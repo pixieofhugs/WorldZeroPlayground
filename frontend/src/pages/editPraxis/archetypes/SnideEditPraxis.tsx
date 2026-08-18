@@ -2,10 +2,10 @@
  * S.N.I.D.E. edit praxis — composer v2 (#1184, epic #1179; design project
  * c491945e, `Snide Edit Praxis.dc.html`, the `snide` row of `SKINS`).
  *
- * The same page `DefaultEditPraxis` draws, wearing SNIDE's dress: a xerox sheet
- * flyposted to the wall. Every region, every control and every word is shared
- * (ADR-0065); what belongs to this file is the frame, the type, the ornament and
- * the marks.
+ * The same page `DefaultEditPraxis` draws, wearing SNIDE's dress: THE FLYPOSTED
+ * WALL ITSELF since #2177, where it used to be a xerox sheet flyposted to one.
+ * Every region, every control and every word is shared (ADR-0065); what belongs
+ * to this file is the frame, the type, the ornament and the marks.
  *
  * ## The dress
  *
@@ -20,13 +20,15 @@
  * underneath it. The zine says DRAFT twice on purpose; a screen reader hears it
  * once.
  *
- * **Ground** — the photocopier raster, flush with the sheet, and nothing else on
- * that layer. Grain only is what the design kit draws as well — its own comment
- * on this ground reads "Grain only; the tape strips are dropped" — so shipped
- * and kit agree, and a fidelity pass has nothing to restore here. The raster
- * stays inside the stock because `ComposerSheet` owns the `overflow: hidden`
- * clip: the ground is the COLUMN's, never the viewport's (#1028, the trap six of
- * eight task-detail skins fell into).
+ * **Ground** — nothing on that layer since #2177. It was the photocopier raster,
+ * flush with the sheet, drawn on a stock that had none of its own; the wall
+ * carries a raster AND a scanline, and a second 1px/3px stripe over those is
+ * moiré rather than xerox. (The design kit draws the raster because it draws the
+ * xerox stock: "Grain only; the tape strips are dropped". Both moved together.)
+ * The dress still names its `ground` slot for the skins that use it — the layer
+ * clips inside the stock because `ComposerSheet` owns the `overflow: hidden`,
+ * so a ground here is the COLUMN's and never the viewport's (#1028, the trap six
+ * of eight task-detail skins fell into).
  *
  * **Rule** — the censor stripe, a solid redaction bar rather than a hairline,
  * struck ONCE above the footer (#1707) rather than between the sections.
@@ -47,12 +49,33 @@
  *
  * ## Colour
  *
- * Every value is a `--faction-snide-*` token, so the sheet flips through the
+ * Every value is a `--faction-snide-*` token, so the ground flips through the
  * `[data-theme="dark"]` cascade with no `dark ?` branch anywhere below. Two
- * families are deliberately kept apart: `-composer-*` is the SHEET (it flips),
- * and `-acid`/`-ink`/`-pink` are the PRESS (they do not). Type printed on an
- * acid ground reads the press's ink in both themes — paper-white on acid green
- * measures 1.2:1.
+ * families are deliberately kept apart: `-composer-*` is the SHEET'S ink (it
+ * flips), and `-acid`/`-ink`/`-pink` are the PRESS (they do not). Type printed
+ * on an acid ground reads the press's ink in both themes — paper-white on acid
+ * green measures 1.2:1.
+ *
+ * **THE STOCK IS THE WALL, AND THAT REVERSES WHAT THIS BLOCK USED TO SAY.**
+ * It read "the sheet is xerox stock by day, photocopier black by night", drawn
+ * from `-composer-sheet` — a sheet flyposted TO the wall. The owner's ruling on
+ * #2177 is that S.N.I.D.E. wears ONE ground across its three authoring and
+ * reading surfaces, so the composer wears the wall itself ({@link WALL}, drawn
+ * once in `factionMarks/snideAtoms`). Restoring the separate stock is drift, not
+ * a fix. `-composer-sheet` survives for the one block that still needs an opaque
+ * stock of its own — the invite dropdown, a floating list the raster must not
+ * read through.
+ *
+ * **THE SWAP IS THE SMALL HALF; THE INKS ARE THE WORK.** This is the only one of
+ * the three surfaces carrying form fields and placeholder text, and every tier
+ * was measured on flat stock. The wall is a ramp with an acid wash off one
+ * corner and a pink one off the other, and this page is tall enough to put its
+ * footer inside the pink one — where `-composer-muted` read 4.23:1 and
+ * `-composer-faint` 3.64:1. Both are walked in index.css, along with the error
+ * banner's alarm; all four readings of the ground, in both themes, are pinned in
+ * `factionContrast.test.ts` (SNIDE_WALL_PAIRS). What did NOT need walking is
+ * every block that already sits on `FIELD`: an input, the task slip, the panels.
+ * A field ground under type is this ruling working, not failing.
  *
  * ## Type
  *
@@ -78,7 +101,6 @@ import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ComposerFooter,
-  ComposerGround,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -111,14 +133,16 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
+import { WALL } from "../../../components/factionMarks/snideAtoms";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
 }
 
-/* THE SHEET — flips with the theme (xerox stock by day, photocopier black by
- * night), so nothing below branches on it. */
+/* THE STOCK the invite dropdown floats on — the one block that still needs an
+ * opaque sheet of its own now the page's ground is the wall (#2177). It flips
+ * with the theme like everything else here, so nothing below branches on it. */
 const SHEET = "var(--faction-snide-composer-sheet)";
 const INK = "var(--faction-snide-composer-ink)";
 const MUTED = "var(--faction-snide-composer-muted)";
@@ -126,14 +150,14 @@ const FAINT = "var(--faction-snide-composer-faint)";
 const FIELD = "var(--faction-snide-composer-field)";
 const RULE = "var(--faction-snide-composer-rule)";
 const BAR = "var(--faction-snide-composer-bar)";
-const GRAIN = "var(--faction-snide-composer-grain)";
 /* Acid as TEXT: deep in the light half, bright on the dark stock. */
 const ACID_INK = "var(--faction-snide-composer-acid-ink)";
 /* The error banner's ink (#1231), and the one skin in the set that could not
  * take `--faction-snide-card-alarm`: the CARD is photocopier-black in both
  * themes (§6) so that rung is pinned bright and reads 1.56:1 on the light
- * xerox stock, while THIS sheet flips. 4.97:1 light / 5.83:1 dark under the
- * neutral veil, which — per ADR-0061 — stays neutral. */
+ * xerox stock, while THIS ground flips. Walked again with the ground in #2177:
+ * 4.67:1 in the wall's pink corner, 6.21:1 at the top of the ramp, 5.83:1 dark,
+ * all under the neutral veil — which, per ADR-0061, stays neutral. */
 const ALARM = "var(--faction-snide-composer-alarm)";
 
 /* THE PRESS — theme-invariant pigments. `ACID` is acid as a DRAWN THING (the
@@ -245,8 +269,9 @@ export default function SnideEditPraxis({ state }: Props) {
      times, so the acid bar and the raster cannot drift between the
      two stages. The masthead's stage word travels with them — it reads
      SUBMITTED, not DRAFT, once your part is filed. */
-  /* radius 0, borderW 0 — the sheet has no edge but its own stock. */
-  const sheetStyle = { background: SHEET, borderRadius: 0 };
+  /* radius 0, borderW 0 — the sheet has no edge but its own stock, and the
+     stock is the wall (#2177). */
+  const sheetStyle = { background: WALL, borderRadius: 0 };
   const statusMark = <SnideBlob width={52} height={40} struck />;
   const slip = {
     style: {
@@ -329,16 +354,13 @@ export default function SnideEditPraxis({ state }: Props) {
             </span>
           </ComposerMasthead>
   );
-  const ground = (
-          <ComposerGround
-            background={`repeating-linear-gradient(0deg, ${GRAIN} 0 1px, transparent 1px 3px)`}
-            /* Flush, not overhanging: the raster is printed ON the sheet, so it
-               stops where the stock does. The shared component's negative
-               default inset is for grounds that overhang their stock; this one
-               is grain only — the kit's ground too — so it takes a flush 0. */
-            inset={0}
-          />
-  );
+  /* NO SECOND RASTER (#2177). This was `<ComposerGround>` printing a 1px/3px
+     stripe flush on the stock, which the stock did not have. The wall brings its
+     own raster and its own scanline, and a third stripe over those two is moiré
+     rather than xerox — the same call the praxis card's dot tooth got in that
+     ruling. The dress's `ground` slot is optional (#1153's rule: a skin that
+     passes nothing renders as if the slot did not exist), so the surface loses a
+     layer rather than gaining an empty one. */
 
   const dress: ComposerDress = {
     accent: ACID_INK,
@@ -346,7 +368,6 @@ export default function SnideEditPraxis({ state }: Props) {
     pageStyle: { fontFamily: BODY_FACE, color: INK },
     sheetStyle,
     masthead,
-    ground,
     rule: () => censorStripe,
     mark: statusMark,
     statusStyle: { color: INK, fontWeight: 700, letterSpacing: "0.2em" },
@@ -383,12 +404,7 @@ export default function SnideEditPraxis({ state }: Props) {
         />
       }
     >
-      <ComposerSheet
-        sizes={sizes}
-        style={sheetStyle}
-        masthead={masthead}
-        ground={ground}
-      >
+      <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
         {/* The stage word, alone (#1828). It is `composerStageWord` rather than
             the bare `Draft` key because SNIDE also prints it in the masthead,
             and the two must not contradict each other. */}

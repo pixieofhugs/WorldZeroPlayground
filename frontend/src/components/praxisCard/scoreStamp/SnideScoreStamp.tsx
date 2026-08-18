@@ -163,10 +163,16 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
 
           THE INKS ARE THIS SURFACE'S, NOT THE ATOM'S DEFAULTS, and the difference
           is not cosmetic: the card's `-note-ink` figure measures 1.05:1 on this
-          plate in LIGHT and its `-note-pink-ink` caption 3.27:1. The tag keeps the
-          two inks it already printed — acid at 16.31:1 light / 16.81:1 dark, the
-          faded newsprint caption at 13.52:1 / 12.74:1, both composited over the
-          translucent plate on the S.N.I.D.E. praxis card's own `-card-bg`.
+          plate in LIGHT and its `-note-pink-ink` caption 3.27:1. The figure keeps
+          the acid it always printed (16.31:1 light / 16.81:1 dark).
+
+          THE CAPTION LEFT `-card-muted` IN #2177. The card around this tag wears
+          the flyposted wall now, and the frame re-points `-card-muted` at the
+          wall's family for the shared slots that cannot take an ink prop — which
+          would have put the wall's dark grey on this black plate. So the caption
+          joins `-vote-off`, the typed-label ink the BASE line above it already
+          uses on this same tag (6.46:1 on the plate, invariant like the plate).
+          The plate itself is opaque since that issue; see `-stamp-bg`.
 
           The loop is drawn at 96, which is the desktop task card's own width, so
           the tag's `minWidth: 116` grows to fit it rather than clipping it. */}
@@ -176,7 +182,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           value={formatPoints(total)}
           unit={t("card.stamp.pointsShort")}
           valueColor="var(--faction-snide-acid)"
-          unitColor="var(--faction-snide-card-muted)"
+          unitColor="var(--faction-snide-vote-off)"
         />
       </div>
     </div>

@@ -8,7 +8,7 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { PenCircle } from "../factionMarks/snideAtoms";
+import { PenCircle, WALL } from "../factionMarks/snideAtoms";
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -163,13 +163,10 @@ export default function SnideTaskCard({
       style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* THE GROUND IS THE FLYPOSTED WALL (#2065), not a second sheet of the
-          clipping's own stock. Five layers over the `-wall` ramp: the diagonal
-          xerox raster, a vertical scanline, an acid wash off the top-left and a
-          pink one off the bottom-right. One recipe, and it FLIPS — xerox stock by
-          day, pitch black by night — which is why every pigment is a token and
-          none of it is a `dark ? a : b`. The recipe stays inline rather than
-          earning a class: `.snd-backdrop` has three mounts, this has one, and
-          five gradients is a lot of BLOCKING stylesheet for one component.
+          clipping's own stock. The five-layer recipe is {@link WALL}, drawn once
+          in `factionMarks/snideAtoms` since #2177 gave the same ground to the
+          composer and to the praxis card: this card was its only mount when it
+          was written inline here, and it is one of three now.
 
           THE EDGE AND THE SHADOW ARE LOAD-BEARING. On the S.N.I.D.E. faction
           page `useFactionBackdrop` paints the page with this same wall, so these
@@ -183,13 +180,7 @@ export default function SnideTaskCard({
           boxSizing: "border-box",
           width: "100%",
           color: INK,
-          background: [
-            "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",
-            "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
-            "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
-            "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
-            "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
-          ].join(", "),
+          background: WALL,
           border: "1px solid var(--faction-snide-note-wall-edge)",
           boxShadow: "var(--faction-snide-note-wall-shadow)",
           transform: "rotate(-0.4deg)",

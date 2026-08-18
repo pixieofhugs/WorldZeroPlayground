@@ -148,12 +148,20 @@ describe("SNIDE's dress", () => {
     expect(markup).not.toContain("--faction-snide-border");
   });
 
-  it.each(WIDTHS)("paints on the composer's own token family on %s", (width) => {
+  it.each(WIDTHS)("grounds on the flyposted WALL, not a sheet of its own on %s", (width) => {
+    // #2177 REVERSES what this assertion used to make: the composer was a xerox
+    // sheet flyposted TO the wall (`-composer-sheet`, with the clipping's family
+    // asserted ABSENT), and the owner's ruling is that S.N.I.D.E. wears one
+    // ground. The wall's pigments are `-note-*` because the task card drew it
+    // first; the file's own INK family is unchanged and still `-composer-*`.
     const markup = render(width);
-    expect(markup).toContain("--faction-snide-composer-sheet");
-    expect(markup).toContain("--faction-snide-composer-grain");
-    // The clipping's family belongs to the praxis card, not to this surface.
-    expect(markup).not.toContain("--faction-snide-note-");
+    expect(markup, "the wall's ramp").toContain("--faction-snide-wall");
+    expect(markup, "the acid corner").toContain("--faction-snide-note-wash-acid");
+    expect(markup, "the pink corner").toContain("--faction-snide-note-wash-pink");
+    expect(markup, "the ink family").toContain("--faction-snide-composer-ink");
+    // The wall brings a raster and a scanline; the composer's own 1px/3px
+    // stripe over those two was moiré, so the ground layer went with the swap.
+    expect(markup, "no second raster").not.toContain("--faction-snide-composer-grain");
   });
 
   it("bleeds the submit bar to the sheet's edge at each width", () => {

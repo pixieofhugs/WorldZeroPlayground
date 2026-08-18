@@ -960,7 +960,12 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
+          {/* `snd-detail-praxis` is the ONE surface where the praxis card is
+              black rather than the wall (#2177). It is this row's own class, not
+              `.praxis-gallery`: that one is mounted by `WowFactionBody` too, and
+              a Snide-task praxis lands there. The class carries no paint — it
+              sets the `--snd-praxis-*` channel the card reads (index.css). */}
+          <div className="praxis-gallery snd-detail-praxis flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)

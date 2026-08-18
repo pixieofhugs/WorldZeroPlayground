@@ -8,6 +8,36 @@
  */
 import type { CSSProperties } from "react";
 
+/**
+ * THE FLYPOSTED WALL — S.N.I.D.E.'s one ground (#2177).
+ *
+ * Five layers bottom-to-top over the `-wall` ramp: the diagonal xerox raster, a
+ * vertical scanline, an acid wash off the top-left corner and a pink one off the
+ * bottom-right. It FLIPS — xerox stock by day, pitch black by night — which is
+ * why every pigment is a token and none of it is a `dark ? a : b` (§8).
+ *
+ * IT LIVES HERE BECAUSE THREE SURFACES WEAR IT. The recipe was inline in
+ * `SnideTaskCard` while the card was its only mount, and the owner's ruling on
+ * #2177 gives it to the composer and the praxis card as well. Three inline
+ * copies is how a faction acquires a second identity, so it is drawn once, in
+ * the shape `covenSlip`'s `SLIP_SHEET` already established for Coven's four
+ * mounts. It stays in JS rather than becoming a class for the reason the task
+ * card's comment gave: five gradients is a lot of BLOCKING stylesheet.
+ *
+ * THE INKS THAT GO ON IT ARE THE `-note-*` FAMILY, which flips with it — never
+ * `-card-*`, which is pinned near-black in both themes for the slabs pasted ON
+ * the wall (#2066). The two ends of that rule are measured against all four of
+ * this ground's readings (both ramp stops and both washed corners, both themes)
+ * in `utils/__tests__/factionContrast.test.ts`.
+ */
+export const WALL = [
+  "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",
+  "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
+  "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
+  "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
+  "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
+].join(", ");
+
 interface SnideSigilProps {
   size?: number;
   color?: string;
