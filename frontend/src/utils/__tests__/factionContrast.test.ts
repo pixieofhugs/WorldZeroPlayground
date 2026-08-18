@@ -376,6 +376,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Everymen — "the paper surface + its text FLIP in dark"; ink is structure:
   // "borders, rules, text on gold/parchment elements".
   { what: "everymen paper", surface: "--everymen-paper", text: "--everymen-paper-text" },
+  // The stock the SAME ink lands on one rung down (#2133). `.em-backdrop` ramps
+  // from the paper to the deep stock and then vignettes 55% of the deep stock
+  // over the whole thing, so the page's ground is not one flat token — a
+  // heading near the bottom of the faction page is reading against this end of
+  // it, and only the paper end was measured.
+  { what: "everymen deep stock, ink", surface: "--everymen-paper-deep", text: "--everymen-paper-text" },
   { what: "everymen paper, muted", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
@@ -2427,4 +2433,78 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
       "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
     ).toEqual([]);
   });
+});
+
+/**
+ * `--everymen-ink` is STRUCTURE, and the two surfaces grounded on the paper may
+ * not set text in it (#2133).
+ *
+ * The pairing shape, in the one cascade the value test cannot see. index.css
+ * states the split in words — "the paper surface + its text FLIP in dark; ink is
+ * structure: borders, rules, text on gold/parchment elements" — and the manifest
+ * above measures both halves of it and stays green: `--everymen-ink` really does
+ * clear on the cream and on the gold, and `--everymen-paper-text` really does
+ * clear on the paper. No row of it can see a COMPONENT reaching past the
+ * flipping ink for the frozen one.
+ *
+ * It is invisible by daylight too, which is why an eyeball audit kept missing
+ * it: the two tokens are the SAME hex in light (#221a12), so the bug has no
+ * light mode at all. In dark the paper flips to #221a16 and the ink does not
+ * flip — 1.16:1 on the paper, 1.06:1 on the deep stock. That is the
+ * "theme-invariant surface, flipping ink" trap read backwards.
+ *
+ * A `color:` is the only place it bites: a border or a box-shadow struck in the
+ * frozen ink goes dim in dark, not illegible, and four sibling archetypes
+ * already say as much in their own comments ("NOT `--everymen-ink`, which
+ * vanishes on the dark sheet"). So the guard is a per-file reader rule, in the
+ * shape #1793 and #1766 set here — the files whose GROUND is the paper are
+ * named, and in those files the structure ink may not be a text colour.
+ */
+describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
+  /**
+   * The Everymen surfaces whose ground IS `--everymen-paper`.
+   *
+   * `EverymenFactionBody` stands on `.em-backdrop` (`useFactionDetail` calls
+   * `useFactionBackdrop`); `EverymenFieldDesk` paints the paper on its own root
+   * and again on every `Plate`. Every other Everymen archetype grounds on the
+   * cream board or on a sheet of its own (`.em-broadsheet`, the press slip),
+   * where the frozen ink is the right answer — this list must not grow to them.
+   */
+  const ON_THE_PAPER = [
+    "pages/factionDetail/archetypes/EverymenFactionBody.tsx",
+    "pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx",
+  ];
+
+  for (const relative of ON_THE_PAPER) {
+    it(`${relative} sets no text in the structure ink`, () => {
+      const source = stripComments(sourceOf(relative));
+      // The rule is written against the local alias, so it has to prove the
+      // alias still means what it says — a rename would otherwise pass by
+      // matching nothing.
+      expect(
+        source,
+        `${relative} no longer binds \`INK\` to --everymen-ink; retarget this guard at whatever the structure ink is called there now.`,
+      ).toMatch(/const INK = ['"]var\(--everymen-ink\)['"]/);
+      expect(
+        source.match(/color:\s*(INK\b|['"`]var\(--everymen-ink\))/g) ?? [],
+        "on the paper the ink is 1.16:1 in dark (1.06:1 on the deep stock). Text here takes `--everymen-paper-text`, which flips with the stock — 13.19:1 light, 13.96:1 dark — and is byte-identical to the ink in light, so nothing moves by day. Borders, fills and shadows keep `INK`.",
+      ).toEqual([]);
+    });
+  }
+
+  for (const theme of BOTH_THEMES) {
+    it(`the ink they take instead clears AA on both stocks (${theme})`, () => {
+      const text = resolveColor("--everymen-paper-text", theme);
+      expect(text.color, `--everymen-paper-text (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+      for (const stock of ["--everymen-paper", "--everymen-paper-deep"]) {
+        const surface = resolveColor(stock, theme);
+        expect(surface.color, `${stock} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(
+          ratio,
+          `--everymen-paper-text on ${stock} (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
+  }
 });
