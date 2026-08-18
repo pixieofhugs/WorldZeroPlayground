@@ -71,6 +71,14 @@ export type ArchetypeProps = {
  * `minWidth` deliberately stays out of it. It is the floor that keeps one card
  * per row on a phone, and it is also the clamp that would silently swallow any
  * basis below 280 — so the variable is only ever useful in [280, 394].
+ *
+ * THE BASIS IS A MAIN-AXIS SIZE, so it is only a WIDTH while the container is a
+ * ROW (#2149). Stack these cards with `display: grid`, never a flex COLUMN: on
+ * a column main axis the same 394px becomes a height cap and clips the card.
+ * The width cannot move to `width` to make that safe — `width: 100%` is what
+ * fills the wrapper the faction and profile bodies nest the card in, and the
+ * feed rows need the grow — so the axis stays the container's business, and
+ * `praxisCard/__tests__/columnMountGuard.test.ts` holds every mount to it.
  */
 export const frameBase: CSSProperties = {
   width: "100%",
