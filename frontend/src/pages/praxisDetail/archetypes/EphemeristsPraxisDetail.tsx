@@ -128,6 +128,7 @@ import { EphemeristsMasthead } from "../../../components/factionMarks/Ephemerist
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
+import { mediaUrl } from "../../../utils/media";
 import {
   PraxisAdminBar,
   PraxisStatusBanners,
@@ -135,6 +136,7 @@ import {
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
+  bylineFaces,
   orderedMembers,
   scoreWasBanked,
   taskRefMeta,
@@ -202,7 +204,23 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
  * set these in a row, so a shared record reads as shared before a single name is
  * parsed.
  */
-function AuthorOctagon({ name, size }: { name: string; size: number }) {
+/**
+ * The inner (`inset={7}`) octagon of the cartouche below, restated in percent so
+ * a portrait can be clipped to it: `Octagon`'s path over a 100-unit box, scaled
+ * 0.86 about the centre — p' = 50 + 0.86 × (p − 50). Geometry, not dress.
+ */
+const OCTAGON_CLIP =
+  "polygon(32.8% 10.44%, 67.2% 10.44%, 89.56% 32.8%, 89.56% 67.2%, 67.2% 89.56%, 32.8% 89.56%, 10.44% 67.2%, 10.44% 32.8%)";
+
+function AuthorOctagon({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name: string;
+  avatarUrl: string;
+  size: number;
+}) {
   return (
     <span
       aria-hidden
@@ -224,22 +242,37 @@ function AuthorOctagon({ name, size }: { name: string; size: number }) {
         <Octagon inset={0} stroke={BRASS} width={2} fill={DISC} />
         <Octagon inset={7} stroke={BRASS_LIGHT} width={0.8} />
       </svg>
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: CAPS,
-          fontWeight: 500,
-          fontSize: "var(--text-md)",
-          letterSpacing: "0.08em",
-          color: INK,
-        }}
-      >
-        {initialsOf(name)}
-      </span>
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            clipPath: OCTAGON_CLIP,
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: CAPS,
+            fontWeight: 500,
+            fontSize: "var(--text-md)",
+            letterSpacing: "0.08em",
+            color: INK,
+          }}
+        >
+          {initialsOf(name)}
+        </span>
+      )}
     </span>
   );
 }
@@ -262,17 +295,12 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   const isCollab = praxis.type === "collab";
 
   // A payload with no member rows still credits its creator, so the byline is
-  // never empty and the author is always reachable from it. Initials only:
-  // `PraxisOut` carries no avatar for either a member or the creator (that field
-  // is the CARD payload's, `PraxisCardOut.created_by_avatar_url`), and a
-  // monogram cut into a cartouche is the plate's own answer anyway.
-  const authors =
-    members.length > 0
-      ? members.map((member) => ({
-          id: member.character_id,
-          name: member.character_display_name || `#${member.character_id}`,
-        }))
-      : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }];
+  // never empty and the author is always reachable from it. NOT initials only
+  // any more: #2172 put `created_by_avatar_url` on `PraxisOut` (it was the CARD
+  // payload's alone, which is what the note here used to record), so the
+  // creator's portrait is clipped into the cartouche and the monogram cut is
+  // what a plateless author still gets.
+  const authors = bylineFaces(praxis);
 
   /** The page-ground label voice. `-quiet`: the caption gold is measured on the
    *  PLATE and does not clear on the darker page this surface introduces. */
@@ -506,7 +534,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
           {authors.map((author) => (
             <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
-              <AuthorOctagon name={author.name} size={size.disc} />
+              <AuthorOctagon
+                name={author.name}
+                avatarUrl={author.avatarUrl}
+                size={size.disc}
+              />
             </Link>
           ))}
         </span>

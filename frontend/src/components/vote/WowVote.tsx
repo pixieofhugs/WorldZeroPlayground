@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -98,7 +98,7 @@ function Balloon({ fill, width, height }: { fill: string; width: number; height:
   )
 }
 
-export default function WowVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -109,17 +109,6 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
 
   const active = hovered || selected
   const cheering = active >= 5
-  // The design's own caption logic: hovering previews the bare word, a cast vote
-  // is spoken as a sentence, and an untouched row waits.
-  // A cast vote used to be spoken in WOW's own voice — `chrome.wow.picked`,
-  // "thou dubbed it {{label}}". #1909 cut it: the audit found the generic
-  // `chrome.voted` already covers the slot. It takes `stars`, not `label`, so
-  // the call site moves with the key.
-  const caption = hovered
-    ? TIERS[hovered - 1].label
-    : selected
-      ? t('chrome.voted', { stars: selected })
-      : t('chrome.idle')
 
   return (
     <div>
@@ -210,33 +199,18 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
         })}
       </div>
 
-      <div style={{ marginTop: 'var(--space-sm)', minHeight: 21 }}>
-        <span
-          style={{
-            fontFamily: 'var(--faction-wow-card-font)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament exemption: the design's own caption size (17, MedievalSharp), not the --text-* ramp (§4a)
-            fontSize: 17,
-            letterSpacing: '0.02em',
-            color: active ? 'var(--faction-wow-vote-on)' : 'var(--faction-wow-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-      </div>
+      {/* The MedievalSharp caption stood here: the hovered tier's word, or
+          `chrome.voted` once cast — a SECOND call to the key the shell's own
+          summary block below was already rendering, so a cast WOW card printed
+          "Voted 4 pts" twice (#2166). #2166 struck the whole slot, not just the
+          doubled line: the balloons are the scale. The 21px-tall reserved row
+          goes with it rather than staying behind as an empty box — nothing
+          hovers into it any more, so there is no reflow left to absorb. The
+          aggregate tally that used to sit under the plate went too, on the
+          owner's third ruling; the plate carries its own padding, so nothing
+          below it was holding the breathing room open. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-wow-card-muted)',
-          accent: 'var(--faction-wow-card-accent)',
-          accentFont: 'var(--faction-wow-card-font)',
-          errorColor: 'var(--color-danger)',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

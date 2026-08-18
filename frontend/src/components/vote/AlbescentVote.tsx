@@ -2,8 +2,7 @@ import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'r
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
-import { reframeLabel } from './voteReframes'
+import { VoteLoginGate, VoteError } from './VoteShell'
 
 /**
  * Albescent vote UI (#843) — FERROFLUID. Ported from the vote-stamps design
@@ -29,9 +28,10 @@ import { reframeLabel } from './voteReframes'
  * removed Albescent's vote voice on lore grounds (#783/#232, ADR-0048): a task
  * filed under Albescent used to label its tiers in the society's own words for
  * every voter, revealed or not, which was the loudest tell left. `voteReframes`
- * therefore has no `albescent` entry and {@link reframeLabel} returns the plain
- * numeral. That resolver is the single source of the decision, so this widget
- * calls it rather than hardcoding either ladder.
+ * therefore has no `albescent` entry, and this widget printed the plain numeral
+ * `reframeLabel` returns in its place. #2166 took the whole caption row off
+ * every skin, so nothing under the dots reads a ladder now — the divergence
+ * survives only as the absence of an entry in the registry.
  *
  * MOTION. Two separate things move, and both are gated:
  *  - the rising-wave bob reuses the shared `.spectrum-dot--reached` class, which
@@ -113,8 +113,6 @@ function useMorphTick(enabled: boolean): number {
 export default function AlbescentVote({
   praxisId,
   currentValue,
-  points,
-  totalVotes,
 }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -127,8 +125,6 @@ export default function AlbescentVote({
   }
 
   const active = hovered || selected
-  // Plain numerals, not a word ladder — see the TIER WORDS note above.
-  const caption = active ? reframeLabel('albescent', active) : t('chrome.idle')
   const step = Math.floor((tick * TICK_MS) / MORPH_STEP_MS)
   let offset = 0
 
@@ -210,53 +206,12 @@ export default function AlbescentVote({
         })}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 'var(--space-sm)',
-          marginTop: 'var(--space-sm)',
-          minHeight: 20,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--faction-default-card-font)',
-            fontSize: 'var(--text-content)',
-            letterSpacing: '0.04em',
-            color: active ? 'var(--faction-default-vote-on)' : 'var(--faction-default-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--faction-default-vote-off)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The caption — a bare numeral, since Albescent ships no tier words
+          (#783) — and its `· your vote` tag stood here. #2166 struck the row on
+          all nine skins: printing the digit the dots already draw was the
+          clearest case of it. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--faction-default-card-muted)',
-          accent: 'var(--faction-default-card-accent)',
-          accentFont: 'var(--faction-default-card-font)',
-          errorColor: 'var(--color-danger)',
-          avgLetterSpacing: '0.04em',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

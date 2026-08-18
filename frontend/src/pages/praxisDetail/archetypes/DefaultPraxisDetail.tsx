@@ -106,14 +106,15 @@ import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
+import { mediaUrl } from '../../../utils/media'
 import {
+  bylineFaces,
   PraxisAdminBar,
   PraxisStatusBanners,
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
-  orderedMembers,
   scoreWasBanked,
   taskRefMeta,
 } from '../shared'
@@ -153,7 +154,15 @@ function initials(name: string): string {
  * One spectrum-ringed initials disc. Collab bylines stack these, overlapping,
  * so a shared praxis reads as shared before a single name is parsed.
  */
-function MemberDisc({ name, size }: { name: string; size: number }) {
+function MemberDisc({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name: string
+  avatarUrl: string
+  size: number
+}) {
   return (
     <span
       aria-hidden
@@ -167,19 +176,28 @@ function MemberDisc({ name, size }: { name: string; size: number }) {
         flexShrink: 0,
       }}
     >
-      <span
-        className="flex items-center justify-center font-display italic"
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '50%',
-          background: 'var(--faction-default-card-bg)',
-          fontSize: 'var(--text-lg)',
-          color: 'var(--faction-default-card-text)',
-        }}
-      >
-        {initials(name)}
-      </span>
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%' }}
+        />
+      ) : (
+        <span
+          className="flex items-center justify-center font-display italic"
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '50%',
+            background: 'var(--faction-default-card-bg)',
+            fontSize: 'var(--text-lg)',
+            color: 'var(--faction-default-card-text)',
+          }}
+        >
+          {initials(name)}
+        </span>
+      )}
     </span>
   )
 }
@@ -199,7 +217,6 @@ export default function DefaultPraxisDetail({
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  const members = orderedMembers(praxis)
   // A collab is a collab at ONE member (#1274). This used to read
   // `members.length > 1`, which hid the whole Members section from a collab
   // nobody had joined yet while the heading still counted them. Tested
@@ -378,13 +395,7 @@ export default function DefaultPraxisDetail({
             single name is parsed. A payload with no member rows still credits
             its creator, so the author is always reachable from the byline. */}
         <span style={{ display: 'flex', alignItems: 'center' }}>
-          {(members.length > 0
-            ? members.map((member) => ({
-                id: member.character_id,
-                name: member.character_display_name || `#${member.character_id}`,
-              }))
-            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
-          ).map((author, index) => (
+          {bylineFaces(praxis).map((author, index) => (
             <Link
               key={author.id}
               to={`/characters/${author.id}`}
@@ -396,7 +407,11 @@ export default function DefaultPraxisDetail({
                 zIndex: index,
               }}
             >
-              <MemberDisc name={author.name} size={desktop ? 44 : 38} />
+              <MemberDisc
+                name={author.name}
+                avatarUrl={author.avatarUrl}
+                size={desktop ? 44 : 38}
+              />
             </Link>
           ))}
         </span>
