@@ -125,6 +125,14 @@ describe('every profile kit renders the one shared set of words (#1911)', () => 
     }
   })
 
+  // Singularity is the one kit whose eyebrow slot draws INK of its own — a
+  // `> ` command prompt. Handed nothing to say (the praxis heading above, and
+  // the About block, which both ask for a bare heading) it printed a prompt
+  // with no command. An empty eyebrow now draws no prompt at all.
+  it('leaves singularity no empty command prompt over the praxis heading', () => {
+    expect(renderText('singularity')).not.toMatch(/>\s*Praxis/)
+  })
+
   it('speaks none of the retired per-kit words', () => {
     // One from each collapsed family, chosen where the kit's own wording was
     // most distinct — a kit that kept a literal instead of losing its knob
