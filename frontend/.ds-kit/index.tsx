@@ -16,7 +16,7 @@ export { default as AlbescentVote } from "../src/components/vote/AlbescentVote";
 export { default as AuthCard } from "../src/pages/onboarding/AuthCard";
 export { BackdropProvider } from "../src/components/backdrop/BackdropContext";
 export { default as CanSignUpEmpty } from "../src/pages/tasks/CanSignUpEmpty";
-export { default as CardMasthead } from "../src/components/taskCard/CardMasthead";
+export { default as CardMasthead } from "../src/components/cardMasthead/CardMasthead";
 export { default as CharacterBadge } from "../src/components/CharacterBadge";
 export { default as CharacterSwitcherSheet } from "../src/components/CharacterSwitcherSheet";
 export { ChipRow } from "../src/components/ui/ChipRow";

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { WowBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -193,8 +193,8 @@ export default function WowTaskCard({
         {/* THE DECREE'S MASTHEAD — the plum banner, mounted from the shared
             band (#2185) so the WOW praxis card wears the identical one. Its
             paint, and the #2032/#2070 inset rulings behind it, live at
-            `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="wow" />
+            `cardMasthead/factionBands`. */}
+        <WowBand />
 
         {/* The pennants, strung under the band (#2032) where the 6px barber
             ribbon used to run — the design's own swap. `Bunting` is WOW's one

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { SnideBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -188,8 +188,8 @@ export default function SnideTaskCard({
         {/* The header bar, mounted from the shared band (#2185) so the
             S.N.I.D.E. praxis card wears the identical one. The broken acid rule
             that used to fill the bar's right end went with the centring; the
-            paint and the 24px mark live at `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="snide" />
+            paint and the 24px mark live at `cardMasthead/factionBands`. */}
+        <SnideBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

@@ -1,13 +1,10 @@
 import type { CSSProperties } from "react";
 import {
-  BAND,
-  BAND_INK,
   BRASS,
   BRASS_LIGHT,
   CAPTION,
   Cornice,
   DECO,
-  GlyphRegister,
   INK,
   LotusSign,
   OCHRE,
@@ -16,20 +13,35 @@ import {
   READING,
   SHADOW,
 } from "../../factionMarks/ephemeristsPlate";
-import { EphemeristsMasthead } from "../../factionMarks/EphemeristsMasthead";
+import { EphemeristsBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
  * The Ephemerists — THE FIELD-JOURNAL PLATE (#1207, the Valley plate at card
- * size). A papyrus leaf under a night-band masthead: the ENGRAVED MASTHEAD at
- * card scale (#1634) over an incised register of glyphs, a cavetto cornice
- * ruling it off, the Poiret One title over its Spectral gloss, and the tally
- * cell cut into the right column.
+ * size). A papyrus leaf under a brass-edged masthead, a cavetto cornice ruling
+ * it off, the Poiret One title over its Spectral gloss, and the tally cell cut
+ * into the right column.
  *
- * The masthead replaced two things at once: the winged sun disc over a
- * letterspaced Poiret One wordmark that headed the band, and the brass cartouche
- * pill below the cornice that said "THE EPHEMERISTS" a second time.
+ * ## THE MASTHEAD IS THE CARD TIER'S NOW (#2185)
+ *
+ * This card headed itself with the ENGRAVED MASTHEAD at card scale (#1634) — the
+ * kite sigil beside a stacked wordmark and datum row — over a 110px night band
+ * carrying an incised `GlyphRegister`. Its task card does not: #2067 restrained
+ * `EphemeristsTaskCard` to the kit's plain `CardMasthead` on the medallion's
+ * disc. The owner's #2185 ruling is that a praxis card wears THE SAME BAND ITS
+ * TASK CARD WEARS, so the plate joins the card tier and the night band goes.
+ *
+ * THE ENGRAVED MASTHEAD IS NOT RETIRED — it is the PAGE tier's, and it still
+ * heads task detail, praxis detail and the edit-praxis page (each at
+ * `scale={desktop ? "page" : "card"}`, so the card scale stays live). The split
+ * that leaves is: a CARD wears the kit band, a PAGE wears the engraving. The
+ * datum row's date is not lost with it — `PraxisStats` already carries the date
+ * as a fact.
+ *
+ * The engraving replaced two things at once when it arrived: the winged sun disc
+ * over a letterspaced Poiret One wordmark, and the brass cartouche pill below
+ * the cornice that said "THE EPHEMERISTS" a second time.
  *
  * It replaces THE CODEX (#841) — the vellum folio painted out of the retired
  * `--eph-*` family. That family is still declared and still worn by every other
@@ -62,12 +74,6 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * its string: #1909 CUT `card.ephemerists.for`, so there is no gloss to set.
  */
 
-/** Masthead band, and the field its register is drawn across. Geometry (§4a).
- *  A FLOOR since #1634, not a height: the engraved masthead sizes itself from
- *  its own padding, and a fixed band would crop it. */
-const MASTHEAD = 110;
-const MASTHEAD_VIEW = 340;
-
 /**
  * The drifting strip above the vote block — a run of marks from the plate's
  * other eras (nabla, psi, the integral), breathing out of phase on `.epg-glyph`.
@@ -96,40 +102,10 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         transition: "background 150ms, color 150ms",
       }}
     >
-      {/* The masthead: the engraved title over an incised register, on night. */}
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          minHeight: MASTHEAD,
-          background: BAND,
-          color: BAND_INK,
-        }}
-      >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${MASTHEAD_VIEW} ${MASTHEAD}`}
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, zIndex: 1 }}
-        >
-          <path
-            d={`M33 86 H${MASTHEAD_VIEW - 33}`}
-            stroke={BRASS_LIGHT}
-            strokeWidth="0.6"
-            opacity="0.28"
-          />
-          <GlyphRegister width={MASTHEAD_VIEW} y={97} strength={0.3} keyPrefix="card" />
-        </svg>
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <EphemeristsMasthead
-            slug={praxis.task_faction_slug}
-            scale="card"
-            date={praxis.submitted_at ?? praxis.created_at}
-          />
-        </div>
-      </div>
+      {/* THE RESTRAINED MASTHEAD (#2185) — the same band `EphemeristsTaskCard`
+          wears, mounted from `cardMasthead/factionBands`, with the cornice
+          ruling it off exactly as it does there. */}
+      <EphemeristsBand />
       <Cornice />
 
       <div

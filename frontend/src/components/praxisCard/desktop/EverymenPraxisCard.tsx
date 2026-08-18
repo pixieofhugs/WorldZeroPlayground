@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { factionCssVar } from "../../../utils/factions";
-import FactionMasthead from "../../cardMasthead/FactionMasthead";
+import { EverymenBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -69,12 +69,12 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           `--faction-everymen-bill-mast` in Bebas at `--text-title` under a
           double rule. Two mastheads for one faction, which is exactly what
           `CardMasthead` was created to prevent. The band is mounted from
-          `cardMasthead/FactionMasthead` now, so there is one of them.
+          `cardMasthead/factionBands` now, so there is one of them.
 
           THE COGS STAND DOWN, for the reason they did on the task card (#2029):
           they flanked the centre the wordmark now holds. The cog stays the
           bill's motif on the hero rule and the in-progress line. */}
-      <FactionMasthead slug="everymen" />
+      <EverymenBand />
 
       <div
         style={{

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { UaBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -186,8 +186,8 @@ export default function UaTaskCard({
             it, because the ensō it held is the same mark the band carries and no
             card draws two. Mounted from the shared band (#2185) so the UA praxis
             card wears the identical one; the paint and the ink measurement live
-            at `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="ua" />
+            at `cardMasthead/factionBands`. */}
+        <UaBand />
 
         <div style={{ position: "relative", padding: size.pad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

@@ -24,29 +24,26 @@ import { factionName } from "../../utils/factions";
  * two mastheads for one faction, exactly what #2029 created `CardMasthead` to
  * prevent, arrived anyway through the seam the component did not cover.
  *
- * ONLY SEVEN SLUGS ARE HERE, and {@link BandedSlug} is why the eighth and ninth
- * cannot be added by accident. `na` and `albescent` mount no band by RULE
- * (ADR-0048): the Albescent card IS the unaffiliated sheet plus a drift, and a
- * band naming the society would un-hide it. On a praxis card — a public card, on
- * other people's feeds — that is a disclosure, not a style choice. A runtime
- * `return null` would have let a future mount ask for one and get silence; a
- * union makes `<FactionMasthead slug="albescent" />` fail to compile.
+ * SEVEN NAMED EXPORTS, AND NO SLUG→COMPONENT MAP. #782 removed surface-owned
+ * registries and `factions/__tests__/addAFaction.test.tsx` enforces it, but the
+ * rule is not the only reason there is no dispatch here: there is nothing to
+ * dispatch ON. Both callers of a band are per-faction files that already know
+ * their own faction — `WowTaskCard` and `WowPraxisCard` both want the WOW band
+ * and neither has a slug to look one up with. A record keyed by slug would have
+ * been a lookup table with seven constant keys.
+ *
+ * ONLY SEVEN BANDS EXIST, and the eighth and ninth are absent by RULE (ADR-0048,
+ * NOT superseded by #2185): the Albescent card IS the unaffiliated sheet plus a
+ * drift, and a band naming the society would un-hide it. On a praxis card — a
+ * public card, on other people's feeds — that is a disclosure, not a style
+ * choice. There is no `DefaultBand` and no `AlbescentBand` to import, which is
+ * the strongest form the rule can take in a module.
  *
  * The ORNAMENT that rides BELOW a band is not here — WOW's bunting, the
  * Ephemerists' cornice. Those are strung under the band by the surface that
  * wants them, and the two kits do not agree about them; what the ruling binds is
  * the band itself.
  */
-
-/** The seven factions that wear a band. Not a faction list — see the docblock. */
-export type BandedSlug =
-  | "coven"
-  | "ephemerists"
-  | "everymen"
-  | "singularity"
-  | "snide"
-  | "ua"
-  | "wow";
 
 /* ── Coven ─────────────────────────────────────────────────────────────── */
 
@@ -391,21 +388,12 @@ function WowBand() {
   );
 }
 
-const BANDS: Record<BandedSlug, () => React.ReactElement> = {
-  coven: CovenBand,
-  ephemerists: EphemeristsBand,
-  everymen: EverymenBand,
-  singularity: SingularityBand,
-  snide: SnideBand,
-  ua: UaBand,
-  wow: WowBand,
+export {
+  CovenBand,
+  EphemeristsBand,
+  EverymenBand,
+  SingularityBand,
+  SnideBand,
+  UaBand,
+  WowBand,
 };
-
-/**
- * Mount a faction's band. One line on a task card, the same line on its praxis
- * card, and no way to spell a slug that has no band.
- */
-export default function FactionMasthead({ slug }: { slug: BandedSlug }) {
-  const Band = BANDS[slug];
-  return <Band />;
-}

@@ -1,5 +1,5 @@
 import { Lotus } from "../../factionMarks";
-import FactionMasthead from "../../cardMasthead/FactionMasthead";
+import { UaBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -75,7 +75,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           right column, where it is the score's device rather than the header's.
           What the band replaced on the task card was the EYEBROW ensō, which was
           a header mark. */}
-      <FactionMasthead slug="ua" />
+      <UaBand />
 
       <div style={{ position: "relative", padding: "var(--space-xl) var(--space-xl) var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />

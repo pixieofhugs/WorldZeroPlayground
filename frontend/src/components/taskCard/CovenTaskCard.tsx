@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { CovenBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
@@ -175,8 +175,8 @@ export default function CovenTaskCard({
             Mounted from the shared band (#2185) so the Coven praxis card wears
             the identical one, twinkle field and all — the field is the band's
             backdrop, so it travels with it rather than being rebuilt beside it.
-            The paint lives at `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="coven" />
+            The paint lives at `cardMasthead/factionBands`. */}
+        <CovenBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

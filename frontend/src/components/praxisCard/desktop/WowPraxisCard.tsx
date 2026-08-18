@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import FactionMasthead from "../../cardMasthead/FactionMasthead";
+import { WowBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -62,9 +62,9 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
       } as CSSProperties}
     >
       {/* THE BANNER (#2185) — the same band `WowTaskCard` wears, mounted from
-          `cardMasthead/FactionMasthead` rather than restated, so the chronicle
+          `cardMasthead/factionBands` rather than restated, so the chronicle
           and the decree cannot drift apart. */}
-      <FactionMasthead slug="wow" />
+      <WowBand />
 
       {/* The running head: a woven gold/plum stripe. No text — see the note
           above. It survives the band because it is not a masthead: it is the

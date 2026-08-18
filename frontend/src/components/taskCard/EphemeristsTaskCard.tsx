@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { EphemeristsBand } from "../cardMasthead/factionBands";
 /* No `CARD_CTA_ROW` here: the plate's rule and its button share one inset box,
    so the clearance comes from that box's own `bodyPad` bottom. */
 import { CARD_CTA } from "./cardCta";
@@ -300,8 +300,8 @@ export default function EphemeristsTaskCard({
             nothing else, mounted from the shared band (#2185). The wrapper box
             that used to pin a 110px canvas for the glyph registers went with
             #2067, which is what makes the hero row rise ~75px. The paint and the
-            disc-vs-band ruling live at `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="ephemerists" />
+            disc-vs-band ruling live at `cardMasthead/factionBands`. */}
+        <EphemeristsBand />
         <Cornice flutes={40} />
 
         {/* The journal leaf. */}

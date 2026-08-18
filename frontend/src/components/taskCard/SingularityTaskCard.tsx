@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import FactionMasthead from "../cardMasthead/FactionMasthead";
+import { SingularityBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -169,8 +169,8 @@ export default function SingularityTaskCard({
         {/* Window chrome, mounted from the shared band (#2185) so the
             Singularity praxis card wears the identical one — the three lamps
             included, since they ride with the mark rather than standing down.
-            The paint lives at `cardMasthead/FactionMasthead`. */}
-        <FactionMasthead slug="singularity" />
+            The paint lives at `cardMasthead/factionBands`. */}
+        <SingularityBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

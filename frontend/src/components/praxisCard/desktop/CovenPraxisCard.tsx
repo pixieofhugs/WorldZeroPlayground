@@ -1,4 +1,4 @@
-import FactionMasthead from "../../cardMasthead/FactionMasthead";
+import { CovenBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import {
@@ -113,7 +113,7 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           field and all, mounted from the shared module. The field is the band's
           BACKDROP, so it travels with the band rather than being rebuilt beside
           it; that is what keeps the stars off the copy on both cards. */}
-      <FactionMasthead slug="coven" />
+      <CovenBand />
 
       <AdminOverlay {...adminProps} />
       {/* The copy takes a layer of its own, for the reason `CovenTaskCard`'s

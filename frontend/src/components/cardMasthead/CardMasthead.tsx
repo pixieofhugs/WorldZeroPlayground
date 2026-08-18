@@ -12,7 +12,7 @@ import { factionName } from "../../utils/factions";
  * `taskCard/` (#2185): the owner ruled that a praxis card wears the same band
  * its task card does, so the praxis kit stopped being a stranger to this file
  * and the file stopped belonging to one kit. The PAINT is not repeated across
- * the two — `FactionMasthead` beside this module holds one painted band per
+ * the two — `factionBands` beside this module holds one painted band per
  * faction and both kits mount that, so "the same band" is an identity rather
  * than a promise two directories make to each other.
  *
@@ -64,9 +64,11 @@ import { factionName } from "../../utils/factions";
  * S.N.I.D.E.'s broken acid rule and Everymen's pair of cogs both occupied the
  * space the centred title now takes. Ornament that sits BESIDE the mark without
  * reaching the centre survives, which is why Singularity keeps its lamps. Where
- * a band carries a backdrop (the Ephemerists' glyph registers, Coven's twinkle
- * field), the skin wraps this component in its own positioned box and paints
- * there — no ornament slot is needed here, and none is offered.
+ * a band carries a backdrop — Coven's twinkle field is the only one left, since
+ * #2067 took the Ephemerists' glyph registers off the card tier — the BAND
+ * wraps this component in its own positioned box and paints there. That wrapper
+ * lives with the band in `factionBands`, so both kits inherit it; no ornament
+ * slot is needed here, and none is offered.
  *
  * NO CARD RENDERS TWO FACTION MARKS IN ITS HEADER. The mark below is the kit's
  * `FactionSigil`, so a card that drew its own header mark hands it over rather
