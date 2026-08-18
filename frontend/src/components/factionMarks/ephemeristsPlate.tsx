@@ -737,13 +737,61 @@ export function EmblemOctagon({ size }: { size: number }) {
 }
 
 /**
+ * THE LIMB'S GRADUATION (#2145) — 48 ticks at 7.5°, long every sixth, i.e. one
+ * long tick on each 45°. It is what turns an ornament into an instrument, and
+ * it is the detail that earns the faction its name.
+ *
+ * Built once at module load rather than mapped per render: the geometry is a
+ * constant, the mark is drawn on two surfaces, and forty `<path>` nodes is a
+ * silly amount of markup for a figure that never moves. Two `d` strings, two
+ * weights.
+ */
+const TICK_STEP_DEG = 7.5;
+const TICK_OUTER = 47.2;
+/** Where a long tick starts — ON the inner rim — and where a short one does. */
+const TICK_LONG_INNER = 43;
+const TICK_SHORT_INNER = 45.4;
+/**
+ * The inner rim, moved r41 -> r43 by #2145. The north needle's tip is r42
+ * (`M50 8` on a 100-unit box), so at r41 the rim ran straight through it.
+ */
+const INNER_RIM = 43;
+
+function limb(long: boolean): string {
+  const marks: string[] = [];
+  const inner = long ? TICK_LONG_INNER : TICK_SHORT_INNER;
+  for (let i = 0; i < 360 / TICK_STEP_DEG; i += 1) {
+    if ((i % 6 === 0) !== long) continue;
+    const radians = (i * TICK_STEP_DEG * Math.PI) / 180;
+    const sin = Math.sin(radians);
+    const cos = Math.cos(radians);
+    const at = (r: number) =>
+      `${(50 + r * sin).toFixed(2)} ${(50 - r * cos).toFixed(2)}`;
+    marks.push(`M${at(inner)}L${at(TICK_OUTER)}`);
+  }
+  return marks.join(" ");
+}
+
+const LONG_TICKS = limb(true);
+const SHORT_TICKS = limb(false);
+
+/**
+ * Below this the short ticks are not drawn at all (#2145). At the praxis card's
+ * 84px each of the forty renders about 0.4px wide and the browser resolves the
+ * limb into a grey wash; the eight long ones survive and still read as
+ * graduated. Above it — the task card's 128px plate, and the phone's 112px —
+ * the full 48 come back.
+ */
+const FULL_LIMB_MIN_PX = 100;
+
+/**
  * THE COMPASS ROSE — the plate's points medallion (#2037, task cards v3).
  *
- * A brass-ruled disc with four needles on the cardinals, the north one struck
- * solid in the plate's gold and the other three left open in one ink at one
- * weight (#2067). It replaces the stepped octagon the score sat in: the plate is
- * a FIELD JOURNAL out of the Valley, and the instrument a surveyor's plate
- * reaches for is a rose.
+ * A brass-ruled disc with a graduated limb and four needles on the cardinals,
+ * the north one struck solid in the faction's mark and the other three left
+ * open in one ink at one weight (#2067). It replaces the stepped octagon the
+ * score sat in: the plate is a FIELD JOURNAL out of the Valley, and the
+ * instrument a surveyor's plate reaches for is a rose.
  *
  * IT IS A SHARED MARK, and that is why `size` is a prop rather than a constant.
  * The octagon medallion it replaces is drawn identically on two surfaces — the
@@ -763,6 +811,20 @@ export function EmblemOctagon({ size }: { size: number }) {
  * and west to x=26 and x=74, so the inner disc (r=29) is the clear field and the
  * host has to be big enough that the figure fits inside 48 of the 100 units.
  * That is why the design grows the box to 128px where the octagon was 104.
+ *
+ * EVERY LINE ON IT IS `-plate-brass-rule` NOW (#2145, #2141), and that is a
+ * contrast fix as much as a repaint. The disc is `-plate-disc` #12151f in BOTH
+ * cascades and `-brass-light` FLIPS (#6f5620 by day, #e6c877 by night), so the
+ * rims and the three open needles read 2.63:1 in light and ~11:1 in dark — the
+ * theme-invariant-ground-with-a-flipping-ink shape this repo has shipped once
+ * before and caught an hour later. The rule brass does not flip: 3.73:1 on the
+ * compass blue, in both, clear of the 3:1 a non-text mark owes. The outer rim
+ * keeps `-brass`, which is the same #8a6d2c by day and brighter by night.
+ *
+ * NORTH IS `-plate-band-ink` (#2145). It was `-plate-gold`, which reads 13.07:1
+ * on the disc and was never the problem; the faction's mark is brass now
+ * (#2140), and gold on the one drawing that carries the total would have been
+ * the last place the old identity survived. 7.59:1, in both cascades.
  */
 export function CompassRose({ size }: { size: number }) {
   return (
@@ -774,37 +836,32 @@ export function CompassRose({ size }: { size: number }) {
       style={{ position: "absolute", inset: 0 }}
     >
       <circle cx="50" cy="50" r="47" fill={DISC} stroke={BRASS} strokeWidth="1.6" />
-      <circle cx="50" cy="50" r="41" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
-      {/* The ordinals, struck as ticks between the two rims rather than as
-          needles — the design gives the quarter winds a mark, not a point. */}
-      <g stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.7">
-        <path d="M16.8 16.8 L21 21" />
-        <path d="M83.2 16.8 L79 21" />
-        <path d="M16.8 83.2 L21 79" />
-        <path d="M83.2 83.2 L79 79" />
-      </g>
+      <circle cx="50" cy="50" r={INNER_RIM} fill="none" stroke={BRASS_RULE} strokeWidth="0.7" />
+      {/* The graduated limb. The FOUR ORDINAL TICKS STOOD HERE and are retired
+          rather than kept: every 45° is already a long tick, so the old
+          diagonal marks were the same statement twice. */}
+      <path d={LONG_TICKS} stroke={BRASS_RULE} strokeWidth="0.9" fill="none" />
+      {size >= FULL_LIMB_MIN_PX && (
+        <path d={SHORT_TICKS} stroke={BRASS_RULE} strokeWidth="0.6" fill="none" />
+      )}
       {/* North alone is filled, which is how a rose says which way is up — and
           the other three are ONE ink at ONE weight, so the rose says it exactly
           once (#2067). It shipped saying it three ways: north in the register's
           teal, south in `-brass` at 0.9, east and west in `-brass-light` at 0.7.
-          North is `-plate-gold` now, which is the ink the winged disc and the
-          registers are drawn in and the brightest mark the plate has: 13.07:1 on
-          the rose's own disc against the teal's 7.36:1, so the one point that
-          carries meaning is also the one that reads first.
 
           A SECOND DESIGN FILE DREW THIS NEEDLE NAVY (`ephCompassBadge()`, as
           the register's aqua with a `#1e3a6e` fallback) and it was never the one
           to follow: that navy measures 1.64:1 on `-plate-disc` and the needle
-          would be invisible. #2141 settled it by deleting the aqua outright, so
-          only the gold reading survives. #2145 owns what the rose looks like
-          next; if north moves, it moves to `-plate-band-ink`, the MARK the
-          faction now sets every glyph and numeral in. */}
-      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={GOLD} />
-      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
-      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
-      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
+          would be invisible. #2141 settled it by deleting the aqua outright.
+          The design fills all four needles in gold with north one unit longer,
+          which is not a difference anyone can see at 84px and which stops the
+          needle leading — #2067's ruling stands and #2145 restates it. */}
+      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={BAND_INK} />
+      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
+      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
+      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
       {/* The card the figure is struck on. */}
-      <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_RULE} strokeWidth="0.7" />
     </svg>
   );
 }
