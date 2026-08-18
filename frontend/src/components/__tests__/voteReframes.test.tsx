@@ -60,12 +60,13 @@ describe('VOTE_REFRAMES registry', () => {
 describe('EverymenVote renders from registry', () => {
   const html = renderToStaticMarkup(<EverymenVote praxisId={1} />)
 
-  it('renders all five tier labels from voteReframes', () => {
-    for (const tier of VOTE_REFRAMES['everymen'].tiers) {
-      expect(html, `tier ${tier.value} label "${tier.label}"`).toContain(tier.label)
-    }
-  })
-
+  /**
+   * #2166 — the tier word reaches the viewer through the CONTROL, not through a
+   * caption. The widget used to print the word under the gear row as well; that
+   * line is gone on all nine skins, so the `aria-label` below is now the only
+   * place the vocabulary surfaces here, and asserting the bare word appears
+   * "somewhere in the markup" would pass off that same attribute twice.
+   */
   it('buttons carry aria-labels matching registry tier labels', () => {
     for (const tier of VOTE_REFRAMES['everymen'].tiers) {
       expect(html, `aria-label for tier ${tier.value}`).toContain(

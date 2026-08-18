@@ -4,14 +4,12 @@ import {
   BRASS,
   GOLD,
   OCHRE,
-  QUIET,
-  DECO,
   METAL_SIGILS,
   stepClip,
 } from '../factionMarks/ephemeristsPlate'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -35,7 +33,9 @@ import { VOTE_REFRAMES } from './voteReframes'
  * ring visibly densifies as the metal improves. Rank is readable off the ring.
  *
  * Nothing was lost with the caption: each disc's `aria-label` names its metal,
- * and `VoteSummary` below states the cast once it is made.
+ * and the raised disc is the cast. (The shell used to state it in words as well
+ * — #2166 took that line, and the aggregate tally under it, off every skin,
+ * this one included.)
  *
  * ## THE PLATE IS A FIXED NIGHT SURFACE in both themes
  *
@@ -80,8 +80,6 @@ const SHEET_STEP = 6
 export default function EphemeristsVote({
   praxisId,
   currentValue,
-  points,
-  totalVotes,
 }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
@@ -348,23 +346,13 @@ export default function EphemeristsVote({
 
       {/* The italic gloss caption naming the hovered tier — and its "· cast"
           tag — stood here. #1638 struck both: each disc's `aria-label` already
-          names its metal, and `VoteSummary` below states the cast once it is
-          made, so the caption row was a third restatement of the row above it.
-          `votes:chrome.idle` and `.tag` went with it. */}
+          names its metal, so the caption row was a third restatement of the row
+          above it. #2166 then did the same to the other eight skins, and took
+          the shell's "Voted N pts" line and its aggregate tally with it —
+          `votes:chrome.idle`, `.tag`, `.voted` and `.tally_*` all leave the
+          catalog together, and the shell's summary block with them. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: QUIET,
-          accent: OCHRE,
-          accentFont: DECO,
-          errorColor: OCHRE,
-          avgLetterSpacing: '0.02em',
-        }}
-      />
+      <VoteError error={error} color={OCHRE} />
     </div>
   )
 }
