@@ -5080,6 +5080,28 @@
 .eph-metal-shock, .eph-metal-sheen { opacity: 0; }
 .eph-metal-filing { opacity: 0.55; }
 
+/* THE LADDER'S SPACING ANSWERS THE PLATE, NOT THE VIEWPORT (#2236).
+   The five hit boxes are 44px (50 at rank 5) and may never shrink — §6, and
+   the reason the reported ellipses were a bug rather than a squeeze. So the
+   thing that gives way in a narrow plate is the spacing, and the question is
+   how narrow THIS plate is: the same widget sits on a 402px phone and inside a
+   praxis card that is a `flex: 1 1 394px` cell with a 280px floor, so a
+   viewport media query would answer for one and lie about the other. Hence the
+   container: `--space-xl` is #1633's burst clearance (re-derived by #1638 —
+   12px of overhang each side, 24 rim to rim) and it holds wherever the row's
+   own intrinsic 370px fits. Below that the gap and the plate's inline padding
+   drop to the smallest rung, which seats a 226px ladder in a 258px plate: a
+   375px phone, and a card down to ~306px. Narrower still and the row wraps
+   rather than letting `stepClip` shave a disc — five circles on two lines
+   beats five ellipses on one.
+   The block padding is NOT on the query: 16px is what clears the burst
+   vertically, and nothing above or below the row is competing for it. */
+.eph-vote-plate { container-type: inline-size; }
+.eph-metal-row { gap: var(--space-lg) var(--space-xl); padding: var(--space-lg) var(--space-xl); }
+@container (width < 372px) {
+  .eph-metal-row { column-gap: var(--space-sm); padding-inline: var(--space-sm); }
+}
+
 /* S.N.I.D.E. — the amp/EQ meter's party VU is in motion.ornament.css (#2073).
    The segments' lit HEIGHT carries the rank and is set by the widget. */
 

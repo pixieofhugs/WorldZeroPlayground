@@ -85,6 +85,11 @@ const text = (html: string) => html.replace(/<[^>]*>/g, '')
 
 const METALS = ['lead', 'copper', 'silver', 'gold', 'platinum']
 
+/** The critical sheet, where the plate's own spacing lives since #2236. */
+const SHEET = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+/** The row's unconditional rule — the one outside the container query. */
+const metalRow = () => SHEET.match(/^\.eph-metal-row \{[^}]*\}/m)?.[0] ?? ''
+
 describe('the metals vocabulary (#1207, ADR-0061)', () => {
   it('names the five tiers lead → platinum', () => {
     expect(VOTE_REFRAMES.ephemerists.tiers.map((tier) => tier.label)).toEqual(METALS)
@@ -273,10 +278,53 @@ describe('EphemeristsVote markup', () => {
    * 16 clears it by 4 and nothing is shaved.
    */
   it('holds the metals far enough apart for their bursts to clear (#1633)', () => {
+    // Both figures moved to `.eph-metal-row` in index.css (#2236) — they had to,
+    // because an inline style beats a stylesheet and the narrow-plate rule that
+    // yields them could not otherwise be written. Read there, so the clearance
+    // is still asserted rather than quietly lost in the move.
     mocks.user = currentUser()
-    const plate = render(5).match(/<div style="position:relative;display:flex[^"]*"/)?.[0] ?? ''
-    expect(plate).toContain('gap:var(--space-xl)')
-    expect(plate).toContain('padding:var(--space-lg) var(--space-xl)')
+    expect(render(5)).toContain('class="eph-metal-row"')
+    expect(metalRow()).toContain('gap: var(--space-lg) var(--space-xl)')
+    expect(metalRow()).toContain('padding: var(--space-lg) var(--space-xl)')
+  })
+
+  /**
+   * #2236 — THE DISCS ARE CIRCLES AT EVERY WIDTH.
+   *
+   * Reported from a phone: five ovals. The buttons carry a square `width` /
+   * `height` and were ordinary flex items, so in any plate too narrow for the
+   * row's intrinsic 370px they shrank on one axis only — ~31 × 44 at 402px,
+   * which is out of round AND under the touch floor horizontally. Nothing about
+   * the disc may give way (§6, WCAG ≥44): what yields is the spacing, and then
+   * the line.
+   *
+   * The seam is split on purpose, because the harness has neither layout nor a
+   * container. From the MARKUP: the discs are locked and the row may wrap. From
+   * the STYLESHEET: the clearance is conditional on the plate's own width, not
+   * the viewport's — the same widget sits on a phone and inside a 280px-floor
+   * praxis card, so a media query would answer for one and lie about the other.
+   */
+  it('locks every disc out of round-losing shrink (#2236)', () => {
+    mocks.user = currentUser()
+    const html = render(5)
+    // Five discs, five locks — the ovals were all five, not the odd one out.
+    expect((html.match(/flex-shrink:0/g) ?? []).length).toBe(5)
+    // Which is only safe because the row can spill onto a second line: locked
+    // discs in a row that cannot wrap would be shaved by the plate's clip.
+    expect(html).toContain('flex-wrap:wrap')
+  })
+
+  it('yields the clearance to the PLATE’s width, never the viewport’s (#2236)', () => {
+    // The plate is the query container; the row is what answers.
+    expect(SHEET).toContain('.eph-vote-plate { container-type: inline-size; }')
+    const narrow = SHEET.slice(SHEET.indexOf('@container'), SHEET.indexOf('@container') + 200)
+    expect(narrow).toContain('.eph-metal-row')
+    // The smallest rung, on the two axes that can pay: 226px of disc into a
+    // 258px plate. Nothing here touches the block padding, which is the burst's
+    // vertical clearance and is not what runs out.
+    expect(narrow).toContain('column-gap: var(--space-sm)')
+    expect(narrow).toContain('padding-inline: var(--space-sm)')
+    expect(narrow).not.toContain('@media')
   })
 
   it('lights only the reached discs, and leaves the rest idle', () => {

@@ -315,14 +315,23 @@ export default function EphemeristsVote({
        * is a line, and the mark brass is reserved for things that are read.
        */}
       <div
+        /* The plate is also the QUERY CONTAINER for the row inside it (#2236):
+           `container-type: inline-size` is in index.css, on this class. */
+        className="eph-vote-plate"
         // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which draws the plate a four-pixel brass mount.
         style={{ background: BRASS_RULE, padding: 1, clipPath: stepClip(PLATE_STEP) }}
       >
         <div
+          className="eph-metal-row"
           style={{
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
+            /* Below the row's own intrinsic width the discs stay round and the
+               LINE gives way instead — the last disc drops rather than five of
+               them going oval. Centred so a wrapped row reads as one ladder. */
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             /*
              * The gap holds the BURSTS apart, not the discs (#1633), and the
              * figure was re-derived for #1638's conic ring.
@@ -351,9 +360,15 @@ export default function EphemeristsVote({
              * is the only thing left that reaches past a rim. Only one disc
              * casts at a time, so the 24px is now clearance against the plate's
              * clip rather than against a neighbour's ring.
+             *
+             * BOTH FIGURES ARE IN `index.css` NOW, on `.eph-metal-row` (#2236),
+             * and they had to leave this object to get there: an inline style
+             * beats a stylesheet, so a rule that yields them in a narrow plate
+             * could not have been written while they were declared here. What
+             * the sheet adds is the one thing no inline value can say — the
+             * clearance holds while the PLATE has room for it, and gives way to
+             * the smallest rung when it does not, so the discs never do.
              */
-            gap: 'var(--space-xl)',
-            padding: 'var(--space-lg) var(--space-xl)',
             /*
              * The ground is the MASTHEAD BAND, dropping to the same near-black
              * (#2142). The plate and the band are one metal catching light two
@@ -402,6 +417,12 @@ export default function EphemeristsVote({
                 position: 'relative',
                 width: size,
                 height: size,
+                /* A DISC IS A CIRCLE OR IT IS NOTHING (#2236). As a plain flex
+                   item it was free to shrink, and in a plate too narrow for the
+                   row it did — five ovals, at 31px wide against a 44px tall,
+                   which is also under the touch floor in one axis. The row
+                   yields its spacing instead (index.css), and wraps after that. */
+                flexShrink: 0,
                 borderRadius: '50%',
                 border: 'none',
                 background: 'transparent',
