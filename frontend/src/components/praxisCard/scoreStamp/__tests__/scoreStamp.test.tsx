@@ -533,7 +533,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     expect(withoutMult).not.toContain('×')
   })
 
-  it('draws the UA grouped subtotal only when a metatask AND a multiplier are both live', () => {
+  it('draws the UA subtotal only when a metatask AND a multiplier are both live', () => {
     const full = text(
       renderToStaticMarkup(
         <UaScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
@@ -545,9 +545,9 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       ),
     )
     // (base + meta) = 32, under the plate's rule.
-    expect(full).toContain('group')
+    expect(full).toContain('subtotal')
     expect(full).toContain('32')
-    expect(metaOnly).not.toContain('group')
+    expect(metaOnly).not.toContain('subtotal')
   })
 
   it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
@@ -561,8 +561,8 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
         <EverymenScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
       ),
     )
-    expect(full).toContain('group')
-    expect(metaOnly).not.toContain('group')
+    expect(full).toContain('subtotal')
+    expect(metaOnly).not.toContain('subtotal')
   })
 })
 

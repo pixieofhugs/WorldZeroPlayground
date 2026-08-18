@@ -260,7 +260,7 @@ export default function UaTaskCard({
               <UaEnsoScore
                 size={size.enso}
                 value={basePoints}
-                unit={i18n.t("feed:taskCard.pointsUnit")}
+                unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                 valueColor="var(--faction-ua-card-accent)"
               />
             </div>

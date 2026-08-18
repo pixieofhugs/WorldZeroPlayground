@@ -149,7 +149,7 @@ describe('the stamp reads working-then-total (#2145)', () => {
   })
 
   it('labels the total “points”, in English (#2145 §5)', () => {
-    expect(render().replace(/<[^>]*>/g, '')).toContain(i18n.t('praxis:card.stamp.points'))
+    expect(render().replace(/<[^>]*>/g, '')).toContain(i18n.t('praxis:card.stamp.points', { count: 26.5 }))
     expect(render()).not.toContain('PVNCTA')
   })
 })

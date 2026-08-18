@@ -91,6 +91,33 @@ export default function RequestsQueue() {
       ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }, [hash])
 
+  // ── A clear queue is one line (#2234) ──────────────────────────────────
+  //
+  // The panel below is chrome for an OBLIGATION: an eyebrow, a title, a
+  // collapse toggle and a dashed report of what is owed. With nothing owed it
+  // is chrome for a negative, and on a phone that negative cost 236 of the 742
+  // usable CSS px above the tab bar — enough that the reporter's first date
+  // divider landed at 713 and they saw no notifications at all, on the page
+  // whose entire job is to show them. STYLE §1.4's rule about controls a player
+  // cannot use reads the same for a panel about work they do not have.
+  //
+  // The SECTION survives regardless. `MobileHeader`'s bell is the phone's only
+  // route here and it links to this element's fragment (#2083); unmounting it
+  // would trade a confusing screen for a link that goes nowhere. So: the
+  // anchor, and the one line that answers "is my bell broken?" — no border, no
+  // heading band, no dashed box.
+  //
+  // Silent while `loading`, because "Nothing is waiting on you" before the
+  // fetch lands is a claim rather than a state, and the shape is the same
+  // either way so the answer arriving moves nothing.
+  if (!error && items.length === 0) {
+    return (
+      <section id={REQUESTS_QUEUE_ANCHOR} style={{ marginBottom: 'var(--space-lg)' }}>
+        {!loading && <p className="label-caption">{t('queue.doneTitle')}</p>}
+      </section>
+    )
+  }
+
   const index = selectQueueIndex(items, activeKey)
   const current = index === -1 ? null : items[index]
   const tray = selectQueueTray(items, activeKey, trayExpanded)
@@ -159,16 +186,12 @@ export default function RequestsQueue() {
         <div className="requests-queue__body">
           {loading ? null : error ? (
             <p className="font-body content-text requests-queue__error">{error}</p>
-          ) : current ? (
-            <FeedCardRouter item={current} onArchiveChange={refresh} />
           ) : (
-            <div className="requests-queue__done">
-              <p className="font-display content-text">{t('queue.doneTitle')}</p>
-              {/* #1421 authored this line already fixed: the design says
-                  "No invitations, duels, mentions or submissions owed" and
-                  a mention is not an obligation (decision 8). */}
-              <p className="label-caption">{t('queue.doneBody')}</p>
-            </div>
+            // Never null past the early return above: `selectQueueIndex` only
+            // fails to resolve on an empty list, and an empty list no longer
+            // reaches this panel at all (#2234). The dashed "done" box that
+            // used to sit here went with it.
+            current && <FeedCardRouter item={current} onArchiveChange={refresh} />
           )}
         </div>
 

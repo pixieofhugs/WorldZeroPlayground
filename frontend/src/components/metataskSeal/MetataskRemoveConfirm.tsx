@@ -12,6 +12,7 @@
  * it. The target faction/points come from `state.metataskRemovalTarget`.
  */
 import { useTranslation } from "react-i18next";
+import { drawAtRoot } from "../ui/drawAtRoot";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionName } from "../../utils/factions";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
@@ -29,7 +30,9 @@ export default function MetataskRemoveConfirm({
   const faction = factionName(target.metatask_faction_slug);
   const busy = state.applyingMetatask === target.id;
 
-  return (
+  // Drawn at the root (#2244): a bottom sheet under a fixed tab bar is a sheet
+  // whose confirm button cannot be pressed. See `drawAtRoot`.
+  return drawAtRoot(
     <div
       role="dialog"
       aria-modal="true"
@@ -114,6 +117,6 @@ export default function MetataskRemoveConfirm({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
   );
 }

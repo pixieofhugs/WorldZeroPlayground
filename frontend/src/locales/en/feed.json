@@ -42,7 +42,6 @@
     "remaining_one": "{{count}} left",
     "remaining_other": "{{count}} left",
     "doneTitle": "Nothing is waiting on you.",
-    "doneBody": "Answer what arrives and this stays clear.",
     "error": "That didn't go through."
   },
   "kicker": {
@@ -194,7 +193,8 @@
     "multiplier": "×{{value}}",
     "modifierCaption": "modifier",
     "levelCaption": "Level",
-    "pointsUnit": "Points",
+    "pointsUnit_one": "Point",
+    "pointsUnit_other": "Points",
     "signup": "Sign up",
     "mastheadLink": "{{faction}} faction page"
   },

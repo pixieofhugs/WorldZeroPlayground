@@ -359,3 +359,94 @@ async def test_anonymous_viewer_gets_nothing(
         db_session, can_sign_up=True, viewer=None, status="all", task_type="all"
     )
     assert filtered == []
+
+
+# ---------------------------------------------------------------------------
+# The route's half of the agreement (#2264)
+# ---------------------------------------------------------------------------
+# Everything above tests the service. The flag and the enforcement can still
+# disagree one layer up: until #2264 the ROUTE defaulted `exclude_character_id`
+# to the viewer for EVERY caller, unconditionally on `can_sign_up`, so gate 5
+# was applied to reads that had never asked for the sign-up predicate at all.
+# `GET /tasks?can_sign_up=0` is the browse's own escape hatch and it did not
+# work; a faction page, which sends no `can_sign_up`, reported a viewer-relative
+# task COUNT. The route now passes the parameter through untouched and the
+# service arms gate 5 itself when — and only when — `can_sign_up` is on.
+
+
+async def _route_task_ids(client, url: str, headers: dict | None = None) -> list[int]:
+    resp = await client.get(url, headers=headers or {})
+    assert resp.status_code == 200, resp.text
+    return [task["id"] for task in resp.json()]
+
+
+@pytest.mark.asyncio
+async def test_route_all_tasks_shows_a_task_the_viewer_started(
+    client,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+):
+    """#2264 — "All tasks" means all tasks, including the ones you are working."""
+    await _seed_in_progress_praxis(db_session, character, active_task)
+
+    ids = await _route_task_ids(client, "/tasks?can_sign_up=0", auth_headers)
+    assert active_task.id in ids, (
+        "the viewer switched the eligibility filter off; the task they started "
+        "is still one of the tasks that exist"
+    )
+
+
+@pytest.mark.asyncio
+async def test_route_eligibility_browse_still_hides_a_started_task(
+    client,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+):
+    """#1229 must survive #2264 — the browse's DEFAULT view still hides it.
+
+    Gate 5 is part of the sign-up predicate, so `can_sign_up=1` carries the
+    exclusion on its own. This is the half that proves #2264 moved the default
+    rather than deleting the behaviour.
+    """
+    await _seed_in_progress_praxis(db_session, character, active_task)
+
+    ids = await _route_task_ids(client, "/tasks?can_sign_up=1", auth_headers)
+    assert active_task.id not in ids
+
+
+@pytest.mark.asyncio
+async def test_route_faction_task_list_is_the_same_for_every_viewer(
+    client,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """The invariant the reported `Tasks · 0` broke (#2264).
+
+    `useFactionDetail` sends exactly this query and renders its LENGTH as the
+    faction's task count. A count is a fact about the faction, so two readers —
+    one of them holding a praxis on one of its tasks — must be told the same
+    number, and an anonymous visitor must be told it too.
+    """
+    await _seed_in_progress_praxis(db_session, character, active_task)
+    url = "/tasks?faction=ua&status=active"
+
+    holder = await _route_task_ids(client, url, auth_headers)
+    stranger = await _route_task_ids(client, url, auth_headers2)
+    anonymous = await _route_task_ids(client, url)
+
+    assert active_task.id in holder
+    assert holder == stranger == anonymous

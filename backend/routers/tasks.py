@@ -67,20 +67,25 @@ async def list_tasks(
     is_admin = account is not None and await account_has_admin_role(
         account.id, session
     )
-    # The viewer is the exclusion default (#1229): the browse hides tasks you
-    # have already started, and the server already knows who you are. Clients
-    # that echoed their own character id back made the page fetch twice — once
-    # before /auth/me settled and once after. An explicit value still wins;
-    # anonymous callers get None, which excludes nothing.
+    # `exclude_character_id` is passed through untouched (#2264). The route used
+    # to default it to the viewer for #1229's "the browse hides tasks you have
+    # already started" — but a route default reaches EVERY caller of GET /tasks,
+    # not the browse, and it was applied unconditionally on `can_sign_up`. So a
+    # faction page rendered a viewer-relative task COUNT (`Tasks · 0` where the
+    # reader held a praxis on every one of that faction's tasks), the browse's
+    # own `can_sign_up=0` escape hatch could not undo it, and Home's teaser and
+    # random jump could never land on a task you were working. #2126 had already
+    # carved out `created_by` by hand; a second carve-out per caller is not a
+    # contract, it is a list of the surfaces somebody remembered.
     #
-    # `created_by` is the one read that is not a browse (#2126): it asks "what
-    # did this character propose", and the answer cannot depend on which of
-    # those tasks the *reader* happens to be working. Defaulting it here dropped
-    # a proposer's own accepted-and-started task off their own profile, and
-    # dropped rows off a stranger's profile according to the visitor's praxis
-    # bank. An explicit value still wins, on every route.
-    if exclude_character_id is None and viewer is not None and created_by is None:
-        exclude_character_id = viewer.id
+    # #1229's behaviour is not deleted, it is stated where it is true: the
+    # exclusion IS gate 5 of the sign-up predicate, so `services.task.list_tasks`
+    # arms it from the viewer whenever `can_sign_up` is on and the caller named
+    # nobody. The browse asks for that filter by default, so it keeps the exact
+    # list it had; every viewer-independent read now gets a viewer-independent
+    # answer. #1229's other reason — clients echoing their own character id back
+    # made the page fetch twice, once before /auth/me settled and once after — is
+    # a client concern, and no client needs to send the id at all.
     tasks = await service_list_tasks(
         session,
         status=status,

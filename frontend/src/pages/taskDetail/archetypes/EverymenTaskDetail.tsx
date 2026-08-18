@@ -637,7 +637,7 @@ export default function EverymenTaskDetail({
               marginTop: "var(--space-xs)",
             }}
           >
-            {t("detail.points.total")}
+            {t("detail.points.total", { count: modifiedPoints })}
           </span>
         </div>
       </div>

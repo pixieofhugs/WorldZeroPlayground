@@ -69,8 +69,14 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
     // The skin's box is drawn by the host; the editor is a pane inside it.
     backgroundColor: "transparent",
   },
-  // Every skin's `fieldBox` sets `outline: none`, and the base theme's dotted
-  // default sits on the editor rather than on the host, out of that reach.
+  // The base theme's dotted default sits on the editor PANE — inside the
+  // skin's padding — rather than around the field box the player sees, so it
+  // marks the wrong box. This is the ONE outline suppression in the composer
+  // that survives #2266, and it is paired: `[data-composer-body]:focus-within`
+  // in index.css draws the ring on the host, where the field's edge is.
+  // (The eight skins' `fieldBox` each carried one of these too, replaced by
+  // that same rule — an inline declaration wins over any stylesheet, so they
+  // had to go for it to reach anything.)
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
     fontFamily: "inherit",

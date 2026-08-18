@@ -16,11 +16,19 @@
  * Mounted once from the EditPraxis dispatcher (beside DuelSealConfirm), so all
  * 16 composer surfaces inherit it. Mobile gets a full-screen sheet, desktop a
  * centred panel, via `useFormFactor()`.
+ *
+ * IT DRAWS AT THE ROOT (#2244). Mounted from page content it composited inside
+ * `ShellContent`'s `z-index: 5` stacking context, so `z-50` here bought nothing
+ * and the mobile header and tab bar (chrome band 10) painted over it: the title
+ * was cut off above and the whole footer — the pending line AND Attach — was
+ * cut off below, on a sheet that is `inset: 0` and cannot be scrolled to. See
+ * `drawAtRoot` for why the bands stay and the overlay is what leaves.
  */
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TaskOut } from "../../api/tasks";
 import MetataskSeal from "./MetataskSeal";
+import { drawAtRoot } from "../ui/drawAtRoot";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionCssVar, factionName } from "../../utils/factions";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
@@ -73,7 +81,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
     whiteSpace: "nowrap" as const,
   });
 
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
@@ -91,6 +99,12 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
         style={{
           gap: "var(--space-md)",
           padding: "var(--space-lg)",
+          // Drawing at the root put this sheet OVER the tab bar rather than
+          // under it, so the bar's own safe-area padding no longer stands
+          // between Attach and the home indicator. The sheet holds the gap.
+          paddingBottom: isMobile
+            ? "calc(var(--space-lg) + env(safe-area-inset-bottom))"
+            : "var(--space-lg)",
           width: isMobile ? "100%" : "min(560px, 100%)",
           height: isMobile ? "100%" : "auto",
           maxHeight: isMobile ? "100%" : "85vh",
@@ -319,4 +333,6 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
       </div>
     </div>
   );
+
+  return drawAtRoot(overlay);
 }

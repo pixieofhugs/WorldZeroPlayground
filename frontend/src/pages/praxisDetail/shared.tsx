@@ -704,7 +704,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
           on the wire; naming one needs that decision reopened, not a one-line
           "improvement" here. `unsubmitConfirmCopy.test.tsx` guards it. */}
       <span className="label-caption">
-        {t(unsubmitCopy.prompt, { points: formatPoints(praxis.score) })}
+        {t(unsubmitCopy.prompt, { points: formatPoints(praxis.score), count: praxis.score })}
       </span>
       <button
         onClick={handleWithdraw}

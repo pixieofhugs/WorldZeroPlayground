@@ -19,6 +19,7 @@
  * utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
  */
 import type { PraxisMemberOut } from '../../api/praxis'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { collabCopy } from './collabCopy'
@@ -43,7 +44,10 @@ export function CollabSuccess({
   const accent = factionCssVar(factionSlug, 'card-accent')
   const isMobile = formFactor === 'mobile'
 
-  return (
+  // Drawn at the root (#2244): mounted from `EditPraxis`, this beat composited
+  // inside `ShellContent`'s `z-index: 5` band, so the mobile header and tab bar
+  // sat on top of a screen that is supposed to BE the screen. See `drawAtRoot`.
+  return drawAtRoot(
     <div
       role="dialog"
       aria-modal="true"
@@ -141,6 +145,6 @@ export function CollabSuccess({
           {collabCopy(factionSlug, 'successContinue')}
         </button>
       </div>
-    </div>
+    </div>,
   )
 }

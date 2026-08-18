@@ -221,7 +221,7 @@ export default function SingularityTaskCard({
                   card's any more except the tier it asks for. */}
               <SingularityReadout
                 value={basePoints}
-                unit={i18n.t("feed:taskCard.pointsUnit")}
+                unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
                 valueSize={size.pointsSize}
                 style={{ flex: "0 0 auto" }}
               />
