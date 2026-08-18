@@ -17,8 +17,10 @@ Two numbers, and they are different things:
   ``UNION ALL`` of those COUNTs preserves that while costing one.
 
 The fixture deliberately satisfies every pre-fetch need (a friend, a foe, an
-in-progress praxis), because a source whose context is empty is skipped without a
-round trip — a viewer with no relationships would understate the fan-out.
+in-progress praxis, a vote on it), because a source whose context is empty is
+skipped without a round trip — a viewer with no relationships would understate
+the fan-out, and a viewer nobody has voted for would miss the scoring pass
+(#2199) entirely.
 """
 from contextlib import contextmanager
 
@@ -30,12 +32,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_session_factory
 from main import app
+from models.account import Account
 from models.character import Character
 from models.era import Era
 from models.feed_dismissal import FeedDismissal
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.task import Task
+from models.vote import Vote
 from services.activity_feed import (
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_SOURCES,
@@ -51,7 +55,17 @@ from services.activity_feed import (
 #: the fetch fan-out costs one more statement. The badge counts do not — they
 #: are one ``UNION ALL`` however many sources there are, which is the property
 #: the two constants below exist to hold.
-EXPECTED_FEED_LOAD_STATEMENTS = 20
+#:
+#: 20 → 33 in #2199: a page carrying a vote row pays one scoring pass
+#: (``_score_vote_items``) so the "+N pts" it prints is the praxis's real score
+#: rather than arithmetic invented at the payload. Thirteen statements — the
+#: praxis fetch, its four ``selectin`` loaders (see the ``ponytail`` note on
+#: that function), and ``author_contributions_for``'s own bulk queries — every
+#: one **flat** in the number of vote rows, and zero when the page has none.
+#: The fixture below seeds a vote deliberately: pinning the cheap page would
+#: have left the expensive one unpinned, which is how a per-row scoring
+#: regression would get in unseen.
+EXPECTED_FEED_LOAD_STATEMENTS = 33
 
 #: Round trips the six tab badges cost. One ``UNION ALL`` over the same windowed
 #: Selects the fetch fan-out runs, whatever the registry's size (#1532). Was 15.
@@ -96,6 +110,7 @@ def _badge_count_statements(statements: list[str]) -> list[str]:
 @pytest_asyncio.fixture
 async def feed_viewer(
     db_session: AsyncSession,
+    account2: Account,
     character: Character,
     character2: Character,
     character3: Character,
@@ -105,7 +120,10 @@ async def feed_viewer(
     """A viewer with every pre-fetch context populated, so no source is skipped.
 
     ``character2`` is a friend, ``character3`` a foe, and the viewer holds an
-    in-progress praxis so ``my_task_ids`` is non-empty.
+    in-progress praxis so ``my_task_ids`` is non-empty. ``character2`` has voted
+    on that praxis, so the page carries a ``vote_on_mine`` row and therefore
+    pays the #2199 scoring pass — the expensive shape, which is the one worth
+    pinning.
     """
     db_session.add_all([
         Relationship(
@@ -130,7 +148,15 @@ async def feed_viewer(
     )
     db_session.add(praxis)
     await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    db_session.add_all([
+        PraxisMember(praxis_id=praxis.id, character_id=character.id),
+        Vote(
+            praxis_id=praxis.id,
+            voter_character_id=character2.id,
+            voter_account_id=account2.id,
+            value=4,
+        ),
+    ])
     await db_session.commit()
     return character
 
