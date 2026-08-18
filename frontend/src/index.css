@@ -456,16 +456,38 @@
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
-  /* The cornice masthead (#1627, repriced by #2141). Ephemerists is a
-     DARK-IN-LIGHT card faction, beside S.N.I.D.E. and Singularity: the
-     aged-manuscript vellum was the illuminated CODEX's stock, and #1208 swept
-     the last surface off that metaphor — this contract was the only thing still
-     holding it up. The card names take the inks the cornice BAND admits
-     (WORLD_ZERO_STYLE §3), which is the whole of the plate's ink budget on that
-     ground. The band is the compass blue in both cascades, so these aliases
-     resolve to one value each and the card sheet does not flip — which is the
-     premise the plate's own register note leans on. */
-  --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-band);
+  /* THE VALLEY PLATE'S SHEET, NOT ITS MASTHEAD (#1627, repriced by #2141, and
+     then MOVED by #2141's owner ruling). Ephemerists is a normal flipping-sheet
+     card faction again — vellum by day, night plate after dark — and is no
+     longer grouped with S.N.I.D.E. and Singularity as dark-in-light.
+
+     #1627 aliased this to `-plate-band` and #2141's body defended the alias on
+     the grounds that the band is the compass blue in BOTH cascades, so the card
+     register would never meet a light ground. That premise was false, and the
+     thing that falsified it is `praxisCard/shared.tsx::sheetInk`: it hands
+     `-card-notice` / `-alarm` / `-credit` / `-muted` to six surfaces grounded on
+     the SHEET — the praxis card, the composer's error banner, the praxis-detail
+     wall, the flagged banner, the seal ledger and the vote login gate — not on
+     the masthead. While both grounds were near-black that crossing was
+     invisible; the vellum half split them and the shipped inks read ~1.04:1 on
+     paper.
+
+     ONE INK CANNOT SERVE BOTH, and that is arithmetic rather than a hex hunt:
+     clearing 4.5:1 on the band #12151f needs relative luminance >= 0.20937,
+     clearing it on the vellum #eadcb6 needs <= 0.12124, and the interval is
+     empty by 0.088. It is #1627's own argument one axis over. So the register
+     follows its consumers onto the sheet, and the handful of marks that really
+     do print on the masthead take `-plate-band-ink` / `-plate-band-quiet`,
+     which exist for exactly that job (`EphemeristsBand`, the profile header's
+     `headerMuted`, and the medallion rows in factionContrast.test.ts already
+     did this — no consumer had to move).
+
+     Rejected, so neither comes back as drift: a parallel `sheet-*` token family
+     (four tokens plus a seam in `sheetInk`, which all nine factions pass
+     through, for a problem exactly one faction has), and grounding those six
+     surfaces on the band instead (free, but it cancels the vellum light half on
+     the faction's most-used surfaces, which is most of what #2141 is for). */
+  --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-bg);
   --faction-singularity-card-bg: #050f08; /* terminal black */
 
   /* ── Faction card text (light mode) ── */
@@ -473,7 +495,13 @@
   --faction-wow-card-text: #2b2412; /* chronicle body ink — 14.02:1 */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
-  --faction-ephemerists-card-text: var(--faction-ephemerists-plate-band-ink); /* 7.59:1 */
+  /* The sheet's own blue-black by day — 13.37:1 on the vellum, the same value
+     and the same reading as `-plate-ink`, which is the ink every other slot on
+     that stock takes. Stated outright rather than aliased because the night
+     half does NOT follow `-plate-ink` (see [data-theme="dark"]): the card's
+     dark value is the brass mark it has carried since #1627, kept as-is by the
+     ruling so the repoint moves no dark pixels. Two halves, two contracts. */
+  --faction-ephemerists-card-text: #12151f;
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (light mode) ── */
@@ -499,19 +527,22 @@
      metadata, so it owes 4.5:1 and pays 11.18:1 — retiring the rubric
      vermilion's 3.72:1, which #651 allowlisted and no repaint had reached.
 
-     IT STOPPED BEING AN ALIAS IN #2141, and the reason is the shape this file
-     keeps meeting: a THEME-INVARIANT SURFACE UNDER A FLIPPING INK. It aliased
-     `-plate-brass-light`, which was one value while the whole register was
-     night-valued and is now the SHEET's link ink — #6f5620 by day. The band it
-     is measured on does not flip, so the alias would have put a 2.63:1 dark
-     brass on the compass blue in light while every check stayed green: both
-     ends are real tokens, so no census, no lint and no "is it tokenized" grep
-     can see it. Only a pairing measured in BOTH themes can, which is what
-     `ephemerists card accent` in factionContrast.test.ts now is. The value is
-     the one the band has always rendered — the night half of the highlight —
-     stated outright rather than reached through a name that no longer means it
-     on this ground. */
-  --faction-ephemerists-card-accent: #e6c877;
+     IT STOPPED BEING AN ALIAS EARLIER IN #2141 AND IS ONE AGAIN, which is
+     worth recording because the round trip is the whole diagnosis. The hazard
+     was a THEME-INVARIANT SURFACE UNDER A FLIPPING INK: while `-card-bg` was
+     the compass blue, aliasing `-plate-brass-light` would have put its day
+     value #6f5620 — the SHEET's link ink — on a band that does not flip, at
+     2.63:1, with every census, lint and "is it tokenized" grep still green,
+     because both ends are real tokens. Only a pairing measured in BOTH themes
+     can see that, which is what `ephemerists card accent` in
+     factionContrast.test.ts is.
+
+     The owner ruling took the ground off the band, so the surface flips with
+     the ink and the hazard is gone rather than dodged: 5.09:1 on the vellum by
+     day, 11.18:1 on the night plate. The alias is the honest statement now —
+     the card's accent IS the plate's link-and-affirmation brass, on the sheet
+     they now share — and it costs one declaration instead of two. */
+  --faction-ephemerists-card-accent: var(--faction-ephemerists-plate-brass-light);
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
@@ -525,7 +556,11 @@
   --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
-  --faction-ephemerists-card-muted: var(--faction-ephemerists-plate-band-quiet); /* 8.37:1 */
+  /* The sheet's quiet tier by day, not the band's — 7.35:1 on the vellum, the
+     reading `-plate-muted` / `-plate-quiet` already carry there. Literal for the
+     reason `-card-text` above gives: the night half keeps the band's quiet gold
+     (#c2ae7e, 7.96:1 on the night plate) so the repoint moves no dark pixels. */
+  --faction-ephemerists-card-muted: #3a4257;
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── Faction headline fonts (per-faction display) ──
@@ -1436,7 +1471,8 @@
      NOTHING PAINTS THESE COLOURS ANY MORE. #1208 swept the last surface off
      the codex onto the Valley plate, and the `--faction-ephemerists-card-*`
      contract — the family's one remaining reader, reaching it by indirection —
-     moved onto the plate's cornice band in #1627. What survives the repoint is
+     moved onto the plate's cornice band in #1627 and onto the plate's SHEET in
+     #2141, where its consumers were all along. What survives the repoint is
      `--eph-display` and `--eph-serif`, both FACES, both still aliased by
      `-card-font` / `-body-font` below. #1661 deleted the ten colours nothing
      read at all, plus `--eph-script`. The EIGHT that remain are still dead as
@@ -2150,21 +2186,38 @@
 
      THE REGISTER HAS TWO HALVES AGAIN (#2141), and the note that stood here —
      "THE PLATE IS THEME-INVARIANT (#1627 + #1636)" — is rewritten rather than
-     deleted, because its ARGUMENT was sound and only its PREMISE has changed.
-     The argument: `praxisCard/shared.tsx::sheetInk` reads ONE set of card ink
-     names for a card that grounds on the masthead, so two grounds of opposite
-     polarity would have to share four inks — clearing 4.5:1 on a night band
-     wants relative luminance >= 0.2497, clearing it on papyrus wants <= 0.1212,
-     and no value lies in both intervals. It held because the design of the day
-     FLIPPED THE BAND. This one does not: the band is the compass blue #12151f
-     in both cascades, so `--faction-ephemerists-card-*` never sees a light
-     ground, the empty interval never arises, and the SHEET under the band is
-     free to be vellum by day and night-blue after dark like every other faction.
+     deleted, because its ARGUMENT was sound. Its argument:
+     `praxisCard/shared.tsx::sheetInk` reads ONE set of card ink names, so if
+     that set had to serve two grounds of opposite polarity, four inks would
+     each need to lie in an empty interval — clearing 4.5:1 on a night band
+     wants relative luminance >= 0.2497, clearing it on papyrus wants <= 0.1212.
+     No value lies in both, so #1627 froze the whole register instead.
 
-     SO THREE TOKENS ARE THEME-INVARIANT ON PURPOSE and carry no
+     #2141's OWN FIRST ANSWER WAS WRONG, and the correction is the owner ruling
+     this file now records. That answer was: the band is the compass blue #12151f
+     in both cascades, so `--faction-ephemerists-card-*` never meets a light
+     ground and the empty interval cannot arise. It does meet one. `-card-bg`
+     was ALIASED to `-plate-band`, which made `card-*` a band register — but the
+     six surfaces `sheetInk` actually paints (praxis card, composer error
+     banner, praxis-detail wall, flagged banner, seal ledger, vote login gate)
+     ground on the SHEET. The same empty interval, one axis over: >= 0.20937 on
+     the band #12151f against <= 0.12124 on the vellum #eadcb6, a gap of 0.088.
+
+     SO THE CARD REGISTER MOVED TO THE SHEET rather than the sheet being frozen
+     to the card. `-card-bg` aliases `-plate-bg`; the inks take vellum-correct
+     day values and keep their night ones; and the marks that genuinely print on
+     the masthead take `-band-ink` / `-band-quiet`, which is what those two are
+     for and what every one of them already did. The SHEET under the band is
+     therefore free to be vellum by day and night-blue after dark like every
+     other faction, which is what the rest of this register is.
+
+     THREE TOKENS ARE STILL THEME-INVARIANT ON PURPOSE and carry no
      `[data-theme="dark"]` override — `-band`, `-band-ink` and `-band-quiet`.
      The compass blue is the faction, not a mode. Read their absence from the
-     dark cascade as this decision, not as an omission. Everything else here is
+     dark cascade as this decision, not as an omission. What changed is that
+     they are no longer the card's ground: a theme-invariant SURFACE is only
+     safe under inks that are invariant too, and these three are the whole of
+     that set. Everything else here is
      a two-theme contract and restates its night value in `[data-theme="dark"]`
      below, which is the same per-theme tuning S.N.I.D.E.'s `-wall-*` and
      Singularity's `-term-*` families already have; it is no longer true, as
@@ -2845,17 +2898,31 @@
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
-  /* Ephemerists declares no card value here at all (#1627, still true after
-     #2141 split the register). Its card names alias the Valley plate's cornice
-     BAND, and the band is the compass blue in both cascades even though the
-     sheet under it now flips — so the card ground is the same near-black in
-     both, the shape S.N.I.D.E. and Singularity above have (theirs restate a
-     value; there is nothing to restate when the contract is an alias). */
+  /* Ephemerists declares no card GROUND here, and the reason changed in #2141
+     even though the line did not. It used to be that `-card-bg` aliased the
+     cornice BAND, which is the compass blue in both cascades, so there was one
+     value and nothing to restate. The owner ruling moved it onto the Valley
+     plate's SHEET (`-plate-bg`) — and that token restates its own night value
+     in the plate register below, so the alias flips without help. Still nothing
+     to restate, for the opposite reason. The FIVE INKS whose day value is now
+     vellum-correct do restate their night values: `-card-text` and
+     `-card-muted` in the two blocks below, `-card-notice` / `-card-alarm` /
+     `-card-credit` in the functional-ink block further down. `-card-accent`
+     does not, because it aliases `-plate-brass-light`, which flips. */
   --faction-singularity-card-bg: #050f08;
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: #f1e8da; /* body ink, inverted — 13.58:1 */
   --faction-wow-card-text: #f3e7c4; /* chronicle parchment ink — 14.72:1 */
+  /* THE VALUE #1627 SHIPPED, KEPT (#2141's owner ruling). The card ground moved
+     off the compass blue and onto the night plate, so this reading moved with
+     it — 7.59:1 on the band, 7.22:1 on `-plate-bg` #171a26 — and the ruling is
+     that only the LIGHT half is being cut. NOT `-plate-ink` #f0e6c8, which is
+     what the sheet's other slots take at 13.91:1: repointing here would repaint
+     dark pixels the ruling did not ask to move. If a later issue wants the
+     card's night ink to be the sheet's rather than the band's mark, that is a
+     deliberate change and this is the line it edits. */
+  --faction-ephemerists-card-text: #c9a24b;
   --faction-coven-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
@@ -2879,6 +2946,10 @@
   --faction-ua-card-muted: #a8947a;
   --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
   --faction-coven-card-muted: #dd719c;
+  /* The band's quiet gold, kept for the night half exactly as `-card-text`
+     above is and for the same reason — 8.37:1 on the band it left, 7.96:1 on
+     the night plate it now sits on. */
+  --faction-ephemerists-card-muted: #c2ae7e;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night. Retuned to the design's
      blacks in #2065, when the task card's ground became this wall: pitch black
@@ -3851,12 +3922,20 @@
    `--color-warning` / `--color-success`, which stay exactly as they are for
    every surface that reads them as a fill, a rule or an ink on app chrome.
 
-   Polarity, not theme, is what these flip on. Five sheets are light by day and
-   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E.,
-   Singularity and — since #1627 — Ephemerists are dark in BOTH themes (§6), so
-   their light-theme values are the bright pair. That is the whole reason a
-   global token could not do this job: one light-theme value cannot clear both
-   #f7e7d2 and #14110b.
+   Polarity, not theme, is what these flip on. SIX sheets are light by day and
+   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E. and
+   Singularity are dark in BOTH themes (§6), so their light-theme values are the
+   bright pair. That is the whole reason a global token could not do this job:
+   one light-theme value cannot clear both #f7e7d2 and #14110b.
+
+   EPHEMERISTS LEFT THE ALWAYS-DARK GROUP IN #2141 (owner ruling). #1627 put it
+   there by aliasing `-card-bg` to the cornice band, which is the compass blue
+   in both cascades — but `sheetInk` hands these three inks to six surfaces
+   grounded on the SHEET, and the sheet is vellum by day. The bright pair read
+   ~1.04:1 there. The card ground now follows its consumers onto `-plate-bg`,
+   so this faction takes light-sheet values like the other five; see the
+   `--faction-ephemerists-card-bg` declaration for the arithmetic that made the
+   alias unsalvageable.
 
    Measured against `--faction-{key}-card-bg` in both themes by
    `utils/__tests__/factionContrast.test.ts` (ROSTER_PAIRS), which also
@@ -3873,13 +3952,22 @@
   --faction-coven-card-notice: #92400e;
   --faction-wow-card-notice: #92400e;
   --faction-default-card-notice: #92400e;
-  /* ...and the THREE always-dark sheets take the bright amber in LIGHT theme.
-     Ephemerists joined them in #1627: its card sheet is the cornice band and
-     its praxis sheet is the Valley plate, and neither is papyrus in either
-     cascade any more. */
+  /* THE EPHEMERISTS' AMBER IS WALKED ONE RUNG FURTHER (#2141), and the rung is
+     the reason the token is per-faction rather than shared. #92400e is amber-800
+     — the whole family's light-sheet value, walked there from amber-700 #b45309
+     for the same kind of miss — and on the Ephemerists' VELLUM it clears
+     everything the card asks (5.20:1 bare, 5.06:1 under the holdout veil). It
+     misses on the faction's PAGE: `-plate-page` #e0d2ac is the darkest light
+     page stock in the app, and under `--color-danger-veil` the moderator's fail
+     note inside the failed banner reads 4.41:1. So the ink takes amber-900, the
+     next rung of the ramp it was already walking, which clears every ground
+     this faction paints it on — worst 5.36:1, and 5.65:1 on the row that
+     failed. Same method as `--faction-wow-card-muted` above: nearest compliant
+     shade of the same hue, not a new hue. */
+  --faction-ephemerists-card-notice: #78350f;
+  /* ...and the TWO always-dark sheets take the bright amber in LIGHT theme. */
   --faction-snide-card-notice: #fbbf24;
   --faction-singularity-card-notice: #fbbf24;
-  --faction-ephemerists-card-notice: #fbbf24;
 
   /* ── The DESTRUCTIVE half of the attention role (#1449) ──────────────────
      `-card-notice` above was the card family's ENTIRE attention role, so the
@@ -3919,9 +4007,14 @@
   --faction-coven-card-alarm: #991b1b;
   --faction-wow-card-alarm: #991b1b;
   --faction-default-card-alarm: #991b1b;
+  /* The shared red-800, unwalked: it clears every Ephemerists ground by day —
+     6.10:1 on the vellum, 5.70:1 under the danger veil there (the composer's
+     error banner, and the reading this block already quoted as the family's
+     worst), 5.53:1 bare on the page and 5.17:1 veiled. Only the amber needed a
+     rung; recording that here so the asymmetry does not read as an oversight. */
+  --faction-ephemerists-card-alarm: #991b1b;
   --faction-snide-card-alarm: #fca5a5;
   --faction-singularity-card-alarm: #fca5a5;
-  --faction-ephemerists-card-alarm: #fca5a5;
 
   /* Points credited. The global success green, kept as-is where the sheet is
      light, and flipped on the two dark sheets for the same reason. */
@@ -3930,14 +4023,18 @@
   --faction-coven-card-credit: #14532d;
   --faction-wow-card-credit: #14532d;
   --faction-default-card-credit: #14532d;
+  /* Unwalked too — 6.69:1 on the vellum and 7.47:1 on `-plate-inner`, which is
+     the seal ledger's band, the one surface that prints it. */
+  --faction-ephemerists-card-credit: #14532d;
   --faction-snide-card-credit: #4ade80;
   --faction-singularity-card-credit: #4ade80;
-  --faction-ephemerists-card-credit: #4ade80;
 }
 
 /* Every card sheet is dark here, so all three inks take their bright value
    across the board — the two always-dark factions simply keep the values they
-   already carried in light. */
+   already carried in light, and since #2141 the Ephemerists are not one of
+   them: its three night values are unchanged, but they are now a genuine dark
+   half rather than a value restated from `:root`. */
 [data-theme="dark"] {
   --faction-ua-card-notice: #fbbf24;
   --faction-everymen-card-notice: #fbbf24;

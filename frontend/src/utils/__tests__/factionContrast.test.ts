@@ -250,11 +250,11 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
  *                                                only honest scalar reading — the
  *                                                same call `ua leaf darkest stop` makes)
  *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
- *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate, which is a
- *                                                different SHEET from the cornice
- *                                                band `-card-bg` names — #171a26
- *                                                against #0a0c15, in both cascades
- *                                                since #1627
+ *   (ephemerists  WAS in this list and left it in #2141. `-card-bg` aliased the
+ *                 cornice band, a different sheet from the plate this card
+ *                 paints; the owner ruling repointed it at `-plate-bg`, so the
+ *                 name and the sheet are one token again and the crossing this
+ *                 map existed to record is gone rather than remapped.)
  *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
  *                                                different token tomorrow (the reason
  *                                                the snide composer block gives)
@@ -274,12 +274,25 @@ const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
   // is measured there too.
   snide: "--faction-snide-wall-deep",
   wow: "--faction-wow-chronicle-bg",
+  // The same token `--faction-ephemerists-card-bg` aliases since #2141. Kept
+  // spelled out rather than dropped to the default: this map is read as the
+  // list of sheets a praxis card paints, and an entry that agrees with the
+  // default is still an answer.
   ephemerists: "--faction-ephemerists-plate-bg",
   singularity: "--faction-singularity-card-bg",
 };
 
-/** The five whose sheet is a different TOKEN from `--faction-{key}-card-bg`. */
-const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists", "snide"] as const;
+/**
+ * The four whose sheet is a different TOKEN from `--faction-{key}-card-bg`.
+ *
+ * EPHEMERISTS LEFT IN #2141 (owner ruling). Its `-card-bg` now aliases
+ * `-plate-bg`, which is the sheet its praxis card paints, so `ephemerists
+ * praxis card sheet, muted ink` would resolve the identical (ink, ground) pair
+ * as `ephemerists card muted text` in CARD_PAIRS — a second name for one
+ * measurement, which is the thing this file keeps warning about. The pairing is
+ * still gated; it is gated once.
+ */
+const OWN_SHEET_KEYS = ["ua", "coven", "wow", "snide"] as const;
 
 /**
  * WHICH INK THE CARD'S SHARED SLOTS ACTUALLY RESOLVE (#2177).
@@ -372,7 +385,7 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
   }),
   // The BARE-sheet muted reading, for the four sheets `-card-bg` does not stand
   // in for: the `hidden` badge sets the muted ink there (its 5% wash is gone —
-  // see the component). For the other four keys that is `{key} card muted
+  // see the component). For the other five keys that is `{key} card muted
   // text`, and a second name for one measurement is what this file keeps
   // warning about.
   //
@@ -2280,18 +2293,21 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * slip stock, and both Singularity chassis repoint the global inks outright.
    *
    * WHY `-plate-quiet` AND NOT `-card-muted`, which is the default the seam's
-   * own declaration names. The Ephemerists card sheet is the CORNICE BAND, so
-   * `--faction-ephemerists-card-muted` is `-plate-band-quiet` — an ink measured
-   * on #0a0c15. `.eph-plate-sheet`'s grounds are the page, the plate and the
-   * panel cell, and `-plate-quiet` is the sibling minted for exactly those three
-   * (#1173: `-quiet` is the standing name for "same role, second ground"). It
-   * clears them at 6.38 / 5.98 / 5.52 in BOTH cascades — the plate register is
-   * theme-invariant since #1627 — and it is what the plate's own quiet prose
-   * already reads, so the label tier joins the register instead of introducing a
-   * fourth warm tone on the same sheet. Dark gives up ~2.3 points (8.33 -> 5.98
-   * on the sheet) to hold one ink across a register that declares nothing under
-   * dark; the floor is 4.5 and this is a faction ink, not the most-painted
-   * neutral in the repo that #1715 argued to AAA.
+   * own declaration names. `-card-muted` is the PRAXIS CARD's second tier and
+   * is measured on the sheet that card paints; `.eph-plate-sheet`'s grounds are
+   * the page, the plate and the panel cell, and `-plate-quiet` is the sibling
+   * minted for exactly those three
+   * (#1173: `-quiet` is the standing name for "same role, second ground"), and
+   * it is what the plate's own quiet prose already reads, so the label tier
+   * joins the register instead of introducing a fourth warm tone on the same
+   * sheet. The three pairings are gated by `ephemerists page ground / plate /
+   * panel cell, quiet ink` below, in BOTH cascades — since #2141 those are two
+   * real readings each rather than one taken twice, because the register grew a
+   * vellum half. The figures this note used to quote (6.38 / 5.98 / 5.52, and
+   * "dark gives up ~2.3 points to hold one ink across a register that declares
+   * nothing under dark") were measured on the frozen night-valued register and
+   * are not restated here: the rows carry the numbers, and a comment that
+   * restates them is the thing that goes stale.
    *
    * NO `Pair` ROW IS ADDED, for the reason this file keeps giving. All three
    * pairings are already gated above — `ephemerists page ground, quiet ink`,
