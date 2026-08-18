@@ -407,14 +407,29 @@ export default function InvitationLetterPopup({
         position: 'fixed',
         inset: 0,
         display: 'flex',
-        alignItems: 'center',
+        // Short viewports (#2130), the same contract #1947 gave LevelUpPopup:
+        // the scrim is the scroller, and the card centres with `margin: auto`
+        // rather than `align-items: center`. A centred flex item taller than
+        // its scroll container overflows off BOTH ends and the top end cannot
+        // be scrolled to, which is precisely what the report showed — the
+        // masthead cut off above, ENLIST cut off below, and neither reachable.
+        // Auto margins centre while there is free space and collapse to 0 when
+        // there isn't, so a full prospectus stays readable end to end. Both
+        // steps live in this one scrim, so the confirm button the reporter
+        // also lost is reachable by the same rule; its `autoFocus` is what
+        // scrolls it into view when the taller confirm step swaps in.
+        alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 'var(--space-xl)',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
         zIndex: 1000,
         background: 'var(--color-overlay-strong)',
       }}
     >
-      <div onClick={(e) => e.stopPropagation()}>{card}</div>
+      <div style={{ margin: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        {card}
+      </div>
     </div>
   )
 }
