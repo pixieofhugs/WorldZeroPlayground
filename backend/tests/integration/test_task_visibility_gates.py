@@ -426,13 +426,17 @@ async def test_a_profile_keeps_a_proposal_its_author_is_also_working(
 ):
     """The browse's exclusion is not a fact about authorship (#2126).
 
-    `GET /tasks` defaults `exclude_character_id` to the reader (#1229) so the
-    browse hides what they have already started. `created_by` is not a browse:
-    it asks what a character PROPOSED, and the answer cannot depend on which of
-    those tasks the *reader* happens to be working. `active_task` is authored by
-    `character` and carries their praxis, so it dropped off their own profile
-    the moment they started it — and off a stranger's profile according to
-    whatever the visitor had in their own praxis bank.
+    The eligibility browse hides what the reader has already started, because
+    that is gate 5 of the sign-up predicate (#1229). `created_by` is not a
+    browse: it asks what a character PROPOSED, and the answer cannot depend on
+    which of those tasks the *reader* happens to be working. `active_task` is
+    authored by `character` and carries their praxis, so it dropped off their
+    own profile the moment they started it — and off a stranger's profile
+    according to whatever the visitor had in their own praxis bank.
+
+    #2126 fixed that by carving `created_by` out of a route-level default;
+    #2264 removed the default itself, so this route no longer needs a
+    carve-out to be right. The assertion is unchanged and still guards it.
     """
     mine = await _ids(client, f"/tasks?created_by={character.id}", auth_headers)
     assert active_task.id in mine

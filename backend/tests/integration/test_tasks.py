@@ -465,14 +465,21 @@ async def test_list_tasks_exclude_character_id(
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_defaults_exclusion_to_viewer(
+async def test_list_tasks_is_the_same_list_for_every_reader(
     client: AsyncClient,
     character: Character,
     active_task: Task,
     auth_headers: dict,
 ):
-    """An authenticated browse excludes the viewer's own started tasks without
-    the client passing exclude_character_id (#1229) — anonymous excludes none."""
+    """A plain `GET /tasks` does not depend on who is reading it (#2264).
+
+    The route used to default `exclude_character_id` to the viewer (#1229), so
+    a signed-in reader and an anonymous one were handed different lists — and
+    the surfaces that render a COUNT off this call reported a different number
+    per reader. The exclusion now belongs to `can_sign_up`, which is where it is
+    actually true: it is gate 5 of the sign-up predicate, asserted in
+    tests/integration/test_task_can_sign_up_filter.py.
+    """
     create_resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
@@ -482,37 +489,11 @@ async def test_list_tasks_defaults_exclusion_to_viewer(
 
     resp = await client.get("/tasks", headers=auth_headers)
     assert resp.status_code == 200
-    assert active_task.id not in [t["id"] for t in resp.json()]
+    assert active_task.id in [t["id"] for t in resp.json()]
 
     anon_resp = await client.get("/tasks")
     assert anon_resp.status_code == 200
-    assert active_task.id in [t["id"] for t in anon_resp.json()]
-
-
-@pytest.mark.asyncio
-async def test_list_tasks_explicit_exclusion_beats_viewer_default(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """An explicitly passed exclude_character_id wins over the viewer default,
-    so the viewer's own started task stays visible when another id is named."""
-    create_resp = await client.post(
-        "/praxes",
-        json={"task_id": active_task.id, "type": "solo"},
-        headers=auth_headers,
-    )
-    assert create_resp.status_code == 201
-
-    resp = await client.get(
-        "/tasks",
-        params={"exclude_character_id": character2.id},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert active_task.id in [t["id"] for t in resp.json()]
+    assert [t["id"] for t in anon_resp.json()] == [t["id"] for t in resp.json()]
 
 
 @pytest.mark.asyncio
