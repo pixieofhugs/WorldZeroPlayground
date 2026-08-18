@@ -593,3 +593,54 @@ is sourceHashes-based, so the other 212 were provably byte-identical; and no fon
 source changed (`git diff` over the range showed nothing under `assets/fonts`). Post-upload
 `list_files`: **0 missing, 0 converter-owned extras.** If any of those premises is not
 verifiable, fall back to §5's full-writes default — it is the safe one.
+
+---
+
+## [2026-08-18] Third round — 8 more commits, and two GRID_OVERFLOW warns nobody had recorded
+
+Ran the morning after #2189 merged; `main` had taken 8 commits (S.N.I.D.E.'s single ground,
+the task-detail reorder, the roster-pill/display-name fix, the Coven identity band, the task
+crown's light-mode ring). Two PRs were open and unmerged, so this synced `main`'s HEAD.
+
+- **Zero component churn**: 268 unchanged, 0 added / 0 removed / 0 verification-changed, map
+  clean (0 dead, 0 case-renames) for the third round running. What moved was RENDERING —
+  29 components' emitted files plus the bundle and `_ds_bundle.css` (`index.css` changed).
+  This is the `sourceKey` vs `renderHash` split from 2026-07-15 seen from the other side:
+  the verification partition can be entirely `unchanged` while `upload.components` is 29.
+  **Never scope an upload by the verification partition** — they answer different questions.
+
+### Two warns that had been hiding in plain sight
+`[GRID_OVERFLOW]` on `FeedCardCollabInvite` (Accepted, Pending) and `EphemeristsSeal`
+(Applied, LongCondition, Removable) — NOT new (warn totals were 21 in the previous two
+rounds as well), just never surfaced, because my earlier warn greps matched
+`RENDER_|FONT_|TOKENS_` and that tag matches none of them. **Grep `^! \[` and read the
+whole list, not a pattern you guessed.**
+
+Both were real, not cosmetic-noise: the collab-invite card squeezed to one word per line
+with its COLLAB button clipping the cell edge; the Ephemerists seal clipped its removable
+affordance. Both are full-width rows in a 3-column grid → `cardMode: column`, the same
+precedent as `FeedChassisBand` / `EverymenCard`. Fixed; `[GRID_OVERFLOW]` is gone and the
+warn total dropped 21 → 19.
+
+**An `overrides` edit forces a FULL driver re-run** (`preview-rebuild.mjs` refuses it with
+`[CONFIG_STALE]`) — budget the extra ~6 minutes, or batch override edits before the first
+build of a round.
+
+### Known render warns — current standing list is 19
+Unchanged from the previous round: the 3 blank-threshold components (`MediaArt`,
+`SingularityLamps`, `SidebarHandle`), the sigil/floor-card `[RENDER_THIN]` set,
+`CommentThread` variants-identical, `[TOKENS_MISSING]` (34 `--tw-*`), and `[FONT_MISSING]`
+naming the 4 system families. If a future run sees anything outside that set, it is new.
+
+### Upload record (2026-08-18)
+Scoped again — 31 components + their previews + README/styles/`_ds_bundle.css`/`_ds_bundle.js`
+= 161 files, no deletes. Same three premises verified as last round (remote was a confirmed
+0-missing mirror of the anchor being diffed; `upload.components` is sourceHashes-based; no
+font or vendor source touched in the range). Post-upload `list_files`: **0 missing, 0
+converter-owned extras**, same 64 hand-uploaded handoffs.
+
+### The standing lesson from three rounds in two days
+`main` moves faster than a sync takes. **Re-check `origin/main` immediately before opening
+the PR, every time** — round two caught a `VoteSummary` → `VoteError` rename that would have
+shipped a component that no longer existed. The re-sync itself is cheap when nothing changed
+(the driver skips capture for unchanged components); it is the not-checking that is expensive.
