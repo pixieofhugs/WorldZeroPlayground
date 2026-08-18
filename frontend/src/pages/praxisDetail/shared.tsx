@@ -10,7 +10,7 @@
  *   - Failed note (ADR-0062 removed the open-state banners: detail is
  *     published-only, so there is no IN EDITING / PENDING PUBLISH to draw; the
  *     crown hero went with #1710 and the mark lives on the score stamp)
- *   - Owner actions (edit / reopen)
+ *   - Owner actions (reopen)
  *   - Comments region (ADR-0061)
  *   - Voter breakdown
  *   - Flag block
@@ -35,9 +35,6 @@ import { Link } from 'react-router-dom'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
-// The LEAF module, not `useEditPraxis` — reaching for the hook's barrel would
-// drag the composer's api and upload plumbing onto every praxis-detail load.
-import { deriveEditPraxisPhase } from '../editPraxis/editPraxisPhase'
 import { UNSCORED_MODERATION_STATUSES } from '../../api/praxis'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
@@ -464,35 +461,25 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 // ── Owner actions ─────────────────────────────────────────────────────────────
 
 export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
-  const { t } = useTranslation('praxis')
-  const { praxis, isOwner, duel, user, withdrawError } = state
+  const { praxis, isOwner, withdrawError } = state
   if (!praxis || !isOwner) return null
 
-  // THE EDIT LINK ONLY SHOWS WHEN `/edit` HAS SOMETHING TO DRAW (#1397).
+  // ONE CONTROL, AND IT IS THE UNSUBMIT (#2136).
   //
-  // `EditPraxis` redirects straight back here whenever `deriveEditPraxisPhase`
-  // answers `handoff` (#1164), and `replace` means the redirect leaves no
-  // history trace — the page simply did not change. This page renders a
-  // PUBLISHED praxis only (ADR-0062), and `handoff` is exactly "published, with
-  // nobody to wait for": a solo, a one-member collab, a declined challenge. So
-  // the link was gated on `isOwner` alone and round-tripped every time it was
-  // visible.
+  // There was an "edit this praxis" link here beside it. #1397 hid it on the
+  // `handoff` phase — published with nobody to wait for, i.e. every solo — but
+  // the phases it left alone all draw READ-ONLY surfaces too: `completed` for a
+  // published collab or a settled duel, `waiting` for a live duel side, a
+  // locked composer for a moderated praxis. So the pair advertised the same
+  // outcome and only one of them delivered it. Owner ruling: the link is not
+  // re-gated by phase, it is gone. "There is no reason for the player to go
+  // back to the edit page unless they are going to edit."
   //
-  // Asking the composer's own predicate rather than re-deriving the statuses is
-  // the point: the two can't drift, and the phases that still draw a real
-  // surface — the waiting surface for a live duel, the completed reading for a
-  // published collab, the locked composer for a moderated praxis — keep their
-  // link untouched.
-  //
-  // The way to EDIT a published praxis is the control beside it: unsubmit →
-  // confirm → `PraxisDetail` redirects the now-`in_progress` praxis into the
-  // composer. That journey already worked; it was just outshouted by a link
-  // that promised the same thing and did nothing. Deliberately NOT an
-  // auto-unsubmit on click — that would silently spend the two-step confirm
-  // #1094 wrote to keep this beat truthful, and on a settled duel side the same
-  // click would be a permanent forfeit.
-  const handsOff =
-    deriveEditPraxisPhase(praxis, duel, user?.character?.id) === 'handoff'
+  // The way to EDIT a published praxis is what is left: unsubmit → confirm →
+  // `PraxisDetail` redirects the now-`in_progress` praxis into the composer.
+  // Deliberately NOT an auto-unsubmit on some other control — that would spend
+  // the two-step confirm #1094 wrote to keep this beat truthful, and on a
+  // settled duel side the same click would be a permanent forfeit.
 
   // EVERY praxis keeps the cluster here, duel or not (#1090). #752 had moved it
   // into the duel RAIL — "the state and the control that changes it share a
@@ -507,12 +494,10 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   // the forfeit dialog on a settled duel, wherever it renders.
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
-        {!handsOff && (
-          <Link to={`/praxis/${praxis.id}/edit`} className="font-body label-caption hover:underline">
-            {t('detail.owner.edit')}
-          </Link>
-        )}
+      {/* Still a flex row with one child: `gap` went with the link, but the
+          shrink-to-fit box is what keeps the confirm state's own wrapping row
+          from spanning the whole column. */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
         <PraxisSubmitControls state={state} />
       </div>
       {withdrawError && <p className="font-body content-text mb-3" style={{ color: wallInk(praxis, 'alarm') }}>{withdrawError}</p>}
