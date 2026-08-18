@@ -1459,6 +1459,30 @@ const ARCHETYPE_PAIRS: Pair[] = [
     },
   ]),
 
+  // ── THE SAME TWO NEUTRALS, THE OTHER WAY UP (#2107) ──────────────────────
+  //
+  // Every row above measures an ink ON the page. Nothing measured the page AS
+  // an ink, and ten shipped controls print it that way: `.btn-primary`,
+  // `.chip-active`, `.requests-queue__badge`, `.filter-factions__box[data-on]`,
+  // `.filter-factions__done`, `.filter-empty__action`, and inline in
+  // `FeedRowActions`, `ScoreToggle`, `ProposeTaskLink`, `DefaultTaskDetail`,
+  // the Field Desk's browse switch and the profile's segmented toggle. All of
+  // them fill with `--color-text-primary` and ink with `--color-bg-page` — the
+  // page's own pair, inverted, and so the one pairing that survives a repaint
+  // of EITHER token only if both move together.
+  //
+  // It is one row rather than eleven because there is one pairing: the surface
+  // is opaque in both cascades (#1a1209 / #f0e6d0) and no mount lays anything
+  // over the fill. 16.86:1 light, 15.00:1 dark. The wrong ink for this ground
+  // is `--color-text-on-accent`, which the source guard at the bottom of this
+  // file forbids; this row is what makes "take the page instead" a measurement
+  // rather than a claim in a comment.
+  {
+    what: "inverted pill, the page as ink",
+    surface: "--color-text-primary",
+    text: "--color-bg-page",
+  },
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
