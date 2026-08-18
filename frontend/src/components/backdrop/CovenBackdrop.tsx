@@ -4,7 +4,9 @@
  * `useFactionBackdrop`'s callers reach it, and both stack `<TaskCard>` on it, so
  * this is a ground a card sits on). Fixed at z-index 0; `.coven-backdrop` in index.css
  * owns the ground, the four blooms and the light/dark flip, and shares all of it
- * with `.coven-candle-backdrop` (the detail pages' column wash).
+ * with `.coven-candle-backdrop` — which is the MOBILE FIELD DESK's page ground
+ * as of #2135, not the detail columns' wash: both detail columns wear the slip
+ * gradient now, and `CovenFieldDesk` is the class's one remaining mount.
  *
  * It was a lo-fi pastel "desktop" — dotted grid, corner glow, vignette — until
  * the `coven.exe` sweep. The markup is unchanged: the metaphor lived entirely in

@@ -6209,19 +6209,29 @@
   --faction-coven-ward-haze: 0.28;
 }
 
-/* The full-viewport candlelight wash. Same markup hook shape as `.na-backdrop`:
+/* The candlelight wash. Same markup hook shape as `.na-backdrop`:
    `<div class="coven-candle-backdrop" aria-hidden />` inside the archetype.
    The design blurs a floating gradient stack at `blur(70px)` and blends it
    `screen` in dark; both are replaced by soft-stopped radial gradients over the
    page ground, which is the repo's established backdrop shape and costs no
    filter layer. The FLOAT survives — it is the candle, and it lives here rather
-   than in a component-injected <style> (#911). */
+   than in a component-injected <style> (#911).
+
+   IT HAS ONE CONSUMER NOW, AND IT IS NOT A DETAIL COLUMN (#2135). Both detail
+   columns wore this wash until the owner ruled that Coven's surfaces should wear
+   the SLIP the task card wears; they take `SLIP_SHEET` from `covenSlip` now, and
+   the class is left mounted only by
+   `pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx`, where the candlelight
+   IS the page ground. So this is live code with one caller — #2135's body called
+   it dead after the two columns left and it is not, because a form-factor
+   archetype is invisible to a grep of `pages/*/archetypes/`. Do not delete it
+   without checking the field desk. */
 .coven-candle-backdrop {
-  /* Painted on the detail COLUMN, not the viewport — the site background shows
-     around it (owner QA on #1055, applied to every task-detail skin). The
+  /* Painted on a page or a column, never the viewport — the site background
+     shows around it (owner QA on #1055, applied to every task-detail skin). The
      archetype supplies position / z-index / radius / padding; this rule owns
      only the ground and its blooms. `overflow: hidden` stays because the
-     ::before bloom is inset -25% and must be clipped to the column. */
+     ::before bloom is inset -25% and must be clipped to whatever carries it. */
   overflow: hidden;
   /* A longhand, for the reason `.na-backdrop` gives (#1636). */
   background-color: var(--faction-coven-ward-page);
