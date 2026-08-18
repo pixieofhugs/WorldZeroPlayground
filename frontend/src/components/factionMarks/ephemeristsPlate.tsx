@@ -55,7 +55,16 @@ export const QUIET = "var(--faction-ephemerists-plate-quiet)";
 export const CAPTION = "var(--faction-ephemerists-plate-caption)";
 /** A rule colour. Never an ink, never behind text. */
 export const BRASS = "var(--faction-ephemerists-plate-brass)";
+/** Links and affirmations on the sheet — text, so it owes 4.5:1 and pays
+ *  5.09:1 on the vellum / 9.68:1 on the night plate. This is what #2141 gave
+ *  the sites that read the deleted NILE: a link is a WORD, and the rule brass
+ *  below is 3.58:1 on the vellum, which is a line's floor and not a word's. */
 export const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
+/** THE RULE BRASS (#2141) — borders, ticks, hairlines, double rules, the vote
+ *  plate's mount, idle disc rims. One value across all three grounds (3.73 on
+ *  the compass blue, 3.58 on the vellum, 3.55 on the night plate), so a line
+ *  crossing between them never changes colour. NEVER behind or as text. */
+export const BRASS_RULE = "var(--faction-ephemerists-plate-brass-rule)";
 export const GOLD = "var(--faction-ephemerists-plate-gold)";
 export const BAND = "var(--faction-ephemerists-plate-band)";
 export const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
@@ -66,7 +75,6 @@ export const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 /** The summons band and its ink — the plate's one filled call to action. */
 export const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
 export const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
-export const NILE = "var(--faction-ephemerists-plate-nile)";
 export const RULE = "var(--faction-ephemerists-plate-rule)";
 export const LINE = "var(--faction-ephemerists-plate-line)";
 export const SHADOW = "var(--faction-ephemerists-plate-shadow)";
@@ -784,13 +792,13 @@ export function CompassRose({ size }: { size: number }) {
           the rose's own disc against the teal's 7.36:1, so the one point that
           carries meaning is also the one that reads first.
 
-          A SECOND DESIGN FILE DRAWS THIS NEEDLE NAVY (`ephCompassBadge()`, as
-          `var(--faction-ephemerists-plate-nile, #1e3a6e)`) and it is not the one
+          A SECOND DESIGN FILE DREW THIS NEEDLE NAVY (`ephCompassBadge()`, as
+          the register's aqua with a `#1e3a6e` fallback) and it was never the one
           to follow: that navy measures 1.64:1 on `-plate-disc` and the needle
-          would be invisible. The two files disagree, the gold one is the one
-          naming a variable, and the navy is most likely the eventual LIGHT-mode
-          value being carried into that epic (#1627/#1636 keep this register
-          theme-invariant until then). */}
+          would be invisible. #2141 settled it by deleting the aqua outright, so
+          only the gold reading survives. #2145 owns what the rose looks like
+          next; if north moves, it moves to `-plate-band-ink`, the MARK the
+          faction now sets every glyph and numeral in. */}
       <path d="M50 8 L55.5 26 L44.5 26 Z" fill={GOLD} />
       <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
       <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />

@@ -118,12 +118,27 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     expect(markup, "the medallion's disc, not the cornice band").toContain(
       'var(--faction-ephemerists-plate-disc)',
     )
-    // The DATUM ROW's ink is the engraving's tell — it exists nowhere else on
-    // this card — so its absence is what says the night band really went rather
-    // than merely moving. `epg-glyph` would NOT say it: the drift strip above
-    // the vote block carries that class too, so asserting on it would pass
-    // whether the register were here or not.
-    expect(markup, 'no engraved datum row on a card').not.toContain(
+    // THE DATUM ROW'S INK IS STILL THE TELL, BUT IT IS NOW SCOPED TO THE BAND,
+    // and the rescoping is the finding rather than a tidy-up. This asserted the
+    // absence of `-plate-band-quiet` from the WHOLE CARD, on the stated premise
+    // that the ink "exists nowhere else on this card". #2141 expired that
+    // premise: `-plate-disc` is a chip that does not flip, so the score stamp's
+    // caption had to leave the SHEET ink `-plate-caption` (2.63:1 on the chip in
+    // light) for the band's quiet tier, and the ink is now legitimately on this
+    // card, several hundred pixels below the masthead. A whole-card proxy is
+    // only a proxy while its exclusivity holds — and an expired one fails on the
+    // NEXT honest change, which is exactly what it did.
+    //
+    // The masthead is an <a>, and anchors do not nest, so its own markup is the
+    // slice between `data-card-masthead` and the first `</a>` after it. That is
+    // the region the engraved register would have to be in. Everything the
+    // assertion was ever about is inside it, and nothing else is.
+    const at = markup.indexOf('data-card-masthead')
+    const band = markup.slice(at, markup.indexOf('</a>', at))
+    expect(band, 'the slice really is the masthead').toContain(
+      'var(--faction-ephemerists-plate-disc)',
+    )
+    expect(band, 'no engraved datum row in the band').not.toContain(
       'var(--faction-ephemerists-plate-band-quiet)',
     )
   })

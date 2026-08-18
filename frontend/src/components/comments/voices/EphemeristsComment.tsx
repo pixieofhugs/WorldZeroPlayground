@@ -61,13 +61,13 @@ import {
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { useAuth } from '../../../auth/AuthContext'
 import {
+  BRASS_LIGHT,
   CAPS,
   CAPTION,
   RuneRule,
   INK,
   INNER,
   LINE,
-  NILE,
   OCHRE,
   PLATE,
   QUIET,
@@ -278,7 +278,7 @@ export default function EphemeristsComment(props: CommentProps) {
         ) : (
           // Resolved @mentions in the plate's Nile ink — the token whose whole job
           // is links and affirmations on this ground.
-          <MentionText body={comment.body_text} mentions={comment.mentions} accent={NILE} />
+          <MentionText body={comment.body_text} mentions={comment.mentions} accent={BRASS_LIGHT} />
         )}
       </Marginalia>
 

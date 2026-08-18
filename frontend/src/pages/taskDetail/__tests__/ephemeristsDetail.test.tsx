@@ -212,24 +212,67 @@ describe("the Valley plate's tokens", () => {
     expect(referenced.length).toBeGreaterThan(10);
   });
 
-  // The plate used to owe a value in BOTH cascades, and this block checked that
-  // token by token. #1627 took the register theme-INVARIANT — the papyrus half
-  // could not survive the card contract moving onto the cornice band, because
-  // one set of card ink names then had to serve two grounds of opposite
-  // polarity — so the question flips: every token is declared once in `:root`
-  // and none of them may reappear under `[data-theme="dark"]`. A stray dark
-  // override would resurrect the split this change exists to remove, and would
-  // do it silently: `factionContrast.test.ts` measures whatever is declared, so
-  // it would just go back to measuring two palettes, and pass.
+  /**
+   * THE REGISTER HAS TWO HALVES AGAIN (#2141), so this block asks a different
+   * question than it did between #1627 and now — and the SHAPE of the question
+   * is what matters, because both wrong answers are silent.
+   *
+   * #1627 took the register theme-INVARIANT: the papyrus half could not survive
+   * the card contract moving onto the cornice band, because one set of card ink
+   * names then had to serve two grounds of opposite polarity. This block checked
+   * that, token by token, by asserting no token appeared under
+   * `[data-theme="dark"]`. #2141 kept the BAND at the compass blue in both
+   * cascades and gave the SHEET a vellum light half, so most of the family owes
+   * a value in both again — and five members deliberately still do not.
+   *
+   * Both failure modes are invisible to `factionContrast.test.ts`, which
+   * measures whatever is declared and would happily pass either way:
+   *   • a two-theme token missing its dark half silently ships a vellum ink on
+   *     a night sheet;
+   *   • a dark override on an INVARIANT silently un-freezes the compass blue,
+   *     which is the one thing holding the card contract's polarity still.
+   * So the assertion is per token and by name, not a count.
+   */
+  const THEME_INVARIANT = new Set([
+    // The compass blue and its two inks — the faction, not a mode (#2140).
+    "--faction-ephemerists-plate-band",
+    "--faction-ephemerists-plate-band-ink",
+    "--faction-ephemerists-plate-band-quiet",
+    // The dark chip the metals are struck on; they have no light value at all.
+    "--faction-ephemerists-plate-disc",
+    // One value across all three grounds by construction (3.73 / 3.58 / 3.55).
+    "--faction-ephemerists-plate-brass-rule",
+    // Struck only on the chip above, so likewise no light value to differ from.
+    "--faction-ephemerists-plate-gold",
+    // `none` in both cascades since #1627 — an absence, not a colour.
+    "--faction-ephemerists-plate-wash",
+  ]);
+
   for (const token of referenced) {
-    it(`${token} is declared once, in :root`, () => {
+    const invariant = THEME_INVARIANT.has(token);
+    it(`${token} is declared in :root${invariant ? " and nowhere else" : " and in dark"}`, () => {
       expect(themes.light.has(token), "light / :root").toBe(true);
       expect(
         themes.dark.has(token),
-        'the Valley plate is theme-invariant (#1627) — a `[data-theme="dark"]` value splits it back in two',
-      ).toBe(false);
+        invariant
+          ? `${token} is theme-invariant on purpose (#2141) — a \`[data-theme="dark"]\` value un-freezes the compass blue the card contract's polarity rests on`
+          : `${token} is a two-theme contract since #2141 — without a \`[data-theme="dark"]\` value it ships its VELLUM value on the night sheet`,
+      ).toBe(!invariant);
     });
   }
+
+  it("the invariant set is the whole of it — nothing else escapes the dark half", () => {
+    // The set above is a claim about the register, so it is checked against the
+    // register rather than against this page's imports: a token this file never
+    // names could still be missing its dark half.
+    const family = [...themes.light.keys()].filter((name) =>
+      name.startsWith("--faction-ephemerists-plate-"),
+    );
+    expect(family.length).toBeGreaterThan(15);
+    expect(family.filter((name) => !themes.dark.has(name)).sort()).toEqual(
+      [...THEME_INVARIANT].sort(),
+    );
+  });
 });
 
 /**

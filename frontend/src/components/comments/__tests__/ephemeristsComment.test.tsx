@@ -102,14 +102,15 @@ describe('EphemeristsComment — row states', () => {
     expect(row()).not.toContain('edited')
   })
 
-  it('row · mention: a resolved handle links in the plate Nile ink', () => {
+  it('row · mention: a resolved handle links in the plate link ink', () => {
     const html = row({
       ...COMMENT,
       body_text: 'as @bo recorded',
       mentions: [{ character_id: 9, username: 'bo', display_name: 'Bo' }],
     })
     expect(html).toContain('href="/characters/9"')
-    expect(html).toContain('--faction-ephemerists-plate-nile')
+    // #2141 deleted the faction's aqua; the link role is the brass highlight.
+    expect(html).toContain('--faction-ephemerists-plate-brass-light')
   })
 
   it('links a mention that OPENS the note — the drop cap used to eat its @', () => {

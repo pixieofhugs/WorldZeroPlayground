@@ -122,11 +122,13 @@ describe('the rose says which way is up exactly once (#2067)', () => {
   it('fills north in the plate gold, not the register teal', () => {
     // 13.07:1 on the rose's own disc against the teal's 7.36:1 — the one point
     // that carries meaning is also the one that reads first. The design's OTHER
-    // file draws this navy (`-plate-nile`'s 1.64:1 fallback), which would make
-    // the needle invisible; the gold file is the one naming a variable.
+    // file drew this navy (the register's aqua, 1.64:1 on the disc), which would
+    // make the needle invisible; #2141 deleted that token outright, so the
+    // assertion below is now the only reading the rose has. #2145 owns what the
+    // rose becomes; if north moves it moves to the MARK, `-plate-band-ink`.
     const north = needle(render('desktop'), NORTH)
     expect(north).toContain('fill="var(--faction-ephemerists-plate-gold)"')
-    expect(north).not.toContain('plate-nile')
+    expect(north).not.toContain('nile')
   })
 
   it('outlines the other three in one ink at one weight', () => {

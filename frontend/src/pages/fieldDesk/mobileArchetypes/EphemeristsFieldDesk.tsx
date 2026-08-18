@@ -10,6 +10,7 @@ import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   BRASS,
+  BRASS_LIGHT,
   CAPTION,
   CTA_BG,
   CTA_INK,
@@ -19,7 +20,6 @@ import {
   INNER,
   LINE,
   MARGINALIA,
-  NILE,
   OCHRE,
   PAGE,
   QUIET,
@@ -70,7 +70,7 @@ const actionPillStyle: CSSProperties = {
   ...SMALL_CAPS,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
-  color: NILE,
+  color: BRASS_LIGHT,
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 120ms ease',
@@ -85,7 +85,7 @@ const trackMetaStyle: CSSProperties = {
 }
 
 /** The valley's own spectrum: ochre through brass into the Nile (#1553). */
-const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${NILE})`
+const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${BRASS_LIGHT})`
 
 /** The task-faction mark on a register row (#1711), at the row's cap height.
  *  Below the kite's own 20px threshold, so an ephemerists task draws the mark's
@@ -267,7 +267,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
           row={pendingRow}
           className="flex items-center justify-between"
           style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
-          chevron={<span aria-hidden style={{ color: NILE }}>›</span>}
+          chevron={<span aria-hidden style={{ color: BRASS_LIGHT }}>›</span>}
         />
       )}
 
@@ -278,7 +278,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
             {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: brassRule }} />
-          <Link to="/tasks" style={{ ...kicker, color: NILE, textDecoration: 'none' }}>
+          <Link to="/tasks" style={{ ...kicker, color: BRASS_LIGHT, textDecoration: 'none' }}>
             {t('fieldDesk.home.viewAll')}
           </Link>
         </div>
@@ -315,7 +315,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: NILE, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
+                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: BRASS_LIGHT, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>

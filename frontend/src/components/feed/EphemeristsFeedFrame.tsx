@@ -66,7 +66,6 @@ import {
   GlyphRegister,
   INK,
   LINE,
-  NILE,
   OCHRE,
   PLATE,
   READING,
@@ -93,17 +92,19 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * that read **2.91:1** on the night plate but the plate's own brass, which reads
  * **7.22:1** light / 10.64:1 dark on that same theme-invariant near-black. The
  * miss the repoint was measured against is gone — the raw hue would now clear
- * AA here, and by a hair more than {@link NILE} does.
+ * AA here, and by a hair more than {@link BRASS_LIGHT} does.
  *
- * THE REPOINT STAYS ANYWAY, because it was never only a ratio: {@link NILE} is
- * exactly the ink this faction declares for
- * "links", and the actor's name IS a link to that player. It measures 7.00:1 on
- * the plate. `-plate-quiet` clears too (5.98) and is still rejected for the
+ * THE REPOINT STAYS ANYWAY, because it was never only a ratio: {@link BRASS_LIGHT} is
+ * exactly the ink this faction declares for "links + affirmations", and the
+ * actor's name IS a link to that player. #2141 retired the aqua this slot used
+ * to read and handed the role to the brass highlight, so the sentence is now
+ * true of the token it names: 5.09:1 on the vellum sheet, 9.68:1 on the night
+ * plate. `-plate-quiet` clears too (5.98) and is still rejected for the
  * reason it always was — it is the MUTED role's ink, and painting the row's one
  * identity slot in a colour quieter than the body copy loses the faction rather
  * than legibly keeping it.
  */
-const ROW_SKIN: FeedRowSkin = { ink: { actor: NILE } }
+const ROW_SKIN: FeedRowSkin = { ink: { actor: BRASS_LIGHT } }
 
 interface BandSize {
   /** Masthead height, and the width its register is drawn to fill. Geometry. */

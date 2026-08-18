@@ -112,7 +112,7 @@ const CASES = [
   {
     slug: 'ephemerists',
     Frame: EphemeristsFeedFrame,
-    ink: '--faction-ephemerists-plate-nile',
+    ink: '--faction-ephemerists-plate-brass-light',
     ground: '--faction-ephemerists-plate-bg',
     veil: '--faction-ephemerists-plate-wash',
   },

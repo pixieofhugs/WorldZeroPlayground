@@ -389,12 +389,18 @@ export default function EphemeristsTaskCard({
               >
                 <CompassRose size={size.medallion} />
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-                  <span style={{ fontFamily: DECO, fontSize: size.pointsSize }}>{basePoints}</span>
+                  {/* THE ROSE IS A DARK CHIP ON A LIGHT SHEET (#2141), so this
+                      numeral states its ink instead of inheriting the plate's:
+                      `-plate-ink` is the same #12151f as the disc in light and
+                      would read 1.00:1. `-plate-band-ink` is the MARK, and the
+                      compass blue is the ground it is measured on — 7.59:1 in
+                      both themes. */}
+                  <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: "var(--faction-ephemerists-plate-band-ink)" }}>{basePoints}</span>
                   {/* Ornament: the unit engraved inside the rose, sized to the
                       disc rather than to the label ramp (§4a). #2037 kept this
                       as one HTML node over the rose so #2038 could turn it. */}
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
-                  <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
+                  <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-band-quiet)" }}>
                     <span className="sr-only">{i18n.t("feed:taskCard.pointsUnit")}</span>
                     <Turning
                       variant="points"

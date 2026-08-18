@@ -111,7 +111,6 @@ import {
   INNER,
   LINE,
   MARGINALIA,
-  NILE,
   OCHRE,
   Octagon,
   PLATE,
@@ -267,7 +266,9 @@ function AuthorOctagon({
             fontWeight: 500,
             fontSize: "var(--text-md)",
             letterSpacing: "0.08em",
-            color: INK,
+            // The octagon is the compass blue in both themes (#2141), so the
+            // initial takes the band's mark rather than the sheet's ink.
+            color: BAND_INK,
           }}
         >
           {initialsOf(name)}
@@ -416,7 +417,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         flexWrap: "wrap",
       }}
     >
-      <Link to="/tasks" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
+      <Link to="/tasks" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
         {t("detail.breadcrumb.tasks")}
       </Link>
       <span aria-hidden style={eyebrow}>
@@ -424,7 +425,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       </span>
       <Link
         to={`/tasks/${praxis.task_id}`}
-        style={{ ...eyebrow, color: NILE, textDecoration: "none" }}
+        style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}
       >
         {praxis.task_title}
       </Link>
@@ -452,7 +453,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         marginBottom: "var(--space-lg)",
       }}
     >
-      <Link to="/praxis" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
+      <Link to="/praxis" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
         <span aria-hidden>‹ </span>
         {t("detail.back")}
       </Link>
@@ -616,7 +617,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <Link
           to={`/tasks/${praxis.task_id}`}
           className="content-text"
-          style={{ fontFamily: READING, color: NILE, textDecoration: "none" }}
+          style={{ fontFamily: READING, color: BRASS_LIGHT, textDecoration: "none" }}
         >
           {praxis.task_title}
         </Link>

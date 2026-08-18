@@ -31,7 +31,6 @@ import {
   INK,
   LINE,
   MARGINALIA,
-  NILE,
   PAGE,
   PLATE,
   QUIET,
@@ -74,7 +73,7 @@ const dress: ProfileDress = {
   ink: INK,
   muted: QUIET,
   headerMuted: BAND_QUIET,
-  accent: NILE,
+  accent: BRASS_LIGHT,
   surface: PLATE,
   border: BRASS,
   displayFont: DECO,
@@ -123,7 +122,9 @@ const dress: ProfileDress = {
   // whispered (#1630). Not free from #1645's card-* repoint, which is where this
   // was expected to fall out: that landed `--faction-ephemerists-card-accent` on
   // the brass, and this kit reads none of the `card-*` family — its accent is
-  // `-plate-nile` and this label was `-plate-quiet`. 11.04:1 on the plate.
+  // the plate's link ink, which #2141 moved from the retired aqua to
+  // `-plate-brass-light`, and this label was `-plate-quiet`. 5.09:1 on the
+  // vellum sheet, 9.68:1 on the night plate.
   ringLabelInk: BRASS_LIGHT,
   barFill: `linear-gradient(90deg, ${BRASS}, ${GOLD})`,
   barTrack: `color-mix(in srgb, ${BRASS} 30%, transparent)`,
