@@ -150,7 +150,6 @@ import {
   INK,
   INNER,
   LINE,
-  NILE,
   OCHRE,
   Octagon,
   PLATE,
@@ -342,7 +341,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 say so too (#1830 corrected this note). */}
             <ComposerMasthead
               height={EPH_BAND[factor]}
-              background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${NILE}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
+              background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${BRASS_LIGHT}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
               style={{
                 // The engraved masthead sizes itself from its own padding, so
                 // the shared band's `height` becomes a FLOOR. `style` is spread
@@ -397,7 +396,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
        against a near-white page, and 2.60:1 on the panel cell `BodyPreview`
        renders into (hover 1.16:1). The detail column declares the identical
        pair through `.eph-plate-sheet`; this is the same seam reached from the
-       one Ephemerists root that is not inside that column. NILE is the plate's
+       one Ephemerists root that is not inside that column. BRASS_LIGHT is the plate's
        declared link hue and is measured on all three of its grounds.
 
        AND THE LABEL SEAM, for the identical reason, one issue later (#1754 fixed
@@ -422,7 +421,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     pageStyle: {
       fontFamily: DECO,
       color: INK,
-      ["--link-ink" as string]: NILE,
+      ["--link-ink" as string]: BRASS_LIGHT,
       ["--link-ink-hover" as string]: INK,
       ["--label-ink" as string]: QUIET,
     } as CSSProperties,

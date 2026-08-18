@@ -101,7 +101,6 @@ const BAND = "var(--faction-ephemerists-plate-band)";
 const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
 const DISC = "var(--faction-ephemerists-plate-disc)";
 const OCHRE = "var(--faction-ephemerists-plate-ochre)";
-const NILE = "var(--faction-ephemerists-plate-nile)";
 const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
 const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
 const RULE = "var(--faction-ephemerists-plate-rule)";
@@ -351,7 +350,7 @@ export default function EphemeristsTaskDetail({
     borderBottom: `1px solid ${LINE}`,
     cursor: "pointer",
     padding: 0,
-    color: NILE,
+    color: BRASS_LIGHT,
   };
 
   /** Small caps, a brass hairline running out, an optional gloss, a fluted rule. */
@@ -442,7 +441,7 @@ export default function EphemeristsTaskDetail({
             both ends, and that crumb was the task's ordinal — #1124 retired the
             id, so the cartouche and the separator before it went with it rather
             than framing nothing. */}
-        <Link to="/tasks" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
+        <Link to="/tasks" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
       </nav>
@@ -736,7 +735,7 @@ export default function EphemeristsTaskDetail({
             {!levelJumpSignup && (
               <>
                 {" · "}
-                <span style={{ color: NILE }}>
+                <span style={{ color: BRASS_LIGHT }}>
                   {t("detail.signup.levelMet", { level: task.level_required })}
                 </span>
               </>
@@ -765,8 +764,8 @@ export default function EphemeristsTaskDetail({
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
-            <Sign name="openEye" size={15} color={NILE} />
-            <span style={{ ...quietItalic, color: NILE }}>{t("detail.inProgress.text")}</span>
+            <Sign name="openEye" size={15} color={BRASS_LIGHT} />
+            <span style={{ ...quietItalic, color: BRASS_LIGHT }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
             <Link to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>

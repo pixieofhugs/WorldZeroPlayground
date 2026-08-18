@@ -22,7 +22,6 @@ import {
   INK,
   LINE,
   MARGINALIA,
-  NILE,
   QUIET,
   READING,
   RULE,
@@ -275,7 +274,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     </div>
                     <div style={{ fontFamily: READING, fontSize: "var(--text-xl)", color: QUIET, margin: "var(--space-md) 0 0" }}>
                       <Trans t={t} i18nKey="ephemerists.road.memberStanding">
-                        Standing · <span style={{ fontStyle: "italic", color: NILE }}>keeper of the road</span>
+                        Standing · <span style={{ fontStyle: "italic", color: BRASS_LIGHT }}>keeper of the road</span>
                       </Trans>
                     </div>
                   </div>
@@ -486,7 +485,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     </div>
                   </div>
                   <Tally level={m.level} />
-                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: NILE }}>
+                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: BRASS_LIGHT }}>
                     {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>
