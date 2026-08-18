@@ -4772,6 +4772,28 @@
 
   /* ── Markdown preview ── */
 
+  /* The body a player typed, so it wraps wherever it has to (#2268). Without
+     this the class carried type-scale rules only, `normal` wrapping applied,
+     and a pasted URL or a keysmash — which has no word boundary to break at —
+     ran straight out of its panel. One declaration on the one shared class
+     reaches all eleven surfaces that mount it: the composer's Preview tab, the
+     duel/collab waiting panel, the Ephemerists composer and all eight
+     praxis-detail archetypes.
+
+     `anywhere` rather than `break-word`: it also lets min-content width shrink,
+     so a long token cannot force a flex or grid sibling wider. The duel panels
+     are a two-column pair, where `break-word` wraps the text and still blows
+     the column out.
+
+     Scoped to prose on purpose. §"A wordmark is a MARK" (#2000) is the other
+     half of this rule: a faction name must never carry `anywhere`, because a
+     break that invents a new word is worse than an overflow. `pre` is exempt by
+     construction — `white-space: pre` disallows wrapping, so this cannot reach
+     it and its own `overflow-x-auto` below is what a code block gets instead. */
+  .markdown-preview {
+    overflow-wrap: anywhere;
+  }
+
   .markdown-preview h1 {
     @apply font-display text-2xl font-bold mt-4 mb-2;
   }
