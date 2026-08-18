@@ -2531,3 +2531,48 @@ describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
     });
   }
 });
+
+/**
+ * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
+ *
+ * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a
+ * statement about the page ground and nothing else; the moment a control FILLS
+ * with it, the ink it needs is the ground that neutral was measured against —
+ * `--color-bg-page`, which flips with the cascade exactly as the fill does
+ * (16.86:1 light, 15.00:1 dark). `--color-text-on-accent` is `#ffffff` in
+ * `:root` alone and never flips, so the same two lines read "near-black pill,
+ * white label" in light and WHITE ON CREAM in dark, at **1.24:1**.
+ *
+ * Part A can only ask "does this token clear on the surface its documentation
+ * names", and no documentation pairs those two — the pairing exists only at a
+ * call site. Part B (`e2e/contrast.spec.ts`) would see it rendered, but it is
+ * nightly-only and outside PR CI, and a player profile is not on its route
+ * walk. So the defect shipped twice: #1819 fixed the faction page's join
+ * button, and the profile's segmented Praxis/Tasks toggle — the same two lines,
+ * copied — survived to be reported by eye as #2107.
+ *
+ * A FILE-LEVEL INTERSECTION, deliberately. `ponytail:` the guard asks whether
+ * one file both fills with the primary neutral and inks with `-on-accent`,
+ * which is coarser than "in the same style object" and could false-positive on
+ * a file that legitimately does both to different elements. There is no such
+ * file today, and the coarse question needs no parser; if one appears, read the
+ * pairing and add it here with the reason. The precise version is a JSX/AST
+ * walk, which is a dependency this suite does not carry.
+ */
+describe("a --color-text-primary fill takes the page as its ink (#2107)", () => {
+  const FILL = /background[A-Za-z]*:[^;\n]*var\(--color-text-primary\)/;
+  const WRONG_INK = "var(--color-text-on-accent)";
+
+  it("no file inks the primary neutral's fill with the accent's white", () => {
+    const found = sourceFiles()
+      .filter((path) => {
+        const source = readStripped(path);
+        return FILL.test(source) && source.includes(WRONG_INK);
+      })
+      .map(toRelative);
+    expect(
+      found,
+      "`--color-text-on-accent` is #ffffff in BOTH themes and `--color-text-primary` flips to cream (#f0e6d0) in dark — the pair is 1.24:1 there (#1819, #2107). Ink a primary-neutral fill with `--color-bg-page`, the ground that neutral is measured against.",
+    ).toEqual([]);
+  });
+});
