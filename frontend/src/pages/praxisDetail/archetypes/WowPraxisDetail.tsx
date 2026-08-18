@@ -11,14 +11,15 @@ import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wow
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
+import { mediaUrl } from '../../../utils/media'
 import {
+  bylineFaces,
   PraxisAdminBar,
   PraxisStatusBanners,
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
-  orderedMembers,
   scoreWasBanked,
   taskRefMeta,
 } from '../shared'
@@ -228,7 +229,15 @@ function initials(name: string): string {
  * parsed — the same move the Unaffiliated page makes with its spectrum ring,
  * wearing WOW's coin mount instead.
  */
-function ChronicleDisc({ name, size }: { name: string; size: number }) {
+function ChronicleDisc({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name: string
+  avatarUrl: string
+  size: number
+}) {
   return (
     <span
       aria-hidden
@@ -242,20 +251,29 @@ function ChronicleDisc({ name, size }: { name: string; size: number }) {
         flexShrink: 0,
       }}
     >
-      <span
-        className="flex items-center justify-center"
-        style={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '50%',
-          background: 'var(--faction-wow-avatar-field)',
-          fontFamily: MED,
-          fontSize: 'var(--text-lg)',
-          color: PLUM,
-        }}
-      >
-        {initials(name)}
-      </span>
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{ display: 'block', width: '100%', height: '100%', borderRadius: '50%' }}
+        />
+      ) : (
+        <span
+          className="flex items-center justify-center"
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '50%',
+            background: 'var(--faction-wow-avatar-field)',
+            fontFamily: MED,
+            fontSize: 'var(--text-lg)',
+            color: PLUM,
+          }}
+        >
+          {initials(name)}
+        </span>
+      )}
     </span>
   )
 }
@@ -269,7 +287,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
 
-  const members = orderedMembers(praxis)
   // A collab is a collab at ONE member (#1274). This used to read
   // `members.length > 1`, which hid the whole Members section from a collab
   // nobody had joined yet while the heading still counted them. Tested
@@ -432,13 +449,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         {/* Stacked discs, one per member. A payload with no member rows still
             credits its creator, so the author is always reachable from here. */}
         <span style={{ display: 'flex', alignItems: 'center' }}>
-          {(members.length > 0
-            ? members.map((member) => ({
-                id: member.character_id,
-                name: member.character_display_name || `#${member.character_id}`,
-              }))
-            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
-          ).map((author, index) => (
+          {bylineFaces(praxis).map((author, index) => (
             <Link
               key={author.id}
               to={`/characters/${author.id}`}
@@ -450,7 +461,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 zIndex: index,
               }}
             >
-              <ChronicleDisc name={author.name} size={size.disc} />
+              <ChronicleDisc
+                name={author.name}
+                avatarUrl={author.avatarUrl}
+                size={size.disc}
+              />
             </Link>
           ))}
         </span>
