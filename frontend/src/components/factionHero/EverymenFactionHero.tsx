@@ -25,7 +25,6 @@ const RED = "var(--everymen-red)";
 
 export default function EverymenFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
@@ -183,18 +182,6 @@ export default function EverymenFactionHero({
             >
               {i18n.t("feed:factionHero.everymen.motto")}
             </div>
-            <p
-              className="content-text"
-              style={{
-                fontFamily: "var(--font-body)",
-                lineHeight: 1.6,
-                maxWidth: 560,
-                margin: "var(--space-md) 0 0",
-                color: CREAM,
-              }}
-            >
-              {description ?? i18n.t("feed:factionHero.everymen.descriptionFallback")}
-            </p>
           </div>
         </div>
 

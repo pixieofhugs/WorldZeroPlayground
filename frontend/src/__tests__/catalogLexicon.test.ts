@@ -125,6 +125,10 @@ describe('the University of Asthmatics counts points, not marks (#1702)', () => 
   it('reads a non-empty set of UA keys, so the sweep cannot pass by finding nothing', () => {
     // The catalog half only. The source-scan half is asserted once, with the
     // shared walk, in `src/test/__tests__/sourceScan.test.ts`.
-    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThan(50)
+    //
+    // The floor tracks the catalog: #2137 retired
+    // `feed:factionHero.ua.descriptionFallback` with the hero's blurb, which is
+    // one UA key fewer, so the bar moves down by exactly that one.
+    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThanOrEqual(50)
   })
 })

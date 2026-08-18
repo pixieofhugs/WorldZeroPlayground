@@ -53,7 +53,6 @@ const render = (Hero: ComponentType<FactionHeroProps>, slug: string) =>
   routed(
     <Hero
       name={factionName(slug)}
-      description="Reliable hands who do the work in front of them."
       members={214}
       tasks={9}
       praxes={1489}

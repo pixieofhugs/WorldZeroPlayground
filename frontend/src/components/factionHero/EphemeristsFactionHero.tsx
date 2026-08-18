@@ -66,13 +66,11 @@ function HeroGrids() {
 
 export default function EphemeristsFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
 }: {
   name: string;
-  description?: string | null;
   members: number;
   tasks: number;
   praxes: number;
@@ -146,7 +144,10 @@ export default function EphemeristsFactionHero({
               color: BAND_INK,
             }}
           >
-            {description ?? i18n.t("feed:factionHero.ephemerists.descriptionFallback")}
+            {/* The catalog blurb used to open this paragraph; #2137 took it out,
+                because `EphemeristsFactionBody` sets the same string as the
+                apparatus. The paragraph stays as the gloss's mount — it is what
+                holds the gloss off the motto. */}
             {/* Gloss is a full catalog sentence -> content floor; the marginalia
                 face and the band's second ink carry the hierarchy, not a size. */}
             <span
