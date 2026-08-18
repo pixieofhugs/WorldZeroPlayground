@@ -23,6 +23,7 @@ import { useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import StartHereMark from "../components/StartHereMark";
+import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useTaskDetail } from "./taskDetail/useTaskDetail";
@@ -80,6 +81,24 @@ export default function TaskDetail() {
         </div>
       )}
       <Archetype state={state} />
+      {/* THE DROP CONFIRM, MOUNTED ONCE (#2215). It sits here rather than in
+          the nine archetypes for the same reason the fetch does: every skin
+          draws its own Drop button and none of them has an opinion about the
+          question that follows it. This replaces a `window.confirm` — the last
+          one in the app after #1082 — which is OS chrome a browser is free to
+          suppress, and did: a suppressed prompt returns `false`, so the
+          handler returned in silence and the control looked inert.
+
+          `factionSlug` is the TASK's, not the viewer's, so the dialog wears
+          the surface it interrupts — same convention as the composer's. */}
+      {state.dropConfirm && (
+        <ConfirmDialog
+          request={state.dropConfirm.request}
+          factionSlug={slug}
+          onConfirm={state.dropConfirm.onConfirm}
+          onDismiss={state.dropConfirm.onDismiss}
+        />
+      )}
     </>
   );
 }

@@ -202,6 +202,7 @@ function detailState(task: TaskOut): TaskDetailState {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    dropConfirm: null,
   }
 }
 
