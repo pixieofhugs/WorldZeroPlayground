@@ -16,14 +16,16 @@ import type { PraxesFeedState, SortOrder, VotedFilter, EraScope } from './usePra
  * The type rail (solo / collab / duel) is NOT here: deleted on purpose,
  * #1361 ruling 2.
  *
- * `summary` is deliberately unset. The design puts "Showing N" in the bar, but
- * both surfaces already print `listPage.count` in their header, and one number
- * twice on one screen is a thing to keep in sync, not a feature.
+ * `summary` carries the count, as the design draws it (#2262). The objection
+ * that kept the slot empty was to printing one number TWICE — both headers used
+ * to state it as well — and the answer is to state it once, here, beside the
+ * controls that change it. Neither header prints it now; this is the only copy,
+ * and it is the bar's because the bar is what moves it.
  */
 export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
-  const { filters, setFilters, clearAllFilters, canFilterByVote, factions } = state
+  const { items, filters, setFilters, clearAllFilters, canFilterByVote, factions } = state
 
   const rails: FilterRail[] = [
     {
@@ -86,6 +88,7 @@ export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
         ),
       ]}
       onClearAll={clearAllFilters}
+      summary={t('listPage.count', { count: items.length })}
       search={{
         value: state.query,
         onChange: state.setQuery,

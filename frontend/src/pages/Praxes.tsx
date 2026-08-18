@@ -41,14 +41,15 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
 
   return (
     <div className="py-8">
-      <PageTitle title={t('listPage.title')} eyebrow={t('listPage.count', { count: items.length })} />
-      {/* A `?task_id=` feed is a subset, so it must not keep claiming to be
-          "all praxes from across World Zero" (#1050) — it says what it is and
-          offers the way out. The filter bar's chip row does not speak for it:
-          the task filter is set by task surfaces, not by the bar. */}
-      {taskId === null ? (
-        <p className="font-body content-text text-muted mb-6">{t('listPage.intro')}</p>
-      ) : (
+      {/* The count is NOT an eyebrow here any more (#2262): it rides in the
+          filter bar, beside the controls that change it. */}
+      <PageTitle title={t('listPage.title')} />
+      {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way
+          out, so a narrowed stream can't read as the whole register. The filter
+          bar's chip row does not speak for it: the task filter is set by task
+          surfaces, not by the bar. Nothing renders on the bare feed; the page
+          is titled "Praxis" and the body is the praxis. */}
+      {taskId !== null && (
         <p className="font-body content-text text-muted mb-6">
           {t('listPage.taskFilter.notice')}{' '}
           <button type="button" onClick={clearTaskFilter} className="underline">

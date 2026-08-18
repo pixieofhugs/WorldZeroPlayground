@@ -54,12 +54,19 @@ const ELIGIBILITY_ON = 'canSignUp'
  * Status keeps its viewer-gated segment count for the same reason — `retired`
  * and `pending` are a permission boundary, and a logged-out viewer gets two
  * segments, not four.
+ *
+ * `summary` states how many tasks are on screen (#2262). It sits here rather
+ * than in either header because the bar is what changes the number, and because
+ * one component printing it is what keeps the desktop eyebrow and the mobile
+ * caption from drifting apart — they both used to print it, in two spellings,
+ * one of them hardcoded English.
  */
 export default function TaskFilterBar({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
   const { t: tc } = useTranslation('common')
   const {
     user,
+    tasks,
     factions,
     statusFilters,
     taskType,
@@ -172,6 +179,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       rails={rails}
       facets={[factionFacet(factions, selectedFactions, setSelectedFactions)]}
       onClearAll={clearFilters}
+      summary={t('listPage.count', { count: tasks.length })}
       search={{
         value: query,
         onChange: setQuery,

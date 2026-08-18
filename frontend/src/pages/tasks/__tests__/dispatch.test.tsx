@@ -113,6 +113,7 @@ function text(): string {
 }
 
 const SIGNUP = i18n.t('feed:taskCard.signup')
+const COUNT = i18n.t('tasks:listPage.count', { count: 0 })
 
 describe('Tasks form-factor dispatch', () => {
   it('renders the Default mobile browse skin on mobile', () => {
@@ -129,13 +130,35 @@ describe('Tasks form-factor dispatch', () => {
     // The desktop page title; the filter bar itself is now shared chrome and so
     // is no longer a form-factor discriminator (#1367).
     //
-    // Asserted on the eyebrow, not the word "Tasks": `PageTitle` draws the title
-    // as per-letter spans (Style Guide §7), so the title never appears
+    // Asserted on `PageTitle`'s per-letter underline, not the word "Tasks": the
+    // title is drawn as per-letter spans (Style Guide §7), so it never appears
     // contiguously in the markup. This line used to read `toContain('Tasks')`
     // and was in fact matching the type rail's "Tasks" SEGMENT — which #1973
-    // then hid from this logged-out viewer, exposing the false positive.
-    expect(out, 'desktop page title eyebrow').toContain('0 shown')
+    // then hid from this logged-out viewer, exposing the false positive. It then
+    // read the eyebrow, which #2262 moved into the shared bar, so it stopped
+    // discriminating too.
+    expect(out, 'desktop page title').toContain(
+      'border-bottom:4px solid var(--faction-default-stop-1)',
+    )
   })
+
+  it.each(['mobile', 'desktop'] as const)(
+    'states the count in the bar, once, on %s (#2262)',
+    (formFactor) => {
+      dispatch.formFactor = formFactor
+      state.current = CANNED
+      const out = html()
+      expect(out, 'the bar states it').toContain(
+        `class="filter-bar__summary">${COUNT}<`,
+      )
+      // The header eyebrow (desktop) and the header caption (mobile) both
+      // carried this number; neither does now, so one copy is on screen.
+      expect(
+        out.replace(/<[^>]*>/g, '').split(COUNT),
+        'exactly one count on screen',
+      ).toHaveLength(2)
+    },
+  )
 
   it('mounts the shared filter bar on BOTH form factors (#1367)', () => {
     for (const formFactor of ['mobile', 'desktop'] as const) {
