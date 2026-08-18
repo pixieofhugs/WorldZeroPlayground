@@ -171,12 +171,18 @@ async def test_own_faction_never_delivers(
 
 
 @pytest.mark.asyncio
-async def test_defection_reopens_former_faction_invite(
+async def test_leaving_without_a_defection_record_reopens_former_faction_invite(
     db_session, character: Character, era: Era, faction_ua: Faction
 ):
     # #1425: the guard keys on the faction held at DELIVERY time, not on history.
-    # Qualify ua while in ua (no letter), then defect to snide — ua's letter is now
+    # Qualify ua while in ua (no letter), then move to snide — ua's letter is now
     # a legitimate re-invitation and must arrive on the next recalc.
+    #
+    # The move here is a bare slug write, NOT `defect_to_faction`, so no
+    # FactionDefectionHistory row exists and ua is still joinable. That is the
+    # whole reason the letter is legitimate: since #2218 a recorded defection
+    # from a faction that cannot be rejoined suppresses delivery instead — see
+    # test_faction_invitation_retirement.py.
     await _seed_faction(db_session, "snide")
     await _submit(db_session, character, await _task(db_session, character, "ua", 30))
     await _submit(db_session, character, await _task(db_session, character, "ua", 30))
