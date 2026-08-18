@@ -197,6 +197,26 @@ export default function FactionsDirectoryView({
               className="font-body"
               style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)', lineHeight: 1.4 }}
             >
+              {/* Every clause is load-bearing against a specific falsehood the old
+                  line told, so this is not a sentence to "simplify" later (#1963):
+                  • "Each faction watches its own work" — an invitation is earned PER
+                    FACTION, by doing THAT faction's tasks (ADR-0022). The old copy
+                    ("Join a faction after your first task") read as a general
+                    unlock; two Coven tasks move you no distance toward Snide.
+                  • "do enough of it" — there is a threshold and the copy declines to
+                    name it ON PURPOSE. Era 1 wants both a completed-task count for
+                    that faction AND points from its tasks, and neither
+                    `invitation_task_threshold` nor `invitation_point_threshold`
+                    ships to the client. Naming either would hardcode an EraConfig
+                    value into copy, which CLAUDE.md forbids outright — it needs
+                    the thresholds put on the wire first.
+                  • "an invitation finds you" — literal, not flavour. Delivery is
+                    passive: `InvitationWatcher` / `InvitationLetterPopup` exist
+                    because the letter arrives on its own; nothing is claimed.
+                  • "Every path is open" — kept, and true: sign-up carries no faction
+                    gate, so every faction is reachable from unaffiliated.
+                  Keep it in one voice with its sibling `index.loggedOutHint`
+                  (Factions.tsx), which a player can see too. */}
               {t('mobile.unaffiliatedBody')}
             </p>
           </div>
