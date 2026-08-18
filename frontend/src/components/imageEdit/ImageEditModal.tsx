@@ -35,6 +35,7 @@ import {
   toRadians,
 } from './imageEditHelpers'
 import type { ApplyFailureReason, CropRatioChoice } from './imageEditHelpers'
+import { drawAtRoot } from '../ui/drawAtRoot'
 
 const PAPER = 'var(--color-bg-page)'
 const INK = 'var(--color-text-primary)'
@@ -344,10 +345,14 @@ export default function ImageEditModal({
     </div>
   )
 
-  return (
+  // Drawn at the root (#2244): raised from a page — the composer's media tray
+  // and both character screens — this overlay composited inside
+  // `ShellContent`'s `z-index: 5` band and the mobile chrome painted over its
+  // crop frame and its confirm row. See `drawAtRoot`.
+  return drawAtRoot(
     <div onClick={onCancel} style={overlayStyle}>
       <div onClick={(event) => event.stopPropagation()}>{card}</div>
-    </div>
+    </div>,
   )
 }
 

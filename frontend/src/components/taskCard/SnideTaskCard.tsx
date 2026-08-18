@@ -252,7 +252,7 @@ export default function SnideTaskCard({
               <PenCircle
                 size={size.stamp}
                 value={basePoints}
-                unit={i18n.t("feed:taskCard.pointsUnit")}
+                unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
               />
             </div>
 

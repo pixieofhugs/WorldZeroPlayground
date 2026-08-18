@@ -63,7 +63,7 @@ describe('the score sits in the SHARED cauldron (#2033, ruling on #2019)', () =>
     const mark = renderToStaticMarkup(
       <CovenCauldron
         total={String(TASK.point_value)}
-        caption={i18n.t('feed:taskCard.pointsUnit')}
+        caption={i18n.t('feed:taskCard.pointsUnit', { count: TASK.point_value })}
         size={CAULDRON.desktop}
       />,
     )
@@ -75,7 +75,7 @@ describe('the score sits in the SHARED cauldron (#2033, ruling on #2019)', () =>
     const mark = renderToStaticMarkup(
       <CovenCauldron
         total={String(TASK.point_value)}
-        caption={i18n.t('feed:taskCard.pointsUnit')}
+        caption={i18n.t('feed:taskCard.pointsUnit', { count: TASK.point_value })}
         size={CAULDRON.mobile}
       />,
     )

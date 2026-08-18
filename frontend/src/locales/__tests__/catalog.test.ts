@@ -374,19 +374,12 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'feed.json:factionSelect.wow.status.member',
     // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
     'factions.json:ephemerists.road.joining',
-    // #1864 GENERIC, and the ONE row its collapse could not settle. Fifteen
-    // entries stood here waiting on the children; #1909, #1910 and #1911 took
-    // every other one — the per-faction task/praxis headings and empties, the
-    // faction-hero stat labels and six of the seven profile-kit branches all
-    // left with their keys.
-    //
-    // This leaf is the clash the sweep could not resolve on its own: #1864's
-    // agreed wording for the collapsed praxis empty state is literally "No
-    // praxis sealed yet", and #1863's ruling C retires exactly that phrase.
-    // #1911 owns key STRUCTURE, so the key collapsed and the WORD shipped
-    // unchanged rather than being picked by an agent. An owner ruling on #1863
-    // rewords this one leaf and empties this list.
-    'common.json:profile.praxisEmptyTitle',
+    // The #1864 GENERIC row that stood here — `common.json:profile.
+    // praxisEmptyTitle` — is gone: #2046 carries the owner's ruling that the
+    // collapsed praxis empty state reads "No praxis submitted yet." Fifteen
+    // entries once waited here on #1864's children; #1909, #1910 and #1911 took
+    // fourteen with their keys and #2046 reworded the last. What is left is the
+    // four look-alikes above, which no ruling is coming for.
   ].sort()
 
   const FILED_SURVIVORS = [

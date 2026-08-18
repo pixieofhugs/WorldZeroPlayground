@@ -429,9 +429,13 @@ export function useTasks(): TasksState {
             sort: sort === TASK_SORT_DEFAULT ? undefined : sort,
             can_sign_up: canSignUp || undefined,
             q: trimmedQuery || undefined,
-            // The server excludes the authenticated viewer's own started tasks
-            // by default (#1229). Echoing the character id back here added an
-            // auth-dependent dep that made the page fetch twice.
+            // No `exclude_character_id`, deliberately (#2264). "A task you are
+            // already working" is gate 5 of the sign-up predicate, so the
+            // `can_sign_up` above already carries it and #1229's hiding is
+            // intact on the default view. Switching the eligibility filter off
+            // drops the whole predicate, gate 5 with it, which is what makes
+            // "All tasks" mean all tasks. Echoing the character id back here
+            // would add an auth-dependent dep and buy nothing.
             limit,
           }),
     [taskType, sort, status, factionKey, canSignUp, trimmedQuery, viewerPending],

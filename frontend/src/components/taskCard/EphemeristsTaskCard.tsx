@@ -414,11 +414,11 @@ export default function EphemeristsTaskCard({
                       as one HTML node over the rose so #2038 could turn it. */}
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
                   <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-band-quiet)" }}>
-                    <span className="sr-only">{i18n.t("feed:taskCard.pointsUnit")}</span>
+                    <span className="sr-only">{i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}</span>
                     <Turning
                       variant="points"
                       turns={[
-                        { text: i18n.t("feed:taskCard.pointsUnit"), style: {} },
+                        { text: i18n.t("feed:taskCard.pointsUnit", { count: basePoints }), style: {} },
                         ...POINTS_TURNS,
                       ]}
                     />

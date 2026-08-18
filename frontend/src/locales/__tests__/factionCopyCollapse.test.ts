@@ -139,13 +139,13 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `common:profile\\.{F}\\.levelUnit`, shared: 'common:profile.ptsThisLevel', wording: '{{current}} / {{span}} pts this level' },
   { banned: `common:profile\\.{F}\\.nextLevel`, shared: 'common:profile.nextLevel', wording: 'next · lvl {{level}}' },
   { banned: `common:profile\\.{F}\\.praxisEmptyBody`, shared: 'common:profile.praxisEmptyBody', wording: 'Every path is still open — the first finding is the hardest.' },
-  // ponytail: #1864's table and #1863's ruling DISAGREE on this one string —
-  // the table's agreed wording keeps "sealed", the seal ruling retires it. The
-  // previous agent flagged the clash rather than picking (see catalog.test.ts's
-  // SEAL_SURVIVORS); this issue owns key STRUCTURE, so the key collapses and
-  // the word stays exactly as it shipped. Upgrade path: an owner ruling on
-  // #1863 rewords this one leaf, touching nothing else.
-  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis sealed yet' },
+  // The one row whose WORDING outlived #1911. #1864's collapse table kept
+  // "sealed" here while #1863's ruling C retired that very word, so #1911 —
+  // which owns key STRUCTURE — collapsed the key and shipped the string
+  // untouched rather than picking between two closed issues. #2046 is the owner
+  // ruling that picked: "submitted", and the retired word leaves the one place
+  // a player reads it.
+  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis submitted yet.' },
   { banned: `common:profile\\.{F}\\.praxisEyebrow`, shared: 'common:profile.praxisEyebrow', wording: 'Submitted by {{name}}' },
   { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'lvl' },
 
@@ -202,7 +202,13 @@ describe('the 40 per-faction key families are one shared string each (#1911)', (
       const re = bannedRe(banned)
       expect(leaves.map(([id]) => id).filter((id) => re.test(id))).toEqual([])
       const [ns, key] = shared.split(':')
-      expect(leaves.find(([id]) => id === `${ns}:${key}`)?.[1]).toBe(wording)
+      // A pluralised family lives under `_one`/`_other` rather than a bare leaf
+      // (#2239). The agreed wording is the plural, which is what the surface
+      // prints for every count but one.
+      const leaf =
+        leaves.find(([id]) => id === `${ns}:${key}`)
+        ?? leaves.find(([id]) => id === `${ns}:${key}_other`)
+      expect(leaf?.[1]).toBe(wording)
     })
   }
 

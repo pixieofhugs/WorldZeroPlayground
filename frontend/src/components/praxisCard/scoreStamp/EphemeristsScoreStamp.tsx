@@ -301,7 +301,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
               marginTop: "var(--space-xs)",
             }}
           >
-            {t("card.stamp.points")}
+            {t("card.stamp.points", { count: total })}
           </span>
         </div>
       </div>

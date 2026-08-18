@@ -560,7 +560,7 @@ export default function SingularityTaskDetail({
           {modifiedPoints}
         </span>
         <span style={{ ...LABEL, fontSize: "var(--text-md)", color: BLUE }}>
-          {t("detail.points.total")}
+          {t("detail.points.total", { count: modifiedPoints })}
         </span>
       </div>
     </div>
