@@ -26,7 +26,15 @@ vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mocks.user, refetch: async () => {} }),
 }))
 vi.mock('../../../hooks/useLevelTrack', () => ({
-  useLevelTrack: () => ({ nextLevel: 5, pointsToNext: 160, nextThreshold: 500, fillPercent: 68 }),
+  useLevelTrack: () => ({
+    nextLevel: 5,
+    pointsToNext: 160,
+    currentThreshold: 300,
+    nextThreshold: 500,
+    pointsIntoLevel: 40,
+    levelSpan: 200,
+    fillPercent: 20,
+  }),
 }))
 vi.mock('../../../hooks/useSidebarPanels', () => ({
   useSidebarPanels: () => ({

@@ -159,7 +159,7 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
     it(`${slug} renders the level track`, () => {
       const { html, text } = render(<Skin state={baseState()} />)
       expect(html, 'progress track slot').toContain('role="progressbar"')
-      expect(html, 'fill width slot').toContain('width:68%')
+      expect(html, 'fill width slot').toContain('width:20%')
       expect(text, 'to-next-level slot').toContain('160 to Level 5')
     })
 
