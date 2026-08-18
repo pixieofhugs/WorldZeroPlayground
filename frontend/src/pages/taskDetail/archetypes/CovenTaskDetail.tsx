@@ -594,7 +594,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title, author, stats ──
+  // ── Header: breadcrumb, faction line, title ── (byline + stats: `credentials`, below the brief — #2120)
   const stat = (label: string, value: ReactNode, valueSize: string) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
       <span style={eyebrow}>{label}</span>
@@ -1001,13 +1001,16 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
               which is #2041's "not two different drawings" a level up. It was
               `right: 24, top: 120`.
 
-              THE ANCHOR IS THE BRIEF-AND-GALLERY REGION, which is why the
-              discussion moved out into a block of its own below rather than
-              staying in here: the sheet's true bottom-right is behind the
-              comment composer, which paints an opaque `ward-card` panel and
-              would swallow the mark. This is the lowest point on the page it is
-              still visible at. `right: 24` is unchanged and is what keeps the
-              whole face on the sheet at both widths.
+              THE ANCHOR IS THE GALLERY REGION, which is why the discussion
+              moved out into a block of its own below rather than staying in
+              here: the sheet's true bottom-right is behind the comment
+              composer, which paints an opaque `ward-card` panel and would
+              swallow the mark. This is the lowest point on the page it is still
+              visible at. `right: 24` is unchanged and is what keeps the whole
+              face on the sheet at both widths. (It read BRIEF-AND-GALLERY until
+              #2120 moved the brief up into the header column; the anchor is
+              `bottom: 0`, so losing a block off the TOP of this wrapper leaves
+              the mark exactly where it was.)
 
               `zIndex: -1` puts it back UNDER the copy: this wrapper IS a
               stacking context (position + z-index), so the negative index lands

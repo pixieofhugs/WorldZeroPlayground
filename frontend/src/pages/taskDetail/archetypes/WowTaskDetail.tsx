@@ -550,7 +550,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb · shield + faction line · title · author · stats ──
+  // ── Header: breadcrumb · shield + faction line · title ── (byline + stats: `credentials`, below the brief — #2120)
   const header = (
     <div>
       <nav

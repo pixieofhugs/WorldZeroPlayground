@@ -31,9 +31,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  * The shared v2 anatomy (#1030) in UA's language: a sheet of mesa-sand vellum
  * with a lotus bleeding off the left edge, sienna rules running out from every
  * label, Cormorant Garamond on the title and the numerals, EB Garamond on
- * everything read. The header sits beside one 460px action panel that holds the
- * base value, the (usually absent) ×mult badge and the total inside an ensō.
- * Then the brief in full, the praxis gallery, the discussion.
+ * everything read. Title, then the brief in full, then the byline and the two
+ * counts, all beside one 460px action panel that holds the base value, the
+ * (usually absent) ×mult badge and the total inside an ensō (#2120). Then the
+ * praxis gallery, the discussion.
  *
  * WHAT THIS REPLACES: the 681-line "sheet" archetype built on `ua.*` voice keys
  * (`salonWallHeading`, `critiqueHeading`, `commissionHeading`,
@@ -478,7 +479,8 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title, author, the two counts ──
+  // ── Header: breadcrumb, faction line, title ── (byline + the two counts:
+  // `credentials`, below the brief — #2120)
   //
   // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
   // the task id, and the id WAS the second crumb, so the separator went with it

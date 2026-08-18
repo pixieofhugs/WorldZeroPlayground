@@ -426,7 +426,7 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title, author, stats ──
+  // ── Header: breadcrumb, faction line, title ── (byline + stats: `credentials`, below the brief — #2120)
   const header = (
     <div>
       <nav

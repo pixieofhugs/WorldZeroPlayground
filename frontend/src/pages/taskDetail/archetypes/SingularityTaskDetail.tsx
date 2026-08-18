@@ -301,7 +301,8 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Header: faction line, title, author, Level / In progress ──
+  // ── Header: faction line, title ── (author + Level / In progress:
+  // `credentials`, below the brief — #2120)
   const header = (
     <div>
       <div

@@ -440,7 +440,7 @@ export default function DefaultTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, faction line, title, author, stats ──
+  // ── Header: breadcrumb, faction line, title ── (byline + stats: `credentials`, below the brief — #2120)
   //
   // The breadcrumb is one crumb, not two. It read `TASKS / Task №{id}` until
   // #1124 retired the task id from this page; the trail's second crumb WAS the

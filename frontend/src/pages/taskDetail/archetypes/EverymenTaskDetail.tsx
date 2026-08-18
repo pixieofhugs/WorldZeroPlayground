@@ -129,12 +129,13 @@ function initialsOf(name: string): string {
  * bar flanked by cogs; Bebas Neue headlines over a Courier Prime dispatch;
  * dashed red rules between everything; the points struck as a rubber stamp.
  *
- * Anatomy is #1030's contract, unchanged and in its order — breadcrumb ·
- * masthead · title · author byline · Level / In-progress stats · action plate
- * (base + the usually-absent `×mult` badge + the stamped total, sign-up /
- * in-progress / submitted, slots, level-met, {@link LevelJumpBanner},
- * {@link ErrorBanner}) · the brief in full · the praxis gallery with its sort
- * toggle · comments. Only the dress is the Everymen's.
+ * Anatomy is #1030's contract — breadcrumb · masthead · title · the brief in
+ * full · author byline · Level / In-progress stats · action plate (base + the
+ * usually-absent `×mult` badge + the stamped total, sign-up / in-progress /
+ * submitted, slots, level-met, {@link LevelJumpBanner}, {@link ErrorBanner})
+ * · the praxis gallery with its sort toggle · comments. Only the dress is the
+ * Everymen's. #2120 re-sequenced that order in every skin: the brief rose to
+ * sit under the title, and the byline and stats came down below it.
  *
  * Four contract points worth not re-deriving:
  * - **No in-progress roster.** The header's count is the only place that number
@@ -275,7 +276,7 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── Header: breadcrumb, masthead, title, byline, stats ──
+  // ── Header: breadcrumb, masthead, title ── (byline + stats: `credentials`, below the brief — #2120)
   //
   // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
   // the task id, and the id WAS the second crumb, so the separator went with it

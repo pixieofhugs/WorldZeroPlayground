@@ -635,7 +635,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, the bar, the cut-up headline, author, stats ──
+  // ── Header: breadcrumb, the bar, the cut-up headline ── (byline + stats: `credentials`, below the brief — #2120)
   //
   // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
   // the task id, and the id WAS the second crumb, so the separator went with it
