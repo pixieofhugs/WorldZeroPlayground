@@ -12,9 +12,6 @@
  * reads source, so it can only follow a value inside one module. Every surface
  * below hands the hue across a boundary the rule cannot cross:
  *
- *   - `StatusBadge` / `InvitationNote` take a SLUG and resolve the hue inside,
- *     so all seven call sites name no colour at all (#951) — the shape a reader
- *     scanning for inks walks straight past.
  *   - `TaskCard` and the task details reach the hue through `surfaceMap`
  *     dispatch, off a *different* faction's slug (`metatask_faction_slug`) than
  *     the one dressing the page: eight hues against nine grounds.
@@ -36,6 +33,17 @@
  * sweep has been there". `local/no-faction-hue-as-ink` reads it out of the
  * source and does not care whether it renders.
  *
+ * ONE GROUP OF SITES IS GONE RATHER THAN FIXED, and its section with it. Three
+ * of #2077's twelve were `StatusBadge` / `InvitationNote` inside
+ * `components/factionCard/FactionCard.tsx` — slug-taking helpers whose call
+ * sites named no colour at all, which is why they headed the list above. #2024
+ * retired that whole surface: the dispatcher never had a production mount (#422
+ * gave the faction directory `FactionSelectCard` on both form factors), and the
+ * two helpers were declared in that file with no other call site anywhere in
+ * `src/`, so deleting it took the defect with them rather than relocating it.
+ * Nothing was reinstated elsewhere, and the nine mounts below are the ones that
+ * are still mounted.
+ *
  * A NOTE ON WHICH FACTION THE FIXTURES USE. `ephemerists` is the metatask
  * faction throughout, because #2068 handed it the plate brass and that is the
  * slot that fails — 2.19:1 on the app's page in light, 2.04:1 on the faction
@@ -48,7 +56,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../i18n'
-import type { FactionOut, InvitationLetterOut } from '../api/factions'
+import type { InvitationLetterOut } from '../api/factions'
 import type { TaskOut } from '../api/tasks'
 import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import { fillUses, inkOffenders } from '../utils/__tests__/inkSeam'
@@ -62,7 +70,6 @@ vi.mock('../auth/AdminModeContext', () => ({
 }))
 
 // Imported after the mocks are registered.
-import FactionCard from '../components/factionCard/FactionCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import { surfaceMap } from '../factions'
 import DefaultTaskDetail from '../pages/taskDetail/archetypes/DefaultTaskDetail'
@@ -87,60 +94,6 @@ const SLUGS = [
 
 /** The hue that fails hardest today. See the header — a fixture, not the subject. */
 const META_SLUG = 'ephemerists'
-
-// ── The faction card ───────────────────────────────────────────────────────
-
-/**
- * Both API spellings of every standing.
- *
- * `welcome_back` / `can_return` is the branch #951 measured and deferred, and
- * `burned` / `defected` is its structural twin — the same `-light` wash under
- * the same `.label-caption`. Walking all seven is what stops a fix to one branch
- * reading as a fix to the badge.
- */
-const STANDINGS = [
-  'member',
-  'invited',
-  'burned',
-  'defected',
-  'welcome_back',
-  'can_return',
-  'not_invited',
-] as const
-
-describe('the faction cards paint no spine hue as text (#951, closed by #2077)', () => {
-  for (const slug of SLUGS) {
-    const faction: FactionOut = { slug, status: 'visible' }
-    it(`${slug}: no standing, and no invitation note, inks in the hue`, () => {
-      for (const status of STANDINGS) {
-        const html = render(
-          <FactionCard faction={faction} status={status} invitationNote="Delivered" />,
-        )
-        expect(inkOffenders(html), `${slug} / ${status}`).toEqual([])
-      }
-    })
-  }
-
-  it('the cards still wear their faction family on the fills, rules and borders', () => {
-    // NOT `fillUses` here, and the difference is worth stating: the card family
-    // does its fills with SUFFIXED tokens (`-light`, `-border`, `-card-bg`), so
-    // the BARE hue never legitimately appears anywhere on a faction card in any
-    // role. `fillUses` counts bare-hue fills and correctly reads zero, which
-    // would make it a guard that passes when the dress is deleted. The claim that
-    // actually holds here is that the faction family is still doing the drawing.
-    for (const slug of SLUGS) {
-      const html = render(
-        <FactionCard
-          faction={{ slug, status: 'visible' }}
-          status="invited"
-          invitationNote="Delivered"
-        />,
-      )
-      expect(/--faction-|--everymen-|--albescent-/.test(html), slug).toBe(true)
-      expect(fillUses(html), `${slug} paints no BARE hue at all, in any role`).toEqual([])
-    }
-  })
-})
 
 // ── The task card's metatask chip ──────────────────────────────────────────
 
