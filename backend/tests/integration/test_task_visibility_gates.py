@@ -336,3 +336,103 @@ async def test_the_detail_door_opens_for_an_admin_immediately(
     response = await client.get(f"/tasks/{fresh.id}", headers=auth_headers)
     assert response.status_code == 200, response.text
     assert response.json()["id"] == fresh.id
+
+
+# ---------------------------------------------------------------------------
+# The author's own proposals (#2126)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_a_proposer_sees_their_own_proposal_the_moment_they_write_it(
+    client: AsyncClient,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """#2126 — "No proposed tasks yet" said to the one person who knows better.
+
+    TWO gates hid a proposal from its own author. The #1695 window withheld it
+    for its first `pending_task_admin_review_hours`, and the proposer's-profile
+    branch of `list_tasks` withheld pending from *every* viewer for good — so
+    the profile section headed "Proposed tasks" answered "none", and unlike the
+    window, waiting never fixed that one.
+
+    The propose-success screen already promises the narrower rule in so many
+    words: only admins see it at first, "other players see it after that". The
+    author is not one of the other players.
+
+    Asserted against the FRESH row at BOTH doors: a carve-out that only reaches
+    the ripe rows is the same bug with a 48-hour delay on it.
+    """
+    await _set_level_and_faction(
+        db_session, character, era, CURRENT_ERA.level_to_propose_task, "ua"
+    )
+    fresh = await _gated_task(db_session, character, TaskStatus.pending, FRESH_AGE)
+
+    mine = await _ids(client, f"/tasks?created_by={character.id}", auth_headers)
+    assert fresh.id in mine
+
+    detail = await client.get(f"/tasks/{fresh.id}", headers=auth_headers)
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["id"] == fresh.id
+
+
+@pytest.mark.asyncio
+async def test_the_carve_out_is_authorship_and_not_a_hole_in_the_window(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """What #2126 must NOT widen: somebody else's profile.
+
+    `character2` reads `character`'s profile at the level that opens the review
+    queue. One row is inside the window and one is past it, and BOTH stay off a
+    profile that is not the reader's own — the proposer's-profile branch still
+    withholds other people's pending rows exactly as it did before. The
+    exemption is per-ROW authorship, so it can only ever reach rows the reader
+    wrote.
+    """
+    await _set_level_and_faction(
+        db_session, character2, era, CURRENT_ERA.level_to_see_pending_tasks, "ua"
+    )
+    fresh = await _gated_task(db_session, character, TaskStatus.pending, FRESH_AGE)
+    ripe = await _gated_task(db_session, character, TaskStatus.pending, RIPE_AGE)
+
+    theirs = await _ids(client, f"/tasks?created_by={character.id}", auth_headers2)
+    assert fresh.id not in theirs
+    assert ripe.id not in theirs
+
+    # The detail door keeps the window against a row you did not write, and the
+    # anonymous web is still below every gate.
+    other = await client.get(f"/tasks/{fresh.id}", headers=auth_headers2)
+    assert other.status_code == 404
+    assert (await client.get(f"/tasks/{fresh.id}")).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_a_profile_keeps_a_proposal_its_author_is_also_working(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    praxis_solo,
+    auth_headers: dict,
+):
+    """The browse's exclusion is not a fact about authorship (#2126).
+
+    `GET /tasks` defaults `exclude_character_id` to the reader (#1229) so the
+    browse hides what they have already started. `created_by` is not a browse:
+    it asks what a character PROPOSED, and the answer cannot depend on which of
+    those tasks the *reader* happens to be working. `active_task` is authored by
+    `character` and carries their praxis, so it dropped off their own profile
+    the moment they started it — and off a stranger's profile according to
+    whatever the visitor had in their own praxis bank.
+    """
+    mine = await _ids(client, f"/tasks?created_by={character.id}", auth_headers)
+    assert active_task.id in mine
