@@ -10,16 +10,13 @@ import { EphemeristsSigil } from '../../../components/sigil/EphemeristsSigil'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   BRASS,
+  BRASS_LIGHT,
   CAPTION,
-  CTA_BG,
-  CTA_INK,
   DECO,
-  RuneRule,
   INK,
   INNER,
   LINE,
   MARGINALIA,
-  NILE,
   OCHRE,
   PAGE,
   QUIET,
@@ -70,7 +67,7 @@ const actionPillStyle: CSSProperties = {
   ...SMALL_CAPS,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
-  color: NILE,
+  color: BRASS_LIGHT,
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 120ms ease',
@@ -85,7 +82,7 @@ const trackMetaStyle: CSSProperties = {
 }
 
 /** The valley's own spectrum: ochre through brass into the Nile (#1553). */
-const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${NILE})`
+const TRACK_FILL = `linear-gradient(90deg, ${OCHRE}, ${BRASS}, ${BRASS_LIGHT})`
 
 /** The task-faction mark on a register row (#1711), at the row's cap height.
  *  Below the kite's own 20px threshold, so an ephemerists task draws the mark's
@@ -130,9 +127,10 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         <h1 style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1.05, letterSpacing: '0.04em', color: INK, margin: 'var(--space-xs) 0 0' }}>
           {t('fieldDesk.home.title')}
         </h1>
-        <div style={{ marginTop: 'var(--space-sm)' }}>
-          <RuneRule />
-        </div>
+        {/* A rune band closed the running head until #2210 retired the old
+            glyph vocabulary kit-wide. The desk mounts no masthead, so nothing
+            takes its place — the column's own `--space-lg` gap parts the head
+            from the first leaf. */}
       </header>
 
       {/* ── Observer leaf ── */}
@@ -267,7 +265,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
           row={pendingRow}
           className="flex items-center justify-between"
           style={{ background: SHEET, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
-          chevron={<span aria-hidden style={{ color: NILE }}>›</span>}
+          chevron={<span aria-hidden style={{ color: BRASS_LIGHT }}>›</span>}
         />
       )}
 
@@ -278,7 +276,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
             {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: brassRule }} />
-          <Link to="/tasks" style={{ ...kicker, color: NILE, textDecoration: 'none' }}>
+          <Link to="/tasks" style={{ ...kicker, color: BRASS_LIGHT, textDecoration: 'none' }}>
             {t('fieldDesk.home.viewAll')}
           </Link>
         </div>
@@ -315,7 +313,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: NILE, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
+                  style={{ ...SMALL_CAPS, fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: BRASS_LIGHT, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {praxisModeLabel(praxis, t)}
                 </span>
@@ -327,10 +325,15 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
 
       {/* ── Primary actions: both land on an already-narrowed view (#1554) ── */}
       <div className="flex gap-2.5">
+        {/* THE ONE PLATE CTA (#2146). #2067's note that this surface "does not
+            paint it with the plate CTA" was already out of date — it does, and
+            it restated the enclosure at the width the light half happens to
+            want. `.eph-cta` carries all three; the Tailwind utilities beside it
+            set only layout, so nothing here competes with the paint. */}
         <Link
           to={FIND_TASK_LINK}
-          className="flex-1 flex items-center justify-center"
-          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, textDecoration: 'none' }}
+          className="flex-1 flex items-center justify-center eph-cta"
+          style={{ ...SMALL_CAPS, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', padding: 'var(--space-lg)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.findTask')}
         </Link>

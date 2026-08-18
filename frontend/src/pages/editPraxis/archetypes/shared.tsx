@@ -341,10 +341,18 @@ export interface ComposerBand {
    * CAST paint once the viewer has — the confirmation signal the design says the
    * bleed exists for. The archetype decides which, because only it knows what
    * "filed" means for its own gate (Coven's `hasCast`).
+   *
+   * OPTIONAL SINCE #2146, for the one case where the paint is not the skin's to
+   * decide here: the Ephemerists' band is the faction's single CTA definition,
+   * a class in `index.css`, because its enclosure changes width between the
+   * cascades. Omitting these two lets that class through — an inline value
+   * would beat it and pin one theme's half in both. Omit them ONLY when a class
+   * on the same button supplies them; a band that names neither and wears
+   * nothing is a transparent button.
    */
-  background: string;
-  /** The ink on that fill. */
-  color: string;
+  background?: string;
+  /** The ink on that fill. See {@link ComposerBand.background} on omitting it. */
+  color?: string;
   /**
    * The sheet's own frame, for the band's 1.5px top rule.
    *

@@ -11,7 +11,6 @@ import {
   EmblemOctagon,
   GOLD,
   GRID,
-  GlyphRegister,
   MARGINALIA,
   READING,
   SMALL_CAPS,
@@ -53,13 +52,14 @@ function HeroGrids() {
           ))}
         </g>
       </svg>
-      {/* The design's own register, marching the band rather than a card's. */}
-      <svg width="100%" height={26} viewBox="0 0 1000 26" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute", left: 0, top: 8, opacity: 0.6 }}>
-        <GlyphRegister width={1000} y={13} strength={0.34} keyPrefix="hero-a" />
-      </svg>
-      <svg width="100%" height={26} viewBox="0 0 1000 26" preserveAspectRatio="xMidYMid slice" style={{ position: "absolute", left: 0, bottom: 6, opacity: 0.6 }}>
-        <GlyphRegister width={1000} y={13} strength={0.3} keyPrefix="hero-b" />
-      </svg>
+      {/* TWO INCISED REGISTERS STOOD HERE (#2210), one along the top of the
+          band and one along the bottom. They were the OLD glyph vocabulary, and
+          #2143's notation band is the faction's only ornament row now. Nothing
+          replaces them on this hero: the band is the MASTHEAD's last line, and
+          this hero heads itself — it draws its own wordmark and stat ledger and
+          mounts no `EphemeristsMasthead`, so a band here would be ornament
+          filling a gap rather than a lockup closing itself off. What the ground
+          keeps is the graticule and the survey rays above. */}
     </div>
   );
 }

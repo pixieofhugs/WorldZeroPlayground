@@ -123,11 +123,13 @@ describe("Ephemerists task detail — the Valley plate", () => {
     }
   });
 
-  it("wears the Valley dress — masthead band, incised registers, engraved title", () => {
+  it("wears the Valley dress — masthead band, notation band, engraved title", () => {
     const { html, text } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(html, "papyrus page sheet").toContain("eph-plate-sheet");
     expect(html, "cornice masthead band").toContain("--faction-ephemerists-plate-band");
-    expect(html, "incised glyph registers").toContain("epg-glyph");
+    // Two incised glyph registers (`epg-glyph`) were asserted here. #2210
+    // retired them: the notation band is the head's only ornament row, and the
+    // block further down is what says so.
     expect(html, "the stepped octagon medallion").toContain("M30 4 L70 4 L96 30");
     expect(text, "the masthead wordmark").toContain("The Ephemerists");
     // The kite's opening move; brushed rather than ruled since Sigil Studies v2.
@@ -188,6 +190,22 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(text).toContain(long);
   });
 
+  it("stands the brief on the chart, at the PAGE's weight and not the design's (#2144)", () => {
+    const { html } = render(<EphemeristsTaskDetail state={baseState()} />);
+    // The net, not the journal ruling this leaf used to draw for itself.
+    expect(html).toContain('viewBox="0 0 1000 600"');
+    expect(html).not.toContain("repeating-linear-gradient(180deg");
+    // 0.17. The design says 0.42, which puts the net's diagonals at the weight
+    // of a 13px serif's strokes over what is body copy; the owner walked it
+    // down to the page's own number. The upgrade path if the brief ever needs
+    // to read as more written-on is BOTH grounds, never a heavier net.
+    expect(html).toContain("opacity:0.17");
+    expect(html).not.toContain("opacity:0.42");
+    // A ground, not a veil: the leaf isolates so the net's negative layer lands
+    // above the plate's fill and below every ink printed on it.
+    expect(html).toContain("isolation:isolate");
+  });
+
   it("never links the gallery out at the task_id feed filter", () => {
     // The gallery expands in place instead (#1030's fix, inherited here) — the
     // reader stays on the task, even now that the URL filters (#1050).
@@ -212,31 +230,74 @@ describe("the Valley plate's tokens", () => {
     expect(referenced.length).toBeGreaterThan(10);
   });
 
-  // The plate used to owe a value in BOTH cascades, and this block checked that
-  // token by token. #1627 took the register theme-INVARIANT — the papyrus half
-  // could not survive the card contract moving onto the cornice band, because
-  // one set of card ink names then had to serve two grounds of opposite
-  // polarity — so the question flips: every token is declared once in `:root`
-  // and none of them may reappear under `[data-theme="dark"]`. A stray dark
-  // override would resurrect the split this change exists to remove, and would
-  // do it silently: `factionContrast.test.ts` measures whatever is declared, so
-  // it would just go back to measuring two palettes, and pass.
+  /**
+   * THE REGISTER HAS TWO HALVES AGAIN (#2141), so this block asks a different
+   * question than it did between #1627 and now — and the SHAPE of the question
+   * is what matters, because both wrong answers are silent.
+   *
+   * #1627 took the register theme-INVARIANT: the papyrus half could not survive
+   * the card contract moving onto the cornice band, because one set of card ink
+   * names then had to serve two grounds of opposite polarity. This block checked
+   * that, token by token, by asserting no token appeared under
+   * `[data-theme="dark"]`. #2141 kept the BAND at the compass blue in both
+   * cascades and gave the SHEET a vellum light half, so most of the family owes
+   * a value in both again — and five members deliberately still do not.
+   *
+   * Both failure modes are invisible to `factionContrast.test.ts`, which
+   * measures whatever is declared and would happily pass either way:
+   *   • a two-theme token missing its dark half silently ships a vellum ink on
+   *     a night sheet;
+   *   • a dark override on an INVARIANT silently un-freezes the compass blue,
+   *     which is the one thing holding the card contract's polarity still.
+   * So the assertion is per token and by name, not a count.
+   */
+  const THEME_INVARIANT = new Set([
+    // The compass blue and its two inks — the faction, not a mode (#2140).
+    "--faction-ephemerists-plate-band",
+    "--faction-ephemerists-plate-band-ink",
+    "--faction-ephemerists-plate-band-quiet",
+    // The dark chip the metals are struck on; they have no light value at all.
+    "--faction-ephemerists-plate-disc",
+    // One value across all three grounds by construction (3.73 / 3.58 / 3.55).
+    "--faction-ephemerists-plate-brass-rule",
+    // Struck only on the chip above, so likewise no light value to differ from.
+    "--faction-ephemerists-plate-gold",
+    // `none` in both cascades since #1627 — an absence, not a colour.
+    "--faction-ephemerists-plate-wash",
+  ]);
+
   for (const token of referenced) {
-    it(`${token} is declared once, in :root`, () => {
+    const invariant = THEME_INVARIANT.has(token);
+    it(`${token} is declared in :root${invariant ? " and nowhere else" : " and in dark"}`, () => {
       expect(themes.light.has(token), "light / :root").toBe(true);
       expect(
         themes.dark.has(token),
-        'the Valley plate is theme-invariant (#1627) — a `[data-theme="dark"]` value splits it back in two',
-      ).toBe(false);
+        invariant
+          ? `${token} is theme-invariant on purpose (#2141) — a \`[data-theme="dark"]\` value un-freezes the compass blue the card contract's polarity rests on`
+          : `${token} is a two-theme contract since #2141 — without a \`[data-theme="dark"]\` value it ships its VELLUM value on the night sheet`,
+      ).toBe(!invariant);
     });
   }
+
+  it("the invariant set is the whole of it — nothing else escapes the dark half", () => {
+    // The set above is a claim about the register, so it is checked against the
+    // register rather than against this page's imports: a token this file never
+    // names could still be missing its dark half.
+    const family = [...themes.light.keys()].filter((name) =>
+      name.startsWith("--faction-ephemerists-plate-"),
+    );
+    expect(family.length).toBeGreaterThan(15);
+    expect(family.filter((name) => !themes.dark.has(name)).sort()).toEqual(
+      [...THEME_INVARIANT].sort(),
+    );
+  });
 });
 
 /**
  * #1654 — the page draws the kit's marks, at the PAGE's densities.
  *
  * Seven of this file's declarations were transcriptions of `ephemeristsPlate`'s
- * — `GLYPHS`, `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally`, `Sign` —
+ * — `GLYPHS`, the register and its marks, `Octagon`, `Cornice`, `Tally`, `Sign` —
  * so a mark redrawn in the kit left this page on the old one, silently. The
  * source-tree guard against a fresh copy lives in
  * `praxisCard/__tests__/ephemeristsPlateSurfaces.test.tsx`; what only rendering
@@ -254,14 +315,17 @@ describe("the Valley page's ornament comes from the kit unchanged (#1654)", () =
     expect(page().match(/height:3\.5px/g)).toHaveLength(26);
   });
 
-  it("fills both masthead registers from the width, not a fixed 16", () => {
-    // `Math.ceil(1200 / 27.5)` = 44 signs a row, twice. A fixed count would
-    // stop short of the page edge at the 1200 cap; the design's own 16 is the
-    // number the local copy documented itself as NOT using. Sliced to the
-    // masthead's own svg so the page's rune bands — one per section head, and
-    // a section count this has no opinion about — cannot move it.
-    const masthead = page().slice(0, page().indexOf("</svg>"));
-    expect(masthead.match(/class="epg-glyph"/g)).toHaveLength(44 * 2);
+  it("heads the page with the notation band and no glyph register (#2210)", () => {
+    // This asserted the OPPOSITE until #2210: 44 signs a row, twice, filled
+    // from the 1200px cap. #2143 hung the mathematical notation band under the
+    // wordmark and left both registers standing, so the page wore two glyph
+    // vocabularies at once and the lower row ran through the band's own marks.
+    // The registers retire; the band is the head's last line and its only
+    // ornament row, and the page's section heads keep the brass hairline that
+    // already flexes across each heading row.
+    const html = page();
+    expect(html, "the retired incised registers").not.toContain("epg-glyph");
+    expect(html, "the notation band's closing rule").toContain("3px double");
   });
 
   it("strikes the summons in platinum, off the shared sign table", () => {

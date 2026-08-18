@@ -10,6 +10,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import EphemeristsRuneStrip from "../factionMarks/EphemeristsRuneStrip";
+import EphemerisNet from "../factionMarks/EphemerisNet";
 import {
   CompassRose,
   Cornice,
@@ -285,6 +286,13 @@ export default function EphemeristsTaskCard({
         className="eph-turn-scope"
         style={{
           position: "relative",
+          /* THE NET'S MOUNT (#2144's card weight, landed by #2146). Isolating
+             makes the plate its own stacking context, so the net's `z-index: -1`
+             paints after the plate's own fill and before every descendant. NOT
+             the design's `z-index: 1` lift on the content: lifting static
+             children needs `position: relative` on them, which would override
+             the absolutely positioned ornament this skin is full of. */
+          isolation: "isolate",
           overflow: "hidden",
           boxSizing: "border-box",
           width: "100%",
@@ -301,6 +309,11 @@ export default function EphemeristsTaskCard({
             that used to pin a 110px canvas for the glyph registers went with
             #2067, which is what makes the hero row rise ~75px. The paint and the
             disc-vs-band ruling live at `cardMasthead/factionBands`. */}
+        {/* 0.10, not the page's 0.17 (#2144's table). On a card the net sits
+            behind 12px body text rather than behind a solid fill, and at the
+            page's weight its lines cross letterforms. */}
+        <EphemerisNet opacity={0.1} />
+
         <EphemeristsBand />
         <Cornice flutes={40} />
 
@@ -389,12 +402,18 @@ export default function EphemeristsTaskCard({
               >
                 <CompassRose size={size.medallion} />
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-                  <span style={{ fontFamily: DECO, fontSize: size.pointsSize }}>{basePoints}</span>
+                  {/* THE ROSE IS A DARK CHIP ON A LIGHT SHEET (#2141), so this
+                      numeral states its ink instead of inheriting the plate's:
+                      `-plate-ink` is the same #12151f as the disc in light and
+                      would read 1.00:1. `-plate-band-ink` is the MARK, and the
+                      compass blue is the ground it is measured on — 7.59:1 in
+                      both themes. */}
+                  <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: "var(--faction-ephemerists-plate-band-ink)" }}>{basePoints}</span>
                   {/* Ornament: the unit engraved inside the rose, sized to the
                       disc rather than to the label ramp (§4a). #2037 kept this
                       as one HTML node over the rose so #2038 could turn it. */}
                   {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the rose. */}
-                  <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-muted)" }}>
+                  <span data-points-label="ephemerists" style={{ ...SMALL_CAPS, fontSize: 7, letterSpacing: "0.2em", marginTop: "var(--space-xs)", color: "var(--faction-ephemerists-plate-band-quiet)" }}>
                     <span className="sr-only">{i18n.t("feed:taskCard.pointsUnit")}</span>
                     <Turning
                       variant="points"
@@ -485,15 +504,27 @@ export default function EphemeristsTaskCard({
               data-cta-rule="ephemerists"
               style={{
                 height: 3,
-                borderTop: "1px solid var(--faction-ephemerists-plate-brass)",
-                borderBottom: "1px solid var(--faction-ephemerists-plate-brass)",
+                /* The notation band's own closing pair (#2146 §4) — a hairline
+                   above, a `3px double` below, both in the faction's LINE brass.
+                   It was two matched hairlines in `-plate-brass`, which is the
+                   MARK brass and the heavier of the two after dark. The masthead
+                   opens on this rule and the CTA block closes on it. */
+                borderTop: "1px solid var(--faction-ephemerists-plate-brass-rule)",
+                borderBottom: "3px double var(--faction-ephemerists-plate-brass-rule)",
                 margin: "0 var(--space-xl) var(--space-md)",
               }}
             />
-            <EphemeristsRuneStrip side="top" />
+            <EphemeristsRuneStrip side="top" seed={`task:${task.id}`} />
             <div style={{ display: "flex", justifyContent: "center" }}>
               <button
                 type="button"
+                /* THE ONE PLATE CTA (#2146). Ground, ink and enclosure all come
+                   from `.eph-cta` in index.css — the enclosure changes WIDTH
+                   between the cascades, which no token can carry and which an
+                   inline style could only get with the ternary §3 forbids. An
+                   inline `background` or `border` here would beat the class and
+                   pin the light half in both themes on this card alone. */
+                className="eph-cta"
                 onClick={cta.onPress}
                 aria-disabled={cta.denied || undefined}
                 style={{
@@ -504,9 +535,6 @@ export default function EphemeristsTaskCard({
                   /* The design's 14px, on the rung below it: the air between the
                      button and the two strips it sits between. */
                   margin: "var(--space-md) auto",
-                  background: "var(--faction-ephemerists-plate-cta-bg)",
-                  color: "var(--faction-ephemerists-plate-cta-ink)",
-                  border: "2px solid var(--faction-ephemerists-plate-brass)",
                   padding: "var(--space-sm) var(--space-xl)",
                   fontFamily: CAPS,
                   fontWeight: 500,
@@ -539,7 +567,7 @@ export default function EphemeristsTaskCard({
                 </svg>
               </button>
             </div>
-            <EphemeristsRuneStrip side="bottom" />
+            <EphemeristsRuneStrip side="bottom" seed={`task:${task.id}`} />
           </div>
         )}
       </article>

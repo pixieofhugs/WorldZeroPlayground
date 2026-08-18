@@ -25,7 +25,7 @@
  * band.
  *
  * Every mark is REUSED from the kit, never redrawn: `EphemeristsSigil`,
- * `Cornice`, `GlyphRegister`. No new SVG.
+ * `Cornice`. No new SVG.
  *
  * The band's mark was the winged sun disc until #1634 retired it kit-wide — the
  * sigil is the only mark, and this row was its last caller anywhere. It takes
@@ -63,10 +63,8 @@ import {
   BRASS,
   BRASS_LIGHT,
   Cornice,
-  GlyphRegister,
   INK,
   LINE,
-  NILE,
   OCHRE,
   PLATE,
   READING,
@@ -93,39 +91,38 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * that read **2.91:1** on the night plate but the plate's own brass, which reads
  * **7.22:1** light / 10.64:1 dark on that same theme-invariant near-black. The
  * miss the repoint was measured against is gone — the raw hue would now clear
- * AA here, and by a hair more than {@link NILE} does.
+ * AA here, and by a hair more than {@link BRASS_LIGHT} does.
  *
- * THE REPOINT STAYS ANYWAY, because it was never only a ratio: {@link NILE} is
- * exactly the ink this faction declares for
- * "links", and the actor's name IS a link to that player. It measures 7.00:1 on
- * the plate. `-plate-quiet` clears too (5.98) and is still rejected for the
+ * THE REPOINT STAYS ANYWAY, because it was never only a ratio: {@link BRASS_LIGHT} is
+ * exactly the ink this faction declares for "links + affirmations", and the
+ * actor's name IS a link to that player. #2141 retired the aqua this slot used
+ * to read and handed the role to the brass highlight, so the sentence is now
+ * true of the token it names: 5.09:1 on the vellum sheet, 9.68:1 on the night
+ * plate. `-plate-quiet` clears too (5.98) and is still rejected for the
  * reason it always was — it is the MUTED role's ink, and painting the row's one
  * identity slot in a colour quieter than the body copy loses the faction rather
  * than legibly keeping it.
  */
-const ROW_SKIN: FeedRowSkin = { ink: { actor: NILE } }
+const ROW_SKIN: FeedRowSkin = { ink: { actor: BRASS_LIGHT } }
 
 interface BandSize {
-  /** Masthead height, and the width its register is drawn to fill. Geometry. */
+  /** Band height, and the width its ruled hairline is drawn to fill. Geometry. */
   height: number
   view: number
   /** The sigil at the head of the band. Its HEIGHT — the mark owns its ratio
    *  (#1635) — so there is one number, not two. */
   discHeight: number
-  /** Strength of the incised register behind the label. */
-  register: number
   bandPadding: string
   labelSize: string
 }
 
 const SIZES: Record<'desktop' | 'mobile', BandSize> = {
   // 452 is the feed column's own basis (the sheet's `minmax(452px, 1fr)`), so
-  // the register's signs land at their drawn pitch instead of being sliced short.
+  // the band's hairline is drawn to the width it is actually shown at.
   desktop: {
     height: 30,
     view: 452,
     discHeight: 14,
-    register: 0.24,
     bandPadding: 'var(--space-xs) var(--space-md)',
     labelSize: 'var(--text-md)',
   },
@@ -133,7 +130,6 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
     height: 26,
     view: 360,
     discHeight: 10,
-    register: 0.2,
     bandPadding: 'var(--space-xs) var(--space-sm)',
     labelSize: 'var(--text-base)',
   },
@@ -152,8 +148,8 @@ export default function EphemeristsFeedFrame({
     <div
       style={{
         position: 'relative',
-        // The ornament z-indexes (the register behind the label, the cornice's
-        // own layer) stay inside this card. Without it they order against
+        // The ornament z-indexes (the band's hairline behind the label, the
+        // cornice's own layer) stay inside this card. Without it they order against
         // whatever stacking context the feed column happens to establish, which
         // is how a positioned ornament ends up over unrelated copy (§5).
         isolation: 'isolate',
@@ -163,7 +159,7 @@ export default function EphemeristsFeedFrame({
         color: INK,
       }}
     >
-      {/* ── The masthead: night sky, one incised register, the winged disc ── */}
+      {/* ── The chassis band: night sky, ruled off, four chrome slots ── */}
       <div
         style={{
           position: 'relative',
@@ -176,8 +172,8 @@ export default function EphemeristsFeedFrame({
         <svg
           width="100%"
           height={size.height}
-          // The viewBox tracks the band's own height so `slice` crops the
-          // register at the edges rather than through the middle of every sign.
+          // The viewBox tracks the band's own height, so `slice` crops the
+          // hairline at the edges rather than scaling it off the band.
           viewBox={`0 0 ${size.view} ${size.height}`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
@@ -189,12 +185,14 @@ export default function EphemeristsFeedFrame({
             strokeWidth="0.6"
             opacity="0.24"
           />
-          <GlyphRegister
-            width={size.view}
-            y={size.height - 7}
-            strength={size.register}
-            keyPrefix="feed"
-          />
+          {/* AN INCISED REGISTER RAN ALONG THE FOOT OF THIS BAND (#2210). It
+              was the old glyph vocabulary, which #2143 replaced on the masthead
+              with the notation band and then left standing everywhere else —
+              two vocabularies at once, overlapping wherever they shared a band.
+              The register retires; nothing replaces it here, because the
+              notation band is the MASTHEAD's last line and this frame has no
+              masthead: it places its four chrome slots by hand. The hairline
+              above still rules the band's head. */}
         </svg>
 
         {/* The four chrome slots, placed by hand rather than through

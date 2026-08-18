@@ -90,16 +90,27 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
 
   it('reuses the kit ornament rather than drawing new marks', () => {
     const html = frame()
-    // The kite sigil (#1635) and the incised register (`epg-glyph`, whose
-    // breathe cycle + reduced-motion gate live in index.css). The band's mark
-    // was the winged sun disc until #1634 retired it kit-wide; this row was its
-    // last caller anywhere, so the disc's own `plate-disc` medallion fill must
-    // not survive here.
+    // The kite sigil (#1635). The band's mark was the winged sun disc until
+    // #1634 retired it kit-wide; this row was its last caller anywhere, so the
+    // disc's own `plate-disc` medallion fill must not survive here.
     // The kite's opening move. Redrawn brushed by Sigil Studies v2 — six fills
     // on a square 100-unit box, where #1635's was a stroked diamond on 486x560.
     expect(html).toContain('M19.1 30.8')
     expect(html).not.toContain('--faction-ephemerists-plate-disc')
-    expect(html).toContain('epg-glyph')
+  })
+
+  it('carries no glyph register — this band has no masthead to hang one on', () => {
+    // An incised register (`epg-glyph`) ran along the foot of the band until
+    // #2210. It was the OLD vocabulary: #2143 gave the masthead the notation
+    // band and left this one standing, so the faction wore two at once. The
+    // register retires and NOTHING replaces it here — the notation band is the
+    // masthead's last line, and this frame places its four chrome slots by
+    // hand rather than mounting `EphemeristsMasthead`.
+    const html = frame()
+    expect(html, 'the retired incised register').not.toContain('epg-glyph')
+    expect(html, 'a band mounted where there is no lockup').not.toContain('3px double')
+    // What still rules the band's head is its own hairline.
+    expect(html).toContain('stroke-width="0.6"')
   })
 
   it('takes the sigil at the REDUCED cut, since the band is 10-14px tall', () => {

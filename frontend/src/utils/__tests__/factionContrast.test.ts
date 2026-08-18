@@ -250,11 +250,11 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
  *                                                only honest scalar reading — the
  *                                                same call `ua leaf darkest stop` makes)
  *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
- *   ephemerists  `--faction-ephemerists-plate-bg` the Valley plate, which is a
- *                                                different SHEET from the cornice
- *                                                band `-card-bg` names — #171a26
- *                                                against #0a0c15, in both cascades
- *                                                since #1627
+ *   (ephemerists  WAS in this list and left it in #2141. `-card-bg` aliased the
+ *                 cornice band, a different sheet from the plate this card
+ *                 paints; the owner ruling repointed it at `-plate-bg`, so the
+ *                 name and the sheet are one token again and the crossing this
+ *                 map existed to record is gone rather than remapped.)
  *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
  *                                                different token tomorrow (the reason
  *                                                the snide composer block gives)
@@ -274,12 +274,25 @@ const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
   // is measured there too.
   snide: "--faction-snide-wall-deep",
   wow: "--faction-wow-chronicle-bg",
+  // The same token `--faction-ephemerists-card-bg` aliases since #2141. Kept
+  // spelled out rather than dropped to the default: this map is read as the
+  // list of sheets a praxis card paints, and an entry that agrees with the
+  // default is still an answer.
   ephemerists: "--faction-ephemerists-plate-bg",
   singularity: "--faction-singularity-card-bg",
 };
 
-/** The five whose sheet is a different TOKEN from `--faction-{key}-card-bg`. */
-const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists", "snide"] as const;
+/**
+ * The four whose sheet is a different TOKEN from `--faction-{key}-card-bg`.
+ *
+ * EPHEMERISTS LEFT IN #2141 (owner ruling). Its `-card-bg` now aliases
+ * `-plate-bg`, which is the sheet its praxis card paints, so `ephemerists
+ * praxis card sheet, muted ink` would resolve the identical (ink, ground) pair
+ * as `ephemerists card muted text` in CARD_PAIRS — a second name for one
+ * measurement, which is the thing this file keeps warning about. The pairing is
+ * still gated; it is gated once.
+ */
+const OWN_SHEET_KEYS = ["ua", "coven", "wow", "snide"] as const;
 
 /**
  * WHICH INK THE CARD'S SHARED SLOTS ACTUALLY RESOLVE (#2177).
@@ -372,7 +385,7 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
   }),
   // The BARE-sheet muted reading, for the four sheets `-card-bg` does not stand
   // in for: the `hidden` badge sets the muted ink there (its 5% wash is gone —
-  // see the component). For the other four keys that is `{key} card muted
+  // see the component). For the other five keys that is `{key} card muted
   // text`, and a second name for one measurement is what this file keeps
   // warning about.
   //
@@ -830,12 +843,21 @@ const ARCHETYPE_PAIRS: Pair[] = [
     floor: AA_LARGE,
   },
 
-  // Ephemerists — THE VALLEY PLATE (task card v2, #1023). Four surfaces, not
-  // one: the papyrus plate, the cornice's night band, the medallion's disc and
-  // the CTA bar, each carrying its own ink. `-brass` is absent from this list on
-  // purpose and for the same reason as WOW's chronicle gold — it rules and
-  // frames, it is never painted as text. The caption ink that REPLACED it in the
-  // one text slot the design gave it is measured here instead.
+  // Ephemerists — THE VALLEY PLATE (task card v2, #1023; the register split in
+  // two halves in #2141). Four surfaces, not one: the sheet, the cornice's
+  // compass-blue band, the medallion's disc and the CTA bar, each carrying its
+  // own ink. `-brass` is absent from this list on purpose and for the same
+  // reason as WOW's chronicle gold — it rules and frames, it is never painted as
+  // text. The caption ink that REPLACED it in the one text slot the design gave
+  // it is measured here instead.
+  //
+  // EVERY ROW HERE IS NOW TWO REAL MEASUREMENTS. Between #1627 and #2141 the
+  // whole register was night-valued in both cascades, so each of these ratios
+  // was one reading taken twice, and the light column of this file said nothing
+  // about the faction at all. The sheet is vellum by day now; what did NOT
+  // follow it is the band and the disc, which are the compass blue #12151f in
+  // both themes because the metals struck on them have no light value. That
+  // asymmetry is the trap the three disc rows below exist to hold shut.
   { what: "ephemerists plate, ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
@@ -844,14 +866,27 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // rather than the row above wearing a different ground. The restrained
   // masthead grounds on `-plate-disc` — the medallion's own field, two values
   // lighter than the cornice band — and keeps `-plate-band-ink`, so the gold
-  // that was measured on #0a0c15 is now also asked to clear #12151f. It does,
-  // by a wide margin either way; the row exists so that the NEXT move of this
-  // band cannot repeat #1627's failure, where an ink stayed put while the ground
-  // under it changed and every row in this file went on passing. 14.00:1 on the
-  // band, 13.07:1 on the disc — 0.93 of a very large margin.
+  // that was measured on #0a0c15 is now also asked to clear #12151f. It does;
+  // the row exists so that the NEXT move of this band cannot repeat #1627's
+  // failure, where an ink stayed put while the ground under it changed and every
+  // row in this file went on passing. #2141 CLOSED THE GAP THIS ROW WAS SPLIT
+  // FOR: the cornice band moved onto #12151f too, so the band and the disc are
+  // now one hex and both readings are 7.59:1. The row stays anyway — two
+  // surfaces that agree today are still two surfaces, and this file's whole
+  // method is that a shared value is a coincidence until something asserts it
   { what: "ephemerists card masthead band, wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
-  { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
-  { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
+  // THE DISC'S INK BUDGET IS THE BAND'S (#2141), and these two rows moved for
+  // that reason rather than to make a failing measurement pass. The disc is a
+  // THEME-INVARIANT SURFACE; `-plate-ink` and `-plate-muted` became FLIPPING
+  // INKS the moment the register grew a vellum half, and the pairings they had
+  // held since #1023 went to 1.00:1 (the sheet ink is the same #12151f as the
+  // disc in light) and 1.82:1. Both ends stayed real tokens the whole time,
+  // which is exactly why no lint, no census and no "is it tokenized" grep could
+  // have seen it — only a pairing measured in BOTH themes, i.e. this file.
+  // The two inks the compass blue actually admits are the band's own, and they
+  // do not flip either: the mark at 7.59:1 and its second tier at 8.37:1.
+  { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
+  { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-quiet" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
   // THE PROFILE HEADER ADDS NO ROW, and that is the finding rather than an
   // omission. `EphemeristsProfileBody` handed `profileSkin` a kit whose `muted`
@@ -899,14 +934,31 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // design drew it) and carries every link plus the "level met" yes, so it is
   // measured on all three grounds it lands on.
   { what: "ephemerists page ground, quiet ink", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-quiet" },
-  { what: "ephemerists page ground, links", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists page ground, links", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-brass-light" },
   { what: "ephemerists page ground, title", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists plate, quiet ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-quiet" },
   { what: "ephemerists panel cell, ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists panel cell, caption", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-caption" },
   { what: "ephemerists panel cell, quiet ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-quiet" },
-  { what: "ephemerists panel cell, links", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-nile" },
-  { what: "ephemerists medallion disc, caption", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-caption" },
+  { what: "ephemerists panel cell, links", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-brass-light" },
+  // OCHRE AS AN INK, which is new in #2145 and is the reason it gets a row.
+  // `EphemeristsDuelSealConfirm` records "ochre is a mark, never an ink HERE"
+  // and the scope of that word is the papyrus: #a6432b measures 4.46:1 on
+  // `-plate-bg`, a near miss, which is why nothing legible is set in it there.
+  // The score stamp's metatask line lands on the PANEL CELL, one sheet lighter,
+  // at 4.97:1 light and 4.99:1 dark. It reaches this ground by REPLACING a
+  // worse reading rather than by relaxing a rule: the row shipped as an
+  // 11px `-plate-disc` label on an ochre CHIP, which is the same two colours
+  // inverted and therefore the same 3.0007:1 — a normal-text pairing sitting on
+  // the LARGE-text floor, and clearing it by seven ten-thousandths at that.
+  { what: "ephemerists panel cell, metatask award", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ochre" },
+  // `ephemerists medallion disc, caption` STOOD HERE and is retired rather than
+  // repointed (#2141). It measured `-plate-caption` on the disc, and the caption
+  // is a SHEET ink — #6f5620 by day, 2.63:1 on a chip that does not flip — so
+  // the medallion's caption took `-band-quiet` with the rose's unit. That makes
+  // it byte-identical to `ephemerists medallion disc, unit` above, and a second
+  // `what` for one (ink, ground) pair measures nothing new: it is the call the
+  // WOW block and the four "checked and deliberately NOT written" pairings make.
 
   // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
   // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
@@ -1365,7 +1417,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // on the plate — that link ink is measured on the page ground and the panel
   // cell already, but the feed card grounds on `-plate-bg`, a third stock.
   { what: "ephemerists cornice band, quiet ink", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-quiet" },
-  { what: "ephemerists plate, links", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists plate, links", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-brass-light" },
 
   // Everymen — THE DISPATCH SLIP (#1200). The masthead band: red as a FILL with
   // the broadsheet's masthead ink on it. Its dark reading is the tightest in
@@ -1652,7 +1704,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // pairings make further up):
   //   snide       -slip-acid-ink on -slip-paper   = `snide slip, mention ink`
   //   coven       -slip-deep     on -ward-card    = `coven ward panel, accent ink`
-  //   ephemerists -plate-nile    on -plate-bg     = `ephemerists plate, links`
+  //   ephemerists -plate-brass-light on -plate-bg  = `ephemerists plate, links`
   //
   // Everymen is the one mint, and the one new row. Its red has no rung that
   // survives this stock in both themes: `--everymen-red` is the 4.49 above,
@@ -2252,18 +2304,21 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * slip stock, and both Singularity chassis repoint the global inks outright.
    *
    * WHY `-plate-quiet` AND NOT `-card-muted`, which is the default the seam's
-   * own declaration names. The Ephemerists card sheet is the CORNICE BAND, so
-   * `--faction-ephemerists-card-muted` is `-plate-band-quiet` — an ink measured
-   * on #0a0c15. `.eph-plate-sheet`'s grounds are the page, the plate and the
-   * panel cell, and `-plate-quiet` is the sibling minted for exactly those three
-   * (#1173: `-quiet` is the standing name for "same role, second ground"). It
-   * clears them at 6.38 / 5.98 / 5.52 in BOTH cascades — the plate register is
-   * theme-invariant since #1627 — and it is what the plate's own quiet prose
-   * already reads, so the label tier joins the register instead of introducing a
-   * fourth warm tone on the same sheet. Dark gives up ~2.3 points (8.33 -> 5.98
-   * on the sheet) to hold one ink across a register that declares nothing under
-   * dark; the floor is 4.5 and this is a faction ink, not the most-painted
-   * neutral in the repo that #1715 argued to AAA.
+   * own declaration names. `-card-muted` is the PRAXIS CARD's second tier and
+   * is measured on the sheet that card paints; `.eph-plate-sheet`'s grounds are
+   * the page, the plate and the panel cell, and `-plate-quiet` is the sibling
+   * minted for exactly those three
+   * (#1173: `-quiet` is the standing name for "same role, second ground"), and
+   * it is what the plate's own quiet prose already reads, so the label tier
+   * joins the register instead of introducing a fourth warm tone on the same
+   * sheet. The three pairings are gated by `ephemerists page ground / plate /
+   * panel cell, quiet ink` below, in BOTH cascades — since #2141 those are two
+   * real readings each rather than one taken twice, because the register grew a
+   * vellum half. The figures this note used to quote (6.38 / 5.98 / 5.52, and
+   * "dark gives up ~2.3 points to hold one ink across a register that declares
+   * nothing under dark") were measured on the frozen night-valued register and
+   * are not restated here: the rows carry the numbers, and a comment that
+   * restates them is the thing that goes stale.
    *
    * NO `Pair` ROW IS ADDED, for the reason this file keeps giving. All three
    * pairings are already gated above — `ephemerists page ground, quiet ink`,
@@ -2336,10 +2391,12 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
  * This is #1307's shape one property over, and it takes #1307's answer: the ink
  * becomes a seam a faction frame repoints once on its own root, defaulted at
  * `:root` to the neutral so it renders exactly what it renders today everywhere
- * else. NOTHING IS MINTED for the Ephemerists half — `-plate-nile` is declared
- * "links, affirmations" and is already measured on all three of the plate's
- * grounds by the rows above, which is why this block asserts the WIRING and adds
- * no `Pair`. A second name for a measured value is a name pretending to be one.
+ * else. NOTHING IS MINTED for the Ephemerists half — `-plate-brass-light` is
+ * declared "links + affirmations" and is already measured on all three of the
+ * register's sheets by the rows above, which is why this block asserts the
+ * WIRING and adds no `Pair`. A second name for a measured value is a name
+ * pretending to be one. (It was the register's nile until #2141 deleted the
+ * faction's aqua; the seam is unchanged, only what it points at.)
  *
  * And the wiring is the only assertable half. Every ratio in this file stays
  * green through a `.markdown-preview a` that hardcodes the neutral, because the
@@ -2379,7 +2436,7 @@ describe("a prose link's ink is a seam (#1636)", () => {
     expect(
       body,
       "`.eph-plate-sheet` is the column both Ephemerists detail pages wear; it is one of the two roots the plate's link ink has to be set on.",
-    ).toContain("--link-ink: var(--faction-ephemerists-plate-nile)");
+    ).toContain("--link-ink: var(--faction-ephemerists-plate-brass-light)");
     expect(body, "hover goes to the plate's body ink, the same relation the neutral pair has.").toContain(
       "--link-ink-hover: var(--faction-ephemerists-plate-ink)",
     );
@@ -2399,7 +2456,7 @@ describe("a prose link's ink is a seam (#1636)", () => {
     expect(
       pageStyle,
       "`dress.pageStyle` is mounted by both `ComposerPage` and `PraxisWaitingSurface`; without the seam their prose links fall back to the app neutral on a night ground.",
-    ).toContain('["--link-ink" as string]: NILE');
+    ).toContain('["--link-ink" as string]: BRASS_LIGHT');
     expect(pageStyle, "and its hover partner, for the same reason").toContain(
       '["--link-ink-hover" as string]: INK',
     );

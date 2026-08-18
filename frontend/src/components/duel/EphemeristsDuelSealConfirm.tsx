@@ -76,11 +76,11 @@ import {
   BAND,
   BAND_INK,
   BRASS,
+  BRASS_RULE,
   CAPS,
   INK,
   INNER,
   LINE,
-  NILE,
   OCHRE,
   PLATE,
   QUIET,
@@ -88,7 +88,7 @@ import {
 } from '../factionMarks/ephemeristsPlate'
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
-const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${NILE} 45%, transparent)`
+const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`
 /**
  * The sheet-measured "sealed / positive" ink — the call S.N.I.D.E. and
  * Singularity already make, and now for the same reason. `--color-success` is
@@ -252,7 +252,7 @@ export default function EphemeristsDuelSealConfirm({
                 marginTop: 'var(--space-md)',
                 padding: 'var(--space-xs) var(--space-md)',
                 borderTop: `1px solid color-mix(in srgb, ${BRASS} 55%, transparent)`,
-                borderBottom: `1px solid color-mix(in srgb, ${NILE} 45%, transparent)`,
+                borderBottom: `1px solid color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`,
                 color: QUIET,
                 fontStyle: 'italic',
               }}

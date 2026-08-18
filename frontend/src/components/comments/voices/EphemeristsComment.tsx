@@ -61,13 +61,12 @@ import {
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { useAuth } from '../../../auth/AuthContext'
 import {
+  BRASS_LIGHT,
   CAPS,
   CAPTION,
-  RuneRule,
   INK,
   INNER,
   LINE,
-  NILE,
   OCHRE,
   PLATE,
   QUIET,
@@ -125,10 +124,12 @@ function Leaf({
           color: INK,
         }}
       >
-        {/* The cavetto flute at the head of the leaf — this sheet's answer to the
-            na sheet's spectrum hairline, and the same mark the feed chassis wears
-            under its masthead. Reused from `ephemeristsPlate`, not redrawn. */}
-        <RuneRule />
+        {/* A rune band headed this leaf — the cavetto flute's replacement
+            (#1638), and the OLD glyph vocabulary. #2210 retires that vocabulary
+            kit-wide in favour of the masthead's notation band, and this leaf has
+            no masthead, so the head of the sheet takes nothing in its place: the
+            leaf's own 1px border already rules it off, and a hairline struck
+            directly under that border would read as a doubled edge. */}
         {/* The gold wash rides the leaf's own background: the dark plate takes no
             wash at all (`--plate-wash: none`), so there is nothing for a ternary
             or a positioned overlay to decide. NO `overflow: hidden` anywhere on
@@ -278,7 +279,7 @@ export default function EphemeristsComment(props: CommentProps) {
         ) : (
           // Resolved @mentions in the plate's Nile ink — the token whose whole job
           // is links and affirmations on this ground.
-          <MentionText body={comment.body_text} mentions={comment.mentions} accent={NILE} />
+          <MentionText body={comment.body_text} mentions={comment.mentions} accent={BRASS_LIGHT} />
         )}
       </Marginalia>
 

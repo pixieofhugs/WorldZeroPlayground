@@ -118,12 +118,27 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     expect(markup, "the medallion's disc, not the cornice band").toContain(
       'var(--faction-ephemerists-plate-disc)',
     )
-    // The DATUM ROW's ink is the engraving's tell — it exists nowhere else on
-    // this card — so its absence is what says the night band really went rather
-    // than merely moving. `epg-glyph` would NOT say it: the drift strip above
-    // the vote block carries that class too, so asserting on it would pass
-    // whether the register were here or not.
-    expect(markup, 'no engraved datum row on a card').not.toContain(
+    // THE DATUM ROW'S INK IS STILL THE TELL, BUT IT IS NOW SCOPED TO THE BAND,
+    // and the rescoping is the finding rather than a tidy-up. This asserted the
+    // absence of `-plate-band-quiet` from the WHOLE CARD, on the stated premise
+    // that the ink "exists nowhere else on this card". #2141 expired that
+    // premise: `-plate-disc` is a chip that does not flip, so the score stamp's
+    // caption had to leave the SHEET ink `-plate-caption` (2.63:1 on the chip in
+    // light) for the band's quiet tier, and the ink is now legitimately on this
+    // card, several hundred pixels below the masthead. A whole-card proxy is
+    // only a proxy while its exclusivity holds — and an expired one fails on the
+    // NEXT honest change, which is exactly what it did.
+    //
+    // The masthead is an <a>, and anchors do not nest, so its own markup is the
+    // slice between `data-card-masthead` and the first `</a>` after it. That is
+    // the region the engraved register would have to be in. Everything the
+    // assertion was ever about is inside it, and nothing else is.
+    const at = markup.indexOf('data-card-masthead')
+    const band = markup.slice(at, markup.indexOf('</a>', at))
+    expect(band, 'the slice really is the masthead').toContain(
+      'var(--faction-ephemerists-plate-disc)',
+    )
+    expect(band, 'no engraved datum row in the band').not.toContain(
       'var(--faction-ephemerists-plate-band-quiet)',
     )
   })
@@ -239,36 +254,49 @@ function sources(): { path: string; source: string }[] {
   return found
 }
 
-describe('the fluted rule is retired kit-wide (#1638)', () => {
-  it('leaves no FlutedRule anywhere — not a mount, not a second declaration', () => {
+describe('one ornament vocabulary, and it is the notation band (#2210)', () => {
+  it('leaves no FlutedRule anywhere — not a mount, not a second declaration (#1638)', () => {
     expect(sources().filter(({ source }) => source.includes('FlutedRule'))).toEqual([])
   })
 
-  it('mounts the rune band on every surface the flute had', () => {
-    // Six imports plus the task page, whose local copy #1638 collapsed into the
-    // shared one. Counted as FILES rather than mounts because the task page
-    // draws it twice, and the number that can silently drift is how many
-    // surfaces reach the kit at all.
-    //
-    // Seven until #1314. `EphemeristsFactionPage` was one of them and is gone
-    // with the whole `mobileFactionPage` surface (ADR-0078) — the band it drew
-    // is still on the phone, because `EphemeristsFactionBody` (already counted)
-    // now serves both widths. A DELETED surface is the one way this number may
-    // fall; it must never fall because a mount was dropped.
-    const mounts = sources().filter(({ source }) => source.includes('<RuneRule'))
-    expect(mounts.length).toBe(6)
+  /**
+   * #2143 gave the masthead the NOTATION BAND — mathematical marks — and
+   * retired none of the astro/alchemical register it replaced, so both drew and
+   * they overlapped wherever they shared a band. The owner's ruling is that the
+   * register retires ENTIRELY rather than moving clear: the band is the
+   * faction's only ornament row.
+   *
+   * The seam is the SOURCE tree for the same reason #1638's was. Eight mounts
+   * across eight files render perfectly on their own; only a sweep of the tree
+   * can say that none of them is left, and only a sweep catches a NEW mount
+   * appearing later.
+   */
+  it('leaves no glyph register anywhere — not a mount, not a declaration', () => {
+    const files = sources()
+    for (const retired of ['GlyphRegister', 'RuneRule']) {
+      const alive = files.filter(({ source }) => new RegExp(`\\b${retired}\\b`).test(source))
+      expect(alive.map((file) => file.path), `${retired} still ships`).toEqual([])
+    }
+    // `Glyph` drew one sign for the register and had no other caller: the task
+    // card and the task page both reach `GLYPHS` directly, and `Sign` is the
+    // kit's one-mark component. Word-bounded, or `GlyphRegister` (gone above)
+    // and `GlossedGlyph` would answer for it.
+    const glyph = files.filter(({ source }) => /\b(?:function|const)\s+Glyph\b/.test(source))
+    expect(glyph.map((file) => file.path), 'Glyph still ships').toEqual([])
   })
 
-  it('draws the band out of the kit register, in brass rather than gold', () => {
-    // Gold is the masthead's ink on a night band; on the papyrus page it is a
-    // stain. `-brass` is the plate's rule colour and never an ink.
-    const kit = readFileSync(KIT, 'utf8')
-    const rule = kit.slice(kit.indexOf('export function RuneRule'))
-    expect(rule).toContain('<GlyphRegister')
-    expect(rule).toContain('color={BRASS}')
-    // The shift is the register's own `.epg-glyph` cycle, already gated on
-    // reduced-motion — the band declares no animation of its own.
-    expect(rule.slice(0, rule.indexOf('\n}'))).not.toContain('animation')
+  /**
+   * The band is THE MASTHEAD'S LAST LINE — that is the whole argument for it
+   * (#2143), and it is why the surfaces with no lockup get nothing in the
+   * register's place rather than a band mounted to fill the space. The faction
+   * hero, the feed frame and the select tile each head themselves by hand; none
+   * of them takes `EphemeristsMasthead`, so none of them takes the band.
+   */
+  it('mounts the notation band from the masthead and nowhere else', () => {
+    const mounts = sources().filter(({ source }) => source.includes('<EphemeristsNotationBand'))
+    expect(mounts.map(({ path }) => path.split(/[\\\/]/).pop())).toEqual([
+      'EphemeristsMasthead.tsx',
+    ])
   })
 })
 
@@ -302,7 +330,7 @@ describe('the Ephemerists mark vocabulary is declared once (#1654)', () => {
     // and the ORDER is the card's. Word-bounded, or `AuthorOctagon`,
     // `GlossedGlyph` and `LotusSign` would each answer for their base name.
     const files = sources()
-    for (const mark of ['Glyph', 'GlyphRegister', 'Octagon', 'Cornice', 'Tally', 'Sign']) {
+    for (const mark of ['Octagon', 'Cornice', 'Tally', 'Sign']) {
       const declared = files.filter(({ source }) =>
         new RegExp(`\\b(?:function|const)\\s+${mark}\\b`).test(source),
       )

@@ -55,7 +55,16 @@ export const QUIET = "var(--faction-ephemerists-plate-quiet)";
 export const CAPTION = "var(--faction-ephemerists-plate-caption)";
 /** A rule colour. Never an ink, never behind text. */
 export const BRASS = "var(--faction-ephemerists-plate-brass)";
+/** Links and affirmations on the sheet — text, so it owes 4.5:1 and pays
+ *  5.09:1 on the vellum / 9.68:1 on the night plate. This is what #2141 gave
+ *  the sites that read the deleted NILE: a link is a WORD, and the rule brass
+ *  below is 3.58:1 on the vellum, which is a line's floor and not a word's. */
 export const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
+/** THE RULE BRASS (#2141) — borders, ticks, hairlines, double rules, the vote
+ *  plate's mount, idle disc rims. One value across all three grounds (3.73 on
+ *  the compass blue, 3.58 on the vellum, 3.55 on the night plate), so a line
+ *  crossing between them never changes colour. NEVER behind or as text. */
+export const BRASS_RULE = "var(--faction-ephemerists-plate-brass-rule)";
 export const GOLD = "var(--faction-ephemerists-plate-gold)";
 export const BAND = "var(--faction-ephemerists-plate-band)";
 export const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
@@ -66,7 +75,6 @@ export const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 /** The summons band and its ink — the plate's one filled call to action. */
 export const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
 export const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
-export const NILE = "var(--faction-ephemerists-plate-nile)";
 export const RULE = "var(--faction-ephemerists-plate-rule)";
 export const LINE = "var(--faction-ephemerists-plate-line)";
 export const SHADOW = "var(--faction-ephemerists-plate-shadow)";
@@ -158,6 +166,48 @@ export function stepClip(step: number): string {
   return `polygon(${step}px 0, 100% 0, 100% calc(100% - ${step}px), calc(100% - ${step}px) 100%, 0 100%, 0 ${step}px)`;
 }
 
+/**
+ * A SEEDED GENERATOR — the faction's one source of random-looking ornament.
+ *
+ * Two devices draw an unpatterned row of mathematical marks: the masthead's
+ * notation band (#2143) and the CTA's rune strips (#2146). Both need the same
+ * two properties and neither may have `Math.random()` at render.
+ *
+ *  • **Unpatterned.** A row built from a coprime stride over the index reads as
+ *    a machine counting, which is what the strips did before the owner asked
+ *    for a seeded draw.
+ *  • **Stable.** A row redrawn on every render twitches whenever anything
+ *    unrelated moves on the page — a vote lands, a filter changes, a hover
+ *    fires — and a screenshot of it never reproduces, which is exactly what
+ *    this epic's visual QA needs. Seed from something stable about the SURFACE
+ *    (`task:${id}`, `praxis:${id}`) and one seed draws one row forever.
+ *
+ * It lives in the kit rather than in either consumer because a second copy of a
+ * PRNG is a copy that can be tuned in one file and not the other, and the drift
+ * would be invisible: both rows would still look random. #2143 wrote it, #2146
+ * moved it here on the second reader — the same threshold this module exists
+ * for.
+ *
+ * FNV-1a over the seed's code units for the state, mulberry32 for the stream:
+ * a hash, not a checksum, and a generator short enough to read in one sitting
+ * with no dependency. Nothing here is cryptographic and nothing depends on the
+ * distribution beyond "looks unpatterned at a few dozen draws".
+ */
+export function seededRandom(seed: string): () => number {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  let a = hash >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 /** Incised small caps — the plate's label voice, everywhere. */
 export const SMALL_CAPS: CSSProperties = {
   fontFamily: CAPS,
@@ -219,8 +269,13 @@ export const METAL_SIGILS = [
   },
   {
     name: "platinum",
+    // THE HAND (#2142). Platinum is the sun-and-moon compound, and it was drawn
+    // mirrored: the dotted sun sat on the RIGHT at x=15.6 with the crescent
+    // opening the path on the left. Owner checked it against a reference and it
+    // is sun-with-dot LEFT, crescent RIGHT. The other four sigils are unchanged
+    // and must stay byte-identical — they were already correct.
     color: "var(--faction-ephemerists-metal-platinum)",
-    glyph: "M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z",
+    glyph: "M6.4 7.2 a4.8 4.8 0 1 0 0.01 0 Z M6.4 10.85 a1.15 1.15 0 1 0 0.01 0 Z M16.8 7.2 A4.8 4.8 0 1 0 16.8 16.8 A6.5 6.5 0 0 1 16.8 7.2 Z",
     weight: 1.3,
     burstStep: 22.5,
   },
@@ -261,84 +316,23 @@ export const GLYPHS: Record<string, string> = {
   platinum: PLATINUM.glyph,
 };
 
-/** The order the signs march in — the design's own register. */
-export const REGISTER = [
-  "ankh", "water", "feather", "eye", "djed", "greekKey", "reed", "offering",
-  "alchemy", "chevrons", "scarab", "sun", "ankh", "water", "djed", "eye",
-];
-
-/** Distance between two signs in a register, and their drawn size. Geometry. */
-const GLYPH_PITCH = 27.5;
-const GLYPH_SIZE = 13;
-
-/**
- * One incised sign, at its own strength and its own phase in the cycle.
+/*
+ * THE INCISED REGISTER IS GONE (#2210) — `REGISTER`, `Glyph` and `GlyphRegister`
+ * were here, marching the astro/alchemical signs across a masthead band.
  *
- * Exported for the ONE caller that composes its own register rather than taking
- * {@link GlyphRegister}: the task card's masthead marches two named 12-sign
- * rows at its own pitch, which is the card design's drawing and not the page's.
- * Everything else wants the register.
- */
-export function Glyph({ name, x, y, strength, delay, color }: {
-  name: string
-  x: number
-  y: number
-  strength: number
-  delay: number
-  color?: string
-}) {
-  return (
-    <g
-      className="epg-glyph"
-      transform={`translate(${x} ${y}) scale(${GLYPH_SIZE / 24}) translate(-12 -12)`}
-      style={{ ["--epg-op"]: strength, ["--epg-delay"]: `${delay}s` } as CSSProperties}
-    >
-      <path
-        d={GLYPHS[name]}
-        fill="none"
-        stroke={color ?? GOLD}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </g>
-  );
-}
-
-/**
- * A register of signs marching the full width of a band. The count follows the
- * viewBox rather than a fixed number, so the register reaches the edge at any
- * width instead of stopping short or blowing every sign up under `slice`.
+ * #2143 gave the masthead the NOTATION BAND (mathematical marks, ruled top and
+ * bottom) and retired none of this, so both vocabularies drew at once and
+ * overlapped: the register rows were positioned to clear a datum row the band
+ * had already replaced, and the band's lead had opened from 5px to 9px. The
+ * owner's ruling is that the register retires ENTIRELY rather than moving out
+ * of the way — the band is the faction's only ornament row, carried by the
+ * masthead wherever there is one, and nothing takes its place on the surfaces
+ * that head themselves by hand.
  *
- * `color` defaults to the gold every masthead band strikes its register in.
- * {@link RuneRule} is the one caller that overrides it: a rune band rules a
- * PAGE rather than a night band, and gold on papyrus is a stain where brass is
- * a rule.
+ * {@link GLYPHS} above SURVIVES: the signs are still the kit's vocabulary for a
+ * single mark, drawn one at a time by {@link Sign} and read directly by the task
+ * card. What retired is the ROW, not the drawings.
  */
-export function GlyphRegister({ width, y, strength, keyPrefix, color }: {
-  width: number
-  y: number
-  strength: number
-  keyPrefix: string
-  color?: string
-}) {
-  const count = Math.ceil(width / GLYPH_PITCH);
-  return (
-    <>
-      {Array.from({ length: count }).map((_, index) => (
-        <Glyph
-          key={`${keyPrefix}${index}`}
-          name={REGISTER[index % REGISTER.length]}
-          x={18 + index * GLYPH_PITCH}
-          y={y}
-          strength={strength * (index % 3 === 0 ? 1 : 0.7)}
-          delay={((index * 7) % 12) * 1.6}
-          color={color}
-        />
-      ))}
-    </>
-  );
-}
 
 /* ── The gravity field (#1830) ──
  *
@@ -487,54 +481,17 @@ export function Cornice({ glow, flutes = 52 }: { glow?: boolean; flutes?: number
   );
 }
 
-/**
- * THE RUNE BAND — the divider under every section head (#1638).
+/*
+ * THE RUNE BAND IS GONE (#2210) — `RUNE_SPAN`, `RUNE_HEIGHT` and `RuneRule`
+ * stood here. It was the divider under every section head, and it drew exactly
+ * one thing: a `GlyphRegister` in brass. With the register retired the band had
+ * nothing left to draw, so it goes with it rather than staying as an empty box.
  *
- * It replaces `FlutedRule`, which was the cavetto band reused as a rule: 48
- * brass strokes at alternating heights. The plate's own register of incised
- * signs takes its place, so a section is divided by the kit's SIGNS rather than
- * by a second drawing of its cornice — one ornament vocabulary reaching down
- * from the masthead instead of two doing the same job.
- *
- * The band SHIFTS on `.epg-glyph`, the register's shared opacity cycle, already
- * opt-in under `prefers-reduced-motion: no-preference`. Nothing here declares
- * motion, so a stilled reader gets the signs rather than a blank strip.
- *
- * NO `viewBox`, deliberately, and this is the whole reason the band fits every
- * column at one size. A viewBox plus `slice` scales by `max(w/vbW, h/vbH)`, and
- * the height here is fixed, so `h/vbH` is 1 and any column WIDER than the
- * viewBox blows every sign up — a 16px band of 32px glyphs on the 1200px task
- * page, which is precisely the failure `EphemeristsTaskDetail` documented when
- * it stopped using a fixed sign count. Without a viewBox, user units are CSS
- * pixels, the signs are drawn at their own size at every width, and the SVG
- * viewport crops the overspill for free. {@link RUNE_SPAN} is therefore a
- * CEILING — enough signs to reach the widest column the site has (the 1200px
- * page cap), not a count anyone reads.
- *
- * `rule` pairs the band with the brass hairline the write-up header carries
- * above it (`sectionHead` draws its own). A rune band mounted WITHOUT a heading
- * reads as a loose row of marks; the composer is the surface that does that, so
- * it asks for the rule and gets the same two-part divider the record has.
+ * Its seven mounts lose a row of marks and no structure: every section head
+ * that carried it already rules itself off with the brass hairline that flexes
+ * across the heading row, and the composer — the one mount with no heading —
+ * keeps that hairline through the shared `ComposerRule`.
  */
-const RUNE_SPAN = 1280;
-const RUNE_HEIGHT = 16;
-
-export function RuneRule({ rule }: { rule?: boolean }) {
-  return (
-    <div aria-hidden="true">
-      {rule && <div style={{ height: 1, background: BRASS, opacity: 0.5 }} />}
-      <svg width="100%" height={RUNE_HEIGHT} aria-hidden="true" style={{ display: "block" }}>
-        <GlyphRegister
-          width={RUNE_SPAN}
-          y={RUNE_HEIGHT / 2}
-          strength={0.42}
-          keyPrefix="rune"
-          color={BRASS}
-        />
-      </svg>
-    </div>
-  );
-}
 
 /**
  * The lotus — the plate's closing mark, drawn on its own 18×13 field. It sits
@@ -729,13 +686,61 @@ export function EmblemOctagon({ size }: { size: number }) {
 }
 
 /**
+ * THE LIMB'S GRADUATION (#2145) — 48 ticks at 7.5°, long every sixth, i.e. one
+ * long tick on each 45°. It is what turns an ornament into an instrument, and
+ * it is the detail that earns the faction its name.
+ *
+ * Built once at module load rather than mapped per render: the geometry is a
+ * constant, the mark is drawn on two surfaces, and forty `<path>` nodes is a
+ * silly amount of markup for a figure that never moves. Two `d` strings, two
+ * weights.
+ */
+const TICK_STEP_DEG = 7.5;
+const TICK_OUTER = 47.2;
+/** Where a long tick starts — ON the inner rim — and where a short one does. */
+const TICK_LONG_INNER = 43;
+const TICK_SHORT_INNER = 45.4;
+/**
+ * The inner rim, moved r41 -> r43 by #2145. The north needle's tip is r42
+ * (`M50 8` on a 100-unit box), so at r41 the rim ran straight through it.
+ */
+const INNER_RIM = 43;
+
+function limb(long: boolean): string {
+  const marks: string[] = [];
+  const inner = long ? TICK_LONG_INNER : TICK_SHORT_INNER;
+  for (let i = 0; i < 360 / TICK_STEP_DEG; i += 1) {
+    if ((i % 6 === 0) !== long) continue;
+    const radians = (i * TICK_STEP_DEG * Math.PI) / 180;
+    const sin = Math.sin(radians);
+    const cos = Math.cos(radians);
+    const at = (r: number) =>
+      `${(50 + r * sin).toFixed(2)} ${(50 - r * cos).toFixed(2)}`;
+    marks.push(`M${at(inner)}L${at(TICK_OUTER)}`);
+  }
+  return marks.join(" ");
+}
+
+const LONG_TICKS = limb(true);
+const SHORT_TICKS = limb(false);
+
+/**
+ * Below this the short ticks are not drawn at all (#2145). At the praxis card's
+ * 84px each of the forty renders about 0.4px wide and the browser resolves the
+ * limb into a grey wash; the eight long ones survive and still read as
+ * graduated. Above it — the task card's 128px plate, and the phone's 112px —
+ * the full 48 come back.
+ */
+const FULL_LIMB_MIN_PX = 100;
+
+/**
  * THE COMPASS ROSE — the plate's points medallion (#2037, task cards v3).
  *
- * A brass-ruled disc with four needles on the cardinals, the north one struck
- * solid in the plate's gold and the other three left open in one ink at one
- * weight (#2067). It replaces the stepped octagon the score sat in: the plate is
- * a FIELD JOURNAL out of the Valley, and the instrument a surveyor's plate
- * reaches for is a rose.
+ * A brass-ruled disc with a graduated limb and four needles on the cardinals,
+ * the north one struck solid in the faction's mark and the other three left
+ * open in one ink at one weight (#2067). It replaces the stepped octagon the
+ * score sat in: the plate is a FIELD JOURNAL out of the Valley, and the
+ * instrument a surveyor's plate reaches for is a rose.
  *
  * IT IS A SHARED MARK, and that is why `size` is a prop rather than a constant.
  * The octagon medallion it replaces is drawn identically on two surfaces — the
@@ -755,6 +760,20 @@ export function EmblemOctagon({ size }: { size: number }) {
  * and west to x=26 and x=74, so the inner disc (r=29) is the clear field and the
  * host has to be big enough that the figure fits inside 48 of the 100 units.
  * That is why the design grows the box to 128px where the octagon was 104.
+ *
+ * EVERY LINE ON IT IS `-plate-brass-rule` NOW (#2145, #2141), and that is a
+ * contrast fix as much as a repaint. The disc is `-plate-disc` #12151f in BOTH
+ * cascades and `-brass-light` FLIPS (#6f5620 by day, #e6c877 by night), so the
+ * rims and the three open needles read 2.63:1 in light and ~11:1 in dark — the
+ * theme-invariant-ground-with-a-flipping-ink shape this repo has shipped once
+ * before and caught an hour later. The rule brass does not flip: 3.73:1 on the
+ * compass blue, in both, clear of the 3:1 a non-text mark owes. The outer rim
+ * keeps `-brass`, which is the same #8a6d2c by day and brighter by night.
+ *
+ * NORTH IS `-plate-band-ink` (#2145). It was `-plate-gold`, which reads 13.07:1
+ * on the disc and was never the problem; the faction's mark is brass now
+ * (#2140), and gold on the one drawing that carries the total would have been
+ * the last place the old identity survived. 7.59:1, in both cascades.
  */
 export function CompassRose({ size }: { size: number }) {
   return (
@@ -766,37 +785,32 @@ export function CompassRose({ size }: { size: number }) {
       style={{ position: "absolute", inset: 0 }}
     >
       <circle cx="50" cy="50" r="47" fill={DISC} stroke={BRASS} strokeWidth="1.6" />
-      <circle cx="50" cy="50" r="41" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" />
-      {/* The ordinals, struck as ticks between the two rims rather than as
-          needles — the design gives the quarter winds a mark, not a point. */}
-      <g stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.7">
-        <path d="M16.8 16.8 L21 21" />
-        <path d="M83.2 16.8 L79 21" />
-        <path d="M16.8 83.2 L21 79" />
-        <path d="M83.2 83.2 L79 79" />
-      </g>
+      <circle cx="50" cy="50" r={INNER_RIM} fill="none" stroke={BRASS_RULE} strokeWidth="0.7" />
+      {/* The graduated limb. The FOUR ORDINAL TICKS STOOD HERE and are retired
+          rather than kept: every 45° is already a long tick, so the old
+          diagonal marks were the same statement twice. */}
+      <path d={LONG_TICKS} stroke={BRASS_RULE} strokeWidth="0.9" fill="none" />
+      {size >= FULL_LIMB_MIN_PX && (
+        <path d={SHORT_TICKS} stroke={BRASS_RULE} strokeWidth="0.6" fill="none" />
+      )}
       {/* North alone is filled, which is how a rose says which way is up — and
           the other three are ONE ink at ONE weight, so the rose says it exactly
           once (#2067). It shipped saying it three ways: north in the register's
           teal, south in `-brass` at 0.9, east and west in `-brass-light` at 0.7.
-          North is `-plate-gold` now, which is the ink the winged disc and the
-          registers are drawn in and the brightest mark the plate has: 13.07:1 on
-          the rose's own disc against the teal's 7.36:1, so the one point that
-          carries meaning is also the one that reads first.
 
-          A SECOND DESIGN FILE DRAWS THIS NEEDLE NAVY (`ephCompassBadge()`, as
-          `var(--faction-ephemerists-plate-nile, #1e3a6e)`) and it is not the one
+          A SECOND DESIGN FILE DREW THIS NEEDLE NAVY (`ephCompassBadge()`, as
+          the register's aqua with a `#1e3a6e` fallback) and it was never the one
           to follow: that navy measures 1.64:1 on `-plate-disc` and the needle
-          would be invisible. The two files disagree, the gold one is the one
-          naming a variable, and the navy is most likely the eventual LIGHT-mode
-          value being carried into that epic (#1627/#1636 keep this register
-          theme-invariant until then). */}
-      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={GOLD} />
-      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
-      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
-      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
+          would be invisible. #2141 settled it by deleting the aqua outright.
+          The design fills all four needles in gold with north one unit longer,
+          which is not a difference anyone can see at 84px and which stops the
+          needle leading — #2067's ruling stands and #2145 restates it. */}
+      <path d="M50 8 L55.5 26 L44.5 26 Z" fill={BAND_INK} />
+      <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
+      <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
+      <path d="M92 50 L74 44.5 L74 55.5 Z" fill="none" stroke={BRASS_RULE} strokeWidth="0.9" />
       {/* The card the figure is struck on. */}
-      <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_LIGHT} strokeWidth="0.7" />
+      <circle cx="50" cy="50" r="29" fill={DISC} stroke={BRASS_RULE} strokeWidth="0.7" />
     </svg>
   );
 }

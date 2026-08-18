@@ -217,6 +217,23 @@ const ALLOWED: Record<string, { readonly hits: number; readonly why: string }> =
     hits: 1,
     why: 'A NEGATIVE assertion — it exists to prove the token is absent.',
   },
+  'components/vote/EphemeristsVote.tsx': {
+    hits: 1,
+    why:
+      'The seven planetary metals orbiting rank 5 (#2142) — twelve astro glyphs ' +
+      'at 9px, `aria-hidden`, which is the size the owner specified. They are ' +
+      'the DRAWING that six 3px gold dots used to be: ornament struck around a ' +
+      'disc, never read, and the disc\'s own aria-label carries the meaning. ' +
+      'The same argument as the Ephemerists praxis card\'s glyph strip above.',
+  },
+  'components/vote/__tests__/ephemeristsVote.test.tsx': {
+    hits: 1,
+    why:
+      'Pins the row above: that the planets are a TOKEN at all. The alternative ' +
+      'to `var(--text-sm)` on an ornament this small is a raw `9`, which the ' +
+      'no-raw-style-values ratchet would take instead — so the assertion is what ' +
+      'keeps the exemption from becoming a raw value later.',
+  },
 }
 
 describe('the label tier left its two smallest steps, objects included (#1608)', () => {

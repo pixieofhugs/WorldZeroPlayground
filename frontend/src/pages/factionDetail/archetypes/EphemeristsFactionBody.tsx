@@ -14,15 +14,11 @@ import {
   BRASS_LIGHT,
   CAPS,
   CAPTION,
-  CTA_BG,
-  CTA_INK,
   DECO,
-  RuneRule,
   GOLD,
   INK,
   LINE,
   MARGINALIA,
-  NILE,
   QUIET,
   READING,
   RULE,
@@ -51,8 +47,9 @@ import type { FactionDetailState } from "../useFactionDetail";
  *
  * SWEPT OFF THE CODEX (#1208). Every mark is the plate kit's rather than a
  * private drawing: the roster's circular vellum medallions are `AuthorOctagon`,
- * the level beside a keeper's name gains the `Tally`, and every section rule is
- * `RuneRule`. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
+ * the level beside a keeper's name gains the `Tally`, and every section rule was
+ * the kit's rune band until #2210 retired the old glyph vocabulary and left the
+ * section heads as bare type. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
  * `quiet` 5.98, `caption` 7.22, `nile` 7.00) and the night band under the
  * spotlight (`band-ink` 14.00, `gold` 14.00, `band-quiet` 8.97). Every one of
  * those eight numbers was stale when #1793 re-derived them: they were measured
@@ -122,14 +119,16 @@ const SECTION_HEADING: CSSProperties = {
   color: "var(--color-text-primary)",
 };
 
-/** Section title in the plate's display face, over the design's fluted rule. */
+/**
+ * Section title in the plate's display face.
+ *
+ * It stood over a rune band until #2210, which retires the old glyph vocabulary
+ * kit-wide: the notation band is the faction's only ornament row and it is the
+ * MASTHEAD's last line, so a page that heads its sections with bare type takes
+ * nothing in the band's place.
+ */
 function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <>
-      <h2 style={SECTION_HEADING}>{children}</h2>
-      <RuneRule />
-    </>
-  );
+  return <h2 style={SECTION_HEADING}>{children}</h2>;
 }
 
 // `romanLevel` formatted the roster and spotlight levels as "level {roman}".
@@ -275,7 +274,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     </div>
                     <div style={{ fontFamily: READING, fontSize: "var(--text-xl)", color: QUIET, margin: "var(--space-md) 0 0" }}>
                       <Trans t={t} i18nKey="ephemerists.road.memberStanding">
-                        Standing · <span style={{ fontStyle: "italic", color: NILE }}>keeper of the road</span>
+                        Standing · <span style={{ fontStyle: "italic", color: BRASS_LIGHT }}>keeper of the road</span>
                       </Trans>
                     </div>
                   </div>
@@ -311,9 +310,15 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
                       {t("ephemerists.road.eligibleBody")}
                     </div>
+                    {/* THE ONE PLATE CTA (#2146) — ground, ink and enclosure
+                        from `.eph-cta`, because the enclosure changes width
+                        between the cascades and no inline style has a cascade.
+                        This surface is not one of the three the issue names; it
+                        draws the identical button, which is what decides it. */}
                     <button
+                      className="eph-cta"
                       onClick={() => setConfirming(true)}
-                      style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, padding: "var(--space-md)", cursor: "pointer" }}
+                      style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" }}
                     >
                       {t("ephemerists.road.joinButton")}
                     </button>
@@ -336,9 +341,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     )}
                     <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
+                        className="eph-cta"
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
-                        style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", color: CTA_INK, background: CTA_BG, border: `2px solid ${BRASS}`, padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {membership.joining
                           ? t("ephemerists.road.joining")
@@ -486,7 +492,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     </div>
                   </div>
                   <Tally level={m.level} />
-                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: NILE }}>
+                  <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: BRASS_LIGHT }}>
                     {t("detail.memberLevel", { level: m.level })}
                   </span>
                 </Link>

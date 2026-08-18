@@ -2,8 +2,9 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
+import EphemerisNet from "../../../components/factionMarks/EphemerisNet";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -16,10 +17,8 @@ import {
 } from "./shared";
 import {
   Cornice,
-  GlyphRegister,
   initialsOf,
   Octagon,
-  RuneRule,
   Sign,
   SMALL_CAPS,
   Tally,
@@ -35,8 +34,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  * field journal out of the Valley. A cavetto-cornice masthead whose night band
  * holds the ENGRAVED MASTHEAD (#1634, page scale on desktop and card scale on a
  * phone) between two incised registers of glyphs; the level a numeral over tally
- * strokes; the worth on a stepped octagon medallion; the brief on a ruled leaf
- * with a red margin rule. Poiret One display, Cinzel small caps, Spectral
+ * strokes; the worth on a stepped octagon medallion; the brief on a leaf of the
+ * chart with a red margin rule. Poiret One display, Cinzel small caps, Spectral
  * reading.
  *
  * The winged sun disc appeared TWICE on this page — over the wordmark, and 400px
@@ -99,12 +98,11 @@ const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
    band and a stain on the papyrus page; nothing else here wants it. */
 const BAND = "var(--faction-ephemerists-plate-band)";
 const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
+const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 const DISC = "var(--faction-ephemerists-plate-disc)";
 const OCHRE = "var(--faction-ephemerists-plate-ochre)";
-const NILE = "var(--faction-ephemerists-plate-nile)";
 const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
 const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
-const RULE = "var(--faction-ephemerists-plate-rule)";
 const LINE = "var(--faction-ephemerists-plate-line)";
 const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 /* `--faction-ephemerists-plate-wash` filled the breadcrumb cartouche and nothing
@@ -120,21 +118,24 @@ const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 const GALLERY_PREVIEW = 3;
 
 /**
- * The brief's leading, in px, and the pitch of the journal ruling under it.
- * These are ONE number by construction: a ruled leaf whose rules miss the text's
- * baselines reads as a printing error rather than as stationery. The design's 28
- * was drawn for 15.5px type; `--text-content` is 18px (the #627 floor), so the
- * ruling opens to match rather than the type closing to fit.
+ * The brief's leading, in px. It used to be TWO things — the leading and the
+ * pitch of the journal ruling beneath it, one number by construction so no rule
+ * missed a baseline. #2144 took the ruling away (the net replaces it), and the
+ * leading it was pitched to is what stays: the design's 28 was drawn for 15.5px
+ * type and `--text-content` is 18px (the #627 floor), so the line opened to
+ * match rather than the type closing to fit. Nothing tracks it any more, which
+ * is why it is now a plain number and not a pair.
  */
 const BRIEF_LEADING = 32;
 
 /* The glyph library, its 16-sign register and their pitch stood here — a
    transcription of the kit's, path for path, which is exactly the shape that
-   lets one surface keep drawing last month's mark. #1654 collapsed it along
-   with `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally` and `Sign`: all
-   seven now come from `factionMarks/ephemeristsPlate`, imported at the top of
-   this file. Nothing on this page draws differently — the kit's `GlyphRegister`
-   defaults its ink to the same gold the local one hardcoded. */
+   lets one surface keep drawing last month's mark. #1654 collapsed all seven
+   into `factionMarks/ephemeristsPlate`, imported at the top of this file.
+   #2210 then retired the REGISTER itself, kit and copies together: the
+   mathematical notation band #2143 hung under the wordmark is the faction's
+   only ornament row, and `GLYPHS` survives as the vocabulary for a single mark
+   drawn by `Sign`. */
 
 /* The page's own `SMALL_CAPS` stood here — the kit's constant to the byte, and
    the last thing in this file that restated the plate's typography. It is now
@@ -152,16 +153,14 @@ const BRIEF_LEADING = 32;
 /* The page's own hand-copied `FlutedRule` stood here — a second, byte-identical
    declaration of the kit's divider that no import-following sweep could see, so
    #1638's "fluted rules become shifting runes" would have converted six mounts
-   and silently left this page's two on the old drawing. The rule is now
-   `RuneRule` from `factionMarks/ephemeristsPlate`, imported at the top of this
-   file: one divider, seven mounts, one place to change it. #1654 did the same
-   for the other eleven, so nothing in this file declares a mark any more. */
+   and silently left this page's two on the old drawing. Its replacement, the
+   kit's rune band, retired with the rest of the old glyph vocabulary in #2210;
+   this page's two section heads keep the brass hairline that already flexes
+   across each heading row. Nothing in this file declares a mark. */
 
 interface SizeSet {
   /** Masthead band height. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   masthead: number
-  /** Width the masthead's registers are drawn to fill. Geometry. */
-  mastheadView: number
   /** The wordmark's winged disc. Geometry. */
   wordmarkDisc: number
   /** The disc crowning the action panel, and the room reserved above it. */
@@ -179,9 +178,8 @@ interface SizeSet {
   tapTarget: number
   cellPadding: string
   briefPadding: string
-  /** Where the ochre margin rule is struck, and where the ruling starts. */
+  /** Where the ochre margin rule is struck down the gutter. */
   marginRule: number
-  rulingOffset: number
   titleSize: string
   levelSize: string
   pointsSize: string
@@ -190,7 +188,6 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     masthead: 108,
-    mastheadView: 1200,
     wordmarkDisc: 176,
     medallion: 104,
     ledgerWidth: 150,
@@ -198,14 +195,12 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cellPadding: "var(--space-lg)",
     briefPadding: "var(--space-xl) var(--space-xl) var(--space-lg) var(--space-3xl)",
     marginRule: 26,
-    rulingOffset: 30,
     titleSize: "var(--text-display)",
     levelSize: "var(--text-heading)",
     pointsSize: "var(--text-heading)",
   },
   mobile: {
     masthead: 92,
-    mastheadView: 440,
     wordmarkDisc: 150,
     medallion: 88,
     ledgerWidth: 116,
@@ -213,7 +208,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cellPadding: "var(--space-md)",
     briefPadding: "var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)",
     marginRule: 18,
-    rulingOffset: 22,
     titleSize: "var(--text-heading)",
     levelSize: "var(--text-title)",
     pointsSize: "var(--text-title)",
@@ -319,6 +313,19 @@ export default function EphemeristsTaskDetail({
     lineHeight: 1.7,
     color: QUIET,
   };
+  /**
+   * The plate's primary control, MINUS ITS PAINT (#2146).
+   *
+   * Ground, ink and enclosure arrive from `.eph-cta` in index.css, which every
+   * surface drawing this button wears. They used to be three lines here — and
+   * three more in the task card, and three more again in the composer, the
+   * faction page and the field desk — with the enclosure quietly disagreeing
+   * with itself at 2px, 1.5px and 2px. It could not have been unified inline
+   * either way: the enclosure changes WIDTH between the cascades and an inline
+   * style has no cascade to change in.
+   *
+   * Every element spreading this must also carry `className="eph-cta"`.
+   */
   const primaryButton: CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -330,9 +337,6 @@ export default function EphemeristsTaskDetail({
     cursor: "pointer",
     textAlign: "center",
     textDecoration: "none",
-    background: CTA_BG,
-    color: CTA_INK,
-    border: `2px solid ${BRASS}`,
     padding: "var(--space-md) var(--space-sm)",
     fontFamily: CAPS,
     fontWeight: 500,
@@ -351,7 +355,7 @@ export default function EphemeristsTaskDetail({
     borderBottom: `1px solid ${LINE}`,
     cursor: "pointer",
     padding: 0,
-    color: NILE,
+    color: BRASS_LIGHT,
   };
 
   /** Small caps, a brass hairline running out, an optional gloss, a fluted rule. */
@@ -381,11 +385,26 @@ export default function EphemeristsTaskDetail({
         <span aria-hidden style={{ flex: 1, minWidth: 24, height: 1, background: BRASS, opacity: 0.5 }} />
         {gloss !== undefined && <span style={eyebrow}>{gloss}</span>}
       </div>
-      <RuneRule />
+      {/* A rune band closed this head until #2210 retired the old glyph
+          vocabulary. The hairline above rules the head off on its own. */}
     </div>
   );
 
-  // ── The masthead: the night band, its two registers, the engraved title ──
+  // ── The masthead: the night band and the engraved title ──────────────────
+  //
+  // AN ORNAMENT LAYER SAT BEHIND THE LOCKUP UNTIL #2210 — an absolutely
+  // positioned SVG carrying two incised glyph registers, one along the top of
+  // the band and one along the foot, with a pair of faint brass rules bracketing
+  // them off from the title. This is the surface the owner reported: #2143 put
+  // the NOTATION BAND under the wordmark and left the registers standing, so the
+  // page wore two glyph vocabularies at once and the lower register ran through
+  // the band's own marks — the row had been placed to clear a datum row the band
+  // had already replaced, and the band's lead had opened from 5px to 9px.
+  //
+  // The whole layer goes, not just the two registers: the pair of rules existed
+  // to bracket them, and the notation band brought the masthead its own `1px` /
+  // `3px double` pair, which is the head's rule now. What is left on the band is
+  // the lockup, which no longer needs a stacking layer to sit above.
   const masthead = (
     <div style={{ marginBottom: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
       <div
@@ -397,30 +416,11 @@ export default function EphemeristsTaskDetail({
           color: BAND_INK,
         }}
       >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${size.mastheadView} 108`}
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, zIndex: 1 }}
-        >
-          <path
-            d={`M8 24 H${size.mastheadView - 8} M8 84 H${size.mastheadView - 8}`}
-            stroke={BRASS_LIGHT}
-            strokeWidth="0.6"
-            opacity="0.28"
-          />
-          <GlyphRegister width={size.mastheadView} y={13} strength={0.34} keyPrefix="top" />
-          <GlyphRegister width={size.mastheadView} y={95} strength={0.3} keyPrefix="bottom" />
-        </svg>
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <EphemeristsMasthead
-            slug={slug}
-            scale={desktop ? "page" : "card"}
-            date={task.created_at}
-          />
-        </div>
+        <EphemeristsMasthead
+          slug={slug}
+          scale={desktop ? "page" : "card"}
+          seed={`task:${task.id}`}
+        />
       </div>
       <Cornice />
     </div>
@@ -442,7 +442,7 @@ export default function EphemeristsTaskDetail({
             both ends, and that crumb was the task's ordinal — #1124 retired the
             id, so the cartouche and the separator before it went with it rather
             than framing nothing. */}
-        <Link to="/tasks" style={{ ...eyebrow, color: NILE, textDecoration: "none" }}>
+        <Link to="/tasks" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
           {t("detail.breadcrumb.tasks")}
         </Link>
       </nav>
@@ -568,7 +568,7 @@ export default function EphemeristsTaskDetail({
                   fontFamily: CAPS,
                   fontWeight: 500,
                   fontSize: "var(--text-md)",
-                  color: INK,
+                  color: BAND_INK,
                 }}
               >
                 {initialsOf(authorName)}
@@ -694,14 +694,16 @@ export default function EphemeristsTaskDetail({
           <path d="M16 70 H84" stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.5" />
         </svg>
         <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-          <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: INK }}>{modifiedPoints}</span>
+          {/* The medallion is a dark chip in both themes; its inks are the
+              band's, not the sheet's (#2141). */}
+          <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: BAND_INK }}>{modifiedPoints}</span>
           <span
             style={{
               ...SMALL_CAPS,
               fontSize: "var(--text-md)",
               letterSpacing: "0.2em",
               marginTop: "var(--space-xs)",
-              color: CAPTION,
+              color: BAND_QUIET,
             }}
           >
             {t("detail.points.total")}
@@ -724,19 +726,19 @@ export default function EphemeristsTaskDetail({
               Only the SIGN-UP button is bracketed: "continue" and "view your
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
-          <EphemeristsRuneStrip side="top" />
-          <button onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
+          <EphemeristsRuneStrip side="top" seed={`task:${task.id}`} />
+          <button className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
-          <EphemeristsRuneStrip side="bottom" />
+          <EphemeristsRuneStrip side="bottom" seed={`task:${task.id}`} />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
             {!levelJumpSignup && (
               <>
                 {" · "}
-                <span style={{ color: NILE }}>
+                <span style={{ color: BRASS_LIGHT }}>
                   {t("detail.signup.levelMet", { level: task.level_required })}
                 </span>
               </>
@@ -756,7 +758,7 @@ export default function EphemeristsTaskDetail({
               submitted praxis straight back to `/praxis/:id` (#1164) — so this
               button used to change nothing at all. Reopening for editing lives
               on the praxis page, one honest hop away. */}
-          <Link to={`/praxis/${mySubmission.id}`} style={primaryButton}>
+          <Link className="eph-cta" to={`/praxis/${mySubmission.id}`} style={primaryButton}>
             {t("detail.submitted.view")}
           </Link>
         </div>
@@ -765,11 +767,11 @@ export default function EphemeristsTaskDetail({
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
-            <Sign name="openEye" size={15} color={NILE} />
-            <span style={{ ...quietItalic, color: NILE }}>{t("detail.inProgress.text")}</span>
+            <Sign name="openEye" size={15} color={BRASS_LIGHT} />
+            <span style={{ ...quietItalic, color: BRASS_LIGHT }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-            <Link to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
+            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
               {t("detail.inProgress.continue")}
             </Link>
             <button onClick={handleDrop} style={quietButton}>
@@ -825,7 +827,24 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── The brief, in full, on a ruled leaf with a red margin rule ──
+  // ── The brief, in full, on a leaf of the chart with a red margin rule ──
+  //
+  // The leaf used to be RULED NOTEPAPER: a `repeating-linear-gradient` pitched
+  // to `BRIEF_LEADING` so every rule met a baseline. #2144 replaces it with the
+  // page's own net — one drawing across the whole faction, where the rules were
+  // a second ruling this page drew for itself.
+  //
+  // 0.17, WHICH IS THE PAGE'S WEIGHT AND NOT THE DESIGN'S 0.42. Owner ruling:
+  // at 0.42 the net's diagonals land at roughly the weight of a 13px serif's
+  // strokes, and this is body copy. If the brief later needs to read as more
+  // written-on than the page around it, the honest fix is to keep BOTH — the
+  // rules for the writing line, the net for the material — and NOT to double
+  // the net's weight; 0.42 has already been tried and ruled out once.
+  //
+  // `isolation: isolate` is the whole mount: it makes this leaf a stacking
+  // context, so the net's `z-index: -1` lands above the plate's fill and below
+  // the copy, the margin rule and everything else printed here. The design's
+  // `z-index: 1` lift is not used — see the net's header.
   const brief = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
@@ -834,11 +853,11 @@ export default function EphemeristsTaskDetail({
           style={{
             ...plate,
             position: "relative",
+            isolation: "isolate",
             padding: size.briefPadding,
-            backgroundImage: `repeating-linear-gradient(180deg, transparent 0 ${BRIEF_LEADING - 1}px, ${RULE} ${BRIEF_LEADING - 1}px ${BRIEF_LEADING}px)`,
-            backgroundPosition: `0 ${size.rulingOffset}px`,
           }}
         >
+          <EphemerisNet opacity={0.17} />
           {/* The margin rule, struck in ochre down the gutter. */}
           <span
             aria-hidden
@@ -918,7 +937,6 @@ export default function EphemeristsTaskDetail({
             </span>
           )}
         </div>
-        <RuneRule />
       </div>
 
       {sortedSubmissions.length === 0 ? (
@@ -1010,6 +1028,17 @@ export default function EphemeristsTaskDetail({
               heading={sectionHead(t("detail.comments.heading"))}
             />
           </div>
+
+          {/* The plate's provenance, at the foot of the sheet (#2143). It is
+              the masthead's old datum row, labelled — see `EphemeristsColophon`
+              for why the label and this placement are a requirement (#2124) and
+              not a layout preference. It sits OUTSIDE the two-column region and
+              below the comment thread, so nothing player-scoped is beside it,
+              and its own rule separates it from whatever ended above. */}
+          <EphemeristsColophon
+            scale={desktop ? "page" : "card"}
+            date={task.created_at}
+          />
         </div>
       </div>
     </div>

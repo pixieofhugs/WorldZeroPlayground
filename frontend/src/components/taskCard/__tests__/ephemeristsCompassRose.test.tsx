@@ -119,14 +119,20 @@ describe('the rose says which way is up exactly once (#2067)', () => {
   const EAST = 'M8 50 L26 44.5 L26 55.5 Z'
   const WEST = 'M92 50 L74 44.5 L74 55.5 Z'
 
-  it('fills north in the plate gold, not the register teal', () => {
-    // 13.07:1 on the rose's own disc against the teal's 7.36:1 — the one point
-    // that carries meaning is also the one that reads first. The design's OTHER
-    // file draws this navy (`-plate-nile`'s 1.64:1 fallback), which would make
-    // the needle invisible; the gold file is the one naming a variable.
+  it('fills north in the faction MARK, not the plate gold and not the teal', () => {
+    // It moved gold -> `-plate-band-ink` in #2145, which is the move this file
+    // predicted: the faction's ink is BRASS since #2140 and the rose carries the
+    // total, so gold here would have been the last place the old identity
+    // survived. 7.59:1 on the disc, in BOTH cascades, against gold's 13.07 —
+    // this spends contrast on purpose and stays far clear of any floor.
+    //
+    // The design's OTHER file drew this needle navy (the register's aqua, 1.64:1
+    // on the disc), which would make it invisible; #2141 deleted that token
+    // outright, so the assertion below is the only reading the rose has.
     const north = needle(render('desktop'), NORTH)
-    expect(north).toContain('fill="var(--faction-ephemerists-plate-gold)"')
-    expect(north).not.toContain('plate-nile')
+    expect(north).toContain('fill="var(--faction-ephemerists-plate-band-ink)"')
+    expect(north).not.toContain('nile')
+    expect(north).not.toContain('plate-gold')
   })
 
   it('outlines the other three in one ink at one weight', () => {
@@ -134,7 +140,12 @@ describe('the rose says which way is up exactly once (#2067)', () => {
     for (const d of [SOUTH, EAST, WEST]) {
       const open = needle(html, d)
       expect(open, d).toContain('fill="none"')
-      expect(open, d).toContain('stroke="var(--faction-ephemerists-plate-brass-light)"')
+      // `-brass-light` stood here and was the FORKED half of a theme-invariant
+      // ground: it flips (#6f5620 / #e6c877) and `-plate-disc` does not, so the
+      // three open needles read 2.63:1 in light and ~11:1 in dark. The rule
+      // brass (#2141) is one value on all three of the faction's grounds —
+      // 3.73:1 on this one, clear of the 3:1 a non-text mark owes (#2145).
+      expect(open, d).toContain('stroke="var(--faction-ephemerists-plate-brass-rule)"')
       expect(open, d).toContain('stroke-width="0.9"')
     }
   })

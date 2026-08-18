@@ -150,13 +150,11 @@ import {
   INK,
   INNER,
   LINE,
-  NILE,
   OCHRE,
   Octagon,
   PLATE,
   QUIET,
   READING,
-  RuneRule,
   SHADOW,
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
@@ -272,16 +270,20 @@ export default function EphemeristsEditPraxis({ state }: Props) {
   /** Section heads sit on the plate, where the caption gold is measured. */
   const sectionLabel = { ...label, color: CAPTION };
   /**
-   * The rune band is this skin's rule (#1638, replacing the flute), drawn ONCE
-   * above the footer (#1707) rather than at the head of every section — the
-   * design calls its rule once and parts the regions with the sheet's own gap.
+   * The skin's rule, drawn ONCE above the footer (#1707) rather than at the head
+   * of every section — the design calls its rule once and parts the regions with
+   * the sheet's own gap.
    *
-   * PAIRED with the brass hairline, which the plate's other mounts are not:
-   * each of those sits under a section HEAD whose own filler rule already draws
-   * that line, while the composer's rule closes a column of bare field labels.
-   * On its own the band reads as a loose row of marks rather than as a rule.
+   * IT IS THE BRASS HAIRLINE ALONE SINCE #2210. The rule used to be that
+   * hairline PAIRED with the kit's rune band, and the pairing was the point: the
+   * plate's other mounts sat under a section HEAD whose own filler rule already
+   * drew the line, while this one closes a column of bare field labels, where a
+   * band on its own read as a loose row of marks. #2210 retires the band's glyph
+   * vocabulary kit-wide, so what is left is the half that was doing the ruling —
+   * the same 1px brass the section heads draw, through the shared
+   * `ComposerRule` rather than a second declaration of it here.
    */
-  const runes = <RuneRule rule />;
+  const composerRule = <ComposerRule style={{ background: BRASS, opacity: 0.5 }} />;
 
   /** Radius 0, borderW 1.5 — the skin's whole geometry row. */
   const fieldBox = {
@@ -321,6 +323,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     descriptionStyle: { fontFamily: READING, color: QUIET },
     pillStyle: { ...label, color: QUIET, borderRadius: 0 },
   } as const;
+  /* NOT `.eph-cta`, and this is a reported gap rather than a decision (#2146).
+     This is the affirmative control on the WAITING stage, and it paints the
+     plate CTA like every other — but it reaches that surface as
+     `dress.primaryStyle`, a bare `CSSProperties`, and `PraxisWaitingSurface`
+     derives its own `className` from whether that style exists. There is no
+     seam for a class without giving the shared dress a `primaryClassName`, and
+     that file carries the stage's state rather than its paint.
+     ponytail: one optional field on `ComposerDress` and one `??` in
+     `PraxisWaitingSurface` closes it; until then this is the one Ephemerists
+     plate CTA whose enclosure does not flip with the theme. */
   const primaryStyle = composerLabelStyle({
     ...label,
     display: "inline-flex",
@@ -342,7 +354,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 say so too (#1830 corrected this note). */}
             <ComposerMasthead
               height={EPH_BAND[factor]}
-              background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${NILE}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
+              background={`linear-gradient(180deg, color-mix(in srgb, var(--faction-ephemerists-plate-band) 82%, ${BRASS_LIGHT}) 0%, var(--faction-ephemerists-plate-band) 100%)`}
               style={{
                 // The engraved masthead sizes itself from its own padding, so
                 // the shared band's `height` becomes a FLOOR. `style` is spread
@@ -354,10 +366,19 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 color: BAND_INK,
               }}
             >
+              {/* NO COLOPHON ON THIS SURFACE, and it is a structural block
+                  rather than a choice: #1828 makes the cast a full-bleed band
+                  that closes the sheet with a negative bottom margin, so a
+                  trailing sibling is pulled back up over the brass instead of
+                  sitting under it — the same block the trailing rune strip
+                  records at the footer below. The composer therefore keeps the
+                  notation band and loses the coordinates, which is also the
+                  placement #2124 wanted least: this is the one Ephemerists
+                  surface whose every field is the author's own. */}
               <EphemeristsMasthead
                 slug={praxis.task_faction_slug}
                 scale={sizes.isMobile ? "card" : "page"}
-                date={praxis.submitted_at ?? praxis.created_at}
+                seed={`praxis:${praxis.id}`}
               />
             </ComposerMasthead>
             {/* The cavetto cornice, beneath the band, carrying the one motion. */}
@@ -397,7 +418,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
        against a near-white page, and 2.60:1 on the panel cell `BodyPreview`
        renders into (hover 1.16:1). The detail column declares the identical
        pair through `.eph-plate-sheet`; this is the same seam reached from the
-       one Ephemerists root that is not inside that column. NILE is the plate's
+       one Ephemerists root that is not inside that column. BRASS_LIGHT is the plate's
        declared link hue and is measured on all three of its grounds.
 
        AND THE LABEL SEAM, for the identical reason, one issue later (#1754 fixed
@@ -422,7 +443,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     pageStyle: {
       fontFamily: DECO,
       color: INK,
-      ["--link-ink" as string]: NILE,
+      ["--link-ink" as string]: BRASS_LIGHT,
       ["--link-ink-hover" as string]: INK,
       ["--label-ink" as string]: QUIET,
     } as CSSProperties,
@@ -430,7 +451,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     sheetStyle,
     masthead,
     ground,
-    rule: () => runes,
+    rule: () => composerRule,
     mark: statusMark,
     statusStyle: { ...label, color: INK },
     metaStyle: { fontFamily: READING, color: QUIET },
@@ -752,9 +773,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         <ErrorBanner message={state.error} style={{ color: ALARM }} />
 
-        {/* The footer's own divider. `ComposerRule` hands its whole box over
-            when it is given children, so the rune band replaces the hairline. */}
-        <ComposerRule>{runes}</ComposerRule>
+        {/* The footer's own divider — the plate's brass, at the shared rule's
+            own 1px. */}
+        {composerRule}
 
         {/* [Cancel] … [Submit] — the global order from #646. The cast is a
             full-bleed band (#1828) with the open eye following the word. */}
@@ -806,10 +827,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   There is no room below the band inside the sheet, and taking it
                   would mean undoing #1828 — which this issue puts out of scope.
                   The card and the task page carry both strips. */}
-              <EphemeristsRuneStrip side="top" />
+              <EphemeristsRuneStrip side="top" seed={`praxis:${praxis.id}`} />
               <PublishButton
                 state={state}
                 skin={{
+                  /* THE ONE PLATE CTA (#2146). The band takes its ground and
+                     its ink from `.eph-cta` — this is the same control the task
+                     card and the task page draw, so it may not restate them —
+                     and keeps its own 1.5px top rule, because #1828 made it
+                     full-bleed and a band has no enclosure to be given one. */
+                  className: "eph-cta",
                   idleLabel: t("editPraxis.composer.submit"),
                   busyLabel: t("editPraxis.composer.submitBusy"),
                   trailingOrnament: (
@@ -829,8 +856,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                       fontWeight: 500,
                       letterSpacing: "0.24em",
                       frame: LINE,
-                      color: CTA_INK,
-                      background: CTA,
                     }),
                     cursor: state.submitting ? "wait" : "pointer",
                   },
