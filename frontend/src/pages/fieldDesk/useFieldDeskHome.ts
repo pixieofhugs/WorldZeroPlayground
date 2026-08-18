@@ -78,6 +78,12 @@ export interface FieldDeskHomeState {
  * pill that still looks pressable is worse than no pill, so `to === null` is the
  * skins' single instruction to drop the link, the chevron and the press state
  * together — not to grey one out.
+ *
+ * `'notifications'` is the wire field's historical name (`global_activity`),
+ * NOT what the row says: since #2083 that state speaks as ACTIVITY — a log of
+ * events — because the bell beside it is the queue of things awaiting an
+ * answer, and neither used to say which it was. `PendingRowPill.activityLabel`
+ * holds the copy and the argument.
  */
 export type PendingRowKind = 'requests' | 'notifications' | 'clear'
 
@@ -135,8 +141,8 @@ export interface NewsWaiting {
  * The glance length is still read, for PRESENCE only: under deploy skew a client
  * ahead of its API gets no count at all, and a non-empty glance is then the only
  * proof there is news. `total: undefined` reaches the pill as `count: 0` — the
- * row still leads to `/updates`, it just says "New updates" as it did before this
- * issue, rather than rendering `undefined`.
+ * row still leads to `/updates`, it just says "New activity" — the numberless
+ * wording, true at any volume — rather than rendering `undefined`.
  */
 export function selectPendingRow(
   pendingRequests: number,
