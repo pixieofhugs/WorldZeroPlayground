@@ -165,6 +165,28 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
      * the seven other skins head the page with a masthead and WOW with the
      * carried life's name — the text is the skin's, the level is not.
      */
+    /**
+     * #2111 — the CHARACTERS pill is a door to a room that can be empty.
+     *
+     * It opens `CharacterSwitcherSheet`, which is the account's ROSTER. With one
+     * life and the era's second-character gate shut, that roster holds nothing
+     * but the life already being carried and the sheet has no create button
+     * either, so the pill is two taps to a dead end — and, worse, a tell that
+     * there is something here you cannot have yet (#1560). The desktop roster
+     * section answers the same predicate, so the two cannot disagree.
+     *
+     * The EDIT pill beside it is NOT part of this: editing the carried life is
+     * always available, and it is the action the sheet's own duplicate link was
+     * deleted in favour of.
+     */
+    it(`${slug} hides the CHARACTERS trigger when the roster offers no choice`, () => {
+      expect(render(<Skin state={baseState()} />).text, 'a choice to make').toContain('Characters')
+
+      const { html, text } = render(<Skin state={baseState({ offersACharacterChoice: false })} />)
+      expect(text, 'one life, shut gate').not.toContain('Characters')
+      expect(html, 'the edit link is not the switcher').toContain('href="/characters/42/edit"')
+    })
+
     it(`${slug} opens the outline with exactly one h1`, () => {
       const { html } = render(<Skin state={baseState()} />)
       expect(h1s(html)).toHaveLength(1)

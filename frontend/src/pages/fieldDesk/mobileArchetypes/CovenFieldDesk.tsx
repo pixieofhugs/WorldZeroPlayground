@@ -172,7 +172,8 @@ const ghostButton: CSSProperties = {
 
 export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
-  const { character, eraName, levelTrack, activeTasks, pendingRow } = state
+  const { character, eraName, levelTrack, activeTasks, pendingRow, offersACharacterChoice } =
+    state
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -210,14 +211,18 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
         {/* ── Character plate ── */}
         <Plate>
           <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-md)' }}>
-            <button
-              type="button"
-              onClick={() => setSwitcherOpen(true)}
-              style={actionPillStyle}
-              className="hover:opacity-80 active:opacity-60"
-            >
-              {t('sidebar.characterCard.characters')}
-            </button>
+            {/* Hidden when the roster has nothing to offer (#2111): one life and a
+                shut second-character gate make this two taps to a dead end. */}
+            {offersACharacterChoice && (
+              <button
+                type="button"
+                onClick={() => setSwitcherOpen(true)}
+                style={actionPillStyle}
+                className="hover:opacity-80 active:opacity-60"
+              >
+                {t('sidebar.characterCard.characters')}
+              </button>
+            )}
             <Link
               to={`/characters/${character.id}/edit`}
               style={actionPillStyle}
