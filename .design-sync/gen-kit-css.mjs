@@ -1,8 +1,18 @@
-// Regenerate frontend/.ds-kit/kit.css = Google-Fonts @import (harvested from
-// frontend/index.html, where the real app loads its faction webfonts via a
-// <link>) prepended to the TAILWIND-COMPILED frontend/src/index.css, plus
-// frontend/src/motion.ornament.css appended (the app defers that sheet past
-// first paint, so index.css does not @import it — see step 2b).
+// Regenerate frontend/.ds-kit/kit.css = the TAILWIND-COMPILED
+// frontend/src/index.css, plus two sheets the app reaches across a chunk
+// boundary and the Tailwind compile therefore cannot see:
+// frontend/src/fonts.faction.css (the 15 faction families, #2079) and
+// frontend/src/motion.ornament.css (#2073) — see steps 2a and 2b.
+//
+// The faces used to arrive via a Google-Fonts @import harvested from
+// frontend/index.html's <link>. #1977 self-hosted all 18 families, so that
+// <link> is gone: `src/fonts.css` (the shell's three) is @imported by
+// index.css and lands in the Tailwind compile on its own, and the faction
+// sheet is appended here. The converter's extractFonts() then copies every
+// woff2 into the uploaded fonts/ dir — which is strictly better than the old
+// remote @import, since the previews no longer need network to paint in the
+// real faces. It resolves url()s relative to THIS file's directory, so step 2c
+// rewrites the src-relative paths to ../src/… before it looks.
 //
 // Why compile Tailwind: index.css is just `@tailwind base/components/utilities`
 // + the app's custom vars/rules. The design-sync converter copies cssEntry
@@ -91,11 +101,19 @@ function main() {
     { cwd: 'frontend', stdio: 'inherit' },
   );
 
-  // 2. Prepend the Google-Fonts @import (must be the first at-rule).
-  const html = readFileSync('frontend/index.html', 'utf8');
-  const href = html.match(/href="(https:\/\/fonts\.googleapis\.com\/css2[^"]+)"/)?.[1];
-  if (!href) throw new Error('no Google Fonts <link> href in frontend/index.html');
   const compiled = readFileSync('frontend/.ds-kit/index.compiled.css', 'utf8');
+
+  // 2a. Append the faction @font-face sheet (#2079). index.css deliberately
+  //     does NOT @import it — it rides the chunk of whatever faction surface
+  //     needs it — so the Tailwind compile above sees only the shell's three
+  //     families. Without this the kit ships 3 of 18 faces and every faction
+  //     surface paints in a fallback, which reads as "the font just looks a
+  //     bit off" rather than as a missing asset.
+  const FACTION_FONTS_SRC = 'frontend/src/fonts.faction.css';
+  const factionFonts =
+    `\n/* Appended from ${FACTION_FONTS_SRC}: the app loads this sheet from a\n` +
+    `   faction chunk (#2079), so index.css never @imports it. */\n` +
+    readFileSync(FACTION_FONTS_SRC, 'utf8');
 
   // 2b. Append the deferred ornament-motion sheet (#2073). The app reaches it
   //     through a chunk boundary so it stays off the critical path, which means
@@ -111,28 +129,44 @@ function main() {
     `   boundary (#2073), so the Tailwind compile of index.css never sees it. */\n` +
     readFileSync(MOTION_SRC, 'utf8');
 
-  // 3. Inline the ensō mask so the UA marks paint without an app server.
-  const ENSO_SRC = 'frontend/public/factionMarks/enso.webp';
-  const ensoDataUri = `data:image/webp;base64,${readFileSync(ENSO_SRC).toString('base64')}`;
-  const ensoRule =
-    `\n/* Inlined from ${ENSO_SRC}: the component asks for the absolute path\n` +
-    `   /factionMarks/enso.webp, which nothing serves inside a design. */\n` +
-    `span[style*="factionMarks/enso.webp"]{` +
-    `-webkit-mask-image:url("${ensoDataUri}") !important;` +
-    `mask-image:url("${ensoDataUri}") !important;}\n`;
+  // 3. Inline every app-served mask asset so the marks paint without an app
+  //    server. Each is an ABSOLUTE `/factionMarks/…` path in a component's
+  //    inline style, which nothing serves inside a design; `!important` beats
+  //    that inline style. Keep this list in step with `grep -rn "url(/" frontend/src`.
+  const MASK_ASSETS = [
+    ['frontend/public/factionMarks/enso.webp', 'image/webp', 'factionMarks/enso.webp'],
+    ['frontend/public/factionMarks/labyrinth.svg', 'image/svg+xml', 'factionMarks/labyrinth.svg'],
+  ];
+  let maskBytes = 0;
+  const maskRules = MASK_ASSETS.map(([src, mime, marker]) => {
+    const dataUri = `data:${mime};base64,${readFileSync(src).toString('base64')}`;
+    maskBytes += dataUri.length;
+    return (
+      `\n/* Inlined from ${src}: the component asks for the absolute path\n` +
+      `   /${marker}, which nothing serves inside a design. */\n` +
+      `span[style*="${marker}"]{` +
+      `-webkit-mask-image:url("${dataUri}") !important;` +
+      `mask-image:url("${dataUri}") !important;}\n`
+    );
+  }).join('');
+
+  // 2c. Point every self-hosted face at ../src/…, because the converter's
+  //     extractFonts() resolves url()s relative to the directory holding THIS
+  //     stylesheet (.ds-kit/), not relative to src/. An unresolvable src is
+  //     dropped silently, so a wrong path here costs the whole family.
+  const rebase = (css) =>
+    css.replace(/url\(\s*['"]?\.?\/?assets\/fonts\/([^'")]+)['"]?\s*\)/g, "url('../src/assets/fonts/$1')");
 
   writeFileSync(
     'frontend/.ds-kit/kit.css',
     `/* AUTO-GENERATED by .design-sync/gen-kit-css.mjs — do not edit. */\n` +
-      `@import url('${href}');\n` +
-      stripTailwindPreflightVars(compiled) +
-      motion +
-      ensoRule,
+      rebase(stripTailwindPreflightVars(compiled) + factionFonts + motion) +
+      maskRules,
   );
   console.error(
-    `wrote frontend/.ds-kit/kit.css (tailwind-compiled + webfonts + ornament motion ` +
-      `+ inlined ensō mask, preflight --tw-* stripped, ` +
-      `${Math.round(ensoDataUri.length / 1024)} KB enso)`,
+    `wrote frontend/.ds-kit/kit.css (tailwind-compiled + self-hosted faces + ornament motion ` +
+      `+ inlined ${MASK_ASSETS.length} mask assets, preflight --tw-* stripped, ` +
+      `${Math.round(maskBytes / 1024)} KB masks)`,
   );
 }
 

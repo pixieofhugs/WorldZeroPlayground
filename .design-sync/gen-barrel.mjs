@@ -52,10 +52,17 @@ for (const name of Object.keys(cfg.componentSrcMap).sort()) {
   if (!rel) continue;
   const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
   const spec = '../' + rel.replace(/\.tsx$/, '');
-  // tsc emits with rootDir=src, so `src/a/B.tsx` lands at `ds-types/a/B.d.ts`.
-  const stem = rel.replace(/^src\//, '').replace(/\.tsx$/, '');
-  const hasTypes = fs.existsSync(path.join(DTS_TREE, stem + '.d.ts'));
-  const dtsSpec = './ds-types/' + stem;
+  // tsc's rootDir is INFERRED from the common root of everything it actually
+  // compiled, so the tree's shape is not ours to assume: when only src/ is
+  // reachable, `src/a/B.tsx` lands at `ds-types/a/B.d.ts`; the moment anything
+  // outside src/ gets pulled in (e2e/ does today), rootDir backs up to the
+  // package root and the same file lands at `ds-types/src/a/B.d.ts`. Probe
+  // both — guessing wrong emits ZERO typed re-exports and silently ships
+  // `[key: string]: unknown` as every component's API contract.
+  const bare = rel.replace(/\.tsx$/, '');
+  const stem = [bare, bare.replace(/^src\//, '')].find((s) => fs.existsSync(path.join(DTS_TREE, s + '.d.ts')));
+  const hasTypes = Boolean(stem);
+  const dtsSpec = './ds-types/' + (stem ?? bare);
   if (!hasTypes) noTypes.push(name);
 
   if (/^export\s+default\s/m.test(src)) {
