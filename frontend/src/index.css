@@ -4831,20 +4831,26 @@
    `--eph-*` while their plates moved would have been the second
    identity in its most visible form: papyrus floating on vellum.
 
-   It is now `-plate-page`, the same ground the task detail's sheet
-   sits on, wearing the plate's own marks: a gold bloom off the top
-   edge, a set of surveyor's rings bleeding from the top corner in
-   brass, papyrus grain, and the journal's ruling. The vignette
-   follows `-plate-page` itself rather than a second sheet colour,
-   because the plate family has no "deep" twin.
+   It became `-plate-page`, the same ground the task detail's sheet
+   sits on, and #2144 then took every mark off it. The wash was a
+   gold bloom off the top edge, surveyor's rings bleeding from the
+   top corner, papyrus grain and the journal's ruling (plus two nile
+   layers #2141 deleted with the token). All of it is replaced by ONE
+   layer, and that layer is not here: it is `EphemerisNet`, drawn in
+   JS by `components/backdrop/EphemeristsBackdrop.tsx`.
 
-   #2144 OWNS THE REWRITE OF THIS RECIPE — the warped ephemeris net
-   replaces the seven-layer wash outright. What #2141 did here is the
-   minimum that leaves `main` green and the faction aqua-free: the
-   two nile layers (a 12% corner bloom and a 10% ring set)
-   are DELETED with the token, not repointed onto a brass that the
-   layer above them already carries. Five layers, not seven; do not
-   read the reduced stack as the design's intent, read #2144's.
+   THIS RULE IS NOW THE SHEET COLOUR AND NOTHING ELSE, on purpose.
+   The colour is the one item on that list which was never a wash
+   layer — it is what makes this page vellum by day and the night
+   plate after dark, and dropping it would drop the faction's stock
+   back to the site's neutral ground. Everything ABOVE the colour is
+   the chart, and the chart has to follow the theme through a var(),
+   which an image can only do while it is drawn in the document —
+   see the net's header for why that ruled out a `url()` here.
+
+   `z-index: 0` on a fixed element makes this a stacking context,
+   which is what keeps the net's `z-index: -1` above this colour
+   instead of behind the page.
    ══════════════════════════════════════════════════════════════ */
 .eph-backdrop {
   position: fixed;
@@ -4852,13 +4858,6 @@
   z-index: 0;
   pointer-events: none;
   background-color: var(--faction-ephemerists-plate-page);
-  background-image:
-    radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--faction-ephemerists-plate-gold) 18%, transparent), transparent 72%),
-    repeating-radial-gradient(circle at 90% 8%, transparent 0 33px, color-mix(in srgb, var(--faction-ephemerists-plate-brass) 12%, transparent) 33px 34px),
-    radial-gradient(var(--faction-ephemerists-plate-rule) 0.6px, transparent 0.9px),
-    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-rule) 0 1px, transparent 1px 26px),
-    linear-gradient(170deg, var(--faction-ephemerists-plate-bg), var(--faction-ephemerists-plate-page));
-  background-size: 100% 100%, 100% 100%, 5px 5px, 100% 100%, 100% 100%;
 }
 
 /* ══════════════════════════════════════════════════════════════

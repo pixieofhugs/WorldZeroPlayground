@@ -2,8 +2,9 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
+import EphemerisNet from "../../../components/factionMarks/EphemerisNet";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -35,8 +36,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  * field journal out of the Valley. A cavetto-cornice masthead whose night band
  * holds the ENGRAVED MASTHEAD (#1634, page scale on desktop and card scale on a
  * phone) between two incised registers of glyphs; the level a numeral over tally
- * strokes; the worth on a stepped octagon medallion; the brief on a ruled leaf
- * with a red margin rule. Poiret One display, Cinzel small caps, Spectral
+ * strokes; the worth on a stepped octagon medallion; the brief on a leaf of the
+ * chart with a red margin rule. Poiret One display, Cinzel small caps, Spectral
  * reading.
  *
  * The winged sun disc appeared TWICE on this page — over the wordmark, and 400px
@@ -104,7 +105,6 @@ const DISC = "var(--faction-ephemerists-plate-disc)";
 const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
 const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
-const RULE = "var(--faction-ephemerists-plate-rule)";
 const LINE = "var(--faction-ephemerists-plate-line)";
 const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 /* `--faction-ephemerists-plate-wash` filled the breadcrumb cartouche and nothing
@@ -120,11 +120,13 @@ const SHADOW = "var(--faction-ephemerists-plate-shadow)";
 const GALLERY_PREVIEW = 3;
 
 /**
- * The brief's leading, in px, and the pitch of the journal ruling under it.
- * These are ONE number by construction: a ruled leaf whose rules miss the text's
- * baselines reads as a printing error rather than as stationery. The design's 28
- * was drawn for 15.5px type; `--text-content` is 18px (the #627 floor), so the
- * ruling opens to match rather than the type closing to fit.
+ * The brief's leading, in px. It used to be TWO things — the leading and the
+ * pitch of the journal ruling beneath it, one number by construction so no rule
+ * missed a baseline. #2144 took the ruling away (the net replaces it), and the
+ * leading it was pitched to is what stays: the design's 28 was drawn for 15.5px
+ * type and `--text-content` is 18px (the #627 floor), so the line opened to
+ * match rather than the type closing to fit. Nothing tracks it any more, which
+ * is why it is now a plain number and not a pair.
  */
 const BRIEF_LEADING = 32;
 
@@ -179,9 +181,8 @@ interface SizeSet {
   tapTarget: number
   cellPadding: string
   briefPadding: string
-  /** Where the ochre margin rule is struck, and where the ruling starts. */
+  /** Where the ochre margin rule is struck down the gutter. */
   marginRule: number
-  rulingOffset: number
   titleSize: string
   levelSize: string
   pointsSize: string
@@ -198,7 +199,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cellPadding: "var(--space-lg)",
     briefPadding: "var(--space-xl) var(--space-xl) var(--space-lg) var(--space-3xl)",
     marginRule: 26,
-    rulingOffset: 30,
     titleSize: "var(--text-display)",
     levelSize: "var(--text-heading)",
     pointsSize: "var(--text-heading)",
@@ -213,7 +213,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cellPadding: "var(--space-md)",
     briefPadding: "var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)",
     marginRule: 18,
-    rulingOffset: 22,
     titleSize: "var(--text-heading)",
     levelSize: "var(--text-title)",
     pointsSize: "var(--text-title)",
@@ -418,7 +417,7 @@ export default function EphemeristsTaskDetail({
           <EphemeristsMasthead
             slug={slug}
             scale={desktop ? "page" : "card"}
-            date={task.created_at}
+            seed={`task:${task.id}`}
           />
         </div>
       </div>
@@ -827,7 +826,24 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── The brief, in full, on a ruled leaf with a red margin rule ──
+  // ── The brief, in full, on a leaf of the chart with a red margin rule ──
+  //
+  // The leaf used to be RULED NOTEPAPER: a `repeating-linear-gradient` pitched
+  // to `BRIEF_LEADING` so every rule met a baseline. #2144 replaces it with the
+  // page's own net — one drawing across the whole faction, where the rules were
+  // a second ruling this page drew for itself.
+  //
+  // 0.17, WHICH IS THE PAGE'S WEIGHT AND NOT THE DESIGN'S 0.42. Owner ruling:
+  // at 0.42 the net's diagonals land at roughly the weight of a 13px serif's
+  // strokes, and this is body copy. If the brief later needs to read as more
+  // written-on than the page around it, the honest fix is to keep BOTH — the
+  // rules for the writing line, the net for the material — and NOT to double
+  // the net's weight; 0.42 has already been tried and ruled out once.
+  //
+  // `isolation: isolate` is the whole mount: it makes this leaf a stacking
+  // context, so the net's `z-index: -1` lands above the plate's fill and below
+  // the copy, the margin rule and everything else printed here. The design's
+  // `z-index: 1` lift is not used — see the net's header.
   const brief = (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
@@ -836,11 +852,11 @@ export default function EphemeristsTaskDetail({
           style={{
             ...plate,
             position: "relative",
+            isolation: "isolate",
             padding: size.briefPadding,
-            backgroundImage: `repeating-linear-gradient(180deg, transparent 0 ${BRIEF_LEADING - 1}px, ${RULE} ${BRIEF_LEADING - 1}px ${BRIEF_LEADING}px)`,
-            backgroundPosition: `0 ${size.rulingOffset}px`,
           }}
         >
+          <EphemerisNet opacity={0.17} />
           {/* The margin rule, struck in ochre down the gutter. */}
           <span
             aria-hidden
@@ -1012,6 +1028,17 @@ export default function EphemeristsTaskDetail({
               heading={sectionHead(t("detail.comments.heading"))}
             />
           </div>
+
+          {/* The plate's provenance, at the foot of the sheet (#2143). It is
+              the masthead's old datum row, labelled — see `EphemeristsColophon`
+              for why the label and this placement are a requirement (#2124) and
+              not a layout preference. It sits OUTSIDE the two-column region and
+              below the comment thread, so nothing player-scoped is beside it,
+              and its own rule separates it from whatever ended above. */}
+          <EphemeristsColophon
+            scale={desktop ? "page" : "card"}
+            date={task.created_at}
+          />
         </div>
       </div>
     </div>
