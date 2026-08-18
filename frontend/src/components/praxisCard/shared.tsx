@@ -322,30 +322,38 @@ export function PraxisByline({
   const here = useLocation().pathname.replace(/\/+$/, "");
   const onAuthorsOwnPage = here === authorHref;
   // Shared by both branches so the two render identically apart from the
-  // anchor: the truncation pair, and the padding that keeps it off the glyphs
-  // (#1633). `overflow: hidden` is doing two jobs: it clips, and it is what
-  // makes this a shrinkable flex item at all (min-width: auto resolves to 0
-  // rather than to the whole nowrap string), so a name too long for the card
-  // ellipsizes instead of shoving the portrait out of the frame.
+  // anchor: how the name yields, and the padding that keeps it off the glyphs
+  // (#1633 — that 8px lives here rather than as `gap` on the row because a
+  // display face's final glyph can carry ink past its own advance width, and
+  // the Ephemerists card sets this line in Poiret One).
   //
-  // But it clips at the PADDING box while `text-overflow` measures the CONTENT
-  // box, and the two coincided while the 8px lived on the row as `gap`. A
-  // display face's final glyph can carry ink past its own advance width — the
-  // Ephemerists card sets this line in Poiret One — so that overhang was shaved
-  // off flush against the portrait beside it, with no ellipsis to explain it,
-  // which is what "a letter clipped behind its own avatar" looks like. Carrying
-  // the same 8px as padding here renders identically and gives the ink
-  // somewhere to land.
+  // #2132 — THE NAME WRAPS; it used to ellipsize, and the ellipsis was the
+  // defect. `overflow: hidden` + `white-space: nowrap` is a bound on how the
+  // name PAINTS and, deliberately, on nothing else: a nowrap string's
+  // min-content size is its whole rendered width, and `min-width: auto` — the
+  // initial value, so the value of every flex item nobody thought about —
+  // floors an item at its content-based minimum size. So a 22-character name
+  // did not overflow this row. It inflated the row, the card, and the profile
+  // body's card wrapper, out past the viewport, until it met the first ancestor
+  // carrying an explicit bound; the reporter filed it as the embedded VIDEO
+  // overflowing, because the media slot was dragged along with everything else.
+  // The `min-width: 0` on the row below was correct and bought nothing — it
+  // only ever bites once an ancestor has a width to shrink against.
   //
-  // The Ephemerists kit's own fix was `overflow: visible` + `text-overflow:
-  // clip`. It does not port: visible overflow restores min-width: auto to
-  // min-content, the name stops yielding, and a long one paints straight over
-  // the portrait and the faction tag. That is the symptom, caused on purpose.
+  // `overflow-wrap: anywhere` is what actually fixes it, and the repo already
+  // reaches for it (~30 sites) wherever it prints text a player typed. It takes
+  // min-content to a single character, so no ancestor can be inflated by a name
+  // on any surface, at any length, including the ones not written yet. NOT
+  // `break-word`, which paints identically and does NOT reduce min-content —
+  // the two differ in exactly the property this bug is about.
+  //
+  // The Ephemerists kit's `overflow: visible` + `text-overflow: clip` is still
+  // the wrong port and for the same reason as ever: with nothing to break at,
+  // the name stops yielding and paints over the portrait and the faction tag.
+  // Wrapping yields, which is what that pair was buying.
   const nameStyle: CSSProperties = {
     fontFamily: fonts?.display,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
+    overflowWrap: "anywhere",
     paddingInlineEnd: "var(--space-sm)",
   };
   return (

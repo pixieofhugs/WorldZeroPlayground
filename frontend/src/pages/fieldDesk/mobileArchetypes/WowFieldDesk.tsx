@@ -112,7 +112,8 @@ const trackMetaStyle: CSSProperties = {
 
 export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation("common");
-  const { character, eraName, levelTrack, activeTasks, pendingRow } = state;
+  const { character, eraName, levelTrack, activeTasks, pendingRow, offersACharacterChoice } =
+    state;
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   return (
@@ -136,14 +137,18 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
            one in the footer below (#1553). */
         tally={
           <span style={{ display: "inline-flex", gap: "var(--space-sm)" }}>
-            <button
-              type="button"
-              onClick={() => setSwitcherOpen(true)}
-              style={actionPillStyle}
-              className="hover:opacity-80 active:opacity-60"
-            >
-              {t("sidebar.characterCard.characters")}
-            </button>
+            {/* Hidden when the roster has nothing to offer (#2111): one life and a
+                shut second-character gate make this two taps to a dead end. */}
+            {offersACharacterChoice && (
+              <button
+                type="button"
+                onClick={() => setSwitcherOpen(true)}
+                style={actionPillStyle}
+                className="hover:opacity-80 active:opacity-60"
+              >
+                {t("sidebar.characterCard.characters")}
+              </button>
+            )}
             <Link
               to={`/characters/${character.id}/edit`}
               style={actionPillStyle}
