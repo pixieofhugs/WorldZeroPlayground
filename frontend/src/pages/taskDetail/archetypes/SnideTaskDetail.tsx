@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { PenCircle } from "../../../components/factionMarks/snideAtoms";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -364,6 +365,22 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   // pink they used to wear falls to 3.1:1 on black, so they take the acid the
   // slab admits as ink (#2066).
   //
+  // THE LOOP IS THE SHARED `PenCircle` (#2042). This page hand-drew the same two
+  // paths at the same viewBox until then, which made three copies of one drawing
+  // rather than the two #2042's survey counted. Two things travel with the mount:
+  //  - **The 1.18× growth** the shared loop carries (#2035). This page never had
+  //    it, so the loop is now visibly bigger here. That is a fix, not a
+  //    regression: the growth exists to clear a wide total, and this is the
+  //    surface with the widest — `modifiedPoints` at `--text-display` on desktop,
+  //    where the cards show a narrower figure a rung down. The growth is on the
+  //    SVG alone and the loop still lands inside its own box, so nothing moves.
+  //  - **The inks, as props, non-negotiably.** `PenCircle` defaults to the
+  //    clipping's `-note-*` family, which is the WALL's, and the wall flips while
+  //    this slab does not. `-note-ink` on `-card-bg` is **1.00:1 in light** — the
+  //    identical hex — and `-note-pink-ink` is 3.12:1. `PLATE_TEXT` reads 16.68:1
+  //    light / 17.51:1 dark and `PLATE_ACCENT` 15.55:1 / 16.32:1, which is the
+  //    same pairing this block already had; the mount must keep passing them.
+  //
   // The base chip's photocopier-black fill is LEFT ALONE and is worth knowing
   // about: `--faction-snide-ink` is the same `#14110b` as `-card-bg` in light, so
   // in light theme the chip's ground now matches the sheet under it exactly and
@@ -421,61 +438,16 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
       )}
 
-      {/* The total, circled in pink pen. */}
-      <div
-        style={{
-          position: "relative",
-          flex: "0 0 auto",
-          width: desktop ? 128 : 104,
-          height: desktop ? 100 : 81,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: "rotate(-5deg)",
-        }}
-      >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 78"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        >
-          <g fill="none" stroke={PINK} strokeLinecap="round">
-            <path
-              d="M14 40 C13 19 38 7 56 9 C79 11 91 24 89 40 C87 59 61 71 43 68 C23 65 12 55 13 37 C13 28 18 19 27 13"
-              strokeWidth="2.6"
-            />
-            <path d="M27 12 C16 18 11 28 11 39" strokeWidth="1.8" opacity="0.75" />
-          </g>
-        </svg>
-        <span
-          style={{
-            position: "relative",
-            fontFamily: IMPACT,
-            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-            lineHeight: 0.9,
-            color: PLATE_TEXT,
-          }}
-        >
-          {modifiedPoints}
-        </span>
-        <span
-          style={{
-            position: "relative",
-            fontFamily: IMPACT,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: pen-circle caption, sized to the drawn loop rather than the label ramp (§4a).
-            fontSize: 10,
-            letterSpacing: "0.22em",
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption's lead inside the drawn loop; a 4px rung pushes it off the numeral.
-            marginTop: 3,
-            color: PLATE_ACCENT,
-          }}
-        >
-          {t("detail.points.total")}
-        </span>
-      </div>
+      {/* The total, circled in pink pen — the SHARED loop (#2042), not a third
+          hand-drawn copy of it. See the note above `worth` for the inks. */}
+      <PenCircle
+        size={desktop ? 128 : 104}
+        value={modifiedPoints}
+        unit={t("detail.points.total")}
+        valueColor={PLATE_TEXT}
+        unitColor={PLATE_ACCENT}
+        valueSize={desktop ? "var(--text-display)" : "var(--text-heading)"}
+      />
     </div>
   );
 
