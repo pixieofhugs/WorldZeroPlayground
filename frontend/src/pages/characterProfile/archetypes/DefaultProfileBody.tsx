@@ -883,6 +883,25 @@ function MobileProfile({
   )
 }
 
+/**
+ * One segment of the Praxis/Tasks toggle. The ON half INVERTS — it fills with
+ * the page's primary ink and prints the page itself, the same two lines every
+ * other inverted pill in the app carries (`.btn-primary`, `.chip-active`,
+ * `ScoreToggle`, `ProposeTaskLink`, the Field Desk's own browse switch).
+ *
+ * IT USED TO INK WITH `--color-text-on-accent` AND THAT WAS #2107. That neutral
+ * is `#ffffff` in `:root` alone and never flips, while `--color-text-primary`
+ * flips to a warm cream (`#f0e6d0`) in dark — so the dark pill was white on
+ * cream at **1.24:1**, the label all but gone, while light read a fine 18.51:1.
+ * `--color-bg-page` is the ground that neutral is measured against and flips
+ * with it: 16.86:1 light, 15.00:1 dark. Identical defect to the faction page's
+ * join button (#1819); the guard at the bottom of `factionContrast.test.ts` is
+ * what stops the third copy.
+ *
+ * The OFF half is unchanged and was never in question: `--color-text-secondary`
+ * over the rail's `--color-bg-surface-alt` composite is 7.31:1 / 7.21:1, the
+ * AAA pairing `factionContrast.test.ts` already gates as "app alt surface".
+ */
 function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -895,7 +914,7 @@ function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; c
         fontWeight: on ? 700 : 400,
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
-        color: on ? 'var(--color-text-on-accent)' : 'var(--color-text-secondary)',
+        color: on ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
         background: on ? 'var(--color-text-primary)' : 'transparent',
         border: 'none',
         borderRadius: 999,

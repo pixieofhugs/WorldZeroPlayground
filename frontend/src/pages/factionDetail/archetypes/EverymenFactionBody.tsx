@@ -26,6 +26,18 @@ import type { FactionDetailState } from "../useFactionDetail";
 const CREAM = "var(--everymen-cream)";
 const GOLD = "var(--everymen-gold)";
 const INK = "var(--everymen-ink)";
+/**
+ * Text on the PAGE, which is `.em-backdrop` — the paper, not the cream (#2133).
+ *
+ * `INK` is a near-black in both themes, which is right on the cream frames and
+ * on the gold: those stocks are theme-invariant. The page under them is not —
+ * it ramps `--everymen-paper` to `--everymen-paper-deep`, and both flip. So the
+ * two section headings, the only type this file sets outside a frame, were
+ * reading 1.16:1 at night while measuring 13.19:1 by day, because the two
+ * tokens are the same hex in light. `--everymen-paper-text` is the ink that
+ * flips with the stock: 13.19 / 13.96 on the paper, 11.02 / 15.26 on the deep.
+ */
+const PAPER_TEXT = "var(--everymen-paper-text)";
 const RED = "var(--everymen-red)";
 const MUTED = "var(--everymen-muted)";
 
@@ -86,7 +98,8 @@ const SECTION_HEADING_TEXT: CSSProperties = {
   fontSize: 34,
   letterSpacing: "0.04em",
   margin: 0,
-  color: INK,
+  // The heading stands on the page, not in a frame — see `PAPER_TEXT` (#2133).
+  color: PAPER_TEXT,
   whiteSpace: "nowrap",
 };
 
