@@ -289,7 +289,7 @@ describe("the CAST control is gone from the owner actions (#521 → #1089)", () 
     expect(t).not.toContain("owner.submit");
   });
 
-  it("keeps the edit affordance and the quiet reopen — the published controls", () => {
+  it("keeps the quiet reopen — the one published control (#2136)", () => {
     const t = text(
       <PraxisOwnerActions
         state={state({
@@ -299,7 +299,7 @@ describe("the CAST control is gone from the owner actions (#521 → #1089)", () 
         })}
       />,
     );
-    expect(t).toContain("edit this praxis");
     expect(t).toContain("unsubmit");
+    expect(t).not.toContain("edit this praxis");
   });
 });

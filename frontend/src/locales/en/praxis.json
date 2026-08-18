@@ -118,7 +118,6 @@
       "confirm": "confirm"
     },
     "owner": {
-      "edit": "edit this praxis",
       "submitting": "Unsubmitting…",
       "unsubmit": "unsubmit to edit",
       "unsubmitDuelLive": "pull my entry back",
