@@ -48,11 +48,16 @@
  * - The `@media` wrapper's absence. The gate travels WITH the rules; a deferred
  *   sheet that drops it ships motion to people who asked for none.
  * - Motion a functional indicator depends on. `@keyframes spec-rise` stays in
- *   index.css because `.spectrum-dot--reached` is a vote READOUT, not ornament;
- *   `@keyframes wz-blink` stays because `ActivityTicker.tsx` reaches it from an
- *   inline `animation:` string and `.sg-cursor` here borrows it across the two
- *   sheets (keyframe names are document-global, so that works — but check every
- *   consumer of a keyframe before you move the keyframe itself).
+ *   index.css because `.spectrum-dot--reached` is a vote READOUT, not ornament.
+ *   `@keyframes wz-blink` used to be named here as the other example, for a
+ *   reason that turned out to be a defect rather than a property: it stayed
+ *   only because `ActivityTicker.tsx` reached it from an inline `animation:`
+ *   string, which is a keyframe reference no consumer analysis can see AND a
+ *   piece of motion no `@media` query can gate. #2104 moved that site onto a
+ *   class and the keyframe came here with it. The instruction the old note was
+ *   really carrying still stands, so keep it: CHECK EVERY CONSUMER OF A
+ *   KEYFRAME BEFORE YOU MOVE THE KEYFRAME — a consumer that names it from
+ *   outside a stylesheet will not turn up in a grep of one.
  *
  * ═══ WHAT IS STILL IN index.css AND COULD FOLLOW ═══
  *
@@ -87,14 +92,37 @@
 /* ── Singularity system slab (#842) — the travelling scanline and the block
    cursor. `.sg-scan`'s resting `top: -24%` is in index.css: it parks the sweep
    off-slab, which is layout, and the slab has to still into a legible
-   screenshot with this sheet absent. `.sg-cursor` runs `wz-blink`, which stays
-   in index.css (the activity ticker's LIVE dot reaches it inline) — the cursor
-   stops blinking but stays drawn, since it is punctuation on the number rather
-   than an indicator. ── */
+   screenshot with this sheet absent. `.sg-cursor` runs `wz-blink`, which now
+   lives just below — the cursor stops blinking but stays drawn, since it is
+   punctuation on the number rather than an indicator. ── */
 @keyframes sg-scan-sweep { 0% { top: -24%; } 100% { top: 120%; } }
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
   .sg-cursor { animation: wz-blink 1s step-end infinite; }
+}
+
+/* ── Homepage activity ticker (#2104) — the marquee and the "LIVE" dot. Both
+   ran from an inline `animation:` in `ActivityTicker.tsx`, so they ran for
+   readers who had asked for no motion and they pinned two keyframes to the
+   render-blocking sheet: a keyframe named by a style attribute is invisible to
+   the consumer analysis #2073 moves things on. Class-gated, both keyframes
+   travel.
+
+   `wz-blink` is the one blink keyframe (#911), shared with `.sg-cursor` above.
+   Its OTHER consumer used to be the inline string; now that it is a class, the
+   name has no reader outside this sheet.
+
+   Stranded-sheet reading: the dot rests drawn beside the word LIVE, which
+   carries the state on its own, and the strip rests showing its leading cards.
+   That is the reduced-motion rendering exactly. It is also not a load anyone
+   takes: `pages/Home.tsx` — the ticker's only mount — imports `factionFaces`
+   STATICALLY, so this sheet is a dependency of the chunk the ticker ships in
+   and the browser holds it before the component executes. ── */
+@keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes wz-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .ticker-roll { animation: ticker-roll 90s linear infinite; }
+  .ticker-live-dot { animation: wz-blink 1.4s ease-in-out infinite; }
 }
 
 /* ── Singularity task card (#2036/#2071) — the ASCII robot idling in the CTA's

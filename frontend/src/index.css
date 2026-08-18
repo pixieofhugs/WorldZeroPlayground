@@ -4921,13 +4921,15 @@
   background-repeat: no-repeat;
 }
 
-/* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
-@keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-/* The one blink keyframe (#911): the ticker's LIVE dot pulses it (ease-in-out)
-   and `.sg-cursor` below hard-toggles it (step-end). It used to have four names
-   — `sg-term-blink`, `sg-blink`, bare `blink` — three of them injected inline
-   by components, bypassing the reduced-motion guard. One keyframe, one guard. */
-@keyframes wz-blink { 50% { opacity: 0; } }
+/* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. Both
+   `@keyframes ticker-roll` and `@keyframes wz-blink` moved to
+   `src/motion.ornament.css` in #2104, with `.ticker-roll` / `.ticker-live-dot`.
+   They could not go with the rest in #2073 because `ActivityTicker.tsx` named
+   them from an inline `animation:` string, which no consumer analysis can see
+   and no `@media` query can gate — that was the defect, not the deferral.
+   `wz-blink` is still the ONE blink keyframe (#911); it used to have four names
+   — `sg-term-blink`, `sg-blink`, bare `blink` — three of them injected inline by
+   components, bypassing the reduced-motion guard. One keyframe, one guard. */
 
 /* The codex's slow motion — turning astrolabe rings, breathing points — went
    with the surfaces that used it (#1208). `eph-twinkle` is the survivor and is
