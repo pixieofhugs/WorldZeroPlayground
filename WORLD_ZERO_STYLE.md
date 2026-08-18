@@ -864,6 +864,16 @@ The corollary at the sheet: **a `max-height` measured from `bottom: 0` is not th
 
 Which columns take it is decided by whether the CHILD carries a width. A praxis card does not — it fills whatever it is given, so the praxis lists stay stretched, and a metatask seal is the same, which is why the mobile browse applies the class conditionally rather than to the whole results column. The three lists that stack a fixed-width `<TaskCard>` (mobile browse, and the mobile Default and WOW profile task tabs) centre. **A flex-WRAP container is a separate question and is deliberately left alone**: the faction bodies and the desktop board wrap left-flush on purpose, and centring them would recentre a partial last row on the desktop, which is the "intentional chaos" this section is protecting.
 
+### A bordered panel may not sit directly inside another bordered panel (#2131)
+
+**Framing is how a surface says "this is one object".** Two frames, one inside the other, say it twice about a thing that is once. Three say it three times, and the report that names it says "a window in a window in a window" — which is what the Cozy Coven character profile was: an identity band at `2px solid --faction-coven-slip-border`, the shared `CredentialCard` inside it at `2px solid --faction-coven-card-accent`, and the progression panel beside the card at `1.5px solid --faction-coven-slip-border` again. Concentric, and all of it pink.
+
+The rule is **faction-blind**. Coven is the loud case because its edge is a high-contrast pink, but a kit that frames its band in a neutral hairline is doing the identical thing quietly, and the day someone raises that hairline's contrast it becomes the same screenshot. So this is a layout rule, not a Coven note.
+
+**The inner panel is normally the one that gives way** — it drops to a background fill, or to a single-side hairline divider, which is not a frame and is always allowed. **Which one gives way is decided by which frame survives being moved.** On the Coven profile it went the other way round: the card kept its edge, because the card is the object being looked at and it renders framed on the FieldDesk roster and the creation preview too, so its frame is a property of the component rather than of this page. The band gave way instead, and it lost nothing — it already carried `--faction-coven-ward-card` and a 16px radius, which is a panel. **A ground and a radius are enough to be a panel; the edge is a third statement of the same thing.** The elevation shadow stays, for the same reason: a shadow is depth, not an outline.
+
+Two devices the rule does NOT catch, and the distinction is the device's job rather than its shape. **A portrait ring is a ring, not a panel border** — the pink circle around the Coven avatar is a mount for a face, doing what a mat does in a picture frame, and it stays even though it reads as a fourth circle in the screenshot. Same for a badge medallion. And **a `border-left` accent rule is a rule**: the Everymen progression panel's 5px gold edge marks a side, it does not enclose. If it encloses, it is a frame and this rule applies.
+
 ---
 
 ## 6. Faction Card Archetypes
