@@ -195,7 +195,8 @@
     "modifierCaption": "modifier",
     "levelCaption": "Level",
     "pointsUnit": "Points",
-    "signup": "Sign up"
+    "signup": "Sign up",
+    "mastheadLink": "{{faction}} faction page"
   },
   "factionCard": {
     "status": {

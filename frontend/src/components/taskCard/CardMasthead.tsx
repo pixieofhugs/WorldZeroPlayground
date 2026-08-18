@@ -1,5 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
+import { Link } from "react-router-dom";
 import FactionSigil from "../sigil/FactionSigil";
+import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
 
 /**
  * The one masthead anatomy the task-card kit shares (#2029, task cards v3):
@@ -8,6 +11,18 @@ import FactionSigil from "../sigil/FactionSigil";
  * Seven of the nine cards carry one. `na` and `albescent` mount none — that is
  * deliberate (ADR-0048: the Albescent card IS the unaffiliated sheet plus a
  * drift, and a band naming the society would un-hide it), not an omission.
+ *
+ * THE BAND IS A LINK TO THE FACTION (#2167). A card has three regions and three
+ * destinations: the body reads the task, the CTA signs up, and the band — which
+ * says nothing but the faction's name — reads the faction. It is derived here
+ * from the `slug` every mount already passes rather than wired seven times, so
+ * one change lands on seven surfaces and no skin can drift.
+ *
+ * It is valid HTML because the band is a SIBLING of the card-wide task link in
+ * every archetype, never inside it — `mastheadFactionLink.test.tsx` holds that,
+ * and it is the one thing that would make an anchor here illegal. The two
+ * bandless cards get no such link and must not grow one: `/factions/albescent`
+ * is an in-world dead end, not a faction page.
  *
  * WHY A COMPONENT AND NOT A CONVENTION. The epic's sequencing ruling exists
  * because seven agents each inventing this shape yields seven slightly
@@ -104,7 +119,31 @@ export default function CardMasthead({
   children,
 }: CardMastheadProps) {
   return (
-    <div
+    <Link
+      to={`/factions/${slug}`}
+      /* The band's text IS the faction's name, so unlabelled this announces as
+         "Cozy Coven, link" — the name without the destination. The label keeps
+         the name and says where it goes; it names the faction, never the
+         furniture. */
+      aria-label={i18n.t("feed:taskCard.mastheadLink", { faction: factionName(slug) })}
+      /* The hover affordance, as an inline handler because the kit's paint is
+         inline and `index.css` has no hook for this band (a class would be a
+         style decision this component does not own). Underline is the platform's
+         own link tell and takes `currentColor`, so it costs no token and reads
+         in both themes.
+
+         ponytail: the ceiling is that a pointer is the only thing that lights
+         it — `:focus-visible` cannot be expressed inline, so keyboard users get
+         the user agent's focus ring instead (nothing in `index.css` suppresses
+         it). If the band ever wants a paint of its own on hover or focus, that
+         is a `frontend-style` change: one class in `index.css` replaces both
+         handlers. */
+      onMouseEnter={(e) => {
+        e.currentTarget.style.textDecoration = "underline";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.textDecoration = "none";
+      }}
       data-card-masthead={slug}
       style={{
         position: "relative",
@@ -114,6 +153,11 @@ export default function CardMasthead({
         alignItems: "center",
         gap: "var(--space-sm)",
         padding: "var(--space-sm) var(--space-lg)",
+        /* Ahead of the skin's own `style`, so a band that sets its ink still
+           wins and one that does not inherits the card's — either way, never
+           the user agent's link blue over a hand-set wordmark. */
+        color: "inherit",
+        textDecoration: "none",
         ...style,
       }}
     >
@@ -150,6 +194,6 @@ export default function CardMasthead({
       {/* The right gutter. Empty by design — it is what makes the centre column
           land on the band's centreline rather than beside the mark. */}
       <span aria-hidden="true" />
-    </div>
+    </Link>
   );
 }
