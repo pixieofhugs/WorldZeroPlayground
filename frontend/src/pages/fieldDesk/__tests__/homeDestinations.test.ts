@@ -15,18 +15,23 @@
  * is ever renamed, or `CAN_SIGN_UP_ON` stops being `'1'`, this fails here rather
  * than turning the home screen's buttons into a plain browse in production.
  *
- * `readTaskFilters` takes the viewer's has-a-character answer since #1972, and
- * `true` is the only honest value here: the field desk is the signed-in home,
- * and eligibility is exactly the axis a viewer without a character cannot use.
+ * `readTaskFilters` takes the viewer's eligibility default since #1972, and
+ * `'off'` — a player past level 0 — is the value worth driving here since
+ * #2025. The field desk is the signed-in home, so a viewer with no character is
+ * not the case; and a level-0 one would pass on their default alone, proving
+ * nothing about whether the link's `can_sign_up=1` was read at all.
  */
 import { describe, it, expect } from 'vitest'
 import { CAST_VOTES_LINK, FIND_TASK_LINK, UPDATES_LINK } from '../homeDestinations'
-import { readTaskFilters } from '../../tasks/useTasks'
+import { readTaskFilters, type EligibilityDefault } from '../../tasks/useTasks'
 import { readFeedFilters } from '../../praxes/feedFilterParams'
 
 /** Split a same-origin app link into its path and its parsed query. */
-/** The field desk only renders for a signed-in viewer carrying a character. */
-const HAS_CHARACTER = true
+/**
+ * A player past the tutorial: their board opens WHOLE, so the axis coming out
+ * on can only be the link's doing.
+ */
+const LEVELLED_PLAYER: EligibilityDefault = 'off'
 
 function parse(link: string): { path: string; params: URLSearchParams } {
   const [path, query = ''] = link.split('?')
@@ -37,7 +42,7 @@ describe('the mobile home CTA destinations', () => {
   it('sends "Find a Task" to the task browse with the eligibility axis on', () => {
     const { path, params } = parse(FIND_TASK_LINK)
     expect(path, 'the task browse').toBe('/tasks')
-    expect(readTaskFilters(params, HAS_CHARACTER).canSignUp, 'can-sign-up axis').toBe(
+    expect(readTaskFilters(params, LEVELLED_PLAYER).canSignUp, 'can-sign-up axis').toBe(
       true,
     )
   })
@@ -47,7 +52,7 @@ describe('the mobile home CTA destinations', () => {
     // faction ability bend the level bar (the Ephemerists reach retired tasks).
     // A `status=active` riding along would cancel that silently.
     const { params } = parse(FIND_TASK_LINK)
-    const filters = readTaskFilters(params, HAS_CHARACTER)
+    const filters = readTaskFilters(params, LEVELLED_PLAYER)
     expect(filters.status, 'no status narrowing').toBe('All')
     expect(filters.factions, 'no faction narrowing').toEqual([])
   })
