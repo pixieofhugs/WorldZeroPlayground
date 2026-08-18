@@ -2261,6 +2261,10 @@
             "title": "Own Task Modifier",
             "type": "number"
           },
+          "reads_the_array": {
+            "title": "Reads The Array",
+            "type": "boolean"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -2273,7 +2277,8 @@
           "collab_own_modifier",
           "collab_other_modifier",
           "duel_win_modifier",
-          "duel_loss_modifier"
+          "duel_loss_modifier",
+          "reads_the_array"
         ],
         "title": "FactionConfigOut",
         "type": "object"

@@ -15,6 +15,13 @@ class FactionConfigOut(WireModel):
     collab_other_modifier: float
     duel_win_modifier: float
     duel_loss_modifier: float
+    # "The array" (#1869). Unlike `can_always_rejoin` above, this flag DOES need
+    # a client reader: the perk is entirely client-side, so the browser decides
+    # whether to print by comparing its own character's slug against these rows.
+    # The neat part is that the flag rides in the payload the perk prints, so
+    # the array can see the flag that grants it — and no `/auth/me` field, no
+    # capability flag and no extra request were needed to gate it.
+    reads_the_array: bool
 
 
 class LevelUnlockOut(WireModel):

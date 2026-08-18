@@ -113,6 +113,7 @@ ERA_1_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        reads_the_array=True,   # the array: reads this config in the console (#1869)
     ),
     # Albescent holds every OTHER faction's perk (#1871). The values below are
     # its FLOOR, not its final deal: `inherits_faction_perks` makes

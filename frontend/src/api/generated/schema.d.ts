@@ -2728,6 +2728,8 @@ export interface components {
             other_task_modifier: number;
             /** Own Task Modifier */
             own_task_modifier: number;
+            /** Reads The Array */
+            reads_the_array: boolean;
             /** Slug */
             slug: string;
         };

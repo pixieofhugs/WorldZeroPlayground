@@ -7,6 +7,7 @@ import { BackdropProvider } from './backdrop/BackdropContext'
 import FactionBackdrop from './backdrop/FactionBackdrop'
 import LevelUpWatcher from './LevelUpWatcher'
 import InvitationWatcher from './InvitationWatcher'
+import TheArray from './TheArray'
 import NavBar from './NavBar'
 import { flushPendingCasts } from './vote/pendingCasts'
 import MobileHeader from './layout/MobileHeader'
@@ -61,6 +62,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       <FactionBackdrop />
       <LevelUpWatcher />
       <InvitationWatcher />
+      {/* Singularity's perk (#1869): renders nothing, speaks in the console. */}
+      <TheArray />
 
       {isMobile ? <MobileHeader /> : <NavBar />}
       <ShellContent
