@@ -122,8 +122,7 @@
         "close": "Close",
         "tapToUse": "Tap to use",
         "meta": "{{faction}} · Level {{level}} · {{points}} pts",
-        "createNew": "Create new character",
-        "editThis": "Edit this character"
+        "createNew": "Create new character"
       },
       "questsHeading": "In progress",
       "questsEmpty": "Nothing in progress yet — pick up a task.",

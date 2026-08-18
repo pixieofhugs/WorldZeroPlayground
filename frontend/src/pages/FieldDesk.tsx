@@ -19,6 +19,7 @@ import { surfaceMap } from '../factions'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useGameConfig } from '../hooks/useGameConfig'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
+import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
 import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
 
@@ -61,7 +62,8 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
  * be gated. Since #1557 landed, `/` also carries "continue where you left off"
  * and the browse — a pre-gate player still needs those. So the seam is the
  * ROSTER SECTION (chip, cards, dossier, closing line), which is hidden as one
- * piece unless it has a choice to offer. `rosterOffersAChoice` below is that
+ * piece unless it has a choice to offer. `rosterOffersAChoice`
+ * (`hooks/useRosterChoice`, shared with the `CHARACTERS` trigger since #2111) is that
  * rule, and the create-your-first-life path is inside it: an account with zero
  * lives ALWAYS sees the roster, or signup dead-ends.
  *
@@ -105,7 +107,7 @@ export default function FieldDesk() {
   // Mobile home dispatch (#500). Hooks run unconditionally; the branch below
   // only fires once a carried life exists — otherwise we render the roster.
   const formFactor = useFormFactor()
-  const homeState = useFieldDeskHome()
+  const homeState = useFieldDeskHome(lives)
 
   useEffect(() => {
     void getMyCharacters()
@@ -277,35 +279,6 @@ export default function FieldDesk() {
       </div>
     </div>
   )
-}
-
-/**
- * Does the roster have a choice to offer? (#1560)
- *
- * A chooser with one option and no way to add one is a dead end, and — worse —
- * it is a tell: it can only be read as "there is something here you cannot have
- * yet". So the roster earns its place on three counts, any one of which is
- * enough:
- *   - NO CARRIED LIFE — the account is playing nobody. This is the
- *     create-your-first-life path, and it must never be gated away or signup
- *     dead-ends, because the roster is the only way in. Asked of `CurrentUser`
- *     rather than of the count, so it holds even if the roster read is still out
- *     or comes back with a life the server will not carry.
- *   - AN OPEN GATE — "begin a new self" is a control the viewer can use.
- *   - MORE THAN ONE life — a genuine chooser, whatever the gate says. Reachable
- *     with a shut gate: an era reset drops every level.
- *
- * `lives === null` means the roster read is still in flight, so only the first
- * two — both answerable from `CurrentUser` alone — can be decided. Everyone else
- * waits, and a shut gate never flashes a heading it is about to take away.
- */
-export function rosterOffersAChoice(
-  lives: CharacterOut[] | null,
-  carriesALife: boolean,
-  canCreateAdditional: boolean,
-): boolean {
-  if (!carriesALife || canCreateAdditional) return true
-  return lives !== null && lives.length > 1
 }
 
 /** The three closing lines the roster can honestly end on. */
