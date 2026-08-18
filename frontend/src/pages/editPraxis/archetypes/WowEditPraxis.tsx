@@ -277,7 +277,6 @@ export default function WowEditPraxis({ state }: Props) {
     border: `1.5px solid ${GOLD}`,
     borderRadius: 6,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 

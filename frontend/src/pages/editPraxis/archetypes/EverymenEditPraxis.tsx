@@ -293,7 +293,6 @@ export default function EverymenEditPraxis({ state }: Props) {
     border: `2px solid ${FRAME}`,
     borderRadius: 0,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 
