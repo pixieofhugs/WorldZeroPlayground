@@ -501,6 +501,22 @@ const BARE_FACTION_HUE = /var\(\s*--faction-[a-z]+\s*\)/
  * indirection is what hid #1932 from a reader scanning for inks. The three seam
  * variables are here because repointing a seam is the sanctioned move and
  * pointing one at a BARE hue is the defect wearing the fix's clothes.
+ *
+ * `actor` is `FeedRowInk`'s field (#2108) and is here for exactly the `--gem-ink`
+ * reason: it IS the actor name's `color`, one MODULE away in `FeedRowContent`.
+ * That distance is what let the bare hue survive #2077's sweep at the one site
+ * the report never reached.
+ *
+ * ponytail: this closes the class by NAMING the far end, not by following the
+ * value. The general form the #2108 ruling asks for — flag `factionCssVar(slug)`
+ * called with no shape argument, wherever it lands — was measured before being
+ * skipped: it reports 28 files, and all but this one are CORRECT fills
+ * (gradients, rings, gem glows, tints, colour bars). Seeding a shrink-only list
+ * of 28 correct files is debt-shaped noise, and two of those files are being
+ * deleted in the same wave, so the list would be stale before it merged. The
+ * upgrade path is type information — a bare hue reaching a field whose TYPE is
+ * an ink bag — which needs `@typescript-eslint`'s type-aware pass and a decision
+ * about running it in CI. Until then, a new ink field adds its name here.
  */
 const INK_PROPS = new Set([
   'color',
@@ -508,6 +524,7 @@ const INK_PROPS = new Set([
   'textDecorationColor',
   'WebkitTextFillColor',
   '-webkit-text-fill-color',
+  'actor',
   '--gem-ink',
   '--label-ink',
   '--link-ink',
@@ -782,15 +799,6 @@ const LEGACY_RAW_COLOUR_FILES = fs
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
 
-// Files still painting the bare spine hue as an ink (issue #2077). This list
-// only ever shrinks — migrating a file means deleting its line here, not adding
-// one. New files may never be added to it.
-const LEGACY_FACTION_HUE_INK_FILES = fs
-  .readFileSync(new URL('./.eslint-legacy-faction-hue-ink.txt', import.meta.url), 'utf8')
-  .split('\n')
-  .map((line) => line.split('#')[0].trim())
-  .filter(Boolean)
-
 // Faction surfaces not yet migrated off the global ink family (issue #1819).
 // This list only ever shrinks — migrating a file means deleting its line here,
 // not adding one. New files may never be added to it.
@@ -1027,18 +1035,10 @@ export default [
       'local/no-faction-hue-as-ink': 'off',
     },
   },
-  // Same ratchet, same empty-list guard (#750). Seeded from what the rule
-  // reported on the day it landed, with the measurements in the file's header.
-  ...(LEGACY_FACTION_HUE_INK_FILES.length > 0
-    ? [
-        {
-          files: LEGACY_FACTION_HUE_INK_FILES,
-          rules: {
-            'local/no-faction-hue-as-ink': 'off',
-          },
-        },
-      ]
-    : []),
+  // #2077's shrink-only allowlist is GONE (#2108). It seeded at four files and
+  // eleven violations; every one is fixed, and `.eslint-legacy-faction-hue-ink.txt`
+  // is deleted with it rather than left behind as an empty list that reads like
+  // debt nobody has looked at.
   {
     // Test files assert on literal strings by design.
     files: [

@@ -374,12 +374,18 @@ describe('FeedRowContent', () => {
 
   // The other half of ADR-0039, and the half that looks like a bug: an actor's
   // NAME is single-ink text, no stop of a seven-stop ramp is legible as one
-  // (#649), so `na` keeps the neutral grey. Deliberate, not a fallback.
-  it('leaves an na actor name neutral grey', () => {
+  // (#649), so an `na` name is never painted from the ramp.
+  //
+  // It used to read `--faction-default`, the unaffiliated grey, and #2108 moved
+  // every unskinned row onto a NEUTRAL TEXT TIER instead: the same fallback fired
+  // for all nine slugs, and on the neutral feed ground three of the eight hues
+  // measured 2.36:1–3.10:1 as an 18px/700 name. `--faction-default` itself was
+  // the one that happened to pass (5.21:1) — which is exactly why the defect
+  // survived a test written around `na`.
+  it('paints an na actor name from a text tier, never the ramp', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
-    // The token, not the hex it happens to hold: #1269 gave the unaffiliated
-    // neutral a dark half (#8b8aa0) that a pinned literal could never see.
-    expect(html).toContain('color:var(--faction-default)')
+    expect(html).toContain('color:var(--color-text-primary)')
+    expect(html).not.toContain('color:var(--faction-default)')
     expect(html).not.toContain('background-clip:text')
   })
 })

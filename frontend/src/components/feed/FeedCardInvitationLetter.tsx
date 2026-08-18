@@ -109,9 +109,16 @@ const QUIET: CSSProperties = {
  */
 export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
   const { faction_slug } = item.payload;
-  // Scalar ink for both the highlighted name and the link — `na` stays neutral
-  // there on purpose (ADR-0039 §2), and the cascade owns the dark half.
+  // The faction's hue, and it is a FILL: the wax seal's disc below (#2108).
+  // `na` stays neutral there on purpose (ADR-0039 §2), and the cascade owns the
+  // dark half.
   const color = factionCssVar(faction_slug);
+  // The TYPE on this card takes a neutral tier instead. The letter sits on the
+  // neutral feed chassis, where the bare hue ran 2.36:1 (Ephemerists), 2.67:1
+  // (S.N.I.D.E.) and 3.10:1 (Coven) in light — under the 4.5:1 every one of the
+  // three sites below owes. `.feed-action` sets face and size but no colour, so
+  // the link needs one stated.
+  const ink = "var(--color-text-primary)";
 
   const { user, applyUser } = useAuth();
   const mode = acceptMode(user?.character?.faction_slug, faction_slug);
@@ -159,7 +166,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
       to="/factions"
       className="feed-action"
       style={{
-        color,
+        color: ink,
         textDecoration: "none",
       }}
     >
@@ -197,7 +204,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
           ns="feed"
           i18nKey="invitationLetter.sentence"
           values={{ faction: letterName }}
-          components={{ 1: <span style={{ color, fontWeight: 700 }} /> }}
+          components={{ 1: <span style={{ color: ink, fontWeight: 700 }} /> }}
         />
       </p>
 
@@ -271,7 +278,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
           {joined ? (
             <span
               className="label-caption"
-              style={{ color }}
+              style={{ color: ink }}
               data-invitation-accepted
             >
               {i18n.t("feed:invitationLetter.accepted", { faction: letterName })}

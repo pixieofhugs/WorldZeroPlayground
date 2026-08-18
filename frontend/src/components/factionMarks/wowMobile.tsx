@@ -54,6 +54,24 @@ export const WOW_DISPLAY = "var(--faction-wow-card-font)"; // MedievalSharp
 export const WOW_BODY = "var(--faction-wow-body-font)"; // Lora
 
 /**
+ * The three inks for type set DIRECTLY ON `wowMobilePage` (#2248).
+ *
+ * The pavilion ground is not the cream card. Its darkest point — the court glow
+ * over the gilt hatch over `-ground-to` — composites to #dcc6a1, where the card
+ * inks above read 3.82 (`WOW_PLUM`), 3.51 (`WOW_DEEP`) and 3.14 (`WOW_MUTED`).
+ * These are the same three hues walked down until they clear AA on it; the
+ * measurement and the reason receding the ground cannot work are recorded at
+ * the declarations in `index.css`.
+ *
+ * WHICH ONE TO REACH FOR IS THE GROUND, NOT THE ROLE. On the cream quest card,
+ * the near-white plate and the crest wash, `WOW_PLUM` / `WOW_DEEP` / `WOW_MUTED`
+ * are still the right inks and still measured — do not sweep them.
+ */
+export const WOW_PAGE_PLUM = "var(--faction-wow-ground-accent)";
+export const WOW_PAGE_LABEL = "var(--faction-wow-ground-label)";
+export const WOW_PAGE_MUTED = "var(--faction-wow-ground-quiet)";
+
+/**
  * The pavilion's page ground: WOW's own wallpaper, plus the court-glow and gilt
  * hatch the desktop backdrop and the profile page already wear. The kit's flat
  * mobile `page` fill is replaced by it on purpose — see the mapping table in
@@ -276,7 +294,9 @@ export function WowSectionHead({
           fontSize: "var(--text-content)",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: WOW_PLUM,
+          // Both consumers mount this on `wowMobilePage`, so it takes the page's
+          // own plum rather than the card's (#2248).
+          color: WOW_PAGE_PLUM,
           whiteSpace: "nowrap",
         }}
       >

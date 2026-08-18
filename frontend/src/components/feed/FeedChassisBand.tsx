@@ -61,6 +61,11 @@ export default function FeedChassisBand({
         <span
           className="label-caption"
           style={{
+            // The one alpha left on this band, and it is measured (#2098):
+            // 4.90:1 in light and 5.36:1 in dark on the default chassis ground,
+            // both clear of the 4.5:1 a caption owes. It also dims the hairline
+            // box around the chip, which is where the recede is actually
+            // wanted — so it stays where the dateline's 0.7 could not.
             color: 'inherit',
             opacity: 0.8,
             border: '1px solid currentColor',
@@ -74,9 +79,17 @@ export default function FeedChassisBand({
       <span
         className="label-caption"
         style={{
+          // NO ALPHA (#2098). `opacity: 0.7` here cut `--color-text-secondary`
+          // from 8.41:1 to 3.82:1 in light and 7.64:1 to 4.42:1 in dark, and no
+          // guard could see it: the token measured at its declaration is not the
+          // colour the reader gets once the call site composites it. There is no
+          // quieter global tier to move to — secondary IS the quiet tier — and
+          // the dateline has no ground of its own to recede, which is what §3's
+          // rule asks for. So it simply stops being dimmed: the hierarchy the
+          // alpha was buying is already carried by the type, `.label-caption`
+          // against the kicker's `.label-heading`.
           marginLeft: 'auto',
           color: 'inherit',
-          opacity: 0.7,
           whiteSpace: 'nowrap',
         }}
       >

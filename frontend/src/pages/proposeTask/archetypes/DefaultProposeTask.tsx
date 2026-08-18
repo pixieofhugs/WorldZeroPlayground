@@ -144,6 +144,12 @@ export default function DefaultProposeTask({
   } = state;
 
   const color = factionCssVar(factionSlug);
+  // The TYPE on this page takes a neutral tier, never the scalar above (#2108).
+  // `color` is a FILL — the swatch ring, the preview panel's wash and border —
+  // and as an ink on this page's neutral ground the bare hue measured 2.36:1
+  // (Ephemerists), 2.67:1 (S.N.I.D.E.) and 3.10:1 in light. The accent stays;
+  // only the type moves, which is what the preview caption below already said.
+  const ink = "var(--color-text-primary)";
   const fname = factionName(factionSlug);
   // The form opens on unaffiliated, whose accent (`color`) resolves to neutral
   // grey. A real faction paints its solid hue; `na` gets the spectrum as a
@@ -187,7 +193,7 @@ export default function DefaultProposeTask({
             <>
               <p
                 className="content-title font-display italic"
-                style={{ color, marginBottom: "var(--space-sm)" }}
+                style={{ color: ink, marginBottom: "var(--space-sm)" }}
               >
                 {t("proposeTask.successMeta.heading")}
               </p>
@@ -207,7 +213,7 @@ export default function DefaultProposeTask({
             <>
               <p
                 className="content-title font-display italic"
-                style={{ color, marginBottom: "var(--space-sm)" }}
+                style={{ color: ink, marginBottom: "var(--space-sm)" }}
               >
                 {t("proposeTask.successTask.heading")}
               </p>
@@ -512,7 +518,7 @@ export default function DefaultProposeTask({
                     faction accent stays — ink is measured separately. */}
                 <span
                   className="label-caption"
-                  style={{ color, marginBottom: "var(--space-xs)", display: "block" }}
+                  style={{ color: ink, marginBottom: "var(--space-xs)", display: "block" }}
                 >
                   {isMetatask
                     ? t("proposeTask.preview.metaHeading", { faction: fname })
@@ -566,7 +572,7 @@ export default function DefaultProposeTask({
                     })}
                   </span>
                   {!isMetatask && (
-                    <span className="label-caption" style={{ color }}>
+                    <span className="label-caption" style={{ color: ink }}>
                       {t("proposeTask.preview.pending")}
                     </span>
                   )}

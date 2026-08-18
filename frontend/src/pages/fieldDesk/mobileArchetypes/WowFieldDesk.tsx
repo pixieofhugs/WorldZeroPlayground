@@ -49,6 +49,8 @@ import {
   WOW_FIGURE,
   WOW_INK,
   WOW_MUTED,
+  WOW_PAGE_LABEL,
+  WOW_PAGE_MUTED,
   WOW_PLATE,
   WOW_PLUM,
   WOW_RULE,
@@ -316,7 +318,9 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               <Link
                 to="/tasks"
                 className="label-caption"
-                style={{ color: WOW_DEEP, textDecoration: "none", whiteSpace: "nowrap" }}
+                /* On the pavilion ground, not on a card — WOW_DEEP reads 3.51:1
+                   there and the page's own label ink 4.61:1 (#2248). */
+                style={{ color: WOW_PAGE_LABEL, textDecoration: "none", whiteSpace: "nowrap" }}
               >
                 {t("fieldDesk.home.viewAll")}
               </Link>
@@ -328,7 +332,11 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
           {activeTasks.length === 0 ? (
             <p
               className="content-text"
-              style={{ fontFamily: WOW_BODY, fontStyle: "italic", color: WOW_MUTED, margin: 0 }}
+              /* The empty line is the one piece of body copy this desk sets on
+                 the bare pavilion ground: WOW_MUTED is 3.14:1 there, the page's
+                 own quiet ink 4.61:1 (#2248). The quest rows below keep
+                 WOW_MUTED — they are on the cream card it was measured for. */
+              style={{ fontFamily: WOW_BODY, fontStyle: "italic", color: WOW_PAGE_MUTED, margin: 0 }}
             >
               {t("fieldDesk.home.questsEmpty")}
             </p>

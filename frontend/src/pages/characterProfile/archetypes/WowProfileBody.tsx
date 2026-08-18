@@ -55,6 +55,7 @@ import {
   WOW_FIGURE,
   WOW_INK,
   WOW_MUTED,
+  WOW_PAGE_MUTED,
   WOW_PLATE,
   WOW_RULE,
   WowCheckerBand,
@@ -573,7 +574,11 @@ function Empty({ children }: { children: ReactNode }) {
   return (
     <p
       className="content-text"
-      style={{ fontFamily: WOW_BODY, fontStyle: 'italic', color: WOW_MUTED, margin: 0 }}
+      /* Body copy straight on the pavilion ground, the twin of the field desk's
+         empty line: WOW_MUTED is 3.14:1 on that ground's darkest point, the
+         page's own quiet ink 4.61:1 (#2248). The plate captions above keep
+         WOW_MUTED — the plate is what it was measured on. */
+      style={{ fontFamily: WOW_BODY, fontStyle: 'italic', color: WOW_PAGE_MUTED, margin: 0 }}
     >
       <WowSpark /> {children}
     </p>

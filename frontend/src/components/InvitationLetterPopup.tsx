@@ -218,7 +218,11 @@ export default function InvitationLetterPopup({
           fontSize: 'var(--text-md)',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          color: accent,
+          // The kicker is 11px type on the prospectus paper, so it takes a text
+          // tier (#2108). The hue keeps the ENLIST fill, the border and the
+          // perk bullet below — the roles it was measured for. As an ink here
+          // it ran 2.19:1 (Ephemerists) to 4.46:1 (UA) in light.
+          color: FAINT,
           margin: '0 0 var(--space-sm)',
         }}
       >
@@ -327,8 +331,8 @@ export default function InvitationLetterPopup({
                 marginBottom: 'var(--space-sm)',
               }}
             >
-              {/* eslint-disable-next-line local/no-raw-style-values -- ornament: four-pointed-star dingbat used as a bullet */}
-              <span style={{ color: accent, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
+              {/* eslint-disable-next-line local/no-raw-style-values, local/no-faction-hue-as-ink -- ornament: a four-pointed-star dingbat used as a list bullet, not type. `aria-hidden` because the perk beside it carries the whole meaning, which is also why 1.4.3 does not reach it (#2108). */}
+              <span aria-hidden="true" style={{ color: accent, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
                 &#x2726;
               </span>
               <span
