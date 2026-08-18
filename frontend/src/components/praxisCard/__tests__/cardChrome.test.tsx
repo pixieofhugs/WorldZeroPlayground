@@ -129,33 +129,34 @@ describe('the byline portrait (#888)', () => {
  *
  * The seam is the NAME LINK's own declaration, and it has to be, because the
  * clip is unobservable in this harness: renderToStaticMarkup gives no DOM, no
- * fonts and no layout, so nothing here can see a glyph get shaved. What these
- * pin is the pair of properties that decides it — how far the clip box runs
- * past the text, and whether the name still yields when it genuinely does not
- * fit. Both halves matter: the second is what the Ephemerists kit's own fix
- * (`overflow: visible`) would have given away.
+ * fonts and no layout, so nothing here can see a glyph get shaved.
+ *
+ * This block was two cases and is now one. The other half pinned the ellipsis
+ * pair (`overflow: hidden` + `text-overflow: ellipsis`) as how the name yields,
+ * and #2132 established that the pair bounds only how the name PAINTS: a nowrap
+ * string's min-content size is its whole rendered width, so a long name inflated
+ * every `min-width: auto` ancestor up to the viewport rather than ellipsizing
+ * inside one. The name wraps now, and `components/__tests__/
+ * displayNameMinContent.test.tsx` owns that half for both surfaces it broke on.
+ *
+ * What stays here is the part that is still only about this portrait.
  */
 describe('the byline name is not shaved against its portrait (#1633)', () => {
   const nameLink = (html: string) => html.match(/<a [^>]*>/)?.[0] ?? ''
   const byline = (name: string) =>
     nameLink(render(<PraxisByline praxis={praxis({ created_by_display_name: name })} />))
 
-  it('carries the portrait separation as padding, so the clip box outruns the text', () => {
-    // `overflow: hidden` clips at the PADDING box while `text-overflow`
-    // measures the CONTENT box. With the 8px living on the row as `gap` the
-    // two edges coincided, so a display face's last glyph — the Ephemerists
-    // card sets this line in Poiret One — was cut off at the portrait.
+  it('carries the portrait separation as padding on the name itself', () => {
+    // The row deliberately sets no `gap` for this: a display face's last glyph
+    // can carry ink past its own advance width — the Ephemerists card sets this
+    // line in Poiret One — and the 8px is what gives that overhang somewhere to
+    // land instead of being shaved flush against the portrait beside it.
     expect(byline('Isolde')).toContain('padding-inline-end:var(--space-sm)')
-  })
-
-  it('still yields a long name to an ellipsis rather than over the portrait', () => {
-    const link = byline('Bartholomew Featherstonehaugh-Wentworth')
-    expect(link).toContain('overflow:hidden')
-    expect(link).toContain('text-overflow:ellipsis')
-    // The kit patched this to `visible`, which restores min-width:auto to
-    // min-content — the name then stops shrinking and paints over the portrait
-    // and the faction tag, which is the reported symptom, deliberately caused.
-    expect(link).not.toContain('overflow:visible')
+    // Still true of a name long enough to reach the portrait, which is the only
+    // case where it is observable.
+    expect(byline('Bartholomew Featherstonehaugh-Wentworth')).toContain(
+      'padding-inline-end:var(--space-sm)',
+    )
   })
 })
 
