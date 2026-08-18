@@ -185,6 +185,15 @@ export function printTheArray(readout: ArrayReadout): void {
 /**
  * Mounted once in `Layout`, beside `LevelUpWatcher` and `InvitationWatcher`,
  * and renders nothing — the array speaks in the console, never on the page.
+ *
+ * ponytail: imported eagerly, so this module's ~0.4 KB gzipped rides in the
+ * initial chunk for every visitor to serve one faction. Measured against
+ * `origin/main`: JS 126.9 → 127.3 KB, still `ok` and 3.6 KB under the warn
+ * line, so the byte is not worth a code-split today. The ceiling is the initial
+ * JS budget in `scripts/bundle-budget.mjs`; if it tightens, the upgrade is a
+ * `void import('./TheArray')` inside the effect, guarded by `readsTheArray` —
+ * which would have to move out of this module first, since the gate must be
+ * answerable before the chunk is fetched.
  */
 export default function TheArray() {
   const { user } = useAuth()
