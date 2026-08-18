@@ -825,8 +825,8 @@ export default function Sidebar() {
                   'aria-valuemax': 100,
                   'aria-valuenow': Math.round(track.fillPercent),
                   'aria-label': t('sidebar.characterCard.trackLabel', {
-                    score: character.score.toLocaleString(),
-                    target: track.nextThreshold.toLocaleString(),
+                    score: track.pointsIntoLevel.toLocaleString(),
+                    target: track.levelSpan.toLocaleString(),
                     level: track.nextLevel ?? character.level,
                   }),
                 }

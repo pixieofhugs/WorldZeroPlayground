@@ -300,8 +300,8 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                   'aria-valuemax': 100,
                   'aria-valuenow': Math.round(levelTrack.fillPercent),
                   'aria-label': t('sidebar.characterCard.trackLabel', {
-                    score: character.score.toLocaleString(),
-                    target: levelTrack.nextThreshold.toLocaleString(),
+                    score: levelTrack.pointsIntoLevel.toLocaleString(),
+                    target: levelTrack.levelSpan.toLocaleString(),
                     level: levelTrack.nextLevel ?? character.level,
                   }),
                 }

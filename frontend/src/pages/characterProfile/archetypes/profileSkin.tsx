@@ -424,13 +424,11 @@ export function ProfileSkin({
   const topScore = submissions.reduce((max, p) => Math.max(max, p.score ?? 0), 0)
   const laurelId = submissions.find((p) => (p.score ?? 0) === topScore)?.id ?? null
 
-  // ① progression numbers (hidden until game config supplies thresholds).
-  const pointsIntoLevel = progression
-    ? Math.max(character.score - progression.currentThreshold, 0)
-    : 0
-  const levelSpan = progression
-    ? Math.max(progression.nextThreshold - progression.currentThreshold, 0)
-    : 0
+  // ① progression numbers (hidden until game config supplies thresholds). The
+  // figures arrive computed — see ProfileProgression, and #2127 for why a skin
+  // no longer does this arithmetic itself.
+  const pointsIntoLevel = progression?.pointsIntoLevel ?? 0
+  const levelSpan = progression?.levelSpan ?? 0
   const ringDegrees = progression
     ? Math.round(Math.min(Math.max(progression.progressPercent, 0), 100) * 3.6)
     : 0

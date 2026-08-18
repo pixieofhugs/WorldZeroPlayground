@@ -237,17 +237,10 @@ function spectrumRing(degrees: number, fill: string): string {
 
 /** ① progression numbers, shared by both branches (hidden until game config
  *  supplies thresholds). */
-function progressionFigures(
-  character: ProfileBodyProps['character'],
-  progression: ProfileBodyProps['progression'],
-) {
+function progressionFigures(progression: ProfileBodyProps['progression']) {
   return {
-    pointsIntoLevel: progression
-      ? Math.max(character.score - progression.currentThreshold, 0)
-      : 0,
-    levelSpan: progression
-      ? Math.max(progression.nextThreshold - progression.currentThreshold, 0)
-      : 0,
+    pointsIntoLevel: progression?.pointsIntoLevel ?? 0,
+    levelSpan: progression?.levelSpan ?? 0,
     ringDegrees: progression
       ? Math.round(Math.min(Math.max(progression.progressPercent, 0), 100) * 3.6)
       : 0,
@@ -298,7 +291,7 @@ function DesktopProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   const mainColumn = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
@@ -524,10 +517,15 @@ function DesktopProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
@@ -633,7 +631,7 @@ function MobileProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   return (
     <div className="py-4" data-testid="mobile-profile" style={{ position: 'relative' }}>
@@ -783,10 +781,15 @@ function MobileProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
