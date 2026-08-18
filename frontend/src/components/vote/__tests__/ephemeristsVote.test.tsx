@@ -31,7 +31,8 @@ vi.mock('../../../api/votes', () => ({
   castVote: mocks.castVote,
 }))
 
-import EphemeristsVote from '../EphemeristsVote'
+import EphemeristsVote, { CastBurst } from '../EphemeristsVote'
+import { METAL_SIGILS } from '../../factionMarks/ephemeristsPlate'
 import { VOTE_REFRAMES, reframeLabel } from '../voteReframes'
 
 /** No hex may reach the markup — every colour is a token. */
@@ -155,28 +156,60 @@ describe('EphemeristsVote markup', () => {
   })
 
   /**
-   * #1638 — THE PER-TIER BURST. The fixed ray fan (10 rays, 16 at rank 5)
-   * becomes a conic ring whose spoke pitch is set per metal, so the burst
-   * densifies as the metal improves and rank reads off the ring rather than off
-   * a numeral. That is the whole reason the numeral could go, which is why this
-   * pins every step rather than just that a burst exists.
+   * #2142 — THE RESTING PLATE IS STILL.
+   *
+   * #1638 haloed every reached disc with a perpetual conic ring at that metal's
+   * spoke pitch, so rank could be read off the densification; the owner struck
+   * it — five haloed discs at once is fog, and 60° against 45° is not a
+   * distinction anyone reads at 44px. Checked at three ranks because rank 5 is
+   * where five of them stood at once and rank 1 is where a single stray one
+   * would hide.
    */
-  it('sets the burst spoke step per metal, 60° down to 22.5° (#1638)', () => {
+  it('halos no reached disc — the ambient ring is gone (#2142)', () => {
     mocks.user = currentUser()
-    const html = render(5)
-    for (const step of ['60deg', '45deg', '36deg', '30deg', '22.5deg']) {
-      expect(html).toContain(`--metal-step:${step}`)
+    for (const rank of [1, 3, 5]) {
+      expect(render(rank)).not.toContain('eph-metal-burst')
     }
-    // Each ring is inked in its OWN metal, not one accent for the ladder.
-    for (const metal of METALS) {
-      expect(html).toContain(`--metal-ink:var(--faction-ephemerists-metal-${metal})`)
+    // The PITCH is not retired — it moved to the cast dial, which is the whole
+    // reason `burstStep` survives on the metals table.
+    expect(METAL_SIGILS.map((metal) => metal.burstStep)).toEqual([60, 45, 36, 30, 22.5])
+  })
+
+  /**
+   * #2142 — THE CAST DIAL carries the pitch now, and it is the one part of the
+   * burst that is not a firework: an instrument taking a measurement.
+   *
+   * Rendered directly rather than through a click, because the burst is
+   * click-driven state and this harness has no DOM. The seam is the same either
+   * way — the pitch that reaches CSS is the STRUCK metal's own `burstStep`, so
+   * casting platinum throws a visibly finer dial (22.5°) than casting lead (60°).
+   */
+  it('rules the cast dial at the struck metal\u2019s own pitch (#2142)', () => {
+    for (const metal of METAL_SIGILS) {
+      const html = renderToStaticMarkup(<CastBurst metal={metal} size={44} />)
+      expect(html).toContain(`transparent 1.2deg ${metal.burstStep}deg`)
+      // Every layer is inked in that metal, never in one accent for the ladder.
+      expect(html).toContain(metal.color)
     }
   })
 
-  it('bursts only the reached metals', () => {
-    mocks.user = currentUser()
-    expect((render(2).match(/eph-metal-burst/g) ?? []).length).toBe(2)
-    expect(render()).not.toContain('eph-metal-burst')
+  /**
+   * #2142 — THE BURST IS ENTIRELY MOTION, which is what keeps it off the
+   * critical CSS: every layer is mounted invisible from an inline style and gets
+   * its whole visible life from a keyframe in the deferred sheet. A reader on
+   * `reduce`, or one whose deferred sheet never arrives, therefore sees NO burst
+   * rather than a frozen one — which is the required reduced-motion rendering.
+   *
+   * Counted rather than sampled: a layer that forgets its `opacity: 0` is a
+   * spark, mote or halo stuck permanently on the plate, and it is invisible in
+   * every review where the sheet did load.
+   */
+  it('rests every cast layer invisible, so reduced motion draws none of it (#2142)', () => {
+    const html = renderToStaticMarkup(<CastBurst metal={METAL_SIGILS[3]} size={44} />)
+    // 1 halo + 2 shock rings + 1 dial + 9 motes + 12 sparks.
+    expect((html.match(/opacity:0/g) ?? []).length).toBe(25)
+    expect(html).not.toContain('animation:')
+    expect(html).not.toMatch(HEX)
   })
 
   /**
@@ -197,7 +230,9 @@ describe('EphemeristsVote markup', () => {
     mocks.user = currentUser()
     const html = render(5)
     expect((html.match(/clip-path:polygon/g) ?? []).length).toBe(2)
-    expect(html).toContain('background:var(--faction-ephemerists-plate-brass)')
+    // The mount is the RULE brass since #2141's mark/rule split (#2142) — it is
+    // a line, and the mark brass is reserved for things that are read.
+    expect(html).toContain('background:var(--faction-ephemerists-plate-brass-rule)')
     // No border on either stepped element — that is the bug, restated.
     const plate = html.slice(0, html.indexOf('<button'))
     expect(plate).not.toContain('border:1px solid')
@@ -262,15 +297,83 @@ describe('EphemeristsVote markup', () => {
   it('gates every motion through a CSS class, never an inline animation', () => {
     mocks.user = currentUser()
     const html = render(5)
-    expect(html).toContain('eph-metal-burst')
+    expect(html).toContain('eph-metal-sheen')
     expect(html).not.toContain('animation:')
+  })
+
+  /**
+   * #2142 — RANK 5 ORBITS THE SEVEN PLANETARY METALS.
+   *
+   * Six 3px gold dots called "iron filings" stood here, naming one metal and
+   * drawing none. Twelve marks now cycle the seven classical correspondences at
+   * 9px (`--text-sm`), `aria-hidden`, on the SHIPPED orbit of `radius + 13`: the
+   * design's tighter `size / 2 + 6` crowds twelve 9px glyphs onto the rim, where
+   * they compete with the platinum sigil inside it.
+   */
+  it('orbits rank 5 with twelve glyphs cycling the seven planets (#2142)', () => {
+    mocks.user = currentUser()
+    const html = render(5)
+    for (const planet of ['\u2644', '\u2640', '\u263d', '\u2609', '\u263f', '\u2643', '\u2642']) {
+      expect(html).toContain(planet)
+    }
+    // Twelve mounts over seven symbols: five of them are struck twice.
+    expect((html.match(/eph-metal-filing/g) ?? []).length).toBe(12)
+    // Label tier, not content tier — and a token, so the ratchet holds.
+    expect(html).toContain('font-size:var(--text-sm)')
+    // Only the fully transmuted disc draws them.
+    expect(render(4)).not.toContain('eph-metal-filing')
+  })
+
+  /**
+   * #2142 — THE PLATINUM SIGIL WAS MIRRORED. The compound is sun-with-dot on the
+   * LEFT and crescent on the RIGHT; it shipped the other hand round, with the
+   * dotted sun at x=15.6. Owner checked it against a reference image.
+   *
+   * The four sigils that were already correct are pinned by their opening move
+   * as well, because "fix platinum" is exactly the edit that quietly renumbers a
+   * neighbour — and a mirrored sigil renders perfectly.
+   */
+  it('draws platinum sun-left, crescent-right (#2142)', () => {
+    const platinum = METAL_SIGILS[4].glyph
+    // The sun and its dot open the path on the left; the crescent's big arc
+    // follows on the right.
+    expect(platinum).toContain('a1.15')
+    expect(platinum.indexOf('M6.4')).toBeLessThan(platinum.indexOf('M16.8'))
+    expect(platinum).not.toContain('15.6')
+    expect(METAL_SIGILS.map((metal) => metal.glyph.slice(0, 8))).toEqual([
+      'M6.2 7.4',
+      'M12 4.4 ',
+      'M15.8 4.',
+      'M12 5 a7',
+      'M6.4 7.2',
+    ])
+  })
+
+  /**
+   * #2142 — THE PLATE'S GROUND IS THE MASTHEAD BAND. The vote plate used to
+   * have a blue of its own (`-vote-plate-from`) that belonged to no other
+   * Ephemerists surface; the plate and the band are now one metal catching light
+   * two ways. It is still a RECESS — the radial gradient and the inset top
+   * shadow both survive, which is the half of the ruling that is easy to lose on
+   * the way to "the plate goes flat".
+   */
+  it('anchors the plate ground to the masthead band, still recessed (#2142)', () => {
+    mocks.user = currentUser()
+    const html = render(3)
+    expect(html).toContain(
+      'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-plate-band), var(--faction-ephemerists-vote-plate-to))',
+    )
+    expect(html).toContain('box-shadow:inset 0 1px 8px')
+    expect(html).not.toContain('--faction-ephemerists-vote-plate-from')
   })
 })
 
 /**
- * The burst's 3.2s loop is PERPETUAL, so its `prefers-reduced-motion` guard is
- * an a11y floor rather than a polish item — and the component cannot be asked
- * about it, because the guard lives in the stylesheet. This is the seam.
+ * The cast burst is the loudest thing this widget does — a halo, two rings, a
+ * turning dial, nine motes and twelve sparks, on the viewer's own click — so its
+ * `prefers-reduced-motion` guard is an a11y floor rather than a polish item.
+ * The component cannot be asked about it, because the guard lives in the
+ * stylesheet. This is the seam.
  *
  * Partitioned by brace-counting rather than sliced by regex: `@media` blocks
  * nest, and a rule that merely sits NEAR a no-preference block reads as guarded
@@ -278,12 +381,13 @@ describe('EphemeristsVote markup', () => {
  * brace still balances, the stylesheet still builds, and the animation escapes
  * into the unguarded cascade.
  *
- * TWO SHEETS, ONE QUESTION (#2073). The ladder's four animations moved to
- * `src/motion.ornament.css`, delivered past first paint; the resting states
- * stayed in `index.css`. "Is the burst guarded, and is there no unguarded twin"
- * is a question about the pair, not about either file, so both are read and
- * concatenated — which is also what keeps the second assertion honest, since an
- * unguarded `animation` reintroduced in EITHER sheet must still fail.
+ * TWO SHEETS, ONE QUESTION (#2073). The ladder's animations live in
+ * `src/motion.ornament.css`, delivered past first paint; the resting states are
+ * in `index.css`. "Is the burst guarded, and is there no unguarded twin" is a
+ * question about the pair, not about either file, so both are read and
+ * concatenated — which is also what keeps the assertions honest, since an
+ * unguarded `animation`, or a stray declaration for a cast layer, reintroduced
+ * in EITHER sheet must still fail.
  *
  * ponytail: this partition function is copied from `#1630`'s block in
  * `pages/characterProfile/__tests__/factionProfileBody.test.tsx`, which is the
@@ -291,7 +395,7 @@ describe('EphemeristsVote markup', () => {
  * A third consumer should lift it to a shared `src/__tests__/` helper rather
  * than make it three.
  */
-describe('#1638 the metals burst sits behind the reduced-motion guard', () => {
+describe('#2142 the cast burst sits behind the reduced-motion guard', () => {
   const css = ['../../../index.css', '../../../motion.ornament.css']
     .map((sheet) => readFileSync(fileURLToPath(new URL(sheet, import.meta.url)), 'utf8'))
     .join('\n')
@@ -326,26 +430,44 @@ describe('#1638 the metals burst sits behind the reduced-motion guard', () => {
 
   const [GUARDED, UNGUARDED] = partitionByGuard(css)
 
-  it('animates only under no-preference', () => {
-    const animates = /\.eph-metal-burst\s*\{[^}]*animation/
-    expect(animates.test(GUARDED), 'guarded rule').toBe(true)
-    expect(animates.test(UNGUARDED), 'UNguarded rule').toBe(false)
+  it('animates every cast layer only under no-preference (#2142)', () => {
+    // All six, because the burst is where a dropped gate would hurt most: it is
+    // the loudest thing this widget does, and it fires on the viewer's own
+    // click, which is precisely the moment a reader who asked for stillness is
+    // looking at it.
+    for (const layer of ['halo', 'ring', 'dial', 'mote', 'spark', 'sigil']) {
+      const animates = new RegExp(`\\.eph-cast-${layer}\\s*\\{[^}]*animation`)
+      expect(animates.test(GUARDED), `guarded .eph-cast-${layer}`).toBe(true)
+      expect(animates.test(UNGUARDED), `UNguarded .eph-cast-${layer}`).toBe(false)
+    }
   })
 
-  it('draws its ring at rest, so a stilled reader still sees the rank', () => {
-    // The base rule carries the pigment and the mask but no `animation`: the
-    // burst's MEANING is its spoke pitch, which must survive the guard.
-    const base = UNGUARDED.match(/\.eph-metal-burst\s*\{[^}]*\}/)?.[0] ?? ''
-    expect(base).toContain('--metal-step')
-    expect(base).toContain('mask:')
+  it('leaves the cast NOTHING at rest — no stilled frame, no critical CSS', () => {
+    // The inverse of the pre-#2142 assertion, and deliberately so. The ambient
+    // ring had to survive the guard because its spoke pitch WAS the rank; the
+    // cast burst is an event, so its stilled frame is correctly nothing at all.
+    // Neither sheet may declare paint for it — the layers carry their box, their
+    // ink and their `opacity: 0` inline, which is what keeps a ~1.6s ornament
+    // off the render-blocking stylesheet entirely.
+    for (const layer of ['halo', 'ring', 'dial', 'mote', 'spark', 'sigil']) {
+      expect(UNGUARDED).not.toContain(`.eph-cast-${layer}`)
+    }
   })
 
-  it('retired the ray fan and the rail with the scaffolding', () => {
-    // Comments stripped first: the block above still NAMES the three retired
+  it('retired the ray fan, the rail and the ambient ring with the scaffolding', () => {
+    // Comments stripped first: the blocks in both sheets still NAME the retired
     // rules, which is how the next reader learns they were deleted rather than
     // mislaid. Only declarations count here.
     const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '')
-    for (const retired of ['eph-metal-ray', 'eph-metal-rail', 'eph-metal-current']) {
+    for (const retired of [
+      'eph-metal-ray',
+      'eph-metal-rail',
+      'eph-metal-current',
+      // #2142. Both halves went: the keyframes and the gated rule in
+      // motion.ornament.css, and the base rule that carried the conic gradient
+      // and the mask in index.css.
+      'eph-metal-burst',
+    ]) {
       expect(declarations, retired).not.toContain(retired)
     }
   })
