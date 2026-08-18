@@ -16,6 +16,7 @@
     "portraitLabel": "Portrait",
     "optional": "· optional",
     "callingLabel": "Answer a calling",
+    "callingHint": "Some of these already know you.",
     "callingOptional": "· optional — invitations you've earned",
     "submitIdle": "Create & step out ▸",
     "submitBusy": "Stepping out…",
@@ -27,7 +28,7 @@
       "step": "Step 1 of 2 · Identity",
       "addPhoto": "Add photo",
       "changePhoto": "Change photo",
-      "help": "Upload a photo — it becomes your avatar everywhere. You'll pick a faction after your first task; until then you play as Unaffiliated and every path is open to you.",
+      "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you.",
       "submit": "Create character"
     }
   },
