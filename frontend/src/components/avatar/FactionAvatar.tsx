@@ -33,7 +33,9 @@ export function avatarDim(size: FactionAvatarProps['size']): number {
 }
 
 /**
- * THE ROOT NEVER YIELDS ITS WIDTH (#2232), on either skin below.
+ * THE ROOT NEVER YIELDS ITS WIDTH (#2232), on both skins below and on the one
+ * skin that wraps `BadgedAvatar` in chrome of its own (`WowAvatar`, #2241) —
+ * which is why this is exported rather than private.
  *
  * An avatar is a circle at a stated diameter, and it is nearly always mounted
  * in a flex row beside a name the player typed — the praxis byline, the duel
@@ -51,7 +53,11 @@ export function avatarDim(size: FactionAvatarProps['size']): number {
  * same praxis-card row (#2114): the stamp is a panel and must give ground, this
  * is a fixed disc and must not.
  */
-const AVATAR_ROOT = { position: 'relative', display: 'inline-block', flexShrink: 0 } as const
+export const AVATAR_ROOT = {
+  position: 'relative',
+  display: 'inline-block',
+  flexShrink: 0,
+} as const
 
 function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
   const dim = avatarDim(size)
