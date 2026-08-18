@@ -86,7 +86,6 @@ const SHARED_COPY: readonly string[] = [
   i18n.t('common:profile.lvl'),
   i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 }),
   i18n.t('common:profile.nextLevel', { level: 8 }),
-  i18n.t('common:profile.praxisEyebrow', { name: 'Reza' }),
   i18n.t('common:profile.praxisEmptyTitle'),
   i18n.t('common:profile.praxisEmptyBody'),
   i18n.t('common:profile.badgesHeading'),
@@ -97,7 +96,7 @@ const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', '
 
 describe('every profile kit renders the one shared set of words (#1911)', () => {
   it('has words to look for, so the loop below cannot pass by asserting nothing', () => {
-    expect(SHARED_COPY).toHaveLength(7)
+    expect(SHARED_COPY).toHaveLength(6)
     for (const word of SHARED_COPY) expect(word.length).toBeGreaterThan(0)
   })
 
@@ -112,6 +111,18 @@ describe('every profile kit renders the one shared set of words (#1911)', () => 
 
   it('keeps the shared praxis section heading ProfileSkin owns', () => {
     expect(renderText('coven')).toContain(i18n.t('common:profile.praxisHeading'))
+  })
+
+  // #2231: a character page shows that character's OWN praxis, so a byline
+  // naming them is a line that can never say anything else. The catalog key
+  // stays — `common:profile.praxisEyebrow` is the right words for any surface
+  // where authorship IS in question — it is this MOUNT that stops asking for
+  // it, in ProfileSkin and in DefaultProfileBody alike.
+  it('names no submitter under the praxis heading, on any kit', () => {
+    const byline = i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })
+    for (const slug of SLUGS) {
+      expect(renderText(slug), `${slug} byline`).not.toContain(byline)
+    }
   })
 
   it('speaks none of the retired per-kit words', () => {
