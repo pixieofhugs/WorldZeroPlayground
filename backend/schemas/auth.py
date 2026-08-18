@@ -42,6 +42,12 @@ class CurrentUser(WireModel):
     # is_admin — the jump is a faction perk, not a level gate.
     level_jump_reach: int = 0
     level_jump_available: bool = False
+    # Does the task browse OPEN narrowed to "tasks I can sign up for" (#2025)?
+    # True only for a level-0 character — the tutorial state, which has exactly
+    # one task to do. A DEFAULT, not a gate: GET /tasks still takes can_sign_up
+    # from the client and no server branch is paired with this. Not
+    # short-circuited by is_admin — see character_capabilities.
+    task_browse_defaults_to_eligible: bool = False
 
 
 class LogoutOut(WireModel):

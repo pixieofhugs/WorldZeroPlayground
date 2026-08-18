@@ -175,6 +175,7 @@ export const mockUser: CurrentUser = {
   // which is the correct render for this character, not a missing value.
   level_jump_reach: 0,
   level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
 }
 
 // ---------------------------------------------------------------------------
@@ -502,6 +503,10 @@ export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): Fa
     collab_other_modifier: 1,
     duel_win_modifier: 1.5,
     duel_loss_modifier: 0.5,
+    // "The array" (#1869) — Singularity's perk. False here because the kit's
+    // neutral config is exactly that, and the perk has no preview surface: it
+    // renders nothing at all, it prints to the devtools console.
+    reads_the_array: false,
     ...overrides,
   }
 }

@@ -27,11 +27,16 @@
  * game actually answers; every rule stays backend-side, so nothing here reads
  * an era value and #1046's "never hardcode an EraConfig value" is not reopened.
  *
- * Eligibility is the ONE axis whose default is viewer-relative (#1972): ON for
- * a viewer who carries a character, unavailable for everyone else. A level-0
- * character can start exactly one of the era's tasks, so the unfiltered board
- * is 65 rows with no way to tell which. See {@link readTaskFilters} for the
- * tri-state that costs, and what a shared link does about it.
+ * Eligibility is the ONE axis whose default is viewer-relative (#1972, narrowed
+ * by #2025): ON while the character is at level 0, OFF once it is past that,
+ * unavailable to a viewer carrying no character at all. Level 0 is the tutorial
+ * state with exactly one task to do, so opening the board on that one task is
+ * the whole point; from level 1 the player has run the loop once and a board
+ * that quietly hides rows is the surprise #1367 spent an epic removing. The
+ * server answers which of the three this viewer is —
+ * {@link EligibilityDefault}, never a `character.level` compared here. See
+ * {@link readTaskFilters} for the tri-state param that costs, and what a shared
+ * link does about it.
  */
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -106,6 +111,23 @@ export const CAN_SIGN_UP_ON = '1'
 export const CAN_SIGN_UP_OFF = '0'
 
 /**
+ * What eligibility means for THIS viewer — the one viewer-relative input the
+ * two readers below take (#2025). Three states, not two booleans, because the
+ * middle one is exactly the case the pair would let you spell wrongly:
+ *
+ *   - `'unavailable'` — no character. There is nothing to ask the server about,
+ *     so the axis is forced off whatever the URL says, and the rail is hidden.
+ *   - `'off'` — a character past the tutorial. The axis works; the board opens
+ *     whole.
+ *   - `'on'` — a level-0 character. The board opens on what they can start.
+ *
+ * Which one a viewer is comes from `/auth/me`'s
+ * `task_browse_defaults_to_eligible` plus whether a character is carried at all
+ * — never a level compared here, per the capability-flag rule in `api/auth.ts`.
+ */
+export type EligibilityDefault = 'unavailable' | 'off' | 'on'
+
+/**
  * The legal value of each enumerated axis, for {@link readOneOf} (#1537). A URL
  * is untrusted input: `GET /tasks` 422s on an unknown `sort` (#1443), so a stale
  * bookmark or a hand-edited link has to degrade to the default view here rather
@@ -146,15 +168,23 @@ export interface TaskFilterAxes {
  * The three enumerated axes go through the shared whitelist, so an unknown value
  * clamps to the default instead of riding out to a route that 422s on it.
  *
- * `hasCharacter` is the only viewer-relative input, and it decides the whole
- * eligibility axis (#1972):
+ * `eligibilityDefault` is the only viewer-relative input, and it decides the
+ * whole eligibility axis (#1972, narrowed by #2025):
  *
- *   - **No character, no eligibility.** There is no question to ask the server,
- *     so the axis is forced off whatever the URL says. `/tasks` is public and it
- *     is the shop window — a stranger gets all 65 tasks, never an empty page.
- *   - **With a character it is ON unless the URL says `0`.** A brand-new
- *     character can start one task out of 65; opening the board on that one is
- *     the point.
+ *   - **`'unavailable'`: no character, no eligibility.** There is no question to
+ *     ask the server, so the axis is forced off whatever the URL says. `/tasks`
+ *     is public and it is the shop window — a stranger gets all 65 tasks, never
+ *     an empty page.
+ *   - **`'on'`: a level-0 character, so ON unless the URL says `0`.** The
+ *     tutorial state can start one task out of 65; opening the board on that
+ *     one is the point.
+ *   - **`'off'`: a character past level 0, so OFF unless the URL says `1`.**
+ *     They have run the loop once and know the board exists; hiding rows from
+ *     them is the surprise, not the help.
+ *
+ * The URL still wins over the default in both directions — that is what makes
+ * the axis shareable at all, and what keeps the field desk's
+ * `/tasks?can_sign_up=1` CTA landing narrowed for a player of any level.
  *
  * That answers the shareable-link question the ruling leaves open. The axis is
  * viewer-relative, so it cannot round-trip faithfully; what it round-trips
@@ -164,12 +194,13 @@ export interface TaskFilterAxes {
  * recipient honours only if they carry a character — for anyone else it
  * degrades to the full board rather than to nothing at all. A bare `/tasks`
  * link means "the board, as it opens for you", which is now different for a
- * player and a stranger by design.
+ * brand-new player, a levelled one and a stranger by design.
  */
 export function readTaskFilters(
   params: URLSearchParams,
-  hasCharacter: boolean,
+  eligibilityDefault: EligibilityDefault,
 ): TaskFilterAxes {
+  const asked = params.get(TASK_FILTER_PARAMS.canSignUp)
   return {
     taskType: readOneOf(
       params.get(TASK_FILTER_PARAMS.taskType),
@@ -185,8 +216,13 @@ export function readTaskFilters(
     // Unknown slugs are left alone, as on the praxis feed: `/factions` is
     // fetched separately and a slug that matches nothing simply returns no rows.
     factions: params.getAll(TASK_FILTER_PARAMS.faction).filter((slug) => slug !== ''),
+    // Anything the axis cannot read — absent, blank, hand-typed nonsense —
+    // falls through to the viewer's default, the same clamp the enumerated
+    // axes get above.
     canSignUp:
-      hasCharacter && params.get(TASK_FILTER_PARAMS.canSignUp) !== CAN_SIGN_UP_OFF,
+      eligibilityDefault !== 'unavailable' &&
+      (asked === CAN_SIGN_UP_ON ||
+        (asked !== CAN_SIGN_UP_OFF && eligibilityDefault === 'on')),
   }
 }
 
@@ -222,20 +258,28 @@ export function nextFactionParams(
  * Every axis off, search included — what "clear all filters" means. Params this
  * page does not own are left alone.
  *
- * Note "off", not "back to its default": for a viewer whose eligibility default
- * is ON, deleting that param would hand them straight back to the filtered
- * board, so clear-all writes the explicit `0` instead (#1972). A button that
- * says it cleared the filters has to leave a list with no filters on it — and
- * this is the same tap `CanSignUpEmpty` offers as "see everything".
+ * "Off", not "back to its default", and which of the two takes the extra write
+ * INVERTS with the default (#2025). A button that says it cleared the filters
+ * has to leave a list with no filters on it — and this is the same tap
+ * `CanSignUpEmpty` offers as "see everything" — so:
+ *
+ *   - `'on'` (a level-0 character): deleting the param would hand them straight
+ *     back to the filtered board, so the explicit `0` is written out.
+ *   - `'off'` / `'unavailable'`: off IS the default, so spelling it out would
+ *     leave a param behind on the majority of clears for no effect. Deleting is
+ *     both the honest clear and the clean address `nextFilterParams` aims for.
+ *
+ * Both branches end in the same place — `readTaskFilters` reading `false` — and
+ * `taskFilterParams.test.ts` asserts that round trip rather than the string.
  */
 export function clearedFilterParams(
   previous: URLSearchParams,
-  hasCharacter: boolean,
+  eligibilityDefault: EligibilityDefault,
 ): URLSearchParams {
   const next = new URLSearchParams(previous)
   for (const key of Object.values(TASK_FILTER_PARAMS)) next.delete(key)
   next.delete(SEARCH_QUERY_PARAM)
-  if (hasCharacter) next.set(TASK_FILTER_PARAMS.canSignUp, CAN_SIGN_UP_OFF)
+  if (eligibilityDefault === 'on') next.set(TASK_FILTER_PARAMS.canSignUp, CAN_SIGN_UP_OFF)
   return next
 }
 
@@ -328,8 +372,9 @@ export interface TasksState {
   selectedFactions: string[]
   setSelectedFactions: (slugs: string[]) => void
   /**
-   * "Tasks I can sign up for" (#1130). Defaults **ON** for a viewer who carries
-   * a character and is unavailable to everyone else (#1972) — see
+   * "Tasks I can sign up for" (#1130). Defaults **ON** for a level-0 character,
+   * OFF for one past that, and is unavailable to a viewer carrying none
+   * (#1972, #2025) — see {@link EligibilityDefault} and
    * {@link readTaskFilters}. Callers hide the control entirely for a viewer
    * with no character: the server answers `[]` for an anonymous viewer, so it
    * is a control that cannot work.
@@ -368,7 +413,15 @@ export interface TasksState {
 export function useTasks(): TasksState {
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const hasCharacter = Boolean(user?.character)
+  // The server's answer, not a level compared here (`api/auth.ts`). The flag is
+  // false for a viewer carrying no character, so the character check is what
+  // separates 'unavailable' from 'off' — the axis being absent from a
+  // stranger's board is a different fact from it opening wide for a player.
+  const eligibilityDefault: EligibilityDefault = !user?.character
+    ? 'unavailable'
+    : user.task_browse_defaults_to_eligible
+      ? 'on'
+      : 'off'
 
   /**
    * Hold the read while the viewer is still unknown (#1972).
@@ -401,7 +454,7 @@ export function useTasks(): TasksState {
     status,
     factions: selectedFactions,
     canSignUp,
-  } = readTaskFilters(searchParams, hasCharacter)
+  } = readTaskFilters(searchParams, eligibilityDefault)
   const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
@@ -473,7 +526,7 @@ export function useTasks(): TasksState {
     )
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
   const clearFilters = () =>
-    writeParams((previous) => clearedFilterParams(previous, hasCharacter))
+    writeParams((previous) => clearedFilterParams(previous, eligibilityDefault))
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)

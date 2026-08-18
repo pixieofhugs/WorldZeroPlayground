@@ -36,6 +36,7 @@ async def get_game_config(
             collab_other_modifier=faction.collab_other_modifier,
             duel_win_modifier=faction.duel_win_modifier,
             duel_loss_modifier=faction.duel_loss_modifier,
+            reads_the_array=faction.reads_the_array,
         )
         for faction in CURRENT_ERA.factions.values()
     ]

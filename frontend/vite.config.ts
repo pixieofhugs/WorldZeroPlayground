@@ -2,6 +2,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+/**
+ * ⚠️ DO NOT CONFIGURE CONSOLE STRIPPING HERE — a faction's perk depends on it.
+ *
+ * `esbuild: { drop: ['console'] }`, or terser's `drop_console`, is a normal and
+ * sensible optimisation. In this app it would silently delete Singularity's
+ * entire Era 1 perk (#1869): "the array" IS console output — see
+ * `src/components/TheArray.tsx`. Nothing about that module can defend itself
+ * from a build flag set over here, and the deletion would show up as no failing
+ * test, no error and no missing pixel; just a faction that quietly stopped
+ * having a mechanic.
+ *
+ * So the absence of that config is load-bearing, and
+ * `src/components/__tests__/theArray.test.ts` asserts it against this very
+ * object. If you have a real reason to strip console output, the perk needs
+ * another channel FIRST and that test is the conversation.
+ */
 export default defineConfig({
   plugins: [react()],
   server: {
