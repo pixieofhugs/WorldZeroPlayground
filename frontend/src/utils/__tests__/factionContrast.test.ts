@@ -2461,36 +2461,59 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
  * named, and in those files the structure ink may not be a text colour.
  */
 describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
-  /**
-   * The Everymen surfaces whose ground IS `--everymen-paper`.
-   *
-   * `EverymenFactionBody` stands on `.em-backdrop` (`useFactionDetail` calls
-   * `useFactionBackdrop`); `EverymenFieldDesk` paints the paper on its own root
-   * and again on every `Plate`. Every other Everymen archetype grounds on the
-   * cream board or on a sheet of its own (`.em-broadsheet`, the press slip),
-   * where the frozen ink is the right answer — this list must not grow to them.
-   */
-  const ON_THE_PAPER = [
-    "pages/factionDetail/archetypes/EverymenFactionBody.tsx",
-    "pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx",
-  ];
+  const AS_TEXT = /color:\s*(INK\b|['"`]var\(--everymen-ink\))/g;
+  const WHY =
+    "on the paper the ink is 1.16:1 in dark (1.06:1 on the deep stock). Text on this ground takes `--everymen-paper-text`, which flips with the stock — 13.19:1 light, 13.96:1 dark — and is byte-identical to the ink in light, so nothing moves by day. Borders, fills and shadows keep `INK`.";
 
-  for (const relative of ON_THE_PAPER) {
-    it(`${relative} sets no text in the structure ink`, () => {
-      const source = stripComments(sourceOf(relative));
-      // The rule is written against the local alias, so it has to prove the
-      // alias still means what it says — a rename would otherwise pass by
-      // matching nothing.
-      expect(
-        source,
-        `${relative} no longer binds \`INK\` to --everymen-ink; retarget this guard at whatever the structure ink is called there now.`,
-      ).toMatch(/const INK = ['"]var\(--everymen-ink\)['"]/);
-      expect(
-        source.match(/color:\s*(INK\b|['"`]var\(--everymen-ink\))/g) ?? [],
-        "on the paper the ink is 1.16:1 in dark (1.06:1 on the deep stock). Text here takes `--everymen-paper-text`, which flips with the stock — 13.19:1 light, 13.96:1 dark — and is byte-identical to the ink in light, so nothing moves by day. Borders, fills and shadows keep `INK`.",
-      ).toEqual([]);
-    });
+  /**
+   * The alias every rule below is written against. A rename would otherwise
+   * pass by matching nothing.
+   */
+  function paperSource(relative: string): string {
+    const source = stripComments(sourceOf(relative));
+    expect(
+      source,
+      `${relative} no longer binds \`INK\` to --everymen-ink; retarget this guard at whatever the structure ink is called there now.`,
+    ).toMatch(/const INK = ['"]var\(--everymen-ink\)['"]/);
+    return source;
   }
+
+  /**
+   * The faction page is a MIXED file, and that is the whole reason the bug was
+   * hard to see: nearly all of its type sits inside `PAPER_FRAME`, whose stock
+   * is `--everymen-cream` — theme-invariant, so the frozen ink is correct there
+   * and eight `color: INK` sites in this file are right. The two section
+   * headings are the only type it sets on the page itself. So the rule is
+   * per-element, in the shape #1793 uses on the Ephemerists body, not per-file.
+   */
+  it("EverymenFactionBody's section heading is inked for the page, not the frame", () => {
+    const source = paperSource("pages/factionDetail/archetypes/EverymenFactionBody.tsx");
+    const at = source.indexOf("const SECTION_HEADING_TEXT");
+    expect(at, "no `SECTION_HEADING_TEXT` in EverymenFactionBody").toBeGreaterThan(-1);
+    const style = source.slice(at, source.indexOf("};", at));
+    expect(style, WHY).not.toMatch(AS_TEXT);
+    expect(
+      style,
+      "`SectionHeading` renders straight into `.wz-faction-grid`, which stands on `.em-backdrop`.",
+    ).toContain("color: PAPER_TEXT");
+  });
+
+  /**
+   * The mobile desk is NOT mixed, which is why its rule can be the whole file:
+   * every ground it paints is the paper, the deep stock, the red band or the
+   * ink itself, and `CREAM` appears only as an ink on the last two. Six sites
+   * read the frozen ink as text, all of them on the paper family. If a cream
+   * plate is ever added here, `INK` becomes right on it and this rule has to
+   * narrow to the elements the way the faction body's did.
+   */
+  it("EverymenFieldDesk sets no text in the structure ink at all", () => {
+    const source = paperSource("pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx");
+    expect(
+      source,
+      "`CREAM` is an ink on this desk, never a ground — every stock under its type is the paper family.",
+    ).not.toMatch(/background:\s*CREAM\b/);
+    expect(source.match(AS_TEXT) ?? [], WHY).toEqual([]);
+  });
 
   for (const theme of BOTH_THEMES) {
     it(`the ink they take instead clears AA on both stocks (${theme})`, () => {
