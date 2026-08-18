@@ -5,7 +5,6 @@
   },
   "listPage": {
     "title": "Praxis",
-    "intro": "Proof of action. All praxis from across World Zero.",
     "loading": "Loading praxis...",
     "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
