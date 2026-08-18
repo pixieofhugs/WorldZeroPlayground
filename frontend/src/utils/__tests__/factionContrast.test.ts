@@ -941,6 +941,17 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists panel cell, caption", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-caption" },
   { what: "ephemerists panel cell, quiet ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-quiet" },
   { what: "ephemerists panel cell, links", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-brass-light" },
+  // OCHRE AS AN INK, which is new in #2145 and is the reason it gets a row.
+  // `EphemeristsDuelSealConfirm` records "ochre is a mark, never an ink HERE"
+  // and the scope of that word is the papyrus: #a6432b measures 4.46:1 on
+  // `-plate-bg`, a near miss, which is why nothing legible is set in it there.
+  // The score stamp's metatask line lands on the PANEL CELL, one sheet lighter,
+  // at 4.97:1 light and 4.99:1 dark. It reaches this ground by REPLACING a
+  // worse reading rather than by relaxing a rule: the row shipped as an
+  // 11px `-plate-disc` label on an ochre CHIP, which is the same two colours
+  // inverted and therefore the same 3.0007:1 — a normal-text pairing sitting on
+  // the LARGE-text floor, and clearing it by seven ten-thousandths at that.
+  { what: "ephemerists panel cell, metatask award", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ochre" },
   // `ephemerists medallion disc, caption` STOOD HERE and is retired rather than
   // repointed (#2141). It measured `-plate-caption` on the disc, and the caption
   // is a SHEET ink — #6f5620 by day, 2.63:1 on a chip that does not flip — so

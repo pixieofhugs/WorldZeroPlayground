@@ -58,10 +58,12 @@ vi.mock("../../../../hooks/useFormFactor", () => ({ useFormFactor: () => "deskto
 
 // Imported after the mock is registered.
 import DefaultTaskCard from "../../../taskCard/DefaultTaskCard";
+import EphemeristsTaskCard from "../../../taskCard/EphemeristsTaskCard";
 import SingularityTaskCard from "../../../taskCard/SingularityTaskCard";
 import SnideTaskCard from "../../../taskCard/SnideTaskCard";
 import WowTaskCard from "../../../taskCard/WowTaskCard";
 import DefaultScoreStamp from "../DefaultScoreStamp";
+import EphemeristsScoreStamp from "../EphemeristsScoreStamp";
 import SingularityScoreStamp from "../SingularityScoreStamp";
 import SnideScoreStamp from "../SnideScoreStamp";
 import WowScoreStamp from "../WowScoreStamp";
@@ -215,6 +217,25 @@ const UNIFIED = [
     },
     // The struck disc's tilt and its rainbow-clipped numeral.
     retired: ["rotate(-7deg)", "var(--faction-default-total-rainbow)"],
+  },
+  {
+    // THE FOURTH FACTION TO UNIFY (#2145), added here by name because a surface
+    // this list omits is invisible rather than red. `CompassRose` replaced the
+    // task card's octagon in #2037 and the stamp kept striking its own copy of
+    // that octagon until now; the ruling in #2042 is that a faction's points
+    // mark is one drawing, and `ephemeristsCompassRose.test.tsx` holds the other
+    // half — that the north needle's path is declared in exactly one file.
+    faction: "ephemerists",
+    mark: "components/factionMarks/ephemeristsPlate.tsx (CompassRose)",
+    // The one filled needle, which is the rose's signature.
+    fragment: "M50 8 L55.5 26 L44.5 26 Z",
+    surfaces: {
+      "components/taskCard/EphemeristsTaskCard.tsx": () => card(EphemeristsTaskCard),
+      "components/praxisCard/scoreStamp/EphemeristsScoreStamp.tsx": () =>
+        stamp(EphemeristsScoreStamp),
+    },
+    // The stepped octagon on its lotus base — the stamp's own second copy.
+    retired: ["M30 4 L70 4 L96 30", "M18 74 H82"],
   },
 ] as const;
 
