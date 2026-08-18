@@ -125,3 +125,41 @@ describe('ComposerControls — the body cap', () => {
     expect(html).not.toContain('disabled=""')
   })
 })
+
+/**
+ * #2238 — THE COUNT IS ONE TOKEN AND THE ROW HAS TO SAY SO.
+ *
+ * The foot is three things across one line — the hint, the count, the submit —
+ * and on a narrow leaf they do not fit. What gave way was the count, which
+ * broke as `100/5` over `00`: a figure severed mid-number, which is the one
+ * thing in that row that means nothing in halves. The Ephemerists sheet reports
+ * it because its note body sets `overflow-wrap: anywhere` (a long unbroken
+ * word must not blow the leaf open) and the composer INHERITS it, so the count
+ * gained break opportunities between its own digits.
+ *
+ * Two declarations answer it, and both are needed. `white-space: nowrap` beats
+ * an inherited `overflow-wrap` outright, so the count can never be severed
+ * wherever a voice mounts it; and the row WRAPS, so the width the count stops
+ * yielding is taken from the line rather than from the hint's last word.
+ *
+ * The seam is the row's own declarations: this harness has no layout, so a
+ * break is not observable — what is decidable is whether the row can produce
+ * one.
+ */
+describe('ComposerControls — the foot row (#2238)', () => {
+  const foot = (html: string) => html.slice(html.indexOf('</textarea>'))
+
+  it('sets the count as one unbreakable token', () => {
+    const html = composer({ value: 'x'.repeat(100) })
+    const at = html.indexOf('100/500')
+    const count = html.slice(html.lastIndexOf('<span', at), at)
+    expect(count).toContain('white-space:nowrap')
+    // It also stops yielding width: the hint beside it wraps and the count
+    // cannot, so a shrinking count would only be squeezed to overflow.
+    expect(count).toContain('flex-shrink:0')
+  })
+
+  it('lets the row wrap rather than crushing what is on it', () => {
+    expect(foot(composer())).toContain('flex-wrap:wrap')
+  })
+})
