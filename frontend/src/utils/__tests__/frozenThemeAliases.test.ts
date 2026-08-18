@@ -89,6 +89,10 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-default-rainbow-loop",
   "--faction-default-rainbow-vertical",
   "--faction-default-total-rainbow",
+  // #2141 gave `-plate-brass-light` a light half, which turned the Ephemerists
+  // graticule into an alias over a flipping referent. This sweep is what said
+  // so; the grid moved to `:root, [data-theme]` in the same change.
+  "--faction-ephemerists-grid",
   "--faction-everymen-card-accent",
   "--faction-everymen-card-bg",
   "--faction-everymen-card-muted",

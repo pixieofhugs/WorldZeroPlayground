@@ -2346,9 +2346,13 @@
      pitch. Upgrade path: point this at a `url()` of a hosted SVG. Every
      consumer already sizes it `100% 100%` / `no-repeat`, so a stretched image
      lands exactly where the tiling gradient sat, and no consumer changes. */
-  --faction-ephemerists-grid:
-    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px),
-    repeating-linear-gradient(90deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px);
+  /* THE GRID MOVED TO ITS OWN `:root, [data-theme]` BLOCK below (#2141), and
+     the reason is #1839's, not a style preference: it resolves through var(),
+     and #2141 made its referent `-plate-brass-light` FLIP. A `:root`-only alias
+     over a flipping referent freezes at its light value inside a nested theme
+     wrapper — the skin container `profileSkin.tsx` renders — because `:root`
+     matches `documentElement` and nothing else, so it never re-substitutes.
+     `frozenThemeAliases.test.ts` is the guard, and it caught this. */
 
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
@@ -2409,6 +2413,16 @@
 /* The card CONTRACT — four names the shared archetype reads, each pointing at
    the legacy `--everymen-*` family rather than repeating its hex. The alias IS
    the contract, which is exactly why it needs the theme scope (#1839). */
+/* The ephemeris graticule, theme-scoped for #1839's reason — see the note where
+   it used to stand. Its ruling ink is the brass HIGHLIGHT, which is the sheet's
+   link ink and a dark brass by day: a ruled ground reads as a ruling on either
+   stock only if it follows the stock. */
+:root, [data-theme] {
+  --faction-ephemerists-grid:
+    repeating-linear-gradient(0deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, var(--faction-ephemerists-plate-brass-light) 0 1px, transparent 1px 26px);
+}
+
 :root, [data-theme] {
   --faction-everymen-card-bg: var(--everymen-paper);
   --faction-everymen-card-text: var(--everymen-paper-text);
