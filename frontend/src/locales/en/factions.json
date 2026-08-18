@@ -98,6 +98,10 @@
     }
   },
   "ephemerists": {
+    "plate": {
+      "provenance": "Plate struck {{date}} · station of the Ephemerists, {{rightAscension}} {{declination}}",
+      "provenanceUndated": "Station of the Ephemerists, {{rightAscension}} {{declination}}"
+    },
     "road": {
       "heading": "The Road",
       "memberTitle": "Your name is in the codex",

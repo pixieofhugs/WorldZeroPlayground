@@ -353,10 +353,19 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 color: BAND_INK,
               }}
             >
+              {/* NO COLOPHON ON THIS SURFACE, and it is a structural block
+                  rather than a choice: #1828 makes the cast a full-bleed band
+                  that closes the sheet with a negative bottom margin, so a
+                  trailing sibling is pulled back up over the brass instead of
+                  sitting under it — the same block the trailing rune strip
+                  records at the footer below. The composer therefore keeps the
+                  notation band and loses the coordinates, which is also the
+                  placement #2124 wanted least: this is the one Ephemerists
+                  surface whose every field is the author's own. */}
               <EphemeristsMasthead
                 slug={praxis.task_faction_slug}
                 scale={sizes.isMobile ? "card" : "page"}
-                date={praxis.submitted_at ?? praxis.created_at}
+                seed={`praxis:${praxis.id}`}
               />
             </ComposerMasthead>
             {/* The cavetto cornice, beneath the band, carrying the one motion. */}

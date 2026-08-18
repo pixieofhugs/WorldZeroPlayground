@@ -188,6 +188,22 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(text).toContain(long);
   });
 
+  it("stands the brief on the chart, at the PAGE's weight and not the design's (#2144)", () => {
+    const { html } = render(<EphemeristsTaskDetail state={baseState()} />);
+    // The net, not the journal ruling this leaf used to draw for itself.
+    expect(html).toContain('viewBox="0 0 1000 600"');
+    expect(html).not.toContain("repeating-linear-gradient(180deg");
+    // 0.17. The design says 0.42, which puts the net's diagonals at the weight
+    // of a 13px serif's strokes over what is body copy; the owner walked it
+    // down to the page's own number. The upgrade path if the brief ever needs
+    // to read as more written-on is BOTH grounds, never a heavier net.
+    expect(html).toContain("opacity:0.17");
+    expect(html).not.toContain("opacity:0.42");
+    // A ground, not a veil: the leaf isolates so the net's negative layer lands
+    // above the plate's fill and below every ink printed on it.
+    expect(html).toContain("isolation:isolate");
+  });
+
   it("never links the gallery out at the task_id feed filter", () => {
     // The gallery expands in place instead (#1030's fix, inherited here) — the
     // reader stays on the task, even now that the URL filters (#1050).
