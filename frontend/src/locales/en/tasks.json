@@ -76,7 +76,8 @@
     "inProgress": {
       "text": "You're on this task",
       "continue": "Continue editing",
-      "drop": "drop"
+      "drop": "drop",
+      "dropUnavailable": "We couldn't find your draft for this task. Reload the page and try again."
     },
     "submitted": {
       "text": "You've submitted praxis for this task",

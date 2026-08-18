@@ -299,7 +299,7 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       const { html, text } = render(
         <Skin state={baseState({ pendingRow: { kind: 'notifications', count: 0, to: UPDATES_LINK } })} />,
       )
-      expect(text, 'notifications copy').toContain('New updates')
+      expect(text, 'activity copy').toContain('New activity')
       expect(html, 'unfiltered updates').toContain(`href="${UPDATES_LINK}"`)
     })
 

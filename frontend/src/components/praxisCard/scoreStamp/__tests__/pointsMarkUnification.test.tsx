@@ -136,6 +136,7 @@ function snideDetail(): string {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    dropConfirm: null,
   };
   return renderToStaticMarkup(
     <MemoryRouter>

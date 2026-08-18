@@ -49,18 +49,24 @@ const SCANLINES =
 function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
-      <div
-        style={{
-          fontFamily: FONT,
-          fontSize: 'var(--text-md)',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: signal(65),
-          marginBottom: 'var(--space-sm)',
-        }}
-      >
-        {'>'} {eyebrow}
-      </div>
+      {/* A prompt with no command is not a prompt (#2231). Six kits dress the
+          eyebrow slot in nothing but a margin, so a heading that asks for a
+          bare title — praxis since #2231, About since #1626 — costs them
+          nothing; this is the one kit whose slot draws ink of its own. */}
+      {eyebrow ? (
+        <div
+          style={{
+            fontFamily: FONT,
+            fontSize: 'var(--text-md)',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: signal(65),
+            marginBottom: 'var(--space-sm)',
+          }}
+        >
+          {'>'} {eyebrow}
+        </div>
+      ) : null}
       <h2
         style={{
           fontFamily: FONT,

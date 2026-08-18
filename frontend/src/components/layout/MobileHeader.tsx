@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
+import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 import PendingBadge from './PendingBadge'
 
 /**
@@ -23,6 +24,12 @@ export default function MobileHeader() {
   // still a list of items this only ever measured.
   const { pending_requests_count: pendingCount } = useSidebarPanels()
 
+  // Written out rather than composed from a `nav.bell${suffix}` template: a
+  // computed key is invisible to the copy sweep and to the typed `t()`, the same
+  // rule `SidebarHandle`'s four toggle labels follow.
+  const bellLabel =
+    pendingCount > 0 ? t('nav.bellWithPending', { count: pendingCount }) : t('nav.bell')
+
   return (
     <header
       className="sticky top-0 flex items-center justify-between px-4 h-12"
@@ -39,18 +46,30 @@ export default function MobileHeader() {
       {/* Right-side header controls — only meaningful when signed in. */}
       {user && (
         <div className="flex items-center gap-3">
-          {/* Bell → Updates. The only phone entry point to the Updates page
-              (#572); carries the same pending-request badge as the sidebar. */}
+          {/* Bell → the Requests queue. The only phone entry point to the
+              Updates page (#572); carries the same pending-request badge as the
+              sidebar.
+
+              IT IS NOT A GENERIC NOTIFICATION BELL, and #2083 is what happens
+              when it looks like one. The badge counts `pending_requests_count`
+              — obligations — while the home panel counts `global_activity`,
+              which is the same feed MINUS those obligations (ADR-0070, one feed
+              partitioned once). So a vote changed on your praxis lands on the
+              home panel and correctly leaves the bell silent, and a bell that
+              said only "Updates" left that reading as a broken bell rather than
+              as two true statements about two halves.
+
+              Naming the queue is the whole fix, in all three places a reader
+              meets it: the accessible name, the tooltip, and the destination —
+              which is now the queue's own anchor, under the heading "Waiting on
+              you · Requests", rather than the top of the stream. */}
           <Link
-            to="/updates"
+            to={REQUESTS_QUEUE_LINK}
             // The badge is `aria-hidden` and colour-carried, so the count has to
             // ride the LINK's accessible name or it never reaches a screen
             // reader — same contract the sidebar handle's label meets (#1457).
-            aria-label={
-              pendingCount > 0
-                ? t('nav.updatesWithPending', { count: pendingCount })
-                : t('nav.updates')
-            }
+            aria-label={bellLabel}
+            title={bellLabel}
             className="relative flex items-center"
             style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', padding: 'var(--space-xs)' }}
           >

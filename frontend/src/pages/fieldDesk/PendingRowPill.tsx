@@ -47,7 +47,7 @@ export default function PendingRowPill({
     row.kind === 'requests'
       ? t('fieldDesk.home.pending', { count: row.count })
       : row.kind === 'notifications'
-        ? newsLabel(row.count, t)
+        ? activityLabel(row.count, t)
         : t('fieldDesk.home.caughtUp')
 
   const body = (
@@ -77,6 +77,14 @@ export default function PendingRowPill({
 /**
  * The middle state's words, in the only three shapes its number can take (#1587).
  *
+ * IT SAYS ACTIVITY, NOT "NOTIFICATIONS" (#2083). This row counts
+ * `global_activity` — the viewer's live feed MINUS their obligations — and the
+ * bell counts the obligations. One feed, partitioned once (ADR-0070), never two
+ * systems. But "1 notification" here beside a silent bell up in the header read
+ * as a broken bell rather than as two true statements about two halves, because
+ * nothing on either said which half it was. So this half is a LOG of events and
+ * says so, and the bell names the queue of things awaiting an answer.
+ *
  * EXACT below the cap, "50+" at or above it. `global_activity_count` is the
  * length of a fetch whose every source stops at `SUB_QUERY_LIMIT` rows, so a
  * total under that cap cannot have come from a truncated source and is provably
@@ -85,17 +93,17 @@ export default function PendingRowPill({
  *
  * ZERO IS "NO NUMBER". `selectPendingRow` only reaches this state with news
  * waiting, so a zero here means the response carried no count — a client
- * deployed ahead of its API. It reads as the wording this row shipped with,
- * which is true at any volume, rather than "undefined notifications".
+ * deployed ahead of its API. It reads as the numberless wording, which is true
+ * at any volume, rather than "undefined events".
  */
-function newsLabel(count: number, t: TFunction<'common'>): string {
-  if (count === 0) return t('fieldDesk.home.notifications')
+function activityLabel(count: number, t: TFunction<'common'>): string {
+  if (count === 0) return t('fieldDesk.home.activity')
   if (count >= ACTIVITY_COUNT_CAP) {
     // `cap`, not `count`: a bare `count` would send i18next hunting for plural
     // suffixes this one-form key does not have.
-    return t('fieldDesk.home.notificationsCapped', { cap: ACTIVITY_COUNT_CAP })
+    return t('fieldDesk.home.activityCapped', { cap: ACTIVITY_COUNT_CAP })
   }
-  return t('fieldDesk.home.notificationsCount', { count })
+  return t('fieldDesk.home.activityCount', { count })
 }
 
 /** Inline-flex so a skin that passes a `glyph` gets it set beside the words;

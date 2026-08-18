@@ -17,9 +17,13 @@ import {
   deletePraxis,
   type PraxisCardOut,
 } from "../../api/praxis";
+import { cancelChallenge } from "../../api/duel";
+import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
+import { dropConfirmFor } from "./dropConfirm";
 import { listRelationships } from "../../api/relationships";
 import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
+import i18n from "../../i18n";
 import { extractError } from "../../utils/errors";
 import { computeDisplayPoints, computeFactionMultiplier } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
@@ -27,6 +31,20 @@ import { isLevelJumpSignup } from "./levelJump";
 import { canSignUpForTask } from "./signupCta";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
+
+/**
+ * A drop the player has asked for and not yet confirmed (#2215).
+ *
+ * The dialog itself is mounted ONCE, by the dispatcher — `TaskDetail.tsx` — so
+ * that none of the nine archetypes has to know a confirm exists. They keep
+ * calling `handleDrop`; this is what the dispatcher draws when they do.
+ */
+export interface DropConfirmState {
+  /** Fully worded, built by `composerConfirms` — see `dropConfirm` below. */
+  request: ConfirmRequest;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}
 
 export interface TaskDetailState {
   // Routing / loading
@@ -124,7 +142,23 @@ export interface TaskDetailState {
   // Handlers
   signupError: string | null;
   handleSignup: () => Promise<void>;
-  handleDrop: () => Promise<void>;
+  /**
+   * ASK to drop this task. Opens {@link dropConfirm}; it does not delete.
+   *
+   * It used to delete, behind a `window.confirm` — see the handler for why
+   * that was the one step on this path that could swallow a click in silence
+   * (#2215).
+   */
+  handleDrop: () => void;
+  /**
+   * The pending drop confirmation, or null when none is open (#2215).
+   *
+   * Non-null only between a `handleDrop` click and the player's answer. The
+   * DISPATCHER renders it — see `TaskDetail.tsx`. An archetype that wants no
+   * part of this simply keeps wiring `handleDrop` to its own button, which is
+   * all nine of them.
+   */
+  dropConfirm: DropConfirmState | null;
 }
 
 export function useTaskDetail(idParam: string | undefined): TaskDetailState {
@@ -135,10 +169,22 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   const [task, setTask] = useState<TaskOut | null>(null);
   const [submissions, setSubmissions] = useState<PraxisCardOut[]>([]);
   const [comments, setComments] = useState<CommentOut[] | null>(null);
-  const [isInProgress, setIsInProgress] = useState(false);
-  const [inProgressPraxisId, setInProgressPraxisId] = useState<number | null>(
-    null,
-  );
+  /**
+   * The viewer's own open draft for THIS task, as a row — not as two mirrored
+   * booleans-and-an-id.
+   *
+   * It used to be `isInProgress: boolean` beside `inProgressPraxisId: number |
+   * null`, set from the same `find()` on the same line and therefore never
+   * legitimately out of step with each other; both are now derived below. The
+   * row is what `handleDrop` needs: a duel side and a crewed collab are not
+   * the same act as dropping a solo draft, and the id alone cannot tell them
+   * apart. `PraxisCardOut` already carries `type`, `members` and `duel_id`, so
+   * this costs no extra request — the fetch below was throwing the row away.
+   */
+  const [inProgressPraxis, setInProgressPraxis] =
+    useState<PraxisCardOut | null>(null);
+  /** The draft a pending confirm is asking about; null when none is open. */
+  const [dropTarget, setDropTarget] = useState<PraxisCardOut | null>(null);
   const [taskSlotCount, setTaskSlotCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -160,7 +206,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   useEffect(() => {
     if (!idParam) return;
     setLoading(true);
-    setIsInProgress(false);
+    setInProgressPraxis(null);
     const taskId = parseInt(idParam, 10);
 
     const fetches: Promise<unknown>[] = [
@@ -216,8 +262,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
           const activeForThisTask = praxes.find(
             (p) => p.task_id === taskId,
           );
-          setIsInProgress(activeForThisTask !== undefined);
-          setInProgressPraxisId(activeForThisTask?.id ?? null);
+          setInProgressPraxis(activeForThisTask ?? null);
           setTaskSlotCount(praxes.length);
         }
         if (relationships) {
@@ -255,18 +300,70 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     }
   }, [task, navigate]);
 
-  const handleDrop = useCallback(async () => {
-    if (!task) return;
-    // Drop either the submitted praxis (if any) or the in-progress draft.
-    const targetPraxisId = mySubmission?.id ?? inProgressPraxisId;
-    if (!targetPraxisId) return;
-    if (!window.confirm("Drop this task? You can sign up again later.")) return;
+  /**
+   * ASK to drop — the click half. It opens the confirm and does nothing else.
+   *
+   * WHY THIS IS NOT `window.confirm` ANY MORE (#2215). The player reported the
+   * word "drop" behaving like inert text: a click, and nothing. It was never
+   * inert — all nine archetypes have always wired a real
+   * `<button onClick={handleDrop}>` — and the two id guards in front of the old
+   * body could not fire either, because every one of those nine gates the
+   * control on `inProgressPraxisId !== null`. What sat between the click and
+   * the request was `window.confirm`, which is the one step on that path that
+   * can decline WITHOUT DRAWING ANYTHING: a browser that has suppressed dialogs
+   * for the origin (Chrome's "don't allow this page to prompt you", an inactive
+   * tab, some in-app webviews) returns `false` from it immediately. The handler
+   * then took its silent `return`, and the control was dead for that player
+   * until they cleared the setting — no dialog, no banner, no console.
+   *
+   * It was also the last `window.confirm` in the app: #1082 replaced seven of
+   * them in the composer with `ConfirmDialog`, and #1668 the eighth, precisely
+   * because OS chrome cannot be dressed, cannot be asserted by this repo's
+   * DOM-less harness, and — as here — cannot be relied on to appear at all.
+   * This one was missed because it lives on task detail, not in the composer.
+   *
+   * The guard below keeps its shape but stops being silent. It is still not
+   * reachable from any archetype's rendered Drop; a control that can only ever
+   * no-op is the defect this issue is about, so if a tenth skin ever renders
+   * Drop on a state with no draft, the player gets a sentence instead of
+   * nothing.
+   *
+   * `mySubmission?.id ?? …` used to stand in front of the target and is gone.
+   * It was dead twice over: every archetype gates Drop on `!mySubmission`, and
+   * `services/praxis.delete_praxis` refuses a submitted praxis with a 400, so
+   * reading it could only ever have produced a failure.
+   */
+  const handleDrop = useCallback(() => {
+    if (!task || !inProgressPraxis) {
+      setSignupError(i18n.t("tasks:detail.inProgress.dropUnavailable"));
+      return;
+    }
+    setSignupError(null);
+    setDropTarget(inProgressPraxis);
+  }, [task, inProgressPraxis]);
+
+  const cancelDrop = useCallback(() => setDropTarget(null), []);
+
+  /** The confirmed half: dissolve any duel, delete, then resync the task. */
+  const confirmDrop = useCallback(async () => {
+    if (!task || !dropTarget) return;
+    setDropTarget(null);
     setSignupError(null);
     try {
-      await deletePraxis(targetPraxisId);
-      setIsInProgress(false);
-      setInProgressPraxisId(null);
-      setSubmissions((prev) => prev.filter((s) => s.id !== targetPraxisId));
+      // Dissolve the contract, THEN delete the side — the same order, and for
+      // the same reason, as the composer's `cancel` (`useEditPraxis.ts`). Both
+      // duel FKs on `praxis` are deliberately NO ACTION while its eight sibling
+      // FKs cascade, so a praxis a duel row still points at cannot be deleted
+      // at all. Task detail did not make this call, which made Drop a hard
+      // failure — not a slow one — for every duellist who reached it. A live or
+      // resolved duel is still refused by the backend, and that refusal lands
+      // in the banner below.
+      if (dropTarget.duel_id != null) {
+        await cancelChallenge(dropTarget.duel_id);
+      }
+      await deletePraxis(dropTarget.id);
+      setInProgressPraxis(null);
+      setSubmissions((prev) => prev.filter((s) => s.id !== dropTarget.id));
       // `canSignUp` gates on `task.can_sign_up`, which the SERVER computes
       // and flips to false once you are on the task. Clearing local state alone
       // leaves that stale `false` in place, so the sign-up button stayed hidden
@@ -279,9 +376,22 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
         // banner. The stale flag clears on the next navigation.
       }
     } catch (err) {
-      setSignupError(extractError(err, "Could not drop this task."));
+      setSignupError(extractError(err, i18n.t("forms:editPraxis.errors.drop")));
     }
-  }, [task, mySubmission, inProgressPraxisId]);
+  }, [task, dropTarget]);
+
+  /** What the dispatcher draws while a drop is pending. */
+  const dropConfirm = useMemo<DropConfirmState | null>(
+    () =>
+      dropTarget === null
+        ? null
+        : {
+            request: dropConfirmFor(dropTarget),
+            onConfirm: confirmDrop,
+            onDismiss: cancelDrop,
+          },
+    [dropTarget, confirmDrop, cancelDrop],
+  );
 
   // ── Derived gameplay numbers (null-safe — run every render) ──
   const myFaction = user?.character?.faction_slug ?? null;
@@ -354,8 +464,12 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     foes,
 
     mySubmission,
-    isInProgress,
-    inProgressPraxisId,
+    // Both derived from the one row, so the pair cannot disagree. The contract
+    // keeps them because every archetype gates its in-progress block on
+    // `isInProgress && inProgressPraxisId !== null` and links to
+    // `/praxis/:id/edit`.
+    isInProgress: inProgressPraxis !== null,
+    inProgressPraxisId: inProgressPraxis?.id ?? null,
 
     canSignUp,
     levelJumpSignup,
@@ -375,5 +489,6 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     signupError,
     handleSignup,
     handleDrop,
+    dropConfirm,
   };
 }

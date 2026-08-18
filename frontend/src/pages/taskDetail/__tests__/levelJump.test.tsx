@@ -122,6 +122,7 @@ function state(overrides: Partial<TaskDetailState>): TaskDetailState {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    dropConfirm: null,
     ...overrides,
   };
 }

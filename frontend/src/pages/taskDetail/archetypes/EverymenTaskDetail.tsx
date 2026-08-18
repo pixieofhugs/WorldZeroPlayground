@@ -754,7 +754,13 @@ export default function EverymenTaskDetail({
               fontSize: "var(--text-md)",
               color: MUTED,
               textAlign: "center",
-              textDecoration: "line-through",
+              // UNDERLINE, NOT LINE-THROUGH (#2214). A struck-through word
+              // is the universal mark for something that no longer applies, so
+              // both this skin and S.N.I.D.E.'s drew the one control on the
+              // panel that IS available as the one that is not. The quiet
+              // affordance the design wanted is a rule under the word, which is
+              // what the other seven archetypes already draw.
+              textDecoration: "underline",
             }}
           >
             {t("detail.inProgress.drop")}
