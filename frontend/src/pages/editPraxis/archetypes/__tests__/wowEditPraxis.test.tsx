@@ -206,6 +206,9 @@ describe("WOW composer — copy is neutral, and the old block is GONE (ADR-0065 
     const markup = render(width);
     // No `writeUpLabel`: #2085 took that heading off the page, and the key now
     // names the editor through an aria-label a static render cannot see.
+    // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
+    // itself, so a static render still sees it. This asserts the wording is the
+    // neutral catalog's; that it is no longer DRAWN is composerRule.test.tsx's.
     for (const key of [
       "taskLabel",
       "titleLabel",

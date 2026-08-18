@@ -102,6 +102,9 @@ describe("Everymen composer copy is the neutral set (ADR-0065 §3)", () => {
     const markup = render(width);
     // No `writeUpLabel`: #2085 took that heading off the page, and the key now
     // names the editor through an aria-label a static render cannot see.
+    // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
+    // itself, so a static render still sees it. This asserts the wording is the
+    // neutral catalog's; that it is no longer DRAWN is composerRule.test.tsx's.
     for (const key of ["taskLabel", "titleLabel", "modeLabel", "proofLabel", "submit"]) {
       expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}` as never));
     }

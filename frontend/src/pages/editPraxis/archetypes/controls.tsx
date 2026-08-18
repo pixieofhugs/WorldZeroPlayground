@@ -718,6 +718,10 @@ export interface TitleFieldSkin {
    * labels as `ComposerSection` headings rather than as `<label>`s wrapping the
    * control, so the field needs an id for `htmlFor` to point at — pass the same
    * string to both and the input gets a real accessible name.
+   *
+   * No shipped skin passes this since #2179 took the visible label off all eight
+   * sheets. It stays as the seam a skin with its OWN drawn heading would use,
+   * and it is the switch below: an id means something else names this field.
    */
   id?: string;
   /** For a skin whose label is a drawn mark rather than words. */
@@ -742,6 +746,7 @@ export function TitleField({
   state: EditPraxisState;
   skin: TitleFieldSkin;
 }) {
+  const { t } = useTranslation("forms");
   const room = usePraxisRoom();
   const meta = room?.meta ?? null;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -798,14 +803,28 @@ export function TitleField({
       type="text"
       maxLength={200}
       // A praxis cannot be published without a title, and until #2093 nothing
-      // said so before the submit failed. The catalog's label carries the word
-      // (`titleLabel`); this carries the STATE, which is what a screen reader
-      // announces and what a drawn asterisk could never do. No `<form>` wraps
-      // the composer — publish is an onClick — so this adds no browser bubble
-      // and changes no validation path.
+      // said so before the submit failed. This carries the STATE, which is what
+      // a screen reader announces and what a drawn asterisk could never do. No
+      // `<form>` wraps the composer — publish is an onClick — so this adds no
+      // browser bubble and changes no validation path.
+      //
+      // #2179 reverses #2093's VISIBLE half and ONLY that half: the label came
+      // off the screen, so this attribute and `errors.titleRequired` (printed by
+      // `ErrorBanner` on submit) are now the whole of the constraint. Take
+      // either away and #2093 comes straight back.
       required
       id={skin.id}
-      aria-label={skin.ariaLabel}
+      // #2179 moved the field's NAME into the placeholder, which is not a name:
+      // it is gone the moment the field has text, and placeholder-as-name is
+      // unevenly supported. So the catalog key that WAS the visible label is the
+      // accessible name — the same route `bodyContentAttributes` takes for the
+      // write-up since #2085, and an `id` means the same thing here as there:
+      // some skin drew its own `<label htmlFor>`, so this must not name it twice
+      // from a second string that can drift.
+      aria-label={
+        skin.ariaLabel ??
+        (skin.id ? undefined : t("editPraxis.composer.titleLabel"))
+      }
       className="content-text"
       value={state.title}
       onChange={(event) => {
