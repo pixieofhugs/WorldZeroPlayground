@@ -283,12 +283,19 @@ describe('Coven praxis detail — the shared layout contract', () => {
     expect(render(state(), 'mobile').html, 'and only when crowned').not.toContain(crown)
   })
 
-  it('carries the candlelight ground on the column, never the viewport', () => {
+  it('carries the SLIP on the column, never the viewport', () => {
     // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
-    // the page. The wash is the column's own class, and index.css paints it
-    // there — nothing here may go full-bleed.
+    // the page — nothing here may go full-bleed.
+    //
+    // THE GROUND CHANGED (#2135). The column wore `.coven-candle-backdrop`, the
+    // near-black ward wash with four drifting blooms, and now wears the same
+    // four-stop sheet the task card and the praxis card do. The negative half is
+    // the load-bearing one: the class is still LIVE (`CovenFieldDesk` mounts it),
+    // so a revert here compiles, renders, and is invisible to a dead-code sweep.
     const { html } = render(state())
-    expect(html, 'the ward ground').toContain('coven-candle-backdrop')
+    expect(html, 'the slip sheet').toContain('--faction-coven-slip-from')
+    expect(html, 'the lavender end of the same ramp').toContain('--faction-coven-slip-vio')
+    expect(html, 'the ward wash is gone from this column').not.toContain('coven-candle-backdrop')
     expect(html, 'no full-viewport layer').not.toContain('position:fixed')
   })
 

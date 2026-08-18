@@ -82,11 +82,17 @@ function render(element: ReactElement): { html: string; text: string } {
 }
 
 describe("Coven task detail — the dress", () => {
-  it("draws the candlelight haze, the braid, the wheel and the ward's flicker", () => {
+  it("draws the slip sheet, the braid, the wheel and the ward's flicker", () => {
     const { html } = render(<CovenTaskDetail state={baseState()} />);
     // Each of these classes is owned by index.css, which is where the light/dark
     // flip and the reduced-motion guard live.
-    expect(html, "candlelight backdrop").toContain("coven-candle-backdrop");
+    //
+    // THE GROUND CHANGED (#2135): the column wore `.coven-candle-backdrop` and
+    // now wears the task card's own four-stop sheet. The negative assertion is
+    // the load-bearing one — that class is still live on the mobile field desk,
+    // so a revert here would render fine and survive a dead-code sweep.
+    expect(html, "the slip sheet").toContain("--faction-coven-slip-from");
+    expect(html, "the ward wash is gone from this column").not.toContain("coven-candle-backdrop");
     expect(html, "braided thread rules").toContain("cvn-braid");
     expect(html, "turning pentagram watermark").toContain("cvn-wheel");
     expect(html, "the ward's breathing aura").toContain("cvn-candle");
