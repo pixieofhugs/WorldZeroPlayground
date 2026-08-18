@@ -723,6 +723,12 @@
     },
     "SegmentedRail": {
       "cardMode": "column"
+    },
+    "FeedCardCollabInvite": {
+      "cardMode": "column"
+    },
+    "EphemeristsSeal": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",
