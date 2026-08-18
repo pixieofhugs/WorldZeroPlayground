@@ -560,3 +560,36 @@ lists doubles the cost for nothing.
   authorable previews on any later re-sync, starting points for whoever wants them.
 - `AuthCard` renders real but PLACEHOLDER copy ("PLACEHOLDER — the title of the sign-in
   stop"). That is the onboarding component's own unfinished i18n, not a sync defect.
+
+### [2026-08-17, second pass] Main moved 14 commits mid-run — re-synced before the PR
+
+Between the first upload and opening the PR, `origin/main` advanced 14 commits. Re-syncing
+caught a rename that would otherwise have shipped stale, so **always re-check `origin/main`
+immediately before the PR, not just at the start.**
+
+- **Main maintains `.design-sync/` itself.** Those commits touched `config.json` (renaming
+  `VoteSummary` → `VoteError`, following `VoteShell.tsx`'s exports) AND six
+  `previews/*FactionHero.tsx` plus `_fixtures.tsx` / `_state.tsx`. **Merge, never
+  overwrite** — `git merge origin/main` auto-merged the config cleanly (my 27 additions +
+  their rename, still 268).
+- **`frontend/.ds-kit/index.tsx` conflicts on every such merge and that is fine** — it is
+  GENERATED. Resolve by re-running `gen-barrel.mjs` against the merged config, never by
+  hand-editing the conflict markers.
+- Diff after the merge: **261 unchanged / 6 changed / 1 added (VoteError) / 1 removed
+  (VoteSummary)**, 6 deletePaths. The 6 changed are the `*FactionHero` skins — main's
+  wordmark-wrap work. `EVERYMEN` now sets on one line instead of clipping; graded good.
+- **Canary fired with `trigger: render_churn`** over 47 components and picked 5 sheets
+  (AlbescentPraxisCard, SnidePraxisCard, SnideTaskDetail, EphemeristsFieldDesk, ScoreStamp).
+  Spot-checked ScoreStamp across all 9 faction stamps — arithmetic and skins intact, no
+  divergence, so carried-forward grades stand. That is the expected outcome of pipeline
+  churn; only re-grade if the sampled sheets actually diverge.
+- Render check identical to pass one: 268 total, the same 3 triaged blank-threshold
+  components, the same 21 warns.
+
+**Upload was deliberately SCOPED this pass** — 56 components + previews + bundle + styling,
+not the full 1,271. Justification, which must ALL hold before doing this again: the remote
+had just been verified a 0-missing mirror of the anchor being diffed against; `upload.components`
+is sourceHashes-based, so the other 212 were provably byte-identical; and no font or vendor
+source changed (`git diff` over the range showed nothing under `assets/fonts`). Post-upload
+`list_files`: **0 missing, 0 converter-owned extras.** If any of those premises is not
+verifiable, fall back to §5's full-writes default — it is the safe one.
