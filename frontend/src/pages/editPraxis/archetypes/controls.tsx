@@ -380,6 +380,10 @@ export function InviteSearch({
       <div style={{ position: "relative" }}>
         <input
           type="text"
+          // The composer's shared focus ring selects on this (#2266). See the
+          // rule in index.css for why it is one attribute rather than a class
+          // and why the ring is `currentColor`.
+          data-composer-field
           // Opened by the chip, so it takes the caret with it — the click that
           // asked for a search box is not also a request to go and find it.
           autoFocus={pickerOpen}
@@ -404,7 +408,6 @@ export function InviteSearch({
             background: skin.inputBg ?? "transparent",
             color: skin.inputColor ?? "inherit",
             border: skin.inputBorder ?? "1px solid currentColor",
-            outline: "none",
           }}
           onFocus={() => {
             if (state.inviteResults.length > 0) state.setInviteOpen(true);
@@ -826,6 +829,10 @@ export function TitleField({
         (skin.id ? undefined : t("editPraxis.composer.titleLabel"))
       }
       className="content-text"
+      // The composer's shared focus ring selects on this (#2266) — one rule in
+      // index.css for all eight skins, in place of the eight inline
+      // `outline: none` declarations that used to sit in every `fieldBox`.
+      data-composer-field
       value={state.title}
       onChange={(event) => {
         const next = event.target.value;

@@ -245,7 +245,6 @@ export default function SingularityEditPraxis({ state }: Props) {
     borderRadius: RADIUS,
     padding: "var(--space-md)",
     fontFamily: FACE,
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 

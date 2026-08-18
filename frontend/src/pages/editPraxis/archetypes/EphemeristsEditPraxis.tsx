@@ -293,7 +293,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     border: `1.5px solid ${LINE}`,
     borderRadius: 0,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 
