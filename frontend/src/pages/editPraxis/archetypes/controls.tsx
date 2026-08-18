@@ -71,8 +71,12 @@ export interface InviteSearchSkin {
  *
  * The circle is `RosterAvatar` at 52 rather than a third avatar idiom, and it
  * takes the SIDE's own faction — a duel is the one surface two factions share,
- * and the monogram is who is speaking. That is the same call the waiting
+ * and the face is who is speaking. That is the same call the waiting
  * surface's `SideAvatar` makes at 28.
+ *
+ * It draws the side's PORTRAIT and falls back to the monogram (#2128): this is
+ * the surface the report screenshotted, two initials where two faces belong.
+ * `DuelSideOut.avatar_url` was already on the wire; the pair just never read it.
  *
  * The filing word is `duelPill*`, the pair the waiting surface already speaks:
  * one fact, one wording. The design labelled these "Submitted" / "Not yet
@@ -96,6 +100,7 @@ function DuelPairSide({
     <div className="flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
       <RosterAvatar
         name={side.display_name}
+        avatarUrl={side.avatar_url}
         size={DUEL_PAIR_AVATAR_SIZE}
         background={factionCssVar(side.faction_slug, "light")}
         borderColor={factionCssVar(side.faction_slug, "border")}

@@ -19,6 +19,7 @@ import {
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
+import { mediaUrl } from "../../../utils/media";
 import {
   PraxisAdminBar,
   PraxisStatusBanners,
@@ -26,7 +27,7 @@ import {
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
-  orderedMembers,
+  bylineFaces,
   scoreWasBanked,
   taskRefMeta,
 } from "../shared";
@@ -230,7 +231,15 @@ function initials(name: string): string {
  * Deliberately NOT ringed with the ensō: the mark is reserved for the score and
  * the faction mark, and an avatar ring is neither (§6/#849).
  */
-function LeafDisc({ name, size }: { name: string; size: number }) {
+function LeafDisc({
+  name,
+  avatarUrl,
+  size,
+}: {
+  name: string;
+  avatarUrl: string;
+  size: number;
+}) {
   return (
     <span
       aria-hidden
@@ -251,7 +260,16 @@ function LeafDisc({ name, size }: { name: string; size: number }) {
         boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
       }}
     >
-      {initials(name)}
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{ display: "block", width: "100%", height: "100%" }}
+        />
+      ) : (
+        initials(name)
+      )}
     </span>
   );
 }
@@ -266,7 +284,6 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // Guarded non-null by the dispatcher.
   if (!praxis) return null;
 
-  const members = orderedMembers(praxis);
   // A collab is a collab at ONE member (#1274). This used to read
   // `members.length > 1`, which hid the whole Members section from a collab
   // nobody had joined yet while the heading still counted them. Tested
@@ -463,13 +480,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         {/* Stacked discs, one per member. A payload with no member rows still
             credits its creator, so the author is always reachable from here. */}
         <span style={{ display: "flex", alignItems: "center" }}>
-          {(members.length > 0
-            ? members.map((member) => ({
-                id: member.character_id,
-                name: member.character_display_name || `#${member.character_id}`,
-              }))
-            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
-          ).map((author, index) => (
+          {bylineFaces(praxis).map((author, index) => (
             <Link
               key={author.id}
               to={`/characters/${author.id}`}
@@ -481,7 +492,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 zIndex: index,
               }}
             >
-              <LeafDisc name={author.name} size={size.disc} />
+              <LeafDisc
+                name={author.name}
+                avatarUrl={author.avatarUrl}
+                size={size.disc}
+              />
             </Link>
           ))}
         </span>

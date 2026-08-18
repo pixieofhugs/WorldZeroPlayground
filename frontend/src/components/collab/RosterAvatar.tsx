@@ -12,7 +12,15 @@
  * muted ink otherwise, dashed while an invite is unanswered); the duel side
  * paints the SIDE's faction, never the page's. One component cannot know which,
  * and guessing is what would have made it a third idiom instead of a shared one.
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2128). Pass `avatarUrl` and
+ * the circle wears the face; the monogram is what an absent portrait falls back
+ * to. Both duel surfaces route through here, so the rule is written once —
+ * `avatarUrl` answers only WHAT to draw, never WHETHER there is a person to
+ * draw, which is why it is optional and an empty string is a portrait-less
+ * person rather than no person at all.
  */
+import { mediaUrl } from '../../utils/media'
 import { rosterInitials } from './rosterRows'
 
 export function RosterAvatar({
@@ -22,6 +30,7 @@ export function RosterAvatar({
   borderColor,
   dashed = false,
   color,
+  avatarUrl,
 }: {
   /** Display name; the monogram is derived, never passed in. */
   name: string
@@ -32,7 +41,29 @@ export function RosterAvatar({
   /** An unanswered invite is drawn as a dashed outline, like its status pill. */
   dashed?: boolean
   color?: string
+  /** The person's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null
 }) {
+  if (avatarUrl) {
+    return (
+      <img
+        aria-hidden="true"
+        alt=""
+        src={mediaUrl(avatarUrl)}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          flexShrink: 0,
+          objectFit: 'cover',
+          // The ring is the caller's state read (faction, done, unanswered), so
+          // the portrait keeps wearing it exactly as the monogram did.
+          border: `1px ${dashed ? 'dashed' : 'solid'} ${borderColor}`,
+          boxSizing: 'border-box',
+        }}
+      />
+    )
+  }
   return (
     <span
       aria-hidden="true"

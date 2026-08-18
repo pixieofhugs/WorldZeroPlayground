@@ -284,6 +284,9 @@ function SideAvatar({ side }: { side: DuelSideOut }) {
   return (
     <RosterAvatar
       name={side.display_name}
+      // The portrait, with the monogram as the fallback (#2128) — the same read
+      // the composer's duel pair makes at 52, through the same leaf.
+      avatarUrl={side.avatar_url}
       size={28}
       // The SIDE's own faction, never the page's: a duel is the one place two
       // factions share a surface, and the avatar is who is speaking.
