@@ -160,14 +160,20 @@ export default function ActivityTicker() {
           className="label-heading"
           style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-coven)' }}
         >
+          {/* The blink is a CLASS, never an inline `animation:` — a style
+              attribute is not in a stylesheet, so nothing can wrap it in the
+              reduced-motion gate and the dot pulsed forever for a reader who
+              asked for none (#2104). Geometry stays inline; only the motion
+              travels. Stilled, the dot is still drawn and the word LIVE beside
+              it carries the meaning on its own. */}
           <span
+            className="ticker-live-dot"
             style={{
               width: 7,
               height: 7,
               borderRadius: '50%',
               background: 'var(--faction-coven)',
               display: 'inline-block',
-              animation: 'wz-blink 1.4s ease-in-out infinite',
             }}
           />
           {t('ticker.live')}
@@ -188,13 +194,22 @@ export default function ActivityTicker() {
       />
 
       {/* Scrolling row */}
+      {/* Same reason as the dot, and the louder half of it: a 90s infinite
+          translate on the homepage is exactly what someone sets the preference
+          to stop, and an inline `animation:` ran it regardless (#2104).
+          ponytail: stilled, the strip shows its leading cards and no more —
+          the marquee is the only way to reach the rest of them. That is the
+          state a reduced-motion reader now gets, and the full list is a click
+          away on the activity feed. If it ever needs to be reachable without
+          motion, the upgrade is `overflow-x: auto` on the clipping parent
+          under `prefers-reduced-motion: reduce`, not an ungated animation. */}
       <div
+        className="ticker-roll"
         style={{
           display: 'inline-flex',
           gap: 'var(--space-md)',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: clears the absolutely-positioned LIVE badge + its gradient mask; the nearest rungs (64/96) either tuck the first card under the badge or leave a visible hole.
           paddingLeft: 84,
-          animation: 'ticker-roll 90s linear infinite',
           willChange: 'transform',
         }}
       >

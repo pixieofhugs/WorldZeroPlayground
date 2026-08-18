@@ -572,6 +572,32 @@ function isBareFactionHue(node, sourceCode) {
   }
 }
 
+// The MOTION arm (#2104). Not an off-scale value like the px arm's, nor an
+// off-theme one like the colour arm's: this is an ACCESSIBILITY escape.
+// `@media (prefers-reduced-motion: no-preference)` is a property of a
+// STYLESHEET, and a style attribute is not in one — so an inline `animation:`
+// names a keyframe from the one place the gate provably cannot reach, and runs
+// forever for a reader who asked for no motion. #911 consolidated four blink
+// keyframes into `wz-blink` so the gate could be enforced in one place;
+// `ActivityTicker.tsx` reached that keyframe from outside the structure and got
+// the keyframe without the guard. Same class as the `<style>` injection
+// `__tests__/noInjectedStylesheets.test.ts` already forbids, one property down.
+//
+// Only the two properties that NAME a keyframe. `animationDelay` /
+// `animationDuration` are inert on their own — nothing animates until a gated
+// class supplies `animation-name` — and a per-element beat is the one thing
+// that legitimately varies per instance, which is why `LevelUpPopup`'s
+// confetti, `praxisCard/shared.tsx`'s sparks and `EverymenTaskCard`'s arcs all
+// write it inline. `transition` is deliberately absent: it runs once, bounded,
+// on a state change the reader caused, names no keyframe and so pins nothing to
+// the critical path — and ~70 of them here ease a colour. That would be a
+// different change with a different argument.
+//
+// Its OWN rule id, for the mechanical reason spelled out above the colour arm:
+// the ratchet turns a whole RULE off per file, so sharing an id would let a
+// legacy list silently un-ratchet this one.
+const INLINE_MOTION_PROPS = new Set(['animation', 'animationName'])
+
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
@@ -603,6 +629,30 @@ const noRawStyleValues = {
                   'Arbitrary Tailwind spacing utility (e.g. `mt-[6px]`) — use a scale class such as `mt-2`. The value is raw spacing wearing a class name.',
               })
             }
+          },
+        }
+      },
+    },
+    // The motion arm (#2104). See INLINE_MOTION_PROPS above for what it reads
+    // and, just as deliberately, what it does not.
+    'no-inline-animation': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow inline `animation` / `animationName` — a style attribute cannot be wrapped in @media (prefers-reduced-motion: no-preference), so the motion escapes the gate (#911, #2104).',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Property(node) {
+            const name = propertyName(node)
+            if (!name || !INLINE_MOTION_PROPS.has(name)) return
+            context.report({
+              node,
+              message: `Inline "${name}" names a keyframe where @media (prefers-reduced-motion: no-preference) cannot reach it, so it runs for readers who asked for no motion. Move it to a class inside that gate in index.css — or motion.ornament.css if the motion is ornament — and leave only the per-element animationDelay inline.`,
+            })
           },
         }
       },
@@ -818,6 +868,10 @@ export default [
       ],
       'local/no-raw-style-values': 'error',
       'local/no-raw-colour-values': 'error',
+      // The motion arm needs no path glob and gets no legacy list: it reported
+      // exactly two sites when it was written, both in ActivityTicker.tsx, and
+      // #2104 fixed both in the same change (#2104).
+      'local/no-inline-animation': 'error',
       // The polarity arm needs no path glob — a bare spine hue is never an ink
       // on any surface — so unlike the tier arm it registers here (#2077).
       'local/no-faction-hue-as-ink': 'error',
