@@ -12,7 +12,7 @@ import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from "../factionMarks/uaAtoms";
 import * as coven from "../factionMarks/covenSlip";
-import { SnideSigil } from "../factionMarks/snideAtoms";
+import { SnideSigil } from "../sigil/SnideSigil";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import * as eph from "../factionMarks/ephemeristsPlate";
 import { SingularitySigil } from "../sigil/SingularitySigil";
