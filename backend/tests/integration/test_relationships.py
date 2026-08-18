@@ -1,11 +1,8 @@
 """Integration tests for /relationships endpoints."""
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
-from models.character_block import CharacterBlock
 
 
 # ---------------------------------------------------------------------------
@@ -131,126 +128,27 @@ async def test_list_relationships_unauthenticated(client: AsyncClient):
 
 
 # ---------------------------------------------------------------------------
-# Block relationship
+# The retired edge-addressed block shims (#2021)
 # ---------------------------------------------------------------------------
 
 
-# The two edge-addressed routes below are the ADR-0009 shape, kept for one
-# release while the client moves to /relationships/blocks (#1907). They write
-# the ADR-0077 record like everything else — what is asserted here is that they
-# still answer, that they no longer touch the edge, and that the guards on the
-# path (404, 403) survive the reimplementation.
-
-
 @pytest.mark.asyncio
-async def test_block_by_edge_id_writes_the_record_and_leaves_the_edge_alone(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    """A block outranks an active edge; it does not consume one (ADR-0077)."""
-    create_resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
-        headers=auth_headers,
-    )
-    relationship_id = create_resp.json()["id"]
-
-    block_resp = await client.put(
-        f"/relationships/{relationship_id}",
-        headers=auth_headers,
-    )
-
-    assert block_resp.status_code == 200
-    assert block_resp.json()["status"] == "active"
-    assert block_resp.json()["display_status"] == "One-sided Friend"
-    blocks = (await db_session.execute(select(CharacterBlock))).scalars().all()
-    assert [(b.blocker_character_id, b.blocked_character_id) for b in blocks] == [
-        (character.id, character2.id)
-    ]
-
-
-@pytest.mark.asyncio
-async def test_unblock_by_edge_id_deletes_the_record(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-):
-    create_resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
-        headers=auth_headers,
-    )
-    relationship_id = create_resp.json()["id"]
-    await client.put(f"/relationships/{relationship_id}", headers=auth_headers)
-
-    unblock_resp = await client.post(
-        f"/relationships/{relationship_id}/unblock",
-        headers=auth_headers,
-    )
-
-    assert unblock_resp.status_code == 200
-    assert (await db_session.execute(select(CharacterBlock))).scalars().all() == []
-
-
-@pytest.mark.asyncio
-async def test_the_target_cannot_lift_the_declarers_block(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """ADR-0009 let either party unblock, because they shared one row. ADR-0077
-    gives the record's authorship to the blocker alone — and the target's call
-    still answers 200, because a refusal here would name the block."""
-    create_resp = await client.post(
-        "/relationships",
-        json={"to_character_id": character2.id, "type": "friend"},
-        headers=auth_headers,
-    )
-    relationship_id = create_resp.json()["id"]
-    await client.put(f"/relationships/{relationship_id}", headers=auth_headers)
-
-    unblock_resp = await client.post(
-        f"/relationships/{relationship_id}/unblock",
-        headers=auth_headers2,
-    )
-
-    assert unblock_resp.status_code == 200
-    assert len((await db_session.execute(select(CharacterBlock))).scalars().all()) == 1
-
-
-@pytest.mark.asyncio
-async def test_unblock_relationship_non_party_forbidden(
+async def test_the_edge_addressed_block_doors_are_gone(
     client: AsyncClient,
     character: Character,
     character2: Character,
     auth_headers: dict,
 ):
-    """A non-existent relationship returns 404 (no edge to unblock)."""
-    resp = await client.post(
-        "/relationships/999999/unblock",
-        headers=auth_headers,
-    )
-    assert resp.status_code == 404
+    """``PUT /relationships/{id}`` and ``POST /relationships/{id}/unblock`` were
+    the ADR-0009 shape. #1906 reimplemented them over the new record and #1907
+    moved the client off them; they were then held one release so a browser on
+    the pre-deploy bundle still had a door, because `main` auto-deploys. That
+    window has passed and #2021 closed them — a block is addressed by character
+    now, never by edge (ADR-0077), and `/relationships/blocks` is the only door.
 
-
-@pytest.mark.asyncio
-async def test_a_third_party_cannot_act_on_someone_elses_edge(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    character3: Character,
-    auth_headers: dict,
-    auth_headers3: dict,
-):
-    """The 403 guard on the dyad still holds: character3 is not a party to it."""
+    The PUT answers 405 because ``DELETE /relationships/{relationship_id}``
+    still occupies that path; the unblock path matches no route at all.
+    """
     create_resp = await client.post(
         "/relationships",
         json={"to_character_id": character2.id, "type": "friend"},
@@ -259,14 +157,14 @@ async def test_a_third_party_cannot_act_on_someone_elses_edge(
     relationship_id = create_resp.json()["id"]
 
     blocked = await client.put(
-        f"/relationships/{relationship_id}", headers=auth_headers3
+        f"/relationships/{relationship_id}", headers=auth_headers
     )
     unblocked = await client.post(
-        f"/relationships/{relationship_id}/unblock", headers=auth_headers3
+        f"/relationships/{relationship_id}/unblock", headers=auth_headers
     )
 
-    assert blocked.status_code == 403
-    assert unblocked.status_code == 403
+    assert blocked.status_code == 405
+    assert unblocked.status_code == 404
 
 
 # ---------------------------------------------------------------------------

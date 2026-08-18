@@ -67,6 +67,27 @@ async def test_game_config_omits_rules_no_client_reads(client: AsyncClient):
         assert "can_always_rejoin" not in faction
 
 
+@pytest.mark.asyncio
+async def test_game_config_carries_the_array_flag(client: AsyncClient):
+    """`reads_the_array` reaches the client, because the CLIENT is the gate (#1869).
+
+    Singularity's perk is entirely browser-side — the console prints config the
+    payload already carries — so unlike `can_always_rejoin` above, which was
+    withdrawn for having no reader, this flag exists precisely to have one. The
+    neat part is that it rides in the very payload the perk prints.
+
+    Anonymous on purpose: there is nothing to withhold here and no auth to gate
+    on, which is the whole reason no server-side enforcement door was added.
+    """
+    data = (await client.get("/game-config")).json()
+    served = {faction["slug"]: faction["reads_the_array"] for faction in data["factions"]}
+
+    assert served == {
+        slug: faction.reads_the_array for slug, faction in CURRENT_ERA.factions.items()
+    }
+    assert served["singularity"] is True
+
+
 # ---------------------------------------------------------------------------
 # The secret-society rung over the wire (#1891)
 # ---------------------------------------------------------------------------

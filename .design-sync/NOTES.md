@@ -79,7 +79,6 @@ cannot produce, and an `EditPraxisState` builder 28 fields behind.
   element-screenshot is blank.
 
 ## Known render warns (triaged legitimate — not new issues on re-sync)
-- `SnideMasthead` is a thin header strip (wordmark + acid underline) — renders slim by design.
 - LevelPill / small avatars / sigils are intentionally tiny; previews compose several per cell.
 - `[FONT_REMOTE]` on the faction families — expected (loaded via the Google-Fonts `@import`).
 - esbuild prints `Duplicate key "invitation"` for `factions.json` — see Re-sync risks.

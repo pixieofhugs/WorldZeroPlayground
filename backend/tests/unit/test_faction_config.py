@@ -182,13 +182,20 @@ def test_all_factions_flat_cross_faction_modifiers():
         assert config.collab_other_modifier == 1.0, slug
 
 
-def test_singularity_holds_no_perk_on_any_axis():
-    """Singularity's invitation letter promises nothing because it HAS nothing.
+def test_singularity_holds_exactly_one_perk_and_it_is_the_array():
+    """Singularity's whole deal is `reads_the_array`, and the emptiness AROUND it.
 
-    #1869 tracks giving it a mechanic. Until then the copy deliberately offers
-    no perk rather than inventing one, so the emptiness is pinned here as the
-    *expected* value on every axis a perk can live on. The day Singularity gains
-    one, this fails and the placeholder copy gets replaced in the same breath.
+    This test used to be ``test_singularity_holds_no_perk_on_any_axis`` and said
+    the letter promises nothing because it HAS nothing. #1869 gave it something
+    — and gave it deliberately on the ONE axis that moves no number: the array
+    grants information, never score, modifier or gate (#1869 ruling 1, which is
+    why an Era 1 ship was safe).
+
+    So the emptiness stays pinned, and that is not leftover rigour. The joke the
+    perk runs on is that the array prints every faction's modifiers and
+    Singularity's own row is the era baseline — its perk is being the faction
+    that can see its slot is blank. A future era file quietly handing it a
+    multiplier would smooth that away, and this is what notices.
     """
     config = ERA_1.factions["singularity"]
 
@@ -205,13 +212,28 @@ def test_singularity_holds_no_perk_on_any_axis():
     assert config.habit_bonus_points == 0
 
     # Held-or-not perks, read off the registry so a perk field classified later
-    # is covered here the day it is added rather than silently skipped.
+    # is covered here the day it is added rather than silently skipped. The
+    # array is the single exception, named rather than excluded by index.
+    assert config.reads_the_array is True
     for name in _ANY_PERK_FIELDS:
+        if name == "reads_the_array":
+            continue
         assert getattr(config, name) is False, name
 
     # Perks have TWO homes (#1871) — Task Vision is an EraConfig frozenset, not
     # a FactionConfig field, and an audit reading only the dataclass misses it.
     assert "singularity" not in ERA_1.allow_praxis_on_retired_task_factions
+
+
+def test_the_array_is_singularity_and_its_inheritor_only():
+    """Nobody else reads the array in Era 1 (#1869).
+
+    Albescent holds it because it holds EVERY other faction's perk (#1871), not
+    because anything here names it — which is the point of asserting against the
+    derived inheritor set rather than a literal ``{"singularity", "albescent"}``.
+    """
+    readers = {slug for slug, config in ERA_1.factions.items() if config.reads_the_array}
+    assert readers == {"singularity"} | INHERITORS
 
 
 def test_na_sentinel():

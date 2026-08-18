@@ -46,10 +46,11 @@ const ELIGIBILITY_ON = 'canSignUp'
  * The eligibility rail (#1130) is gated on carrying a CHARACTER (#1972): the
  * server answers `[]` for an anonymous viewer, so it is a control that cannot
  * work logged out, and this page hides unusable controls rather than disabling
- * them (STYLE §1.4). It is also the one rail that does not open on its
- * `defaultValue` — the filter defaults ON for a character, which raises its
- * applied chip in the bar, and that chip's `×` is the one-tap way back to the
- * whole board.
+ * them (STYLE §1.4). It is also the one rail that need not open on its
+ * `defaultValue` — the filter defaults ON for a LEVEL-0 character (#2025),
+ * which raises its applied chip in the bar, and that chip's `×` is the one-tap
+ * way back to the whole board. For every other player it opens on
+ * `defaultValue` like the rest of the bar.
  * Status keeps its viewer-gated segment count for the same reason — `retired`
  * and `pending` are a permission boundary, and a logged-out viewer gets two
  * segments, not four.

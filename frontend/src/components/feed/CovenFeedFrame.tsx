@@ -19,10 +19,11 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * wearing it. Two things follow, and both are deliberate:
  *   - the `--faction-coven-win-*` / `-notepad-*` tokens are NOT deleted — other
  *     surfaces still paint with them (index.css says so at the family's head);
- *   - `feed:identity.coven.windowTitle` ("coven.exe") is no longer read here. It
- *     is still read by `FactionCard` and `FactionSelectCard`, so nothing is
- *     orphaned — and epic #1192 decision 5 forbids a faction-name label on this
- *     surface anyway. The skin is the identification.
+ *   - `feed:identity.coven.windowTitle` ("coven.exe") is no longer read here —
+ *     nor anywhere else: #1909's copy audit ruled the slot generic and deleted
+ *     the key, and #2024 took the last surface that had held a copy of it. Epic
+ *     #1192 decision 5 forbids a faction-name label on this surface anyway. The
+ *     skin is the identification.
  *
  * WHAT THIS OWNS, AND ONLY THIS (the three-layer seam, #1194):
  *   FeedItemSlot      the archive — the ✕, the swipe, the write, the 6s undo

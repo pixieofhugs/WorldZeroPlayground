@@ -29,13 +29,11 @@ const UaTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/
 const UaVote = lazyArchetype(() => import('../components/vote/UaVote'))
 const UaPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/UaPraxisCard'))
 const UaSigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.UaSigilAdapter })))
-const UaCard = lazyArchetype(() => import('../components/factionCard/FactionCard').then((m) => ({ default: m.UaCard })))
 const UaSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.UaSelectCard })))
 
 export const UA_MANIFEST: FactionManifest = {
   slug: 'ua',
 
-  factionCard: () => UaCard,
   factionSelectCard: () => UaSelectCard,
   taskCard: () => UaTaskCard,
   praxisCard: () => UaPraxisCard,

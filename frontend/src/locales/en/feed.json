@@ -198,15 +198,6 @@
     "signup": "Sign up",
     "mastheadLink": "{{faction}} faction page"
   },
-  "factionCard": {
-    "status": {
-      "member": "MEMBER",
-      "invited": "INVITED",
-      "burned": "BURNED",
-      "welcomeBack": "WELCOME BACK"
-    },
-    "newInvitation": "NEW INVITATION"
-  },
   "factionHero": {
     "stats": {
       "tasks": "Tasks open",

@@ -28,7 +28,7 @@
  * only the surfaces in WOW_SKINNED are claimed, the rest fall back, WOW resolves
  * its own hue, and it still has a name and description of its own.
  *
- * RE-SCOPED, NOT DELETED (#951, the `factionCard` bill). The docblock used to
+ * RE-SCOPED, NOT DELETED (#951's last bill). The docblock used to
  * say "delete or re-scope this file when WOW's remaining surfaces ship"; they
  * have all shipped, and WOW_SKINNED is now every key in SURFACE_KEYS. The
  * completeness half of the file is therefore a stronger statement than it was
@@ -98,15 +98,14 @@ function Sentinel() {
  * ADR-0078 has since retired, and the copy was already sitting unread in
  * `factions.json` from #900. It serves both form factors now.
  *
- * and `factionCard` — THE MUSTER BILL, the last of #951's four and the surface
- * that closed it. Bunting across the head, the googly crown struck on a cream
- * plate, a wavy gold→plum rule and a still balloon bunch in the corner, over the
- * chronicle parchment. Derived rather than drawn, like the three above it: the
- * ornaments come from `wowOrnament` and the content slots from the six cards
- * that already existed, and it adds not one copy key — #1909's audit ruled this
- * surface's words generic and deleted every per-faction string on it, so the
- * card says the shared four (name, description, standing, invitation) in WOW's
- * dress and nothing else.
+ * #951's FOURTH bullet, `factionCard`, is absent from the list below and there
+ * is no WOW gap behind it: #2024 RETIRED THE SURFACE. The dispatcher had never
+ * had a production mount — #422 replaced the faction directory grid with
+ * `FactionSelectCard` on both form factors — so the muster bill was seven skins
+ * maintained for a `/design-sync` preview cell. The key is gone from
+ * SURFACE_KEYS, which is why the loop below no longer walks it: the row follows
+ * the surviving surface, and a retired surface leaves nothing to pin. That is
+ * the same move ADR-0056/0058/0061/0065/0078 made five times over.
  *
  * SO THE SET IS NOW EXHAUSTIVE, and that is what this file records. #951 is
  * closed and there is no pending list left in either guard. #899/#900/#840 had
@@ -115,9 +114,9 @@ function Sentinel() {
  * would be invention), but the owner ruled (2026-07-23) that a faction missing a
  * custom experience is a bug regardless, and ruled again (2026-08-16) that a
  * surface with no sheet gets DERIVED rather than left generic. The set shrank
- * four times, each in the same commit as its skin: `taskDetail` in #1037,
- * `praxisDetail` in #1121, `factionBody` with the muster page and `factionCard`
- * with the bill.
+ * three times, each in the same commit as its skin — `taskDetail` in #1037,
+ * `praxisDetail` in #1121 and `factionBody` with the muster page — and emptied
+ * when #2024 retired `factionCard` rather than skinning it.
  *
  * WHAT THE FALL-BACK BRANCH IS STILL FOR. Nothing is unclaimed today, so the
  * `else` below does not run — it is the contract a NEW surface key lands on. A
@@ -153,7 +152,6 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'duelSeal',
   'mobileFieldDesk',
   'metataskSeal',
-  'factionCard',
 ])
 
 describe('wow is fully skinned: every surface the manifest declares is claimed', () => {

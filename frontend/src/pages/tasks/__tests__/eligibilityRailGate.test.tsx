@@ -38,12 +38,18 @@ const BASE_VIEWER: CurrentUser = {
   era_name: 'Era 1',
   level_jump_reach: 0,
   level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
 }
 
-/** The brand-new player the default exists for: level 0, one startable task. */
+/**
+ * The brand-new player the default exists for: level 0, one startable task —
+ * which since #2025 is exactly the viewer the server sets
+ * `task_browse_defaults_to_eligible` for.
+ */
 const WITH_CHARACTER: CurrentUser = {
   ...BASE_VIEWER,
   character: { level: 0, faction_slug: 'na' } as never,
+  task_browse_defaults_to_eligible: true,
 }
 
 function mkState(user: CurrentUser | null, canSignUp: boolean): TasksState {

@@ -1,25 +1,31 @@
 /**
  * Membership relocation guard (issue #347).
  *
- * The Factions GRID is a directory of pure preview cards: the whole card links
- * to the faction detail page and carries NO membership controls. All Join /
- * Leave / Accept / Decline actions live on the detail page's membership block.
+ * The Factions GRID is a directory: a tile visits the faction's detail page, and
+ * all Join / Leave / Accept / Decline actions live on that page's membership
+ * block. This test pins the half of that split which is still testable here —
+ * the detail-page membership block renders the Join CTA for an eligible viewer
+ * and hides it for a viewer with no join affordance ("none"), which is exactly
+ * the state the hook resolves for UA (graduation-gated, no chosen-join flow).
  *
- * This test pins that split:
- *   1. A grid FactionCard renders no interactive controls (no <button>).
- *   2. The detail-page membership block renders the Join CTA for an eligible
- *      viewer, and hides it for a viewer with no join affordance ("none") —
- *      which is exactly the state the hook resolves for UA (graduation-gated,
- *      no chosen-join flow).
+ * THE GRID HALF LOST ITS SUBJECT (#2024). It asserted that a `FactionCard`
+ * rendered no `<button>` and was wrapped in a link to the detail page. That
+ * dispatcher is gone: #422 had already replaced the directory grid with
+ * `FactionSelectCard` on both form factors, so the card this file rendered had
+ * had no production mount for a long time and #2024 retired the surface. The
+ * claim does not transfer verbatim — every select tile draws a `<button>`, its
+ * visit CTA — so a repointed assertion would have been a new claim wearing an
+ * old issue number. What replaces it is the tile's PROP SURFACE:
+ * `FactionSelectCardProps` offers `onVisit` and no membership callback at all,
+ * and `pages/Factions.tsx` wires it to `navigate('/factions/:slug')`. There is
+ * nothing for a join control on that tile to call.
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter, Link } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
-import FactionCard from "../../components/factionCard/FactionCard";
 import EverymenFactionBody from "../factionDetail/archetypes/EverymenFactionBody";
 import type { FactionDetailState, Membership } from "../factionDetail/useFactionDetail";
 import type { FactionOut } from "../../api/factions";
-import { factionName } from "../../utils/factions";
 
 // Faction name/description prose is no longer on FactionOut (issue #461) — the
 // display copy resolves from the factions.json catalog by slug.
@@ -32,45 +38,7 @@ function html(node: React.ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 }
 
-/** Tag-stripped text — some archetypes split the name across spans (the
- *  Ephemerists' lapis last word), so the name only reads contiguously here. */
-function text(node: React.ReactElement): string {
-  return html(node).replace(/<[^>]*>/g, "");
-}
-
-// ─── 1. Grid card is a pure preview (no interactive controls) ─────────────────
-
-describe("faction grid card is a pure preview", () => {
-  // The `null` slug is deliberate: it pins that the grid card survives a
-  // missing slug. FactionOut.slug is `string`, so feed it through as such —
-  // the cast is the narrow escape hatch, not a behavior change.
-  for (const slug of ['__unregistered__', 'na', null] as (string | null)[]) {
-    it(`${slug} card renders the name but no membership buttons`, () => {
-      const card = (
-        <FactionCard
-          faction={{ ...FACTION, slug } as FactionOut}
-          status="eligible"
-        />
-      );
-      expect(text(card), "faction name renders").toContain(factionName(slug));
-      expect(html(card), "no interactive controls on the grid card").not.toContain(
-        "<button",
-      );
-    });
-  }
-
-  it("is wrapped in a link to the faction detail page (grid usage)", () => {
-    // Mirrors how Factions.tsx wraps each card; the whole card is the link.
-    const markup = html(
-      <Link to="/factions/everymen">
-        <FactionCard faction={FACTION} status="eligible" />
-      </Link>,
-    );
-    expect(markup).toContain('href="/factions/everymen"');
-  });
-});
-
-// ─── 2. Detail-page membership block ──────────────────────────────────────────
+// ─── Detail-page membership block ──────────────────────────────────────────
 
 function stateWith(membership: Partial<Membership>): FactionDetailState {
   return {
