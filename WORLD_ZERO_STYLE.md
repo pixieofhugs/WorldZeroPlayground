@@ -1143,6 +1143,14 @@ The rune strips bracketing that button marched thirty-two marks in a fixed order
 
 **One generator, in the kit.** #2143 wrote FNV-1a + mulberry32 inside the notation band; the second reader moved it to `ephemeristsPlate`. A second copy of a PRNG can be tuned in one file and not the other and **the drift is invisible, because both rows still look random** — which is why the guard for it is a source-tree assertion on the magic constant rather than anything you could see.
 
+### An ornament that REPLACES another is not shipped until the other is deleted (#2210)
+
+#2143 hung the notation band under the Ephemerists wordmark *in place of* the datum row, and retired none of the astro/alchemical glyph register the faction had been marching across the same bands. Both drew. The owner found it by looking: *"the task detail and praxis detail pages didn't remove the old runes before putting on new runes"*, *"faint overlapping old sigils all over the site"*. Nothing failed — every surface rendered perfectly, and the tests of the day asserted the register was **present**, so the suite was green on the defect.
+
+**Two vocabularies at once is the failure; the overlap is only how you notice.** The rows collided because the old ones were positioned to clear a datum row the band had already replaced, and the band's lead had opened 5px → 9px — but repositioning them would have left the real problem, one faction wearing two alphabets, looking fixed. The ruling is total retirement: **a faction has one ornament row, and a replacement's job is not done until its predecessor has no mounts.** The seam that can hold that is the source tree (§6, #1654), not markup — eight mounts across six files each render fine alone.
+
+**And the replacement travels with its CARRIER, so a surface without the carrier gets nothing.** The band's whole argument is that it is the masthead's last line: it inherits the datum row's two brass rules and closes the head against the sheet. The surfaces that mount `EphemeristsMasthead` get the band with it; the faction hero, the feed chassis and the select tile head themselves by hand, so they lost a register and gained nothing, because a band mounted where there is no lockup is ornament filling a hole. The same test kills the wrapper — the kit's rune band drew exactly one register and nothing else, so it retired too, and its seven section-head mounts kept the brass hairline that already flexed across each heading row. **Delete the row, then ask each surface what it still needs; do not assume the answer is "a replacement".**
+
 ---
 
 ## 7. Components
