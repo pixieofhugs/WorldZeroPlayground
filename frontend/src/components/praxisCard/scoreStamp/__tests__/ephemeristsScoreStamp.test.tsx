@@ -100,8 +100,14 @@ describe('the stamp reads working-then-total (#2145)', () => {
   it('puts every working row ABOVE the rose', () => {
     const html = render()
     const rose = html.indexOf(NORTH)
-    for (const row of ['card.stamp.base', 'card.stamp.mult', 'card.stamp.meta', 'card.stamp.votes']) {
-      const at = html.indexOf(i18n.t(`praxis:${row}`))
+    const rows = [
+      i18n.t('praxis:card.stamp.base'),
+      i18n.t('praxis:card.stamp.mult'),
+      i18n.t('praxis:card.stamp.meta'),
+      i18n.t('praxis:card.stamp.votes'),
+    ]
+    for (const row of rows) {
+      const at = html.indexOf(row)
       expect(at, `${row} is printed`).toBeGreaterThan(-1)
       expect(at, `${row} comes before the rose`).toBeLessThan(rose)
     }
