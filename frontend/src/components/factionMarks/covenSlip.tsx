@@ -37,6 +37,13 @@ import type { CSSProperties } from "react";
  * reading on that ground, not its worst. The three text inks hold there (INK
  * 5.70, SOFT 4.86, LABEL 4.80), and dark clears everywhere with room.
  *
+ * WHERE THAT GROUND STILL IS, after #2135: the mobile field desk, and nothing
+ * else. Both detail columns wore it and now wear `SLIP_SHEET`; the substitution
+ * rule below is unchanged, but the surfaces it governs are the field desk's.
+ * `DEEP` is worse on the SHEET than it was on the hazed page — 3.33:1 on the
+ * gradient's darkest stop in light — so "when a mark wants a pink that carries
+ * words, it wants `INK`" now holds on four surfaces rather than two.
+ *
  * **The substitute is `INK`, not `SOFT`/`LABEL`.** Every consumer this rule
  * caught was a link, an active control or an emphasised clause — an affordance,
  * which must not read QUIETER than the copy around it. `INK` is the strongest of
@@ -75,7 +82,14 @@ export const CTA_TO = "var(--faction-coven-slip-cta-to)";
 export const CTA_INK = "var(--faction-coven-slip-cta-ink)";
 export const HOLD_INK = "var(--faction-coven-ward-hold-ink)";
 
-/** The slip itself: pink paper fading to lavender. */
+/**
+ * The slip itself: pink paper fading to lavender.
+ *
+ * FOUR SURFACES WEAR IT (#2135): the task card, the praxis card and both detail
+ * columns. It is the faction's ground, not one card's — the three inks measured
+ * on it in `factionContrast.test.ts` are measured for all four, and `DEEP` is
+ * ornament on every one of them (3.33:1 on the darkest stop in light).
+ */
 export const SLIP_SHEET =
   "linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 36%, var(--faction-coven-slip-lav) 74%, var(--faction-coven-slip-vio))";
 

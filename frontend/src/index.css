@@ -6224,8 +6224,8 @@
    `pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx`, where the candlelight
    IS the page ground. So this is live code with one caller — #2135's body called
    it dead after the two columns left and it is not, because a form-factor
-   archetype is invisible to a grep of `pages/*/archetypes/`. Do not delete it
-   without checking the field desk. */
+   archetype is not in the archetype folders a detail-page sweep greps. Do not
+   delete it without checking the field desk. */
 .coven-candle-backdrop {
   /* Painted on a page or a column, never the viewport — the site background
      shows around it (owner QA on #1055, applied to every task-detail skin). The

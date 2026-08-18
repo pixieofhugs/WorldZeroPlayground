@@ -537,6 +537,15 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // gradient's darkest stop (#fbc4dd), so index.css ships them walked down. The
   // surface column below is that darkest stop deliberately — measuring the
   // lightest one would reproduce the design's own mistake.
+  //
+  // FOUR SURFACES READ THESE ROWS NOW (#2135): the task card, the praxis card
+  // and both detail columns. That is also what forced the praxis card's `tint`
+  // from DEEP to INK when its ground moved off the ward panel — `tint` is the
+  // shared body's `accent`, which paints a collab member's name and a duel
+  // rival's name at --text-content straight on the sheet, and DEEP reads 3.33:1
+  // there against 4.70:1 on the panel it left. No row records that reading,
+  // because after the swap nothing paints it: `coven ward panel, accent ink`
+  // below still gates DEEP where DEEP is still text.
   { what: "coven slip, ink", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" },
   { what: "coven slip, brief", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" },
   { what: "coven slip, caption", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" },
@@ -597,6 +606,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "coven ward page, ink", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-ink" },
   { what: "coven ward page, brief", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-soft" },
   { what: "coven ward page, caption", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-label" },
+  // THE TWO DETAIL COLUMNS LEFT THAT GROUND (#2135). Both wore
+  // `.coven-candle-backdrop` — the ward page under a haze — and both now wear
+  // the SLIP, so the copy that sits outside a panel on those pages is measured
+  // against the gradient instead. The three rows above stay live and are not a
+  // duplicate of these: `CovenFieldDesk` still grounds a whole mobile page on
+  // the ward page, and it is the class's one remaining mount.
+  //
+  // The surfaces are the ramp's two ENDS, for the reason the task card's block
+  // gives up top: `-mid` is the darkest stop an ink meets and `-vio` is a
+  // different hue rather than a lighter shade of it, so neither covers the
+  // other. Same token pair as the card's rows by design — this is the manifest
+  // recording that a second surface reads them, which is what makes a future
+  // walk-down of one of these inks show up as three failures and not one.
+  { what: "coven detail column, ink", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" },
+  { what: "coven detail column, brief", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" },
+  { what: "coven detail column, caption", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" },
+  { what: "coven detail column lavender, ink", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-ink" },
+  { what: "coven detail column lavender, brief", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-soft" },
+  { what: "coven detail column lavender, caption", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-label" },
   { what: "coven ward panel, ink", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-ink" },
   { what: "coven ward panel, brief", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-soft" },
   { what: "coven ward panel, caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" },
