@@ -237,9 +237,17 @@ export function ComposerControls({
           />
         )}
       </div>
+      {/*
+       * THE FOOT WRAPS (#2238). Three things share this line — the hint, the
+       * count, the submit — and a narrow leaf cannot seat them. Crushed, the
+       * hint wrapped to two lines, the button's label broke, and the count came
+       * apart as `100/5` over `00`. Wrapping moves the deficit to the LINE: the
+       * hint drops to its own row and everything on the foot keeps its shape.
+       */}
       <div
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: 'var(--space-sm)',
@@ -258,6 +266,15 @@ export function ComposerControls({
           <span
             style={{
               fontSize: 'var(--text-md)',
+              // ONE TOKEN (#2238). `100/500` is a single figure, and a voice
+              // whose note body sets `overflow-wrap: anywhere` — the
+              // Ephemerists leaf does, so a long unbroken word cannot blow the
+              // plate open — hands this span break opportunities between its
+              // own digits. `nowrap` beats an inherited `overflow-wrap`; not
+              // yielding width is the other half, or the count is simply
+              // squeezed until it overflows instead of wrapping.
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
               // Danger ink is the only signal that the save is blocked, so it
               // carries the over-limit state rather than decorating it.
               color: overLimit ? 'var(--color-danger)' : 'var(--color-text-tertiary)',

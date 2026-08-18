@@ -156,6 +156,22 @@ describe('EphemeristsComment — composer states', () => {
     expect(html).toContain('--faction-ephemerists-plate-cta-bg')
     expect(html).toContain('--faction-ephemerists-plate-cta-ink')
   })
+
+  /**
+   * #2238 — the count came apart as `100/5` over `00` on THIS sheet, and the
+   * reason is the pairing rather than either half: the marginalia block sets
+   * `overflow-wrap: anywhere` so an unbroken word cannot blow the leaf open,
+   * and the composer sits inside it and inherits the break opportunities. The
+   * shared foot answers it for all nine voices (`composerControls.test.tsx`);
+   * what this pins is that the two still meet on the plate — the day someone
+   * drops the leaf's `anywhere` this test says the count was never relying on
+   * its absence, and the day someone drops the `nowrap` it fails here first.
+   */
+  it('cannot break the character count, wrap-anywhere leaf and all (#2238)', () => {
+    const html = composer(false)
+    expect(html, "the leaf's own wrap rule").toContain('overflow-wrap:anywhere')
+    expect(html, 'and a count it cannot reach').toContain('white-space:nowrap')
+  })
 })
 
 describe('EphemeristsComment — the Valley plate ground', () => {
