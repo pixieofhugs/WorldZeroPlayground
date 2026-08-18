@@ -37,7 +37,6 @@ const signalFill = "var(--faction-singularity)"; // blue brand fill
 
 export default function SingularityFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
@@ -183,19 +182,6 @@ export default function SingularityFactionHero({
             {i18n.t("feed:factionHero.singularity.motto")}
           </div>
 
-          {/* blurb */}
-          <p
-            className="content-text"
-            style={{
-              lineHeight: 1.7,
-              color: phosphor(60),
-              maxWidth: 520,
-              margin: 0,
-            }}
-          >
-            {description ??
-              i18n.t("feed:factionHero.singularity.descriptionFallback")}
-          </p>
         </div>
 
         {/* right column: spinning sigil + side "system readout" stats */}

@@ -14,7 +14,6 @@ import {
   SHADOW,
   SigilMark,
   SLIP_SHEET,
-  SOFT,
   Spark,
 } from "../factionMarks/covenSlip";
 
@@ -22,9 +21,13 @@ import {
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
  *
  * The pentagram badge, the coven's name hand-lettered in Caveat, a braided
- * thread under both, the blurb in the reading voice, and — per the faction-page
- * standardization — the three counts as small candle-lit panels in a SIDE
- * column, never a full-width band. Conforms to {@link FactionHeroProps}.
+ * thread under both, and — per the faction-page standardization — the three
+ * counts as small candle-lit panels in a SIDE column, never a full-width band.
+ * Conforms to {@link FactionHeroProps}.
+ *
+ * The blurb in the reading voice used to close this slip; #2137 took it out.
+ * `CovenFactionBody` reads the same catalog string and sets it as the coven's
+ * manifesto, so the slip was saying the manifesto's first words back to it.
  *
  * This REPLACES the cork-memo-board `whimsy.exe` charm wholesale: the pinned
  * paper, the pushpins, the dotted wash, the washi-taped sticker charms and the
@@ -41,7 +44,6 @@ import {
  */
 export default function CovenFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
@@ -105,19 +107,6 @@ export default function CovenFactionHero({
           >
             {i18n.t("feed:factionHero.coven.motto")}
           </div>
-          <p
-            className="content-text"
-            style={{
-              fontFamily: READING,
-              fontStyle: "italic",
-              lineHeight: 1.5,
-              color: SOFT,
-              maxWidth: 440,
-              margin: "var(--space-sm) 0 0",
-            }}
-          >
-            {description ?? i18n.t("feed:factionHero.coven.descriptionFallback")}
-          </p>
         </div>
 
         {/* counts on the side — candle-lit panels stacked in a side column */}
