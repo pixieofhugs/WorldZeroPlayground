@@ -104,9 +104,14 @@ describe("the composer's focus ring", () => {
     // claim here is only that the attribute is on the element, so the source is
     // the cheaper seam for it.
     const controls = readFileSync(`${ARCHETYPE_DIR}/controls.tsx`, "utf8");
-    const inviteInput = controls.slice(controls.indexOf("autoFocus={pickerOpen}"));
-    expect(inviteInput.slice(0, inviteInput.indexOf("/>"))).toContain(
-      "data-composer-field",
+    // `autoFocus={pickerOpen}` is the invite input's own tell; the element runs
+    // from the `<input` before it to the `/>` after it.
+    const tell = controls.indexOf("autoFocus={pickerOpen}");
+    expect(tell, "the invite search input is still here").toBeGreaterThan(-1);
+    const element = controls.slice(
+      controls.lastIndexOf("<input", tell),
+      controls.indexOf("/>", tell),
     );
+    expect(element).toContain("data-composer-field");
   });
 });

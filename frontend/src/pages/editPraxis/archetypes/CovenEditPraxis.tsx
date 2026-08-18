@@ -374,7 +374,6 @@ export default function CovenEditPraxis({ state }: Props) {
     border: RULE,
     borderRadius: FIELD_RADIUS,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
   /* The braid, for the dress the waiting surface wears. On THIS page the one

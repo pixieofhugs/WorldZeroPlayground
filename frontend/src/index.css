@@ -6953,6 +6953,52 @@
   .ep-blink { animation: epBlink 1s step-end infinite; }
 }
 
+/* ══ The composer's focus ring (#2266) ══
+   WCAG 2.4.7 Focus Visible is Level AA — the tier this repo already enforces
+   for contrast — and the composer was the one surface that owed it and paid
+   nothing. All eight skins' `fieldBox` set `outline: none` inline, the invite
+   input set a ninth and the CodeMirror theme a tenth, and NOTHING replaced any
+   of them: the title, the write-up and the invite search all took focus
+   invisibly on every skin. That is why clicking into the write-up box looked
+   like nothing had happened, and why tabbing through the sheet was worse.
+
+   ONE rule, not ten, because ten copies of `outline: none` is what the bug was.
+   The eight inline suppressions are deleted (an inline declaration wins over
+   any stylesheet, so they had to go for this to reach anything), and the next
+   skin inherits the ring rather than having to remember it.
+
+   `:focus-visible`, never a bare `:focus` — the app's own convention, stated at
+   `.eph-gloss` and worn by `.filter-bar__toggle` and its siblings: a pointer
+   user who clicks into a field is not asking to be told where the caret went.
+
+   `[data-composer-body]` takes `:focus-within` instead, and that is the same
+   decision rather than a second convention. The host div never receives focus
+   itself — CodeMirror's contenteditable pane inside it does — so there is no
+   `:focus-visible` for the host to match, and the only focusable thing under it
+   is that pane. On a text-entry surface `:focus-visible` matches on every focus
+   route anyway, which is what makes the two equivalent here.
+
+   `currentColor`, so this costs no token and needs no eight-way measurement:
+   each skin already sets its field's `color` against its own `fieldBox` ground,
+   and that pairing is measured as body text. A distinct focus hue would need
+   measuring against eight field grounds in both themes, which is a bigger job
+   than this bug — and the blocking sheet has no room for a per-skin token set.
+
+   The offset is NEGATIVE for the same reason: the ring is drawn just inside the
+   box, on the ground the ink was measured against, rather than out on whatever
+   sheet the field happens to sit on. It follows the skin's own border-radius.
+
+   `bodyEditorTheme.ts` keeps its `&.cm-focused { outline: none }`. That one is
+   not a suppression this replaces but the reason this exists: CodeMirror's base
+   theme draws its dotted default on the editor PANE, inside the padding, rather
+   than around the field box the player sees. It is paired now, which is the
+   whole of #2266. */
+[data-composer-field]:focus-visible,
+[data-composer-body]:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
 /* ══════════════════════════════════════════
    FILTER BAR (#1365, epic #1361)
    One responsive filter surface for tasks and praxes. Chrome, not a faction

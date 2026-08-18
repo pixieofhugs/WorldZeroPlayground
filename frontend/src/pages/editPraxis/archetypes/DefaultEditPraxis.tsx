@@ -256,7 +256,6 @@ export default function DefaultEditPraxis({ state }: Props) {
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
   /* Your part is in, so the composer is not a composer any more (ADR-0059).
