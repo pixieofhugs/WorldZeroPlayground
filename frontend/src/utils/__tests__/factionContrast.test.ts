@@ -268,14 +268,44 @@ const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
   ua: "--faction-ua-panel",
   everymen: "--faction-everymen-card-bg",
   coven: "--faction-coven-ward-card",
-  snide: "--faction-snide-card-bg",
+  // The FLYPOSTED WALL since #2177, at the ramp's deep stop — its other three
+  // readings (the top of the ramp and the two washed corners) are measured in
+  // SNIDE_WALL_PAIRS below, and the black dress the card wears on task detail
+  // is measured there too.
+  snide: "--faction-snide-wall-deep",
   wow: "--faction-wow-chronicle-bg",
   ephemerists: "--faction-ephemerists-plate-bg",
   singularity: "--faction-singularity-card-bg",
 };
 
-/** The four whose sheet is a different TOKEN from `--faction-{key}-card-bg`. */
-const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists"] as const;
+/** The five whose sheet is a different TOKEN from `--faction-{key}-card-bg`. */
+const OWN_SHEET_KEYS = ["ua", "coven", "wow", "ephemerists", "snide"] as const;
+
+/**
+ * WHICH INK THE CARD'S SHARED SLOTS ACTUALLY RESOLVE (#2177).
+ *
+ * `sheetInk` types `--faction-{key}-card-{role}` and nothing else, so for seven
+ * factions the name in the component IS the token measured here. S.N.I.D.E. is
+ * the eighth: its card wears a ground that FLIPS (the wall) while `-card-*` is
+ * pinned near-black in both themes for the slabs pasted ON that wall (#2066), so
+ * the frame RE-POINTS those four custom properties on its own root to the wall's
+ * family. The cascade is the seam — `.snd-praxis-*` in index.css — and this map
+ * is what keeps the manifest measuring the token the cascade delivers rather
+ * than the name the shared component happens to type.
+ */
+const PRAXIS_CARD_INK: Partial<
+  Record<(typeof CARD_KEYS)[number], Record<"notice" | "alarm" | "credit" | "muted", string>>
+> = {
+  snide: {
+    notice: "--faction-snide-wall-notice",
+    alarm: "--faction-snide-wall-alarm",
+    credit: "--faction-snide-wall-credit",
+    muted: "--faction-snide-note-muted",
+  },
+};
+
+const cardInk = (key: (typeof CARD_KEYS)[number], role: "notice" | "alarm" | "credit" | "muted") =>
+  PRAXIS_CARD_INK[key]?.[role] ?? `--faction-${key}-card-${role}`;
 
 /**
  * The chip's own wash, as a fraction of the ink printed on it. 8%, not the 12%
@@ -288,8 +318,8 @@ const CHIP_WASH = 0.08;
 const PRAXIS_CARD_PAIRS: Pair[] = [
   ...CARD_KEYS.flatMap((key) => {
     const surface = PRAXIS_CARD_SHEET[key];
-    const notice = `--faction-${key}-card-notice`;
-    const alarm = `--faction-${key}-card-alarm`;
+    const notice = cardInk(key, "notice");
+    const alarm = cardInk(key, "alarm");
     return [
       // The two moderation badges, and the two moderator controls that sit side
       // by side above them (#1449). Each mark is measured under THE VEIL IT IS
@@ -335,8 +365,8 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
       {
         what: `${key} praxis card mode chip, credit ink on its own wash`,
         surface,
-        veil: { token: `--faction-${key}-card-credit`, alpha: CHIP_WASH },
-        text: `--faction-${key}-card-credit`,
+        veil: { token: cardInk(key, "credit"), alpha: CHIP_WASH },
+        text: cardInk(key, "credit"),
       },
     ];
   }),
@@ -355,9 +385,147 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
     {
       what: `${key} praxis card sheet, muted ink`,
       surface: PRAXIS_CARD_SHEET[key],
-      text: `--faction-${key}-card-muted`,
+      text: cardInk(key, "muted"),
     },
   ]),
+];
+
+/**
+ * ── S.N.I.D.E. WEARS ONE GROUND: THE FLYPOSTED WALL (#2177) ─────────────────
+ *
+ * The owner's ruling puts the composer and the praxis card on the same ground
+ * the task card already wore, so three surfaces' worth of ink lands on one
+ * stock — and the ink each of them brought was measured on a stock it no longer
+ * has. The composer's tiers were read on `-composer-sheet` (flat xerox stock);
+ * the praxis card's were read on `-card-bg`, which is near-black in BOTH themes
+ * while the wall FLIPS.
+ *
+ * THE WALL IS FOUR GROUNDS, NOT ONE, and that is why this block exists rather
+ * than one row per ink. It is a 180deg ramp from `-wall` to `-wall-deep` with an
+ * acid wash off the top-left corner and a pink one off the bottom-right, so an
+ * ink that clears at the top of the ramp can miss in a corner — the shape #1028
+ * names and #1451 already hit once on the detail page's own ramp. Measured
+ * flat, `-note-muted` reads 4.92:1 in light; under the pink wash it is 4.22:1,
+ * and that corner is where a tall composer puts its footer.
+ *
+ * WHAT IS NOT MODELLED: the raster and the scanline. Both are ~5% of a near-
+ * black over the whole stock at a 1-in-4 duty, so no glyph sits on one — they
+ * average into the ground rather than becoming it, and treating a 2px stripe as
+ * a surface would gate every ink on a texture no reader resolves. The corner
+ * washes are solid area tints and are modelled.
+ */
+const SNIDE_WALL_GROUNDS: { where: string; surface: string; wash?: string }[] = [
+  { where: "wall", surface: "--faction-snide-wall" },
+  { where: "deep wall", surface: "--faction-snide-wall-deep" },
+  {
+    where: "acid corner",
+    surface: "--faction-snide-wall",
+    wash: "--faction-snide-note-wash-acid",
+  },
+  {
+    where: "pink corner",
+    surface: "--faction-snide-wall-deep",
+    wash: "--faction-snide-note-wash-pink",
+  },
+];
+
+/**
+ * Every ink S.N.I.D.E. prints straight on that wall, across the three surfaces.
+ * The `-note-*` tiers are the clipping's (task card, praxis card, both detail
+ * columns); the `-composer-*` tiers are the sheet's. They carry the same values
+ * today and stay two families for #1181's reason.
+ */
+const SNIDE_WALL_INKS = [
+  ["headline and title", "--faction-snide-note-ink"],
+  ["brief and excerpt", "--faction-snide-note-muted"],
+  ["the pink that is text", "--faction-snide-note-pink-ink"],
+  ["composer ink", "--faction-snide-composer-ink"],
+  ["composer prose", "--faction-snide-composer-muted"],
+  ["composer faint ink", "--faction-snide-composer-faint"],
+] as const;
+
+const SNIDE_WALL_PAIRS: Pair[] = [
+  ...SNIDE_WALL_GROUNDS.flatMap(({ where, surface, wash }) => [
+    ...SNIDE_WALL_INKS.map(([role, text]) => ({
+      what: `snide ${where}, ${role}`,
+      surface,
+      veil: wash,
+      text,
+    })),
+    // The praxis card's three functional inks, on the ground the frame's
+    // re-point measures them against (see PRAXIS_CARD_INK). The generated rows
+    // above cover the deep stop; these are the other three readings.
+    {
+      what: `snide ${where}, flagged badge alarm ink under the danger veil`,
+      surface,
+      veil: [wash, "--color-danger-veil"].filter((layer) => layer !== undefined) as Veil[],
+      text: "--faction-snide-wall-alarm",
+    },
+    {
+      what: `snide ${where}, mode chip notice ink on its own wash`,
+      surface,
+      veil: [wash, { token: "--faction-snide-wall-notice", alpha: CHIP_WASH }].filter(
+        (layer) => layer !== undefined,
+      ) as Veil[],
+      text: "--faction-snide-wall-notice",
+    },
+    {
+      what: `snide ${where}, mode chip credit ink on its own wash`,
+      surface,
+      veil: [wash, { token: "--faction-snide-wall-credit", alpha: CHIP_WASH }].filter(
+        (layer) => layer !== undefined,
+      ) as Veil[],
+      text: "--faction-snide-wall-credit",
+    },
+    // The composer's error banner, which moved stock with the composer.
+    {
+      what: `snide ${where}, composer error banner alarm ink under the danger veil`,
+      surface,
+      veil: [wash, "--color-danger-veil"].filter((layer) => layer !== undefined) as Veil[],
+      text: "--faction-snide-composer-alarm",
+    },
+  ]),
+  // ── THE ONE EXCEPTION: the praxis card on TASK DETAIL is black ───────────
+  //
+  // A wall inside a wall stops reading as a thing pasted ON something (#2066's
+  // ruling, restated by #2177), so on the detail page the card is a slab and
+  // its shared slots resolve the `-card-*` family they were always measured on.
+  // `{key} card body/muted/accent` already pin the three reading inks on that
+  // ground; these are the three functional inks the generator used to cover for
+  // snide before its sheet became the wall.
+  {
+    what: "snide detail slab, flagged badge alarm ink under the danger veil",
+    surface: "--faction-snide-card-bg",
+    veil: "--color-danger-veil",
+    text: "--faction-snide-card-alarm",
+  },
+  {
+    what: "snide detail slab, mode chip notice ink on its own wash",
+    surface: "--faction-snide-card-bg",
+    veil: { token: "--faction-snide-card-notice", alpha: CHIP_WASH },
+    text: "--faction-snide-card-notice",
+  },
+  {
+    what: "snide detail slab, mode chip credit ink on its own wash",
+    surface: "--faction-snide-card-bg",
+    veil: { token: "--faction-snide-card-credit", alpha: CHIP_WASH },
+    text: "--faction-snide-card-credit",
+  },
+  // The score stamp is a black well punched into the card, and it is the one
+  // thing inside the frame that keeps the slab's inks on BOTH dresses — which
+  // is only true while its plate is OPAQUE. It was a 40% black over the card,
+  // so on the wall's light half it composited to mid-grey and took the acid
+  // figure to 2.71:1. See `--faction-snide-stamp-bg`.
+  {
+    what: "snide score stamp plate, acid figure",
+    surface: "--faction-snide-stamp-bg",
+    text: "--faction-snide-acid",
+  },
+  {
+    what: "snide score stamp plate, typed caption",
+    surface: "--faction-snide-stamp-bg",
+    text: "--faction-snide-vote-off",
+  },
 ];
 
 /**
@@ -1602,6 +1770,7 @@ const PAIRS: Pair[] = [
   ...ACCENT_PAIRS,
   ...ROSTER_PAIRS,
   ...PRAXIS_CARD_PAIRS,
+  ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
 ];
 

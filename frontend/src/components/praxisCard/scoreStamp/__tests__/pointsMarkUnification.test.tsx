@@ -245,7 +245,13 @@ describe("each mount overrides what its ground demands (#2042)", () => {
   it("S.N.I.D.E. passes its own two inks rather than the clipping's", () => {
     const chronicle = stamp(SnideScoreStamp);
     expect(chronicle, "the acid figure").toContain("color:var(--faction-snide-acid)");
-    expect(chronicle, "the newsprint caption").toContain("color:var(--faction-snide-card-muted)");
+    // The caption left `-card-muted` in #2177: the card around this tag wears
+    // the flyposted wall now and its frame re-points that property at the wall's
+    // family for the shared slots that take no ink prop, which would have landed
+    // the wall's dark grey on this black plate. `-vote-off` is the typed-label
+    // ink the BASE line on this same tag already prints, and it is invariant
+    // like the plate. Still an OVERRIDE, which is what this assertion guards.
+    expect(chronicle, "the typed caption").toContain("color:var(--faction-snide-vote-off)");
     // `-note-ink` is 1.05:1 on this plate in light and `-note-pink-ink` is 3.27:1.
     // Neither may reach this surface, at any theme, ever.
     expect(chronicle).not.toContain("--faction-snide-note-ink");

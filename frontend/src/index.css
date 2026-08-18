@@ -942,7 +942,21 @@
      Dark keeps the faction's night pink and amber unchanged; light was the only
      miss, exactly as in #1449 and #1231. */
   --faction-snide-wall-alarm: #9d174d;
-  --faction-snide-wall-notice: #92400e;
+  /* Walked once more by #2177. The praxis card's mode chip prints this ink on
+     an 8% wash OF ITSELF, and a wash of the mark's own polarity only ever
+     tightens the reading: #92400e measured 4.04:1 that way in the wall's pink
+     corner (4.47:1 bare). At #78350f the chip clears every reading of the wall
+     — 5.10:1 in that corner — and the detail page's failed banner, which reads
+     this ink under the danger veil, only gains. */
+  --faction-snide-wall-notice: #78350f;
+  /* The third of that trio, minted by #2177 for the same ground and the same
+     reason: the praxis card wears the wall now, and its collab chip reads
+     `-card-credit`, which is pinned bright (#4ade80) for the black slab and
+     measures 1.86:1 on the light wall. This is the value the five paper
+     factions already carry, measured here on both ends of the ramp and both
+     washed corners under the chip's own 8% wash. The frame re-points
+     `-card-credit` at it in `.snd-praxis-wall`; nothing reads it directly. */
+  --faction-snide-wall-credit: #14532d;
   /* SNIDE font set — a ransom note mixes many faces in one surface */
   --faction-snide-font-impact: "Anton", Impact, sans-serif;
   --faction-snide-font-cond: var(--font-accent); /* Bebas Neue */
@@ -972,7 +986,15 @@
      themes, so only the two shadow alphas deepen under [data-theme="dark"]. */
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.4);
   --faction-snide-slab-tooth: rgba(244, 241, 232, 0.05);
-  --faction-snide-stamp-bg: rgba(0, 0, 0, 0.4);
+  /* THE SCORE WELL IS OPAQUE (#2177), and that is a pairing fix rather than a
+     repaint: #0c0a07 is exactly what rgba(0,0,0,0.4) computed to over the black
+     `-card-bg` it used to be punched into, so the tag looks identical where it
+     always sat. The praxis card's ground flips to the wall now, and a 40% black
+     over the wall's LIGHT half composited to mid-grey — which took the tag's
+     acid figure to 2.71:1 and its typed working with it. An opaque plate keeps
+     every ink on this tag measured against the tag, whichever dress the card
+     around it is wearing. */
+  --faction-snide-stamp-bg: #0c0a07;
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.5);
 
   /* ══ S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023) ══
@@ -997,15 +1019,34 @@
          serves both themes because the chip's pink does not flip.
      The bright pink survives everywhere it is a DRAWN LINE — the pen circle,
      the struck-out cross — where it is ornament and owes nothing. */
+  /* RE-MEASURED ON THE WALL (#2177). These tiers were read on `-note-paper`,
+     and since #2065 the clipping's GROUND is the flyposted wall — a 180deg ramp
+     with an acid wash off one corner and a pink one off the other. #2177 gives
+     that same ground to the praxis card and the composer, so three surfaces'
+     copy now lands on it and the ramp's deep end under the pink wash is the
+     reading that gates. Two tiers missed there and are walked below; the rest
+     clear on all four readings in both themes (`factionContrast.test.ts`,
+     SNIDE_WALL_PAIRS). Dark was never the miss, exactly as in #1449/#1231. */
   --faction-snide-note-paper: #f4f1e8; /* the clipping's stock (FLIPS) */
-  --faction-snide-note-ink: #14110b; /* headline, level, points numeral (FLIPS) */
-  --faction-snide-note-muted: #5f5c50; /* brief + in-progress copy */
+  --faction-snide-note-ink: #14110b; /* headline, level, points numeral (FLIPS) — 9.87:1 in the pink corner */
+  /* Brief + in-progress copy. #5f5c50 read 5.93:1 on the stock and 4.23:1 in
+     the wall's pink corner; walked until the corner clears — 5.03:1 there,
+     6.75:1 at the top of the ramp. */
+  --faction-snide-note-muted: #545143;
   --faction-snide-note-rule: rgba(20, 17, 11, 0.28);
   --faction-snide-note-grain: rgba(20, 17, 11, 0.045); /* the xerox raster */
   --faction-snide-note-bar: #14110b; /* the header bar */
   --faction-snide-note-bar-ink: #f4f1e8; /* the ordinal on that bar */
-  /* The pink that is TEXT, as opposed to the pink that is a drawn line. */
-  --faction-snide-note-pink-ink: #be185d;
+  /* The pink that is TEXT, as opposed to the pink that is a drawn line. Walked
+     for the wall for the third time in this faction's history and for the same
+     reason each time (#1451, #1231): the value was measured on a stock this ink
+     no longer sits on. #be185d read 5.35:1 on the note stock, 4.44:1 flat at the
+     ramp's deep end and 3.81:1 in the pink corner. It lands on the SAME hex as
+     `--faction-snide-wall-alarm` by measurement rather than by borrowing, and
+     stays its own token for #1181's reason — one is the clipping's caption ink,
+     the other is the wall's destructive mark, and a shared value today is not a
+     shared contract tomorrow. 4.98:1 in the corner, 6.67:1 at the ramp's top. */
+  --faction-snide-note-pink-ink: #9d174d;
   /* The headline's four cuts. Cut 2 is knocked out of the near-black ink and
      cut 1 sits on acid: both are stated as their own pair rather than reusing
      `-paper`/`-ink`, because those two SWAP under the dark cascade and a
@@ -1068,16 +1109,29 @@
      slip's field rather than the sheet (#1028: contrast is a pairing): 4.7:1 on
      the field, 5.2:1 on the stock. Acid stays bright everywhere it is a DRAWN
      THING: the masthead rule, the blobs, the submit bar. */
-  --faction-snide-composer-sheet: #f4f1e8; /* the xerox stock (FLIPS) */
-  --faction-snide-composer-ink: #14110b; /* type on that stock (FLIPS) */
-  --faction-snide-composer-muted: #5f5c50; /* the task's prose, the pill */
-  /* Counter, autosave line, body placeholder. #1232 walked the light value from
-     #6e6b5d: that reading was taken on the SHEET (4.74:1) and the ink also lands
-     on the FIELD — the placeholder inside the write-up box, and `quietStyle` over
-     `panelStyle` on the waiting surface — where the same hue was 4.28:1. Walked
-     until it clears the tighter ground: 4.62:1 on the field, 5.11:1 on the stock,
-     still a tier under -composer-muted (5.36 / 5.93). Dark was never the miss. */
-  --faction-snide-composer-faint: #696658;
+  /* THE SHEET IS THE WALL SINCE #2177, and these tiers were measured on the
+     stock below it. The owner's ruling puts the composer on the ground the task
+     card already wore, so the sheet token survives for the ONE opaque block that
+     still needs a stock of its own — the invite dropdown, which must not let the
+     raster read through a floating list — and every ink is re-measured on the
+     wall's four readings instead. Two missed and are walked; see
+     `factionContrast.test.ts`, SNIDE_WALL_PAIRS. The composer is the surface
+     that gates this ground, because it is the only one of the three carrying
+     form fields and placeholder text, and it is tall enough to put its footer
+     inside the pink corner. */
+  --faction-snide-composer-sheet: #f4f1e8; /* the invite dropdown's stock (FLIPS) */
+  --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
+  /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
+     old stock and 4.23:1 in the wall's pink corner; walked to clear the corner
+     at 5.03:1. Same walk as `-note-muted`, still its own token (#1181). */
+  --faction-snide-composer-muted: #545143;
+  /* Counter, autosave line, body placeholder, the save-draft and drop exits.
+     #1232 walked this from #6e6b5d for the FIELD (4.28:1) rather than the sheet,
+     and #2177 walks it again for the same reason one rung out: the sheet is the
+     wall now, where #696658 read 3.64:1 in the pink corner. 4.58:1 there, 6.14:1
+     at the top of the ramp, 5.81:1 on the field — still a tier under
+     `-composer-muted` (5.03 / 6.75 / 6.38). Dark was never the miss. */
+  --faction-snide-composer-faint: #5a5749;
   --faction-snide-composer-field: #eae6d8; /* an input, a shade off the sheet */
   --faction-snide-composer-rule: rgba(20, 17, 11, 0.5); /* a drawn hairline */
   --faction-snide-composer-bar: #14110b; /* masthead bar + the censor stripe */
@@ -1087,10 +1141,12 @@
      second ground"). Seven skins hand that banner their existing
      `--faction-{key}-card-alarm`; this faction cannot, because its CARD is
      photocopier-black in BOTH themes (§6) so `-card-alarm` is pinned bright and
-     reads 1.56:1 on the light xerox stock, while this sheet FLIPS. Same hue as
-     `-slip-pink-ink` today and declared rather than borrowed for #1181's
-     reason. Measured under `--color-danger-veil`: 4.97:1 light, 5.83:1 dark. */
-  --faction-snide-composer-alarm: #be185d;
+     reads 1.56:1 on the light xerox stock, while this sheet FLIPS. Declared
+     rather than borrowed for #1181's reason. #2177 walks the light value with
+     the sheet — under `--color-danger-veil` #be185d read 3.58:1 in the wall's
+     pink corner — to 4.67:1 there and 6.21:1 at the top of the ramp. Dark is
+     unchanged at 5.83:1. */
+  --faction-snide-composer-alarm: #9d174d;
 
   /* ══ S.N.I.D.E. — THE INTERCEPTED SLIP (feed chassis + comment sheet, #1198) ══
      Design: `Snide Comment + Update Cards.dc.html` — a flyposted xerox slip
@@ -2735,10 +2791,13 @@
      near-black wall the light values would be the miss, so only light moved. */
   --faction-snide-wall-alarm: #ff69ac;
   --faction-snide-wall-notice: #fbbf24;
+  --faction-snide-wall-credit: #4ade80;
   /* The evidence slab, lights out (#842): the plate itself is already ink, so
      only its printed shadow and the score well deepen. */
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.5);
-  --faction-snide-stamp-bg: rgba(0, 0, 0, 0.5);
+  /* The opaque night value of the same well: what rgba(0,0,0,0.5) computed to
+     over the dark `-card-bg` (#0c0a07). See the light declaration. */
+  --faction-snide-stamp-bg: #060504;
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.6);
 
   /* ── The ransom clipping, lights out (#1023) ──
@@ -3381,6 +3440,57 @@
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
+}
+
+/* ══ The S.N.I.D.E. praxis card's TWO DRESSES (#2177) ══
+   The owner's ruling gives the card the faction's one ground — the flyposted
+   wall, drawn by `WALL` in `factionMarks/snideAtoms` — everywhere it appears,
+   with a single exception: on the TASK DETAIL page it is black. That page's
+   column already wears the wall (`.snd-detail-sheet` above), and a wall inside
+   a wall stops reading as a thing pasted ON something (#2066's ruling, which
+   this restates rather than reverses). Black is `--faction-snide-card-bg`, the
+   same slab every other sheet on that page is cut from — no new pigment, and
+   the ink family it was measured with comes with it.
+
+   `.praxis-gallery` IS NOT THE HOOK. It reads like the task-detail row, but
+   `WowFactionBody` mounts it too, and a Snide-task praxis lands on the WOW
+   faction page; scoping black there would blacken those cards as well. So the
+   detail row carries its own class and `.praxis-gallery` keeps doing its one
+   job (narrowing `--praxis-card-basis` to 320px, #1137).
+
+   WHY A CHANNEL RATHER THAN TWO RULESETS ON THE CARD. The switch is made by the
+   CONTAINER, and a container cannot give a child a class — the same problem
+   `--praxis-card-basis` solved with a custom property, for the same reason
+   (#1137). Every value the two dresses disagree about travels down one, and the
+   card supplies the WALL half as each channel's fallback, in the file the wall
+   itself lives in. The row resolves the slab half from `:root`, where it is
+   still the plain `-card-*` family — the card is the only element that
+   re-points those, which is what keeps this out of a var() cycle. */
+.snd-praxis-frame {
+  /* The shared slots inside the frame (`sheetInk` in praxisCard/shared.tsx)
+     type `--faction-{slug}-card-{role}` and take no ink prop. For seven
+     factions that names the sheet's own family; for S.N.I.D.E. it names the
+     SLAB's, which is pinned near-black in both themes (§6) — 1.86:1 to 1.41:1
+     on the light wall. The frame re-points them at the wall's family, which is
+     the cascade doing what a missing prop cannot (#1153). */
+  --faction-snide-card-notice: var(--snd-praxis-notice, var(--faction-snide-wall-notice));
+  --faction-snide-card-alarm: var(--snd-praxis-alarm, var(--faction-snide-wall-alarm));
+  --faction-snide-card-credit: var(--snd-praxis-credit, var(--faction-snide-wall-credit));
+  --faction-snide-card-muted: var(--snd-praxis-muted, var(--faction-snide-note-muted));
+}
+
+/* The exception, set on the ROW and read by the card. Each value is resolved
+   here, one element above the card, so it is the plain `:root` family rather
+   than the re-point above — a var() cycle needs one element, not two. */
+.snd-detail-praxis {
+  --snd-praxis-ground: var(--faction-snide-card-bg);
+  --snd-praxis-ink: var(--faction-snide-card-text);
+  --snd-praxis-muted: var(--faction-snide-card-muted);
+  --snd-praxis-accent: var(--faction-snide-card-accent);
+  --snd-praxis-paper: var(--faction-snide-card-bg);
+  --snd-praxis-notice: var(--faction-snide-card-notice);
+  --snd-praxis-alarm: var(--faction-snide-card-alarm);
+  --snd-praxis-credit: var(--faction-snide-card-credit);
 }
 
 /* ══ Default (Unaffiliated / na) spectrum backdrop (faction-context pages; theme-aware) ══
