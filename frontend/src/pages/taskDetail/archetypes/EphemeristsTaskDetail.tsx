@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
@@ -418,7 +418,7 @@ export default function EphemeristsTaskDetail({
           <EphemeristsMasthead
             slug={slug}
             scale={desktop ? "page" : "card"}
-            date={task.created_at}
+            seed={`task:${task.id}`}
           />
         </div>
       </div>
@@ -1012,6 +1012,17 @@ export default function EphemeristsTaskDetail({
               heading={sectionHead(t("detail.comments.heading"))}
             />
           </div>
+
+          {/* The plate's provenance, at the foot of the sheet (#2143). It is
+              the masthead's old datum row, labelled — see `EphemeristsColophon`
+              for why the label and this placement are a requirement (#2124) and
+              not a layout preference. It sits OUTSIDE the two-column region and
+              below the comment thread, so nothing player-scoped is beside it,
+              and its own rule separates it from whatever ended above. */}
+          <EphemeristsColophon
+            scale={desktop ? "page" : "card"}
+            date={task.created_at}
+          />
         </div>
       </div>
     </div>

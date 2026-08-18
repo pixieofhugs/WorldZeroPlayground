@@ -123,7 +123,7 @@ import {
   BAND_INK,
   BRASS_LIGHT,
 } from "../../../components/factionMarks/ephemeristsPlate";
-import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
+import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
@@ -395,7 +395,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           <EphemeristsMasthead
             slug={praxis.task_faction_slug}
             scale={desktop ? "page" : "card"}
-            date={praxis.submitted_at ?? praxis.created_at}
+            seed={`praxis:${praxis.id}`}
           />
         </div>
       </div>
@@ -966,6 +966,17 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             state={state}
             heading={sectionHead(t("detail.sections.comments"))}
             style={{ marginTop: size.sectionGap }}
+          />
+
+          {/* The plate's provenance, at the foot of the sheet (#2143) — the
+              masthead's old datum row, labelled. #2124's requirement is about
+              PLACEMENT as much as wording, and this page is where it bites: the
+              byline, the submission date and the crew all live in the two
+              columns above, and the colophon sits below every one of them,
+              outside both, behind its own rule. See `EphemeristsColophon`. */}
+          <EphemeristsColophon
+            scale={desktop ? "page" : "card"}
+            date={praxis.submitted_at ?? praxis.created_at}
           />
         </div>
       </div>
