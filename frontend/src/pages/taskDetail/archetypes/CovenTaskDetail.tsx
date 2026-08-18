@@ -143,6 +143,31 @@ function starPath(x: number, y: number, r: number): string {
   return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
 }
 
+/**
+ * A five-point star, points up, drawn on the circle of radius `r` about
+ * (cx, cy) — every vertex lands ON that circle by construction.
+ */
+function pentagramPath(cx: number, cy: number, r: number): string {
+  const vertex = (i: number) => {
+    const angle = ((-90 + i * 144) * Math.PI) / 180;
+    return `${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy + r * Math.sin(angle)).toFixed(2)}`;
+  };
+  return `M${[0, 1, 2, 3, 4].map(vertex).join(" L")} Z`;
+}
+
+/* ── The ward's two concentric drawings, in its own 0 0 100 100 box. ────────
+ * The pentagram's radius is DERIVED from the ring's, never typed: its tips land
+ * on the ring's inner face, so the two strokes kiss and neither crosses. A typed
+ * radius is exactly how the star got outside the circle (#2237) — it was on 34.9
+ * against a ring of 33, which reads as a mistake at both ward sizes and at every
+ * zoom. Round joins put a tip's outer edge at radius + strokeWidth / 2, so that
+ * is the whole of the sum.
+ */
+const RING_R = 33;
+const RING_STROKE = 1.8;
+const STAR_STROKE = 1;
+const WARD_STAR = pentagramPath(50, 50, RING_R - RING_STROKE / 2 - STAR_STROKE / 2);
+
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
@@ -244,14 +269,22 @@ function Ward({
         style={{ position: "absolute", inset: 0, overflow: "visible" }}
       >
         <path
-          d="M50 16 L69.8 78.5 L16.5 40.1 L83.5 40.1 L30.2 78.5 Z"
+          d={WARD_STAR}
           fill="none"
           stroke={GOLD}
-          strokeWidth="1"
+          strokeWidth={STAR_STROKE}
           strokeLinejoin="round"
           opacity="0.55"
         />
-        <circle cx="50" cy="50" r="33" fill="none" stroke={PINK} strokeWidth="1.8" opacity="0.9" />
+        <circle
+          cx="50"
+          cy="50"
+          r={RING_R}
+          fill="none"
+          stroke={PINK}
+          strokeWidth={RING_STROKE}
+          opacity="0.9"
+        />
         {twinkles.map(([x, y, r]) => (
           <path key={`${x}-${y}`} d={starPath(x, y, r)} fill={GOLD} opacity="0.9" />
         ))}
