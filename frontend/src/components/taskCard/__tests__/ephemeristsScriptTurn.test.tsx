@@ -73,7 +73,8 @@ function render(task = TASK): string {
 
 /** The catalogue's own words, put back after the test that overwrites them. */
 const CATALOGUE = {
-  pointsUnit: i18n.t('feed:taskCard.pointsUnit'),
+  pointsUnit_one: i18n.t('feed:taskCard.pointsUnit', { count: 1 }),
+  pointsUnit_other: i18n.t('feed:taskCard.pointsUnit', { count: 2 }),
   signup: i18n.t('feed:taskCard.signup'),
 }
 afterEach(() => {
@@ -95,7 +96,7 @@ describe('the rotation is decoration over a stable accessible name (#2038)', () 
 
   it('hides every glyph from assistive tech and leaves the word behind', () => {
     const html = render()
-    const unit = i18n.t('feed:taskCard.pointsUnit')
+    const unit = i18n.t('feed:taskCard.pointsUnit', { count: TASK.point_value })
     const signup = i18n.t('feed:taskCard.signup')
 
     // Both stacks are aria-hidden…
@@ -111,7 +112,7 @@ describe('the rotation is decoration over a stable accessible name (#2038)', () 
     i18n.addResourceBundle(
       'en',
       'feed',
-      { taskCard: { pointsUnit: 'Puntos', signup: 'Apuntarse' } },
+      { taskCard: { pointsUnit_one: 'Punto', pointsUnit_other: 'Puntos', signup: 'Apuntarse' } },
       true,
       true,
     )

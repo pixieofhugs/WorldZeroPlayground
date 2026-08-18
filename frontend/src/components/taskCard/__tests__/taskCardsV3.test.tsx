@@ -96,7 +96,7 @@ describe.each(SKINS)('$slug speaks the kit\'s three words (#2028)', (skin) => {
   it('reads the shared level, points and sign-up strings, unedited', () => {
     const { text } = render(skin)
     expect(text, 'level gate').toContain(i18n.t('feed:taskCard.levelCaption'))
-    expect(text, 'score').toContain(i18n.t('feed:taskCard.pointsUnit'))
+    expect(text, 'score').toContain(i18n.t('feed:taskCard.pointsUnit', { count: TASK.point_value }))
     expect(text, 'call to action').toContain(i18n.t('feed:taskCard.signup'))
   })
 

@@ -38,7 +38,8 @@
     "descriptionEmpty": "No description yet.",
     "membersEmptyWithSpotlight": "No other members yet.",
     "memberLevel": "Level {{level}}",
-    "spotlightStat": "Level {{level}} · {{score}} points",
+    "spotlightStat_one": "Level {{level}} · {{score}} point",
+    "spotlightStat_other": "Level {{level}} · {{score}} points",
     "errors": {
       "load": "Couldn't load this faction.",
       "join": "Could not join faction."

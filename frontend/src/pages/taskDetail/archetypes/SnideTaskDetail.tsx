@@ -443,7 +443,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       <PenCircle
         size={desktop ? 128 : 104}
         value={modifiedPoints}
-        unit={t("detail.points.total")}
+        unit={t("detail.points.total", { count: modifiedPoints })}
         valueColor={PLATE_TEXT}
         unitColor={PLATE_ACCENT}
         valueSize={desktop ? "var(--text-display)" : "var(--text-heading)"}

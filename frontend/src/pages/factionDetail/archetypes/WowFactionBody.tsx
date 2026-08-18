@@ -389,6 +389,7 @@ function MemberRow({
           ? t("detail.spotlightStat", {
               level: member.level,
               score: member.all_time_score.toLocaleString(),
+              count: member.all_time_score,
             })
           : t("detail.memberLevel", { level: member.level })}
       </span>

@@ -207,7 +207,6 @@ export default function UaEditPraxis({ state }: Props) {
     border: `1px solid ${RULE}`,
     borderRadius: RADIUS,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 

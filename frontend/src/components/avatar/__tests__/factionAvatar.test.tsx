@@ -125,6 +125,9 @@ describe("an avatar is a circle in a flex row (#2232)", () => {
   it.each([
     ["the unaffiliated ring", "na"],
     ["a registered skin", "singularity"],
+    // WOW's plate is its own root — the gilt ring wraps the shared badge, so
+    // the rule has to be restated on the outer span (#2241).
+    ["the WOW plate", "wow"],
   ])("%s does not yield its width to the name beside it", (_label, slug) => {
     const monogram = renderToStaticMarkup(
       <FactionAvatar character={character({ faction_slug: slug })} />,
@@ -136,5 +139,57 @@ describe("an avatar is a circle in a flex row (#2232)", () => {
     );
     expect(root(monogram)).toContain("flex-shrink:0");
     expect(root(portrait)).toContain("flex-shrink:0");
+  });
+});
+
+/**
+ * #2241 / #2242 — WOW wore its crest IN THE FIELD, so the crest and the
+ * portrait competed for one slot: a member WITH a portrait wore no faction
+ * mark (#2241), a member WITHOUT one never got a monogram (#2242). One defect,
+ * reported from both ends.
+ *
+ * The exemption `WowAvatar` carried was written against the OLD gilt crest and
+ * flagged for veto in #897; `WowSigil` is a Sigil Studies v2 mark drawn to
+ * survive badge size, so the owner vetoed it. The seam is the dispatcher's
+ * rendered markup, because that is where both halves are visible at once: the
+ * crown must be a CORNER badge on both branches, never the field.
+ *
+ * The gilt rope ring, the plum inner rim and the rank pill stay — adopting the
+ * shared badge is not licence to flatten the plate into a plain circle — so
+ * the chrome is asserted too.
+ */
+describe("FactionAvatar — WOW wears its crown at the corner (#2241, #2242)", () => {
+  /** The opening subpath of `WowSigil`'s one path: the three-peaked crown. */
+  const CROWN = "M12 88L12 24L33 46";
+
+  it("badges a portrait-bearing member with the crown (#2241)", () => {
+    const html = renderToStaticMarkup(
+      <FactionAvatar
+        character={character({ faction_slug: "wow", avatar_url: "/media/isolde.png" })}
+      />,
+    );
+    expect(html).toContain("isolde.png");
+    expect(html).toContain(CROWN);
+  });
+
+  it("falls back to the house monogram, not the crown, in the field (#2242)", () => {
+    const html = renderToStaticMarkup(
+      <FactionAvatar character={character({ faction_slug: "wow" })} />,
+    );
+    // The initial, in the chronicle's own hand on the flipping field.
+    expect(html).toContain(">I<");
+    expect(html).toContain("var(--faction-wow-card-font)");
+    expect(html).toContain("var(--faction-wow-avatar-field)");
+    // Still marked — the crown is the corner badge, not the field.
+    expect(html).toContain(CROWN);
+  });
+
+  it("keeps the gilt rope ring, the plum rim and the rank pill", () => {
+    const html = renderToStaticMarkup(
+      <FactionAvatar character={character({ faction_slug: "wow" })} size={72} />,
+    );
+    expect(html).toContain("var(--faction-wow-avatar-ring)");
+    expect(html).toContain("var(--faction-wow-crest-field-rim)");
+    expect(html).toContain("var(--faction-wow-avatar-pill-text)");
   });
 });

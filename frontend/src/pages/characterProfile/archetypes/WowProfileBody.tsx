@@ -295,7 +295,7 @@ function MobileProfile({
   // `profile.stats.*` block. The row itself is kept because its figures are
   // real data — deleting it would take the score and both counts off the page.
   const stats = [
-    { label: t('sidebar.characterCard.points'), value: character.score },
+    { label: t('sidebar.characterCard.points', { count: character.score }), value: character.score },
     { label: t('profile.mobile.tabPraxis'), value: submissions.length },
     { label: t('profile.mobile.tabTasks'), value: proposedTasks.length },
   ]

@@ -193,7 +193,8 @@
     "multiplier": "×{{value}}",
     "modifierCaption": "modifier",
     "levelCaption": "Level",
-    "pointsUnit": "Points",
+    "pointsUnit_one": "Point",
+    "pointsUnit_other": "Points",
     "signup": "Sign up",
     "mastheadLink": "{{faction}} faction page"
   },

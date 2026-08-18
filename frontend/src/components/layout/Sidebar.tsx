@@ -816,8 +816,8 @@ export default function Sidebar() {
             </span>
             <span className="truncate" style={identityMetaStyle}>
               {eraName
-                ? t('sidebar.characterCard.eraPoints', { era: eraName })
-                : t('sidebar.characterCard.points')}
+                ? t('sidebar.characterCard.eraPoints', { era: eraName, count: character.score })
+                : t('sidebar.characterCard.points', { count: character.score })}
             </span>
           </div>
 

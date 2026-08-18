@@ -188,7 +188,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
       >
         <DefaultPointsRing
           value={formatPoints(total)}
-          unit={t("card.stamp.points")}
+          unit={t("card.stamp.points", { count: total })}
           size={MARK}
           ground="var(--faction-default-stamp-bg)"
         />

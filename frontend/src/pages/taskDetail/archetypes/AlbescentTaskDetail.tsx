@@ -153,7 +153,7 @@ export default function AlbescentTaskDetail({
               color: "var(--faction-default-gold)",
             }}
           >
-            {t("detail.points.total")}
+            {t("detail.points.total", { count: modifiedPoints })}
           </span>
         </span>
       </span>

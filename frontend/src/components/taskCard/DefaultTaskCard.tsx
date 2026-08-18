@@ -163,7 +163,7 @@ export default function DefaultTaskCard({
                 before. The ring is drawn ONCE, in {@link DefaultPointsRing}. */}
             <DefaultPointsRing
               value={basePoints}
-              unit={i18n.t("feed:taskCard.pointsUnit")}
+              unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
               size={size.ringSize}
               valueSize={size.numeralSize}
             />
