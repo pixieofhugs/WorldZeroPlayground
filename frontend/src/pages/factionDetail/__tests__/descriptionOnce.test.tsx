@@ -53,7 +53,7 @@ const WITH_HERO = [
 const WITHOUT_HERO = 'albescent'
 
 const membership: Membership = {
-  state: 'ineligible',
+  state: 'none',
   currentFactionSlug: null,
   join: async () => {},
   joining: false,

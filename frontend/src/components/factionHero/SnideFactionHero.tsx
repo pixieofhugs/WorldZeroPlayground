@@ -26,13 +26,11 @@ const CHIT_ROT = [-3, 2.5, -2];
 
 export default function SnideFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
 }: {
   name: string;
-  description?: string | null;
   members: number;
   tasks: number;
   praxes: number;
@@ -191,18 +189,6 @@ export default function SnideFactionHero({
           >
             {i18n.t("feed:factionHero.snide.motto")}
           </div>
-          <p
-            className="content-text"
-            style={{
-              fontFamily: "var(--font-body)",
-              lineHeight: 1.6,
-              maxWidth: 560,
-              margin: "var(--space-lg) 0 0",
-              color: "var(--faction-snide-card-muted)",
-            }}
-          >
-            {description ?? i18n.t("feed:factionHero.snide.descriptionFallback")}
-          </p>
         </div>
 
         {/* right: slapped sigil + acid stat chits stacked on the side */}

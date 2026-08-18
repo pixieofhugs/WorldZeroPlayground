@@ -30,9 +30,15 @@ import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
  * Data + the page backdrop come from useFactionDetail; this component only
  * routes the loading / error / not-found guards and the two dispatches.
  */
+/**
+ * A hero is the IDENTITY BAND — seal, wordmark, motto, counts. It carries no
+ * `description` (#2137): the blurb used to arrive here AND be read again out of
+ * the catalog by every `*FactionBody`, so every faction page said the same
+ * sentence twice. The body keeps it, because the body is the half that treats
+ * it as paragraphs rather than a blob.
+ */
 export interface FactionHeroProps {
   name: string;
-  description?: string | null;
   /** Raw counts — each hero labels them in its own faction voice. */
   members: number;
   tasks: number;
@@ -84,7 +90,6 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
       {Hero ? (
         <Hero
           name={name}
-          description={description}
           members={members.length}
           tasks={tasks.length}
           praxes={recentPraxis.length}
@@ -93,7 +98,14 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
         <>
           <PageTitle title={name} eyebrow={t("detail.eyebrow")} />
 
-          {/* ── Description ── PLACEHOLDER: design to restyle ── */}
+          {/* ── Description ── PLACEHOLDER: design to restyle ──
+              This is the ONLY copy of the blurb on the fall-through branch, so
+              it stays where the heroes' went (#2137). A faction with no
+              `factionHero` has no `factionBody` either — it falls through to
+              DefaultFactionBody, which draws no description at all — so there
+              is nothing to duplicate here and nothing beneath to inherit it.
+              A faction that later claims a body without a hero would want this
+              card gone; `descriptionOnce.test.tsx` counts the page either way. */}
           <div
             className="sidebar-card mb-6"
             style={{ borderLeft: `4px solid ${accent}`, padding: "var(--space-md) var(--space-lg)" }}

@@ -23,7 +23,6 @@ import { WowSigil } from "../sigil/WowSigil";
  */
 export default function WowFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
@@ -118,18 +117,6 @@ export default function WowFactionHero({
             {i18n.t("feed:factionHero.wow.motto")}
           </p>
 
-          <p
-            className="content-text"
-            style={{
-              fontFamily: "var(--faction-wow-body-font)",
-              lineHeight: 1.55,
-              color: "var(--faction-wow-card-text)",
-              maxWidth: 560,
-              margin: "0 auto var(--space-xl)",
-            }}
-          >
-            {description ?? i18n.t("feed:factionHero.wow.descriptionFallback")}
-          </p>
 
           {/* ── the muster ── */}
           <div

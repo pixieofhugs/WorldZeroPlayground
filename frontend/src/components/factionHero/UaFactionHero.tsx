@@ -2,7 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
-import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../factionMarks/uaAtoms";
+import { UA_DISPLAY, UA_EYEBROW } from "../factionMarks/uaAtoms";
 
 /**
  * UA faction-page hero (kit §13, #851).
@@ -22,7 +22,6 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../factionMarks/uaAtoms";
  */
 export default function UaFactionHero({
   name,
-  description,
   members,
   tasks,
   praxes,
@@ -93,19 +92,6 @@ export default function UaFactionHero({
               >
                 {name}
               </h1>
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: UA_TEXT,
-                  lineHeight: 1.5,
-                  color: "var(--faction-ua-card-body)",
-                  maxWidth: 520,
-                  margin: 0,
-                }}
-              >
-                {description ??
-                  i18n.t("feed:factionHero.ua.descriptionFallback")}
-              </p>
             </div>
           </div>
         </div>
