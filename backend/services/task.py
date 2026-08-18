@@ -846,8 +846,12 @@ async def list_tasks(
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:
             query = query.where(Task.status != TaskStatus.pending)
         # Gate 5 is the exclude_character_id clause below — reused, not rewritten.
-        # The route already defaults it to the viewer (#1229); this only arms it
-        # for a direct service caller that did not.
+        # This is the ONLY place the viewer becomes that default (#2264). The
+        # route used to do it first, for every caller and regardless of
+        # `can_sign_up`, which made a faction's task count depend on who was
+        # reading it. Armed here it is scoped to the question that actually asks
+        # it: "which tasks could I claim right now" — and a task you are already
+        # working is not one of them, which is #1229's browse behaviour intact.
         if exclude_character_id is None:
             exclude_character_id = viewer.id
 
