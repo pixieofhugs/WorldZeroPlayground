@@ -15,7 +15,6 @@ import {
   CAPS,
   CAPTION,
   DECO,
-  RuneRule,
   GOLD,
   INK,
   LINE,
@@ -48,8 +47,9 @@ import type { FactionDetailState } from "../useFactionDetail";
  *
  * SWEPT OFF THE CODEX (#1208). Every mark is the plate kit's rather than a
  * private drawing: the roster's circular vellum medallions are `AuthorOctagon`,
- * the level beside a keeper's name gains the `Tally`, and every section rule is
- * `RuneRule`. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
+ * the level beside a keeper's name gains the `Tally`, and every section rule was
+ * the kit's rune band until #2210 retired the old glyph vocabulary and left the
+ * section heads as bare type. Two faction grounds carry ink here — the plate (`ink` 13.91:1,
  * `quiet` 5.98, `caption` 7.22, `nile` 7.00) and the night band under the
  * spotlight (`band-ink` 14.00, `gold` 14.00, `band-quiet` 8.97). Every one of
  * those eight numbers was stale when #1793 re-derived them: they were measured
@@ -119,14 +119,16 @@ const SECTION_HEADING: CSSProperties = {
   color: "var(--color-text-primary)",
 };
 
-/** Section title in the plate's display face, over the design's fluted rule. */
+/**
+ * Section title in the plate's display face.
+ *
+ * It stood over a rune band until #2210, which retires the old glyph vocabulary
+ * kit-wide: the notation band is the faction's only ornament row and it is the
+ * MASTHEAD's last line, so a page that heads its sections with bare type takes
+ * nothing in the band's place.
+ */
 function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <>
-      <h2 style={SECTION_HEADING}>{children}</h2>
-      <RuneRule />
-    </>
-  );
+  return <h2 style={SECTION_HEADING}>{children}</h2>;
 }
 
 // `romanLevel` formatted the roster and spotlight levels as "level {roman}".

@@ -13,7 +13,6 @@ import {
   BRASS_LIGHT,
   CAPTION,
   DECO,
-  RuneRule,
   INK,
   INNER,
   LINE,
@@ -128,9 +127,10 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
         <h1 style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1.05, letterSpacing: '0.04em', color: INK, margin: 'var(--space-xs) 0 0' }}>
           {t('fieldDesk.home.title')}
         </h1>
-        <div style={{ marginTop: 'var(--space-sm)' }}>
-          <RuneRule />
-        </div>
+        {/* A rune band closed the running head until #2210 retired the old
+            glyph vocabulary kit-wide. The desk mounts no masthead, so nothing
+            takes its place — the column's own `--space-lg` gap parts the head
+            from the first leaf. */}
       </header>
 
       {/* ── Observer leaf ── */}

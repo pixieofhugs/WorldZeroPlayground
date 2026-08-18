@@ -25,7 +25,7 @@
  * band.
  *
  * Every mark is REUSED from the kit, never redrawn: `EphemeristsSigil`,
- * `Cornice`, `GlyphRegister`. No new SVG.
+ * `Cornice`. No new SVG.
  *
  * The band's mark was the winged sun disc until #1634 retired it kit-wide — the
  * sigil is the only mark, and this row was its last caller anywhere. It takes
@@ -63,7 +63,6 @@ import {
   BRASS,
   BRASS_LIGHT,
   Cornice,
-  GlyphRegister,
   INK,
   LINE,
   OCHRE,
@@ -107,26 +106,23 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 const ROW_SKIN: FeedRowSkin = { ink: { actor: BRASS_LIGHT } }
 
 interface BandSize {
-  /** Masthead height, and the width its register is drawn to fill. Geometry. */
+  /** Band height, and the width its ruled hairline is drawn to fill. Geometry. */
   height: number
   view: number
   /** The sigil at the head of the band. Its HEIGHT — the mark owns its ratio
    *  (#1635) — so there is one number, not two. */
   discHeight: number
-  /** Strength of the incised register behind the label. */
-  register: number
   bandPadding: string
   labelSize: string
 }
 
 const SIZES: Record<'desktop' | 'mobile', BandSize> = {
   // 452 is the feed column's own basis (the sheet's `minmax(452px, 1fr)`), so
-  // the register's signs land at their drawn pitch instead of being sliced short.
+  // the band's hairline is drawn to the width it is actually shown at.
   desktop: {
     height: 30,
     view: 452,
     discHeight: 14,
-    register: 0.24,
     bandPadding: 'var(--space-xs) var(--space-md)',
     labelSize: 'var(--text-md)',
   },
@@ -134,7 +130,6 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
     height: 26,
     view: 360,
     discHeight: 10,
-    register: 0.2,
     bandPadding: 'var(--space-xs) var(--space-sm)',
     labelSize: 'var(--text-base)',
   },
@@ -153,8 +148,8 @@ export default function EphemeristsFeedFrame({
     <div
       style={{
         position: 'relative',
-        // The ornament z-indexes (the register behind the label, the cornice's
-        // own layer) stay inside this card. Without it they order against
+        // The ornament z-indexes (the band's hairline behind the label, the
+        // cornice's own layer) stay inside this card. Without it they order against
         // whatever stacking context the feed column happens to establish, which
         // is how a positioned ornament ends up over unrelated copy (§5).
         isolation: 'isolate',
@@ -164,7 +159,7 @@ export default function EphemeristsFeedFrame({
         color: INK,
       }}
     >
-      {/* ── The masthead: night sky, one incised register, the winged disc ── */}
+      {/* ── The chassis band: night sky, ruled off, four chrome slots ── */}
       <div
         style={{
           position: 'relative',
@@ -177,8 +172,8 @@ export default function EphemeristsFeedFrame({
         <svg
           width="100%"
           height={size.height}
-          // The viewBox tracks the band's own height so `slice` crops the
-          // register at the edges rather than through the middle of every sign.
+          // The viewBox tracks the band's own height, so `slice` crops the
+          // hairline at the edges rather than scaling it off the band.
           viewBox={`0 0 ${size.view} ${size.height}`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
@@ -190,12 +185,14 @@ export default function EphemeristsFeedFrame({
             strokeWidth="0.6"
             opacity="0.24"
           />
-          <GlyphRegister
-            width={size.view}
-            y={size.height - 7}
-            strength={size.register}
-            keyPrefix="feed"
-          />
+          {/* AN INCISED REGISTER RAN ALONG THE FOOT OF THIS BAND (#2210). It
+              was the old glyph vocabulary, which #2143 replaced on the masthead
+              with the notation band and then left standing everywhere else —
+              two vocabularies at once, overlapping wherever they shared a band.
+              The register retires; nothing replaces it here, because the
+              notation band is the MASTHEAD's last line and this frame has no
+              masthead: it places its four chrome slots by hand. The hairline
+              above still rules the band's head. */}
         </svg>
 
         {/* The four chrome slots, placed by hand rather than through
