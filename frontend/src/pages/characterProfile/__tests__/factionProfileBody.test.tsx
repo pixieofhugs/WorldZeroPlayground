@@ -459,11 +459,14 @@ describe.each(["desktop", "mobile"] as const)(
       expect(html, "the torn strip survived").not.toContain("polygon(0 0,4% 40%");
     });
 
-    it("reads the ephemerists level label in brass", () => {
-      onlyOn(
-        "ephemerists",
-        "color:var(--faction-ephemerists-plate-brass-light)",
-      );
+    // Was the level LABEL, in the plate's brass. #2213 deleted the ring, which
+    // took the hub disc that painted `surface` under both of the panel's texts:
+    // the label joined its two neighbours on `headerMuted`, and the NUMERAL's
+    // ink moved with its ground, from the plate's brass (2.83:1 on the cornice
+    // band it now sits on) to the band's own mark at 7.59:1. Still `onlyOn`,
+    // because the leak this table guards is a kit's ink reaching all nine.
+    it("strikes the ephemerists level numeral in the band's mark", () => {
+      onlyOn("ephemerists", "color:var(--faction-ephemerists-plate-band-ink)");
     });
   },
 );
