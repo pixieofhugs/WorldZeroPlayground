@@ -61,34 +61,57 @@ export function SnideSigil({
  * is the device the figure sits INSIDE, and this is S.N.I.D.E.'s: the only DRAWN
  * one it has.
  *
- * IT IS A SHARED MARK, BY OWNER RULING (#2042). The task card drew the loop and
- * the praxis-card score stamp drew a bare Anton numeral with a misregistered pink
- * offset shadow — one faction, two devices — and the ruling is that the point card
- * reflects the card's total look. So the loop is drawn once, here, and both
- * surfaces mount it. The pink SHADOW does not come along: the pink is the loop
- * now, and a second pink pass under a pink line reads as mud rather than as
- * misregistration.
+ * IT IS A SHARED MARK, BY OWNER RULING (#2042), ON THREE SURFACES. The task card
+ * drew the loop, the praxis-card score stamp drew a bare Anton numeral with a
+ * misregistered pink offset shadow, and the TASK DETAIL page drew the loop a third
+ * time by hand — one faction, three drawings, and #2042's own survey only ever
+ * counted two. The ruling is that the point card reflects the card's total look,
+ * so the loop is drawn once, here, and all three surfaces mount it. The pink
+ * SHADOW does not come along: the pink is the loop now, and a second pink pass
+ * under a pink line reads as mud rather than as misregistration.
  *
  * THE INKS ARE PROPS AND THAT IS NOT OPTIONAL. This is the pairing trap #2042
- * warns about, and S.N.I.D.E. is where it bites hardest. The card's numeral ink is
- * `--faction-snide-note-ink`, which FLIPS (#14110b by day, #f4f1e8 by night); the
- * score stamp's plate is `--faction-snide-stamp-bg`, a translucent black over the
- * near-black `-card-bg` in BOTH themes. The card's ink on the stamp's plate
- * measures **1.05:1 in light** — an invisible figure that passes every guard,
- * exactly the shape that shipped at 1.08:1 earlier in this epic. The caption ink
- * is no better: `-note-pink-ink` reads 3.27:1 there, under AA.
+ * warns about, and S.N.I.D.E. is where it bites hardest — on BOTH the surfaces the
+ * loop travelled to. The card's numeral ink is `--faction-snide-note-ink`, which
+ * FLIPS (#14110b by day, #f4f1e8 by night), and both other grounds are black in
+ * BOTH themes, so it is legible on them in exactly one:
  *
- * So the stamp passes its own inks and they are measured on its own plate:
- *   figure  `--faction-snide-acid`        16.31:1 light · 16.81:1 dark
- *   caption `--faction-snide-card-muted`  13.52:1 light · 12.74:1 dark
- *   loop    `--faction-snide-pink`         5.65:1 light ·  5.82:1 dark
- * The loop is theme-invariant, which is why it needs no prop.
+ *   score stamp   `-stamp-bg` over `-card-bg`   `-note-ink` **1.05:1 light**
+ *   task detail   `-card-bg`, the punched slab  `-note-ink` **1.00:1 light**
+ *
+ * 1.00:1 is not a near miss: on the detail page's slab the default figure ink is
+ * the identical hex to the ground. The caption default is no better — 3.27:1 on
+ * the stamp, 3.12:1 on the slab, both under AA. This is the shape that shipped at
+ * 1.08:1 earlier in this epic, and it passes every guard that does not measure the
+ * PAIR.
+ *
+ * So each mount passes its own inks, measured on its own ground:
+ *
+ *   score stamp (`-stamp-bg` over `-card-bg`)
+ *     figure  `--faction-snide-acid`        16.31:1 light · 16.81:1 dark
+ *     caption `--faction-snide-card-muted`  13.52:1 light · 12.74:1 dark
+ *     loop    `--faction-snide-pink`         5.65:1 light ·  5.82:1 dark
+ *   task detail (`-card-bg`, the slab punched into the acid plate — #2066)
+ *     figure  `--faction-snide-card-text`   16.68:1 light · 17.51:1 dark
+ *     caption `--faction-snide-card-accent` 15.55:1 light · 16.32:1 dark
+ *     loop    `--faction-snide-pink`         5.38:1 light ·  5.65:1 dark
+ *
+ * The loop is theme-invariant and clears 1.4.11's 3:1 on every ground, which is
+ * why it alone needs no prop.
+ *
+ * `valueSize` IS A PROP BECAUSE THE THREE SURFACES DRAW AT DIFFERENT SCALES —
+ * the pattern `SingularityReadout`, `DefaultPointsRing` and `UaEnsoScore` already
+ * set. The two cards take the default; the detail page's desktop total is the
+ * page's headline figure and keeps `--text-display`.
  *
  * NO NUMERAL CEILING, unlike UA's ensō. Anton is condensed enough that the widest
  * total the era can bank still clears the loop: at `--text-heading` a four-glyph
- * `13.6` is ~47px against the loop's ~77px of inner span at the 96 both surfaces
- * draw. If a future era ever banks a five-figure total, `UaEnsoScore.ringCeilingPx`
- * is the upgrade path — ponytail: measured, not machined.
+ * `13.6` is ~47px against the loop's ~77px of inner span at the 96 the two cards
+ * draw. The detail page asks more of it — `--text-display` on a 128 loop — and
+ * that is the ratio the 1.18× growth below was built for, so it is the surface the
+ * growth belongs on MOST. If a future era ever banks a five-figure total,
+ * `UaEnsoScore.ringCeilingPx` is the upgrade path — ponytail: measured, not
+ * machined.
  */
 export function PenCircle({
   size,
@@ -96,6 +119,7 @@ export function PenCircle({
   unit,
   valueColor = "var(--faction-snide-note-ink)",
   unitColor = "var(--faction-snide-note-pink-ink)",
+  valueSize = "var(--text-heading)",
   style,
 }: {
   /** The loop's drawn width in px. Ornament geometry (§4a). */
@@ -108,6 +132,8 @@ export function PenCircle({
   valueColor?: string;
   /** The caption's ink. Defaults to the clipping's walked pink. */
   unitColor?: string;
+  /** The figure's type ramp rung. The two cards take the default. */
+  valueSize?: string;
   style?: CSSProperties;
 }) {
   return (
@@ -150,7 +176,7 @@ export function PenCircle({
         style={{
           position: "relative",
           fontFamily: "var(--faction-snide-font-impact)",
-          fontSize: "var(--text-heading)",
+          fontSize: valueSize,
           lineHeight: 0.9,
           color: valueColor,
           letterSpacing: "-0.01em",
