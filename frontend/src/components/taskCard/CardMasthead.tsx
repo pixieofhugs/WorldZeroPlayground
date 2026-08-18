@@ -158,6 +158,16 @@ export default function CardMasthead({
            the user agent's link blue over a hand-set wordmark. */
         color: "inherit",
         textDecoration: "none",
+        /* THE BAND DOES NOT TAKE THE ROW'S SLACK. `.task-card-row` hands a
+           card's spare height down a chain that ends at `a[href]` (index.css,
+           the equal-height row), so the moment this element became an anchor it
+           joined that chain and would have stretched beside the body link,
+           splitting the slack between them. The band is a band: it is as tall
+           as its own content, and the body still absorbs the difference.
+           `frontend/src/pages/tasks/__tests__/equalHeightRow.test.tsx` holds
+           this. Only `flex-grow` is pinned, so shrink and basis stay the
+           initial values the band had as a plain block. */
+        flexGrow: 0,
         ...style,
       }}
     >
