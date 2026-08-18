@@ -147,5 +147,39 @@ describe("task-detail content-slot invariant", () => {
         'href="/praxis/99/edit"',
       );
     });
+
+    /**
+     * The DROP slot is a live control, and it is not crossed out.
+     *
+     * Both halves were reported from production in one week. #2215 read the
+     * word as inert text because clicking it did nothing (the cause was the
+     * `window.confirm` behind it — see `useTaskDetail`), and #2214 read it as
+     * unavailable because two skins struck it through. Neither is visible to a
+     * `tsc` pass, and both are one careless line away from coming back, so the
+     * shape of the control is asserted for every archetype here rather than in
+     * the two skins that happened to get reported.
+     *
+     * `line-through` is checked against the whole in-progress render, not one
+     * declaration: the mark is wrong on any control on this panel, whichever
+     * skin reaches for it next.
+     */
+    it(`${slug} draws drop as a button, not struck-through text`, () => {
+      const { html } = render(
+        <Archetype
+          state={baseState({ isInProgress: true, inProgressPraxisId: 99 })}
+        />,
+      );
+      const buttonLabels = [
+        ...html.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/g),
+      ].map((match) => match[1].replace(/<[^>]*>/g, "").toLowerCase());
+      expect(
+        buttonLabels.some((label) => label.includes("drop")),
+        "drop slot is a <button>, not inert text",
+      ).toBe(true);
+      expect(
+        html,
+        "a struck-through control reads as unavailable",
+      ).not.toContain("line-through");
+    });
   }
 });
