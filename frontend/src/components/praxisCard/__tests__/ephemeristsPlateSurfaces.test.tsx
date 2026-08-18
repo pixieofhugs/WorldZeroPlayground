@@ -189,6 +189,39 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     const markup = html()
     expect(markup.slice(0, markup.indexOf('>'))).not.toMatch(HEX)
   })
+
+  /**
+   * #2240 — THE CROWN IS DRAWN OVER THE CORNICE, NOT UNDER IT.
+   *
+   * `EphemeristsScoreStamp` hangs the crown at `top: -13`, so it overhangs the
+   * leaf's top edge on purpose (#2122 already moved it out of the panel's own
+   * `clip-path` for that reason). On this card the overhang landed under the
+   * cavetto: the leaf is a stacking context at `z-index: 2` and `Cornice` is
+   * one at `3`, so the band painted over the mark whatever the crown's own
+   * `z-index: 3` said — the inner number cannot lift a child out of its
+   * parent's context.
+   *
+   * NOT an `overflow` bug, which is the other way this defect presents on this
+   * kit (#2150's shaved plates): the frame's `overflow: hidden` clips at the
+   * card's border box, and the crown overhangs 13px into a ~12px cornice that
+   * sits well inside it. Nothing is clipped; the order was wrong.
+   *
+   * The seam is the two declared layers, because an overlap is not decidable in
+   * an SSR harness: what IS decidable is that the layer carrying the crown
+   * composites above the layer carrying the band.
+   */
+  it('paints the crowned leaf above the cornice, not under it (#2240)', () => {
+    const markup = render(
+      <EphemeristsPraxisCard praxis={praxis({ is_top_for_task: true })} adminProps={adminProps} />,
+    )
+    // The crown really is on this render, and really is in the leaf.
+    expect(markup, 'the one praxis mark').toContain('var(--fdl-ring)')
+    const cornice = markup.match(/aria-hidden="true" style="position:relative;z-index:(\d+)/)
+    const leaf = markup.match(/<div style="position:relative;z-index:(\d+);padding:/)
+    expect(cornice?.[1], 'the cavetto band declares a layer').toBeDefined()
+    expect(leaf?.[1], 'the journal leaf declares a layer').toBeDefined()
+    expect(Number(leaf?.[1])).toBeGreaterThan(Number(cornice?.[1]))
+  })
 })
 
 describe('one card, both form factors (ADR-0067)', () => {

@@ -109,10 +109,18 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
       <EphemeristsBand />
       <Cornice />
 
+      {/* THE LEAF SITS ABOVE THE CAVETTO (#2240). The score stamp's crown hangs
+          at `top: -13`, so it overhangs the leaf's top edge into the cornice on
+          purpose — #2122 moved it out of the stamp's own `clip-path` for that
+          reason. At `z-index: 2` under a `Cornice` at 3 the band painted over
+          it, and the crown's own `z-index: 3` could not help: an inner number
+          never lifts a child out of its parent's stacking context. NOT an
+          `overflow` fix — the frame clips at the card's border box and the
+          crown never reaches it. Nothing else in the leaf meets the band. */}
       <div
         style={{
           position: "relative",
-          zIndex: 2,
+          zIndex: 4,
           padding: "0 var(--space-xl) var(--space-lg)",
         }}
       >
