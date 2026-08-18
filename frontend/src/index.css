@@ -1135,7 +1135,10 @@
   --faction-snide-composer-field: #eae6d8; /* an input, a shade off the sheet */
   --faction-snide-composer-rule: rgba(20, 17, 11, 0.5); /* a drawn hairline */
   --faction-snide-composer-bar: #14110b; /* masthead bar + the censor stripe */
-  --faction-snide-composer-grain: rgba(20, 17, 11, 0.09); /* the raster */
+  /* `--faction-snide-composer-grain` stood here — the sheet's own 1px/3px
+     raster, printed on a stock that had none. #2177 gives this surface the wall,
+     which carries a raster AND a scanline of its own, and a third stripe over
+     those two is moiré rather than xerox. The layer went, so the pigment did. */
   --faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */
   /* The error banner's ink, and the ONE mint #1231 needed (§3, "same ink,
      second ground"). Seven skins hand that banner their existing
@@ -2844,7 +2847,6 @@
   --faction-snide-composer-field: #1e1a12;
   --faction-snide-composer-rule: rgba(244, 241, 232, 0.32);
   --faction-snide-composer-bar: #080706;
-  --faction-snide-composer-grain: rgba(244, 241, 232, 0.07);
   --faction-snide-composer-acid-ink: #b6ff2e;
   --faction-snide-composer-alarm: #ff69ac;
 
