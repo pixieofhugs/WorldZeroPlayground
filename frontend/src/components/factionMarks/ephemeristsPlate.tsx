@@ -269,8 +269,13 @@ export const METAL_SIGILS = [
   },
   {
     name: "platinum",
+    // THE HAND (#2142). Platinum is the sun-and-moon compound, and it was drawn
+    // mirrored: the dotted sun sat on the RIGHT at x=15.6 with the crescent
+    // opening the path on the left. Owner checked it against a reference and it
+    // is sun-with-dot LEFT, crescent RIGHT. The other four sigils are unchanged
+    // and must stay byte-identical — they were already correct.
     color: "var(--faction-ephemerists-metal-platinum)",
-    glyph: "M10.6 5.2 A7 7 0 1 0 10.6 18.8 A5.5 5.5 0 1 1 10.6 5.2 Z M15.6 7.6 a4.4 4.4 0 1 0 0.01 0 Z M15.6 11.2 a0.9 0.9 0 1 0 0.01 0 Z",
+    glyph: "M6.4 7.2 a4.8 4.8 0 1 0 0.01 0 Z M6.4 10.85 a1.15 1.15 0 1 0 0.01 0 Z M16.8 7.2 A4.8 4.8 0 1 0 16.8 16.8 A6.5 6.5 0 0 1 16.8 7.2 Z",
     weight: 1.3,
     burstStep: 22.5,
   },
