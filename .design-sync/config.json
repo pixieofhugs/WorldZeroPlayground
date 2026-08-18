@@ -250,7 +250,34 @@
     "UaFieldDesk": "src/pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
     "DefaultVote": "src/components/vote/DefaultVote.tsx",
     "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
-    "DuelSealSheet": "src/components/duel/DuelSealSheet.tsx"
+    "DuelSealSheet": "src/components/duel/DuelSealSheet.tsx",
+    "SignInOptions": "src/components/SignInOptions.tsx",
+    "StartHereMark": "src/components/StartHereMark.tsx",
+    "RosterAvatar": "src/components/collab/RosterAvatar.tsx",
+    "CovenCauldron": "src/components/factionMarks/CovenCauldron.tsx",
+    "DefaultPointsRing": "src/components/factionMarks/DefaultPointsRing.tsx",
+    "EphemeristsRuneStrip": "src/components/factionMarks/EphemeristsRuneStrip.tsx",
+    "SingularityLamps": "src/components/factionMarks/SingularityLamps.tsx",
+    "SingularityProcessLight": "src/components/factionMarks/SingularityProcessLight.tsx",
+    "SingularityReadout": "src/components/factionMarks/SingularityReadout.tsx",
+    "PendingBadge": "src/components/layout/PendingBadge.tsx",
+    "CardMasthead": "src/components/cardMasthead/CardMasthead.tsx",
+    "RelationshipBlockControl": "src/pages/characterProfile/RelationshipBlockControl.tsx",
+    "PlayersFilterBar": "src/pages/players/PlayersFilterBar.tsx",
+    "ScoreToggle": "src/pages/players/ScoreToggle.tsx",
+    "SectionHeading": "src/pages/players/SectionHeading.tsx",
+    "PraxisFeedEmpty": "src/pages/praxes/PraxisFeedEmpty.tsx",
+    "PraxisFilterBar": "src/pages/praxes/PraxisFilterBar.tsx",
+    "ProposeTaskLink": "src/pages/tasks/ProposeTaskLink.tsx",
+    "TaskFilterBar": "src/pages/tasks/TaskFilterBar.tsx",
+    "SegmentedRail": "src/components/ui/FilterBar/SegmentedRail.tsx",
+    "OptionPicker": "src/components/ui/FilterBar/OptionPicker.tsx",
+    "OnboardingCard": "src/pages/onboarding/OnboardingCard.tsx",
+    "IntroCard": "src/pages/onboarding/IntroCard.tsx",
+    "AuthCard": "src/pages/onboarding/AuthCard.tsx",
+    "TermsCard": "src/pages/onboarding/TermsCard.tsx",
+    "UpdatesFilterBar": "src/pages/updates/UpdatesFilterBar.tsx",
+    "RequestsQueue": "src/pages/updates/RequestsQueue.tsx"
   },
   "overrides": {
     "ActivityTicker": {
@@ -681,6 +708,21 @@
     "UaFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
+    },
+    "PlayersFilterBar": {
+      "cardMode": "column"
+    },
+    "PraxisFilterBar": {
+      "cardMode": "column"
+    },
+    "TaskFilterBar": {
+      "cardMode": "column"
+    },
+    "UpdatesFilterBar": {
+      "cardMode": "column"
+    },
+    "SegmentedRail": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",

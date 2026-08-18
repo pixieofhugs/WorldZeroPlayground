@@ -362,14 +362,39 @@ export function CollabRoster({
                   )}
               </span>
 
+              {/* #2129 — THE NAME WRAPS, and the `min-width: 0` beside it was
+                  never what made that safe. This cell used to be the ellipsis
+                  pair (`overflow: hidden` + `white-space: nowrap`), which
+                  bounds how the name PAINTS and, deliberately, nothing else: a
+                  nowrap string's min-content size is its whole rendered width,
+                  and `min-width: auto` — the initial value, so the value of
+                  every flex item nobody thought about — floors an item at its
+                  content-based minimum size. The composer mounts this roster
+                  inside `controls.tsx`'s `flex: 1 1 100%` wrapper, which is one
+                  of those, so a 22-character name inflated the wrapper to
+                  min-content instead of ellipsizing inside it, and the status
+                  pill went out past the panel's clip. `min-width: 0` only ever
+                  bites once an ancestor HAS a width to shrink against.
+
+                  `overflow-wrap: anywhere` is the fix, and it is the fix at the
+                  name rather than at that wrapper because there is no shared
+                  ancestor to bound — the same root cause reached the praxis
+                  card through a different one (#2132). It puts min-content at a
+                  single character, so no ancestor anywhere can be inflated by a
+                  name at any length. NOT `break-word`: identical paint, and it
+                  does not reduce min-content. `flex: 1` and `min-width: 0` stay
+                  — they are what still hands the leftover width to the name.
+
+                  Wrapping over two lines is the intended reading of a long
+                  name here. The alternative is a truncation that hides which
+                  collaborator a row belongs to, on the one block whose entire
+                  job is naming who is on the praxis. */}
               <span
                 className="font-body text-[13px]"
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  overflowWrap: 'anywhere',
                   fontWeight: done ? 700 : 400,
                 }}
               >

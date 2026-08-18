@@ -160,7 +160,15 @@ const dress: ProfileDress = {
   bodyFont: READING,
   headerStyle: {
     background: CARD,
-    border: `2px solid ${BORDER}`,
+    // NO EDGE (#2131). §5: a bordered panel may not sit directly inside another
+    // bordered panel. This band holds two framed panels — the shared
+    // `CredentialCard` and the progression panel below it — and its own 2px
+    // `BORDER` made all three the same pink, concentric, which is the report's
+    // screenshot. The card keeps its frame (it is the object being looked at,
+    // and it renders framed on the FieldDesk roster and the creation preview
+    // too), so the band gives way: it already has the ward-card stock and a
+    // radius, which is enough to read as a panel. The shadow stays — that is
+    // elevation, not a frame.
     borderRadius: 16,
     padding: 'var(--space-2xl)',
     marginBottom: 'var(--space-2xl)',

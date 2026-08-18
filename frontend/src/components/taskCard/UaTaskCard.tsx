@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { UaBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { Lotus } from "../factionMarks";
@@ -183,36 +182,12 @@ export default function UaTaskCard({
 
         {/* THE LEAF GAINS A MASTHEAD (#2029). UA shipped none: the top of the
             card was a bare eyebrow holding the ensō alone, once #1124 took the
-            "Task {id}" ordinal that stood beside it. The band is the kit's
-            shared anatomy — the mark hard left, the faction's name centred — and
-            the eyebrow stands down with it, because the ensō it held is the
-            same mark the band now carries and no card draws two.
-
-            THE WORDMARK TAKES THE BODY INK, NOT THE ACCENT. The design sets it
-            in `--faction-ua-card-accent` on `--faction-ua-hair`, which measures
-            4.46:1 in light — under AA for a 24px non-bold face, and the band's
-            whole job is to be read. `-card-text` is 10.35:1 on the same ground
-            (11.45:1 in dark) and is the leaf's own ink; the accent keeps the
-            band's bottom rule, where a hairline owes nothing. */}
-        <CardMasthead
-          slug="ua"
-          style={{
-            background: "var(--faction-ua-hair)",
-            borderBottom: "1px solid var(--faction-ua-card-accent)",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: UA_DISPLAY,
-              fontWeight: 600,
-              fontSize: "var(--text-title)",
-              letterSpacing: "0.08em",
-              lineHeight: 1,
-            }}
-          >
-            {factionName("ua")}
-          </span>
-        </CardMasthead>
+            "Task {id}" ordinal that stood beside it. The eyebrow stood down with
+            it, because the ensō it held is the same mark the band carries and no
+            card draws two. Mounted from the shared band (#2185) so the UA praxis
+            card wears the identical one; the paint and the ink measurement live
+            at `cardMasthead/factionBands`. */}
+        <UaBand />
 
         <div style={{ position: "relative", padding: size.pad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

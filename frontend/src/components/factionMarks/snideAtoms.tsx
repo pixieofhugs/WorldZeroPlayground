@@ -1,57 +1,45 @@
 /**
- * Shared S.N.I.D.E. craft atoms — the struck-through circle-S sigil reused
- * across SNIDE surfaces (task detail, faction hero), and the pink pen loop the
- * faction circles a figure in. Mirrors
+ * Shared S.N.I.D.E. craft atoms — the flyposted wall the faction's surfaces
+ * stand on, and the pink pen loop it circles a figure in. It does NOT hold the
+ * faction's sigil: a struck-through circle-S lived here until #2119 and was a
+ * second `SnideSigil` competing with the real one in `components/sigil/`, which
+ * two surfaces then imported by mistake. A faction gets one mark, from one
+ * module. Mirrors
  * components/factionMarks/ephemeristsPlate.tsx. Colors come from the namespaced
  * --faction-snide-* tokens in index.css. Filter-free (matches the faction's
  * CSS-only craft layers — no SVG feTurbulence).
  */
 import type { CSSProperties } from "react";
 
-interface SnideSigilProps {
-  size?: number;
-  color?: string;
-}
-
-/** A sprayed, struck-through circle-S — the defiant SNIDE mark. */
-export function SnideSigil({
-  size = 48,
-  color = "var(--faction-snide-acid)",
-}: SnideSigilProps) {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      width={size}
-      height={size}
-      style={{ display: "block" }}
-      aria-hidden="true"
-    >
-      <circle cx="24" cy="24" r="19" fill="none" stroke={color} strokeWidth="3" />
-      <text
-        x="24"
-        y="34"
-        textAnchor="middle"
-        style={{
-          fontFamily: "var(--faction-snide-font-impact)",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: sigil letterform drawn into the 48px SVG
-          fontSize: 30,
-        }}
-        fill={color}
-      >
-        S
-      </text>
-      <line
-        x1="9"
-        y1="40"
-        x2="39"
-        y2="8"
-        stroke={color}
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+/**
+ * THE FLYPOSTED WALL — S.N.I.D.E.'s one ground (#2177).
+ *
+ * Five layers bottom-to-top over the `-wall` ramp: the diagonal xerox raster, a
+ * vertical scanline, an acid wash off the top-left corner and a pink one off the
+ * bottom-right. It FLIPS — xerox stock by day, pitch black by night — which is
+ * why every pigment is a token and none of it is a `dark ? a : b` (§8).
+ *
+ * IT LIVES HERE BECAUSE THREE SURFACES WEAR IT. The recipe was inline in
+ * `SnideTaskCard` while the card was its only mount, and the owner's ruling on
+ * #2177 gives it to the composer and the praxis card as well. Three inline
+ * copies is how a faction acquires a second identity, so it is drawn once, in
+ * the shape `covenSlip`'s `SLIP_SHEET` already established for Coven's four
+ * mounts. It stays in JS rather than becoming a class for the reason the task
+ * card's comment gave: five gradients is a lot of BLOCKING stylesheet.
+ *
+ * THE INKS THAT GO ON IT ARE THE `-note-*` FAMILY, which flips with it — never
+ * `-card-*`, which is pinned near-black in both themes for the slabs pasted ON
+ * the wall (#2066). The two ends of that rule are measured against all four of
+ * this ground's readings (both ramp stops and both washed corners, both themes)
+ * in `utils/__tests__/factionContrast.test.ts`.
+ */
+export const WALL = [
+  "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",
+  "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
+  "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
+  "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
+  "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
+].join(", ");
 
 /**
  * The pen circle — S.N.I.D.E.'s points mark (#2035, shared by #2042).

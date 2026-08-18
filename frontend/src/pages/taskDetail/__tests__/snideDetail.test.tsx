@@ -144,6 +144,31 @@ describe("SNIDE task detail — the ransom dossier", () => {
     );
   });
 
+  it("hangs the praxis gallery's own hook, so its cards are black too (#2177)", () => {
+    // S.N.I.D.E.'s praxis card wears the WALL everywhere else. This page's
+    // column already is the wall, and a wall inside a wall stops reading as a
+    // thing pasted on something — so the row sets `--snd-praxis-*` back to the
+    // slab. The class is the row's OWN: `.praxis-gallery` is not a safe hook,
+    // because `WowFactionBody` mounts that one and a Snide-task praxis lands
+    // there. `snideOneGround.test.tsx` holds the other end.
+    const filed = {
+      id: 91,
+      task_id: TASK.id,
+      task_title: TITLE,
+      task_faction_slug: "snide",
+      title: "Posted it at the depot gate",
+      created_by_id: 31,
+      created_by_display_name: "Wren Abalone",
+      score: 12,
+      media_items: [],
+      applied_metatasks: [],
+    } as unknown as TaskDetailState["submissions"][number];
+    const { html } = render(
+      <SnideTaskDetail state={baseState({ submissions: [filed], sortedSubmissions: [filed] })} />,
+    );
+    expect(html).toContain("praxis-gallery snd-detail-praxis");
+  });
+
   it("speaks the shared neutral copy, not the retired case-file voice", () => {
     const { text } = render(<SnideTaskDetail state={baseState()} />);
     expect(text).toContain("Task Description");

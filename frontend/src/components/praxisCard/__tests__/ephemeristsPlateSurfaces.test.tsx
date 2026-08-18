@@ -108,21 +108,38 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     // belongs to the sweep, not to this card.
   })
 
-  it('carries the night-band masthead: the engraved title over an incised register', () => {
+  it('heads the record with the CARD TIER band, on the medallion disc', () => {
+    // #2185: a praxis card wears the same band its task card wears, and #2067
+    // restrained `EphemeristsTaskCard` to the kit's plain `CardMasthead` on the
+    // plate DISC. So the 110px night band with its incised `GlyphRegister` is
+    // off this card, and the engraved masthead with it.
     const markup = html()
-    // The register's signs and the cornice are the kit's, not a second copy.
-    expect(markup).toContain('class="epg-glyph"')
-    expect(markup).toContain('var(--faction-ephemerists-plate-band)')
+    expect(markup, 'the kit band from #2029').toContain('data-card-masthead="ephemerists"')
+    expect(markup, "the medallion's disc, not the cornice band").toContain(
+      'var(--faction-ephemerists-plate-disc)',
+    )
+    // The DATUM ROW's ink is the engraving's tell — it exists nowhere else on
+    // this card — so its absence is what says the night band really went rather
+    // than merely moving. `epg-glyph` would NOT say it: the drift strip above
+    // the vote block carries that class too, so asserting on it would pass
+    // whether the register were here or not.
+    expect(markup, 'no engraved datum row on a card').not.toContain(
+      'var(--faction-ephemerists-plate-band-quiet)',
+    )
   })
 
-  it('heads the record with the engraved masthead, and says the wordmark ONCE', () => {
-    // #1634 replaced the winged disc + Poiret One wordmark with the engraved
-    // masthead, and retired the brass cartouche pill that repeated the faction's
-    // name 40px below it. Both halves are asserted here because a mount that
-    // adds the masthead and leaves the pill is the failure that still renders:
-    // it looks like a masthead with a subtitle.
+  it('says the wordmark ONCE', () => {
+    // #1634 retired the brass cartouche pill that repeated the faction's name
+    // 40px under the masthead. The band still names the faction, so the pill
+    // must still be gone: a header plus a subtitle saying the same word is the
+    // failure that renders perfectly.
     const rendered = text(html())
-    expect(rendered).toContain(i18n.t('factions:names.ephemerists'))
+    const name = i18n.t('factions:names.ephemerists')
+    expect(rendered).toContain(name)
+    expect(
+      rendered.split(new RegExp(name, 'i')).length - 1,
+      'the band names the faction; nothing else on the card does',
+    ).toBe(1)
     // The pill's own copy, spelled out: `praxis:card.masthead.ephemerists` was
     // deleted with the pill, and a key kept alive by a negative assertion is a
     // key the next dead-key sweep cannot tell from a live one.
@@ -133,7 +150,6 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     // generic. Asserted as an absence so a voice pass cannot quietly put a
     // faction-only band back on a surface ruled shared.
     expect(rendered).not.toContain('星')
-    expect(html()).toContain('var(--faction-ephemerists-plate-band-quiet)')
   })
 
   /* The plate gloss ("for:", `praxis:card.ephemerists.for`) and the card's own

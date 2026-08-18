@@ -1,13 +1,12 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { CovenBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
 import { CovenCat, SLIP_SHEET } from "../factionMarks/covenSlip";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -36,17 +35,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 
 const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
 const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
-const HAND = "var(--font-faction-script)"; /* Caveat */
 const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
-/**
- * The masthead band the twinkle field is confined to, so no star lands in copy.
- *
- * It was 72px while the wordmark floated over the slip with a braid tied under
- * it. #2029 pins the wordmark into a band of its own and drops the braid, so
- * the field shrinks to the band it dresses. Geometry (§4a).
- */
-const MASTHEAD_HEIGHT = 44;
 
 interface SizeSet {
   /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
@@ -96,11 +86,6 @@ const CAPTION: CSSProperties = {
   color: "var(--faction-coven-slip-label)",
 };
 
-/** A four-point star, centred on (x, y) with arm length r. */
-function starPath(x: number, y: number, r: number): string {
-  const long = r * 2.6;
-  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
-}
 
 /** One heart, tied off at an end of the braid. */
 function Heart({ size = 10 }: { size?: number }) {
@@ -125,31 +110,6 @@ function Thread({ style }: { style?: CSSProperties }) {
   );
 }
 
-/** The gold twinkle field, clipped to the masthead band. */
-function TwinkleField() {
-  const stars: [number, number, number][] = [
-    [38, 16, 2.6],
-    [296, 21, 2],
-    [120, 11, 1.4],
-    [212, 27, 1.6],
-    [264, 10, 1.2],
-    [74, 29, 1.6],
-  ];
-  return (
-    <svg
-      width="100%"
-      height={MASTHEAD_HEIGHT}
-      viewBox={`0 0 340 ${MASTHEAD_HEIGHT}`}
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      style={{ position: "absolute", left: 0, top: 0, right: 0, zIndex: 1, pointerEvents: "none" }}
-    >
-      {stars.map(([x, y, r]) => (
-        <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
-      ))}
-    </svg>
-  );
-}
 
 export default function CovenTaskCard({
   task,
@@ -204,48 +164,19 @@ export default function CovenTaskCard({
             with the measurements, is at {@link CovenCat}. */}
         <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
 
-        {/* Masthead. THE WORDMARK MOVES (#2029): it floated over the slip under
-            a pentagram badge, with a braid tied off beneath it; v3 pins it into
-            a band at the top of the card on the kit's shared anatomy — the mark
-            hard left, the hand-lettered name centred on the band.
+        {/* Masthead. THE WORDMARK MOVES (#2029): it floated over the slip
+            under a pentagram badge, with a braid tied off beneath it; v3 pins it
+            into a band at the top of the card. The badge is retired in favour of
+            the kit's own `CovenSigil` (a card may not draw two faction marks in
+            its header), and the braid under the wordmark goes with it — a band
+            that already names the coven does not need an ornament run repeating
+            it. The braid lives on below, ruling off every section.
 
-            Two things go with the move. The badge is retired in favour of the
-            kit's own `CovenSigil`, because a card may not draw two faction
-            marks in its header; and the braid under the wordmark goes, because
-            a band that already names the coven does not need an ornament run
-            repeating it. The braid lives on below, ruling off every section.
-            The pentagram does not: it was still turning as the watermark when
-            #2029 wrote this, and #2041 has since made that a cat.
-
-            The twinkle field moves INTO the band, over its ground: with a
-            painted band the stars would otherwise be hidden behind it. */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            height: MASTHEAD_HEIGHT,
-            background: "var(--faction-coven-slip-sigil-ground)",
-            borderBottom: "1px solid var(--faction-coven-slip-pk)",
-            /* The twinkle box is the one wrapper standing between a card's
-               <article> and its band, so since #2167 made the band a link it
-               matches `:has(a[href])` on the equal-height row's slack chain
-               (index.css) and would stretch past its 44px. The band inside
-               pins its own growth for the same reason; this pins the box. */
-            flexGrow: 0,
-          }}
-        >
-          <TwinkleField />
-          <CardMasthead slug="coven" style={{ height: "100%" }}>
-            {/* The slip's own `feed:taskCard.coven.masthead` held a second copy
-                of the faction's name ("the cozy coven") and is gone with #1910.
-                The lower case belonged to the hand-lettering rather than to the
-                word, so it lives in `textTransform`, where casing belongs — the
-                name itself comes from the one place that owns it (ADR-0038). */}
-            <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase" }}>
-              {factionName("coven")}
-            </div>
-          </CardMasthead>
-        </div>
+            Mounted from the shared band (#2185) so the Coven praxis card wears
+            the identical one, twinkle field and all — the field is the band's
+            backdrop, so it travels with it rather than being rebuilt beside it.
+            The paint lives at `cardMasthead/factionBands`. */}
+        <CovenBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

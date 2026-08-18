@@ -309,3 +309,48 @@ describe("na / Default task detail — the reference anatomy", () => {
     expect(text).not.toContain("counts for everyone");
   });
 });
+
+/**
+ * The page's reading order (#2120) — one sequence, both form factors.
+ *
+ * Owner ruling: title and description answer *what is this*; byline, level and
+ * headcount answer *can I, and who else*; the points-and-signup panel answers
+ * *do I*. The page runs in that order:
+ *
+ *     breadcrumb · title · description · author/level/headcount · panel
+ *
+ * The seam is DOM order, not CSS. Every skin lays its header and its action
+ * column out as flex siblings with `flexDirection: desktop ? "row" : "column"`,
+ * so on mobile the DOM order IS the reading order — which is how the whole panel
+ * came to sit between the title and the description — while on desktop the same
+ * DOM reads down the left column with the panel beside it. Asserting on the
+ * markup therefore pins both form factors at once, which is what the ruling asks
+ * for: a page whose order depends on width comes back as its own bug report.
+ *
+ * Anchored on shared neutral copy (ADR-0057) and fixture values, so a skin that
+ * re-dresses its labels still passes and a skin that re-sequences fails.
+ */
+describe("task-detail reading order", () => {
+  /** First occurrence; an absent anchor fails by name rather than as `-1 < n`. */
+  function at(text: string, needle: string): number {
+    const index = text.indexOf(needle);
+    expect(index, `missing anchor: ${needle}`).toBeGreaterThanOrEqual(0);
+    return index;
+  }
+
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} runs title, description, who-and-level, then the panel`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      const title = at(text, TASK.title);
+      const description = at(text, "Make something small and honest.");
+      const byline = at(text, "Wren Abalone");
+      const headcount = at(text, "people working on this");
+      const panel = at(text, "POINTS");
+
+      expect(title, "description after the title").toBeLessThan(description);
+      expect(description, "byline after the description").toBeLessThan(byline);
+      expect(byline, "headcount after the byline").toBeLessThan(headcount);
+      expect(headcount, "panel after the headcount").toBeLessThan(panel);
+    });
+  }
+});

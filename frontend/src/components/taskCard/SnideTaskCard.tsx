@@ -1,14 +1,13 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { SnideBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { PenCircle } from "../factionMarks/snideAtoms";
+import { PenCircle, WALL } from "../factionMarks/snideAtoms";
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -163,13 +162,10 @@ export default function SnideTaskCard({
       style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* THE GROUND IS THE FLYPOSTED WALL (#2065), not a second sheet of the
-          clipping's own stock. Five layers over the `-wall` ramp: the diagonal
-          xerox raster, a vertical scanline, an acid wash off the top-left and a
-          pink one off the bottom-right. One recipe, and it FLIPS — xerox stock by
-          day, pitch black by night — which is why every pigment is a token and
-          none of it is a `dark ? a : b`. The recipe stays inline rather than
-          earning a class: `.snd-backdrop` has three mounts, this has one, and
-          five gradients is a lot of BLOCKING stylesheet for one component.
+          clipping's own stock. The five-layer recipe is {@link WALL}, drawn once
+          in `factionMarks/snideAtoms` since #2177 gave the same ground to the
+          composer and to the praxis card: this card was its only mount when it
+          was written inline here, and it is one of three now.
 
           THE EDGE AND THE SHADOW ARE LOAD-BEARING. On the S.N.I.D.E. faction
           page `useFactionBackdrop` paints the page with this same wall, so these
@@ -183,44 +179,17 @@ export default function SnideTaskCard({
           boxSizing: "border-box",
           width: "100%",
           color: INK,
-          background: [
-            "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",
-            "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
-            "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
-            "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
-            "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
-          ].join(", "),
+          background: WALL,
           border: "1px solid var(--faction-snide-note-wall-edge)",
           boxShadow: "var(--faction-snide-note-wall-shadow)",
           transform: "rotate(-0.4deg)",
         }}
       >
-        {/* The header bar, on the kit's shared anatomy (#2029) — the mark hard
-            left, the wordmark centred on the band.
-
-            The broken acid rule that used to fill the bar's right end is gone
-            with the centring: it was a flex filler taking the width #1124's
-            retired ordinal left behind, and that width is exactly where the
-            centred wordmark now sits. The clipping keeps its acid elsewhere —
-            the CTA, the knockout cuts, the pen circle. */}
-        <CardMasthead
-          slug="snide"
-          /* The brushed A is drawn 24 where the kit draws 20 (#2035), and it
-             bleeds 2px into the band's inset on each side — which is the mark
-             doing what it was drawn to do: `SnideSigil`'s four shapes break out
-             of their own circle at four points. This used to be a stylesheet
-             hook reaching into the sigil's markup; #2056 made it the prop. */
-          markSize={24}
-          style={{
-            background: "var(--faction-snide-note-bar)",
-            color: "var(--faction-snide-note-bar-ink)",
-          }}
-        >
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead. */}
-          <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
-            {factionName("snide")}
-          </span>
-        </CardMasthead>
+        {/* The header bar, mounted from the shared band (#2185) so the
+            S.N.I.D.E. praxis card wears the identical one. The broken acid rule
+            that used to fill the bar's right end went with the centring; the
+            paint and the 24px mark live at `cardMasthead/factionBands`. */}
+        <SnideBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
+import { SingularityBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
-import SingularityLamps from "../../factionMarks/SingularityLamps";
 
 /**
  * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
@@ -29,6 +29,16 @@ import SingularityLamps from "../../factionMarks/SingularityLamps";
  *
  * Both motions are class-gated on reduced-motion in `index.css` — the sweep
  * parks off-slab, the cursor stops blinking but stays drawn.
+ *
+ * ## THE HEADER IS THE KIT'S BAND NOW (#2185)
+ *
+ * #1909's reasoning is SUPERSEDED by owner ruling: the praxis masthead was
+ * removed on the judgement that a card answering a task does not need a band,
+ * and the owner has since decided it does. Nothing about #1909 was wrong at the
+ * time — the decision changed. So the hand-rolled LED bar this file drew is
+ * gone and `SingularityTaskCard`'s own window chrome stands in its place,
+ * mounted from `cardMasthead/factionBands`. The lamps did not stand down:
+ * they are the window, not a faction mark, and they ride beside the sigil.
  */
 
 /** The viewfinder brackets — ornament geometry, raw px by §4a. */
@@ -94,7 +104,9 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         // The standing raster — ornament geometry, raw by §4a.
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent 0 2px, var(--faction-singularity-scanline) 2px 3px)",
-        padding: "var(--space-lg)",
+        /* NO PADDING ON THE FRAME since #2185: the window chrome is full-bleed,
+           and an inset frame would have floated it off three edges. The slab's
+           inset moved to the body box below. */
         fontFamily: "var(--font-faction-terminal)",
         color: "var(--faction-singularity-terminal-ink)",
       }}
@@ -105,29 +117,18 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       <span aria-hidden style={bracketBottomLeft} />
       <span aria-hidden style={bracketBottomRight} />
 
-      <div style={{ position: "relative", zIndex: 2 }}>
-        {/* Window chrome: three LEDs, then the log line pushed to the rail. */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            paddingBottom: "var(--space-sm)",
-            marginBottom: "var(--space-md)",
-            borderBottom: "1px solid var(--faction-singularity-rule)",
-          }}
-        >
-          {/* #1979: three spans spreading a local `ledStyle` — 7px dots at a 6px
-              pitch, the one surface that drew the cluster without a `Lamp` at
-              all. The kit's 8px/`--space-xs` is what the other four already
-              drew, and the bar's own `gap` went with the copy: the cluster is
-              now this row's only child and carries its own pitch. */}
-          <SingularityLamps />
-          {/* "singularity protocol" closed this LED bar
-              (`card.masthead.singularity`). #1909 cut the slot: once the praxis
-              masthead is generic it reads "Praxis" on a praxis card, and this
-              one was the faction naming itself. The lamps stay. */}
-        </div>
+      {/* THE WINDOW CHROME (#2185) — the same bar `SingularityTaskCard` wears,
+          mounted from the shared module.
 
+          IT REPLACES THIS CARD'S OWN LED BAR rather than sitting above it. That
+          bar was three lamps on a hairline rule with nothing else on it once
+          #1909 cut "singularity protocol" from it, and the shared band IS that
+          bar plus the one title that is not generic — the faction's own name,
+          with the lamps riding beside the mark as `leading`. Two chrome bars
+          stacked would have been two windows on one screen. */}
+      <SingularityBand />
+
+      <div style={{ position: "relative", zIndex: 2, padding: "var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}

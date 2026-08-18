@@ -5,12 +5,22 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 
 /**
- * The one masthead anatomy the task-card kit shares (#2029, task cards v3):
+ * The one masthead anatomy the CARD KITS share (#2029, task cards v3):
  * **the faction's mark hard left, the faction's title centred on the band.**
+ *
+ * TWO KITS MOUNT IT NOW, which is why it lives here rather than under
+ * `taskCard/` (#2185): the owner ruled that a praxis card wears the same band
+ * its task card does, so the praxis kit stopped being a stranger to this file
+ * and the file stopped belonging to one kit. The PAINT is not repeated across
+ * the two — `factionBands` beside this module holds one painted band per
+ * faction and both kits mount that, so "the same band" is an identity rather
+ * than a promise two directories make to each other.
  *
  * Seven of the nine cards carry one. `na` and `albescent` mount none — that is
  * deliberate (ADR-0048: the Albescent card IS the unaffiliated sheet plus a
- * drift, and a band naming the society would un-hide it), not an omission.
+ * drift, and a band naming the society would un-hide it), not an omission. On a
+ * praxis card that reasoning binds harder, not softer: the card is PUBLIC, so a
+ * band naming Albescent would reveal the society on a stranger's feed.
  *
  * THE BAND IS A LINK TO THE FACTION (#2167). A card has three regions and three
  * destinations: the body reads the task, the CTA signs up, and the band — which
@@ -18,11 +28,17 @@ import { factionName } from "../../utils/factions";
  * from the `slug` every mount already passes rather than wired seven times, so
  * one change lands on seven surfaces and no skin can drift.
  *
- * It is valid HTML because the band is a SIBLING of the card-wide task link in
- * every archetype, never inside it — `mastheadFactionLink.test.tsx` holds that,
- * and it is the one thing that would make an anchor here illegal. The two
- * bandless cards get no such link and must not grow one: `/factions/albescent`
- * is an in-world dead end, not a faction page.
+ * It is valid HTML because the band is a SIBLING of the links inside the card,
+ * never inside one — the task card's card-wide task link, the praxis card's
+ * task line and byline. `taskCard/__tests__/mastheadFactionLink.test.tsx` and
+ * `praxisCard/__tests__/praxisMasthead.test.tsx` hold that on both kits, and it
+ * is the one thing that would make an anchor here illegal. It is also why a
+ * frame that pads itself has to move that padding to an inner box before it
+ * mounts a band: the band is full-bleed, and the two praxis frames that wrapped
+ * their whole body in padding got an inner box rather than an inset band.
+ *
+ * The two bandless cards get no such link and must not grow one:
+ * `/factions/albescent` is an in-world dead end, not a faction page.
  *
  * WHY A COMPONENT AND NOT A CONVENTION. The epic's sequencing ruling exists
  * because seven agents each inventing this shape yields seven slightly
@@ -48,9 +64,11 @@ import { factionName } from "../../utils/factions";
  * S.N.I.D.E.'s broken acid rule and Everymen's pair of cogs both occupied the
  * space the centred title now takes. Ornament that sits BESIDE the mark without
  * reaching the centre survives, which is why Singularity keeps its lamps. Where
- * a band carries a backdrop (the Ephemerists' glyph registers, Coven's twinkle
- * field), the skin wraps this component in its own positioned box and paints
- * there — no ornament slot is needed here, and none is offered.
+ * a band carries a backdrop — Coven's twinkle field is the only one left, since
+ * #2067 took the Ephemerists' glyph registers off the card tier — the BAND
+ * wraps this component in its own positioned box and paints there. That wrapper
+ * lives with the band in `factionBands`, so both kits inherit it; no ornament
+ * slot is needed here, and none is offered.
  *
  * NO CARD RENDERS TWO FACTION MARKS IN ITS HEADER. The mark below is the kit's
  * `FactionSigil`, so a card that drew its own header mark hands it over rather

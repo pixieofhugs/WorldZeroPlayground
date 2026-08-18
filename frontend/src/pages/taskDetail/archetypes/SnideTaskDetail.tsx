@@ -635,7 +635,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── Header: breadcrumb, the bar, the cut-up headline, author, stats ──
+  // ── Header: breadcrumb, the bar, the cut-up headline ── (byline + stats: `credentials`, below the brief — #2120)
   //
   // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
   // the task id, and the id WAS the second crumb, so the separator went with it
@@ -764,7 +764,15 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -960,7 +968,12 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </p>
       ) : (
         <>
-          <div className="praxis-gallery flex flex-wrap gap-4 items-start">
+          {/* `snd-detail-praxis` is the ONE surface where the praxis card is
+              black rather than the wall (#2177). It is this row's own class, not
+              `.praxis-gallery`: that one is mounted by `WowFactionBody` too, and
+              a Snide-task praxis lands there. The class carries no paint — it
+              sets the `--snd-praxis-*` channel the card reads (index.css). */}
+          <div className="praxis-gallery snd-detail-praxis flex flex-wrap gap-4 items-start">
             {(showAllPraxis
               ? sortedSubmissions
               : sortedSubmissions.slice(0, GALLERY_PREVIEW)
@@ -1027,7 +1040,11 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: 452 }),
@@ -1039,7 +1056,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           <TaskDetailComments
             state={state}
