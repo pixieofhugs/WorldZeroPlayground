@@ -404,12 +404,14 @@ async def recompute_votes_spent_this_era(
 
     **The identity this rests on: the counter equals the number of that
     character's vote rows cast inside the era window.** It holds because the
-    counter only ever moves in one place —
-    ``services.vote.cast_or_update_vote`` increments it by one on a NEW cast,
-    and a re-rate takes the update branch, which is free. Nothing in the
-    application deletes a vote or decrements the counter (the only ``DELETE FROM
-    vote`` outside a migration is ``scripts/seed_demo_praxes.py``, which is a
-    local reseed, not a production path).
+    counter moves in exactly two places, and they are a matched pair —
+    ``services.vote.cast_or_update_vote`` increments it by one on a NEW cast
+    (a re-rate takes the update branch, which is free), and
+    ``services.vote.void_account_vote_on_join`` decrements it by one as it
+    deletes the row (#2216), crediting the era the vote was cast in so the
+    window still balances. That void is the only ``DELETE FROM vote`` in the
+    application; the only other one outside a migration is
+    ``scripts/seed_demo_praxes.py``, a local reseed, not a production path.
 
     Two things break the identity, and both are refused or ruled out here rather
     than silently invented:

@@ -10,6 +10,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
+from models.era import Era
 from models.praxis import (
     ModerationStatus,
     Praxis,
@@ -176,6 +177,82 @@ async def cast_or_update_vote(
     # is always present even when this cast is somehow the only row (#1378).
     tallies = await tally_votes([praxis.id], session)
     return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
+
+
+async def void_account_vote_on_join(
+    praxis: Praxis,
+    joiner: Character,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """Delete ``joiner``'s account's vote on ``praxis`` and re-tally (#2216).
+
+    Called from ``services.praxis.respond_to_invite`` when an invitation is
+    accepted. The gate above only stops *future* votes; a vote cast before the
+    invitation arrived would otherwise be grandfathered into exactly the state
+    the gate exists to prevent — a co-owner holding a rating on their own praxis.
+    Blocking the accept instead was ruled out: it punishes the invitee for a rule
+    they could not have known about when they voted.
+
+    Account-scoped, not character-scoped, because that is what the vote is: an
+    alt life's rating becomes a self-vote the moment any life on the account
+    joins (ADR-0041, and the ``uq_vote_praxis_account`` key).
+
+    The re-tally is ``recalculate_members_stats`` — the one recalculation for
+    anything that changes what a praxis is worth, and the same call the cast path
+    makes. It is a no-op in today's reachable states (``respond_to_invite``
+    refuses a submitted praxis, and an unsealed praxis is unscored), but the
+    delete and the re-tally are one act and splitting them is how they drift.
+
+    Returns whether a vote was actually voided.
+    """
+    result = await session.execute(
+        select(Vote).where(
+            Vote.praxis_id == praxis.id,
+            Vote.voter_account_id == joiner.account_id,
+        )
+    )
+    vote = result.scalar_one_or_none()
+    if vote is None:
+        return False
+
+    # The budget follows the row out. ``recompute_votes_spent_this_era`` rests on
+    # "the counter equals that character's vote rows inside the era window" and
+    # states that nothing in the application deletes a vote; leaving the caster
+    # charged would break that identity, and the operator repair would hand the
+    # vote back later anyway. Charged to the era the vote was CAST in (#1345), so
+    # that is the row credited — never today's, or a vote from a closed era would
+    # buy a free vote in this one.
+    era_row = await _era_row_for_vote(vote, session)
+    stats = await get_or_create_stats(session, vote.voter_character_id, era_row.id)
+    if stats.votes_spent_this_era > 0:
+        stats.votes_spent_this_era -= 1
+
+    # ``session.delete``, not removal through ``praxis.votes``: that collection is
+    # ``lazy="raise"``, so it is never loaded on this path and there is no cached
+    # list to keep consistent.
+    await session.delete(vote)
+    await session.flush()
+    await recalculate_members_stats(praxis, session, era)
+    return True
+
+
+async def _era_row_for_vote(vote: Vote, session: AsyncSession) -> Era:
+    """The era a vote was CAST in — the latest era that started at or before it.
+
+    The mirror of :func:`services.era.get_era_row_for_praxis`, which answers the
+    same question for a *seal*. They are deliberately different facts: a praxis's
+    score belongs to the era it was sealed in, while the vote *budget* is a
+    cast-time fact (``cast_or_update_vote`` charges ``get_current_era_row``), and
+    #1345 is the ruling that keeps the two apart.
+    """
+    result = await session.execute(
+        select(Era)
+        .where(Era.started_at <= vote.created_at)
+        .order_by(Era.id.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none() or await get_current_era_row(session)
 
 
 # ---------------------------------------------------------------------------
