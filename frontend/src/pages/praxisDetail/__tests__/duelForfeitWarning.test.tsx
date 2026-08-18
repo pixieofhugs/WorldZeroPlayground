@@ -264,7 +264,9 @@ describe('owner controls carry the action cluster for every praxis (#1090)', () 
         state={state({ duel: duel('settled', true), showWithdrawConfirm: true })}
       />,
     )
-    expect(t).toMatch(/Edit/i)
+    // #2136 deleted the edit link that used to sit beside it, so the cluster is
+    // the forfeit escalation and nothing else.
+    expect(t).not.toMatch(/edit this praxis/i)
     // The forfeit escalation reaches the player through the owner controls now.
     expect(t).toMatch(/FORFEITS the duel/i)
     expect(t).toMatch(/Rax wins by default/i)

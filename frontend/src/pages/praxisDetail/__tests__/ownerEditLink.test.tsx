@@ -1,23 +1,24 @@
 /**
- * The owner's "edit this praxis" link only shows when `/edit` has something to
- * draw (#1397).
+ * A published praxis offers its owner ONE control, and it is not a link to
+ * `/edit` (#2136).
  *
- * `/praxis/:id/edit` renders `EditPraxis`, which `<Navigate replace>`s back to
- * `/praxis/:id` whenever `deriveEditPraxisPhase` answers `handoff` (#1164). The
- * link here was gated on `isOwner` alone, and this page only ever renders a
- * PUBLISHED praxis (ADR-0062 redirects both open statuses to the composer) — so
- * on a submitted solo it round-tripped every single time it was visible, with
- * `replace` swallowing even the history trace. "It did not route me anywhere."
+ * #1397 hid the link on the `handoff` phase only, so the pair survived wherever
+ * `/edit` still drew something: a published collab and a settled duel reach
+ * `completed`, a live duel side reaches `waiting`, a moderated praxis reaches
+ * the locked composer. Every one of those surfaces is READ-ONLY, so "edit this
+ * praxis" named an outcome it could not deliver, beside a control that could.
+ * The ruling deleted the link rather than re-gating it: "There is no reason for
+ * the player to go back to the edit page unless they are going to edit. One
+ * button only."
  *
- * The seam under test is `PraxisOwnerActions`: given a state, is a
- * `/praxis/:id/edit` href in the markup? The fix is a hide, not a removal, so
- * every non-handoff phase below is asserted to KEEP its link — otherwise this
- * file could not tell "dropped the dead link" from "dropped editing".
+ * The seam under test is `PraxisOwnerActions`: given an owner's state, is a
+ * `/praxis/:id/edit` href anywhere in the markup? The phases named below are
+ * the ones #1397 deliberately KEPT — they are exactly what this change removes,
+ * so they are the ones worth spelling out.
  *
- * The way to edit a published praxis is the control in the same flex row:
- * unsubmit → confirm → `PraxisDetail` redirects the now-`in_progress` praxis
- * straight into the composer. So the unsubmit trigger must survive wherever the
- * edit link goes.
+ * The way to edit a published praxis is the surviving control: unsubmit →
+ * confirm → `PraxisDetail` redirects the now-`in_progress` praxis straight into
+ * the composer. So the unsubmit trigger must survive everywhere the link went.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -190,20 +191,20 @@ function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
 
 const COLLAB_MEMBERS = [member(1, 'Ada'), member(2, 'Beth')]
 
-describe('the dead edit link is gone (#1397)', () => {
-  it('a submitted solo praxis offers its owner no link to /edit', () => {
+describe('no owner state offers a link to /edit (#2136)', () => {
+  it('a submitted solo praxis', () => {
     const { html } = render(<PraxisOwnerActions state={state({})} />)
     expect(html).not.toContain(EDIT_HREF)
   })
 
-  it('a one-member collab hands off the same way, so it loses the link too', () => {
+  it('a one-member collab', () => {
     const { html } = render(
       <PraxisOwnerActions state={state({ praxis: praxis({ type: 'collab' }) })} />,
     )
     expect(html).not.toContain(EDIT_HREF)
   })
 
-  it('a declined challenge is an ordinary published solo — no link', () => {
+  it('a declined challenge', () => {
     const { html } = render(
       <PraxisOwnerActions
         state={state({ praxis: praxis({ duel_id: 5 }), duel: duel('declined') })}
@@ -212,40 +213,69 @@ describe('the dead edit link is gone (#1397)', () => {
     expect(html).not.toContain(EDIT_HREF)
   })
 
-  it('the way to edit — the unsubmit control — survives beside it', () => {
-    const { text } = render(<PraxisOwnerActions state={state({})} />)
-    expect(text.toLowerCase()).toContain('unsubmit')
-  })
-})
-
-describe('every phase that /edit still draws keeps its link (#1397)', () => {
-  it('a published collab reaches the completed reading', () => {
+  // The four below are the phases #1397 kept: `/edit` still draws a real
+  // surface for each, and every one of those surfaces is read-only.
+  it('a published collab, which used to reach the completed reading', () => {
     const { html } = render(
       <PraxisOwnerActions
         state={state({ praxis: praxis({ type: 'collab', members: COLLAB_MEMBERS }) })}
       />,
     )
-    expect(html).toContain(EDIT_HREF)
+    expect(html).not.toContain(EDIT_HREF)
   })
 
   it.each<DuelStatus>(['pending', 'active'])(
-    'a duel side at %s reaches the waiting surface',
+    'a duel side at %s, which used to reach the waiting surface',
     (status) => {
       const { html } = render(
         <PraxisOwnerActions
           state={state({ praxis: praxis({ duel_id: 5 }), duel: duel(status) })}
         />,
       )
-      expect(html).toContain(EDIT_HREF)
+      expect(html).not.toContain(EDIT_HREF)
     },
   )
 
-  it('a moderated praxis reaches its own locked composer', () => {
+  it('a settled duel side, which used to reach the completed reading too', () => {
+    const { html } = render(
+      <PraxisOwnerActions
+        state={state({ praxis: praxis({ duel_id: 5 }), duel: duel('settled') })}
+      />,
+    )
+    expect(html).not.toContain(EDIT_HREF)
+  })
+
+  it('a moderated praxis, which used to reach its own locked composer', () => {
     const { html } = render(
       <PraxisOwnerActions
         state={state({ praxis: praxis({ moderation_status: 'failed' }) })}
       />,
     )
-    expect(html).toContain(EDIT_HREF)
+    expect(html).not.toContain(EDIT_HREF)
+  })
+
+  it('and the copy goes with the href', () => {
+    const { text } = render(
+      <PraxisOwnerActions
+        state={state({ praxis: praxis({ type: 'collab', members: COLLAB_MEMBERS }) })}
+      />,
+    )
+    expect(text).not.toContain('edit this praxis')
+  })
+})
+
+describe('the one control that remains (#2136)', () => {
+  it('is the quiet unsubmit, on a published solo', () => {
+    const { text } = render(<PraxisOwnerActions state={state({})} />)
+    expect(text.toLowerCase()).toContain('unsubmit')
+  })
+
+  it('and on a published collab, where the link used to sit beside it', () => {
+    const { text } = render(
+      <PraxisOwnerActions
+        state={state({ praxis: praxis({ type: 'collab', members: COLLAB_MEMBERS }) })}
+      />,
+    )
+    expect(text.toLowerCase()).toContain('unsubmit')
   })
 })
