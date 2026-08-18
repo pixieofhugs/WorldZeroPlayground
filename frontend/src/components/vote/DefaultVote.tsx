@@ -55,9 +55,6 @@ export default function DefaultVote({
   }
 
   const active = hovered || selected
-  const caption = active
-    ? t(`unaffiliated.${TIER_KEYS[active - 1]}`)
-    : t('chrome.idle')
 
   return (
     <div>
@@ -135,35 +132,13 @@ export default function DefaultVote({
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)', minHeight: 20 }}>
-        <span
-          style={{
-            fontFamily: 'var(--faction-default-card-font)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas Neue verdict under the row, the design's 15; a condensed poster face is not on the text scale (§4a)
-            fontSize: 15,
-            letterSpacing: '0.04em',
-            color: active ? 'var(--faction-default-vote-on)' : 'var(--faction-default-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--faction-default-vote-off)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The Bebas verdict — the tier word, or `chrome.idle` while untouched —
+          and its `· your vote` tag stood here. #2166 struck the row for all
+          nine skins: the dots fill to the cast value and the tally states the
+          rest, so the words were the same fact a third and fourth time. The
+          whole flex row goes rather than an empty one staying behind. */}
 
       <VoteSummary
-        selected={selected}
         points={points}
         totalVotes={totalVotes}
         error={error}

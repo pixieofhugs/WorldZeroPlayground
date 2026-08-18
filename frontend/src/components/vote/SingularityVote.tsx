@@ -81,7 +81,6 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div style={{ fontFamily: 'var(--font-faction-terminal)' }}>
@@ -147,37 +146,11 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)', minHeight: 20 }}>
-        <span
-          style={{
-            fontFamily: 'var(--font-faction-terminal)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal read-out caption, the design's 13; monospace print, not prose (§4a)
-            fontSize: 13,
-            letterSpacing: '0.08em',
-            color: active
-              ? 'var(--faction-singularity-vote-reached)'
-              : 'var(--faction-singularity-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--faction-singularity-vote-off)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The terminal read-out caption and its `· your vote` tag stood here.
+          #2166 struck the row on all nine skins — the decoded columns already
+          resolve to the rank, and the tally below states the aggregate. */}
 
       <VoteSummary
-        selected={selected}
         points={points}
         totalVotes={totalVotes}
         error={error}

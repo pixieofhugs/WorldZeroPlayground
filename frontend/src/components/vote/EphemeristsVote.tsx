@@ -35,7 +35,8 @@ import { VOTE_REFRAMES } from './voteReframes'
  * ring visibly densifies as the metal improves. Rank is readable off the ring.
  *
  * Nothing was lost with the caption: each disc's `aria-label` names its metal,
- * and `VoteSummary` below states the cast once it is made.
+ * and the raised disc is the cast. (`VoteSummary` used to state it in words as
+ * well — #2166 took that line off every skin, this one included.)
  *
  * ## THE PLATE IS A FIXED NIGHT SURFACE in both themes
  *
@@ -348,12 +349,12 @@ export default function EphemeristsVote({
 
       {/* The italic gloss caption naming the hovered tier — and its "· cast"
           tag — stood here. #1638 struck both: each disc's `aria-label` already
-          names its metal, and `VoteSummary` below states the cast once it is
-          made, so the caption row was a third restatement of the row above it.
-          `votes:chrome.idle` and `.tag` went with it. */}
+          names its metal, so the caption row was a third restatement of the row
+          above it. #2166 then did the same to the other eight skins, and took
+          `VoteSummary`'s own "Voted N pts" line with it — `votes:chrome.idle`,
+          `.tag` and `.voted` all leave the catalog together. */}
 
       <VoteSummary
-        selected={selected}
         points={points}
         totalVotes={totalVotes}
         error={error}

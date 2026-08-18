@@ -9,8 +9,10 @@ import { VOTE_REFRAMES } from './voteReframes'
  * UA (University of Asthmatics) vote UI (#821) — THE GROWING MANDALA. The 1-5
  * approval is cast as a mandala that blooms fuller and warmer per rank: rank 1 is
  * a faint asterisk, and each rung adds a turning ring of petals until rank 5 is a
- * full, breathing bloom. A lowercase "reading" word sits below — faint · forming
- * · true · alive · radiant — the practice's verdict on the sealed work. The
+ * full, breathing bloom. A lowercase "reading" word sat below — faint · forming
+ * · true · alive · radiant — until #2166 took the caption row off all nine
+ * skins; the practice's vocabulary now reaches the viewer through each rank's
+ * `aria-label` and the voter breakdown, not as a line under the row. The
  * mandala cores are punched out to the sheet colour so the figure reads as an
  * aperture.
  *
@@ -26,7 +28,7 @@ import { VOTE_REFRAMES } from './voteReframes'
  * Same 1-5 data model as every faction; a pure visual reskin driven by the shared
  * {@link useVote} hook so cast/tally logic lives in one place.
  * Every motion is a reduced-motion-gated CSS class (never inline `animation:`);
- * the mandala's fullness and the reading word carry the meaning when stilled.
+ * the mandala's fullness carries the meaning when stilled.
  */
 
 /**
@@ -41,9 +43,6 @@ const RANK_COLOR = [
   'var(--faction-ua-rank-4)',
   'var(--faction-ua-rank-5)',
 ]
-
-/** Cormorant Garamond — the practice's headline face, via UA's card contract. */
-const READING_FONT = 'var(--faction-ua-card-font)'
 
 const TIERS = VOTE_REFRAMES['ua'].tiers
 
@@ -197,7 +196,6 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
   }
 
   const active = hovered || selected
-  const reading = active ? TIERS[active - 1].label : ''
 
   return (
     <div>
@@ -283,24 +281,12 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
         })}
       </div>
 
-      <div
-        style={{
-          marginTop: 'var(--space-sm)',
-          minHeight: 22,
-          fontFamily: READING_FONT,
-          fontWeight: 600,
-          fontSize: 'var(--text-content)',
-          lineHeight: 1,
-          letterSpacing: '0.01em',
-          color: 'var(--faction-ua-vote-reading)',
-          textTransform: 'lowercase',
-        }}
-      >
-        {reading}
-      </div>
+      {/* The "reading" line naming the hovered/cast rank (faint … radiant)
+          stood here. #2166 struck the caption row on all nine skins — the
+          mandala blooms fuller and warmer as the rank climbs, which is the same
+          reading in the widget's own vocabulary. */}
 
       <VoteSummary
-        selected={selected}
         points={points}
         totalVotes={totalVotes}
         error={error}

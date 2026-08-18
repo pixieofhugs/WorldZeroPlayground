@@ -109,17 +109,6 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
 
   const active = hovered || selected
   const cheering = active >= 5
-  // The design's own caption logic: hovering previews the bare word, a cast vote
-  // is spoken as a sentence, and an untouched row waits.
-  // A cast vote used to be spoken in WOW's own voice — `chrome.wow.picked`,
-  // "thou dubbed it {{label}}". #1909 cut it: the audit found the generic
-  // `chrome.voted` already covers the slot. It takes `stars`, not `label`, so
-  // the call site moves with the key.
-  const caption = hovered
-    ? TIERS[hovered - 1].label
-    : selected
-      ? t('chrome.voted', { stars: selected })
-      : t('chrome.idle')
 
   return (
     <div>
@@ -210,23 +199,16 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
         })}
       </div>
 
-      <div style={{ marginTop: 'var(--space-sm)', minHeight: 21 }}>
-        <span
-          style={{
-            fontFamily: 'var(--faction-wow-card-font)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament exemption: the design's own caption size (17, MedievalSharp), not the --text-* ramp (§4a)
-            fontSize: 17,
-            letterSpacing: '0.02em',
-            color: active ? 'var(--faction-wow-vote-on)' : 'var(--faction-wow-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-      </div>
+      {/* The MedievalSharp caption stood here: the hovered tier's word, or
+          `chrome.voted` once cast — a SECOND call to the key `VoteSummary`
+          below was already rendering, so a cast WOW card printed "Voted 4 pts"
+          twice (#2166). #2166 struck the whole slot, not just the doubled line:
+          the balloons are the scale. The 21px-tall reserved row goes with it
+          rather than staying behind as an empty box — nothing hovers into it
+          any more, so there is no reflow left to absorb. `VoteSummary`'s tally
+          carries its own top margin, so the plate keeps its breathing room. */}
 
       <VoteSummary
-        selected={selected}
         points={points}
         totalVotes={totalVotes}
         error={error}

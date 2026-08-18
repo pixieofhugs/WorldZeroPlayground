@@ -11,7 +11,7 @@ import '../../factionFaces'
 /**
  * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
  * specific (ink stamps, hearts, …), but the logged-out gate and the
- * points/"voted"/error summary are identical in structure — only their theme
+ * points/error summary are identical in structure — only their theme
  * colors differ. These two helpers keep that chrome in one place. Copy lives
  * in the votes:chrome catalog branch (ADR-0032).
  */
@@ -196,15 +196,25 @@ export interface VoteSummaryTheme {
   avgLetterSpacing?: string
 }
 
-/** "Voted N pts", the votes/points display, and the error line — themeable. */
+/**
+ * The votes/points tally and the error line — themeable.
+ *
+ * "Voted {{stars}} pts" (`chrome.voted`) headed this block for every skin.
+ * #2166 struck it: it was the fourth statement of one fact, after the star row
+ * filled to the viewer's value, the tier adjective, and the `your vote` tag —
+ * and on WOW it printed TWICE, because that widget called the same key again in
+ * its own caption slot. The `selected` prop went with it; nothing else here
+ * consulted the viewer's own cast.
+ *
+ * The tally below is NOT that fact. It is the aggregate of everyone's votes on
+ * the praxis, which no other chrome states, so it stays.
+ */
 export function VoteSummary({
-  selected,
   points,
   totalVotes,
   error,
   theme,
 }: {
-  selected: number
   points?: number | null
   totalVotes?: number
   error: string
@@ -214,12 +224,6 @@ export function VoteSummary({
 
   return (
     <>
-      {selected > 0 && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.muted, margin: 'var(--space-sm) 0 0' }}>
-          {t('chrome.voted', { stars: selected })}
-        </p>
-      )}
-
       {points != null && (
         <p
           className="font-body"

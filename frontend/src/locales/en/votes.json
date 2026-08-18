@@ -57,12 +57,9 @@
   },
   "chrome": {
     "loginGate": "Log in to vote",
-    "voted": "Voted {{stars}} pts",
     "tally_one": "{{count}} vote · <1>{{points}}</1> pts",
     "tally_other": "{{count}} votes · <1>{{points}}</1> pts",
     "saveError": "Could not save your vote. Please try again.",
-    "idle": "cast a vote",
-    "tag": "your vote",
     "rateAria": "Rate {{value}} — {{label}}",
     "rateAriaPlain": "Rate {{value}} of 5"
   }
