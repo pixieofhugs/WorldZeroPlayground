@@ -3,14 +3,20 @@
  *
  * ## The two seams
  *
- * 1. THE MOUNT SEAM — the rendered markup of a faction's TWO surfaces: its task
- *    card and its praxis-card score stamp. #2042's finding was that each faction
- *    drew its points mark on both with almost no sharing, so what has to hold is
- *    that one drawing now appears on both and the second copy is GONE. Both
- *    surfaces are named per faction below; nothing here asserts a count of
- *    unified factions, because #1998 shipped a `toHaveLength(5)` census that was
- *    clean while a sixth wrong mount sat beside it (#2090 replaced it with an
- *    explicit list). A faction that unifies has to be added here by name.
+ * 1. THE MOUNT SEAM — the rendered markup of every surface a faction draws its
+ *    points mark on: its task card, its praxis-card score stamp, and — for
+ *    S.N.I.D.E. — its TASK DETAIL page. #2042's finding was that each faction drew
+ *    its points mark on each with almost no sharing, so what has to hold is that
+ *    one drawing now appears on all of them and the other copies are GONE. Every
+ *    surface is named per faction below; nothing here asserts a count of unified
+ *    factions, because #1998 shipped a `toHaveLength(5)` census that was clean
+ *    while a sixth wrong mount sat beside it (#2090 replaced it with an explicit
+ *    list). A faction that unifies has to be added here by name.
+ *
+ *    THE LIST IS THE ONLY CENSUS, and it has already been wrong once: #2042's own
+ *    survey counted TWO S.N.I.D.E. surfaces while the task detail page hand-drew
+ *    the loop a third time, so PR #2105 unified a mark that was still being copied
+ *    somewhere it had not looked. A surface omitted here is invisible, not red.
  *
  * 2. THE PAIRING SEAM — the ruling settles WHETHER the mark propagates, not WHAT
  *    it looks like on the way. A mark drawn for a card lands on a score stamp
@@ -59,6 +65,8 @@ import DefaultScoreStamp from "../DefaultScoreStamp";
 import SingularityScoreStamp from "../SingularityScoreStamp";
 import SnideScoreStamp from "../SnideScoreStamp";
 import WowScoreStamp from "../WowScoreStamp";
+import SnideTaskDetail from "../../../../pages/taskDetail/archetypes/SnideTaskDetail";
+import type { TaskDetailState } from "../../../../pages/taskDetail/useTaskDetail";
 import { aTask } from "../../../../test/fixtures";
 
 const TASK = aTask({ description: "Leave something small where a stranger finds it." });
@@ -92,8 +100,69 @@ function stamp(Stamp: ComponentType<ScoreStampProps>): string {
   return renderToStaticMarkup(<Stamp praxis={PRAXIS} />);
 }
 
+/**
+ * S.N.I.D.E.'s THIRD surface. The total here is `modifiedPoints`, four glyphs
+ * wide on purpose: this page draws the widest figure the loop has to hold, which
+ * is the argument for the shared 1.18× growth landing here rather than the
+ * argument against it.
+ */
+function snideDetail(): string {
+  const state: TaskDetailState = {
+    loading: false,
+    task: TASK,
+    fetchError: null,
+    submissions: [],
+    comments: null,
+    friends: new Set(),
+    foes: new Set(),
+    mySubmission: undefined,
+    isInProgress: false,
+    inProgressPraxisId: null,
+    canSignUp: true,
+    levelJumpSignup: false,
+    slotsOpen: 4,
+    maxTaskSlots: 13,
+    basePoints: 120,
+    factionMultiplier: 1.0,
+    modifiedPoints: 1080,
+    inProgressCount: 9,
+    topScore: 0,
+    voteCount: 0,
+    submissionSort: "score",
+    setSubmissionSort: () => {},
+    sortedSubmissions: [],
+    signupError: null,
+    handleSignup: async () => {},
+    handleDrop: async () => {},
+  };
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <SnideTaskDetail state={state} />
+    </MemoryRouter>,
+  );
+}
+
 function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
+}
+
+/** The pen loop's own first stroke — drawn nowhere else on any of its surfaces. */
+const PEN_LOOP = "M14 40 C13 19";
+
+/**
+ * Just the pen circle, cut out of a whole surface's markup.
+ *
+ * A `not.toContain` over a whole PAGE is the wrong instrument here and says so
+ * loudly: the S.N.I.D.E. task detail prints `--faction-snide-note-ink` all over
+ * the WALL, correctly — that family is what the flipping wall is for (#2066). The
+ * defect is that ink reaching the SLAB the mark stands on, so the assertion has to
+ * be scoped to the mark. `PenCircle` emits `<svg>` then two `<span>`s inside one
+ * `<div>`, so the first `</div>` after the loop is the mark's own.
+ */
+function penCircle(markup: string): string {
+  const at = markup.indexOf(PEN_LOOP);
+  expect(at, "the pen loop must be drawn at all").toBeGreaterThan(-1);
+  return markup.slice(markup.lastIndexOf("<div", at), markup.indexOf("</div>", at) + 6);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -126,11 +195,11 @@ const UNIFIED = [
   {
     faction: "snide",
     mark: "components/factionMarks/snideAtoms.tsx (PenCircle)",
-    // The pen loop's own first stroke — drawn nowhere else in these two surfaces.
-    fragment: "M14 40 C13 19",
+    fragment: PEN_LOOP,
     surfaces: {
       "components/taskCard/SnideTaskCard.tsx": () => card(SnideTaskCard),
       "components/praxisCard/scoreStamp/SnideScoreStamp.tsx": () => stamp(SnideScoreStamp),
+      "pages/taskDetail/archetypes/SnideTaskDetail.tsx": snideDetail,
     },
     // The misregistered pink second pass: the pink is the loop now.
     retired: ["text-shadow:2px 2px 0 var(--faction-snide-pink)"],
@@ -172,7 +241,7 @@ describe.each(UNIFIED)("$faction draws its points mark once (#2042)", (entry) =>
  * red for that, and it is the one that would have caught the 1.08:1 masthead ink
  * this epic shipped.
  */
-describe("the stamp mounts override what its ground demands (#2042)", () => {
+describe("each mount overrides what its ground demands (#2042)", () => {
   it("S.N.I.D.E. passes its own two inks rather than the clipping's", () => {
     const chronicle = stamp(SnideScoreStamp);
     expect(chronicle, "the acid figure").toContain("color:var(--faction-snide-acid)");
@@ -189,6 +258,29 @@ describe("the stamp mounts override what its ground demands (#2042)", () => {
     // reads as struck into this surface rather than as a patch laid on it.
     expect(sheet).toContain("background:var(--faction-default-stamp-bg)");
     expect(sheet).not.toContain("var(--faction-default-card-bg)");
+  });
+
+  it("S.N.I.D.E.'s task detail passes the SLAB's inks, not the wall's", () => {
+    // A different ground again from the stamp's, and the trap is sharper here:
+    // `-note-ink` is the SAME HEX as `-card-bg` in light, so a dropped prop paints
+    // the total in the ground colour. Measured below.
+    const mark = penCircle(snideDetail());
+    expect(mark, "the cream figure").toContain("color:var(--faction-snide-card-text)");
+    expect(mark, "the acid caption").toContain("color:var(--faction-snide-card-accent)");
+    expect(mark).not.toContain("--faction-snide-note-ink");
+    expect(mark).not.toContain("--faction-snide-note-pink-ink");
+  });
+
+  it("S.N.I.D.E.'s task detail draws the SHARED loop, growth and all", () => {
+    const mark = penCircle(snideDetail());
+    // The 1.18× growth (#2035) lives on the SVG alone and is the one thing the
+    // hand-drawn third copy lacked, so it is what tells the two drawings apart.
+    // Deliberate: this page shows `modifiedPoints` at `--text-display`, the widest
+    // figure the loop carries anywhere, so the growth belongs here most.
+    expect(mark, "the shared loop's growth").toContain("scale(1.18)");
+    // The size branch survives the mount rather than flattening to the cards' 96.
+    expect(mark, "the desktop loop").toContain("width:128px");
+    expect(mark, "the page's headline figure").toContain("font-size:var(--text-display)");
   });
 
   it("Singularity needs no ink override — the well carries its own ground", () => {
@@ -253,15 +345,16 @@ function opaque(token: string, theme: Theme, under?: string): Rgba {
 }
 
 /**
- * Every ink each shared mark puts on the SCORE STAMP's ground — the surface whose
- * ground the mark was NOT drawn for. `floor` is the WCAG rung the role owes:
- * AA_LARGE for a display numeral, AA_NORMAL for a caption.
+ * Every ink each shared mark puts on a ground it was NOT drawn for — the score
+ * stamp's plate, and for S.N.I.D.E. the task detail page's slab as well. `floor`
+ * is the WCAG rung the role owes: AA_LARGE for a display numeral, AA_NORMAL for a
+ * caption.
  *
  * The measured figures are in the marks' own docblocks beside the pairings, as
  * this repo does; the numbers here are the floors, so a repaint that walks a token
  * fails on the ratio rather than on a stale comment.
  */
-const ON_THE_STAMP: Array<{
+const ON_A_BORROWED_GROUND: Array<{
   what: string;
   ink: string;
   ground: string;
@@ -303,6 +396,26 @@ const ON_THE_STAMP: Array<{
     under: "--faction-snide-card-bg",
     floor: AA_LARGE,
   },
+  // S.N.I.D.E.'s task detail — the slab punched into the acid plate (#2066).
+  // A third ground for one drawing, opaque this time and black in both themes.
+  {
+    what: "snide detail total figure in the pen circle",
+    ink: "--faction-snide-card-text",
+    ground: "--faction-snide-card-bg",
+    floor: AA_LARGE,
+  },
+  {
+    what: "snide detail pen-circle caption",
+    ink: "--faction-snide-card-accent",
+    ground: "--faction-snide-card-bg",
+    floor: AA_NORMAL,
+  },
+  {
+    what: "snide detail pen loop (non-text, 1.4.11)",
+    ink: "--faction-snide-pink",
+    ground: "--faction-snide-card-bg",
+    floor: AA_LARGE,
+  },
   // na — the ring's ground is a prop, so the plate shows through the annulus.
   {
     what: "na total figure in the spectrum ring",
@@ -318,7 +431,7 @@ const ON_THE_STAMP: Array<{
   },
 ];
 
-describe.each(ON_THE_STAMP)("$what clears its floor on the stamp's ground", (pair) => {
+describe.each(ON_A_BORROWED_GROUND)("$what clears its floor on the ground it lands on", (pair) => {
   it.each(BOTH)("in %s", (theme) => {
     const ratio = contrastRatio(
       opaque(pair.ink, theme, pair.under),
@@ -352,6 +465,23 @@ describe("the S.N.I.D.E. card's own inks do NOT survive the move (#2042)", () =>
   it("puts the caption under AA in light", () => {
     const light = contrastRatio(opaque("--faction-snide-note-pink-ink", "light"), plate("light"));
     expect(light, formatRatio(light)).toBeLessThan(AA_NORMAL);
+  });
+
+  it("is not merely dim on the task detail's slab in light — it is the SAME HEX", () => {
+    // `--faction-snide-note-ink` and `--faction-snide-card-bg` are both #14110b in
+    // the light cascade. The wall flips and the slab does not (#2066), so the
+    // clipping's ink on the slab is 1.00:1 — the total painted in the ground
+    // colour, on the page that shows the widest total the loop ever holds.
+    const slab = (theme: Theme) => opaque("--faction-snide-card-bg", theme);
+    const light = contrastRatio(opaque("--faction-snide-note-ink", "light"), slab("light"));
+    expect(light, formatRatio(light)).toBeLessThan(1.01);
+    // And legible in dark, which is exactly what makes it invisible to a
+    // single-theme eyeball and to every guard that does not measure the pair.
+    const dark = contrastRatio(opaque("--faction-snide-note-ink", "dark"), slab("dark"));
+    expect(dark, formatRatio(dark)).toBeGreaterThan(AA_NORMAL);
+    // The caption default lands under AA there too: 3.12:1.
+    const caption = contrastRatio(opaque("--faction-snide-note-pink-ink", "light"), slab("light"));
+    expect(caption, formatRatio(caption)).toBeLessThan(AA_NORMAL);
   });
 });
 
