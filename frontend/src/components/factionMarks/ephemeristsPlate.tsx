@@ -222,7 +222,7 @@ export const SMALL_CAPS: CSSProperties = {
  *
  * Classical alchemical sigils on the plate's 24-unit square — Saturn for lead,
  * Venus for copper, the crescent for silver, the sun for gold, and the
- * moon-and-Mercury compound for platinum. They lived in `EphemeristsVote` while
+ * sun-and-moon compound for platinum. They lived in `EphemeristsVote` while
  * the ladder was their only reader; #1660 gave them two more (the voters panel
  * strikes one per vote, and the sign-up summons strikes platinum), which is the
  * threshold the kit exists for.
@@ -242,8 +242,15 @@ export const SMALL_CAPS: CSSProperties = {
 export const METAL_SIGILS = [
   {
     name: "lead",
+    // SATURN, REDRAWN (#2235). Saturn is the right metal for lead and was never
+    // in question; the DRAWING was wrong. Rank 1 shipped as a single scythe
+    // stroke with a bar through it, and it was reported from outside as reading
+    // "a lowercase t" — a letter, not a sigil. This is the letterform Saturn
+    // instead: a straight stem, a crossbar crossing it near the top, and a bowl
+    // hanging off the stem to the right. Structure over flourish, because the
+    // rung is struck as small as 15-16px on the voters panel and the summons.
     color: "var(--faction-ephemerists-metal-lead)",
-    glyph: "M6.2 7.4 C7.4 4.6 10.2 4.8 10.2 7.8 C10.2 10.8 9 14.6 9.4 17.6 C9.8 20.4 11.8 21 13.8 19.4 M6.4 10.8 H13.4",
+    glyph: "M10.4 4.4 V19.6 M7 8.2 H13.8 M10.4 13 C11.2 10.4 16.8 10.6 16.4 14.2 C16.1 16.6 14.4 18 14.4 19.6",
     weight: 1.5,
     burstStep: 60,
   },
@@ -270,13 +277,18 @@ export const METAL_SIGILS = [
   },
   {
     name: "platinum",
-    // THE HAND (#2142). Platinum is the sun-and-moon compound, and it was drawn
-    // mirrored: the dotted sun sat on the RIGHT at x=15.6 with the crescent
-    // opening the path on the left. Owner checked it against a reference and it
-    // is sun-with-dot LEFT, crescent RIGHT. The other four sigils are unchanged
-    // and must stay byte-identical — they were already correct.
+    // THE HAND, REVERSED (#2235 reverses #2142). #2142 found this sigil drawn
+    // mirrored (dotted sun on the RIGHT at x=15.6), checked it against a
+    // reference, and pinned it here as sun-with-dot LEFT, crescent RIGHT.
+    // THAT RULING IS WITHDRAWN. The classical platinum compound is
+    // crescent-LEFT, its back against a sun-with-dot on the right, per the
+    // reference image on #2235; the owner reversed her own call on the report.
+    // The path below is #2142's geometry mirrored about x=12 — every x becomes
+    // 24-x and both crescent sweep flags invert with it, which is why they read
+    // 1 and 0 where they used to read 0 and 1. Do not "restore" #2142: it is
+    // the earlier answer, not the current one.
     color: "var(--faction-ephemerists-metal-platinum)",
-    glyph: "M6.4 7.2 a4.8 4.8 0 1 0 0.01 0 Z M6.4 10.85 a1.15 1.15 0 1 0 0.01 0 Z M16.8 7.2 A4.8 4.8 0 1 0 16.8 16.8 A6.5 6.5 0 0 1 16.8 7.2 Z",
+    glyph: "M7.2 7.2 A4.8 4.8 0 1 1 7.2 16.8 A6.5 6.5 0 0 0 7.2 7.2 Z M17.6 7.2 a4.8 4.8 0 1 0 0.01 0 Z M17.6 10.85 a1.15 1.15 0 1 0 0.01 0 Z",
     weight: 1.3,
     burstStep: 22.5,
   },

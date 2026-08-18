@@ -373,28 +373,77 @@ describe('EphemeristsVote markup', () => {
   })
 
   /**
-   * #2142 — THE PLATINUM SIGIL WAS MIRRORED. The compound is sun-with-dot on the
-   * LEFT and crescent on the RIGHT; it shipped the other hand round, with the
-   * dotted sun at x=15.6. Owner checked it against a reference image.
+   * #2235 REVERSES #2142 — THE PLATINUM SIGIL IS CRESCENT-LEFT.
    *
-   * The four sigils that were already correct are pinned by their opening move
-   * as well, because "fix platinum" is exactly the edit that quietly renumbers a
-   * neighbour — and a mirrored sigil renders perfectly.
+   * #2142 pinned this the other hand round, sun-with-dot LEFT and crescent
+   * RIGHT, on an owner reference check. That ruling is WITHDRAWN: the classical
+   * platinum compound puts the crescent on the LEFT with its back against a
+   * sun-and-dot on the right, which is what the reference image on #2235 shows.
+   * Do not "restore" #2142 as a regression fix.
+   *
+   * Measured, not matched: the crescent's cusps sit left of the sun's leftmost
+   * point, so the compound reads moon-then-sun at every size. The four other
+   * sigils are pinned by their opening move as well, because "fix platinum" is
+   * exactly the edit that quietly renumbers a neighbour — and a mirrored sigil
+   * renders perfectly.
    */
-  it('draws platinum sun-left, crescent-right (#2142)', () => {
+  it('draws platinum crescent-left, sun-right (#2235, reversing #2142)', () => {
     const platinum = METAL_SIGILS[4].glyph
-    // The sun and its dot open the path on the left; the crescent's big arc
-    // follows on the right.
-    expect(platinum).toContain('a1.15')
-    expect(platinum.indexOf('M6.4')).toBeLessThan(platinum.indexOf('M16.8'))
-    expect(platinum).not.toContain('15.6')
+    const parts = platinum.match(/M[^M]+/g) ?? []
+    const startX = (d: string) => Number.parseFloat(d.slice(1))
+    // Three subpaths: the crescent's two arcs, the sun's circle, and its dot.
+    const crescent = parts.find((part) => part.includes('A6.5'))
+    const sun = parts.find((part) => part.includes('a4.8'))
+    const dot = parts.find((part) => part.includes('a1.15'))
+    expect([crescent, sun, dot].every(Boolean)).toBe(true)
+    // The crescent's cusps clear the sun entirely: centre less the 4.8 radius.
+    expect(startX(crescent!)).toBeLessThan(startX(sun!) - 4.8)
+    // Sun and dot are concentric — a dot off-centre reads as a second moon.
+    expect(startX(dot!)).toBe(startX(sun!))
     expect(METAL_SIGILS.map((metal) => metal.glyph.slice(0, 8))).toEqual([
-      'M6.2 7.4',
+      'M10.4 4.',
       'M12 4.4 ',
       'M15.8 4.',
       'M12 5 a7',
-      'M6.4 7.2',
+      'M7.2 7.2',
     ])
+  })
+
+  /**
+   * #2235 — LEAD READ AS A LOWERCASE "t". Right metal, wrong drawing: Saturn
+   * is correct for lead and was never in question, but rank 1 shipped as one
+   * hand-drawn scythe stroke with a bar through it, and was reported as a
+   * letter rather than a sigil. Redrawn as the classical Saturn — a straight
+   * stem, a crossbar crossing it near the top, and a bowl hanging off the stem
+   * to the right.
+   *
+   * No test can prove a glyph is LEGIBLE: this harness has no layout, no
+   * rasteriser and no eyes. What is assertable is the structure that makes the
+   * mark a Saturn rather than a letter, and it is arithmetic on the path's own
+   * coordinates.
+   */
+  it('draws lead as a Saturn — stem, crossing bar, bowl to the right (#2235)', () => {
+    const [stem = '', bar = '', bowl = ''] = METAL_SIGILS[0].glyph.match(/M[^M]+/g) ?? []
+    const [, stemX, stemTop, stemFoot] = /^M([\d.]+) ([\d.]+) V([\d.]+)/
+      .exec(stem)!
+      .map(Number)
+    const [, barLeft, barY, barRight] = /^M([\d.]+) ([\d.]+) H([\d.]+)/.exec(bar)!.map(Number)
+    // The bar CROSSES the stem — it overhangs on both sides.
+    expect(barLeft).toBeLessThan(stemX)
+    expect(barRight).toBeGreaterThan(stemX)
+    // The stem rises above its bar and runs on well below it.
+    expect(stemTop).toBeLessThan(barY)
+    expect(stemFoot).toBeGreaterThan(barY + 8)
+    // The bowl leaves the stem below the bar and swings clear to the right.
+    const pairs = bowl.match(/[\d.]+ [\d.]+/g) ?? []
+    const bowlXs = pairs.map((pair) => Number(pair.split(' ')[0]))
+    const bowlYs = pairs.map((pair) => Number(pair.split(' ')[1]))
+    expect(bowlXs[0]).toBe(stemX)
+    expect(bowlYs[0]).toBeGreaterThan(barY)
+    expect(Math.max(...bowlXs)).toBeGreaterThan(stemX + 3)
+    // ...and stays inside the 24-unit square every sigil is drawn on.
+    expect(Math.max(...bowlXs)).toBeLessThan(24)
+    expect(Math.max(...bowlYs)).toBeLessThanOrEqual(stemFoot)
   })
 
   /**
