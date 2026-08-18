@@ -316,6 +316,44 @@
   --color-cast-shadow: rgba(0, 0, 0, 0.25);
   --color-cast-shadow-soft: rgba(0, 0, 0, 0.06);
 
+  /* The ink a FLAT OFFSET PRINT REGISTER is struck in (#1609, class 1 of the
+     raw-colour list): a flyposter's misregistered second impression — zero blur,
+     hard edge, `8px 10px 0` down to `1px 2px 0`. Fourteen sites across S.N.I.D.E.
+     and the Everymen poster had hand-rolled it as `rgba(0, 0, 0, α)`, plus three
+     more the ratchet cannot see (two `filter: drop-shadow(...)`, one module
+     constant).
+
+     THIS IS NOT ELEVATION, and it is deliberately not `--color-cast-shadow`
+     above even though both are black. That token names what a LIFTED surface
+     throws onto the ground BEHIND it; nothing here is lifted, so its 0.25 -> 0.7
+     dark lift would swell a printed mark rather than deepen a shadow. If you are
+     looking for the shadow under a card, it is the token above, not this one.
+
+     STRENGTH STAYS AT THE CALL SITE — `color-mix(in srgb,
+     var(--color-print-offset) 32%, transparent)` — which is the same split the
+     cast token makes for blur and offset and the same one `shared.tsx`'s byline
+     rule makes as a percentage of `currentColor`: how hard THIS mark is printed
+     is the component's drawing, and only the paint was ever off-theme. All NINE
+     strengths that survive (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 /
+     0.55) are kept exactly, so this rung repaints no pixel. Collapsing them onto
+     one is the honest next move and it is a DESIGN call that needs eyes on
+     seventeen surfaces; minting the name is what makes it a one-line change when
+     someone makes it.
+
+     THEME-INVARIANT ON PURPOSE — there is no dark half, and that is the decision
+     rather than an omission. Nothing behind these marks moves: they are struck on
+     the press constants at the head of the S.N.I.D.E. block (`-ink`/`-paper`/
+     `-acid`, whose own note reads "the ink that prints on an acid ground stays
+     #14110b in both themes") and on Everymen's poster frame, which "stays the
+     colour it was printed in" (#1187). A mark that is part of the drawing flips
+     when the drawing does, which is never. Where a printed offset genuinely does
+     need a night answer the fix is GEOMETRY, not paint —
+     `--faction-snide-note-wall-shadow` trades its offset for a hairline plus a
+     deep drop because "an offset in the dark is invisible" — and geometry lives
+     at the call site, not here. `printOffsetToken.test.ts` pins the absent dark
+     half so it cannot be added without reading this paragraph. */
+  --color-print-offset: #000000;
+
   /* The lift under an attached listbox — the @-mention popover and the invite
      picker's results, both absolutely positioned under their input. They had
      written the same alpha by hand at two different geometries (`0 4px 12px`

@@ -50,9 +50,10 @@ const INK_PANEL: CSSProperties = {
   background: INK,
   color: PAPER,
   border: "1px solid color-mix(in srgb, var(--faction-snide-acid) 18%, transparent)",
-  // ornament (#1609): flat offset print shadow — the flyposter metaphor, not
-  // elevation, so it does not take `--color-cast-shadow`. Stays raw.
-  boxShadow: "6px 8px 0 rgba(0,0,0,0.45)",
+  // ornament (#1609): flat offset print register — the flyposter metaphor, not
+  // elevation, so it does not take `--color-cast-shadow`. Ink tokenized,
+  // strength left here: how hard this panel is printed is the drawing.
+  boxShadow: "6px 8px 0 color-mix(in srgb, var(--color-print-offset) 45%, transparent)",
 };
 
 /** Warm xerox-paper panel (light card on the wall). */
@@ -62,9 +63,9 @@ const PAPER_PANEL: CSSProperties = {
   background: PAPER,
   color: INK,
   border: `1.5px solid ${INK}`,
-  // ornament (#1609): same flat offset print shadow, one stop lighter for the
-  // paper stock. Stays raw.
-  boxShadow: "4px 6px 0 rgba(0,0,0,0.22)",
+  // ornament (#1609): same flat offset print register, one stop lighter for the
+  // paper stock.
+  boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 22%, transparent)",
 };
 
 /** Faint halftone dot wash — acid on ink, or ink on paper. */
@@ -251,7 +252,11 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     <TaskCrown
                       size={48}
                       rotate="-8deg"
-                      shadow="drop-shadow(2px 2px 0 rgba(0,0,0,.35))"
+                      // The crown's own offset register (#1609). `TaskCrown`
+                      // applies this as a `filter`, and `filter` is not a
+                      // COLOUR_PROP — so the ratchet never reported it. It was a
+                      // blind spot, not a keep-raw ruling.
+                      shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 35%, transparent))"
                       style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
                     />
                   )}
@@ -363,7 +368,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         padding: "var(--space-md)",
                         border: "none",
                         transform: "rotate(-1deg)",
-                        boxShadow: "3px 4px 0 rgba(0,0,0,.4)",
+                        // The CTA's offset register (#1609) — not lift.
+                        boxShadow: "3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
                         cursor: "pointer",
                       }}
                     >
@@ -478,7 +484,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
-                <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "var(--space-lg)", textAlign: "center" }}>
+                {/* Offset register (#1609) at this panel's own 30%, overriding INK_PANEL's 45%. */}
+                <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 color-mix(in srgb, var(--color-print-offset) 30%, transparent)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone on="ink" />
                   {/* The poster's "★ WANTED ★" rule stood here. #1909 cut
                       `snide.spotlight.wanted`: Snide was the only faction with
@@ -525,7 +532,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           )}
 
           <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-            <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 rgba(0,0,0,.2)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+            {/* Offset register (#1609) at this panel's own 20% — the lightest impression on the wall. */}
+            <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 20%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
               <Halftone on="paper" />
               <div
                 style={{

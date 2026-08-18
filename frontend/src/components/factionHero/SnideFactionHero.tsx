@@ -51,9 +51,11 @@ export default function SnideFactionHero({
         marginBottom: "var(--space-xl)",
         background: "var(--faction-snide-ink)",
         color: "var(--faction-snide-card-text)",
-        // ornament (#1609): the flyposter's flat offset shadow — the print
-        // metaphor, not elevation. It stays raw; see the legacy list.
-        boxShadow: "8px 10px 0 rgba(0,0,0,0.32)",
+        // ornament (#1609): the flyposter's flat offset register — the print
+        // metaphor, not elevation, so not `--color-cast-shadow`. The ink is
+        // `--color-print-offset`; the 8/10px offset and the 32% are the drawing
+        // and stay at this call site.
+        boxShadow: "8px 10px 0 color-mix(in srgb, var(--color-print-offset) 32%, transparent)",
         paddingBottom: "var(--space-xs)",
       }}
     >
@@ -228,7 +230,10 @@ export default function SnideFactionHero({
                 alignItems: "center",
                 justifyContent: "center",
                 border: "2px solid var(--faction-snide)",
-                boxShadow: "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 rgba(0,0,0,0.4)",
+                // The second layer is the medallion's offset register (#1609);
+                // the first is a solid ink rim, not a shadow.
+                boxShadow:
+                  "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
               }}
             >
               <div
@@ -257,7 +262,10 @@ export default function SnideFactionHero({
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a rotated stat chit; rounding reflows the staggered stack.
                 padding: "7px 14px 6px",
                 transform: `rotate(${CHIT_ROT[i % CHIT_ROT.length]}deg)`,
-                boxShadow: "2px 3px 0 rgba(0,0,0,0.4)",
+                // The chit's offset register (#1609). The translucent black ground
+                // above it is NOT this — it is a wash on the wall, still raw and
+                // still on the legacy list.
+                boxShadow: "2px 3px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
               }}
             >
               <div

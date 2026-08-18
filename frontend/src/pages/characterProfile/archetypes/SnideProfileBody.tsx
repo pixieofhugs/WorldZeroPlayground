@@ -75,8 +75,10 @@ const dress: ProfileDress = {
     border: `1px solid ${ACID}`,
     // ornament (#1609): the flyposter's flat offset shadow — the print
     // metaphor, not elevation, so neither cast rung fits. Same drawing as the
-    // faction hero's and the ransom seal's. Stays raw; see the legacy list.
-    boxShadow: '8px 10px 0 rgba(0,0,0,0.55)',
+    // faction hero's and the ransom seal's. The ink is now
+    // `--color-print-offset`; the 55% is this mark's own strength, the hardest
+    // impression on the page.
+    boxShadow: '8px 10px 0 color-mix(in srgb, var(--color-print-offset) 55%, transparent)',
     // The torn acid strip along the top is dropped (#1630), and the 3xl top
     // inset that was reserving room for it goes with it — a band sized for an
     // absent ornament is #1138's shape (hiding the mark does not hide the SPACE
@@ -84,8 +86,17 @@ const dress: ProfileDress = {
     padding: 'var(--space-2xl)',
     marginBottom: 'var(--space-3xl)',
   },
+  // The same offset register as the header, struck through `filter` so it follows
+  // the card's cut edge rather than its box (#1609). `filter` is not a
+  // COLOUR_PROP, so the ratchet never reported this one — it is the blind spot
+  // the legacy list records, not a site anybody decided to keep raw.
   credentialFrame: (card) => (
-    <div style={{ transform: 'rotate(-1.5deg)', filter: 'drop-shadow(6px 8px 0 rgba(0,0,0,0.5))' }}>
+    <div
+      style={{
+        transform: 'rotate(-1.5deg)',
+        filter: 'drop-shadow(6px 8px 0 color-mix(in srgb, var(--color-print-offset) 50%, transparent))',
+      }}
+    >
       {card}
     </div>
   ),
@@ -116,8 +127,8 @@ const dress: ProfileDress = {
     // 2px optical trim is not a spacing decision the scale needs to express.
     padding: 'var(--space-xs) var(--space-md) var(--space-sm)',
     transform: 'rotate(-0.7deg)',
-    // ornament (#1609): same flat offset print shadow, one stop tighter.
-    boxShadow: '4px 4px 0 rgba(0,0,0,0.45)',
+    // ornament (#1609): same flat offset print register, one stop tighter.
+    boxShadow: '4px 4px 0 color-mix(in srgb, var(--color-print-offset) 45%, transparent)',
     letterSpacing: '-0.01em',
     textTransform: 'uppercase',
   },
