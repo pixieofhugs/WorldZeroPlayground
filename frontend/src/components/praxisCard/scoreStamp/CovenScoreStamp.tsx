@@ -33,17 +33,17 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *    line was the odd one out.
  *  • The `✨`. It was decoration beside the figure; the cauldron IS the mark now.
  *  • The braid, whose job — ruling the working off from the total — belongs to
- *    the plate's own dashed rule above the group subtotal.
+ *    the plate's own dashed rule above the subtotal.
  * `<TaskCrown>` STAYS. The design draws a `♛` glyph, but at size 26 / `8deg` /
  * a few px off the top-right corner it is describing the shared component this
  * stamp already mounted at those numbers.
  *
- * THE GROUP ROW IS COVEN-LOCAL, AND IT MUST NOT SWALLOW THE HABIT BONUS.
+ * THE SUBTOTAL ROW IS COVEN-LOCAL, AND IT MUST NOT SWALLOW THE HABIT BONUS.
  * It exists so `×1.50` is visibly applied to `17` and not to `12`, and it is a
  * subtotal of two figures `scoreBreakdown` already returns — arithmetic, not a
- * new term, which is why `ScoreBreakdown` gains no `group` field and ADR-0049 is
+ * new term, which is why `ScoreBreakdown` gains no `subtotal` field and ADR-0049 is
  * unamended. The bonus is FLAT and sits outside the multiplier (#1617), so it is
- * written beside the votes and never inside the group. This skin genuinely meets
+ * written beside the votes and never inside the subtotal. This skin genuinely meets
  * that case: the stamp dispatches on the TASK's faction (`ScoreStamp.tsx`), so a
  * UA character's praxis on a Coven task lands here with a live habit row — a
  * state the design never draws, because its vendored `breakdown()` predates
@@ -67,7 +67,7 @@ const ROW: CSSProperties = {
 };
 
 /**
- * A figure in the working. `strong` is the group subtotal, a step up from the
+ * A figure in the working. `strong` is the subtotal, a step up from the
  * terms it sums; both are drawn figures rather than copy, so they sit off the
  * type scale as ornament (WORLD_ZERO_STYLE §4a).
  */
@@ -128,7 +128,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
        * it exactly when NO other term is in play — so `?? 0` is the compiler's
        * proof rather than a fourth state.
        */
-      row("group", t("card.stamp.group"), (
+      row("subtotal", t("card.stamp.subtotal"), (
         <span style={value(true, INK)}>{(base ?? 0) + meta}</span>
       ), {
         borderTop: `1.5px dashed color-mix(in srgb, ${DEEP} 45%, transparent)`,
@@ -151,7 +151,7 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
     );
   }
   /*
-   * The habit bonus (#1617), written after the tally: flat, outside the group.
+   * The habit bonus (#1617), written after the tally: flat, outside the subtotal.
    * The design draws no such row and this skin still has to — see the header.
    */
   if (habit !== null) {

@@ -3,17 +3,17 @@
  *
  * THE SEAM UNDER TEST is the join between the shared resolver and this one skin:
  * `scoreBreakdown()` returns the rows, and Coven adds ONE derived figure of its
- * own — `Group`, the `(base + meta)` subtotal the design prints under a dashed
+ * own — the `(base + meta)` subtotal the design prints under a dashed
  * rule so `×1.50` is visibly applied to `17` and not to `12`.
  *
  * That derivation is the whole risk, and it is invisible to a green build. The
  * habit bonus is FLAT and sits outside the multiplier (`scoreBreakdown.ts`), and
  * the stamp dispatches on the TASK's faction (`ScoreStamp.tsx`) — so a UA
  * character's praxis on a Coven task renders this skin with a live habit row.
- * A `Group` that swallowed it would print arithmetic that never reaches the
+ * A subtotal that swallowed it would print arithmetic that never reaches the
  * printed total, on a card that renders perfectly. The design cannot warn about
  * this: its own vendored `breakdown()` predates #1617 and has no habit term at
- * all. Hence `groupIgnoresHabit` below, with three figures chosen so the wrong
+ * all. Hence `subtotalIgnoresHabit` below, with three figures chosen so the wrong
  * sum (`24`) cannot be confused with the right one (`17`).
  *
  * The rest pins what #2019 replaced: the tilt, the ✨ and the gold chip are gone,
@@ -46,26 +46,26 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
   } as PraxisCardOut
 }
 
-describe('the Coven Group row is (base + meta) and nothing else (#2019)', () => {
+describe('the Coven subtotal row is (base + meta) and nothing else (#2019)', () => {
   it('prints the subtotal under the meta row when a metatask is live', () => {
     const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ metatask_points: 5, score: 17 })} />))
-    expect(html).toContain('group')
+    expect(html).toContain('subtotal')
     // 12 + 5. Stated once as a row, and once more as the cauldron's total.
     expect(html.split('17')).toHaveLength(3)
   })
 
-  it('leaves the Group row out when there is no metatask', () => {
+  it('leaves the subtotal row out when there is no metatask', () => {
     const html = text(
       renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ display_multiplier: 1.5, score: 18 })} />),
     )
     expect(html).toContain('mult')
-    expect(html).not.toContain('group')
+    expect(html).not.toContain('subtotal')
   })
 
   /**
    * The trap. `12 + 5 = 17`, and the habit bonus of 7 is added AFTER the
    * multiplier — so the total is `17 × 1.5 + 7 = 32.5` and the subtotal is 17.
-   * A `Group` that folded the bonus in would print 24, which multiplies out to
+   * A subtotal that folded the bonus in would print 24, which multiplies out to
    * 36 and reaches no figure on the card.
    */
   it('holds the subtotal at base + meta while a habit row is live beside it', () => {
@@ -105,7 +105,7 @@ describe('the states the design does not draw', () => {
   it('drops the whole plate when the base row would only restate the total', () => {
     const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({})} />))
     expect(html).not.toContain('base')
-    expect(html).not.toContain('group')
+    expect(html).not.toContain('subtotal')
     expect(html.split('12')).toHaveLength(2)
   })
 

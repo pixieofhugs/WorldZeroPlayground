@@ -179,7 +179,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
           )}
 
           {/*
-           * The grouped subtotal, drawn under a hairline. It exists only when a
+           * The subtotal, drawn under a hairline. It exists only when a
            * metatask AND a multiplier are both live — the design's "full formula"
            * column — because without a multiplier `(base + meta)` explains
            * nothing and the plate reads as a form with a hole in it. Either of
@@ -199,7 +199,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                 paddingTop: 3,
               }}
             >
-              <span style={workingStyle}>{t("card.stamp.group")}</span>
+              <span style={workingStyle}>{t("card.stamp.subtotal")}</span>
               <span
                 style={{
                   fontFamily: "var(--faction-ua-card-font)",
@@ -236,7 +236,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
           {/*
            * The habit bonus (#1617) — UA's own ability, and the one plate on the
            * site that routinely carries this line. It is written UNDER the tally
-           * and outside the grouped subtotal on purpose: the bonus is flat, and
+           * and outside the subtotal on purpose: the bonus is flat, and
            * the plate's rule is where the multiplier stops applying. Vermilion
            * like the metatask working, because both are points the sheet ADDS.
            */}

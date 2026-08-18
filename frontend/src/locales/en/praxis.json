@@ -53,7 +53,7 @@
       "points": "points",
       "pointsShort": "pts",
       "tally": "TALLY",
-      "group": "group",
+      "subtotal": "subtotal",
       "onTheRecord": "★ VERIFIED ★ ON THE RECORD "
     },
     "mediaEmpty": "no proof attached",
