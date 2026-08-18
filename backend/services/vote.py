@@ -10,7 +10,13 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
-from models.praxis import ModerationStatus, Praxis, PraxisMember
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisInvite,
+    PraxisInviteStatus,
+    PraxisMember,
+)
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
@@ -187,6 +193,16 @@ async def _voter_account_owns_praxis(
     created_by starter — so this checks every current member's account. members
     + member.character are selectin-loaded, so no extra query in the common path.
     Solo praxis: one member (the creator) → identical to the old created_by check.
+
+    **A pending invitation counts as ownership here and nowhere else** (#2216).
+    ``praxis.members`` is current members only and a ``PraxisMember`` row is
+    written only on accept (``services.praxis.respond_to_invite``), so an invitee
+    who has not answered yet was invisible to this check and could rate a praxis
+    they were one click from co-owning. Sealing a collab does not rescind its
+    pending invites — only the collab→solo conversion does — so the praxis can be
+    Live and public with the invitation still outstanding, which is the shape the
+    bug was reported in. The invite buys nothing else: no points, no roster seat,
+    no member row.
     """
     member_account_ids = {
         member.character.account_id
@@ -200,7 +216,37 @@ async def _voter_account_owns_praxis(
             author = await session.get(Character, praxis.created_by_id)
         if author is not None:
             member_account_ids = {author.account_id}
-    return voter.account_id in member_account_ids
+    if voter.account_id in member_account_ids:
+        return True
+    return bool(await _pending_invite_praxis_ids(voter.account_id, [praxis.id], session))
+
+
+async def _pending_invite_praxis_ids(
+    account_id: int, praxis_ids: list[int], session: AsyncSession
+) -> set[int]:
+    """Praxis ids among ``praxis_ids`` that ``account_id`` holds a pending invite on.
+
+    Queried rather than read off ``praxis.invites``: that relationship is
+    ``lazy="raise"`` on purpose (only the detail and moderation flows load
+    invites), and the vote path runs per card.
+
+    Account-level, not character-level, like every other rule in this module
+    (ADR-0041): the invitation reaches one life, but an alt on the same account
+    rating the collab that account is about to co-own is the same hole the gate
+    exists to close.
+    """
+    if not praxis_ids:
+        return set()
+    result = await session.execute(
+        select(PraxisInvite.praxis_id)
+        .join(Character, Character.id == PraxisInvite.invitee_id)
+        .where(
+            PraxisInvite.praxis_id.in_(praxis_ids),
+            PraxisInvite.status == PraxisInviteStatus.pending,
+            Character.account_id == account_id,
+        )
+    )
+    return set(result.scalars().all())
 
 
 async def _voter_in_praxis_duel(
@@ -284,6 +330,13 @@ async def viewer_can_vote_map(
         )
     )
     blocked_ids = set(owned_result.scalars().all())
+
+    # A'. An outstanding invitation is ownership for this gate alone (#2216) —
+    # the same rule ``_voter_account_owns_praxis`` applies per praxis, batched
+    # here so the feed's flag can never disagree with what the cast enforces.
+    blocked_ids |= await _pending_invite_praxis_ids(
+        account_id, list(praxis_ids), session
+    )
 
     # B. Duel participation — for every active duel touching a page praxis, block
     # BOTH of its sides (that are on this page) when the viewer's account is a
