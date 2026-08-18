@@ -41,6 +41,7 @@ import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
 import { factionCssVar } from '../../utils/factions'
 import { stampRestatesTaskPoints } from '../../utils/praxis'
+import { formatPoints } from '../../utils/points'
 import type { TFunction } from 'i18next'
 
 /**
@@ -692,7 +693,19 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
     </button>
   ) : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-      <span className="label-caption">{t(unsubmitCopy.prompt)}</span>
+      {/* `points` lands ONLY in the solo prompt, which is the one string that
+          interpolates it (#2094). Do NOT add it to `confirmPromptCollab`:
+          the score fields are ONE set resolved for the praxis AUTHOR on every
+          type including collab (ADR-0053), so on a group praxis this figure
+          is the author's, not the reader's. Printing it to a co-author would
+          state a number that is NOT what leaves their total — a worse error
+          than the vague "points & votes pause" #2094 removed. The owner ruled
+          the collab prompt numberless and ruled out putting a per-member share
+          on the wire; naming one needs that decision reopened, not a one-line
+          "improvement" here. `unsubmitConfirmCopy.test.tsx` guards it. */}
+      <span className="label-caption">
+        {t(unsubmitCopy.prompt, { points: formatPoints(praxis.score) })}
+      </span>
       <button
         onClick={handleWithdraw}
         disabled={withdrawing}
