@@ -306,8 +306,10 @@ async def flag_comment(
     if await account_already_flagged(
         flagged_by.account_id, session, comment_id=comment.id
     ):
-        raise HTTPException(
-            status_code=409, detail="Your account has already flagged this comment."
+        raise_coded(
+            409,
+            ErrorCode.comment_already_flagged,
+            "Your account has already flagged this comment.",
         )
 
     if await _character_level(flagged_by.id, session) < era.flag_level_required:
