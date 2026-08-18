@@ -92,3 +92,51 @@ describe('no full-document reload behind a one-field write', () => {
     expect(source.replace(/\/\*[\s\S]*?\*\//g, '')).not.toContain('window.location.reload')
   })
 })
+
+/**
+ * The moderation cluster is part of the card's foot, not an overlay on it
+ * (#2049).
+ *
+ * SEAM: the dispatcher's own markup — specifically the box that holds the
+ * retire/activate buttons. It used to be `position:absolute; bottom:4; right:4;
+ * z-index:10`, which was survivable while the sign-up affordance was a
+ * full-bleed footer BAR: the cluster covered it edge to edge, predictably.
+ * #2030 made that affordance a discrete, inset, CENTRED button, so a
+ * bottom-right overlay and a centred control can now collide at narrow widths —
+ * the overlapping hit boxes `docs/agents/design-fidelity.md` names as a failure.
+ *
+ * NOTHING HERE MEASURES A BOX. `renderToStaticMarkup` runs no layout, so no
+ * test in this repo can prove two rectangles stop overlapping. What is
+ * assertable is the SHAPE that makes overlap impossible: the cluster is a
+ * normal-flow sibling below the card's frame rather than an absolutely
+ * positioned overlay, and the wrapper stays the plain positioned box the
+ * equal-height row lays out (`pages/tasks/__tests__/equalHeightRow.test.tsx`).
+ * VISUAL QA IS OUTSTANDING and stated as such on the PR.
+ */
+describe('the moderation cluster sits in the foot, not over it (#2049)', () => {
+  it('is a normal-flow box: no absolute positioning, no stacking context', () => {
+    const out = card(TASK)
+    const at = out.indexOf('>retire<')
+    const open = out.lastIndexOf('<div', at)
+    const tag = out.slice(open, out.indexOf('>', open) + 1)
+    expect(tag, 'the cluster is laid out, not floated over the card').not.toContain(
+      'position:absolute',
+    )
+    expect(tag, 'nothing to raise it above the sign-up button').not.toContain('z-index')
+  })
+
+  it('follows the card frame instead of sitting inside it', () => {
+    const out = card(TASK)
+    // The skin owns everything up to its </article>; the dispatcher appends the
+    // cluster after it. Putting it INSIDE the frame would need a slot prop on
+    // all nine skins — see the PR for why that was not the fix taken.
+    expect(out.indexOf('>retire<')).toBeGreaterThan(out.lastIndexOf('</article>'))
+  })
+
+  it('leaves the wrapper the plain positioned box the equal-height row needs', () => {
+    // An inline `display` here would beat `.task-card-row > *` in index.css and
+    // silently stop every card on the board from stretching (#1945).
+    const out = card(TASK)
+    expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div style="position:relative">')
+  })
+})
