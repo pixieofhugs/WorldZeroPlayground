@@ -52,9 +52,10 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.03em',
           color: PAPER_TEXT,
           margin: 0,
-          // The Everymen poster drop shadow is ONE drawing on five surfaces
-          // (#1609). `EverymenFactionCard`, `EverymenFactionHero` and
-          // `EverymenDuelSealConfirm` all strike it from `--everymen-ink`; the
+          // The Everymen poster drop shadow is ONE drawing on four surfaces
+          // (#1609; it was five until #2024 retired the faction card).
+          // `EverymenFactionHero` and
+          // `EverymenDuelSealConfirm` both strike it from `--everymen-ink`; the
           // two here were the only copies hand-rolled in black, so they could
           // not follow the ink into dark mode (#221a12 -> #0d0907).
           textShadow: `2px 2px 0 color-mix(in srgb, ${INK} 12%, transparent)`,
