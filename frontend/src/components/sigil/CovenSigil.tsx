@@ -22,8 +22,11 @@
  * Every one of those nine mounts draws exactly what it drew before.
  *
  * Note Coven has other devices and this does not displace them: `covenSlip`'s
- * pentagram `SigilMark` still badges the slip, and `CovenAvatar`'s crescent moon
- * is explicitly kept (#1209). This is the mark the dispatcher hands out.
+ * pentagram `SigilMark` still badges the slip. This is the mark the dispatcher
+ * hands out — and since #2217 it is also the mark `CovenAvatar` badges a MEMBER
+ * with, so a player meets one symbol for the faction rather than two. The
+ * crescent that badge used to draw is retired; the moon survives only inside
+ * `CovenVote`'s phase plate, where it is a 1-5 mechanic and not an identity.
  *
  * ONE INK, WHOLESALE. `color` defaults to `--faction-coven`, which is the token
  * the design's own cell names and the sparkle's default before it. Never a hex.
