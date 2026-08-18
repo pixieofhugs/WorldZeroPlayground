@@ -71,6 +71,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     activeTasks: [ACTIVE_TASK],
     pendingRow: { kind: 'clear', count: 0, to: null },
     loadingTasks: false,
+    offersACharacterChoice: true,
     ...overrides,
   }
 }

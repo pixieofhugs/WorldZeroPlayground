@@ -89,6 +89,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
     activeTasks: [ACTIVE_TASK],
     pendingRow: { kind: 'requests', count: 2, to: REQUESTS_QUEUE_LINK },
     loadingTasks: false,
+    offersACharacterChoice: true,
     ...overrides,
   }
 }

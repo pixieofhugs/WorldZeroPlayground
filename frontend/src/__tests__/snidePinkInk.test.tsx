@@ -96,6 +96,7 @@ const DESK_STATE: FieldDeskHomeState = {
   activeTasks: [],
   pendingRow: null,
   loadingTasks: false,
+  offersACharacterChoice: true,
 }
 
 /**
