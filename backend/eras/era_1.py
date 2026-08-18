@@ -183,11 +183,22 @@ ERA_1_TASKS: tuple[TaskDef, ...] = ()
 # entries are pure whimsy. Bot-drafted copy — Molly may revise later
 # (config-only, no code change).
 #
-# NOTE: issue #287's table paired level 3 with "choose a faction", but
-# `services/faction_service.py::defect_to_faction` has no level check at all —
-# faction choice is gated purely by invitation (ADR-0022), not by level. Dropped
-# from the grounded abilities below rather than citing a gate that isn't
-# actually enforced.
+# NOTE: an ability rung must name a gate that exists. Two have been dropped
+# rather than reworded, because the alternative is announcing a door that was
+# never locked:
+#
+#   * issue #287's table paired level 3 with "choose a faction", but
+#     `services/faction_service.py::defect_to_faction` has no level check at
+#     all — faction choice is gated purely by invitation (ADR-0022).
+#   * issue #2224 dropped "sign up for a task" from level 1. Sign-up has no
+#     era-wide level gate; the bar is per-task (`task.level_required`, read via
+#     `services/praxis.py::meets_task_level`). A character reaches level 1 *by*
+#     signing up for the level-0 onboarding task and posting a praxis for it,
+#     so the rung announced an ability the player had just finished using.
+#
+# `tests/unit/test_level_profiles.py` holds a tripwire for each. Before adding
+# an ability rung, find the `era.*` constant or the service-level check it
+# names; if there isn't one, it belongs in the sense list or nowhere.
 
 # ADR-0031: profiles carry copy KEYS, never prose. The English words live in
 # frontend/src/locales/en/progression.json (ranks.<rank_key>,
@@ -198,7 +209,6 @@ ERA_1_LEVEL_PROFILES = (
     LevelProfile(
         rank_key="trailhead",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "sign_up_task"),
             LevelUnlock(LevelUnlockKind.ability, "start_collaboration"),
             LevelUnlock(LevelUnlockKind.sense, "worn_paths"),
         ),

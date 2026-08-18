@@ -640,6 +640,36 @@ which put the initial-load CSS budget exactly on its WARN line for the sake of a
 value is now assembled with `join('-')` and appears nowhere bare, and the built sheet is byte-identical
 to before the fix. The same trap applies to any assertion naming a class the code must *not* have.
 
+**The ceiling is universal; the ARM is per-hero, and `vw` is only right when the track is a fraction of
+the viewport (#2222).** "Singularity" is the second name long enough to trip the geometry — the only
+other single-word one, eleven characters of Share Tech Mono, which advances **0.54em per glyph**, so with
+its 0.04em tracking the mark is **6.38em** wide, or 357px at the hero's 56px display size. It has no space
+and no dots, so nothing about the name gives, and the hero clips its own overflow (correctly — that
+`overflow: hidden` holds the corner glow and the scanlines to the tile), so the failure printed as
+*Singularit* plus a sheared descender rather than as a spill.
+
+Everymen's `20vw` arm is not transferable to it. That hero's mark sits in a track that really is roughly
+the viewport minus a seal; **Singularity's is not** — a fixed 240px readout column sits beside it inside
+the hero, and the 320px desktop rail sits outside it, so one viewport width yields three different track
+widths. An arm fitted to a phone caps out around 430px and is inert by 768px, which leaves the mark
+overflowing in two bands a phone screenshot never shows: **~768–800px**, and **~1024–1160px with the rail
+open**. So the arm reads the column instead: `container-type: inline-size` on the identity column and
+`font-size: min(56px, 14cqw)` on the mark. 6.38 x 0.14 = 0.89 of the track, so the mark keeps ~11% of its
+column as air at every width and the 56px ceiling engages once the track passes ~400px.
+
+Two second-order notes. **The container declaration is half the fix, not plumbing for the other half**:
+inline-size containment takes the column's min-content contribution to zero, which is what stops the
+hero's `1fr` track being *floored* by an unbreakable word and shoving the whole grid past the clipped
+edge — the same `1fr`-is-floored-at-its-own-min-content mechanic §"a shared anatomy is a grid" names on
+the task-card masthead. And **`min()` is invisible to the raw-value ratchet either way**: the disable
+directive that rode the bare `56` reports UNUSED the moment the value moves inside `min()` and has to come
+off, exactly as it did on Everymen. The value is still ornament and still off the `--text-*` scale.
+
+The other five heroes keep a flat size (Coven 52, the Ephemerists 44, S.N.I.D.E. 82, UA and WOW on the
+scale) and that is **not** the same latent bug: every one of those names carries a space or dots to give
+at, so the container yielding is enough. They are worth re-checking the day a faction is renamed, not
+repainting now.
+
 ### The label tier is TWO tiers, and the content floor has one exception (#1307)
 
 One class covered five jobs — section headings, metadata captions, status chips, counts, bylines — at 9px uppercase on 0.15em tracking in the weakest neutral, on 461 sites. Four legibility costs on the same string, and the treatment had already been found not to survive real content once: `.eyebrow-sentence` existed because *"a sentence set that way is a wall"*, which is a caption wearing a heading's clothes and a variant standing in for a rethink. **Owner ruling: two intents, not five treatments and not one.**
@@ -1152,6 +1182,18 @@ The rune strips bracketing that button marched thirty-two marks in a fixed order
 **Two vocabularies at once is the failure; the overlap is only how you notice.** The rows collided because the old ones were positioned to clear a datum row the band had already replaced, and the band's lead had opened 5px → 9px — but repositioning them would have left the real problem, one faction wearing two alphabets, looking fixed. The ruling is total retirement: **a faction has one ornament row, and a replacement's job is not done until its predecessor has no mounts.** The seam that can hold that is the source tree (§6, #1654), not markup — eight mounts across six files each render fine alone.
 
 **And the replacement travels with its CARRIER, so a surface without the carrier gets nothing.** The band's whole argument is that it is the masthead's last line: it inherits the datum row's two brass rules and closes the head against the sheet. The surfaces that mount `EphemeristsMasthead` get the band with it; the faction hero, the feed chassis and the select tile head themselves by hand, so they lost a register and gained nothing, because a band mounted where there is no lockup is ornament filling a hole. The same test kills the wrapper — the kit's rune band drew exactly one register and nothing else, so it retired too, and its seven section-head mounts kept the brass hairline that already flexed across each heading row. **Delete the row, then ask each surface what it still needs; do not assume the answer is "a replacement".**
+
+### One number gets ONE instrument, and the second one is the ornament (#2213)
+
+Every character profile drew a 60px conic level RING beside a points-into-level BAR, both fed the same `progressPercent`. A player reported it as "the progress bar twice" on Cozy Coven and Singularity. **Owner ruling: the ring goes from all nine profiles, the bar stays** — the bar is what carries the within-level reading on every other surface (#2127), and one number deserves one instrument. The stated cost is that nine kits each lose a distinctive object; that was accepted deliberately, and *"do not restore the ring later as a fix"* is part of the ruling. It is written at all three deleted sites so the next reader finds it before re-drawing one.
+
+Three things worth carrying.
+
+**"Which kits have it" is a question about the shared renderer, not about the kits.** The ruling was first scoped to the two archetypes the reporter opened, on the reading that only two kits had a ring at all. Neither `CovenProfileBody` nor `SingularityProfileBody` draws one: they hand dress tokens to `profileSkin.tsx`, which draws the ring unconditionally for **seven** slugs, and `DefaultProfileBody` draws it once per form-factor branch for the other two. So the defect was on nine profiles and the fix is three sites. **Honouring the narrow scope would have been the bigger diff** — it needs a `hideRing`-shaped opt-out minted on `ProfileDress` so one renderer draws two panels — and it would have left seven of nine still showing the duplicate. When a report names two skins, grep for who actually *draws* the thing before believing the count.
+
+**Deleting a shape re-grounds the text that was inside it.** The ring's hub was a disc painted in `kit.surface`, and it held the level numeral and its "lvl" label — the ring's second job, which a bar cannot do, so the numeral survives as type in the ring's slot. Both inks then sat on `progressionStyle`'s ground instead of the disc's. Five kits paint that panel in `surface` and moved nothing; three moved to a ground their accent still clears; **Ephemerists' panel is transparent over the cornice BAND, where the plate's brass falls to 2.83:1**, so its `accent` repoints to `-plate-band-ink` (7.59:1) — the ink §3's faction-goes-dark rule already says the masthead owns. The label needed no knob at all: with the disc gone it sits beside two lines that already answer this question with `headerMuted`. **A ProfileDress knob (`ringLabelInk`) existed only to correct for the disc, and retired with it.**
+
+**The suite encoded the defect as the requirement, and that is the tell.** `factionProfileBody.test.tsx` asserted the na/albescent ring mask present on those two slugs and absent on the other seven — a table whose whole premise is "every slug has a ring". A guard written about *which* variant of a thing each kit wears cannot notice that the thing should not exist; it goes green hardest right before the ruling that deletes it. The replacement asserts the absence across all eighteen slug × form-factor renders off one fingerprint (`progressPercent: 40` → the `144deg` stop every one of those conics carried), which is narrower than "no conic" — Everymen's header sunburst is a conic and is dress.
 
 ---
 

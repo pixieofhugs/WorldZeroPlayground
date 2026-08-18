@@ -114,4 +114,32 @@ describe('a faction wordmark never breaks mid-word', () => {
       /font-size:min\(76px, [\d.]+vw\)/,
     )
   })
+
+  /**
+   * Singularity is the second name long enough to trip the geometry, and the one
+   * #2222 was filed on: eleven characters of a MONOSPACE face set at a flat 56px
+   * is ~370px of unbreakable mark, and the hero clips its own overflow, so on a
+   * phone the name printed as "Singularit" plus a sheared descender.
+   *
+   * The arm is `cqw` and not the `vw` the Everymen mark takes, because this
+   * hero's track is not a fraction of the viewport. A fixed 240px readout column
+   * sits beside it and the 320px desktop rail sits outside it, so one viewport
+   * width yields three different track widths — and a `vw` arm long since capped
+   * at its ceiling cannot see any of them. The two failing bands a `vw` arm
+   * leaves behind are ~768-800px, and ~1024-1160px with the rail open.
+   *
+   * Both halves are pinned because either alone re-opens #2222: the container
+   * declaration is what gives `cqw` something to resolve against (and what stops
+   * the `1fr` track being floored by the mark's own min-content), and the cap is
+   * what keeps the poster size on a wide screen.
+   */
+  it('scales the Singularity wordmark to its own column, not the viewport', () => {
+    const html = render(SingularityFactionHero, 'singularity')
+    expect(html, "the wordmark's column is its own inline-size container").toContain(
+      'container-type:inline-size',
+    )
+    expect(wordmarkTag(html), 'the mark scales with its track instead of overflowing').toMatch(
+      /font-size:min\(56px, [\d.]+cqw\)/,
+    )
+  })
 })

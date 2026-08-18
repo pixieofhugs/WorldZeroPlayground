@@ -37,7 +37,20 @@ class FeedPayloadBase(WireModel):
 
 
 class VoteOnMinePayload(FeedPayloadBase):
-    """Someone voted on the viewer's praxis."""
+    """Someone voted on the viewer's praxis.
+
+    ``points_earned`` is the praxis's **whole current score** — the same number
+    ``PraxisOut.score`` publishes, same type, off the same scoring path
+    (ADR-0014/0053). It is what the author sees when they click the row through,
+    which is the promise #2199 was filed about: the row used to print
+    ``value × task_point_value``, a product where the score is a sum, and
+    announced 120 points against a praxis worth 34.
+
+    Optional because it is filled in a **second pass**: scoring is async and
+    batched, so the per-row mapper that builds this payload cannot reach it (see
+    ``services.activity_feed._score_vote_items``). A praxis that cannot be scored
+    leaves it ``None`` and the row prints no number — never an invented one.
+    """
 
     vote_id: int
     value: int
@@ -45,7 +58,7 @@ class VoteOnMinePayload(FeedPayloadBase):
     # Praxis.title is nullable in the model, so a praxis genuinely can have none.
     praxis_title: Optional[str] = None
     task_point_value: int
-    points_earned: int
+    points_earned: Optional[float] = None
 
 
 class CompletionPayload(FeedPayloadBase):
