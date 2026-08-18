@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { WowBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
@@ -91,13 +90,6 @@ const PLUM = "var(--faction-wow-card-accent)";
 const GOLD = "var(--faction-wow-chronicle-gold)";
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const GILT = "var(--faction-wow-stamp-total)";
-/**
- * The banner's ink — lettering AND mark (#2032). The page kit's gilt button
- * stop, theme-invariant like the plum it stands on, so one measurement (3.47:1)
- * covers both themes. NOT `-stamp-total`, which is an ink that flips: see the
- * docblock.
- */
-const GILT_MID = "var(--faction-wow-gilt-mid)";
 
 interface SizeSet {
   /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
@@ -198,48 +190,11 @@ export default function WowTaskCard({
           color: INK,
         }}
       >
-        {/* THE DECREE'S MASTHEAD (#2029), dressed (#2032). The kit's shared
-            anatomy — mark hard left, the faction's name centred — on the
-            theme-invariant plum the CTA already stands on, and lettered in the
-            gilt the mark now takes with it.
-
-            THE HORIZONTAL INSET IS SYMMETRIC, AND IT IS NO LONGER ZERO (#2070).
-            #2032 zeroed it so the mark would break the banner's left line and
-            stand on the card's own gold frame; in production that read as
-            touching the border, and the owner's ruling is that it overshot. The
-            mark sits inboard with clearance now — `--space-sm`, which is the
-            band's own vertical inset, so the mark keeps a uniform 8px surround
-            instead of 2px of frame. Still half the kit's `--space-lg` default,
-            so the sigil stays nearer the edge than the type block, which is the
-            half of #2032 that was right.
-
-            WHAT DOES NOT CHANGE IS THAT BOTH SIDES MOVE TOGETHER. #2029's title
-            is centred on the band's CONTENT box, so left-only clearance walks
-            the centred wordmark off the card's centreline by half the inset —
-            symmetry is what keeps the title true, and it was #2032's reason for
-            zeroing both rather than just the left. `--space-xs` was the smaller
-            candidate and is only 2px past the frame's own 2px weight, i.e. the
-            reported symptom again at half strength.
-
-            THE BOTTOM RULE COMES BACK IN GOLD. Phase 1 dropped the design's 2px
-            `--faction-wow-card-accent` line because in light that token IS the
-            band's own ground to the hex; `-gilt-mid` on the same plum is
-            3.47:1, so drawn in the gilt it is a line you can see — and it is
-            the string the bunting below hangs from. */}
-        <CardMasthead
-          slug="wow"
-          markColor={GILT_MID}
-          style={{
-            background: PLUM_SURFACE,
-            color: "var(--faction-wow-on-plum)",
-            padding: "var(--space-sm) var(--space-sm)",
-            borderBottom: `2px solid ${GILT_MID}`,
-          }}
-        >
-          <span style={{ fontFamily: MED, fontSize: "var(--text-title)", letterSpacing: "0.04em", lineHeight: 1, color: GILT_MID }}>
-            {factionName("wow")}
-          </span>
-        </CardMasthead>
+        {/* THE DECREE'S MASTHEAD — the plum banner, mounted from the shared
+            band (#2185) so the WOW praxis card wears the identical one. Its
+            paint, and the #2032/#2070 inset rulings behind it, live at
+            `cardMasthead/factionBands`. */}
+        <WowBand />
 
         {/* The pennants, strung under the band (#2032) where the 6px barber
             ribbon used to run — the design's own swap. `Bunting` is WOW's one

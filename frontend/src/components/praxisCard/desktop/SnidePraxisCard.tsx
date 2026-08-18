@@ -1,3 +1,4 @@
+import { SnideBand } from "../../cardMasthead/factionBands";
 import { WALL } from "../../factionMarks/snideAtoms";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -54,6 +55,17 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * CUT its string (`card.masthead.snide`, "evidence locker"), so the slot ships
  * empty.
  *
+ * ## THE NOTE BAR IS BACK, AS A BAND (#2185)
+ *
+ * #1909's reasoning is SUPERSEDED by owner ruling: the praxis masthead was
+ * removed on the judgement that a card answering a task does not need a band,
+ * and the owner has since decided it does. Nothing about #1909 was wrong at the
+ * time — the decision changed. What heads the slab is the SAME band
+ * `SnideTaskCard` wears, mounted from `cardMasthead/factionBands`, not a
+ * revival of the eyebrow line: a band across the head, the brushed A hard left
+ * at 24, the wordmark centred in Anton on the censor bar. The `eyebrow` slot
+ * stays empty.
+ *
  * The dashed acid rule above the vote widget is the design's, and is the one
  * divider the slab carries.
  */
@@ -75,51 +87,64 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         background: GROUND,
         border: "1.5px solid var(--faction-snide-acid-deep)",
         boxShadow: "6px 8px 0 var(--faction-snide-slab-shadow)",
-        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
+        /* NO PADDING ON THE FRAME since #2185: the band is full-bleed, and an
+           inset frame would have floated it off three edges. The slab's inset
+           moved to the body box below. */
         fontFamily: "var(--faction-snide-font-type)",
         color: INK,
         transition: "background 150ms, color 150ms",
       }}
     >
-      <AdminOverlay {...adminProps} />
-      <PraxisBody
-        praxis={praxis}
-        tint={ACCENT}
-        muted={MUTED}
-        paper={PAPER}
-        showCrown={showCrown}
-        // The split earning its keep (#888): Permanent Marker is S.N.I.D.E.'s
-        // declared card font and it finally reaches the card — but only where
-        // identity belongs. A two-line excerpt set in it is unreadable, so the
-        // body stays on the slab's Special Elite.
-        fonts={{
-          display: "var(--faction-snide-card-font)",
-          body: "var(--faction-snide-font-type)",
-        }}
-        titleStyle={{
-          fontFamily: "var(--faction-snide-font-impact)",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          lineHeight: 1,
-          transform: "skewX(-3deg)",
-          color: INK,
-        }}
-        /* The eyebrow read "evidence locker" (`card.masthead.snide`). #1909 cut
-           the slot — once generic it says "Praxis" on a praxis card — so the
-           shared eyebrow is left unfilled here. */
-        voteRule={
-          <div
-            aria-hidden
-            style={{
-              height: 2,
-              opacity: 0.7,
-              background:
-                "repeating-linear-gradient(90deg, var(--faction-snide-acid-deep) 0 6px, transparent 6px 11px)",
-              margin: "var(--space-lg) 0 var(--space-md)",
-            }}
-          />
-        }
-      />
+      {/* THE NOTE BAR (#2185) — the same band `SnideTaskCard` wears, mounted
+          from the shared module. Its ground is `--faction-snide-note-bar`, the
+          censor bar, which is a PAINTED band rather than the wall showing
+          through: the bar does not read `--snd-praxis-*`, so it is the same
+          strip on the feed's wall and on task detail's black. The brushed A
+          rides at 24 there and here. */}
+      <SnideBand />
+
+      <div style={{ padding: "var(--space-xl) var(--space-xl) var(--space-lg)" }}>
+        <AdminOverlay {...adminProps} />
+        <PraxisBody
+          praxis={praxis}
+          tint={ACCENT}
+          muted={MUTED}
+          paper={PAPER}
+          showCrown={showCrown}
+          // The split earning its keep (#888): Permanent Marker is S.N.I.D.E.'s
+          // declared card font and it finally reaches the card — but only where
+          // identity belongs. A two-line excerpt set in it is unreadable, so the
+          // body stays on the slab's Special Elite.
+          fonts={{
+            display: "var(--faction-snide-card-font)",
+            body: "var(--faction-snide-font-type)",
+          }}
+          titleStyle={{
+            fontFamily: "var(--faction-snide-font-impact)",
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            lineHeight: 1,
+            transform: "skewX(-3deg)",
+            color: INK,
+          }}
+          /* The eyebrow read "evidence locker" (`card.masthead.snide`). #1909
+             cut the slot, and #2185 answered it a different way: the running
+             head is a BAND across the head of the slab now, not a line inside
+             the text column, so the shared eyebrow stays unfilled. */
+          voteRule={
+            <div
+              aria-hidden
+              style={{
+                height: 2,
+                opacity: 0.7,
+                background:
+                  "repeating-linear-gradient(90deg, var(--faction-snide-acid-deep) 0 6px, transparent 6px 11px)",
+                margin: "var(--space-lg) 0 var(--space-md)",
+              }}
+            />
+          }
+        />
+      </div>
     </div>
   );
 }

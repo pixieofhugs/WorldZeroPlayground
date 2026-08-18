@@ -1,12 +1,11 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { EverymenBand } from "../cardMasthead/factionBands";
 import PointsRoundel from "../factionMarks/PointsRoundel";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 
@@ -60,7 +59,6 @@ const INK = "var(--everymen-paper-text)";
 interface SizeSet {
   /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   cardWidth: number;
-  mastPad: string;
   bodyPad: string;
   titleSize: string;
   levelSize: string;
@@ -78,7 +76,6 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     cardWidth: 384,
-    mastPad: "var(--space-md) var(--space-lg)",
     bodyPad: "var(--space-lg) var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-heading)",
     levelSize: "var(--text-display)",
@@ -87,7 +84,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   },
   mobile: {
     cardWidth: 340,
-    mastPad: "var(--space-sm) var(--space-lg)",
     bodyPad: "var(--space-lg) var(--space-lg) var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-heading)",
@@ -350,33 +346,12 @@ export default function EverymenTaskCard({
             }}
           />
 
-          {/* Masthead — the union's red bar, on the kit's shared anatomy
-              (#2029): the mark hard left, the faction's name centred.
-
-              The band read "Help Wanted!" between two cogs
-              (`feed:taskCard.everymen.billMasthead`) until #1909 cut the slot
-              as generic, which left the cogs alone on the bar. v3 answers the
-              same objection the other way round — the band names THE FACTION,
-              which is the one thing on it no other card says — and the pair of
-              cogs stands down with the naming, because they flanked the centre
-              the wordmark now holds. The cog stays the bill's motif on the
-              hero rule and the in-progress line. */}
-          <CardMasthead
-            slug="everymen"
-            /* On the red mast the sigil's own `--everymen-red` is invisible. */
-            markColor="var(--faction-everymen-bill-mast-ink)"
-            style={{
-              padding: size.mastPad,
-              background: "var(--faction-everymen-bill-mast)",
-              color: "var(--faction-everymen-bill-mast-ink)",
-              borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
-              boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
-            }}
-          >
-            <span style={{ ...LABEL, fontSize: "var(--text-title)", lineHeight: 1 }}>
-              {factionName("everymen")}
-            </span>
-          </CardMasthead>
+          {/* Masthead — the union's red bar, mounted from the shared band
+              (#2185) so the Everymen praxis card wears the identical one. It
+              did not: the praxis card drew its own bar in `--everymen-red` with
+              two cogs and no name. The paint, and why the cogs stood down, live
+              at `cardMasthead/factionBands`. */}
+          <EverymenBand />
 
           <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
             {/* Everything but the CTA reads the full call — a card-sized target

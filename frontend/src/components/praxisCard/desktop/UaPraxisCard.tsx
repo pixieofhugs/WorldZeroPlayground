@@ -1,4 +1,5 @@
 import { Lotus } from "../../factionMarks";
+import { UaBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -38,7 +39,12 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         border: "2px solid var(--faction-ua-card-frame)",
         boxShadow:
           "0 14px 40px -22px color-mix(in srgb, var(--faction-ua-card-text) 50%, transparent)",
-        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
+        /* NO PADDING ON THE FRAME since #2185: the band is full-bleed, and an
+           inset frame would have floated it off three edges. The sheet's inset
+           moved to the body box below, which is the only thing that ever wanted
+           it. The lotus does not move with it — an absolutely positioned child
+           resolves against the PADDING box, which dropping padding leaves where
+           it was. */
         fontFamily: "var(--faction-ua-body-font)",
         color: "var(--faction-ua-card-text)",
       }}
@@ -63,7 +69,15 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         }}
       />
 
-      <div style={{ position: "relative" }}>
+      {/* THE LEAF'S BAND (#2185) — the same hairline band `UaTaskCard` wears,
+          mounted from the shared module rather than restated here. The ensō is
+          not a second mark and does not stand down: it carries the total in the
+          right column, where it is the score's device rather than the header's.
+          What the band replaced on the task card was the EYEBROW ensō, which was
+          a header mark. */}
+      <UaBand />
+
+      <div style={{ position: "relative", padding: "var(--space-xl) var(--space-xl) var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
@@ -86,9 +100,10 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
            * The running head ("Acquisition · filed", `card.masthead.ua`) sat
            * INSIDE the text column, above the title, so it stopped at the score
            * box rather than running under the ensō — the `eyebrow` slot #841
-           * added for exactly that shape. #1909 CUT the string: once the praxis
-           * masthead is generic it reads "Praxis" on a praxis card. The slot
-           * stays for whatever fills it next.
+           * added for exactly that shape. #1909 CUT the string, and the slot
+           * stays empty: what heads this card now is the faction's own band
+           * across the top of the sheet (#2185), not a line inside the text
+           * column.
            */
         />
       </div>

@@ -129,12 +129,20 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
     // both scans above at once: no `Lamp` identifier to find, and no LED token
     // to find either. Only a roll-call of the surfaces can see that, and only
     // if it is written down.
+    //
+    // IT IS FIVE NOW, AND THAT IS A MERGE RATHER THAN A LOSS (#2185). The task
+    // card and the praxis card wear the SAME window bar, mounted from
+    // `cardMasthead/factionBands` — so the two card mounts became one and the
+    // bar they share is `SingularityBand`. Four window bars still draw their own
+    // (the feed frame and the three page surfaces). A future reader shortening
+    // this list further should check they are removing a mount and not a
+    // SURFACE: a card that stopped drawing the bar at all is the regression this
+    // roll-call exists to catch, and it looks identical to this edit from here.
     const rel = (path: string) => path.slice(SRC.length).replace(/\\/g, "/");
     const mounts = sources().filter(({ source }) => source.includes("<SingularityLamps"));
     expect(mounts.map((file) => rel(file.path)).sort()).toEqual([
+      "components/cardMasthead/factionBands.tsx",
       "components/feed/SingularityFeedFrame.tsx",
-      "components/praxisCard/desktop/SingularityPraxisCard.tsx",
-      "components/taskCard/SingularityTaskCard.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",

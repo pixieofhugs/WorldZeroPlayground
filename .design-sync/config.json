@@ -261,7 +261,7 @@
     "SingularityProcessLight": "src/components/factionMarks/SingularityProcessLight.tsx",
     "SingularityReadout": "src/components/factionMarks/SingularityReadout.tsx",
     "PendingBadge": "src/components/layout/PendingBadge.tsx",
-    "CardMasthead": "src/components/taskCard/CardMasthead.tsx",
+    "CardMasthead": "src/components/cardMasthead/CardMasthead.tsx",
     "RelationshipBlockControl": "src/pages/characterProfile/RelationshipBlockControl.tsx",
     "PlayersFilterBar": "src/pages/players/PlayersFilterBar.tsx",
     "ScoreToggle": "src/pages/players/ScoreToggle.tsx",

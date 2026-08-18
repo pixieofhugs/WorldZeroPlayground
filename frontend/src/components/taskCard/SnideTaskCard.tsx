@@ -1,11 +1,10 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import { SnideBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { PenCircle, WALL } from "../factionMarks/snideAtoms";
@@ -186,32 +185,11 @@ export default function SnideTaskCard({
           transform: "rotate(-0.4deg)",
         }}
       >
-        {/* The header bar, on the kit's shared anatomy (#2029) — the mark hard
-            left, the wordmark centred on the band.
-
-            The broken acid rule that used to fill the bar's right end is gone
-            with the centring: it was a flex filler taking the width #1124's
-            retired ordinal left behind, and that width is exactly where the
-            centred wordmark now sits. The clipping keeps its acid elsewhere —
-            the CTA, the knockout cuts, the pen circle. */}
-        <CardMasthead
-          slug="snide"
-          /* The brushed A is drawn 24 where the kit draws 20 (#2035), and it
-             bleeds 2px into the band's inset on each side — which is the mark
-             doing what it was drawn to do: `SnideSigil`'s four shapes break out
-             of their own circle at four points. This used to be a stylesheet
-             hook reaching into the sigil's markup; #2056 made it the prop. */
-          markSize={24}
-          style={{
-            background: "var(--faction-snide-note-bar)",
-            color: "var(--faction-snide-note-bar-ink)",
-          }}
-        >
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead. */}
-          <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
-            {factionName("snide")}
-          </span>
-        </CardMasthead>
+        {/* The header bar, mounted from the shared band (#2185) so the
+            S.N.I.D.E. praxis card wears the identical one. The broken acid rule
+            that used to fill the bar's right end went with the centring; the
+            paint and the 24px mark live at `cardMasthead/factionBands`. */}
+        <SnideBand />
 
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target

@@ -1,7 +1,7 @@
+import { CovenBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import {
-  Braid,
   CARD,
   BORDER,
   CovenCat,
@@ -17,9 +17,19 @@ import {
  * Cozy Coven — THE SPELL SLIP, filed (#1209).
  *
  * The praxis card is the coven's proof written onto the same candle-lit paper
- * the task slip is issued on: the four-stop pink→lavender sheet, a braided
- * thread under the dispatch line, the cat turning in the corner, Grenze Gotisch
+ * the task slip is issued on: the four-stop pink→lavender sheet, the hand-
+ * lettered band across the head, the cat turning in the corner, Grenze Gotisch
  * for the title and Cormorant Garamond for the reading voice.
+ *
+ * ## IT WEARS A MASTHEAD AGAIN — #1909's reasoning is SUPERSEDED (#2185)
+ *
+ * This docstring used to carry #1909's note that the praxis masthead was cut
+ * because "a generic one just says 'Praxis' on a praxis card". THE OWNER HAS
+ * SINCE DECIDED A PRAXIS CARD DOES WANT A BAND, and it is the faction's own —
+ * the same one `CovenTaskCard` wears, mounted from the same module. Nothing
+ * about #1909 was wrong at the time; the decision changed, and #2185 is the
+ * record. Do not reconstruct the old argument beside the band it argues against,
+ * and do not restore the braid the band displaced.
  *
  * ## IT WEARS THE SHEET NOW — #1209's decision is REVERSED (#2135)
  *
@@ -84,7 +94,11 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         border: `2px solid ${BORDER}`,
         boxShadow: SHADOW,
         fontFamily: READING,
-        padding: "var(--space-xl)",
+        /* NO PADDING ON THE FRAME since #2185: the band is full-bleed, and an
+           inset frame would have floated it off three edges. The slip's inset
+           moved to the body box below. The cat does not move with it — an
+           absolutely positioned child resolves against the PADDING box, which
+           dropping padding leaves where it was. */
         transition: "background 150ms, color 150ms",
       }}
     >
@@ -94,12 +108,19 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           {@link CovenCat}). `.cvn-wheel` owns the turn and its reduced-motion
           guard in index.css; the body below sits above it on its own layer. */}
       <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
+
+      {/* THE SLIP'S BAND (#2185) — the same one `CovenTaskCard` wears, twinkle
+          field and all, mounted from the shared module. The field is the band's
+          BACKDROP, so it travels with the band rather than being rebuilt beside
+          it; that is what keeps the stars off the copy on both cards. */}
+      <CovenBand />
+
       <AdminOverlay {...adminProps} />
       {/* The copy takes a layer of its own, for the reason `CovenTaskCard`'s
           body does: the mark is absolutely positioned, so in-flow siblings would
           paint UNDER it. A watermark that crosses the type is the one thing the
           0.09 was chosen to avoid. */}
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div style={{ position: "relative", zIndex: 1, padding: "var(--space-xl)" }}>
         <PraxisBody
           praxis={praxis}
           tint={INK}
@@ -116,13 +137,13 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
             display: DISPLAY,
             body: READING,
           }}
-          /* The eyebrow's dispatch line ("dispatch no. {{id}} · all done!",
+          /* NO EYEBROW. The dispatch line ("dispatch no. {{id}} · all done!",
              `card.masthead.coven`) and the empty gallery's "Drop a happy little
-             photo" (`card.coven.mediaEmpty`) were both CUT by #1909 — the
-             masthead because a generic one just says "Praxis" on a praxis card,
-             the media label because Coven was one of two factions with the slot.
-             The braid stays: it is drawn, not written. */
-          eyebrow={<Braid style={{ marginBottom: "var(--space-sm)" }} />}
+             photo" (`card.coven.mediaEmpty`) were both CUT by #1909, and the
+             BRAID that outlived them went with #2185: a band that already names
+             the coven does not need an ornament run repeating it — the same
+             reasoning that untied the braid from under the task card's wordmark
+             in #2029. The braid lives on below, ruling off sections. */
           mediaEmptyStyle={{
             height: 158,
             borderRadius: 12,
