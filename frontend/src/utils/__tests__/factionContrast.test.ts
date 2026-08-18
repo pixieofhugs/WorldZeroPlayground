@@ -1459,6 +1459,30 @@ const ARCHETYPE_PAIRS: Pair[] = [
     },
   ]),
 
+  // ── THE SAME TWO NEUTRALS, THE OTHER WAY UP (#2107) ──────────────────────
+  //
+  // Every row above measures an ink ON the page. Nothing measured the page AS
+  // an ink, and ten shipped controls print it that way: `.btn-primary`,
+  // `.chip-active`, `.requests-queue__badge`, `.filter-factions__box[data-on]`,
+  // `.filter-factions__done`, `.filter-empty__action`, and inline in
+  // `FeedRowActions`, `ScoreToggle`, `ProposeTaskLink`, `DefaultTaskDetail`,
+  // the Field Desk's browse switch and the profile's segmented toggle. All of
+  // them fill with `--color-text-primary` and ink with `--color-bg-page` — the
+  // page's own pair, inverted, and so the one pairing that survives a repaint
+  // of EITHER token only if both move together.
+  //
+  // It is one row rather than eleven because there is one pairing: the surface
+  // is opaque in both cascades (#1a1209 / #f0e6d0) and no mount lays anything
+  // over the fill. 16.86:1 light, 15.00:1 dark. The wrong ink for this ground
+  // is `--color-text-on-accent`, which the source guard at the bottom of this
+  // file forbids; this row is what makes "take the page instead" a measurement
+  // rather than a claim in a comment.
+  {
+    what: "inverted pill, the page as ink",
+    surface: "--color-text-primary",
+    text: "--color-bg-page",
+  },
+
   // ── THE FEED ROW'S ACTOR NAME, on the four chassis #1252 left (#1341) ────
   //
   // `resolveFeedRowInk` defaults `actor` to `factionCssVar(slug)` — the raw
@@ -2425,6 +2449,51 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
     expect(
       Object.keys(READERS).filter((path) => !found.has(path)),
       "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
+    ).toEqual([]);
+  });
+});
+
+/**
+ * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
+ *
+ * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a
+ * statement about the page ground and nothing else; the moment a control FILLS
+ * with it, the ink it needs is the ground that neutral was measured against —
+ * `--color-bg-page`, which flips with the cascade exactly as the fill does
+ * (16.86:1 light, 15.00:1 dark). `--color-text-on-accent` is `#ffffff` in
+ * `:root` alone and never flips, so the same two lines read "near-black pill,
+ * white label" in light and WHITE ON CREAM in dark, at **1.24:1**.
+ *
+ * Part A can only ask "does this token clear on the surface its documentation
+ * names", and no documentation pairs those two — the pairing exists only at a
+ * call site. Part B (`e2e/contrast.spec.ts`) would see it rendered, but it is
+ * nightly-only and outside PR CI, and a player profile is not on its route
+ * walk. So the defect shipped twice: #1819 fixed the faction page's join
+ * button, and the profile's segmented Praxis/Tasks toggle — the same two lines,
+ * copied — survived to be reported by eye as #2107.
+ *
+ * A FILE-LEVEL INTERSECTION, deliberately. `ponytail:` the guard asks whether
+ * one file both fills with the primary neutral and inks with `-on-accent`,
+ * which is coarser than "in the same style object" and could false-positive on
+ * a file that legitimately does both to different elements. There is no such
+ * file today, and the coarse question needs no parser; if one appears, read the
+ * pairing and add it here with the reason. The precise version is a JSX/AST
+ * walk, which is a dependency this suite does not carry.
+ */
+describe("a --color-text-primary fill takes the page as its ink (#2107)", () => {
+  const FILL = /background[A-Za-z]*:[^;\n]*var\(--color-text-primary\)/;
+  const WRONG_INK = "var(--color-text-on-accent)";
+
+  it("no file inks the primary neutral's fill with the accent's white", () => {
+    const found = sourceFiles()
+      .filter((path) => {
+        const source = readStripped(path);
+        return FILL.test(source) && source.includes(WRONG_INK);
+      })
+      .map(toRelative);
+    expect(
+      found,
+      "`--color-text-on-accent` is #ffffff in BOTH themes and `--color-text-primary` flips to cream (#f0e6d0) in dark — the pair is 1.24:1 there (#1819, #2107). Ink a primary-neutral fill with `--color-bg-page`, the ground that neutral is measured against.",
     ).toEqual([]);
   });
 });
