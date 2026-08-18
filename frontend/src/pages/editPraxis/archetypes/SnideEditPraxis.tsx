@@ -255,7 +255,6 @@ export default function SnideEditPraxis({ state }: Props) {
     border: `1px solid ${RULE}`,
     borderRadius: 0,
     padding: "var(--space-md)",
-    outline: "none",
     boxSizing: "border-box",
   } as const;
 
