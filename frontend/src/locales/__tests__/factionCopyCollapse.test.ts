@@ -139,11 +139,12 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `common:profile\\.{F}\\.levelUnit`, shared: 'common:profile.ptsThisLevel', wording: '{{current}} / {{span}} pts this level' },
   { banned: `common:profile\\.{F}\\.nextLevel`, shared: 'common:profile.nextLevel', wording: 'next · lvl {{level}}' },
   { banned: `common:profile\\.{F}\\.praxisEmptyBody`, shared: 'common:profile.praxisEmptyBody', wording: 'Every path is still open — the first finding is the hardest.' },
-  // #1864's table and #1863's ruling C disagreed on this one string — the table
-  // said "submitted", the seal ruling's own example said "sealed" — so #1911
-  // collapsed the key and shipped the word untouched. #2046 is the owner ruling
-  // that picked: the table wins, and "sealed" leaves the one place a player
-  // reads it.
+  // The one row whose WORDING outlived #1911. #1864's collapse table kept
+  // "sealed" here while #1863's ruling C retired that very word, so #1911 —
+  // which owns key STRUCTURE — collapsed the key and shipped the string
+  // untouched rather than picking between two closed issues. #2046 is the owner
+  // ruling that picked: "submitted", and the retired word leaves the one place
+  // a player reads it.
   { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis submitted yet.' },
   { banned: `common:profile\\.{F}\\.praxisEyebrow`, shared: 'common:profile.praxisEyebrow', wording: 'Submitted by {{name}}' },
   { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'lvl' },
