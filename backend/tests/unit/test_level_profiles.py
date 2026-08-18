@@ -69,3 +69,21 @@ def test_faction_choice_is_not_a_grounded_ability_anywhere():
             if unlock.kind == LevelUnlockKind.ability:
                 assert "choose_faction" not in unlock.key
                 assert "pick_faction" not in unlock.key
+
+
+def test_task_signup_is_not_a_grounded_ability_anywhere():
+    """Sign-up has no era-wide level gate, so no level may announce it (#2224).
+
+    The bar is per-task — ``task.level_required``, read through
+    ``services/praxis.py::meets_task_level``. There is no
+    ``signup_level_required`` in GATE_ATTRS above because no such constant
+    exists. A character reaches level 1 *by* signing up for the level-0
+    onboarding task and posting a praxis for it, so a level-1 "sign up for a
+    task" unlock announces an ability the player has just finished using. Same
+    call as ``choose_faction`` above (#287).
+    """
+    for profile in ERA_1.level_profiles:
+        for unlock in profile.unlocks:
+            if unlock.kind == LevelUnlockKind.ability:
+                assert "sign_up" not in unlock.key
+                assert "signup" not in unlock.key

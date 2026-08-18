@@ -130,7 +130,14 @@ export default function SingularityFactionHero({
           alignItems: "start",
         }}
       >
-        <div>
+        {/* The identity column, and the wordmark's SIZING CONTAINER (#2222).
+            `container-type: inline-size` earns its keep twice here. It gives the
+            mark below a `cqw` to resolve against — the track's own width, which
+            is what the mark actually has to fit — and it takes the column's
+            min-content contribution to zero, so the `1fr` track above stops
+            being floored by an eleven-character unbreakable word and shoving
+            the whole grid past the header's clipped edge. */}
+        <div style={{ containerType: "inline-size" }}>
           {/* boot lines */}
           <div
             style={{
@@ -157,8 +164,32 @@ export default function SingularityFactionHero({
           <h1
             style={{
               fontFamily: FONT,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal wordmark — the Singularity hero's display type
-              fontSize: 56,
+              // The mark CAPS rather than overflows (#2222), the doctrine
+              // WORLD_ZERO_STYLE.md sets on the Everymen wordmark (#2000). 56px
+              // is the terminal's display size and the ceiling; below it the
+              // mark scales.
+              //
+              // The arm is `cqw` and not the `vw` Everymen takes, because this
+              // hero's track is not a fraction of the viewport: a fixed 240px
+              // readout column sits beside it and the 320px desktop rail sits
+              // outside it, so one viewport width yields three different track
+              // widths. A `vw` arm fitted to the phone is capped long before
+              // 768px and would leave the mark overflowing at ~768-800px, and
+              // again at ~1024-1160px with the rail open.
+              //
+              // 14 is measured, not picked: Share Tech Mono advances 0.54em per
+              // glyph, so "Singularity" — eleven characters, no space and no
+              // break opportunity, the longest single-word faction name — is
+              // 11 x (0.54 + 0.04) = 6.38em wide. 6.38 x 0.14 = 0.89 of the
+              // track, so the mark keeps ~11% of its column as air at every
+              // width, and the cap engages once the track passes ~400px.
+              //
+              // ornament: terminal wordmark — the Singularity hero's display
+              // type, off the --text-* scale on purpose. This carried a
+              // no-raw-style-values disable while it was a bare `56`; the
+              // ratchet does not look inside `min()`, so the directive reported
+              // unused and had to come off. Same as the Everymen mark.
+              fontSize: "min(56px, 14cqw)",
               lineHeight: 0.9,
               letterSpacing: "0.04em",
               margin: "0 0 var(--space-md)",

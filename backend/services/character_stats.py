@@ -32,6 +32,7 @@ from services.era import (
     get_next_era_row,
     get_or_create_stats,
 )
+from services.faction_service import unjoinable_faction_slugs
 from services.praxis_scoring import Contribution, compute_contributions
 from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
@@ -138,7 +139,9 @@ async def _deliver_earned_invitations(
     The character's *current* faction is excluded (#1425): you cannot be invited to
     join the faction you are already in, and doing your own faction's tasks is the
     most ordinary thing a player does. Keyed on membership at delivery time, not on
-    history — defect away from X and re-cross X's thresholds and X re-invites you.
+    history — with one exception, added by #2218: a faction this character has
+    *defected from* and cannot rejoin is excluded too, because that letter is an
+    invitation to an action the API refuses.
     """
     if not praxes:
         return
@@ -185,7 +188,22 @@ async def _deliver_earned_invitations(
         )
     )
     held = {slug for (slug,) in already.all()}
-    for slug in qualifying - held:
+    pending = qualifying - held
+    if not pending:
+        return
+
+    # #2218: never post a letter to a faction this character has walked out of
+    # and cannot rejoin — the bell would offer a join `defect_to_faction`
+    # answers with `faction_rejoin_forbidden`. This is the delivery half of the
+    # retirement done there: the gather above re-reads every era praxis, so the
+    # thresholds that earned a retired letter are still met and any vote would
+    # post it straight back. It supersedes the re-invite this function used to
+    # allow after a defection (#1425) — that re-invitation has been unusable
+    # since #454 made the letter the door key. Read after the `held` cut so the
+    # query only runs when a letter would actually be delivered.
+    pending -= await unjoinable_faction_slugs(character.id, era_row.id, session, era)
+
+    for slug in pending:
         # ponytail: the (character, faction, era) UNIQUE constraint is the real
         # backstop against a concurrent double-deliver; the held-set check avoids
         # the common case.
@@ -404,12 +422,14 @@ async def recompute_votes_spent_this_era(
 
     **The identity this rests on: the counter equals the number of that
     character's vote rows cast inside the era window.** It holds because the
-    counter only ever moves in one place —
-    ``services.vote.cast_or_update_vote`` increments it by one on a NEW cast,
-    and a re-rate takes the update branch, which is free. Nothing in the
-    application deletes a vote or decrements the counter (the only ``DELETE FROM
-    vote`` outside a migration is ``scripts/seed_demo_praxes.py``, which is a
-    local reseed, not a production path).
+    counter moves in exactly two places, and they are a matched pair —
+    ``services.vote.cast_or_update_vote`` increments it by one on a NEW cast
+    (a re-rate takes the update branch, which is free), and
+    ``services.vote.void_account_vote_on_join`` decrements it by one as it
+    deletes the row (#2216), crediting the era the vote was cast in so the
+    window still balances. That void is the only ``DELETE FROM vote`` in the
+    application; the only other one outside a migration is
+    ``scripts/seed_demo_praxes.py``, a local reseed, not a production path.
 
     Two things break the identity, and both are refused or ruled out here rather
     than silently invented:

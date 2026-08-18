@@ -20,9 +20,14 @@
  * Drop either and the other is decorative: a class nobody reads, or a variable
  * nobody sets.
  *
- * #1897 added a third fact: the gallery also CAPS its children at that basis.
- * `frameBase` carries `flex-grow: 1`, so a task with exactly one praxis had that
- * card stretch across the whole row — one card should look like one of three.
+ * #1897 added a third fact: the gallery also CAPS its children. `frameBase`
+ * carries `flex-grow: 1`, so a task with exactly one praxis had that card
+ * stretch across the whole row — one card should look like one of three.
+ *
+ * #2229 refined that cap without reversing it. It was `var(--praxis-card-basis)`,
+ * which made one number answer two questions; it is now a flat 50%, so the
+ * variable means only "where the row wraps" and the cap means only "how much of
+ * the row one card may take". The pair is the fourth fact this file pins.
  *
  * CEILING (`renderToStaticMarkup`, no jsdom, no layout, no computed styles):
  * this cannot prove a card got smaller, that three land in a row, or that a skin
@@ -157,23 +162,41 @@ describe("task-detail praxis gallery basis (#1137)", () => {
   });
 });
 
-describe("a lone praxis card is capped at the gallery basis (#1897)", () => {
+describe("a lone praxis card takes half the row (#1897, refined by #2229)", () => {
   const capped = ruleBodies(css, ".praxis-gallery > *");
+  const gallery = ruleBodies(css, ".praxis-gallery");
 
-  it("the gallery caps its children at the basis it sets", () => {
+  it("the gallery caps its children at half the row", () => {
     // `frameBase` is `flex: 1 1 var(--praxis-card-basis)` — the leading grow is
-    // why a single card ate the whole row. The cap is the same variable, so the
-    // basis stays the one knob and one card matches one of three.
+    // why a single card ate the whole row (#1897). #2229 keeps that cap and
+    // changes its VALUE: 320px in a full-width row clamped a lone card to
+    // something that read as squished, so the cap is a fraction of the row.
     expect(capped.length, ".praxis-gallery > * rule must exist").toBeGreaterThan(0);
     for (const body of capped) {
-      expect(body).toMatch(/max-width\s*:\s*var\(\s*--praxis-card-basis\s*\)/);
+      expect(body).toMatch(/max-width\s*:\s*50%/);
     }
+  });
+
+  it("the cap no longer reads the wrap basis", () => {
+    // The two numbers answer different questions, and #2229 separated them: the
+    // basis says where the row WRAPS, the cap says how wide a lone card may
+    // grow. Re-pointing the cap at the variable re-couples them.
+    for (const body of capped) {
+      expect(body).not.toMatch(/--praxis-card-basis/);
+    }
+  });
+
+  it("leaves the wrap basis at 320px", () => {
+    // Unchanged by #2229 on purpose: three cards still wrap where they did, and
+    // a 50% cap cannot bite three items that each hold under half a row.
+    expect(gallery.length, ".praxis-gallery rule must exist").toBeGreaterThan(0);
+    expect(gallery.join("\n")).toMatch(/--praxis-card-basis\s*:\s*320px/);
   });
 
   it("leaves the card's 280px phone floor alone", () => {
     // ACCEPTANCE, not an oversight: `min-width` beats `max-width`, so under a
-    // 320px viewport the card still renders at 280, one per row. The cap must
-    // not restate or lower that floor.
+    // 320px viewport the card still renders at 280, one per row — a percentage
+    // cap cannot crush it either. The cap must not restate or lower that floor.
     expect(frameBase.minWidth).toBe(280);
     for (const body of capped) {
       expect(body).not.toMatch(/min-width/);
