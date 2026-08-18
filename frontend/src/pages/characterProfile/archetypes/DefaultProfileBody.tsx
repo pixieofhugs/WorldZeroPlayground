@@ -517,10 +517,15 @@ function DesktopProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
@@ -776,10 +781,15 @@ function MobileProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
