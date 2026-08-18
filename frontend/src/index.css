@@ -4667,16 +4667,40 @@
      ONE filed praxis had that card stretch across the whole gallery row and
      dominate the page (#1897). One card should read like one of three.
 
+     HALF THE ROW, NOT THE BASIS (#2229). The cap first read
+     `--praxis-card-basis`, which reused one number for two questions and got
+     the second one wrong: 320px is where three cards should WRAP, but as a
+     ceiling in a ~1136px column it left a lone card stranded — clamped to a
+     quarter of the row and reading as squished rather than as one of three. A
+     fraction answers the actual question, "how much of the row may one card
+     take", at every column width instead of at one. So the two numbers are now
+     separate on purpose: the variable above still means where the row wraps and
+     stays at 320px, and this cap no longer reads it. Do not re-point it at the
+     variable to make them one knob again — that is the bug.
+
+     50% NEVER BITES A FULL ROW. Three items cannot each exceed half a row, so
+     the 3-across case is untouched and still wraps on the basis; the cap only
+     shows up once a row is under-filled, which is exactly when it is wanted.
+
      `max-width` and not `width`: it clamps a flex item regardless of flex-grow,
      and it constrains a different property than the card's inline `width: 100%`,
      so the cap lands without a specificity fight and without touching any of the
-     nine bespoke frames. Empty space to the right of a lone card is the point —
-     a gallery with one item in it, which is the truth.
+     nine bespoke frames. Empty space to the right of a lone card is still the
+     point — a gallery with one item in it, which is the truth. Half a row of it
+     rather than three quarters.
 
      No `min-width` here on purpose: `frameBase`'s 280px floor must keep winning
-     under a 320px viewport, one card per row on a phone. */
+     under a 320px viewport, one card per row on a phone. A percentage cap makes
+     that floor matter MORE, not less — 50% of a 320px viewport is 160px, and
+     the only reason the card does not collapse to it is that `min-width` beats
+     `max-width` in the cascade. Adding one here would fight the floor that is
+     already doing the job.
+
+     ONE RULE, ALL EIGHT KITS, deliberately: `.praxis-gallery` is mounted by
+     every task-detail archetype and by `WowFactionBody`. Forking it per faction
+     to spare seven pages would be worse than the bug it fixed. */
   .praxis-gallery > * {
-    max-width: var(--praxis-card-basis);
+    max-width: 50%;
   }
   /* ── Leaderboard row hover ── */
 
