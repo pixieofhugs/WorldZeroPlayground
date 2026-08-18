@@ -9,7 +9,7 @@
  * costume differs (ADR-0016). The kit's own section names map onto that spine
  * one-for-one and are supplied as copy, not as new structure:
  *
- *   the tally of deeds  → the progression panel (level ring + points bar)
+ *   the tally of deeds  → the progression panel (level readout + points bar)
  *   Honours & Credentials → ③ badges
  *   Recent Chronicles   → ⑤ praxis, which renders WOW's own chronicle card
  *

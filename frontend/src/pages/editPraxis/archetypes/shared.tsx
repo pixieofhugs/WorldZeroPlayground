@@ -127,6 +127,13 @@ export function ErrorBanner({ message, style }: ErrorBannerProps) {
   if (!message) return null;
   return (
     <div
+      // Announced, not merely present (#2179). Publish is an onClick with no
+      // `<form>` around it, so a failed submit fires no native validation
+      // message; and the banner sits at the foot of a long sheet, far from
+      // whichever field was refused. Without a live region a screen-reader user
+      // presses Submit and is told nothing at all. `alert` rather than `status`
+      // because every message this renders is a failure.
+      role="alert"
       className="font-body"
       style={{
         fontSize: "var(--text-md)",

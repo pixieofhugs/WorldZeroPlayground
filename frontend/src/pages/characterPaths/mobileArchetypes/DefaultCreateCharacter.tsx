@@ -2,6 +2,7 @@ import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
+import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { NAME_MAX, type CreateCharacterState } from '../useCreateCharacter'
@@ -134,7 +135,10 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                     boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                   }}
                 >
-                  <span style={{ width: 12, height: 12, borderRadius: '50%', background: factionCssVar(slug), flexShrink: 0 }} />
+                  {/* The faction's own mark, from the dispatcher every other
+                      chooser draws (#2223) — 18px, the size the propose-task
+                      chips use; the 12px disc it replaces was a placeholder. */}
+                  <FactionSigil slug={slug} size={18} />
                   <span className="content-text" style={{ fontFamily: factionCssVar(slug, 'card-font'), color: 'var(--color-text-primary)' }}>
                     {factionName(slug)}
                   </span>
@@ -142,6 +146,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
               )
             })}
           </div>
+          <p className="content-text" style={{ ...help, marginTop: 'var(--space-sm)' }}>{t('createCharacter.callingHint')}</p>
         </div>
       )}
 

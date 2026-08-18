@@ -137,12 +137,26 @@ function SectionHeading({ children }: { children: ReactNode }) {
 // `toRoman` still numbers the codex's own ornament below.
 
 /**
- * A keeper's monogram. The codex struck these as circular vellum medallions;
+ * A keeper's portrait. The codex struck these as circular vellum medallions;
  * the plate cuts corners, so this is the kit's `AuthorOctagon` at whatever size
  * the slot asks for — the same cartouche the roster rows in the design use.
+ *
+ * IT TOOK A NAME AND NOTHING ELSE until #2228, so both mounts below drew a
+ * keeper's initials over their uploaded photo — not a fallback misfiring, but a
+ * surface with no image path to fall back from. `members` has been
+ * `CharacterOut[]` all along and `avatar_url` was already on the wire; only this
+ * component declined to read it. It takes the whole character so a third mount
+ * cannot repeat the omission by passing half of one.
  */
-function Medallion({ name, size }: { name: string; size: number }) {
-  return <AuthorOctagon name={name} size={size} fontSize={size * 0.4} />;
+function Medallion({ character, size }: { character: CharacterOut; size: number }) {
+  return (
+    <AuthorOctagon
+      name={character.display_name}
+      avatarUrl={character.avatar_url}
+      size={size}
+      fontSize={size * 0.4}
+    />
+  );
 }
 
 export default function EphemeristsFactionBody({ state }: { state: FactionDetailState }) {
@@ -443,7 +457,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     {t("ephemerists.spotlight.label")}
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
-                    <Medallion name={spot.display_name} size={72} />
+                    <Medallion character={spot} size={72} />
                   </div>
                   <div
                     style={{
@@ -485,7 +499,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   to={`/characters/${m.id}`}
                   style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid ${RULE}`, textDecoration: "none" }}
                 >
-                  <Medallion name={m.display_name} size={32} />
+                  <Medallion character={m} size={32} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="content-text" style={{ fontFamily: READING, color: INK, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.display_name}
