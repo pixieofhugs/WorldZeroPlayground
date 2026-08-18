@@ -190,7 +190,7 @@ describe('the meta line (#888)', () => {
  * cannot see it. `stampRestatesTaskPoints` is the rule both ends share, and it
  * is #1131's `baseRestatesTotal` reused rather than a second comparison.
  */
-describe('the meta line does not restate the stamp (#1833)', () => {
+describe("the meta line does not restate the stamp (#1833, widened by #2114)", () => {
   const body = (over: Partial<PraxisCardOut>) =>
     text(render(<PraxisBody praxis={aPraxisCard(over)} tint="#000" muted="#555" />))
 
@@ -207,12 +207,10 @@ describe('the meta line does not restate the stamp (#1833)', () => {
     expect(html).toContain('solo')
   })
 
-  it('keeps both figures once votes move the total off the base', () => {
-    // base 12 + 4 from votes = 16: two figures answering two questions.
-    const html = body({ score: 16, points_from_votes: 4 })
-    expect(html, 'what the task is worth').toContain('12 pts')
-    expect(html, 'what this praxis scored').toContain('16points')
-  })
+  // "keeps both figures once votes move the total off the base" was here, and
+  // #2114 retired it: a voted stamp prints the base as its own labelled BASE
+  // row, so the meta figure was a restatement in that case too — just of a row
+  // instead of the total. `headingRoom.test.tsx` holds the wider rule.
 
   it('keeps the base figure on a praxis with no stamp at all', () => {
     // #1444 gates the stamp off a `failed` praxis, so the meta line is the only

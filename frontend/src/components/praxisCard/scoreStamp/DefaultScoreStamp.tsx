@@ -115,7 +115,6 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
       style={{
         position: "relative",
         boxSizing: "border-box",
-        flexShrink: 0,
         width: "100%",
         maxWidth: STAMP_WIDTH,
         border: "1px solid var(--faction-default-card-line)",

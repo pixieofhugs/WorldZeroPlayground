@@ -32,11 +32,32 @@ export function avatarDim(size: FactionAvatarProps['size']): number {
   return size === 'sm' ? 24 : 32
 }
 
+/**
+ * THE ROOT NEVER YIELDS ITS WIDTH (#2232), on either skin below.
+ *
+ * An avatar is a circle at a stated diameter, and it is nearly always mounted
+ * in a flex row beside a name the player typed — the praxis byline, the duel
+ * banner's rival face, the comment leaves. A flex item's initial `flex-shrink`
+ * is 1, and this root's automatic minimum size is its CONTENT's min-content:
+ * zero, because Tailwind's preflight gives every `img` a `max-width: 100%` and
+ * the monogram branch is a `width: 100%` span. So the root gave ground to a
+ * long name while the img kept the height it was handed inline, and the circle
+ * painted as an ellipse.
+ *
+ * `flex-shrink: 0` is inert wherever the parent is not a flex container, so
+ * this is the whole fix for every mount at once rather than a prop for the two
+ * that reported it. It is what `RosterAvatar` (praxis card) already says as
+ * `flex: none`. Note the direction is the OPPOSITE of the score stamp's on the
+ * same praxis-card row (#2114): the stamp is a panel and must give ground, this
+ * is a fixed disc and must not.
+ */
+const AVATAR_ROOT = { position: 'relative', display: 'inline-block', flexShrink: 0 } as const
+
 function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
   const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
-    <span style={{ position: 'relative', display: 'inline-block', width: dim, height: dim }}>
+    <span style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
       {/*
         Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
         ramp: this is a disc, and a left-to-right ramp smears the spectrum across
@@ -176,7 +197,8 @@ export function BadgedAvatar({
   const isSmall = dim <= 24
   const badge = Math.max(12, Math.round(dim * 0.5))
   return (
-    <span style={{ position: 'relative', display: 'inline-block', width: dim, height: dim }}>
+    // Same root, same reason — see AVATAR_ROOT (#2232).
+    <span style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
       <FactionCircle
         character={character}
         dim={dim}

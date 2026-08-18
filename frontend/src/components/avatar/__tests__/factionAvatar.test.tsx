@@ -96,3 +96,45 @@ describe("FactionAvatar — Coven wears the hat (#2217)", () => {
     expect(html).not.toContain("M16.5 12a6.5");
   });
 });
+
+/**
+ * #2232 — the byline portrait rendered as an ellipse.
+ *
+ * Every avatar root is a `width: dim; height: dim` inline-block, and every
+ * surface that shows a name beside a face is a flex row: the praxis card's
+ * byline, the duel banner's rival face, the comment leaves. As a flex item the
+ * root took the initial `flex-shrink: 1`, and its automatic minimum size is its
+ * CONTENT's min-content — which for a portrait is zero, because Tailwind's
+ * preflight gives every `img` a `max-width: 100%`. So a long display name (the
+ * reporter's wraps to two lines) pulled the root narrower while the img kept
+ * the height it was handed inline: a 28px circle painted 20 x 28.
+ *
+ * The monogram fallback has the same root and the same exposure — its `<span>`
+ * is sized `width: 100%` of that root — so the guard belongs on the root, the
+ * one thing both branches and all eight skins share. `RosterAvatar` on the
+ * praxis card already carried `flex: none` for this reason; the shared surface
+ * did not.
+ *
+ * A layout assertion is impossible in this harness (no DOM, no fonts), so the
+ * seam is the declaration. Both roots are covered: `DefaultAvatar` (na, in
+ * FactionAvatar.tsx) and `BadgedAvatar` (the seven registered skins).
+ */
+describe("an avatar is a circle in a flex row (#2232)", () => {
+  const root = (html: string) => html.match(/^<[a-z]+[^>]*>/)?.[0] ?? "";
+
+  it.each([
+    ["the unaffiliated ring", "na"],
+    ["a registered skin", "singularity"],
+  ])("%s does not yield its width to the name beside it", (_label, slug) => {
+    const monogram = renderToStaticMarkup(
+      <FactionAvatar character={character({ faction_slug: slug })} />,
+    );
+    const portrait = renderToStaticMarkup(
+      <FactionAvatar
+        character={character({ faction_slug: slug, avatar_url: "/media/isolde.png" })}
+      />,
+    );
+    expect(root(monogram)).toContain("flex-shrink:0");
+    expect(root(portrait)).toContain("flex-shrink:0");
+  });
+});

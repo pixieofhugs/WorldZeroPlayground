@@ -26,6 +26,18 @@ import DefaultScoreStamp from "./DefaultScoreStamp";
  * The stamp is SIZE-AGNOSTIC: mobile renders this same component (the design's
  * mobile guidance reuses the card's score presentation unchanged), which is why
  * the invented mobile `BASE ∣ MULT ∣ VOTES ∣ TOT` strip is gone.
+ *
+ * NO SKIN DECLARES `flex-shrink: 0`, AND THAT IS THE CONTRACT (#2114). All eight
+ * did, which froze the widest of them at its cap in every mount that lays the
+ * stamp beside something else — the praxis card's heading row, the composer's
+ * task slip, the detail rail's centring flex — so the text next to it absorbed
+ * every pixel a narrow surface was short. Unfrozen, a stamp still cannot be
+ * squeezed below what it draws: `min-width` stays `auto`, whose used value is
+ * the skin's own min-content size (the na plate's padding around its 96px mark,
+ * Coven's 150px arch, S.N.I.D.E.'s 116px tag). That floor is per-skin, correct
+ * by construction and needs no number written down anywhere. Re-adding the
+ * freeze to "protect" a skin re-breaks its neighbour instead; if a skin ever
+ * genuinely must not yield, give it a `min-width` and say why.
  */
 /**
  * Everything ANY stamp reads off a praxis — structural, like the `ScoredPraxis`
