@@ -111,7 +111,9 @@ describe("the Everymen cog is drawn once", () => {
     // shared mark, move it into MOUNTS; if this assertion is what fails, the
     // reason in `everymenCogs.tsx` is what needs revisiting first.
     const vote = read("components/vote/EverymenVote.tsx");
-    expect(vote).not.toContain("everymenCogs");
+    expect(vote).not.toMatch(/^import .*everymenCogs/m);
+    // The refusal is written down at BOTH ends, so neither can drift alone.
+    expect(vote).toContain("everymenCogs");
     expect(read("components/factionMarks/everymenCogs.tsx")).toContain(
       "components/vote/EverymenVote",
     );
