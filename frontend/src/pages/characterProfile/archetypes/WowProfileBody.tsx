@@ -529,7 +529,16 @@ function MobileProfile({
           submissions.length === 0 ? (
             <Empty>{t('profile.praxisEmptyTitle')}</Empty>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            /* `grid` and not a flex COLUMN (#2149). A praxis card carries
+               `flex: 1 1 var(--praxis-card-basis, 394px)` (#1137), and a
+               flex-basis sizes along the MAIN axis — a width in the rows it was
+               written for, a HEIGHT here. This stack has an auto height, so
+               there is no free space to grow into and every chronicle was
+               pinned at exactly 394px tall: whitespace under a short one, and
+               the byline and vote row cut off a long one, because the WOW frame
+               is `overflow: hidden`. A grid stack lays the same single column
+               out without claiming the card's block size. */
+            <div style={{ display: 'grid', gap: 'var(--space-lg)' }}>
               {submissions.map((praxis) => (
                 <PraxisCard key={praxis.id} praxis={praxis} />
               ))}
