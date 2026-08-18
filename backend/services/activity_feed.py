@@ -604,7 +604,34 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _global_tasks_query(ctx: FeedContext) -> Select:
-    """Recently activated tasks (global events)."""
+    """Recently activated tasks (global events) — the ones newer than the reader.
+
+    A notification means "something happened since you last looked". For a
+    character made this minute nothing has, so a task that was already on the
+    board when they were created is not news to them and is not announced
+    (owner ruling, #2225). Without this a new character's first bell was the
+    whole task board, one row per task.
+
+    Scoped to the CHARACTER, deliberately not the account: a second life on an
+    old account starts as clean as the first one did.
+
+    ``>=``, not ``>``. Postgres's ``now()`` is the *transaction* timestamp, so a
+    character and a task written in one transaction carry the identical stamp —
+    a strict comparison would silence genuine news to save nothing.
+
+    A correlated scalar subquery rather than a sixth pre-fetch round trip: the
+    predicate belongs to this source's WHERE (ADR-0036), so it rides the badge
+    ``COUNT`` too, and the feed's pinned statement count does not move for it.
+
+    There is no cap on the remainder. Capping the backlog at N most recent was
+    considered and rejected on #2225 — it still delivers noise, and the number
+    would be arbitrary.
+    """
+    character_born = (
+        select(Character.created_at)
+        .where(Character.id == ctx.character_id)
+        .scalar_subquery()
+    )
     query = select(
         Task.id,
         Task.title,
@@ -612,7 +639,10 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
         Task.level_required,
         Task.primary_faction_slug,
         Task.created_at,
-    ).where(Task.status == TaskStatus.active)
+    ).where(
+        Task.status == TaskStatus.active,
+        Task.created_at >= character_born,
+    )
     if ctx.before is not None:
         query = query.where(Task.created_at < ctx.before)
     return query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
