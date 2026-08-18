@@ -71,3 +71,28 @@ describe("FactionAvatar — UA variant (#200)", () => {
     expect(html).toContain("I");
   });
 });
+
+/**
+ * #2217 — ONE MARK PER FACTION. The badge on a Coven member's avatar is the
+ * witch hat, the same drawing `FactionSigil` hands out for a Coven TASK. It was
+ * a crescent moon, kept by #1209 on the argument that a PENTAGRAM would be mud
+ * at badge size; the hat is drawn to survive 15px, so that argument never
+ * defended the moon against it, and the owner reversed the keep-ruling.
+ *
+ * The crescent is not gone from the kit — `CovenVote`'s phase plate builds a
+ * 1-5 rating out of moon phases, which is a mechanic and not a badge. That
+ * split (and `covenVote.test.tsx`, which guards it) is why this asserts on the
+ * AVATAR rather than on "the app draws no crescent".
+ */
+describe("FactionAvatar — Coven wears the hat (#2217)", () => {
+  it("badges a coven member with the witch hat, not the crescent", () => {
+    const html = renderToStaticMarkup(
+      <FactionAvatar character={character({ faction_slug: "coven" })} />,
+    );
+    // The hat's brim — the opening subpath of `CovenSigil`'s one path.
+    expect(html).toContain("M4 78C14 66 32 62 50 62");
+    expect(html).toContain('fill-rule="evenodd"');
+    // The crescent this badge used to draw, gone from this mount.
+    expect(html).not.toContain("M16.5 12a6.5");
+  });
+});

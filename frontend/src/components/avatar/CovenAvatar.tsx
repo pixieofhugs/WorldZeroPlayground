@@ -1,29 +1,27 @@
 import { BadgedAvatar, type FactionAvatarProps } from './FactionAvatar'
 import { CARD, BORDER, INK, READING } from '../factionMarks/covenSlip'
-
-/** Crescent-moon sigil. */
-function MoonGlyph({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M16.5 12a6.5 6.5 0 0 1-8.4 6.2 7.5 7.5 0 1 0 0-12.4A6.5 6.5 0 0 1 16.5 12Z"
-        fill={color}
-      />
-    </svg>
-  )
-}
+import { CovenSigil } from '../sigil/CovenSigil'
 
 /**
  * Cozy Coven avatar — a candle-lit disc inside the slip's pink edge, tagged with
- * the coven's moon.
+ * the coven's mark.
  *
- * THE MOON STAYS (#1209). The `coven.exe` sweep swapped this file's window
- * tokens (`-win-border`, `-notepad-bg`) for the slip's border and the ward's
- * panel ground and left the glyph alone: the crescent is not a lo-fi mark, it is
- * the same moon `CovenVote`'s phase plate is built from, and that plate was
- * explicitly kept. A pentagram at badge size (12–16px) would be mud anyway,
- * which is the reason the four-point sparkle exists at all (`covenSlip`'s
- * `Spark` since Sigil Studies v2 gave `CovenSigil` the witch hat).
+ * THE MOON IS GONE FROM THIS BADGE (#2217, reversing #1209). This file used to
+ * draw a bespoke `MoonGlyph`, and the keep-ruling it carried argued that a
+ * PENTAGRAM would be mud at 12–16px, so the crescent stayed rather than the
+ * badge taking the faction's other device. That was never an argument about the
+ * hat: `CovenSigil` is drawn specifically to survive 15px (a brim and a leaning
+ * point are the whole silhouette) and it is the mark the dispatcher hands out
+ * for a Coven TASK. A player was learning two symbols for one faction, and the
+ * report also noted a crescent reads as a DORMANT state — iOS badges Focus Mode
+ * with one. So the badge now mounts the sigil, exactly as the Everymen, S.N.I.D.E.,
+ * Singularity, Ephemerists and UA avatars mount theirs.
+ *
+ * THE CRESCENT SURVIVES IN ONE PLACE, deliberately: `CovenVote`'s phase plate
+ * builds a 1–5 rating out of moon phases. That is a game mechanic, not an
+ * identity badge, and a hat cannot wax. It is the same badge/ornament split
+ * `covenSlip` already makes between `SigilMark` and `Spark` — do not collapse
+ * it.
  *
  * The monogram takes the slip's reading face rather than Caveat: Cormorant is
  * what the design letters a disc in, and one hand-script capital inside a 24px
@@ -42,7 +40,9 @@ export default function CovenAvatar({ character, size }: FactionAvatarProps) {
       }}
       badgeBg="var(--faction-coven)"
       badgeRing={CARD}
-      glyph={(s, color) => <MoonGlyph size={s} color={color} />}
+      // The badge ring's colour is the glyph's ink here, as it is for every
+      // other `BadgedAvatar`: the hat is knocked out of the faction fill.
+      glyph={(s, color) => <CovenSigil size={s} color={color} />}
     />
   )
 }
