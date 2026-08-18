@@ -1593,7 +1593,13 @@
   --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
   --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
   --faction-ua-card-total: var(--faction-ua-vermil); /* the total, display size */
-  --faction-ua-card-points: var(--faction-ua-glow); /* the "points" caption */
+  /* The "points" caption. NOT `--faction-ua-glow` (#2248): the glow is declared
+     ORNAMENT ONLY three blocks up and it reads 2.93:1 on the parchment's darkest
+     stop (`--faction-ua-panel` #f2e0cb), against the 4.5:1 an 11px caption owes.
+     `-card-accent` is the substitution `UaTaskCard` already made at its own
+     numeral for the same measurement — 4.88:1 there. Dark keeps its own value
+     below; only the day half was failing. */
+  --faction-ua-card-points: var(--faction-ua-card-accent);
   --faction-ua-card-lotus-opacity: 0.2; /* the watermark above, at 20% */
 
   /* ── UA growing-mandala reading ramp (#821, re-read for dark by #849) ──
@@ -6385,6 +6391,42 @@
   /* plum AS A SURFACE — theme-invariant (note 1 above) */
   --faction-wow-plum-surface: #7a4a9e;
   --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
+
+  /* ── THE PAVILION GROUND'S OWN INKS (#2248) ──────────────────────────────
+     Three siblings, the shape `--faction-wow-chronicle-quiet` already set for
+     the parchment plate: when a surface gains a darker ground, RE-MEASURE the
+     inks it already had (WORLD_ZERO_STYLE §3). This is the third WOW ground and
+     nobody had measured on it.
+
+     The ground is not `-ground-from`. `wowMobilePage` / `.wow-backdrop` paint
+     the court glow AND the gilt hatch over the `165deg from → to` sweep, so the
+     darkest point a line of type can land on is
+
+       rgba(122,74,158,.13) over rgba(200,160,42,.16) over #f1e3b8  =  #dcc6a1
+
+     and the three chronicle inks read 3.82 / 3.51 / 3.14 there — all under AA
+     for the 12–18px type the pavilion sets in them. The card values were
+     measured on the CREAM CARD (#fbf4e0) and stay correct there; these are the
+     same three hues walked down at constant hue and saturation until they clear
+     the corner, exactly as `-accent-deep` and `-chronicle-quiet` were walked.
+
+     RECEDING THE GROUND WAS TRIED FIRST AND IS UNSATISFIABLE: with the hatch and
+     the glow taken all the way to zero the corner is still `-ground-to` #f1e3b8,
+     where `-card-muted` reaches only 4.09:1. The ink side is the only side that
+     moves. Measured on #dcc6a1 / #f1e3b8 / the cream card:
+
+       -ground-accent  #6a4089   4.66 · 6.06 · 7.06   (was 3.82 as -card-accent)
+       -ground-label   #675014   4.61 · 6.01 · 6.99   (was 3.51 as -accent-deep)
+       -ground-quiet   #5e5235   4.61 · 6.01 · 6.99   (was 3.14 as -card-muted)
+
+     DARK NEEDS NO WALK. The night corner is #32271c and the same three chronicle
+     inks read 6.39 / 7.10 / 5.51 there, so the dark block below aliases each
+     back to the card ink rather than minting a night value nothing needed. That
+     is why this is a light-only defect and why the sweep reported no dark twin
+     for any of the four rows. */
+  --faction-wow-ground-accent: #6a4089; /* headings, section marks */
+  --faction-wow-ground-label: #675014; /* small caps, links, captions */
+  --faction-wow-ground-quiet: #5e5235; /* metadata, empty-state copy */
 }
 
 :root, [data-theme] {
@@ -6423,6 +6465,12 @@
   --faction-wow-rule: #4a3a0e;
   --faction-wow-gilt-border: #e1c877;
   /* plum-surface, on-plum, figure and gilt-mid do NOT flip — see notes 1 and 2 */
+  /* The night pavilion needs no walked ink (#2248): on the dark corner #32271c
+     the three chronicle inks read 6.39 / 7.10 / 5.51, so each page ink is the
+     card ink itself rather than a second night value to keep in step. */
+  --faction-wow-ground-accent: var(--faction-wow-card-accent);
+  --faction-wow-ground-label: var(--faction-wow-accent-deep);
+  --faction-wow-ground-quiet: var(--faction-wow-card-muted);
 }
 
 /* ══ WOW page backdrop (faction-context pages; theme-aware) ══

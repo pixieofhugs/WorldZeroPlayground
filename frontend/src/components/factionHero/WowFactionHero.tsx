@@ -150,11 +150,18 @@ export default function WowFactionHero({
                   >
                     {entry.value}
                   </div>
+                  {/* The banner is the pavilion ground, not the cream card:
+                      `-card-muted` measures 4.09:1 on the plate's lower stop
+                      (#f1e3b8) and 3.14:1 where the hatch and the court glow
+                      above cross it, against the 4.5:1 a 12px caption owes.
+                      `-ground-quiet` is that same olive walked down for this
+                      ground — 6.01:1 on the stop, 4.61:1 at the crossing
+                      (#2248). */}
                   <div
                     className="label-caption"
                     style={{
                       fontFamily: "var(--faction-wow-body-font)",
-                      color: "var(--faction-wow-card-muted)",
+                      color: "var(--faction-wow-ground-quiet)",
                       marginTop: "var(--space-xs)",
                     }}
                   >
