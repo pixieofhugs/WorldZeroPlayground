@@ -542,7 +542,28 @@ export default function DefaultTaskDetail({
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120, which re-sequenced this page in every skin:
+  //
+  //     breadcrumb · title · description · author/level/headcount · panel
+  //
+  // Owner's reasoning: the page groups by the question the reader is asking.
+  // Title and description answer *what is this*; byline, level and headcount
+  // answer *can I, and who else*; the panel answers *do I*. The old order
+  // interleaved the first and third and put the second at the top, stating a
+  // level requirement before the reader knew what the task was.
+  //
+  // It was never a content decision — the header and the action column are flex
+  // siblings under `flexDirection: desktop ? "row" : "column"`, so on mobile the
+  // column stacked the WHOLE panel between the title and the description. The
+  // fix is DOM order, which is why desktop's left column re-sequences too: one
+  // sequence at both widths, not a page that reorders itself at a breakpoint.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -836,7 +857,11 @@ export default function DefaultTaskDetail({
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: 440 }),
@@ -848,7 +873,6 @@ export default function DefaultTaskDetail({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           <TaskDetailComments
             state={state}

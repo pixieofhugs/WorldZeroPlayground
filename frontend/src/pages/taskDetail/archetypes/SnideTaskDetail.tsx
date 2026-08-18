@@ -764,7 +764,15 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -1032,7 +1040,11 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: 452 }),
@@ -1044,7 +1056,6 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           <TaskDetailComments
             state={state}

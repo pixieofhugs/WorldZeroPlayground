@@ -689,7 +689,15 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Author row — the proposing character's byline (#1029). */}
       {authorName && (
         <div
@@ -966,7 +974,11 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: size.plate }),
@@ -979,7 +991,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
 
         <div style={{ position: "relative", zIndex: 1, minWidth: 0 }}>
-          {brief}
           {gallery}
           {/* The cat watermark, turning once every two minutes (#2041 — it was a
               pentagram, and the swap is `covenSlip`'s because five Coven

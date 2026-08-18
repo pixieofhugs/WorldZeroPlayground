@@ -379,7 +379,15 @@ export default function EverymenTaskDetail({
           })}
         </p>
       )}
+    </div>
+  );
 
+  // ── Who and at what level: the byline, the level, the headcount ──
+  //
+  // Split out of `header` by #2120 so the DESCRIPTION reads between them. See
+  // `DefaultTaskDetail` for the whole sequence and why it is this one.
+  const credentials = (
+    <div>
       {/* Byline — the character who proposed the job (#1029). */}
       {authorName && (
         <div
@@ -955,7 +963,11 @@ export default function EverymenTaskDetail({
             marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            {brief}
+            {credentials}
+          </div>
           <div
             style={{
               ...actionColumnSize({ desktop, hasAction, width: 520 }),
@@ -967,7 +979,6 @@ export default function EverymenTaskDetail({
         </div>
 
         <div style={{ minWidth: 0 }}>
-          {brief}
           {gallery}
           {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
               under the sheet's own dressed section head. */}
