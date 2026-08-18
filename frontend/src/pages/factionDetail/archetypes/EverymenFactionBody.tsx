@@ -6,6 +6,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -120,14 +121,48 @@ function SectionHeading({ children, right }: { children: ReactNode; right?: Reac
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** Circular initials medallion — cream ring / red face (or inverted for the spotlight). */
-function Medallion({ name, size, invert = false }: { name: string; size: number; invert?: boolean }) {
+/** A portrait filling a medallion's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
+/** The spotlight's inset red band, as a width the padding box holds open. */
+const SPOTLIGHT_BAND = 5;
+
+/**
+ * Circular initials medallion — cream ring / red face (or inverted for the
+ * spotlight).
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The disc keeps every
+ * ring it wears, but the spotlight's is an INSET shadow, and an inset shadow
+ * paints under content — a photo at 100% would swallow it. So when a portrait
+ * is drawn the band is held open by padding on the border box instead, which
+ * is the same 5px in the same place with the shadow still doing the drawing.
+ */
+function Medallion({
+  name,
+  size,
+  invert = false,
+  avatarUrl,
+}: {
+  name: string;
+  size: number;
+  invert?: boolean;
+  /** The member's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
+}) {
   return (
     <span
       style={{
         flexShrink: 0,
         width: size,
         height: size,
+        boxSizing: "border-box",
+        padding: avatarUrl && invert ? SPOTLIGHT_BAND : 0,
         borderRadius: "50%",
         background: invert ? CREAM : RED,
         color: invert ? RED : CREAM,
@@ -136,10 +171,12 @@ function Medallion({ name, size, invert = false }: { name: string; size: number;
         justifyContent: "center",
         fontFamily: BEBAS,
         fontSize: size * 0.46,
-        boxShadow: invert ? `0 0 0 4px ${INK}, inset 0 0 0 5px ${RED}` : `0 0 0 2px ${INK}`,
+        boxShadow: invert
+          ? `0 0 0 4px ${INK}, inset 0 0 0 ${SPOTLIGHT_BAND}px ${RED}`
+          : `0 0 0 2px ${INK}`,
       }}
     >
-      {initial(name)}
+      {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
     </span>
   );
 }
@@ -421,7 +458,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                     {t("everymen.spotlight.label")}
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
-                    <Medallion name={spot.display_name} size={74} invert />
+                    <Medallion name={spot.display_name} size={74} invert avatarUrl={spot.avatar_url} />
                   </div>
                   <div
                     style={{
@@ -466,7 +503,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   to={`/characters/${m.id}`}
                   style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${INK} 16%, transparent)`, textDecoration: "none" }}
                 >
-                  <Medallion name={m.display_name} size={32} />
+                  <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{

@@ -430,7 +430,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                     marginBottom: "var(--space-md)",
                   }}
                 >
-                  <SlipAvatar name={spot.display_name} size={60} />
+                  <SlipAvatar name={spot.display_name} size={60} avatarUrl={spot.avatar_url} />
                 </div>
                 <div style={CAPTION}>{t("coven.spotlight.label")}</div>
                 <div
@@ -491,7 +491,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                     textDecoration: "none",
                   }}
                 >
-                  <SlipAvatar name={member.display_name} size={26} />
+                  <SlipAvatar name={member.display_name} size={26} avatarUrl={member.avatar_url} />
                   <span
                     style={{
                       flex: 1,

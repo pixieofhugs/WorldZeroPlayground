@@ -12,6 +12,7 @@ import {
 } from "../../../components/factionMarks/uaAtoms";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -103,15 +104,33 @@ const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 // retired *anno* as a name for a character's level and #1911 settled both rows
 // onto the shared "Level {{level}}", which takes the integer.
 
-/** Circular initials medallion — panel face, display glyph. */
+/** A portrait filling a medallion's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
+/**
+ * Circular initials medallion — panel face, display glyph.
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The rule (or the
+ * spotlight's heavier accent ring) is this span's own border, so the portrait
+ * sits inside it untouched.
+ */
 function Medallion({
   name,
   size,
   spotlight = false,
+  avatarUrl,
 }: {
   name: string;
   size: number;
   spotlight?: boolean;
+  /** The member's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
 }) {
   return (
     <span
@@ -133,7 +152,7 @@ function Medallion({
         color: "var(--faction-ua-card-text)",
       }}
     >
-      {initial(name)}
+      {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
     </span>
   );
 }
@@ -475,7 +494,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     marginBottom: "var(--space-md)",
                   }}
                 >
-                  <Medallion name={spot.display_name} size={72} spotlight />
+                  <Medallion name={spot.display_name} size={72} spotlight avatarUrl={spot.avatar_url} />
                 </div>
                 <div
                   className="content-title"
@@ -525,7 +544,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     textDecoration: "none",
                   }}
                 >
-                  <Medallion name={m.display_name} size={32} />
+                  <Medallion name={m.display_name} size={32} avatarUrl={m.avatar_url} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       className="content-text"

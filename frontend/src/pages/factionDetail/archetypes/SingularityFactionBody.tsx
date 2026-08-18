@@ -6,6 +6,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -113,8 +114,31 @@ function SectionHeading({ children }: { children: ReactNode }) {
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** Node avatar — signal-ringed initials disc. */
-function NodeGlyph({ name, size }: { name: string; size: number }) {
+/** A portrait filling a node's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
+/**
+ * Node avatar — signal-ringed initials disc.
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The signal ring is
+ * this span's own border, so the portrait sits inside it untouched.
+ */
+function NodeGlyph({
+  name,
+  size,
+  avatarUrl,
+}: {
+  name: string;
+  size: number;
+  /** The node's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
+}) {
   return (
     <span
       style={{
@@ -132,7 +156,7 @@ function NodeGlyph({ name, size }: { name: string; size: number }) {
         color: SIGNAL,
       }}
     >
-      {initial(name)}
+      {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
     </span>
   );
 }
@@ -461,7 +485,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   {t("singularity.spotlight.label")}
                 </div>
                 <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
-                  <NodeGlyph name={spot.display_name} size={72} />
+                  <NodeGlyph name={spot.display_name} size={72} avatarUrl={spot.avatar_url} />
                 </div>
                 <div className="content-title" style={{ position: "relative", fontFamily: FONT, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.03em" }}>
                   {spot.display_name}
@@ -502,7 +526,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     textDecoration: "none",
                   }}
                 >
-                  <NodeGlyph name={m.display_name} size={30} />
+                  <NodeGlyph name={m.display_name} size={30} avatarUrl={m.avatar_url} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       className="content-text"

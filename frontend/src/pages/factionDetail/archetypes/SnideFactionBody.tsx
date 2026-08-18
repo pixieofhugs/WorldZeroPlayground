@@ -6,6 +6,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -130,8 +131,35 @@ function SectionHeading({ children }: { children: ReactNode }) {
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
 
-/** Struck initials chip — ink face, acid glyph (or inverted for the spotlight). */
-function Mugshot({ name, size, invert = false }: { name: string; size: number; invert?: boolean }) {
+/** A portrait filling a mugshot's field, cropped square-to-circle. */
+const PORTRAIT: CSSProperties = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover",
+};
+
+/**
+ * Struck initials chip — ink face, acid glyph (or inverted for the spotlight).
+ *
+ * THE MONOGRAM IS THE FALLBACK, NOT THE DEFAULT (#2226). The green rule and the
+ * ink halo are this span's own border and shadow, and the -3deg tilt is its
+ * transform — so a real portrait comes out crooked, which is the point of
+ * calling the thing a mugshot.
+ */
+function Mugshot({
+  name,
+  size,
+  invert = false,
+  avatarUrl,
+}: {
+  name: string;
+  size: number;
+  invert?: boolean;
+  /** The member's portrait. Empty/absent falls back to the monogram. */
+  avatarUrl?: string | null;
+}) {
   return (
     <span
       style={{
@@ -151,7 +179,7 @@ function Mugshot({ name, size, invert = false }: { name: string; size: number; i
         transform: "rotate(-3deg)",
       }}
     >
-      {initial(name)}
+      {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
     </span>
   );
 }
@@ -505,7 +533,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     {t("snide.spotlight.label")}
                   </div>
                   <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
-                    <Mugshot name={spot.display_name} size={70} invert />
+                    <Mugshot name={spot.display_name} size={70} invert avatarUrl={spot.avatar_url} />
                   </div>
                   <div
                     style={{
@@ -569,7 +597,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       textDecoration: "none",
                     }}
                   >
-                    <Mugshot name={m.display_name} size={30} />
+                    <Mugshot name={m.display_name} size={30} avatarUrl={m.avatar_url} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="content-text" style={{ fontFamily: MARKER, color: INK, lineHeight: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {m.display_name}
