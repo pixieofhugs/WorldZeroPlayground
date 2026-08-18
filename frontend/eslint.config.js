@@ -782,15 +782,6 @@ const LEGACY_RAW_COLOUR_FILES = fs
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
 
-// Files still painting the bare spine hue as an ink (issue #2077). This list
-// only ever shrinks — migrating a file means deleting its line here, not adding
-// one. New files may never be added to it.
-const LEGACY_FACTION_HUE_INK_FILES = fs
-  .readFileSync(new URL('./.eslint-legacy-faction-hue-ink.txt', import.meta.url), 'utf8')
-  .split('\n')
-  .map((line) => line.split('#')[0].trim())
-  .filter(Boolean)
-
 // Faction surfaces not yet migrated off the global ink family (issue #1819).
 // This list only ever shrinks — migrating a file means deleting its line here,
 // not adding one. New files may never be added to it.
@@ -1009,18 +1000,10 @@ export default [
       'local/no-faction-hue-as-ink': 'off',
     },
   },
-  // Same ratchet, same empty-list guard (#750). Seeded from what the rule
-  // reported on the day it landed, with the measurements in the file's header.
-  ...(LEGACY_FACTION_HUE_INK_FILES.length > 0
-    ? [
-        {
-          files: LEGACY_FACTION_HUE_INK_FILES,
-          rules: {
-            'local/no-faction-hue-as-ink': 'off',
-          },
-        },
-      ]
-    : []),
+  // #2077's shrink-only allowlist is GONE (#2108). It seeded at four files and
+  // eleven violations; every one is fixed, and `.eslint-legacy-faction-hue-ink.txt`
+  // is deleted with it rather than left behind as an empty list that reads like
+  // debt nobody has looked at.
   {
     // Test files assert on literal strings by design.
     files: [

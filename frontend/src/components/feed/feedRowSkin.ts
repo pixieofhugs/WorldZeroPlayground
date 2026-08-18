@@ -66,24 +66,32 @@ export interface FeedRowInk {
   /**
    * The actor's name.
    *
-   * Default `factionCssVar(slug)` — the faction's raw hue, which is what the row
-   * has always painted. That default is legible on the app's neutral page and
-   * MEASURABLY IS NOT on ANY of the seven bespoke chassis: at 18px/700 it owes
-   * 4.5:1 (700 weight reaches the large-text 3:1 exemption only at 18.66px) and
-   * pays 1.96:1 on WOW's cream, 2.41:1 on the S.N.I.D.E. slip, 2.98:1 on the
-   * Coven ward, 3.67:1 on the Singularity terminal, 4.04:1 on UA's parchment,
-   * 4.15:1 on the Ephemerists plate under its gold wash and 4.49:1 on Everymen's
-   * paper. All seven are LIGHT-theme misses and the raw hue clears in dark on
-   * every one of them — #1252's "Ephemerists 3.16:1 dark" was the light wash
-   * composited over the dark plate, where `-plate-wash` resolves to `none`.
-   * A chassis whose ground fails passes the accent it measured instead; all
-   * seven now do (#1252, then #1341), and `feedRowInk.test.tsx` renders each
-   * frame around the shared body and re-measures the pairing it publishes.
+   * Default `--color-text-primary` — a NEUTRAL text tier, not a faction hue
+   * (#2108). The default used to be `factionCssVar(slug)`, the bare spine hue,
+   * and its docstring asserted that was "legible on the app's neutral page".
+   * That assertion was true of the pre-#2068 hue set and is not true of this
+   * one: on the neutral feed ground `--faction-default-card-bg` (#fffdf9) the
+   * Ephemerists' brass reads 2.36:1, S.N.I.D.E.'s acid 2.67:1 and Coven's pink
+   * 3.10:1, for an 18px/700 name that owes 4.5:1 — 700 weight reaches the
+   * large-text 3:1 exemption only at 18.66px. Three of the eight failed, not
+   * one. `--color-text-primary` reads 18.22:1 light and 13.75:1 dark there.
    *
-   * It stays the default rather than becoming `-card-accent` globally because
-   * `card-accent` is measured against `-card-bg`, and only three of the eight
-   * chassis paint the body on `-card-bg`. The ground decides, so the ground's
-   * owner decides.
+   * THE HUE DOES NOT LEAVE THE ROW, ONLY THE TYPE. It still fills the monogram
+   * disc beside the name, which carries its own measured `-on-fill` glyph — the
+   * §3 rule stated exactly as it is written: a faction hue is a FILL, not an ink.
+   *
+   * A LIGHT-MODE INK VALUE FOR EVERY SPINE HUE WAS CONSIDERED AND REJECTED
+   * (#2108). Darkening a hue breaks `--faction-<slug>-on-fill`, which is measured
+   * AGAINST that hue, so moving one stops the pair clearing; and the blast radius
+   * — twelve sites, five files, all on neutral ground where a free neutral tier
+   * already exists — does not pay for a token family.
+   *
+   * A chassis still overrides this: it knows its own ground, and its own accent
+   * is measured on it. All seven bespoke frames pass one (#1252, then #1341), and
+   * `feedRowInk.test.tsx` renders each frame around the shared body and
+   * re-measures the pairing it publishes. What changed here is only what happens
+   * when NOBODY answers — the default/Albescent rows, which is exactly where no
+   * one wearing a faction skin would ever have seen it.
    */
   actor?: string
   /**
@@ -117,7 +125,7 @@ export function resolveFeedRowInk(
   slug: string | null,
 ): Required<FeedRowInk> {
   return {
-    actor: ink?.actor ?? factionCssVar(slug),
+    actor: ink?.actor ?? 'var(--color-text-primary)',
     monogram: ink?.monogram ?? factionCssVar(slug, 'on-fill'),
   }
 }

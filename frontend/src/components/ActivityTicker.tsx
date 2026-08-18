@@ -95,7 +95,11 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
           className="font-body"
           style={{
             fontSize: 'var(--text-content)',
-            color: accent,
+            // The hue stays on the FILL — the 3px spine at the card's left edge
+            // — and the type takes a neutral tier (#2108). As an ink on
+            // `--color-bg-surface` the bare hue ran 2.36:1 (Ephemerists) to
+            // 3.10:1 (Coven) in light, under the 4.5:1 this 18px line owes.
+            color: 'var(--color-text-secondary)',
             fontStyle: 'italic',
             lineHeight: 1.25,
             overflow: 'hidden',
@@ -158,7 +162,10 @@ export default function ActivityTicker() {
       >
         <div
           className="label-heading"
-          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-coven)' }}
+          /* The word takes a neutral tier; the DOT beside it keeps the pink,
+             which is the fill this hue is for (#2108). As an ink the bare hue
+             measured 2.70:1 on `--color-bg-surface-alt` in light. */
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--color-text-secondary)' }}
         >
           {/* The blink is a CLASS, never an inline `animation:` — a style
               attribute is not in a stylesheet, so nothing can wrap it in the

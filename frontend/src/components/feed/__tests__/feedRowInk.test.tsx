@@ -33,6 +33,7 @@ import CovenFeedFrame from '../CovenFeedFrame'
 import EphemeristsFeedFrame from '../EphemeristsFeedFrame'
 import EverymenFeedFrame from '../EverymenFeedFrame'
 import FeedRowContent from '../FeedRowContent'
+import { resolveFeedRowInk } from '../feedRowSkin'
 import { normalizeFeedItem } from '../normalizeFeedItem'
 import { AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
@@ -148,6 +149,44 @@ describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Fram
       const surface = veiledGround(stop, veil, theme)
       const ratio = contrastRatio(text!, surface)
       expect(ratio, `${ink} on ${stop} (${theme}) = ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+})
+
+/**
+ * THE SEAM WHEN NOBODY ANSWERS (#2108).
+ *
+ * Every case above is a chassis publishing an ink it measured. This is the other
+ * half: the neutral feed, where no frame publishes one and the body falls back.
+ * That fallback was the bare spine hue and its docstring claimed the hue "is
+ * legible on the app's neutral page" — measured on `--faction-default-card-bg`,
+ * three of the eight are not (Ephemerists 2.36:1, S.N.I.D.E. 2.67:1, Coven
+ * 3.10:1, against 4.5:1 for an 18px/700 name).
+ *
+ * The assertion is deliberately about the RESOLVED ink and its pairing rather
+ * than about a hard-coded token name: what matters is that the fallback is a
+ * colour that clears the neutral ground for every slug, in both themes, and a
+ * name-only check would pass a neutral that had drifted.
+ */
+describe('the neutral feed row falls back to a measured ink', () => {
+  const FALLBACK = resolveFeedRowInk(undefined, 'ephemerists').actor
+
+  it('does not fall back to any faction hue', () => {
+    for (const slug of ['ua', 'wow', 'snide', 'coven', 'ephemerists', 'singularity', 'everymen', 'albescent']) {
+      expect(resolveFeedRowInk(undefined, slug).actor).toBe(FALLBACK)
+      expect(FALLBACK).not.toContain(`--faction-${slug}`)
+    }
+    // The hue keeps its FILL job on the same row — the monogram disc.
+    expect(resolveFeedRowInk(undefined, 'coven').monogram).toContain('--faction-coven')
+  })
+
+  it.each(['light', 'dark'] as Theme[])('clears AA on the neutral card ground in %s', (theme) => {
+    const name = FALLBACK.replace(/^var\(|\)$/g, '')
+    const text = parseColor(resolveVar(name, theme, THEMES) ?? '')
+    expect(text, `${name} (${theme})`).not.toBeNull()
+    for (const stop of groundStops('--faction-default-card-bg', theme)) {
+      const ratio = contrastRatio(text!, parseColor(stop)!)
+      expect(ratio, `${name} on ${stop} (${theme}) = ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL)
     }
   })
 })
