@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { CovenCat } from "../../../components/factionMarks/covenSlip";
+import { CovenCat, SLIP_SHEET } from "../../../components/factionMarks/covenSlip";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -19,12 +19,19 @@ import type { TaskDetailState } from "../useTaskDetail";
 /**
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
  *
- * The spell slip opened out to a full page: a candlelight haze washes the
- * viewport, a cat watermark turns slowly behind the copy, braided thread
- * rules head every section, and the points are held inside a glowing pentagram
- * ward on a 452px action plate. Grenze Gotisch carries the display, Cormorant
- * Garamond the numerals and the brief, Caveat the hand, Quicksand the chrome —
- * the same four faces the v2 task card (#1023) established for this faction.
+ * The spell slip opened out to a full page: a cat watermark turns slowly behind
+ * the copy, braided thread rules head every section, and the points are held
+ * inside a glowing pentagram ward on a 452px action plate. Grenze Gotisch
+ * carries the display, Cormorant Garamond the numerals and the brief, Caveat the
+ * hand, Quicksand the chrome — the same four faces the v2 task card (#1023)
+ * established for this faction.
+ *
+ * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
+ * four drifting blooms. Owner ruling, 2026-08-17: the task card's sheet is the
+ * iconic coven look, and the surfaces around the card should wear it. The panels
+ * on top stay `ward-card` — a dark panel on a pink sheet is the intended
+ * reading, and the score plate in particular has to stay a distinct object on a
+ * page whose job is showing a score.
  *
  * This REPLACES the `whimsy.exe` desktop-window archetype wholesale, along with
  * every word of Coven's own detail vocabulary (`spellsHeading`, `loveHeading`,
@@ -54,9 +61,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  * surface that held it were deleted by #1068 when the ADR was accepted.
  *
  * All colour via `--faction-coven-slip-*` (shared with the task card) plus the
- * `--faction-coven-ward-*` family this surface adds; the haze, the braid, the
- * wheel and the aura's flicker all live in index.css so the light/dark flip and
- * the reduced-motion guard run through the cascade, never a ternary.
+ * `--faction-coven-ward-*` family this surface adds; the braid, the wheel and
+ * the aura's flicker live in index.css so the light/dark flip and the
+ * reduced-motion guard run through the cascade, never a ternary. The haze went
+ * with the wash it drifted (#2135).
  */
 
 const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
@@ -920,40 +928,33 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
-      {/* The candlelight wash belongs to the COMPONENT, not the viewport: the
-          owner's rule for this surface is that the site background still shows
-          around the detail column (QA on #1055, applied to every skin). It was a
-          `position: fixed; inset: 0` layer; index.css still owns its blooms, its
-          drift and the light/dark flip, but it now paints this column only. */}
+      {/* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop`,
+          the near-black ward wash with four drifting blooms, until the owner
+          ruled that the sheet the task card wears is the iconic coven look and
+          the surfaces around it should wear it too. `SLIP_SHEET` is `covenSlip`'s
+          one copy of the four-stop ramp — the card, the praxis card and both
+          detail columns now read it rather than each retyping it.
+
+          The class STAYS in index.css: `CovenFieldDesk` grounds a whole mobile
+          page on it, so this is a change of consumer, not a deletion.
+
+          The ground still belongs to the COLUMN, not the viewport (QA on #1055,
+          applied to every skin) — the site background shows around it. The clip
+          below is this file's own and predates the swap; it stays because the
+          numbers under it were chosen against it. */}
       <div
-        className="coven-candle-backdrop"
         style={{
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
+          background: SLIP_SHEET,
           borderRadius: 18,
           padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
       >
-        {/* The cat watermark, turning once every two minutes (#2041 — it was a
-            pentagram, and the swap is `covenSlip`'s because five Coven surfaces
-            turn the same mark). `.cvn-wheel` still carries the motion and its
-            reduced-motion guard (#911/#1023).
-
-            IT COMES INSIDE, and the size becomes responsive to make that
-            possible. The pentacle was a fixed 640px hung 180px off the right,
-            so a quarter of it was clipped — fine for an abstract star, wrong
-            for a face. `right: 24` puts the whole drawing on the sheet, which
-            means the size now has to fit the narrow sheet too: 240 + 24 clears
-            a 320px viewport, where 400 would not. */}
-        <CovenCat
-          size={desktop ? 400 : 240}
-          style={{ right: 24, top: 120, opacity: 0.09 }}
-        />
-
         <div
           style={{
             position: "relative",
@@ -980,6 +981,33 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <div style={{ position: "relative", zIndex: 1, minWidth: 0 }}>
           {brief}
           {gallery}
+          {/* The cat watermark, turning once every two minutes (#2041 — it was a
+              pentagram, and the swap is `covenSlip`'s because five Coven
+              surfaces turn the same mark). `.cvn-wheel` still carries the motion
+              and its reduced-motion guard (#911/#1023).
+
+              IT COMES TO THE BOTTOM (#2135) — one placement rule on every mount,
+              which is #2041's "not two different drawings" a level up. It was
+              `right: 24, top: 120`.
+
+              THE ANCHOR IS THE BRIEF-AND-GALLERY REGION, which is why the
+              discussion moved out into a block of its own below rather than
+              staying in here: the sheet's true bottom-right is behind the
+              comment composer, which paints an opaque `ward-card` panel and
+              would swallow the mark. This is the lowest point on the page it is
+              still visible at. `right: 24` is unchanged and is what keeps the
+              whole face on the sheet at both widths.
+
+              `zIndex: -1` puts it back UNDER the copy: this wrapper IS a
+              stacking context (position + z-index), so the negative index lands
+              behind its in-flow blocks and still over the sheet's ground. */}
+          <CovenCat
+            size={desktop ? 400 : 240}
+            style={{ right: 24, bottom: 0, opacity: 0.09, zIndex: -1 }}
+          />
+        </div>
+
+        <div style={{ position: "relative", zIndex: 1, minWidth: 0 }}>
           <TaskDetailComments state={state} heading={sectionHead(t("detail.comments.heading"))} />
         </div>
       </div>

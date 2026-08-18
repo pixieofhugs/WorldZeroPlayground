@@ -114,9 +114,15 @@ function Sparkfield() {
  * The ring goes with the pentacle. It was there to close the star's silhouette;
  * a cat's head already closes its own, and a circle behind it reads as a second
  * device rather than a frame.
+ *
+ * IT SITS AT THE BOTTOM (#2135), where it sat at `top: 16`. One placement rule
+ * on every mount — bottom-right, tucked in — because five surfaces turning the
+ * same drawing in four different corners is #2041's defect one level up. Only
+ * the anchor moves: the size, the inset and the 0.08 are untouched, and the
+ * header clips, so the mark still reads as a corner watermark either way.
  */
 function Watermark() {
-  return <CovenCat size={240} style={{ right: 16, top: 16, opacity: 0.08 }} />
+  return <CovenCat size={240} style={{ right: 16, bottom: 16, opacity: 0.08 }} />
 }
 
 /** Section heading — the display face, a braid, then the gloss. */

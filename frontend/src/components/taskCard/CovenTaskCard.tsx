@@ -5,7 +5,7 @@ import CardMasthead from "./CardMasthead";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
-import { CovenCat } from "../factionMarks/covenSlip";
+import { CovenCat, SLIP_SHEET } from "../factionMarks/covenSlip";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -174,8 +174,10 @@ export default function CovenTaskCard({
           overflow: "hidden",
           boxSizing: "border-box",
           width: "100%",
-          background:
-            "linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 36%, var(--faction-coven-slip-lav) 74%, var(--faction-coven-slip-vio))",
+          /* The four-stop ramp, from `covenSlip` rather than retyped (#2135):
+             the praxis card and both detail columns wear the same sheet now, so
+             a fourth copy of the gradient is a fourth thing to re-tune. */
+          background: SLIP_SHEET,
           border: "2px solid var(--faction-coven-slip-border)",
           borderRadius: 18,
           boxShadow: "var(--faction-coven-slip-shadow)",

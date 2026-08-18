@@ -5,22 +5,27 @@
  * The first faction skin over the shared praxis-detail layout. It is the same
  * page `DefaultPraxisDetail` draws — same regions, same slots, same API
  * contract (ADR-0061) — wearing the ward the task detail (#1031) and the spell
- * slip (#1023) already established for this faction: a candlelight haze
- * drifting over the column, a cat watermark turning behind the copy,
- * braided thread rules heading every section, and a candle flicker under the
- * score. Grenze Gotisch carries the display, Cormorant Garamond the reading
- * voice, Caveat the hand, Quicksand the chrome.
+ * slip (#1023) already established for this faction: a cat watermark turning
+ * behind the copy, braided thread rules heading every section, and a candle
+ * flicker under the score. Grenze Gotisch carries the display, Cormorant
+ * Garamond the reading voice, Caveat the hand, Quicksand the chrome.
+ *
+ * THE COLUMN WEARS THE SLIP (#2135), where it wore the candlelight haze and its
+ * four drifting blooms. Owner ruling, 2026-08-17: the task card's sheet is the
+ * iconic coven look and the surfaces around it should wear it. The panels on top
+ * stay `ward-card` — dark panels on a pink sheet is the intended reading, and it
+ * is the shape the praxis CARD already had.
  *
  * ## Nothing here is new dress
  *
  * Every colour is a shipped `--faction-coven-slip-*` / `--faction-coven-ward-*`
- * token, and all four motions (`cvn-haze` on `.coven-candle-backdrop`,
- * `.cvn-candle`, `.cvn-wheel`, `.cvn-braid`) are index.css rules this file only
- * names. So the light/dark flip and the `prefers-reduced-motion` guard run
- * through the cascade, never a `dark ?` branch and never an inline `animation:`
- * that would bypass the guard. **This skin adds no CSS at all** — the ward was
- * measured for these exact two grounds in #1031 and the inks are reused on the
- * same pair (page under the haze, panel a shade above it).
+ * token, and the three motions left (`.cvn-candle`, `.cvn-wheel`, `.cvn-braid`)
+ * are index.css rules this file only names — `cvn-haze` went with the wash it
+ * drifted (#2135). So the light/dark flip and the `prefers-reduced-motion` guard
+ * run through the cascade, never a `dark ?` branch and never an inline
+ * `animation:` that would bypass the guard. **This skin adds no CSS at all** —
+ * the inks it paints on the sheet are the three the task card already measured
+ * on it (`factionContrast.test.ts`), and the panel is unchanged from #1031.
  *
  * ## The layout contract, inherited not re-derived (#1129)
  *
@@ -80,7 +85,7 @@ import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
 import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
-import { CovenCat } from '../../../components/factionMarks/covenSlip'
+import { CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
@@ -718,47 +723,81 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <div className="py-8" style={{ position: 'relative', color: INK, fontFamily: CHROME }}>
       {desktop ? breadcrumb : mobileBar}
 
-      {/* The candlelight wash belongs to the COLUMN, not the viewport: the site
-          background still shows around the page (WORLD_ZERO_STYLE §5, the #1028
-          ruling). index.css owns the ground, its four blooms, their drift and
-          the light/dark flip; this only places and clips them. */}
+      {/* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
+          the near-black ward wash with four drifting blooms — until the owner
+          ruled that the sheet the task card wears is the iconic coven look and
+          the surfaces around it should wear it too. `SLIP_SHEET` is `covenSlip`'s
+          one copy of the four-stop ramp, so the sheet, the task card and the
+          praxis card cannot drift apart.
+
+          The blooms and their drift go with the class; nothing here paints them.
+          The class itself STAYS in index.css — `CovenFieldDesk` still grounds a
+          whole mobile page on it — so this is a change of consumer, not a
+          deletion, and the test on this file pins the negative half.
+
+          The ground still belongs to the COLUMN, not the viewport: the site
+          background shows around the page (WORLD_ZERO_STYLE §5, the #1028
+          ruling).
+
+          THE CLIP IS NOT RESTORED, and that is deliberate. `.coven-candle-
+          backdrop` carried `overflow: hidden` for one reason — its `::before`
+          bloom is inset -25% and had to be cut to the column. No bloom, no clip
+          to owe: a background is cut by the element's OWN border-radius, and the
+          cat below sits wholly inside its container. #1255 is the reason not to
+          put it back on spec: this column wraps the comment composer, whose
+          @-mention listbox is an absolutely positioned child, and a clipping
+          ancestor cuts a descendant off whatever its stacking order. */}
       <div
-        className="coven-candle-backdrop"
         style={{
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,
           margin: '0 auto',
+          background: SLIP_SHEET,
           border: `2px solid ${BORDER}`,
           borderRadius: 18,
           padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
           boxSizing: 'border-box',
         }}
       >
-        {/* The cat watermark, turning once every two minutes (#2041 — it was a
-            pentagram, and the drawing lives in `covenSlip` because five Coven
-            surfaces turn the same one). `.cvn-wheel` still carries the motion
-            and its reduced-motion guard (#911/#1023).
-
-            IT COMES INSIDE. `size.wheel` was 620/420 hung 170/140px off the
-            right edge, so a quarter of the mark was clipped — which a
-            radially-symmetric star survives and a face does not. The values
-            below are what fits wholly on the sheet at each width; `right`
-            stops being a form-factor branch because the offset no longer has
-            to hide a crop. */}
-        <CovenCat size={size.wheel} style={{ right: 24, top: 140, opacity: 0.09 }} />
-
         <div style={{ position: 'relative', zIndex: 1 }}>
           {banners}
 
           <div
             style={{
+              position: 'relative',
               display: 'flex',
               flexDirection: desktop ? 'row' : 'column',
               alignItems: 'stretch',
               gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
             }}
           >
+            {/* The cat watermark, turning once every two minutes (#2041 — it was
+                a pentagram, and the drawing lives in `covenSlip` because five
+                Coven surfaces turn the same one). `.cvn-wheel` still carries the
+                motion and its reduced-motion guard (#911/#1023).
+
+                IT COMES TO THE BOTTOM (#2135) — one placement rule across every
+                mount, which is #2041's "not two different drawings" one level up.
+                It was `right: 24, top: 140`.
+
+                THE ANCHOR IS THE COLUMNS ROW, not the sheet, and the owner's
+                reason is what pins it there: the sheet's true bottom-right sits
+                behind the comment composer, which paints an opaque `ward-card`
+                panel and would swallow the mark whole. "I want the cat where it
+                can be seen, but in general at the bottom." The row ends exactly
+                where the discussion begins, so `bottom: 0` here is the lowest
+                point on the page the mark is still visible at. `right: 24` is
+                unchanged and is what keeps the whole face on the sheet.
+
+                `zIndex: -1` puts it back UNDER the copy. The row is positioned
+                but has no z-index, so it is not a stacking context; the negative
+                index lands in the wrapper above, which is — behind every in-flow
+                block there, and still over the sheet's own ground. */}
+            <CovenCat
+              size={size.wheel}
+              style={{ right: 24, bottom: 0, opacity: 0.09, zIndex: -1 }}
+            />
             <div style={{ flex: '1 1 auto', minWidth: 0 }}>
               {header}
               {/* Mobile stacks the rail above the proof — one block each, moved,

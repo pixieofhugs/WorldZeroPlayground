@@ -4,11 +4,12 @@ import {
   Braid,
   CARD,
   BORDER,
-  DEEP,
+  CovenCat,
   DISPLAY,
   INK,
   READING,
   SHADOW,
+  SLIP_SHEET,
   SOFT,
 } from "../../factionMarks/covenSlip";
 
@@ -16,9 +17,37 @@ import {
  * Cozy Coven — THE SPELL SLIP, filed (#1209).
  *
  * The praxis card is the coven's proof written onto the same candle-lit paper
- * the task slip is issued on: the ward's panel ground inside the slip's pink
- * edge, a braided thread under the dispatch line, Grenze Gotisch for the title
- * and Cormorant Garamond for the reading voice.
+ * the task slip is issued on: the four-stop pink→lavender sheet, a braided
+ * thread under the dispatch line, the cat turning in the corner, Grenze Gotisch
+ * for the title and Cormorant Garamond for the reading voice.
+ *
+ * ## IT WEARS THE SHEET NOW — #1209's decision is REVERSED (#2135)
+ *
+ * This docstring used to say the card was "the ward's panel ground inside the
+ * slip's pink edge", deliberately NOT the slip: a filed proof against the issued
+ * spell. The owner ruled the other way on 2026-08-17 — "the slip is the iconic
+ * coven look" — so the ground is `SLIP_SHEET`, the same gradient
+ * `CovenTaskCard` paints, and the cat watermark comes with it at the task card's
+ * own numbers. Do not restore the panel ground as a regression: it was a written
+ * decision and it was overturned on purpose.
+ *
+ * TWO THINGS RIDE ALONG, and neither is cosmetic.
+ *
+ * `overflow: hidden`, so the mark clips to the 16px die-cut corner. Safe here
+ * and not everywhere: #1255's rule is "what is downstream of the clip?" — this
+ * card hosts no composer, menu or modal, only the read-only body, so nothing
+ * absolutely positioned needs to escape it.
+ *
+ * `tint` becomes INK, where it was DEEP. This is #1295's substitution, forced by
+ * the ground change and measured: `tint` is the shared body's `accent`, and the
+ * shared body paints a collab member's name, a duel rival's name and a roster
+ * chip's label in it at `--text-content`. DEEP clears on the ward panel (4.70:1)
+ * and does NOT clear on the sheet — 3.33:1 on the gradient's darkest stop in
+ * light, with 3.60–3.85 on the other three. INK is the ink Coven reaches for
+ * when a pink has to carry words (5.46:1 on that same stop, 7.99 dark), and the
+ * new pairs are gated in `factionContrast.test.ts`. Nothing else on the card
+ * changes ink: the title was already INK, the quiet copy SOFT, and `paper` stays
+ * `CARD` because it grounds solid discs drawn ON the sheet, not the sheet.
  *
  * THIS REPLACES THE PINK MARKER STICKER (ADR-0050 → #1209). The blush sticker
  * stock, its `--faction-coven-sticker-*` family and the all-Caveat setting were
@@ -26,6 +55,9 @@ import {
  * geometry, and deliberately: the 16px die-cut radius and the soft pink bloom
  * are the card's silhouette, and the slip is drawn with exactly the same corner
  * (`CovenTaskCard` is 18 on a wider sheet).
+ *
+ * The gradient itself is imported, never retyped: four surfaces wear it now, so
+ * a private copy is a private copy to re-tune.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0067). There is no mobile twin any more — this
  * file serves both form factors, and `frameBase`'s `flex: 1 1 394px` /
@@ -44,7 +76,10 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         ...frameBase,
         borderRadius: 16, // the slip's die-cut corner — see frameBase's note
         position: "relative",
-        background: CARD,
+        // Clips the cat to that corner. Nothing on this card opens a popover,
+        // so the clip is free here (#1255).
+        overflow: "hidden",
+        background: SLIP_SHEET,
         color: INK,
         border: `2px solid ${BORDER}`,
         boxShadow: SHADOW,
@@ -53,47 +88,59 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         transition: "background 150ms, color 150ms",
       }}
     >
+      {/* The watermark, at `CovenTaskCard`'s exact numbers on a card 10px
+          narrower — #2135 pins them rather than picking a second placement, and
+          the opacity is the 0.09 every mount holds (the measurements are at
+          {@link CovenCat}). `.cvn-wheel` owns the turn and its reduced-motion
+          guard in index.css; the body below sits above it on its own layer. */}
+      <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
       <AdminOverlay {...adminProps} />
-      <PraxisBody
-        praxis={praxis}
-        tint={DEEP}
-        muted={SOFT}
-        paper={CARD}
-        titleStyle={{
-          fontFamily: DISPLAY,
-          fontWeight: 600,
-          letterSpacing: "0.005em",
-          color: INK,
-        }}
-        showCrown={showCrown}
-        fonts={{
-          display: DISPLAY,
-          body: READING,
-        }}
-        /* The eyebrow's dispatch line ("dispatch no. {{id}} · all done!",
-           `card.masthead.coven`) and the empty gallery's "Drop a happy little
-           photo" (`card.coven.mediaEmpty`) were both CUT by #1909 — the masthead
-           because a generic one just says "Praxis" on a praxis card, the media
-           label because Coven was one of two factions with the slot. The braid
-           stays: it is drawn, not written. */
-        eyebrow={<Braid style={{ marginBottom: "var(--space-sm)" }} />}
-        mediaEmptyStyle={{
-          height: 158,
-          borderRadius: 12,
-          border: "none",
-          // A ring rather than a border: the filled gallery draws the same 2px
-          // pink edge as a shadow, so an empty and a full slot sit identically.
-          boxShadow: `0 0 0 2px ${BORDER}`,
-          background: "transparent",
-          color: SOFT,
-          fontFamily: READING,
-          fontStyle: "italic",
-          textTransform: "none",
-          letterSpacing: "0.02em",
-          fontSize: "var(--text-content)",
-          opacity: 1,
-        }}
-      />
+      {/* The copy takes a layer of its own, for the reason `CovenTaskCard`'s
+          body does: the mark is absolutely positioned, so in-flow siblings would
+          paint UNDER it. A watermark that crosses the type is the one thing the
+          0.09 was chosen to avoid. */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <PraxisBody
+          praxis={praxis}
+          tint={INK}
+          muted={SOFT}
+          paper={CARD}
+          titleStyle={{
+            fontFamily: DISPLAY,
+            fontWeight: 600,
+            letterSpacing: "0.005em",
+            color: INK,
+          }}
+          showCrown={showCrown}
+          fonts={{
+            display: DISPLAY,
+            body: READING,
+          }}
+          /* The eyebrow's dispatch line ("dispatch no. {{id}} · all done!",
+             `card.masthead.coven`) and the empty gallery's "Drop a happy little
+             photo" (`card.coven.mediaEmpty`) were both CUT by #1909 — the
+             masthead because a generic one just says "Praxis" on a praxis card,
+             the media label because Coven was one of two factions with the slot.
+             The braid stays: it is drawn, not written. */
+          eyebrow={<Braid style={{ marginBottom: "var(--space-sm)" }} />}
+          mediaEmptyStyle={{
+            height: 158,
+            borderRadius: 12,
+            border: "none",
+            // A ring rather than a border: the filled gallery draws the same 2px
+            // pink edge as a shadow, so an empty and a full slot sit identically.
+            boxShadow: `0 0 0 2px ${BORDER}`,
+            background: "transparent",
+            color: SOFT,
+            fontFamily: READING,
+            fontStyle: "italic",
+            textTransform: "none",
+            letterSpacing: "0.02em",
+            fontSize: "var(--text-content)",
+            opacity: 1,
+          }}
+        />
+      </div>
     </div>
   );
 }

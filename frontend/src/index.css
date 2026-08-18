@@ -1708,12 +1708,34 @@
   --faction-coven-slip-label: #83466a; /* small-caps captions */
   --faction-coven-slip-gold: #f4c430; /* twinkles, braid bead, sigil ticks */
   /* The sigil's two washes, declared as GRADIENTS rather than as a colour plus
-     an opacity the component tunes: the design's light and dark halves ramp at
-     different strengths, and an alpha chosen in TSX is a `dark ? a : b` in
-     numeric clothing. `-halo` is the pink bloom around the disc; `-core` is the
+     an opacity the component tunes: an alpha chosen in TSX is a `dark ? a : b`
+     in numeric clothing. `-halo` is the bloom around the disc; `-core` is the
      candle behind the numeral — it brightens on the light slip and DARKENS on
-     the dark one, staying the numeral's ground either way. */
-  --faction-coven-slip-sigil-halo: radial-gradient(circle, rgba(236, 79, 146, 0.38) 0%, rgba(236, 79, 146, 0.14) 55%, rgba(236, 79, 146, 0) 100%);
+     the dark one, staying the numeral's ground either way.
+
+     THE HALO IS CANDLELIGHT NOW, NOT PINK (#2135). Owner: "it is a candle; it
+     should be candlelight." The two live stops are `--faction-coven-slip-gold`
+     read through `color-mix`, so the bloom follows the gold the twinkles and the
+     sigil ticks already take rather than carrying a second copy of its value
+     (#1630 — a transcribed hex is a token you have lost). The third stop is just
+     `transparent`: a zero-alpha gold and a zero-alpha anything are the same
+     colour, and it is the shape `-core` beside it already ends on.
+
+     THE RAMP IS ONE RAMP NOW, and that is the swap's real cost. Gold is far more
+     luminous than the pink it replaces, so the night half's 0.55/0.20 would have
+     put a BRIGHTER wash behind the score by night than by day. Measured on
+     `--faction-coven-ward-card` with `utils/contrast.ts`, at the bloom's peak:
+
+       light   pink .38 → gold .38   ink 4.93 → 6.49, brief 4.20 → 5.54
+       dark    pink .55 → gold .55   ink 4.38 → 2.85  ← the regression
+       dark    pink .55 → gold .38   ink 4.38 → 4.58
+
+     So the night ramp walks down to the day's, per #2135's instruction to walk
+     the ALPHA and never the hue. No text is laid on the peak — the stamp's plate
+     and the sigil's `-core` are opaque over it, which is why these readings are
+     not `factionContrast.test.ts` rows — but the composite is now no darker in
+     either cascade than what shipped, and in light it is a clear gain. */
+  --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
   --faction-coven-slip-sigil-ground: #ffffff;
   --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 98%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 70%, transparent) 62%, transparent 100%);
   --faction-coven-slip-cta-from: #d13a80;
@@ -3026,7 +3048,12 @@
      dark stop (#5e2a46). Same hue, one step up. */
   --faction-coven-slip-label: #d29bb4;
   --faction-coven-slip-gold: #f4d472;
-  --faction-coven-slip-sigil-halo: radial-gradient(circle, rgba(244, 114, 182, 0.55) 0%, rgba(244, 114, 182, 0.2) 55%, rgba(244, 114, 182, 0) 100%);
+  /* The night bloom is the day's ramp exactly (#2135) — see the light twin for
+     the measurement that walked 0.55/0.20 down to 0.38/0.14. `-slip-gold` is
+     itself lighter by night (#f4d472), so the two cascades still differ; what
+     no longer differs is the STRENGTH, because the hue that made a strong night
+     ramp safe was the pink. */
+  --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
   --faction-coven-slip-sigil-ground: #1a0713;
   --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 90%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 60%, transparent) 62%, transparent 100%);
   --faction-coven-slip-cta-from: #f472b6;
@@ -6182,19 +6209,29 @@
   --faction-coven-ward-haze: 0.28;
 }
 
-/* The full-viewport candlelight wash. Same markup hook shape as `.na-backdrop`:
+/* The candlelight wash. Same markup hook shape as `.na-backdrop`:
    `<div class="coven-candle-backdrop" aria-hidden />` inside the archetype.
    The design blurs a floating gradient stack at `blur(70px)` and blends it
    `screen` in dark; both are replaced by soft-stopped radial gradients over the
    page ground, which is the repo's established backdrop shape and costs no
    filter layer. The FLOAT survives — it is the candle, and it lives here rather
-   than in a component-injected <style> (#911). */
+   than in a component-injected <style> (#911).
+
+   IT HAS ONE CONSUMER NOW, AND IT IS NOT A DETAIL COLUMN (#2135). Both detail
+   columns wore this wash until the owner ruled that Coven's surfaces should wear
+   the SLIP the task card wears; they take `SLIP_SHEET` from `covenSlip` now, and
+   the class is left mounted only by
+   `pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx`, where the candlelight
+   IS the page ground. So this is live code with one caller — #2135's body called
+   it dead after the two columns left and it is not, because a form-factor
+   archetype is not in the archetype folders a detail-page sweep greps. Do not
+   delete it without checking the field desk. */
 .coven-candle-backdrop {
-  /* Painted on the detail COLUMN, not the viewport — the site background shows
-     around it (owner QA on #1055, applied to every task-detail skin). The
+  /* Painted on a page or a column, never the viewport — the site background
+     shows around it (owner QA on #1055, applied to every task-detail skin). The
      archetype supplies position / z-index / radius / padding; this rule owns
      only the ground and its blooms. `overflow: hidden` stays because the
-     ::before bloom is inset -25% and must be clipped to the column. */
+     ::before bloom is inset -25% and must be clipped to whatever carries it. */
   overflow: hidden;
   /* A longhand, for the reason `.na-backdrop` gives (#1636). */
   background-color: var(--faction-coven-ward-page);
