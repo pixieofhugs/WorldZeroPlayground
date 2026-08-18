@@ -7635,15 +7635,6 @@
   color: var(--color-danger);
 }
 
-.requests-queue__done {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-xl);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--space-md);
-}
-
 /* The one navigator (epic decision 16) — chips, the expander, and the skip. The
    design's 10-segment dot bar is cut: a 4px bar whose only affordance is a
    `title` tooltip is invisible on touch and near-useless to a screen reader. */
