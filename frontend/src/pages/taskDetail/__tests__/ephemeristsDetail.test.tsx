@@ -123,11 +123,13 @@ describe("Ephemerists task detail — the Valley plate", () => {
     }
   });
 
-  it("wears the Valley dress — masthead band, incised registers, engraved title", () => {
+  it("wears the Valley dress — masthead band, notation band, engraved title", () => {
     const { html, text } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(html, "papyrus page sheet").toContain("eph-plate-sheet");
     expect(html, "cornice masthead band").toContain("--faction-ephemerists-plate-band");
-    expect(html, "incised glyph registers").toContain("epg-glyph");
+    // Two incised glyph registers (`epg-glyph`) were asserted here. #2210
+    // retired them: the notation band is the head's only ornament row, and the
+    // block further down is what says so.
     expect(html, "the stepped octagon medallion").toContain("M30 4 L70 4 L96 30");
     expect(text, "the masthead wordmark").toContain("The Ephemerists");
     // The kite's opening move; brushed rather than ruled since Sigil Studies v2.
@@ -295,7 +297,7 @@ describe("the Valley plate's tokens", () => {
  * #1654 — the page draws the kit's marks, at the PAGE's densities.
  *
  * Seven of this file's declarations were transcriptions of `ephemeristsPlate`'s
- * — `GLYPHS`, `Glyph`, `GlyphRegister`, `Octagon`, `Cornice`, `Tally`, `Sign` —
+ * — `GLYPHS`, the register and its marks, `Octagon`, `Cornice`, `Tally`, `Sign` —
  * so a mark redrawn in the kit left this page on the old one, silently. The
  * source-tree guard against a fresh copy lives in
  * `praxisCard/__tests__/ephemeristsPlateSurfaces.test.tsx`; what only rendering
@@ -313,14 +315,17 @@ describe("the Valley page's ornament comes from the kit unchanged (#1654)", () =
     expect(page().match(/height:3\.5px/g)).toHaveLength(26);
   });
 
-  it("fills both masthead registers from the width, not a fixed 16", () => {
-    // `Math.ceil(1200 / 27.5)` = 44 signs a row, twice. A fixed count would
-    // stop short of the page edge at the 1200 cap; the design's own 16 is the
-    // number the local copy documented itself as NOT using. Sliced to the
-    // masthead's own svg so the page's rune bands — one per section head, and
-    // a section count this has no opinion about — cannot move it.
-    const masthead = page().slice(0, page().indexOf("</svg>"));
-    expect(masthead.match(/class="epg-glyph"/g)).toHaveLength(44 * 2);
+  it("heads the page with the notation band and no glyph register (#2210)", () => {
+    // This asserted the OPPOSITE until #2210: 44 signs a row, twice, filled
+    // from the 1200px cap. #2143 hung the mathematical notation band under the
+    // wordmark and left both registers standing, so the page wore two glyph
+    // vocabularies at once and the lower row ran through the band's own marks.
+    // The registers retire; the band is the head's last line and its only
+    // ornament row, and the page's section heads keep the brass hairline that
+    // already flexes across each heading row.
+    const html = page();
+    expect(html, "the retired incised registers").not.toContain("epg-glyph");
+    expect(html, "the notation band's closing rule").toContain("3px double");
   });
 
   it("strikes the summons in platinum, off the shared sign table", () => {
