@@ -876,6 +876,7 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     submit_proposed_at: null,
     created_by_id: 5,
     created_by_display_name: 'Wanderer',
+    created_by_avatar_url: '',
     created_by_faction_slug: null,
     created_at: '2026-07-27T00:00:00Z',
     updated_at: '2026-07-28T00:00:00Z',

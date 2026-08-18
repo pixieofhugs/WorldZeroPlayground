@@ -376,6 +376,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Everymen — "the paper surface + its text FLIP in dark"; ink is structure:
   // "borders, rules, text on gold/parchment elements".
   { what: "everymen paper", surface: "--everymen-paper", text: "--everymen-paper-text" },
+  // The stock the SAME ink lands on one rung down (#2133). `.em-backdrop` ramps
+  // from the paper to the deep stock and then vignettes 55% of the deep stock
+  // over the whole thing, so the page's ground is not one flat token — a
+  // heading near the bottom of the faction page is reading against this end of
+  // it, and only the paper end was measured.
+  { what: "everymen deep stock, ink", surface: "--everymen-paper-deep", text: "--everymen-paper-text" },
   { what: "everymen paper, muted", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
@@ -2425,6 +2431,148 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
     expect(
       Object.keys(READERS).filter((path) => !found.has(path)),
       "an allowlist entry with no reader is a scope nobody is spending — delete the line with the last draw call, the way #1293 deletes an unread font token.",
+    ).toEqual([]);
+  });
+});
+
+/**
+ * `--everymen-ink` is STRUCTURE, and the two surfaces grounded on the paper may
+ * not set text in it (#2133).
+ *
+ * The pairing shape, in the one cascade the value test cannot see. index.css
+ * states the split in words — "the paper surface + its text FLIP in dark; ink is
+ * structure: borders, rules, text on gold/parchment elements" — and the manifest
+ * above measures both halves of it and stays green: `--everymen-ink` really does
+ * clear on the cream and on the gold, and `--everymen-paper-text` really does
+ * clear on the paper. No row of it can see a COMPONENT reaching past the
+ * flipping ink for the frozen one.
+ *
+ * It is invisible by daylight too, which is why an eyeball audit kept missing
+ * it: the two tokens are the SAME hex in light (#221a12), so the bug has no
+ * light mode at all. In dark the paper flips to #221a16 and the ink does not
+ * flip — 1.16:1 on the paper, 1.06:1 on the deep stock. That is the
+ * "theme-invariant surface, flipping ink" trap read backwards.
+ *
+ * A `color:` is the only place it bites: a border or a box-shadow struck in the
+ * frozen ink goes dim in dark, not illegible, and four sibling archetypes
+ * already say as much in their own comments ("NOT `--everymen-ink`, which
+ * vanishes on the dark sheet"). So the guard is a per-file reader rule, in the
+ * shape #1793 and #1766 set here — the files whose GROUND is the paper are
+ * named, and in those files the structure ink may not be a text colour.
+ */
+describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
+  const AS_TEXT = /color:\s*(INK\b|['"`]var\(--everymen-ink\))/g;
+  const WHY =
+    "on the paper the ink is 1.16:1 in dark (1.06:1 on the deep stock). Text on this ground takes `--everymen-paper-text`, which flips with the stock — 13.19:1 light, 13.96:1 dark — and is byte-identical to the ink in light, so nothing moves by day. Borders, fills and shadows keep `INK`.";
+
+  /**
+   * The alias every rule below is written against. A rename would otherwise
+   * pass by matching nothing.
+   */
+  function paperSource(relative: string): string {
+    const source = stripComments(sourceOf(relative));
+    expect(
+      source,
+      `${relative} no longer binds \`INK\` to --everymen-ink; retarget this guard at whatever the structure ink is called there now.`,
+    ).toMatch(/const INK = ['"]var\(--everymen-ink\)['"]/);
+    return source;
+  }
+
+  /**
+   * The faction page is a MIXED file, and that is the whole reason the bug was
+   * hard to see: nearly all of its type sits inside `PAPER_FRAME`, whose stock
+   * is `--everymen-cream` — theme-invariant, so the frozen ink is correct there
+   * and eight `color: INK` sites in this file are right. The two section
+   * headings are the only type it sets on the page itself. So the rule is
+   * per-element, in the shape #1793 uses on the Ephemerists body, not per-file.
+   */
+  it("EverymenFactionBody's section heading is inked for the page, not the frame", () => {
+    const source = paperSource("pages/factionDetail/archetypes/EverymenFactionBody.tsx");
+    const at = source.indexOf("const SECTION_HEADING_TEXT");
+    expect(at, "no `SECTION_HEADING_TEXT` in EverymenFactionBody").toBeGreaterThan(-1);
+    const style = source.slice(at, source.indexOf("};", at));
+    expect(style, WHY).not.toMatch(AS_TEXT);
+    expect(
+      style,
+      "`SectionHeading` renders straight into `.wz-faction-grid`, which stands on `.em-backdrop`.",
+    ).toContain("color: PAPER_TEXT");
+  });
+
+  /**
+   * The mobile desk is NOT mixed, which is why its rule can be the whole file:
+   * every ground it paints is the paper, the deep stock, the red band or the
+   * ink itself, and `CREAM` appears only as an ink on the last two. Six sites
+   * read the frozen ink as text, all of them on the paper family. If a cream
+   * plate is ever added here, `INK` becomes right on it and this rule has to
+   * narrow to the elements the way the faction body's did.
+   */
+  it("EverymenFieldDesk sets no text in the structure ink at all", () => {
+    const source = paperSource("pages/fieldDesk/mobileArchetypes/EverymenFieldDesk.tsx");
+    expect(
+      source,
+      "`CREAM` is an ink on this desk, never a ground — every stock under its type is the paper family.",
+    ).not.toMatch(/background:\s*CREAM\b/);
+    expect(source.match(AS_TEXT) ?? [], WHY).toEqual([]);
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`the ink they take instead clears AA on both stocks (${theme})`, () => {
+      const text = resolveColor("--everymen-paper-text", theme);
+      expect(text.color, `--everymen-paper-text (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+      for (const stock of ["--everymen-paper", "--everymen-paper-deep"]) {
+        const surface = resolveColor(stock, theme);
+        expect(surface.color, `${stock} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(
+          ratio,
+          `--everymen-paper-text on ${stock} (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
+  }
+});
+
+/**
+ * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
+ *
+ * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a
+ * statement about the page ground and nothing else; the moment a control FILLS
+ * with it, the ink it needs is the ground that neutral was measured against —
+ * `--color-bg-page`, which flips with the cascade exactly as the fill does
+ * (16.86:1 light, 15.00:1 dark). `--color-text-on-accent` is `#ffffff` in
+ * `:root` alone and never flips, so the same two lines read "near-black pill,
+ * white label" in light and WHITE ON CREAM in dark, at **1.24:1**.
+ *
+ * Part A can only ask "does this token clear on the surface its documentation
+ * names", and no documentation pairs those two — the pairing exists only at a
+ * call site. Part B (`e2e/contrast.spec.ts`) would see it rendered, but it is
+ * nightly-only and outside PR CI, and a player profile is not on its route
+ * walk. So the defect shipped twice: #1819 fixed the faction page's join
+ * button, and the profile's segmented Praxis/Tasks toggle — the same two lines,
+ * copied — survived to be reported by eye as #2107.
+ *
+ * A FILE-LEVEL INTERSECTION, deliberately. `ponytail:` the guard asks whether
+ * one file both fills with the primary neutral and inks with `-on-accent`,
+ * which is coarser than "in the same style object" and could false-positive on
+ * a file that legitimately does both to different elements. There is no such
+ * file today, and the coarse question needs no parser; if one appears, read the
+ * pairing and add it here with the reason. The precise version is a JSX/AST
+ * walk, which is a dependency this suite does not carry.
+ */
+describe("a --color-text-primary fill takes the page as its ink (#2107)", () => {
+  const FILL = /background[A-Za-z]*:[^;\n]*var\(--color-text-primary\)/;
+  const WRONG_INK = "var(--color-text-on-accent)";
+
+  it("no file inks the primary neutral's fill with the accent's white", () => {
+    const found = sourceFiles()
+      .filter((path) => {
+        const source = readStripped(path);
+        return FILL.test(source) && source.includes(WRONG_INK);
+      })
+      .map(toRelative);
+    expect(
+      found,
+      "`--color-text-on-accent` is #ffffff in BOTH themes and `--color-text-primary` flips to cream (#f0e6d0) in dark — the pair is 1.24:1 there (#1819, #2107). Ink a primary-neutral fill with `--color-bg-page`, the ground that neutral is measured against.",
     ).toEqual([]);
   });
 });
