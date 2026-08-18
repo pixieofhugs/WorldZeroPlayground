@@ -1,6 +1,6 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionCssVar, factionName } from "../../utils/factions";
@@ -220,7 +220,7 @@ export function PraxisTaskLink({
 }
 
 /**
- * The praxis author as the shared avatar surface wants them (#888).
+ * A face on this card as the shared avatar surface wants them (#888).
  *
  * `FactionAvatar` reads only username / avatar_url / faction_slug off a
  * `CharacterOut`; a card payload carries those three under different names, so
@@ -230,17 +230,25 @@ export function PraxisTaskLink({
  *
  * `display_name` stands in for `username` deliberately: it is what the byline
  * shows, so it is what the monogram initial and the img alt should follow.
+ *
+ * `id` is padded with 0 for the rival (#2128): the card payload carries no
+ * character id for them, and no avatar skin reads it — the field is `CharacterOut`
+ * shape, not data this surface has or needs.
  */
-function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
-  const name = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+function faceAsCharacter(face: {
+  id: number;
+  name: string;
+  avatarUrl: string | null | undefined;
+  factionSlug: string | null | undefined;
+}): CharacterOut {
   return {
-    id: praxis.created_by_id,
-    username: name,
-    display_name: name,
-    avatar_url: praxis.created_by_avatar_url || "",
+    id: face.id,
+    username: face.name,
+    display_name: face.name,
+    avatar_url: face.avatarUrl || "",
     // Unaffiliated is a slug, not a missing one (ADR-0030), and `CharacterOut`
     // says so now that it IS the generated type (#1400).
-    faction_slug: praxis.created_by_faction_slug ?? "na",
+    faction_slug: face.factionSlug ?? "na",
     bio: "",
     tagline: "",
     location: "",
@@ -252,6 +260,15 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
     badges: [],
     invitations: [],
   };
+}
+
+function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
+  return faceAsCharacter({
+    id: praxis.created_by_id,
+    name: praxis.created_by_display_name || `#${praxis.created_by_id}`,
+    avatarUrl: praxis.created_by_avatar_url,
+    factionSlug: praxis.created_by_faction_slug,
+  });
 }
 
 /**
@@ -285,6 +302,52 @@ export function PraxisByline({
   // the factions.json catalog (factionName), never a hardcoded map.
   const authorFaction = praxis.created_by_faction_slug;
   const showFaction = !!authorFaction && authorFaction !== praxis.task_faction_slug;
+  const authorHref = `/characters/${praxis.created_by_id}`;
+  const authorName = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+  /*
+   * #2125 — an anchor whose destination is the page you are already on is not a
+   * broken link, it is a link that should not have been an anchor: it takes the
+   * underline, the pointer and focus, and then does nothing, and a screen
+   * reader still announces it as a link. So on the author's OWN character page
+   * the name is plain text; everywhere else it stays a link. Not a "self"
+   * variant, and NOT a disabled anchor — dropping the `<a>` is what fixes the
+   * announcement.
+   *
+   * The test is destination-vs-location, character to character. Deliberately
+   * NOT account-to-account: a player viewing their own OTHER character's page
+   * is looking at a different page, and going there is meaningful (the ruling
+   * says so explicitly). Comparing the whole path rather than a bare id also
+   * keeps the link alive on `/praxis/7` when the author happens to be #7.
+   */
+  const here = useLocation().pathname.replace(/\/+$/, "");
+  const onAuthorsOwnPage = here === authorHref;
+  // Shared by both branches so the two render identically apart from the
+  // anchor: the truncation pair, and the padding that keeps it off the glyphs
+  // (#1633). `overflow: hidden` is doing two jobs: it clips, and it is what
+  // makes this a shrinkable flex item at all (min-width: auto resolves to 0
+  // rather than to the whole nowrap string), so a name too long for the card
+  // ellipsizes instead of shoving the portrait out of the frame.
+  //
+  // But it clips at the PADDING box while `text-overflow` measures the CONTENT
+  // box, and the two coincided while the 8px lived on the row as `gap`. A
+  // display face's final glyph can carry ink past its own advance width — the
+  // Ephemerists card sets this line in Poiret One — so that overhang was shaved
+  // off flush against the portrait beside it, with no ellipsis to explain it,
+  // which is what "a letter clipped behind its own avatar" looks like. Carrying
+  // the same 8px as padding here renders identically and gives the ink
+  // somewhere to land.
+  //
+  // The Ephemerists kit's own fix was `overflow: visible` + `text-overflow:
+  // clip`. It does not port: visible overflow restores min-width: auto to
+  // min-content, the name stops yielding, and a long one paints straight over
+  // the portrait and the faction tag. That is the symptom, caused on purpose.
+  const nameStyle: CSSProperties = {
+    fontFamily: fonts?.display,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    paddingInlineEnd: "var(--space-sm)",
+  };
   return (
     <div
       className="flex justify-between items-center font-body"
@@ -311,46 +374,26 @@ export function PraxisByline({
        * carried as padding on the name itself. See the link below.
        */}
       <span className="flex items-center" style={{ minWidth: 0 }}>
-        <Link
-          to={`/characters/${praxis.created_by_id}`}
-          // A person's name is readable text, not scanned chrome: content tier
-          // (18px). It ties the task link's size, and separates from it by
-          // weight and by the faction's own display face instead.
-          className="content-text font-semibold hover:underline"
-          style={{
-            fontFamily: fonts?.display,
-            /*
-             * The truncation pair, and the padding that keeps it off the
-             * glyphs (#1633). `overflow: hidden` is doing two jobs: it clips,
-             * and it is what makes this a shrinkable flex item at all
-             * (min-width: auto resolves to 0 rather than to the whole nowrap
-             * string), so a name too long for the card ellipsizes instead of
-             * shoving the portrait out of the frame.
-             *
-             * But it clips at the PADDING box while `text-overflow` measures
-             * the CONTENT box, and the two coincided while the 8px lived on
-             * the row as `gap`. A display face's final glyph can carry ink
-             * past its own advance width — the Ephemerists card sets this line
-             * in Poiret One — so that overhang was shaved off flush against
-             * the portrait beside it, with no ellipsis to explain it, which is
-             * what "a letter clipped behind its own avatar" looks like.
-             * Carrying the same 8px as padding here renders identically and
-             * gives the ink somewhere to land.
-             *
-             * The Ephemerists kit's own fix was `overflow: visible` +
-             * `text-overflow: clip`. It does not port: visible overflow
-             * restores min-width: auto to min-content, the name stops yielding,
-             * and a long one paints straight over the portrait and the faction
-             * tag. That is the symptom, caused on purpose.
-             */
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            paddingInlineEnd: "var(--space-sm)",
-          }}
-        >
-          {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-        </Link>
+        {/*
+         * A person's name is readable text, not scanned chrome: content tier
+         * (18px). It ties the task link's size, and separates from it by
+         * weight and by the faction's own display face instead. `hover:underline`
+         * is the only thing the link branch adds — a name that goes nowhere
+         * must not offer one.
+         */}
+        {onAuthorsOwnPage ? (
+          <span className="content-text font-semibold" style={nameStyle}>
+            {authorName}
+          </span>
+        ) : (
+          <Link
+            to={authorHref}
+            className="content-text font-semibold hover:underline"
+            style={nameStyle}
+          >
+            {authorName}
+          </Link>
+        )}
         <FactionAvatar
           character={authorAsCharacter(praxis)}
           size={BYLINE_PORTRAIT_SIZE}
@@ -570,11 +613,26 @@ export function PraxisRoster({
  *
  * ONE SHARED SLOT, NOT NINE TREATMENTS (owner ruling, 2026-08-01). It sits in
  * the composition where {@link PraxisRoster} sits and is themed the same way —
- * the frame's own `accent`/`paper` for the avatar, `factionCssVar` off
- * `task_faction_slug` for the ink — so a faction gets its duel banner from the
- * archetype it already passes, with no per-archetype edit. The Snide mock in
- * #596 was reference for tone; it also assumed the rival was findable in
- * `members`, which the schema never supported.
+ * `factionCssVar` off `task_faction_slug` for the ink — so a faction gets its
+ * duel banner from the archetype it already passes, with no per-archetype edit.
+ * The Snide mock in #596 was reference for tone; it also assumed the rival was
+ * findable in `members`, which the schema never supported.
+ *
+ * THE RIVAL'S FACE IS `FactionAvatar`, NOT THE ROSTER DISC (#2128). It was the
+ * accent-ringed monogram, which meant this card drew its two people two ways:
+ * the byline eight inches above already renders its author through the shared
+ * avatar surface, and a rival in a different idiom read as a different KIND of
+ * thing. `FactionAvatar` brings the faction skin and the membership sigil with
+ * it, and here that is the point rather than a cost — a duel is the one surface
+ * two factions share, the wire carries `opponent_faction_slug` for exactly this,
+ * and both composer duel surfaces already paint each side in its OWN faction.
+ * (The praxis-detail byline in #2106 declined the same dress; it draws one
+ * person inside a bespoke kit frame, where a second faction's colours would be
+ * noise. Different question, different answer.)
+ *
+ * `opponent_avatar_url` is `""` for a rival with no portrait, and the shared
+ * surface's own fallback (monogram, else spectrum ring) takes it from there —
+ * no second fallback rule is written here.
  *
  * NO NEW TOKEN IS MINTED (ADR-0061). The "vs." mark reads in `card-notice`, the
  * sheet's cautionary ink — the same ink the duel mode chip directly above it
@@ -592,12 +650,10 @@ export function PraxisRoster({
 export function PraxisDuelBanner({
   praxis,
   accent,
-  paper,
   fonts,
 }: {
   praxis: PraxisCardOut;
   accent: string;
-  paper?: string;
   fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("praxis");
@@ -634,7 +690,17 @@ export function PraxisDuelBanner({
       >
         {t("duelBanner.versus")}
       </span>
-      <RosterAvatar name={name} accent={accent} paper={paper} />
+      <FactionAvatar
+        character={faceAsCharacter({
+          id: 0,
+          name,
+          avatarUrl: praxis.opponent_avatar_url,
+          factionSlug: praxis.opponent_faction_slug,
+        })}
+        // The diameter the accent-ringed disc drew at, said in the shared
+        // surface's own size vocabulary rather than as a fresh number.
+        size="sm"
+      />
       <span style={{ fontSize: "var(--text-content)", minWidth: 0 }}>
         {praxis.opponent_praxis_id != null ? (
           <Link

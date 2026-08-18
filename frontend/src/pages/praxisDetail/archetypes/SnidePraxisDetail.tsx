@@ -126,6 +126,7 @@ import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
+import { mediaUrl } from "../../../utils/media";
 import {
   PraxisAdminBar,
   PraxisStatusBanners,
@@ -133,6 +134,7 @@ import {
   PraxisFlagBlock,
   PraxisDetailComments,
   MemberByline,
+  bylineFaces,
   orderedMembers,
   scoreWasBanked,
   taskRefMeta,
@@ -242,7 +244,17 @@ function initialsOf(name: string): string {
  * rounded. Both pigments are theme-invariant, so the chip measures 16.8:1 in
  * either theme without the cascade having to agree with the wall behind it.
  */
-function PosterChip({ name, size, tilt }: { name: string; size: number; tilt: number }) {
+function PosterChip({
+  name,
+  avatarUrl,
+  size,
+  tilt,
+}: {
+  name: string;
+  avatarUrl: string;
+  size: number;
+  tilt: number;
+}) {
   return (
     <span
       aria-hidden="true"
@@ -262,7 +274,16 @@ function PosterChip({ name, size, tilt }: { name: string; size: number; tilt: nu
         boxShadow: `3px 3px 0 ${PINK}`,
       }}
     >
-      {initialsOf(name)}
+      {avatarUrl ? (
+        <img
+          src={mediaUrl(avatarUrl)}
+          alt={name}
+          className="object-cover"
+          style={{ display: "block", width: "100%", height: "100%" }}
+        />
+      ) : (
+        initialsOf(name)
+      )}
     </span>
   );
 }
@@ -486,16 +507,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             single name is parsed. A payload with no member rows still credits
             its creator, so the author is always reachable from the byline. */}
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-          {(members.length > 0
-            ? members.map((member) => ({
-                id: member.character_id,
-                name: member.character_display_name || `#${member.character_id}`,
-              }))
-            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
-          ).map((author, index) => (
+          {bylineFaces(praxis).map((author, index) => (
             <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
               <PosterChip
                 name={author.name}
+                avatarUrl={author.avatarUrl}
                 size={desktop ? 44 : 38}
                 tilt={index % 2 === 0 ? -3 : 2.5}
               />

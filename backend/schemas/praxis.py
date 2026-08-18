@@ -110,6 +110,11 @@ class PraxisOut(WireModel):
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
     created_by_id: int
     created_by_display_name: str  # populated by build_praxis_out
+    # The author's portrait, for the detail byline (#2106). Relative media path
+    # or "" — the empty string is the ordinary case (no portrait uploaded) and
+    # the byline degrades to each archetype's own monogram, not a placeholder
+    # image. Same field, same meaning as ``PraxisCardOut.created_by_avatar_url``.
+    created_by_avatar_url: str = ""  # populated by build_praxis_out
     created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline; ADR-0017 §6
     created_at: datetime
     updated_at: datetime
@@ -176,8 +181,9 @@ class PraxisCardOut(WireModel):
     # The author's portrait, for the card byline (#888). Relative media path or
     # "" — an empty string is the ordinary case (no portrait uploaded) and the
     # byline degrades to the shared monogram avatar, not a placeholder image.
-    # Deliberately card-only: ``PraxisOut`` gets it if the detail byline ever
-    # needs a face.
+    # This was card-only until #2106, on the stated condition that ``PraxisOut``
+    # would get it if the detail byline ever needed a face. It does, so it has —
+    # the two models carry the same field with the same meaning now.
     created_by_avatar_url: str = ""
     created_at: datetime
     updated_at: datetime
@@ -233,7 +239,9 @@ class PraxisCardOut(WireModel):
     # cannot name its rival from anything else on this body. Populated page-wide
     # in one query by the card-list route (no N+1) via ``duel_opponents_for``.
     #
-    # ALL THREE ARE SET TOGETHER OR NOT AT ALL. They stay None in two cases the
+    # ALL THREE NULLABLE ONES ARE SET TOGETHER OR NOT AT ALL
+    # (``opponent_avatar_url`` below rides the same path but is never None — see
+    # its own note). They stay None in two cases the
     # card must not confuse: the praxis is not a duel side, or it IS one and the
     # duel is still ``pending`` — ``Duel.opponent_praxis_id`` is NULL until the
     # challenge is accepted, and a challenger has nobody to name until then. The
@@ -243,6 +251,14 @@ class PraxisCardOut(WireModel):
     opponent_praxis_id: Optional[int] = None
     opponent_display_name: Optional[str] = None
     opponent_faction_slug: Optional[str] = None
+    # The rival's portrait (#2128), resolved on that same single statement — one
+    # more selected column off the author joins already there, not a fourth
+    # lookup. It is a plain ``str`` rather than ``Optional``, like every other
+    # avatar on this wire: "" covers BOTH "no rival to name" and "the rival has
+    # no portrait", because the banner never asks this field whether to draw.
+    # It gates on ``opponent_display_name`` (above), and only then asks this one
+    # what to draw — portrait when non-empty, monogram otherwise.
+    opponent_avatar_url: str = ""
 
     model_config = {"from_attributes": True}
 

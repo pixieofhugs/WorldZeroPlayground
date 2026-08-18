@@ -8,7 +8,9 @@
  *
  *   TaskCard's positioned wrapper > skin root ([data-form-factor]) > <article>
  *
- * with exactly one anchor per card marking the region a player reads. The CSS
+ * with exactly one GROWING anchor per card marking the region a player reads —
+ * the masthead's faction link (#2167) is a second anchor that pins its own
+ * flex-grow to 0 precisely so this chain still ends in one place. The CSS
  * hands the height down that chain, so a skin that quietly stops honouring it
  * would not fail to compile, would not fail a snapshot, and would simply stop
  * stretching — a bug that only shows up in a browser nobody here has. These
@@ -160,15 +162,25 @@ describe('every skin honours the chain the row hands its height down', () => {
     )
   })
 
-  it.each(SKINS)('%s: exactly one anchor, and it is inside the frame', (_name, Card) => {
+  it.each(SKINS)('%s: exactly one GROWING anchor, and it is inside the frame', (_name, Card) => {
     dispatch.formFactor = 'desktop'
     const out = markup(
       <Card task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={2} />,
     )
     // The slack stops at the box holding this link (`:has(a[href])`), which is
-    // what keeps a full-width CTA bar flush with the bottom edge. A SECOND
-    // anchor elsewhere in the card would grow a second box and split the slack.
-    expect(out.match(/<a\s/g) ?? [], 'one reading link per card').toHaveLength(1)
+    // what keeps a full-width CTA bar flush with the bottom edge. A second
+    // anchor that GROWS would split the slack in two.
+    //
+    // Since #2167 the seven faction cards carry a second anchor — the masthead,
+    // which reads the faction page — so the count alone no longer says this.
+    // What does is the flex-grow: every anchor but the reading link pins its
+    // own to 0 and takes no slack, whatever else it is or does.
+    const anchors = [...out.matchAll(/<a\s[^>]*>/g)].map((m) => m[0])
+    const growing = anchors.filter((tag) => !/flex-grow:\s*0/.test(tag))
+    expect(growing, 'one reading link per card').toHaveLength(1)
+    expect(growing[0], 'and it is the one that reads the task').toContain(
+      `href="/tasks/${TASK.id}"`,
+    )
     const frame = out.slice(out.indexOf('<article'), out.lastIndexOf('</article>'))
     expect(frame, 'the link sits inside the frame, not beside it').toContain(
       `href="/tasks/${TASK.id}"`,

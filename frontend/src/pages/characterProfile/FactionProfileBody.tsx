@@ -30,6 +30,12 @@ import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import DefaultProfileBody from './archetypes/DefaultProfileBody'
 
+/**
+ * The identity panel's progression read-out, mapped by `CharacterProfile` from
+ * the one shared `levelTrack` derivation (#2127). Every figure here is already
+ * computed — a skin reads, it does not re-derive, because the last time two
+ * places did the same arithmetic the two bars disagreed.
+ */
 export interface ProfileProgression {
   /** The level the current score is climbing toward (capped at max level). */
   nextLevel: number
@@ -37,6 +43,10 @@ export interface ProfileProgression {
   currentThreshold: number
   /** Absolute score where nextLevel begins. */
   nextThreshold: number
+  /** The bar's numerator: points banked inside the current level. */
+  pointsIntoLevel: number
+  /** The bar's denominator: the width of the current level's band. */
+  levelSpan: number
   /** 0–100 fill of the points-into-level bar. */
   progressPercent: number
 }

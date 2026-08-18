@@ -200,6 +200,11 @@ async def build_praxis_out(
 
     created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
     created_by_faction_slug = praxis.created_by.faction_slug if praxis.created_by else None
+    # The author's portrait for the detail byline (#2106). Same relationship the
+    # display name above is read off, so this costs no additional query.
+    created_by_avatar_url = (
+        praxis.created_by.avatar_url if praxis.created_by else None
+    ) or ""
 
     # Query applied metatasks
     applied_metatasks: list[TaskOut] = []
@@ -230,6 +235,7 @@ async def build_praxis_out(
         submit_proposed_at=praxis.submit_proposed_at,
         created_by_id=praxis.created_by_id,
         created_by_display_name=created_by_display_name,
+        created_by_avatar_url=created_by_avatar_url,
         created_by_faction_slug=created_by_faction_slug,
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
@@ -403,6 +409,10 @@ class DuelOpponent:
     #: The author's member faction, for the opponent's avatar. ``None`` for an
     #: unaffiliated author, which is the `default` sheet's slug (ADR-0039).
     faction_slug: Optional[str]
+    #: The author's portrait (#2128), so the duel banner shows a face rather
+    #: than initials. Relative media path or "" — "" is the ordinary case (no
+    #: portrait uploaded) and the banner falls back to the monogram.
+    avatar_url: str
 
 
 async def duel_opponents_for(
@@ -454,8 +464,10 @@ async def duel_opponents_for(
             Duel.opponent_praxis_id,
             challenger_author.display_name,
             challenger_author.faction_slug,
+            challenger_author.avatar_url,
             opponent_author.display_name,
             opponent_author.faction_slug,
+            opponent_author.avatar_url,
         )
         .join(challenger_praxis, challenger_praxis.id == Duel.challenger_praxis_id)
         .join(challenger_author, challenger_author.id == challenger_praxis.created_by_id)
@@ -484,8 +496,10 @@ async def duel_opponents_for(
         opponent_praxis_id,
         challenger_name,
         challenger_faction,
+        challenger_avatar,
         opponent_name,
         opponent_faction,
+        opponent_avatar,
     ) in rows.all():
         # The challenger's card names the opponent — only once there IS one.
         if challenger_praxis_id in praxis_ids and opponent_praxis_id is not None:
@@ -493,6 +507,7 @@ async def duel_opponents_for(
                 praxis_id=opponent_praxis_id,
                 display_name=opponent_name or "",
                 faction_slug=opponent_faction,
+                avatar_url=opponent_avatar or "",
             )
         # The opponent's card names the challenger, who always exists: a Duel row
         # cannot be created without the challenger's praxis.
@@ -501,6 +516,7 @@ async def duel_opponents_for(
                 praxis_id=challenger_praxis_id,
                 display_name=challenger_name or "",
                 faction_slug=challenger_faction,
+                avatar_url=challenger_avatar or "",
             )
     return opponents
 
@@ -737,6 +753,7 @@ async def build_praxis_card_out(
         opponent_praxis_id=opponent.praxis_id if opponent else None,
         opponent_display_name=opponent.display_name if opponent else None,
         opponent_faction_slug=opponent.faction_slug if opponent else None,
+        opponent_avatar_url=opponent.avatar_url if opponent else "",
     )
 
 

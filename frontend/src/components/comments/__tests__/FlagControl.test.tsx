@@ -5,7 +5,7 @@
  * Rendered to static markup (no DOM), per the comments-test convention.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 
@@ -25,11 +25,22 @@ import type { CommentOut } from '../../../api/comments'
  */
 const wire = vi.hoisted(() => {
   const sent: Request[] = []
+  // What the next request is answered with. Mutable so one test can make the
+  // route refuse; `afterEach` puts it back.
+  const reply = { status: 200, body: '{}' }
   globalThis.fetch = (async (input: Request) => {
     sent.push(input)
-    return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
+    return new Response(reply.body, {
+      status: reply.status,
+      headers: { 'content-type': 'application/json' },
+    })
   }) as unknown as typeof globalThis.fetch
-  return { sent }
+  return { sent, reply }
+})
+
+afterEach(() => {
+  wire.reply.status = 200
+  wire.reply.body = '{}'
 })
 
 // Control the signed-in viewer for the render cases.
@@ -37,6 +48,7 @@ const authState = vi.hoisted(() => ({ user: null as unknown }))
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => authState }))
 
 import { flagComment } from '../../../api/comments'
+import { extractError } from '../../../utils/errors'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 
 const COMMENT: CommentOut = {
@@ -93,5 +105,38 @@ describe('CommentFlagControl — affordance presence (#575)', () => {
     authState.user = { character: { id: 42 } }
     const html = renderToStaticMarkup(<CommentFlagControl comment={COMMENT} />)
     expect(html).toBe('')
+  })
+})
+
+/**
+ * #2138 — "Flagging comments doesn't seem to work".
+ *
+ * The report was a screenshot of "Couldn't flag this. Please try again." The
+ * write was never broken: the viewer was under `era.flag_level_required`, the
+ * route said so in a coded 403, and the control threw the reason away.
+ *
+ * This pins the contract the fix leans on, end to end over the real client:
+ * the route's coded body survives into an `ApiError`, and the catalog answers
+ * the `context: 'comment'` sibling rather than the bare key or the fallback.
+ * It cannot cover the last inch — that `CommentFlagControl.submit` calls
+ * `extractError` at all — because submitting needs a click and these tests
+ * render to static markup with no DOM.
+ */
+describe('a refused flag keeps the backend reason (#2138)', () => {
+  it('renders the level refusal, not the generic retry line', async () => {
+    wire.reply.status = 403
+    wire.reply.body = JSON.stringify({
+      detail: {
+        code: 'FLAG_LEVEL_TOO_LOW',
+        message: 'Must be level 4 or above to flag a comment.',
+        params: { level: 4, context: 'comment' },
+      },
+    })
+
+    const err = await flagComment(7, 'spam').catch((e: unknown) => e)
+
+    expect(extractError(err, "Couldn't flag this. Please try again.")).toBe(
+      'Must be level 4 or above to flag a comment.',
+    )
   })
 })

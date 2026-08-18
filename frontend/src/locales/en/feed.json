@@ -195,7 +195,8 @@
     "modifierCaption": "modifier",
     "levelCaption": "Level",
     "pointsUnit": "Points",
-    "signup": "Sign up"
+    "signup": "Sign up",
+    "mastheadLink": "{{faction}} faction page"
   },
   "factionCard": {
     "status": {
@@ -222,7 +223,6 @@
     "ephemerists": {
       "eyebrow": "World Zero · Faction №5 — the road's keepers",
       "motto": "OMNIA · TRANSEUNT",
-      "descriptionFallback": "Wanderers who set down what is true before it passes.",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
         "members": "ephemerists"
@@ -231,14 +231,12 @@
     "everymen": {
       "eyebrow": "World Zero · Faction",
       "motto": "THE WORK OUTLASTS THE WORKER",
-      "descriptionFallback": "Nobody's coming to fix it but us. Report for duty.",
       "stats": {
         "members": "card-carrying"
       }
     },
     "singularity": {
       "motto": "THE THRESHOLD IS ALREADY BEHIND US",
-      "descriptionFallback": "Through execution comes understanding, through understanding, a stronger signal",
       "boot": {
         "faction": "FACTION: {{name}}",
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",
@@ -252,14 +250,12 @@
     "snide": {
       "eyebrow": "World Zero · faction no. 4",
       "motto": "NOTHING MATTERS — DO IT ANYWAY",
-      "descriptionFallback": "Nothing matters. We do it anyway.",
       "stats": {
         "members": "operatives"
       }
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
-      "descriptionFallback": "One true piece, then another. The satisfaction is in the making, not the tally.",
       "stats": {
         "members": "practising"
       }
@@ -267,7 +263,6 @@
     "coven": {
       "eyebrow": "World Zero · Faction · est. MMXXI",
       "motto": "make it weird, make it matter",
-      "descriptionFallback": "Nobody said the work couldn't be fun. Cast something.",
       "stats": {
         "members": "witches"
       }
@@ -275,7 +270,6 @@
     "wow": {
       "eyebrow": "World Zero · the Court of Whimsy",
       "motto": "“Whimsy for everyone.”",
-      "descriptionFallback": "Gold-clad knights who take the silly seriously. We deliver soliloquies to houseplants, joust with pool noodles, and mean every word of it.",
       "stats": {
         "members": "Knights"
       }

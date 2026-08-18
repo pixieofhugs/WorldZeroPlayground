@@ -231,8 +231,8 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                 'aria-valuemax': 100,
                 'aria-valuenow': Math.round(levelTrack.fillPercent),
                 'aria-label': t('sidebar.characterCard.trackLabel', {
-                  score: character.score.toLocaleString(),
-                  target: levelTrack.nextThreshold.toLocaleString(),
+                  score: levelTrack.pointsIntoLevel.toLocaleString(),
+                  target: levelTrack.levelSpan.toLocaleString(),
                   level: levelTrack.nextLevel ?? character.level,
                 }),
               }
@@ -312,7 +312,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.2, color: PHOSPHOR }}>
+                  <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: PHOSPHOR }}>
                     {praxis.task_title}
                   </div>
                   <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>

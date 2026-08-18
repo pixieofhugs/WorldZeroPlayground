@@ -237,17 +237,10 @@ function spectrumRing(degrees: number, fill: string): string {
 
 /** ① progression numbers, shared by both branches (hidden until game config
  *  supplies thresholds). */
-function progressionFigures(
-  character: ProfileBodyProps['character'],
-  progression: ProfileBodyProps['progression'],
-) {
+function progressionFigures(progression: ProfileBodyProps['progression']) {
   return {
-    pointsIntoLevel: progression
-      ? Math.max(character.score - progression.currentThreshold, 0)
-      : 0,
-    levelSpan: progression
-      ? Math.max(progression.nextThreshold - progression.currentThreshold, 0)
-      : 0,
+    pointsIntoLevel: progression?.pointsIntoLevel ?? 0,
+    levelSpan: progression?.levelSpan ?? 0,
     ringDegrees: progression
       ? Math.round(Math.min(Math.max(progression.progressPercent, 0), 100) * 3.6)
       : 0,
@@ -298,7 +291,7 @@ function DesktopProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   const mainColumn = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
@@ -524,10 +517,15 @@ function DesktopProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
@@ -633,7 +631,7 @@ function MobileProfile({
   })
 
   const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(character, progression)
+  const { pointsIntoLevel, levelSpan, ringDegrees } = progressionFigures(progression)
 
   return (
     <div className="py-4" data-testid="mobile-profile" style={{ position: 'relative' }}>
@@ -783,10 +781,15 @@ function MobileProfile({
                       }}
                     />
                   </div>
-                  <div
-                    className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
-                  >
+                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
+                      used to sit here at --text-content, the same weight as
+                      "15 / 160 pts this level" above the bar — two
+                      denominators beside one bar, with nothing saying which
+                      one the bar tracked. The bar reads the band; this line
+                      annotates it, in the voice the home page's "185 all-time"
+                      caption uses. `.label-caption` is the minted tier
+                      (#1307), so no new style is invented for it. */}
+                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
@@ -883,6 +886,25 @@ function MobileProfile({
   )
 }
 
+/**
+ * One segment of the Praxis/Tasks toggle. The ON half INVERTS — it fills with
+ * the page's primary ink and prints the page itself, the same two lines every
+ * other inverted pill in the app carries (`.btn-primary`, `.chip-active`,
+ * `ScoreToggle`, `ProposeTaskLink`, the Field Desk's own browse switch).
+ *
+ * IT USED TO INK WITH `--color-text-on-accent` AND THAT WAS #2107. That neutral
+ * is `#ffffff` in `:root` alone and never flips, while `--color-text-primary`
+ * flips to a warm cream (`#f0e6d0`) in dark — so the dark pill was white on
+ * cream at **1.24:1**, the label all but gone, while light read a fine 18.51:1.
+ * `--color-bg-page` is the ground that neutral is measured against and flips
+ * with it: 16.86:1 light, 15.00:1 dark. Identical defect to the faction page's
+ * join button (#1819); the guard at the bottom of `factionContrast.test.ts` is
+ * what stops the third copy.
+ *
+ * The OFF half is unchanged and was never in question: `--color-text-secondary`
+ * over the rail's `--color-bg-surface-alt` composite is 7.31:1 / 7.21:1, the
+ * AAA pairing `factionContrast.test.ts` already gates as "app alt surface".
+ */
 function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -895,7 +917,7 @@ function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; c
         fontWeight: on ? 700 : 400,
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
-        color: on ? 'var(--color-text-on-accent)' : 'var(--color-text-secondary)',
+        color: on ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
         background: on ? 'var(--color-text-primary)' : 'transparent',
         border: 'none',
         borderRadius: 999,

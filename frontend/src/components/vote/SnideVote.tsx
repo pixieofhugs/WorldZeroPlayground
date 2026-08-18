@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
-import { VoteLoginGate, VoteSummary } from './VoteShell'
+import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
 
 /**
@@ -27,7 +27,7 @@ const SEG_COLORS = [
 
 const TIERS = VOTE_REFRAMES['snide'].tiers
 
-export default function SnideVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function SnideVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
@@ -38,7 +38,6 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
 
   const active = hovered || selected
   const party = active >= 5
-  const caption = active ? TIERS[active - 1].label : t('chrome.idle')
 
   return (
     <div>
@@ -127,44 +126,11 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)', minHeight: 20 }}>
-        <span
-          style={{
-            fontFamily: 'var(--faction-snide-font-marker)',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: marker-scrawled verdict beside the meter, the design's 14; Permanent Marker's optical size is not the text scale (§4a)
-            fontSize: 14,
-            color: active ? 'var(--faction-snide-acid)' : 'var(--faction-snide-vote-off)',
-            transition: 'color 140ms',
-          }}
-        >
-          {caption}
-        </span>
-        {selected > 0 && (
-          <span
-            style={{
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--faction-snide-vote-off)',
-            }}
-          >
-            {`· ${t('chrome.tag')}`}
-          </span>
-        )}
-      </div>
+      {/* The marker-scrawled verdict and its `· your vote` tag stood here.
+          #2166 struck the row on all nine skins — the meter's lit columns ARE
+          the rank, and the tally below states the aggregate. */}
 
-      <VoteSummary
-        selected={selected}
-        points={points}
-        totalVotes={totalVotes}
-        error={error}
-        theme={{
-          muted: 'var(--color-text-secondary)',
-          accent: 'var(--faction-snide)',
-          accentFont: 'var(--faction-snide-font-impact)',
-          errorColor: 'var(--color-danger)',
-        }}
-      />
+      <VoteError error={error} color="var(--color-danger)" />
     </div>
   )
 }

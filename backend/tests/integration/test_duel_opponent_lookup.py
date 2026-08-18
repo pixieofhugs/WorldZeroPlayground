@@ -24,15 +24,16 @@ Three things are pinned here, and they are different kinds of claim:
 from contextlib import contextmanager
 
 import pytest
-from sqlalchemy import event
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
-from services.praxis_out import duel_opponents_for
+from services.praxis_out import build_praxis_card_out, duel_opponents_for
 from tests.integration.factories import make_task
 
 
@@ -76,6 +77,22 @@ async def _make_praxis(db_session: AsyncSession, task: Task, author: Character) 
     db_session.add(praxis)
     await db_session.flush()
     return praxis
+
+
+async def _load_card(session: AsyncSession, praxis_id: int):
+    """The card wire for one praxis — the single-card path, which resolves its
+    own opponent rather than reading a precomputed page-wide map."""
+    result = await session.execute(
+        select(Praxis)
+        .where(Praxis.id == praxis_id)
+        .options(
+            selectinload(Praxis.task),
+            selectinload(Praxis.created_by),
+            selectinload(Praxis.members),
+            selectinload(Praxis.media_items),
+        )
+    )
+    return await build_praxis_card_out(result.scalar_one(), session, viewer=None)
 
 
 @pytest.mark.asyncio
@@ -282,3 +299,94 @@ async def test_costs_one_query_whatever_the_page_size(
     assert len(opponents) == len(sides)
     assert len(large_page) == 1
     assert len(large_page) == len(small_page)
+
+
+# ── #2128: the rival's portrait rides the same lookup ──────────────────────
+
+
+@pytest.mark.asyncio
+async def test_lookup_carries_the_rivals_portrait(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    era: Era,
+) -> None:
+    """#2128 — the duel banner shows faces, not initials.
+
+    The rival's avatar is the FOURTH field resolved on this path, off the same
+    single statement as the name and the faction slug: the aliased author joins
+    are already there, so this is one more selected column, not one more query
+    (``test_costs_one_query_whatever_the_page_size`` is what keeps that true).
+    """
+    character2.avatar_url = "avatars/pallas.png"
+    task = await _make_task(db_session, character)
+    challenger_praxis = await _make_praxis(db_session, task, character)
+    opponent_praxis = await _make_praxis(db_session, task, character2)
+    db_session.add(
+        Duel(
+            task_id=task.id,
+            challenger_praxis_id=challenger_praxis.id,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent_praxis.id,
+            status=DuelStatus.settled,
+        )
+    )
+    await db_session.flush()
+
+    opponents = await duel_opponents_for(
+        [challenger_praxis, opponent_praxis], db_session
+    )
+
+    assert opponents[challenger_praxis.id].avatar_url == "avatars/pallas.png"
+    # Both directions, off the one row — the challenger has no portrait.
+    assert opponents[opponent_praxis.id].avatar_url == ""
+
+
+@pytest.mark.asyncio
+async def test_card_wire_carries_the_rivals_portrait(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    era: Era,
+) -> None:
+    """The wire seam #2128 needs: ``PraxisCardOut.opponent_avatar_url``.
+
+    Gated exactly as the other three are — populated when there is a rival to
+    name, "" otherwise — so the banner keeps reading ``opponent_display_name``
+    for whether to draw at all, and this field only for what to draw.
+    """
+    character2.avatar_url = "avatars/pallas.png"
+    task = await _make_task(db_session, character)
+    challenger_praxis = await _make_praxis(db_session, task, character)
+    opponent_praxis = await _make_praxis(db_session, task, character2)
+    db_session.add(
+        Duel(
+            task_id=task.id,
+            challenger_praxis_id=challenger_praxis.id,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent_praxis.id,
+            status=DuelStatus.settled,
+        )
+    )
+    await db_session.flush()
+
+    card = await _load_card(db_session, challenger_praxis.id)
+
+    assert card.opponent_display_name == character2.display_name
+    assert card.opponent_avatar_url == "avatars/pallas.png"
+
+
+@pytest.mark.asyncio
+async def test_card_wire_has_no_portrait_without_a_rival(
+    db_session: AsyncSession,
+    character: Character,
+    era: Era,
+) -> None:
+    """A plain solo praxis: no rival, so "" — never a stale or invented path."""
+    task = await _make_task(db_session, character)
+    solo = await _make_praxis(db_session, task, character)
+
+    card = await _load_card(db_session, solo.id)
+
+    assert card.opponent_display_name is None
+    assert card.opponent_avatar_url == ""

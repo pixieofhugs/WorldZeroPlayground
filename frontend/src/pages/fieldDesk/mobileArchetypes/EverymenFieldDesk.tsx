@@ -26,6 +26,18 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
  */
 
 const INK = 'var(--everymen-ink)'
+/**
+ * Text on the paper. FLIPS with the stock — deliberately not `INK` (#2133).
+ *
+ * `--everymen-ink` is a near-black in BOTH themes, because the stocks it was
+ * minted for are theme-invariant: the cream board and the gold. This desk has
+ * neither. Every ground under its type is `PAPER` or `PAPER_DEEP`, and both
+ * flip — so the frozen ink measured 13.19:1 by day and 1.16:1 at night, on the
+ * character name, the section heads, the task rows and the two footer actions.
+ * The two tokens are the same hex in light, so the repaint moves nothing there.
+ * `INK` keeps every border, band and shadow it draws.
+ */
+const PAPER_TEXT = 'var(--everymen-paper-text)'
 const CREAM = 'var(--everymen-cream)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
@@ -134,7 +146,7 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.06em', color: INK, whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.06em', color: PAPER_TEXT, whiteSpace: 'nowrap' }}>
         {title}
       </span>
       <span style={{ flex: 1, height: 3, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
@@ -152,7 +164,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
     <div
       data-skin="everymen"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: INK, background: PAPER }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}
     >
       {/* Masthead billboard */}
       <header style={{ border: `3px solid ${INK}`, background: RED, color: CREAM, overflow: 'hidden' }}>
@@ -244,7 +256,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.95, color: INK, textDecoration: 'none' }}
+              style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.95, color: PAPER_TEXT, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
@@ -278,8 +290,8 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                 'aria-valuemax': 100,
                 'aria-valuenow': Math.round(levelTrack.fillPercent),
                 'aria-label': t('sidebar.characterCard.trackLabel', {
-                  score: character.score.toLocaleString(),
-                  target: levelTrack.nextThreshold.toLocaleString(),
+                  score: levelTrack.pointsIntoLevel.toLocaleString(),
+                  target: levelTrack.levelSpan.toLocaleString(),
                   level: levelTrack.nextLevel ?? character.level,
                 }),
               }
@@ -318,7 +330,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         <PendingRowPill
           row={pendingRow}
           className="flex items-center justify-between"
-          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
+          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: PAPER_TEXT, textDecoration: 'none' }}
           chevron={<span aria-hidden style={{ color: RED }}>›</span>}
         />
       )}
@@ -355,7 +367,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: INK }}>
+                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: PAPER_TEXT }}>
                     {praxis.task_title}
                   </div>
                   <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
@@ -389,7 +401,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
         <Link
           to={CAST_VOTES_LINK}
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: PAPER_TEXT, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.castVotes')}
         </Link>
