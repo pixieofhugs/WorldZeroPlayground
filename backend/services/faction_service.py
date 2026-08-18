@@ -1,6 +1,6 @@
 """Faction lifecycle: defection and invitation letters."""
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -107,6 +107,35 @@ async def can_join_faction(
     return result.scalar_one_or_none() is None
 
 
+def _is_rejoinable(faction_slug: str, era: EraConfig) -> bool:
+    """Whether leaving ``faction_slug`` still leaves the door open (#2218).
+
+    An era can retire a faction, so a slug with no config is treated as closed
+    rather than assumed open.
+    """
+    faction_config = era.factions.get(faction_slug)
+    return faction_config is not None and faction_config.can_always_rejoin
+
+
+async def unjoinable_faction_slugs(
+    character_id: int,
+    era_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> set[str]:
+    """Factions this character has left this era and cannot go back to (#2218).
+
+    The delivery-side reading of the same rule :func:`can_join_faction` enforces
+    at the door: an invitation to one of these is an invitation to an action
+    ``defect_to_faction`` answers with ``faction_rejoin_forbidden``.
+    """
+    return {
+        defection.faction_slug
+        for defection in await get_defection_history(character_id, era_id, session)
+        if not _is_rejoinable(defection.faction_slug, era)
+    }
+
+
 async def has_invitation(
     character_id: int,
     faction_slug: str,
@@ -211,6 +240,23 @@ async def defect_to_faction(
             era_id=era_row.id,
         )
         session.add(defection)
+
+        # #2218: walking out retires that faction's letter. Left in place it is
+        # still a live row, and it re-arms itself the moment you go: the feed
+        # reads "answered" off the character (ADR-0070 — a letter for the
+        # faction you already hold asks nothing), so leaving turns an old letter
+        # back into an unanswered request and the bell offers a rejoin the
+        # guard above refuses. Deleted, not flagged, because a flagged row would
+        # need every reader to remember to skip it. Rejoinable factions keep
+        # theirs — that invitation still works.
+        if not _is_rejoinable(old_slug, era):
+            await session.execute(
+                delete(InvitationLetter).where(
+                    InvitationLetter.character_id == character.id,
+                    InvitationLetter.faction_slug == old_slug,
+                    InvitationLetter.era_id == era_row.id,
+                )
+            )
 
     character.faction_slug = target_slug
 

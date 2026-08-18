@@ -275,10 +275,12 @@ function DesktopProfile({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
-        <SectionHeading
-          title={t('profile.praxisHeading')}
-          eyebrow={t('profile.praxisEyebrow', { name: character.display_name })}
-        />
+        {/* No byline (#2231). Everything under this heading is THIS
+            character's own praxis, so "Submitted by <them>" is the one thing
+            the line could never not say. `common:profile.praxisEyebrow` stays
+            in the catalog — it is the right sentence wherever authorship is
+            genuinely in question; this mount is simply not one of them. */}
+        <SectionHeading title={t('profile.praxisHeading')} />
         {submissions.length === 0 ? (
           <div
             style={{

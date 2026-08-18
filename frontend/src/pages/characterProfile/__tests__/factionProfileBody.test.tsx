@@ -312,21 +312,19 @@ describe.each(["desktop", "mobile"] as const)(
         // the point of it: restoring the document outline must not restore the
         // display line the design deleted.
         //
-        // The name reads off the credential card, which is why the column no
-        // longer repeats it. Two remaining sites on a laptop: the card, and the
-        // praxis section's "sealed by {name}" eyebrow. The phone stack has no
-        // praxis eyebrow, so na / albescent are down to the card alone.
+        // ONE site, every slug, both form factors. The name reads off the
+        // credential card, which is why the column no longer repeats it. The
+        // second site was the praxis section's "Submitted by {name}" eyebrow,
+        // and #2231 deleted it: a character page shows that character's own
+        // praxis, so the byline could only ever name the character whose page
+        // it is. The phone stack never drew it.
         //
         // WOW's phone skin is the one profile with NO credential card — its
         // header IS an avatar hoop over an <h1> name (#901). Deleting that name
         // would leave a nameless profile, which is the opposite of what the
         // design asks for, so it keeps its one copy and takes the tagline under
         // it. Flagged on the PR.
-        const praxisEyebrow =
-          formFactor === "desktop" || !["na", "albescent", "wow"].includes(slug);
-        expect(nameCount(html), `${slug} name sites`).toBe(
-          1 + (praxisEyebrow ? 1 : 0),
-        );
+        expect(nameCount(html), `${slug} name sites`).toBe(1);
       },
     );
   },

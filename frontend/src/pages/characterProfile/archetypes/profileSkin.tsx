@@ -456,10 +456,14 @@ export function ProfileSkin({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
-        {kit.sectionHeading(
-          t('profile.praxisHeading'),
-          t('profile.praxisEyebrow', { name: character.display_name }),
-        )}
+        {/* No byline (#2231). `submissions` is THIS character's own praxis, so
+            "Submitted by <them>" is the one thing that eyebrow could never not
+            say — the name already reads off the credential card overhead.
+            `common:profile.praxisEyebrow` stays in the catalog: it is the right
+            sentence wherever authorship is genuinely in question, and this
+            mount is simply not one of them. An empty eyebrow is how the About
+            block below already asks a kit for a bare heading. */}
+        {kit.sectionHeading(t('profile.praxisHeading'), '')}
         {submissions.length === 0 ? (
           <div style={kit.emptyStateStyle}>
             <div

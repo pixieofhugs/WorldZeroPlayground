@@ -193,13 +193,13 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     expect(html).not.toContain('data-testid="mobile-profile"')
     // The "Unaffiliated · faction pending" caption this used to look for was
     // deleted by #1629 (guarded in factionProfileBody.test.tsx). The desktop
-    // branch's own mark is the praxis section heading, which the phone stack
+    // branch's own mark is a full section heading, which the phone stack
     // replaces with a segmented toggle.
-    // #1911 rewords the shared eyebrow ("sealed by" → "Submitted by"), so this
-    // reads the catalog rather than a literal.
-    expect(html, 'desktop na copy').toContain(
-      i18n.t('common:profile.praxisEyebrow', { name: 'Reza' }),
-    )
+    // It used to read the praxis eyebrow, which #2231 deleted from this mount:
+    // a character page shows that character's own praxis, so a byline naming
+    // them says nothing. The proposed-tasks heading is the same shape and is
+    // still desktop-only — the phone stack has it behind a "Tasks" tab.
+    expect(html, 'desktop na copy').toContain(i18n.t('common:profile.proposedTasksHeading'))
   })
 })
 
