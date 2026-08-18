@@ -1060,11 +1060,20 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               PLACEMENT as much as wording, and this page is where it bites: the
               byline, the submission date and the crew all live in the two
               columns above, and the colophon sits below every one of them,
-              outside both, behind its own rule. See `EphemeristsColophon`. */}
-          <EphemeristsColophon
-            scale={desktop ? "page" : "card"}
-            date={praxis.submitted_at ?? praxis.created_at}
-          />
+              outside both, behind its own rule. See `EphemeristsColophon`.
+
+              UNDATED HERE, AND ONLY HERE. #2143's body says "keep the date real
+              (the surface's own)", but #2124's comment — filed later and closed
+              INTO this issue — says the line must not sit adjacent to "the
+              author, the date-of-submission, or any other player-scoped field".
+              On a praxis the surface's own date IS `submitted_at`, so passing it
+              does not merely place the coordinates NEAR a player-scoped field,
+              it puts the two in one sentence: "Plate struck <the day this player
+              posted> ... +44 03'". That is the exact inference #2124 raised, and
+              a reader cannot be expected to unpick it from the label alone.
+              `EphemeristsTaskDetail` still passes its date: a task's
+              `created_at` belongs to the task, not to any player. */}
+          <EphemeristsColophon scale={desktop ? "page" : "card"} />
         </div>
       </div>
     </div>
