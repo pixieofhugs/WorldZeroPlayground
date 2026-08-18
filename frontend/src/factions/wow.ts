@@ -58,7 +58,8 @@
  * balloons beside the comments. It is dress over the ONE shared praxis-detail
  * page (ADR-0061) rather than a page of its own — the layout, the API contract
  * and every word on it are the shared ones; WOW speaks here only in dress.
- * `factionCard` and `factionBody` remain unclaimed on #951.
+ * `factionBody` remains unclaimed on #951 (`factionCard`, the fourth bullet,
+ * was retired as a surface by #2024).
  *
  * The three ornaments those two pages share — the wavy rule, the balloon bunch
  * and the bunting — live in `components/factionMarks/wowOrnament.tsx`, drawn once for
@@ -66,9 +67,9 @@
  *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
  * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
- * and the `factionSelectCard` pledge placard. `factionBody` and `factionCard`
- * stay unclaimed on purpose — the kit drew the faction HERO, not the page
- * beneath it, so those keep defaulting until they are designed.
+ * and the `factionSelectCard` pledge placard. `factionBody` stays unclaimed on
+ * purpose — the kit drew the faction HERO, not the page beneath it, so it keeps
+ * defaulting until it is designed.
  *
  * #901 adds THE FIELD PAVILION — the general MOBILE surfaces. The kit drew
  * exactly one phone screen, and what survives of it is `mobileFieldDesk`.
@@ -118,7 +119,6 @@ const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchet
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
-const WowCard = lazyArchetype(() => import('../components/factionCard/WowFactionCard'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -128,11 +128,12 @@ export const WOW_MANIFEST: FactionManifest = {
   taskCard: () => WowTaskCard,
   // #1037 — the parchment field: WOW's FIRST desktop task-detail page. Until
   // this row a WOW task rendered the na dossier on desktop (one of #951's four
-  // bullets; praxisDetail, factionCard and factionBody are still open).
+  // bullets; praxisDetail and factionBody were still open, and the fourth,
+  // `factionCard`, is a surface #2024 has since retired).
   taskDetail: () => WowTaskDetail,
   // #1121 — the chronicle entry: WOW's dress over the ONE shared praxis-detail
-  // page (ADR-0061). The second of #951's four bullets to close; `factionCard`
-  // and `factionBody` are still unclaimed. One responsive component, no mobile
+  // page (ADR-0061). The second of #951's four bullets to close; `factionBody`
+  // was still unclaimed. One responsive component, no mobile
   // twin (ADR-0063): #1089 retired the `mobilePraxisDetail` surface outright, so
   // this archetype serves both form factors.
   praxisDetail: () => WowPraxisDetail,
@@ -153,18 +154,9 @@ export const WOW_MANIFEST: FactionManifest = {
   // order from the phone twin that ADR-0078 has since retired, and the main +
   // rail shape from the other six bodies. The copy was already in
   // `factions.json` from #900, unread until now. This now serves BOTH widths.
-  // Third of #951's four bullets.
+  // Third of #951's four bullets — and, since #2024 retired the `factionCard`
+  // surface outright, the last one standing.
   factionBody: () => WowFactionBody,
-  // The LAST of #951's four, and the row that closes it — THE MUSTER BILL, the
-  // directory PREVIEW card. Derived like the body above it (no sheet exists):
-  // the bunting, the wavy rule and the balloons from `wowOrnament`, the frame
-  // and the type from the decree the kit calls "the archetype the others
-  // mirror", and the four content slots from the six cards that already ship
-  // one. Not one new copy key — #1909 ruled this surface's words generic and
-  // cut every per-faction string on it, so the bill says the shared four in
-  // WOW's dress. In its own module rather than the shared `FactionCard.tsx`, so
-  // WOW's ornament is not posted to the five factions that chunk serves.
-  factionCard: () => WowCard,
   backdrop: () => WowBackdrop,
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,
