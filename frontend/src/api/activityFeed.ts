@@ -1,5 +1,6 @@
 import { apiGet, apiPost } from './client'
 import type { components } from './generated/schema'
+import { notifyRequestsChanged } from '../utils/requestsBus'
 
 /**
  * NOT an alias of the generated schema, and deliberately (#1400).
@@ -109,6 +110,44 @@ export function normalizeFeedCounts(raw: Partial<FeedCounts> | undefined | null)
   return { ...ABSENT_COUNTS, ...(raw ?? {}) }
 }
 
+/**
+ * The feed types the `requests` filter carries — the four the bell's
+ * `pending_requests_count` is a COUNT of (ADR-0070).
+ *
+ * Here so the archive writes below can tell "this moved the bell's number" from
+ * "this moved a card in the stream", which is the whole of #2220's gate. It
+ * duplicates the server's `REQUEST_ITEM_TYPES` across a language boundary, so
+ * it is pinned rather than commented: `__tests__/requestItemTypes.test.ts`
+ * reads `FEED_SOURCES` and fails if a fifth type joins the filter or one leaves.
+ *
+ * `awaiting_submission` is in the set even though it can never be archived (it
+ * is state, not an event — the backend refuses it). The set answers "does this
+ * type feed the bell?", and it does; the archivability rule is a separate one
+ * and lives in `components/feed/feedItemLabels`.
+ */
+export const REQUEST_ITEM_TYPES: ReadonlySet<string> = new Set([
+  'collab_invite',
+  'duel_challenge',
+  'invitation_letter',
+  'awaiting_submission',
+])
+
+/**
+ * Did this write move the bell's number, and must the requests bus therefore
+ * hear about it (#2220)?
+ *
+ * The type prefix of the item key is the only thing an archive call knows about
+ * what it just moved — the response says `archived`/`changed`, never `type`.
+ * That is enough: the key's prefix IS the feed type (see `item_key` above).
+ *
+ * A key so malformed it has no prefix reads as "not a request", which is the
+ * safe direction — the server is about to 400 it anyway, so the alternative is
+ * a bus event for a write that never happened.
+ */
+function movesThePendingCount(itemKey: string): boolean {
+  return REQUEST_ITEM_TYPES.has(itemKey.slice(0, itemKey.indexOf(':')))
+}
+
 /** Result of archiving/restoring one item. `archived` is the state AFTER the
  *  call (both endpoints are idempotent); `changed` says whether a row moved. */
 export type FeedItemArchiveResult = components['schemas']['FeedItemArchiveResponse']
@@ -154,15 +193,21 @@ export async function getActivityFeed(params?: {
  * names an `awaiting_submission` row — that type is state, not an event, and the
  * backend refuses it. The UI must therefore not offer the control on that card
  * at all (hide unusable controls; never render them disabled).
+ *
+ * Archiving a REQUEST takes it out of `pending_requests_count`, so the bus has
+ * to hear about it — see {@link movesThePendingCount}.
  */
 export async function dismissFeedItem(itemKey: string): Promise<FeedItemArchiveResult> {
   const { data } = await apiPost('/activity-feed/dismiss', { body: { item_key: itemKey } })
+  if (movesThePendingCount(itemKey)) notifyRequestsChanged()
   return data
 }
 
-/** Take one feed item back out of the archive. */
+/** Take one feed item back out of the archive. Restoring a request puts it back
+ *  INTO the count, which is the same event from the other direction. */
 export async function restoreFeedItem(itemKey: string): Promise<FeedItemArchiveResult> {
   const { data } = await apiPost('/activity-feed/restore', { body: { item_key: itemKey } })
+  if (movesThePendingCount(itemKey)) notifyRequestsChanged()
   return data
 }
 
@@ -170,15 +215,25 @@ export async function restoreFeedItem(itemKey: string): Promise<FeedItemArchiveR
  * Archive everything the given filter currently returns. One call — the server
  * re-runs the feed for that filter, so the scope can never drift from what the
  * tab shows. `awaiting_submission` rows are SKIPPED, not refused.
+ *
+ * Fires the bus unconditionally, unlike the single-item writes: the SERVER
+ * picks what this touched, so the client holds no key to test. Today a stream
+ * filter cannot reach a request (ADR-0070 drops the four types out of `all` and
+ * `your_stuff`), which makes the event redundant — but that is an invariant in
+ * another language, and one refetch of a number the player just moved is
+ * cheaper than the phantom badge the wrong guess would leave (#2220).
  */
 export async function dismissAllFeedItems(filter?: string): Promise<FeedBulkArchiveResult> {
   const { data } = await apiPost('/activity-feed/dismiss-all', { body: { filter: filter ?? null } })
+  notifyRequestsChanged()
   return data
 }
 
 /** Empty the archive (no filter = everything, which is what "Restore all" means
- *  on the Archived tab — the archived view has no tabs of its own). */
+ *  on the Archived tab — the archived view has no tabs of its own). "Everything"
+ *  includes archived requests, so this really can raise the bell's number. */
 export async function restoreAllFeedItems(filter?: string): Promise<FeedBulkArchiveResult> {
   const { data } = await apiPost('/activity-feed/restore-all', { body: { filter: filter ?? null } })
+  notifyRequestsChanged()
   return data
 }

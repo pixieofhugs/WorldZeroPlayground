@@ -54,7 +54,7 @@ describe('selectPendingRow', () => {
   it('degrades to a numberless row when the API predates the count', () => {
     // Deploy skew: the client is ahead, `global_activity_count` is `undefined`.
     // The glance still proves there IS news, so the row stays a link — it just
-    // says "New updates" again rather than inventing (or printing) a number.
+    // says "New activity" rather than inventing (or printing) a number.
     expect(selectPendingRow(0, news(undefined, 5), false)).toEqual({
       kind: 'notifications',
       count: 0,
@@ -93,15 +93,25 @@ describe('PendingRowPill', () => {
 
   it('draws news as a link, with its number (#1587)', () => {
     const html = draw({ kind: 'notifications', count: 12, to: UPDATES_LINK })
-    expect(html).toContain('12 notifications')
+    expect(html).toContain('12 new events')
     expect(html).toContain(`href="${UPDATES_LINK}"`)
     expect(html, 'never the requests copy').not.toContain('pending')
   })
 
-  it('pluralises down to a single notification', () => {
+  it('pluralises down to a single event', () => {
     expect(draw({ kind: 'notifications', count: 1, to: UPDATES_LINK })).toContain(
-      '1 notification<',
+      '1 new event<',
     )
+  })
+
+  it('never calls this half a notification (#2083)', () => {
+    // The bell counts obligations, this row counts events, and they are two
+    // halves of ONE feed (ADR-0070). A quiet bell beside "1 notification" reads
+    // as a broken bell; a quiet bell beside "1 new event" reads as a log.
+    for (const count of [0, 1, 12, ACTIVITY_COUNT_CAP]) {
+      const html = draw({ kind: 'notifications', count, to: UPDATES_LINK })
+      expect(html, `${count} still says notification`).not.toContain('notification')
+    }
   })
 
   it('says "50+" at the cap, where the count stops being a total', () => {
@@ -111,15 +121,15 @@ describe('PendingRowPill', () => {
     for (const count of [ACTIVITY_COUNT_CAP, ACTIVITY_COUNT_CAP + 87]) {
       const html = draw({ kind: 'notifications', count, to: UPDATES_LINK })
       expect(html, `${count} is past the cap`).toContain(
-        `${ACTIVITY_COUNT_CAP}+ notifications`,
+        `${ACTIVITY_COUNT_CAP}+ new events`,
       )
-      expect(html, 'no floor printed as a total').not.toContain(`${count} notifications`)
+      expect(html, 'no floor printed as a total').not.toContain(`${count} new events`)
     }
   })
 
   it('falls back to the old wording when the API sent no count', () => {
     const html = draw({ kind: 'notifications', count: 0, to: UPDATES_LINK })
-    expect(html).toContain('New updates')
+    expect(html).toContain('New activity')
     expect(html, 'never a count it cannot know').not.toContain('0')
   })
 

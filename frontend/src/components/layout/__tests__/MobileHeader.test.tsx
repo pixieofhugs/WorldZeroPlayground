@@ -21,6 +21,7 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
 }))
 
 import MobileHeader from '../MobileHeader'
+import { REQUESTS_QUEUE_LINK } from '../../../pages/updates/requestsQueueAnchor'
 
 function render(): string {
   return renderToStaticMarkup(
@@ -44,16 +45,57 @@ beforeEach(() => {
 })
 
 describe('MobileHeader bell', () => {
-  it('links the bell to /updates when signed in', () => {
+  it('links the bell to the Requests queue when signed in (#2083)', () => {
     authMock.mockReturnValue(signedIn)
     const html = render()
-    expect(html).toContain('href="/updates"')
+    // The queue's own anchor, not the top of the stream: the destination is one
+    // of the three places the bell has to say what it counts.
+    expect(html).toContain(`href="${REQUESTS_QUEUE_LINK}"`)
   })
 
   it('omits the bell when signed out', () => {
     authMock.mockReturnValue(signedOut)
     const html = render()
-    expect(html).not.toContain('href="/updates"')
+    expect(html).not.toContain('href="/updates')
+  })
+
+  /**
+   * #2083 - the bell is a QUEUE OF THINGS AWAITING AN ANSWER, not a generic
+   * notification bell.
+   *
+   * It counts `pending_requests_count`; the mobile home's row counts
+   * `global_activity`, which is the same feed minus those obligations
+   * (ADR-0070). Someone changing a vote on your praxis is an event, so it lands
+   * on the home row and correctly leaves this silent - and a bell whose whole
+   * accessible name was "Updates" left that reading as a broken bell.
+   *
+   * Asserted on the accessible name AND the tooltip because they are the two
+   * halves the badge cannot carry: `PendingBadge` is `aria-hidden` by contract,
+   * so a screen reader meets only the name, and a sighted reader hovering a
+   * bare icon meets only the title.
+   */
+  it('names the queue in its accessible name and its tooltip, at zero', () => {
+    authMock.mockReturnValue(signedIn)
+    const html = render()
+    expect(html).toContain('aria-label="Requests \u2014 nothing waiting on you"')
+    expect(html).toContain('title="Requests \u2014 nothing waiting on you"')
+    expect(html, 'a bare page name says nothing about what it counts').not.toContain(
+      'aria-label="Updates"',
+    )
+  })
+
+  it('carries the count in both, since the badge itself is aria-hidden', () => {
+    authMock.mockReturnValue(signedIn)
+    pendingMock.mockReturnValue({
+      pending_requests_count: 3,
+      global_activity: [],
+      active_praxes: [],
+      refetch: vi.fn(),
+      loading: false,
+    })
+    const html = render()
+    expect(html).toContain('aria-label="Requests \u2014 3 waiting on you"')
+    expect(html).toContain('title="Requests \u2014 3 waiting on you"')
   })
 
   it('shows the pending-request badge only when there are requests', () => {
