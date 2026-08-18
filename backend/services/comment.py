@@ -23,7 +23,7 @@ from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.character_capabilities import compute_capabilities
 from services.era import get_current_era_row, get_or_create_stats
-from services.praxis import can_view_praxis
+from services.praxis import account_already_flagged, can_view_praxis
 
 # @handle mentions: word chars matching Character.username. Unresolved handles
 # stay plain text — linkify at render runs against the resolved set only.
@@ -290,10 +290,26 @@ async def flag_comment(
 
     When the flag count reaches era.comment_flag_review_threshold the comment goes
     to ``flagged`` and surfaces on the admin review page (alongside flagged praxes).
+
+    Account-scoped anti-self-flag and one-flag-per-account, mirroring
+    :func:`services.praxis.flag_praxis`.
     """
     comment = await get_comment(comment_id, session)
-    if flagged_by.id == comment.created_by_id:
+
+    # Account-scoped, not character-scoped (#328): a second life on the same
+    # account is a puppet here, and comment_flag_review_threshold is 1 — so a
+    # character-only check let a player push their own account's comment into
+    # the admin queue. Same two guards, same statuses as flag_praxis.
+    author = comment.created_by
+    if author is not None and author.account_id == flagged_by.account_id:
         raise HTTPException(status_code=403, detail="Cannot flag your own comment.")
+    if await account_already_flagged(
+        flagged_by.account_id, session, comment_id=comment.id
+    ):
+        raise HTTPException(
+            status_code=409, detail="Your account has already flagged this comment."
+        )
+
     if await _character_level(flagged_by.id, session) < era.flag_level_required:
         raise_coded(
             403,

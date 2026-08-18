@@ -1281,18 +1281,29 @@ async def _praxis_author_account_id(
     return author.account_id if author is not None else None
 
 
-async def _account_already_flagged(
-    praxis_id: int, account_id: int, session: AsyncSession
+async def account_already_flagged(
+    account_id: int,
+    session: AsyncSession,
+    *,
+    praxis_id: Optional[int] = None,
+    comment_id: Optional[int] = None,
 ) -> bool:
-    """True if any character on ``account_id`` already flagged this praxis (#328 anti-gang).
+    """True if any character on ``account_id`` already flagged this target (#328 anti-gang).
 
     Joins ``Flag.flagged_by → Character.account_id`` so no ``flagged_by_account_id``
-    column / migration is needed.
+    column / migration is needed. Takes either target because ``Flag`` carries
+    both and the rule is the same one — ``services/comment.py`` reaches this for
+    the comment half rather than restating the join.
     """
+    target = (
+        Flag.praxis_id == praxis_id
+        if praxis_id is not None
+        else Flag.comment_id == comment_id
+    )
     result = await session.execute(
         select(Flag.id)
         .join(Character, Character.id == Flag.flagged_by)
-        .where(Flag.praxis_id == praxis_id, Character.account_id == account_id)
+        .where(target, Character.account_id == account_id)
         .limit(1)
     )
     return result.scalar_one_or_none() is not None
@@ -1318,7 +1329,7 @@ async def can_flag_praxis(
     author_account_id = await _praxis_author_account_id(praxis, session)
     if author_account_id is not None and author_account_id == viewer.account_id:
         return False
-    if await _account_already_flagged(praxis.id, viewer.account_id, session):
+    if await account_already_flagged(viewer.account_id, session, praxis_id=praxis.id):
         return False
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, viewer.id, era_row.id)
@@ -1554,7 +1565,9 @@ async def flag_praxis(
 
     # Account-scoped uniqueness (#328): one flag per account per praxis — a second
     # life can't stack a second flag to gang up on a third-party praxis.
-    if await _account_already_flagged(praxis.id, flagged_by.account_id, session):
+    if await account_already_flagged(
+        flagged_by.account_id, session, praxis_id=praxis.id
+    ):
         raise HTTPException(
             status_code=409, detail="Your account has already flagged this praxis."
         )
