@@ -1,6 +1,7 @@
 import { useAuth } from '../../auth/AuthContext'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
+import { rosterOffersAChoice } from '../../hooks/useRosterChoice'
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
 import type { LevelTrack } from '../../utils/levelTrack'
@@ -56,6 +57,16 @@ export interface FieldDeskHomeState {
   pendingRow: PendingRowState | null
   /** Whether the active-tasks list is still loading. */
   loadingTasks: boolean
+  /**
+   * Has the account got a character choice worth opening a sheet for? (#2111)
+   *
+   * Drives the `CHARACTERS` trigger on every skin's identity block: with one
+   * life and a shut second-character gate the sheet holds nothing but the life
+   * already being carried, so the trigger is hidden rather than shown dead.
+   * `rosterOffersAChoice` is the rule and the desktop roster reads the same
+   * one, so the two surfaces cannot disagree.
+   */
+  offersACharacterChoice: boolean
 }
 
 /**
@@ -142,7 +153,16 @@ export function selectPendingRow(
   return { kind: 'clear', count: 0, to: null }
 }
 
-export function useFieldDeskHome(): FieldDeskHomeState | null {
+/**
+ * `lives` is the ACCOUNT'S ROSTER, passed in rather than read here (#2111).
+ *
+ * The page already holds it — the desktop branch draws the roster cards from
+ * it — and it is needed for exactly one thing on this side: whether the
+ * `CHARACTERS` trigger has a choice to offer. Reading it again here would put a
+ * second byte-identical `/me/characters` on every home load, which is the cost
+ * this hook was written to remove. `null` while the read is in flight.
+ */
+export function useFieldDeskHome(lives: CharacterOut[] | null): FieldDeskHomeState | null {
   const { user } = useAuth()
   const character = user?.character ?? null
 
@@ -173,5 +193,12 @@ export function useFieldDeskHome(): FieldDeskHomeState | null {
       loadingTasks,
     ),
     loadingTasks,
+    // A carried life is guaranteed here (the early return above), so only the
+    // gate and the count are left to ask.
+    offersACharacterChoice: rosterOffersAChoice(
+      lives,
+      true,
+      user?.can_create_additional_character ?? false,
+    ),
   }
 }

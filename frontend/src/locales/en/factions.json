@@ -408,7 +408,7 @@
   "mobile": {
     "loadError": "Couldn't load factions.",
     "unaffiliatedTitle": "You're Unaffiliated",
-    "unaffiliatedBody": "Every path is open. Join a faction after your first task.",
+    "unaffiliatedBody": "Every path is open. Each faction watches its own work — do enough of it, and an invitation finds you.",
     "topMembers": "Top members",
     "recentPraxis": "Recent praxis",
     "membersStat": "Members",

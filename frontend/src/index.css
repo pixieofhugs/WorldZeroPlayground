@@ -603,11 +603,19 @@
      it amends ADR-0054's "fixed brand constant in both themes" clause.
 
      Not every spectrum in this file is one of these, and the exceptions are
-     exceptions on purpose: `--badge-victor-stop-*` and `--spectrum-glow-*` are
-     theme-INVARIANT identities (each says so at its own declaration), and
-     `--faction-default-chip` is a fixed green→blue pill whose white ink is
-     measured on these two exact hues. Those three restate a hue deliberately.
-     Everything else cut from the spectrum reads a stop. */
+     exceptions on purpose: `--badge-victor-stop-*`, `--spectrum-glow-*` and
+     `--fdl-ring` are theme-INVARIANT identities (each says so at its own
+     declaration), and `--faction-default-chip` is a fixed green→blue pill whose
+     white ink is measured on these two exact hues. Those four restate a hue
+     deliberately. Everything else cut from the spectrum reads a stop.
+
+     `--fdl-ring` is the newest and the one likeliest to be read as drift, so:
+     the Task Crown's 4px rim takes the DARK values of these stops in BOTH
+     themes (#2134, ruled by the owner). It composed this spectrum until then
+     and went muddy on ivory, because an ornamental rim carries none of the
+     legibility duty the light seven are darkened FOR. That is an amendment
+     scoped to one mark; the rule above is unchanged everywhere else, and the
+     shared stops were deliberately not brightened to achieve it. */
   --faction-default-stop-1: #c1272d; /* red */
   --faction-default-stop-2: #c2541f; /* orange */
   --faction-default-stop-3: #ca8a04; /* yellow */
@@ -3527,33 +3535,52 @@
      faction card. Only the light/dark pair below vary (see
      components/factionMarks/TaskCrown.tsx).
 
-     THE RING IS NOT A TOKEN HERE, and that is the point of #1213. It used to be
-     `--fdl-rainbow`, a conic carrying the retired brand six resequenced
-     1→6→2→3→4→5 and wrapped back to 1 — the last surviving declaration of that
-     palette once #1220 deleted `--underline-1…6`. The crown now reads
-     `--faction-default-rainbow-conic` directly: the seam-closed SMOOTH conic
-     added in #1038 for exactly this geometry (a full-circle ring whose last
-     stop is its first, so nothing shows an edge). A token whose entire content
-     is "that other token, turned" is a name pretending to be a value, so
-     nothing was left behind to hold the old `from 90deg` start — it pinned gold
-     to 3 o'clock in a hue sequence that no longer exists, and a plain circular
-     ramp has no feature at any angle for a start offset to place.
+     THE RING IS A TOKEN AGAIN (#2134), and it is theme-INVARIANT: --fdl-ring
+     below carries the BRIGHT hues — the dark twins of --faction-default-stop-*
+     — in BOTH themes. That makes it the fourth member of this file's small
+     invariant-spectrum set, beside --badge-victor-stop-*, --spectrum-glow-* and
+     --faction-default-chip, and it is an AMENDMENT to #1219 rather than drift
+     from it. #1219 collapsed the brand six into --faction-default-stop-1…7 and
+     made them flip; the light seven are deliberately DARKENED so the spectrum
+     survives as ink and under text on white. This rim carries nothing — it is a
+     4px ornament around a disc — so it was paying a contrast tax it does not
+     owe, and on ivory those seven near-equal-value hues read as one muddy band
+     (the same 0.184 luminance spread written up on --faction-default-rainbow-
+     conic). The stops themselves are UNTOUCHED on purpose: brightening the
+     shared light seven to fix a 44px badge would repaint every rainbow here.
 
-     Two consequences. The ring FLIPS with the theme now, which ADR-0054's
-     "fixed brand constant in both themes" clause forbade — amended there, on
-     the #1219 ruling that brand chrome flips. And the crown is a prism, not a
-     pinwheel — anything wanting HARD wedges now composes them from
-     --faction-default-stop-*, the way the level-up seal does. #1127 deleted the
-     wedge token this used to point at, once the light palette proved it could
-     not hold an edge; the reasoning is on --faction-default-rainbow-conic. */
+     So this restores ADR-0054's "fixed brand constant in both themes" clause
+     FOR THIS ONE MARK, and #1219 stands everywhere else. The disc and the glyph
+     below still flip; only the ring stopped.
+
+     The ring WAS a token once — `--fdl-rainbow`, a conic carrying the retired
+     brand six resequenced 1→6→2→3→4→5 and wrapped back to 1, the last surviving
+     declaration of that palette once #1220 deleted `--underline-1…6`. #1213
+     deleted it because a token whose entire content is "that other token,
+     turned" is a name pretending to be a value. --fdl-ring is not that: it
+     holds hues no other token holds in light mode, which is the whole reason it
+     exists. What #1213 settled still stands — there is no `from 90deg` start
+     (it pinned gold to 3 o'clock in a hue sequence that no longer exists, and a
+     seam-closed smooth ramp has no feature at any angle for an offset to
+     place), and the crown is a prism, not a pinwheel. Anything wanting HARD
+     wedges composes them from --faction-default-stop-*, the way the level-up
+     seal does; #1127 deleted the wedge token this used to point at, once the
+     light palette proved it could not hold an edge. */
   --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
   --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
+  /* The seven DARK --faction-default-stop-* values verbatim, cut the way
+     --faction-default-rainbow-conic cuts them (#1038's seam-closed sweep: the
+     last stop is the first, so the circle shows no edge). Written as literals
+     rather than var()s for the same reason --faction-default-chip is: a var()
+     here would flip with the theme, which is the one thing this token exists to
+     stop. It gets NO [data-theme="dark"] entry below — deliberately. */
+  --fdl-ring: conic-gradient(#e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
 }
 
 /* Task Crown, dark theme: the disc goes near-black, the fleur goes light ink.
-   The ring needs no entry — it reads --faction-default-rainbow-conic, composed
-   from stops this block rebinds, so it brightens on its own (#1220's rule: a
-   composed value needs no dark twin). */
+   The ring gets no entry, and that is a decision rather than an omission —
+   --fdl-ring is theme-invariant (#2134) and already carries these brighter hues
+   in light. An entry here would re-flip the one mark that was exempted. */
 [data-theme="dark"] {
   --fdl-disc: #1a1712;
   --fdl-glyph: #f0e6d0;

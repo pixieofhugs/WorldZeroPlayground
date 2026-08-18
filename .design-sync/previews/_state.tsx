@@ -60,6 +60,9 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // since the other two are the same pill with less in it.
     pendingRow: { kind: 'requests', count: 2, to: '/updates#requests-queue' },
     loadingTasks: false,
+    // The kit previews the trigger present: a skin that draws no CHARACTERS
+    // pill at all is the thing #2111's gate must not be mistaken for.
+    offersACharacterChoice: true,
   }
 }
 

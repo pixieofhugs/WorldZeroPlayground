@@ -52,7 +52,10 @@ vi.mock('../../../api/tasks', () => ({ listTasks: async () => [] }))
 vi.mock('../../../api/praxis', () => ({ listPraxes: async () => [], createPraxis: async () => ({ id: 1 }) }))
 
 // Imported after the mocks are registered.
-import FieldDesk, { rosterOffersAChoice, rosterFooterKey } from '../../FieldDesk'
+import FieldDesk, { rosterFooterKey } from '../../FieldDesk'
+// Moved out of the page in #2111 so the rail and the eight mobile skins can ask
+// the same question without importing it.
+import { rosterOffersAChoice } from '../../../hooks/useRosterChoice'
 
 function life(overrides: Partial<CharacterOut> = {}): CharacterOut {
   return {
