@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
   BRASS,
+  BAND_QUIET,
   BRASS_LIGHT,
   CAPTION,
   DECO,
@@ -255,7 +256,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
               style={{
                 ...SMALL_CAPS,
                 fontSize: "var(--text-md)",
-                color: CAPTION,
+                color: BAND_QUIET,
                 marginTop: "var(--space-xs)",
               }}
             >

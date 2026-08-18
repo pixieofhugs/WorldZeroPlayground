@@ -792,13 +792,13 @@ export function CompassRose({ size }: { size: number }) {
           the rose's own disc against the teal's 7.36:1, so the one point that
           carries meaning is also the one that reads first.
 
-          A SECOND DESIGN FILE DRAWS THIS NEEDLE NAVY (`ephCompassBadge()`, as
-          `var(--faction-ephemerists-plate-nile, #1e3a6e)`) and it is not the one
+          A SECOND DESIGN FILE DREW THIS NEEDLE NAVY (`ephCompassBadge()`, as
+          the register's aqua with a `#1e3a6e` fallback) and it was never the one
           to follow: that navy measures 1.64:1 on `-plate-disc` and the needle
-          would be invisible. The two files disagree, the gold one is the one
-          naming a variable, and the navy is most likely the eventual LIGHT-mode
-          value being carried into that epic (#1627/#1636 keep this register
-          theme-invariant until then). */}
+          would be invisible. #2141 settled it by deleting the aqua outright, so
+          only the gold reading survives. #2145 owns what the rose looks like
+          next; if north moves, it moves to `-plate-band-ink`, the MARK the
+          faction now sets every glyph and numeral in. */}
       <path d="M50 8 L55.5 26 L44.5 26 Z" fill={GOLD} />
       <path d="M50 92 L55.5 74 L44.5 74 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />
       <path d="M8 50 L26 44.5 L26 55.5 Z" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.9" />

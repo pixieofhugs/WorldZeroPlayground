@@ -266,7 +266,9 @@ function AuthorOctagon({
             fontWeight: 500,
             fontSize: "var(--text-md)",
             letterSpacing: "0.08em",
-            color: INK,
+            // The octagon is the compass blue in both themes (#2141), so the
+            // initial takes the band's mark rather than the sheet's ink.
+            color: BAND_INK,
           }}
         >
           {initialsOf(name)}

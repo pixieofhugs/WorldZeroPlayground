@@ -95,9 +95,11 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * AA here, and by a hair more than {@link BRASS_LIGHT} does.
  *
  * THE REPOINT STAYS ANYWAY, because it was never only a ratio: {@link BRASS_LIGHT} is
- * exactly the ink this faction declares for
- * "links", and the actor's name IS a link to that player. It measures 7.00:1 on
- * the plate. `-plate-quiet` clears too (5.98) and is still rejected for the
+ * exactly the ink this faction declares for "links + affirmations", and the
+ * actor's name IS a link to that player. #2141 retired the aqua this slot used
+ * to read and handed the role to the brass highlight, so the sentence is now
+ * true of the token it names: 5.09:1 on the vellum sheet, 9.68:1 on the night
+ * plate. `-plate-quiet` clears too (5.98) and is still rejected for the
  * reason it always was — it is the MUTED role's ink, and painting the row's one
  * identity slot in a colour quieter than the body copy loses the faction rather
  * than legibly keeping it.

@@ -1,6 +1,6 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
-import { BAND, BRASS, CAPS, DISC, GOLD, INK, PLATE } from "../factionMarks/ephemeristsPlate";
+import { BAND, BAND_INK, BRASS, CAPS, DISC, GOLD, PLATE } from "../factionMarks/ephemeristsPlate";
 
 /**
  * The Ephemerists avatar — the plate's medallion field ruled in brass, with the
@@ -25,7 +25,7 @@ export default function EphemeristsAvatar({ character, size }: FactionAvatarProp
       circle={{
         borderColor: BRASS,
         bg: DISC,
-        textColor: INK,
+        textColor: BAND_INK,
         fontFamily: CAPS,
       }}
       initialFontSize={[11, 14]}

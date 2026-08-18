@@ -99,6 +99,7 @@ const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
    band and a stain on the papyrus page; nothing else here wants it. */
 const BAND = "var(--faction-ephemerists-plate-band)";
 const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
+const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 const DISC = "var(--faction-ephemerists-plate-disc)";
 const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
@@ -567,7 +568,7 @@ export default function EphemeristsTaskDetail({
                   fontFamily: CAPS,
                   fontWeight: 500,
                   fontSize: "var(--text-md)",
-                  color: INK,
+                  color: BAND_INK,
                 }}
               >
                 {initialsOf(authorName)}
@@ -693,14 +694,16 @@ export default function EphemeristsTaskDetail({
           <path d="M16 70 H84" stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.5" />
         </svg>
         <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-          <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: INK }}>{modifiedPoints}</span>
+          {/* The medallion is a dark chip in both themes; its inks are the
+              band's, not the sheet's (#2141). */}
+          <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: BAND_INK }}>{modifiedPoints}</span>
           <span
             style={{
               ...SMALL_CAPS,
               fontSize: "var(--text-md)",
               letterSpacing: "0.2em",
               marginTop: "var(--space-xs)",
-              color: CAPTION,
+              color: BAND_QUIET,
             }}
           >
             {t("detail.points.total")}
