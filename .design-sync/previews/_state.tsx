@@ -42,8 +42,19 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
   return {
     character: characterFor(slug, { level: 4, score: 320, all_time_score: 1180 }),
     eraName: 'Era One',
-    // The design's worked example: 320 of 500, 180 short of level 5 (#1553).
-    levelTrack: { nextLevel: 5, pointsToNext: 180, nextThreshold: 500, fillPercent: 64 },
+    // The design's worked example: 320 points, 180 short of level 5 (#1553).
+    // The BAR reads the current band since #2127 — 70 into the 250 that
+    // separate level 4 from level 5 — and matches `profileProps` below, which
+    // is the whole point of that issue. The 180 lives in the caption.
+    levelTrack: {
+      nextLevel: 5,
+      pointsToNext: 180,
+      currentThreshold: 250,
+      nextThreshold: 500,
+      pointsIntoLevel: 70,
+      levelSpan: 250,
+      fillPercent: 28,
+    },
     activeTasks: praxisCardsFor(slug),
     // The pending row's obligation state (#1554) — the one worth previewing,
     // since the other two are the same pill with less in it.
@@ -396,7 +407,14 @@ export function profileProps(slug: string): ProfileBodyProps {
     character: characterFor(slug, { level: 4, score: 320 }),
     submissions: praxisCardsFor(slug),
     proposedTasks: [taskFor(slug, { id: 121, title: 'A charge I authored' })],
-    progression: { nextLevel: 5, currentThreshold: 250, nextThreshold: 500, progressPercent: 28 },
+    progression: {
+      nextLevel: 5,
+      currentThreshold: 250,
+      nextThreshold: 500,
+      pointsIntoLevel: 70,
+      levelSpan: 250,
+      progressPercent: 28,
+    },
     identityActions: null,
   }
 }
