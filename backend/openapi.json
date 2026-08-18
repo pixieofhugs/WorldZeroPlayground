@@ -1672,6 +1672,11 @@
             "default": 0,
             "title": "Second Character Level Required",
             "type": "integer"
+          },
+          "task_browse_defaults_to_eligible": {
+            "default": false,
+            "title": "Task Browse Defaults To Eligible",
+            "type": "boolean"
           }
         },
         "required": [
@@ -1690,7 +1695,8 @@
           "can_comment",
           "can_apply_metatask",
           "level_jump_reach",
-          "level_jump_available"
+          "level_jump_available",
+          "task_browse_defaults_to_eligible"
         ],
         "title": "CurrentUser",
         "type": "object"
