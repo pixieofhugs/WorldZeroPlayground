@@ -82,6 +82,7 @@ function praxis(): PraxisOut {
     submit_proposed_at: null,
     created_by_id: 1,
     created_by_display_name: 'Ada',
+    created_by_avatar_url: '',
     created_by_faction_slug: 'snide',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-02T00:00:00Z',

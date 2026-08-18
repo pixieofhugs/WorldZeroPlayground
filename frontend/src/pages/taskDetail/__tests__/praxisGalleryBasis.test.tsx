@@ -85,6 +85,7 @@ const PRAXIS: PraxisCardOut[] = [1, 2, 3, 4].map((n) => ({
   members: [],
   opponent_display_name: null,
   opponent_faction_slug: null,
+  opponent_avatar_url: "",
   opponent_praxis_id: null,
   submit_proposed_at: null,
   viewer_can_vote: true,

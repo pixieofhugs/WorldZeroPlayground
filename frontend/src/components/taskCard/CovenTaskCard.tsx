@@ -226,6 +226,12 @@ export default function CovenTaskCard({
             height: MASTHEAD_HEIGHT,
             background: "var(--faction-coven-slip-sigil-ground)",
             borderBottom: "1px solid var(--faction-coven-slip-pk)",
+            /* The twinkle box is the one wrapper standing between a card's
+               <article> and its band, so since #2167 made the band a link it
+               matches `:has(a[href])` on the equal-height row's slack chain
+               (index.css) and would stretch past its 44px. The band inside
+               pins its own growth for the same reason; this pins the box. */
+            flexGrow: 0,
           }}
         >
           <TwinkleField />

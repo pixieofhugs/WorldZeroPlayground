@@ -2993,6 +2993,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Created By Avatar Url
+             * @default
+             */
+            created_by_avatar_url: string;
             /** Created By Display Name */
             created_by_display_name: string;
             /** Created By Faction Slug */
@@ -3861,6 +3866,11 @@ export interface components {
              */
             metatask_points: number;
             moderation_status: components["schemas"]["ModerationStatus"];
+            /**
+             * Opponent Avatar Url
+             * @default
+             */
+            opponent_avatar_url: string;
             /** Opponent Display Name */
             opponent_display_name: string | null;
             /** Opponent Faction Slug */
@@ -4007,6 +4017,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Created By Avatar Url
+             * @default
+             */
+            created_by_avatar_url: string;
             /** Created By Display Name */
             created_by_display_name: string;
             /** Created By Faction Slug */

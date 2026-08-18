@@ -124,8 +124,13 @@ describe('the rotation is decoration over a stable accessible name (#2038)', () 
   it('leaves the wordmark in English', () => {
     // `rotateEphWordmark()` retires itself in its own body; only these two
     // elements turn. THE EPHEMERISTS is written once, plainly.
+    //
+    // Counted over the TEXT, not the markup: since #2167 the band is a link to
+    // the faction page and its `aria-label` names the faction too. That is an
+    // accessible name living in an attribute, not a second wordmark on the
+    // card — what this guards is that nothing turns or repeats the drawn one.
     const html = render()
-    expect(html.match(/The Ephemerists/gi)?.length).toBe(1)
+    expect(html.replace(/<[^>]*>/g, '').match(/The Ephemerists/gi)?.length).toBe(1)
   })
 
   it('says nothing but the reason on a card that cannot be signed up for', () => {
