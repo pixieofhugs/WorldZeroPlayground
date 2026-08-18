@@ -1,13 +1,12 @@
 import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import CardMasthead from "./CardMasthead";
+import FactionMasthead from "../cardMasthead/FactionMasthead";
 /* No `CARD_CTA_ROW` here: the plate's rule and its button share one inset box,
    so the clearance comes from that box's own `bodyPad` bottom. */
 import { CARD_CTA } from "./cardCta";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import EphemeristsRuneStrip from "../factionMarks/EphemeristsRuneStrip";
@@ -298,50 +297,11 @@ export default function EphemeristsTaskCard({
         }}
       >
         {/* THE RESTRAINED MASTHEAD (#2067) — the kit's shared anatomy and
-            nothing else: the mark hard left at the kit's 20, the wordmark on the
-            card's centreline. No wrapper box, because the box existed to hold
-            the registers and to pin a 110px canvas for them to march across;
-            the band is `CardMasthead`'s own height now, which is what makes the
-            hero row rise ~75px.
-
-            THE GROUND IS THE MEDALLION'S DISC, not the cornice band. `-plate-disc`
-            is two values lighter than `-plate-band`, so the header reads as a
-            brass-edged plate rather than as a night strip, and the compass rose
-            below it is struck on the same field. THE INK IS UNCHANGED:
-            `-plate-band-ink` is the gold measured on the band, and moving the
-            ground under it spends 0.93 of a very large margin — 14.00:1 on the
-            band, 13.07:1 on the disc. That is a NEW pairing rather than the old
-            row wearing a new ground, so `factionContrast.test.ts` records it.
-            The sigil takes `currentColor`, so it is that same gold.
-
-            `boxSizing` is load-bearing next to the border: the band is a block
-            child of a card with `overflow: hidden`, so a content-box border
-            would push it 2px wider than the card and be clipped on the right. */}
-        <CardMasthead
-          slug="ephemerists"
-          style={{
-            boxSizing: "border-box",
-            background: "var(--faction-ephemerists-plate-disc)",
-            color: "var(--faction-ephemerists-plate-band-ink)",
-            border: "1px solid var(--faction-ephemerists-plate-brass)",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: DECO,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.3em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {/* #1910: the band spells the faction's name, so it reads the one
-                key that stays per-faction rather than a second copy. The
-                `textTransform` above already carried the plate's upper case, so
-                the band reads THE EPHEMERISTS either way. */}
-            {factionName("ephemerists")}
-          </span>
-        </CardMasthead>
+            nothing else, mounted from the shared band (#2185). The wrapper box
+            that used to pin a 110px canvas for the glyph registers went with
+            #2067, which is what makes the hero row rise ~75px. The paint and the
+            disc-vs-band ruling live at `cardMasthead/FactionMasthead`. */}
+        <FactionMasthead slug="ephemerists" />
         <Cornice flutes={40} />
 
         {/* The journal leaf. */}
