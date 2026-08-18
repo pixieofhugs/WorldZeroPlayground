@@ -137,6 +137,7 @@ function state(): EditPraxisState {
 function render(
   slug: string | null,
   formFactor: "desktop" | "mobile" = "desktop",
+  overrides: Partial<EditPraxisState> = {},
 ): string {
   mocks.formFactor = formFactor;
   const Archetype = resolvedArchetype(
@@ -144,13 +145,24 @@ function render(
   )!;
   return renderToStaticMarkup(
     <MemoryRouter>
-      <Archetype state={state()} />
+      <Archetype state={{ ...state(), ...overrides }} />
     </MemoryRouter>,
   );
 }
 
 function count(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
+}
+
+/**
+ * The composer's title `<input>`, matched off its own tag.
+ *
+ * `maxLength="200"` is the only attribute unique to it — #2179 removed the `id`,
+ * which had existed solely so `ComposerSection`'s `htmlFor` could point at it,
+ * and there is no longer a `<label>` to point.
+ */
+function titleInput(markup: string): string | undefined {
+  return markup.match(/<input[^>]*maxLength="200"[^>]*>/)?.[0];
 }
 
 /**
@@ -234,10 +246,11 @@ describe("the last two archetype seams of #1706", () => {
  * differ by form factor.
  */
 describe("the composer's title, write-up and proof rows", () => {
-  it("the title label says the field is required (#2093)", () => {
-    // One catalog value, inherited by all eight mounts. The composer's label
-    // register is uppercase (`composerLabelStyle`), so this renders as
-    // `TITLE (REQUIRED)` — the case here is what a screen reader reads.
+  it("the title's name still says the field is required (#2093, #2179)", () => {
+    // One catalog value, inherited by all eight mounts. #2179 took it OFF THE
+    // SCREEN — it is the input's `aria-label` now, not a drawn heading — so the
+    // case here is the case a screen reader reads, with no `composerLabelStyle`
+    // uppercasing it on the way.
     expect(i18n.t("forms:editPraxis.composer.titleLabel")).toMatch(/required/i);
   });
 
@@ -247,7 +260,7 @@ describe("the composer's title, write-up and proof rows", () => {
     // required STATE into the accessibility tree, which a `*` glyph does not.
     // Matched off the tag rather than the whole document so attribute order
     // cannot make this pass by accident.
-    const input = markup.match(/<input[^>]*id="composer-title"[^>]*>/)?.[0];
+    const input = titleInput(markup);
     expect(input).toBeDefined();
     expect(input).toContain("required");
   });
@@ -286,5 +299,63 @@ describe("the composer's title, write-up and proof rows", () => {
       width === "mobile" ? [mobile, desktop] : [desktop, mobile];
     expect(markup).toContain(drawn);
     expect(markup).not.toContain(absent);
+  });
+});
+
+/**
+ * The field names move into the placeholders (#2179) — reversing #2093's
+ * VISIBLE half, and only that half.
+ *
+ * "Gone" cannot be tested here as "the string is absent": `titleLabel` is still
+ * in the markup, as the input's `aria-label`. It is tested as a COUNT — exactly
+ * one occurrence, and that one proved below to be the attribute. A second
+ * occurrence is a heading that came back.
+ *
+ * `writeUpLabel` keeps #2085's absence test above instead: the write-up's name
+ * rides on `bodyContentAttributes`, which an effect applies to a CodeMirror
+ * element this harness never builds.
+ */
+describe("the composer's field names move into the placeholders (#2179)", () => {
+  it("the placeholders ARE the field names", () => {
+    // `Write-up`, not `Description`: a task has a description, a praxis has a
+    // write-up, and the task's own description sits on the slip inches above
+    // this box (owner ruling on #2179).
+    expect(i18n.t("forms:editPraxis.composer.titlePlaceholder")).toBe("Title");
+    expect(i18n.t("forms:editPraxis.composer.bodyPlaceholder")).toBe("Write-up");
+  });
+
+  it.each(AT_BOTH)("%s draws no visible Title label on %s", (slug, width) => {
+    const markup = render(slug === "na" ? null : slug, width);
+    expect(count(markup, i18n.t("forms:editPraxis.composer.titleLabel"))).toBe(1);
+    // The id went with the `<label htmlFor>` that was its only reader — the
+    // same move #2085 made for `composer-body`.
+    expect(markup).not.toContain('id="composer-title"');
+  });
+
+  it.each(SLUGS)("%s names and fills the title input from the catalog", (slug) => {
+    const markup = render(slug === "na" ? null : slug);
+    const input = titleInput(markup);
+    expect(input).toBeDefined();
+    // The single occurrence counted above, here shown to be the accessible
+    // name. A placeholder is not a name: it is gone the moment there is text.
+    expect(input).toContain(
+      `aria-label="${i18n.t("forms:editPraxis.composer.titleLabel")}"`,
+    );
+    expect(input).toContain(
+      `placeholder="${i18n.t("forms:editPraxis.composer.titlePlaceholder")}"`,
+    );
+  });
+
+  it.each(SLUGS)("%s reports an empty title IN TEXT on submit", (slug) => {
+    // `(required)` left the screen; the constraint did not. The placeholder
+    // cannot carry it (gone once there is text) and colour is not a report, so
+    // the sheet has to SAY it — inside a live region, because publish is an
+    // onClick with no `<form>` and therefore no native validation announcement.
+    const message = i18n.t("forms:editPraxis.errors.titleRequired");
+    const markup = render(slug === "na" ? null : slug, "desktop", {
+      error: message,
+    });
+    expect(markup).toContain(message);
+    expect(markup).toContain('role="alert"');
   });
 });

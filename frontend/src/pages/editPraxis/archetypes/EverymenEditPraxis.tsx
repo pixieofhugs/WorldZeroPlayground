@@ -493,16 +493,14 @@ export default function EverymenEditPraxis({ state }: Props) {
             dispatch, so the seal no longer changes shape when you file. */}
         <TaskSlip praxis={praxis} task={task} {...slip} />
 
-        <ComposerSection
-          label={t("editPraxis.composer.titleLabel")}
-          htmlFor="composer-title"
-          rule={false}
-          labelStyle={stencil({ color: INK })}
-        >
+        {/* No visible label since #2179, which reverses #2093's VISIBLE
+            half: the placeholder carries the field's name on screen and
+            `titleLabel` carries it in the accessible tree. Both live in
+            `TitleField`, so there is nothing per-faction here. */}
+        <ComposerSection rule={false}>
           <TitleField
             state={state}
             skin={{
-              id: "composer-title",
               placeholder: t("editPraxis.composer.titlePlaceholder"),
               inputStyle: {
                 ...fieldBox,
