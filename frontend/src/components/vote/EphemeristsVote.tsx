@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  BRASS,
+  BRASS_RULE,
   GOLD,
   OCHRE,
   METAL_SIGILS,
@@ -18,8 +18,8 @@ import { VOTE_REFRAMES } from './voteReframes'
  *
  * The 1–5 approval is a transmutation: five discs on a stepped night plate,
  * lead → copper → silver → gold → platinum, each carrying its own alchemical
- * sigil. Reaching a rank lights every disc up to it in its own metal — conic
- * burst, sheen, shock ring — and rank 5 is haloed in gold with iron filings
+ * sigil. Reaching a rank lights every disc up to it in its own metal — rim,
+ * glyph, sheen — and rank 5 is haloed in gold with the seven planetary metals
  * orbiting it. The tier WORDS are the metals themselves.
  *
  * ## The metals ARE the scale (#1638)
@@ -27,15 +27,23 @@ import { VOTE_REFRAMES } from './voteReframes'
  * The plate used to carry three separate restatements of the rank it was
  * already showing: a dashed track threading the discs, a roman numeral struck
  * on each one, and an italic caption naming the hovered tier. All three are
- * gone. What replaced them is not another label but a LEGIBLE burst — the ray
- * fan (a flat 10 rays, 16 at rank 5) is now a conic ring whose spoke pitch is
- * `METAL_SIGILS[n].burstStep`, 60° at lead down to 22.5° at platinum, so the
- * ring visibly densifies as the metal improves. Rank is readable off the ring.
+ * gone. Each disc's `aria-label` names its metal, and the raised disc is the
+ * cast. (The shell used to state it in words as well — #2166 took that line,
+ * and the aggregate tally under it, off every skin, this one included.)
  *
- * Nothing was lost with the caption: each disc's `aria-label` names its metal,
- * and the raised disc is the cast. (The shell used to state it in words as well
- * — #2166 took that line, and the aggregate tally under it, off every skin,
- * this one included.)
+ * ## THE RESTING PLATE IS STILL (#2142)
+ *
+ * #1638 gave every reached disc a perpetual conic ring whose spoke pitch was
+ * the metal's `burstStep`, so rank could be read off the densification. The
+ * owner struck it: five haloed discs at once is fog, and 60° against 45° is not
+ * a distinction anyone reads at 44px. Rank is carried by the COUNT of lit discs
+ * and by the reckoning below the plate. What is left resting is the rim, the
+ * glyph and the slow sheen.
+ *
+ * `burstStep` did not go with it — it moved. The pitch is now the pitch of the
+ * CAST DIAL below, where it is a momentary instrument rather than a permanent
+ * halo, and casting platinum throws a visibly finer dial (22.5°) than casting
+ * lead (60°).
  *
  * ## THE PLATE IS A FIXED NIGHT SURFACE in both themes
  *
@@ -45,9 +53,15 @@ import { VOTE_REFRAMES } from './voteReframes'
  * measurement is recorded at the token declaration in index.css. There is no
  * `dark ? a : b` anywhere (§8).
  *
- * Every motion is a reduced-motion-gated CSS class (`.eph-metal-*`, index.css),
- * so the stilled state is a fully lit ladder — motion is decoration, never
- * meaning. Cast/tally logic stays in the shared {@link useVote} hook.
+ * Since #2142 the plate's ground is anchored to the masthead band
+ * (`--faction-ephemerists-plate-band`) rather than to a vote-only blue, so the
+ * plate and the band are the same metal catching light differently. The radial
+ * recess and the inset top shadow stay: it is a recess, not a flat fill.
+ *
+ * Every motion is a reduced-motion-gated CSS class (`.eph-metal-*`,
+ * `.eph-cast-*`), so the stilled state is a fully lit ladder and a cast that
+ * simply changes state — motion is decoration, never meaning. Cast/tally logic
+ * stays in the shared {@link useVote} hook.
  */
 
 /** The touch target, and the haloed top rank. Never shrink either (WCAG ≥44). */
@@ -57,13 +71,15 @@ const TOP_DISC_SIZE = 50
 const TIERS = VOTE_REFRAMES['ephemerists'].tiers
 
 /**
- * How far the conic burst spreads past the disc it rings. Ornament geometry,
- * and the number the plate's own gap is set from: the ring box is
+ * How far the cast burst spreads past the disc it leaves, and the number the
+ * plate's own gap is set from: every burst layer is boxed at
  * `size + BURST_MARGIN`, so it overhangs the rim by `BURST_MARGIN / 2` in EVERY
- * direction and at every tier — see the gap comment on the plate below.
+ * direction and at every tier — see the gap comment on the plate below. The
+ * ambient ring this figure was first derived for is gone (#2142); the cast
+ * keeps the box, because the plate's clip would otherwise shave the bloom.
  */
 const BURST_MARGIN = 24
-/** How far the filings orbit past rank 5's edge. Ornament geometry. */
+/** How far the planets orbit past rank 5's edge. Ornament geometry. */
 const FILING_ORBIT = 13
 /**
  * The chamfer leg of the plate's stepped silhouette, and of the brass ground
@@ -77,6 +93,190 @@ const FILING_ORBIT = 13
 const PLATE_STEP = 7
 const SHEET_STEP = 6
 
+/**
+ * THE SEVEN PLANETARY METALS, orbiting the fully transmuted disc (#2142).
+ *
+ * Six 3px gold dots stood here — "iron filings", which named one metal and drew
+ * none of them. Twelve marks now cycle the seven classical correspondences:
+ * Saturn/lead, Venus/copper, Moon/silver, Sun/gold, Mercury/quicksilver,
+ * Jupiter/tin, Mars/iron — the ladder's own five plus the two it does not
+ * grade, which is the joke and the reason it is seven and not five.
+ *
+ * Unicode astro symbols, present in every major system stack, so this costs no
+ * webfont and no SVG. `aria-hidden`: they are ornament, and the disc's own
+ * `aria-label` already names its metal.
+ */
+const PLANETS = ['♄', '♀', '☽', '☉', '☿', '♃', '♂']
+/** Twelve mounts around the rim, cycling the seven. A clock face, not a heptagon. */
+const PLANET_COUNT = 12
+
+/** The cast burst's two swarms: nine drifting motes, twelve struck sparks. */
+const CAST_MOTES = 9
+const CAST_SPARKS = 12
+
+/**
+ * THE CAST BURST (#2142) — what the struck disc throws, over ~1.6s.
+ *
+ * A halo bloom, two shock rings, a RULED DIAL that turns as it opens, nine
+ * drifting motes and twelve sparks, all in the struck metal's own colour; the
+ * sigil pops to 1.24 and back on the button itself.
+ *
+ * THE DIAL IS THE POINT. Everything else here is a firework; the dial reads as
+ * an instrument taking a measurement, and its tick pitch is `metal.burstStep` —
+ * the number #1638 spent on the ambient ring — so platinum's dial is finer than
+ * lead's. That is the rank, stated once, at the moment it is cast.
+ *
+ * EVERY LAYER RESTS INVISIBLE. Each carries `opacity: 0` inline and gets its
+ * whole visible life from a `@keyframes` in `src/motion.ornament.css`, behind
+ * `prefers-reduced-motion: no-preference`. So a reader who asked for no motion,
+ * or whose deferred sheet has not arrived, sees no burst at all — they see the
+ * plain state change the disc makes anyway. That is also why the paint is
+ * INLINE rather than in a stylesheet: none of this may reach the critical CSS
+ * (#2073), and the deferred sheet may hold nothing but motion.
+ *
+ * Nothing here is stateful or timed: the layers stay mounted after the run and
+ * fall back to `opacity: 0`, and a fresh strike remounts them by key. No timer,
+ * no cleanup, no effect.
+ *
+ * Exported for its own test and for no other reason: the burst is CLICK-driven
+ * and the frontend harness has no DOM, so the only way to assert the dial's
+ * pitch and the resting opacities from markup is to render this directly.
+ */
+export function CastBurst({
+  metal,
+  size,
+}: {
+  metal: (typeof METAL_SIGILS)[number]
+  size: number
+}) {
+  const radius = size / 2
+  /** The overhang the plate's padding and gap were sized for. */
+  const reach = BURST_MARGIN / 2
+  /** Every full-box layer sits concentric with the disc and overhangs by `reach`. */
+  const layer: CSSProperties = {
+    position: 'absolute',
+    left: -reach,
+    top: -reach,
+    width: size + BURST_MARGIN,
+    height: size + BURST_MARGIN,
+    borderRadius: '50%',
+    pointerEvents: 'none',
+    opacity: 0,
+  }
+  /*
+   * The dial's ticks live in a BAND outside the disc, not across it: the mask
+   * punches out everything inside 74% of the box and everything past 94%, so
+   * what is left is a ruled rim the sigil is legible inside. `black` there is
+   * an alpha stencil, not a colour — a mask reads opacity, so any opaque value
+   * does and no token could be more correct than another (the same argument
+   * index.css made for the ring this replaces).
+   */
+  const dialMask =
+    'radial-gradient(closest-side, transparent 0 74%, black 76%, black 92%, transparent 94%)'
+
+  return (
+    <>
+      <span
+        aria-hidden
+        className="eph-cast-halo"
+        style={{
+          ...layer,
+          background: `radial-gradient(closest-side, color-mix(in srgb, ${metal.color} 62%, transparent), transparent 74%)`,
+        }}
+      />
+
+      {[0, 1].map((ring) => (
+        <span
+          key={`cast-ring${ring}`}
+          aria-hidden
+          className="eph-cast-ring"
+          style={
+            {
+              ...layer,
+              border: `1px solid ${metal.color}`,
+              '--metal-delay': `${ring * 0.18}s`,
+            } as CSSProperties
+          }
+        />
+      ))}
+
+      <span
+        aria-hidden
+        className="eph-cast-dial"
+        style={{
+          ...layer,
+          background: `repeating-conic-gradient(${metal.color} 0 1.2deg, transparent 1.2deg ${metal.burstStep}deg)`,
+          WebkitMask: dialMask,
+          mask: dialMask,
+        }}
+      />
+
+      {Array.from({ length: CAST_MOTES }, (_, mote) => {
+        const angle = (mote / CAST_MOTES) * Math.PI * 2 + 0.7
+        return (
+          <span
+            key={`cast-mote${mote}`}
+            aria-hidden
+            className="eph-cast-mote"
+            style={
+              {
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: 2,
+                height: 2,
+                marginLeft: Math.cos(angle) * radius * 0.5,
+                marginTop: Math.sin(angle) * radius * 0.5,
+                borderRadius: '50%',
+                background: metal.color,
+                pointerEvents: 'none',
+                opacity: 0,
+                // Motes DRIFT — a short outward wander with an updraft, rather
+                // than the sparks' straight radial throw.
+                '--cast-x': `${(Math.cos(angle) * (reach - 4)).toFixed(1)}px`,
+                '--cast-y': `${(Math.sin(angle) * (reach - 4) - 7).toFixed(1)}px`,
+                '--metal-delay': `${(mote * 0.07).toFixed(2)}s`,
+              } as CSSProperties
+            }
+          />
+        )
+      })}
+
+      {Array.from({ length: CAST_SPARKS }, (_, spark) => {
+        const angle = (spark / CAST_SPARKS) * Math.PI * 2 + 0.26
+        return (
+          <span
+            key={`cast-spark${spark}`}
+            aria-hidden
+            className="eph-cast-spark"
+            style={
+              {
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: 3,
+                height: 3,
+                // Struck FROM the rim, so they read as thrown off the metal
+                // rather than fired through the sigil.
+                marginLeft: Math.cos(angle) * radius * 0.82,
+                marginTop: Math.sin(angle) * radius * 0.82,
+                borderRadius: '50%',
+                background: metal.color,
+                boxShadow: `0 0 5px ${metal.color}`,
+                pointerEvents: 'none',
+                opacity: 0,
+                '--cast-x': `${(Math.cos(angle) * (radius * 0.18 + reach)).toFixed(1)}px`,
+                '--cast-y': `${(Math.sin(angle) * (radius * 0.18 + reach)).toFixed(1)}px`,
+                '--metal-delay': `${(spark * 0.018).toFixed(3)}s`,
+              } as CSSProperties
+            }
+          />
+        )
+      })}
+    </>
+  )
+}
+
 export default function EphemeristsVote({
   praxisId,
   currentValue,
@@ -84,6 +284,14 @@ export default function EphemeristsVote({
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
+  /*
+   * Which disc is mid-cast, and WHICH STRIKE it is. The counter is the whole
+   * reason this is not a boolean: casting the same metal twice has to throw a
+   * second burst, and a CSS animation only restarts if the element is new — so
+   * `strike` is the burst's React key. Ornament state only; the cast itself is
+   * `useVote`'s.
+   */
+  const [cast, setCast] = useState<{ value: number; strike: number } | null>(null)
 
   if (!user) {
     return <VoteLoginGate />
@@ -102,10 +310,13 @@ export default function EphemeristsVote({
        * the brass is a GROUND here and the night sheet is laid one pixel inside
        * it, stepped a pixel tighter: the frame is what shows through the inset,
        * which means the clip carries the rule instead of shaving it.
+       *
+       * The mount is the RULE brass since #2141's mark/rule split (#2142): it
+       * is a line, and the mark brass is reserved for things that are read.
        */}
       <div
         // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which draws the plate a four-pixel brass mount.
-        style={{ background: BRASS, padding: 1, clipPath: stepClip(PLATE_STEP) }}
+        style={{ background: BRASS_RULE, padding: 1, clipPath: stepClip(PLATE_STEP) }}
       >
         <div
           style={{
@@ -134,11 +345,24 @@ export default function EphemeristsVote({
              * this to #1638 because the fan's index-0 ray pointed straight up
              * and reached 14.5px into 12px of padding, where the clip cut it.
              * The ring reaches 12, and `--space-lg` (16) clears it by 4.
+             *
+             * #2142 DELETED the ambient ring and the figures still hold, which
+             * is why nothing moved: the cast burst inherits the same box, and it
+             * is the only thing left that reaches past a rim. Only one disc
+             * casts at a time, so the 24px is now clearance against the plate's
+             * clip rather than against a neighbour's ring.
              */
             gap: 'var(--space-xl)',
             padding: 'var(--space-lg) var(--space-xl)',
+            /*
+             * The ground is the MASTHEAD BAND, dropping to the same near-black
+             * (#2142). The plate and the band are one metal catching light two
+             * ways; before this the plate had a vote-only blue of its own that
+             * belonged to no other Ephemerists surface. Still a radial recess,
+             * not a flat fill.
+             */
             background:
-              'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-vote-plate-from), var(--faction-ephemerists-vote-plate-to))',
+              'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-plate-band), var(--faction-ephemerists-vote-plate-to))',
             // ornament (#1609): the same inset well the Coven and S.N.I.D.E.
             // vote plates carry — a recess INSIDE a plate that is dark in both
             // cascades, not a cast onto a ground that flips. This one is also
@@ -159,11 +383,18 @@ export default function EphemeristsVote({
           const top = tier.value === 5
           const size = top ? TOP_DISC_SIZE : DISC_SIZE
           const radius = size / 2
+          const casting = cast?.value === tier.value
           return (
             <button
               key={tier.value}
               disabled={saving}
-              onClick={() => void vote(tier.value)}
+              onClick={() => {
+                setCast((previous) => ({
+                  value: tier.value,
+                  strike: (previous?.strike ?? 0) + 1,
+                }))
+                void vote(tier.value)
+              }}
               onMouseEnter={() => setHovered(tier.value)}
               aria-label={t('chrome.rateAria', { value: tier.value, label: tier.label })}
               aria-pressed={picked}
@@ -187,14 +418,15 @@ export default function EphemeristsVote({
                 transition: 'transform 180ms cubic-bezier(.2,.8,.3,1.4)',
               }}
             >
-              {/* The disc's own rim: brass while idle, its metal once reached. */}
+              {/* The disc's own rim: the rule brass while idle, its metal once
+                  reached (#2142 — a rim is a line, so it takes the rule). */}
               <span
                 aria-hidden
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: '50%',
-                  border: `1px solid ${reached ? metal.color : BRASS}`,
+                  border: `1px solid ${reached ? metal.color : BRASS_RULE}`,
                   opacity: reached ? 1 : 0.85,
                   boxShadow: reached
                     ? `0 0 12px -2px color-mix(in srgb, ${metal.color} 60%, transparent), inset 0 0 10px -4px ${metal.color}`
@@ -203,60 +435,39 @@ export default function EphemeristsVote({
                 }}
               />
 
-              {reached && (
-                <>
-                  {/*
-                   * THE PER-TIER BURST (#1638) — a conic ring of spokes at this
-                   * metal's own pitch, masked to a halo clear of the disc.
-                   *
-                   * The pitch is the point: 60° at lead is six spokes, 22.5° at
-                   * platinum is sixteen, so the burst densifies up the ladder
-                   * and carries the rank the struck numeral used to. The ring
-                   * is inked in its own metal rather than in one accent for the
-                   * whole plate.
-                   *
-                   * Pigment, mask and cycle are all `.eph-metal-burst` in
-                   * index.css; what arrives from here is geometry — the box,
-                   * the spoke pitch and the phase.
-                   */}
-                  <span
-                    aria-hidden
-                    className="eph-metal-burst"
-                    style={
-                      {
-                        position: 'absolute',
-                        left: -BURST_MARGIN / 2,
-                        top: -BURST_MARGIN / 2,
-                        width: size + BURST_MARGIN,
-                        height: size + BURST_MARGIN,
-                        '--metal-ink': metal.color,
-                        '--metal-step': `${metal.burstStep}deg`,
-                        '--metal-delay': `${(tier.value * 0.16).toFixed(2)}s`,
-                      } as CSSProperties
-                    }
-                  />
+              {/* A perpetual conic ring stood here on every reached disc, at
+                  this metal's own spoke pitch (#1638). #2142 struck it: five
+                  haloed discs at once is fog, and the pitch is unreadable at
+                  44px. The pitch moved to the cast dial, where it is thrown
+                  once, by one disc, at the moment it means something. */}
+              {casting && <CastBurst key={`strike${cast.strike}`} metal={metal} size={size} />}
 
-                  {/* The shock ring leaving the disc as the metal strikes. */}
-                  <span
-                    aria-hidden
-                    className="eph-metal-shock"
-                    style={
-                      {
-                        position: 'absolute',
-                        inset: -2,
-                        borderRadius: '50%',
-                        pointerEvents: 'none',
-                        border: `1px solid ${top ? GOLD : metal.color}`,
-                        '--metal-dur': top ? '2.2s' : '3s',
-                        '--metal-delay': `${tier.value * 0.12}s`,
-                      } as CSSProperties
-                    }
-                  />
-                </>
+              {/* The shock ring leaving the disc as the metal strikes. */}
+              {reached && (
+                <span
+                  aria-hidden
+                  className="eph-metal-shock"
+                  style={
+                    {
+                      position: 'absolute',
+                      inset: -2,
+                      borderRadius: '50%',
+                      pointerEvents: 'none',
+                      border: `1px solid ${top ? GOLD : metal.color}`,
+                      '--metal-dur': top ? '2.2s' : '3s',
+                      '--metal-delay': `${tier.value * 0.12}s`,
+                    } as CSSProperties
+                  }
+                />
               )}
 
               <svg
+                // The sigil pops to 1.24 and back on the strike. Keyed on the
+                // strike counter so a second cast of the same metal replays it:
+                // a class that is already applied restarts no animation.
+                key={`sigil${casting ? cast.strike : 0}`}
                 aria-hidden
+                className={casting ? 'eph-cast-sigil' : undefined}
                 width={size * 0.5}
                 height={size * 0.5}
                 viewBox="0 0 24 24"
@@ -303,14 +514,17 @@ export default function EphemeristsVote({
                 />
               )}
 
-              {/* Iron filings, drawn to the fully transmuted disc. */}
+              {/* The seven planetary metals, drawn to the fully transmuted disc
+                  (#2142). The orbit stays at `radius + FILING_ORBIT`: the
+                  design's tighter `size/2 + 6` crowds twelve glyphs onto the rim
+                  where they compete with the platinum sigil inside it. */}
               {reached &&
                 top &&
-                [0, 1, 2, 3, 4, 5].map((filing) => {
-                  const angle = (filing / 6) * Math.PI * 2 + 0.4
+                Array.from({ length: PLANET_COUNT }, (_, planet) => {
+                  const angle = (planet / PLANET_COUNT) * Math.PI * 2 + 0.4
                   return (
                     <span
-                      key={`filing${filing}`}
+                      key={`planet${planet}`}
                       aria-hidden
                       className="eph-metal-filing"
                       style={
@@ -318,26 +532,29 @@ export default function EphemeristsVote({
                           position: 'absolute',
                           left: '50%',
                           top: '50%',
-                          width: 3,
-                          height: 3,
-                          marginLeft: Math.cos(angle) * (radius + FILING_ORBIT),
-                          marginTop: Math.sin(angle) * (radius + FILING_ORBIT),
-                          borderRadius: '50%',
-                          background: GOLD,
-                          boxShadow: `0 0 4px ${GOLD}`,
+                          // The glyph is centred on its orbit point rather than
+                          // hung off it: a 9px mark is its own box, where the
+                          // 3px dot this replaces was near enough a point.
+                          marginLeft: Math.cos(angle) * (radius + FILING_ORBIT) - 4.5,
+                          marginTop: Math.sin(angle) * (radius + FILING_ORBIT) - 4.5,
+                          fontSize: 'var(--text-sm)',
+                          lineHeight: 1,
+                          color: GOLD,
+                          textShadow: `0 0 4px ${GOLD}`,
                           pointerEvents: 'none',
-                          '--metal-delay': `${filing * 0.18}s`,
+                          '--metal-delay': `${planet * 0.14}s`,
                         } as CSSProperties
                       }
-                    />
+                    >
+                      {PLANETS[planet % PLANETS.length]}
+                    </span>
                   )
                 })}
 
               {/* A 16px night badge struck with the rank's roman numeral sat
-                  here, at the metal's lower edge. #1638 struck it off: the
-                  burst's spoke pitch now carries the rank, and a numeral beside
-                  it was the ladder saying the same thing twice in two
-                  vocabularies. */}
+                  here, at the metal's lower edge. #1638 struck it off, and
+                  #2142 declined to bring it back with the cast line: the plate
+                  states the rank once, in metal. */}
             </button>
           )
         })}
@@ -350,7 +567,17 @@ export default function EphemeristsVote({
           above it. #2166 then did the same to the other eight skins, and took
           the shell's "Voted N pts" line and its aggregate tally with it —
           `votes:chrome.idle`, `.tag`, `.voted` and `.tally_*` all leave the
-          catalog together, and the shell's summary block with them. */}
+          catalog together, and the shell's summary block with them.
+
+          #2142 §5 asked for a reckoning line back in this slot ("You cast gold"
+          / "52 pts from 6 votes"). It is NOT built, and the conflict is on the
+          issue: #2142 was filed at 01:07 and #2176 — "No text under the vote
+          stars, none" — merged at 03:01 the same night, taking exactly those
+          two statements off all nine skins and deleting the catalog keys. The
+          issue's premise ("today it reads 'Voted 4 pts'") describes the plate
+          as it was BEFORE that merge. Re-adding the line here would put this
+          skin alone back on the far side of a ruling made two hours later, so
+          it waits on an owner call. */}
 
       <VoteError error={error} color={OCHRE} />
     </div>
