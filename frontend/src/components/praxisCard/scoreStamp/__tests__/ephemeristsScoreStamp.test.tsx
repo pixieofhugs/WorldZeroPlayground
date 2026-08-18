@@ -130,7 +130,7 @@ describe('the stamp reads working-then-total (#2145)', () => {
     const html = render()
     // The foreign award, ochre — 4.97:1 light / 4.99:1 dark on the panel cell.
     expect(html).toContain('color:var(--faction-ephemerists-plate-ochre)')
-    // NOT `-plate-band-quiet`, which is a DISC ink: 1.80:1 on this panel in
+    // NOT `-plate-band-quiet`, which is a DISC ink: 1.78:1 on this panel in
     // light. See the note in the stamp for the measurement.
     expect(html).toContain('color:var(--faction-ephemerists-plate-quiet)')
     // The ochre chip is gone: it was `-plate-disc` on `-plate-ochre`, 3.00:1,

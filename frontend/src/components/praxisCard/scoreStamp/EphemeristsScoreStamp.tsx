@@ -72,7 +72,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * this is a deliberate deviation, reported on the PR rather than shipped.
  * `-band-quiet` is a DISC ink (#c2ae7e, theme-invariant, minted for the compass
  * blue) and this line sits on `-plate-inner`, the panel cell — #f2e8ce in
- * light, where it measures **1.80:1**. `-plate-quiet` is the ink minted for
+ * light, where it measures **1.78:1**. `-plate-quiet` is the ink minted for
  * this exact ground and gated by `factionContrast`'s "ephemerists panel cell,
  * quiet ink" row. The two names differ by one word and the grounds differ by
  * everything.
