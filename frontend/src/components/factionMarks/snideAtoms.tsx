@@ -1,7 +1,10 @@
 /**
- * Shared S.N.I.D.E. craft atoms — the struck-through circle-S sigil reused
- * across SNIDE surfaces (task detail, faction hero), and the pink pen loop the
- * faction circles a figure in. Mirrors
+ * Shared S.N.I.D.E. craft atoms — the flyposted wall the faction's surfaces
+ * stand on, and the pink pen loop it circles a figure in. It does NOT hold the
+ * faction's sigil: a struck-through circle-S lived here until #2119 and was a
+ * second `SnideSigil` competing with the real one in `components/sigil/`, which
+ * two surfaces then imported by mistake. A faction gets one mark, from one
+ * module. Mirrors
  * components/factionMarks/ephemeristsPlate.tsx. Colors come from the namespaced
  * --faction-snide-* tokens in index.css. Filter-free (matches the faction's
  * CSS-only craft layers — no SVG feTurbulence).
@@ -37,51 +40,6 @@ export const WALL = [
   "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
   "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
 ].join(", ");
-
-interface SnideSigilProps {
-  size?: number;
-  color?: string;
-}
-
-/** A sprayed, struck-through circle-S — the defiant SNIDE mark. */
-export function SnideSigil({
-  size = 48,
-  color = "var(--faction-snide-acid)",
-}: SnideSigilProps) {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      width={size}
-      height={size}
-      style={{ display: "block" }}
-      aria-hidden="true"
-    >
-      <circle cx="24" cy="24" r="19" fill="none" stroke={color} strokeWidth="3" />
-      <text
-        x="24"
-        y="34"
-        textAnchor="middle"
-        style={{
-          fontFamily: "var(--faction-snide-font-impact)",
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: sigil letterform drawn into the 48px SVG
-          fontSize: 30,
-        }}
-        fill={color}
-      >
-        S
-      </text>
-      <line
-        x1="9"
-        y1="40"
-        x2="39"
-        y2="8"
-        stroke={color}
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 /**
  * The pen circle — S.N.I.D.E.'s points mark (#2035, shared by #2042).
