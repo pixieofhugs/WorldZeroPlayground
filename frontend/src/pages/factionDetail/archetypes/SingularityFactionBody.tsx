@@ -494,6 +494,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   {t("detail.spotlightStat", {
                     level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
+                    count: spot.all_time_score,
                   })}
                 </div>
               </div>

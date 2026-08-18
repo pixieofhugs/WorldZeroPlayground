@@ -276,7 +276,7 @@ export default function DefaultTaskDetail({
             color: "var(--faction-default-gold)",
           }}
         >
-          {t("detail.points.total")}
+          {t("detail.points.total", { count: modifiedPoints })}
         </span>
       </div>
     </div>

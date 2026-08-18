@@ -20,7 +20,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * roundel already states that figure (#1131), and the VOTES row, which drops out
  * when nobody has voted. With both gone the stamp has no fields to fill, so it is
  * not struck at all. This file only decides what a row looks like. The one row this
- * stamp adds on its own is GROUP — `(base + meta)`, drawn under a rule — and it
+ * stamp adds on its own is the SUBTOTAL — `(base + meta)`, drawn under a rule — and it
  * appears only when a metatask AND a multiplier are both in play, which is
  * exactly the design's "full formula" column. Without a multiplier the subtotal
  * explains nothing, so it stays off; the stamp must read as a completed form in
@@ -51,7 +51,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
     // only when nothing else exists), so the subtotal always has both terms;
     // the guard is what tells the compiler so.
     if (mult !== null && base !== null) {
-      rows.push({ key: "group", label: t("card.stamp.group"), value: `${base + meta}`, ruled: true });
+      rows.push({ key: "subtotal", label: t("card.stamp.subtotal"), value: `${base + meta}`, ruled: true });
     }
   }
   if (mult !== null) {
@@ -174,7 +174,7 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
       <PointsRoundel
         className="everymen-stamp-print"
         total={formatPoints(total)}
-        unitLabel={t("card.stamp.points")}
+        unitLabel={t("card.stamp.points", { count: total })}
         arcLabel={t("card.stamp.onTheRecord")}
         color="var(--everymen-red)"
       />

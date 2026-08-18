@@ -93,7 +93,7 @@ describe('the Ephemerists points plate is a compass rose (#2037)', () => {
     // ONE node so the rotation has somewhere to hook.
     const html = render('desktop')
     expect(html.match(/data-points-label="ephemerists"/g)).toHaveLength(1)
-    expect(html).toContain(i18n.t('feed:taskCard.pointsUnit'))
+    expect(html).toContain(i18n.t('feed:taskCard.pointsUnit', { count: TASK.point_value }))
   })
 })
 

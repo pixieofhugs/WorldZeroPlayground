@@ -287,7 +287,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               {character.score.toLocaleString()}
             </span>
             <span className="truncate" style={trackMetaStyle}>
-              {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName }) : t('sidebar.characterCard.points')}
+              {eraName ? t('sidebar.characterCard.eraPoints', { era: eraName, count: character.score }) : t('sidebar.characterCard.points', { count: character.score })}
             </span>
           </div>
 

@@ -58,7 +58,8 @@
     "points": {
       "base": "base",
       "multiplier": "×{{multiplier}}",
-      "total": "POINTS"
+      "total_one": "POINT",
+      "total_other": "POINTS"
     },
     "signup": {
       "cta": "Sign up",

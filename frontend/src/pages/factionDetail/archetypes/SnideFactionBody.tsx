@@ -547,6 +547,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     {t("detail.spotlightStat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
+                      count: spot.all_time_score,
                     })}
                   </div>
                 </div>

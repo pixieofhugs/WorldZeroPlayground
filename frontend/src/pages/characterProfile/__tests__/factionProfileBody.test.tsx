@@ -25,6 +25,7 @@ import FactionProfileBody, {
   type ProfileBodyProps,
 } from "../FactionProfileBody";
 import { surfaceMap } from "../../../factions";
+import i18n from "../../../i18n";
 import { factionName } from "../../../utils/factions";
 
 function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
@@ -131,7 +132,7 @@ describe("FactionProfileBody dispatch", () => {
     // its absence on every skin. The default skin is still identified here by
     // its own empty-state copy.
     expect(html).toContain("Wren Aldercross");
-    expect(html).toContain("No praxis sealed yet");
+    expect(html).toContain(i18n.t("common:profile.praxisEmptyTitle"));
   });
 
   it("renders a profile for every faction slug (bespoke skin or default)", () => {

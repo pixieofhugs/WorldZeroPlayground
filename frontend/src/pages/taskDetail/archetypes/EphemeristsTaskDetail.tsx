@@ -706,7 +706,7 @@ export default function EphemeristsTaskDetail({
               color: BAND_QUIET,
             }}
           >
-            {t("detail.points.total")}
+            {t("detail.points.total", { count: modifiedPoints })}
           </span>
         </div>
       </div>

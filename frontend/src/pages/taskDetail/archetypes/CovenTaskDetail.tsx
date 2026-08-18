@@ -469,7 +469,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         size={size.ward}
         points={modifiedPoints}
         numeralSize={size.wardSize}
-        label={t("detail.points.total")}
+        label={t("detail.points.total", { count: modifiedPoints })}
       />
     </div>
   );
