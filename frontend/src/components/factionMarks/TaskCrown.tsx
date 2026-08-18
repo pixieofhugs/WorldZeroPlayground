@@ -16,12 +16,15 @@ import i18n from "../../i18n";
  * dark mode. Callers no longer pass disc/glyph colours; that is the point, so
  * the "one praxis mark" reads as one mark.
  *
- * The ring reads --faction-default-rainbow-conic, the site's ONE rainbow swept
- * as a seam-closed smooth conic (#1213, ADR-0066). It was `--fdl-rainbow`, a
- * private third copy of the retired brand six; there is no crown-owned rainbow
- * token any more, because its whole content would have been "the na conic,
- * turned 90deg". So the ring flips with the theme now — ADR-0054's "fixed brand
- * constant" clause is amended, and only that clause.
+ * The ring reads --fdl-ring: the same seam-closed smooth conic cut (#1213,
+ * ADR-0066), but theme-INVARIANT — it carries the BRIGHT (dark-theme) hues in
+ * both themes (#2134). It composed --faction-default-rainbow-conic until then,
+ * and that token's seven stops flip: the light seven are darkened so the
+ * spectrum stays legible as ink and under text on white, a duty this 4px
+ * ornamental rim does not share, so in light mode it read as one muddy band.
+ * ADR-0054's "fixed brand constant in both themes" clause is therefore restored
+ * for this one mark, and #1219 stands everywhere else. The disc and the glyph
+ * still flip; only the ring stopped.
  */
 export interface TaskCrownProps {
   /** Overall medallion diameter, px. */
@@ -61,7 +64,7 @@ export function TaskCrown({
           position: "absolute",
           inset: 0,
           borderRadius: "50%",
-          background: "var(--faction-default-rainbow-conic)",
+          background: "var(--fdl-ring)",
           // Both rims are a percentage of the mark's OWN ink (#1609). They were
           // fixed blacks on two discs that flip — `--fdl-disc` goes #faf6ee ->
           // #1a1712 — so in dark the inner rim was black on near-black and did
