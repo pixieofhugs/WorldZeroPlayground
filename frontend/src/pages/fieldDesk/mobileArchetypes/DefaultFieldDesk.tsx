@@ -327,7 +327,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-display truncate content-text" style={{ lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
+                  <div className="font-display truncate content-text" style={{ lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: 'var(--color-text-primary)' }}>
                     {praxis.task_title}
                   </div>
                   <div

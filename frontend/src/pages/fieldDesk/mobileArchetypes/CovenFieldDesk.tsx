@@ -401,7 +401,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                     <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
+                    <div className="truncate" style={{ fontFamily: HAND, fontSize: 'var(--text-content)', lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: INK }}>
                       {praxis.task_title}
                     </div>
                     <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>

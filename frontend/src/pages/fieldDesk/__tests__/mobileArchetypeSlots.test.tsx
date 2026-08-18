@@ -120,6 +120,19 @@ function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1
 }
 
+/**
+ * The open tag of the element that directly holds `text` — the last `<…>` in
+ * the markup before it. Every skin renders the task title as the sole child of
+ * its title element, so this is that element and its inline style.
+ */
+function openTagOf(html: string, text: string): string {
+  const at = html.indexOf(text)
+  if (at < 0) throw new Error(`the skin never printed ${JSON.stringify(text)}`)
+  const open = html.lastIndexOf('<', at)
+  const close = html.indexOf('>', open)
+  return html.slice(open, close + 1)
+}
+
 /** The text of every `<h1>` the skin drew, in document order. */
 function h1s(html: string): string[] {
   return [...html.matchAll(/<h1\b[^>]*>(.*?)<\/h1>/gs)].map((m) => m[1].replace(/<[^>]*>/g, '').trim())
@@ -283,6 +296,48 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
       // Zero-because-unknown must not render as "All caught up" over a queue
       // with four invites in it, then swap under the reader.
       expect(text, 'nothing claimed while loading').not.toContain('All caught up')
+    })
+
+    /**
+     * #2113 — the row's figure is a QUANTITY, not a signed delta. Points cannot
+     * be negative (`backend/services/scoring.py:50` — every term in
+     * `compute_praxis_score` is non-negative), so a leading `+` distinguished
+     * nothing. Asserted on the row rather than on the catalog string so a skin
+     * that goes back to writing its own `+{formatPoints(...)}` fails too.
+     */
+    it(`${slug} prints the row's points as a figure, not a signed delta`, () => {
+      const voted = { ...ACTIVE_TASK, score: 47.3 }
+      const { text } = render(<Skin state={baseState({ activeTasks: [voted] })} />)
+      expect(text, 'the figure still reads').toContain('47.3')
+      expect(text, 'and carries no sign').not.toContain('+47.3')
+      expect(text, 'nor a spaced one').not.toContain('+ 47.3')
+    })
+
+    /**
+     * #2112 — the `y` and `p` of an in-progress title were cut off at the
+     * bottom. The cause is the pair, not either half: the title is a
+     * single-line `.truncate` (`overflow: hidden`, which ellipsis requires) AND
+     * it pinned a line-height under its own font's content box, so the tails
+     * sat outside the box the overflow then clipped. Measured from the shipped
+     * woff2 metrics — Lora's content box is 1.280em against a line-height of
+     * 1.2, and its `y` inks to 0.271em below the baseline against a box floor
+     * of 0.234em.
+     *
+     * The invariant is therefore: a title that CLIPS may not pin a number.
+     * `line-height: normal` is the font's own content box, which is per-face
+     * correct without a magic number per skin and stays correct while the
+     * webfont is still loading and a fallback with different metrics is drawn.
+     * WOW is exempt by the same rule read forwards — its title wraps
+     * (`overflow-wrap: anywhere`) instead of clipping, so nothing cuts it.
+     */
+    it(`${slug} leaves room for the descenders of a clipped title`, () => {
+      const { html } = render(<Skin state={baseState()} />)
+      const tag = openTagOf(html, ACTIVE_TASK.task_title)
+      if (!/\btruncate\b|overflow:\s*hidden/.test(tag)) return
+      expect(
+        tag,
+        'a clipped title takes the font\'s own line box, not a tighter number',
+      ).not.toMatch(/line-height:\s*[\d.]/)
     })
   }
 })

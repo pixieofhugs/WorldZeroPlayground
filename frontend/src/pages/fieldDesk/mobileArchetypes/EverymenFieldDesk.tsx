@@ -367,7 +367,7 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
                   <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: PAPER_TEXT }}>
+                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 'normal' /* the face's own content box, so nothing clips the tails (#2112) */, color: PAPER_TEXT }}>
                     {praxis.task_title}
                   </div>
                   <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>

@@ -128,7 +128,7 @@
       "questsHeading": "In progress",
       "questsEmpty": "Nothing in progress yet — pick up a task.",
       "viewAll": "All tasks",
-      "taskMeta": "{{faction}} · +{{points}} pts",
+      "taskMeta": "{{faction}} · {{points}} pts",
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
       "notifications": "New updates",
