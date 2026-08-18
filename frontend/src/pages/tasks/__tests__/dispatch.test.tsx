@@ -232,9 +232,11 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
  * could only ever empty the page) — `eligibilityRailGate.test.tsx` holds the
  * account-with-no-character half of that gate.
  *
- * It defaults ON for a viewer who carries one since #1972; which viewer gets
- * which default is `readTaskFilters`' call and is pinned in
- * `taskFilterParams.test.ts`. This page takes `canSignUp` as a given.
+ * It defaults ON for a level-0 character and OFF for anyone past that (#1972,
+ * narrowed by #2025); which viewer gets which default is `readTaskFilters`'
+ * call and is pinned in `taskFilterParams.test.ts`. This page takes `canSignUp`
+ * as a given — VIEWER here is level 2, and the tests that want the filter on
+ * say so.
  */
 describe('can-sign-up filter (#1130)', () => {
   const CAN_SIGN_UP = i18n.t('tasks:browse.canSignUp')
