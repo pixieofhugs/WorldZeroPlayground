@@ -208,11 +208,36 @@ export default function TaskCard({
           </span>
         </div>
       )}
+      {/* MODERATION SITS IN THE FOOT, IT DOES NOT HOVER OVER IT (#2049). This
+          cluster was `position: absolute; bottom: 4; right: 4; zIndex: 10`,
+          which was survivable only because the sign-up affordance was a
+          full-bleed footer BAR: the cluster covered it corner to corner, and
+          did so at every width. #2030 turned that bar into a discrete, inset,
+          CENTRED button, and a centred control beneath a bottom-right overlay
+          is two hit boxes that meet at narrow widths — the overlap
+          `docs/agents/design-fidelity.md` names as a failure outright. More
+          `bottom:` only moves the width at which they touch, so the overlay is
+          gone instead: the cluster is a strip in this wrapper's own flow, after
+          the skin's frame, and no width can bring it onto the button.
+
+          IT STAYS ON THE DISPATCHER, one level out from the card, rather than
+          moving inside a skin's foot. Nine skins draw nine different feet;
+          threading an admin slot through all of them to place two
+          moderator-only buttons is the larger change, not the smaller one, and
+          it is the dispatcher that owns this control in the first place.
+
+          The wrapper keeps `position: relative` (the marks above need it) and
+          gains NO inline `display`: `.task-card-row > *` in index.css makes it
+          a column so every card on the board stretches (#1945), and an inline
+          display would beat that rule silently. In that column the skin root
+          takes the slack (`flex: 1 1 auto`) and this strip keeps its own
+          height, so admin mode adds a row under the card instead of moving
+          anything inside it. */}
       {showAdminControls && (
         <div
           style={{
-            position: 'absolute', bottom: 4, right: 4,
-            display: 'flex', gap: 'var(--space-xs)', zIndex: 10,
+            display: 'flex', justifyContent: 'flex-end',
+            gap: 'var(--space-xs)', marginTop: 'var(--space-xs)',
           }}
         >
           {shown.status ==='active' && (
