@@ -133,6 +133,75 @@ describe("Coven task detail — the dress", () => {
   });
 });
 
+describe("Coven task detail — the ward's geometry (#2237)", () => {
+  /**
+   * The seam is the EMITTED SVG: the ward's pentagram and the pink ring it is
+   * inscribed in, both read straight out of the markup and measured against each
+   * other. Layout is unreachable in this harness, but "is this vertex inside that
+   * circle" is arithmetic on two attributes, so it is the part of "the star
+   * escapes the circle" a test can actually hold.
+   *
+   * It escaped because the path was typed by hand — vertices at radius 34.0 to
+   * 34.9 inside a ring of 33, poking out at all five tips. Re-nudging those
+   * numbers is what this guards: the star's radius must stay DERIVED from the
+   * ring's, or the next hand-tuned `d` walks straight back out.
+   */
+
+  /** The `<svg>` chunk holding the ward — the one that draws the pink ring. */
+  function wardSvg(html: string): string {
+    const svg = html.split("<svg").find((chunk) => /cx="50" cy="50" r="[\d.]+"/.test(chunk));
+    expect(svg, "the ward's svg is in the markup").toBeTruthy();
+    return svg as string;
+  }
+
+  /** The pentagram is the only five-vertex ABSOLUTE path here — the twinkles are
+   * relative (`l`) and the numeral is text. */
+  function starVertices(svg: string): [number, number][] {
+    const star = svg.match(/d="(M[\d.]+ [\d.]+(?: L[\d.]+ [\d.]+){4} Z)"/);
+    expect(star, "the pentagram is drawn").toBeTruthy();
+    const vertices = [...star![1].matchAll(/([\d.]+) ([\d.]+)/g)].map(
+      ([, x, y]) => [Number(x), Number(y)] as [number, number],
+    );
+    expect(vertices, "five points").toHaveLength(5);
+    return vertices;
+  }
+
+  it("inscribes the pentagram inside the ring — every tip, stroke included", () => {
+    const svg = wardSvg(render(<CovenTaskDetail state={baseState()} />).html);
+
+    const ring = svg.match(/cx="50" cy="50" r="([\d.]+)"[^>]*?stroke-width="([\d.]+)"/);
+    expect(ring, "the ring carries a radius and a stroke").toBeTruthy();
+    const ringR = Number(ring![1]);
+    const ringStroke = Number(ring![2]);
+
+    const starStroke = Number(
+      svg.match(/d="M[\d.]+ [\d.]+(?: L[\d.]+ [\d.]+){4} Z"[\s\S]*?stroke-width="([\d.]+)"/)![1],
+    );
+
+    // A round join puts a tip's outer edge at radius + strokeWidth / 2; the
+    // ring's inner face sits at its radius - strokeWidth / 2. Inside is inside
+    // of both, which is the whole sum.
+    const ceiling = ringR - ringStroke / 2 - starStroke / 2;
+    const radii = starVertices(svg).map(([x, y]) => Math.hypot(x - 50, y - 50));
+    for (const radius of radii) {
+      expect(radius, `a tip at radius ${radius} stays inside the ring`).toBeLessThanOrEqual(
+        ceiling + 0.01,
+      );
+    }
+    // ...and it is still a pentacle rather than a shrunken dot: the tips reach.
+    expect(Math.min(...radii), "the tips still touch the ring").toBeGreaterThan(ceiling - 0.5);
+  });
+
+  it("centres the star on the ring, not below it", () => {
+    const vertices = starVertices(wardSvg(render(<CovenTaskDetail state={baseState()} />).html));
+    // A regular pentagram's vertices average to its own centre. The old path
+    // averaged to y = 50.64 — a hand-nudge that dropped the whole figure.
+    const mean = (values: number[]) => values.reduce((a, b) => a + b, 0) / values.length;
+    expect(mean(vertices.map(([x]) => x))).toBeCloseTo(50, 1);
+    expect(mean(vertices.map(([, y]) => y))).toBeCloseTo(50, 1);
+  });
+});
+
 describe("Coven task detail — the copy", () => {
   it("uses the shared neutral headings, not Coven's retired detail voice", () => {
     const { text } = render(<CovenTaskDetail state={baseState()} />);
