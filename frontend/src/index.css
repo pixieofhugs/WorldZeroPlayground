@@ -456,38 +456,8 @@
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
-  /* THE VALLEY PLATE'S SHEET, NOT ITS MASTHEAD (#1627, repriced by #2141, and
-     then MOVED by #2141's owner ruling). Ephemerists is a normal flipping-sheet
-     card faction again — vellum by day, night plate after dark — and is no
-     longer grouped with S.N.I.D.E. and Singularity as dark-in-light.
-
-     #1627 aliased this to `-plate-band` and #2141's body defended the alias on
-     the grounds that the band is the compass blue in BOTH cascades, so the card
-     register would never meet a light ground. That premise was false, and the
-     thing that falsified it is `praxisCard/shared.tsx::sheetInk`: it hands
-     `-card-notice` / `-alarm` / `-credit` / `-muted` to six surfaces grounded on
-     the SHEET — the praxis card, the composer's error banner, the praxis-detail
-     wall, the flagged banner, the seal ledger and the vote login gate — not on
-     the masthead. While both grounds were near-black that crossing was
-     invisible; the vellum half split them and the shipped inks read ~1.04:1 on
-     paper.
-
-     ONE INK CANNOT SERVE BOTH, and that is arithmetic rather than a hex hunt:
-     clearing 4.5:1 on the band #12151f needs relative luminance >= 0.20937,
-     clearing it on the vellum #eadcb6 needs <= 0.12124, and the interval is
-     empty by 0.088. It is #1627's own argument one axis over. So the register
-     follows its consumers onto the sheet, and the handful of marks that really
-     do print on the masthead take `-plate-band-ink` / `-plate-band-quiet`,
-     which exist for exactly that job (`EphemeristsBand`, the profile header's
-     `headerMuted`, and the medallion rows in factionContrast.test.ts already
-     did this — no consumer had to move).
-
-     Rejected, so neither comes back as drift: a parallel `sheet-*` token family
-     (four tokens plus a seam in `sheetInk`, which all nine factions pass
-     through, for a problem exactly one faction has), and grounding those six
-     surfaces on the band instead (free, but it cancels the vellum light half on
-     the faction's most-used surfaces, which is most of what #2141 is for). */
-  --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-bg);
+  /* Ephemerists' card ground is an ALIAS and lives in the `:root, [data-theme]`
+     block below, with the rest of the story — see "THE VALLEY PLATE'S SHEET". */
   --faction-singularity-card-bg: #050f08; /* terminal black */
 
   /* ── Faction card text (light mode) ── */
@@ -522,27 +492,8 @@
   --faction-wow-card-accent: #7a4a9e; /* chronicle plum — 5.79:1 */
   --faction-coven-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
-  /* The brass HIGHLIGHT, not `-plate-brass`: the darker brass is a rule and a
-     frame colour on every plate ground and is never an ink. The accent is
-     metadata, so it owes 4.5:1 and pays 11.18:1 — retiring the rubric
-     vermilion's 3.72:1, which #651 allowlisted and no repaint had reached.
-
-     IT STOPPED BEING AN ALIAS EARLIER IN #2141 AND IS ONE AGAIN, which is
-     worth recording because the round trip is the whole diagnosis. The hazard
-     was a THEME-INVARIANT SURFACE UNDER A FLIPPING INK: while `-card-bg` was
-     the compass blue, aliasing `-plate-brass-light` would have put its day
-     value #6f5620 — the SHEET's link ink — on a band that does not flip, at
-     2.63:1, with every census, lint and "is it tokenized" grep still green,
-     because both ends are real tokens. Only a pairing measured in BOTH themes
-     can see that, which is what `ephemerists card accent` in
-     factionContrast.test.ts is.
-
-     The owner ruling took the ground off the band, so the surface flips with
-     the ink and the hazard is gone rather than dodged: 5.09:1 on the vellum by
-     day, 11.18:1 on the night plate. The alias is the honest statement now —
-     the card's accent IS the plate's link-and-affirmation brass, on the sheet
-     they now share — and it costs one declaration instead of two. */
-  --faction-ephemerists-card-accent: var(--faction-ephemerists-plate-brass-light);
+  /* Ephemerists' card accent is an ALIAS too, and moved to the same
+     `:root, [data-theme]` block below for the same reason (#1839). */
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
@@ -2481,6 +2432,74 @@
   --faction-everymen-card-text: var(--everymen-paper-text);
   --faction-everymen-card-accent: var(--everymen-red);
   --faction-everymen-card-muted: var(--everymen-muted);
+}
+
+/* THE EPHEMERISTS' CARD CONTRACT, theme-scoped for #1839's reason (#2141).
+   Two of the four names are ALIASES over referents that flip — the Valley
+   plate's sheet and its link brass — which is the shape `frozenThemeAliases.
+   test.ts` inventories: declared in a bare `:root` they would resolve once on
+   `<html>` and inherit that already-light value into a nested `data-theme`
+   wrapper (`profileSkin.tsx` renders one), half-flipping the surface. Declared
+   here they re-substitute on any element carrying a theme.
+
+   The other two — `-card-text` and `-card-muted` — are NOT here, and that is
+   the correct shape rather than an oversight: they are literals with a real
+   two-cascade contract (see the `:root` register and `[data-theme="dark"]`),
+   and there is nothing for a var() to re-substitute. */
+:root, [data-theme] {
+  /* THE VALLEY PLATE'S SHEET, NOT ITS MASTHEAD (#1627, repriced by #2141, and
+     then MOVED by #2141's owner ruling). Ephemerists is a normal flipping-sheet
+     card faction again — vellum by day, night plate after dark — and is no
+     longer grouped with S.N.I.D.E. and Singularity as dark-in-light.
+
+     #1627 aliased this to `-plate-band` and #2141's body defended the alias on
+     the grounds that the band is the compass blue in BOTH cascades, so the card
+     register would never meet a light ground. That premise was false, and the
+     thing that falsified it is `praxisCard/shared.tsx::sheetInk`: it hands
+     `-card-notice` / `-alarm` / `-credit` / `-muted` to six surfaces grounded on
+     the SHEET — the praxis card, the composer's error banner, the praxis-detail
+     wall, the flagged banner, the seal ledger and the vote login gate — not on
+     the masthead. While both grounds were near-black that crossing was
+     invisible; the vellum half split them and the shipped inks read ~1.04:1 on
+     paper.
+
+     ONE INK CANNOT SERVE BOTH, and that is arithmetic rather than a hex hunt:
+     clearing 4.5:1 on the band #12151f needs relative luminance >= 0.20937,
+     clearing it on the vellum #eadcb6 needs <= 0.12124, and the interval is
+     empty by 0.088. It is #1627's own argument one axis over. So the register
+     follows its consumers onto the sheet, and the handful of marks that really
+     do print on the masthead take `-plate-band-ink` / `-plate-band-quiet`,
+     which exist for exactly that job (`EphemeristsBand`, the profile header's
+     `headerMuted`, and the medallion rows in factionContrast.test.ts already
+     did this — no consumer had to move).
+
+     Rejected, so neither comes back as drift: a parallel `sheet-*` token family
+     (four tokens plus a seam in `sheetInk`, which all nine factions pass
+     through, for a problem exactly one faction has), and grounding those six
+     surfaces on the band instead (free, but it cancels the vellum light half on
+     the faction's most-used surfaces, which is most of what #2141 is for). */
+  --faction-ephemerists-card-bg: var(--faction-ephemerists-plate-bg);
+  /* The brass HIGHLIGHT, not `-plate-brass`: the darker brass is a rule and a
+     frame colour on every plate ground and is never an ink. The accent is
+     metadata, so it owes 4.5:1 and pays 11.18:1 — retiring the rubric
+     vermilion's 3.72:1, which #651 allowlisted and no repaint had reached.
+
+     IT STOPPED BEING AN ALIAS EARLIER IN #2141 AND IS ONE AGAIN, which is
+     worth recording because the round trip is the whole diagnosis. The hazard
+     was a THEME-INVARIANT SURFACE UNDER A FLIPPING INK: while `-card-bg` was
+     the compass blue, aliasing `-plate-brass-light` would have put its day
+     value #6f5620 — the SHEET's link ink — on a band that does not flip, at
+     2.63:1, with every census, lint and "is it tokenized" grep still green,
+     because both ends are real tokens. Only a pairing measured in BOTH themes
+     can see that, which is what `ephemerists card accent` in
+     factionContrast.test.ts is.
+
+     The owner ruling took the ground off the band, so the surface flips with
+     the ink and the hazard is gone rather than dodged: 5.09:1 on the vellum by
+     day, 11.18:1 on the night plate. The alias is the honest statement now —
+     the card's accent IS the plate's link-and-affirmation brass, on the sheet
+     they now share — and it costs one declaration instead of two. */
+  --faction-ephemerists-card-accent: var(--faction-ephemerists-plate-brass-light);
 }
 
 :root {
