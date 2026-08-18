@@ -217,7 +217,7 @@ export function PraxisBody({
        * siblings rather than behind a ternary that would have to re-derive the
        * duel test the banner already owns.
        */}
-      <PraxisDuelBanner praxis={praxis} accent={tint} paper={paper} fonts={fonts} />
+      <PraxisDuelBanner praxis={praxis} accent={tint} fonts={fonts} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
       <PraxisMediaGallery

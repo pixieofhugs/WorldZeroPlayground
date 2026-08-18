@@ -147,6 +147,27 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
 });
 
 /**
+ * #2128 — a duel drew two monograms where two faces belong.
+ *
+ * `DuelSideOut.avatar_url` has been on the wire the whole time; the pair simply
+ * never read it. Both sides render in ONE pass because the rule is per-side, not
+ * per-surface: the side with a portrait gets the portrait, and the side without
+ * one keeps the monogram it always had rather than falling to a blank disc.
+ */
+describe("InviteSearch — the duel pair draws faces, not initials (#2128)", () => {
+  it("draws the portrait for the side that has one, the monogram for the side that does not", () => {
+    const state = duelState(1, { status: "pending" });
+    state.duel!.opponent.avatar_url = "avatars/rax.png";
+    const html = chipHtml(state);
+    expect(html).toContain("avatars/rax.png");
+    expect(html).toContain("<img");
+    // The challenger's `avatar_url` is still "", so their circle keeps its
+    // monogram: an absent portrait is not an absent side.
+    expect(html).toContain(">CN<");
+  });
+});
+
+/**
  * #1274 — the composer's collab block for a crew of ONE.
  *
  * Two facts have to survive together on this surface, which is why they are
