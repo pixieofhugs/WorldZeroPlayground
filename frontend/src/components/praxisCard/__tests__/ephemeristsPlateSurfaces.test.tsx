@@ -232,6 +232,51 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
     expect(leaf?.[1], 'the journal leaf declares a layer').toBeDefined()
     expect(Number(leaf?.[1])).toBeGreaterThan(Number(cornice?.[1]))
   })
+
+  /**
+   * #2360 — THE ENTRY GETS ITS AIR, THE SEAL KEEPS THE CORNICE.
+   *
+   * This was the only praxis card in the kit opening with zero top padding, so
+   * the title butted the cavetto. The obvious repair — a top pad on the leaf —
+   * is the one that must NOT happen: the crown hangs at `top: -13` off the
+   * SCORE STAMP's box, and the stamp's box sits at the leaf's content top, so
+   * padding the leaf moves the crown down out of the 12px cornice and into the
+   * new padding. It still LOOKS right, because the crown only draws on a
+   * crowned praxis — hence this test renders one.
+   *
+   * The air therefore goes on the TITLE, a flex SIBLING of the stamp's column:
+   * a margin there cannot displace the stamp. What is decidable in an SSR
+   * harness with no layout engine is exactly that split, so all three legs are
+   * asserted together — each alone is satisfiable by the wrong fix.
+   */
+  it('gives the title its space without moving the crown off the cornice (#2360)', () => {
+    const markup = render(
+      <EphemeristsPraxisCard praxis={praxis({ is_top_for_task: true })} adminProps={adminProps} />,
+    )
+    // (1) The crowned path really is the one under test.
+    expect(markup, 'the one praxis mark').toContain('var(--fdl-ring)')
+    expect(markup, "the crown's overhang, unchanged").toContain('top:-13px')
+
+    // (2) The leaf's top edge has not moved: the first rung of its padding
+    // shorthand is still zero, so the -13 measures from the cavetto's underside.
+    const leaf = markup.match(/<div style="position:relative;z-index:\d+;padding:([^ ;"]*)/)
+    expect(leaf?.[1], 'the leaf declares a padding').toBeDefined()
+    expect(leaf?.[1], 'a top pad here would pull the crown out of the cornice').toBe('0')
+
+    // (3) Nor has the heading ROW gained one — it carries the stamp.
+    const row = markup.match(/<div style="display:flex;justify-content:space-between;[^"]*"/)
+    expect(row?.[0], 'the heading row is rendered').toBeDefined()
+    expect(row?.[0], 'a pad on the row moves the stamp with the title').not.toMatch(
+      /(margin|padding)-(top|block-start)/,
+    )
+
+    // (4) And the air is on the title itself, at the kit's rung.
+    const title = markup.match(/<h2 class="content-title[^"]*" style="([^"]*)"/)
+    expect(title?.[1], 'the title is rendered').toBeDefined()
+    expect(title?.[1], "the entry's air, matching its eight fellows").toContain(
+      'margin-top:var(--space-xl)',
+    )
+  })
 })
 
 describe('one card, both form factors (ADR-0067)', () => {
