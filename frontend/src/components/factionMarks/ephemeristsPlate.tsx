@@ -225,8 +225,14 @@ export function chamferSheetLeg(step: number, inset: number = MOUNT_INSET): numb
  *
  * NOTHING ABOUT THE PLATE'S SIZE MOVES. The mount's 1px padding is the border's
  * 1px, so the outer box and the content box are where they were.
+ *
+ * The `padding: 1` carried an `eslint-disable local/no-raw-style-values` at the
+ * vote plate and carries none here — not because the value stopped being raw,
+ * but because that rule's only visitor is `JSXAttribute` and this is a
+ * `CSSProperties` factory. The justification stands on its own: the padding IS
+ * the rule's stroke width, not spacing, and the smallest `--space-*` rung is 4px,
+ * which would draw a four-pixel mount.
  */
-// eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which would draw a four-pixel mount.
 export const chamferMount = (step: number): CSSProperties => ({
   background: BRASS_RULE,
   padding: MOUNT_INSET,
