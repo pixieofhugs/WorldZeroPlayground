@@ -29,7 +29,7 @@ const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetai
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
 const EphemeristsSeal = lazyArchetype(() => import('../components/metataskSeal/skins/EphemeristsSeal'))
 const EphemeristsSigil = lazyArchetype(() => import('../components/sigil/EphemeristsSigil'))
-const EphemeristsSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.EphemeristsSelectCard })))
+const EphemeristsSelectCard = lazyArchetype(() => import('../components/selectCard/EphemeristsSelectCard'))
 
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',
