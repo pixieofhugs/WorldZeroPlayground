@@ -360,7 +360,7 @@ describe('the Ephemerists card keeps its own ornament densities (#1654)', () => 
     // It used to march two named 12-sign rows across a 110px night band, where
     // the page fills its width from a cycled 16-sign register. The re-pulled
     // design's masthead carries no ornament and the motif returns as
-    // `EphemeristsRuneStrip`, so the card's own orders and the `register()`
+    // `EphemeristsNotationBand`, so the card's own orders and the `register()`
     // helper are gone with the canvas they needed. `Glyph` is still kit
     // vocabulary and four other Ephemerists surfaces still cut it — what this
     // asserts is that no register creeps back onto THIS band.

@@ -241,7 +241,7 @@ export function EphemeristsMasthead({ slug, scale, seed }: {
             row to the foot and left them here. Three tenants, one pair of
             rules, and the reason has not changed once: without them the
             wordmark reads as free type rather than as an engraved band. */}
-        <EphemeristsNotationBand seed={seed} />
+        <EphemeristsNotationBand seed={seed} side="band" />
       </div>
     </div>
   );
