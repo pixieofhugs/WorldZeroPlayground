@@ -330,17 +330,25 @@ describe("it is drawn ONCE — keyed on the drawing, not the name (#2230, #2341)
     expect(found).toEqual([]);
   });
 
-  it("is mounted at the masthead, the three CTA surfaces and the praxis byline", () => {
-    // Five files, six rows: the task card and the task page each bracket their
+  it("is mounted at the two page headers, the three CTA surfaces and the praxis byline", () => {
+    // Six files, seven rows: the task card and the task page each bracket their
     // button with two. `EphemeristsPraxisDetail` gets none — no button to
-    // bracket; the faction page and the field desk do paint the plate CTA (both
-    // wear `.eph-cta`) but neither brackets it, which is #2067's separate ruling
-    // about where the MOTIF lives. A sixth file appearing here is a design
-    // decision that should fail rather than land quietly.
+    // bracket; the field desk paints the plate CTA (it wears `.eph-cta`) but
+    // does not bracket it, which is #2067's separate ruling about where the
+    // MOTIF lives. A seventh file appearing here is a design decision that
+    // should fail rather than land quietly.
+    //
+    // THE LAW THIS LIST OBEYS is page-versus-card (#2367): a PAGE wears the band
+    // in its header — the masthead surfaces, and the faction hero, which heads
+    // itself and mounts no masthead — and a CARD wears it at the call to action.
+    // `EphemeristsFeedFrame` is the one deliberate absence: it wraps a stream of
+    // OTHER players' items, so a faction ornament row there would be the faction
+    // stamping itself on content that is not its own.
     const mounts = files
       .filter(([, source]) => source.includes("<EphemeristsNotationBand"))
       .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
     expect(mounts.sort()).toEqual([
+      "components/factionHero/EphemeristsFactionHero.tsx",
       "components/factionMarks/EphemeristsMasthead.tsx",
       "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
