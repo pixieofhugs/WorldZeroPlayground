@@ -266,7 +266,26 @@ export default function SnideFactionHero({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: "2px solid var(--faction-snide)",
+                // THE DISC IS FROZEN, SO ITS RIM AND ITS MARK ARE (#2364). This
+                // rim and the sigil below both painted `--faction-snide` — the
+                // CHROME hue, the one that flips #6fae00 -> #b6ff2e — on a disc
+                // whose stock has exactly one value in both cascades (#2227
+                // pinned it there, and six surfaces spend it as an ink). Acid on
+                // cream measures 2.41:1 by day and **1.07:1** by night: the mark
+                // was simply not there in dark. It is the mirror of #2173 above,
+                // where the ink was frozen and the ground flipped, and #2173's
+                // repair is the wrong tool for it — a plate would take the disc
+                // away, and the disc is paper BY DESIGN, which is what makes the
+                // medallion a slapped sticker rather than another censor bar.
+                // So the mark moves instead, onto the press's own ink, which is
+                // the same answer the three other S.N.I.D.E. surfaces drawing on
+                // this exact stock already shipped (the faction page's inverted
+                // monogram, the praxis-detail avatar tile, the profile laurel):
+                // 16.68:1 in both cascades. Acid is not lost from the hero — it
+                // is the wordmark, the motto sticker, the torn strip and all
+                // three chits — and it cannot be lifted onto cream anyway, since
+                // no acid rung is dark enough for this stock (#2133).
+                border: "2px solid var(--faction-snide-ink)",
                 // The second layer is the medallion's offset register (#1609);
                 // the first is a solid ink rim, not a shadow.
                 boxShadow:
@@ -291,7 +310,10 @@ export default function SnideFactionHero({
                   pointerEvents: "none",
                 }}
               />
-              <SnideSigil size={54} color="var(--faction-snide)" />
+              {/* The mark itself, in the press's ink for the reason the rim
+                  states (#2364). A drawn mark owes 3:1 (WCAG 1.4.11), not the
+                  text floor; this reads 16.68:1 in both cascades. */}
+              <SnideSigil size={54} color="var(--faction-snide-ink)" />
             </div>
           </div>
 
