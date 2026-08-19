@@ -182,10 +182,16 @@ describe('the shared dismiss control', () => {
     expect(CONTROL).not.toMatch(/#[0-9a-fA-F]{3}|rgba?\(/)
   })
 
-  it('is at least a 24px square target (WCAG 2.5.8)', () => {
+  it('is a 44px square target — the house floor, not WCAG 2.5.8 (#2100)', () => {
+    // It shipped at 24 (2.5.8, AA) because `EphemeristsFeedFrame`'s masthead
+    // was a FIXED height that clipped anything taller, for hit-testing as well
+    // as visually. #2100 made that band intrinsic, so the ceiling is gone and
+    // §6's non-negotiable 44 (2.5.5, AAA) is reachable from the one shared
+    // control on all nine chassis. The floor is asserted at 44, not at
+    // "≥ 24", so a regression to the old number goes red here.
     expect(declared('box-sizing')).toBe('border-box')
-    expect(Number.parseFloat(declared('min-width') ?? '0')).toBeGreaterThanOrEqual(24)
-    expect(Number.parseFloat(declared('min-height') ?? '0')).toBeGreaterThanOrEqual(24)
+    expect(Number.parseFloat(declared('min-width') ?? '0')).toBeGreaterThanOrEqual(44)
+    expect(Number.parseFloat(declared('min-height') ?? '0')).toBeGreaterThanOrEqual(44)
   })
 
   it('sets the glyph at the tier the timestamp beside it reads at', () => {
