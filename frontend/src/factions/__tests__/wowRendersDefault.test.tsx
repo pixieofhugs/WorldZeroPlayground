@@ -229,7 +229,14 @@ describe('wow still reads as a real faction', () => {
   it('is distinguishable from Cozy Coven, which took its aesthetic', () => {
     // The rename is only sound if the two slugs are genuinely separate
     // identities. If these ever collide, one of them has swallowed the other.
+    //
+    // The NAME is the whole assertion now. A second arm compared the two
+    // DESCRIPTIONS, and #2332 set six of the nine — Coven's and WOW's among
+    // them — to the literal `PLACEHOLDER`, which is the owner's deliberate
+    // marker for copy she has not written rather than a collision. So that arm
+    // stopped being able to tell "separate identities" from "both unwritten",
+    // and an arm that cannot fail for the reason it was written is worse than
+    // no arm. It comes back when the descriptions do.
     expect(factionName('coven')).not.toBe(factionName('wow'))
-    expect(factionDescription('coven')).not.toBe(factionDescription('wow'))
   })
 })

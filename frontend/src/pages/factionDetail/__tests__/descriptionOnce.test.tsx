@@ -111,18 +111,55 @@ function firstParagraph(slug: string): string {
   return factionDescription(slug).split(/\n\s*\n/)[0].trim()
 }
 
+/**
+ * The floor that stops the count passing vacuously: a blurb short enough to
+ * turn up in the markup by accident would make `occurrences(…) === 1` mean
+ * nothing.
+ *
+ * It used to be 20 characters, chosen when every description was a sentence.
+ * #2332 replaced six of them with the literal `PLACEHOLDER` — the owner's own
+ * marker for copy she has not written yet, and deliberate, so the floor moves
+ * to that word's length rather than the placeholders being exempted. Eleven
+ * capitals is still a token nothing else on the page spells, which is the
+ * property the floor is actually standing in for.
+ */
+const BLURB_FLOOR = 'PLACEHOLDER'.length
+
+/**
+ * Slots OTHER than the description that draw text identical to it, per slug.
+ *
+ * One only, and it is WOW's. #2332 set `descriptions.wow` and
+ * `feed:factionHero.wow.motto` both to the literal `PLACEHOLDER` — two
+ * different slots the owner has not written yet, which happen to spell the same
+ * word. The hero draws the motto and the body draws the description, so that
+ * page says `PLACEHOLDER` twice while still saying its DESCRIPTION exactly
+ * once, which is what #2137 pins. Counting a substring cannot tell the two
+ * apart, so the second occurrence is NAMED here rather than the assertion being
+ * loosened to `>= 1`: the moment either slot gets real copy this row is wrong
+ * and the test says so.
+ */
+const TWINS: Readonly<Record<string, number>> = { wow: 1 }
+
+const expected = (slug: string) => 1 + (TWINS[slug] ?? 0)
+
 describe('a faction page says its description exactly once (#2137)', () => {
   for (const slug of WITH_HERO) {
     it(`${slug} draws the blurb once, in the body and not the hero`, () => {
       const blurb = firstParagraph(slug)
-      expect(blurb.length, `${slug} has a catalog blurb to count`).toBeGreaterThan(20)
-      expect(occurrences(pageText(slug), blurb)).toBe(1)
+      expect(
+        blurb.length,
+        `${slug} has a catalog blurb to count`,
+      ).toBeGreaterThanOrEqual(BLURB_FLOOR)
+      expect(occurrences(pageText(slug), blurb)).toBe(expected(slug))
     })
   }
 
   it(`${WITHOUT_HERO} keeps its one copy in the no-hero chrome`, () => {
     const blurb = firstParagraph(WITHOUT_HERO)
-    expect(blurb.length, 'albescent has a catalog blurb to count').toBeGreaterThan(20)
-    expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(1)
+    expect(
+      blurb.length,
+      'albescent has a catalog blurb to count',
+    ).toBeGreaterThanOrEqual(BLURB_FLOOR)
+    expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(expected(WITHOUT_HERO))
   })
 })

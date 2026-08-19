@@ -208,22 +208,22 @@
       "unrankedLine": "Unranked · By design",
       "motto": "The work is the work",
       "stats": {
-        "members": "Keepers"
+        "members": "Players"
       }
     },
     "ephemerists": {
-      "eyebrow": "World Zero · Faction №5 — the road's keepers",
+      "eyebrow": "World Zero · Cartographers",
       "motto": "OMNIA · TRANSEUNT",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
-        "members": "ephemerists"
+        "members": "wanderers"
       }
     },
     "everymen": {
-      "eyebrow": "World Zero · Faction",
+      "eyebrow": "World Zero · Hardest Workers",
       "motto": "THE WORK OUTLASTS THE WORKER",
       "stats": {
-        "members": "card-carrying"
+        "members": "fellows"
       }
     },
     "singularity": {
@@ -239,28 +239,28 @@
       }
     },
     "snide": {
-      "eyebrow": "World Zero · faction no. 4",
+      "eyebrow": "World Zero · Arsonists",
       "motto": "NOTHING MATTERS — DO IT ANYWAY",
       "stats": {
-        "members": "operatives"
+        "members": "pranksters"
       }
     },
     "ua": {
       "eyebrow": "World Zero · A daily practice",
       "stats": {
-        "members": "practising"
+        "members": "Artisans"
       }
     },
     "coven": {
-      "eyebrow": "World Zero · Faction · est. MMXXI",
+      "eyebrow": "World Zero · Magic's in the air",
       "motto": "make it weird, make it matter",
       "stats": {
         "members": "witches"
       }
     },
     "wow": {
-      "eyebrow": "World Zero · the Court of Whimsy",
-      "motto": "“Whimsy for everyone.”",
+      "eyebrow": "World Zero · The Capricious Court",
+      "motto": "PLACEHOLDER",
       "stats": {
         "members": "Knights"
       }
@@ -279,19 +279,19 @@
       },
       "members_one": "{{count}} practising",
       "members_other": "{{count}} practising",
-      "cta": "Come sit with the work →"
+      "cta": "Create With Us"
     },
     "coven": {
       "name": "Cozy Coven",
-      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
+      "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
       "status": {
-        "locked": "Do the tiny brave thing to be invited ✦",
+        "locked": "Keep Working Together ✦",
         "eligible": "The circle has opened for you ✦",
         "member": "You’re one of us now ✦"
       },
       "members_one": "{{count}} witch ✦",
       "members_other": "{{count}} witches ✦",
-      "cta": "peek inside ✦"
+      "cta": "See our Circle ✦"
     },
     "wow": {
       "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway.",
@@ -303,8 +303,8 @@
         "Absurdly Sincere"
       ],
       "status": {
-        "locked": "Prove thou canst keep a straight face.",
-        "eligible": "The Court has a spare breastplate in thy size.",
+        "locked": "MORE JOUSTING REQUIRED",
+        "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
       "members_one": "{{count}} knight",
@@ -315,13 +315,13 @@
       "masthead": "Field Dispatch · Nº 0666",
       "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
       "status": {
-        "locked": "Cause enough trouble and we’ll be in touch.",
-        "eligible": "Consider yourself recruited.",
+        "locked": "Go Break some S#!*",
+        "eligible": "Let's F%$*ing GO",
         "member": "Active operative — welcome to the mess."
       },
       "members_one": "{{count}} operative",
       "members_other": "{{count}} operatives",
-      "cta": "Read the dispatch →"
+      "cta": "Jump In"
     },
     "ephemerists": {
       "eyebrow": "Exhibit C · no single here",
@@ -329,13 +329,13 @@
       "coordsPolar": "r ∞ · θ 12",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
       "status": {
-        "locked": "Walk far enough and the map redraws for you.",
-        "eligible": "The road has opened.",
+        "locked": "Keep Wandering",
+        "eligible": "Wander with us",
         "member": "Fellow wanderer — mind the tides."
       },
       "members_one": "{{count}} wanderer",
       "members_other": "{{count}} wanderers",
-      "cta": "Trace the route →"
+      "cta": "Check the Map"
     },
     "singularity": {
       "name": "Singularity",
@@ -354,8 +354,8 @@
       "headline": "PICK UP THE LOAD",
       "plaque": "UNITED · WE · STAND",
       "status": {
-        "locked": "Put in the shift and there’s a place for you.",
-        "eligible": "There’s a place for you — take it.",
+        "locked": "Keep bettering yourself",
+        "eligible": "JOIN UP",
         "member": "On the line with us."
       },
       "members_one": "▸ {{count}} HAND",
@@ -367,12 +367,12 @@
       "name": "Albescent",
       "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
       "status": {
-        "locked": "Some are noticed. Few are ever named.",
-        "eligible": "You have been noticed.",
+        "locked": "Keep Playing",
+        "eligible": "Every door is still open.",
         "member": "Named — and unrecorded."
       },
-      "members_one": "{{count}} named",
-      "members_other": "{{count}} named",
+      "members_one": "{{count}} player",
+      "members_other": "{{count}} players",
       "cta": "Request an audience →"
     },
     "na": {

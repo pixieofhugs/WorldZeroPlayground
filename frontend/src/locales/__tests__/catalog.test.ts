@@ -501,10 +501,11 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     'factions.json:singularity.access.joinButton',
     'factions.json:singularity.access.joining',
     'factions.json:singularity.invitation.kicker',
-    // #1874's mechanic slot. Singularity has no perk, so rather than invent one
-    // the line refuses in the array's own register — caught by the `> ` prompt.
-    // It goes when #1869 gives Singularity something to advertise.
-    'factions.json:singularity.invitation.perks.1',
+    // `singularity.invitation.perks.1` stood here — #1874's mechanic slot,
+    // which refused in the array's own register (`> no modifiers…`) because
+    // Singularity had no perk to advertise. #2332 gave it one, in plain voice,
+    // so the prompt left with the copy and the row leaves with it. This list is
+    // an exact set: a stale row fails the sweep as loudly as a missing one.
     // Eight more rows stood here: `profile.singularity.praxisEmptyTitle`,
     // `manifest.empty`, `mobile.eyebrow`, the three `roster.*`, `praxis.empty`
     // and `tasks.empty`. #1911 collapsed every one of those families to a
@@ -946,5 +947,83 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
     expect(factionName('ephemerists')).toBe('The Ephemerists')
     expect(factionName('coven')).toBe('Cozy Coven')
     expect(factionName('singularity')).toBe('Singularity')
+  })
+})
+
+/* ========================================================================== *
+ * #2332 — THE OWNER'S COPY PASS, ON THE ROWS MOST LIKELY TO BE "FIXED"
+ *
+ * THE SEAM IS THE CATALOG. 47 values landed from the owner's own spreadsheet,
+ * and most of them need no guard: a reworded blurb that drifts later is a copy
+ * question, not a regression. Three groups are different, because each one
+ * LOOKS like a defect to the next reader and would be quietly corrected:
+ *
+ *   1. Seven values are the literal `PLACEHOLDER`. That is deliberate — the
+ *      owner's marker for a slot she has not written yet, put there so that
+ *      seeing it on the page tells her what is missing. Two of them
+ *      (`descriptions.wow`, `factionHero.wow.motto`) replaced sentences that
+ *      stopped mid-clause, so a trailing comma never reaches a player.
+ *   2. S.N.I.D.E.'s three masked-profanity strings are the faction's new punk
+ *      register, not a leak and not a typo. Exact characters, exact casing.
+ *   3. Two faction names changed shape: `ua` from the two-letter abbreviation
+ *      to the full name, and `albescent` shed a leading slash that was never
+ *      intentional. (#2300's body calls that slash "the unaffiliated-fold
+ *      convention from #1975". #1975 is about folding Albescent under the
+ *      Unaffiliated FILTER and says nothing about the display name, and no
+ *      other name key in any catalog carries one.)
+ *
+ * The placeholder set is asserted EXACTLY, so a row quietly filled in fails
+ * here and has to be taken off this list on purpose.
+ * ========================================================================== */
+describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () => {
+  const PLACEHOLDERS = [
+    'factions.json:descriptions.albescent',
+    'factions.json:descriptions.coven',
+    'factions.json:descriptions.ephemerists',
+    'factions.json:descriptions.everymen',
+    'factions.json:descriptions.singularity',
+    'factions.json:descriptions.wow',
+    'feed.json:factionHero.wow.motto',
+  ].sort()
+
+  it('holds the placeholder exactly where the owner put it, and nowhere else', () => {
+    const found = catalogLeaves()
+      .filter(([, value]) => value === 'PLACEHOLDER')
+      .map(([id]) => id)
+      .sort()
+    expect(found).toEqual(PLACEHOLDERS)
+  })
+
+  it("keeps S.N.I.D.E.'s punk register masked exactly as written", () => {
+    // Character-for-character. `%$*`, `#!*` and `%&*` + `^&*` are three
+    // different masks, and the casing is three different shouts.
+    expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe("Let's F%$*ing GO")
+    expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe('Go Break some S#!*')
+    expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
+  })
+
+  it('names UA in full and Albescent without a slash', () => {
+    expect(factionName('ua')).toBe('Unwavering Artisans')
+    // `names.albescent` is read through the CATALOG, not `factionName()`.
+    // The getter masks Albescent to "Unaffiliated" for anyone unrevealed
+    // (#1891), which is also why the stray slash only ever reached the order's
+    // own members — but the slot itself is what #2332 corrects.
+    expect(i18n.t('factions:names.albescent')).toBe('Albescent')
+    expect(i18n.t('factions:names.albescent').startsWith('/')).toBe(false)
+  })
+
+  it('leaves the abbreviation alive in the places that are not the name', () => {
+    // "UA" is not lost: the description introduces it, and the select card's
+    // own `wordmark` slot — a DIFFERENT key, untouched by #2332 — is still the
+    // two-letter mark that plate is set around.
+    expect(i18n.t('factions:descriptions.ua')).toContain('also known as UA')
+    expect(i18n.t('feed:factionSelect.ua.wordmark')).toBe('UA')
+  })
+
+  it("keeps Albescent's letterhead wordmark, which was already the clean form", () => {
+    // `albescent.letter.wordmark` is a different key from `names.albescent` and
+    // was never slashed. #2332 does not touch it; this pins that it did not get
+    // swept up in the slash removal either.
+    expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Albescent')
   })
 })

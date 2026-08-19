@@ -86,8 +86,14 @@ export default function UaFactionHero({
                   color: "var(--faction-ua-card-text)",
                   margin: "var(--space-xs) 0 var(--space-sm)",
                   // No overflow-wrap: a wordmark never breaks mid-word (#2000).
-                  // "UA" is two glyphs at --text-display; the 260px column
-                  // floor above is many times what it needs.
+                  // #2332 renamed the faction from "UA" to "Unwavering
+                  // Artisans", so this is no longer two glyphs. It still needs
+                  // no break: the name has a space, and its longest unbreakable
+                  // run — "Unwavering", ten characters of Cormorant Garamond at
+                  // --text-display — sits inside the 260px column floor above,
+                  // which is why the floor holds without moving. What changes
+                  // is that a narrow column now wraps it to two lines instead
+                  // of one; nothing clips, because the plate grows.
                 }}
               >
                 {name}
