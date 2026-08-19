@@ -195,10 +195,14 @@ export default function NavBar() {
           {user ? (
             <>
               {user.character ? (
+                /* The name is the only always-visible answer to "which
+                   character am I carrying", and a name leads to the person
+                   (#2354). It used to lead to `/` — a second home link beside
+                   the wordmark's, titled with a switcher promise that now lives
+                   on the home page alone. Same destination as the rail's name
+                   link, which had it right. */
                 <NavLink
-                  to="/"
-                  end
-                  title={t('nav.fieldDeskTitle')}
+                  to={`/characters/${user.character.id}`}
                   className="nav-link transition-colors"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
