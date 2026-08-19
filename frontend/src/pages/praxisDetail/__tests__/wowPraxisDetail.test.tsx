@@ -323,14 +323,18 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
     );
   });
 
-  it("draws the breadcrumb on desktop and the back link on mobile", () => {
-    const wide = render(state());
-    expect(wide.html, "to the task bank").toContain('href="/tasks"');
-    expect(wide.html, "to the task").toContain('href="/tasks/7"');
-    expect(wide.html, "no phone back link on desktop").not.toContain('href="/praxis"');
-
-    const phone = render(state(), "mobile");
-    expect(phone.html, "phone back link").toContain('href="/praxis"');
+  it("draws no navigation of its own, at either width (#2102)", () => {
+    // It drew a bespoke trail on desktop and swapped it for a back link to
+    // /praxis on mobile. Both are gone: the breadcrumb is neutral site chrome
+    // now, drawn once above this column by `components/nav/Breadcrumb`, and what
+    // the trail CONTAINS is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`
+    // for every skin at both widths. What is left to say here is the negative.
+    for (const factor of ["desktop", "mobile"] as const) {
+      const { html } = render(state(), factor);
+      const sheet = html.slice(html.indexOf("</nav>") + 1);
+      expect(sheet, `${factor}: no crumb inside the surface`).not.toContain('href="/tasks"');
+      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"');
+    }
   });
 });
 

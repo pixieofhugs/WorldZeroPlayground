@@ -183,8 +183,9 @@ for (const spec of FAMILIES) {
       for (const width of WIDTHS) {
         it(`${slug} draws exactly one, unchanged, on ${width}`, () => {
           mocks.formFactor = width;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the two families take two different state types; the loop is over both.
-          const html = spec.render(Archetype as any);
+          // The loop walks two families whose states are different types; the
+          // `render` beside each archetype list is the one that knows which.
+          const html = (spec.render as (a: unknown) => string)(Archetype);
 
           expect(
             html.split(`aria-label="${LABEL}"`).length - 1,

@@ -142,6 +142,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /** The page cap the epic settled on, and the aside track. Geometry. */
 const PAGE_WIDTH = 1200;
@@ -438,67 +439,12 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </div>
   );
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ────────
-  //
-  // Inside the sheet, under the cornice — the plate is headed by its masthead,
-  // so a crumb floating above it would read as belonging to the page around it.
-  const breadcrumb = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-lg)",
-        flexWrap: "wrap",
-      }}
-    >
-      <Link to="/tasks" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
-        {t("detail.breadcrumb.tasks")}
-      </Link>
-      <span aria-hidden style={eyebrow}>
-        /
-      </span>
-      <Link
-        to={`/tasks/${praxis.task_id}`}
-        style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}
-      >
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden style={eyebrow}>
-        /
-      </span>
-      {/* The last crumb was a brass CARTOUCHE pill, ruled off at both ends.
-          #1634 retired it: the engraved masthead directly above the crumb row
-          carries this record's own identity now, and a framed pill under it read
-          as a second masthead rather than as where-you-are. The crumb stays —
-          the trail's last step is still a fact — in the plain eyebrow its
-          siblings wear. */}
-      <span style={{ ...eyebrow, color: INK }}>{t("detail.breadcrumb.current")}</span>
-    </nav>
-  );
-
-  // The phone affordance drawn instead of the breadcrumb. Not sticky: the
-  // mobile shell already owns a sticky top bar.
-  const mobileBar = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-lg)",
-      }}
-    >
-      <Link to="/praxis" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
-        <span aria-hidden>‹ </span>
-        {t("detail.back")}
-      </Link>
-      <span style={{ ...eyebrow, flex: 1, textAlign: "center", color: INK }}>
-        {t("detail.breadcrumb.current")}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden style={{ width: 44 }} />
-    </nav>
-  );
+  // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
+  // plate, under the cornice, so its accent could be measured on the faction's own ground,
+  // and a bespoke `mobileBar` replaced it below 768px. Both are gone: a
+  // breadcrumb is neutral SITE chrome, so it moved ABOVE this column, where
+  // the site's own tertiary is the ink and the faction reading no longer
+  // applies.
 
   // ── Moderation banners — neutral chrome, DRESSED ONLY WHERE IT MUST BE ───
   // The failed note is shared invariant chrome — the crown hero that used to
@@ -955,6 +901,14 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
   return (
     <div className="py-8">
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
+
       {/* The page IS the plate: the column carries the plate's own page stock —
           night in both cascades since #1627, papyrus before it — headed by the
           cornice masthead flush to its own edges. There is deliberately no fixed
@@ -974,8 +928,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         {masthead}
 
         <div style={{ padding: size.pagePadding }}>
-          {desktop ? breadcrumb : mobileBar}
-
           {banners}
 
           <div
