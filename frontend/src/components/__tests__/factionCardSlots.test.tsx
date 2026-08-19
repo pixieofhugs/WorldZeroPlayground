@@ -211,34 +211,46 @@ describe("praxis-card content-parity slots (#587)", () => {
   }
 });
 
-// The byline surfaces the author's OWN faction only when it differs from the
-// task faction (the frame already carries the task faction's voice).
-describe("praxis-card byline author faction (#587)", () => {
-  const OFF_FACTION: PraxisCardOut = {
-    ...PRAXIS,
-    task_faction_slug: "ua",
-    created_by_faction_slug: "snide",
-  };
-  const SAME_FACTION: PraxisCardOut = {
-    ...PRAXIS,
-    task_faction_slug: "ua",
-    created_by_faction_slug: "ua",
-  };
+/*
+ * #2366 — THE BYLINE WRITES NO FACTION NAME. It used to print the AUTHOR's own
+ * faction at the far edge whenever that faction differed from the task's; the
+ * owner deleted it (#2245 rule 1: the sigil beside a player's photo carries
+ * membership on its own, no text). `FactionAvatar` sits immediately to the left
+ * of the name and draws that same faction's sigil, so the tag was a second copy
+ * of a fact already on the row.
+ *
+ * THE FIXTURE MUST BE OFF-FACTION OR IT PROVES NOTHING: on a same-faction card
+ * the tag never rendered, so a praxis whose author matches the task would pass
+ * against the old code too. Every fixture here is therefore an author faction
+ * on a `ua` task, and the byline was the only site under `praxisCard/` that
+ * ever called `factionName` — so a hit in the stripped text is this tag and
+ * nothing else, WITH ONE EXCEPTION the author faction is picked to dodge: the
+ * Coven card writes "Cozy Coven" in its own slip-sheet chrome, so on that one
+ * archetype the author is a different faction again.
+ *
+ * Asserted on the TAG-STRIPPED text, not the markup: the faction still reaches
+ * assistive technology through `FactionAvatar`'s own accessible name, which
+ * lives in an attribute and must survive.
+ */
+describe("praxis-card byline prints no faction name (#2366)", () => {
+  for (const [slug, Card] of Object.entries(praxisArchetypes)) {
+    const authorSlug = slug === "coven" ? "wow" : "coven";
+    const offFaction: PraxisCardOut = {
+      ...PRAXIS,
+      task_faction_slug: "ua",
+      created_by_faction_slug: authorSlug,
+    };
 
-  it("shows the author faction when it differs from the task faction", () => {
-    const { text } = markup(
-      <DefaultPraxisCard praxis={OFF_FACTION} adminProps={{ ...PRAXIS_ADMIN, praxis: OFF_FACTION }} />,
-    );
-    expect(text).toContain(factionName("snide"));
-  });
-
-  it("omits the author faction when it matches the task faction", () => {
-    const { text } = markup(
-      <DefaultPraxisCard praxis={SAME_FACTION} adminProps={{ ...PRAXIS_ADMIN, praxis: SAME_FACTION }} />,
-    );
-    // The UA name should not appear as a byline tag (only the task faction voice).
-    expect(text).not.toContain(`· ${factionName("ua")}`);
-  });
+    it(`${slug} omits the author's faction name beside the portrait`, () => {
+      const { text } = markup(
+        <Card praxis={offFaction} adminProps={{ ...PRAXIS_ADMIN, praxis: offFaction }} />,
+      );
+      expect(text, "the author name still reads").toContain("Ada");
+      expect(text, "no faction name in the byline").not.toContain(
+        factionName(authorSlug),
+      );
+    });
+  }
 });
 
 // ─── Task cards ───────────────────────────────────────────────────────────────
