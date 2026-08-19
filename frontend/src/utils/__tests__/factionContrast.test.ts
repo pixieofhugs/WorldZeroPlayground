@@ -2776,6 +2776,108 @@ describe("`--everymen-ink` stays structure on the paper (#2133)", () => {
 });
 
 /**
+ * `--faction-snide-acid` never touches paper (#2173).
+ *
+ * The SAME shape as `--everymen-ink` one block up, in the OPPOSITE cascade: a
+ * theme-INVARIANT ink on a ground that flips. Everymen was unreadable at night;
+ * S.N.I.D.E.'s acid heading was 1.03:1 by DAY on `.snide-backdrop`, and 16.33:1
+ * by night. Part A could not see it — both tokens clear on the surfaces their
+ * documentation names, and the pairing exists only at a call site.
+ *
+ * WHY THIS ONE COULD NOT BE A REPICK, which is what makes the guard's shape
+ * different from #2133's. There was no ink to move to: the light wall's
+ * relative luminance (0.8389) forces any AA-clearing ink below L 0.1475, and
+ * acid green is a light colour, so every candidate at that luminance is a dark
+ * olive — `-acid-deep` reaches 2.30:1 and is not a rung. So the owner's ruling
+ * (2026-08-18) changes the GROUND, per §3's own doctrine, and turns the repair
+ * into an ornament: acid keeps its acid and carries a photocopier-black plate,
+ * which on the light wall reads as a CENSOR BAR.
+ *
+ * The pairing rows below are the ruling's two measurements. The source rows are
+ * what a ratio cannot ask: that the plate is actually AT the site, and that the
+ * empty states beside it stepped off the CARD's muted tier — the tier error the
+ * issue diagnosed — onto the wall's own flipping ink.
+ *
+ * THE BAR IS EXPECTED TO DISSOLVE IN DARK, and nothing here asserts otherwise:
+ * the plate and the dark wall are both near-black, so by night the heading is
+ * plain acid, exactly as it was. That is why the plate is asserted to be
+ * `--faction-snide-ink` by NAME rather than by any ratio against the wall.
+ */
+describe("`--faction-snide-acid` never touches paper (#2173)", () => {
+  const BODY = "pages/factionDetail/archetypes/SnideFactionBody.tsx";
+
+  /**
+   * The aliases every rule below is written against. A rename would otherwise
+   * pass by matching nothing — the failure mode `paperSource` guards one block
+   * up, for the same reason.
+   */
+  function snideBodySource(): string {
+    const source = stripComments(sourceOf(BODY));
+    for (const [alias, token] of [
+      ["ACID", "--faction-snide-acid"],
+      ["INK", "--faction-snide-ink"],
+      ["WALL_TEXT", "--faction-snide-wall-text"],
+    ] as const) {
+      expect(
+        source,
+        `${BODY} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
+      ).toMatch(new RegExp(`const ${alias} = ["']var\\(${token}\\)["']`));
+    }
+    return source;
+  }
+
+  it("the section heading carries the plate, not the bare wall", () => {
+    const source = snideBodySource();
+    const at = source.indexOf("const SECTION_HEADING_TEXT");
+    expect(at, `no \`SECTION_HEADING_TEXT\` in ${BODY}`).toBeGreaterThan(-1);
+    const style = source.slice(at, source.indexOf("};", at));
+    expect(
+      style,
+      "`SectionHeading` renders straight into `.wz-faction-grid`, which stands on `.snide-backdrop` — and that wall FLIPS while the acid does not.",
+    ).toContain("color: ACID");
+    expect(
+      style,
+      "acid as TYPE owes a photocopier-black ground: 16.33:1 in both cascades, and on the light wall the plate is the censor bar the ruling asked for. Lightening it to make the bar visible at night spends exactly that ratio.",
+    ).toContain("background: INK");
+  });
+
+  it("the empty states on the wall take the wall's ink, not the card's", () => {
+    const source = snideBodySource();
+    for (const copy of ["detail.default.tasksEmpty", "detail.default.recentEmpty"]) {
+      const at = source.indexOf(copy);
+      expect(at, `no \`${copy}\` in ${BODY}`).toBeGreaterThan(-1);
+      const line = source.slice(source.lastIndexOf("\n", at) + 1, source.indexOf("\n", at));
+      expect(
+        line,
+        `${copy} stands on the wall, not on a panel. \`--faction-snide-card-muted\` is the SLAB's tier and reads 1.24:1 there; the wall's own ink flips with it.`,
+      ).toContain("color: WALL_TEXT");
+      expect(line, "MUTED is the card tier — correct on a card, a tier error on the wall.").not.toContain(
+        "color: MUTED",
+      );
+    }
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`acid clears AA on the plate, and the wall's ink on the wall (${theme})`, () => {
+      for (const [ink, ground] of [
+        ["--faction-snide-acid", "--faction-snide-ink"],
+        ["--faction-snide-wall-text", "--faction-snide-wall"],
+        ["--faction-snide-wall-text", "--faction-snide-wall-deep"],
+      ] as const) {
+        const text = resolveColor(ink, theme);
+        const surface = resolveColor(ground, theme);
+        expect(text.color, `${ink} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+        expect(surface.color, `${ground} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(ratio, `${ink} on ${ground} (${theme}) is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+          AA_NORMAL,
+        );
+      }
+    });
+  }
+});
+
+/**
  * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
  *
  * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a
