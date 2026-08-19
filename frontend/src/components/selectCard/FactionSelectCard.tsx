@@ -119,6 +119,7 @@ export function COVENSelectCard({ state = "locked", members, onVisit }: Omit<Fac
     </div>
   );
 }
+
 export function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
