@@ -3512,6 +3512,94 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
 });
 
 /**
+ * #2364 — A FROZEN DISC OWES A FROZEN MARK.
+ *
+ * The OPPOSITE direction to #2173 one block up, which is the whole reason
+ * nothing above this fires. #2173 was a frozen ink (acid) landing on a ground
+ * that flipped. Here the GROUND is frozen — `--faction-snide-paper` is the
+ * press's stock, and #2227's block above pins it to exactly one declaration
+ * because six surfaces spend it as a `color:` — and the MARK on it flipped. The
+ * faction-page hero drew its sigil and the medallion's 2px rim in
+ * `--faction-snide`, the chrome hue, which is `#6fae00` by day and `#b6ff2e` by
+ * night: 2.40:1 on the cream disc in light and **1.07:1** in dark.
+ *
+ * WHY EVERY OTHER GUARD PASSED IT. Both sides are declared tokens, so the value
+ * manifest is green. The disc keeps its one declaration, so #2227 is green. The
+ * acid sweep two blocks up looks for the alias `ACID` set as a `color` with no
+ * plate under it, and this file never called the chrome hue acid. The defect is
+ * a PAIRING, and it exists only because the two sides disagree about whether
+ * they flip — so the assertion that catches it is not a ratio but "these resolve
+ * to the same value in both cascades", with the ratio measured after.
+ *
+ * THE FLOOR IS 3:1. The sigil is a graphical mark (WCAG 1.4.11), not lettering.
+ * It clears far more than that, because the repair is the one the other three
+ * S.N.I.D.E. surfaces that draw on this same disc already shipped: the press's
+ * own `-ink`, 16.68:1 in both cascades. Their rows are here so the family is
+ * pinned rather than only the site that was reported.
+ */
+describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
+  const DISC = "--faction-snide-paper";
+  const HERO = "components/factionHero/SnideFactionHero.tsx";
+
+  /** The three surfaces that already draw a mark on this disc, as tokens. */
+  const DISC_MARKS: ReadonlyArray<readonly [string, string]> = [
+    ["the faction page's inverted monogram (SnideFactionBody)", "--faction-snide-ink"],
+    ["the praxis detail's avatar tile (SnidePraxisDetail)", "--faction-snide-ink"],
+    ["the profile laurel's glyph (SnideProfileBody)", "--faction-snide-ink"],
+  ];
+
+  /**
+   * The hero medallion's two marks, read OFF THE SOURCE rather than listed, so
+   * the rows cannot go on measuring a token the component stopped painting.
+   */
+  function heroMedallionMarks(): Array<[string, string]> {
+    const source = stripComments(sourceOf(HERO));
+    expect(source, `the hero medallion no longer grounds on ${DISC}`).toContain(`background: "var(${DISC})"`);
+    const rim = source.match(/border:\s*"2px solid var\((--[a-z-]+)\)"/);
+    const sigil = source.match(/<SnideSigil[^>]*color="var\((--[a-z-]+)\)"/);
+    expect(rim, "no `2px solid` rim on the hero medallion").not.toBeNull();
+    expect(sigil, "the hero draws no `SnideSigil` in a token colour").not.toBeNull();
+    return [
+      ["the hero medallion's rim", rim![1]],
+      ["the hero medallion's sigil", sigil![1]],
+    ];
+  }
+
+  it("the disc itself cannot flip — the premise the rest of this block rests on", () => {
+    const [light, dark] = BOTH_THEMES.map((theme) => resolveColor(DISC, theme).raw);
+    expect(light, `${DISC} resolved to nothing in light`).not.toBeNull();
+    expect(dark, `${DISC} is the press's stock and #2227 pinned it to one declaration`).toBe(light);
+  });
+
+  it("every mark drawn on it is frozen too", () => {
+    for (const [role, token] of [...heroMedallionMarks(), ...DISC_MARKS]) {
+      const [light, dark] = BOTH_THEMES.map((theme) => resolveColor(token, theme).raw);
+      expect(light, `${token} resolved to nothing in light`).not.toBeNull();
+      expect(
+        dark,
+        `${role} paints ${token}, which is ${light} by day and ${dark} by night. The stock under it has ONE value, so a mark that flips is read against the same cream twice — and the chrome hue's night value is 1.07:1 there (#2364).`,
+      ).toBe(light);
+    }
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`every mark clears the 3:1 graphical floor (${theme})`, () => {
+      const ground = resolveColor(DISC, theme);
+      expect(ground.color, `${DISC} (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+      for (const [role, token] of [...heroMedallionMarks(), ...DISC_MARKS]) {
+        const mark = resolveColor(token, theme);
+        expect(mark.color, `${token} (${theme}) resolved to "${mark.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(mark.color!, ground.color!);
+        expect(
+          ratio,
+          `${role}: ${token} on ${DISC} (${theme}) is ${formatRatio(ratio)}. A drawn mark owes WCAG 1.4.11's 3:1, and the acid a S.N.I.D.E. surface reaches for by reflex reads 2.40:1 on this stock even in light — there is no acid rung dark enough for cream (#2133's arithmetic, one surface over).`,
+        ).toBeGreaterThanOrEqual(AA_LARGE);
+      }
+    });
+  }
+});
+
+/**
  * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
  *
  * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a
