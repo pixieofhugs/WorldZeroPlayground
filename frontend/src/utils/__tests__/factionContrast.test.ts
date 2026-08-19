@@ -3812,3 +3812,38 @@ describe("the Coven directory tile's mark clears the graphical floor", () => {
     });
   }
 });
+
+/**
+ * THE EVERYMEN'S COG RULE, ON THE BILL'S PAPER (#2327).
+ *
+ * NOT A `PAIRS` ROW, for the reason the Coven block above states: `AA_LARGE`
+ * there is reserved for large display TYPE and this is 1.4.11's identical 3:1
+ * for a graphical object.
+ *
+ * WHY IT NEEDS ONE AT ALL. `--everymen-red` on `--everymen-paper` already
+ * appears in this file as `everymen card accent`, and it appears there as a
+ * KNOWN NEAR-MISS -- 4.49 light / 4.16 dark against a 4.5 text floor, carried in
+ * `KNOWN_ISSUES` under #651. Read as an ink that is a defect; read as the dashed
+ * rule and the cog it actually is on both the task card and the directory tile,
+ * it is a graphic and the floor is 3:1. Two different rules over one pair, and
+ * without this the only recorded verdict on it is the wrong one for these
+ * mounts. `EverymenTaskCard` draws exactly the same device, so this pins both.
+ *
+ * The cog's HUB is the paper it sits on, which is why the pairing is the mark
+ * against the ground rather than against anything the cog carries.
+ */
+describe("the Everymen bill's drawn rule clears the graphical floor", () => {
+  for (const theme of BOTH_THEMES) {
+    it(`the dashed rule and its cog read on the paper (${theme})`, () => {
+      const ink = resolveColor("--everymen-red", theme);
+      const ground = resolveColor("--everymen-paper", theme);
+      expect(ink.color, `--everymen-red (${theme}) resolved to "${ink.raw}"`).not.toBeNull();
+      expect(ground.color, `--everymen-paper (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+      const ratio = contrastRatio(ink.color!, ground.color!);
+      expect(
+        ratio,
+        `the rule is ${formatRatio(ratio)} on the bill (${theme}); a drawn mark owes 1.4.11's 3:1`,
+      ).toBeGreaterThanOrEqual(AA_LARGE);
+    });
+  }
+});
