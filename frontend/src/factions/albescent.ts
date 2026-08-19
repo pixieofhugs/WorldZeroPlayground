@@ -32,7 +32,7 @@
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
-const AlbescentSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.AlbescentSelectCard })))
+const AlbescentSelectCard = lazyArchetype(() => import('../components/selectCard/AlbescentSelectCard'))
 const AlbescentTaskCard = lazyArchetype(() => import('../components/taskCard/AlbescentTaskCard'))
 const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
 const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
