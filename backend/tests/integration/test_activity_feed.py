@@ -295,6 +295,71 @@ async def test_activity_feed_shows_collaborator_submitted(
 
 
 @pytest.mark.asyncio
+async def test_collaborator_submitted_carries_the_viewers_own_state(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """#2284 — the row says whether the READER still owes their part.
+
+    ``collaborator_submitted`` describes the submitter and, until now, nothing
+    else, so the renderer had no way to tell "they filed, you haven't" from
+    "you both filed" and offered its Submit-yours CTA on both. The fact belongs
+    on the wire rather than inferred client-side: the viewer's own
+    ``PraxisMember`` row is one join from a query that already selects it.
+
+    The row itself stays either way — a collaborator filing their part is real
+    news whether or not you filed yours. Only the CTA is at stake, which is why
+    this is a payload field and not a predicate in the WHERE. Contrast
+    ``_collab_invites_query``, where the *whole card* was unanswerable (#2279).
+    """
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Team"},
+        headers=auth_headers2,
+    )
+    praxis_id = create.json()["id"]
+    inv = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{inv.json()['id']}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+
+    async def viewer_row() -> dict:
+        feed = await client.get(
+            "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
+        )
+        assert feed.status_code == 200
+        rows = [
+            i for i in feed.json()["items"] if i["type"] == "collaborator_submitted"
+        ]
+        assert len(rows) == 1, feed.json()["items"]
+        return rows[0]
+
+    still_owed = await viewer_row()
+    assert still_owed["payload"]["viewer_has_submitted"] is False, (
+        "the viewer has not filed their part, so the CTA is still live"
+    )
+
+    # The reporter's case: the viewer files too, and the row survives.
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+
+    filed = await viewer_row()
+    assert filed["payload"]["viewer_has_submitted"] is True, (
+        "the viewer has filed, so the CTA must drop"
+    )
+
+
+@pytest.mark.asyncio
 async def test_activity_feed_awaiting_submission_in_requests(
     client: AsyncClient,
     character: Character,

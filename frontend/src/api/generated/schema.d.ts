@@ -2254,6 +2254,8 @@ export interface components {
             task_point_value: number;
             /** Task Title */
             task_title: string;
+            /** Viewer Has Submitted */
+            viewer_has_submitted: boolean;
         };
         /**
          * CommentAuthor

@@ -65,7 +65,17 @@ from services.activity_feed import (
 #: The fixture below seeds a vote deliberately: pinning the cheap page would
 #: have left the expensive one unpinned, which is how a per-row scoring
 #: regression would get in unseen.
-EXPECTED_FEED_LOAD_STATEMENTS = 33
+#:
+#: 33 → 34 in #2280: a sixth pre-fetch round trip for the reader's level, which
+#: answers ``services.meta_task.character_sees_metatasks`` once per call so
+#: ``_global_tasks_query`` can withhold metatasks from readers the metatask list
+#: does not open for. Flat — one statement per *call*, not per source, per row
+#: or per filter. It is a round trip rather than a correlated subquery (the
+#: ``character_born`` trick in that same function) because the gate is a rule,
+#: not a comparison: stating it in SQL would put a second copy of
+#: ``era.level_to_see_metatasks`` next to an identically-numbered apply
+#: threshold that a faction perk bends and this one does not.
+EXPECTED_FEED_LOAD_STATEMENTS = 34
 
 #: Round trips the six tab badges cost. One ``UNION ALL`` over the same windowed
 #: Selects the fetch fan-out runs, whatever the registry's size (#1532). Was 15.

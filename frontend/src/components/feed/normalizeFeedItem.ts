@@ -229,8 +229,17 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         level: null,
         // "File yours" — a plain navigation to the shared editor, which every
         // member of the collab can already open. No new endpoint.
+        //
+        // Offered only while the viewer still owes their part (#2284). It used
+        // to hang on a praxis id alone, so a collab where both sides had filed
+        // still told you to submit yours, and following it landed on the praxis
+        // rather than an editor because editing had closed. `viewer_has_submitted`
+        // is the server's answer about the READER — every other field here
+        // describes the submitter, which is why this could not be inferred.
+        // Hiding the control rather than disabling it is the rule stated above
+        // for `buildAwaitingActions`.
         actions:
-          p.praxis_id != null
+          p.praxis_id != null && !p.viewer_has_submitted
             ? [
                 {
                   id: 'fileYours',

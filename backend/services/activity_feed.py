@@ -46,9 +46,11 @@ from models.relationship import Relationship, RelationshipStatus, RelationshipTy
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from services.block_service import blocked_counterpart_ids
+from services.meta_task import character_sees_metatasks
 from services.praxis import praxis_visibility_condition
 from services.praxis_out import author_contributions_for
-from models.task import Task, TaskStatus
+from models.character_stats import CharacterStats
+from models.task import Task, TaskStatus, TaskType
 from models.taunt_message import TauntMessage
 from models.vote import Vote
 from schemas.activity_feed import (
@@ -207,6 +209,14 @@ class FeedContext:
     ``pending``; an ``awaiting_submission`` is *state* and self-clears when the
     viewer files; an ``invitation_letter`` has no status column at all, so it is
     answered once the viewer is standing in that faction.
+
+    ``sees_metatasks`` is the answer to
+    :func:`services.meta_task.character_sees_metatasks` for this reader, carried
+    as the resolved BOOLEAN rather than as a level integer (#2280). A source
+    that held the integer would have to restate ``>= era.level_to_see_metatasks``
+    to use it, which is the second copy of the threshold the shared predicate
+    exists to prevent. Resolved here so the rule is read once per call, in
+    Python, where the Albescent apply-bypass cannot be mistaken for it.
     """
     character_id: int
     friend_ids: tuple[int, ...]
@@ -215,6 +225,7 @@ class FeedContext:
     era_id: int
     before: Optional[datetime]
     unanswered_requests_only: bool
+    sees_metatasks: bool
 
 
 @dataclass(frozen=True)
@@ -626,6 +637,21 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
     There is no cap on the remainder. Capping the backlog at N most recent was
     considered and rejected on #2225 — it still delivers noise, and the number
     would be arbitrary.
+
+    A metatask is not a feed type of its own — it is a ``Task`` row with
+    ``task_type == metatask`` — so it arrives here with everything else, and
+    until #2280 it was announced to readers for whom the metatask list does not
+    open. Withheld below ``ctx.sees_metatasks``, and withheld HERE for the
+    ``_collab_invites_query`` reason (#2279): ``_count_sources`` wraps this same
+    Select, so the bell's number drops with the card in one edit (ADR-0036).
+    Dropping it in the renderer would leave the badge counting a card nothing
+    draws.
+
+    **Level only — no faction predicate, deliberately.** Since #2295/#2282
+    ``metatask_faction_slug`` records who *authored* a metatask, not who may use
+    one; ADR-0029 removed that gate. A Cozy Coven reader hearing about a
+    Warriors of Whimsy metatask is correct, and re-adding a faction clause here
+    would put the removed gate back.
     """
     character_born = (
         select(Character.created_at)
@@ -643,6 +669,8 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
         Task.status == TaskStatus.active,
         Task.created_at >= character_born,
     )
+    if not ctx.sees_metatasks:
+        query = query.where(Task.task_type != TaskType.metatask)
     if ctx.before is not None:
         query = query.where(Task.created_at < ctx.before)
     return query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
@@ -1017,12 +1045,23 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
     PraxisMember rows with has_submitted=True on collab praxes the viewer is also
     a member of, excluding the viewer's own membership. Ordered by submitted_at —
     the moment their part landed, not when they joined.
+
+    The viewer's own membership is joined rather than merely tested for (#2284).
+    It was already half here — ``viewer_praxis_ids`` selected that row to prove
+    the viewer belongs — so reading ``has_submitted`` off it costs the same
+    round trip and answers the one question the payload could not: has the
+    READER filed their part? Without it the card offered "Submit yours" to
+    people who already had.
+
+    A JOIN, not a correlated subquery, and not a predicate: the row must still
+    appear when the viewer has submitted (that news is real either way), so the
+    fact rides out on the payload and the CTA is what drops. The unique
+    constraint on ``(praxis_id, character_id)`` makes the join one-to-one, so it
+    cannot duplicate rows, and it subsumes the old membership test — a viewer
+    with no member row now falls out of the INNER JOIN exactly as they fell out
+    of the ``IN``.
     """
-    viewer_praxis_ids = (
-        select(PraxisMember.praxis_id)
-        .where(PraxisMember.character_id == ctx.character_id)
-        .scalar_subquery()
-    )
+    viewer_member = aliased(PraxisMember)
     query = (
         select(
             PraxisMember.id,
@@ -1035,16 +1074,23 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
+            viewer_member.has_submitted.label("viewer_has_submitted"),
         )
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .join(Character, PraxisMember.character_id == Character.id)
         .join(Task, Praxis.task_id == Task.id)
+        .join(
+            viewer_member,
+            and_(
+                viewer_member.praxis_id == PraxisMember.praxis_id,
+                viewer_member.character_id == ctx.character_id,
+            ),
+        )
         .where(
             PraxisMember.has_submitted.is_(True),
             PraxisMember.submitted_at.is_not(None),
             PraxisMember.character_id != ctx.character_id,
             Praxis.type == PraxisType.collab,
-            PraxisMember.praxis_id.in_(viewer_praxis_ids),
         )
     )
     if ctx.before is not None:
@@ -1067,6 +1113,7 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
+            viewer_has_submitted=row.viewer_has_submitted,
         ),
     )
 
@@ -1794,10 +1841,21 @@ async def _build_fetch_context(
 ) -> tuple[FeedContext, FeedArchiveView]:
     """The pre-fetch phase: everything a source's query needs, resolved once.
 
-    Five sequential round trips — archive, friends, foes, my tasks, era — before
-    a single feed row is read. That cost is per *call*, not per filter, which is
-    why the rail's two panels share one call to this (#1344) rather than paying
-    it twice for two slices of the same fan-out.
+    Six sequential round trips — archive, friends, foes, my tasks, era, level —
+    before a single feed row is read. That cost is per *call*, not per filter,
+    which is why the rail's two panels share one call to this (#1344) rather
+    than paying it twice for two slices of the same fan-out.
+
+    The level is the sixth and newest (#2280), and it is a round trip on
+    purpose. ``_global_tasks_query`` reaches for a correlated scalar subquery
+    where it can — see ``character_born`` — but that trick only works for facts
+    the WHERE can compare directly. The metatask gate is a *rule*
+    (:func:`services.meta_task.character_sees_metatasks`), and expressing it in
+    SQL would mean restating ``>= era.level_to_see_metatasks`` a second time,
+    beside a same-numbered apply threshold that a faction perk bends and this
+    one does not. One statement of the rule is worth one statement to the DB.
+    ``era_config_for_key`` reads the era row already fetched above, so resolving
+    the config costs nothing further.
 
     ``unanswered_requests_only`` follows the live/archived axis and nothing else.
     The pending window on invites and duel challenges is a live-feed rule, on
@@ -1811,6 +1869,14 @@ async def _build_fetch_context(
     foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
+    # A character with no stats row for this era has not started it, and starts
+    # it at level 0 — below every gate, which is the right answer anyway.
+    viewer_level = await session.scalar(
+        select(CharacterStats.level).where(
+            CharacterStats.character_id == character_id,
+            CharacterStats.era_id == era_row.id,
+        )
+    )
 
     return (
         FeedContext(
@@ -1821,6 +1887,9 @@ async def _build_fetch_context(
             era_id=era_row.id,
             before=before_cursor,
             unanswered_requests_only=not archived,
+            sees_metatasks=character_sees_metatasks(
+                viewer_level or 0, era_config_for_key(era_row.config_key)
+            ),
         ),
         archive_view,
     )

@@ -60,6 +60,41 @@ describe('normalizeFeedItem', () => {
     expect(row.headlineHref).toBe('/praxis/12')
     expect(row.points).toBe('25 pts')
     expect(row.badge?.label).toBe('Your Stuff')
+    expect(row.actions.map((a) => a.id)).toEqual(['fileYours'])
+  })
+
+  // #2284 — the CTA was gated only on a praxis id existing, so it appeared to
+  // people who had already filed and led them to an editor that is closed. The
+  // ROW is still correct news; only the action is wrong, so these two assert
+  // opposite CTAs on an otherwise identical payload.
+  it('drops the Submit-yours CTA once the viewer has filed their part (#2284)', () => {
+    const row = normalizeFeedItem(
+      item('collaborator_submitted', {
+        character_id: 8,
+        praxis_id: 12,
+        task_title: 'Plant a tree',
+        task_point_value: 25,
+        viewer_has_submitted: true,
+      }),
+    )!
+    expect(row.actions).toEqual([])
+    // The news survives the CTA it no longer carries.
+    expect(row.action).toBe('submitted their part of')
+    expect(row.headlineHref).toBe('/praxis/12')
+  })
+
+  it('keeps the Submit-yours CTA while the viewer still owes their part (#2284)', () => {
+    const row = normalizeFeedItem(
+      item('collaborator_submitted', {
+        character_id: 8,
+        praxis_id: 12,
+        task_title: 'Plant a tree',
+        task_point_value: 25,
+        viewer_has_submitted: false,
+      }),
+    )!
+    expect(row.actions.map((a) => a.id)).toEqual(['fileYours'])
+    expect(row.actions[0].href).toBe('/praxis/12/edit')
   })
 
   it('maps a nudge to a row linking into the recipient own editor (#1083)', () => {
