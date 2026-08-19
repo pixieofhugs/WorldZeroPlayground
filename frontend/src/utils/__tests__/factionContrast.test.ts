@@ -1111,6 +1111,16 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
   { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
   { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
+  // THE ONE ROW THE TASK CARD DOES NOT ALREADY MAKE (#2326). The directory tile
+  // draws the same key UNLIT at rest and lights it on hover, so its label sits
+  // on a 14% wash of `-term-blue` over the chassis rather than on the solid
+  // `-term-cta-bg` the row above measures. The wash is only 1.16:1 against the
+  // bare chassis, which is the point of writing it down: what makes the control
+  // findable is its `-term-bright` edge, not its fill, and what makes the label
+  // legible is that the wash barely moves the ground under it. Every other
+  // pairing on that tile IS one of the rows above, ink for ground, so none of
+  // them is restated here — a second `what` for one pair measures nothing new.
+  { what: "singularity tile CTA at rest, label", surface: "--faction-singularity-term-bg", veil: { token: "--faction-singularity-term-blue", alpha: 0.14 }, text: "--faction-singularity-term-bright" },
 
   // S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023). Unlike the faction's
   // older ink-dark families, this one FLIPS, so each row genuinely measures two
