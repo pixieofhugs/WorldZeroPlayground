@@ -8,7 +8,6 @@ import { mediaUrl } from '../../utils/media'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import type { PraxisCardOut } from '../../api/praxis'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
-import { useRosterOffersAChoice } from '../../hooks/useRosterChoice'
 import {
   SIDEBAR_PANEL_COLLAPSIBLE,
   useSidebarPanelLayout,
@@ -17,7 +16,6 @@ import {
 import { praxisModeLabel } from '../../utils/praxis'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { useLevelTrack } from '../../hooks/useLevelTrack'
-import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
 import FactionSigil from '../sigil/FactionSigil'
 import DefaultSigil from '../sigil/DefaultSigil'
 import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
@@ -668,9 +666,6 @@ export default function Sidebar() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
-  const [switcherOpen, setSwitcherOpen] = useState(false)
-  // Whether the CHARACTERS pill has a room to open at all (#2111).
-  const offersACharacterChoice = useRosterOffersAChoice()
   const { order, isCollapsed, toggleCollapsed, movePanelOnto, movePanelByStep } =
     useSidebarPanelLayout(user?.account_id ?? null)
 
@@ -731,23 +726,13 @@ export default function Sidebar() {
             }}
           />
 
-          {/* ── Actions: real 44px targets, right-aligned on their own row ── */}
+          {/* ── Actions: real 44px targets, right-aligned on their own row.
+                 ONE door, since #2354. The `CHARACTERS` pill that stood here
+                 opened the account's roster in a bottom sheet — the same roster,
+                 on the same `rosterOffersAChoice` gate, that the desktop home
+                 lays out in the page behind this rail. `EDIT` stays: it leads
+                 somewhere the home page does not. ── */}
           <div className="flex justify-end gap-2 mb-4">
-            {/* The switcher's door, hidden when the room behind it is empty
-                (#2111): one life and a shut second-character gate leave the
-                sheet holding only the life already being carried. Same
-                predicate as the FieldDesk roster, so the desktop home cannot
-                offer in the rail what it has just withheld in the page. */}
-            {offersACharacterChoice && (
-              <button
-                type="button"
-                onClick={() => setSwitcherOpen(true)}
-                className="hover:opacity-80 active:opacity-60"
-                style={identityActionStyle}
-              >
-                {t('sidebar.characterCard.characters')}
-              </button>
-            )}
             <Link
               to={`/characters/${character.id}/edit`}
               className="hover:opacity-80 active:opacity-60"
@@ -869,14 +854,6 @@ export default function Sidebar() {
               {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
             </span>
           </div>
-
-          {/* The switcher the "Characters" pill opens — the same sheet the
-              mobile home uses, so both homes answer the button identically. */}
-          <CharacterSwitcherSheet
-            open={switcherOpen}
-            activeCharacterId={character.id}
-            onClose={() => setSwitcherOpen(false)}
-          />
         </section>
       ) : (
         <section style={panelStyle}>

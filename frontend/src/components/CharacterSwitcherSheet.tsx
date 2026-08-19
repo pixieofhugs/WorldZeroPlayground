@@ -14,8 +14,10 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * account's lives (active one checkmarked), swaps the carried life on tap
  * (one `POST /me/active-character`, whose answer IS the new viewer — #1383),
  * and holds ONE path action under them: Create new character. Opened from the
- * `CHARACTERS` pill on the rail's character card and on the eight mobile field
- * desks. Presentation-only over existing endpoints.
+ * `CHARACTERS` pill on the eight mobile field desks, and nowhere else since
+ * #2354 — the desktop rail's pill was a second door to the roster the desktop
+ * home already lays out in the page, and it opened THIS, a phone bottom sheet,
+ * on a desktop. Presentation-only over existing endpoints.
  *
  * **The one action is gated, and the trigger is too** (#2111). "Create new
  * character" is rendered only when `can_create_additional_character` says the
@@ -31,11 +33,10 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * `rosterOffersAChoice` (`hooks/useRosterChoice`), so the sheet and the desktop
  * roster cannot disagree about whether a roster is worth showing.
  *
- * **Drawn at the document root** (#1591). Every caller — the desktop rail's
- * Characters pill (`layout/Sidebar`) and all eight mobile field desks — mounts
- * this from inside `ShellContent`, whose `position: relative` + `z-index: 5`
- * opens a stacking context that no descendant can escape by declaring a bigger
- * number. On the phone that put the tab bar over the sheet and left it tappable
+ * **Drawn at the document root** (#1591). Every caller — all eight mobile
+ * field desks — mounts this from inside `ShellContent`, whose
+ * `position: relative` + `z-index: 5` opens a stacking context that no
+ * descendant can escape by declaring a bigger number. On the phone that put the tab bar over the sheet and left it tappable
  * behind the scrim. `drawAtRoot` carries the full argument.
  */
 
