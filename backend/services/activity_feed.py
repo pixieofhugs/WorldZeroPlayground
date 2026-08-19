@@ -703,7 +703,23 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _collab_invites_query(ctx: FeedContext) -> Select:
-    """Collab invites sent to the current character (PraxisInvite, collab type)."""
+    """Collab invites sent to the current character (PraxisInvite, collab type).
+
+    "Unanswered" is TWO conditions, not one (#2279). The invite's own status
+    says nobody has replied; it does not say a reply is still possible. Once the
+    room is submitted, ``respond_to_invite`` refuses the accept with
+    ``invite_praxis_submitted`` — so a pending invite onto a submitted praxis is
+    a card whose Accept button answers nothing, which is exactly the promise
+    ``isQueueItem`` is written to keep from the other side.
+
+    Suppressed HERE rather than in the renderer, and that placement is the whole
+    point: ``_count_sources`` wraps this same Select, so the bell's number and
+    the cards under it drop the invite in one edit (ADR-0036). Filtering in the
+    frontend would leave the badge counting a card the queue will not draw.
+
+    Declining stays possible in principle, but is not worth a card: the invite
+    is inert either way, and nobody is waiting on the answer.
+    """
     query = (
         select(
             PraxisInvite.id,
@@ -728,7 +744,10 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
         )
     )
     if ctx.unanswered_requests_only:
-        query = query.where(PraxisInvite.status == PraxisInviteStatus.pending)
+        query = query.where(
+            PraxisInvite.status == PraxisInviteStatus.pending,
+            Praxis.status != PraxisStatus.submitted,
+        )
     if ctx.before is not None:
         query = query.where(PraxisInvite.created_at < ctx.before)
     return query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
