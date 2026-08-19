@@ -251,17 +251,25 @@ describe("it is drawn once and mounted where a plate CTA is (#2067)", () => {
     expect(found).toEqual(["components/factionMarks/ephemeristsPlate.tsx"]);
   });
 
-  it("is mounted on the three surfaces that paint the plate CTA, and no others", () => {
-    // The owner's ruling names these three. `EphemeristsComment` reads the same
-    // token as an ACCENT rather than as a button; the faction page and the field
-    // desk do draw the button (both wear `.eph-cta` since #2146) but neither
-    // brackets it — where the MOTIF lives is #2067's separate ruling. A fourth
-    // mount appearing here is a design decision that should fail rather than
-    // land quietly.
+  it("is mounted on the CTA surfaces and the praxis byline, and no others", () => {
+    // #2067's ruling named the three that paint a plate CTA. #2312 adds the
+    // FOURTH, and it is the one that brackets nothing: the praxis card's byline
+    // divider, where the strip replaces a generic dashed rule rather than
+    // framing a button. `EphemeristsComment` reads the same token as an ACCENT
+    // rather than as a button; the faction page and the field desk do draw the
+    // button (both wear `.eph-cta` since #2146) but neither brackets it — where
+    // the MOTIF lives is #2067's separate ruling. A fifth mount appearing here
+    // is a design decision that should fail rather than land quietly.
+    //
+    // The detector reads SOURCE TEXT, so a prose mention counts as a mount. That
+    // is deliberate — a re-transcription can be renamed but not un-named — and
+    // it is why `praxisCard/desktop/shared.tsx` documents the slot without
+    // naming the component.
     const mounts = files
       .filter(([path, source]) => path !== STRIP && source.includes("EphemeristsRuneStrip"))
       .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
     expect(mounts.sort()).toEqual([
+      "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
       "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
       "pages/taskDetail/archetypes/EphemeristsTaskDetail.tsx",

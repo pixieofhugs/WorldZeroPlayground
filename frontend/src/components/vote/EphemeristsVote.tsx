@@ -65,9 +65,20 @@ import { VOTE_REFRAMES } from './voteReframes'
  * stays in the shared {@link useVote} hook.
  */
 
-/** The touch target, and the haloed top rank. Never shrink either (WCAG ≥44). */
-const DISC_SIZE = 44
-const TOP_DISC_SIZE = 50
+/**
+ * The touch target, and the haloed top rank. Never shrink either (WCAG ≥44).
+ *
+ * EXPORTED FOR THE STYLESHEET'S TEST (#2315). `.eph-metal-row`'s clearance ramp
+ * is a function of how much disc the row has to seat, and that figure —
+ * `4 × 44 + 50 = 226` — is written into `index.css` because CSS cannot read a
+ * TypeScript constant. Exporting them lets `__tests__/ephemeristsVote.test.tsx`
+ * check the sheet against the source of truth instead of restating it, so
+ * moving a disc size fails loudly rather than silently mis-spacing the row.
+ */
+export const DISC_SIZE = 44
+export const TOP_DISC_SIZE = 50
+/** What five discs occupy before a single gap or pad. The sheet's `226px`. */
+export const DISC_RUN = DISC_SIZE * 4 + TOP_DISC_SIZE
 
 const TIERS = VOTE_REFRAMES['ephemerists'].tiers
 

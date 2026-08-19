@@ -499,12 +499,19 @@ export default function EphemeristsTaskCard({
             #2067 BRACKETS IT WITH THE MASTHEAD'S OWN MOTIF. The two rune strips
             are the registers that came off the band, and they are the reason this
             block no longer sits inside one `bodyPad` box: `[data-eph-runes]` is
-            `calc(100% - 40px)` wide of ITS OWN parent, which is the design's
-            20px inset from the CARD's edges. Nested inside a box already inset by
-            `--space-xl` they would have come out 44px in each side and read as a
-            short line rather than as a register. So the wrapper is bare, the
-            brass rule carries its own inset as a margin, and the trailing strip's
-            18px is what closes the card in place of `bodyPad`'s bottom. */}
+            the full width of ITS OWN parent, so nested inside a box already inset
+            by `--space-xl` they would read as a short line rather than as a
+            register. So the wrapper is bare, the brass rule carries its own inset
+            as a margin, and the trailing strip's 18px is what closes the card in
+            place of `bodyPad`'s bottom.
+
+            #2312 DROPPED THE STRIP'S OWN 20px INSET (it was `calc(100% - 40px)`
+            centred), on the owner's ruling that corner-to-corner applies
+            "anywhere there are runes". Because this wrapper is bare, that is now
+            literal here: both strips run to the card's border box, where before
+            they stopped 20px short of it. The brass rule above keeps its own
+            `--space-xl` margin — a rule and a register are different marks and
+            were never meant to line up. */}
         {cta && (
           <div style={{ position: "relative", zIndex: 2 }}>
             <div
