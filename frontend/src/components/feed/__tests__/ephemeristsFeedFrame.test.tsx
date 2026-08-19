@@ -115,9 +115,11 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     expect(html).toContain('stroke-width="0.6"')
   })
 
-  it('takes the sigil at the REDUCED cut, since the band is 10-14px tall', () => {
-    // Both band heights sit under #1635's 20px threshold, so the mark drops its
-    // crossed axes and vertex discs rather than drawing them at half a pixel.
+  it('takes the sigil at the REDUCED cut, since the MARK is 10-14px tall', () => {
+    // Both sigil heights sit under #1635's 20px threshold, so the mark drops
+    // its crossed axes and vertex discs rather than drawing them at half a
+    // pixel. This is the mark's own size and never the band's — the band has
+    // no height to read since #2100, and it did not set this one before.
     expect(frame()).not.toContain('M100 272 L392 272')
   })
 
