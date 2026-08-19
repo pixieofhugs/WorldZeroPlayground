@@ -19,15 +19,13 @@ const NA_SLUG = 'na'
  * wiring — all layout still lives in the pure `FactionsDirectoryView`, which is
  * what keeps the surface testable over controlled rows (#743).
  *
- * The invitations feed backs the letters PANEL only — never card state.
- * Desktop's extra `|| invitationBySlug[slug]` arm in its `selectState` is dead
- * code: `_NON_INVITE_FACTION_SLUGS = {"na", "albescent"}` (backend
- * services/character_stats.py) means no letter is ever written for those two,
- * and `get_account_invited_faction_slugs` excludes the same pair while being
- * ACCOUNT-pooled — strictly broader than the character-scoped letters. So every
- * slug this feed can return already reports `invited` in the same payload's
- * status map: since #1384 the letters and that map are one `/factions/status`
- * response, built from one query. The view's selectState stays as-is (#733).
+ * Card state comes from the status map and nothing else. The "Recent Invitations"
+ * panel this container used to feed is gone from both form factors (#2310) — the
+ * letter is actionable on the Updates feed card, the faction detail page and the
+ * arrival popup, and it was actionable on none of them here. Desktop's matching
+ * `|| invitationBySlug[slug]` arm went with it: the letters and the status map are
+ * one `/factions/status` response built from one query (#1384), so a held letter
+ * always reads `member`, `can_return` or `invited` already.
  */
 export default function DefaultFactionsDirectory({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
@@ -36,13 +34,12 @@ export default function DefaultFactionsDirectory({ state }: { state: FactionsDir
   const currentSlug = user?.character?.faction_slug ?? null
   const unaffiliated = !currentSlug || currentSlug === NA_SLUG
 
-  const { factions, factionPage, invitations, loading } = state
+  const { factions, factionPage, loading } = state
 
   return (
     <FactionsDirectoryView
       factions={factions}
       factionPage={factionPage}
-      invitations={invitations}
       loading={loading}
       error={state.error ? extractError(state.error, t('mobile.loadError')) : null}
       unaffiliated={unaffiliated}

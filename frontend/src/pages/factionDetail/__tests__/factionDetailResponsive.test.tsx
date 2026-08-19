@@ -320,3 +320,37 @@ describe('UA carries no gold at either width', () => {
     })
   }
 })
+
+/**
+ * The praxis row wraps at TWO on a faction page, not three (#2313).
+ *
+ * The seam is the flex BASIS each archetype emits on the praxis card's wrapper.
+ * Six of the eight hardcoded `1 1 280px` there — a second number beside the one
+ * `frameBase` already asks for, and 280 is the card's own MIN-WIDTH, the floor
+ * that keeps a phone at one card per row. Used as a basis it says where the row
+ * WRAPS, so three of them fitted the ~956px main column.
+ *
+ * CEILING (`renderToStaticMarkup`, no jsdom, no layout, no computed styles):
+ * nothing here can be MEASURED, so this asserts the declaration rather than a
+ * box. The arithmetic it stands in for: `--shell-max-width` 1392px less `px-10`
+ * a side, with `.wz-faction-grid` at `1fr 322px` and a 34px gap, tops the main
+ * column near 956px — under the 1182px three 394px cards need and under the
+ * 992px three 320px ones need, so the row wraps at two at every supported width.
+ *
+ * The NEGATIVE is the load-bearing half: it is what stops a ninth archetype, or
+ * a rebase, reintroducing a hardcoded basis on whatever wrapper it writes.
+ */
+describe('the faction praxis row asks the container where to wrap (#2313)', () => {
+  for (const slug of SLUGS) {
+    it(`${slug} takes its praxis basis from --praxis-card-basis`, () => {
+      const { html } = page(slug, 'desktop')
+      expect(html, 'the container decides the basis').toContain(
+        'flex:1 1 var(--praxis-card-basis, 394px)',
+      )
+      expect(html, 'no archetype reinvents the basis as the min-width floor').not.toContain(
+        '1 1 280px',
+      )
+      expect(html, 'the 280px floor stays').toContain('min-width:280px')
+    })
+  }
+})

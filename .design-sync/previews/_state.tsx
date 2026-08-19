@@ -124,7 +124,6 @@ export function factionsDirectoryState(): FactionsDirectoryState {
   return {
     factions: factionOuts,
     factionPage: null,
-    invitations: [],
     loading: false,
     error: null,
   }

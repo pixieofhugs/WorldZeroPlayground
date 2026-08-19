@@ -280,13 +280,19 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
 const BYLINE_PORTRAIT_SIZE = 28;
 
 /**
- * Slot: the author byline (dashed rule on top) — name, portrait, faction tag.
+ * Slot: the author byline (dashed rule on top) — portrait, name, faction tag.
  *
  * The praxis TOTAL used to sit at the right of this row. It is gone (#888,
  * closing #663): the score stamp is the card's sole owner of that number, and
  * a card that states its total twice invites the reader to check whether the
- * two agree. The portrait takes the name's right-hand side; the author's
- * faction tag takes the far edge the score vacated.
+ * two agree. The author's faction tag takes the far edge the score vacated,
+ * and it keeps it.
+ *
+ * The portrait led the name's right-hand side and now LEADS the row (#2309,
+ * owner ruling on the Ephemerists card): a face before a name is how every
+ * other byline on the site reads. Source order is the whole change — the row
+ * is a plain flex line that sets no `order` — plus the side the name's own
+ * separation padding sits on.
  */
 export function PraxisByline({
   praxis,
@@ -325,7 +331,10 @@ export function PraxisByline({
   // anchor: how the name yields, and the padding that keeps it off the glyphs
   // (#1633 — that 8px lives here rather than as `gap` on the row because a
   // display face's final glyph can carry ink past its own advance width, and
-  // the Ephemerists card sets this line in Poiret One).
+  // the Ephemerists card sets this line in Poiret One). With the portrait now
+  // leading the row (#2309) the same 8px is the name's INLINE-START padding:
+  // it flipped side, it did not become a `gap`, because what it buys is a
+  // glyph's overhang and that belongs to the name.
   //
   // #2132 — THE NAME WRAPS; it used to ellipsize, and the ellipsis was the
   // defect. `overflow: hidden` + `white-space: nowrap` is a bound on how the
@@ -354,7 +363,7 @@ export function PraxisByline({
   const nameStyle: CSSProperties = {
     fontFamily: fonts?.display,
     overflowWrap: "anywhere",
-    paddingInlineEnd: "var(--space-sm)",
+    paddingInlineStart: "var(--space-sm)",
   };
   return (
     <div
@@ -379,9 +388,13 @@ export function PraxisByline({
     >
       {/*
        * No `gap` here on purpose (#1633) — the separation from the portrait is
-       * carried as padding on the name itself. See the link below.
+       * carried as padding on the name itself. See `nameStyle` above.
        */}
       <span className="flex items-center" style={{ minWidth: 0 }}>
+        <FactionAvatar
+          character={authorAsCharacter(praxis)}
+          size={BYLINE_PORTRAIT_SIZE}
+        />
         {/*
          * A person's name is readable text, not scanned chrome: content tier
          * (18px). It ties the task link's size, and separates from it by
@@ -402,10 +415,6 @@ export function PraxisByline({
             {authorName}
           </Link>
         )}
-        <FactionAvatar
-          character={authorAsCharacter(praxis)}
-          size={BYLINE_PORTRAIT_SIZE}
-        />
       </span>
       {showFaction && (
         <span
