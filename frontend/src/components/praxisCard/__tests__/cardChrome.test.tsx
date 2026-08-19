@@ -141,7 +141,7 @@ describe('the byline portrait (#888)', () => {
  *
  * What stays here is the part that is still only about this portrait.
  */
-describe('the byline name is not shaved against its portrait (#1633)', () => {
+describe('the byline name is not shaved against its portrait (#1633, #2309)', () => {
   const nameLink = (html: string) => html.match(/<a [^>]*>/)?.[0] ?? ''
   const byline = (name: string) =>
     nameLink(render(<PraxisByline praxis={praxis({ created_by_display_name: name })} />))
@@ -151,12 +151,66 @@ describe('the byline name is not shaved against its portrait (#1633)', () => {
     // can carry ink past its own advance width — the Ephemerists card sets this
     // line in Poiret One — and the 8px is what gives that overhang somewhere to
     // land instead of being shaved flush against the portrait beside it.
-    expect(byline('Isolde')).toContain('padding-inline-end:var(--space-sm)')
+    //
+    // #2309 moved the portrait to the name's LEFT, so the same 8px is now the
+    // name's INLINE-START padding. It stayed on the name and stayed logical:
+    // what it buys is a glyph's overhang, which is a property of the name.
+    expect(byline('Isolde')).toContain('padding-inline-start:var(--space-sm)')
     // Still true of a name long enough to reach the portrait, which is the only
     // case where it is observable.
     expect(byline('Bartholomew Featherstonehaugh-Wentworth')).toContain(
-      'padding-inline-end:var(--space-sm)',
+      'padding-inline-start:var(--space-sm)',
     )
+    // And it is not quietly the old side as well.
+    expect(byline('Isolde')).not.toContain('padding-inline-end')
+  })
+})
+
+/**
+ * #2309 — owner ruling on a screenshot of the Ephemerists card: the portrait
+ * goes to the LEFT of the name. The faction tag keeps the far edge, the slot the
+ * score vacated in #888.
+ *
+ * The seam is `PraxisByline`'s own markup, and it has to be: no DOM and no
+ * layout here, so what is observable is source ORDER — which is what decides
+ * the painted order inside a plain flex row that sets no `order`.
+ */
+describe('the byline reads portrait, then name, then faction tag (#2309)', () => {
+  const bylineAt = (path: string) =>
+    renderToStaticMarkup(
+      <MemoryRouter initialEntries={[path]}>
+        <PraxisByline
+          praxis={praxis({
+            created_by_avatar_url: 'avatars/isolde.png',
+            created_by_faction_slug: 'coven',
+            task_faction_slug: 'ua',
+          })}
+        />
+      </MemoryRouter>,
+    )
+  // `>Isolde<` is the name's own text node: the portrait's `alt` carries the
+  // same string, so a bare indexOf would match the img and prove nothing.
+  const nameAt = (html: string) => html.indexOf('>Isolde<')
+
+  it('puts the portrait before the name when the name is a link', () => {
+    const html = bylineAt('/praxis/1')
+    expect(html, 'the link branch').toContain('<a ')
+    expect(nameAt(html), 'the name renders').toBeGreaterThan(-1)
+    expect(html.indexOf('<img')).toBeLessThan(nameAt(html))
+  })
+
+  it("puts the portrait before the name on the author's own page (#2125)", () => {
+    // The plain-text branch renders a different element, so the order has to be
+    // asserted against it too — one of the two is where #2132 was reported.
+    const html = bylineAt('/characters/7')
+    expect(html, 'the plain-text branch').not.toContain('<a ')
+    expect(html.indexOf('<img')).toBeLessThan(nameAt(html))
+  })
+
+  it('leaves the faction tag on the far edge', () => {
+    const html = bylineAt('/praxis/1')
+    expect(html).toContain('Cozy Coven')
+    expect(nameAt(html)).toBeLessThan(html.indexOf('Cozy Coven'))
   })
 })
 
