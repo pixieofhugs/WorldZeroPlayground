@@ -9,7 +9,7 @@
     "budget": "node scripts/bundle-budget.mjs",
     "measure": "node scripts/measure-load.mjs",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.e2e.json --noEmit",
     "typecheck:design-sync": "tsc -p tsconfig.design-sync.json --noEmit",
     "test": "vitest run",
     "lint": "eslint src .ds-kit e2e",
