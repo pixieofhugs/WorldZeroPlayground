@@ -65,8 +65,8 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
       {/* Signup outcome — the CTA arrived with the shared card (ADR-0056), so
           the message that answers it has to arrive too. */}
       {signupMsg && (
-        <p className={`font-body content-text mt-3 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'danger-edge danger-text'}`}>
-          {signupMsg.msg}
+        <p className="font-body content-text mt-3 border-2 danger-edge danger-text px-3 py-2">
+          {signupMsg}
         </p>
       )}
 

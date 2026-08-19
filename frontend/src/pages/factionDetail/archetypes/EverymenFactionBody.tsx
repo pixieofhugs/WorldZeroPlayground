@@ -218,7 +218,16 @@ function Medallion({
 
 export default function EverymenFactionBody({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation("factions");
-  const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
+  const {
+    faction,
+    members,
+    tasks,
+    recentPraxis,
+    viewerFactionSlug,
+    gameFactions,
+    onSignup,
+    membership,
+  } = state;
   const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
@@ -282,6 +291,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                     task.primary_faction_slug,
                     gameFactions,
                   )}
+                  onSignup={onSignup}
                 />
               ))}
             </div>

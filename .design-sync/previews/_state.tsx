@@ -8,7 +8,7 @@
 // the character + content (characterFor/taskFor/makePraxis are slug-aware).
 
 import type { FieldDeskHomeState } from '../../frontend/src/pages/fieldDesk/useFieldDeskHome'
-import type { TasksState, SignupMessage } from '../../frontend/src/pages/tasks/useTasks'
+import type { TasksState } from '../../frontend/src/pages/tasks/useTasks'
 import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
@@ -67,7 +67,12 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
 }
 
 // ── tasks (browse) ───────────────────────────────────────────────────────────
-const SIGNUP_OK: SignupMessage = { id: 101, msg: 'Signed up — good luck.', ok: true }
+/**
+ * The signup line is only ever a FAILURE (#2188): the success path navigates
+ * to the new praxis composer, so there is no page left to congratulate anyone
+ * on. This used to preview an `ok: true` message the app could not produce.
+ */
+const SIGNUP_FAILED = 'Could not sign up — make sure you are logged in.'
 /** A scannable task list, a spread of factions so the chips have range. */
 export function tasksState(slug: string): TasksState {
   return {
@@ -102,7 +107,7 @@ export function tasksState(slug: string): TasksState {
     clearFilters: noop,
     hasMore: false,
     loadMore: noop,
-    signupMsg: SIGNUP_OK,
+    signupMsg: SIGNUP_FAILED,
     handleSignup: anoop,
     displayPointsFor: (task) => task.point_value,
     // era_1 neutralises the faction modifier to 1.0 — no ×badge on any card.
@@ -331,6 +336,10 @@ export function factionDetailState(slug: string): FactionDetailState {
     recentPraxis: praxisCardsFor(slug),
     viewerFactionSlug: 'na',
     gameFactions: gameFactionConfigs,
+    // A signed-in viewer, so the task cards on a faction page offer their tasks
+    // (#2188). `noop` is enough — a preview never presses anything.
+    onSignup: noop,
+    signupMsg: null,
     membership: {
       state: 'eligible',
       currentFactionSlug: null,
