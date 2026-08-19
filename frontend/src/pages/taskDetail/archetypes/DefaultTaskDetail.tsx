@@ -8,6 +8,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -130,8 +131,10 @@ export default function DefaultTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel — the issuer line below the
+  // title is that page's one faction statement (#2282). See `headerFactionName`.
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -453,17 +456,23 @@ export default function DefaultTaskDetail({
           flexWrap: "wrap",
         }}
       >
-        <span
-          aria-hidden
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: 2,
-            flex: "none",
-            backgroundImage: SPECTRUM,
-          }}
-        />
-        <span className="label-caption">{factionName(slug)}</span>
+        {/* Swatch and word are one statement, so they stand down together —
+            a lone spectrum chip before the META pill reads as a stray bullet. */}
+        {eyebrowFaction && (
+          <>
+            <span
+              aria-hidden
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: 2,
+                flex: "none",
+                backgroundImage: SPECTRUM,
+              }}
+            />
+            <span className="label-caption">{eyebrowFaction}</span>
+          </>
+        )}
         {isMetatask && (
           <span
             className="font-body"
@@ -512,7 +521,7 @@ export default function DefaultTaskDetail({
             marginBottom: "var(--space-md)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

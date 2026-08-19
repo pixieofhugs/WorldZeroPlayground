@@ -17,6 +17,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -173,8 +174,9 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -499,7 +501,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       >
         <UaSigil width={16} height={16} />
         <span style={{ ...UA_EYEBROW, fontSize: "var(--text-base)" }}>
-          {factionName(slug)}
+          {eyebrowFaction}
         </span>
         {isMetatask && (
           <span
@@ -546,7 +548,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: "var(--space-md)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

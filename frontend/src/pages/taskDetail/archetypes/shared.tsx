@@ -13,6 +13,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CommentThread from "../../../components/comments/CommentThread";
 import { isNeutralMultiplier } from "../../../utils/points";
+import { factionName, UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
+import type { TaskOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
 interface ErrorBannerProps {
@@ -172,6 +174,45 @@ export function actionColumnSize({
  */
 export function showWorthBreakdown(factionMultiplier: number): boolean {
   return !isNeutralMultiplier(factionMultiplier);
+}
+
+/**
+ * headerFactionName — the ONE faction word a task-detail header may print
+ * (#2282).
+ *
+ * A metatask carries two real faction columns and every skin printed both as if
+ * they were one answer: `primary_faction_slug` in the eyebrow/nameplate, and
+ * `metatask_faction_slug` in the line under the title. Task 162 therefore
+ * claimed to be *Unaffiliated* AND *Warriors of Whimsy*.
+ *
+ * Neither column is wrong — they answer different questions. The propose form
+ * POSTs `metatask_faction_slug` only (`planProposalSubmission`), so every
+ * player-made metatask has the `na` sentinel in `primary_faction_slug`, and
+ * `na` printed as "Unaffiliated": a faction-shaped word for the *absence* of
+ * one, standing next to the issuer's real name. The issuer is the fact worth
+ * stating — `faction_permits` documents that it gates nothing, it records who
+ * issued the metatask — so on a metatask THAT line is the header's faction
+ * statement (`detail.metataskIssuer`) and this one stands down.
+ *
+ * Null only where the word would be the generic one, never for a named faction:
+ * the dispatcher picks the archetype off this same slug, so a faction skin's
+ * nameplate — the Everymen masthead, the S.N.I.D.E. bar, the Ephemerists
+ * wordmark — always has its own word to set, and an admin-set
+ * `primary_faction_slug` on a metatask keeps it. Those two lines are then
+ * differently labelled, which is all the rule asks.
+ *
+ * The test is on the resolved NAME rather than the slug, which is what keeps
+ * Albescent hidden (ADR-0027): `factionName` masks that slug to the
+ * unaffiliated word for a viewer who has not been shown the society, so an
+ * albescent metatask must stand its header word down exactly as an `na` one
+ * does — a word that appeared on one and not the other would BE the tell. A
+ * revealed viewer resolves the real name and keeps it.
+ */
+export function headerFactionName(task: TaskOut): string | null {
+  const name = factionName(task.primary_faction_slug);
+  const isGeneric = name === factionName(UNAFFILIATED_FACTION_SLUG);
+  if (task.task_type === "metatask" && isGeneric) return null;
+  return name;
 }
 
 export function ErrorBanner({ message, style }: ErrorBannerProps) {

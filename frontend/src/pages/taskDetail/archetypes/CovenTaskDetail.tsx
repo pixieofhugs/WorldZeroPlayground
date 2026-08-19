@@ -9,6 +9,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -345,8 +346,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -650,7 +652,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <SigilMark size={30} />
-        <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
+        <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{eyebrowFaction}</span>
         {isMetatask && (
           <span
             style={{
@@ -700,7 +702,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             marginBottom: "var(--space-md)",
           }}
         >
-          {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}
+          {t("detail.metataskIssuer", { faction: factionName(task.metatask_faction_slug) })}
         </p>
       )}
     </div>
