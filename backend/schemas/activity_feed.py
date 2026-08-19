@@ -193,6 +193,24 @@ class CollaboratorSubmittedPayload(FeedPayloadBase):
     task_title: str
     task_point_value: int
     task_faction_slug: str
+    # Has the READER filed their own part? Every other field here describes the
+    # submitter, which left the renderer offering "Submit yours" to people who
+    # already had (#2284) — a CTA into an editor that is closed, so it landed on
+    # the praxis instead. The answer is the viewer's own ``PraxisMember``, one
+    # join from a query that already selects that row, and it belongs on the
+    # wire rather than inferred client-side because the client holds nothing to
+    # infer it from.
+    #
+    # It gates the ACTION, not the row: a collaborator filing their part is news
+    # either way, so unlike #2279's unanswerable invite this is a payload field
+    # and not a predicate in the WHERE.
+    #
+    # Reads ``PraxisMember.has_submitted``, which since ADR-0079 means approval
+    # of the live proposal rather than "my part is finished" (that is
+    # ``is_done``). Approval is the right one: it is what the Submit control
+    # sets, what ``awaiting_submission`` calls the viewer's turn, and what this
+    # feed type already reports about the submitter — so all three agree.
+    viewer_has_submitted: bool
 
 
 class AwaitingSubmissionPayload(FeedPayloadBase):

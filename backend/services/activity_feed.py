@@ -1045,12 +1045,23 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
     PraxisMember rows with has_submitted=True on collab praxes the viewer is also
     a member of, excluding the viewer's own membership. Ordered by submitted_at —
     the moment their part landed, not when they joined.
+
+    The viewer's own membership is joined rather than merely tested for (#2284).
+    It was already half here — ``viewer_praxis_ids`` selected that row to prove
+    the viewer belongs — so reading ``has_submitted`` off it costs the same
+    round trip and answers the one question the payload could not: has the
+    READER filed their part? Without it the card offered "Submit yours" to
+    people who already had.
+
+    A JOIN, not a correlated subquery, and not a predicate: the row must still
+    appear when the viewer has submitted (that news is real either way), so the
+    fact rides out on the payload and the CTA is what drops. The unique
+    constraint on ``(praxis_id, character_id)`` makes the join one-to-one, so it
+    cannot duplicate rows, and it subsumes the old membership test — a viewer
+    with no member row now falls out of the INNER JOIN exactly as they fell out
+    of the ``IN``.
     """
-    viewer_praxis_ids = (
-        select(PraxisMember.praxis_id)
-        .where(PraxisMember.character_id == ctx.character_id)
-        .scalar_subquery()
-    )
+    viewer_member = aliased(PraxisMember)
     query = (
         select(
             PraxisMember.id,
@@ -1063,16 +1074,23 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
+            viewer_member.has_submitted.label("viewer_has_submitted"),
         )
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .join(Character, PraxisMember.character_id == Character.id)
         .join(Task, Praxis.task_id == Task.id)
+        .join(
+            viewer_member,
+            and_(
+                viewer_member.praxis_id == PraxisMember.praxis_id,
+                viewer_member.character_id == ctx.character_id,
+            ),
+        )
         .where(
             PraxisMember.has_submitted.is_(True),
             PraxisMember.submitted_at.is_not(None),
             PraxisMember.character_id != ctx.character_id,
             Praxis.type == PraxisType.collab,
-            PraxisMember.praxis_id.in_(viewer_praxis_ids),
         )
     )
     if ctx.before is not None:
@@ -1095,6 +1113,7 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
+            viewer_has_submitted=row.viewer_has_submitted,
         ),
     )
 

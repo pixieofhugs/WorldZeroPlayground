@@ -1207,6 +1207,10 @@
           "task_title": {
             "title": "Task Title",
             "type": "string"
+          },
+          "viewer_has_submitted": {
+            "title": "Viewer Has Submitted",
+            "type": "boolean"
           }
         },
         "required": [
@@ -1215,7 +1219,8 @@
           "praxis_id",
           "task_title",
           "task_point_value",
-          "task_faction_slug"
+          "task_faction_slug",
+          "viewer_has_submitted"
         ],
         "title": "CollaboratorSubmittedPayload",
         "type": "object"
