@@ -242,7 +242,7 @@ describe('task-browse card + CTA parity (ADR-0056)', () => {
       ...CANNED,
       user: VIEWER,
       tasks: [TASK],
-      signupMsg: { id: 7, msg: 'Could not sign up.', ok: false },
+      signupMsg: 'Could not sign up.',
     }
     expect(text()).toContain('Could not sign up.')
   })
