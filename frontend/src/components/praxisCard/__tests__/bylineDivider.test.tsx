@@ -51,6 +51,9 @@ import SnidePraxisCard from "../desktop/SnidePraxisCard";
 import UaPraxisCard from "../desktop/UaPraxisCard";
 import WowPraxisCard from "../desktop/WowPraxisCard";
 
+import EphemeristsRuneStrip, {
+  type RuneStripSide,
+} from "../../factionMarks/EphemeristsRuneStrip";
 import { aPraxisCard } from "../../../test/fixtures";
 
 /** The rule as it is declared in `PraxisByline`, spelled out on purpose. */
@@ -141,10 +144,31 @@ describe("the Ephemerists plate rules its byline with runes (#2312)", () => {
     expect(html(), "the retired inline drift").not.toContain("epg-glyph");
   });
 
+  it("draws a different row per praxis, and the same row for the same praxis", () => {
+    const runes = (id: number) => {
+      const praxis = aPraxisCard({ task_faction_slug: "ephemerists", id });
+      const rendered = renderToStaticMarkup(
+        <MemoryRouter>
+          <EphemeristsPraxisCard praxis={praxis} adminProps={{ ...adminProps, praxis }} />
+        </MemoryRouter>,
+      );
+      const at = rendered.indexOf('data-eph-runes="divider"');
+      return rendered.slice(at, rendered.indexOf("</div>", at));
+    };
+    // Seeded per surface (#2146), so a feed does not march one row down the
+    // page — and stable, so a vote landing or a hover firing cannot reshuffle
+    // it under the reader.
+    expect(runes(41)).not.toBe(runes(42));
+    expect(runes(41)).toBe(runes(41));
+  });
+
   it("seeds the divider apart from the composer's leading strip", () => {
-    // Both are `praxis:${id}`; the component folds `side` into the seed, so the
-    // third value keeps the divider from drawing the composer's row. Same card
-    // twice is still the same row.
-    expect(html()).toBe(html());
+    // Both surfaces seed `praxis:${id}`; the component folds `side` in, so the
+    // third value is what keeps the byline's row off the composer's. Asserted
+    // against the component directly — the composer is a page, not a card.
+    const seed = "praxis:41";
+    const row = (side: RuneStripSide) =>
+      renderToStaticMarkup(<EphemeristsRuneStrip side={side} seed={seed} />);
+    expect(row("divider")).not.toBe(row("top"));
   });
 });
