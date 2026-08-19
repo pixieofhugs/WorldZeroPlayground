@@ -168,6 +168,72 @@ export function stepClip(step: number): string {
 }
 
 /**
+ * How far the sheet is laid inside the brass, in px. It is the RULE'S STROKE
+ * WIDTH rather than spacing — the rule is what shows through the inset — which
+ * is why it is a bare number and not a `--space-*` rung.
+ */
+const MOUNT_INSET = 1;
+
+/**
+ * The SHEET'S chamfer leg, for a sheet laid `inset` px inside a `step`-legged
+ * mount (#1638, #2150). The one piece of arithmetic in the treatment below, and
+ * the part a future edit gets wrong.
+ *
+ * An inset chamfer with an EQUAL leg puts the sheet's cut corner ON the mount's
+ * and the frame opens at both corners — exactly the defect the clipped border
+ * had. `stepClip(s)` cuts along `x + y = s`; the same clip on a box inset by `i`
+ * cuts along `x + y = t + 2i` in the mount's own coordinates, and the two lines
+ * are `|t + 2i − s| / √2` apart. Setting that equal to `i` — so the brass reads
+ * the same width across the diagonal as it does down the straights — gives
+ *
+ *     t = s − i·(2 − √2)     ≈ s − 0.5858·i
+ *
+ * which is the figure the design's `chamferFrames()` pass arrived at
+ * independently. `EphemeristsVote` shipped the rounded-down 6 against `stepClip(7)`
+ * and its own comment names the cost: a 0.7px hairline where the straights draw
+ * 1px. Computing it removes the reason to round, so the taper goes with it.
+ */
+export function chamferSheetLeg(step: number, inset: number = MOUNT_INSET): number {
+  return step - inset * (2 - Math.SQRT2);
+}
+
+/**
+ * THE FRAME, AS A GROUND RATHER THAN A BORDER (#1638, extracted by #2150).
+ *
+ * `stepClip` chamfers the top-left and bottom-right corners, and `clip-path`
+ * cuts the element at its BORDER BOX — so a `border` is shaved away along both
+ * diagonals and the plate ships with two open corners and a rule that stops
+ * short. Every chamfered plate in this kit had that bug; the vote plate fixed it
+ * once, in a comment, and this is that fix with a name.
+ *
+ * A chamfered plate is therefore TWO elements: a brass MOUNT and, one pixel
+ * inside it, the SHEET carrying the panel's real ground. The clip then carries
+ * the rule instead of shaving it, because the rule is the mount showing through.
+ *
+ *     <div style={chamferMount(7)}>
+ *       <div style={{ ...chamferSheet(7, INNER), padding: "var(--space-sm)" }}>
+ *
+ * Both take the MOUNT's leg, so the two clips cannot drift apart. The mount is
+ * the RULE brass since #2141's mark/rule split (#2142): a frame is a line, and
+ * the mark brass is reserved for things that are read.
+ *
+ * NOTHING ABOUT THE PLATE'S SIZE MOVES. The mount's 1px padding is the border's
+ * 1px, so the outer box and the content box are where they were.
+ */
+// eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which would draw a four-pixel mount.
+export const chamferMount = (step: number): CSSProperties => ({
+  background: BRASS_RULE,
+  padding: MOUNT_INSET,
+  clipPath: stepClip(step),
+});
+
+/** The sheet inside a {@link chamferMount}. `step` is the MOUNT's leg. */
+export const chamferSheet = (step: number, ground: string): CSSProperties => ({
+  background: ground,
+  clipPath: stepClip(chamferSheetLeg(step)),
+});
+
+/**
  * A SEEDED GENERATOR — the faction's one source of random-looking ornament.
  *
  * Two devices draw an unpatterned row of mathematical marks: the masthead's
