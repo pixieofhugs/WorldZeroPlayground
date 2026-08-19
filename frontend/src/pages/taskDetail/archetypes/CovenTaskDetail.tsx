@@ -15,6 +15,7 @@ import {
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
@@ -639,26 +640,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   const header = (
     <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* One crumb, not two: the trail read `TASKS / Task №{id}` until #1124
-            retired the task id, and the id WAS the second crumb, so the
-            separator went with it rather than dangling. */}
-        {/* INK, not DEEP (#1295): the crumb sits on the ward PAGE, the one
-            ground `slip-deep` misses — 4.44:1 flat, 3.47:1 under the peak of
-            the pink haze bloom, against a 4.5 floor at eyebrow size. */}
-        <Link to="/tasks" style={{ ...eyebrow, color: INK, textDecoration: "none" }}>
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      </nav>
-
       <div
         style={{
           display: "flex",
@@ -969,6 +950,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       {/* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop`,
           the near-black ward wash with four drifting blooms, until the owner
           ruled that the sheet the task card wears is the iconic coven look and

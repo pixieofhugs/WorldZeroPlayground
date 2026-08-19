@@ -15,6 +15,7 @@ import {
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * S.N.I.D.E. — THE RANSOM DOSSIER (task detail v2, #1035).
@@ -642,34 +643,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   // ── Header: breadcrumb, the bar, the cut-up headline ── (byline + stats: `credentials`, below the brief — #2120)
-  //
-  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
-  // the task id, and the id WAS the second crumb, so the separator went with it
-  // rather than dangling.
   const header = (
     <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        <Link
-          to="/tasks"
-          style={{
-            ...eyebrow,
-            color: INK,
-            textDecoration: "none",
-            borderBottom: "2px solid var(--faction-snide-acid-deep)",
-          }}
-        >
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      </nav>
-
       {/* The masthead bar — the faction line, a broken acid rule, and (only on
           a metatask) the classification stamp. */}
       <div
@@ -1017,6 +992,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       {/* The flyposted xerox wall, painted on the detail COLUMN rather than the
           viewport: the owner's rule for this surface is that the site background
           still shows around the component (QA on #1055, then #1057). This used

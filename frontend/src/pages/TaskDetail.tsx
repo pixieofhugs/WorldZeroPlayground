@@ -68,7 +68,13 @@ export default function TaskDetail() {
 
   return (
     <>
-      <PageTitle title={t("detail.pageTitle")} eyebrow={t("detail.pageEyebrow")} />
+      {/* NO EYEBROW (#2102). It read `Tasks · Detail` — dot-separated, not
+          links, above the title — which is the thing the report screenshotted
+          and called a breadcrumb: "they are just text, not links. Clicking on
+          the word Tasks does nothing." A fake trail sitting over a real one is
+          the inconsistency, so the fake one goes. The archetype below draws the
+          shared `Breadcrumb`. */}
+      <PageTitle title={t("detail.pageTitle")} />
       {/* THE TASK MARKS ITSELF (#1861, SPEC-onboarding § The hand-off) — the
           signal appears WHEREVER the task appears, and this is its second
           surface after the card. On the dispatcher for the same reason it is on
