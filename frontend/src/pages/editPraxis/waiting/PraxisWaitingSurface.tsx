@@ -118,7 +118,6 @@ import { factionCssVar } from "../../../utils/factions";
 import { relativeTime } from "../../../utils/dates";
 import MarkdownPreview from "../blocks/MarkdownPreview";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerPage,
   ComposerRule,
@@ -134,6 +133,7 @@ import {
 } from "../archetypes/shared";
 import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /* -------------------------------------------------------------------------- */
 /* The publish ring — collab only                                             */
@@ -560,7 +560,7 @@ export default function PraxisWaitingSurface({
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={dress.breadcrumbInk}
+          editing
         />
       }
     >

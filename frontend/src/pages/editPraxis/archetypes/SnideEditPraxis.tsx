@@ -99,7 +99,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerMasthead,
   ComposerPage,
@@ -135,6 +134,7 @@ import {
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { WALL } from "../../../components/factionMarks/snideAtoms";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -400,6 +400,7 @@ export default function SnideEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
+          editing
         />
       }
     >
@@ -498,10 +499,38 @@ export default function SnideEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${RULE}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1px solid ${RULE}`,
-                acceptedBg: ACID,
-                acceptedColor: PRESS_INK,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: FAINT, fontFamily: BODY_FACE },
+                /* THE ONE SKIN WHOSE COMPOSER IS NOT ITS CARD SHEET, and so the
+                 * only one that overrides the roster's inks (#2269, #2267).
+                 *
+                 * This composer wears the flyposted WALL (#2177). `snideAtoms`
+                 * states the rule the wall comes with: "the inks that go on it
+                 * are the `-note-*` family, which flips with it — never
+                 * `-card-*`, which is pinned near-black in both themes for the
+                 * slabs pasted ON the wall" (#2066). The roster and the
+                 * `+ invite` chip were reading exactly that forbidden family:
+                 * `--faction-snide-card-muted` is #d8d6c8, "faded newsprint
+                 * grey ON INK", and on this wall it measures 1.24:1.
+                 *
+                 * Every value below is an existing wall-measured token — no
+                 * mint, no index.css. `-composer-*` and `-note-*` are the two
+                 * families `SNIDE_WALL_PAIRS` already gates against all four of
+                 * this ground's readings in both themes.
+                 *
+                 * ACID/PRESS_INK stay the FILL pair (§ "a faction hue is a fill,
+                 * not an ink") — acid is 1.35:1 as type here, so the two
+                 * accent-as-TEXT sites take the pink that IS an ink instead. */
+                collab: {
+                  radius: 0,
+                  quiet: MUTED,
+                  accent: ACID,
+                  onAccent: PRESS_INK,
+                  accentInk: "var(--faction-snide-note-pink-ink)",
+                  notice: "var(--faction-snide-wall-notice)",
+                  credit: "var(--faction-snide-wall-credit)",
+                  ground: "var(--faction-snide-wall)",
+                },
               }}
             />
           </ComposerSection>

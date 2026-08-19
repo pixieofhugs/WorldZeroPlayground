@@ -140,6 +140,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
@@ -388,71 +389,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
     );
   };
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
-  const breadcrumb = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-        flexWrap: "wrap",
-      }}
-    >
-      <Link
-        to="/tasks"
-        style={{
-          ...eyebrow,
-          color: INK,
-          textDecoration: "none",
-          borderBottom: "2px solid var(--faction-snide-acid-deep)",
-        }}
-      >
-        {t("detail.breadcrumb.tasks")}
-      </Link>
-      <span aria-hidden="true" style={eyebrow}>
-        /
-      </span>
-      <Link
-        to={`/tasks/${praxis.task_id}`}
-        style={{
-          ...eyebrow,
-          color: INK,
-          textDecoration: "none",
-          borderBottom: "2px solid var(--faction-snide-acid-deep)",
-        }}
-      >
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden="true" style={eyebrow}>
-        /
-      </span>
-      <span style={eyebrow}>{t("detail.breadcrumb.current")}</span>
-    </nav>
-  );
-
-  // The phone affordance drawn instead of the breadcrumb. Not sticky: the mobile
-  // shell already owns a sticky top bar.
-  const mobileBar = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-      }}
-    >
-      <Link to="/praxis" style={{ ...eyebrow, color: INK, textDecoration: "none" }}>
-        <span aria-hidden="true">‹ </span>
-        {t("detail.back")}
-      </Link>
-      <span style={{ ...eyebrow, flex: 1, textAlign: "center" }}>
-        {t("detail.breadcrumb.current")}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden="true" style={{ width: 44 }} />
-    </nav>
-  );
+  // Navigation is not this skin's any more (#2102). A bespoke trail and a
+  // bespoke `mobileBar` that replaced it below 768px both lived here; the
+  // shared breadcrumb sits ABOVE this column at every width, on the SITE's
+  // ground, where the site's own tertiary is the measured ink.
 
   // ── Moderation chrome — NEUTRAL, outside the costume ──────────────────────
   // The failed note comes from the shared banners — the crown hero went with
@@ -878,7 +818,13 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
   return (
     <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
-      {desktop ? breadcrumb : mobileBar}
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
 
       <div
         className="snd-detail-sheet"

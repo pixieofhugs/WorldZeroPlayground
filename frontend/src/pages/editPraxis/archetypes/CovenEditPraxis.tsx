@@ -74,7 +74,6 @@ import MediaArt from "../blocks/MediaArt";
 import { CovenCat } from "../../../components/factionMarks/covenSlip";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -110,6 +109,7 @@ import {
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { factionName } from "../../../utils/factions";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -498,7 +498,6 @@ export default function CovenEditPraxis({ state }: Props) {
     accent: INK,
     alarm: ALARM,
     pageStyle: { fontFamily: CHROME, color: INK },
-    breadcrumbInk: LABEL,
     sheetStyle,
     masthead,
     ground,
@@ -535,7 +534,7 @@ export default function CovenEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={LABEL}
+          editing
         />
       }
     >
@@ -644,11 +643,13 @@ export default function CovenEditPraxis({ state }: Props) {
                 inputBorder: RULE,
                 dropdownBg: SHEET,
                 dropdownBorder: RULE,
-                acceptedBg: "var(--faction-coven-slip-cta-from)",
-                acceptedColor: CTA_INK,
-                pendingColor: SOFT,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: LABEL },
+                /* The ward slip is a rounded language, so the collab chips take
+                 * the corner this skin's own fields take. The prose tier is the
+                 * slip's `SOFT` — the brief's ink, which is what the roster's
+                 * "· you" byline and its unanswered pills are. */
+                collab: { radius: FIELD_RADIUS, quiet: SOFT },
               }}
             />
           </ComposerSection>

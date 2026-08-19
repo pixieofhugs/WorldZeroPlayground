@@ -102,6 +102,7 @@ import {
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /* The four faces, exactly as the spell slip and the ward page name them. */
 const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
@@ -297,68 +298,11 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
-  //
-  // INK, not DEEP (#1295). These crumbs sit on the ward PAGE, which is the one
-  // ground `slip-deep` does not clear: 4.44:1 flat and 3.47:1 under the peak of
-  // the pink haze bloom, against a 4.5 floor at this size. INK is the strongest
-  // of the three inks measured for the page (7.29:1 flat, 5.70:1 hazed) and it
-  // keeps the link louder than the LABEL the trailing crumb wears — SOFT/LABEL
-  // would have made the link quieter than the page it navigates away from.
-  const crumbLink: CSSProperties = {
-    ...CAPTION,
-    color: INK,
-    textDecoration: 'none',
-  }
-
-  const breadcrumb = (
-    <nav
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-sm)',
-        marginBottom: 'var(--space-md)',
-        flexWrap: 'wrap',
-      }}
-    >
-      <Link to="/tasks" style={crumbLink}>
-        {t('detail.breadcrumb.tasks')}
-      </Link>
-      <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
-        ·
-      </span>
-      <Link to={`/tasks/${praxis.task_id}`} style={crumbLink}>
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
-        ·
-      </span>
-      <span style={CAPTION}>{t('detail.breadcrumb.current')}</span>
-    </nav>
-  )
-
-  // The phone affordance the design draws instead of the breadcrumb. Not sticky:
-  // the mobile shell already owns a sticky top bar.
-  const mobileBar = (
-    <nav
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-sm)',
-        marginBottom: 'var(--space-md)',
-      }}
-    >
-      <Link to="/praxis" style={crumbLink}>
-        <span aria-hidden>‹ </span>
-        {t('detail.back')}
-      </Link>
-      <span style={{ ...CAPTION, flex: 1, textAlign: 'center' }}>
-        {t('detail.breadcrumb.current')}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden style={{ width: 44 }} />
-    </nav>
-  )
+  // Navigation is not this skin's any more (#2102). A `crumbLink` measured INK
+  // against the ward page (#1295) dressed a bespoke trail here, and a bespoke
+  // `mobileBar` replaced it below 768px; both are gone. The shared breadcrumb
+  // sits ABOVE this column on the SITE's ground, where the site's own tertiary
+  // is the measured ink and no faction reading applies.
 
   // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061) ───
   // The failed note is the shared banner — the crown hero that used to lead it
@@ -736,7 +680,13 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   return (
     <div className="py-8" style={{ position: 'relative', color: INK, fontFamily: CHROME }}>
-      {desktop ? breadcrumb : mobileBar}
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
 
       {/* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
           the near-black ward wash with four drifting blooms — until the owner

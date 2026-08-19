@@ -30,6 +30,7 @@ import {
 import type { EditPraxisState } from "../useEditPraxis";
 import { duelSides } from "../../../components/duel/shared";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
+import type { CollabSkin } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import FactionAvatar from "../../../components/avatar/FactionAvatar";
@@ -45,13 +46,21 @@ export interface InviteSearchSkin {
   fontFamily?: string;
   dropdownBg?: string;
   dropdownBorder?: string;
-  pillBg?: string;
-  pillColor?: string;
-  acceptedBg?: string;
-  acceptedColor?: string;
-  pendingBg?: string;
-  pendingColor?: string;
   placeholder?: string;
+  /**
+   * The collab block's dress (#2269, #2267) — the roster, the `+ invite` chip
+   * and the duel pair, all of which are drawn INSIDE this control and none of
+   * which had a way to be dressed.
+   *
+   * It REPLACES `pillBg` / `pillColor` / `acceptedBg` / `acceptedColor` /
+   * `pendingBg` / `pendingColor`, which were the pre-#1416 invite chips' dress.
+   * #1416 absorbed those chips into the roster's four-state pill and nothing
+   * ever read the six fields again — eight archetypes went on filling values
+   * that reached no pixel. The pill they described is the pill `CollabSkin`
+   * dresses, so this is the same six facts arriving where they are painted,
+   * plus the type, the corner and the two tiers the chips never had.
+   */
+  collab?: CollabSkin;
   /* ── Widened for the v2 layout (#1181) ──
    * The mode block is the one region whose contents a skin cannot reach at all
    * through the fields above: the roster, the dropdown rows and the leave link
@@ -167,11 +176,16 @@ function DuelPair({
   // the viewer here: a duel side's composer only ever shows its own praxis.
   const sides = duel ? duelSides(duel, praxis.created_by_id) : null;
   const factionSlug = praxis.task_faction_slug;
-  // The same measured-per-faction card inks the roster reads on this same sheet
-  // (#694). Not `--color-text-tertiary`: this block is mounted on eight faction
+  // The roster's two tiers, from the SAME skin the roster now takes (#2267).
+  // These used to read `factionCssVar(praxis.task_faction_slug, …)` — the ink of
+  // whichever faction owns the TASK, on whichever ground the VIEWER's composer
+  // paints, which is two unmeasured answers at once. `factionSlug` stays for the
+  // COPY below: a duel's words are the task's voice, and that is a different
+  // question from what colour they are printed in.
+  // Not `--color-text-tertiary` either: this block is mounted on eight faction
   // grounds, and the neutral tertiary is the ink that failed on the dark ones.
-  const accent = factionCssVar(factionSlug, "card-accent");
-  const quiet = factionCssVar(factionSlug, "card-muted");
+  const accent = skin.collab?.accentInk ?? skin.collab?.accent ?? "currentColor";
+  const quiet = skin.collab?.quiet ?? "currentColor";
   const accepted = duel?.status === "active";
   // A still-pending challenge is withdrawn with the compact × — nothing is at
   // stake yet.
@@ -304,6 +318,10 @@ export function InviteSearch({
     !duelMode &&
     praxis.type === "collab" &&
     praxis.members.some((member) => member.character_id === state.currentCharacterId);
+  // The face comes free from the field every skin already sets, so eight
+  // archetypes do not restate it; `collab.fontFamily` stays as the override for
+  // a skin whose roster speaks in a different voice from its invite box.
+  const collabSkin: CollabSkin = { fontFamily: skin.fontFamily, ...skin.collab };
   return (
     <div style={skin.containerStyle}>
       <div
@@ -329,6 +347,11 @@ export function InviteSearch({
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
                   presentCharacterIds={room?.present}
+                  // The composer is the ONE roster mount that is not on the
+                  // faction's card sheet, so it is the one that hands in a
+                  // dress (#2269). The praxis-detail and waiting mounts pass
+                  // none and keep the `card-*` family they are measured on.
+                  skin={collabSkin}
                   onKick={state.kickMember}
                   onRescindInvite={state.cancelInvite}
                 />
@@ -348,11 +371,15 @@ export function InviteSearch({
             )}
       </div>
       {/* The chip the search hides behind (#1417) — dashed, muted, at the end of
-          the roster. Its ink is the faction's own `card-muted`, the same one the
-          roster rows read on this same sheet: the neutral tertiary is the ink
-          that failed on the dark grounds (#694). No skin field for it — like the
-          Leave link and SaveDraftButton below, this is a mechanics affordance
-          rather than a faction gesture. */}
+          the roster, and it wears the roster's own quiet tier and corner (#2267,
+          #2269). It used to paint `factionCssVar(praxis.task_faction_slug,
+          "card-muted")` into BOTH the border and the label: the TASK's faction
+          rather than the sheet's, at a tier measured against that faction's CARD
+          rather than this composer's ground. On S.N.I.D.E.'s light wall the pair
+          measured 1.24:1 — a ghost box holding ghost text, which is the
+          screenshot the issue was filed from. `borderRadius: 4` was hardcoded
+          beside them on a composer whose every field is square; the corner comes
+          from the skin now, which is the ruling #2269 carries. */}
       {!duelMode && !pickerOpen && (
         <button
           type="button"
@@ -365,12 +392,17 @@ export function InviteSearch({
           className="label-caption"
           style={{
             padding: "var(--space-xs) var(--space-md)",
-            borderRadius: 4,
-            border: `1px dashed ${factionCssVar(praxis.task_faction_slug, "card-muted")}`,
+            borderRadius: collabSkin.radius ?? 4,
+            // `currentColor` is the fallback for the same reason the invite
+            // input's border below takes it: it is whatever ink this composer
+            // already pairs with this ground, so an archetype that forgets the
+            // rung gets a legible chip rather than an invisible one. All eight
+            // shipped skins pass a measured value.
+            border: `1px dashed ${collabSkin.quiet ?? "currentColor"}`,
             background: "transparent",
-            color: factionCssVar(praxis.task_faction_slug, "card-muted"),
+            color: collabSkin.quiet ?? "currentColor",
             cursor: "pointer",
-            fontFamily: skin.fontFamily,
+            fontFamily: collabSkin.fontFamily,
           }}
         >
           {t("editPraxis.invite.addAction")}

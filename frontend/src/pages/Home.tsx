@@ -2,12 +2,13 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import { listPraxes, createPraxis, type PraxisCardOut } from '../api/praxis'
+import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
 import { useGameConfig } from '../hooks/useGameConfig'
+import { useTaskSignup } from '../hooks/useTaskSignup'
 import { devLogin } from '../api/auth'
 import { computeFactionMultiplier } from '../utils/points'
-import { extractError, messageForCode } from '../utils/errors'
+import { messageForCode } from '../utils/errors'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import ActivityTicker from '../components/ActivityTicker'
@@ -73,7 +74,7 @@ export default function Home() {
 
   const [feed, setFeed] = useState<PraxisCardOut[]>([])
   const [newestTask, setNewestTask] = useState<TaskOut | null>(null)
-  const [signupMsg, setSignupMsg] = useState<string | null>(null)
+  const { signupMsg, handleSignup } = useTaskSignup()
   // The shared cache, not a second `/game-config` request (#1141). Derived, not
   // mirrored into state: empty until the payload lands, exactly as the old
   // `useState([])` was, so the featured task's multiplier settles at 1.0 first.
@@ -85,16 +86,6 @@ export default function Home() {
       .then((tasks) => setNewestTask(tasks[0] ?? null))
       .catch(() => setNewestTask(null))
   }, [])
-
-  const handleSignup = async (id: number) => {
-    setSignupMsg(null)
-    try {
-      const praxis = await createPraxis({ task_id: id, type: 'solo' })
-      navigate(`/praxis/${praxis.id}/edit`)
-    } catch (err) {
-      setSignupMsg(extractError(err, t('signup.error')))
-    }
-  }
 
   const handleRandomTask = async () => {
     try {

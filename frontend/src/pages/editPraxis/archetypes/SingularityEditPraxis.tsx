@@ -134,7 +134,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -171,6 +170,7 @@ import SingularityLamps from "../../../components/factionMarks/SingularityLamps"
 import SingularityProcessLight from "../../../components/factionMarks/SingularityProcessLight";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -423,12 +423,11 @@ export default function SingularityEditPraxis({ state }: Props) {
       sizes={sizes}
       style={dress.pageStyle}
       breadcrumb={
-        /* No inkColor: the breadcrumb is on the page's ground, not the
-           terminal's, so it keeps the ink that ground was measured with. */
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
+          editing
         />
       }
     >
@@ -533,11 +532,13 @@ export default function SingularityEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${BORDER}`,
                 dropdownBg: CHASSIS,
                 dropdownBorder: `1px solid ${BORDER}`,
-                acceptedBg: CTA_BG,
-                acceptedColor: CTA_INK,
-                pendingColor: MUTED,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: FACE, color: MUTED },
+                /* The terminal's own 2px corner, the one `fieldBox` takes.
+                 * `MUTED` is `-term-dim`, the chassis's caption ink — not
+                 * `-card-muted`, which is the blue brand chrome measured
+                 * against the card and not against this panel. */
+                collab: { radius: RADIUS, quiet: MUTED },
               }}
             />
           </ComposerSection>

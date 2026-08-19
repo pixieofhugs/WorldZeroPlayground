@@ -78,9 +78,7 @@
     "minutes": "{{minutes}}m ago"
   },
   "breadcrumb": {
-    "tasks": "Tasks",
-    "praxis": "Praxis",
-    "edit": "Edit"
+    "tasks": "Tasks"
   },
   "taskMeta": {
     "points": "{{points}} pts",
