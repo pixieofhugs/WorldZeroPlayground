@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
@@ -293,15 +293,38 @@ const BYLINE_PORTRAIT_SIZE = 28;
  * other byline on the site reads. Source order is the whole change — the row
  * is a plain flex line that sets no `order` — plus the side the name's own
  * separation padding sits on.
+ *
+ * THE RULE ON TOP IS A SLOT NOW (#2312). It was `border-top: 1px dashed
+ * currentColor 30%` and nothing else, which is right on eight sheets and wrong
+ * on the Ephemerists plate: that kit rules its divisions with its own rune
+ * strip, and drawing a generic dashed line there put a ninth mark on a card
+ * whose every other rule is drawn. So the border became `divider` — pass a node
+ * and it is painted in the border's place, pass nothing and the border is
+ * exactly what it was.
+ *
+ * OPTIONAL, AND THE OPTIONALITY IS LOAD-BEARING. Eight archetypes and the
+ * design-sync previews compose this without knowing the prop exists, and the
+ * absent branch writes `undefined` into the same key at the same position —
+ * React's style serializer skips it — so their markup is byte-identical rather
+ * than merely equivalent. `praxisCard/__tests__/bylineDivider.test.tsx` holds
+ * all nine to that.
  */
 export function PraxisByline({
   praxis,
   style,
   fonts,
+  divider,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
   fonts?: PraxisCardFonts;
+  /**
+   * The faction's own mark, drawn in place of the dashed rule (#2312). It
+   * renders as this slot's previous sibling — the rule was the row's TOP
+   * border, so its replacement sits above the row — and the row's own
+   * `margin-top` / `padding-top` still carry the air on either side of it.
+   */
+  divider?: ReactNode;
 }) {
   // The author's own member faction, shown only when it differs from the task
   // faction (the frame already carries the task faction's voice). Resolved via
@@ -366,64 +389,74 @@ export function PraxisByline({
     paddingInlineStart: "var(--space-sm)",
   };
   return (
-    <div
-      className="flex justify-between items-center font-body"
-      style={{
-        // Byline chrome sits at the TOP of the label tier (14px), not its floor
-        // (8px). The name itself overrides up to the content tier below.
-        fontSize: "var(--text-xl)",
-        marginTop: "var(--space-sm)",
-        paddingTop: "var(--space-sm)",
-        // A percentage of the ink already on the card, not a mid-grey hedge
-        // (#1609). The byline is mounted inside nine faction frames whose
-        // grounds run from cream to near-black, so a fixed rgba(128,128,128)
-        // was the one value that could not be right on any of them — and it
-        // could not flip. `currentColor` is the frame's own
-        // `--faction-*-card-text`, which every archetype already sets on the
-        // sheet, so one rule serves every faction and both cascades.
-        borderTop: "1px dashed color-mix(in srgb, currentColor 30%, transparent)",
-        gap: "var(--space-sm)",
-        ...style,
-      }}
-    >
-      {/*
-       * No `gap` here on purpose (#1633) — the separation from the portrait is
-       * carried as padding on the name itself. See `nameStyle` above.
-       */}
-      <span className="flex items-center" style={{ minWidth: 0 }}>
-        <FactionAvatar
-          character={authorAsCharacter(praxis)}
-          size={BYLINE_PORTRAIT_SIZE}
-        />
+    <>
+      {divider}
+      <div
+        className="flex justify-between items-center font-body"
+        style={{
+          // Byline chrome sits at the TOP of the label tier (14px), not its floor
+          // (8px). The name itself overrides up to the content tier below.
+          fontSize: "var(--text-xl)",
+          marginTop: "var(--space-sm)",
+          paddingTop: "var(--space-sm)",
+          // A percentage of the ink already on the card, not a mid-grey hedge
+          // (#1609). The byline is mounted inside nine faction frames whose
+          // grounds run from cream to near-black, so a fixed rgba(128,128,128)
+          // was the one value that could not be right on any of them — and it
+          // could not flip. `currentColor` is the frame's own
+          // `--faction-*-card-text`, which every archetype already sets on the
+          // sheet, so one rule serves every faction and both cascades.
+          //
+          // `undefined` rather than a branch around the key (#2312): React's
+          // style serializer skips an undefined value, so a card that passes no
+          // `divider` emits the same declaration at the same position it always
+          // did — byte-identical, not merely equivalent.
+          borderTop: divider
+            ? undefined
+            : "1px dashed color-mix(in srgb, currentColor 30%, transparent)",
+          gap: "var(--space-sm)",
+          ...style,
+        }}
+      >
         {/*
-         * A person's name is readable text, not scanned chrome: content tier
-         * (18px). It ties the task link's size, and separates from it by
-         * weight and by the faction's own display face instead. `hover:underline`
-         * is the only thing the link branch adds — a name that goes nowhere
-         * must not offer one.
+         * No `gap` here on purpose (#1633) — the separation from the portrait is
+         * carried as padding on the name itself. See `nameStyle` above.
          */}
-        {onAuthorsOwnPage ? (
-          <span className="content-text font-semibold" style={nameStyle}>
-            {authorName}
-          </span>
-        ) : (
-          <Link
-            to={authorHref}
-            className="content-text font-semibold hover:underline"
-            style={nameStyle}
-          >
-            {authorName}
-          </Link>
-        )}
-      </span>
-      {showFaction && (
-        <span
-          style={{ fontFamily: fonts?.body, opacity: 0.7, whiteSpace: "nowrap" }}
-        >
-          {factionName(authorFaction)}
+        <span className="flex items-center" style={{ minWidth: 0 }}>
+          <FactionAvatar
+            character={authorAsCharacter(praxis)}
+            size={BYLINE_PORTRAIT_SIZE}
+          />
+          {/*
+           * A person's name is readable text, not scanned chrome: content tier
+           * (18px). It ties the task link's size, and separates from it by
+           * weight and by the faction's own display face instead. `hover:underline`
+           * is the only thing the link branch adds — a name that goes nowhere
+           * must not offer one.
+           */}
+          {onAuthorsOwnPage ? (
+            <span className="content-text font-semibold" style={nameStyle}>
+              {authorName}
+            </span>
+          ) : (
+            <Link
+              to={authorHref}
+              className="content-text font-semibold hover:underline"
+              style={nameStyle}
+            >
+              {authorName}
+            </Link>
+          )}
         </span>
-      )}
-    </div>
+        {showFaction && (
+          <span
+            style={{ fontFamily: fonts?.body, opacity: 0.7, whiteSpace: "nowrap" }}
+          >
+            {factionName(authorFaction)}
+          </span>
+        )}
+      </div>
+    </>
   );
 }
 
