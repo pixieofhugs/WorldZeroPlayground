@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import { UNSCORED_MODERATION_STATUSES, type PraxisCardOut } from "../../api/praxis";
-import { factionCssVar, factionName } from "../../utils/factions";
+import { factionCssVar } from "../../utils/factions";
 import { isDuelPraxis } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
@@ -280,13 +280,28 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
 const BYLINE_PORTRAIT_SIZE = 28;
 
 /**
- * Slot: the author byline (dashed rule on top) — portrait, name, faction tag.
+ * Slot: the author byline (dashed rule on top) — portrait, then name.
  *
- * The praxis TOTAL used to sit at the right of this row. It is gone (#888,
- * closing #663): the score stamp is the card's sole owner of that number, and
- * a card that states its total twice invites the reader to check whether the
- * two agree. The author's faction tag takes the far edge the score vacated,
- * and it keeps it.
+ * THE ROW HAS ONE CHILD (#2366). Two things have been deleted off its far
+ * edge. First the praxis TOTAL (#888, closing #663): the score stamp is the
+ * card's sole owner of that number, and a card that states its total twice
+ * invites the reader to check whether the two agree. Then the author's faction
+ * TAG, which had inherited that vacated edge — the owner deleted it under
+ * #2245 rule 1, "the sigil beside a player's photo carries membership on its
+ * own, no text". `FactionAvatar`, one element to the left, draws exactly that
+ * sigil, so the tag was a second copy of a fact already on the row; it printed
+ * only when the author's faction differed from the task's, which is why a
+ * same-faction card looks unchanged.
+ *
+ * `justify-content: space-between` and the row `gap` are kept and are now
+ * inert BY DESIGN, not by oversight: a lone flex item under space-between sits
+ * at the start, which is precisely where the name group sat with the tag
+ * present. Swapping in `flex-start` would repaint nothing and cost the nine
+ * archetypes their byte-identical markup.
+ *
+ * The faction has NOT left the row for assistive technology — it reaches a
+ * screen reader through `FactionAvatar`'s own accessible name, which is where
+ * it always came from. No `aria-label` was touched.
  *
  * The portrait led the name's right-hand side and now LEADS the row (#2309,
  * owner ruling on the Ephemerists card): a face before a name is how every
@@ -326,11 +341,6 @@ export function PraxisByline({
    */
   divider?: ReactNode;
 }) {
-  // The author's own member faction, shown only when it differs from the task
-  // faction (the frame already carries the task faction's voice). Resolved via
-  // the factions.json catalog (factionName), never a hardcoded map.
-  const authorFaction = praxis.created_by_faction_slug;
-  const showFaction = !!authorFaction && authorFaction !== praxis.task_faction_slug;
   const authorHref = `/characters/${praxis.created_by_id}`;
   const authorName = praxis.created_by_display_name || `#${praxis.created_by_id}`;
   /*
@@ -448,13 +458,6 @@ export function PraxisByline({
             </Link>
           )}
         </span>
-        {showFaction && (
-          <span
-            style={{ fontFamily: fonts?.body, opacity: 0.7, whiteSpace: "nowrap" }}
-          >
-            {factionName(authorFaction)}
-          </span>
-        )}
       </div>
     </>
   );
