@@ -10,6 +10,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -184,8 +185,9 @@ export default function SingularityTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -297,7 +299,7 @@ export default function SingularityTaskDetail({
         {/* The process light — the terminal's one live thing, and the kit's own
             drawing since #2092: the composer's window bar had it in green. */}
         <SingularityProcessLight />
-        <span style={{ ...LABEL, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
+        <span style={{ ...LABEL, fontSize: "var(--text-base)" }}>{eyebrowFaction}</span>
         {isMetatask && (
           <span
             style={{
@@ -342,7 +344,7 @@ export default function SingularityTaskDetail({
             margin: "0 0 var(--space-lg)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

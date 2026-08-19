@@ -9,6 +9,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -233,8 +234,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -668,7 +670,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             color: "var(--faction-snide-acid)",
           }}
         >
-          {factionName(slug)}
+          {eyebrowFaction}
         </span>
         <span
           aria-hidden="true"
@@ -740,7 +742,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             margin: "0 0 var(--space-md)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

@@ -328,7 +328,7 @@
     },
     "successMeta": {
       "heading": "Metatask proposed!",
-      "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated, {{faction}} players can apply it to their praxis for a points bonus."
+      "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated it is listed under {{faction}}, which records who issued it rather than who may use it: players of any faction can apply it to their praxis for a points bonus."
     },
     "factionLabel": "Faction",
     "fields": {
