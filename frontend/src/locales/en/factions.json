@@ -89,11 +89,13 @@
         "duties": "Every other house's privilege, held at once — and a door that never locks behind you.",
         "witnessed": "Your account, witnessed and inscribed"
       },
-      "joined": "You are of the Order",
       "whoHeading": "Who takes up the work",
       "lifeMeta": "@{{username}} · {{faction}}",
-      "acceptBusy": "Entering the record…",
-      "acceptIdle": "Accept the order",
+      "cta": {
+        "join": "Accept the order",
+        "joined": "You are of the Order",
+        "busy": "Entering the record…"
+      },
       "reassurance": "you need not persuade us.",
       "declineError": "The order declined, and gave no reason."
     }
