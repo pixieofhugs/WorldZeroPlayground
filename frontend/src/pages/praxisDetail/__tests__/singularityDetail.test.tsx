@@ -337,8 +337,10 @@ describe("Singularity praxis detail — the terminal dress", () => {
   });
 
   it("paints no raw hex — every colour is a token", () => {
-    // `SingularitySelectCard` carries grandfathered raw hex that the lint rule
-    // cannot see. A net-new file must not copy that pattern.
+    // `SingularitySelectCard` used to carry grandfathered raw hex that the lint
+    // rule could not see, through a module constant. #1609 retired it and #2326
+    // moved the tile onto its task card's register, so the example is gone —
+    // the rule it stood for is not, and a net-new file still owes this.
     const { html } = render(state());
     const hex = html.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [];
     expect(hex, `raw hex in the markup: ${hex.join(", ")}`).toHaveLength(0);

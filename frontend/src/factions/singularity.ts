@@ -29,7 +29,7 @@ const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetai
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
 const SingularitySeal = lazyArchetype(() => import('../components/metataskSeal/skins/SingularitySeal'))
 const SingularitySigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
-const SingularitySelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.SingularitySelectCard })))
+const SingularitySelectCard = lazyArchetype(() => import('../components/selectCard/SingularitySelectCard'))
 
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',

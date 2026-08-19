@@ -105,14 +105,14 @@ export const CAPTION: CSSProperties = {
   color: LABEL,
 };
 
-/** Paper laid on the wash — the panel every block on a Coven surface sits in. */
-export const SLIP_PANEL: CSSProperties = {
-  background: CARD,
-  border: `2px solid ${BORDER}`,
-  borderRadius: 16,
-  boxSizing: "border-box",
-  boxShadow: SHADOW,
-};
+/* SLIP_PANEL — "paper laid on the wash" — is RETIRED (#2325). It was the ward
+   family's `CARD` boxed up for a slip surface to lay on itself, and its last
+   reader was the faction-directory tile's status chip, which had no answer in
+   the task card's register to gather from. Every other Coven surface that wants
+   ward paper already reaches for `CARD` directly and draws its own edge; a
+   preset with one caller was the thing keeping a second surface's ground alive
+   on this one. `CARD`, `BORDER` and `SHADOW` are unaffected and keep their
+   readers. */
 
 /** The braided thread rule. `.cvn-braid` owns the strands' pigments (index.css). */
 export function Braid({ style }: { style?: CSSProperties }) {

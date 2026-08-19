@@ -14,7 +14,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
-import FactionSelectCard, { UaSelectCard } from "../FactionSelectCard";
+import FactionSelectCard from "../FactionSelectCard";
+import UaSelectCard from "../UaSelectCard";
 import DefaultSelectCard from "../DefaultSelectCard";
 import { surfaceMap } from "../../../factions";
 import { pickVariant } from "../../../utils/factionDispatch";
