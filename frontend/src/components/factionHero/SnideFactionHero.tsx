@@ -295,8 +295,8 @@ export default function SnideFactionHero({
                 alignSelf: "stretch",
                 textAlign: "right",
                 // THE CHIT IS THE PLATE, WHICH IS WHY IT IS NO LONGER A WASH
-                // (#2303, resolved by #2343). The bare `rgba(0,0,0,0.34)` here
-                // was class 7 of the legacy raw-colour list, parked as an
+                // (#2303, resolved by #2343). The bare 34% black wash that
+                // stood here was class 7 of the legacy raw-colour list, parked as an
                 // undecided HUE question — does the chit want a named wash rung
                 // the way `-note-wash-acid`/`-pink` have one? The ground moving
                 // answers it by dissolving it: the chit's numeral is ACID, and
