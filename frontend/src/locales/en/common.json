@@ -188,6 +188,12 @@
     "discord": "Continue with Discord",
     "close": "Close"
   },
+  "breadcrumb": {
+    "label": "Breadcrumb",
+    "tasks": "Tasks",
+    "praxis": "Praxis",
+    "edit": "Edit"
+  },
   "nav": {
     "home": "Home",
     "tasks": "Tasks",

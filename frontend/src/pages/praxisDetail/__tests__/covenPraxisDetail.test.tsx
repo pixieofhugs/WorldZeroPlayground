@@ -199,6 +199,18 @@ function anchors(html: string): string[] {
   return [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0])
 }
 
+/**
+ * The page WITHOUT the site's shared breadcrumb (#2102).
+ *
+ * The trail is neutral chrome that sits above this column on the SITE's ground,
+ * not on the ward page, so its links deliberately set no ink of their own and
+ * the ward-page ink guard below must not judge them. Everything after the
+ * breadcrumb's `</nav>` is the skin's.
+ */
+function sheetOf(html: string): string {
+  return html.slice(html.indexOf('</nav>') + 1)
+}
+
 /** The inline `color:` custom property on one opening tag, if it sets one. */
 function inkOf(tag: string): string | null {
   const found = /(?:^|[;"])color:(var\(--[^)]+\))/.exec(tag)
@@ -220,15 +232,17 @@ const WARD_PAGE_INKS = [
 ]
 
 describe('Coven praxis detail — the shared layout contract', () => {
-  it('draws the breadcrumb on desktop and the back link on mobile', () => {
-    const wide = render(state())
-    expect(wide.html, 'breadcrumb links to the task bank').toContain('href="/tasks"')
-    expect(wide.html, 'breadcrumb links to the task').toContain('href="/tasks/7"')
-    expect(wide.html, 'no phone back link on desktop').not.toContain('href="/praxis"')
-
-    const phone = render(state(), 'mobile')
-    expect(phone.html, 'phone back link to the praxis index').toContain('href="/praxis"')
-    expect(phone.text, 'and its label').toContain('Praxis')
+  it('draws no navigation of its own, at either width (#2102)', () => {
+    // It used to draw a bespoke trail on desktop and swap it for a `‹ Praxis`
+    // back link on mobile. Both are gone: the breadcrumb is neutral site chrome
+    // now, drawn once by `components/nav/Breadcrumb` above this column, and what
+    // it contains is pinned in `pages/__tests__/breadcrumbAcrossSurfaces`. The
+    // assertion here is the NEGATIVE — the skin adds nothing beside it.
+    for (const factor of ['desktop', 'mobile'] as const) {
+      const { html } = render(state(), factor)
+      expect(sheetOf(html), `${factor}: no crumb inside the slip`).not.toContain('href="/tasks"')
+      expect(html, `${factor}: no phone back bar`).not.toContain('href="/praxis"')
+    }
   })
 
   it('paints every navigation link in an ink measured for the ward PAGE (#1295)', () => {
@@ -238,8 +252,12 @@ describe('Coven praxis detail — the shared layout contract', () => {
     // ground it does not clear. The breadcrumb, the phone back link and the
     // task reference all sit directly on the wash — nothing here may reach for
     // an ink the ward page has not been measured against.
+    //
+    // The breadcrumb and the back link left with #2102; the task reference is
+    // what is still the skin's, and `sheetOf` is why the shared trail above the
+    // column is not dragged into a faction reading it is not measured for.
     for (const factor of ['desktop', 'mobile'] as const) {
-      const { html } = render(state(), factor)
+      const html = sheetOf(render(state(), factor).html)
       const onTheWash = anchors(html).filter((tag) => /href="\/(tasks|praxis)/.test(tag))
       expect(onTheWash.length, `${factor}: found the ward-page links`).toBeGreaterThan(0)
       for (const tag of onTheWash) {

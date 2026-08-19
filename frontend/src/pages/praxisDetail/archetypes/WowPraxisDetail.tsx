@@ -24,6 +24,7 @@ import {
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * Warriors of Whimsy — THE CHRONICLE ENTRY, WOW's praxis-detail skin (#1121,
@@ -337,63 +338,12 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   const panelHead = (id: string, label: ReactNode, trailing?: ReactNode) =>
     head(id, label, size.panelHead, trailing)
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
-  //
-  // Both sit INSIDE the parchment field rather than above it, which is where
-  // every WOW page puts them: plum ink is measured on the field (5.11:1) and not
-  // on whatever page ground the site background happens to be showing.
-  const breadcrumb = (
-    <nav
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-sm)',
-        marginBottom: 'var(--space-md)',
-        flexWrap: 'wrap',
-      }}
-    >
-      <Link to="/tasks" style={{ ...EYEBROW, color: PLUM, textDecoration: 'none' }}>
-        {t('detail.breadcrumb.tasks')}
-      </Link>
-      <span aria-hidden style={{ ...EYEBROW, color: LABEL }}>
-        /
-      </span>
-      <Link
-        to={`/tasks/${praxis.task_id}`}
-        style={{ ...EYEBROW, color: PLUM, textDecoration: 'none' }}
-      >
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden style={{ ...EYEBROW, color: LABEL }}>
-        /
-      </span>
-      <span style={{ ...EYEBROW, color: LABEL }}>{t('detail.breadcrumb.current')}</span>
-    </nav>
-  )
-
-  // The phone affordance drawn instead of the breadcrumb. Not sticky: the mobile
-  // shell already owns a sticky top bar, and a second stacked under it is a
-  // dress decision, not a layout one.
-  const mobileBar = (
-    <nav
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-sm)',
-        marginBottom: 'var(--space-md)',
-      }}
-    >
-      <Link to="/praxis" style={{ ...EYEBROW, color: PLUM, textDecoration: 'none' }}>
-        <span aria-hidden>‹ </span>
-        {t('detail.back')}
-      </Link>
-      <span style={{ ...EYEBROW, color: LABEL, flex: 1, textAlign: 'center' }}>
-        {t('detail.breadcrumb.current')}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden style={{ width: 44 }} />
-    </nav>
-  )
+  // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
+  // parchment field so its accent could be measured on the faction's own ground,
+  // and a bespoke `mobileBar` replaced it below 768px. Both are gone: a
+  // breadcrumb is neutral SITE chrome, so it moved ABOVE this column, where
+  // the site's own tertiary is the ink and the faction reading no longer
+  // applies.
 
   // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
   //
@@ -767,6 +717,14 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
   return (
     <div className="py-8" style={{ position: 'relative' }}>
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
+
       {/* The parchment field with its dot texture (index.css), painting the
           detail COLUMN and not the viewport — the site background still shows
           around the component (WORLD_ZERO_STYLE §5, the #1028 ruling). */}
@@ -785,8 +743,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         }}
       >
         <Bunting style={{ marginBottom: size.buntingGap }} />
-
-        {desktop ? breadcrumb : mobileBar}
 
         {banners}
 

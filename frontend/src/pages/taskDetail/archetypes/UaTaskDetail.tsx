@@ -23,6 +23,7 @@ import {
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * UA (University of Asthmatics) task detail — THE VELLUM LEAF, page-sized
@@ -481,33 +482,8 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
 
   // ── Header: breadcrumb, faction line, title ── (byline + the two counts:
   // `credentials`, below the brief — #2120)
-  //
-  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
-  // the task id, and the id WAS the second crumb, so the separator went with it
-  // rather than dangling.
   const header = (
     <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        <Link
-          to="/tasks"
-          style={{
-            ...UA_EYEBROW,
-            color: "var(--faction-ua-card-accent)",
-            textDecoration: "none",
-          }}
-        >
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      </nav>
-
       {/* The faction line — the mark, then the name resolved from the catalog by
           slug (ADR-0057). The design captions it 'Unbroken Ascension', which is
           not this faction's name and not any faction's name; a shared-copy build
@@ -859,6 +835,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         color: "var(--faction-ua-page-text)",
       }}
     >
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       {/* The vellum ground belongs to the DETAIL COMPONENT, not the viewport.
           This used to be a `position: fixed; inset: 0` span, which painted UA's
           sand over the whole site — including behind the chrome — and left the
