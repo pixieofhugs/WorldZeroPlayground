@@ -102,9 +102,14 @@ import { CARD_CTA } from "../taskCard/cardCta";
  *                                        sans-serif` in both cascades, so this
  *                                        repaints nothing — it stops the tile
  *                                        naming the global family where the card
- *                                        names the faction's role. The typed
- *                                        face was already `--font-body`, which
- *                                        is the card's, and does not move.
+ *                                        names the faction's role. This tile was
+ *                                        that alias's LAST reader, so
+ *                                        `fontsLoaded.test.ts` required its
+ *                                        deletion — index.css records why at the
+ *                                        hole it left, beside the identical one
+ *                                        #2322 left. Bebas itself stays. The
+ *                                        typed face was already `--font-body`,
+ *                                        which is the card's, and does not move.
  *
  * EVERY PAIRING HERE WAS ALREADY PINNED in both themes by the task card's own
  * rows in `utils/__tests__/factionContrast.test.ts` — `everymen paper`,

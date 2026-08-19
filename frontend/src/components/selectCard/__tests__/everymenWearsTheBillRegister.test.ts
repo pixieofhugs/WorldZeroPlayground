@@ -21,10 +21,11 @@
  *
  *   1. A SYNONYM IS PROVEN, NOT WAIVED. The tile's display face was
  *      `--font-faction-poster` where the card's is
- *      `--faction-everymen-card-font`. That looks like a rename and is one —
- *      but "looks like" is how a fork gets waived, so `the two poster faces are
- *      one value` below asserts the two DECLARATIONS resolve equal, in both
- *      cascades, rather than taking the comment's word for it.
+ *      `--faction-everymen-card-font`. That looks like a rename and was one —
+ *      but "looks like" is how a fork gets waived, so the two declarations were
+ *      resolved and compared, in both cascades, before the swap. The tile was
+ *      that alias's LAST reader, so `fontsLoaded.test.ts` then required its
+ *      deletion; the live half of the proof is below.
  *   2. RESOLVE THE KIT'S BINDINGS TRANSITIVELY. `EverymenBand` keeps its poster
  *      face in a module-level `POSTER` beside it rather than in its own body —
  *      the same shape that hid half of Coven's register (#2325) — so the
@@ -168,20 +169,29 @@ answer — not by widening this test.`,
     expect(hero).toContain("--everymen-field");
   });
 
-  it("proves the two poster faces are one value before swapping them", () => {
-    // Rider 1 (#2321): a synonym is PROVEN, not waived. The tile named the
-    // global family, the card names the faction's role token. If these ever
-    // stop resolving equal, the swap below stopped being free and this fails
-    // rather than shipping a silent reface.
+  it("wears the card's poster face, and it is still Bebas in both cascades", () => {
+    // Rider 1 (#2321): a synonym is PROVEN, not waived. The tile named
+    // `--font-faction-poster`, the card names `--faction-everymen-card-font`.
+    // Both resolved to the SAME stack in BOTH cascades, which is what made the
+    // swap free — and made the tile that alias's last reader, so
+    // `fontsLoaded.test.ts` required its deletion (index.css records why at the
+    // hole it left).
+    //
+    // What survives the deletion is the half that can still go wrong: the role
+    // token reaches Bebas through `--font-accent`, and if that indirection is
+    // ever repointed the tile silently changes face. Asserted per cascade
+    // because an alias declared in a bare `:root` resolves once (#1839).
     for (const theme of ["light", "dark"] as const) {
       expect(
-        resolveVar("--font-faction-poster", theme, themes),
-        `the two poster faces diverge in ${theme} — the swap is no longer free`,
-      ).toBe(resolveVar("--faction-everymen-card-font", theme, themes));
+        resolveVar("--faction-everymen-card-font", theme, themes),
+        `the bill's poster face is no longer Bebas in ${theme}`,
+      ).toBe('"Bebas Neue", Impact, sans-serif');
     }
     const source = code(TILE);
     expect(source, "the card names the faction's ROLE token").toContain("--faction-everymen-card-font");
-    expect(source, "--font-faction-poster is the global family").not.toContain("--font-faction-poster");
+    expect(source, "--font-faction-poster is retired, not merely unused here").not.toContain(
+      'var(--font-faction-poster)',
+    );
   });
 
   it("draws no second burst — #2195 owns the collapse", () => {
