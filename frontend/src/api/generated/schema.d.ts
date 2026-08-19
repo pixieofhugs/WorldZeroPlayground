@@ -3752,6 +3752,8 @@ export interface components {
              * @default 0
              */
             in_progress_count: number;
+            /** In Progress Praxis Id */
+            in_progress_praxis_id: number | null;
             /** Level Required */
             level_required: number;
             /** Metatask Faction Slug */
@@ -4289,6 +4291,8 @@ export interface components {
              * @default 0
              */
             in_progress_count: number;
+            /** In Progress Praxis Id */
+            in_progress_praxis_id: number | null;
             /** Level Required */
             level_required: number;
             /** Metatask Faction Slug */

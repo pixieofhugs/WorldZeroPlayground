@@ -4335,6 +4335,17 @@
             "title": "In Progress Count",
             "type": "integer"
           },
+          "in_progress_praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Progress Praxis Id"
+          },
           "level_required": {
             "title": "Level Required",
             "type": "integer"
@@ -4411,6 +4422,7 @@
           "allowed_modes",
           "eligible_for_current_user",
           "signup_reason",
+          "in_progress_praxis_id",
           "start_here",
           "created_by_name",
           "notes"
@@ -5661,6 +5673,17 @@
             "title": "In Progress Count",
             "type": "integer"
           },
+          "in_progress_praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Progress Praxis Id"
+          },
           "level_required": {
             "title": "Level Required",
             "type": "integer"
@@ -5732,6 +5755,7 @@
           "allowed_modes",
           "eligible_for_current_user",
           "signup_reason",
+          "in_progress_praxis_id",
           "start_here"
         ],
         "title": "TaskOut",

@@ -31,6 +31,7 @@ from services.praxis import (
     active_member_task_ids_subquery,
     allowed_praxis_modes,
     evaluate_signup,
+    in_progress_praxis_ids,
     gather_signup_facts,
     is_task_eligible_for_character,
     signup_reason,
@@ -343,6 +344,16 @@ async def build_task_out_for_viewer(
     base.signup_reason = await signup_reason(
         viewer, task, eligibility, session, facts=signup_facts
     )
+    # The viewer's own open draft on this task, so a card can OFFER it instead of
+    # announcing it (#2359). Carries #1377's fallback property, exactly as
+    # `signup_reason` above does: an id outside the page these facts were
+    # gathered for means "not asked about", never "no draft".
+    if task.id in signup_facts.task_ids:
+        base.in_progress_praxis_id = signup_facts.in_progress_praxis_ids.get(task.id)
+    else:
+        base.in_progress_praxis_id = (
+            await in_progress_praxis_ids(viewer, [task.id], session)
+        ).get(task.id)
     base.allowed_modes = [m.value for m in allowed_praxis_modes(viewer, stats.level, era)]
     base.eligible_for_current_user = is_task_eligible_for_character(
         viewer,
