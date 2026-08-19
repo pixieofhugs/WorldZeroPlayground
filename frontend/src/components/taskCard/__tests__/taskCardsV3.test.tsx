@@ -276,3 +276,106 @@ describe('albescent draws the same rule, fainter (#2030)', () => {
     expect(unaffiliated.html).toContain('opacity:var(--faction-default-cta-rule-opacity, 0.6)')
   })
 })
+
+
+/* -------------------------------------------------------------------------- */
+/* #2359 — the one denial that is a door, in all nine hands                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `signupAffordance.test.ts` pins the DECISION value-out; only a render can
+ * prove the nine skins act on it. Each of them used to hand-write its own
+ * `<button type="button" onClick={cta.onPress}>`, so "the slot is a link now"
+ * was nine separate chances to still draw a button that does nothing.
+ *
+ * The three properties asserted here are exactly the ones that survive a
+ * DOM-less harness, and they are the ones that matter: the element is an
+ * anchor, it points at the draft's editor, and it still stands on the 44px
+ * floor `CARD_CTA` sets. The paint is each skin's own and is not this suite's
+ * business — `taskCardsV3` above already guards the shape it sits in.
+ */
+const HELD = aTask({
+  can_sign_up: false,
+  signup_reason: 'already_active_member',
+  in_progress_praxis_id: 77,
+})
+
+/** The same shut card with nothing to land on — submitted, or pending. */
+const HELD_WITH_NO_DRAFT = aTask({
+  can_sign_up: false,
+  signup_reason: 'already_active_member',
+  in_progress_praxis_id: null,
+})
+
+function renderTask({ Card }: Skin, task: typeof HELD): string {
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <Card
+        task={task}
+        basePoints={task.point_value}
+        multiplier={1}
+        inProgressCount={task.in_progress_count}
+        onSignup={() => {}}
+      />
+    </MemoryRouter>,
+  )
+}
+
+/** The card-wide `<Link>` every skin draws; the slot is the OTHER anchor. */
+const CARD_LINK = `href="/tasks/${HELD.id}"`
+
+/**
+ * Visible text, with the entities the server renderer escapes put back. The
+ * denial copy contains an apostrophe ("You're on this task"), which arrives as
+ * `&#x27;` and would otherwise make a correct card look wrong.
+ */
+function visible(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+}
+
+describe.each(SKINS)('$slug offers a draft you already hold (#2359)', (skin) => {
+  it('draws the slot as a link to that draft, on the 44px floor', () => {
+    const html = renderTask(skin, HELD)
+    expect(visible(html)).toContain(i18n.t('tasks:detail.signup.workOnThis'))
+    const slot = html.match(/<a [^>]*href="\/praxis\/77\/edit"[^>]*>/)
+    expect(slot, 'the slot is an anchor to the draft').not.toBeNull()
+    expect(slot![0], 'the tap floor').toContain('min-height:44px')
+  })
+
+  it('does not offer the sign-up the server refused', () => {
+    const html = renderTask(skin, HELD)
+    // Every skin's ONE button is its sign-up; in this state there is no claim
+    // to press, so a button left standing is a control that does nothing.
+    expect(html).not.toContain('<button')
+    expect(visible(html)).not.toContain(
+      i18n.t('tasks:detail.signup.denied.alreadyActiveMember'),
+    )
+  })
+
+  it('falls back to the plain label when there is no draft behind the denial', () => {
+    const html = renderTask(skin, HELD_WITH_NO_DRAFT)
+    expect(html).toContain('<button')
+    expect(visible(html)).toContain(
+      i18n.t('tasks:detail.signup.denied.alreadyActiveMember'),
+    )
+    // The card-wide link stays; nothing points at an editor that is not there.
+    expect(html).toContain(CARD_LINK)
+    expect(html).not.toContain('href="/praxis/')
+  })
+
+  it.each(['below_level', 'task_status_closed', 'bank_full', 'is_metatask'])(
+    'leaves a %s denial a plain label',
+    (reason) => {
+      const html = renderTask(
+        skin,
+        aTask({ can_sign_up: false, signup_reason: reason, level_required: 4 }),
+      )
+      expect(html).toContain('<button')
+      expect(html).not.toContain('href="/praxis/')
+    },
+  )
+})
