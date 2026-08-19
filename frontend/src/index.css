@@ -6227,7 +6227,13 @@
 /* ── Faction display-font tokens referenced by FactionSelectCard (design
    select.card). Aliased to families already loaded in index.html. ── */
 :root {
-  --font-faction-anton: "Anton", Impact, sans-serif;
+  /* `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its
+     last reader and #2322 moved it onto `--faction-snide-font-impact`, the
+     faction's own ROLE token, which names Anton directly. `fontsLoaded.test.ts`
+     is what noticed: an unread family token is not inert, because index.css is
+     itself in the corpus the family check searches, so the declaration vouches
+     for its own family and holds Anton in the shipped kit. The family stays —
+     `-font-impact` still asks for it — and only the alias goes. */
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
   --font-faction-poster: "Bebas Neue", Impact, sans-serif;
   --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
