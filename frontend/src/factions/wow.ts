@@ -102,7 +102,7 @@ import { lazyArchetype } from './lazyArchetype'
 
 const WowAvatar = lazyArchetype(() => import('../components/avatar/WowAvatar'))
 const WowBackdrop = lazyArchetype(() => import('../components/backdrop/WowBackdrop'))
-const WOWSelectCard = lazyArchetype(() => import('../components/selectCard/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
+const WowSelectCard = lazyArchetype(() => import('../components/selectCard/WowSelectCard'))
 const WowComment = lazyArchetype(() => import('../components/comments/voices/WowComment'))
 const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
 const WowFactionHero = lazyArchetype(() => import('../components/factionHero/WowFactionHero'))
@@ -159,7 +159,7 @@ export const WOW_MANIFEST: FactionManifest = {
   factionBody: () => WowFactionBody,
   backdrop: () => WowBackdrop,
   profileBody: () => WowProfileBody,
-  factionSelectCard: () => WOWSelectCard,
+  factionSelectCard: () => WowSelectCard,
 
   // #895 — the lists: the duel seal, both form factors from ONE component since
   // #1313 retired the `mobileDuelSeal` twin (the Lists sheet is responsive now,
