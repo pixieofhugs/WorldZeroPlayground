@@ -124,7 +124,19 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           it, and the crown's own `z-index: 3` could not help: an inner number
           never lifts a child out of its parent's stacking context. NOT an
           `overflow` fix — the frame clips at the card's border box and the
-          crown never reaches it. Nothing else in the leaf meets the band. */}
+          crown never reaches it. Nothing else in the leaf meets the band.
+
+          SO THE ZERO IS LOAD-BEARING (#2360). This was the only praxis card in
+          the kit opening with no top pad — every other frame gives its title
+          `--space-xl` or `--space-lg` — and the owner's report is that the
+          entry reads cramped against the cavetto. The repair may NOT be a top
+          rung here: the crown's `-13` is measured off the STAMP's box, the
+          stamp's box sits at this element's content top, and 24px of padding
+          would drop the crown clear of the 12px cornice and into the padding —
+          undoing #2240 and #2122 on a card that still screenshots correctly,
+          because the crown only draws on a crowned praxis. The air goes on the
+          TITLE instead (`titleStyle` below), which is a flex SIBLING of the
+          stamp's column and so cannot displace it. */}
       <div
         style={{
           position: "relative",
@@ -147,7 +159,19 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           muted={QUIET}
           paper={PLATE}
           showCrown={showCrown}
-          titleStyle={{ fontFamily: DECO, fontWeight: 400, letterSpacing: "0.02em", color: INK }}
+          // THE ENTRY OPENS A RUNG BELOW THE CAVETTO (#2360). `--space-xl` is
+          // the rung five of its eight fellows already give their title, and it
+          // rides on the title rather than on the leaf for the reason the leaf's
+          // comment gives: the seal keeps hanging off the cornice, the entry
+          // starts under it. A praxis with no score renders no stamp at all, so
+          // this is also the whole of the air on an unscored card.
+          titleStyle={{
+            fontFamily: DECO,
+            fontWeight: 400,
+            letterSpacing: "0.02em",
+            color: INK,
+            marginTop: "var(--space-xl)",
+          }}
           // Poiret One for the display line, Spectral for the reading matter.
           fonts={{ display: DECO, body: READING }}
           // #1909 CUT the two strings that used to fill the shared slots here:

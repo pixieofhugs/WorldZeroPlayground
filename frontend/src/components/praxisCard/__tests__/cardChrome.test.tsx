@@ -168,14 +168,13 @@ describe('the byline name is not shaved against its portrait (#1633, #2309)', ()
 
 /**
  * #2309 — owner ruling on a screenshot of the Ephemerists card: the portrait
- * goes to the LEFT of the name. The faction tag keeps the far edge, the slot the
- * score vacated in #888.
+ * goes to the LEFT of the name.
  *
  * The seam is `PraxisByline`'s own markup, and it has to be: no DOM and no
  * layout here, so what is observable is source ORDER — which is what decides
  * the painted order inside a plain flex row that sets no `order`.
  */
-describe('the byline reads portrait, then name, then faction tag (#2309)', () => {
+describe('the byline reads portrait, then name (#2309)', () => {
   const bylineAt = (path: string) =>
     renderToStaticMarkup(
       <MemoryRouter initialEntries={[path]}>
@@ -207,10 +206,14 @@ describe('the byline reads portrait, then name, then faction tag (#2309)', () =>
     expect(html.indexOf('<img')).toBeLessThan(nameAt(html))
   })
 
-  it('leaves the faction tag on the far edge', () => {
-    const html = bylineAt('/praxis/1')
-    expect(html).toContain('Cozy Coven')
-    expect(nameAt(html)).toBeLessThan(html.indexOf('Cozy Coven'))
+  // "leaves the faction tag on the far edge" was here. #2366 deleted the tag —
+  // the sigil this fixture's `created_by_faction_slug` already draws inside
+  // `FactionAvatar` is the membership statement, and the name beside it was a
+  // second copy. The fixture is deliberately left OFF-FACTION (coven author,
+  // ua task), which is the only case in which the tag ever rendered, so the
+  // two order cases above now also witness its absence.
+  it('writes no faction name beside the author (#2366)', () => {
+    expect(bylineAt('/praxis/1')).not.toContain('Cozy Coven')
   })
 })
 
@@ -305,7 +308,12 @@ describe('the applied-metatask seal stack (#932)', () => {
 })
 
 describe('the faction font pair (#888)', () => {
-  it('threads the display face to the author name and the body face beside it', () => {
+  // The byline used to carry BOTH faces — the display one on the author name,
+  // the body one on the faction tag beside it. #2366 deleted the tag, so the
+  // byline is a display-face slot now and the body face is asserted where it
+  // still lands: the meta line. The PAIR is what #888 is about, so both halves
+  // stay pinned, just at the two slots that consume them.
+  it('threads the display face to the author name', () => {
     const html = render(
       <PraxisByline
         praxis={praxis({ created_by_faction_slug: 'snide' })}
@@ -313,6 +321,18 @@ describe('the faction font pair (#888)', () => {
       />,
     )
     expect(html).toContain('var(--faction-snide-card-font)')
+    expect(html, 'and no longer prints anything in the body face').not.toContain(
+      'var(--faction-snide-font-type)',
+    )
+  })
+
+  it('threads the body face to the meta line', () => {
+    const html = render(
+      <PraxisStats
+        praxis={praxis({})}
+        fonts={{ display: 'var(--faction-snide-card-font)', body: 'var(--faction-snide-font-type)' }}
+      />,
+    )
     expect(html).toContain('var(--faction-snide-font-type)')
   })
 
