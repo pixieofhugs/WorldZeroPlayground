@@ -147,13 +147,18 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
-  it("is mounted on the five surfaces that draw one, and no others", () => {
+  it("is mounted on the six surfaces that draw one, and no others", () => {
     // The issue names three (card, task detail, composer). The grep found two
     // more painting the identical button — the faction page's join/leave pair
     // and the phone's field desk — and #2067's own note that the field desk
     // "does not paint it with the plate CTA" is simply out of date. A ruling
     // about one control does not stop at the surfaces someone happened to
     // list; leaving either behind is the drift the extraction exists to end.
+    //
+    // The SIXTH is the faction-directory tile (#2323). It drew a brass-outlined
+    // ghost button in `-plate-gold` on the cornice band, which is what a tile
+    // painted in the wrong register looks like from here: not a variant of this
+    // control, a different one. Repainting it onto the plate made it this one.
     const mounts = files
     // Matched at the `className`, not on the bare string: half the Ephemerists
     // kit names this class in prose, and a census a comment can join is a
@@ -161,6 +166,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
       .filter(([, source]) => WEARS.test(source))
       .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
     expect(mounts.sort()).toEqual([
+      "components/selectCard/EphemeristsSelectCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
       "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
       "pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
