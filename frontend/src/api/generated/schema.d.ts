@@ -3931,6 +3931,11 @@ export interface components {
             created_at: string;
             /** Id */
             id: number;
+            /**
+             * Invitee Avatar Url
+             * @default
+             */
+            invitee_avatar_url: string;
             /** Invitee Display Name */
             invitee_display_name: string;
             /** Invitee Id */
@@ -3948,6 +3953,11 @@ export interface components {
         PraxisInviteStatus: "pending" | "accepted" | "declined";
         /** PraxisMemberOut */
         PraxisMemberOut: {
+            /**
+             * Character Avatar Url
+             * @default
+             */
+            character_avatar_url: string;
             /** Character Display Name */
             character_display_name: string;
             /** Character Id */

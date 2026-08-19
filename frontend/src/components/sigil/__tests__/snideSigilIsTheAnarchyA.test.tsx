@@ -21,7 +21,7 @@ import { describe, it, expect } from 'vitest'
 
 import '../../../i18n'
 import { factionName } from '../../../utils/factions'
-import { SnideSelectCard } from '../../selectCard/FactionSelectCard'
+import SnideSelectCard from '../../selectCard/SnideSelectCard'
 import SnideFactionHero from '../../factionHero/SnideFactionHero'
 
 const render = (el: ReactElement) => renderToStaticMarkup(<MemoryRouter>{el}</MemoryRouter>)

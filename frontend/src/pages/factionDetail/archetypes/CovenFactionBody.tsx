@@ -30,6 +30,7 @@ import {
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
+import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
@@ -127,6 +128,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
     onSignup,
     membership,
   } = state;
+  const sections = useFactionSections();
   const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
@@ -182,51 +184,62 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHead>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHead>
-          {tasks.length === 0 ? (
-            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
-          ) : (
-            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  basePoints={task.point_value}
-                  multiplier={computeFactionMultiplier(
-                    viewerFactionSlug,
-                    task.primary_faction_slug,
-                    gameFactions,
-                  )}
-                  onSignup={onSignup}
-                />
-              ))}
-            </div>
-          )}
+          <SectionHead>
+            <SectionToggle
+              section={sections.tasks}
+              label={t("detail.default.tasksHeading", { total: tasks.length })}
+            />
+          </SectionHead>
+          <SectionPanel section={sections.tasks}>
+            {tasks.length === 0 ? (
+              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.tasksEmpty")}</p>
+            ) : (
+              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+                {tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    basePoints={task.point_value}
+                    multiplier={computeFactionMultiplier(
+                      viewerFactionSlug,
+                      task.primary_faction_slug,
+                      gameFactions,
+                    )}
+                    onSignup={onSignup}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </div>
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHead>{t("detail.default.recentHeading")}</SectionHead>
-          {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
-          ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
-              {recentPraxis.map((praxis) => (
-                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
-                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
-                      so the card's built-in stamp is suppressed. */}
-                  {praxis.is_top_for_task && (
-                    <TaskCrown
-                      size={44}
-                      rotate="-8deg"
-                      style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
-                    />
-                  )}
-                  <PraxisCard praxis={praxis} showCrown={false} />
-                </div>
-              ))}
-            </div>
-          )}
+          <SectionHead>
+            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+          </SectionHead>
+          <SectionPanel section={sections.praxis}>
+            {recentPraxis.length === 0 ? (
+              <p className="content-text" style={{ ...PROSE, marginTop: "var(--space-md)" }}>{t("detail.default.recentEmpty")}</p>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
+                {recentPraxis.map((praxis) => (
+                  <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
+                    {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                        so the card's built-in stamp is suppressed. */}
+                    {praxis.is_top_for_task && (
+                      <TaskCrown
+                        size={44}
+                        rotate="-8deg"
+                        style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
+                      />
+                    )}
+                    <PraxisCard praxis={praxis} showCrown={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </div>
       </div>
 

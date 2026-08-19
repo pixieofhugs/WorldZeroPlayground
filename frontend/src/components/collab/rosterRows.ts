@@ -32,6 +32,18 @@ export interface RosterRow {
   state: RosterRowState
   name: string
   /**
+   * The person's portrait, as the raw wire path — `RosterAvatar` calls
+   * `mediaUrl()` itself. `''` means "draw the monogram", which is the ordinary
+   * case for an account that never uploaded one.
+   *
+   * Normalised here for the same reason `name` is: a member calls it
+   * `character_avatar_url` and an invite calls it `invitee_avatar_url`, and the
+   * row is what spares every consumer that difference. An INVITED or DECLINED
+   * row carries a face too — the dashed ring is the state, the face is the
+   * person (#2318).
+   */
+  avatarUrl: string
+  /**
    * The member behind a `filed`/`accepted` row — the nudge button and the kick ×
    * both need the whole record (character id, `nudged_at`), and an invite row
    * has neither. Undefined for `invited`/`declined`.
@@ -82,6 +94,7 @@ export function buildRosterRows(
         key: `m-${member.id}`,
         state: member.has_submitted ? 'filed' : 'accepted',
         name: member.character_display_name,
+        avatarUrl: member.character_avatar_url,
         member,
       }),
     ),
@@ -90,6 +103,7 @@ export function buildRosterRows(
         key: `i-${invite.id}`,
         state: invite.status === 'pending' ? 'invited' : 'declined',
         name: invite.invitee_display_name,
+        avatarUrl: invite.invitee_avatar_url,
         invite,
       }),
     ),

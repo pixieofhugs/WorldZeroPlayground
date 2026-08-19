@@ -407,6 +407,7 @@ export function CollabRoster({
               <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                 <RosterAvatar
                   name={row.name}
+                  avatarUrl={row.avatarUrl}
                   size={AVATAR_SIZE}
                   borderColor={done ? accent : quiet}
                   dashed={row.state === 'invited'}

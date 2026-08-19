@@ -73,6 +73,7 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   praxis_id: 1,
   character_id: AUTHOR.id,
   character_display_name: AUTHOR.name,
+  character_avatar_url: '',
   has_submitted: true,
   // Done is orthogonal to approval (ADR-0079) — a member may be either, both or
   // neither — so it takes its own default rather than following `has_submitted`.
