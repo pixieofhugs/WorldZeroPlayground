@@ -1155,6 +1155,14 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // onto the accent it already owns rather than onto a new token.
   { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
   { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
+  // The one row #2324 owed. The DIRECTORY TILE now wears the leaf's register,
+  // and every ink it paints was already measured by the four rows above — with
+  // this exception: the tile's CTA has a hover the card's has not, and it swaps
+  // the chip's ground for `-card-accent` while keeping `-card-chip-ink` on top.
+  // `--faction-ua-on-accent` measures the same two hexes today, but a fixture
+  // that measures a synonym stops measuring the site the day one of the two
+  // moves — so the pairing is written at the names the tile actually names.
+  { what: "ua leaf CTA, hovered", surface: "--faction-ua-card-accent", text: "--faction-ua-card-chip-ink" },
 
   // WOW — THE QUEST DECREE (task card v2, #1023). Every pairing on this card
   // resolves to a family measured somewhere above, which is the whole finding:
