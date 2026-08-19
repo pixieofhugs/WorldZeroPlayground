@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
-import { listPraxes, createPraxis, type PraxisCardOut } from '../api/praxis'
+import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
 import type { CharacterOut } from '../api/auth'
 import CredentialCard from '../components/CredentialCard'
@@ -14,10 +14,10 @@ import { mediaUrl } from '../utils/media'
 import { pickVariant } from '../utils/factionDispatch'
 import { computeFactionMultiplier, formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
-import { extractError } from '../utils/errors'
 import { surfaceMap } from '../factions'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useGameConfig } from '../hooks/useGameConfig'
+import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
@@ -92,17 +92,13 @@ const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
 
 export default function FieldDesk() {
   const { t } = useTranslation('common')
-  // The desktop home's own copy lives in the `home` namespace: this component is
-  // what `/` renders for a signed-in viewer, and `home.json` is documented as
-  // "Home / landing page copy". `common:fieldDesk.*` stays the roster's.
-  const { t: tHome } = useTranslation('home')
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
   // `null` until the roster lands — "not known yet" and "known to be empty" are
   // different answers to the gate below, and one state cannot say both.
   const [lives, setLives] = useState<CharacterOut[] | null>(null)
   const [switching, setSwitching] = useState<number | null>(null)
-  const [signupMsg, setSignupMsg] = useState<string | null>(null)
+  const { signupMsg, handleSignup } = useTaskSignup()
 
   // Mobile home dispatch (#500). Hooks run unconditionally; the branch below
   // only fires once a carried life exists — otherwise we render the roster.
@@ -127,18 +123,6 @@ export default function FieldDesk() {
       navigate(`/characters/${id}`)
     } finally {
       setSwitching(null)
-    }
-  }
-
-  // Signing up from a browse card, same as every other TaskCard on the site:
-  // create the solo praxis and go straight to its composer.
-  const handleSignup = async (taskId: number) => {
-    setSignupMsg(null)
-    try {
-      const praxis = await createPraxis({ task_id: taskId, type: 'solo' })
-      navigate(`/praxis/${praxis.id}/edit`)
-    } catch (err) {
-      setSignupMsg(extractError(err, tHome('signup.error')))
     }
   }
 

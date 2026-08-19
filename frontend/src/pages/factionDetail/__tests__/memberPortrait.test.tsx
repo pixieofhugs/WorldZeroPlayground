@@ -93,6 +93,8 @@ function pageHtml(slug: string, members: CharacterOut[]): string {
     recentPraxis: [],
     viewerFactionSlug: null,
     gameFactions: [],
+    onSignup: undefined,
+    signupMsg: null,
     membership,
   }
   return renderToStaticMarkup(

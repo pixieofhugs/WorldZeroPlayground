@@ -44,13 +44,23 @@ export interface TaskCardSignupCta {
 /**
  * The action slot for one card, or `null` for no slot at all.
  *
- * `null` when the surface did not ask for one (`onSignup` undefined) — a
- * character profile's task list and a faction page's roster are readouts, not
- * claim points, and neither should sprout a refusal. The surfaces that DO ask
- * pass `onSignup` for any signed-in viewer and let this decide; an anonymous
- * viewer has no reason on the wire (the server sends `signup_reason: null` when
- * there is no viewer to explain anything to) and so would only ever be offered
- * a button, which is why those surfaces still gate on the user.
+ * A TASK CARD OFFERS THE TASK, EVERYWHERE IT APPEARS (owner ruling, #2188).
+ * This used to read that a character profile's task list and a faction page's
+ * roster were "readouts, not claim points" — a distinction the PAGE invented,
+ * which the card, the wire and the server all disagreed with. Both of those
+ * surfaces pass `onSignup` now, so every mount of every skin asks this
+ * function, and the answer is the same one `/tasks` gets.
+ *
+ * Two things still return `null`, and neither is a surface's opinion:
+ *
+ * ① The anonymous viewer, for whom every caller withholds `onSignup`. The
+ *    server sends `signup_reason: null` when there is no viewer to explain
+ *    anything to, so there is no refusal to draw — only a button that would
+ *    bounce them to a login. That gate is on the USER and never on
+ *    `can_sign_up`: gating on the flag is exactly what made `/tasks` go silent
+ *    about tasks it was still showing (#1976).
+ *
+ * ② The backend reason this build has no copy for — the fallback further down.
  *
  * The label used to arrive as a `signupLabel` parameter, because the nine
  * `feed:taskCard.{F}.signup` keys were nine — eight of them literally "Sign up"

@@ -63,8 +63,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
       </div>
 
       {signupMsg && (
-        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'danger-edge danger-text'}`}>
-          {signupMsg.msg}
+        <p className="font-body content-text mb-4 border-2 danger-edge danger-text px-3 py-2">
+          {signupMsg}
         </p>
       )}
 

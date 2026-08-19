@@ -166,6 +166,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     recentPraxis,
     viewerFactionSlug,
     gameFactions,
+    onSignup,
     membership,
   } = state;
   const [confirming, setConfirming] = useState(false);
@@ -248,6 +249,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     task.primary_faction_slug,
                     gameFactions,
                   )}
+                  onSignup={onSignup}
                 />
               ))}
             </div>

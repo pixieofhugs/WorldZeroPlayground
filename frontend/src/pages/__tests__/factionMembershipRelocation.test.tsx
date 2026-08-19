@@ -51,6 +51,8 @@ function stateWith(membership: Partial<Membership>): FactionDetailState {
     recentPraxis: [],
     viewerFactionSlug: null,
     gameFactions: [],
+    onSignup: undefined,
+    signupMsg: null,
     membership: {
       state: "eligible",
       currentFactionSlug: null,

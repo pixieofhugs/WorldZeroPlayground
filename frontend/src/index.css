@@ -919,6 +919,21 @@
      surfaces are ink-dark in both themes (Singularity precedent), so the
      pigments stay constant across themes; only the flyposted-wall backdrop
      tokens flip under [data-theme="dark"]. */
+  /* ACID NEVER TOUCHES PAPER (#2173). `-acid` is theme-INVARIANT and the wall
+     below FLIPS, so acid AS TYPE is 16.33:1 by night and 1.03:1 by day. There
+     is no ink to repick here: the light wall's relative luminance (0.8389)
+     forces any AA-clearing ink below L 0.1475, and acid green is a light
+     colour, so every candidate at that luminance is a dark olive — `-acid-deep`
+     reaches only 2.30:1 and is not a rung. So the owner's ruling changes the
+     GROUND, per §3: wherever acid is set as an INK, its immediate ground is
+     `--faction-snide-ink` — 16.33:1 in BOTH cascades, and on the light wall
+     that black plate reads as a CENSOR BAR, on-voice for a flyposted zine.
+     THE BAR IS A LIGHT-MODE-ONLY ORNAMENT: in dark the plate (#14110b) and the
+     wall (#0a0a0b) are both near-black, so it dissolves and the type reads as
+     plain acid. That asymmetry is intended.
+     Acid as a DRAWN thing — a rule, a stripe, a fill, a border — is unaffected;
+     this is a rule about type. Copy that wants no plate takes
+     `--faction-snide-wall-text`, which flips with the wall. */
   --faction-snide-acid: #b6ff2e; /* toxic / radioactive green */
   --faction-snide-acid-deep: #6fae00;
   --faction-snide-ink: #14110b; /* photocopier black */
