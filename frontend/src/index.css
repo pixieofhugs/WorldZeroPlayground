@@ -5282,6 +5282,27 @@
    and the split is the sheet's own rule: a rule with an ungated twin is split
    and only the animation travels.
 
+   CORNER TO CORNER, AT EVERY MOUNT (#2312). This was `width: calc(100% - 40px)`
+   centred by `margin: 0 auto` — the design's 20px inset from the card's edges.
+   The owner, on a screenshot: *"the runes should go from one corner of the box
+   to the other"*, and, asked whether that was one surface or all of them,
+   *"Anywhere there are runes applies."* So the inset is gone from the DEVICE
+   rather than overridden at one mount, and there is no full-bleed variant and
+   no per-mount width: one device, one behaviour.
+
+   The strip now fills its container's PADDING box, which is the card's border
+   box only where the mount hangs it in an unpadded wrapper. A mount inside a
+   padded box bleeds ITSELF, with the negative margin its own padding calls for
+   — `EphemeristsPraxisCard`'s byline divider does exactly that, as its `DRIFT`
+   row did before it. `width: 100%` rather than dropping the declaration
+   outright: `auto` on a block-level flex container computes the same, but 100%
+   also holds if a future mount hangs the strip in a flex or grid parent.
+
+   `divider` IS THE THIRD SIDE, and it is a margin like the other two. The
+   praxis card's byline rule is not a CTA and has nothing to bracket, so it gets
+   its own air rather than `top`'s -7px lift; the value is also what keeps its
+   seed off the composer's, which already draws `praxis:${id}` at `top`.
+
    THE DESIGN'S `user-select: none` IS DROPPED, and it is a budget decision. It
    would ship prefixed (`-webkit-user-select` beside it) into the one stylesheet
    that blocks first paint, and what it buys is that a drag-select across the card
@@ -5295,11 +5316,11 @@
   align-items: center;
   height: 12px;
   overflow: hidden;
-  width: calc(100% - 40px);
-  margin: 0 auto;
+  width: 100%;
 }
 [data-eph-runes="top"] { margin-top: -7px; }
 [data-eph-runes="bottom"] { margin-bottom: 18px; }
+[data-eph-runes="divider"] { margin-block: var(--space-sm); }
 /* The design also sets `white-space: nowrap` here. It is a provable no-op on
    this markup and so is not carried: the marks arrive from a `.map()` with no
    whitespace text nodes between them, and a flex row does not wrap by default. */

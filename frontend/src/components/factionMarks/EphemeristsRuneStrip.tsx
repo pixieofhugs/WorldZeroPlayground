@@ -121,16 +121,26 @@ export function drawRunes(seed: string): Slot[] {
   }));
 }
 
-/** Which side of the button this strip sits on. */
-export type RuneStripSide = "top" | "bottom";
+/**
+ * WHERE THE STRIP SITS, which is a VERTICAL-OFFSET knob and a seed ingredient
+ * and nothing else. Each value has its own margin rule in index.css; none of
+ * them touches the width, because the strip has one width everywhere (#2312).
+ *
+ * `top` / `bottom` bracket a plate CTA. `divider` is the third: the praxis
+ * card's byline rule, where there is no button to bracket. It has to be a
+ * distinct value rather than a reused `top` — the seed folds `side` in, and the
+ * composer already draws `praxis:${id}` at `top`, so the two would otherwise be
+ * the same row on two surfaces showing the same praxis.
+ */
+export type RuneStripSide = "top" | "bottom" | "divider";
 
 export default function EphemeristsRuneStrip({ side, seed }: {
   side: RuneStripSide;
   /**
    * Stable per SURFACE — `task:${id}` on the card and the task page,
-   * `praxis:${id}` in the composer, the same strings the notation band takes.
-   * The side is folded in here rather than at the call site so no mount can
-   * forget it and print one row twice.
+   * `praxis:${id}` in the composer and on the praxis card's byline, the same
+   * strings the notation band takes. The side is folded in here rather than at
+   * the call site so no mount can forget it and print one row twice.
    */
   seed: string;
 }) {

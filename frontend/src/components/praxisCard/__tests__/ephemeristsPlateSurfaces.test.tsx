@@ -175,11 +175,18 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
      the drift strip breathing on the shared gate rather than inline — is the
      assertion below, which is the part that was never about copy. */
 
-  it('drifts a glyph strip above the vote block', () => {
+  it('rules the byline with the shared rune strip, not a private drift', () => {
     const markup = html()
-    // The strip breathes on the shared `.epg-glyph` gate rather than an inline
-    // animation, so a reduced-motion reader still gets the marks.
-    expect(text(markup)).toContain('∮')
+    // #2312 — the strip moved from above the vote block to the byline's rule,
+    // and it is the shared component now. The old assertion read a single mark
+    // (`∮`) out of the retired 32-mark array; the marks are seeded per praxis
+    // since #2146, so the strip's IDENTITY is what is assertable here and the
+    // draw is `factionMarks/__tests__/ephemeristsRuneStrip.test.tsx`'s business.
+    expect(markup).toContain('data-eph-runes="divider"')
+    expect(markup, 'the retired inline copy').not.toContain('epg-glyph')
+    // Still no inline animation: the strip's motion is a reduced-motion-gated
+    // class in the deferred sheet, so a reader who never receives it sees a
+    // full static row.
     expect(markup).not.toContain('animation:')
   })
 

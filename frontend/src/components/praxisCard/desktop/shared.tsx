@@ -177,10 +177,13 @@ export function PraxisBody({
    * REPLACES a rule eight archetypes are right to keep, where `voteRule` adds
    * one none of them draw by default. Pass nothing and the dashed rule stands.
    *
-   * The Ephemerists are the only caller (`EphemeristsRuneStrip`), and the mount
-   * owns its own bleed: the strip fills its container's padding box, so a
-   * caller whose leaf is padded hands it a wrapper carrying the negative
-   * margin, exactly as the retired `DRIFT` row did.
+   * The Ephemerists plate is the only caller — it rules its byline with the
+   * faction's rune strip — and the mount owns its own bleed: the strip fills
+   * its container's padding box, so a caller whose leaf is padded hands it a
+   * wrapper carrying the negative margin, exactly as the retired `DRIFT` row
+   * did. (The component is deliberately NOT named here: the strip's own test
+   * detects its mounts by searching source text, and a prose mention in a file
+   * that mounts nothing would read as a fourth surface.)
    */
   bylineDivider?: ReactNode;
   /**
