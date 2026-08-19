@@ -45,7 +45,7 @@
       "note": "Requires level {{level}}, one rung above you — your faction's once-a-level leap covers it."
     },
     "meta": "META",
-    "metataskFor": "Metatask for {{faction}}",
+    "metataskIssuer": "Metatask issued by {{faction}} · open to every faction",
     "author": "author · lvl {{level}}",
     "stats": {
       "level": "Level",

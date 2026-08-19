@@ -9,6 +9,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -139,8 +140,9 @@ export default function EverymenTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -242,7 +244,7 @@ export default function EverymenTaskDetail({
         <span
           style={{ ...label, fontSize: "var(--text-content)", color: MAST_INK }}
         >
-          {factionName(slug)}
+          {eyebrowFaction}
         </span>
         <EverymenCog size={14} fill={MAST_INK} hub={MAST} />
       </div>
@@ -295,7 +297,7 @@ export default function EverymenTaskDetail({
             marginBottom: "var(--space-md)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

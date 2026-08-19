@@ -131,6 +131,7 @@ function member(id: number, name: string): PraxisMemberOut {
     praxis_id: 1,
     character_id: id,
     character_display_name: name,
+    character_avatar_url: "",
     has_submitted: true,
     is_done: false,
     joined_at: "2026-01-01T00:00:00Z",

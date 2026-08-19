@@ -10,19 +10,30 @@ import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
+import { Ransom, WALL } from '../../../components/factionMarks/snideAtoms'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
- * The carried life and its open jobs become dark ransom cards slapped down on
- * a near-black desk: Bebas mastheads over an acid rule, halftone dot screens, hard
- * offset shadows, a hot-pink primary. Same content slots as the Default mobile
- * home (the identity block — name, level, era points and the level track —
- * active-tasks list, primary actions) — only the paste-up changes. Grounds on the `--faction-snide-*`
- * tokens already in index.css; native-dark (dark ink cards on the flyposted
- * wall). Presentation-only — all data arrives via {@link FieldDeskHomeState}.
+ * The desk is the flyposted wall; the masthead is CUT from ransom scraps and the
+ * open jobs are a black clipping slapped down on it, with halftone dot screens,
+ * hard offset shadows and a hot-pink primary. Same content slots as the Default
+ * mobile home (the identity block — name, level, era points and the level track —
+ * active-tasks list, primary actions) — only the paste-up changes. Grounds on the
+ * `--faction-snide-*` tokens already in index.css. Presentation-only — all data
+ * arrives via {@link FieldDeskHomeState}.
+ *
+ * TWO GROUNDS, AND WHICH ONE A MARK IS ON DECIDES ITS INK FAMILY (#2287). The
+ * credential panel wears the shared {@link WALL} — the kit's current S.N.I.D.E.
+ * look, which this surface never got — and everything READ on it takes the
+ * flipping `-note-*` inks. The jobs card stays the black clipping pasted ON that
+ * wall and keeps the invariant `-card-*` family (#2066). A DRAWN fill is neither:
+ * the acid avatar tile and the black action chips inside the panel are objects
+ * stuck to the wall, not type on it, so they keep their own pigments.
  */
 
-const WALL = 'var(--faction-snide-wall)'
+/** The desk itself: the wall's flat ramp START, so the credential panel's full
+ *  five-layer {@link WALL} still reads as something pasted ON it. */
+const DESK = 'var(--faction-snide-wall)'
 const WALL_TEXT = 'var(--faction-snide-wall-text)'
 const INK = 'var(--faction-snide-card-bg)'
 const TEXT = 'var(--faction-snide-card-text)'
@@ -37,6 +48,26 @@ const BLACK = 'var(--faction-snide-font-black)'
 const TYPE = 'var(--faction-snide-font-type)'
 const MARKER = 'var(--faction-snide-font-marker)'
 
+/* THE PANEL'S OWN INK FAMILY (#2287). The credential panel stands on the wall
+   now, and the wall FLIPS -- xerox stock by day, pitch black by night -- so it
+   takes the `-note-*` inks that flip with it, never the `-card-*` ones, which
+   are pinned near-black in both themes for the slabs pasted ON the wall (#2066;
+   `factionMarks/snideAtoms` states the rule). All three that moved were
+   invisible by day on the new ground: `-card-text` 1.05:1, `-card-muted`
+   1.24:1, acid-as-type 1.03:1. Measured on all four of the wall's readings,
+   `-note-ink` runs 11.87-15.95 light / 13.28-18.04 dark and `-note-muted`
+   5.02-6.75 / 9.38-12.75. */
+const NOTE_INK = 'var(--faction-snide-note-ink)'
+const NOTE_MUTED = 'var(--faction-snide-note-muted)'
+/* ACID NEVER TOUCHES PAPER (#2173), so where acid is TYPE or a filled TRACK on
+   this panel it carries a photocopier-black plate, which on the light wall reads
+   as a censor bar and by night dissolves into the wall -- the ruled asymmetry,
+   not a bug. The faction PIGMENT rather than `-card-accent`: the card family is
+   not what this surface is dressed in. Acid on the plate is 15.55:1 in both
+   cascades; where the plate dissolves, acid on the dark wall is 16.33:1. */
+const ACID_PIGMENT = 'var(--faction-snide-acid)'
+const PLATE = 'var(--faction-snide-ink)'
+
 /** The task-faction mark on a cut-out row (#1711) — a touch under the other
  *  skins' 14, because this row's rule is tight and the type is condensed. */
 const ROW_SIGIL = 13
@@ -47,12 +78,14 @@ const HALFTONE = 'radial-gradient(rgba(182,255,46,0.09) 32%, transparent 34%)'
  *  raw-colour ratchet: a module constant is Gap D wearing paint. */
 const CARD_SHADOW = '5px 6px 0 color-mix(in srgb, var(--color-print-offset) 50%, transparent)'
 
+/** The eyebrow voice. NO INK: its two mounts stand on different grounds -- the
+ *  masthead's on the wall, the "view all" link's on the black jobs slab -- and
+ *  the slab's `-card-muted` measured 1.24:1 on the light wall. */
 const kicker: CSSProperties = {
   fontFamily: TYPE,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
-  color: MUTED,
 }
 
 /**
@@ -79,19 +112,54 @@ const actionPillStyle: CSSProperties = {
   transition: 'opacity 120ms ease',
 }
 
-/** The baseline row under the track — the file's typewriter voice. */
+/** The baseline row under the track — the file's typewriter voice. Every mount
+ *  is inside the credential panel, so it inks on the wall (#2287). */
 const trackMetaStyle: CSSProperties = {
   fontFamily: TYPE,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
-  color: MUTED,
+  color: NOTE_MUTED,
 }
 
 /** The operative's own ramp: hot pink burning up into acid (#1553). */
 const TRACK_FILL = `linear-gradient(90deg, ${PINK}, ${ACID})`
 
-/** Dark ransom card — halftoned, hard-shadowed, slightly askew. */
+/**
+ * THE CREDENTIAL PANEL, ON THE FLYPOSTED WALL (#2287).
+ *
+ * Owner ruling: this surface never got the kit's current S.N.I.D.E. look. It was
+ * a dark panel dusted with a green halftone of its own; it takes the same ground
+ * the task card, the composer and the praxis card wear, from the same {@link
+ * WALL} export. The halftone is GONE rather than layered under it.
+ *
+ * THE EDGE AND THE SHADOW ARE LOAD-BEARING (§6, #2065), and doubly so here: the
+ * desk behind it is the flat `-wall` ramp start, so `-note-wall-edge` and
+ * `-note-wall-shadow` — the pair the task card already mounts — are what keep a
+ * wall-grounded panel an object on a wall-grounded page. They are not the
+ * flyposter's `CARD_SHADOW`, which is the black jobs slab's register.
+ */
+function WallPanel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        background: WALL,
+        color: NOTE_INK,
+        border: '1px solid var(--faction-snide-note-wall-edge)',
+        boxShadow: 'var(--faction-snide-note-wall-shadow)',
+        padding: 'var(--space-lg)',
+        transform: 'rotate(-1deg)',
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** Dark ransom card — halftoned, hard-shadowed, slightly askew. Still the JOBS
+ *  slab's archetype: a black clipping pasted ON the wall (#2066). */
 function RansomCard({ children, tilt = -1 }: { children: ReactNode; tilt?: number }) {
   return (
     <div
@@ -125,19 +193,26 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
     <div
       data-skin="snide"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: TYPE, color: WALL_TEXT, background: WALL }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: TYPE, color: WALL_TEXT, background: DESK }}
     >
-      {/* Masthead — Bebas over an acid rule */}
+      {/* Masthead — the ransom cut over an acid rule */}
       <header>
-        <div style={kicker}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: COND, fontSize: 'var(--text-display)', letterSpacing: '0.03em', lineHeight: 0.95, color: WALL_TEXT, margin: 'var(--space-xs) 0 0' }}>
-          {t('fieldDesk.home.title')}
+        <div style={{ ...kicker, color: NOTE_MUTED }}>{t('nav.home')}</div>
+        {/* THE WORDMARK IS CUT, NOT SET (#2287). It was a plain bold condensed
+            sans, which is the "boring" the report named. The ransom cut is the
+            face this kit already pastes a player's name up in on the comment
+            slip, mounted from the one drawing in `snideAtoms` rather than
+            transcribed a second time. Every letter brings its own opaque scrap,
+            so the mark needs no ink of its own on either ground, and the
+            heading's accessible name is still the whole word. */}
+        <h1 style={{ margin: 'var(--space-xs) 0 0' }}>
+          <Ransom text={t('fieldDesk.home.title')} size="var(--text-display)" />
         </h1>
         <div style={{ height: 2, marginTop: 'var(--space-sm)', background: ACCENT_WALL }} />
       </header>
 
       {/* ── Operative file ── */}
-      <RansomCard tilt={-1}>
+      <WallPanel>
         <div className="flex justify-end gap-2" style={{ marginBottom: 'var(--space-lg)' }}>
           {/* Hidden when the roster has nothing to offer (#2111): one life and a
               shut second-character gate make this two taps to a dead end. */}
@@ -173,19 +248,20 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: COND, fontSize: 'var(--text-title)', letterSpacing: '0.03em', lineHeight: 1, color: TEXT, textDecoration: 'none' }}
+              style={{ fontFamily: COND, fontSize: 'var(--text-title)', letterSpacing: '0.03em', lineHeight: 1, color: NOTE_INK, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.12em', textTransform: 'uppercase', color: NOTE_MUTED }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>
           </div>
         </div>
 
-        {/* The one points figure, in the display face (#1553). */}
+        {/* The one points figure, in the display face (#1553), on the censor
+            plate acid-as-type owes the wall (#2173). */}
         <div className="flex items-baseline gap-2" style={{ marginTop: 'var(--space-lg)' }}>
-          <span style={{ fontFamily: IMPACT, fontSize: 'var(--text-heading)', lineHeight: 1, color: ACID }}>
+          <span style={{ fontFamily: IMPACT, fontSize: 'var(--text-heading)', lineHeight: 1, color: ACID_PIGMENT, background: PLATE, padding: '0 var(--space-xs)' }}>
             {character.score.toLocaleString()}
           </span>
           <span className="truncate" style={trackMetaStyle}>
@@ -199,11 +275,15 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             scale. */}
         <div
           className="overflow-hidden"
-          // The unfilled track is a percentage of the ink already on the desk
-          // (#1609), not a fixed white — the desk ground flips #14110b ->
-          // #0c0a07, and a 4% white wash was the one value that could not
-          // follow it.
-          style={{ height: 6, borderRadius: 999, background: 'color-mix(in srgb, var(--faction-snide-card-text) 4%, transparent)', marginTop: 'var(--space-md)' }}
+          // THE GROOVE IS THE PLATE (#2287). A 4% wash of the card's paper ink
+          // was legible only because the track lay on a black card; on the wall
+          // it is nothing by day, and the fill's acid end would have read
+          // 1.03:1 against the paper — the #2173 pairing exactly, in a drawn
+          // mark rather than a word. A solid photocopier-black slot is the same
+          // repair the points figure takes: the acid end reads 15.55:1 in it and
+          // the pink end 5.38:1, and where the slot dissolves at night the fill
+          // is read against the wall instead, at 16.33:1 and 5.65:1.
+          style={{ height: 6, borderRadius: 999, background: PLATE, marginTop: 'var(--space-md)' }}
           {...(levelTrack
             ? {
                 role: 'progressbar',
@@ -244,7 +324,7 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
           </span>
         </div>
-      </RansomCard>
+      </WallPanel>
 
       {/* ── The pending row, in all three of its states (#1554) ── */}
       {pendingRow && (
