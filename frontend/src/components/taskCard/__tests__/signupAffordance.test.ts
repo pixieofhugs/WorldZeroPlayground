@@ -13,6 +13,7 @@ import '../../../i18n'
 import i18n from '../../../i18n'
 import { aTask } from '../../../test/fixtures'
 import { taskCardSignupCta } from '../signupAffordance'
+import type { TaskOut } from '../../../api/tasks'
 
 /** The one shared verb all nine cards now read (#1911 collapsed the nine). */
 const SIGNUP_VERB = i18n.t('feed:taskCard.signup')
@@ -107,5 +108,69 @@ describe('a permitted sign-up', () => {
     )!
     expect(cta.label).toBe(i18n.t('tasks:detail.signup.denied.belowLevel', { level: 7 }))
     expect(cta.label).toContain('7')
+  })
+})
+
+
+/**
+ * #2359 — the one denial that is not a dead end.
+ *
+ * `already_active_member` means the viewer holds an OPEN DRAFT on this task, so
+ * the useful thing is one press away and the card was spending its only slot
+ * saying so. The wire now carries the draft's id, and the slot becomes a link
+ * to its editor.
+ *
+ * The seam is still value-out: a `href` a skin can hang on a `<Link>`, and no
+ * `onPress`, because navigating is not signing up.
+ */
+describe('a draft you already hold', () => {
+  const held = (overrides: Partial<TaskOut> = {}) =>
+    aTask({
+      can_sign_up: false,
+      signup_reason: 'already_active_member',
+      in_progress_praxis_id: 77,
+      ...overrides,
+    })
+
+  it('offers the draft instead of announcing it', () => {
+    const cta = taskCardSignupCta(held(), vi.fn())!
+    expect(cta.denied, 'a way in is not a refusal').toBe(false)
+    expect(cta.href).toBe('/praxis/77/edit')
+    expect(cta.label).toBe(i18n.t('tasks:detail.signup.workOnThis'))
+  })
+
+  it('does not sign up — the slot navigates, it does not post', () => {
+    const onSignup = vi.fn()
+    const cta = taskCardSignupCta(held(), onSignup)!
+    expect(cta.onPress).toBeUndefined()
+    expect(onSignup).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the plain label when there is no draft to land on', () => {
+    // Reachable, not theoretical: the denial's population includes `submitted`
+    // and `pending` praxes, which shut sign-up with nothing left to edit. A
+    // link to /praxis/null/edit is worse than the label it replaced.
+    const cta = taskCardSignupCta(held({ in_progress_praxis_id: null }), vi.fn())!
+    expect(cta.denied).toBe(true)
+    expect(cta.href).toBeUndefined()
+    expect(cta.onPress).toBeUndefined()
+    expect(cta.label).toBe(i18n.t('tasks:detail.signup.denied.alreadyActiveMember'))
+  })
+
+  it('leaves the other four denials alone — an id on the row changes nothing', () => {
+    for (const reason of DENIALS.filter((r) => r !== 'already_active_member')) {
+      const cta = taskCardSignupCta(
+        aTask({
+          can_sign_up: false,
+          signup_reason: reason,
+          in_progress_praxis_id: 77,
+          level_required: 4,
+        }),
+        vi.fn(),
+      )!
+      expect(cta.denied, reason).toBe(true)
+      expect(cta.href, reason).toBeUndefined()
+      expect(cta.onPress, reason).toBeUndefined()
+    }
   })
 })

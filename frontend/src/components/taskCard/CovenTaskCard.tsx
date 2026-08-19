@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { CovenBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
 import { CovenCat, SLIP_SHEET } from "../factionMarks/covenSlip";
@@ -310,10 +311,8 @@ export default function CovenTaskCard({
             is dead code it skips in the same pass. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
-            <button
-              type="button"
-              onClick={cta.onPress}
-              aria-disabled={cta.denied || undefined}
+            <CardCtaControl
+              cta={cta}
               style={{
                 ...CARD_CTA,
                 cursor: cta.denied ? "not-allowed" : "pointer",
@@ -340,7 +339,7 @@ export default function CovenTaskCard({
                 />
               </svg>
               {cta.label}
-            </button>
+            </CardCtaControl>
           </div>
         )}
       </article>

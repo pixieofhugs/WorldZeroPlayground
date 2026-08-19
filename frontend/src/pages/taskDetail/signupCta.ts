@@ -19,6 +19,9 @@
 /** The server's word for "you are on this already, and your faction lets you go again". */
 export const SIGNUP_REASON_MULTI_MEMBERSHIP = "multi_membership";
 
+/** The server's word for "you hold an open praxis on this task, so you may not claim it again". */
+export const SIGNUP_REASON_ALREADY_ACTIVE_MEMBER = "already_active_member";
+
 /**
  * Whether the sign-up CTA renders at all.
  *
@@ -39,6 +42,24 @@ export function canSignUpForTask(params: {
 
 export const SIGNUP_CTA_KEY = "detail.signup.cta" as const;
 const CTA_AGAIN_KEY = "detail.signup.ctaAgain" as const;
+
+/**
+ * What the ONE denial with a way out of it says instead (#2359).
+ *
+ * `already_active_member` is a refusal that names a draft: the server is saying
+ * *you are mid-praxis on this task*, which is the moment its editor is the most
+ * useful thing on screen. Where a surface can reach that editor
+ * (`TaskOut.in_progress_praxis_id`), it offers this instead of
+ * `denied.alreadyActiveMember`, and the affordance is a link rather than a
+ * refusal.
+ *
+ * IT LIVES HERE, in the shared file, for the reason `DENIAL_KEYS` gives above:
+ * two surfaces saying different words is a copy edit inside this table, and two
+ * TABLES is the drift #1497 built the file to end. The task detail's own
+ * in-progress block is a separate thing on a separate key
+ * (`detail.inProgress.*`, with "Continue editing" and "drop") and is untouched.
+ */
+export const SIGNUP_IN_PROGRESS_KEY = "detail.signup.workOnThis" as const;
 
 /**
  * Every reason sign-up is SHUT, mapped to the copy that says so (#1976).
@@ -70,6 +91,7 @@ export type SignupDenialKey = (typeof DENIAL_KEYS)[keyof typeof DENIAL_KEYS];
 export type SignupCtaKey =
   | typeof SIGNUP_CTA_KEY
   | typeof CTA_AGAIN_KEY
+  | typeof SIGNUP_IN_PROGRESS_KEY
   | SignupDenialKey;
 
 /**

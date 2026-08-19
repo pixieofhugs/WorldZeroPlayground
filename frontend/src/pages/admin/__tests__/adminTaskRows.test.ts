@@ -28,6 +28,7 @@ function task(overrides: Partial<TaskOut> & { id: number }): TaskOut {
     created_by_faction_slug: null,
     created_by_level: 0,
     signup_reason: null,
+    in_progress_praxis_id: null,
     can_sign_up: true,
     allowed_modes: [],
     eligible_for_current_user: true,

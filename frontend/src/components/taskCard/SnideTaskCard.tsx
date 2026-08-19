@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { SnideBand } from "../cardMasthead/factionBands";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -344,10 +345,8 @@ export default function SnideTaskCard({
             change the box the 44px floor was solved against. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
-            <button
-              type="button"
-              onClick={cta.onPress}
-              aria-disabled={cta.denied || undefined}
+            <CardCtaControl
+              cta={cta}
               style={{
                 ...CARD_CTA,
                 cursor: cta.denied ? "not-allowed" : "pointer",
@@ -381,7 +380,7 @@ export default function SnideTaskCard({
               }}
             >
               {cta.label}
-            </button>
+            </CardCtaControl>
           </div>
         )}
       </article>

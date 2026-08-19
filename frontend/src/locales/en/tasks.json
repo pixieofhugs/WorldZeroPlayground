@@ -60,6 +60,7 @@
     "signup": {
       "cta": "Sign up",
       "ctaAgain": "Begin again",
+      "workOnThis": "Work on this?",
       "slots": "You have {{open}} of {{max}} task slots open",
       "levelMet": "Level {{level}} met",
       "denied": {
