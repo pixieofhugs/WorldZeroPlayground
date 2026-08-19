@@ -22,6 +22,7 @@ from services.era import (
     get_or_create_stats,
 )
 from services.faction_service import hidden_faction_slugs
+from services.meta_task import character_sees_metatasks
 from services.praxis import (
     # Private, but the bank-cap count has exactly one correct implementation and
     # services.duel already imports it the same way. A second COUNT here is how
@@ -806,8 +807,7 @@ async def list_tasks(
     # Metatask visibility gate (#453): the metatask list only opens at
     # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
     if not skip_level_check:
-        viewer_sees_metatasks = viewer_level >= era.level_to_see_metatasks
-        if not viewer_sees_metatasks:
+        if not character_sees_metatasks(viewer_level, era):
             query = query.where(Task.task_type != TaskType.metatask)
 
     # "Tasks I can sign up for" (#1130) — evaluate_signup's six gates, re-stated

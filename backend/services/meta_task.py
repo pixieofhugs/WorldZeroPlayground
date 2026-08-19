@@ -43,6 +43,34 @@ def faction_bypasses_metatask_level(
     return faction_config.can_apply_metatask_at_any_level
 
 
+def character_sees_metatasks(
+    character_level: int,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """Does the metatask list open for a character at this level? (#453)
+
+    The one statement of the SEE rule, and deliberately separate from the APPLY
+    rule above. Until #2280 it was an inline comparison inside
+    ``services.task.list_tasks`` and nowhere else, which was fine while exactly
+    one surface asked. The activity feed is the second (a metatask is a ``Task``
+    row, so it rode the ``global_task`` source into the bell of characters for
+    whom the list does not open), and two copies of a threshold is how the two
+    drift.
+
+    **No faction bypass, and that is the point.**
+    ``can_apply_metatask_at_any_level`` — Albescent's own perk — lifts
+    ``era.metatask_apply_level`` and nothing else, so a novice Albescent may
+    apply a metatask but still cannot browse the list. Anyone reaching for
+    "can this character have metatasks put in front of them?" wants THIS
+    predicate; :func:`faction_bypasses_metatask_level` answers a different
+    question and answers it True far more often.
+
+    Anonymous callers have no level and are always below the gate; callers hold
+    that case themselves rather than passing a sentinel level in.
+    """
+    return character_level >= era.level_to_see_metatasks
+
+
 def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
     """Max metatasks one praxis may hold, keyed off the applying character's level.
 
