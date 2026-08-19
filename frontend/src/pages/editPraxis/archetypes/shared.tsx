@@ -23,59 +23,6 @@ import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
-interface BreadcrumbProps {
-  praxisId: number | string;
-  taskId: number;
-  taskTitle: string;
-  style?: CSSProperties;
-  inkColor?: string;
-}
-
-export function Breadcrumb({
-  praxisId,
-  taskId,
-  taskTitle,
-  style,
-  inkColor,
-}: BreadcrumbProps) {
-  const { t } = useTranslation("forms");
-  const tone = inkColor ?? "var(--color-text-tertiary)";
-  return (
-    <nav
-      className="font-body"
-      style={{
-        fontSize: "var(--text-md)",
-        letterSpacing: "0.1em",
-        color: tone,
-        marginBottom: "var(--space-md)",
-        ...style,
-      }}
-    >
-      <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
-        {t("breadcrumb.tasks")}
-      </Link>
-      <span> &rsaquo; </span>
-      <Link
-        to={`/tasks/${taskId}`}
-        style={{ color: "inherit", textDecoration: "none" }}
-      >
-        {taskTitle}
-      </Link>
-      <span> &rsaquo; </span>
-      <Link
-        to={`/praxis/${praxisId}`}
-        style={{ color: "inherit", textDecoration: "none" }}
-      >
-        {t("breadcrumb.praxis")}
-      </Link>
-      <span> &rsaquo; </span>
-      <span style={{ color: "inherit", fontWeight: 700 }}>
-        {t("breadcrumb.edit")}
-      </span>
-    </nav>
-  );
-}
-
 interface TitleCounterProps {
   length: number;
   color?: string;
@@ -1146,7 +1093,12 @@ interface ComposerPageProps {
   sizes: ComposerSizes;
   /** The skin's root: its body face and its ink. */
   style?: CSSProperties;
-  /** Drawn in a column of the sheet's own width, above the sheet. */
+  /**
+   * The site's shared `<Breadcrumb>`, drawn in a column of the sheet's own
+   * width, above the sheet. A slot rather than props because the waiting
+   * surface mounts this same page and hands its own — but there is exactly one
+   * component that may go in it (#2102).
+   */
   breadcrumb?: ReactNode;
   children: ReactNode;
 }
@@ -1163,6 +1115,14 @@ interface ComposerPageProps {
  * The breadcrumb belongs to the PAGE rather than to a stage: the composer and
  * the waiting surface each draw exactly one, which is what keeps the dispatcher
  * out of the business of drawing a second (#567, #1181).
+ *
+ * WHAT IT DRAWS IS NO LONGER THIS FILE'S (#2102). A `Breadcrumb` lived here
+ * until the whole site collapsed onto one, and it was the version that already
+ * behaved correctly — so it was promoted to `components/nav/Breadcrumb` rather
+ * than rewritten, and `taskDetail`'s and `praxisDetail`'s eighteen hand-rolled
+ * copies were deleted onto it. The skin no longer tints it: a breadcrumb is
+ * neutral site chrome measured on the site's own ground, which is what the page
+ * under this sheet actually is. `ComposerDress.breadcrumbInk` went with that.
  */
 export function ComposerPage({
   sizes,
@@ -1227,8 +1187,6 @@ export interface ComposerDress {
   alarm?: string;
   /** The skin's root style — its body face and ink. */
   pageStyle?: CSSProperties;
-  /** The breadcrumb's ink, where the skin tints it. */
-  breadcrumbInk?: string;
   /** The sheet's paint, border, radius and shadow. */
   sheetStyle?: CSSProperties;
   /** The sheet's content column, where a skin overrides its inset. */

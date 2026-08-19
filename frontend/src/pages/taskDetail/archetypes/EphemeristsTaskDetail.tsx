@@ -25,6 +25,7 @@ import {
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * The Ephemerists task detail — THE VALLEY PLATE at page size (task detail v2,
@@ -429,24 +430,6 @@ export default function EphemeristsTaskDetail({
   // ── Header: breadcrumb, faction line, title ── (byline + stats: `credentials`, below the brief — #2120)
   const header = (
     <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* One crumb, not two. A brass cartouche ruled the second crumb off at
-            both ends, and that crumb was the task's ordinal — #1124 retired the
-            id, so the cartouche and the separator before it went with it rather
-            than framing nothing. */}
-        <Link to="/tasks" style={{ ...eyebrow, color: BRASS_LIGHT, textDecoration: "none" }}>
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      </nav>
-
       <div
         style={{
           display: "flex",
@@ -969,6 +952,10 @@ export default function EphemeristsTaskDetail({
 
   return (
     <div className="py-8">
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       {/* The page IS the plate: the column carries the papyrus itself, headed by
           the cornice masthead flush to its own edges. There is deliberately no
           fixed full-bleed backdrop element — see the `.eph-plate-sheet` note in

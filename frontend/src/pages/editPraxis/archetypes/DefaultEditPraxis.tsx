@@ -83,7 +83,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -118,6 +117,7 @@ import {
 } from "./controls";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -273,6 +273,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
+          editing
         />
       }
     >
@@ -379,10 +380,14 @@ export default function DefaultEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${BORDER}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1px solid ${BORDER}`,
-                acceptedBg: INK,
-                acceptedColor: ON_ACCENT,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: FAINT },
+                /* na's sheet IS `--faction-default-card-bg`, so the roster's
+                 * card-family fallbacks are already measured on it (#2269's
+                 * ruling) and only the corner and the quiet tier are handed in.
+                 * `MUTED` is that fallback stated out loud, which is what the
+                 * `+ invite` chip needs to stop reading the TASK's faction. */
+                collab: { radius: 10, quiet: MUTED },
               }}
             />
           </ComposerSection>

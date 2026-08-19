@@ -24,6 +24,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
@@ -329,10 +330,14 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     padding: "var(--space-lg)",
   };
 
-  // ── Window chrome: lamps (desktop) or a back arrow (mobile), the breadcrumb,
-  //    and the process id. One window title bar carries the navigation, the way
-  //    the task-detail terminal does; the mobile bar is not sticky because the
-  //    mobile shell already owns a sticky top bar.
+  // ── Window chrome: the lamps and the process id.
+  //
+  //    It carried the navigation until #2102 — a slash-separated trail on
+  //    desktop, a `← Praxis` back link to a different destination on mobile —
+  //    which is the "single breadcrumb, part of the card itself, with faction
+  //    styling" the report screenshotted. The trail is site chrome now and sits
+  //    ABOVE the terminal, outside its frame, identical at both widths. The
+  //    lamps and the hex are the window, not the way out of it, so they stay.
   const chrome = (
     <div
       style={{
@@ -346,54 +351,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         borderBottom: `1px solid ${HAIR}`,
       }}
     >
-      {desktop ? (
-        <>
-          <SingularityLamps />
-          <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
-            {t("detail.breadcrumb.tasks")}
-          </Link>
-          <span aria-hidden style={LABEL}>
-            /
-          </span>
-          <Link
-            to={`/tasks/${praxis.task_id}`}
-            style={{
-              ...LABEL,
-              color: BLUE,
-              textDecoration: "none",
-              minWidth: 0,
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {praxis.task_title}
-          </Link>
-          <span aria-hidden style={LABEL}>
-            /
-          </span>
-          <span style={LABEL}>{t("detail.breadcrumb.current")}</span>
-        </>
-      ) : (
-        <>
-          <Link
-            to="/praxis"
-            style={{
-              ...LABEL,
-              fontSize: "var(--text-lg)",
-              color: BRIGHT,
-              textDecoration: "none",
-              flex: "none",
-            }}
-          >
-            <span aria-hidden>← </span>
-            {t("detail.back")}
-          </Link>
-          <span style={{ ...LABEL, flex: 1, textAlign: "center" }}>
-            {t("detail.breadcrumb.current")}
-          </span>
-        </>
-      )}
+      <SingularityLamps />
       <span aria-hidden style={{ ...LABEL, marginLeft: "auto", color: BLUE, flex: "none" }}>
         {hexOf(praxis.id)}
       </span>
@@ -742,6 +700,14 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
   return (
     <div className="py-8">
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
+
       <div
         style={{
           position: "relative",

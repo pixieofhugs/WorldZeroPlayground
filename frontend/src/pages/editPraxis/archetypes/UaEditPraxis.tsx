@@ -100,7 +100,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerPage,
@@ -137,6 +136,7 @@ import { UaSigil } from "../../../components/sigil/UaSigil";
 import { UA_DISPLAY, UA_TEXT } from "../../../components/factionMarks/uaAtoms";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -307,14 +307,11 @@ export default function UaEditPraxis({ state }: Props) {
       sizes={sizes}
       style={dress.pageStyle}
       breadcrumb={
-        /* No `inkColor`: the breadcrumb sits ABOVE the sheet, on the site
-           background, so it takes the global tertiary ink like every other
-           page's. A `--faction-ua-*` ink here would be a colour measured on
-           UA's paper and then painted on the app's (#651, #694). */
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
+          editing
         />
       }
     >
@@ -417,10 +414,13 @@ export default function UaEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${RULE}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1px solid ${RULE}`,
-                acceptedBg: FILL,
-                acceptedColor: ON_FILL,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: UA_TEXT, color: MUTED },
+                /* The sheet's own corner. `MUTED` is `--faction-ua-card-muted`
+                 * and this composer IS the card sheet, so the roster's inks are
+                 * unchanged — the `+ invite` chip is the one that moves, off
+                 * the TASK's faction and onto this one (#2267). */
+                collab: { radius: RADIUS, quiet: MUTED },
               }}
             />
           </ComposerSection>

@@ -32,6 +32,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * University of Asthmatics — THE PRESSED LEAF, UA's praxis-detail skin (#1119,
@@ -350,81 +351,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   const panelHead = (label: ReactNode, trailing?: ReactNode) =>
     head("var(--faction-ua-card-text)", label, trailing);
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
-  //
-  // Both sit INSIDE the leaf rather than above it, which is where every UA page
-  // puts them: the accent is measured on UA's own grounds, not on whatever page
-  // ground the site background happens to be showing.
-  const breadcrumb = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-        flexWrap: "wrap",
-      }}
-    >
-      <Link
-        to="/tasks"
-        style={{
-          ...UA_EYEBROW,
-          color: "var(--faction-ua-card-accent)",
-          textDecoration: "none",
-        }}
-      >
-        {t("detail.breadcrumb.tasks")}
-      </Link>
-      <span aria-hidden style={UA_EYEBROW}>
-        /
-      </span>
-      <Link
-        to={`/tasks/${praxis.task_id}`}
-        style={{
-          ...UA_EYEBROW,
-          color: "var(--faction-ua-card-accent)",
-          textDecoration: "none",
-        }}
-      >
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden style={UA_EYEBROW}>
-        /
-      </span>
-      <span style={UA_EYEBROW}>{t("detail.breadcrumb.current")}</span>
-    </nav>
-  );
-
-  // The phone affordance drawn instead of the breadcrumb. Not sticky: the mobile
-  // shell already owns a sticky top bar, and a second one stacked under it is a
-  // dress decision, not a layout one.
-  const mobileBar = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-      }}
-    >
-      <Link
-        to="/praxis"
-        style={{
-          ...UA_EYEBROW,
-          color: "var(--faction-ua-card-accent)",
-          textDecoration: "none",
-        }}
-      >
-        <span aria-hidden>‹ </span>
-        {t("detail.back")}
-      </Link>
-      <span style={{ ...UA_EYEBROW, flex: 1, textAlign: "center" }}>
-        {t("detail.breadcrumb.current")}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden style={{ width: 44 }} />
-    </nav>
-  );
+  // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
+  // vellum leaf so its accent could be measured on the faction's own ground,
+  // and a bespoke `mobileBar` replaced it below 768px. Both are gone: a
+  // breadcrumb is neutral SITE chrome, so it moved ABOVE this column, where
+  // the site's own tertiary is the ink and the faction reading no longer
+  // applies.
 
   // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
   //
@@ -853,6 +785,14 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
   return (
     <div className="py-8" style={{ position: "relative" }}>
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
+
       {/* The toothed vellum, painting the detail COLUMN and not the viewport —
           the site background still shows around the leaf (WORLD_ZERO_STYLE §5,
           the #1028 ruling). `zIndex: 1` also makes this the stacking context the
@@ -892,8 +832,6 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             pointerEvents: "none",
           }}
         />
-
-        {desktop ? breadcrumb : mobileBar}
 
         {banners}
 
