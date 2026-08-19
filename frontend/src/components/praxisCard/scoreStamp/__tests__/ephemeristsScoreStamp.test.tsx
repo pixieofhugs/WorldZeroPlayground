@@ -126,13 +126,15 @@ describe('the stamp reads working-then-total (#2145)', () => {
     expect(bare, 'no chamfered panel around an empty block').not.toContain(CLIP)
   })
 
-  it('inks the metatask line in the ochre and the votes line in the quiet', () => {
+  it('inks the metatask line in the ochre, and every other line in the caption', () => {
     const html = render()
-    // The foreign award, ochre — 4.97:1 light / 4.99:1 dark on the panel cell.
+    // The foreign award, ochre — 4.98:1 light / 4.99:1 dark on the panel cell.
     expect(html).toContain('color:var(--faction-ephemerists-plate-ochre)')
-    // NOT `-plate-band-quiet`, which is a DISC ink: 1.78:1 on this panel in
-    // light. See the note in the stamp for the measurement.
-    expect(html).toContain('color:var(--faction-ephemerists-plate-quiet)')
+    // #2285 put each line's figure in its LABEL's colour, so the caption gold is
+    // now the cell's ink and `-plate-quiet` has no reader here. It was never
+    // `-plate-band-quiet`, a DISC ink measuring 1.78:1 on this panel in light.
+    expect(html).toContain('color:var(--faction-ephemerists-plate-caption)')
+    expect(html).not.toContain('color:var(--faction-ephemerists-plate-quiet)')
     // The ochre chip is gone: it was `-plate-disc` on `-plate-ochre`, 3.00:1,
     // at 11px — a normal-text pairing scraping the LARGE-text floor.
     expect(html).not.toContain('background:var(--faction-ephemerists-plate-ochre)')
@@ -151,6 +153,96 @@ describe('the stamp reads working-then-total (#2145)', () => {
   it('labels the total “points”, in English (#2145 §5)', () => {
     expect(render().replace(/<[^>]*>/g, '')).toContain(i18n.t('praxis:card.stamp.points', { count: 26.5 }))
     expect(render()).not.toContain('PVNCTA')
+  })
+})
+
+/**
+ * ONE ARRANGEMENT FOR EVERY LINE (#2285).
+ *
+ * THE SEAM IS THE SAME RENDERED MARKUP, read as an ordered list of `<span>`s.
+ * The defect is not that any one row is wrong — each was internally coherent —
+ * but that the three rows of a three-term addition disagreed with each other:
+ * base put its word first and its figure at the far end of a `space-between`
+ * row, metatask put its word first and its figure beside it, the tally put its
+ * figure first, and two of the three coloured a figure differently from its own
+ * label. So the assertions below are made PER ROW against one shared shape,
+ * which is what makes a fourth row (the habit bonus) unable to arrive
+ * off-pattern: adding a row that disagrees fails the same three checks.
+ *
+ * A string of markup cannot see a column, but it can see everything the column
+ * is made of: the figure's span opening before its label's, the same face and
+ * size on every figure and on every label, and one colour inside a row. The
+ * cell's `grid-template-columns` is asserted once, on the panel itself.
+ */
+describe('every line of the working reads figure-then-word (#2285)', () => {
+  type Span = { style: string; text: string }
+
+  /** Every styled `<span>` in document order. */
+  const spans = (html: string): Span[] =>
+    [...html.matchAll(/<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g)].map((m) => ({
+      style: m[1],
+      text: m[2],
+    }))
+
+  const decl = (span: Span, prop: string) =>
+    span.style.split(';').find((d) => d.startsWith(`${prop}:`)) ?? `no ${prop}`
+
+  /** A row, found by its label — and the span that opened immediately before it. */
+  function row(html: string, label: string) {
+    const all = spans(html)
+    const at = all.findIndex((s) => s.text === label)
+    expect(at, `the ${label} row is printed`).toBeGreaterThan(0)
+    return { figure: all[at - 1], label: all[at] }
+  }
+
+  /** Base, the multiplier's two terms aside, and the three lines added to it. */
+  const ROWS = [
+    { label: 'base', figure: '18' },
+    { label: 'meta', figure: '+3' },
+    { label: 'votes', figure: '+4' },
+    { label: 'habit', figure: '+2' },
+  ]
+  // 12 base points, ×1.5, +3 metatask, +4 votes, +2 habit — every row at once,
+  // which is the only state in which the four can be compared to each other.
+  const html = render({ habit_bonus_points: 2, task_point_value: 18, display_multiplier: 1.5 })
+
+  for (const { label, figure } of ROWS) {
+    it(`puts the figure before the word on the ${label} row`, () => {
+      const cells = row(html, label)
+      expect(cells.figure.text, `${label}'s figure opens before its word`).toBe(figure)
+    })
+
+    it(`sets the ${label} row's figure and word in ONE ink`, () => {
+      // The ruling: the column position tells a number from its label, so
+      // colour never has to — and no row may carry two.
+      const cells = row(html, label)
+      expect(decl(cells.figure, 'color')).toBe(decl(cells.label, 'color'))
+    })
+
+    it(`sets the ${label} row in the shared figure and label voices`, () => {
+      const cells = row(html, label)
+      // One face and one size across the figures...
+      expect(decl(cells.figure, 'font-family')).toBe('font-family:var(--font-faction-deco)')
+      expect(decl(cells.figure, 'font-size')).toBe('font-size:var(--text-xl)')
+      // ...and one across the labels.
+      expect(decl(cells.label, 'font-family')).toBe('font-family:var(--font-faction-engraved)')
+      expect(decl(cells.label, 'font-size')).toBe('font-size:var(--text-md)')
+    })
+  }
+
+  it('lays the cell out as two columns, figures against words', () => {
+    // Per-row flexboxes cannot do this: each would size its own two columns.
+    expect(html).toContain('grid-template-columns:auto 1fr')
+    expect(html, 'the base row no longer pushes its figure to the far end').not.toContain(
+      'justify-content:space-between',
+    )
+  })
+
+  it('still keeps the multiplier out of the addition, spanning both columns', () => {
+    // It is a ratio in a ruled chip, not a term being added, so it is the one
+    // thing in the cell that is not a figure-then-word row.
+    expect(html).toContain('grid-column:1 / -1')
+    expect(html).toContain(i18n.t('praxis:card.stamp.mult'))
   })
 })
 
