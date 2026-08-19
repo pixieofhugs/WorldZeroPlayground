@@ -5,13 +5,13 @@ import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { CollabRoster, deriveCollabGate } from '../CollabRoster'
 import { collabCopy } from '../collabCopy'
 
-function member(id: number, cast: boolean): PraxisMemberOut {
+function member(id: number, cast: boolean, avatar = ''): PraxisMemberOut {
   return {
     id,
     praxis_id: 1,
     character_id: id,
     character_display_name: `M${id}`,
-    character_avatar_url: '',
+    character_avatar_url: avatar,
     has_submitted: cast,
     is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
@@ -24,6 +24,7 @@ function invite(
   id: number,
   name: string,
   status: PraxisInviteOut['status'],
+  avatar = '',
 ): PraxisInviteOut {
   return {
     id,
@@ -31,7 +32,7 @@ function invite(
     inviter_id: 1,
     invitee_id: id + 100,
     invitee_display_name: name,
-    invitee_avatar_url: '',
+    invitee_avatar_url: avatar,
     status,
     created_at: '2026-01-01T00:00:00Z',
   }
@@ -465,5 +466,57 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
       />,
     )
     expect(html).not.toContain('kick M2 from the collab')
+  })
+})
+
+
+// The defect #2318 reported: the panel drew two-letter monograms where the
+// people's faces belong. `RosterAvatar` has taken `avatarUrl` since #2128 and
+// implemented the fallback correctly the whole time — there was simply nothing
+// to pass, because the wire carried no portrait. Now that it does, these three
+// rows are the whole contract.
+describe('CollabRoster portraits (#2318)', () => {
+  const roster = (
+    members: PraxisMemberOut[],
+    invites: PraxisInviteOut[] = [],
+  ) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={members}
+        invites={invites}
+        currentCharacterId={1}
+        factionSlug={null}
+      />,
+    )
+
+  it('a member with a portrait wears it', () => {
+    const html = roster([member(1, false, 'avatars/molly.png'), member(2, false)])
+    expect(html).toContain('avatars/molly.png')
+    expect(html).toContain('<img')
+  })
+
+  // `avatar_url` is `nullable=False, server_default=""`, so the empty string is
+  // the ordinary no-photo case and MUST still reach the monogram. A portrait-less
+  // member drawing a broken `img` would be the worse bug.
+  it('a member without one still gets the two-letter monogram', () => {
+    const html = roster([member(1, false, 'avatars/molly.png'), member(2, false)])
+    expect(html).toContain('>M2<')
+    expect(html).not.toContain('src=""')
+  })
+
+  // The ruling: the ring is the state, the face is the person. An unanswered
+  // invite keeps its dashed ring AND shows who it is about — one rule, no branch
+  // on invite status.
+  it('an invited row draws the portrait inside the dashed ring', () => {
+    const html = roster([member(1, false)], [invite(2, 'Asked Person', 'pending', 'avatars/asked.png')])
+    const img = html.slice(html.indexOf('avatars/asked.png'))
+    expect(html).toContain('avatars/asked.png')
+    expect(img.slice(0, 400)).toContain('dashed')
+  })
+
+  it('a declined row draws the portrait too', () => {
+    const html = roster([member(1, false)], [invite(2, 'Gone Away', 'declined', 'avatars/gone.png')])
+    expect(html).toContain('avatars/gone.png')
   })
 })
