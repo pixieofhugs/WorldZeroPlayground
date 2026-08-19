@@ -80,6 +80,16 @@ describe("faction detail page membership CTA", () => {
       <EverymenFactionBody state={stateWith({ state: "none" })} />,
     );
     expect(markup.toUpperCase()).not.toContain("ENLIST");
-    expect(markup).not.toContain("<button");
+    // "No `<button>` anywhere" used to stand in for "no join control", and it
+    // stopped being a synonym in #2311: the Tasks and Praxis headings are
+    // disclosures now, so this body draws two buttons that have nothing to do
+    // with membership. The claim is narrowed to what it was always about — a
+    // button that ACTS on the faction. The disclosures are excluded by name
+    // rather than by count, so a join control creeping back in still fails.
+    const buttons = markup.match(/<button[^>]*>/g) ?? [];
+    const membershipButtons = buttons.filter(
+      (tag) => !tag.includes('aria-controls="wz-faction-section-'),
+    );
+    expect(membershipButtons).toEqual([]);
   });
 });

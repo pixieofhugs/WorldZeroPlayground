@@ -14,6 +14,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
+import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
@@ -169,6 +170,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     onSignup,
     membership,
   } = state;
+  const sections = useFactionSections();
   const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
@@ -228,80 +230,87 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
         {/* ④ TASKS */}
         <div>
           <SectionHeading>
-            {t("detail.default.tasksHeading", { total: tasks.length })}
+            <SectionToggle
+              section={sections.tasks}
+              label={t("detail.default.tasksHeading", { total: tasks.length })}
+            />
           </SectionHeading>
-          {tasks.length === 0 ? (
-            <p
-              className="content-text"
-              style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
-            >
-              {t("detail.default.tasksEmpty")}
-            </p>
-          ) : (
-            <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  basePoints={task.point_value}
-                  multiplier={computeFactionMultiplier(
-                    viewerFactionSlug,
-                    task.primary_faction_slug,
-                    gameFactions,
-                  )}
-                  onSignup={onSignup}
-                />
-              ))}
-            </div>
-          )}
+          <SectionPanel section={sections.tasks}>
+            {tasks.length === 0 ? (
+              <p
+                className="content-text"
+                style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
+              >
+                {t("detail.default.tasksEmpty")}
+              </p>
+            ) : (
+              <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
+                {tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    basePoints={task.point_value}
+                    multiplier={computeFactionMultiplier(
+                      viewerFactionSlug,
+                      task.primary_faction_slug,
+                      gameFactions,
+                    )}
+                    onSignup={onSignup}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </div>
 
         {/* ⑤ PRAXIS */}
         <div>
           <SectionHeading>
-            {t("detail.default.recentHeading")}
+            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
           </SectionHeading>
-          {recentPraxis.length === 0 ? (
-            <p
-              className="content-text"
-              style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
-            >
-              {t("detail.default.recentEmpty")}
-            </p>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "var(--space-lg)",
-                alignItems: "flex-start",
-              }}
-            >
-              {recentPraxis.map((praxis) => (
-                <div
-                  key={praxis.id}
-                  style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
-                >
-                  {/* Task Crown (ADR-0028) — the skin's own corner medallion,
-                      so the card's built-in stamp is suppressed. */}
-                  {praxis.is_top_for_task && (
-                    <TaskCrown
-                      size={42}
-                      rotate="-8deg"
-                      shadow={`drop-shadow(1.5px 2px 0 ${uaShade(28)})`}
-                      style={{
-                        position: "absolute",
-                        top: -12,
-                        right: -8,
-                        zIndex: 5,
-                      }}
-                    />
-                  )}
-                  <PraxisCard praxis={praxis} showCrown={false} />
-                </div>
-              ))}
-            </div>
-          )}
+          <SectionPanel section={sections.praxis}>
+            {recentPraxis.length === 0 ? (
+              <p
+                className="content-text"
+                style={{ ...prose, color: "var(--faction-ua-card-muted)" }}
+              >
+                {t("detail.default.recentEmpty")}
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "var(--space-lg)",
+                  alignItems: "flex-start",
+                }}
+              >
+                {recentPraxis.map((praxis) => (
+                  <div
+                    key={praxis.id}
+                    style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}
+                  >
+                    {/* Task Crown (ADR-0028) — the skin's own corner medallion,
+                        so the card's built-in stamp is suppressed. */}
+                    {praxis.is_top_for_task && (
+                      <TaskCrown
+                        size={42}
+                        rotate="-8deg"
+                        shadow={`drop-shadow(1.5px 2px 0 ${uaShade(28)})`}
+                        style={{
+                          position: "absolute",
+                          top: -12,
+                          right: -8,
+                          zIndex: 5,
+                        }}
+                      />
+                    )}
+                    <PraxisCard praxis={praxis} showCrown={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </div>
       </div>
 

@@ -981,7 +981,10 @@ describe('the Ephemerists score stamp reads in the shared words (#1909)', () => 
     const html = text(full())
     expect(html).toContain('40')
     expect(html).toContain('×1.20')
-    expect(html).toContain('+ 4 ')
+    // #2285 made the tally figure a cell of its own — the sign and the numeral
+    // are one figure now, and the label is the next cell along, so the space
+    // that separated them in one run of text is gone with the run.
+    expect(html).toContain('+4')
     // Whole, so no decimal — the kanji labels do not change the notation (#1866).
     expect(html).toContain('52')
     expect(html).not.toContain('52.0')
@@ -1034,7 +1037,10 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
   const STAMPS = [
     ['the unaffiliated sheet', DefaultScoreStamp, 'habit', '+ 5 habit bonus'],
     ['Everymen', EverymenScoreStamp, 'habit', 'habit+5'],
-    ['the Ephemerists', EphemeristsScoreStamp, 'habit', '+ 5 habit'],
+    // #2285 put the figure and the word in two columns of the cell's grid, so
+    // they butt together once the tags are stripped — the same shape Coven's
+    // note below describes. The label and the notation are unchanged.
+    ['the Ephemerists', EphemeristsScoreStamp, 'habit', '+5habit'],
     ['S.N.I.D.E.', SnideScoreStamp, 'habit', 'habit +5'],
     ['Singularity', SingularityScoreStamp, 'habit', 'habit+05'],
     ['WOW', WowScoreStamp, 'habit', 'habit +5'],
@@ -1066,7 +1072,7 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
 
   it('leaves the Ephemerists numeral Western, like every other figure of theirs', () => {
     const html = text(renderToStaticMarkup(<EphemeristsScoreStamp praxis={banked} />))
-    expect(html).toContain('+ 5')
+    expect(html).toContain('+5')
     expect(html).not.toMatch(/[〇一二三四五六七八九十百千万]/)
   })
 
