@@ -102,6 +102,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
     recentPraxis,
     viewerFactionSlug,
     gameFactions,
+    onSignup,
     membership,
   } = state;
 
@@ -174,6 +175,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                     task.primary_faction_slug,
                     gameFactions,
                   )}
+                  onSignup={onSignup}
                 />
               ))}
             </div>

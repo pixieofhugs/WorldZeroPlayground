@@ -22,6 +22,7 @@ import { listTasks, type TaskOut } from "../../api/tasks";
 import { listPraxes, type PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
 import { useFactions } from "../../hooks/useFactions";
+import { useTaskSignup } from "../../hooks/useTaskSignup";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { extractError } from "../../utils/errors";
 import { useFactionBackdrop } from "../../components/backdrop/BackdropContext";
@@ -108,6 +109,16 @@ export interface FactionDetailState {
   viewerFactionSlug: string | null | undefined;
   gameFactions: FactionConfigOut[];
 
+  /**
+   * Take one of this faction's tasks (#2188) — threaded to whichever
+   * `<TaskCard>` the skin mounts. Passed for any signed-in viewer and
+   * `undefined` otherwise; the card reads `task.signup_reason` itself and draws
+   * the refusal, so nothing here re-derives eligibility.
+   */
+  onSignup: ((id: number) => void) | undefined;
+  /** Why the last sign-up failed, or null. Drawn by `FactionDetail`, not a skin. */
+  signupMsg: string | null;
+
   // Join / leave / gate block (section ③) — shared across every skin.
   membership: Membership;
 }
@@ -118,6 +129,7 @@ export function useFactionDetail(
   const { t } = useTranslation("factions");
   const { user, applyUser } = useAuth();
   const characterId = user?.character?.id;
+  const { signupMsg, handleSignup } = useTaskSignup();
 
   // Section ③ — the viewer's relationship to this faction. Raw status ("member"
   // | "invited" | "not_invited" | "defected" | "can_return") plus whether an open
@@ -250,6 +262,11 @@ export function useFactionDetail(
 
     viewerFactionSlug: user?.character?.faction_slug,
     gameFactions: gameConfig?.factions ?? [],
+
+    // The gate is the viewer, not `can_sign_up` — gating on the flag is what
+    // made `/tasks` go silent about tasks it was still showing (#1976).
+    onSignup: user ? handleSignup : undefined,
+    signupMsg,
 
     membership: {
       state: membershipState,

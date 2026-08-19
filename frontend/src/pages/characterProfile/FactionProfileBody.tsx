@@ -62,6 +62,17 @@ export interface ProfileBodyProps {
   /** Friend/foe controls (faction-skinned), folded into the identity header.
    *  Null for own profile / logged-out viewers — hide, don't disable. */
   identityActions: ReactNode
+  /**
+   * Take one of these tasks (#2188). Passed for any signed-in viewer and
+   * `undefined` otherwise — the card decides claim-vs-reason itself off
+   * `task.signup_reason`, and an anonymous viewer has no reason on the wire.
+   *
+   * A profile does not hide tasks the viewer has already started the way a
+   * browse does (#2126: `created_by` is not a browse), so a card here may well
+   * draw the `already_active_member` refusal. That is the card being honest,
+   * not a bug.
+   */
+  onSignup?: (id: number) => void
 }
 
 export default function FactionProfileBody(props: ProfileBodyProps) {

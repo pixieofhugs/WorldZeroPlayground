@@ -279,6 +279,7 @@ function MobileProfile({
   submissions,
   proposedTasks,
   identityActions,
+  onSignup,
 }: ProfileBodyProps) {
   const { t } = useTranslation('common')
   const [segment, setSegment] = useState<Segment>('praxis')
@@ -561,7 +562,7 @@ function MobileProfile({
             }}
           >
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
             ))}
           </div>
         )}

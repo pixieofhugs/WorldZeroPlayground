@@ -260,6 +260,7 @@ function DesktopProfile({
   progression,
   identityActions,
   identityOrnament,
+  onSignup,
 }: DefaultProfileBodyProps) {
   const { t } = useTranslation('common')
   const badges = character.badges ?? []
@@ -329,7 +330,7 @@ function DesktopProfile({
         ) : (
           <div className="task-card-row gap-4">
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
             ))}
           </div>
         )}
@@ -588,6 +589,7 @@ function MobileProfile({
   progression,
   identityActions,
   identityOrnament,
+  onSignup,
 }: DefaultProfileBodyProps) {
   const { t } = useTranslation('common')
   const [segment, setSegment] = useState<Segment>('praxis')
@@ -828,7 +830,7 @@ function MobileProfile({
              A praxis card has no width of its own and still stretches. */
           <div className="flex flex-col gap-4 items-center">
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
             ))}
           </div>
         )}

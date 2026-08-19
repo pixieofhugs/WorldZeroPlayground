@@ -181,14 +181,16 @@ describe.each(FAMILIES)('a task card offers the task on a $name (#2188)', ({ ren
   })
 })
 
-describe('the phone half of the na profile is wired too', () => {
-  // DefaultProfileBody holds TWO mounts, one per form factor, and only the
-  // desktop one is on the path the suite above walks.
-  it('offers the claim on a phone-width profile', () => {
-    mocks.formFactor = 'mobile'
-    expect(strip(profile('na', [makeTask()], () => {}))).toContain(SIGNUP)
-  })
-})
+/*
+ * NOT COVERED HERE, AND WHY: the two PHONE mounts —
+ * `DefaultProfileBody`'s `MobileProfile` and `WowProfileBody`'s. Both stack
+ * praxis and tasks behind a segmented toggle whose `useState` opens on
+ * 'praxis', so the task column is only reachable through a press. The harness
+ * is `renderToStaticMarkup` — no DOM, no effects, no press — so a phone-width
+ * render of either body returns the praxis segment and can prove nothing about
+ * the mount below it. They take the same `onSignup` off the same destructure
+ * as the desktop halves; the PR's eyeball list carries them.
+ */
 
 describe("Everymen's fists-and-lightning ride with the CTA", () => {
   // `FistAndBolt` is drawn inside the CTA block, so withholding `onSignup` took

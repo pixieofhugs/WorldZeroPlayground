@@ -117,6 +117,16 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
         </>
       )}
 
+      {/* A failed sign-up from one of the task cards below (#2188). The success
+          path navigates to the new praxis composer, so this is only ever a
+          failure and only ever the page's to draw — the eight bodies are eight
+          different skins and none of them owns a message slot. */}
+      {state.signupMsg && (
+        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2 mb-4">
+          {state.signupMsg}
+        </p>
+      )}
+
       <Body state={state} />
     </div>
   );

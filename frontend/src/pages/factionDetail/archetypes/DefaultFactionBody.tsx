@@ -57,8 +57,16 @@ export default function DefaultFactionBody({
   state: FactionDetailState;
 }) {
   const { t } = useTranslation("factions");
-  const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } =
-    state;
+  const {
+    faction,
+    members,
+    tasks,
+    recentPraxis,
+    viewerFactionSlug,
+    gameFactions,
+    onSignup,
+    membership,
+  } = state;
   const [confirming, setConfirming] = useState(false);
   const phone = useFormFactor() === "mobile";
 
@@ -221,6 +229,7 @@ export default function DefaultFactionBody({
                   task.primary_faction_slug,
                   gameFactions,
                 )}
+                onSignup={onSignup}
               />
             ))}
           </div>
