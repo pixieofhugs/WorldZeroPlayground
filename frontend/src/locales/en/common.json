@@ -216,7 +216,6 @@
       "toLight": "light",
       "toDark": "dark"
     },
-    "fieldDeskTitle": "Your FieldDesk — switch lives or begin a new one",
     "createCharacter": "create character",
     "logout": "logout",
     "login": "Login"

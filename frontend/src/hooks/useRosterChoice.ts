@@ -1,6 +1,3 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
-import { getMyCharacters } from '../api/me'
 import type { CharacterOut } from '../api/auth'
 
 /**
@@ -23,13 +20,15 @@ import type { CharacterOut } from '../api/auth'
  * two — both answerable from `CurrentUser` alone — can be decided. Everyone else
  * waits, and a shut gate never flashes a heading it is about to take away.
  *
- * IT LIVES HERE, NOT IN `pages/FieldDesk`, BECAUSE THREE SURFACES ASK IT
- * (#2111). The desktop roster section is one; the other two are the
- * `CHARACTERS` trigger on the rail's character card and on all eight mobile
- * field desks, which open `CharacterSwitcherSheet` — the same roster in a
- * bottom sheet. One predicate is what stops the home modal and the FieldDesk
- * disagreeing about whether a roster is worth showing. A module with no page in
- * it is also what keeps the rail's chunk from importing the FieldDesk page.
+ * IT LIVES HERE, NOT IN `pages/FieldDesk`, BECAUSE TWO SURFACES ASK IT (#2111,
+ * #2354). The desktop roster section is one; the other is the `CHARACTERS`
+ * trigger on all eight mobile field desks, which opens `CharacterSwitcherSheet`
+ * — the same roster in a bottom sheet. One predicate is what stops the sheet
+ * and the FieldDesk disagreeing about whether a roster is worth showing. (The
+ * rail's character card was a third until #2354 deleted its pill; the desktop
+ * home behind the rail already offered the same roster on this same gate. Its
+ * `useRosterOffersAChoice` wrapper — the one caller that had no roster of its
+ * own and paid a conditional `/me/characters` for the answer — went with it.)
  *
  * NOT "hide until they have two characters", which was the shape the report
  * reached for: an account at the era's `second_character_level_required` with
@@ -43,38 +42,4 @@ export function rosterOffersAChoice(
 ): boolean {
   if (!carriesALife || canCreateAdditional) return true
   return lives !== null && lives.length > 1
-}
-
-/**
- * The same question for a surface that holds no roster of its own — the rail's
- * character card (#2111).
- *
- * THE ROSTER READ IS CONDITIONAL, and that is the whole reason this is a hook
- * rather than a line in `Sidebar`. Two of the three counts above are answered
- * by `/auth/me`, which every signed-in surface already has; only "more than one
- * life" needs `/me/characters`. So the request goes out for shut-gate accounts
- * only, and the rail — which mounts once per document load, not once per route
- * — costs at most one extra round trip and usually none.
- *
- * `FieldDesk` deliberately does NOT use this: it fetches the roster itself to
- * draw the cards, and passing its own `lives` to the predicate is one request
- * instead of two. The mobile skins read the answer off `FieldDeskHomeState` for
- * the same reason.
- */
-export function useRosterOffersAChoice(): boolean {
-  const { user } = useAuth()
-  const carriesALife = Boolean(user?.character)
-  const canCreateAdditional = user?.can_create_additional_character ?? false
-  // True when `/auth/me` alone settles it — see the note above.
-  const settledWithoutTheRoster = !carriesALife || canCreateAdditional
-  const [lives, setLives] = useState<CharacterOut[] | null>(null)
-
-  useEffect(() => {
-    if (settledWithoutTheRoster) return
-    // A failed read must still resolve to a KNOWN roster, as on the FieldDesk:
-    // empty is the answer that hides a chooser nobody can use.
-    void getMyCharacters().then(setLives).catch(() => setLives([]))
-  }, [settledWithoutTheRoster])
-
-  return rosterOffersAChoice(lives, carriesALife, canCreateAdditional)
 }
