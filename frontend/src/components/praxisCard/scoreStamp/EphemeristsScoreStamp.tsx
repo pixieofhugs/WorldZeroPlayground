@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
@@ -10,8 +11,6 @@ import {
   INK,
   INNER,
   OCHRE,
-  QUIET,
-  READING,
   SMALL_CAPS,
   WASH,
   chamferMount,
@@ -68,14 +67,43 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * marking a foreign award rather than the task's own, and it no longer asks an
  * 11px label to live on a large-text ratio.
  *
- * THE VOTES LINE KEEPS `-plate-quiet` AND THE ISSUE SAYS `-plate-band-quiet`;
- * this is a deliberate deviation, reported on the PR rather than shipped.
- * `-band-quiet` is a DISC ink (#c2ae7e, theme-invariant, minted for the compass
- * blue) and this line sits on `-plate-inner`, the panel cell — #f2e8ce in
- * light, where it measures **1.78:1**. `-plate-quiet` is the ink minted for
- * this exact ground and gated by `factionContrast`'s "ephemerists panel cell,
- * quiet ink" row. The two names differ by one word and the grounds differ by
- * everything.
+ * ## ONE ARRANGEMENT FOR EVERY LINE (#2285)
+ *
+ * The cell showed three numbers three ways: the base label and its figure at
+ * opposite ends of a `space-between` row, the metatask word BEFORE its figure,
+ * the tally figure before its word — so a simple addition was read three ways.
+ * The owner's ruling is a two-column read, **numbers on the left, words on the
+ * right, for every line**, at one face and one size across the figures and one
+ * across the labels: the column position tells a figure from its word, so
+ * neither the type nor a second colour has to.
+ *
+ * The columns are the CELL's grid, not each row's — {@link WorkingRow} emits
+ * two grid cells and no wrapper, because a per-row flexbox lines a figure up
+ * with its own label and with nothing else. That is also why a fourth row
+ * (habit) cannot arrive off-pattern: there is one row component and it has no
+ * arrangement to choose.
+ *
+ * TWO FIGURES CHANGE INK, and only because the ruling forbids a number and its
+ * label in two colours to tell them apart. The label tier's caption gold stays
+ * — it is the plate's label voice everywhere — so the figures join their
+ * labels rather than the other way round: base was `-plate-ink` (14.93:1 light
+ * / 12.84:1 dark) and the tally `-plate-quiet` (8.21:1 / 5.52:1), and both are
+ * now `-plate-caption`, **5.68:1 in light and 6.67:1 in dark on `-plate-inner`**
+ * — AA_NORMAL at the labels' 11px and at the figures' 14px alike, and already
+ * gated as `factionContrast`'s "ephemerists panel cell, caption" row. No ink is
+ * introduced and the metatask row, whose word and figure were already one
+ * colour, is untouched.
+ *
+ * THE MULTIPLIER CHIP KEEPS ITS OWN SHAPE. It is not one of the addends and it
+ * is not a line of the working — it is a ruled chip with a brass hairline
+ * between its word and its ratio, rebuilt one commit ago (#2150/#2314) — so it
+ * spans both columns and is otherwise left alone.
+ *
+ * `-plate-quiet` therefore leaves this cell. It was here because the vendored
+ * frame asked for `-plate-band-quiet`, which is a DISC ink (#c2ae7e, minted for
+ * the compass blue) and measures **1.78:1** on this panel; that deviation still
+ * stands wherever the two names are confused, it simply no longer has a reader
+ * here.
  *
  * DEVIATIONS from the vendored frame, both named in the PR:
  *  • the multiplier chip is labelled from the SHARED `card.stamp.mult` key
@@ -110,15 +138,41 @@ import type { ScoreStampProps } from "./ScoreStamp";
 const STAMP_WIDTH = 128;
 const ROSE = 84;
 
+/** The cell's label voice: incised caps at the label tier's 11px (#1608). */
+const LABEL: CSSProperties = { ...SMALL_CAPS, fontSize: "var(--text-md)" };
+
+/**
+ * The cell's figure voice: the plate's display face, at ONE size for every row.
+ *
+ * `--text-xl` (14px) is the smallest step of the plate's own ramp that reads as
+ * a figure rather than as another label — the base figure used to be `--text-title`
+ * and shout over the total struck in the rose, and the tally's used to be set in
+ * running italic at the LABEL's 11px.
+ */
+const FIGURE: CSSProperties = { fontFamily: DECO, fontSize: "var(--text-xl)", lineHeight: 1 };
+
+/**
+ * ONE LINE OF THE WORKING: the figure, then the word (#2285).
+ *
+ * Two grid cells and no wrapper — see the cell's grid above. `ink` is the whole
+ * line's colour, one per row: the ruling forbids a number and its label being
+ * told apart by colour, so a row never carries two.
+ */
+function WorkingRow({ figure, label, ink }: { figure: string; label: string; ink: string }) {
+  return (
+    <>
+      <span style={{ ...FIGURE, color: ink }}>{figure}</span>
+      <span style={{ ...LABEL, color: ink }}>{label}</span>
+    </>
+  );
+}
+
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
   const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
   const working = base !== null;
-
-  /** The cell's label voice: incised caps, at the plate's caption gold. */
-  const label = { ...SMALL_CAPS, fontSize: "var(--text-md)", color: CAPTION };
 
   return (
     /*
@@ -163,33 +217,32 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
               boxSizing: "border-box",
               padding: "var(--space-sm) var(--space-md)",
               lineHeight: 1.1,
+              /*
+               * THE FIGURES ARE ONE COLUMN AND THE WORDS ANOTHER (#2285), which
+               * is a property of the CELL and cannot be one of a row: two
+               * independent flex rows align a figure with its own label and with
+               * nothing above or below it.
+               */
+              display: "grid",
+              gridTemplateColumns: "auto 1fr",
+              alignItems: "baseline",
+              columnGap: "var(--space-sm)",
+              rowGap: "var(--space-sm)",
             }}
           >
-            {/* Base, with the figure set against its label across the cell. */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: "var(--space-sm)",
-              }}
-            >
-              {/* 基 stood here, glossed "base". #1909 cut all five of this cell's
-                  kanji: they were the only faction-specific score-stamp labels in
-                  the app, on a surface the audit ruled generic. The shared gloss
-                  each one carried is now the visible label. */}
-              <span style={label}>{t("card.stamp.base")}</span>
-              <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", lineHeight: 0.8, color: INK }}>
-                {base}
-              </span>
-            </div>
+            {/* 基 stood at the base row, glossed "base". #1909 cut all five of this
+                cell's kanji: they were the only faction-specific score-stamp labels
+                in the app, on a surface the audit ruled generic. The shared gloss
+                each one carried is now the visible label. */}
+            <WorkingRow figure={`${base}`} label={t("card.stamp.base")} ink={CAPTION} />
 
-            {/* The multiplier, in its own ruled chip — the design's "ratio" cell. */}
+            {/* The multiplier, in its own ruled chip — the design's "ratio" cell.
+                Not an addend and not a line of the working, so it spans both
+                columns and keeps its word-then-ratio shape. */}
             {mult !== null && (
-              /* Same treatment, one rung down — the chip had the same clipped
-                 border. The margin belongs to the MOUNT, which is the chip's
-                 outer box now. */
-              <div style={{ ...chamferMount(5), marginTop: "var(--space-sm)" }}>
+              /* The chamfer treatment of #2150/#2314, one rung down — the chip had
+                 the same clipped border. */
+              <div style={{ ...chamferMount(5), gridColumn: "1 / -1" }}>
                 <div
                   style={{
                     ...chamferSheet(5, WASH),
@@ -199,7 +252,9 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                     padding: "var(--space-xs) var(--space-sm)",
                   }}
                 >
-                  <span style={{ ...label, letterSpacing: "0.2em" }}>{t("card.stamp.mult")}</span>
+                  <span style={{ ...LABEL, color: CAPTION, letterSpacing: "0.2em" }}>
+                    {t("card.stamp.mult")}
+                  </span>
                   <span aria-hidden style={{ width: 1, height: 11, background: BRASS_LIGHT }} />
                   <span style={{ fontFamily: DECO, fontSize: "var(--text-lg)", lineHeight: 1, color: INK }}>
                     {formatMult(mult)}
@@ -211,29 +266,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             {/* The metatask award, struck in the plate's one accent — a foreign
                 award, not the task's. See the ochre measurement above. */}
             {meta !== null && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-xs)",
-                  marginTop: "var(--space-sm)",
-                  color: OCHRE,
-                }}
-              >
-                <span
-                  style={{
-                    ...SMALL_CAPS,
-                    fontWeight: 600,
-                    fontSize: "var(--text-md)",
-                    letterSpacing: "0.16em",
-                  }}
-                >
-                  {t("card.stamp.meta")}
-                </span>
-                <span style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-md)" }}>
-                  +{meta}
-                </span>
-              </div>
+              <WorkingRow figure={`+${meta}`} label={t("card.stamp.meta")} ink={OCHRE} />
             )}
 
             {/* The tally, cut only when there are votes to record (ADR-0076). The `+`
@@ -242,17 +275,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                 and a numeral sit together, and #1637's whole bound is that only the
                 label is encoded. */}
             {votes !== null && (
-              <div
-                style={{
-                  fontFamily: READING,
-                  fontStyle: "italic",
-                  fontSize: "var(--text-md)",
-                  color: QUIET,
-                  marginTop: "var(--space-sm)",
-                }}
-              >
-                + {votes} <span style={label}>{t("card.stamp.votes")}</span>
-              </div>
+              <WorkingRow figure={`+${votes}`} label={t("card.stamp.votes")} ink={CAPTION} />
             )}
 
             {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
@@ -260,17 +283,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                 #1637 bound holds, so the LABEL is encoded and the figure stays a
                 Western numeral. */}
             {habit !== null && (
-              <div
-                style={{
-                  fontFamily: READING,
-                  fontStyle: "italic",
-                  fontSize: "var(--text-md)",
-                  color: QUIET,
-                  marginTop: "var(--space-xs)",
-                }}
-              >
-                + {habit} <span style={label}>{t("card.stamp.habit")}</span>
-              </div>
+              <WorkingRow figure={`+${habit}`} label={t("card.stamp.habit")} ink={CAPTION} />
             )}
           </div>
         </div>
