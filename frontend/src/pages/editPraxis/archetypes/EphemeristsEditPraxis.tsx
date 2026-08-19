@@ -158,7 +158,7 @@ import {
   Sign,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
-import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
+import EphemeristsNotationBand from "../../../components/factionMarks/EphemeristsNotationBand";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -830,7 +830,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   There is no room below the band inside the sheet, and taking it
                   would mean undoing #1828 — which this issue puts out of scope.
                   The card and the task page carry both strips. */}
-              <EphemeristsRuneStrip side="top" seed={`praxis:${praxis.id}`} />
+              <EphemeristsNotationBand side="top" seed={`praxis:${praxis.id}`} />
               <PublishButton
                 state={state}
                 skin={{

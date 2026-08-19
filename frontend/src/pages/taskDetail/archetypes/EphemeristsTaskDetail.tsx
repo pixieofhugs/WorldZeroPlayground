@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
-import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
+import EphemeristsNotationBand from "../../../components/factionMarks/EphemeristsNotationBand";
 import EphemerisNet from "../../../components/factionMarks/EphemerisNet";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
@@ -712,13 +712,13 @@ export default function EphemeristsTaskDetail({
               Only the SIGN-UP button is bracketed: "continue" and "view your
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
-          <EphemeristsRuneStrip side="top" seed={`task:${task.id}`} />
+          <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
           <button className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
           </button>
-          <EphemeristsRuneStrip side="bottom" seed={`task:${task.id}`} />
+          <EphemeristsNotationBand side="bottom" seed={`task:${task.id}`} />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
             {!levelJumpSignup && (

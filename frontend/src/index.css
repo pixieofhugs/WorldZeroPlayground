@@ -5272,54 +5272,49 @@
    live on: `.eph-rune` below carries the same peak and phase, which is one
    vocabulary for one motif rather than a leftover. */
 
-/* Ephemerists — THE RUNE STRIP (#2067). The two registers above came OFF the
-   task card's masthead, and the motif returns as a pair of rows bracketing the
-   plate's call to action on the three surfaces that paint one. The only mount is
-   `components/factionMarks/EphemeristsRuneStrip.tsx`; nothing else wears these.
+/* Ephemerists — THE NOTATION BAND (#2067's rune strip, absorbed by #2230). One
+   row of mathematical marks: the masthead's last line, the pair that brackets
+   the plate's CTA, and the praxis card's byline rule. The only mount is
+   `components/factionMarks/EphemeristsNotationBand.tsx`; nothing else wears
+   these, and there is no second drawing to keep in step with — that is what
+   #2230 was for.
 
-   THE SIZE CYCLE IS HERE RATHER THAN INLINE. The design cycles 9/10/11/9/10px
-   per mark and only two of those are rungs (--text-sm, --text-md), so inline it
-   would be ornament type off the ramp — allowed by §4a's hatch, but only behind
-   an `eslint-disable` at every site. Three `nth-child` selectors say the same
-   thing in the sheet where raw lengths belong, and the component carries no
-   suppression. `--epg-op` (peak) and `--epg-delay` (phase) still arrive inline:
-   they are numbers per instance, which a stylesheet has nowhere to put.
+   WHAT IS LEFT HERE IS WHAT A STYLESHEET IS FOR, and it is less than it was.
+   The strip's 9/10/11px `nth-child` size cycle is gone: the component's draw
+   carries a size per mark (11/13/15/17, the masthead's own cycle since #2143),
+   so the row's type is seeded rather than positional and no selector has to say
+   it. `flex: auto` went with it — the row is `justify-content: space-between`
+   at a MEASURED count now, so the marks sit at their natural widths and the air
+   between them is the constant. The box itself (flex, width, min-height, the
+   brass rules on the band) is inline in the component beside the measurement
+   that decides it.
+
+   THE THREE OFFSETS STAY, because they are raw lengths off the ramp and this is
+   where those belong. `band` — the masthead — takes none: its lead is a token
+   (`--space-xs`) and rides with the rest of its box.
 
    MOTION IS OPT-IN, and note the inversion against the design for the same
    reason `.evm-arc` above states it. The base state IS the stilled state —
-   every slot showing its FIRST mark at its own peak — and both animations are
+   every mark showing its FIRST frame at its own peak — and both animations are
    added under `no-preference`, from the deferred sheet (#2073). Written the
    design's way round (0.16 as the base, the animation always on) a reduced-motion
    reader gets a row at 0.16 and reads nothing. Nothing pins the pre-delay state
-   either: a slot holds at its peak until its own cycle starts, which is legible
+   either: a mark holds at its peak until its own cycle starts, which is legible
    from first paint — and legible is all it owes, since a viewer who never
    receives `motion.ornament.css` lands in exactly the reduced-motion frame.
+   `--epg-op` (peak) and `--epg-delay` (phase) arrive inline: they are numbers
+   per mark, which a stylesheet has nowhere to put.
 
    BOTH ANIMATIONS LIVE IN `motion.ornament.css` (#2146 moved the shimmer there
    with the turn). The resting form is here, the motion is off the critical path,
    and the split is the sheet's own rule: a rule with an ungated twin is split
-   and only the animation travels.
+   and only the animation travels. #2230 changed neither — it changed who wears
+   them, which is now the masthead band as well.
 
-   CORNER TO CORNER, AT EVERY MOUNT (#2312). This was `width: calc(100% - 40px)`
-   centred by `margin: 0 auto` — the design's 20px inset from the card's edges.
-   The owner, on a screenshot: *"the runes should go from one corner of the box
-   to the other"*, and, asked whether that was one surface or all of them,
-   *"Anywhere there are runes applies."* So the inset is gone from the DEVICE
-   rather than overridden at one mount, and there is no full-bleed variant and
-   no per-mount width: one device, one behaviour.
-
-   The strip now fills its container's PADDING box, which is the card's border
-   box only where the mount hangs it in an unpadded wrapper. A mount inside a
-   padded box bleeds ITSELF, with the negative margin its own padding calls for
-   — `EphemeristsPraxisCard`'s byline divider does exactly that, as its `DRIFT`
-   row did before it. `width: 100%` rather than dropping the declaration
-   outright: `auto` on a block-level flex container computes the same, but 100%
-   also holds if a future mount hangs the strip in a flex or grid parent.
-
-   `divider` IS THE THIRD SIDE, and it is a margin like the other two. The
-   praxis card's byline rule is not a CTA and has nothing to bracket, so it gets
-   its own air rather than `top`'s -7px lift; the value is also what keeps its
-   seed off the composer's, which already draws `praxis:${id}` at `top`.
+   `divider` IS THE THIRD OFFSET. The praxis card's byline rule is not a CTA and
+   has nothing to bracket, so it gets its own air rather than `top`'s -7px lift;
+   the value is also what keeps its seed off the composer's, which already draws
+   `praxis:${id}` at `top`.
 
    THE DESIGN'S `user-select: none` IS DROPPED, and it is a budget decision. It
    would ship prefixed (`-webkit-user-select` beside it) into the one stylesheet
@@ -5329,34 +5324,19 @@
    is the wrong place to spend, and this is the cheapest thing here to not spend
    it on. ponytail: if the junk-in-clipboard ever matters, the upgrade is one
    `user-select: none` here, ~20 gzipped bytes, not a rethink. */
-[data-eph-runes] {
-  display: flex;
-  align-items: center;
-  height: 12px;
-  overflow: hidden;
-  width: 100%;
-}
 [data-eph-runes="top"] { margin-top: -7px; }
 [data-eph-runes="bottom"] { margin-bottom: 18px; }
 [data-eph-runes="divider"] { margin-block: var(--space-sm); }
-/* The design also sets `white-space: nowrap` here. It is a provable no-op on
-   this markup and so is not carried: the marks arrive from a `.map()` with no
-   whitespace text nodes between them, and a flex row does not wrap by default. */
 .eph-rune {
-  flex: auto;
-  /* A GRID, so the slot's two marks stack in one cell (#2146). The cell is
+  /* A GRID, so the mark's two frames stack in one cell (#2146). The cell is
      therefore the wider of the two by layout — no measuring pass, nothing to go
      stale when a font swaps in, and the row cannot reflow as it turns. Same
      mechanism the card's `Turning` label uses for its five scripts. */
   display: grid;
   text-align: center;
-  line-height: 1;
-  font-size: 9px;
   opacity: var(--epg-op, 0.8);
 }
-.eph-rune:nth-child(5n + 2), .eph-rune:nth-child(5n) { font-size: 10px; }
-.eph-rune:nth-child(5n + 3) { font-size: 11px; }
-/* The RESTING frame: mark one shown, mark two hidden. This is what a
+/* The RESTING frame: frame one shown, frame two hidden. This is what a
    reduced-motion reader sees and what anyone sees before the deferred sheet
    arrives, so it must be a whole legible row on its own. */
 .eph-rune > span { grid-area: 1 / 1; }

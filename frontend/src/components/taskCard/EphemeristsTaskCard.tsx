@@ -9,7 +9,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import EphemeristsRuneStrip from "../factionMarks/EphemeristsRuneStrip";
+import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import {
   CompassRose,
@@ -38,7 +38,9 @@ import {
  * of it drawn in the design the card was built from and all of it stripped by the
  * re-pull. The band is the kit's plain `CardMasthead` now, on the medallion's own
  * disc rather than the cornice band, and the glyph motif moved to the CTA as
- * `EphemeristsRuneStrip`. The band's fixed height went with the registers: it was
+ * `EphemeristsRuneStrip` — which #2230 in turn retired into
+ * `EphemeristsNotationBand`, so the masthead's row and the CTA's are now one
+ * drawing at one pitch. The band's fixed height went with the registers: it was
  * only ever the canvas they marched across, so the band is `CardMasthead`'s own
  * height and no size-set field names it.
  *
@@ -225,7 +227,7 @@ function Turning({
  * `REGISTER_TOP`, `REGISTER_BOTTOM` and the `register()` helper stood here too —
  * two named 12-sign orders and the 20px lead-in that marched them across the
  * night band. #2067 struck all three: the re-pulled design's masthead carries no
- * ornament, and the motif is `EphemeristsRuneStrip` at the CTA. They were
+ * ornament, and the motif is `EphemeristsNotationBand` at the CTA. They were
  * card-local (the page cycles one 16-sign register to fill its width instead), so
  * nothing else lost a register when they went.
  *
@@ -529,7 +531,7 @@ export default function EphemeristsTaskCard({
                 margin: "0 var(--space-xl) var(--space-md)",
               }}
             />
-            <EphemeristsRuneStrip side="top" seed={`task:${task.id}`} />
+            <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
             <div style={{ display: "flex", justifyContent: "center" }}>
               <button
                 type="button"
@@ -582,7 +584,7 @@ export default function EphemeristsTaskCard({
                 </svg>
               </button>
             </div>
-            <EphemeristsRuneStrip side="bottom" seed={`task:${task.id}`} />
+            <EphemeristsNotationBand side="bottom" seed={`task:${task.id}`} />
           </div>
         )}
       </article>
