@@ -230,6 +230,140 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
 ]);
 
 /**
+ * #2269 / #2267 — THE COLLAB BLOCK, ON THE GROUND ITS COMPOSER ACTUALLY PAINTS.
+ *
+ * ROSTER_PAIRS above measures the roster's inks against `--faction-{key}-card-bg`,
+ * and the owner's #2269 ruling keeps it there: the composer IS the card's
+ * surface, so the roster is right to read the card family. That ruling is a
+ * statement about which FAMILY, and this block is the other half — whether the
+ * ground each archetype hands the block is in fact that family's ground.
+ *
+ * For seven skins it is, exactly or within a hair:
+ *
+ *   ua · wow · default   `--faction-{key}-card-bg`, the same token
+ *   everymen             `--everymen-paper`, which `-card-bg` aliases
+ *   ephemerists          `--faction-ephemerists-plate-bg`, which `-card-bg`
+ *                        aliases since #2141
+ *   coven                `--faction-coven-ward-card`, the ward panel — a
+ *                        DIFFERENT token from `-card-bg`, and lighter
+ *   singularity          `--faction-singularity-term-bg`, the chassis — also a
+ *                        different token, and lighter in the light half
+ *
+ * S.N.I.D.E. IS THE ONE THAT IS NOT, and the reason this block exists. Its
+ * composer wears the flyposted WALL (#2177), while `--faction-snide-card-*` is
+ * pinned photocopier-black in BOTH themes for the slabs pasted ON that wall
+ * (#2066; `factionMarks/snideAtoms` states the rule). `-card-muted` — "faded
+ * newsprint grey on ink" — measured 1.24:1 there, which is the ghost box and
+ * ghost text #2267 was filed from. That skin now hands in wall-measured tokens,
+ * so its rows resolve through SNIDE_WALL_PAIRS instead and only the cast pill's
+ * fill pair, which nothing else gates, is added here.
+ *
+ * THE `quiet` ROW IS THE ONE THE `+ invite` CHIP READS, and it is deliberately a
+ * second name for a measurement some other row also makes — the same call #694
+ * made above, and for the same reason: the ratio is not the fact at risk, the
+ * SITE is. A skin that repoints its quiet tier has to stay legible at this site
+ * too, and no row named for a brief or a caption says so.
+ */
+const COLLAB_SKINS = [
+  {
+    key: "ua",
+    source: "pages/editPraxis/archetypes/UaEditPraxis.tsx",
+    ground: "--faction-ua-card-bg",
+    quiet: "--faction-ua-card-muted",
+  },
+  {
+    key: "wow",
+    source: "pages/editPraxis/archetypes/WowEditPraxis.tsx",
+    ground: "--faction-wow-card-bg",
+    quiet: "--faction-wow-card-muted",
+  },
+  {
+    key: "default",
+    source: "pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
+    ground: "--faction-default-card-bg",
+    quiet: "--faction-default-card-muted",
+  },
+  {
+    key: "everymen",
+    source: "pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
+    ground: "--everymen-paper",
+    quiet: "--everymen-muted",
+  },
+  {
+    key: "ephemerists",
+    source: "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
+    ground: "--faction-ephemerists-plate-bg",
+    quiet: "--faction-ephemerists-plate-quiet",
+  },
+  {
+    key: "coven",
+    source: "pages/editPraxis/archetypes/CovenEditPraxis.tsx",
+    ground: "--faction-coven-ward-card",
+    quiet: "--faction-coven-slip-soft",
+  },
+  {
+    key: "singularity",
+    source: "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
+    ground: "--faction-singularity-term-bg",
+    quiet: "--faction-singularity-term-dim",
+  },
+  {
+    key: "snide",
+    source: "pages/editPraxis/archetypes/SnideEditPraxis.tsx",
+    // The tighter of the wall's two ramp stops. The two washed corners are
+    // SNIDE_WALL_PAIRS' four-reading generator, which already carries every ink
+    // this skin hands in.
+    ground: "--faction-snide-wall-deep",
+    quiet: "--faction-snide-composer-muted",
+  },
+] as const;
+
+/**
+ * The card-family inks the roster still resolves through `factionCssVar`, on the
+ * composer ground rather than on `-card-bg`. Skipped for the S.N.I.D.E. skin,
+ * which overrides all three with wall tokens.
+ */
+const COLLAB_FALLBACK_KEYS = COLLAB_SKINS.filter((skin) => skin.key !== "snide");
+
+const COLLAB_PAIRS: Pair[] = [
+  ...COLLAB_SKINS.map((skin) => ({
+    what: `${skin.key} collab quiet tier, on its composer ground`,
+    surface: skin.ground,
+    text: skin.quiet,
+  })),
+  ...COLLAB_FALLBACK_KEYS.flatMap((skin) => [
+    {
+      // The holdout notice lays the banner's OWN ink at 8% under itself (#1609),
+      // which always pulls the ground toward the ink — so the veiled reading is
+      // the tighter one and the only one worth gating.
+      what: `${skin.key} collab holdout notice, on its composer ground`,
+      surface: skin.ground,
+      veil: { token: `--faction-${skin.key}-card-notice`, alpha: 0.08 },
+      text: `--faction-${skin.key}-card-notice`,
+    },
+    {
+      what: `${skin.key} collab credit ink, on its composer ground`,
+      surface: skin.ground,
+      text: `--faction-${skin.key}-card-credit`,
+    },
+    // NO `accent as ink` ROW, and this is the same call ROSTER_PAIRS makes
+    // above rather than an omission. `accent` is the roster's DONE tier and it
+    // is spent as an ink twice — the waiting notice and the nudge control — but
+    // that is `{key} card accent` in CARD_PAIRS, which for everymen and coven is
+    // BASELINE debt owned by #651. Measured on the composer grounds it reads
+    // 4.49:1 / 4.16:1 (everymen paper, light / dark) and 2.98:1 (coven ward
+    // panel, light) — the same three failures at the same three ratios, because
+    // the composer sheet and the card sheet are the same stock. #2269 does not
+    // make it worse and does not fix it, and the ratchet only ever shrinks, so
+    // the debt stays named where it already is instead of gaining a second row.
+    // `accentInk` is the seam that will carry the fix when #651 reaches it.
+  ]),
+  // S.N.I.D.E.'s cast pill is acid as a FILL with the press's near-black on it,
+  // and that pair is `snide badge chip, glyph` in the #2227 block at the foot of
+  // this file — same two theme-invariant pigments, already gated in both halves.
+];
+
+/**
  * #1302 — THE PRAXIS CARD'S ADMIN OVERLAY AND MODE CHIP, on all eight sheets.
  *
  * The third instance of the shape #694 and #1168 already fixed twice, and the
@@ -1821,6 +1955,7 @@ const PAIRS: Pair[] = [
   ...FILL_PAIRS,
   ...ACCENT_PAIRS,
   ...ROSTER_PAIRS,
+  ...COLLAB_PAIRS,
   ...PRAXIS_CARD_PAIRS,
   ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
@@ -1907,7 +2042,9 @@ function sourceOf(relative: string): string {
  */
 function ephemeristsComposerPageStyle(): string {
   const source = sourceOf("pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx");
-  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+  // `breadcrumbInk:` was the end marker until #2102 deleted the field; `sheetStyle`
+  // is the next key in the dress literal and is the same boundary.
+  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("sheetStyle,"));
 }
 
 describe("faction token contrast (WCAG AA)", () => {
@@ -2359,8 +2496,10 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * `--color-bg-page`, where `-plate-quiet` reads 2.64:1 in light. Nothing is
    * broken by that today — every `.label-caption` this root cascades to renders
    * inside `ComposerSheet` (`-plate-bg`) or a panel (`-plate-inner`), and the
-   * breadcrumb, the one thing on the bare page, takes `breadcrumbInk`
-   * explicitly. A label mounted directly on the composer page would be the
+   * breadcrumb, the one thing on the bare page, is neutral SITE chrome reading
+   * the app's own tertiary — it took a `breadcrumbInk` off the dress until
+   * #2102 collapsed the site onto one breadcrumb and deleted the field. A label
+   * mounted directly on the composer page would be the
    * exception, and it would be the same defect #1793 fixed on the faction page.
    */
   it("the composer and waiting surface set the same label seam on their own root (#1800)", () => {
@@ -3035,5 +3174,110 @@ describe("no kit grounds a panel on a light token that cannot flip (#2227)", () 
         ).toBeGreaterThanOrEqual(AA_NORMAL);
       });
     }
+  }
+});
+
+/**
+ * #2269 / #2267 — THE COLLAB BLOCK'S DRESS ARRIVES THROUGH ONE SEAM.
+ *
+ * The ratios in COLLAB_PAIRS measure a manifest, and a manifest is only worth
+ * its ratios while it still describes what ships. These are what tie it to the
+ * source, and each one is a bug that got past every other guard:
+ *
+ *   1. Every archetype hands `InviteSearch` a `collab` skin, and the quiet tier
+ *      it names really is the token COLLAB_SKINS measured. Before #2269 the
+ *      roster took no skin at all, so it wore the site's generic face on eight
+ *      faction sheets and there was no seam for any of this to arrive through.
+ *   2. `controls.tsx` paints nothing from `praxis.task_faction_slug`. The
+ *      `+ invite` chip used to take the ink of whichever faction owns the TASK
+ *      and lay it on whichever ground the VIEWER's composer paints — two
+ *      unmeasured answers at once, and a pairing no per-faction table can model
+ *      because it is a cross-product. `collabCopy(task_faction_slug, …)` is a
+ *      different question and stays: a praxis speaks in its task's voice.
+ *   3. The roster hardcodes no corner. "The corners shouldn't be rounded for
+ *      Ephemerists" is an owner ruling, and a `borderRadius: 4` sitting in a
+ *      shared component is how three square-field skins came to draw rounded
+ *      chips anyway.
+ *   4. The three square skins ask for 0, and they are the three whose own
+ *      `fieldBox` is 0 — so the ruling cannot be satisfied by a coincidence a
+ *      later dress change would quietly undo.
+ */
+describe("the collab block takes its dress from the skin (#2269, #2267)", () => {
+  /**
+   * `quiet: MUTED` names a const, not a token, so this resolves one hop. The
+   * plate's tiers are exported from the mark module both the composer and the
+   * waiting surface import them from, which is why the search is a list.
+   */
+  function tokenOfConst(name: string, sources: string[]): string | null {
+    for (const source of sources) {
+      const found = new RegExp(`\\b${name} = "var\\((--[a-z-]+)\\)"`).exec(source);
+      if (found) return found[1];
+    }
+    return null;
+  }
+
+  for (const skin of COLLAB_SKINS) {
+    it(`the ${skin.key} composer hands in ${skin.quiet} as its quiet tier`, () => {
+      const source = sourceOf(skin.source);
+      const slice = /collab: \{[^}]*\}/.exec(source);
+      expect(slice, `${skin.source} passes no \`collab\` skin to InviteSearch`).not.toBeNull();
+
+      const named = /quiet: (\w+)/.exec(slice![0]);
+      expect(named, `${skin.source}'s \`collab\` skin names no quiet tier`).not.toBeNull();
+
+      const token = tokenOfConst(named![1], [
+        source,
+        sourceOf("components/factionMarks/ephemeristsPlate.tsx"),
+      ]);
+      expect(
+        token,
+        `${skin.source} passes \`quiet: ${named![1]}\`, which COLLAB_SKINS records as ${skin.quiet}. The measured pairing and the shipped one have to be the same one.`,
+      ).toBe(skin.quiet);
+    });
+  }
+
+  it("controls.tsx paints nothing from the TASK's faction", () => {
+    // Comments are stripped first, because the comment recording the defect
+    // quotes the call it removed — and a guard that a comment can trip is a
+    // guard the next person deletes rather than satisfies.
+    const source = sourceOf("pages/editPraxis/archetypes/controls.tsx")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(
+      source.includes("factionCssVar(praxis.task_faction_slug"),
+      "the composer's controls are dressed by the skin — the task's faction is the COPY's voice, not the sheet's palette (#2267)",
+    ).toBe(false);
+  });
+
+  it("the roster hardcodes no corner", () => {
+    const source = sourceOf("components/collab/CollabRoster.tsx");
+    const corners = new Set(
+      [...source.matchAll(/borderRadius: (.+?),/g)].map((match) => match[1]),
+    );
+    // `2` is the progress bar's cap. Nobody reads a 4px hairline's end as a
+    // corner, and handing it the chip radius would make it a lozenge on seven
+    // skins; `'50%'` is the avatar disc and the two dots, which the ruling
+    // explicitly does NOT touch ("do not square the avatars").
+    expect(
+      [...corners].sort(),
+      "every corner in the roster is the skin's `radius`, a disc, or the progress bar's own cap",
+    ).toEqual(["'50%'", "2", "radius"]);
+  });
+
+  const SQUARE_SKINS = ["snide", "ephemerists", "everymen"] as const;
+
+  for (const key of SQUARE_SKINS) {
+    it(`the ${key} composer asks for square collab chips, like its own fields`, () => {
+      const skin = COLLAB_SKINS.find((candidate) => candidate.key === key)!;
+      const source = sourceOf(skin.source);
+      expect(
+        /collab: \{[^}]*radius: 0/.test(source),
+        `${skin.source} draws square fields; its collab chips have to agree`,
+      ).toBe(true);
+      expect(
+        /const fieldBox = \{[\s\S]*?borderRadius: 0/.test(source),
+        `${skin.source}'s fieldBox is no longer square — the collab radius above was matched to it`,
+      ).toBe(true);
+    });
   }
 });

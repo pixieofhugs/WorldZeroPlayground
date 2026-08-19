@@ -83,6 +83,58 @@ const PRESENCE_DOT_RING = 2
  */
 const ON_ACCENT_PROPERTY = '--roster-on-accent'
 
+/**
+ * THE DRESS, handed in by whoever mounts this block (#2269).
+ *
+ * Every field is optional and every one falls back to the faction's `card-*`
+ * family, because that fallback is CORRECT on the two mounts that pass nothing:
+ * the praxis-detail block and the waiting surface really are drawn on the
+ * faction's card sheet, which is the ground `ROSTER_PAIRS` gates these inks
+ * against and the ground the #694 / #1449 measurements were taken on.
+ *
+ * THE COMPOSER IS THE MOUNT THAT IS NOT. It passes a skin because it is the one
+ * caller that knows which sheet it painted — and for S.N.I.D.E. that sheet is
+ * the flyposted WALL (#2177), whose own comment in `factionMarks/snideAtoms`
+ * states the rule outright: "the inks that go on it are the `-note-*` family,
+ * which flips with it — never `-card-*`, which is pinned near-black in both
+ * themes for the slabs pasted ON the wall" (#2066). Reading `card-muted` there
+ * measured 1.24:1 (#2267); it was the GROUND that was wrong, not the tier.
+ *
+ * It carries GEOMETRY and TYPE as well as colour, by owner ruling — "the corners
+ * shouldn't be rounded for Ephemerists", whose whole language is the brass
+ * plate, and S.N.I.D.E.'s fields are square for the same reason. A `fontFamily`
+ * prop alone would have fixed one screenshot and left the next dress decision
+ * exactly where this one was.
+ */
+export interface CollabSkin {
+  /** The face the block is set in. Site-generic when absent — the #2269 bug. */
+  fontFamily?: string
+  /**
+   * The corner on the status pills, the Done chip, the nudge control, the
+   * per-state notice and the `+ invite` chip. NOT the avatar, which is a disc
+   * rather than a rounded rectangle, and not the progress bar's 4px cap.
+   */
+  radius?: number | string
+  /** DONE as a FILL: the finished pill's ground, the progress fill, its ring. */
+  accent?: string
+  /** The ink ON `accent`. */
+  onAccent?: string
+  /**
+   * DONE as an INK — the waiting notice and the nudge control. Split from
+   * `accent` because a faction hue is a fill and not an ink: S.N.I.D.E.'s acid
+   * fills a pill happily and measures 1.35:1 as type on its own wall.
+   */
+  accentInk?: string
+  /** The quiet tier: unanswered pills, "· you", the ×s, the `+ invite` chip. */
+  quiet?: string
+  /** The holdout warning's ink, and the veil it lays over its own ground. */
+  notice?: string
+  /** Credit: the "+N" gain, the published notice, the here-now dot. */
+  credit?: string
+  /** The ground this block is cut from — the here-now dot's ring. */
+  ground?: string
+}
+
 /** Which copy key each of the four states speaks through. */
 const PILL_KEY_BY_STATE: Record<RosterRowState, CollabCopyKey> = {
   filed: 'pillCast',
@@ -99,6 +151,7 @@ export function CollabRoster({
   factionSlug,
   taskPointValue,
   presentCharacterIds,
+  skin,
   onKick,
   onNudge,
   onRescindInvite,
@@ -152,6 +205,12 @@ export function CollabRoster({
    */
   presentCharacterIds?: readonly number[]
   /**
+   * The block's dress — see {@link CollabSkin}. Absent on the praxis-detail and
+   * waiting mounts, which are on the card sheet the fallbacks are measured
+   * against; the composer passes one because it is the mount that is not.
+   */
+  skin?: CollabSkin
+  /**
    * Remove another member (#959). Receives the target's CHARACTER id. When
    * provided, a kick × renders on every OTHER member's row — but only if the
    * viewer is themselves a member and the collab is still open, mirroring the
@@ -189,7 +248,13 @@ export function CollabRoster({
   const gate = deriveCollabGate(members, currentCharacterId)
   if (praxisType !== 'collab') return null // solo/duel render nothing
 
-  const accent = factionCssVar(factionSlug, 'card-accent')
+  const accent = skin?.accent ?? factionCssVar(factionSlug, 'card-accent')
+  // The two accent-as-TEXT sites. Same value as the fill for the seven skins
+  // whose composer IS their card sheet — `${key} card accent` in CARD_PAIRS is
+  // that pairing, gated at 4.5:1 since #651.
+  const accentInk = skin?.accentInk ?? accent
+  const face = skin?.fontFamily
+  const radius = skin?.radius ?? 4
   // The roster is one block mounted on eight different faction sheets, so every
   // ink it paints has to be legible on all of them (#694). Three of the four it
   // used were global: --color-warning as the "not cast" pill and the holdout
@@ -198,10 +263,12 @@ export function CollabRoster({
   // --color-text-tertiary as the "· you" byline. They now read the faction's own
   // card-ink family, whose members index.css measures against that faction's
   // sheet in both themes.
-  const notice = factionCssVar(factionSlug, 'card-notice')
-  const credit = factionCssVar(factionSlug, 'card-credit')
-  const quiet = factionCssVar(factionSlug, 'card-muted')
-  const onAccent = `var(${ON_ACCENT_PROPERTY}, ${factionCssVar(factionSlug, 'card-bg')})`
+  const notice = skin?.notice ?? factionCssVar(factionSlug, 'card-notice')
+  const credit = skin?.credit ?? factionCssVar(factionSlug, 'card-credit')
+  const quiet = skin?.quiet ?? factionCssVar(factionSlug, 'card-muted')
+  const ground = skin?.ground ?? factionCssVar(factionSlug, 'card-bg')
+  const onAccent =
+    skin?.onAccent ?? `var(${ON_ACCENT_PROPERTY}, ${factionCssVar(factionSlug, 'card-bg')})`
   // A crew of one has no consensus to report, so the tally chip and the bar are
   // both withheld rather than printed at their degenerate readings (#1274) —
   // which also keeps `pct` off a zero denominator on an empty roster.
@@ -250,7 +317,7 @@ export function CollabRoster({
           warn: false,
         }
       : gate.state === 'waiting'
-      ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accent, warn: false }
+      ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accentInk, warn: false }
       : gate.state === 'holdout'
         ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: notice, warn: true }
         : gate.state === 'published'
@@ -260,7 +327,18 @@ export function CollabRoster({
   return (
     <div
       className="flex flex-col gap-2"
-      style={{ [ON_ACCENT_PROPERTY]: factionCssVar(factionSlug, 'on-accent') } as CSSProperties}
+      style={
+        {
+          [ON_ACCENT_PROPERTY]: factionCssVar(factionSlug, 'on-accent'),
+          // The root catches what inherits — the × glyphs, the monogram. It is
+          // NOT enough on its own: `.label-heading`, `.label-caption` and
+          // `.font-body` each `@apply font-body`, so they set the family ON the
+          // element and beat anything inherited. The seven nodes wearing one of
+          // those restate `face` inline, which is the same move every archetype
+          // already makes for `leaveStyle` and its own labels.
+          fontFamily: face,
+        } as CSSProperties
+      }
     >
       {/* Panel header (#1416): the block names itself and reports the gate on
           one row. `Collaborators · N` used to be the ComposerSection label at
@@ -271,13 +349,13 @@ export function CollabRoster({
           has been asked, not somebody who is on it, and the tally beside it
           reads out of the same denominator. */}
       <div className="flex items-center justify-between gap-2">
-        <span className="label-heading">
+        <span className="label-heading" style={{ fontFamily: face }}>
           {t('editPraxis.composer.collaboratorsLabel', { count: gate.memberCount })}
         </span>
         {/* `awaiting` has nothing true to say here — a tally of one over one is
             not a gate anybody is waiting on (#1274). */}
         {!awaiting && (
-          <span className="label-caption">
+          <span className="label-caption" style={{ fontFamily: face }}>
             {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
           </span>
         )}
@@ -355,7 +433,7 @@ export function CollabRoster({
                         // Cut out of the sheet the roster is mounted on, so the
                         // badge reads as a separate mark rather than a bump on
                         // the monogram's rule.
-                        border: `${PRESENCE_DOT_RING}px solid ${factionCssVar(factionSlug, 'card-bg')}`,
+                        border: `${PRESENCE_DOT_RING}px solid ${ground}`,
                         boxSizing: 'content-box',
                       }}
                     />
@@ -396,6 +474,7 @@ export function CollabRoster({
                   minWidth: 0,
                   overflowWrap: 'anywhere',
                   fontWeight: done ? 700 : 400,
+                  fontFamily: face,
                 }}
               >
                 {row.name}
@@ -426,12 +505,13 @@ export function CollabRoster({
                   className="label-caption"
                   style={{
                     padding: 'var(--space-xs) var(--space-sm)',
-                    borderRadius: 4,
+                    borderRadius: radius,
+                    fontFamily: face,
                     border: `1px solid ${
-                      row.member.nudged_at != null ? 'var(--color-border)' : accent
+                      row.member.nudged_at != null ? 'var(--color-border)' : accentInk
                     }`,
                     background: 'transparent',
-                    color: row.member.nudged_at != null ? quiet : accent,
+                    color: row.member.nudged_at != null ? quiet : accentInk,
                     cursor: row.member.nudged_at != null ? 'default' : 'pointer',
                     whiteSpace: 'nowrap',
                   }}
@@ -476,7 +556,8 @@ export function CollabRoster({
                   className="label-caption"
                   style={{
                     padding: 'var(--space-xs) var(--space-sm)',
-                    borderRadius: 4,
+                    borderRadius: radius,
+                    fontFamily: face,
                     border: `1px solid ${quiet}`,
                     background: 'transparent',
                     color: quiet,
@@ -494,6 +575,8 @@ export function CollabRoster({
                 accent={accent}
                 quiet={quiet}
                 onAccent={onAccent}
+                face={face}
+                radius={radius}
               />
             </div>
           )
@@ -506,7 +589,8 @@ export function CollabRoster({
           className="font-body text-[11px]"
           style={{
             padding: 'var(--space-sm) var(--space-md)',
-            borderRadius: 4,
+            borderRadius: radius,
+            fontFamily: face,
             color: banner.tone,
             border: `1px solid ${banner.tone}`,
             // The veil is the banner's OWN ink at 8%, not a global amber
@@ -556,12 +640,16 @@ function StatusPill({
   accent,
   quiet,
   onAccent,
+  face,
+  radius,
 }: {
   row: RosterRow
   label: string
   accent: string
   quiet: string
   onAccent: string
+  face: string | undefined
+  radius: number | string
 }) {
   const done = isRowDone(row.state)
   // Asked but not answered — the two states that are not membership.
@@ -574,7 +662,8 @@ function StatusPill({
         alignItems: 'center',
         gap: 'var(--space-xs)',
         padding: 'var(--space-xs) var(--space-sm)',
-        borderRadius: 4,
+        borderRadius: radius,
+        fontFamily: face,
         border: `1px ${unanswered ? 'dashed' : 'solid'} ${done ? accent : quiet}`,
         background: done ? accent : 'transparent',
         color: done ? onAccent : quiet,

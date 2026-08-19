@@ -88,7 +88,6 @@ import { factionName } from "../../../utils/factions";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -124,6 +123,7 @@ import {
 import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -352,7 +352,6 @@ export default function EverymenEditPraxis({ state }: Props) {
     accent: ACCENT,
     alarm: ALARM,
     pageStyle: { fontFamily: COURIER, color: INK },
-    breadcrumbInk: MUTED,
     sheetStyle,
     masthead,
     ground,
@@ -394,7 +393,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={MUTED}
+          editing
         />
       }
     >
@@ -508,11 +507,15 @@ export default function EverymenEditPraxis({ state }: Props) {
                 inputBorder: `2px solid ${FRAME}`,
                 dropdownBg: PANEL,
                 dropdownBorder: `2px solid ${FRAME}`,
-                acceptedBg: RED,
-                acceptedColor: ON_ACCENT,
-                pendingColor: INK,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: MUTED },
+                /* The broadsheet is set in square rules, and `fieldBox` is
+                 * already `borderRadius: 0`; the collab chips were the one
+                 * region still rounding itself. `MUTED` IS
+                 * `--faction-everymen-card-muted` (index.css aliases the two),
+                 * so the roster's ink is unchanged and only the `+ invite`
+                 * chip stops reading the task's faction. */
+                collab: { radius: 0, quiet: MUTED },
               }}
             />
           </ComposerSection>

@@ -122,7 +122,6 @@ import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import { BalloonBunch, Zig } from "../../../components/factionMarks/wowOrnament";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -156,6 +155,7 @@ import {
 } from "./controls";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -355,7 +355,6 @@ export default function WowEditPraxis({ state }: Props) {
     accent: PLUM,
     alarm: ALARM,
     pageStyle: { fontFamily: LORA, color: INK },
-    breadcrumbInk: LABEL,
     sheetStyle,
     masthead,
     ground,
@@ -393,7 +392,7 @@ export default function WowEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={LABEL}
+          editing
         />
       }
     >
@@ -500,15 +499,13 @@ export default function WowEditPraxis({ state }: Props) {
                 inputBorder: `1.5px solid ${GOLD}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1.5px solid ${GOLD}`,
-                // The invite / challenge chip takes the SAME measured pair as
-                // the mode chip and the tile's remove button — the theme-
-                // invariant plum at 5.16:1. Not `-stamp-chip-bg`/`-text`: that
-                // pair is measured against the duel ribbon, and against each
-                // other it is 4.14:1 in dark, under AA at this size (§3).
-                pendingBg: PLUM_FILL,
-                pendingColor: ON_PLUM,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: LORA, color: LABEL },
+                /* The chronicle's 6px corner, the one `fieldBox` takes. This
+                 * composer IS the chronicle card's sheet, so the roster keeps
+                 * the `card-*` inks #694 measured on it and only the corner,
+                 * the face and the quiet tier are handed in. */
+                collab: { radius: 6, quiet: MUTED },
               }}
             />
           </ComposerSection>

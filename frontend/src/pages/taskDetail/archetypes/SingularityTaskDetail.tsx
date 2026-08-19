@@ -16,6 +16,7 @@ import {
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
@@ -49,9 +50,12 @@ import type { TaskDetailState } from "../useTaskDetail";
  * ships as `none` in its light set and lit in its dark set.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * collapses the two-column split; the chrome bar swaps its lamps for a back
- * arrow. The separate Singularity mobile skin and the manifest surface that held
- * it were deleted by #1068 when the ADR was accepted.
+ * collapses the two-column split. The chrome bar used to swap its lamps for a
+ * back arrow; #2102 took the navigation out of the window entirely — the site's
+ * shared breadcrumb sits above the chassis at every width — so the bar is the
+ * lamps alone and no longer changes at the breakpoint. The separate Singularity
+ * mobile skin and the manifest surface that held it were deleted by #1068 when
+ * the ADR was accepted.
  *
  * COPY IS NEUTRAL AND SHARED (`detail.*`, ADR-0057). This is the most voiced
  * dress in the set after Albescent, and the dress is all that survives: the
@@ -252,15 +256,14 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── Window chrome: lamps (desktop) or a back arrow (mobile) and the
-  //    breadcrumb. The design drew a second breadcrumb row inside the header; one
-  //    window title bar is enough, so the breadcrumb lives here.
+  // ── Window chrome: the lamps, and nothing else.
   //
-  //    The bar used to carry the task id twice — `Task №{id}` as the trail's
-  //    second crumb and a `0x131` process slug at the far right. #1124 retired
-  //    the id, and both were it, so the bar is the back affordance plus the one
-  //    crumb: on desktop a TASKS link, on mobile the arrow alone (the crumb text
-  //    was always desktop-only).
+  //    It carried the navigation until #2102 — a `TASKS` link on desktop, a bare
+  //    `←` arrow on mobile — which made this one of the eighteen places the site
+  //    drew a different breadcrumb. The trail is site chrome now and sits ABOVE
+  //    the terminal, outside its frame; the lamps stay because they are the
+  //    window, not the way out of it, and they are drawn at both widths for the
+  //    same reason the trail is: this bar no longer changes at 768px.
   const chrome = (
     <div
       style={{
@@ -274,30 +277,7 @@ export default function SingularityTaskDetail({
         borderBottom: `1px solid ${HAIR}`,
       }}
     >
-      {desktop ? (
-        <SingularityLamps />
-      ) : (
-        <Link
-          to="/tasks"
-          aria-label={t("detail.breadcrumb.tasks")}
-          style={{
-            fontFamily: MONO,
-            fontSize: "var(--text-xl)",
-            lineHeight: 1,
-            color: BRIGHT,
-            textDecoration: "none",
-            flex: "none",
-          }}
-        >
-          ←
-        </Link>
-      )}
-
-      {desktop && (
-        <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      )}
+      <SingularityLamps />
     </div>
   );
 
@@ -864,6 +844,10 @@ export default function SingularityTaskDetail({
 
   return (
     <div className="py-8">
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       <div
         style={{
           position: "relative",

@@ -15,6 +15,7 @@ import {
 } from "./shared";
 import { signupCtaKey } from "../signupCta";
 import type { TaskDetailState } from "../useTaskDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /**
  * How many praxis the gallery prints before the "view all" line. The row is
@@ -221,33 +222,8 @@ export default function EverymenTaskDetail({
   );
 
   // ── Header: breadcrumb, masthead, title ── (byline + stats: `credentials`, below the brief — #2120)
-  //
-  // One crumb, not two: the trail read `TASKS / Task №{id}` until #1124 retired
-  // the task id, and the id WAS the second crumb, so the separator went with it
-  // rather than dangling.
   const header = (
     <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          marginBottom: "var(--space-md)",
-          flexWrap: "wrap",
-        }}
-      >
-        <Link
-          to="/tasks"
-          className="label-caption"
-          style={{
-            color: ACCENT,
-            textDecoration: "none",
-          }}
-        >
-          {t("detail.breadcrumb.tasks")}
-        </Link>
-      </nav>
-
       {/* The masthead — the faction line, set as the paper's nameplate. */}
       <div
         style={{
@@ -888,6 +864,10 @@ export default function EverymenTaskDetail({
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK }}>
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail on every page — see components/nav/Breadcrumb. */}
+      <Breadcrumb taskId={task.id} taskTitle={task.title} />
+
       {/* The sheet itself — newsprint under a rising sun (index.css). It paints
           the detail COLUMN, not the viewport: the owner's rule for this surface
           is that the site background still shows around the component (QA on
