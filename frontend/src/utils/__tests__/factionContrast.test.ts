@@ -3776,3 +3776,39 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
     });
   }
 });
+
+/**
+ * COVEN'S WITCH HAT, LAID STRAIGHT ON THE SLIP (#2325).
+ *
+ * NOT A `PAIRS` ROW, and the reason is the manifest's own guard: `AA_LARGE`
+ * there is reserved for large display TYPE, and this is 1.4.11's identical 3:1
+ * for a graphical object. Same number, different rule -- the same distinction
+ * S.N.I.D.E.'s level-track block up the file draws.
+ *
+ * WHY IT NEEDS ONE AT ALL. Everywhere else on the card kit the mark stands on
+ * `CovenBand`'s white `--faction-coven-slip-sigil-ground`, where the sigil's own
+ * `--faction-coven` default is 3.15:1 and index.css says so at the token. The
+ * faction-DIRECTORY tile has no band, so it is the first surface to lay a drawn
+ * Coven mark straight on the four-stop ramp -- and `--faction-coven` is 2.11:1
+ * there, which is why the tile takes `--faction-coven-slip-deep`, the module's
+ * declared ornament ink, rather than borrowing the band's.
+ *
+ * `-slip-mid` is the ramp's WORST stop for this in BOTH cascades: the darkest by
+ * day (the whole reason the slip block up the file measures on it) and the
+ * lightest by night. 3.33:1 / 6.11:1 as shipped.
+ */
+describe("the Coven directory tile's mark clears the graphical floor", () => {
+  for (const theme of BOTH_THEMES) {
+    it(`the witch hat reads on the slip's worst stop (${theme})`, () => {
+      const ink = resolveColor("--faction-coven-slip-deep", theme);
+      const ground = resolveColor("--faction-coven-slip-mid", theme);
+      expect(ink.color, `-slip-deep (${theme}) resolved to "${ink.raw}"`).not.toBeNull();
+      expect(ground.color, `-slip-mid (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+      const ratio = contrastRatio(ink.color!, ground.color!);
+      expect(
+        ratio,
+        `the hat is ${formatRatio(ratio)} on the ramp's worst stop (${theme}); a drawn mark owes 1.4.11's 3:1`,
+      ).toBeGreaterThanOrEqual(AA_LARGE);
+    });
+  }
+});
