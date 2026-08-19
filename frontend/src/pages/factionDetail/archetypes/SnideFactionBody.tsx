@@ -35,6 +35,11 @@ const INK = "var(--faction-snide-ink)";
 const PAPER = "var(--faction-snide-paper)";
 const PINK = "var(--faction-snide-pink)";
 const MUTED = "var(--faction-snide-card-muted)";
+/* The WALL's own ink, which flips with the wall (#14110b / #e9e6da). `MUTED`
+   above is the CARD's — a tier that is only ever correct on the photocopier
+   slab, and 1.24:1 on the light wall (#2173). Anything standing straight on
+   `.snide-backdrop` takes this one. */
+const WALL_TEXT = "var(--faction-snide-wall-text)";
 
 const IMPACT = "var(--faction-snide-font-impact)";
 const COND = "var(--faction-snide-font-cond)";
@@ -89,12 +94,42 @@ const SECTION_HEADING_ROW: CSSProperties = {
   flexWrap: "wrap",
 };
 
+/**
+ * THE HEADING CARRIES ITS OWN PLATE (#2173) — acid never touches paper.
+ *
+ * `--faction-snide-acid` is theme-INVARIANT and this heading stands straight on
+ * `.snide-backdrop`, which FLIPS: 1.03:1 by day, 16.33:1 by night. Every other
+ * acid-as-type site in this faction already sits on a photocopier-black ground
+ * (`INK_PANEL` here, `-note-bar` on the task card and both detail mastheads,
+ * `-slip-bar` on the feed slip, `-stamp-bg` on the score stamp), which is why
+ * this was the only one that ever failed. So the fix is §3's own doctrine —
+ * change the GROUND, not the ink — and the ground it takes is the same
+ * `--faction-snide-ink` all those other sites already print on: 16.33:1 in BOTH
+ * cascades. The owner's ruling (2026-08-18) turns that repair into an ornament:
+ * on the light wall the plate reads as a CENSOR BAR, which is on-voice for a
+ * flyposted zine.
+ *
+ * THE BAR IS A LIGHT-MODE-ONLY ORNAMENT, AND THAT ASYMMETRY IS INTENDED. In
+ * dark the plate (#14110b) and the wall (#0a0a0b) are both near-black, so the
+ * bar dissolves and the heading reads as plain acid — identical to today. Not
+ * a bug; do not "fix" it by lightening the plate, which would spend the 16.33:1
+ * the whole ruling rests on.
+ *
+ * Geometry stays here, not in index.css: the padding is how hard the redaction
+ * is struck, and the tight `lineHeight` is what keeps the bar a strip over the
+ * word rather than a block behind a line. The barcode rule beside it keeps the
+ * bare wall — a censor bar is drawn over the WORD, and plating the whole row
+ * would make it a masthead band instead.
+ */
 const SECTION_HEADING_TEXT: CSSProperties = {
   fontFamily: IMPACT,
   // eslint-disable-next-line local/no-raw-style-values -- ornament: skewed Impact stencil — the ransom-dispatch masthead cut, not a heading you read.
   fontSize: 30,
+  lineHeight: 1.1,
   letterSpacing: "0.02em",
   color: ACID,
+  background: INK,
+  padding: "var(--space-xs) var(--space-md)",
   textTransform: "uppercase",
   transform: "skewX(-5deg)",
   whiteSpace: "nowrap",
@@ -250,7 +285,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         <div>
           <SectionHeading>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHeading>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("detail.default.tasksEmpty")}</p>
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.tasksEmpty")}</p>
           ) : (
             <div className="task-card-row" style={{ gap: "var(--space-xl)" }}>
               {tasks.map((task) => (
@@ -274,7 +309,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         <div>
           <SectionHeading>{t("detail.default.recentHeading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("detail.default.recentEmpty")}</p>
+            <p className="content-text" style={{ fontFamily: TYPE, color: WALL_TEXT }}>{t("detail.default.recentEmpty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
