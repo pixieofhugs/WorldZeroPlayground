@@ -38,6 +38,21 @@ function invite(
   }
 }
 
+/** The plain collab roster: whatever members and invites, viewed as member 1. */
+const render = (
+  members: PraxisMemberOut[],
+  invites: PraxisInviteOut[] = [],
+) =>
+  renderToStaticMarkup(
+    <CollabRoster
+      praxisType="collab"
+      members={members}
+      invites={invites}
+      currentCharacterId={1}
+      factionSlug={null}
+    />,
+  )
+
 describe('deriveCollabGate — the consensus state machine (#591)', () => {
   it('nobody cast → writing', () => {
     const g = deriveCollabGate([member(1, false), member(2, false)], 1)
@@ -216,20 +231,6 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
   const PILLS = (['pillCast', 'pillWeaving', 'pillInvited', 'pillDeclined'] as const).map(
     (key) => collabCopy(null, key),
   )
-  const render = (
-    members: PraxisMemberOut[],
-    invites: PraxisInviteOut[] = [],
-  ) =>
-    renderToStaticMarkup(
-      <CollabRoster
-        praxisType="collab"
-        members={members}
-        invites={invites}
-        currentCharacterId={1}
-        factionSlug={null}
-      />,
-    )
-
   // Matched on the whole pill element, not by substring: `castStatus` puts the
   // word "submitted" in the header tally too.
   const pillsIn = (html: string) =>
@@ -476,22 +477,8 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
 // to pass, because the wire carried no portrait. Now that it does, these three
 // rows are the whole contract.
 describe('CollabRoster portraits (#2318)', () => {
-  const roster = (
-    members: PraxisMemberOut[],
-    invites: PraxisInviteOut[] = [],
-  ) =>
-    renderToStaticMarkup(
-      <CollabRoster
-        praxisType="collab"
-        members={members}
-        invites={invites}
-        currentCharacterId={1}
-        factionSlug={null}
-      />,
-    )
-
   it('a member with a portrait wears it', () => {
-    const html = roster([member(1, false, 'avatars/molly.png'), member(2, false)])
+    const html = render([member(1, false, 'avatars/molly.png'), member(2, false)])
     expect(html).toContain('avatars/molly.png')
     expect(html).toContain('<img')
   })
@@ -500,7 +487,7 @@ describe('CollabRoster portraits (#2318)', () => {
   // the ordinary no-photo case and MUST still reach the monogram. A portrait-less
   // member drawing a broken `img` would be the worse bug.
   it('a member without one still gets the two-letter monogram', () => {
-    const html = roster([member(1, false, 'avatars/molly.png'), member(2, false)])
+    const html = render([member(1, false, 'avatars/molly.png'), member(2, false)])
     expect(html).toContain('>M2<')
     expect(html).not.toContain('src=""')
   })
@@ -509,14 +496,14 @@ describe('CollabRoster portraits (#2318)', () => {
   // invite keeps its dashed ring AND shows who it is about — one rule, no branch
   // on invite status.
   it('an invited row draws the portrait inside the dashed ring', () => {
-    const html = roster([member(1, false)], [invite(2, 'Asked Person', 'pending', 'avatars/asked.png')])
+    const html = render([member(1, false)], [invite(2, 'Asked Person', 'pending', 'avatars/asked.png')])
     const img = html.slice(html.indexOf('avatars/asked.png'))
     expect(html).toContain('avatars/asked.png')
     expect(img.slice(0, 400)).toContain('dashed')
   })
 
   it('a declined row draws the portrait too', () => {
-    const html = roster([member(1, false)], [invite(2, 'Gone Away', 'declined', 'avatars/gone.png')])
+    const html = render([member(1, false)], [invite(2, 'Gone Away', 'declined', 'avatars/gone.png')])
     expect(html).toContain('avatars/gone.png')
   })
 })
