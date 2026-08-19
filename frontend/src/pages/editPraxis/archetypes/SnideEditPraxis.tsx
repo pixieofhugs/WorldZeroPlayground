@@ -99,7 +99,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerMasthead,
   ComposerPage,
@@ -135,6 +134,7 @@ import {
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { WALL } from "../../../components/factionMarks/snideAtoms";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -400,6 +400,7 @@ export default function SnideEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
+          editing
         />
       }
     >

@@ -1907,7 +1907,9 @@ function sourceOf(relative: string): string {
  */
 function ephemeristsComposerPageStyle(): string {
   const source = sourceOf("pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx");
-  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("breadcrumbInk:"));
+  // `breadcrumbInk:` was the end marker until #2102 deleted the field; `sheetStyle`
+  // is the next key in the dress literal and is the same boundary.
+  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("sheetStyle,"));
 }
 
 describe("faction token contrast (WCAG AA)", () => {
@@ -2359,8 +2361,10 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * `--color-bg-page`, where `-plate-quiet` reads 2.64:1 in light. Nothing is
    * broken by that today — every `.label-caption` this root cascades to renders
    * inside `ComposerSheet` (`-plate-bg`) or a panel (`-plate-inner`), and the
-   * breadcrumb, the one thing on the bare page, takes `breadcrumbInk`
-   * explicitly. A label mounted directly on the composer page would be the
+   * breadcrumb, the one thing on the bare page, is neutral SITE chrome reading
+   * the app's own tertiary — it took a `breadcrumbInk` off the dress until
+   * #2102 collapsed the site onto one breadcrumb and deleted the field. A label
+   * mounted directly on the composer page would be the
    * exception, and it would be the same defect #1793 fixed on the faction page.
    */
   it("the composer and waiting surface set the same label seam on their own root (#1800)", () => {
