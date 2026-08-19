@@ -35,6 +35,7 @@ import "../../../i18n";
 import UaTaskDetail from "../archetypes/UaTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aTask } from '../../../test/fixtures'
+import { factionName } from "../../../utils/factions";
 
 const TASK = aTask({
   id: 207,
@@ -166,7 +167,11 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     // and #1036 anticipated a different wrong label. Neither is a faction.
     expect(text).not.toContain("Unbroken Ascension");
     expect(text).not.toContain("Universal Assembly");
-    expect(text).toContain("UA");
+    // #2332 renamed the faction from "UA" to "Unwavering Artisans". The
+    // abbreviation is not a substring of the new name, so this reads the
+    // catalog rather than spelling either form — the claim is "the eyebrow says
+    // whatever `names.ua` says", which is what ADR-0038 makes checkable.
+    expect(text).toContain(factionName("ua"));
   });
 
   it("renders the in-progress population as a header count", () => {

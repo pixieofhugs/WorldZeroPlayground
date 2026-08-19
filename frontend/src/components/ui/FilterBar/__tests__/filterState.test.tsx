@@ -187,7 +187,10 @@ describe('deriveChips — one removable chip per active filter', () => {
       facets: [factionFacet([{ slug: 'ua', status: 'visible' }, { slug: 'coven', status: 'visible' }], ['ua', 'coven'], () => {})],
     })
     expect(chips.map((chip) => chip.label)).toEqual([
-      'UA',
+      // `names.ua`, which #2332 renamed from "UA". Spelled out rather than read
+      // back through `factionName()` so a rename has to come THROUGH here — the
+      // chip label being the faction's real name is the assertion.
+      'Unwavering Artisans',
       'Cozy Coven',
       'Oldest',
       'All eras',
@@ -216,7 +219,7 @@ describe('deriveChips — one removable chip per active filter', () => {
       rails: [],
       facets: [factionFacet([], ['ua'], () => {})],
     })
-    expect(chip.label).toBe('UA')
+    expect(chip.label).toBe('Unwavering Artisans')
   })
 
   it('removing a rail chip returns the rail to its default, not to empty', () => {
@@ -335,7 +338,7 @@ describe('factionFacet — the faction axis as one configuration of the widget',
     ])
     expect(facet.options.map((option) => option.label)).toEqual([
       'Unaffiliated',
-      'UA',
+      'Unwavering Artisans',
       'Singularity',
     ])
   })

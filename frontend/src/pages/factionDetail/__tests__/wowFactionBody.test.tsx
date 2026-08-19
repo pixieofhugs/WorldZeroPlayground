@@ -25,6 +25,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
 import WowFactionBody from '../archetypes/WowFactionBody'
+import { factionDescription } from '../../../utils/factions'
 import type { FactionDetailState, MembershipState } from '../useFactionDetail'
 
 function text(node: ReactElement): string {
@@ -112,7 +113,14 @@ describe('the page speaks in WOW voice, not the phone catalog', () => {
    */
   it('fills the charter panel with the faction description, not a bespoke charter', () => {
     const markup = render('none')
-    expect(markup).toContain('We wield the noodle sword')
+    // The presence arm reads the CATALOG rather than a sentence copied out of
+    // it. It used to quote "We wield the noodle sword", and #2332 replaced
+    // `descriptions.wow` with the literal `PLACEHOLDER` — a deliberate marker
+    // for copy the owner has not written. What the panel owes is whatever the
+    // catalog holds, drawn and not empty, which is what this now says and what
+    // survives the next rewording too.
+    expect(factionDescription('wow').length).toBeGreaterThan(0)
+    expect(markup).toContain(factionDescription('wow'))
     expect(markup).not.toContain('The Charter of Whimsy')
     expect(markup).not.toContain('We knight houseplants')
   })

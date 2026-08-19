@@ -501,10 +501,11 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     'factions.json:singularity.access.joinButton',
     'factions.json:singularity.access.joining',
     'factions.json:singularity.invitation.kicker',
-    // #1874's mechanic slot. Singularity has no perk, so rather than invent one
-    // the line refuses in the array's own register — caught by the `> ` prompt.
-    // It goes when #1869 gives Singularity something to advertise.
-    'factions.json:singularity.invitation.perks.1',
+    // `singularity.invitation.perks.1` stood here — #1874's mechanic slot,
+    // which refused in the array's own register (`> no modifiers…`) because
+    // Singularity had no perk to advertise. #2332 gave it one, in plain voice,
+    // so the prompt left with the copy and the row leaves with it. This list is
+    // an exact set: a stale row fails the sweep as loudly as a missing one.
     // Eight more rows stood here: `profile.singularity.praxisEmptyTitle`,
     // `manifest.empty`, `mobile.eyebrow`, the three `roster.*`, `praxis.empty`
     // and `tasks.empty`. #1911 collapsed every one of those families to a

@@ -22,6 +22,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
+import i18n from '../../../i18n'
 import type { FactionOut, FactionPageOut, FactionStatusOut, InvitationLetterOut } from '../../../api/factions'
 import type { CurrentUser } from '../../../api/auth'
 import { AuthContext } from '../../../auth/AuthContext'
@@ -31,7 +32,27 @@ import { DesktopFactions } from '../../Factions'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
-  return { html, text: html.replace(/<[^>]*>/g, '') }
+  return { html, text: decode(html.replace(/<[^>]*>/g, '')) }
+}
+
+/**
+ * `renderToStaticMarkup` escapes `& < > " '`; undo that so `text` really is
+ * what the page SAYS and a catalog string can be compared to it directly.
+ * Without this, `factionSelect.snide.status.eligible` — "Let's F%$*ing GO", one
+ * of #2332's — arrives as `Let&#x27;s` and matches nothing.
+ */
+function decode(value: string): string {
+  return value
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
+/** A faction tile's status line, read from the catalog rather than quoted. */
+function statusLine(slug: string, state: 'locked' | 'eligible' | 'member'): string {
+  return i18n.t(`feed:factionSelect.${slug}.status.${state}`)
 }
 
 // An Albescent-hidden six-faction list, deliberately out of rainbow order and
@@ -147,19 +168,22 @@ describe('mobile factions directory — real card state (#743)', () => {
   it('renders each card in its true member/eligible/locked voice, not a uniform neutral', () => {
     const { text } = view()
     // Distinct per-state status copy proves the status prop reaches the tiles.
-    expect(text, 'Coven member line').toContain('You’re one of us now')
-    expect(text, 'S.N.I.D.E. eligible line').toContain('Consider yourself recruited.')
-    expect(text, 'Everymen locked line').toContain('Put in the shift and there’s a place for you.')
+    // The words come from the catalog, not from a quote of it: the seam is that
+    // each tile gets its OWN state's line, and #2332 rewrote three of the six
+    // lines this used to spell out.
+    expect(text, 'Coven member line').toContain(statusLine('coven', 'member'))
+    expect(text, 'S.N.I.D.E. eligible line').toContain(statusLine('snide', 'eligible'))
+    expect(text, 'Everymen locked line').toContain(statusLine('everymen', 'locked'))
     // The eligible/locked copies must not collapse into one another.
-    expect(text).not.toContain('Active operative — welcome to the mess.')
+    expect(text).not.toContain(statusLine('snide', 'member'))
   })
 
   it('falls back to locked when a faction has no status row', () => {
     const { text } = view({ factionPage: status([]) })
     // No rows at all → every card locked, none showing an eligible/member voice.
-    expect(text, 'Coven falls back to locked').toContain('Do the tiny brave thing to be invited')
-    expect(text).not.toContain('You’re one of us now')
-    expect(text).not.toContain('Consider yourself recruited.')
+    expect(text, 'Coven falls back to locked').toContain(statusLine('coven', 'locked'))
+    expect(text).not.toContain(statusLine('coven', 'member'))
+    expect(text).not.toContain(statusLine('snide', 'eligible'))
   })
 })
 
@@ -258,9 +282,11 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
     // separate them — an eligible card that fell back to locked would take away
     // the only route an invited player has into that faction from this page.
     const { text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
-    expect(text, 'S.N.I.D.E. is eligible on its status alone').toContain('Consider yourself recruited.')
-    expect(text, 'Coven still reads member').toContain('You’re one of us now')
-    expect(text, 'Everymen stays locked').toContain('Put in the shift and there’s a place for you.')
+    expect(text, 'S.N.I.D.E. is eligible on its status alone').toContain(
+      statusLine('snide', 'eligible'),
+    )
+    expect(text, 'Coven still reads member').toContain(statusLine('coven', 'member'))
+    expect(text, 'Everymen stays locked').toContain(statusLine('everymen', 'locked'))
   })
 
   it('reads the same with no letters on the payload at all', () => {
