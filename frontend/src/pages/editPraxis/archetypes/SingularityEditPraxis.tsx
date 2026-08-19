@@ -533,11 +533,13 @@ export default function SingularityEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${BORDER}`,
                 dropdownBg: CHASSIS,
                 dropdownBorder: `1px solid ${BORDER}`,
-                acceptedBg: CTA_BG,
-                acceptedColor: CTA_INK,
-                pendingColor: MUTED,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: FACE, color: MUTED },
+                /* The terminal's own 2px corner, the one `fieldBox` takes.
+                 * `MUTED` is `-term-dim`, the chassis's caption ink — not
+                 * `-card-muted`, which is the blue brand chrome measured
+                 * against the card and not against this panel. */
+                collab: { radius: RADIUS, quiet: MUTED },
               }}
             />
           </ComposerSection>

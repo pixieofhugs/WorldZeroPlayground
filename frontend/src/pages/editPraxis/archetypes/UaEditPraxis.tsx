@@ -417,10 +417,13 @@ export default function UaEditPraxis({ state }: Props) {
                 inputBorder: `1px solid ${RULE}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1px solid ${RULE}`,
-                acceptedBg: FILL,
-                acceptedColor: ON_FILL,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: UA_TEXT, color: MUTED },
+                /* The sheet's own corner. `MUTED` is `--faction-ua-card-muted`
+                 * and this composer IS the card sheet, so the roster's inks are
+                 * unchanged — the `+ invite` chip is the one that moves, off
+                 * the TASK's faction and onto this one (#2267). */
+                collab: { radius: RADIUS, quiet: MUTED },
               }}
             />
           </ComposerSection>

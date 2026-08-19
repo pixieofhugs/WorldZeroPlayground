@@ -587,10 +587,15 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 inputBorder: `1.5px solid ${LINE}`,
                 dropdownBg: INNER,
                 dropdownBorder: `1.5px solid ${BRASS}`,
-                acceptedBg: CTA,
-                acceptedColor: CTA_INK,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: READING, color: QUIET },
+                /* THE CORNER IS THE RULING (#2269): "the corners shouldn't be
+                 * rounded for Ephemerists". Every field on this plate is
+                 * `borderRadius: 0` — the brass plate is square, ruled and
+                 * chamfered — while the shared collab chips rounded themselves
+                 * at 4 anyway. Same 0 as `fieldBox`, from the same file, so a
+                 * future change to one cannot leave the other behind. */
+                collab: { radius: 0, quiet: QUIET },
               }}
             />
           </ComposerSection>

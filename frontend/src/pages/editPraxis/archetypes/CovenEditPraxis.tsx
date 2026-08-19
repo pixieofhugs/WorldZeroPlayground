@@ -644,11 +644,13 @@ export default function CovenEditPraxis({ state }: Props) {
                 inputBorder: RULE,
                 dropdownBg: SHEET,
                 dropdownBorder: RULE,
-                acceptedBg: "var(--faction-coven-slip-cta-from)",
-                acceptedColor: CTA_INK,
-                pendingColor: SOFT,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: LABEL },
+                /* The ward slip is a rounded language, so the collab chips take
+                 * the corner this skin's own fields take. The prose tier is the
+                 * slip's `SOFT` — the brief's ink, which is what the roster's
+                 * "· you" byline and its unanswered pills are. */
+                collab: { radius: FIELD_RADIUS, quiet: SOFT },
               }}
             />
           </ComposerSection>

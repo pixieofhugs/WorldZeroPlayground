@@ -508,11 +508,15 @@ export default function EverymenEditPraxis({ state }: Props) {
                 inputBorder: `2px solid ${FRAME}`,
                 dropdownBg: PANEL,
                 dropdownBorder: `2px solid ${FRAME}`,
-                acceptedBg: RED,
-                acceptedColor: ON_ACCENT,
-                pendingColor: INK,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: MUTED },
+                /* The broadsheet is set in square rules, and `fieldBox` is
+                 * already `borderRadius: 0`; the collab chips were the one
+                 * region still rounding itself. `MUTED` IS
+                 * `--faction-everymen-card-muted` (index.css aliases the two),
+                 * so the roster's ink is unchanged and only the `+ invite`
+                 * chip stops reading the task's faction. */
+                collab: { radius: 0, quiet: MUTED },
               }}
             />
           </ComposerSection>
