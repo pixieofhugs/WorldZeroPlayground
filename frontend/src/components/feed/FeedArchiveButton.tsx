@@ -52,16 +52,15 @@ import i18n from '../../i18n'
  * tag. It is what makes the ✕ read as a control rather than as punctuation after
  * the timestamp, and it needs no colour of its own.
  *
- * ponytail: the hit target is 24px, not the 44px this repo applies everywhere
- * else (`identityActionStyle`, every vote key). 44 is unreachable from here and
- * not by a near miss: `EphemeristsFeedFrame` gives its masthead a FIXED
- * `height` (30px desktop, 26px mobile) with `overflow: hidden`, so anything
- * taller than the band is clipped — visually and for hit-testing, by any
- * mechanism, including a padded box or an absolutely-positioned extender. 24px
- * is the largest square that fits that band's border box on a phone and is
- * WCAG 2.5.8's (AA) target minimum; 2.5.5's 44 is AAA. The upgrade path is to
- * grow that band in an Ephemerists dress issue and then raise the two numbers
- * below — this control does not need a second code path to get there.
+ * THE HIT TARGET IS §6's 44px on all nine chassis, and one code path gets it
+ * there (#2100). It shipped at 24 — WCAG 2.5.8's AA minimum, short of the house
+ * rule — for exactly one reason: `EphemeristsFeedFrame` was the only frame of
+ * the nine that gave its masthead a fixed numeric height, and under
+ * `overflow: hidden` that clipped anything taller for hit-testing as well as
+ * visually. That band now sizes to its contents like the other eight, so one
+ * faction's dress no longer sets the target size of a control shared across
+ * all of them, and raising the two numbers below was the whole of the change
+ * here. The band grows to fit them.
  */
 /**
  * The hover / focus wash, as a percentage of the control's own ink.
@@ -105,8 +104,8 @@ export default function FeedArchiveButton({
         // it is a raw number and deliberately off the --space-* ramp (§4a), the
         // same call `identityActionStyle` makes for its 44.
         boxSizing: 'border-box',
-        minWidth: 24,
-        minHeight: 24,
+        minWidth: 44,
+        minHeight: 44,
         background: lit
           ? `color-mix(in srgb, currentColor ${LIT_WASH_PCT}%, transparent)`
           : 'transparent',

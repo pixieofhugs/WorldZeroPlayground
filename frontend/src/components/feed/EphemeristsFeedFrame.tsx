@@ -106,8 +106,19 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 const ROW_SKIN: FeedRowSkin = { ink: { actor: BRASS_LIGHT } }
 
 interface BandSize {
-  /** Band height, and the width its ruled hairline is drawn to fill. Geometry. */
-  height: number
+  /**
+   * The head hairline's OWN drawing box: the ornament SVG's height, and the
+   * height of the viewBox it is struck in. The two must stay equal — `slice`
+   * scales to cover, so a mismatch silently magnifies the rule and eats the
+   * 6px insets it is drawn with rather than erroring.
+   *
+   * THIS IS NOT THE BAND'S HEIGHT (#2100). The band has none: it sizes to its
+   * tallest child, the way the other eight feed frames always have. The
+   * ornament is pinned to the band's head and keeps its own proportion
+   * whatever the band grows to.
+   */
+  ruleHeight: number
+  /** The width the hairline is drawn to fill. Geometry. */
   view: number
   /** The sigil at the head of the band. Its HEIGHT — the mark owns its ratio
    *  (#1635) — so there is one number, not two. */
@@ -120,14 +131,14 @@ const SIZES: Record<'desktop' | 'mobile', BandSize> = {
   // 452 is the feed column's own basis (the sheet's `minmax(452px, 1fr)`), so
   // the band's hairline is drawn to the width it is actually shown at.
   desktop: {
-    height: 30,
+    ruleHeight: 30,
     view: 452,
     discHeight: 14,
     bandPadding: 'var(--space-xs) var(--space-md)',
     labelSize: 'var(--text-md)',
   },
   mobile: {
-    height: 26,
+    ruleHeight: 26,
     view: 360,
     discHeight: 10,
     bandPadding: 'var(--space-xs) var(--space-sm)',
@@ -159,25 +170,41 @@ export default function EphemeristsFeedFrame({
         color: INK,
       }}
     >
-      {/* ── The chassis band: night sky, ruled off, four chrome slots ── */}
+      {/* ── The chassis band: night sky, ruled off, four chrome slots ──
+          IT DECLARES NO HEIGHT (#2100), and that is the whole of the fix. It
+          sizes to its tallest child, which is how the other eight feed frames
+          have always worked — so a 44px control makes a 44px band, and the next
+          thing that needs more gets more without a second decision. The fixed
+          30/26 this carried was the ONLY numeric masthead height in the nine
+          frames, and under `overflow: hidden` it clipped anything taller than
+          itself for hit-testing as well as visually, by any mechanism. That is
+          what held the shared dismiss control down to a 24px target against
+          §6's non-negotiable 44.
+
+          `overflow: hidden` goes with it. With an intrinsic height there is
+          nothing left for it to clip — the ornament below is an `<svg>`, which
+          clips its own viewport, and the kicker carries its own ellipsis — so
+          it is inert, and an inert property that re-arms the trap the moment
+          someone puts a height back is worse than no property. */}
       <div
         style={{
           position: 'relative',
-          overflow: 'hidden',
-          height: size.height,
           background: BAND,
           color: BAND_INK,
         }}
       >
         <svg
           width="100%"
-          height={size.height}
-          // The viewBox tracks the band's own height, so `slice` crops the
-          // hairline at the edges rather than scaling it off the band.
-          viewBox={`0 0 ${size.view} ${size.height}`}
+          height={size.ruleHeight}
+          // The hairline keeps its OWN box, pinned to the band's head, rather
+          // than reading a band height that no longer exists. Element height
+          // and viewBox height are one number for that reason: `slice` crops
+          // rather than erroring, so a viewBox that disagreed with its box
+          // would magnify the rule and read as a design choice, not a bug.
+          viewBox={`0 0 ${size.view} ${size.ruleHeight}`}
           preserveAspectRatio="xMidYMid slice"
           aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
         >
           <path
             d={`M6 4 H${size.view - 6}`}
@@ -205,8 +232,14 @@ export default function EphemeristsFeedFrame({
           style={{
             position: 'relative',
             zIndex: 2,
-            height: '100%',
             display: 'flex',
+            // This row IS the band's height now (#2100) — it is the only
+            // in-flow child, so its content plus this padding is what the night
+            // ground measures. It carried `height: 100%` to fill the old fixed
+            // band; against an intrinsic parent that is inert at best and the
+            // second place the ceiling would come back. `center` is what keeps
+            // the sigil, kicker, tag and time on one optical line beside the
+            // tallest thing in the row rather than stretching to meet it.
             alignItems: 'center',
             gap: 'var(--space-sm)',
             padding: size.bandPadding,
@@ -260,10 +293,10 @@ export default function EphemeristsFeedFrame({
               `currentColor` and arrives finished (boxed, labelled, keyboard
               reachable, and `null` on a card that cannot be archived, which is
               `awaiting_submission`). Placed, never rebuilt. BAND_INK is what it
-              spends, at full strength since #2091 — 14.00:1 here in both themes,
-              and this band is also the reason that control's target is 24px and
-              not 44: the masthead's `height` is fixed and clipped, so nothing
-              taller than it can be hit. */}
+              spends, at full strength since #2091 — 14.00:1 here in both themes.
+              It is also the tallest thing in this row at §6's 44px, so it is the
+              control that sets the band's height rather than the one the band
+              used to cut down to 24 (#2100). */}
           {archive}
         </div>
       </div>
