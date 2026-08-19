@@ -11,7 +11,7 @@ import {
   READING,
   SHADOW,
 } from "../../factionMarks/ephemeristsPlate";
-import EphemeristsRuneStrip from "../../factionMarks/EphemeristsRuneStrip";
+import EphemeristsNotationBand from "../../factionMarks/EphemeristsNotationBand";
 import { EphemeristsBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -62,8 +62,8 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *
  * A 32-mark `DRIFT` array headed the vote block: a fixed sequence, crammed
  * edge to edge, breathing on `.epg-glyph`. It was the same motif
- * `EphemeristsRuneStrip` already draws for the task card, the task page and the
- * composer, transcribed a third time — exactly the drift `ephemeristsPlate.tsx`
+ * `EphemeristsNotationBand` already draws for the task card, the task page and
+ * the composer, transcribed a third time — exactly the drift `ephemeristsPlate.tsx`
  * was extracted to end, and exactly what #2210 / #2067 rule against. The
  * component takes its place, and it takes the BYLINE's rule rather than the
  * vote block's air: the owner's ruling is that the runes replace the dotted
@@ -167,8 +167,9 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
              should show up instead of the dotted line"*, corner to corner and
              evenly spread.
 
-             It is `EphemeristsRuneStrip`, the same component the task card, the
-             task page and the composer mount, and not a fourth transcription:
+             It is `EphemeristsNotationBand`, the same component the masthead,
+             the task card, the task page and the composer mount (#2230), and
+             not a fourth transcription:
              the 32-mark `DRIFT` array that used to head the vote block was a
              THIRD drawing of this motif, crammed rather than spread, and #2210 /
              #2067 both rule that this device is drawn once and consumed
@@ -179,7 +180,7 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
              the seed, and the composer already draws `praxis:${id}` at `top`. */
           bylineDivider={
             <div style={{ margin: LEAF_BLEED }}>
-              <EphemeristsRuneStrip side="divider" seed={`praxis:${praxis.id}`} />
+              <EphemeristsNotationBand side="divider" seed={`praxis:${praxis.id}`} />
             </div>
           }
           voteRule={

@@ -577,15 +577,26 @@ const SNIDE_WALL_GROUNDS: { where: string; surface: string; wash?: string }[] = 
 ];
 
 /**
- * Every ink S.N.I.D.E. prints straight on that wall, across the three surfaces.
+ * Every ink S.N.I.D.E. prints straight on that wall, across the four surfaces.
  * The `-note-*` tiers are the clipping's (task card, praxis card, both detail
  * columns); the `-composer-*` tiers are the sheet's. They carry the same values
  * today and stay two families for #1181's reason.
+ *
+ * The FOURTH surface is the faction page itself (#2343): its hero and all four
+ * panels stopped grounding on the invariant press ink and took this wall, so
+ * every tier below is read there too. Two rows are new with it — both are inks
+ * that already existed for this ground and were only ever measured UNDER a wash
+ * (the badge's danger veil, the mode chip's own 8%), and the faction page reads
+ * them BARE: `-wall-credit` as the marker scrawl over the About flyer and the rap
+ * sheet, `-wall-alarm` as the join error. A reading through a veil does not vouch
+ * for the reading without one, which is #1028 in the direction people forget.
  */
 const SNIDE_WALL_INKS = [
   ["headline and title", "--faction-snide-note-ink"],
   ["brief and excerpt", "--faction-snide-note-muted"],
   ["the pink that is text", "--faction-snide-note-pink-ink"],
+  ["the marker scrawl, bare", "--faction-snide-wall-credit"],
+  ["the join error, bare", "--faction-snide-wall-alarm"],
   ["composer ink", "--faction-snide-composer-ink"],
   ["composer prose", "--faction-snide-composer-muted"],
   ["composer faint ink", "--faction-snide-composer-faint"],
@@ -2995,14 +3006,20 @@ describe("`--faction-snide-acid` never touches paper (#2173)", () => {
     const at = source.indexOf("const SECTION_HEADING_TEXT");
     expect(at, `no \`SECTION_HEADING_TEXT\` in ${BODY}`).toBeGreaterThan(-1);
     const style = source.slice(at, source.indexOf("};", at));
+    // The pairing is spelt once now and spread — #2343 flipped this page's
+    // panels onto the wall, so the five OTHER acid headings that used to sit on
+    // a black panel need the identical two declarations, and transcribing them
+    // six times is how one of the six later loses its plate. The assertion is
+    // the same assertion, read through the alias: this heading takes the plate,
+    // and the plate is acid on photocopier black.
     expect(
       style,
       "`SectionHeading` renders straight into `.wz-faction-grid`, which stands on `.snide-backdrop` — and that wall FLIPS while the acid does not.",
-    ).toContain("color: ACID");
+    ).toContain("...ACID_PLATE");
     expect(
-      style,
+      source,
       "acid as TYPE owes a photocopier-black ground: 16.33:1 in both cascades, and on the light wall the plate is the censor bar the ruling asked for. Lightening it to make the bar visible at night spends exactly that ratio.",
-    ).toContain("background: INK");
+    ).toMatch(/const ACID_PLATE: CSSProperties = \{ color: ACID, background: INK \};/);
   });
 
   it("the empty states on the wall take the wall's ink, not the card's", () => {
@@ -3228,6 +3245,267 @@ describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
         ).toBe(1);
         const ratio = contrastRatio(letter.color!, scrap.color!);
         expect(ratio, `${col} on ${bg} (${theme}) is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
+  }
+});
+
+/**
+ * The S.N.I.D.E. FACTION PAGE stands on the wall (#2343).
+ *
+ * The same move as #2287 one block up, on the surface the owner was actually
+ * looking at: the page's ground already flipped — `useFactionBackdrop` paints it
+ * with `--faction-snide-wall` — while the hero and all four panels grounded on
+ * `--faction-snide-ink`, which is theme-INVARIANT. So in light the whole page was
+ * a dark island on a cream sheet. It REVERSES #2227, on the owner's ruling, and
+ * it does not bring back what #2227 was right to retire: `--faction-snide-paper`
+ * stays an ink. The panels take the wall, which already flips.
+ *
+ * WHY THE SWEEP IS THE INTERESTING HALF. #2173's own scope note recorded that
+ * "exactly one site was inked onto the wall" — true, and true only because every
+ * other acid-as-type site on this page sat inside the panel and the panel was
+ * black. Flipping the panel lands all of them on paper in the same commit. That
+ * is a shape a ratio manifest cannot see: it knows what an ink sits ON only where
+ * somebody wrote the pairing down, and here the ground arrives from three
+ * spreads away. So seam (a) is a SOURCE sweep, over both files, for the general
+ * form of the defect — an acid ink whose own style object declares no plate —
+ * rather than a list of today's six sites.
+ *
+ * SEAM (b) IS MOSTLY INHERITED, WHICH IS THE ARGUMENT FOR THE INKS CHOSEN.
+ * `SNIDE_WALL_PAIRS` already measures `-note-ink`, `-note-muted` and
+ * `-note-pink-ink` on both ends of the wall's ramp, both washed corners and both
+ * themes, because three other surfaces already stand there; two rows were added
+ * to that generator for the readings this page is the first to take BARE. Nothing
+ * was minted. The rows below are the ones the generator cannot reach: a pairing
+ * whose ground is the plate rather than the wall.
+ *
+ * WHAT MOVED IN DARK, stated because "unchanged" is the acceptance and this is
+ * not byte-identical. The panel ground goes #14110b -> #0a0a0b and its primary
+ * ink is unchanged at #f4f1e8; against the page's own backdrop the panel was
+ * already only 1.045:1 and is now 1.000:1, which is a separation the edge and the
+ * offset were always doing. `-card-muted` -> `-note-muted` is #d8d6c8 -> #cfcdbf.
+ * Every dark pairing on both surfaces stays above 11:1.
+ */
+describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
+  const BODY = "pages/factionDetail/archetypes/SnideFactionBody.tsx";
+  const HERO = "components/factionHero/SnideFactionHero.tsx";
+
+  /**
+   * The aliases the source rows are written against — #2173's guard, verbatim.
+   * A rename would otherwise pass by matching nothing.
+   */
+  const ALIASES: Record<string, ReadonlyArray<readonly [string, string]>> = {
+    [BODY]: [
+      ["ACID", "--faction-snide-acid"],
+      ["INK", "--faction-snide-ink"],
+      ["WALL", "--faction-snide-wall"],
+      ["NOTE_INK", "--faction-snide-note-ink"],
+      ["NOTE_MUTED", "--faction-snide-note-muted"],
+      ["NOTE_PINK", "--faction-snide-note-pink-ink"],
+      ["WALL_GREEN", "--faction-snide-wall-credit"],
+      ["WALL_ALARM", "--faction-snide-wall-alarm"],
+    ],
+    [HERO]: [
+      ["WALL", "--faction-snide-wall"],
+      ["NOTE_INK", "--faction-snide-note-ink"],
+      ["NOTE_MUTED", "--faction-snide-note-muted"],
+      ["GRAIN", "--faction-snide-wall-text"],
+      ["ACID", "--faction-snide-acid"],
+      ["PLATE", "--faction-snide-ink"],
+    ],
+  };
+
+  function boundSource(file: string): string {
+    const source = stripComments(sourceOf(file));
+    for (const [alias, token] of ALIASES[file]) {
+      expect(
+        source,
+        `${file} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
+      ).toMatch(new RegExp(`const ${alias} = ["']var\\(${token}\\)["']`));
+    }
+    return source;
+  }
+
+  /**
+   * The `{ … }` literal a declaration sits inside — the style object, found by
+   * brace depth rather than by regex, because a style object contains template
+   * literals with their own `${}` and a block match would swallow the file.
+   */
+  function styleObjectAround(source: string, at: number): string {
+    let depth = 0;
+    let open = -1;
+    for (let i = at; i >= 0; i--) {
+      if (source[i] === "}") depth++;
+      else if (source[i] === "{") {
+        if (depth === 0) {
+          open = i;
+          break;
+        }
+        depth--;
+      }
+    }
+    expect(open, `no enclosing style object for the declaration at ${at}`).toBeGreaterThan(-1);
+    depth = 0;
+    for (let i = open + 1; i < source.length; i++) {
+      if (source[i] === "{") depth++;
+      else if (source[i] === "}") {
+        if (depth === 0) return source.slice(open, i + 1);
+        depth--;
+      }
+    }
+    throw new Error(`unclosed style object at ${open}`);
+  }
+
+  /**
+   * The style object of the element that renders `marker` — its LAST occurrence,
+   * because `{spot.display_name}` is also the `Mugshot`'s `name=` prop three
+   * elements above the name plate, and the mugshot brings its own ground.
+   */
+  function styleRendering(source: string, file: string, marker: string): string {
+    const at = source.lastIndexOf(marker);
+    expect(at, `no \`${marker}\` in ${file}`).toBeGreaterThan(-1);
+    const style = source.lastIndexOf("style={{", at);
+    expect(style, `\`${marker}\` in ${file} is rendered by no styled element`).toBeGreaterThan(-1);
+    return styleObjectAround(source, style + "style={{".length);
+  }
+
+  it("the hero grounds on the wall that flips, not the press that does not", () => {
+    const source = boundSource(HERO);
+    // The hero's own `<header>` is the file's first styled element.
+    const header = styleObjectAround(source, source.indexOf("style={{") + "style={{".length);
+    expect(header, "the hero's own ground is the wall").toContain("background: WALL");
+    expect(
+      header,
+      "`-card-text` is pinned #f4f1e8 in both themes and reads 1.05:1 on the light wall; the wall's ink flips with it.",
+    ).not.toContain("card-text");
+    expect(
+      source,
+      "the eyebrow typed in the INVARIANT `-paper` — xerox white on xerox stock.",
+    ).not.toMatch(/color: PAPER|color: "var\(--faction-snide-paper\)"/);
+  });
+
+  it("the hero's raster and its five ghosts flip with the ground", () => {
+    const source = boundSource(HERO);
+    for (const [alpha, why] of [
+      ["rgba(182,255,46", "acid at 2.5-7% over xerox stock is a luminance step of 0.0006 — the hero would render as the one flat rectangle on a textured page"],
+      ["rgba(255,45,139", "the pink ghosts were drawn against black too"],
+      ["rgba(0,0,0,0.34", "the stat chits' wash is #2303, and the plate acid owes the wall resolves it — there is no wash left to name a rung for"],
+    ] as const) {
+      expect(source, `${why} (#2343).`).not.toContain(alpha);
+    }
+    expect(
+      source,
+      "the DENSITY is still the drawing and every percentage is unchanged; only the hue moved onto the ink that flips with the ground.",
+    ).toMatch(/color-mix\(in srgb, \$\{GRAIN\} 5\.5%, transparent\)/);
+  });
+
+  it("the panels take the wall, and the edge that separates them from it", () => {
+    const source = boundSource(BODY);
+    const at = source.indexOf("const WALL_PANEL");
+    expect(at, `no \`WALL_PANEL\` in ${BODY}`).toBeGreaterThan(-1);
+    const panel = source.slice(at, source.indexOf("};", at));
+    expect(panel, "the panel's ground FLIPS with the page it is pasted to").toContain("background: WALL");
+    expect(panel, "and so does the ink read on it").toContain("color: NOTE_INK");
+    expect(
+      panel,
+      "the page's own ground is this same wall, so the edge is the only thing that separates a panel from it — and an 18% acid hairline over xerox stock is a 0.004 luminance step. `-note-wall-edge` flips, and is the edge the task card on this very page already draws.",
+    ).toContain("--faction-snide-note-wall-edge");
+    expect(
+      source,
+      "`INK_PANEL` grounded on the INVARIANT press ink while the page under it flipped. That name is the whole bug — the wall is `-wall`, `-ink` is the press.",
+    ).not.toContain("INK_PANEL:");
+  });
+
+  it("nothing on either surface reads the CARD's tiers on the wall", () => {
+    for (const [file, allowed] of [
+      // The hero's stat chits ARE a slab — they ground on the plate — so the
+      // card's quiet tier is the correct one inside them and only inside them.
+      [HERO, 1],
+      [BODY, 0],
+    ] as const) {
+      const source = boundSource(file);
+      const hits = source.match(/--faction-snide-card-(?:text|muted)\b/g) ?? [];
+      expect(
+        hits.length,
+        `${file} reads the CARD's tier ${hits.length} times and ${allowed} site(s) stand on a slab. Every other one is on the wall, where -card-text is 1.05:1 and -card-muted 1.24:1 by day (#2066, #2173).`,
+      ).toBe(allowed);
+    }
+  });
+
+  it("no acid ink on either surface has a non-ink immediate ground", () => {
+    // The general form of #2173, swept rather than listed: wherever `ACID` is
+    // set as a `color`, the SAME style object must set a ground that is the
+    // photocopier plate. A site that reaches its ground from a parent passes a
+    // per-element sweep and fails a viewer, so the plate is co-located by rule —
+    // which is why the hero's chit numeral inherits its acid from the chit.
+    const ACID_AS_INK = /\bcolor:\s*[^,;\n}]*\bACID\b/g;
+    const PLATED = /background:[^,;\n}]*\b(?:INK|PLATE)\b/;
+    for (const file of [BODY, HERO]) {
+      const source = boundSource(file);
+      const matches = [...source.matchAll(ACID_AS_INK)];
+      expect(matches.length, `no acid ink at all in ${file} — this sweep has stopped reading the surface`).toBeGreaterThan(0);
+      for (const match of matches) {
+        expect(
+          styleObjectAround(source, match.index!),
+          `${file}: acid is set as an ink here with no photocopier plate under it. On the light wall that is 1.03:1, and there is no darker acid to reach for — the ground moves, not the ink (#2173).`,
+        ).toMatch(PLATED);
+      }
+    }
+  });
+
+  it("every acid heading the panel flip landed on paper kept its plate", () => {
+    const source = boundSource(BODY);
+    for (const [marker, role] of [
+      ['t("snide.dispatch.letterhead")', "the dispatch letterhead"],
+      ['t("snide.dispatch.memberTitle")', "the member standing headline"],
+      ['t("snide.dispatch.eligibleTitle")', "the join headline"],
+      ['t("snide.dispatch.gateTitle")', "the gate / burned headline"],
+      ['t("snide.spotlight.label")', "the WANTED spotlight label"],
+      ["{spot.display_name}", "the spotlight's stencilled name plate"],
+    ] as const) {
+      expect(
+        styleRendering(source, BODY, marker),
+        `${role} was acid on a BLACK panel until #2343 flipped the panel onto the wall. It owes the plate now.`,
+      ).toContain("...ACID_PLATE");
+    }
+  });
+
+  it("the pinks and greens that carry WORDS stepped onto the wall's rungs", () => {
+    const source = boundSource(BODY);
+    expect(
+      source,
+      "`PINK` is the PIGMENT: correct as a FILL (the join button, which inks through `-on-accent` at 5.38:1) and 2.98:1 as TYPE on the light wall.",
+    ).not.toMatch(/color: PINK[,\s}]/);
+    expect(
+      source,
+      "`GREEN` is `-acid-deep`, picked because it read on the always-dark panel; on the light wall it is 2.30:1. It keeps the barcode and the mugshot's rim, whose ground really is the press.",
+    ).not.toMatch(/color: GREEN[,\s}]/);
+    expect(source, "the marker scrawl takes the wall's own green").toContain("color: WALL_GREEN");
+    expect(
+      source,
+      "the join error printed the GLOBAL `--color-danger`, measured on `--color-bg-page` and 4.08:1 here.",
+    ).not.toContain("var(--color-danger)");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`the pairings whose ground is the PLATE rather than the wall clear AA (${theme})`, () => {
+      for (const [ink, ground, floor, role] of [
+        // The hero's stat chits: an opaque plate now, so the numeral is read
+        // against the plate and not against a 34% black over whatever the wall is.
+        ["--faction-snide-acid", "--faction-snide-ink", AA_LARGE, "the stat chit's numeral"],
+        ["--faction-snide-card-muted", "--faction-snide-ink", AA_NORMAL, "the stat chit's label"],
+        // The motto sticker and the plated headings, restated at this surface:
+        // both are the same 15.55:1 / 16.33:1 pairing #2173 rests on.
+        ["--faction-snide-ink", "--faction-snide-acid", AA_NORMAL, "the motto on its acid sticker"],
+      ] as const) {
+        const text = resolveColor(ink, theme);
+        const surface = resolveColor(ground, theme);
+        expect(text.color, `${ink} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+        expect(surface.color, `${ground} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(ratio, `${role}: ${ink} on ${ground} (${theme}) is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+          floor,
+        );
       }
     });
   }
@@ -3495,6 +3773,42 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
         /const fieldBox = \{[\s\S]*?borderRadius: 0/.test(source),
         `${skin.source}'s fieldBox is no longer square — the collab radius above was matched to it`,
       ).toBe(true);
+    });
+  }
+});
+
+/**
+ * COVEN'S WITCH HAT, LAID STRAIGHT ON THE SLIP (#2325).
+ *
+ * NOT A `PAIRS` ROW, and the reason is the manifest's own guard: `AA_LARGE`
+ * there is reserved for large display TYPE, and this is 1.4.11's identical 3:1
+ * for a graphical object. Same number, different rule -- the same distinction
+ * S.N.I.D.E.'s level-track block up the file draws.
+ *
+ * WHY IT NEEDS ONE AT ALL. Everywhere else on the card kit the mark stands on
+ * `CovenBand`'s white `--faction-coven-slip-sigil-ground`, where the sigil's own
+ * `--faction-coven` default is 3.15:1 and index.css says so at the token. The
+ * faction-DIRECTORY tile has no band, so it is the first surface to lay a drawn
+ * Coven mark straight on the four-stop ramp -- and `--faction-coven` is 2.11:1
+ * there, which is why the tile takes `--faction-coven-slip-deep`, the module's
+ * declared ornament ink, rather than borrowing the band's.
+ *
+ * `-slip-mid` is the ramp's WORST stop for this in BOTH cascades: the darkest by
+ * day (the whole reason the slip block up the file measures on it) and the
+ * lightest by night. 3.33:1 / 6.11:1 as shipped.
+ */
+describe("the Coven directory tile's mark clears the graphical floor", () => {
+  for (const theme of BOTH_THEMES) {
+    it(`the witch hat reads on the slip's worst stop (${theme})`, () => {
+      const ink = resolveColor("--faction-coven-slip-deep", theme);
+      const ground = resolveColor("--faction-coven-slip-mid", theme);
+      expect(ink.color, `-slip-deep (${theme}) resolved to "${ink.raw}"`).not.toBeNull();
+      expect(ground.color, `-slip-mid (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+      const ratio = contrastRatio(ink.color!, ground.color!);
+      expect(
+        ratio,
+        `the hat is ${formatRatio(ratio)} on the ramp's worst stop (${theme}); a drawn mark owes 1.4.11's 3:1`,
+      ).toBeGreaterThanOrEqual(AA_LARGE);
     });
   }
 });
