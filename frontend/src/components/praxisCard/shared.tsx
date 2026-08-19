@@ -553,17 +553,46 @@ export function PraxisExcerpt({
   );
 }
 
-/** A round avatar disc showing the first initial — ringed in the frame accent. */
+/**
+ * A round avatar disc — the person's portrait, ringed in the frame accent, and
+ * their first initial when they have no portrait (#2318).
+ *
+ * Deliberately NOT `collab/RosterAvatar`, which is a different component with
+ * the same name: that one is 34px and draws a TWO-letter monogram, and adopting
+ * it here would change the fallback on all nine card archetypes. This is the
+ * card's own dress; only the portrait is new.
+ */
 function RosterAvatar({
   name,
+  avatarUrl,
   accent,
   paper,
 }: {
   name: string;
+  /** Raw wire path. Empty or absent falls back to the initial. */
+  avatarUrl?: string | null;
   accent: string;
   paper?: string;
 }) {
   const initial = (name.trim()[0] ?? "?").toUpperCase();
+  if (avatarUrl) {
+    return (
+      <img
+        aria-hidden
+        alt=""
+        src={mediaUrl(avatarUrl)}
+        style={{
+          flex: "none",
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: `1.5px solid ${accent}`,
+          boxSizing: "border-box",
+        }}
+      />
+    );
+  }
   return (
     <span
       aria-hidden
@@ -614,12 +643,20 @@ export function PraxisRoster({
       style={{ gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}
     >
       <span style={{ display: "inline-flex" }}>
-        {names.map((name, index) => (
+        {/* The same cap `rosterNames` applies, over the member rows themselves:
+            the discs need the portrait, and `rosterNames` deliberately narrows
+            to a display name so it can serve any shape with one. */}
+        {members.slice(0, ROSTER_NAME_CAP).map((member, index) => (
           <span
-            key={index}
+            key={member.id}
             style={{ marginLeft: index === 0 ? undefined : "calc(var(--space-sm) * -1)" }}
           >
-            <RosterAvatar name={name} accent={accent} paper={paper} />
+            <RosterAvatar
+              name={member.character_display_name}
+              avatarUrl={member.character_avatar_url}
+              accent={accent}
+              paper={paper}
+            />
           </span>
         ))}
       </span>
