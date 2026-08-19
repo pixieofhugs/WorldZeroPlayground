@@ -326,18 +326,16 @@ describe('one ornament vocabulary, and it is the notation band (#2210)', () => {
   })
 
   /**
-   * The band is THE MASTHEAD'S LAST LINE — that is the whole argument for it
-   * (#2143), and it is why the surfaces with no lockup get nothing in the
-   * register's place rather than a band mounted to fill the space. The faction
-   * hero, the feed frame and the select tile each head themselves by hand; none
-   * of them takes `EphemeristsMasthead`, so none of them takes the band.
+   * THE BAND'S OWN MOUNT CENSUS MOVED (#2230). It read "from the masthead and
+   * nowhere else" — true while the band was the masthead's last line and the
+   * rune strip was a second drawing of the same motif. #2230 retired the strip
+   * INTO the band, so the band now has five mounts and the census belongs beside
+   * the component it counts: `factionMarks/__tests__/ephemeristsNotationBand`,
+   * which also carries the harder guard #2341 asked for — keyed on the mark POOL
+   * rather than on the component's name, because a re-transcription can be
+   * renamed and a pool cannot be left behind. Restating the list here would give
+   * one ruling two homes to drift between.
    */
-  it('mounts the notation band from the masthead and nowhere else', () => {
-    const mounts = sources().filter(({ source }) => source.includes('<EphemeristsNotationBand'))
-    expect(mounts.map(({ path }) => path.split(/[\\\/]/).pop())).toEqual([
-      'EphemeristsMasthead.tsx',
-    ])
-  })
 })
 
 /**

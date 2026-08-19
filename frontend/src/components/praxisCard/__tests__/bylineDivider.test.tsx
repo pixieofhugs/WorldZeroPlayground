@@ -4,7 +4,8 @@
  * Owner ruling, on a screenshot of the Ephemerists praxis card: *"the runes
  * should show up instead of the dotted line under 'no proof attached'"*. So
  * `PraxisByline`'s `border-top: 1px dashed …` became an optional `divider`
- * node, and the Ephemerists plate passes its rune strip.
+ * node, and the Ephemerists plate passes its notation band (`EphemeristsNotationBand`,
+ * which absorbed the rune strip in #2230).
  *
  * THE SEAM IS THE NINE CARDS' RENDERED BYLINE, not `PraxisByline` in isolation,
  * and the distinction is the whole reason this file exists. A shared slot taking
@@ -26,6 +27,8 @@
  * these pin markup given props. Nothing here is measured — that the strip
  * reaches both card edges is a cascade fact and is eyeballed.
  */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ComponentType } from "react";
@@ -51,9 +54,10 @@ import SnidePraxisCard from "../desktop/SnidePraxisCard";
 import UaPraxisCard from "../desktop/UaPraxisCard";
 import WowPraxisCard from "../desktop/WowPraxisCard";
 
-import EphemeristsRuneStrip, {
-  type RuneStripSide,
-} from "../../factionMarks/EphemeristsRuneStrip";
+import { drawNotation } from "../../factionMarks/EphemeristsNotationBand";
+
+/** The card's own source — read for the one claim markup cannot carry. */
+const CARD = fileURLToPath(new URL("../desktop/EphemeristsPraxisCard.tsx", import.meta.url));
 import { aPraxisCard } from "../../../test/fixtures";
 
 /** The rule as it is declared in `PraxisByline`, spelled out on purpose. */
@@ -144,31 +148,26 @@ describe("the Ephemerists plate rules its byline with runes (#2312)", () => {
     expect(html(), "the retired inline drift").not.toContain("epg-glyph");
   });
 
-  it("draws a different row per praxis, and the same row for the same praxis", () => {
-    const runes = (id: number) => {
-      const praxis = aPraxisCard({ task_faction_slug: "ephemerists", id });
-      const rendered = renderToStaticMarkup(
-        <MemoryRouter>
-          <EphemeristsPraxisCard praxis={praxis} adminProps={{ ...adminProps, praxis }} />
-        </MemoryRouter>,
-      );
-      const at = rendered.indexOf('data-eph-runes="divider"');
-      return rendered.slice(at, rendered.indexOf("</div>", at));
-    };
-    // Seeded per surface (#2146), so a feed does not march one row down the
-    // page — and stable, so a vote landing or a hover firing cannot reshuffle
-    // it under the reader.
-    expect(runes(41)).not.toBe(runes(42));
-    expect(runes(41)).toBe(runes(41));
+  it("draws a different row per praxis, and seeds the byline apart from the composer", () => {
+    // AT THE DRAW, not at the markup, and that is #2230's doing: the row's
+    // count is measured off a real element now, and this harness has no DOM, so
+    // a rendered divider is an empty divider here however it was seeded. What
+    // the card owes is the SEED it passes, and this is what that seed draws.
+    //
+    // Different per praxis, so a feed does not march one row down the page;
+    // stable per praxis, so a vote landing cannot reshuffle it under the reader.
+    // And distinct from `top`, because the composer draws `praxis:${id}` too and
+    // only the side keeps the two apart.
+    const row = (seed: string) => JSON.stringify(drawNotation(seed));
+    expect(row("praxis:41:divider")).not.toBe(row("praxis:42:divider"));
+    expect(row("praxis:41:divider")).toBe(row("praxis:41:divider"));
+    expect(row("praxis:41:divider")).not.toBe(row("praxis:41:top"));
   });
 
-  it("seeds the divider apart from the composer's leading strip", () => {
-    // Both surfaces seed `praxis:${id}`; the component folds `side` in, so the
-    // third value is what keeps the byline's row off the composer's. Asserted
-    // against the component directly — the composer is a page, not a card.
-    const seed = "praxis:41";
-    const row = (side: RuneStripSide) =>
-      renderToStaticMarkup(<EphemeristsRuneStrip side={side} seed={seed} />);
-    expect(row("divider")).not.toBe(row("top"));
+  it("hands the strip the praxis's own id as its seed", () => {
+    // The half the assertion above cannot see: that the CARD is the thing
+    // passing `praxis:${id}`. A card that hard-coded one seed would draw one row
+    // for the whole feed and every claim above would still hold.
+    expect(readFileSync(CARD, "utf8")).toContain('seed={`praxis:${praxis.id}`}');
   });
 });
