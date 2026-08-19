@@ -273,12 +273,20 @@ export default function SnideFactionHero({
                   "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
               }}
             >
+              {/* The medallion's own raster, and the LAST raw colour on this
+                  file (#1853's list, class 2). It does not flip and must not:
+                  the disc under it is `--faction-snide-paper`, which has one
+                  value in both cascades, so photocopier ink at 6% is correct by
+                  day and by night alike. The literal was still a literal,
+                  though, and `color-mix(in srgb, <token> N%, transparent)` IS
+                  that rgba to the byte — so the density stays here, the hue gets
+                  its name, and the file comes off the list. */}
               <div
                 className="ht-dots"
                 style={{
                   position: "absolute",
                   inset: 0,
-                  color: "rgba(20,17,11,0.06)",
+                  color: `color-mix(in srgb, ${PLATE} 6%, transparent)`,
                   borderRadius: "50%",
                   pointerEvents: "none",
                 }}

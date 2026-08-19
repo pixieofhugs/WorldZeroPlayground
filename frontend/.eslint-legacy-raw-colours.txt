@@ -112,7 +112,14 @@
 #
 # THE 27 THAT STAY were six ornament classes, and the reason is per class rather
 # than per line — this is one metaphor at a time, not a residue of stragglers.
-# Class 1 is now cleared, so the standing figure is 8 FILES / 13 VIOLATIONS.
+# Class 1 is now cleared, so the standing figure is 7 FILES / 8 VIOLATIONS —
+# #2343 took `SnideFactionHero`, the whole of classes 4 and 7 and two thirds of
+# class 2, off in one move. It is worth naming what that move WAS: not a sweep,
+# but a GROUND change on the surface those alphas were drawn against. Four of
+# the five were repairs (an alpha cannot follow a ground that flips) and the
+# fifth was free (a color-mix of a token IS the rgba it replaces). Three of the
+# six classes below were written as standing decisions and two of them were
+# really standing PREMISES about a surface that has since moved.
 # Classes 2-6 keep their numbers: the site comments and two PR bodies cite them,
 # and renumbering a decision record to close a gap loses the trail.
 #
@@ -143,10 +150,24 @@
 #      `color-mix(in srgb, <token> N%, transparent)`; these were the holdouts.
 #      Four files came off the list. Byte cost: one declaration, comments
 #      stripped by the minifier.
-#   2. HALFTONE DOT FIELDS — `rgba(182,255,46,0.055)` / `0.08` acid on ink,
-#      `rgba(20,17,11,0.06)` ink on the medallion. The list's own example. The
-#      density IS the drawing; `--faction-snide-acid` names the tier the strip
-#      and the chit rules read, and pointing grain at it couples the two.
+#   2. HALFTONE DOT FIELDS — acid on ink at 0.055 / 0.08, and photocopier ink
+#      on the medallion at 0.06. The list's own example, and CLEARED for
+#      `SnideFactionHero` by #2343 — for two different reasons, which is the
+#      part worth carrying.
+#      The reasoning above was "the density IS the drawing; pointing grain at
+#      `--faction-snide-acid` couples the two". That was right about the density
+#      and wrong about what a hue is FOR. The acid alphas were drawn against
+#      photocopier black, and #2343 moved the hero onto the wall, which FLIPS —
+#      so on xerox stock acid at 5.5% is a 0.0006 luminance step and the raster
+#      painted nothing at all. They read `--faction-snide-wall-text` now, which
+#      reverses polarity with its own ground, at exactly the percentages they
+#      always had. A raw alpha cannot follow a ground; that is the whole of it.
+#      The medallion's is the other reason: its disc is the INVARIANT
+#      `--faction-snide-paper`, so 6% ink was correct in both cascades and had
+#      no defect to fix — but `color-mix(in srgb, <token> N%, transparent)` IS
+#      that rgba to the byte, so naming the hue repaints nothing and takes the
+#      last literal off the file. **An alpha that is theme-correct still owes
+#      its hue a name**; only the percentage was ever the drawing.
 #   3. INSET PLATE WELLS — the Coven moon plate, the Ephemerists vote plate,
 #      the S.N.I.D.E. amp panel. An inset recess is not a cast: the cast token
 #      names what a surface throws onto the ground BEHIND it, and all three
@@ -155,7 +176,11 @@
 #      deliberately; re-decided here and the call holds.
 #   4. THE PASTED-FLYER GHOSTS — a border and a fill at 0.07 / 0.035 / 0.025,
 #      alternating acid and pink. Five absolutely-positioned rectangles that
-#      exist to be barely visible.
+#      exist to be barely visible. CLEARED by #2343, with class 2 and for the
+#      same reason: "barely visible" is a statement about a ground, and this one
+#      started flipping. All three percentages survive; the alternation survives
+#      as density rather than as hue, because the pink half was the only one of
+#      the two that showed on cream at all.
 #   5. THE BROADSHEET'S RULED LINE — `rgba(100,140,200,0.08)` every 17/18px.
 #      Deliberately NOT `--faction-everymen-dispatch-rule` (0.12, every 24px),
 #      which names the dispatch SLIP's rule: two drawings the family keeps
@@ -182,13 +207,21 @@
 #   7. ONE SURVIVOR THE SIX CLASSES NEVER COVERED, found while clearing class 1
 #      and RECORDED HERE RATHER THAN DECIDED — deciding it was not that pass's
 #      job, and an undecided line with no reason on it is how a list stops being
-#      a decision record. `SnideFactionHero`'s staggered stat chits fill with a
-#      bare `rgba(0,0,0,0.34)`: a translucent WASH on the flyposted wall, not the
-#      offset register on the same element and not classes 2-6. It is the 13th of
-#      the 13. What a decider has to weigh: the wall it darkens is
-#      `--faction-snide-ink`, theme-invariant, so this is a hue question — does
-#      the chit want a named wash rung, the way `-note-wash-acid`/`-pink` have
-#      one? — and not a dark-mode one.
+#      a decision record. `SnideFactionHero`'s staggered stat chits filled with a
+#      bare 34% black: a translucent WASH on the flyposted wall, not the offset
+#      register on the same element and not classes 2-6. It was the 13th of the
+#      13, split out as #2303, and the question posed for a decider was: does the
+#      chit want a named wash rung, the way `-note-wash-acid`/`-pink` have one?
+#      RESOLVED BY #2343, AND NOT BY ANSWERING IT. The premise the question
+#      rested on was that "the wall it darkens is `--faction-snide-ink`,
+#      theme-invariant, so this is a hue question and not a dark-mode one". The
+#      hero was never on the wall — it was on the PRESS, calling it the wall in
+#      its own comments — and once it stood on `--faction-snide-wall`, which
+#      flips, a 34% black over xerox stock composited to mid-grey and took the
+#      chit's acid numeral to 2.4:1. Acid as type owes a photocopier-black plate
+#      (#2173), so the chit IS the plate now, opaque, and there is no wash left
+#      to name a rung for. **A parked hue question can be answered by the ground
+#      moving; re-read its premise before pricing it.**
 #
 # THE BLIND SPOTS, restated after class 1 (none is a hole in the regex, §4a).
 # Both shapes are still open in the RULE; the class-1 instances of them are gone.
@@ -206,7 +239,6 @@
 #     and none is reportable, so none can go on this list. They are named here so
 #     the next reader knows the list undercounts, and they belong to whoever
 #     takes classes 2-7.
-src/components/factionHero/SnideFactionHero.tsx
 src/components/metataskSeal/skins/EphemeristsSeal.tsx
 src/components/metataskSeal/skins/SnideSeal.tsx
 src/components/praxisCard/desktop/EverymenPraxisCard.tsx
