@@ -6490,16 +6490,21 @@
   /* the near-white plate a stat / honour / chronicle row is struck on */
   --faction-wow-plate: #fffcf2;
   --faction-wow-plate-border: rgba(200, 160, 42, 0.34);
-  /* the tag chip on the pledge card */
-  --faction-wow-chip-bg: #f1e3b8;
-  --faction-wow-chip-border: #d9c589;
+  /* The tag chip on the pledge card was `--faction-wow-chip-bg` /
+     `-chip-border` and is now the DECREE's crowned plaque — `-chronicle-panel`
+     inside `-chronicle-gold` (#2328). The tile was the two names' entire
+     readership, so they went with it: a page-kit plate answering a role the
+     faction's own card had already answered is the fork #2321 is about, even
+     though both sides were live, declared and measured. */
   /* the hairline rule between hero tallies */
   --faction-wow-rule: rgba(200, 160, 42, 0.4);
-  /* the gilt button. from/to/ink are the avatar pill's — the kit strikes the
-     same lozenge for its buttons and its honour medallions — plus the one mid
-     stop the three-stop button gradient adds. */
+  /* The gilt mid stop, kept for `WowBand`'s lettering (3.47:1 on the plum) —
+     theme-invariant, which is why it is not restated below. The button ring
+     `--faction-wow-gilt-border` went with the pledge card's gilt lozenge
+     (#2328): the decree's CTA is plum, and that button was its only reader.
+     `-gilt-mid`'s companions from/to/ink live on as `--faction-wow-quest-*`,
+     which alias the avatar pill's stops directly. */
   --faction-wow-gilt-mid: #e7b94e;
-  --faction-wow-gilt-border: var(--faction-wow-avatar-pill-border);
 }
 [data-theme="dark"] {
   /* NOT the kit's #241c0b — see note 3 above. This is --faction-wow-card-bg's
@@ -6512,10 +6517,7 @@
   --faction-wow-hatch: rgba(227, 184, 74, 0.1);
   --faction-wow-plate: #221a0c;
   --faction-wow-plate-border: #4a3a0e;
-  --faction-wow-chip-bg: #2a2210;
-  --faction-wow-chip-border: #4a3a0e;
   --faction-wow-rule: #4a3a0e;
-  --faction-wow-gilt-border: #e1c877;
   /* plum-surface, on-plum, figure and gilt-mid do NOT flip — see notes 1 and 2 */
   /* The night pavilion needs no walked ink (#2248): on the dark corner #32271c
      the three chronicle inks read 6.39 / 7.10 / 5.51, so each page ink is the
