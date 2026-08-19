@@ -1,0 +1,30 @@
+// Typecheck for the Playwright suite (issue #1780).
+//
+// `tsconfig.json` is `include: ["src"]`, so nothing in CI has ever looked at
+// `frontend/e2e/`. That matters because the suite is not all thin driver:
+// `contrastScan.ts`, `contrastBaseline.ts` and `triageFindings` hold real
+// decisions, and #1762 changed `BaselineEntry.ratio` across two of them with
+// no check able to catch getting it wrong.
+//
+// A separate config rather than widening `tsconfig.json`'s `include`: the
+// specs import `@playwright/test`, and the app's own build graph must not
+// reach a test-runner package. Same reasoning, and the same shape, as
+// `tsconfig.design-sync.json`.
+//
+// Wired into CI by being chained onto the `typecheck` npm script, which the
+// `frontend` job already runs as its "Typecheck (tsc --noEmit)" step —
+// `.github/workflows/**` is owner-only, so this needed no workflow edit.
+//
+// This does NOT put the Playwright *run* on the PR-blocking path; that is
+// nightly-only on purpose (see `e2e.yml`'s header). Only the compiler runs here.
+{
+  "extends": "./tsconfig.json",
+  // `e2e` only. Files under `src` still arrive — the contrast modules import
+  // `src/utils/contrast` — but they arrive as dependencies of the specs,
+  // checked with the same options `npm run typecheck` already applies to them.
+  "include": ["e2e"],
+  // `tsconfig.json` references `tsconfig.node.json`, which is `composite` and
+  // owns `vite.config.ts`. Nothing under `e2e` needs it, and inheriting the
+  // reference makes this config depend on a build artifact it never reads.
+  "references": []
+}
