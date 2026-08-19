@@ -6243,8 +6243,33 @@
 .fielddesk-life:hover { transform: translateY(-6px); }
 .fielddesk-life:disabled { cursor: default; }
 
-/* ── Faction display-font tokens referenced by FactionSelectCard (design
-   select.card). Aliased to families already loaded in index.html. ── */
+/* ── Faction display-font aliases. Each names a family already loaded in
+   index.html; the header used to say "referenced by FactionSelectCard (design
+   select.card)", which was true when the directory's eight archetypes lived
+   inline in that one file and is true of NONE of the three below now that epic
+   #2321 has split them out (#2329, the last child). Re-derived rather than
+   patched — an attribution nothing checks is how a comment outlives its fact:
+
+     --font-faction-codex-script  read ONLY by `--faction-ua-body-font` above.
+                                  No component names it; UA's role token is its
+                                  entire readership.
+     --font-faction-vellum        read by the three ALBESCENT REVEAL surfaces —
+                                  `selectCard/AlbescentSelectCard`,
+                                  `AlbescentInvitation` and
+                                  `pages/AlbescentSecretPlaceholder`. The only
+                                  one of the three a component still spells, and
+                                  the reason it is not a role token is that
+                                  Albescent has no --faction-albescent-* block
+                                  to hold one (see the reveal note below).
+     --font-faction-medieval      read ONLY by `--faction-wow-card-font` above,
+                                  which has ~30 readers of its own.
+
+   NONE of the three has lost its last reader, so nothing is retired here.
+   `fontsLoaded.test.ts` is what would notice if one had: an unread family token
+   is not inert, because index.css is itself in the corpus the family check
+   searches, so the declaration vouches for its own family and holds the face in
+   the shipped kit — which is how `--font-faction-anton` (#2322) and
+   `--font-faction-poster` (#2327) came to go. ── */
 :root {
   /* `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its
      last reader and #2322 moved it onto `--faction-snide-font-impact`, the
@@ -6266,10 +6291,13 @@
   --font-faction-medieval: "MedievalSharp", cursive;
 }
 
-/* ── Bare faction extension tokens consumed by FactionSelectCard (design
-   select.card). Values from the design system's tokens/colors.css. The repo
-   already carries these hues under the --faction-<slug>-* namespace; the
-   select cards reference the bare names, so alias them here. ── */
+/* ── Bare faction extension tokens (design select.card). Values from the design
+   system's tokens/colors.css. The repo already carries these hues under the
+   --faction-<slug>-* namespace; the bare names are aliased here. The header used
+   to say "consumed by FactionSelectCard": two of the three families it named are
+   now retired outright (see the tombstones below), and the survivor is read by
+   `selectCard/AlbescentSelectCard` and the other reveal surfaces since #2329
+   split the directory's archetypes into one file each. ── */
 :root {
   /* The `--gestalt-*` whimsy.exe alias family stood here (eleven names, both
      cascades). `FactionSelectCard`'s COVEN tile was its entire readership and
