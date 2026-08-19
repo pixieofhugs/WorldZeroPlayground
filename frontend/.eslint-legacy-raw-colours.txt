@@ -162,12 +162,23 @@
 #      apart, and de-duplicating them would be picking a winner (§6, #1654).
 #      The masthead's `0 2px 0` underline is the same call — a printed rule
 #      drawn as a zero-blur shadow, lifting nothing.
-#   6. TWO SINGLETONS. `FactionSelectCard`'s `1px solid #000` is a hairline
-#      drawn one stop BELOW the tile's own `--snide-ink` fill; the family has
-#      no rung under its ink and minting one for a single hairline is the
-#      `-weak`/`-medium` mistake index.css already records. `EphemeristsSeal`'s
-#      disc casts onto `--faction-ephemerists-plate-bg`, declared once with no
-#      dark override — nothing behind it flips, so neither cast rung applies.
+#   6. TWO SINGLETONS, now ONE. `EphemeristsSeal`'s disc casts onto
+#      `--faction-ephemerists-plate-bg`, declared once with no dark override —
+#      nothing behind it flips, so neither cast rung applies. That one stands.
+#      THE OTHER IS CLEARED, and the way it cleared is the lesson.
+#      `FactionSelectCard`'s `1px solid #000` was a hairline drawn one stop
+#      BELOW the S.N.I.D.E. tile's own `--snide-ink` fill, and the reasoning
+#      held exactly as far as the premise under it: that the tile's ground was
+#      a flat, theme-invariant ink with no rung beneath it. #2322 moved the
+#      tile onto the register its OWN TASK CARD wears — the flyposted wall,
+#      `--faction-snide-note-*` — and that family already declares the edge,
+#      `--faction-snide-note-wall-edge`, per theme, because the card it was
+#      minted for has the same edge to draw. Nothing was minted and nothing
+#      stayed raw. A singleton whose justification is "this family has no rung
+#      for it" is worth re-asking whenever the surface changes family: the
+#      answer may exist one family over, on the surface's own twin.
+#      `src/components/selectCard/FactionSelectCard.tsx` comes off the list
+#      entirely — it was that file's only violation.
 #   7. ONE SURVIVOR THE SIX CLASSES NEVER COVERED, found while clearing class 1
 #      and RECORDED HERE RATHER THAN DECIDED — deciding it was not that pass's
 #      job, and an undecided line with no reason on it is how a list stops being
@@ -199,7 +210,6 @@ src/components/factionHero/SnideFactionHero.tsx
 src/components/metataskSeal/skins/EphemeristsSeal.tsx
 src/components/metataskSeal/skins/SnideSeal.tsx
 src/components/praxisCard/desktop/EverymenPraxisCard.tsx
-src/components/selectCard/FactionSelectCard.tsx
 src/components/vote/CovenVote.tsx
 src/components/vote/EphemeristsVote.tsx
 src/components/vote/SnideVote.tsx
