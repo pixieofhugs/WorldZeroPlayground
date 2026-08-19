@@ -268,7 +268,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
-                <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
+                <div key={praxis.id} style={{ position: "relative", flex: "1 1 var(--praxis-card-basis, 394px)", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
                       so the card's built-in stamp is suppressed. */}
                   {praxis.is_top_for_task && (
