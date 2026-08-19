@@ -23,14 +23,23 @@
  * this vocabulary left in `src/`, and `ephemeristsPlateSurfaces.test.tsx` pins
  * that against the SOURCE tree, because an import-graph sweep cannot see a copy.
  *
- * Every colour is a `--faction-ephemerists-plate-*` token, never a ternary — but
- * do not expect a theme flip. This register is THEME-INVARIANT BY DESIGN (#1627
- * + #1636): every plate var is declared once at `:root`, and `[data-theme="dark"]`
- * declares no plate token at all. The dark block in `index.css` says so where
- * the night half used to be — the half was removed because "the register is
- * theme-invariant and lives entirely in `:root`", the polarity argument being
- * set out beside the `:root` declarations. The register IS the design's night
- * half, so these values already read on the dark page.
+ * Every colour is a `--faction-ephemerists-plate-*` token, never a ternary — and
+ * the register DOES flip. It used to say the opposite here: "THEME-INVARIANT BY
+ * DESIGN (#1627 + #1636)", every plate var declared once at `:root` and
+ * `[data-theme="dark"]` declaring "no plate token at all". That was true when it
+ * was written and #2141 reversed it; the dark block declares FIFTEEN of them
+ * today. The sheet is the vellum #eadcb6 by day and #171a26 by night, and the
+ * inks flip with it. Corrected in #2323, because anyone trusting the old
+ * sentence skips a dark measurement that matters — and skipping it is exactly
+ * how the faction's directory tile spent this epic grounded on a band.
+ *
+ * FOUR ABSENCES FROM THE DARK BLOCK ARE STILL THE POINT and must not be
+ * "completed": `-band` / `-band-ink` / `-band-quiet` are the compass blue and
+ * its two inks, theme-invariant because the masthead is the faction rather than
+ * a mode; `-plate-disc` is the dark chip the metals are struck on; `-brass-rule`
+ * is one value across all three grounds by construction; and `-plate-gold` and
+ * `-plate-wash` have no light value to differ from. The full reasoning is beside
+ * both halves in `index.css`.
  */
 import type { CSSProperties } from "react";
 import { mediaUrl } from "../../utils/media";
