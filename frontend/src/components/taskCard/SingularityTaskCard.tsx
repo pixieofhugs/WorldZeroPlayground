@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { SingularityBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -275,10 +276,8 @@ export default function SingularityTaskCard({
                 marginTop: "var(--space-lg)",
               }}
             >
-              <button
-                type="button"
-                onClick={cta.onPress}
-                aria-disabled={cta.denied || undefined}
+              <CardCtaControl
+                cta={cta}
                 style={{
                   ...CARD_CTA,
                   gridColumn: 2,
@@ -310,7 +309,7 @@ export default function SingularityTaskCard({
                     verticalAlign: "-0.12em",
                   }}
                 />
-              </button>
+              </CardCtaControl>
 
               {/* The little robot idling in the right gutter (#2036). It is
                   ornament: `aria-hidden`, and OUTSIDE the button, so it never

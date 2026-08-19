@@ -7,7 +7,7 @@ Replaces the old services/submission.py and services/collaboration.py.
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Collection, List, Optional
+from typing import Collection, List, Mapping, Optional
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import and_, exists, func, not_, or_, select
@@ -604,6 +604,10 @@ class SignupFacts:
     task_ids: frozenset[int]
     active_member_task_ids: frozenset[int]
     held_membership_task_ids: frozenset[int]
+    #: Task id → the viewer's OPEN DRAFT on it, for ``TaskOut.in_progress_praxis_id``
+    #: (#2359). A third population, and neither of the two above: see
+    #: :func:`in_progress_praxis_ids` for why it can be folded into neither.
+    in_progress_praxis_ids: Mapping[int, int]
 
 
 async def gather_signup_facts(
@@ -612,7 +616,7 @@ async def gather_signup_facts(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in five queries, not five per row.
+    """Read one page's worth of :class:`SignupFacts` in six queries, not six per row.
 
     ``era`` is threaded into the membership read so a caller evaluating against a
     non-current ruleset gets facts from that same ruleset — precomputed facts
@@ -622,6 +626,10 @@ async def gather_signup_facts(
     query rather than a Python derivation of the first because deriving it would
     mean restating the Double Dipper carve-out outside the SQL that owns it — the
     #1359 defect exactly.
+
+    The sixth is the open-draft map (#2359). It is a *page-wide* query like the
+    other five, so the browse still costs a constant number of reads however
+    many rows are on it — the only property this file's #1377 work defends.
     """
     era_row = await get_current_era_row(session)
     return SignupFacts(
@@ -632,6 +640,9 @@ async def gather_signup_facts(
             character, task_ids, session, era
         ),
         held_membership_task_ids=await held_membership_task_ids(
+            character, task_ids, session
+        ),
+        in_progress_praxis_ids=await in_progress_praxis_ids(
             character, task_ids, session
         ),
     )
@@ -1453,6 +1464,49 @@ async def active_member_task_ids(
     return frozenset(result.scalars().all())
 
 
+async def in_progress_praxis_ids(
+    character: Character,
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """Which of ``task_ids`` ``character`` holds an OPEN DRAFT on, and which praxis
+    — ONE query. The source of ``TaskOut.in_progress_praxis_id`` (#2359).
+
+    A THIRD population, and it can be folded into neither of its two siblings
+    above, which is why it is its own read rather than a column added to one of
+    them:
+
+    * :func:`held_membership_task_ids` is wider — it counts ``pending`` and
+      ``submitted`` too. A submitted praxis shuts sign-up but leaves nothing to
+      edit, so borrowing its rows would hand out ids to editors that will refuse
+      them. ``in_progress`` is what the task detail page means by "your draft"
+      (``useTaskDetail.ts`` fetches exactly ``status=in_progress``), and the two
+      surfaces must not disagree about which praxis is yours.
+    * :func:`active_member_task_ids` is narrower — the Double Dipper carve-out
+      empties it for factions that may hold several memberships. "Do I have a
+      draft here" is a raw fact no ability changes.
+
+    No ``era``, for :func:`held_membership_task_ids`'s reason: no ruleset changes
+    the raw fact.
+
+    A character may hold more than one open draft on one task (Double Dipper);
+    the ordering makes the newest one the answer rather than an arbitrary one.
+    """
+    if not task_ids:
+        return {}
+    result = await session.execute(
+        select(Praxis.task_id, Praxis.id)
+        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
+        .where(
+            PraxisMember.character_id == character.id,
+            Praxis.status == PraxisStatus.in_progress,
+            Praxis.task_id.in_(task_ids),
+        )
+        .order_by(Praxis.id)
+    )
+    return {task_id: praxis_id for task_id, praxis_id in result.all()}
+
+
 async def is_active_member_of_task(
     character: Character,
     task: Task,
@@ -2109,6 +2163,7 @@ __all__ = [
     "gather_signup_facts",
     "get_praxis",
     "held_membership_task_ids",
+    "in_progress_praxis_ids",
     "invite_to_praxis",
     "is_active_member_of_task",
     "is_task_eligible_for_character",

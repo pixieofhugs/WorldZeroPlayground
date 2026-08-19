@@ -2,6 +2,8 @@ import i18n from "../../i18n";
 import type { TaskOut } from "../../api/tasks";
 import {
   SIGNUP_CTA_KEY,
+  SIGNUP_IN_PROGRESS_KEY,
+  SIGNUP_REASON_ALREADY_ACTIVE_MEMBER,
   isSignupDenial,
   signupCtaKey,
 } from "../../pages/taskDetail/signupCta";
@@ -31,14 +33,28 @@ export interface TaskCardSignupCta {
    */
   denied: boolean;
   /**
-   * The press handler — **absent iff {@link denied}**, and that is the whole
-   * enforcement. A skin spreads this onto its button, so there is no skin in
-   * which the dead-ended control can come back: the handler simply is not there
-   * to attach. `pages/fieldDesk/PendingRowPill.tsx` states the doctrine — a
-   * dead-ended pill that still looks pressable is worse than no pill — and this
+   * The press handler — **absent iff the slot does not sign up**, and that is
+   * the whole enforcement. A skin never attaches it itself: `CardCtaControl`
+   * spreads it, so there is no skin in which the dead-ended control can come
+   * back, because the handler simply is not there to attach.
+   * `pages/fieldDesk/PendingRowPill.tsx` states the doctrine — a dead-ended
+   * pill that still looks pressable is worse than no pill — and that component
    * is the one place a card can honour it for all nine skins at once.
+   *
+   * It used to be "absent iff {@link denied}". {@link href} is the third state
+   * that made that biconditional false: a slot that is neither a refusal nor a
+   * sign-up.
    */
   onPress?: () => void;
+  /**
+   * Where the slot GOES instead of what it posts (#2359) — a router path, set
+   * on exactly one reason: `already_active_member` with a draft to land on.
+   *
+   * Never set together with {@link onPress}. Navigating to your own draft is
+   * not signing up: the server has refused the claim and is right to, and the
+   * praxis this reaches already exists.
+   */
+  href?: string;
 }
 
 /**
@@ -76,6 +92,27 @@ export function taskCardSignupCta(
   if (!onSignup) return null;
 
   if (isSignupDenial(task.signup_reason)) {
+    // THE ONE REFUSAL THAT IS A DOOR (#2359). `already_active_member` means the
+    // viewer holds an open draft on this task, so the card was spending its only
+    // slot telling them something they knew, with the useful thing one press
+    // away. The wire carries that draft's id now, and the slot becomes a link to
+    // its editor — pressable, and NOT a sign-up (the server has refused the
+    // claim and is right to; the praxis already exists).
+    //
+    // The null branch falls through to the label below, and it is REACHABLE
+    // rather than defensive: the denial's population also covers `submitted`
+    // and `pending` praxes, which shut sign-up with nothing left to edit. A
+    // link to /praxis/null/edit is worse than the sentence it replaced.
+    if (
+      task.signup_reason === SIGNUP_REASON_ALREADY_ACTIVE_MEMBER &&
+      task.in_progress_praxis_id != null
+    ) {
+      return {
+        label: i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`),
+        denied: false,
+        href: `/praxis/${task.in_progress_praxis_id}/edit`,
+      };
+    }
     // `level` is only read by `denied.belowLevel`; passing it to the others is
     // free and keeps this a single call rather than a branch per reason.
     const key = signupCtaKey(task.signup_reason);

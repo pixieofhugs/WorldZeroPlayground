@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { UaBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -332,10 +333,8 @@ export default function UaTaskCard({
                   in-flow items, the control in the middle — see UaCtaFlank. */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-md)" }}>
               <UaCtaFlank side="start" size={size.flank} />
-              <button
-                type="button"
-                onClick={cta.onPress}
-                aria-disabled={cta.denied || undefined}
+              <CardCtaControl
+                cta={cta}
                 style={{
                   ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
@@ -352,7 +351,7 @@ export default function UaTaskCard({
                 }}
               >
                 {cta.label}
-              </button>
+              </CardCtaControl>
               <UaCtaFlank side="end" size={size.flank} />
               </div>
             </>

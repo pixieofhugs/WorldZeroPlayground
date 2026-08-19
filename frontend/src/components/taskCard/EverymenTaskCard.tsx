@@ -5,6 +5,7 @@ import { EverymenBand } from "../cardMasthead/factionBands";
 import PointsRoundel from "../factionMarks/PointsRoundel";
 import { EverymenCog } from "../factionMarks/everymenCogs";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -445,10 +446,8 @@ export default function EverymenTaskCard({
           {cta && (
             <div style={{ ...CARD_CTA_ROW, alignItems: "center", gap: "var(--space-sm)", position: "relative", zIndex: 2 }}>
               <FistAndBolt width={size.mark} mirrored />
-              <button
-                type="button"
-                onClick={cta.onPress}
-                aria-disabled={cta.denied || undefined}
+              <CardCtaControl
+                cta={cta}
                 style={{
                   ...CARD_CTA,
                   flex: "0 0 auto",
@@ -465,7 +464,7 @@ export default function EverymenTaskCard({
                 }}
               >
                 {cta.label}
-              </button>
+              </CardCtaControl>
               <FistAndBolt width={size.mark} />
             </div>
           )}

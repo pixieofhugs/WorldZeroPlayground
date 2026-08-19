@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { CARD_CTA } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -283,10 +284,8 @@ export default function DefaultTaskCard({
               }}
             />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                type="button"
-                onClick={cta.onPress}
-                aria-disabled={cta.denied || undefined}
+              <CardCtaControl
+                cta={cta}
                 style={{
                   ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
@@ -305,7 +304,7 @@ export default function DefaultTaskCard({
                 }}
               >
                 {cta.label}
-              </button>
+              </CardCtaControl>
             </div>
           </>
         )}

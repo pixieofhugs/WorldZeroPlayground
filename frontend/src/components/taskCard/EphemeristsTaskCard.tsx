@@ -5,6 +5,7 @@ import { EphemeristsBand } from "../cardMasthead/factionBands";
 /* No `CARD_CTA_ROW` here: the plate's rule and its button share one inset box,
    so the clearance comes from that box's own `bodyPad` bottom. */
 import { CARD_CTA } from "./cardCta";
+import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -533,8 +534,8 @@ export default function EphemeristsTaskCard({
             />
             <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <button
-                type="button"
+              <CardCtaControl
+                cta={cta}
                 /* THE ONE PLATE CTA (#2146). Ground, ink and enclosure all come
                    from `.eph-cta` in index.css — the enclosure changes WIDTH
                    between the cascades, which no token can carry and which an
@@ -542,8 +543,6 @@ export default function EphemeristsTaskCard({
                    inline `background` or `border` here would beat the class and
                    pin the light half in both themes on this card alone. */
                 className="eph-cta"
-                onClick={cta.onPress}
-                aria-disabled={cta.denied || undefined}
                 style={{
                   ...CARD_CTA,
                   cursor: cta.denied ? "not-allowed" : "pointer",
@@ -582,7 +581,7 @@ export default function EphemeristsTaskCard({
                 <svg width={16} height={16} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                   <path d={GLYPHS.planet} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </button>
+              </CardCtaControl>
             </div>
             <EphemeristsNotationBand side="bottom" seed={`task:${task.id}`} />
           </div>

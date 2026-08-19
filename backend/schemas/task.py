@@ -69,6 +69,30 @@ class TaskOut(WireModel):
     # call to action ("begin again" vs "you are already on this") without
     # re-deriving a server rule from its own state (#1497).
     signup_reason: Optional[str] = None
+    # The VIEWER'S OWN open draft on this task — the praxis id, or None (#2359).
+    #
+    # NOT ``in_progress_count``'s sibling despite the name it shares a prefix
+    # with: that is a population count of everyone working the task, this is one
+    # viewer-relative id, and it defaults to None for anonymous callers exactly
+    # as the flags above default.
+    #
+    # It exists because ``signup_reason == "already_active_member"`` was a dead
+    # label on a card: the reason names a draft the card had no way to reach.
+    # The task DETAIL page reaches it by fetching the viewer's own
+    # ``status=in_progress`` praxes and finding this task among them, which a
+    # feed of cards cannot do without an N+1 — so the id rides along on the row.
+    #
+    # THE POPULATION IS THE DETAIL PAGE'S, `in_progress` ONLY, and it is
+    # deliberately NARROWER than the denial's own (`in_progress`, `pending`,
+    # `submitted`). A submitted praxis shuts sign-up with nothing left to edit,
+    # and this field is None there — reachable, not theoretical, and the client
+    # falls back to the plain label for it.
+    #
+    # It is also NOT filtered by the Double Dipper carve-out
+    # (``active_member_task_ids``). "Do I hold a draft here" is a raw fact no
+    # ability changes; sourcing it from the blocking set would have made an
+    # Everymen player the one group whose draft the wire refused to name.
+    in_progress_praxis_id: Optional[int] = None
     # The *start here* mark (#1861, SPEC-onboarding § The hand-off). True iff
     # this is the one game-wide onboarding task AND the viewing character has
     # never completed it — ever, not "not this era".
