@@ -19,16 +19,22 @@ import {
 
 /**
  * The Ephemerists faction-page hero — the plate's CORNICE MASTHEAD at page width
- * (#1208, swept off the illuminated codex). The night band behind two incised
- * glyph registers and a ghost survey graticule, the emblem struck in a stepped
- * octagon, a letterspaced Poiret One wordmark, the motto on a ruled cartouche, a
+ * (#1208, swept off the illuminated codex). The night band behind a ghost survey
+ * graticule, the emblem struck in a stepped octagon, a letterspaced Poiret One
+ * wordmark closed off by the notation band, the motto on a ruled cartouche, a
  * running gloss, and a brass-ruled stat ledger on the side. The cavetto cornice
  * closes it, exactly as it closes the masthead on the task detail.
  *
- * Every ink is measured on the BAND, which is the only ground here: `band-ink`
- * 12.4:1, `gold` 9.4, `band-quiet` 8.6, `brass-light` 6.1. `nile` and `ochre`
- * are 2.3 and 2.6 on this ground and appear nowhere — the codex's lapis
- * last-word tic went with them (see `EphemeristsCard`).
+ * Every ink is measured on the BAND, which is the only ground here, and the
+ * three tokens that make it — `-plate-band`, `-plate-band-ink`,
+ * `-plate-brass-rule` — are each declared once and do not flip, so the readings
+ * hold in both cascades: `band-ink` 7.6:1, `gold` 13.4, `band-quiet` 8.6
+ * (re-measured against today's #12151f in #2367 — the first two were stale by
+ * two token moves). `brass-light` is not an ink here at all: it draws the
+ * graticule and the survey rays, it is the one thing on this hero that DOES
+ * flip, and a 0.6px hairline is not text. `nile` and `ochre` are 2.3 and 2.6 on
+ * this ground and appear nowhere — the codex's lapis last-word tic went with
+ * them (see `EphemeristsCard`).
  *
  * Takes raw counts and labels them in the faction's own voice — the page stays
  * vocabulary-agnostic (see FactionHeroProps in FactionDetail).
