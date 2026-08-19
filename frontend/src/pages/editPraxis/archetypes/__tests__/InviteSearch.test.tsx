@@ -197,6 +197,7 @@ function member(
     praxis_id: 1,
     character_id: characterId,
     character_display_name: name,
+    character_avatar_url: "",
     has_submitted: hasSubmitted,
     is_done: false,
     joined_at: "2026-01-01T00:00:00Z",
@@ -212,6 +213,7 @@ function pendingInvite(name: string): PraxisInviteOut {
     inviter_id: 1,
     invitee_id: 2,
     invitee_display_name: name,
+    invitee_avatar_url: "",
     status: "pending",
     created_at: "2026-01-01T00:00:00Z",
   };

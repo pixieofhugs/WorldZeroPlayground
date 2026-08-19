@@ -11,7 +11,6 @@ import {
   factionCssVar,
   factionName,
 } from "../../utils/factions";
-import { notifyRequestsChanged } from "../../utils/requestsBus";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -138,11 +137,12 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
       // The character's faction is on /auth/me and dresses most of the site, so
       // the feed alone is not enough — but the join POST now answers the whole
       // refreshed viewer (#1383), so adopting it replaces the /auth/me that
-      // used to chase it. The bell and the queue count still follow.
+      // used to chase it. The bell and the queue count still follow: since
+      // #2288 `chooseFaction` fires the requests bus itself, for the three other
+      // join surfaces that never did. Do not fire it again here.
       applyUser(await chooseFaction(faction_slug));
       setJoined(true);
       setConfirming(false);
-      notifyRequestsChanged();
     } catch (err) {
       // `extractError` returns the backend `detail` verbatim, which is what
       // makes each refusal legible rather than generic: "Cannot rejoin a faction

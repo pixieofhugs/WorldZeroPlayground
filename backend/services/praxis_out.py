@@ -73,6 +73,7 @@ def _build_member_out(
         praxis_id=member.praxis_id,
         character_id=member.character_id,
         character_display_name=member.character.display_name,
+        character_avatar_url=member.character.avatar_url,
         has_submitted=member.has_submitted,
         is_done=member.is_done,
         submitted_at=member.submitted_at,
@@ -88,6 +89,7 @@ def _build_invite_out(invite: PraxisInvite) -> PraxisInviteOut:
         inviter_id=invite.inviter_id,
         invitee_id=invite.invitee_id,
         invitee_display_name=invite.invitee.display_name,
+        invitee_avatar_url=invite.invitee.avatar_url,
         status=invite.status,
         created_at=invite.created_at,
     )

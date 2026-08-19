@@ -200,11 +200,11 @@ export interface BylineFace {
  * not travel — `FactionAvatar` would replace eight bespoke kit monograms with
  * one generic disc, so each archetype draws the `img` inside its own frame.
  *
- * `ponytail:` only the CREATOR can have a face. `PraxisMemberOut` carries no
- * avatar column, so a collab byline is one portrait among monograms. That is
- * the narrow read of #2106 and is flagged on the issue; the upgrade path is an
- * avatar field on `PraxisMemberOut` populated in `build_praxis_out`, after
- * which this maps `member.character_avatar_url` and the special case goes away.
+ * Every member has their own face since #2318. This used to carry a `ponytail:`
+ * saying only the CREATOR could have one, because `PraxisMemberOut` carried no
+ * avatar column — the narrow read of #2106, which left a collab byline as one
+ * portrait among monograms. The upgrade path it named is the one that shipped,
+ * so the special case is gone rather than merely widened.
  */
 export function bylineFaces(praxis: PraxisOut): BylineFace[] {
   const members = orderedMembers(praxis)
@@ -223,8 +223,10 @@ export function bylineFaces(praxis: PraxisOut): BylineFace[] {
   return members.map((member) => ({
     id: member.character_id,
     name: member.character_display_name || `#${member.character_id}`,
-    avatarUrl:
-      member.character_id === praxis.created_by_id ? portrait : '',
+    // `|| ''` for the same reason the author's path above does it: a member row
+    // cached before #2318 has no such key, and `undefined` would reach `img
+    // src`. It degrades to the monogram and heals on the next fetch.
+    avatarUrl: member.character_avatar_url || '',
   }))
 }
 

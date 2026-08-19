@@ -6227,7 +6227,13 @@
 /* ── Faction display-font tokens referenced by FactionSelectCard (design
    select.card). Aliased to families already loaded in index.html. ── */
 :root {
-  --font-faction-anton: "Anton", Impact, sans-serif;
+  /* `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its
+     last reader and #2322 moved it onto `--faction-snide-font-impact`, the
+     faction's own ROLE token, which names Anton directly. `fontsLoaded.test.ts`
+     is what noticed: an unread family token is not inert, because index.css is
+     itself in the corpus the family check searches, so the declaration vouches
+     for its own family and holds Anton in the shipped kit. The family stays —
+     `-font-impact` still asks for it — and only the alias goes. */
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
   --font-faction-poster: "Bebas Neue", Impact, sans-serif;
   --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
@@ -6245,13 +6251,18 @@
      declared and unread — see the guard in
      `__tests__/covenSpeaksOneIdentity.test.ts`, which keeps the names retired.
      Deleted in #1661; the guard is what stops them coming back. */
-  /* S.N.I.D.E. · ransom dispatch (always-dark constants) */
-  --snide-acid: #b6ff2e;
-  --snide-ink: #14110b;
-  --snide-paper: #f4f1e8;
-  --snide-pink: #ff2d8b;
-  /* `--snide-tape` stood here — the always-dark twin of `--faction-snide-tape`,
-     same rgba, retired with it in #1708. */
+  /* The `--snide-*` ransom-dispatch constants stood here — acid, ink, paper and
+     pink, four always-dark values with an always-dark twin in the namespaced
+     `--faction-snide-*` block. `FactionSelectCard`'s S.N.I.D.E. tile was their
+     entire readership, and #2322 moved that tile onto the register its own task
+     card wears (`--faction-snide-note-*`, which FLIPS), leaving the four
+     declared and unread. Retired for the same reason and by the same rule as
+     the `--gestalt-*` family above and `--snide-tape` before them (#1708): a
+     token nobody reads is a FORK waiting to happen, because it resolves.
+     Nothing in CI can see a surface drifting onto a second real family — every
+     lint passes, every census counts it, every contrast sweep measures it — so
+     the guard that keeps them retired is not a ratio, it is the name being
+     gone. `selectCard/__tests__/snideWearsTheClippingRegister.test.ts` pins it. */
   /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
      Always-light, the same mechanism Singularity uses to stay always-dark.
 

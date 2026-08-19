@@ -326,10 +326,16 @@ async def four_request_types(
     broken filter — it is only the twins that prove the badge is reading the
     same ADR-0070 "unanswered" window the queue reads, per type:
 
-    ``collab_invite``      status is ``pending``
+    ``collab_invite``      status is ``pending`` AND the room is still joinable
     ``duel_challenge``     status is ``pending``
     ``awaiting_submission``  ``PraxisMember.has_submitted`` is false
     ``invitation_letter``  the letter's faction is not the one you now stand in
+
+    ``collab_invite`` carries a SECOND answered twin (#2279): an invite left
+    ``pending`` whose praxis has since been submitted. Its status column says
+    unanswered, but ``respond_to_invite`` refuses the accept with
+    ``invite_praxis_submitted`` — so it is a request nobody can answer, and the
+    queue's promise is that everything in it is waiting on an answer from you.
     """
     def praxis(owner_id: int, praxis_type: PraxisType, title: str) -> Praxis:
         return Praxis(
@@ -344,6 +350,9 @@ async def four_request_types(
     # --- collab_invite: one pending (counts), one declined (does not) --------
     open_collab = praxis(character2.id, PraxisType.collab, "Open collab")
     answered_collab = praxis(character2.id, PraxisType.collab, "Answered collab")
+    # ...and one still pending whose room has closed: unanswerable (#2279).
+    shut_collab = praxis(character2.id, PraxisType.collab, "Shut collab")
+    shut_collab.status = PraxisStatus.submitted
     # --- duel_challenge: one pending (counts), one active (does not) -- -------
     open_duel_praxis = praxis(character2.id, PraxisType.duel, "Open duel")
     answered_duel_praxis = praxis(character2.id, PraxisType.duel, "Answered duel")
@@ -354,7 +363,7 @@ async def four_request_types(
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
     db_session.add_all([
-        open_collab, answered_collab, open_duel_praxis,
+        open_collab, answered_collab, shut_collab, open_duel_praxis,
         answered_duel_praxis, my_turn, already_filed,
     ])
     await db_session.flush()
@@ -371,6 +380,13 @@ async def four_request_types(
             inviter_id=character2.id,
             invitee_id=character.id,
             status=PraxisInviteStatus.declined,
+        ),
+        # Pending, and still unanswerable: the room it opens onto is submitted.
+        PraxisInvite(
+            praxis_id=shut_collab.id,
+            inviter_id=character2.id,
+            invitee_id=character.id,
+            status=PraxisInviteStatus.pending,
         ),
         Duel(
             task_id=active_task.id,

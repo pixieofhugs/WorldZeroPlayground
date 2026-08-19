@@ -40,8 +40,8 @@ import { mediaUrl } from '../../../utils/media'
 const NAME = 'Zev Quist'
 const MONOGRAM = 'ZQ'
 const PORTRAIT = 'avatars/zev.png'
-/** A second member, who has no avatar field on the wire at all (see below). */
-const CREWMATE = { id: 44, name: 'Ilse Ronan' }
+/** A second member, who since #2318 carries a portrait of their own. */
+const CREWMATE = { id: 44, name: 'Ilse Ronan', portrait: 'avatars/ilse.png' }
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -52,7 +52,17 @@ function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailS
     loading: false,
     praxis: aPraxis({
       created_by_display_name: NAME,
-      members: [aMember({ character_display_name: NAME })],
+      // The author's own member row carries the same portrait the top-level
+      // field does. On the server they are one column of one Character row, so
+      // a fixture that lets them disagree is describing a payload that cannot
+      // arrive — and since #2318 the byline reads the member row, which would
+      // make that impossible fixture the thing under test.
+      members: [
+        aMember({
+          character_display_name: NAME,
+          character_avatar_url: over.created_by_avatar_url ?? '',
+        }),
+      ],
       ...over,
     }),
     fetchError: null,
@@ -115,52 +125,102 @@ describe('praxis-detail byline portrait (#2106)', () => {
   }
 })
 
-// ─── The collab limitation, asserted rather than assumed ─────────────────────
+// ─── Every member wears their own face (#2318) ───────────────────────────────
 //
-// `PraxisMemberOut` carries no avatar field, so only the CREATOR can get a
-// face. On a collab byline that is one portrait among monograms. That is the
-// narrow read of #2106 and it is flagged on the issue; this test pins the
-// behaviour so the day the members' avatars reach the wire, it fails here and
-// says where to look.
-describe('collab byline: only the creator has a face today', () => {
+// This block used to pin the opposite: `PraxisMemberOut` carried no avatar
+// column, so only the CREATOR could get a face and a collab byline was one
+// portrait among monograms. The comment here said that the day the members'
+// avatars reached the wire it should fail and say where to look. They have, so
+// it did, and this is what it became.
+describe('collab byline: every member wears their own face (#2318)', () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    it(`${slug} draws exactly one portrait on a two-member collab`, () => {
+    it(`${slug} draws both portraits on a two-member collab`, () => {
       const html = render(
         <Archetype
           state={state({
             type: 'collab',
             created_by_avatar_url: PORTRAIT,
             members: [
-              aMember({ character_display_name: NAME }),
+              aMember({
+                character_display_name: NAME,
+                character_avatar_url: PORTRAIT,
+              }),
               aMember({
                 id: 102,
                 character_id: CREWMATE.id,
                 character_display_name: CREWMATE.name,
+                character_avatar_url: CREWMATE.portrait,
                 joined_at: '2026-01-02T00:00:00Z',
               }),
             ],
           })}
         />,
       )
-      expect(occurrences(html, `src="${mediaUrl(PORTRAIT)}"`), 'one face').toBe(1)
-      expect(html, "the crewmate keeps a monogram").toContain('IR')
+      // Counted as "at least once", not "exactly once": several archetypes mount
+      // `CollabRoster` below the byline, and since #2318 that panel draws the
+      // same faces. Two appearances of one person is the fix working twice, not
+      // a duplicate.
+      expect(
+        occurrences(html, `src="${mediaUrl(PORTRAIT)}"`),
+        "the author's face",
+      ).toBeGreaterThan(0)
+      expect(
+        occurrences(html, `src="${mediaUrl(CREWMATE.portrait)}"`),
+        "the crewmate's face",
+      ).toBeGreaterThan(0)
+      expect(html, 'no monogram is left standing').not.toContain('>IR<')
     })
   }
+
+  // The fallback did not go anywhere: `avatar_url` is `nullable=False,
+  // server_default=""`, so a portrait-less crewmate is the ordinary case.
+  it('a crewmate with no portrait still gets their monogram', () => {
+    const html = render(
+      <DefaultPraxisDetail
+        state={state({
+          type: 'collab',
+          created_by_avatar_url: PORTRAIT,
+          members: [
+            aMember({
+              character_display_name: NAME,
+              character_avatar_url: PORTRAIT,
+            }),
+            aMember({
+              id: 102,
+              character_id: CREWMATE.id,
+              character_display_name: CREWMATE.name,
+              character_avatar_url: '',
+              joined_at: '2026-01-02T00:00:00Z',
+            }),
+          ],
+        })}
+      />,
+    )
+    expect(
+      occurrences(html, `src="${mediaUrl(PORTRAIT)}"`),
+      "the author's face",
+    ).toBeGreaterThan(0)
+    expect(html, 'the crewmate keeps a monogram').toContain('IR')
+  })
 })
 
 // ─── The shared rule, unit-tested once ───────────────────────────────────────
 describe('bylineFaces', () => {
-  it('gives the portrait to the creator and to nobody else', () => {
+  it('gives every member their own portrait (#2318)', () => {
     const faces = bylineFaces(
       aPraxis({
         created_by_display_name: NAME,
         created_by_avatar_url: PORTRAIT,
         members: [
-          aMember({ character_display_name: NAME }),
+          aMember({
+            character_display_name: NAME,
+            character_avatar_url: PORTRAIT,
+          }),
           aMember({
             id: 102,
             character_id: CREWMATE.id,
             character_display_name: CREWMATE.name,
+            character_avatar_url: CREWMATE.portrait,
             joined_at: '2026-01-02T00:00:00Z',
           }),
         ],
@@ -168,8 +228,20 @@ describe('bylineFaces', () => {
     )
     expect(faces).toEqual([
       { id: AUTHOR.id, name: NAME, avatarUrl: PORTRAIT },
-      { id: CREWMATE.id, name: CREWMATE.name, avatarUrl: '' },
+      { id: CREWMATE.id, name: CREWMATE.name, avatarUrl: CREWMATE.portrait },
     ])
+  })
+
+  // A member row from a cache written before this field existed has no such
+  // key. `undefined` must never reach `img src`, so it degrades to the monogram
+  // and heals on the next fetch — the same guard the author's path already had.
+  it('degrades a pre-#2318 cached member row to the monogram', () => {
+    const stale = aMember({ character_display_name: NAME })
+    delete (stale as Partial<typeof stale>).character_avatar_url
+    const faces = bylineFaces(
+      aPraxis({ created_by_avatar_url: PORTRAIT, members: [stale] }),
+    )
+    expect(faces).toEqual([{ id: AUTHOR.id, name: NAME, avatarUrl: '' }])
   })
 
   it('credits the creator when the payload carries no member rows', () => {
