@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  getFactionStatus,
-  type FactionOut,
-  type FactionPageOut,
-  type InvitationLetterOut,
-} from '../../api/factions'
+import { getFactionStatus, type FactionOut, type FactionPageOut } from '../../api/factions'
 import { useAuth } from '../../auth/AuthContext'
 import { useFactions } from '../../hooks/useFactions'
 
@@ -13,10 +8,16 @@ import { useFactions } from '../../hooks/useFactions'
  *
  * `/factions` itself is no longer fetched here: it comes from the app-wide
  * `useFactions` cache (#1284), so arriving from any other surface costs nothing.
- * What this hook still owns is the viewer's membership status + invitations,
- * which are per-character and not cacheable app-wide. Those two arrive together
- * on `/factions/status` (#1384) — the letters ride on the same payload as the
- * status map they were derived from, so this is one request, not two.
+ * What this hook still owns is the viewer's per-faction membership status, which
+ * is per-character and not cacheable app-wide.
+ *
+ * The response's `invitations` array is no longer read here. #2310 deleted the
+ * "Recent Invitations" panel that was its only consumer on this page, and the
+ * request stays exactly as it was: `/factions/status` is fetched for the STATUS
+ * MAP, and the letters have ridden along on that same payload since #1384. So
+ * there is no dead request to drop — only a field the directory stopped
+ * exposing. `pages/factionDetail/useFactionDetail.ts` still reads the letters off
+ * its own copy of the response.
  *
  * The desktop grid and the phone directory used to own a private copy of this
  * effect, which made `/factions` the one page dispatcher whose data lived BELOW
@@ -28,14 +29,10 @@ import { useFactions } from '../../hooks/useFactions'
  * The failure is returned raw rather than as a message: the two surfaces phrase
  * their own fallback copy, and a shared hook has no business picking one.
  */
-/** Stable identity for the signed-out / not-yet-loaded case. */
-const NO_INVITATIONS: InvitationLetterOut[] = []
-
 export interface FactionsDirectoryState {
   readonly factions: FactionOut[]
   /** The viewer's per-faction membership status; null while signed out. */
   readonly factionPage: FactionPageOut | null
-  readonly invitations: InvitationLetterOut[]
   readonly loading: boolean
   readonly error: unknown
 }
@@ -58,7 +55,6 @@ export function useFactionsDirectory(): FactionsDirectoryState {
 
     const load = async () => {
       if (characterId == null) return
-      // The invitations feed backs the letters PANEL only — never card state.
       const statusData = await getFactionStatus()
       if (cancelled) return
       setFactionPage(statusData)
@@ -80,7 +76,6 @@ export function useFactionsDirectory(): FactionsDirectoryState {
   return {
     factions: factions ?? [],
     factionPage,
-    invitations: factionPage?.invitations ?? NO_INVITATIONS,
     // Still one flag, and it still means "nothing to draw yet": the grid needs
     // the faction list, so a settled membership read with `factions` still null
     // is not loaded. Keeping the two apart would flash an empty grid.

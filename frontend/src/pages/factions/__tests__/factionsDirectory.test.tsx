@@ -1,11 +1,21 @@
 /**
- * Mobile factions directory (#732 grid + #733 letters, tested #743). Renders the
- * pure `FactionsDirectoryView` skin directly over controlled rows — the same seam
- * DefaultPlayers gives the players directory. The live `DefaultFactionsDirectory`
- * container self-fetches inside a useEffect, and this harness is node +
- * renderToStaticMarkup (no DOM, effects never fire), so a direct container render
- * only ever reaches the loading state; feeding the view controlled props is the
- * only way to assert the four things merge review had to catch by hand.
+ * The factions directory, BOTH form factors (#732 grid, tested #743).
+ *
+ * SEAM: what each renderer draws from a controlled directory state. Mobile has
+ * always had one — the pure `FactionsDirectoryView` skin, the same shape
+ * DefaultPlayers gives the players directory. #2310 gave desktop the matching
+ * one by exporting `DesktopFactions`, because the deletion it makes has to be
+ * asserted on the renderer that carried the risk. The live containers fetch
+ * inside a `useEffect`, and this harness is node + renderToStaticMarkup (no DOM,
+ * effects never fire), so a direct container render only ever reaches the
+ * loading state; feeding controlled props is the only way in.
+ *
+ * The "Recent Invitations" panel is gone from both (#2310) and the two guards
+ * below are what keep it gone. The second is the load-bearing one: deleting the
+ * panel also deleted desktop's `|| invitationBySlug[slug]` arm out of
+ * `selectState`, and getting that wrong would silently strip an invited player's
+ * route into a faction. The assertion is that an `invited` status alone still
+ * reads `eligible`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -13,8 +23,11 @@ import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { FactionOut, FactionPageOut, FactionStatusOut, InvitationLetterOut } from '../../../api/factions'
+import type { CurrentUser } from '../../../api/auth'
+import { AuthContext } from '../../../auth/AuthContext'
 import FactionsDirectoryView from '../mobileArchetypes/FactionsDirectoryView'
 import DefaultFactionsDirectory from '../mobileArchetypes/DefaultFactionsDirectory'
+import { DesktopFactions } from '../../Factions'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -39,9 +52,12 @@ const FACTIONS: FactionOut[] = [
 // The status half of a row is the schema's five-value membership enum, not any
 // string — spelling it that way is what stops a typo reaching a card state the
 // server cannot report (#1400).
-function status(rows: Array<[string, FactionStatusOut['status']]>): FactionPageOut {
+function status(
+  rows: Array<[string, FactionStatusOut['status']]>,
+  invitations: InvitationLetterOut[] = [],
+): FactionPageOut {
   const all_factions: FactionStatusOut[] = rows.map(([slug, status]) => ({ slug, status }))
-  return { current_faction_slug: 'coven', all_factions, invitations: [] }
+  return { current_faction_slug: 'coven', all_factions, invitations }
 }
 
 // A viewer who is a Coven member, recruited by S.N.I.D.E., and not invited by
@@ -55,14 +71,20 @@ const STATUS = status([
   ['singularity', 'not_invited'],
 ])
 
-const NO_INVITES: InvitationLetterOut[] = []
+// A viewer holding two live letters. `snide` is the one the status map also
+// reports `invited` for; `coven` is the faction they are already in, which is the
+// pairing that used to make desktop's dead `|| invitationBySlug[slug]` arm look
+// load-bearing. Both are letters the panel would have drawn a row for.
+const LETTERS: InvitationLetterOut[] = [
+  { faction_slug: 'snide', delivered_at: '2026-01-01T00:00:00Z' },
+  { faction_slug: 'coven', delivered_at: '2026-01-02T00:00:00Z' },
+]
 
 function view(overrides: Partial<React.ComponentProps<typeof FactionsDirectoryView>> = {}) {
   return render(
     <FactionsDirectoryView
       factions={FACTIONS}
       factionPage={STATUS}
-      invitations={NO_INVITES}
       loading={false}
       error={null}
       unaffiliated={false}
@@ -141,23 +163,17 @@ describe('mobile factions directory — real card state (#743)', () => {
   })
 })
 
-describe('mobile factions directory — invitation letters panel (#743)', () => {
-  it('draws nothing when the invite list is empty', () => {
-    const { text } = view({ invitations: [] })
-    // The panel is header + rows only when a letter exists — an empty feed is silent.
-    expect(text).not.toContain('Recent Invitations')
-    expect(text, 'no INVITE badge without a letter').not.toContain('INVITE')
-  })
-
-  it('renders a row per letter, linking to the faction detail page', () => {
-    const invitations: InvitationLetterOut[] = [
-      { faction_slug: 'snide', delivered_at: '2026-01-01T00:00:00Z' },
-      { faction_slug: 'coven', delivered_at: '2026-01-02T00:00:00Z' },
-    ]
-    const { html, text } = view({ invitations })
-    expect(text, 'panel header appears with a count').toContain('Recent Invitations')
-    expect(html, 'S.N.I.D.E. letter links to its detail page').toContain('href="/factions/snide"')
-    expect(html, 'Coven letter links to its detail page').toContain('href="/factions/coven"')
+describe('mobile factions directory — no invitation panel (#2310)', () => {
+  it('draws no panel even for a viewer holding letters', () => {
+    // The letters are on the payload — the backend still sends them, and the
+    // faction detail page still reads them. This surface just stopped drawing
+    // them, so none of the panel's three strings may appear at any state.
+    const { html, text } = view({ factionPage: status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS) })
+    expect(text, 'no panel header').not.toContain('Recent Invitations')
+    expect(text, 'no INVITE badge').not.toContain('INVITE')
+    expect(text, 'no invite sentence').not.toContain('been invited to join')
+    // The rows were the only links on this screen; the cards navigate by handler.
+    expect(html, 'no letter row linking to a detail page').not.toContain('href="/factions/')
   })
 })
 
@@ -194,10 +210,64 @@ describe('mobile factions directory — the container', () => {
     // takes the same still-loading state it used to produce for itself.
     const { text } = render(
       <DefaultFactionsDirectory
-        state={{ factions: [], factionPage: null, invitations: [], loading: true, error: null }}
+        state={{ factions: [], factionPage: null, loading: true, error: null }}
       />,
     )
     expect(text).toContain('Factions')
     expect(text).toContain('Unaffiliated')
+  })
+})
+
+/**
+ * The DESKTOP renderer over the same controlled state. `useAuth` has a default
+ * context value, so a viewer with no character is the cheap case; the panel was
+ * drawn behind `character &&`, so the letters case needs a real one.
+ */
+describe('desktop factions grid — no invitation panel (#2310)', () => {
+  // Only the field the grid reads; the rest of /auth/me is irrelevant here.
+  const VIEWER = { character: { faction_slug: 'coven' } } as unknown as CurrentUser
+
+  const desktop = (page: FactionPageOut) =>
+    render(
+      <AuthContext.Provider
+        value={{
+          user: VIEWER,
+          loading: false,
+          refetch: async () => {},
+          applyUser: () => {},
+          signOut: async () => {},
+        }}
+      >
+        <DesktopFactions state={{ factions: FACTIONS, factionPage: page, loading: false, error: null }} />
+      </AuthContext.Provider>,
+    )
+
+  it('draws no panel even for a viewer holding letters', () => {
+    const { html, text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
+    expect(text, 'no panel header').not.toContain('Recent Invitations')
+    expect(text, 'no INVITE badge').not.toContain('INVITE')
+    expect(text, 'no invite sentence').not.toContain('been invited to join')
+    // The collapse toggle was the only button on the page that is not a tile CTA.
+    expect(html, 'no expand/collapse triangle').not.toContain('aria-expanded')
+  })
+
+  it('still reads an invited faction as eligible with the letter arm gone', () => {
+    // THE ASSERTION THAT PROTECTS THE DELETION. `snide` is `invited` in the
+    // status map AND holds a letter; `everymen` is `not_invited` and holds none.
+    // With `|| invitationBySlug[slug]` removed, the status map alone must still
+    // separate them — an eligible card that fell back to locked would take away
+    // the only route an invited player has into that faction from this page.
+    const { text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
+    expect(text, 'S.N.I.D.E. is eligible on its status alone').toContain('Consider yourself recruited.')
+    expect(text, 'Coven still reads member').toContain('You’re one of us now')
+    expect(text, 'Everymen stays locked').toContain('Put in the shift and there’s a place for you.')
+  })
+
+  it('reads the same with no letters on the payload at all', () => {
+    // The other half of the claim: the letters were never what produced
+    // `eligible`, so dropping them changes nothing.
+    const withLetters = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS)).text
+    const without = desktop(STATUS).text
+    expect(without).toBe(withLetters)
   })
 })
