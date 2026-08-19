@@ -15,23 +15,23 @@
  *   - `TaskCard` and the task details reach the hue through `surfaceMap`
  *     dispatch, off a *different* faction's slug (`metatask_faction_slug`) than
  *     the one dressing the page: eight hues against nine grounds.
- *   - the two invitation rows put the hue in a `<Trans>` interpolation component,
- *     where the ink and the copy are assembled in different files.
  *
  * WHY BOTH HALVES ARE ASSERTED. The careless sweep here is not "miss one ink" —
  * it is "strip the colour". These surfaces are meant to be loudly faction-coded,
  * and every one of them keeps the hue on its fill, wash, rule or border. A guard
  * that only forbade would be satisfied by deleting the identity.
  *
- * ONE OF THE TWELVE SITES IS NOT REACHABLE FROM HERE, and it is the clearest
- * argument for shipping the lint rule beside this file. `pages/Factions.tsx`
- * draws the desktop invitation row inside `invitationsExpanded &&`, whose
- * `useState` starts false — and this harness has no DOM, so no click can open
- * it (§ the mobile twin is a pure view component and IS rendered below). A
- * render guard cannot see a state no route walk produces, which is #694's
- * lesson: "the surface is skinned by a faction" is not the same claim as "the
- * sweep has been there". `local/no-faction-hue-as-ink` reads it out of the
- * source and does not care whether it renders.
+ * TWO MORE SITES ARE GONE RATHER THAN FIXED, and their section with them: the
+ * pair of "Recent Invitations" rows, desktop (`pages/Factions.tsx`) and mobile
+ * (`FactionsDirectoryView`). #2310 deleted that panel from both form factors —
+ * the letter is already actionable on the Updates feed card, the faction detail
+ * page and the arrival popup, so the row carried no action of its own. The
+ * desktop one was never reachable from this harness anyway (it sat inside
+ * `invitationsExpanded &&`, a `useState` starting false, and there is no DOM
+ * here to click the toggle) — which was the clearest argument for shipping
+ * `local/no-faction-hue-as-ink` beside this file: the rule reads source and does
+ * not care whether a surface renders. That argument stands; only the specimen is
+ * gone.
  *
  * ONE GROUP OF SITES IS GONE RATHER THAN FIXED, and its section with it. Three
  * of #2077's twelve were `StatusBadge` / `InvitationNote` inside
@@ -46,8 +46,8 @@
  *
  * A NOTE ON WHICH FACTION THE FIXTURES USE. `ephemerists` is the metatask
  * faction throughout, because #2068 handed it the plate brass and that is the
- * slot that fails — 2.19:1 on the app's page in light, 2.04:1 on the faction
- * wash the invitation rows lay down. It is a fixture choice and NOT the subject:
+ * slot that fails — 2.19:1 on the app's page in light. It is a fixture choice
+ * and NOT the subject:
  * the slot changed hands once already (WOW vacated it, 1.96 -> 5.80), so the
  * loops below walk every slug and the assertion is about the ROLE.
  */
@@ -56,7 +56,6 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../i18n'
-import type { InvitationLetterOut } from '../api/factions'
 import type { TaskOut } from '../api/tasks'
 import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import { fillUses, inkOffenders } from '../utils/__tests__/inkSeam'
@@ -73,7 +72,6 @@ vi.mock('../auth/AdminModeContext', () => ({
 import TaskCard from '../components/taskCard/TaskCard'
 import { surfaceMap } from '../factions'
 import DefaultTaskDetail from '../pages/taskDetail/archetypes/DefaultTaskDetail'
-import FactionsDirectoryView from '../pages/factions/mobileArchetypes/FactionsDirectoryView'
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -183,51 +181,5 @@ describe('every task-detail metatask byline reads its own surface (#2077)', () =
     // `PINK_INK` rather than the hue. Counting here is what stops a future
     // reader trusting the report's number over the registry's.
     expect(Object.keys(DETAILS).length).toBeGreaterThanOrEqual(9)
-  })
-})
-
-// ── The two invitation rows ────────────────────────────────────────────────
-
-const LETTERS: InvitationLetterOut[] = SLUGS.filter((slug) => slug !== 'na').map((slug) => ({
-  faction_slug: slug,
-  delivered_at: '2026-01-01T00:00:00Z',
-  note: 'Come and see',
-}))
-
-describe('the invitation rows mark the faction name by WEIGHT, not hue (#2077)', () => {
-  it('mobile: the directory view inks no faction name in its own hue', () => {
-    const html = render(
-      <FactionsDirectoryView
-        factions={LETTERS.map(({ faction_slug }) => ({ slug: faction_slug, status: 'visible' }))}
-        factionPage={null}
-        invitations={LETTERS}
-        loading={false}
-        error={null}
-        unaffiliated
-        onVisit={() => {}}
-      />,
-    )
-    expect(inkOffenders(html)).toEqual([])
-    // The row's wash and its 3px left rule are the hue's, and they are what make
-    // the row readable AS an invitation from that faction.
-    expect(fillUses(html).length).toBeGreaterThan(0)
-  })
-
-  it('the name still carries a weight of its own', () => {
-    // The fix deletes a `color` from a two-declaration span. Delete the other
-    // one by accident and the name stops being marked out at all — which no ink
-    // assertion would notice.
-    const html = render(
-      <FactionsDirectoryView
-        factions={[{ slug: META_SLUG, status: 'visible' }]}
-        factionPage={null}
-        invitations={[LETTERS[0]]}
-        loading={false}
-        error={null}
-        unaffiliated
-        onVisit={() => {}}
-      />,
-    )
-    expect(html).toContain('font-weight:700')
   })
 })

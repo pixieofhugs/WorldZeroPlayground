@@ -1,13 +1,9 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trans, useTranslation } from 'react-i18next'
-import type { InvitationLetterOut } from '../api/factions'
+import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 import FactionSelectCard from '../components/selectCard/FactionSelectCard'
 import type { SelectState } from '../components/selectCard/FactionSelectCard'
 import { extractError } from '../utils/errors'
-import { factionCssVar, factionName } from '../utils/factions'
-import { relativeTime } from '../utils/dates'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
@@ -46,17 +42,17 @@ export default function Factions() {
   return <DesktopFactions state={state} />
 }
 
-function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
+/** Exported for tests: the desktop grid over a controlled directory state, the
+ *  same seam `FactionsDirectoryView` gives the phone skin. The page's own fetch
+ *  lives in `useFactionsDirectory`, above the form-factor switch. */
+export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
   const { user } = useAuth()
   const character = user?.character ?? null
   const navigate = useNavigate()
 
-  const { factions, factionPage, invitations, loading } = state
+  const { factions, factionPage, loading } = state
   const error = state.error ? extractError(state.error, 'Could not load factions.') : null
-
-  // Invitations panel (collapsed by default once each card surfaces its own status)
-  const [invitationsExpanded, setInvitationsExpanded] = useState(false)
 
   const statusFor = (slug: string): string => {
     if (!factionPage) return STATUS_NOT_INVITED
@@ -65,12 +61,6 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   }
 
   if (loading) return <div className="py-8 font-body text-muted">{t('index.loading')}</div>
-
-  // Index invitations by slug for quick per-card lookup
-  const invitationBySlug: Record<string, InvitationLetterOut> = {}
-  for (const letter of invitations) {
-    invitationBySlug[letter.faction_slug] = letter
-  }
 
   // Build the visible faction list (exclude hidden system factions)
   const visibleFactions = factions.filter((f) => !HIDDEN_SLUGS.has(f.slug))
@@ -89,12 +79,25 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
     return sa - sb
   })
 
-  // Map the invite-gated status (+ any open letter) to the select-card's
-  // three-state model. Joining itself happens on the faction detail page.
+  // Map the invite-gated status to the select-card's three-state model. Joining
+  // itself happens on the faction detail page.
+  //
+  // The status alone decides it. There used to be a third `|| invitationBySlug[slug]`
+  // arm here; #2310 removed it after checking that a held letter can never land
+  // outside the two states above. `get_invitation_status` (backend
+  // services/faction_service.py) builds the status map and the letters list from
+  // ONE `InvitationLetter` select in one response (#1384), so the two cannot skew:
+  // `invited_slugs` IS the letter set. Of the branches that can win ahead of
+  // `invited` in that map, `member` and `can_return` are both handled above, and
+  // `defected` cannot hold a letter at all since #2218 — walking out of a
+  // non-rejoinable faction DELETES its letter (`defect_to_faction`) and
+  // `maybe_deliver_invitations` subtracts `unjoinable_faction_slugs` before
+  // posting a new one. So a letter implies member / can_return / invited, and the
+  // arm could only ever re-derive `eligible` for a card already reading it.
   const selectState = (slug: string): SelectState => {
     const status = statusFor(slug)
     if (status === STATUS_MEMBER) return 'member'
-    if (status === STATUS_INVITED || status === STATUS_CAN_RETURN || invitationBySlug[slug]) return 'eligible'
+    if (status === STATUS_INVITED || status === STATUS_CAN_RETURN) return 'eligible'
     return 'locked'
   }
 
@@ -104,80 +107,6 @@ function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
 
       {error && (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">{error}</p>
-      )}
-
-      {/* Invitation letters — collapsible; each card also surfaces its own status below */}
-      {character && invitations.length > 0 && (
-        <div className="mb-6">
-          <button
-            onClick={() => setInvitationsExpanded((v) => !v)}
-            className="label-heading"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--space-sm)',
-              marginBottom: invitationsExpanded ? 'var(--space-sm)' : 0,
-            }}
-            aria-expanded={invitationsExpanded}
-          >
-            <span>{invitationsExpanded ? '▾' : '▸'}</span>
-            <span>
-              {t('index.recentInvitations', { count: invitations.length })}
-            </span>
-          </button>
-          {invitationsExpanded && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-              {invitations.map((inv) => {
-                return (
-                  <div
-                    key={inv.faction_slug}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--space-sm)',
-                      padding: 'var(--space-sm) var(--space-md)',
-                      background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
-                      borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
-                    }}
-                  >
-                    <span className="label-caption">{t('index.inviteBadge')}</span>
-                    <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1 }}>
-                      <Trans
-                        t={t}
-                        i18nKey="index.invitedToJoin"
-                        values={{ faction: factionName(inv.faction_slug) }}
-                        components={[
-                          <span key="0" />,
-                          // WEIGHT, NOT HUE (#2077). The faction name used to
-                          // print `factionCssVar(slug)` — the bare spine hue,
-                          // which is a FILL (§3, #1932). The row already lays
-                          // that hue down as a wash and rules its left edge in
-                          // it; measured ON that wash over the page, the hue as
-                          // ink is 2.04:1 for the Ephemerists brass, 2.41 for
-                          // the S.N.I.D.E. acid, 2.59 Coven, 3.80 UA, 4.12
-                          // Singularity and 4.26 for `na` in light — six of
-                          // eight under AA, and all eight clear in dark, which
-                          // is the cascade tell #1932 names. The ink inherited
-                          // from the parent span is `--color-text-primary` at
-                          // 14.26–16.44:1 on the same wash. `fontWeight: 700`
-                          // is what still marks the name out.
-                          <span key="1" style={{ fontWeight: 700 }} />,
-                        ]}
-                      />
-                    </span>
-                    <span className="label-caption">
-                      {relativeTime(inv.delivered_at)}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
       )}
 
       {/* Logged-out hint */}

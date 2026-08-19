@@ -1,12 +1,6 @@
-import { Link } from 'react-router-dom'
-import { Trans, useTranslation } from 'react-i18next'
-import type {
-  FactionOut,
-  FactionPageOut,
-  InvitationLetterOut,
-} from '../../../api/factions'
-import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../../utils/factions'
-import { relativeTime } from '../../../utils/dates'
+import { useTranslation } from 'react-i18next'
+import type { FactionOut, FactionPageOut } from '../../../api/factions'
+import { factionCssVar, sortFactionsByRainbowOrder } from '../../../utils/factions'
 import FactionSelectCard, { type SelectState } from '../../../components/selectCard/FactionSelectCard'
 
 const NA_SLUG = 'na'
@@ -21,8 +15,6 @@ export interface FactionsDirectoryViewProps {
   factions: FactionOut[]
   /** Per-faction viewer status from GET /factions/status — drives card state. */
   factionPage: FactionPageOut | null
-  /** Invitation letters the viewer holds — backs the letters PANEL only. */
-  invitations: InvitationLetterOut[]
   loading: boolean
   error: string | null
   /** Whether the viewer has not yet sworn to a faction (shows the banner). */
@@ -34,10 +26,9 @@ export interface FactionsDirectoryViewProps {
 /**
  * Pure presentational skin for the Default MOBILE factions directory — the phone
  * twin of the desktop Factions grid. A single-column screen, in render order: a
- * title, the faction stripe bar, any invitation letters the player holds (#733),
- * an "unaffiliated" banner (shown only while the viewer hasn't sworn to a
- * faction), then a vertical stack of the SAME bespoke FactionSelectCard
- * archetypes desktop uses (#732), each visiting its faction's detail page where
+ * title, the faction stripe bar, an "unaffiliated" banner (shown only while the
+ * viewer hasn't sworn to a faction), then a vertical stack of the SAME bespoke
+ * FactionSelectCard archetypes desktop uses (#732), each visiting its detail page where
  * all membership actions live (#347). Member counts are intentionally dropped —
  * no cheap per-faction count query exists (ADR-0035: real fields only).
  *
@@ -57,7 +48,6 @@ export interface FactionsDirectoryViewProps {
 export default function FactionsDirectoryView({
   factions,
   factionPage,
-  invitations,
   loading,
   error,
   unaffiliated,
@@ -109,63 +99,6 @@ export default function FactionsDirectoryView({
         >
           {visible.map((f) => (
             <span key={f.slug} style={{ flex: 1, background: factionCssVar(f.slug) }} />
-          ))}
-        </div>
-      )}
-
-      {/* Invitation letters. Rendered only when the player actually holds one —
-          an empty list draws NOTHING (no header, no empty state).
-
-          ponytail: NO collapse toggle, unlike desktop's collapsed-by-default
-          panel. Desktop can collapse because its grid is fully visible above
-          the fold and each tile already shows `eligible`; on a phone the cards
-          are a tall vertical stack, so this panel is the only thing that tells
-          an invited player a letter exists without scrolling. A collapsed
-          `▸ Recent Invitations (1)` would defeat the point of the issue, and
-          one or two rows never need collapsing. Rows link to the detail page,
-          which owns Accept/Decline (ADR-0030, #347). */}
-      {invitations.length > 0 && (
-        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-          <span className="label-heading">
-            {t('index.recentInvitations', { count: invitations.length })}
-          </span>
-          {invitations.map((inv) => (
-            <Link
-              key={inv.faction_slug}
-              to={`/factions/${inv.faction_slug}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-sm)',
-                padding: 'var(--space-md)',
-                textDecoration: 'none',
-                background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
-                borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
-              }}
-            >
-              <span className="label-caption">{t('index.inviteBadge')}</span>
-              <span
-                className="font-body"
-                style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
-              >
-                <Trans
-                  t={t}
-                  i18nKey="index.invitedToJoin"
-                  values={{ faction: factionName(inv.faction_slug) }}
-                  components={[
-                    <span key="0" />,
-                    // WEIGHT, NOT HUE (#2077) — the desktop twin in
-                    // `pages/Factions.tsx` carries the measurements. The wash
-                    // and the left rule keep the hue; the name inherits
-                    // `--color-text-primary` from the span around it.
-                    <span key="1" style={{ fontWeight: 700 }} />,
-                  ]}
-                />
-              </span>
-              <span className="label-caption">
-                {relativeTime(inv.delivered_at)}
-              </span>
-            </Link>
           ))}
         </div>
       )}
