@@ -23,6 +23,7 @@ const member = (id: number): PraxisMemberOut => ({
   praxis_id: 1,
   character_id: id,
   character_display_name: `Member ${id}`,
+  character_avatar_url: '',
   has_submitted: false,
   is_done: false,
   submitted_at: null,

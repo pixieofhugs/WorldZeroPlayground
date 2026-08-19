@@ -11,6 +11,7 @@ function member(id: number, cast: boolean): PraxisMemberOut {
     praxis_id: 1,
     character_id: id,
     character_display_name: `M${id}`,
+    character_avatar_url: '',
     has_submitted: cast,
     is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
@@ -30,6 +31,7 @@ function invite(
     inviter_id: 1,
     invitee_id: id + 100,
     invitee_display_name: name,
+    invitee_avatar_url: '',
     status,
     created_at: '2026-01-01T00:00:00Z',
   }
