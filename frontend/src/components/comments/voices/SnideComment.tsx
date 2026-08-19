@@ -14,6 +14,7 @@ import {
   ownerRevealStyle,
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
+import { Ransom } from '../../factionMarks/snideAtoms'
 
 /**
  * S.N.I.D.E. comment voice — THE INTERCEPTED SLIP (ADR-0018, redressed for
@@ -69,73 +70,10 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * else's prose; only the cut-out NAME is a poster now.
  */
 
-/**
- * The five scraps the author's name is cut from. Only the first FLIPS — it is a
- * paler patch of the sheet itself, so on a dark stock it has to be a darker one
- * or the letter loses its edge. The other four are the PRESS's theme-invariant
- * pigments: over-inked black, hot pink, acid. A scrap is a drawn thing.
- */
-const RANSOM = [
-  {
-    bg: 'var(--faction-snide-slip-field)',
-    col: 'var(--faction-snide-slip-ink)',
-    font: 'var(--faction-snide-font-impact)',
-    rot: -5,
-  },
-  {
-    bg: 'var(--faction-snide-ink)',
-    col: 'var(--faction-snide-acid)',
-    font: 'var(--faction-snide-font-cond)',
-    rot: 4,
-  },
-  {
-    bg: 'var(--faction-snide-pink)',
-    col: 'var(--faction-snide-on-accent)',
-    font: 'var(--faction-snide-font-black)',
-    rot: -3,
-  },
-  {
-    bg: 'var(--faction-snide-acid)',
-    col: 'var(--faction-snide-ink)',
-    font: 'var(--faction-snide-font-impact)',
-    rot: 6,
-  },
-  {
-    bg: 'var(--faction-snide-ink)',
-    col: 'var(--faction-snide-paper)',
-    font: 'var(--faction-snide-font-cond)',
-    rot: -6,
-  },
-]
-
-function Ransom({ text, size = 16 }: { text: string; size?: number }) {
-  return (
-    // THE NAME MUST STAY ONE READABLE STRING. This byline is the accessible
-    // name of the link to the author's profile, and it was an `inline-flex` row
-    // of per-letter tiles spaced with `gap`: a flex container discards
-    // whitespace-only children, and the space CHARACTER was drawn as an empty
-    // box, so the link announced "VexLineCrane" (#1043, the fix #1023 made on
-    // the SNIDE task card). Ordinary inline flow instead — REAL spaces between
-    // the words, the tiles still `inline-block` and still wrapping, their
-    // kerning carried by a margin and the wrapped rows by the line-height.
-    <span style={{ display: 'inline-block', fontSize: size, lineHeight: 1.25 }}>
-      {[...text].map((char, index) => {
-        if (char === ' ') return <span key={index}>{' '}</span>
-        const s = RANSOM[(char.charCodeAt(0) + index * 3) % RANSOM.length]
-        return (
-          <span key={index} style={{ display: 'inline-block', verticalAlign: 'middle', background: s.bg, color: s.col, fontFamily: s.font, fontSize: size, lineHeight: 0.92,
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a single cut-out letter tile inside its scrap of paper
-            padding: '2px 5px 0',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: kerning between the cut-out ransom letters; a rung breaks the pasted-up letterform run
-            marginRight: 2,
-            transform: `rotate(${s.rot}deg)`, boxShadow: '1.5px 2.5px 0 var(--faction-snide-slip-scrap-shadow)', textTransform: 'uppercase' }}>
-            {char}
-          </span>
-        )
-      })}
-    </span>
-  )
-}
+/* The per-LETTER ransom cut was drawn here. #2287 moved it into `snideAtoms`
+   as {@link Ransom}: the owner's ruling gives the S.N.I.D.E. field-desk
+   masthead the same cut, and this file was its only mount. The five scraps and
+   the reason only the first of them flips travelled with it. */
 
 /**
  * The slip itself — the same stock, raster, border and hard printed shadow the

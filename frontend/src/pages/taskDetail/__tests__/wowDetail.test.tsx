@@ -25,6 +25,8 @@ import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import WowTaskDetail from "../archetypes/WowTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aTask } from '../../../test/fixtures'
+import { factionName } from "../../../utils/factions";
+import i18n from "../../../i18n";
 
 const TASK = aTask({
   id: 663,
@@ -157,7 +159,7 @@ describe("wow task detail — the contract points it inherits", () => {
     expect(text).toContain("4");
   });
 
-  it("keeps the metatask pill and the metatask-for line", () => {
+  it("keeps the metatask pill and the issuer line", () => {
     const { text } = render(
       <WowTaskDetail
         state={baseState({
@@ -166,7 +168,11 @@ describe("wow task detail — the contract points it inherits", () => {
       />,
     );
     expect(text).toContain("META");
-    expect(text).toContain("Metatask for Cozy Coven");
+    // Read from the catalog, not spelled here: the line says who ISSUED the
+    // metatask since #2282, and the wording is the catalog's to change.
+    expect(text).toContain(
+      i18n.t("tasks:detail.metataskIssuer", { faction: factionName("coven") }),
+    );
   });
 
   it("expands the gallery in place instead of linking out to ?task_id=", () => {

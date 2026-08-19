@@ -31,7 +31,7 @@ vi.mock('../../../api/votes', () => ({
   castVote: mocks.castVote,
 }))
 
-import EphemeristsVote, { CastBurst } from '../EphemeristsVote'
+import EphemeristsVote, { CastBurst, DISC_RUN } from '../EphemeristsVote'
 import { METAL_SIGILS } from '../../factionMarks/ephemeristsPlate'
 import { VOTE_REFRAMES, reframeLabel } from '../voteReframes'
 
@@ -90,6 +90,9 @@ const METALS = ['lead', 'copper', 'silver', 'gold', 'platinum']
 const SHEET = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
 /** The row's unconditional rule — the one outside the container query. */
 const metalRow = () => SHEET.match(/^\.eph-metal-row \{[^}]*\}/m)?.[0] ?? ''
+/** The container query's whole block — what the row does in a narrow plate. */
+const narrowRow = () =>
+  SHEET.slice(SHEET.indexOf('@container'), SHEET.indexOf('@container') + 320)
 
 describe('the metals vocabulary (#1207, ADR-0061)', () => {
   it('names the five tiers lead → platinum', () => {
@@ -318,14 +321,79 @@ describe('EphemeristsVote markup', () => {
   it('yields the clearance to the PLATE’s width, never the viewport’s (#2236)', () => {
     // The plate is the query container; the row is what answers.
     expect(SHEET).toContain('.eph-vote-plate { container-type: inline-size; }')
-    const narrow = SHEET.slice(SHEET.indexOf('@container'), SHEET.indexOf('@container') + 200)
-    expect(narrow).toContain('.eph-metal-row')
-    // The bottom of the ramp, on the two axes that can pay: 226px of disc into
-    // a 258px plate, which is a 360px phone. Nothing here touches the block
-    // padding — that is the burst's vertical clearance, and it never runs out.
-    expect(narrow).toContain('column-gap: var(--space-xs)')
-    expect(narrow).toContain('padding-inline: var(--space-sm)')
-    expect(narrow).not.toContain('@media')
+    expect(narrowRow()).toContain('.eph-metal-row')
+    expect(narrowRow()).not.toContain('@media')
+  })
+
+  /**
+   * #2315 — THE YIELD IS A RAMP, NOT A CLIFF, AND THAT IS THE WHOLE BUG.
+   *
+   * Reported as "voting icons are squished" on a narrow praxis card, with all
+   * three of #2236's guards still in place. They are: nothing in either
+   * stylesheet carries `flex-shrink` or `!important`, so the inline
+   * `flex-shrink: 0` on each disc cannot be beaten and the discs are NOT
+   * shrinking. What was wrong is the STEP.
+   *
+   * #2236 wrote one rung — the bottom one. The instant a plate dropped under
+   * 372px the clearance fell from `--space-xl` (24) straight to `--space-xs`
+   * (4), however much room the plate actually had: a 375px phone gives the
+   * plate about 291px, where the five discs need 226 and there is room for
+   * ~11px between them, and the row drew them 4px apart and dumped the other
+   * 33px at the two ends via `justify-content: center`. Round discs, bunched
+   * into the middle. That is what a reader calls squished.
+   *
+   * So the clearance is now a continuous function of the plate: the row seats
+   * `DISC_RUN` of disc, four gaps and two end pads, which is `DISC_RUN + 6g`,
+   * so `g = (100cqi − DISC_RUN) / 6` spends exactly the room there is. Clamped
+   * to the same two rungs it moved between before, which makes the ramp meet
+   * the un-queried rule EXACTLY at its ceiling — the query threshold stops
+   * being a step at all.
+   *
+   * NOT MEASURED. This harness has no DOM and no layout, and there is no
+   * browser here; the reproduction above is arithmetic over the sheet and the
+   * component's own constants, and the render is eyeballing that is still owed.
+   * What IS decidable is that the sheet's arithmetic and the component's agree.
+   */
+  it('spends the whole plate rather than dropping to one narrow rung (#2315)', () => {
+    const narrow = narrowRow()
+    // A ramp: one expression over the container's own inline size, floored and
+    // capped at the two rungs the cliff used to jump between.
+    expect(narrow, 'the clearance ramps').toContain('clamp(')
+    expect(narrow, 'and it ramps against the PLATE').toContain('100cqi')
+    expect(narrow, 'floor').toContain('var(--space-xs)')
+    expect(narrow, 'ceiling').toContain('var(--space-xl)')
+    // Gap and end padding are ONE figure, because a disc at the end of the row
+    // wants the same air against the plate's edge as against its neighbour.
+    expect(narrow).toMatch(/column-gap: var\(--eph-metal-air\)/)
+    expect(narrow).toMatch(/padding-inline: var\(--eph-metal-air\)/)
+    // The BLOCK padding is still off the query — it is the cast burst's
+    // vertical clearance and never runs out — and so is the row gap, which is
+    // what separates a wrapped ladder's two lines.
+    expect(narrow).not.toContain('padding-block')
+    expect(narrow).not.toContain('row-gap')
+  })
+
+  it('reads the disc run from the discs, so a resize cannot mis-space the row (#2315)', () => {
+    // CSS cannot import a constant, so `DISC_RUN` is transcribed into the
+    // sheet. This is the guard that transcription needs: change a disc size
+    // without changing the sheet and the ramp silently spends the wrong room.
+    expect(DISC_RUN, 'four discs and the haloed fifth').toBe(226)
+    expect(narrowRow()).toContain(`${DISC_RUN}px`)
+  })
+
+  it('meets the wide rule exactly at the ramp’s ceiling, so the threshold is not a step (#2315)', () => {
+    // Solving `DISC_RUN + 6g = W` at the ceiling gives the widest plate the
+    // ramp still answers for. The query has to fire at or above it, or there
+    // is a band where the row is queried but pinned — which is the cliff back.
+    const rung = (name: string) =>
+      Number(SHEET.match(new RegExp(`--space-${name}: (\\d+)px`))?.[1])
+    const ceiling = DISC_RUN + 6 * rung('xl')
+    expect(ceiling, 'the un-queried rule’s own intrinsic width').toBe(370)
+    const threshold = Number(SHEET.match(/@container \(width < (\d+)px\)/)?.[1])
+    expect(threshold).toBeGreaterThanOrEqual(ceiling)
+    // And at the floor the row still seats all five before it has to wrap, so
+    // the wrap stays the LAST resort rather than the common case.
+    expect(DISC_RUN + 6 * rung('xs')).toBeLessThan(threshold)
   })
 
   it('lights only the reached discs, and leaves the rest idle', () => {

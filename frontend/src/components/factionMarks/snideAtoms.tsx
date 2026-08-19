@@ -1,6 +1,7 @@
 /**
  * Shared S.N.I.D.E. craft atoms — the flyposted wall the faction's surfaces
- * stand on, and the pink pen loop it circles a figure in. It does NOT hold the
+ * stand on, the per-letter ransom cut its names and mastheads are pasted up
+ * from, and the pink pen loop it circles a figure in. It does NOT hold the
  * faction's sigil: a struck-through circle-S lived here until #2119 and was a
  * second `SnideSigil` competing with the real one in `components/sigil/`, which
  * two surfaces then imported by mistake. A faction gets one mark, from one
@@ -40,6 +41,110 @@ export const WALL = [
   "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
   "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
 ].join(", ");
+
+/**
+ * The five scraps a name is cut from, and the cut itself (#1198, shared by #2287).
+ *
+ * Only the first FLIPS — it is a paler patch of the comment sheet's own stock, so
+ * on a dark stock it has to be a darker one or the letter loses its edge. The
+ * other four are the PRESS's theme-invariant pigments: over-inked black, hot
+ * pink, acid. A scrap is a drawn thing.
+ *
+ * IT MOVED HERE BECAUSE THE FIELD DESK WEARS IT TOO. The recipe was inline in
+ * `comments/voices/SnideComment` while the comment byline was its only mount;
+ * #2287's ruling gives the S.N.I.D.E. field-desk masthead the same cut, and the
+ * faction already keeps two other per-word ransom sets (the task card's `CUTS`,
+ * the seal's chips). A third transcription of the per-LETTER one is how a
+ * faction acquires a second identity, so it is drawn once, in the shape {@link
+ * WALL} and {@link PenCircle} already established for this module.
+ *
+ * A RANSOM CUT IS GROUND-PORTABLE, and that is the whole reason it could travel
+ * without a re-measurement of the mark itself: every letter carries its own
+ * OPAQUE scrap, so the pairing is letter-on-scrap and never letter-on-page.
+ * Worst reading of the five is the pink tile's `-on-accent` at 5.38:1, in both
+ * cascades. The one thing that IS ground-relative is the scrap's own drop, and
+ * `--faction-snide-slip-scrap-shadow` flips with the theme, so it survives both
+ * grounds the mark now lands on. On the flyposted wall the pale scrap composites
+ * at 1.06:1 light / 1.14:1 dark against the wall — it reads as an unpasted patch
+ * rather than a tile — but its LETTER still clears the bare wall (15.95:1 light,
+ * 17.52:1 dark), so the blend costs a texture and never a word.
+ *
+ * THE NAME MUST STAY ONE READABLE STRING — see the comment inside.
+ */
+const RANSOM = [
+  {
+    bg: "var(--faction-snide-slip-field)",
+    col: "var(--faction-snide-slip-ink)",
+    font: "var(--faction-snide-font-impact)",
+    rot: -5,
+  },
+  {
+    bg: "var(--faction-snide-ink)",
+    col: "var(--faction-snide-acid)",
+    font: "var(--faction-snide-font-cond)",
+    rot: 4,
+  },
+  {
+    bg: "var(--faction-snide-pink)",
+    col: "var(--faction-snide-on-accent)",
+    font: "var(--faction-snide-font-black)",
+    rot: -3,
+  },
+  {
+    bg: "var(--faction-snide-acid)",
+    col: "var(--faction-snide-ink)",
+    font: "var(--faction-snide-font-impact)",
+    rot: 6,
+  },
+  {
+    bg: "var(--faction-snide-ink)",
+    col: "var(--faction-snide-paper)",
+    font: "var(--faction-snide-font-cond)",
+    rot: -6,
+  },
+];
+
+export function Ransom({ text, size = 16 }: { text: string; size?: string | number }) {
+  return (
+    // THE NAME MUST STAY ONE READABLE STRING. This is the accessible name of the
+    // link (or the heading) it is cut into, and it was an `inline-flex` row of
+    // per-letter tiles spaced with `gap`: a flex container discards
+    // whitespace-only children, and the space CHARACTER was drawn as an empty
+    // box, so the link announced "VexLineCrane" (#1043, the fix #1023 made on
+    // the SNIDE task card). Ordinary inline flow instead — REAL spaces between
+    // the words, the tiles still `inline-block` and still wrapping, their
+    // kerning carried by a margin and the wrapped rows by the line-height.
+    <span style={{ display: "inline-block", fontSize: size, lineHeight: 1.25 }}>
+      {[...text].map((char, index) => {
+        if (char === " ") return <span key={index}>{" "}</span>;
+        const s = RANSOM[(char.charCodeAt(0) + index * 3) % RANSOM.length];
+        return (
+          <span
+            key={index}
+            style={{
+              display: "inline-block",
+              verticalAlign: "middle",
+              background: s.bg,
+              color: s.col,
+              fontFamily: s.font,
+              fontSize: size,
+              lineHeight: 0.92,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a single cut-out letter tile inside its scrap of paper
+              padding: "2px 5px 0",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: kerning between the cut-out ransom letters; a rung breaks the pasted-up letterform run
+              marginRight: 2,
+              transform: `rotate(${s.rot}deg)`,
+              boxShadow: "1.5px 2.5px 0 var(--faction-snide-slip-scrap-shadow)",
+              textTransform: "uppercase",
+            }}
+          >
+            {char}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
 
 /**
  * The pen circle — S.N.I.D.E.'s points mark (#2035, shared by #2042).

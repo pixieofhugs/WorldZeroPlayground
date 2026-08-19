@@ -9,6 +9,7 @@ import { WowSigil } from "../../../components/sigil/WowSigil";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
 import type { CharacterOut } from "../../../api/auth";
+import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
@@ -105,6 +106,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
     onSignup,
     membership,
   } = state;
+  const sections = useFactionSections();
 
   // Guarded non-null by the dispatcher.
   if (!faction) return null;
@@ -160,42 +162,51 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ── quests awaiting a champion ── */}
         <section>
-          <SectionHead>{t("detail.default.tasksHeading", { total: tasks.length })}</SectionHead>
-          {tasks.length === 0 ? (
-            <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
-          ) : (
-            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  basePoints={task.point_value}
-                  multiplier={computeFactionMultiplier(
-                    viewerFactionSlug,
-                    task.primary_faction_slug,
-                    gameFactions,
-                  )}
-                  onSignup={onSignup}
-                />
-              ))}
-            </div>
-          )}
+          <SectionHead>
+            <SectionToggle
+              section={sections.tasks}
+              label={t("detail.default.tasksHeading", { total: tasks.length })}
+            />
+          </SectionHead>
+          <SectionPanel section={sections.tasks}>
+            {tasks.length === 0 ? (
+              <Quiet>{t("detail.default.tasksEmpty")}</Quiet>
+            ) : (
+              <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
+                {tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    basePoints={task.point_value}
+                    multiplier={computeFactionMultiplier(
+                      viewerFactionSlug,
+                      task.primary_faction_slug,
+                      gameFactions,
+                    )}
+                    onSignup={onSignup}
+                  />
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </section>
 
         {/* ── chronicles of proof ── the one bunch of balloons on the page ── */}
         <section>
           <SectionHead balloons>
-            {t("detail.default.recentHeading")}
+            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
           </SectionHead>
-          {recentPraxis.length === 0 ? (
-            <Quiet>{t("detail.default.recentEmpty")}</Quiet>
-          ) : (
-            <div className="praxis-gallery" style={CARD_GRID}>
-              {recentPraxis.map((praxis) => (
-                <PraxisCard key={praxis.id} praxis={praxis} />
-              ))}
-            </div>
-          )}
+          <SectionPanel section={sections.praxis}>
+            {recentPraxis.length === 0 ? (
+              <Quiet>{t("detail.default.recentEmpty")}</Quiet>
+            ) : (
+              <div className="praxis-gallery" style={CARD_GRID}>
+                {recentPraxis.map((praxis) => (
+                  <PraxisCard key={praxis.id} praxis={praxis} />
+                ))}
+              </div>
+            )}
+          </SectionPanel>
         </section>
       </div>
 

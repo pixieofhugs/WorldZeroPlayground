@@ -3024,6 +3024,198 @@ describe("`--faction-snide-acid` never touches paper (#2173)", () => {
 });
 
 /**
+ * The S.N.I.D.E. field desk stands on the wall, and its masthead is CUT (#2287).
+ *
+ * Owner ruling on a report that the skin was "boring". Two halves, and both are
+ * CONSUMPTION of drawings the kit already makes: the FIELDDESK masthead takes the
+ * per-letter ransom cut the comment slip pastes a player's name up in, and the
+ * credential panel takes the flyposted `WALL` the task card, the composer and the
+ * praxis card already wear. The faction keeps three ransom sets already (the task
+ * card's per-WORD `CUTS`, the seal's per-word chips, this per-LETTER one), so a
+ * third transcription of the per-letter one was the live risk — hence the source
+ * rows below, which fail on a copy rather than on a colour.
+ *
+ * THE GROUND MOVED UNDER INKS THAT WERE MEASURED ON THE OLD ONE, which is the
+ * part a ratio manifest cannot notice by itself. The panel was
+ * `--faction-snide-card-bg`, near-black in BOTH themes; the wall FLIPS. Every
+ * `-card-*` ink on it was therefore correct only by night, and by day:
+ *
+ *   -card-text    1.05:1      the character's name
+ *   -card-muted   1.24:1      the level line and the whole track baseline
+ *   acid as type  1.03:1      the points figure — #2173's pairing exactly
+ *
+ * All three move to the `-note-*` family, which flips with the wall and which
+ * `SNIDE_WALL_PAIRS` above already measures on all four of the wall's readings
+ * (both ramp stops, both washed corners, both themes): `-note-ink` 11.87-15.95
+ * light / 13.28-18.04 dark, `-note-muted` 5.02-6.75 / 9.38-12.75. Acid cannot
+ * move — there is no rung — so it takes #2173's repair instead and carries the
+ * photocopier-black plate, and so does the level track, whose acid END would
+ * otherwise have read 1.03:1 against paper as a DRAWN mark.
+ *
+ * A RANSOM CUT IS GROUND-PORTABLE, and that is what let the mark travel with no
+ * re-measurement of its own: every letter sits on its own OPAQUE scrap, so the
+ * pairing is letter-on-scrap on any page. The alpha row below is the load-bearing
+ * one — a scrap walked to an rgba would silently make the mark's legibility a
+ * property of whatever it was pasted to. Two of the five scraps DO composite to
+ * within 1.06:1 / 1.05:1 of the wall (the pale patch by day, the over-inked black
+ * by night); that costs a texture, never a word.
+ *
+ * `ponytail:` the ink rows read the panel by slicing `<WallPanel>` out of the
+ * source, so an ink that arrives through a module-level style object — the way
+ * `actionPillStyle` does, correctly, because its own ground is a black chip — is
+ * outside the slice. The upgrade path is the JSX walk the #2107 block below
+ * declines for the same reason.
+ */
+describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
+  const DESK = "pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx";
+  const ATOMS = "components/factionMarks/snideAtoms.tsx";
+  const VOICE = "components/comments/voices/SnideComment.tsx";
+
+  /** The aliases the source rows are written against — #2173's guard, verbatim. */
+  function deskSource(): string {
+    const source = stripComments(sourceOf(DESK));
+    for (const [alias, token] of [
+      ["NOTE_INK", "--faction-snide-note-ink"],
+      ["NOTE_MUTED", "--faction-snide-note-muted"],
+      ["ACID_PIGMENT", "--faction-snide-acid"],
+      ["PLATE", "--faction-snide-ink"],
+    ] as const) {
+      expect(
+        source,
+        `${DESK} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
+      ).toMatch(new RegExp(`const ${alias} = ["']var\\(${token}\\)["']`));
+    }
+    return source;
+  }
+
+  /** The credential panel's markup, which is the only part standing on the wall. */
+  function wallPanelMarkup(source: string): string {
+    const open = source.indexOf("<WallPanel>");
+    const close = source.indexOf("</WallPanel>");
+    expect(open, `no \`<WallPanel>\` mount in ${DESK}`).toBeGreaterThan(-1);
+    expect(close, `no \`</WallPanel>\` close in ${DESK}`).toBeGreaterThan(open);
+    return source.slice(open, close);
+  }
+
+  /** The scraps as the module actually declares them, so this cannot drift. */
+  function ransomScraps(): { bg: string; col: string }[] {
+    const source = stripComments(sourceOf(ATOMS));
+    const at = source.indexOf("const RANSOM = [");
+    expect(at, `no \`RANSOM\` table in ${ATOMS}`).toBeGreaterThan(-1);
+    const table = source.slice(at, source.indexOf("\n];", at));
+    const scraps = [...table.matchAll(/bg:\s*"var\((--[a-z0-9-]+)\)",\s*col:\s*"var\((--[a-z0-9-]+)\)"/g)].map(
+      (match) => ({ bg: match[1], col: match[2] }),
+    );
+    expect(scraps.length, `parsed ${scraps.length} scraps out of \`RANSOM\`; the table's shape changed`).toBe(5);
+    return scraps;
+  }
+
+  it("the panel's ground is the shared WALL, not a second copy of the recipe", () => {
+    const source = deskSource();
+    expect(
+      source,
+      "the wall is drawn once, in `factionMarks/snideAtoms`, because five surfaces wear it.",
+    ).toMatch(/import \{ Ransom, WALL \} from ["'][^"']*factionMarks\/snideAtoms["']/);
+    expect(wallPanelMarkup(source).length, "the panel mounts something").toBeGreaterThan(0);
+    expect(source, "`WallPanel` grounds on the imported recipe").toMatch(/background: WALL,/);
+    for (const layer of [
+      "--faction-snide-note-grain",
+      "--faction-snide-note-scan",
+      "--faction-snide-note-wash-acid",
+      "--faction-snide-note-wash-pink",
+    ]) {
+      expect(
+        source,
+        `${layer} is a layer of the shared wall. Naming it here is the transcription this guard exists to fail on — import \`WALL\`.`,
+      ).not.toContain(layer);
+    }
+  });
+
+  it("the masthead and the comment byline are cut from ONE drawing", () => {
+    expect(
+      deskSource(),
+      "the FIELDDESK masthead is the ransom cut, mounted — not a bold condensed sans, which is what was reported.",
+    ).toMatch(/<Ransom text=\{t\('fieldDesk\.home\.title'\)\}/);
+    const voice = stripComments(sourceOf(VOICE));
+    expect(voice, `${VOICE} mounts the shared cut`).toMatch(
+      /import \{ Ransom \} from ["'][^"']*factionMarks\/snideAtoms["']/,
+    );
+    expect(
+      voice,
+      "a second `RANSOM` scrap table in the comment voice is the drift this move closed. The faction already keeps two OTHER ransom sets; the per-letter one is drawn once.",
+    ).not.toMatch(/const RANSOM\b/);
+  });
+
+  it("the panel inks with the family that flips with its ground", () => {
+    const panel = wallPanelMarkup(deskSource());
+    for (const [alias, why] of [
+      ["TEXT", "`-card-text` is pinned #f4f1e8 in both themes and reads 1.05:1 on the light wall"],
+      ["MUTED", "`-card-muted` is the SLAB's quiet tier and reads 1.24:1 on the light wall"],
+      ["ACID", "acid as TYPE reads 1.03:1 on the light wall — it takes the plate, as `ACID_PIGMENT`"],
+    ] as const) {
+      expect(panel, `${why} (#2066, #2173).`).not.toMatch(new RegExp(`color: ${alias}[,\\s}]`));
+    }
+    expect(panel, "the name and the level line read the wall's own flipping inks").toMatch(/color: NOTE_INK/);
+    expect(panel, "and so does the quiet tier").toMatch(/color: NOTE_MUTED/);
+  });
+
+  it("acid on the panel carries its censor plate, and so does the level track", () => {
+    const panel = wallPanelMarkup(deskSource());
+    expect(
+      panel,
+      "the points figure is acid on `--faction-snide-ink` — the plate is the whole repair, and deleting it as ornament restores a 1.03:1 pairing by day.",
+    ).toMatch(/color: ACID_PIGMENT, background: PLATE/);
+    expect(
+      panel,
+      "the level track's groove is the same plate: its fill ramps INTO acid, and a drawn mark owes 1.4.11 on the ground it is actually on.",
+    ).toMatch(/background: PLATE, marginTop/);
+    expect(
+      panel,
+      "the old groove was a 4% wash of the card's paper ink — legible only because the track lay on a black card.",
+    ).not.toContain("--faction-snide-card-text) 4%");
+  });
+
+  it("the halftone is gone from the panel rather than layered under the wall", () => {
+    const panel = wallPanelMarkup(deskSource());
+    expect(panel, "the acid dot screen was the panel's OLD ground; the wall replaces it.").not.toContain("HALFTONE");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`acid and the track's two ends clear their plate (${theme})`, () => {
+      for (const [ink, ground, floor, role] of [
+        ["--faction-snide-acid", "--faction-snide-ink", AA_NORMAL, "the points figure, as TYPE"],
+        ["--faction-snide-acid", "--faction-snide-ink", AA_LARGE, "the track fill's acid end, as a DRAWN mark"],
+        ["--faction-snide-pink", "--faction-snide-ink", AA_LARGE, "the track fill's pink end"],
+      ] as const) {
+        const text = resolveColor(ink, theme);
+        const surface = resolveColor(ground, theme);
+        expect(text.color, `${ink} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+        expect(surface.color, `${ground} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(text.color!, surface.color!);
+        expect(ratio, `${role}: ${ink} on ${ground} (${theme}) is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
+          floor,
+        );
+      }
+    });
+
+    it(`every ransom letter clears its own scrap, and every scrap is OPAQUE (${theme})`, () => {
+      for (const { bg, col } of ransomScraps()) {
+        const scrap = resolveColor(bg, theme);
+        const letter = resolveColor(col, theme);
+        expect(scrap.color, `${bg} (${theme}) resolved to "${scrap.raw}"`).not.toBeNull();
+        expect(letter.color, `${col} (${theme}) resolved to "${letter.raw}"`).not.toBeNull();
+        expect(
+          scrap.color!.a,
+          `${bg} (${theme}) is translucent. An opaque scrap is what makes the cut ground-portable — the masthead and the comment byline stand on two different grounds and neither re-measures the mark.`,
+        ).toBe(1);
+        const ratio = contrastRatio(letter.color!, scrap.color!);
+        expect(ratio, `${col} on ${bg} (${theme}) is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
+  }
+});
+
+/**
  * The inverted pill's ink is the PAGE, never `--color-text-on-accent` (#2107).
  *
  * WHY THIS IS A SOURCE GUARD AND NOT A ROW. `--color-text-primary` is a

@@ -11,6 +11,7 @@ import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
   ErrorBanner,
+  headerFactionName,
   LevelJumpBanner,
   showWorthBreakdown,
   TaskDetailComments,
@@ -275,6 +276,8 @@ export default function EphemeristsTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
+  const eyebrowFaction = headerFactionName(task);
   const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
@@ -440,7 +443,7 @@ export default function EphemeristsTaskDetail({
         }}
       >
         <Sign name="ankh" size={19} color={BRASS} weight={1.6} />
-        <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
+        <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{eyebrowFaction}</span>
         {isMetatask && (
           <span
             style={{
@@ -487,7 +490,7 @@ export default function EphemeristsTaskDetail({
             marginBottom: "var(--space-lg)",
           }}
         >
-          {t("detail.metataskFor", {
+          {t("detail.metataskIssuer", {
             faction: factionName(task.metatask_faction_slug),
           })}
         </p>

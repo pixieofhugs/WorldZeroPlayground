@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import {
   BRASS,
   BRASS_LIGHT,
@@ -7,12 +6,12 @@ import {
   DECO,
   INK,
   LotusSign,
-  OCHRE,
   PLATE,
   QUIET,
   READING,
   SHADOW,
 } from "../../factionMarks/ephemeristsPlate";
+import EphemeristsRuneStrip from "../../factionMarks/EphemeristsRuneStrip";
 import { EphemeristsBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -57,14 +56,23 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * shows, one card per row. Nothing here is form-factor branched.
  *
  * The ornament is the shared kit's (`ephemeristsPlate`), not a second copy:
- * `Cornice`, `LotusSign`, `stepClip`. The drifting strip below breathes on
- * `.epg-glyph`, whose reduced-motion gate and resting state live in index.css —
- * the class outlived the incised register it was named for (#2210), and the
- * marks it now paces are the plate's mathematical ones.
+ * `Cornice`, `LotusSign`, `stepClip` — and, since #2312, the rune strip too.
+ *
+ * ## THE THIRD DRAWING IS GONE (#2312)
+ *
+ * A 32-mark `DRIFT` array headed the vote block: a fixed sequence, crammed
+ * edge to edge, breathing on `.epg-glyph`. It was the same motif
+ * `EphemeristsRuneStrip` already draws for the task card, the task page and the
+ * composer, transcribed a third time — exactly the drift `ephemeristsPlate.tsx`
+ * was extracted to end, and exactly what #2210 / #2067 rule against. The
+ * component takes its place, and it takes the BYLINE's rule rather than the
+ * vote block's air: the owner's ruling is that the runes replace the dotted
+ * line, so that is the slot they fill.
  *
  * DEVIATIONS from the vendored `#eph` / `#ephD` frames, all four in the PR body:
  *  • the drifting strip's marks are ochre and CAPTION gold, not ochre and brass
- *    — brass is a rule colour, and the strip's glyphs are set as type;
+ *    — brass is a rule colour, and the strip's glyphs are set as type. The
+ *    shared component keeps that reading, in `-caption` and `-quiet`;
  *  • the byline keeps the shared portrait (`FactionAvatar`) rather than the
  *    design's octagon monogram: the byline slot is shared card chrome (#888) and
  *    the avatar is one convention across every faction;
@@ -76,15 +84,15 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  */
 
 /**
- * The drifting strip above the vote block — a run of marks from the plate's
- * other eras (nabla, psi, the integral), breathing out of phase on `.epg-glyph`.
- * Ornament, `aria-hidden`, and never part of an accessible name.
+ * How far the strip has to reach BACK to clear the leaf's own padding.
+ *
+ * `[data-eph-runes]` fills its container's PADDING box, and this card's leaf is
+ * inset by `--space-xl` a side — so the mount bleeds itself, which is what the
+ * retired `DRIFT` row did with the same expression. The strip is not given a
+ * per-mount width (#2312 rules that out): one device, one behaviour, and each
+ * mount answers for the box it was hung in.
  */
-const DRIFT = [
-  "∇", "×", "Ψ", "≡", "∂", "Φ", "∕", "∂", "τ", "·", "∮", "⟨", "ψ", "‖", "Θ",
-  "‖", "ψ", "⟩", "∝", "Σ", "μ", "ν", "·", "⊗", "Δ", "λ", "≥", "ϖ", "·", "∫",
-  "ρ", "∂",
-];
+const LEAF_BLEED = "0 calc(var(--space-xl) * -1)";
 
 export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
@@ -153,62 +161,47 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
             background: "transparent",
             color: CAPTION,
           }}
-          voteRule={
-            <>
-              {/* The drift, bled to the plate's edges. */}
-              <div
-                aria-hidden
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  height: 15,
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  userSelect: "none",
-                  margin: "var(--space-md) calc(var(--space-xl) * -1)",
-                }}
-              >
-                {DRIFT.map((mark, index) => (
-                  <span
-                    key={`${mark}${index}`}
-                    className="epg-glyph"
-                    style={
-                      {
-                        flex: "1 1 auto",
-                        textAlign: "center",
-                        lineHeight: 1,
-                        color: index % 2 ? CAPTION : OCHRE,
-                        fontSize: index % 2 ? "var(--text-lg)" : "var(--text-sm)",
-                        "--epg-op": index % 2 ? 0.72 : 0.48,
-                        "--epg-delay": `${(index * 2.83) % 12}s`,
-                      } as CSSProperties
-                    }
-                  >
-                    {mark}
-                  </span>
-                ))}
-              </div>
+          /* THE RUNE STRIP RULES THE BYLINE (#2312). A generic dashed line stood
+             here — the shared `PraxisByline`'s `border-top` — on a plate whose
+             every other division is drawn. The owner's ruling: *"the runes
+             should show up instead of the dotted line"*, corner to corner and
+             evenly spread.
 
-              {/* The vote section's head — the card states the prompt, so the
-                  widget carries none and the detail page's own heading is not
-                  doubled up. */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  marginBottom: "var(--space-md)",
-                }}
-              >
-                {/* "Cast your metal" (`votes:chrome.ephemerists.prompt`) headed
-                    this rule. #1909 cut the whole `chrome.{F}.prompt` slot:
-                    only three of nine factions ever rendered one, two more held
-                    dead strings, and six ship none at all. The rule and the
-                    lotus stay — they are the vote panel's frame, not its copy. */}
-                <span aria-hidden style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
-                <LotusSign width={16} color={BRASS} />
-              </div>
-            </>
+             It is `EphemeristsRuneStrip`, the same component the task card, the
+             task page and the composer mount, and not a fourth transcription:
+             the 32-mark `DRIFT` array that used to head the vote block was a
+             THIRD drawing of this motif, crammed rather than spread, and #2210 /
+             #2067 both rule that this device is drawn once and consumed
+             everywhere. It is deleted; the vote block keeps its heading.
+
+             `side="divider"` is the vertical-offset knob (index.css), and it is
+             also what keeps the seed distinct: the component folds `side` into
+             the seed, and the composer already draws `praxis:${id}` at `top`. */
+          bylineDivider={
+            <div style={{ margin: LEAF_BLEED }}>
+              <EphemeristsRuneStrip side="divider" seed={`praxis:${praxis.id}`} />
+            </div>
+          }
+          voteRule={
+            /* The vote section's head — the card states the prompt, so the
+               widget carries none and the detail page's own heading is not
+               doubled up. */
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-md)",
+              }}
+            >
+              {/* "Cast your metal" (`votes:chrome.ephemerists.prompt`) headed
+                  this rule. #1909 cut the whole `chrome.{F}.prompt` slot:
+                  only three of nine factions ever rendered one, two more held
+                  dead strings, and six ship none at all. The rule and the
+                  lotus stay — they are the vote panel's frame, not its copy. */}
+              <span aria-hidden style={{ flex: 1, height: 1, background: BRASS, opacity: 0.5 }} />
+              <LotusSign width={16} color={BRASS} />
+            </div>
           }
         />
       </div>

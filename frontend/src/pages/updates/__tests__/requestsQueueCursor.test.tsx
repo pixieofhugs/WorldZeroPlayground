@@ -18,7 +18,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import type { ActivityFeedItem } from '../../../api/activityFeed'
+import { REQUEST_ITEM_TYPES, type ActivityFeedItem } from '../../../api/activityFeed'
 import {
   QUEUE_ITEM_TYPES,
   TRAY_CAP,
@@ -72,6 +72,19 @@ describe('what the queue accepts', () => {
     for (const type of QUEUE_ITEM_TYPES) {
       expect(isQueueItem(item(type, 1)), type).toBe(true)
     }
+  })
+
+  /**
+   * #2279 / #2288 — the set the page DRAWS and the set that feeds the BELL were
+   * pinned to different authorities: `REQUEST_ITEM_TYPES` to the Python
+   * registry (`api/__tests__/requestItemTypes.test.ts`), this one to the literal
+   * above. Same four today, and nothing said so. Add a fifth type to
+   * `FILTER_REQUESTS` server-side and only the other test fails; fix that one
+   * and the queue still silently refuses the type the bell now counts — a badge
+   * over a card the page will not draw, which is #2288's exact shape.
+   */
+  it('is the same set that feeds the bell, not merely the same length', () => {
+    expect([...QUEUE_ITEM_TYPES].sort()).toEqual([...REQUEST_ITEM_TYPES].sort())
   })
 
   it('refuses a mention — news about you is not a request of you', () => {

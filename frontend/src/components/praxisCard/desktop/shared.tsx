@@ -138,6 +138,7 @@ export function PraxisBody({
   showCrown,
   eyebrow,
   voteRule,
+  bylineDivider,
   taskLead,
   mediaEmptyLabel,
   mediaEmptyStyle,
@@ -168,6 +169,23 @@ export function PraxisBody({
    * archetype that draws no rule simply passes nothing.
    */
   voteRule?: ReactNode;
+  /**
+   * The faction's own mark in place of the byline's dashed rule (#2312).
+   *
+   * Same shape and the same reason as `voteRule` above — a divider is a
+   * per-faction MARK, so it arrives as a node — but a different slot: this one
+   * REPLACES a rule eight archetypes are right to keep, where `voteRule` adds
+   * one none of them draw by default. Pass nothing and the dashed rule stands.
+   *
+   * The Ephemerists plate is the only caller — it rules its byline with the
+   * faction's rune strip — and the mount owns its own bleed: the strip fills
+   * its container's padding box, so a caller whose leaf is padded hands it a
+   * wrapper carrying the negative margin, exactly as the retired `DRIFT` row
+   * did. (The component is deliberately NOT named here: the strip's own test
+   * detects its mounts by searching source text, and a prose mention in a file
+   * that mounts nothing would read as a fourth surface.)
+   */
+  bylineDivider?: ReactNode;
   /**
    * An un-linked run-in before the task title (#840) — WOW's chronicle writes
    * this line as "for the quest — {task}" rather than a bare reference.
@@ -278,7 +296,7 @@ export function PraxisBody({
         fonts={fonts}
       />
       {footnote}
-      <PraxisByline praxis={praxis} style={{ color: muted }} fonts={fonts} />
+      <PraxisByline praxis={praxis} style={{ color: muted }} fonts={fonts} divider={bylineDivider} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       {voteRule}
       <PraxisVoteFooter praxis={praxis} />

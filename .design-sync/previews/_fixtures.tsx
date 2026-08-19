@@ -188,6 +188,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     praxis_id: 501,
     character_id: 7,
     character_display_name: 'Ada Reed',
+    character_avatar_url: '',
     // Approval, and Done, are orthogonal since ADR-0079 — a member may hold
     // either, both or neither — so the fixture carries one of each.
     has_submitted: true,
@@ -201,6 +202,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     praxis_id: 501,
     character_id: 12,
     character_display_name: 'Sam Okafor',
+    character_avatar_url: '',
     has_submitted: false,
     is_done: false,
     joined_at: EARLIER,
@@ -215,6 +217,7 @@ const SAMPLE_INVITE: PraxisInviteOut = {
   inviter_id: 7,
   invitee_id: 19,
   invitee_display_name: 'Pip Marigold',
+  invitee_avatar_url: '',
   status: 'pending',
   created_at: EARLIER,
 }
