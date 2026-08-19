@@ -162,8 +162,14 @@ export function GlossedGlyph({ glyph, gloss, size, style }: {
  * reads as cut from stone rather than rounded. The design draws it on the score
  * box (7), the ratio chip inside it (5), the byline cartouche (7) and the vote
  * plate (7); `step` is the chamfer's leg in px, which is ornament geometry.
+ *
+ * MODULE PRIVATE SINCE #2150, and the privacy is the fix rather than tidiness.
+ * Every surface that called this directly also painted a `border` beside it, and
+ * a border is shaved away by its own clip — four plates, four open corners. The
+ * door out of this module is {@link chamferMount} + {@link chamferSheet}, and
+ * neither can emit a border.
  */
-export function stepClip(step: number): string {
+function stepClip(step: number): string {
   return `polygon(${step}px 0, 100% 0, 100% calc(100% - ${step}px), calc(100% - ${step}px) 100%, 0 100%, 0 ${step}px)`;
 }
 
