@@ -42,6 +42,13 @@ class PraxisMemberOut(WireModel):
     praxis_id: int
     character_id: int
     character_display_name: str  # populated by build_praxis_out
+    # The member's portrait, so a roster row can draw the person and not just
+    # their initials (#2318). Relative media path or "" — the empty string is
+    # the ordinary case (no portrait uploaded) and every roster surface falls
+    # back to its own monogram, never to a placeholder image. Same field, same
+    # meaning as ``PraxisOut.created_by_avatar_url``; it rides the Character row
+    # the roster already selectin-loads, so it costs no query.
+    character_avatar_url: str = ""  # populated by build_praxis_out
     # APPROVAL of the live proposal since ADR-0079, not "this member filed their
     # part" — the name stayed because it is the wire field and the feed's column.
     has_submitted: bool
@@ -86,6 +93,11 @@ class PraxisInviteOut(WireModel):
     inviter_id: int
     invitee_id: int
     invitee_display_name: str   # populated by build_praxis_out
+    # The invitee's portrait (#2318). An unanswered invite draws the face INSIDE
+    # the dashed ring: the ring is the state, the face is the person, so a
+    # pending or declined row still says who it is about. Same "" fallback as
+    # ``PraxisMemberOut.character_avatar_url``.
+    invitee_avatar_url: str = ""  # populated by build_praxis_out
     status: PraxisInviteStatus
     created_at: datetime
 

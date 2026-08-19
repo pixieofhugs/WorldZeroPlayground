@@ -1129,6 +1129,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Headline cut 1 and the CTA bar are the same pairing — ink on acid — and the
   // acid does not flip, so one row covers both in both themes.
   { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
+  // The DIRECTORY TILE's CTA on hover (#2322), which floods with the acid
+  // itself rather than with `-note-cta-bg`. Same hex today, and deliberately a
+  // row of its own: the tile's source names `--faction-snide-acid`, and a
+  // fixture that measures a synonym stops measuring the site the day one of the
+  // two moves. The resting state is the bar, covered by "clipping bar, wordmark"
+  // one block up.
+  { what: "snide select tile CTA, hovered", surface: "--faction-snide-acid", text: "--faction-snide-note-cta-ink" },
   // The modifier chip. The design set its label in PAPER on the pink (3.10:1);
   // it takes the near-black CTA ink instead, one value for both themes because
   // `--faction-snide-pink` does not flip either.

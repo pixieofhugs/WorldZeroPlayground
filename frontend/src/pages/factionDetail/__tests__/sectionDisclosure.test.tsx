@@ -1,0 +1,255 @@
+/**
+ * The seam: SIXTEEN call sites — eight faction bodies × the Tasks and Praxis
+ * sections — each carrying a real disclosure (#2311).
+ *
+ * WHY THIS IS DRIVEN OFF THE TWO i18n KEYS AND NOT OFF A COMPONENT NAME.
+ * The eight archetypes do not share a heading component and must not (CLAUDE.md:
+ * "each faction has its own card archetype; don't unify"). Seven of them define a
+ * local `SectionHeading` / `SectionHead`; `DefaultFactionBody` defines neither
+ * and draws a bare `<h2 className="label-heading">`. A sweep that greps for the
+ * component name reaches twelve of the sixteen and ships whole faction pages
+ * with no disclosure at all — which is exactly the failure #2311 was filed
+ * predicting. `detail.default.tasksHeading` and `detail.default.recentHeading`
+ * are the only thing all sixteen have in common, so the walk is by SLUG × KEY
+ * and every archetype is rendered through the real page dispatch.
+ *
+ * WHAT IS ASSERTED, AND WHY EACH PART MATTERS
+ *   - a `<button>` whose `aria-controls` names the section body, so the control
+ *     is reachable by keyboard and announces what it owns. A `<div onClick>`
+ *     that hides content is not a disclosure;
+ *   - `aria-expanded`, which is the state announcement itself;
+ *   - the `aria-label` from the sidebar's own `sidebar.panel.expand` /
+ *     `.collapse` pair, naming the state the press MOVES TO;
+ *   - an element actually carrying that `aria-controls` id, because a dangling
+ *     reference is a silent screen-reader dead end;
+ *   - the `· {{total}}` count STILL RENDERED while collapsed — the owner's
+ *     "that is what makes a folded section still worth reading".
+ *
+ * THE HARNESS HAS NO DOM (`renderToStaticMarkup`, node env): effects never run
+ * and `localStorage` does not exist. Two consequences shape this file. The
+ * collapsed rendering is reachable anyway, because the hook reads storage in a
+ * LAZY `useState` initializer, which runs during render — so a stubbed
+ * `globalThis.localStorage` is enough. And the persistence rules themselves are
+ * tested as pure functions, never through a mounted component.
+ */
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import type { ReactElement } from 'react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+// Initialize the i18n catalog so the headings resolve to English text.
+import '../../../i18n'
+import i18next from 'i18next'
+import type { FactionDetailState } from '../useFactionDetail'
+import {
+  FACTION_SECTION_IDS,
+  FACTION_SECTION_STORAGE_KEY,
+  factionSectionStorageKey,
+  factionSectionBodyId,
+  resolveCollapsedSections,
+  serializeCollapsedSections,
+  toggleCollapsedSection,
+} from '../sectionDisclosure'
+import { aTask, aPraxisCard } from '../../../test/fixtures'
+
+const mocks = vi.hoisted(() => ({
+  state: undefined as unknown as FactionDetailState,
+}))
+
+vi.mock('../useFactionDetail', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../useFactionDetail')>()),
+  useFactionDetail: () => mocks.state,
+}))
+
+// Loaded after the mock, so the page picks it up.
+const FactionDetail = (await import('../../FactionDetail')).default
+
+/** The seven bespoke bodies plus `albescent`, which falls through to Default. */
+const SLUGS = [
+  'coven',
+  'ephemerists',
+  'everymen',
+  'singularity',
+  'snide',
+  'ua',
+  'wow',
+  'albescent',
+] as const
+
+/** Three tasks and two praxis, so the Tasks count is a number worth reading. */
+const TASKS = [aTask({ id: 1 }), aTask({ id: 2 }), aTask({ id: 3 })]
+const PRAXIS = [aPraxisCard({ id: 1 }), aPraxisCard({ id: 2 })]
+
+function stateFor(slug: string): FactionDetailState {
+  return {
+    slug,
+    loading: false,
+    faction: { slug, status: 'visible' },
+    fetchError: null,
+    members: [],
+    tasks: TASKS,
+    recentPraxis: PRAXIS,
+    viewerFactionSlug: null,
+    gameFactions: [],
+    onSignup: undefined,
+    signupMsg: null,
+    membership: {
+      state: 'none',
+      currentFactionSlug: null,
+      join: async () => {},
+      joining: false,
+      joinError: null,
+    },
+  } as unknown as FactionDetailState
+}
+
+function page(slug: string): string {
+  mocks.state = stateFor(slug)
+  const element: ReactElement = <FactionDetail slug={slug} />
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
+}
+
+/** `t` is typed to the literal key union; these are looked up from a table. */
+const translate = i18next.t as unknown as (
+  key: string,
+  options?: Record<string, unknown>,
+) => string
+
+/** The visible heading of each section — the string the aria-label names. */
+const HEADING: Record<(typeof FACTION_SECTION_IDS)[number], string> = {
+  tasks: translate('factions:detail.default.tasksHeading', { total: TASKS.length }),
+  praxis: translate('factions:detail.default.recentHeading'),
+}
+
+/** The opening tag of the disclosure button that owns `bodyId`, if any. */
+function disclosureTag(html: string, bodyId: string): string | undefined {
+  return html
+    .match(/<button[^>]*>/g)
+    ?.find((tag) => tag.includes(`aria-controls="${bodyId}"`))
+}
+
+/** Strip tags the way the sibling suites do, so copy matches plainly. */
+function textOf(html: string): string {
+  return html.replace(/<[^>]*>/g, '')
+}
+
+describe('every faction folds both galleries', () => {
+  for (const slug of SLUGS) {
+    for (const section of FACTION_SECTION_IDS) {
+      it(`${slug} · ${section} — the heading is a disclosure control`, () => {
+        const html = page(slug)
+        const bodyId = factionSectionBodyId(section)
+        const tag = disclosureTag(html, bodyId)
+
+        expect(tag, `${slug}'s ${section} heading draws no disclosure button`).toBeDefined()
+        // Open by default.
+        expect(tag).toContain('aria-expanded="true"')
+        // The label names the state the press moves TO, per the sidebar pair.
+        expect(tag).toContain(
+          `aria-label="${translate('common:sidebar.panel.collapse', { panel: HEADING[section] })}"`,
+        )
+        // …and `aria-controls` resolves to something really in the document.
+        expect(html, `${slug}'s ${section} body carries no ${bodyId}`).toContain(
+          `id="${bodyId}"`,
+        )
+      })
+    }
+  }
+
+  it('leaves the Charter, the Roll and the Members list alone', () => {
+    // The owner's exclusion (#2311): a panel that tells you somebody is waiting
+    // on you is not hideable, and folding a few paragraphs of charter saves
+    // nothing. Only the two long galleries get a control — so the count of
+    // disclosure buttons on a page is exactly two, on every skin.
+    for (const slug of SLUGS) {
+      const html = page(slug)
+      const controls = html.match(/aria-controls="wz-faction-section-[a-z]+"/g) ?? []
+      expect(controls, `${slug} draws ${controls.length} disclosures`).toHaveLength(2)
+    }
+  })
+})
+
+describe('a folded section is still worth reading', () => {
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, 'localStorage')
+  })
+
+  /** Both sections stored collapsed, under the signed-out (bare) key — the
+   *  AuthContext default in this harness has no user. */
+  function stubStorage(value: string) {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: { getItem: () => value, setItem: () => {} },
+    })
+  }
+
+  it('keeps the heading, the count and the control when collapsed', () => {
+    stubStorage(serializeCollapsedSections(['tasks', 'praxis']))
+    for (const slug of SLUGS) {
+      const html = page(slug)
+      // The count is the whole reason a folded section still reads.
+      expect(textOf(html), `${slug} lost its task count when folded`).toContain(
+        HEADING.tasks,
+      )
+      expect(textOf(html)).toContain(HEADING.praxis)
+      for (const section of FACTION_SECTION_IDS) {
+        const tag = disclosureTag(html, factionSectionBodyId(section))
+        expect(tag, `${slug} · ${section}`).toContain('aria-expanded="false"')
+        expect(tag).toContain(
+          `aria-label="${translate('common:sidebar.panel.expand', { panel: HEADING[section] })}"`,
+        )
+      }
+    }
+  })
+
+  it('hides the gallery itself, so the page actually gets shorter', () => {
+    stubStorage(serializeCollapsedSections(['tasks']))
+    const html = page('albescent')
+    // React writes a bare `hidden` on the body it folds, and only on that one.
+    expect(html).toContain(`id="${factionSectionBodyId('tasks')}" hidden`)
+    expect(html).not.toContain(`id="${factionSectionBodyId('praxis')}" hidden`)
+  })
+})
+
+/**
+ * The persistence rules, at the seam the harness can actually reach. The hook
+ * around them is storage-driven and this env has no `localStorage`; the resolver
+ * is pure, so it is tested directly — the idiom `useSidebarPanelLayout`'s own
+ * `resolveInitialPanelLayout` established.
+ */
+describe('the fold follows the account, not the browser', () => {
+  it('appends the account id to the base key, like the rail does', () => {
+    expect(factionSectionStorageKey(7)).toBe(`${FACTION_SECTION_STORAGE_KEY}:7`)
+    expect(factionSectionStorageKey(8)).not.toBe(factionSectionStorageKey(7))
+  })
+
+  it('falls back to the bare key before the account is known', () => {
+    // A faction page renders while `/auth/me` is still in flight, and for a
+    // signed-out visitor it never resolves at all.
+    expect(factionSectionStorageKey(null)).toBe(FACTION_SECTION_STORAGE_KEY)
+    expect(factionSectionStorageKey(undefined)).toBe(FACTION_SECTION_STORAGE_KEY)
+  })
+
+  it('opens everything rather than breaking on junk', () => {
+    for (const stored of [null, '', 'not json', '{}', '[1,2]', '["nope"]']) {
+      expect(resolveCollapsedSections(stored)).toEqual([])
+    }
+  })
+
+  it('round-trips a stored fold', () => {
+    expect(resolveCollapsedSections(serializeCollapsedSections(['praxis']))).toEqual([
+      'praxis',
+    ])
+  })
+
+  it('serializes in a stable order, whatever order they were folded in', () => {
+    expect(serializeCollapsedSections(['praxis', 'tasks'])).toBe(
+      serializeCollapsedSections(['tasks', 'praxis']),
+    )
+  })
+
+  it('toggles one section without disturbing the other', () => {
+    expect(toggleCollapsedSection([], 'tasks')).toEqual(['tasks'])
+    expect(toggleCollapsedSection(['tasks'], 'praxis')).toEqual(['tasks', 'praxis'])
+    expect(toggleCollapsedSection(['tasks', 'praxis'], 'tasks')).toEqual(['praxis'])
+  })
+})

@@ -39,6 +39,7 @@ function member(
     praxis_id: 1,
     character_id: id,
     character_display_name: name,
+    character_avatar_url: "",
     has_submitted: hasSubmitted,
     is_done: false,
     joined_at: OPENED,
