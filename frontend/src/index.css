@@ -6254,7 +6254,14 @@
      for its own family and holds Anton in the shipped kit. The family stays —
      `-font-impact` still asks for it — and only the alias goes. */
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
-  --font-faction-poster: "Bebas Neue", Impact, sans-serif;
+  /* `--font-faction-poster` stood here, and went the same way for the same
+     reason (#2327). The Everymen directory tile was its last reader; gathering
+     that tile's register off its task card moved it onto
+     `--faction-everymen-card-font`, the faction's own ROLE token, which reaches
+     Bebas Neue through `--font-accent`. The swap was PROVEN free before it was
+     made — both names resolved to `"Bebas Neue", Impact, sans-serif` in both
+     cascades — so no pixel moved and only the alias goes. Bebas stays in the
+     kit: `-card-font` still asks for it. */
   --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
   --font-faction-medieval: "MedievalSharp", cursive;
 }
