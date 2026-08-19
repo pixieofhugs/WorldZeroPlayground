@@ -7,6 +7,7 @@ import { factionCssVar, factionName } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
+import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
 const NA_SLUG = "na";
@@ -69,6 +70,7 @@ export default function DefaultFactionBody({
   } = state;
   const [confirming, setConfirming] = useState(false);
   const phone = useFormFactor() === "mobile";
+  const sections = useFactionSections();
 
   // Guarded non-null by the dispatcher.
   if (!faction) return null;
@@ -210,46 +212,58 @@ export default function DefaultFactionBody({
         )}
       </section>
 
-      {/* ── Tasks ── reuses the per-faction TaskCard archetype ── */}
+      {/* ── Tasks ── reuses the per-faction TaskCard archetype ──
+          This body has no `SectionHeading` of its own — it draws the bare
+          `.label-heading` the other seven replaced with a house component — so
+          the disclosure goes straight inside the `<h2>` here (#2311). */}
       <section className="mb-8">
         <h2 className="label-heading mb-3">
-          {t("detail.default.tasksHeading", { total: tasks.length })}
+          <SectionToggle
+            section={sections.tasks}
+            label={t("detail.default.tasksHeading", { total: tasks.length })}
+          />
         </h2>
-        {tasks.length === 0 ? (
-          <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
-        ) : (
-          <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                basePoints={task.point_value}
-                multiplier={computeFactionMultiplier(
-                  viewerFactionSlug,
-                  task.primary_faction_slug,
-                  gameFactions,
-                )}
-                onSignup={onSignup}
-              />
-            ))}
-          </div>
-        )}
+        <SectionPanel section={sections.tasks}>
+          {tasks.length === 0 ? (
+            <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
+          ) : (
+            <div className="task-card-row" style={{ gap: "var(--space-lg)" }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={computeFactionMultiplier(
+                    viewerFactionSlug,
+                    task.primary_faction_slug,
+                    gameFactions,
+                  )}
+                  onSignup={onSignup}
+                />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
       </section>
 
       {/* ── Recently completed ── PLACEHOLDER: design to restyle ── */}
       <section className="mb-8">
-        <h2 className="label-heading mb-3">{t("detail.default.recentHeading")}</h2>
-        {recentPraxis.length === 0 ? (
-          <p className="font-body text-muted content-text">
-            {t("detail.default.recentEmpty")}
-          </p>
-        ) : (
-          <div style={CARD_GRID}>
-            {recentPraxis.map((p) => (
-              <PraxisCard key={p.id} praxis={p} />
-            ))}
-          </div>
-        )}
+        <h2 className="label-heading mb-3">
+          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+        </h2>
+        <SectionPanel section={sections.praxis}>
+          {recentPraxis.length === 0 ? (
+            <p className="font-body text-muted content-text">
+              {t("detail.default.recentEmpty")}
+            </p>
+          ) : (
+            <div style={CARD_GRID}>
+              {recentPraxis.map((p) => (
+                <PraxisCard key={p.id} praxis={p} />
+              ))}
+            </div>
+          )}
+        </SectionPanel>
       </section>
 
       {/* ── The pinned action band ── phone only, and the LAST child of the
