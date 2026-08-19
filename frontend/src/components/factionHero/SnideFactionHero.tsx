@@ -2,17 +2,42 @@ import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 
 /**
- * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): a
- * photocopier-black field with faint pasted-flyer ghosts, halftone + grain, a
- * torn acid strip, a slapped sigil sticker, a skewed acid wordmark with a pink
- * drop-shadow, the motto on a strip, and — per the faction-page standardization
- * — the acid stat chits stacked on the SIDE of the sigil (stats live on the side
- * of the hero, never a full-width band). Ported from the SNIDE design kit
- * (SnideHero); conforms to {@link FactionHeroProps}.
+ * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): faint
+ * pasted-flyer ghosts, halftone + grain, a torn acid strip, a slapped sigil
+ * sticker, a skewed acid wordmark with a pink drop-shadow, the motto on a strip,
+ * and — per the faction-page standardization — the acid stat chits stacked on
+ * the SIDE of the sigil (stats live on the side of the hero, never a full-width
+ * band). Ported from the SNIDE design kit (SnideHero); conforms to
+ * {@link FactionHeroProps}.
  *
  * The page passes raw counts; the faction labels them in its own voice. Motto +
  * full name are faction constants (not backend fields).
+ *
+ * THE WALL IS `-wall`; `-ink` IS THE PRESS (#2343). This hero grounded on
+ * `--faction-snide-ink` — theme-INVARIANT photocopier black — while calling it
+ * "the wall" in its own comments, so the page's ground flipped to xerox stock by
+ * day and the hero stayed a dark island on it. It stands on
+ * `--faction-snide-wall` now, the token that FLIPS, which is the same move #2287
+ * made for the field desk's credential panel. Everything READ on it therefore
+ * takes the flipping `-note-*` inks rather than the `-card-*` ones, which are
+ * pinned near-black-surface-bright in both themes for the slabs pasted ON a wall
+ * (#2066): on the light wall `-card-text` reads 1.05:1 and `-card-muted` 1.24:1.
+ * Acid cannot move — there is no rung below the wall's luminance — so acid AS
+ * TYPE carries #2173's photocopier-black plate, which by day is a censor bar and
+ * by night dissolves into the wall. That asymmetry is the ruling, not a bug.
  */
+
+/** The ground, which FLIPS: xerox stock by day, pitch black by night. */
+const WALL = "var(--faction-snide-wall)";
+/** Type on that ground (16.03:1 light / 17.52:1 dark). */
+const NOTE_INK = "var(--faction-snide-note-ink)";
+/** The quiet tier on it (6.75:1 / 12.38:1). */
+const NOTE_MUTED = "var(--faction-snide-note-muted)";
+/** The wall's own texture ink — the hue `.snide-backdrop` draws its raster with. */
+const GRAIN = "var(--faction-snide-wall-text)";
+const ACID = "var(--faction-snide-acid)";
+/** The plate acid owes the wall (#2173). Invariant, so the bar dissolves at night. */
+const PLATE = "var(--faction-snide-ink)";
 
 const HERO_GHOSTS = [
   { w: 122, h: 152, top: -24, left: 54, rot: -12 },
@@ -47,8 +72,8 @@ export default function SnideFactionHero({
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
-        background: "var(--faction-snide-ink)",
-        color: "var(--faction-snide-card-text)",
+        background: WALL,
+        color: NOTE_INK,
         // ornament (#1609): the flyposter's flat offset register — the print
         // metaphor, not elevation, so not `--color-cast-shadow`. The ink is
         // `--color-print-offset`; the 8/10px offset and the 32% are the drawing
@@ -57,18 +82,23 @@ export default function SnideFactionHero({
         paddingBottom: "var(--space-xs)",
       }}
     >
-      {/* ornament (#1609): the halftone dot field and the pasted-flyer ghosts
-          below name a ONE-OFF drawing, not a tier. `--faction-snide-acid` at
-          5.5% is not the acid the strip and the chit rules read — it is the
-          density this wall's grain was drawn at, and pointing it at the tier
-          would couple the ghost lettering to every future edit of the hue
-          (§4a). They stay raw; see the legacy list. */}
+      {/* THE DENSITY IS STILL THE DRAWING; THE HUE IS NOT (#2343). These were
+          raw acid/pink alphas because "density is the drawing" — and the density
+          still is, which is why every percentage below is unchanged and stays at
+          this call site. What could not survive the ground moving is the HUE: an
+          alpha drawn against photocopier black paints nothing at all on xerox
+          stock (acid at 5.5% over the light wall is a 0.0006 luminance step,
+          which would have left the hero the one flat rectangle on a textured
+          page). `--faction-snide-wall-text` flips with the wall, so the raster
+          reverses polarity with its ground — and it is the same ink, at the same
+          kind of percentage, that `.snide-backdrop` draws its own dot field and
+          two hatches with. */}
       <div
         className="ht-dots"
         style={{
           position: "absolute",
           inset: 0,
-          color: "rgba(182,255,46,0.055)",
+          color: `color-mix(in srgb, ${GRAIN} 5.5%, transparent)`,
           pointerEvents: "none",
         }}
       />
@@ -83,18 +113,22 @@ export default function SnideFactionHero({
             left: g.left,
             width: g.w,
             height: g.h,
-            border: "1px solid rgba(182,255,46,0.07)",
-            background: i % 2 ? "rgba(255,45,139,0.035)" : "rgba(182,255,46,0.025)",
+            border: `1px solid color-mix(in srgb, ${GRAIN} 7%, transparent)`,
+            background: `color-mix(in srgb, ${GRAIN} ${i % 2 ? "3.5%" : "2.5%"}, transparent)`,
             transform: `rotate(${g.rot}deg)`,
             pointerEvents: "none",
           }}
         />
       ))}
-      {/* torn acid strip */}
+      {/* Torn acid strip — a DRAWN mark, which #2173 leaves alone: the ruling is
+          about type. On the light wall it reads by CHROMA rather than by
+          luminance (a saturated yellow-green against warm cream is 1.03:1 and
+          still perfectly visible as a colour), and it carries no words, so it
+          owes no ratio. */}
       <div
         style={{
           height: 6,
-          background: "var(--faction-snide-acid)",
+          background: ACID,
           position: "relative",
           zIndex: 2,
           clipPath:
@@ -127,12 +161,13 @@ export default function SnideFactionHero({
               display: "inline-block",
               width: "fit-content",
               whiteSpace: "nowrap",
-              // The strip carried this line's ink as well as its ground: on the
-              // tape it printed in the press's near-black, which IS the wall.
-              // Xerox paper is the faction's own on-ink type colour and needs no
-              // new value; the padding and the paste-up shadow went with the
-              // strip, so the eyebrow sets flush with the wordmark below it.
-              color: "var(--faction-snide-paper)",
+              // The strip carried this line's ink as well as its ground; the
+              // padding and the paste-up shadow went with it (#1708), so the
+              // eyebrow sets flush with the wordmark below. It typed in the
+              // INVARIANT `-paper` until #2343, which was xerox-white on a wall
+              // that had become xerox stock — 1.05:1. It is the wall's own ink
+              // now, and flips with it.
+              color: NOTE_INK,
               fontFamily: "var(--faction-snide-font-type)",
               fontSize: "var(--text-base)",
               letterSpacing: "0.05em",
@@ -141,7 +176,20 @@ export default function SnideFactionHero({
           >
             {i18n.t("feed:factionHero.snide.eyebrow")}
           </div>
-          {/* wordmark */}
+          {/* THE WORDMARK IS ACID, SO IT CARRIES THE PLATE (#2173, #2343). Acid
+              on the light wall is 1.026:1 — the faction's own name, invisible —
+              and there is no darker acid to reach for: the wall's luminance
+              (0.8389) puts every AA-clearing ink below L 0.1475 and `-acid-deep`
+              only reaches 2.30:1, under even the 3:1 a mark this size owes. So
+              the GROUND moves, per §3, and on the light wall the black plate is
+              the censor bar the ruling asked for; at night it dissolves into the
+              wall and the mark is plain acid, exactly as it was.
+              THE PLATE IS ON AN INLINE SPAN, NOT ON THE h1. An inline box's
+              background covers the FONT's own ascent-to-descent, so it wraps the
+              letters whatever the leading does; the h1's `lineHeight: 0.8` is a
+              slammed line box the glyphs deliberately overflow, and a plate on
+              the block would have clipped them top and bottom. Horizontal
+              padding is the strike of the redaction and stays here. */}
           <h1
             style={{
               fontFamily: "var(--faction-snide-font-impact)",
@@ -150,12 +198,11 @@ export default function SnideFactionHero({
               lineHeight: 0.8,
               letterSpacing: "0.02em",
               margin: "var(--space-lg) 0 0",
-              color: "var(--faction-snide-acid)",
               textShadow: "4px 4px 0 var(--faction-snide-pink)",
               transform: "skewX(-5deg) rotate(-1.5deg)",
             }}
           >
-            {name}
+            <span style={{ color: ACID, background: PLATE, padding: "0 var(--space-md)" }}>{name}</span>
           </h1>
           <div
             style={{
@@ -163,7 +210,9 @@ export default function SnideFactionHero({
               fontSize: "var(--text-base)",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "var(--faction-snide-card-muted)",
+              // `-card-muted` is the SLAB's quiet tier and reads 1.24:1 on the
+              // light wall (#2173's other half). The wall's quiet tier flips.
+              color: NOTE_MUTED,
               margin: "var(--space-md) 0 0",
               transform: "rotate(-0.4deg)",
             }}
@@ -175,8 +224,10 @@ export default function SnideFactionHero({
             style={{
               display: "inline-block",
               marginTop: "var(--space-lg)",
-              background: "var(--faction-snide-acid)",
-              color: "var(--faction-snide-ink)",
+              // A sticker, so it brings its own ground on any wall: ink on acid
+              // is 15.55:1 in both cascades and never reads the page.
+              background: ACID,
+              color: PLATE,
               fontFamily: "var(--faction-snide-font-black)",
               // eslint-disable-next-line local/no-raw-style-values -- ornament: motto slapped on an acid sticker, rotated -2deg — illustration, not chrome
               fontSize: 15,
@@ -243,8 +294,21 @@ export default function SnideFactionHero({
               style={{
                 alignSelf: "stretch",
                 textAlign: "right",
-                background: "rgba(0,0,0,0.34)",
-                border: "2px solid var(--faction-snide-acid)",
+                // THE CHIT IS THE PLATE, WHICH IS WHY IT IS NO LONGER A WASH
+                // (#2303, resolved by #2343). The bare `rgba(0,0,0,0.34)` here
+                // was class 7 of the legacy raw-colour list, parked as an
+                // undecided HUE question — does the chit want a named wash rung
+                // the way `-note-wash-acid`/`-pink` have one? The ground moving
+                // answers it by dissolving it: the chit's numeral is ACID, and
+                // acid owes a photocopier-black plate on a wall that flips
+                // (#2173). A 34% black over xerox stock composites to mid-grey
+                // and takes that numeral to 2.4:1; the opaque plate reads
+                // 15.55:1 in both cascades, and by night it is within 1.05:1 of
+                // the wash it replaces. So the chit takes the plate, and there
+                // is no wash left to name.
+                background: PLATE,
+                color: ACID,
+                border: `2px solid ${ACID}`,
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a rotated stat chit; rounding reflows the staggered stack.
                 padding: "7px 14px 6px",
                 transform: `rotate(${CHIT_ROT[i % CHIT_ROT.length]}deg)`,
@@ -260,7 +324,10 @@ export default function SnideFactionHero({
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: chit numeral in the impact face; above the content floor already
                   fontSize: 30,
                   lineHeight: 0.85,
-                  color: "var(--faction-snide-acid)",
+                  // The acid is INHERITED from the chit, which is the plate it
+                  // owes — declaring it here would put an ink on this element
+                  // and its ground on the parent, which is the exact shape a
+                  // sweep for #2173 cannot see.
                   whiteSpace: "nowrap",
                 }}
               >
@@ -272,6 +339,9 @@ export default function SnideFactionHero({
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
+                  // The CARD's tier is the right one HERE and only here on this
+                  // hero: the chit is a slab, not the wall. 12.96:1 light /
+                  // 11.85:1 dark on the plate.
                   color: "var(--faction-snide-card-muted)",
                 }}
               >
