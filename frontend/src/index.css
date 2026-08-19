@@ -5135,17 +5135,50 @@
    container: `--space-xl` is #1633's burst clearance (re-derived by #1638 —
    12px of overhang each side, 24 rim to rim) and it holds wherever the row's
    own intrinsic width fits, which is 226 + 4×24 + 2×24 = 370px, hence the
-   372 below. Under that the two inline figures drop to the bottom of the
-   ramp — 226 + 4×4 + 2×8 = 258px — which is every phone from 360 CSS px up
-   and a praxis card down to ~306. Narrower again and the row WRAPS rather
-   than letting `stepClip` shave a disc: five circles on two lines beats five
-   ellipses on one, and 5 × 44 simply does not fit a 320px phone.
+   372 below. Narrower again and the row WRAPS rather than letting `stepClip`
+   shave a disc: five circles on two lines beats five ellipses on one, and
+   5 × 44 simply does not fit a 320px phone.
    The BLOCK padding is not on the query: `--space-lg` is what clears the cast
-   burst vertically, and nothing above or below the row competes for it. */
+   burst vertically, and nothing above or below the row competes for it. Neither
+   is the ROW gap — that is what separates a wrapped ladder's two lines.
+
+   ── #2315: THE YIELD IS A RAMP, AND IT WAS A CLIFF ──
+
+   #2236 shipped ONE rung, the bottom one: under 372px the clearance dropped
+   straight to `--space-xs` / `--space-sm`, however much room the plate actually
+   had. Reported back as "the voting icons are squished", and the discs were
+   never the problem — nothing on either sheet carries `flex-shrink` or an
+   `!important`, so the inline `flex-shrink: 0` cannot be beaten and no disc has
+   ever gone oval since. What the cliff did was bunch them: a 375px phone leaves
+   the plate about 291px, the discs need 226, and there was room for ~11px
+   between them — the row drew 4 and `justify-content: center` piled the other
+   33 up at the two ends.
+
+   So the clearance is what the plate can actually pay. The row has to seat five
+   discs (`4 × 44 + 50 = 226`, and `EphemeristsVote` exports that figure so its
+   test can hold this transcription to it), four gaps and two end pads, which is
+   `226 + 6g`; the plate's own inline size is `100cqi`, so `g = (100cqi − 226) / 6`
+   spends the room exactly and nothing is left over to pile up. Gap and pad are
+   ONE figure because a disc at the end of the row wants the same air against
+   the plate's edge as against its neighbour.
+
+   Clamped to the same two rungs the cliff jumped between, and the CEILING is
+   the interesting end: at `--space-xl` the expression solves to 370px, which is
+   the un-queried rule's own intrinsic width, so the ramp meets it exactly and
+   the 372 threshold stops being a step at all. At the floor it solves to 250px,
+   so the row seats all five down to a plate 8px narrower than the old bottom
+   rung managed, and only then wraps.
+
+   NOT MEASURED IN A BROWSER, and the PR says so: this is arithmetic over the
+   sheet, and the render is still owed an eyeballing. */
 .eph-vote-plate { container-type: inline-size; }
 .eph-metal-row { gap: var(--space-lg) var(--space-xl); padding: var(--space-lg) var(--space-xl); }
 @container (width < 372px) {
-  .eph-metal-row { column-gap: var(--space-xs); padding-inline: var(--space-sm); }
+  .eph-metal-row {
+    --eph-metal-air: clamp(var(--space-xs), (100cqi - 226px) / 6, var(--space-xl));
+    column-gap: var(--eph-metal-air);
+    padding-inline: var(--eph-metal-air);
+  }
 }
 
 /* S.N.I.D.E. — the amp/EQ meter's party VU is in motion.ornament.css (#2073).
