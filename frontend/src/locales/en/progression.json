@@ -82,8 +82,8 @@
       "desc": "Certain rooms feel already-visited. You've stopped questioning it."
     },
     "apply_metatasks": {
-      "name": "Apply your faction's metatasks",
-      "desc": "Take on the metatasks your faction has published."
+      "name": "Apply metatasks",
+      "desc": "Attach a metatask to your praxis for its bonus — any faction's, not just your own."
     },
     "multiple_metatasks": {
       "name": "Stack multiple metatasks",
