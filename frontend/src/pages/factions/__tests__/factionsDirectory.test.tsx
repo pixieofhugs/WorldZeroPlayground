@@ -50,9 +50,19 @@ function decode(value: string): string {
     .replace(/&amp;/g, '&')
 }
 
-/** A faction tile's status line, read from the catalog rather than quoted. */
-function statusLine(slug: string, state: 'locked' | 'eligible' | 'member'): string {
-  return i18n.t(`feed:factionSelect.${slug}.status.${state}`)
+/**
+ * A faction tile's status line, read from the catalog rather than quoted.
+ *
+ * Both parameters are literal unions, not `string`: the copy keys are typed as
+ * a literal union, so a `${string}` template widens past it and fails the
+ * typecheck. Only the three slugs these tests exercise are listed — widen it
+ * when a fourth is needed.
+ */
+type StatusSlug = 'coven' | 'snide' | 'everymen'
+type StatusState = 'locked' | 'eligible' | 'member'
+
+function statusLine(slug: StatusSlug, state: StatusState): string {
+  return i18n.t(`feed:factionSelect.${slug}.status.${state}` as const)
 }
 
 // An Albescent-hidden six-faction list, deliberately out of rainbow order and
