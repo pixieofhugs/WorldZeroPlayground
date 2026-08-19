@@ -5043,7 +5043,7 @@
    `sg-float`'s own 0%/100% value, so stilled — or with the deferred motion sheet
    never received — the robot is parked and drawn at the drift's rest rather than
    at a brightness it never reaches in motion. It is ornament, not an indicator,
-   and it must not vanish; same reading as `.epg-glyph` below. */
+   and it must not vanish; same reading as `.eph-rune` below. */
 .sg-ascii { opacity: 0.45; }
 
 /* ══ Praxis-card redesign vote widgets (#821) ══
@@ -5226,33 +5226,18 @@
    who never receives the deferred sheet — would otherwise get a fist and a bolt
    with no lightning, and the mark would lose the thing it is a picture of. 0.9
    is the crackle's own 13% peak, so the rest state is a frame somebody drew,
-   the same reading as `.epg-glyph` below and Coven's static pentagram. The bolt
+   the same reading as `.eph-rune` below and Coven's static pentagram. The bolt
    needs no counterpart: `evm-flicker` never leaves full strength. */
 .evm-arc { opacity: 0.9; }
 
-/* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
-   signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,
-   staggered cycle behind the masthead. Per-glyph strength and phase arrive as
-   inline custom properties, so no two breathe together.
-
-   Note the inversion against the design, which wrote `opacity:0` as the base and
-   stilled the animation under reduced motion — that leaves every glyph
-   INVISIBLE for a reduced-motion reader. Here the base state IS the stilled
-   state (glyphs present at their own strength) and the motion is added under
-   `no-preference`, which is both the repo's convention and the only ordering
-   that degrades correctly. */
-@keyframes epg-breathe {
-  0%, 100% { opacity: 0; }
-  22%, 72% { opacity: var(--epg-op, 0.3); }
-}
-.epg-glyph { opacity: var(--epg-op, 0.3); }
-@media (prefers-reduced-motion: no-preference) {
-  .epg-glyph {
-    opacity: 0;
-    animation: epg-breathe 19s ease-in-out infinite;
-    animation-delay: var(--epg-delay, 0s);
-  }
-}
+/* `.epg-glyph` and `@keyframes epg-breathe` stood here — the Valley plate's
+   incised glyph registers (#1023), a pair of rows breathing behind the
+   masthead. #2210 took them off the masthead and the class outlived the thing
+   it was named for, paced by the praxis card's inline `DRIFT` row; #2312
+   deleted that row as a third transcription of the rune strip, so nothing wears
+   the class any more and it goes with it. The `--epg-op` / `--epg-delay` NAMES
+   live on: `.eph-rune` below carries the same peak and phase, which is one
+   vocabulary for one motif rather than a leftover. */
 
 /* Ephemerists — THE RUNE STRIP (#2067). The two registers above came OFF the
    task card's masthead, and the motif returns as a pair of rows bracketing the
@@ -5268,7 +5253,7 @@
    they are numbers per instance, which a stylesheet has nowhere to put.
 
    MOTION IS OPT-IN, and note the inversion against the design for the same
-   reason `.epg-glyph` above states it. The base state IS the stilled state —
+   reason `.evm-arc` above states it. The base state IS the stilled state —
    every slot showing its FIRST mark at its own peak — and both animations are
    added under `no-preference`, from the deferred sheet (#2073). Written the
    design's way round (0.16 as the base, the animation always on) a reduced-motion
@@ -5517,7 +5502,7 @@
    Motion is opt-in under `no-preference`, the repo's inversion of the design's
    `reduce → none`: the BASE state is the stilled one (a bloom at rest, centred),
    so a reduced-motion reader gets the ornament rather than a blank band. Same
-   ordering as `.epg-glyph` above it. */
+   ordering as `.eph-rune` above it. */
 @keyframes eph-cornice-glow {
   0%, 100% { opacity: 0.3; transform: translateX(-9%); }
   50% { opacity: 0.85; transform: translateX(9%); }
