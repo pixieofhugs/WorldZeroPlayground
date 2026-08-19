@@ -4794,6 +4794,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "invitee_avatar_url": {
+            "default": "",
+            "title": "Invitee Avatar Url",
+            "type": "string"
+          },
           "invitee_display_name": {
             "title": "Invitee Display Name",
             "type": "string"
@@ -4820,6 +4825,7 @@
           "inviter_id",
           "invitee_id",
           "invitee_display_name",
+          "invitee_avatar_url",
           "status",
           "created_at"
         ],
@@ -4837,6 +4843,11 @@
       },
       "PraxisMemberOut": {
         "properties": {
+          "character_avatar_url": {
+            "default": "",
+            "title": "Character Avatar Url",
+            "type": "string"
+          },
           "character_display_name": {
             "title": "Character Display Name",
             "type": "string"
@@ -4896,6 +4907,7 @@
           "praxis_id",
           "character_id",
           "character_display_name",
+          "character_avatar_url",
           "has_submitted",
           "is_done",
           "submitted_at",
