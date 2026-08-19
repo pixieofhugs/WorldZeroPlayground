@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import {
-  BRASS,
   BAND_INK,
   BAND_QUIET,
   BRASS_LIGHT,
@@ -15,7 +14,8 @@ import {
   READING,
   SMALL_CAPS,
   WASH,
-  stepClip,
+  chamferMount,
+  chamferSheet,
 } from "../../factionMarks/ephemeristsPlate";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
@@ -147,121 +147,132 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
       )}
 
       {working && (
-        <div
-          style={{
-            boxSizing: "border-box",
-            background: INNER,
-            border: `1px solid ${BRASS}`,
-            padding: "var(--space-sm) var(--space-md)",
-            clipPath: stepClip(7),
-            lineHeight: 1.1,
-          }}
-        >
-          {/* Base, with the figure set against its label across the cell. */}
+        /*
+         * THE PANEL'S RULE IS ITS GROUND, NOT A BORDER (#2314, treatment #2150).
+         * `clip-path` cuts at the border box, so the `border: 1px solid` that
+         * stood here was shaved away along both chamfers — the owner's report is
+         * "gold border is missing on the sides of the score stamps". The brass
+         * is the MOUNT and the panel is laid a pixel inside it; the clip then
+         * carries the rule instead of shaving it. Nothing about the panel's box
+         * moves: the mount's 1px padding is the border's 1px.
+         */
+        <div style={chamferMount(7)}>
           <div
             style={{
-              display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              gap: "var(--space-sm)",
+              ...chamferSheet(7, INNER),
+              boxSizing: "border-box",
+              padding: "var(--space-sm) var(--space-md)",
+              lineHeight: 1.1,
             }}
           >
-            {/* 基 stood here, glossed "base". #1909 cut all five of this cell's
-                kanji: they were the only faction-specific score-stamp labels in
-                the app, on a surface the audit ruled generic. The shared gloss
-                each one carried is now the visible label. */}
-            <span style={label}>{t("card.stamp.base")}</span>
-            <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", lineHeight: 0.8, color: INK }}>
-              {base}
-            </span>
-          </div>
-
-          {/* The multiplier, in its own ruled chip — the design's "ratio" cell. */}
-          {mult !== null && (
+            {/* Base, with the figure set against its label across the cell. */}
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                gap: "var(--space-xs)",
-                marginTop: "var(--space-sm)",
-                padding: "var(--space-xs) var(--space-sm)",
-                border: `1px solid ${BRASS}`,
-                background: WASH,
-                clipPath: stepClip(5),
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: "var(--space-sm)",
               }}
             >
-              <span style={{ ...label, letterSpacing: "0.2em" }}>{t("card.stamp.mult")}</span>
-              <span aria-hidden style={{ width: 1, height: 11, background: BRASS_LIGHT }} />
-              <span style={{ fontFamily: DECO, fontSize: "var(--text-lg)", lineHeight: 1, color: INK }}>
-                {formatMult(mult)}
+              {/* 基 stood here, glossed "base". #1909 cut all five of this cell's
+                  kanji: they were the only faction-specific score-stamp labels in
+                  the app, on a surface the audit ruled generic. The shared gloss
+                  each one carried is now the visible label. */}
+              <span style={label}>{t("card.stamp.base")}</span>
+              <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", lineHeight: 0.8, color: INK }}>
+                {base}
               </span>
             </div>
-          )}
 
-          {/* The metatask award, struck in the plate's one accent — a foreign
-              award, not the task's. See the ochre measurement above. */}
-          {meta !== null && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-xs)",
-                marginTop: "var(--space-sm)",
-                color: OCHRE,
-              }}
-            >
-              <span
+            {/* The multiplier, in its own ruled chip — the design's "ratio" cell. */}
+            {mult !== null && (
+              /* Same treatment, one rung down — the chip had the same clipped
+                 border. The margin belongs to the MOUNT, which is the chip's
+                 outer box now. */
+              <div style={{ ...chamferMount(5), marginTop: "var(--space-sm)" }}>
+                <div
+                  style={{
+                    ...chamferSheet(5, WASH),
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "var(--space-xs)",
+                    padding: "var(--space-xs) var(--space-sm)",
+                  }}
+                >
+                  <span style={{ ...label, letterSpacing: "0.2em" }}>{t("card.stamp.mult")}</span>
+                  <span aria-hidden style={{ width: 1, height: 11, background: BRASS_LIGHT }} />
+                  <span style={{ fontFamily: DECO, fontSize: "var(--text-lg)", lineHeight: 1, color: INK }}>
+                    {formatMult(mult)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* The metatask award, struck in the plate's one accent — a foreign
+                award, not the task's. See the ochre measurement above. */}
+            {meta !== null && (
+              <div
                 style={{
-                  ...SMALL_CAPS,
-                  fontWeight: 600,
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.16em",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-xs)",
+                  marginTop: "var(--space-sm)",
+                  color: OCHRE,
                 }}
               >
-                {t("card.stamp.meta")}
-              </span>
-              <span style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-md)" }}>
-                +{meta}
-              </span>
-            </div>
-          )}
+                <span
+                  style={{
+                    ...SMALL_CAPS,
+                    fontWeight: 600,
+                    fontSize: "var(--text-md)",
+                    letterSpacing: "0.16em",
+                  }}
+                >
+                  {t("card.stamp.meta")}
+                </span>
+                <span style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-md)" }}>
+                  +{meta}
+                </span>
+              </div>
+            )}
 
-          {/* The tally, cut only when there are votes to record (ADR-0076). The `+`
-              and the figure are arithmetic, not copy, so they are set here rather
-              than interpolated into a sentence: this is the one line where a label
-              and a numeral sit together, and #1637's whole bound is that only the
-              label is encoded. */}
-          {votes !== null && (
-            <div
-              style={{
-                fontFamily: READING,
-                fontStyle: "italic",
-                fontSize: "var(--text-md)",
-                color: QUIET,
-                marginTop: "var(--space-sm)",
-              }}
-            >
-              + {votes} <span style={label}>{t("card.stamp.votes")}</span>
-            </div>
-          )}
+            {/* The tally, cut only when there are votes to record (ADR-0076). The `+`
+                and the figure are arithmetic, not copy, so they are set here rather
+                than interpolated into a sentence: this is the one line where a label
+                and a numeral sit together, and #1637's whole bound is that only the
+                label is encoded. */}
+            {votes !== null && (
+              <div
+                style={{
+                  fontFamily: READING,
+                  fontStyle: "italic",
+                  fontSize: "var(--text-md)",
+                  color: QUIET,
+                  marginTop: "var(--space-sm)",
+                }}
+              >
+                + {votes} <span style={label}>{t("card.stamp.votes")}</span>
+              </div>
+            )}
 
-          {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
-              Labelled from the shared key like every other row of this cell — the
-              #1637 bound holds, so the LABEL is encoded and the figure stays a
-              Western numeral. */}
-          {habit !== null && (
-            <div
-              style={{
-                fontFamily: READING,
-                fontStyle: "italic",
-                fontSize: "var(--text-md)",
-                color: QUIET,
-                marginTop: "var(--space-xs)",
-              }}
-            >
-              + {habit} <span style={label}>{t("card.stamp.habit")}</span>
-            </div>
-          )}
+            {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
+                Labelled from the shared key like every other row of this cell — the
+                #1637 bound holds, so the LABEL is encoded and the figure stays a
+                Western numeral. */}
+            {habit !== null && (
+              <div
+                style={{
+                  fontFamily: READING,
+                  fontStyle: "italic",
+                  fontSize: "var(--text-md)",
+                  color: QUIET,
+                  marginTop: "var(--space-xs)",
+                }}
+              >
+                + {habit} <span style={label}>{t("card.stamp.habit")}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

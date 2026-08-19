@@ -5,7 +5,8 @@ import {
   GOLD,
   OCHRE,
   METAL_SIGILS,
-  stepClip,
+  chamferMount,
+  chamferSheet,
 } from '../factionMarks/ephemeristsPlate'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
@@ -83,15 +84,15 @@ const BURST_MARGIN = 24
 const FILING_ORBIT = 13
 /**
  * The chamfer leg of the plate's stepped silhouette, and of the brass ground
- * one pixel behind it. The inner leg is a pixel shorter so the two chamfers run
- * parallel: a 1px inset with an equal leg would put the sheet's cut corner ON
- * the ground's, and the frame would open at both corners exactly as the clipped
- * border it replaces did. (Strictly the parallel leg is 6.41 — 1px of normal
- * clearance across a 45° cut — so 6 draws the chamfer's hairline at 0.7px
- * against the straights' 1px. That is a taper on a brass rule, not a gap.)
+ * one pixel behind it.
+ *
+ * The sheet's own leg used to stand beside this as a hand-rounded 6, with a
+ * comment naming what that cost: the parallel leg is 6.41, so 6 drew the
+ * chamfer's hairline at 0.7px against the straights' 1px — a taper on a brass
+ * rule rather than a gap, but a taper. `chamferSheet` computes it (#2150), and
+ * the reason to round went with the hand-typing.
  */
 const PLATE_STEP = 7
-const SHEET_STEP = 6
 
 /**
  * THE SEVEN PLANETARY METALS, orbiting the fully transmuted disc (#2142).
@@ -318,8 +319,7 @@ export default function EphemeristsVote({
         /* The plate is also the QUERY CONTAINER for the row inside it (#2236):
            `container-type: inline-size` is in index.css, on this class. */
         className="eph-vote-plate"
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the brass rule's stroke width, not spacing. The smallest space rung is 4px, which draws the plate a four-pixel brass mount.
-        style={{ background: BRASS_RULE, padding: 1, clipPath: stepClip(PLATE_STEP) }}
+        style={chamferMount(PLATE_STEP)}
       >
         <div
           className="eph-metal-row"
@@ -376,15 +376,16 @@ export default function EphemeristsVote({
              * belonged to no other Ephemerists surface. Still a radial recess,
              * not a flat fill.
              */
-            background:
+            ...chamferSheet(
+              PLATE_STEP,
               'radial-gradient(130% 170% at 50% -20%, var(--faction-ephemerists-plate-band), var(--faction-ephemerists-vote-plate-to))',
+            ),
             // ornament (#1609): the same inset well the Coven and S.N.I.D.E.
             // vote plates carry — a recess INSIDE a plate that is dark in both
             // cascades, not a cast onto a ground that flips. This one is also
             // tinted to its own plate (30,34,51 is the valley blue-black, not
             // neutral), which is the drawing rather than a stray alpha. Raw.
             boxShadow: 'inset 0 1px 8px rgba(30, 34, 51, 0.7)',
-            clipPath: stepClip(SHEET_STEP),
           }}
         >
           {/* The dashed brass rail threading the metals stood here, carrying a

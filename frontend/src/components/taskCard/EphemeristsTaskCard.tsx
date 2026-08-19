@@ -16,6 +16,9 @@ import {
   Cornice,
   GLYPHS,
   Tally,
+  WASH,
+  chamferMount,
+  chamferSheet,
 } from "../factionMarks/ephemeristsPlate";
 
 /**
@@ -361,21 +364,26 @@ export default function EphemeristsTaskCard({
                   (ADR-0055). */}
               {showMultiplier && (
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "var(--space-xs) var(--space-sm)",
-                      background: "var(--faction-ephemerists-plate-wash)",
-                      border: "1px solid var(--faction-ephemerists-plate-brass)",
-                      clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)",
-                      fontFamily: CAPS,
-                      fontWeight: 600,
-                      fontSize: "var(--text-lg)",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  {/* The chip's rule is its GROUND, not a border (#2150). It
+                      typed its own chamfer out by hand and painted a border
+                      under it, so `clip-path` shaved the rule along both cuts
+                      and the chip opened at two corners. Same treatment as the
+                      score stamp's ratio chip, which is the same drawing. */}
+                  <span style={{ ...chamferMount(6), display: "inline-flex" }}>
+                    <span
+                      style={{
+                        ...chamferSheet(6, WASH),
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: "var(--space-xs) var(--space-sm)",
+                        fontFamily: CAPS,
+                        fontWeight: 600,
+                        fontSize: "var(--text-lg)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                    </span>
                   </span>
                   <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", color: "var(--faction-ephemerists-plate-caption)" }}>
                     {i18n.t("feed:taskCard.modifierCaption")}
