@@ -40,13 +40,9 @@
     "fetchError": "<0>Try refreshing.</0>",
     "notFound": "Task not found.",
     "pageTitle": "Task",
-    "pageEyebrow": "Tasks · Detail",
     "levelJump": {
       "tag": "Level-jump",
       "note": "Requires level {{level}}, one rung above you — your faction's once-a-level leap covers it."
-    },
-    "breadcrumb": {
-      "tasks": "Tasks"
     },
     "meta": "META",
     "metataskFor": "Metatask for {{faction}}",

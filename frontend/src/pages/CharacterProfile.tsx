@@ -33,6 +33,7 @@ import {
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
+import { useTaskSignup } from "../hooks/useTaskSignup";
 import { extractError } from "../utils/errors";
 import { factionFill } from "../utils/factions";
 import { levelTrack } from "../utils/levelTrack";
@@ -73,6 +74,9 @@ export default function CharacterProfile() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const gameConfig = useGameConfig();
+  // A profile's task list OFFERS its tasks (#2188). The gate is the viewer, not
+  // `can_sign_up` — the card reads the server's reason itself and says why.
+  const { signupMsg, handleSignup } = useTaskSignup();
   const { data, loading, error } = useResource(
     () => {
       const cid = Number(id);
@@ -404,11 +408,25 @@ export default function CharacterProfile() {
     proposedTasks,
     progression,
     identityActions,
+    onSignup: user ? handleSignup : undefined,
   };
 
   // ONE dispatch, both form factors (#1319). The page used to branch on
   // `useFormFactor()` through a `mobileProfile` surface only WOW ever filled,
   // which meant every OTHER faction wore the na spectrum skin on a phone. Each
   // profile body is responsive now, so the slug dispatch is the whole story.
-  return <FactionProfileBody {...bodyProps} />;
+  return (
+    <>
+      {/* The only thing a failed sign-up can be answered with: the success path
+          navigates to the new praxis composer, so there is no page left to say
+          anything on. Above the body because the body is nine different skins
+          and none of them owns a message slot. */}
+      {signupMsg && (
+        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
+          {signupMsg}
+        </p>
+      )}
+      <FactionProfileBody {...bodyProps} />
+    </>
+  );
 }

@@ -122,7 +122,6 @@ import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import { BalloonBunch, Zig } from "../../../components/factionMarks/wowOrnament";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -156,6 +155,7 @@ import {
 } from "./controls";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -355,7 +355,6 @@ export default function WowEditPraxis({ state }: Props) {
     accent: PLUM,
     alarm: ALARM,
     pageStyle: { fontFamily: LORA, color: INK },
-    breadcrumbInk: LABEL,
     sheetStyle,
     masthead,
     ground,
@@ -393,7 +392,7 @@ export default function WowEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={LABEL}
+          editing
         />
       }
     >

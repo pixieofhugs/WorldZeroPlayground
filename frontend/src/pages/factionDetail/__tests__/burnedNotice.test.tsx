@@ -45,6 +45,8 @@ function stateWith(slug: string, state: MembershipState): FactionDetailState {
     recentPraxis: [],
     viewerFactionSlug: null,
     gameFactions: [],
+    onSignup: undefined,
+    signupMsg: null,
     membership: {
       state,
       currentFactionSlug: null,

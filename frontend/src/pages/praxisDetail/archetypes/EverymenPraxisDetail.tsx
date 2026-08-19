@@ -100,6 +100,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 // ── The sheet's palette. Every value is a token; the "broadsheet sheet" and
 //    "dispatch sheet" blocks in index.css say which are new and which the
@@ -278,85 +279,10 @@ export default function EverymenPraxisDetail({
     boxSizing: "border-box",
   };
 
-  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
-  const breadcrumb = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-        flexWrap: "wrap",
-      }}
-    >
-      <Link
-        to="/tasks"
-        className="label-caption"
-        style={{
-          color: ACCENT,
-          textDecoration: "none",
-        }}
-      >
-        {t("detail.breadcrumb.tasks")}
-      </Link>
-      <span aria-hidden className="label-caption" style={{ color: MUTED }}>
-        /
-      </span>
-      <Link
-        to={`/tasks/${praxis.task_id}`}
-        className="label-caption"
-        style={{
-          color: ACCENT,
-          textDecoration: "none",
-        }}
-      >
-        {praxis.task_title}
-      </Link>
-      <span aria-hidden className="label-caption" style={{ color: MUTED }}>
-        /
-      </span>
-      <span className="label-caption" style={{ color: MUTED }}>
-        {t("detail.breadcrumb.current")}
-      </span>
-    </nav>
-  );
-
-  // The phone affordance drawn instead of the breadcrumb. Not sticky: the mobile
-  // shell already owns a sticky top bar.
-  const mobileBar = (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        marginBottom: "var(--space-md)",
-      }}
-    >
-      <Link
-        to="/praxis"
-        className="label-caption"
-        style={{
-          color: ACCENT,
-          textDecoration: "none",
-        }}
-      >
-        <span aria-hidden>‹ </span>
-        {t("detail.back")}
-      </Link>
-      <span
-        className="label-caption"
-        style={{
-          flex: 1,
-          textAlign: "center",
-          color: MUTED,
-        }}
-      >
-        {t("detail.breadcrumb.current")}
-      </span>
-      {/* Balances the centred label against the back link's width. */}
-      <span aria-hidden style={{ width: 44 }} />
-    </nav>
-  );
+  // Navigation is not this skin's any more (#2102). A bespoke trail and a
+  // bespoke `mobileBar` that replaced it below 768px both lived here; the
+  // shared breadcrumb sits ABOVE this column at every width, on the SITE's
+  // ground, where the site's own tertiary is the measured ink.
 
   // ── The masthead band — the paper's nameplate, theme-invariant red ─────────
   const masthead = (
@@ -785,7 +711,13 @@ export default function EverymenPraxisDetail({
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK }}>
-      {desktop ? breadcrumb : mobileBar}
+      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
+          same trail at every width - see components/nav/Breadcrumb. */}
+      <Breadcrumb
+        taskId={praxis.task_id}
+        taskTitle={praxis.task_title}
+        praxisId={praxis.id}
+      />
 
       {/* The dispatch sheet — ruled newsprint under a red margin rule
           (index.css). It paints the detail COLUMN, not the viewport: the site

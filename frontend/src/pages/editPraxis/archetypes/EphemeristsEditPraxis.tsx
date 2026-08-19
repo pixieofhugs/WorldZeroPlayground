@@ -103,7 +103,6 @@ import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -161,6 +160,7 @@ import {
 import { EphemeristsMasthead } from "../../../components/factionMarks/EphemeristsMasthead";
 import EphemeristsRuneStrip from "../../../components/factionMarks/EphemeristsRuneStrip";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -435,7 +435,9 @@ export default function EphemeristsEditPraxis({ state }: Props) {
        the sheet here is the APP's `--color-bg-page` — near-white in light, where
        QUIET reads 2.64:1 (the #1793 defect, on the faction page). Every label
        this seam reaches renders inside `ComposerSheet` or a panel, and the one
-       thing on the bare page, the breadcrumb, takes `breadcrumbInk` explicitly.
+       thing on the bare page, the breadcrumb, is neutral SITE chrome that reads
+       the app's own tertiary and never this seam at all (#2102 — it took a
+       `breadcrumbInk` off the dress until then).
        A `.label-caption` mounted directly on this page would need the app's own
        tier instead; there is none today, and the guard in
        `factionContrast.test.ts` records why. */
@@ -446,7 +448,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
       ["--link-ink-hover" as string]: INK,
       ["--label-ink" as string]: QUIET,
     } as CSSProperties,
-    breadcrumbInk: QUIET,
     sheetStyle,
     masthead,
     ground,
@@ -483,7 +484,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={QUIET}
+          editing
         />
       }
     >

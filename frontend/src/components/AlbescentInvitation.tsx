@@ -187,7 +187,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       {/* answer */}
       <div style={{ position: 'relative', padding: 'var(--space-xl) var(--space-3xl) var(--space-2xl)' }}>
         {joined ? (
-          <div style={{ ...serifItalic, fontSize: 'var(--text-title)', color: INK, textAlign: 'center' }}>{t('albescent.letter.joined')}</div>
+          <div style={{ ...serifItalic, fontSize: 'var(--text-title)', color: INK, textAlign: 'center' }}>{t('albescent.letter.cta.joined')}</div>
         ) : (
           <>
             <div style={{
@@ -220,7 +220,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button type="button" onClick={() => void handleAccept()} disabled={submitting} style={acceptButton}>
-                {submitting ? t('albescent.letter.acceptBusy') : t('albescent.letter.acceptIdle')}
+                {submitting ? t('albescent.letter.cta.busy') : t('albescent.letter.cta.join')}
               </button>
               <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>{t('albescent.letter.reassurance')}</span>
             </div>

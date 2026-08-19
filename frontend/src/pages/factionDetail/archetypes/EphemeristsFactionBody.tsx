@@ -161,7 +161,16 @@ function Medallion({ character, size }: { character: CharacterOut; size: number 
 
 export default function EphemeristsFactionBody({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation("factions");
-  const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
+  const {
+    faction,
+    members,
+    tasks,
+    recentPraxis,
+    viewerFactionSlug,
+    gameFactions,
+    onSignup,
+    membership,
+  } = state;
   const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
@@ -227,6 +236,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     task.primary_faction_slug,
                     gameFactions,
                   )}
+                  onSignup={onSignup}
                 />
               ))}
             </div>

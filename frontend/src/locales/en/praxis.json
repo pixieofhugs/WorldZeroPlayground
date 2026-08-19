@@ -75,11 +75,6 @@
     "loading": "Loading...",
     "retry": "Try refreshing.",
     "notFound": "Not found.",
-    "breadcrumb": {
-      "tasks": "Tasks",
-      "current": "Praxis"
-    },
-    "back": "Praxis",
     "sections": {
       "proof": "Proof",
       "writeUp": "Write-up",

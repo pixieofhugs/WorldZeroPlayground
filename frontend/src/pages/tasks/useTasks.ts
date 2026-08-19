@@ -4,8 +4,9 @@
  * the detail page).
  *
  * The factions/factionConfigs reads (both app-wide cached hooks), the filter
- * state, the task read keyed on those filters, and the signup →
- * navigate-to-edit handler with its inline message.
+ * state, and the task read keyed on those filters. Signing up is `useTaskSignup`
+ * and is only re-exported through here — this hook held the third byte-identical
+ * copy of it until #2188.
  *
  * EVERY axis lives in the URL (#1367, epic #1361 ruling 7) — type, sort, status,
  * faction and eligibility joined `?q=`, which `useSearchQueryParam` has owned
@@ -38,15 +39,13 @@
  * {@link readTaskFilters} for the tri-state param that costs, and what a shared
  * link does about it.
  */
-import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   listTasks,
   type TaskOut,
   type TaskSort,
   type TaskType,
 } from '../../api/tasks'
-import { createPraxis } from '../../api/praxis'
 import type { FactionOut } from '../../api/factions'
 import type { FactionConfigOut } from '../../api/gameConfig'
 import {
@@ -55,12 +54,12 @@ import {
 } from '../../components/ui/FilterBar'
 import { useFactions } from '../../hooks/useFactions'
 import { useGameConfig } from '../../hooks/useGameConfig'
-import { extractError } from '../../utils/errors'
 import { readOneOf } from '../../utils/urlParams'
 import { hadSessionLastVisit, useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
+import { useTaskSignup } from '../../hooks/useTaskSignup'
 import {
   SEARCH_QUERY_PARAM,
   useSearchQueryParam,
@@ -334,12 +333,6 @@ export function selectTaskEmptyState(
   return selectEmptyState(appliedCount, canSignUp)
 }
 
-export interface SignupMessage {
-  id: number
-  msg: string
-  ok: boolean
-}
-
 export interface TasksState {
   // Viewer
   user: CurrentUser | null
@@ -391,8 +384,9 @@ export interface TasksState {
   hasMore: boolean
   loadMore: () => void
 
-  // Signup
-  signupMsg: SignupMessage | null
+  // Signup — `useTaskSignup`, re-exported so a browse skin takes one state
+  // object rather than calling the hook a second time beside this one.
+  signupMsg: string | null
   handleSignup: (id: number) => Promise<void>
 
   /**
@@ -412,7 +406,6 @@ export interface TasksState {
 
 export function useTasks(): TasksState {
   const { user, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
   // The server's answer, not a level compared here (`api/auth.ts`). The flag is
   // false for a viewer carrying no character, so the character check is what
   // separates 'unavailable' from 'off' — the axis being absent from a
@@ -456,7 +449,7 @@ export function useTasks(): TasksState {
     canSignUp,
   } = readTaskFilters(searchParams, eligibilityDefault)
   const [query, setQueryState] = useSearchQueryParam()
-  const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
+  const { signupMsg, handleSignup } = useTaskSignup()
 
   // Debounced so a refetch fires once the typing settles, not per keystroke —
   // the same 200ms the praxis feed uses (#644).
@@ -527,16 +520,6 @@ export function useTasks(): TasksState {
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
   const clearFilters = () =>
     writeParams((previous) => clearedFilterParams(previous, eligibilityDefault))
-
-  const handleSignup = async (id: number) => {
-    setSignupMsg(null)
-    try {
-      const praxis = await createPraxis({ task_id: id, type: 'solo' })
-      navigate(`/praxis/${praxis.id}/edit`)
-    } catch (err) {
-      setSignupMsg({ id, msg: extractError(err, 'Could not sign up — make sure you are logged in.'), ok: false })
-    }
-  }
 
   const statusFilters = [TASK_STATUS_DEFAULT, 'active']
   if (user?.can_see_retired_tasks) statusFilters.push('retired')

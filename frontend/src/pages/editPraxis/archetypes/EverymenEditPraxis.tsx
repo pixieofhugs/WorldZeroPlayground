@@ -88,7 +88,6 @@ import { factionName } from "../../../utils/factions";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
-  Breadcrumb,
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
@@ -124,6 +123,7 @@ import {
 import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
@@ -352,7 +352,6 @@ export default function EverymenEditPraxis({ state }: Props) {
     accent: ACCENT,
     alarm: ALARM,
     pageStyle: { fontFamily: COURIER, color: INK },
-    breadcrumbInk: MUTED,
     sheetStyle,
     masthead,
     ground,
@@ -394,7 +393,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={MUTED}
+          editing
         />
       }
     >

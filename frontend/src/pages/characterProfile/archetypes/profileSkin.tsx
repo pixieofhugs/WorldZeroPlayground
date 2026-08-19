@@ -418,7 +418,7 @@ export function ProfileSkin({
   const mobile = useFormFactor() === 'mobile'
   /** Every quiet ink INSIDE `<header>` — see `ProfileKit.headerMuted`. */
   const headerMuted = kit.headerMuted ?? kit.muted
-  const { character, submissions, proposedTasks, progression, identityActions } = props
+  const { character, submissions, proposedTasks, progression, identityActions, onSignup } = props
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
     month: 'short',
@@ -513,7 +513,7 @@ export function ProfileSkin({
         ) : (
           <div className="task-card-row gap-4">
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
             ))}
           </div>
         )}
