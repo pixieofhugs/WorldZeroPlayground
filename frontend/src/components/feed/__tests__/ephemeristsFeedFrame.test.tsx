@@ -17,6 +17,8 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import EphemeristsFeedFrame from '../EphemeristsFeedFrame'
+import FeedArchiveButton from '../FeedArchiveButton'
+import '../../../i18n'
 
 function frame({
   tag = null,
@@ -113,9 +115,11 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     expect(html).toContain('stroke-width="0.6"')
   })
 
-  it('takes the sigil at the REDUCED cut, since the band is 10-14px tall', () => {
-    // Both band heights sit under #1635's 20px threshold, so the mark drops its
-    // crossed axes and vertex discs rather than drawing them at half a pixel.
+  it('takes the sigil at the REDUCED cut, since the MARK is 10-14px tall', () => {
+    // Both sigil heights sit under #1635's 20px threshold, so the mark drops
+    // its crossed axes and vertex discs rather than drawing them at half a
+    // pixel. This is the mark's own size and never the band's — the band has
+    // no height to read since #2100, and it did not set this one before.
     expect(frame()).not.toContain('M100 272 L392 272')
   })
 
@@ -124,5 +128,68 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     // stacking context; without `isolation` that is whatever the feed column
     // established, which is how an ornament lands over unrelated copy (§5).
     expect(frame()).toContain('isolation:isolate')
+  })
+})
+
+/**
+ * SEAM: the masthead band's own inline style declaration, read back out of the
+ * rendered markup.
+ *
+ * #2100. This band carried the ONE numeric masthead height across all nine feed
+ * frames (30px desktop / 26px mobile) under `overflow: hidden`, so it clipped
+ * anything taller than itself — visually AND for hit-testing, by any mechanism.
+ * That held `FeedArchiveButton`, a control shared by all nine chassis, down to
+ * a 24px target where §6 makes 44x44 non-negotiable.
+ *
+ * The fix is structural rather than a bigger number: the band declares no
+ * height at all and sizes to its tallest child, which is how the other eight
+ * frames get this right for free. So what is asserted is the ABSENCE of a
+ * height on that box. A test pinned to `44px` would be the same magic number
+ * in a second place, and would go green again the day a control needs 46.
+ *
+ * There is no DOM here (`renderToStaticMarkup`), so nothing can be MEASURED.
+ * What is checkable is that the band declares no height and that the control it
+ * holds declares a 44px minimum — together, the whole of the fix.
+ */
+function styleOf(html: string, pattern: RegExp): string {
+  const match = new RegExp(`style="([^"]*${pattern.source}[^"]*)"`).exec(html)
+  if (!match) throw new Error(`no element whose style matches ${pattern}`)
+  return match[1]
+}
+
+/** The masthead: the box that paints the night ground. */
+const BAND = /background:var\(--faction-ephemerists-plate-band\)/
+
+describe('EphemeristsFeedFrame — the masthead sizes to its contents (#2100)', () => {
+  it('declares NO height on the band, so nothing placed in it can be clipped', () => {
+    // The defect, exactly: `height: 30` / `height: 26` on this box.
+    expect(styleOf(frame(), BAND)).not.toMatch(/(^|;)height:/)
+  })
+
+  it('pins no height on the chrome row inside it either', () => {
+    // The row carried `height: 100%` to fill the fixed band. Against an
+    // intrinsic parent that is at best inert, and it is the second place the
+    // ceiling would come back.
+    const row = styleOf(frame(), /padding:var\(--space-xs\) var\(--space-md\)/)
+    expect(row).not.toMatch(/(^|;)height:/)
+  })
+
+  it('holds the REAL 44px control, with no number left that could refuse it', () => {
+    const html = frame({ archive: <FeedArchiveButton onAct={() => {}} /> })
+    expect(html).toContain('min-width:44px')
+    expect(html).toContain('min-height:44px')
+    expect(styleOf(html, BAND)).not.toMatch(/(^|;)height:/)
+  })
+
+  it("keeps the head hairline on the ornament's OWN box, not on the band's", () => {
+    // The SVG viewBox used to track the band's height. `slice` crops rather
+    // than erroring, so a viewBox reading a height that no longer exists looks
+    // like a design choice instead of a bug (#2100, consequence 4). The
+    // ornament keeps its own constant, and the element height and the viewBox
+    // height must stay equal or the hairline scales and loses its inset.
+    const html = frame()
+    expect(html).toContain('height="30"')
+    expect(html).toContain('viewBox="0 0 452 30"')
+    expect(html).toContain('stroke-width="0.6"')
   })
 })
