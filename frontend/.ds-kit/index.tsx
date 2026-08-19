@@ -80,10 +80,10 @@ export { default as EphemeristsFactionHero } from "../src/components/factionHero
 export { default as EphemeristsFeedFrame } from "../src/components/feed/EphemeristsFeedFrame";
 export { default as EphemeristsFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk";
 export { default as EphemeristsMasthead } from "../src/components/factionMarks/EphemeristsMasthead";
+export { default as EphemeristsNotationBand } from "../src/components/factionMarks/EphemeristsNotationBand";
 export { default as EphemeristsPraxisCard } from "../src/components/praxisCard/desktop/EphemeristsPraxisCard";
 export { default as EphemeristsPraxisDetail } from "../src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail";
 export { default as EphemeristsProfileBody } from "../src/pages/characterProfile/archetypes/EphemeristsProfileBody";
-export { default as EphemeristsRuneStrip } from "../src/components/factionMarks/EphemeristsRuneStrip";
 export { default as EphemeristsScoreStamp } from "../src/components/praxisCard/scoreStamp/EphemeristsScoreStamp";
 export { default as EphemeristsSeal } from "../src/components/metataskSeal/skins/EphemeristsSeal";
 export { default as EphemeristsSigil } from "../src/components/sigil/EphemeristsSigil";

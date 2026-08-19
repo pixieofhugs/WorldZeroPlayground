@@ -496,27 +496,29 @@
 
 /* ── THE RUNE STRIP'S TWO MOTIONS (#2067's shimmer, #2146's turn) ──
  *
- * The row of mathematical marks bracketing every Ephemerists CTA. Both
- * animations moved here from index.css when the turn was added: they share one
- * phase (`--epg-delay`, drawn per slot from the surface's seed) and splitting
- * them across two sheets would put half a device on the critical path.
+ * The row of mathematical marks — bracketing every Ephemerists CTA, ruling the
+ * praxis card's byline, and, since #2230 absorbed the strip into the notation
+ * band, closing the masthead as well. Both animations moved here from index.css
+ * when the turn was added: they share one phase (`--epg-delay`, drawn per mark
+ * from the surface's seed) and splitting them across two sheets would put half a
+ * device on the critical path.
  *
- * THE SHIMMER breathes a slot between 0.16 and its own peak. Note the inversion
+ * THE SHIMMER breathes a mark between 0.16 and its own peak. Note the inversion
  * against the design, which index.css states beside the resting rule: the base
  * IS the stilled state, at the peak, and the dip is what the animation adds.
  *
  * THE TURN is what makes the row change over time WITHOUT any render-time
- * randomness. Each slot holds two seeded marks stacked in one grid cell; these
+ * randomness. Each mark holds two seeded frames stacked in one grid cell; these
  * two keyframes are the same cut read forwards and backwards, so exactly one
  * mark is up at any instant and the swap is hard rather than a cross-fade —
  * `49.99%` and not a `steps()` timing function, because the shimmer on the
  * parent needs its own easing and the two rules are on different elements.
  *
- * 9.4s against the shimmer's 5.2s: coprime enough that a slot's mark does not
+ * 9.4s against the shimmer's 5.2s: coprime enough that a mark's frame does not
  * change on the same beat as its own dip, twice a minute, forever.
  *
  * Sheet-less or reduced-motion, `.eph-rune > span + span { opacity: 0 }` in
- * index.css leaves mark one showing in every slot — a whole, legible row. ── */
+ * index.css leaves frame one showing in every mark — a whole, legible row. ── */
 @keyframes eph-rune-shift {
   0%, 100% { opacity: 0.16; }
   50% { opacity: var(--epg-op, 0.8); }

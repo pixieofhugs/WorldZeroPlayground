@@ -178,10 +178,13 @@ describe('the Ephemerists praxis card wears the Valley plate (#1207)', () => {
   it('rules the byline with the shared rune strip, not a private drift', () => {
     const markup = html()
     // #2312 — the strip moved from above the vote block to the byline's rule,
-    // and it is the shared component now. The old assertion read a single mark
-    // (`∮`) out of the retired 32-mark array; the marks are seeded per praxis
-    // since #2146, so the strip's IDENTITY is what is assertable here and the
-    // draw is `factionMarks/__tests__/ephemeristsRuneStrip.test.tsx`'s business.
+    // and it is the shared component now (`EphemeristsNotationBand`, which
+    // absorbed the strip in #2230). The old assertion read a single mark (`∮`)
+    // out of the retired 32-mark array; the marks are seeded per praxis since
+    // #2146, and since #2230 the COUNT is measured off the element, so a row
+    // rendered here is empty by construction. What is assertable at this seam is
+    // the divider's IDENTITY; the draw is
+    // `factionMarks/__tests__/ephemeristsNotationBand.test.tsx`'s business.
     expect(markup).toContain('data-eph-runes="divider"')
     expect(markup, 'the retired inline copy').not.toContain('epg-glyph')
     // Still no inline animation: the strip's motion is a reduced-motion-gated

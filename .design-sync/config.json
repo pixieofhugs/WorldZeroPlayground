@@ -252,7 +252,7 @@
     "RosterAvatar": "src/components/collab/RosterAvatar.tsx",
     "CovenCauldron": "src/components/factionMarks/CovenCauldron.tsx",
     "DefaultPointsRing": "src/components/factionMarks/DefaultPointsRing.tsx",
-    "EphemeristsRuneStrip": "src/components/factionMarks/EphemeristsRuneStrip.tsx",
+    "EphemeristsNotationBand": "src/components/factionMarks/EphemeristsNotationBand.tsx",
     "SingularityLamps": "src/components/factionMarks/SingularityLamps.tsx",
     "SingularityProcessLight": "src/components/factionMarks/SingularityProcessLight.tsx",
     "SingularityReadout": "src/components/factionMarks/SingularityReadout.tsx",
