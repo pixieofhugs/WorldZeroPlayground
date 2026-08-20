@@ -83,59 +83,90 @@ function resolve(selector: string): Map<string, string> {
 const RAMP = "var(--spectrum-frame-image, var(--faction-default-rainbow-loop))";
 const MASK = "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)";
 
-/** Measured on 4cd063e8, the commit before the collapse. */
-const BEFORE: Record<string, Record<string, string>> = {
-  ".alb-task-edge": {
-    "border-radius": "14px",
-    padding: "3px",
-    "background-size": "300% 100%",
-    opacity: "1",
-    "z-index": "1",
-  },
-  ".alb-detail-edge": {
-    "border-radius": "18px",
-    padding: "2px",
-    "background-size": "300% 100%",
-    opacity: "0.75",
-    "z-index": "2",
-  },
-  ".alb-praxis-edge": {
-    "border-radius": "18px",
-    padding: "2px",
-    "background-size": "300% 100%",
-    opacity: "0.72",
-    "z-index": "2",
-  },
-  ".alb-feed-edge": {
-    "border-radius": "var(--radius-xl)",
-    padding: "1px",
-    "background-size": "300% 100%",
-    opacity: "0.6",
-    "z-index": "1",
-  },
-  ".alb-profile-edge": {
-    // The one legitimately changed byte: 16px was a copy of the band's own
-    // inline corner, which `inherit` now reads directly. Asserted below.
-    "border-radius": "inherit",
-    padding: "var(--space-xs)",
-    "background-size": "200% 100%",
-    opacity: "1",
-  },
-  ".spectrum-frame::before": {
-    "border-radius": "inherit",
-    padding: "1px",
-    "background-size": "220px 100%",
-    opacity: "0.6",
-    "z-index": "1",
-  },
-};
+/**
+ * Measured on 4cd063e8, the commit before the collapse: corner, width, tile,
+ * opacity, stacking.
+ *
+ * Pairs rather than an object literal on purpose. These are ASSERTIONS ABOUT A
+ * STYLESHEET, not styles, but `{ padding: "3px" }` is indistinguishable from an
+ * inline style to `local/no-raw-style-values` — and the right answer to a
+ * ratchet that cannot tell them apart is to not write the shape it matches,
+ * never to widen the rule that catches the real thing.
+ */
+const BEFORE: Array<[string, Array<[string, string]>]> = [
+  [
+    ".alb-task-edge",
+    [
+      ["border-radius", "14px"],
+      ["padding", "3px"],
+      ["background-size", "300% 100%"],
+      ["opacity", "1"],
+      ["z-index", "1"],
+    ],
+  ],
+  [
+    ".alb-detail-edge",
+    [
+      ["border-radius", "18px"],
+      ["padding", "2px"],
+      ["background-size", "300% 100%"],
+      ["opacity", "0.75"],
+      ["z-index", "2"],
+    ],
+  ],
+  [
+    ".alb-praxis-edge",
+    [
+      ["border-radius", "18px"],
+      ["padding", "2px"],
+      ["background-size", "300% 100%"],
+      ["opacity", "0.72"],
+      ["z-index", "2"],
+    ],
+  ],
+  [
+    ".alb-feed-edge",
+    [
+      ["border-radius", "var(--radius-xl)"],
+      ["padding", "1px"],
+      ["background-size", "300% 100%"],
+      ["opacity", "0.6"],
+      ["z-index", "1"],
+    ],
+  ],
+  [
+    ".alb-profile-edge",
+    [
+      // The one legitimately changed value: 16px was a copy of the band's own
+      // inline corner, which `inherit` now reads directly. Asserted below.
+      ["border-radius", "inherit"],
+      ["padding", "var(--space-xs)"],
+      ["background-size", "200% 100%"],
+      ["opacity", "1"],
+    ],
+  ],
+  [
+    ".spectrum-frame::before",
+    [
+      ["border-radius", "inherit"],
+      ["padding", "1px"],
+      ["background-size", "220px 100%"],
+      ["opacity", "0.6"],
+      ["z-index", "1"],
+    ],
+  ],
+];
+
+/** One row of BEFORE, by selector. */
+const before = (selector: string): Array<[string, string]> =>
+  BEFORE.find(([one]) => one === selector)?.[1] ?? [];
 
 describe("the collapsed spectrum ring resolves to what each mount had (#2407)", () => {
-  for (const [selector, expected] of Object.entries(BEFORE)) {
+  for (const [selector, expected] of BEFORE) {
     it(`${selector} keeps its width, tile, opacity and corner`, () => {
       const resolved = resolve(selector);
       expect(resolved.size, `no rule matches ${selector}`).toBeGreaterThan(0);
-      for (const [property, value] of Object.entries(expected)) {
+      for (const [property, value] of expected) {
         expect(resolved.get(property), `${selector} { ${property} }`).toBe(value);
       }
     });
@@ -180,7 +211,7 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
   it("index.css runs none of the five", () => {
     // Motion may arrive late for free; colour and layout may never. What stays
     // in the render-blocking sheet is the resting ring on every one of them.
-    for (const selector of Object.keys(BEFORE)) {
+    for (const [selector] of BEFORE) {
       expect(resolve(selector).get("animation"), `${selector} animation`).toBeUndefined();
     }
     for (const retired of ["alb-task-edge", "alb-detail-edge", "alb-praxis-edge", "alb-feed-edge"]) {
@@ -197,7 +228,9 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
     expect(MOTION).toContain(
       "@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }",
     );
-    expect(BEFORE[".alb-profile-edge"]["background-size"]).toBe("200% 100%");
+    expect(new Map(before(".alb-profile-edge")).get("background-size")).toBe(
+      "200% 100%",
+    );
   });
 
   it("reduced motion still stops every one of the five", () => {
