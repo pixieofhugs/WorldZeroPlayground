@@ -85,6 +85,26 @@ describe('local/no-raw-colour-values reports raw colour', () => {
     expect(await reports("export const s = { background: 'rgba(10,26,14,1)' }")).toBe(true)
   })
 
+  /**
+   * #2139. `filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25))` launders paint past
+   * a rule that reads property NAMES: `filter` was not a `COLOUR_PROP` and does
+   * not end in `Color`, so four sites went unreported and two of them sat in
+   * files on no list at all. A cast shadow is precisely where a non-flipping
+   * colour goes wrong, which is why #2007 had to mint `--color-cast-shadow`.
+   *
+   * The accepted cost, pinned here so nobody argues it back out: the value
+   * carries GEOMETRY (blur, offset) beside the paint, so the rule flags a string
+   * it can only partly judge. That does not contradict this repo's three rulings
+   * that geometry is not paint's business — those are about where a VALUE lives,
+   * and this is about what a MATCHER reads. The rule reports the declaration; a
+   * reviewer resolves which half is at fault.
+   */
+  it('flags a colour laundered through filter: drop-shadow()', async () => {
+    expect(
+      await reports("export const s = { filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }"),
+    ).toBe(true)
+  })
+
   it('flags a colour laundered through a ternary, as the px arm does', async () => {
     expect(
       await reports("export const s = (w: boolean) => ({ background: w ? 'rgba(234,179,8,0.08)' : 'transparent' })"),
@@ -113,6 +133,20 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
     )
   })
 
+  it('says nothing about a filter that carries no paint of its own', async () => {
+    // The other half of #2139's widening. `filter` is a geometry-AND-paint
+    // property, and the report only ever fires on the paint: a blur, or a
+    // drop-shadow struck from a token, must stay silent. Otherwise the arm
+    // becomes a reason to stop reaching for `filter`, which is the shape
+    // `SnideProfileBody`'s credential frame needs — a shadow that follows the
+    // card's cut edge rather than its box.
+    expect(
+      await lint(
+        "export const s = { filter: 'blur(4px) drop-shadow(2px 2px 0 var(--color-print-offset))' }",
+      ),
+    ).toEqual([])
+  })
+
   it('says nothing about a raw length — that is the OTHER arm, on its own list', async () => {
     expect(await lint("export const s = { padding: 'var(--space-md)', opacity: 0.4 }")).toEqual([])
   })
@@ -134,6 +168,32 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
 })
 
 describe('the legacy list stays honest', () => {
+  /**
+   * #2139's actual finding, and the one thing on this file that is not about a
+   * regex: the report is a FLOOR, not the class. Two shapes stay invisible to
+   * this rule ON PURPOSE — a module constant read as an `Identifier`, and a
+   * component's own colour-named prop — so any "N files remaining" figure taken
+   * from the list below undercounts, silently, by construction.
+   *
+   * Pinned because a warning that lives only in a comment is one refactor from
+   * gone, and the failure it prevents is somebody quoting the list as an extent.
+   * The assertion is on the WORD, not the sentence: rewording is fine, deleting
+   * the framing is not.
+   */
+  it('warns, in both places a reader meets it, that the report is a floor', async () => {
+    const header = readFileSync(
+      new URL('../../.eslint-legacy-raw-colours.txt', import.meta.url),
+      'utf8',
+    )
+    expect(header).toMatch(/FLOOR, NOT THE CLASS/)
+
+    const results = await eslint.lintText("export const s = { color: '#dc2626' }", {
+      filePath: 'src/rawColourFixture.tsx',
+    })
+    const description = eslint.getRulesMetaForResults(results)[RULE]?.docs?.description
+    expect(description).toMatch(/FLOOR, NOT THE CLASS/)
+  })
+
   it('is not empty, and every entry is a real path the rule can be turned off for', async () => {
     const entries = legacyEntries()
 
