@@ -182,7 +182,7 @@ export default function CovenTaskCard({
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
-          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+          <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             {/* The slip's pencilled ordinal ("Task {id}", hand-lettered under the
                 masthead) is gone with #1124 — the id no longer shows on any card,
                 and it was the whole line. */}

@@ -19,11 +19,14 @@
  * This repo has no jsdom, so nothing here measures a height: `renderToStaticMarkup`
  * runs no layout. VISUAL QA IS OUTSTANDING and stated as such on the PR.
  */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ComponentType, ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
+import { SIGNUP_REASON_ALREADY_ACTIVE_MEMBER } from '../../taskDetail/signupCta'
 import type { CurrentUser } from '../../../api/auth'
 import type { CardProps } from '../../../components/taskCard/TaskCard'
 import type { TasksState } from '../useTasks'
@@ -204,6 +207,99 @@ describe('every skin honours the chain the row hands its height down', () => {
         /display:/,
       )
     }
+  })
+})
+
+/**
+ * #2380 — THE CHAIN MUST KEY ON THE CARD'S OWN LINK, NOT ON "A LINK".
+ *
+ * THE SEAM: the selector in `index.css` that decides which boxes become
+ * columns, read against the markup a card renders for a viewer holding a draft.
+ * Both halves of the chain used to end in `a[href]`, which reads as *any*
+ * descendant holding *any* anchor. That agreed with the comment above it by
+ * accident, for exactly as long as the card-wide reading link was the only
+ * anchor a card drew. #2167 added the masthead — which had to patch itself
+ * twice with `flexGrow: 0` to get back off the chain — and #2359 gave
+ * `CardCtaControl` a link branch for the `already_active_member` draft, a
+ * SIBLING of the reading link. That sibling matched, its row flipped to a
+ * column, and Everymen's two `flex: 0 1 96px` marks read their basis as a
+ * HEIGHT with `width: 100%` behind it: hands the full width of the card.
+ *
+ * So the assertion is not "the row is still a row" — nothing here lays anything
+ * out. It is that the selector and the markup name the SAME single anchor.
+ */
+const CSS = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+
+/**
+ * The anchor attributes the two chain rules key on, read out of the stylesheet
+ * rather than restated here — restating them is how a CSS rule and its guard
+ * drift in the same direction and both stay green.
+ *
+ * ponytail: this reads `a[attr]`-shaped compounds only, ignoring values and
+ * combinators. Ceiling: a chain rule keyed on `a[href^="/tasks/"]` would be
+ * reported as keying on `href`, and this suite would call it broken — which is
+ * the right answer for a value-matched guess anyway, since the CTA's own
+ * `/praxis/…` href is one route rename away from matching it. Upgrade path if
+ * that ever stops being true: a real selector parser (none is installed).
+ */
+function chainAnchorKeys(): string[] {
+  const rules = CSS.split('\n').filter((line) => line.includes('[data-form-factor] > article :'))
+  expect(rules, 'both halves of the chain — the column and the grow — are still here').toHaveLength(
+    2,
+  )
+  return [...new Set([...rules.join('\n').matchAll(/\ba\[([\w-]+)/g)].map((m) => m[1]))]
+}
+
+const anchorTags = (out: string): string[] => [...out.matchAll(/<a\s[^>]*>/g)].map((m) => m[0])
+const carries = (tag: string, attr: string): boolean =>
+  new RegExp(`\\s${attr}(?=[=\\s>/])`).test(tag)
+
+/** A viewer who already holds an open draft on this task — the #2359 branch. */
+const DRAFT_TASK = aTask({
+  description: TASK.description,
+  signup_reason: SIGNUP_REASON_ALREADY_ACTIVE_MEMBER,
+  in_progress_praxis_id: 77,
+  can_sign_up: false,
+})
+const DRAFT_HREF = '/praxis/77/edit'
+
+function draftCard(Card: ComponentType<CardProps>): string {
+  dispatch.formFactor = 'desktop'
+  return markup(
+    <Card
+      task={DRAFT_TASK}
+      basePoints={DRAFT_TASK.point_value}
+      multiplier={1}
+      inProgressCount={2}
+      onSignup={() => {}}
+    />,
+  )
+}
+
+describe('a sibling CTA row holding a link stays off the slack chain (#2380)', () => {
+  it.each(SKINS)('%s: the draft link is not on the chain', (_name, Card) => {
+    const cta = anchorTags(draftCard(Card)).find((tag) => tag.includes(`href="${DRAFT_HREF}"`))
+    expect(cta, 'the draft branch renders a <Link>, so the premise still holds').toBeDefined()
+    expect(
+      chainAnchorKeys().filter((key) => carries(cta as string, key)),
+      'the CTA link matches the chain selector, so its row is flipped to a column',
+    ).toEqual([])
+  })
+
+  it.each(SKINS)('%s: exactly one anchor is on the chain, and it reads the task', (_name, Card) => {
+    // Three anchors are in this card in this state — masthead, reading link,
+    // draft link — and the chain must end at the middle one. The masthead's
+    // `flexGrow: 0` and the CTA row's position outside the frame's column are
+    // both defences; neither is what makes this true. The selector naming one
+    // anchor is.
+    const keys = chainAnchorKeys()
+    const onChain = anchorTags(draftCard(Card)).filter((tag) =>
+      keys.some((key) => carries(tag, key)),
+    )
+    expect(onChain, 'one anchor carries the chain hook').toHaveLength(1)
+    expect(onChain[0], 'and it is the card-wide reading link').toContain(
+      `href="/tasks/${DRAFT_TASK.id}"`,
+    )
   })
 })
 
