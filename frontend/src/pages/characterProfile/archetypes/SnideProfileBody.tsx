@@ -61,7 +61,14 @@ const dress: ProfileDress = {
   slug: 'snide',
   dataTheme: 'dark',
   pageBackground: INK,
-  pageOverlay: 'radial-gradient(rgba(182,255,46,0.05) 1px, transparent 1px)',
+  // The halftone dot field (#2139), the twin of Everymen's grain and reached the
+  // same way — through a skin prop the colour arm does not judge. Unlike that
+  // one it was never a dark-mode defect: every `--faction-snide-*` token has one
+  // value, so acid at 5% on the ink page was already correct in both cascades.
+  // `--faction-snide-acid` IS #b6ff2e, so this color-mix is the old rgba to the
+  // byte and repaints nothing — but an alpha that is theme-correct still owes
+  // its hue a name, which is the call the halftone medallion made in #2343.
+  pageOverlay: `radial-gradient(color-mix(in srgb, ${ACID} 5%, transparent) 1px, transparent 1px)`,
   ink: PAPER,
   muted: 'var(--faction-snide-card-muted)',
   accent: ACID,
@@ -144,7 +151,11 @@ const dress: ProfileDress = {
   },
   barFill:
     'repeating-linear-gradient(45deg, var(--faction-snide-acid) 0 6px, var(--faction-snide-acid-deep) 6px 12px)',
-  barTrack: 'rgba(255,255,255,0.12)',
+  // Everymen's `barTrack` twin, on this skin's own ink slab. PAPER is the warm
+  // xerox white this frame already spends as its light, and at 12% the track
+  // reads 1.35:1 against the slab where the bare white read 1.38:1 — one value
+  // each, both cascades, because S.N.I.D.E. does not flip.
+  barTrack: `color-mix(in srgb, ${PAPER} 12%, transparent)`,
   sectionHeading: heading,
   emptyStateStyle: {
     border: `2px dashed ${ACID}`,

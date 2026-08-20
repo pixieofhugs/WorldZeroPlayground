@@ -159,7 +159,15 @@ export function useFactionDetail(
 
   // Theme the page backdrop to this faction (Tier-3 surface #10). Falls back to
   // the global watercolor for factions without a backdrop variant.
-  useFactionBackdrop(slug);
+  //
+  // THE ONE PAGE EXEMPT FROM THE ORNAMENT ALTERNATION (#2195). The law is that a
+  // card on an ornamented ground goes plain; the owner carved this page out of
+  // it on 2026-08-18 — "for the complex background rule, faction pages are
+  // exempt. We can have a busy faction background page with busy task and praxis
+  // cards on it." A faction page IS the kit at full volume, so its roster of
+  // task and praxis cards keeps every ornament however loud the wall behind it.
+  // This leaves `CharacterProfile` as the only route where a card goes plain.
+  useFactionBackdrop(slug, { cardsKeepOrnament: true });
 
   useEffect(() => {
     if (!slug) return;
