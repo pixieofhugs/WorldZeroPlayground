@@ -177,14 +177,18 @@ export default function CardMasthead({
         color: "inherit",
         textDecoration: "none",
         /* THE BAND DOES NOT TAKE THE ROW'S SLACK. `.task-card-row` hands a
-           card's spare height down a chain that ends at `a[href]` (index.css,
-           the equal-height row), so the moment this element became an anchor it
-           joined that chain and would have stretched beside the body link,
-           splitting the slack between them. The band is a band: it is as tall
-           as its own content, and the body still absorbs the difference.
+           card's spare height down a chain that ends at the one anchor marked
+           `data-card-link` (index.css, the equal-height row), and this band is
+           not it. That was not always the selector: the chain used to end at
+           `a[href]`, so the moment this element became an anchor (#2167) it
+           joined the chain and stretched beside the body link, splitting the
+           slack between them — this pin was the correction. #2380 moved the
+           chain onto the hook, so the pin now restates the initial value
+           instead. It stays as the belt: a band is as tall as its own content
+           whatever a later rule decides, and only `flex-grow` is pinned, so
+           shrink and basis keep the values the band had as a plain block.
            `frontend/src/pages/tasks/__tests__/equalHeightRow.test.tsx` holds
-           this. Only `flex-grow` is pinned, so shrink and basis stay the
-           initial values the band had as a plain block. */
+           the chain to a single anchor. */
         flexGrow: 0,
         ...style,
       }}
