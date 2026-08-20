@@ -84,7 +84,9 @@ function asideTag(html: string): string {
   return html.slice(at, html.indexOf('>', at) + 1)
 }
 
-/** The eight locals `railFaceVars` declares, all or nothing. */
+/** The locals `railFaceVars` declares, all or nothing. Eight at #2361; the ninth
+ *  arrived with #2404, which gave the panels a spectrum ring and switches it off
+ *  for a member so their own hairline stands. */
 const RAIL_LOCALS = [
   '--rail-paper',
   '--rail-ink',
@@ -94,13 +96,19 @@ const RAIL_LOCALS = [
   '--rail-face',
   '--rail-well',
   '--rail-spectrum',
+  '--spectrum-frame-image',
 ] as const
 
 /** What the unaffiliated rail must keep, verbatim, at the site that reads it. */
 const NA_FALLBACKS = [
   'var(--rail-paper,var(--color-bg-surface))',
   'var(--rail-line,var(--color-border))',
-  'var(--rail-radius,var(--radius-xl))',
+  // #2404 moved this one rung, on the owner's ruling: the unaffiliated frame is
+  // the deliberate `--faction-default-card-radius` (10px, the documented
+  // Default/Albescent rung), not `--radius-xl`'s 14px, which it had inherited by
+  // accident. The SHAPE of the seam is unchanged — still one fallback read at
+  // the site — which is why this list keeps the entry rather than dropping it.
+  'var(--rail-radius,var(--faction-default-card-radius))',
   'var(--rail-ink,var(--color-text-primary))',
   'var(--rail-quiet,var(--color-text-secondary))',
   'var(--rail-quiet,var(--color-text-tertiary))',
@@ -141,7 +149,13 @@ describe('a member sees the rail in their own faction (#2361)', () => {
   }
 })
 
-describe('an unaffiliated viewer is pixel-identical to what shipped (#2361)', () => {
+// #2404 ENDED THE "PIXEL-IDENTICAL TO WHAT SHIPPED" HALF OF THIS, on the owner's
+// ruling: the unaffiliated frame is now the rainbow at a deliberate 10px rather
+// than a 7%-black hairline at an accidental 14px. What survives — and is the
+// half that was always doing the work — is that the rail declares NOTHING for an
+// unaffiliated viewer, so every value it draws is the na kit's own, read through
+// a fallback at the site. That is still measured below, verbatim.
+describe('an unaffiliated viewer declares nothing and reads the na kit (#2361)', () => {
   for (const slug of ['na', null, 'a-slug-the-server-invented']) {
     it(`declares no local at all for ${String(slug)}`, () => {
       const tag = asideTag(renderAs(slug))
@@ -172,11 +186,18 @@ describe('Albescent gets the na rail, and that is ADR-0048 (#2361)', () => {
     expect(tag).not.toContain('albescent')
   })
 
-  it('renders byte-identical to an unaffiliated rail', () => {
-    // The strongest form of "no colour family": not one pixel of the rail can
-    // tell an Albescent member from an unaffiliated stranger. A future overlay
-    // (the shimmer ADR-0048 permits) would break this deliberately — and should
-    // be a conversation, which is what a failure here forces.
-    expect(renderAs('albescent')).toBe(renderAs('na'))
+  it('renders identically to an unaffiliated rail but for the drift hook', () => {
+    // This asserted BYTE-identical until #2404, and its own note named the exit:
+    // "a future overlay (the shimmer ADR-0048 permits) would break this
+    // deliberately — and should be a conversation, which is what a failure here
+    // forces." That conversation happened; the owner ruled the Albescent frame
+    // drifts. So the assertion is not relaxed to "they differ" — it names the
+    // one permitted difference and holds everything else to the same byte
+    // equality, and a colour family minted for Albescent still fails here.
+    //
+    // `data-spectrum-drift` adds no paint of its own. It is matched only by the
+    // DEFERRED `motion.ornament.css`, so what it buys is motion and nothing
+    // else. The full form of that seam is `railSpectrumFrame.test.tsx`.
+    expect(renderAs('albescent').split(' data-spectrum-drift=""').join('')).toBe(renderAs('na'))
   })
 })
