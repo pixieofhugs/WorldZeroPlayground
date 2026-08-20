@@ -184,7 +184,7 @@ export default function SingularityTaskCard({
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
-          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+          <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...LABEL, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>

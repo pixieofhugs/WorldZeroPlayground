@@ -107,10 +107,12 @@ function CovenBand() {
         background: "var(--faction-coven-slip-sigil-ground)",
         borderBottom: "1px solid var(--faction-coven-slip-pk)",
         /* The twinkle box is the one wrapper standing between a card's root and
-           its band, so since #2167 made the band a link it matches
-           `:has(a[href])` on the equal-height row's slack chain (index.css) and
-           would stretch past its 44px. The band inside pins its own growth for
-           the same reason; this pins the box. */
+           its band, so while the equal-height row's slack chain ended at
+           `:has(a[href])` (index.css), #2167's linked band made this box match
+           and stretch past its 44px. #2380 re-keyed that chain onto the
+           `data-card-link` hook, which this box does not contain, so the pin is
+           belt rather than braces now — kept, like the band's own, because a
+           band's height is its content. */
         flexGrow: 0,
       }}
     >
