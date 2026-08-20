@@ -139,9 +139,14 @@ describe('the proclamation chrome', () => {
     expect(html).toContain('opacity:0.75')
   })
 
-  it('binds the sheet in a 2px gold frame at radius 9 on the cream ground', () => {
+  it('binds the sheet in a 2px gold frame on the cream ground, at the list radius', () => {
+    // The radius was a literal 9 here until #2403 ruled the frame list's middle
+    // to a single rung; the VALUE now lives once, in `--faction-wow-card-radius`
+    // (`utils/__tests__/factionCardFrame.test.ts` holds it to the list). So this
+    // asks that the frame reads it — restating the pixel is the thing the token
+    // exists to stop.
     const html = frame()
-    expect(html).toContain('border-radius:9px')
+    expect(html).toContain('border-radius:var(--faction-wow-card-radius)')
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
     expect(html).toContain('background:var(--faction-wow-card-bg)')
   })
