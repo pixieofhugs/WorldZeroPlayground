@@ -186,7 +186,8 @@ export default function WowTaskCard({
           width: "100%",
           background: "var(--faction-wow-card-bg)",
           border: `2px solid ${GOLD}`,
-          borderRadius: 9,
+          // The decree's shape, said once (#2361/#2403).
+          borderRadius: "var(--faction-wow-card-radius)",
           boxShadow: "var(--faction-wow-quest-shadow)",
           color: INK,
         }}
