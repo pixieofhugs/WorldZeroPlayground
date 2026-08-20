@@ -200,12 +200,16 @@ export default function EphemeristsTaskCard({
         className="eph-turn-scope"
         style={{
           position: "relative",
-          /* THE NET'S MOUNT (#2144's card weight, landed by #2146). Isolating
-             makes the plate its own stacking context, so the net's `z-index: -1`
-             paints after the plate's own fill and before every descendant. NOT
-             the design's `z-index: 1` lift on the content: lifting static
-             children needs `position: relative` on them, which would override
-             the absolutely positioned ornament this skin is full of. */
+          /* THE GROUND'S MOUNT. Isolating makes the plate its own stacking
+             context, so the card's whole layering — ground 1, band 2, cornice 3
+             — is settled inside the card and cannot be reordered from outside
+             it. It arrived for the chart net's `z-index: -1` (#2144's card
+             weight, landed by #2146); #2398 replaced that ground with the
+             gravity field, which lifts to 1 instead, and the isolation stays
+             because the card still owes its own context. NOT the design's
+             `z-index: 1` lift on the CONTENT: lifting static children needs
+             `position: relative` on them, which would override the absolutely
+             positioned ornament this skin is full of. */
           isolation: "isolate",
           overflow: "hidden",
           boxSizing: "border-box",
