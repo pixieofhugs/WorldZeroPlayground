@@ -4304,7 +4304,17 @@
      ("revealed by a shimmer, never by a colour") holding on the type too.
 
      Specificity is what makes this win, not order: (0,2,0) against the
-     utility's (0,1,0), so it holds wherever Tailwind emits the layers. */
+     utility's (0,1,0), so it holds wherever Tailwind emits the layers.
+
+     ONE SURPRISE IN THE BUILT SHEET, recorded so nobody re-derives it: naming
+     `.font-display` in a selector makes this rule part of what `@apply
+     font-display` copies. The base `h1…h4` rule and `.markdown-preview h1…h3`
+     each `@apply` it, so the build also emits `[data-rail-face] h1`, `…h2` and
+     so on — eight selectors, merged into two rules. They are inert everywhere
+     but inside the rail, which renders no heading element and no markdown; and
+     inside the rail they say the same thing this rule does. Left alone rather
+     than dodged with a private attribute: the copies are correct, and the
+     alternative is a second name for "the rail's display type". */
   [data-rail-face] .font-display {
     font-family: var(--rail-face);
   }

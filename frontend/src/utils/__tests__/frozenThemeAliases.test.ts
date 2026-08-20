@@ -75,6 +75,17 @@ const CSS = readFileSync(
  * It leaves this list by ceasing to be an alias at all — a reminder that the
  * sweep tracks a SHAPE, not a set.
  *
+ * A fourth family joined in #2361: **the card FRAME colour**
+ * (`--faction-{key}-card-border`). Eight of them were minted so a shared
+ * surface — the desktop rail is the first — can ask every faction for its frame
+ * in one name instead of reaching into eight private namespaces
+ * (`--everymen-frame`, `--faction-coven-slip-border`, `--faction-ua-card-frame`,
+ * …). Five of the eight land here and three do not, and the split is the sweep
+ * working rather than an inconsistency: WOW's chronicle gold, S.N.I.D.E.'s acid
+ * and Singularity's terminal frame are theme-INVARIANT, so those three aliases
+ * have no flipping referent to freeze. The alias IS the contract, same ruling as
+ * `--faction-everymen-card-bg`.
+ *
  * `--faction-wow-stamp-bg` arrived from the other direction. #1827 (PR #1838)
  * restated it under `[data-theme="dark"]` as the one instance that demonstrably
  * rendered in a nested wrapper, which took it out of the sweep by making it not
@@ -82,7 +93,9 @@ const CSS = readFileSync(
  * and the plaque rejoins the list it was always a member of.
  */
 const KNOWN_ROOT_ONLY_ALIASES = [
+  "--faction-coven-card-border",
   "--faction-default-aurora",
+  "--faction-default-card-border",
   "--faction-default-eyebrow-rainbow",
   "--faction-default-rainbow",
   "--faction-default-rainbow-conic",
@@ -98,14 +111,17 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // once the ground moved that hazard went with it.
   "--faction-ephemerists-card-accent",
   "--faction-ephemerists-card-bg",
+  "--faction-ephemerists-card-border",
   // #2141 gave `-plate-brass-light` a light half, which turned the Ephemerists
   // graticule into an alias over a flipping referent. This sweep is what said
   // so; the grid moved to `:root, [data-theme]` in the same change.
   "--faction-ephemerists-grid",
   "--faction-everymen-card-accent",
   "--faction-everymen-card-bg",
+  "--faction-everymen-card-border",
   "--faction-everymen-card-muted",
   "--faction-everymen-card-text",
+  "--faction-ua-card-border",
   "--faction-ua-card-chip-ink",
   "--faction-ua-card-enso",
   "--faction-ua-card-lotus",
