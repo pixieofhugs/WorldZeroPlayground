@@ -72,6 +72,15 @@ const PLATE = 'var(--faction-snide-ink)'
  *  skins' 14, because this row's rule is tight and the type is condensed. */
 const ROW_SIGIL = 13
 
+/** The ransom card's dot field. A DECIDED KEEP (#2139 ②), and the reason is the
+ *  ground: the only surface that mounts it is {@link RansomCard}, filled with
+ *  `--faction-snide-ink`, which has ONE value in index.css. So acid at 9% is
+ *  theme-correct in both cascades — the medallion's case in #2343 and not the
+ *  hero's, where an acid alpha over a ground that had started flipping painted
+ *  nothing. It is invisible to the colour arm because a module constant reaches
+ *  the style object as an `Identifier` (Gap D wearing paint), and #2139 ruled
+ *  that local const-tracking is not worth the rule's complexity for a handful of
+ *  sites. Move this onto a flipping ground and it becomes a defect again. */
 const HALFTONE = 'radial-gradient(rgba(182,255,46,0.09) 32%, transparent 34%)'
 /** The flyposter's flat offset register (#1609) — zero blur, and its strength is
  *  this file's drawing, so only the ink is a token. This one was invisible to the

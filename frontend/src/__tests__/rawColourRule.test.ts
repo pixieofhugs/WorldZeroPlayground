@@ -85,6 +85,26 @@ describe('local/no-raw-colour-values reports raw colour', () => {
     expect(await reports("export const s = { background: 'rgba(10,26,14,1)' }")).toBe(true)
   })
 
+  /**
+   * #2139. `filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25))` launders paint past
+   * a rule that reads property NAMES: `filter` was not a `COLOUR_PROP` and does
+   * not end in `Color`, so four sites went unreported and two of them sat in
+   * files on no list at all. A cast shadow is precisely where a non-flipping
+   * colour goes wrong, which is why #2007 had to mint `--color-cast-shadow`.
+   *
+   * The accepted cost, pinned here so nobody argues it back out: the value
+   * carries GEOMETRY (blur, offset) beside the paint, so the rule flags a string
+   * it can only partly judge. That does not contradict this repo's three rulings
+   * that geometry is not paint's business — those are about where a VALUE lives,
+   * and this is about what a MATCHER reads. The rule reports the declaration; a
+   * reviewer resolves which half is at fault.
+   */
+  it('flags a colour laundered through filter: drop-shadow()', async () => {
+    expect(
+      await reports("export const s = { filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }"),
+    ).toBe(true)
+  })
+
   it('flags a colour laundered through a ternary, as the px arm does', async () => {
     expect(
       await reports("export const s = (w: boolean) => ({ background: w ? 'rgba(234,179,8,0.08)' : 'transparent' })"),
@@ -111,6 +131,20 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
     expect(await lint('export const A = () => <p className="text-ink bg-surface border-border" />')).toEqual(
       [],
     )
+  })
+
+  it('says nothing about a filter that carries no paint of its own', async () => {
+    // The other half of #2139's widening. `filter` is a geometry-AND-paint
+    // property, and the report only ever fires on the paint: a blur, or a
+    // drop-shadow struck from a token, must stay silent. Otherwise the arm
+    // becomes a reason to stop reaching for `filter`, which is the shape
+    // `SnideProfileBody`'s credential frame needs — a shadow that follows the
+    // card's cut edge rather than its box.
+    expect(
+      await lint(
+        "export const s = { filter: 'blur(4px) drop-shadow(2px 2px 0 var(--color-print-offset))' }",
+      ),
+    ).toEqual([])
   })
 
   it('says nothing about a raw length — that is the OTHER arm, on its own list', async () => {

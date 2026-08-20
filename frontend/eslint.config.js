@@ -255,6 +255,24 @@ const COLOUR_PROPS = new Set([
   'fill',
   'stroke',
   'caretColor',
+  // `filter` (#2139). Not paint's own property, but `drop-shadow()` is the one
+  // filter function that takes a colour, and it was a laundering route out of
+  // this arm: four sites reached it, two of them in files on no list at all
+  // (`SnideProfileBody`'s credential frame, and the `shadow=` prop `TaskCrown`
+  // applies as a filter). A cast shadow is the worst place for a frozen colour
+  // — `--color-overlay-strong` at 0.25 is a correct DIM over #13121a and an
+  // INVISIBLE shadow over it, which is why #2007 minted `--color-cast-shadow`
+  // with a dark lift.
+  //
+  // ACCEPTED COST, so nobody argues it back out: the value carries GEOMETRY
+  // (blur, offset) beside the paint, so the rule flags a string it can only
+  // partly judge. That does not contradict this repo's three rulings that
+  // geometry is not paint's business (group 2 kept blur and offset at the call
+  // site; the print token keeps strength there; `shared.tsx`'s byline rule is a
+  // percentage of `currentColor`) — those are about where a VALUE lives, and
+  // this is about what a MATCHER reads. The rule reports the declaration; a
+  // reviewer resolves which half is at fault.
+  'filter',
 ])
 const isColourProp = (name) =>
   COLOUR_PROPS.has(name) || /Color$/.test(name) || name.startsWith('--')

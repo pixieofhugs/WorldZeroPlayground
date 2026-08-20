@@ -77,7 +77,15 @@ function heading(title: string, eyebrow: string): ReactNode {
 const dress: ProfileDress = {
   slug: 'everymen',
   pageBackground: PAPER,
-  pageOverlay: 'radial-gradient(rgba(34,26,18,0.05) 1px, transparent 1px)',
+  // The dot-grid paper texture (#2139). It was a frozen `rgba(34,26,18,0.05)` —
+  // `--everymen-ink`'s LIGHT value spelled out — laundered past the colour arm
+  // because `pageOverlay` is this skin's own prop name and not a style key the
+  // rule judges. The page under it is `PAPER`, which FLIPS (#ece1c6 -> #221a16),
+  // so by night the grain was near-black on near-black and painted nothing:
+  // 1.11:1 in light, 1.00:1 in dark. `PAPER_TEXT` is the ink that flips WITH the
+  // paper, and it is byte-identical to the old literal in light, so day is
+  // untouched and night gets the same grain back: 1.11:1 in both cascades.
+  pageOverlay: `radial-gradient(color-mix(in srgb, ${PAPER_TEXT} 5%, transparent) 1px, transparent 1px)`,
   // The page and both panels are the PAPER (#2227), so the skin's ink is the
   // one that flips with it. `kit.ink` lands in three places: the praxis empty
   // state, the badges heading — which stands straight on the page — and the
@@ -127,7 +135,13 @@ const dress: ProfileDress = {
     maxWidth: 440,
   },
   barFill: `linear-gradient(90deg, ${GOLD}, ${RED})`,
-  barTrack: 'rgba(255,255,255,0.16)',
+  // The unfilled remainder of the progression bar, on the panel's INK slab
+  // (near-black in both cascades, so the old bare white was theme-correct — it
+  // was a raw literal, not a dark-mode defect). CREAM is this family's
+  // invariant light, the one the panel already inks with, and at 16% the
+  // composite moves under a point: the track reads 1.53:1 against the slab in
+  // light and 1.45:1 in dark, where the white read 1.59 / 1.50.
+  barTrack: `color-mix(in srgb, ${CREAM} 16%, transparent)`,
   sectionHeading: heading,
   // Both panels stand on the paper page, so they take the paper (#2227). The
   // cream is an ornament ink here — the laurel's centre and the badge disc's
