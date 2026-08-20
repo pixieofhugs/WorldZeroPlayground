@@ -690,6 +690,76 @@
   --faction-default-rainbow-conic: conic-gradient(var(--faction-default-stop-1) 0%, var(--faction-default-stop-2) 14%, var(--faction-default-stop-3) 28%, var(--faction-default-stop-4) 43%, var(--faction-default-stop-5) 57%, var(--faction-default-stop-6) 72%, var(--faction-default-stop-7) 86%, var(--faction-default-stop-1) 100%);
 }
 
+/* ══ THE CARD FRAME, SAID IN TOKENS (#2361) ══════════════════════════════════
+   The `--faction-{key}-card-*` family covered a card's PAINT — sheet, ink,
+   accent, muted, display face — and nothing about its FRAME. The frame radius
+   existed only as English, in `praxisCard/desktop/shared.tsx::frameBase`:
+
+     "the prototype's frame radius is per-faction (Snide 0 · Everymen 2 · UA 7 ·
+      Singularity/Ephemerists 8 · chronicle 9 · Default/Albescent 10 · Coven's
+      sticker 16) … Each archetype sets its own."
+
+   A comment is not readable by a component. Any surface that wants to wear a
+   faction's shape — the desktop rail is the first — had either to restate the
+   list or to flatten it, and flattening it is the exact thing that comment
+   exists to forbid. So the list becomes two token families, and the values are
+   TRANSCRIBED from it rather than re-decided.
+
+   EIGHT KEYS COVER NINE VIEWER FACTIONS. `albescent` and `na` both resolve to
+   `default` through `CSS_KEY` (utils/factions.ts), so `default` IS their row —
+   which is also what the comment says, "Default/Albescent 10". Albescent gets
+   no family of its own here on purpose: ADR-0048 makes its card the Default
+   sheet plus two motion overlays, "revealed by a shimmer, never by a colour",
+   and a shape of its own would be a second way to pick it out of a line-up.
+
+   THE PRAXIS CARDS HAVE NOT MOVED ONTO THESE and #2361 rules that out until it
+   is provably a no-op. It is not: `EphemeristsPraxisCard` draws NO radius at
+   all — its own docblock lists that as a deliberate deviation, "the design's
+   `border-radius` is 0 here (the design draws none), against the 8 the codex
+   folio used". So `-card-radius: 8` below is the documented list, and reading
+   it from that card would repaint it. The divergence is recorded rather than
+   silently resolved; deciding which of the two is right is a design question,
+   not a token question.
+
+   The radii are literals with no dark half, so `:root` is their whole story. */
+:root {
+  --faction-snide-card-radius: 0;
+  --faction-everymen-card-radius: 2px;
+  --faction-ua-card-radius: 7px;
+  --faction-singularity-card-radius: 8px;
+  /* 8 per the list; the shipped praxis card draws 0 — see the note above. */
+  --faction-ephemerists-card-radius: 8px;
+  --faction-wow-card-radius: 9px; /* "chronicle" in the list */
+  --faction-default-card-radius: 10px; /* Default AND Albescent */
+  --faction-coven-card-radius: 16px; /* the slip's die-cut corner */
+}
+
+/* The frame's COLOUR, read off the same eight cards' `border` declarations —
+   every one of these was already a token, just one per faction in a namespace
+   of its own (`--everymen-frame`, `--faction-coven-slip-border`, …). This is
+   the one NAME a shared surface can ask all eight for.
+
+   A colour, not a `border` shorthand, for the reason the rest of the family is
+   colours: the rail reads it four ways — a panel edge, a row rule, a pill edge
+   and a gradient stop in the header rule — and only one of those takes a
+   shorthand. Per-faction border WEIGHT (1 / 1.5 / 2px on the cards) is not
+   minted: it is chrome rather than shape, and #2361 puts chrome out of scope.
+
+   Every one of these is an ALIAS over a referent with a dark half, so the block
+   is theme-scoped (#1839) — declared at a bare `:root` it would resolve once on
+   `<html>` and inherit its already-light value into a nested `data-theme`
+   wrapper, half-flipping the surface. */
+:root, [data-theme] {
+  --faction-ua-card-border: var(--faction-ua-card-frame);
+  --faction-wow-card-border: var(--faction-wow-chronicle-border);
+  --faction-everymen-card-border: var(--everymen-frame);
+  --faction-coven-card-border: var(--faction-coven-slip-border);
+  --faction-snide-card-border: var(--faction-snide-acid-deep);
+  --faction-ephemerists-card-border: var(--faction-ephemerists-plate-brass);
+  --faction-singularity-card-border: var(--faction-singularity-frame);
+  --faction-default-card-border: var(--faction-default-card-line);
+}
+
 :root {
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
@@ -4215,6 +4285,38 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     backdrop-filter: blur(var(--card-blur));
+  }
+
+  /* ── THE DESKTOP RAIL'S DISPLAY FACE (#2361) ──
+     Colour, radius and frame reach the rail as custom properties with a
+     fallback (`var(--rail-ink, var(--color-text-primary))`, declared by
+     `layout/Sidebar.tsx::railFaceVars`), so an unaffiliated viewer is
+     pixel-identical because nothing is declared at all. The FACE cannot use
+     that shape: `.font-display` is a Tailwind utility with the stack written
+     into it, and there is no fallback slot in a utility to hang the na value
+     on. Restating the stack here would be a second copy of it, drifting.
+
+     So the switch is the ATTRIBUTE, and it is set only for a viewer whose
+     faction has a `-card-font` at all. Unset, this rule does not match and the
+     utility is untouched; set, `--rail-face` is guaranteed declared beside it.
+     `na` and `albescent` both resolve to `default` in `CSS_KEY`, so neither
+     ever carries the attribute — which is ADR-0048's ruling for Albescent
+     ("revealed by a shimmer, never by a colour") holding on the type too.
+
+     Specificity is what makes this win, not order: (0,2,0) against the
+     utility's (0,1,0), so it holds wherever Tailwind emits the layers.
+
+     ONE SURPRISE IN THE BUILT SHEET, recorded so nobody re-derives it: naming
+     `.font-display` in a selector makes this rule part of what `@apply
+     font-display` copies. The base `h1…h4` rule and `.markdown-preview h1…h3`
+     each `@apply` it, so the build also emits `[data-rail-face] h1`, `…h2` and
+     so on — eight selectors, merged into two rules. They are inert everywhere
+     but inside the rail, which renders no heading element and no markdown; and
+     inside the rail they say the same thing this rule does. Left alone rather
+     than dodged with a private attribute: the copies are correct, and the
+     alternative is a second name for "the rail's display type". */
+  [data-rail-face] .font-display {
+    font-family: var(--rail-face);
   }
 
   /* ── Task card shared patterns ── */

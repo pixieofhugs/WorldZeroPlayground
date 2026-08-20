@@ -1986,6 +1986,44 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * `pages/players/__tests__/playersFactionInk.test.tsx`.
  */
 
+/**
+ * #2361 — the desktop rail's WELL, the one ground the repoint invented.
+ *
+ * The rail now takes the viewer's faction, and every ink it carries is a
+ * `--faction-{key}-card-*` on `--faction-{key}-card-bg`, which `CARD_PAIRS`
+ * above already measures for all eight keys in both cascades. One ground is not
+ * covered there, because it is not a token: `--rail-well`, the recessed fill
+ * under the `EDIT` pill and both progress tracks. The rail used to fill those
+ * with the app's `--color-bg-surface-alt`, a neutral chosen against the app's
+ * page — put it on S.N.I.D.E.'s photocopier ink and it is a pale smear on
+ * near-black. So a themed rail composes its well from the SHEET'S OWN INK at
+ * 10% (`layout/Sidebar.tsx::railFaceVars`), which lands light on a light sheet
+ * and lifted on a dark one without eight more tokens for one consumer.
+ *
+ * A wash made of the ink can only ever pull the ground toward the ink, so it
+ * only ever TIGHTENS the reading — the exact shape the `Veil` type exists for,
+ * and the reason "it clears on the bare sheet" is not the answer.
+ *
+ * ONLY THE BODY INK IS MEASURED, because only the body ink is painted on it:
+ * the pill carries `--rail-ink` and the two tracks carry no text at all. That
+ * is a live constraint, not an omission — `card-muted` on this well reads 3.94
+ * on WOW's cream, 4.19 on the broadsheet and 4.31 on UA's dusk sheet, so the
+ * quiet tier may not move onto it without the well thinning first. WOW's muted
+ * is 4.76 on the bare cream, so no non-zero veil of its own ink clears AA there.
+ *
+ * `default` is absent, and that absence is the na promise: an unaffiliated (or
+ * Albescent) viewer declares no locals at all, so their well is still the
+ * app's `--color-bg-surface-alt` and every neutral pairing on it is untouched.
+ */
+const RAIL_WELL_ALPHA = 0.1;
+
+const RAIL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
+  what: `${key} rail ink on the rail well`,
+  surface: `--faction-${key}-card-bg`,
+  veil: { token: `--faction-${key}-card-text`, alpha: RAIL_WELL_ALPHA },
+  text: `--faction-${key}-card-text`,
+}));
+
 const PAIRS: Pair[] = [
   ...CARD_PAIRS,
   ...FILL_PAIRS,
@@ -1995,6 +2033,7 @@ const PAIRS: Pair[] = [
   ...PRAXIS_CARD_PAIRS,
   ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
+  ...RAIL_PAIRS,
 ];
 
 /**

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
-import { factionCssVar, factionName } from '../../utils/factions'
+import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import type { PraxisCardOut } from '../../api/praxis'
@@ -56,6 +56,79 @@ function sampledSpectrum(index: number): string {
 }
 
 /**
+ * THE RAIL WEARS THE VIEWER'S FACTION (#2361), AS A SEAM RATHER THAN A BRANCH.
+ *
+ * The rail was dressed in the na kit for every viewer: `--color-bg-surface`
+ * panels, the three global text tiers, and the unaffiliated spectrum on the
+ * hairline, the avatar ring and both tracks. True for an unaffiliated player,
+ * wrong for the other eight — and its own comment asserted the point it got
+ * wrong ("the rainbow ring and the whole rail already say unaffiliated").
+ *
+ * ONE RAIL, NOT EIGHT ARCHETYPES. That is the owner's ruling on shape, taken
+ * "for now, but I reserve the right to go for B after a visual check" — so this
+ * is a first pass whose job is to be LOOKED at, and per-faction CHROME (the
+ * Ephemerists' cornice, S.N.I.D.E.'s wall, Coven's slip corners) is deliberately
+ * absent. A faction that reads flat without its chrome is evidence for that
+ * conversation, not a reason to start it here.
+ *
+ * WHY A SEAM. Eight locals are declared once, on the `<aside>`, and every style
+ * below reads one of them THROUGH A FALLBACK: `var(--rail-ink,
+ * var(--color-text-primary))`. Three things fall out of that shape and all
+ * three are why it was chosen over threading a slug down:
+ *
+ *  1. AN UNAFFILIATED VIEWER IS PIXEL-IDENTICAL BY CONSTRUCTION, which is the
+ *     acceptance criterion. For `na` — and for `albescent`, and for null, and
+ *     for a slug the server invents tomorrow — this function returns `{}`. Not
+ *     one custom property is declared, so every fallback below is the value
+ *     that shipped, byte for byte. There is no second render path to keep in
+ *     step and nothing to measure twice.
+ *  2. The module-level style constants stay constants. `panelStyle` is an
+ *     EXPORT (`SidebarHandle` borrows it), so making them per-viewer functions
+ *     would have changed a contract outside this file.
+ *  3. The fallback is per-SITE, which is how three neutral ink tiers survive a
+ *     family that has two. `--rail-quiet` unset reads `--color-text-secondary`
+ *     at a heading and `--color-text-tertiary` at a timestamp; set, both take
+ *     `card-muted`.
+ *
+ * ALBESCENT TAKES THE na RAIL AND THAT IS THE DESIGN, not a gap.
+ * `isKnownFaction` is false for it because `CSS_KEY` maps it to `default`
+ * (#783), and ADR-0048 makes its praxis card the Default sheet plus two motion
+ * overlays — "revealed by a shimmer, never by a colour, a repaint in
+ * Albescent's own hues would put it back in the spectrum and un-hide it". A
+ * colour family minted for it here would be that repaint, one surface over.
+ *
+ * ponytail: two of the eight locals are COMPOSED here rather than read from a
+ * token, because no per-faction token says them. `--rail-well` is the sheet's
+ * own ink at 10% — a wash that lands light on a light sheet and lifted on a
+ * dark one, so one expression serves all eight rather than eight `-well`
+ * tokens for one consumer; and `--rail-spectrum` is a ramp of the faction's
+ * spine hue, standing where the unaffiliated ramp stands. If the archetype
+ * conversation happens, both become the archetype's business.
+ */
+function railFaceVars(slug: string | null | undefined): CSSProperties {
+  if (!isKnownFaction(slug)) return {}
+  const hue = factionCssVar(slug)
+  const ink = factionCssVar(slug, 'card-text')
+  return {
+    '--rail-paper': factionCssVar(slug, 'card-bg'),
+    '--rail-ink': ink,
+    '--rail-quiet': factionCssVar(slug, 'card-muted'),
+    '--rail-line': factionCssVar(slug, 'card-border'),
+    '--rail-radius': factionCssVar(slug, 'card-radius'),
+    '--rail-face': factionCssVar(slug, 'card-font'),
+    // 10% of the sheet's own ink: a well on the cream reads as a light warm
+    // grey, the same expression on S.N.I.D.E.'s photocopier ink reads as a
+    // lifted black. Measured as a VEIL in factionContrast.test.ts, because a
+    // wash made of the ink can only ever tighten the ink's own reading.
+    '--rail-well': `color-mix(in srgb, ${ink} 10%, transparent)`,
+    // Always an IMAGE, never a colour: two of the four sites read this as
+    // `background-image` under a `background-size` window, and a flat colour
+    // is not a valid image. na's fallback is a gradient for the same reason.
+    '--rail-spectrum': `linear-gradient(90deg, color-mix(in srgb, ${hue} 45%, transparent), ${hue})`,
+  } as CSSProperties
+}
+
+/**
  * Each reorderable panel's heading key.
  *
  * A LOOKUP of whole literal keys, never a `sidebar.${id}.heading` template: a
@@ -82,15 +155,15 @@ const identityActionStyle: CSSProperties = {
   boxSizing: 'border-box',
   padding: '0 var(--space-lg)',
   borderRadius: 999,
-  border: '1px solid var(--color-border-strong)',
-  background: 'var(--color-bg-surface-alt)',
+  border: '1px solid var(--rail-line, var(--color-border-strong))',
+  background: 'var(--rail-well, var(--color-bg-surface-alt))',
   fontFamily: 'var(--font-body)',
   // --text-md, not .eyebrow's --text-sm: a 44px pill wants a label a reader can
   // land on, and this is the size the bare caps it replaces already read at.
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
-  color: 'var(--color-text-primary)',
+  color: 'var(--rail-ink, var(--color-text-primary))',
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 120ms ease',
@@ -102,17 +175,23 @@ const identityMetaStyle: CSSProperties = {
   fontSize: 'var(--text-base)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: 'var(--color-text-secondary)',
+  color: 'var(--rail-quiet, var(--color-text-secondary))',
 }
 
-/** Shared panel shell for the redesigned sidebar (unaffiliated rainbow style).
- *  Exported so the fold-away handle (#1191) reads as part of the rail. */
+/** Shared panel shell for the rail. The three properties that carry the
+ *  viewer's faction read the seam (#2361): the sheet, the frame colour and the
+ *  per-faction frame RADIUS, which was English in `praxisCard/desktop/shared.
+ *  tsx` until `--faction-{key}-card-radius` was minted for it.
+ *
+ *  Exported so the fold-away handle (#1191) reads as part of the rail. The
+ *  handle renders OUTSIDE `#wz-sidebar`, so no local reaches it and it keeps
+ *  the neutral chrome it ships with today, for every viewer. */
 export const panelStyle: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
-  background: 'var(--color-bg-surface)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-xl)',
+  background: 'var(--rail-paper, var(--color-bg-surface))',
+  border: '1px solid var(--rail-line, var(--color-border))',
+  borderRadius: 'var(--rail-radius, var(--radius-xl))',
   padding: 'var(--space-lg)',
 }
 
@@ -121,7 +200,7 @@ const sectionLabel: CSSProperties = {
   fontSize: 'var(--text-base)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
-  color: 'var(--color-text-secondary)',
+  color: 'var(--rail-quiet, var(--color-text-secondary))',
 }
 
 /** The rule that fades out to the right, in "LABEL ——————". Decorative. */
@@ -132,7 +211,8 @@ function HeaderRule() {
       style={{
         flex: 1,
         height: 1,
-        background: 'linear-gradient(90deg, var(--color-border-strong), transparent)',
+        background:
+          'linear-gradient(90deg, var(--rail-line, var(--color-border-strong)), transparent)',
       }}
     />
   )
@@ -163,7 +243,7 @@ const CHEVRON_ROTATION_CLOSED = 'rotate(0deg)'
 const gripButtonStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  color: 'var(--color-text-tertiary)',
+  color: 'var(--rail-quiet, var(--color-text-tertiary))',
   background: 'none',
   border: 'none',
   padding: 0,
@@ -175,7 +255,7 @@ const disclosureButtonStyle: CSSProperties = {
   border: 'none',
   padding: 0,
   cursor: 'pointer',
-  color: 'var(--color-text-secondary)',
+  color: 'var(--rail-quiet, var(--color-text-secondary))',
   fontSize: 'var(--text-content)',
   lineHeight: 1,
 }
@@ -288,7 +368,7 @@ function SidebarPanel({
         ...panelStyle,
         // The drop-target mark: the panel's own hairline, brightened. It is the
         // border it already has rather than a new outline, so nothing shifts.
-        ...(dropTarget ? { borderColor: 'var(--color-border-strong)' } : null),
+        ...(dropTarget ? { borderColor: 'var(--rail-line, var(--color-border-strong))' } : null),
         ...(dragging ? { opacity: 0.5 } : null),
       }}
     >
@@ -373,7 +453,10 @@ function ActiveTasksBody({
   return (
     <>
       {activeTasks.length === 0 ? (
-        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
+        <p
+          className="font-body content-text"
+          style={{ color: 'var(--rail-quiet, var(--color-text-tertiary))' }}
+        >
           {t('sidebar.activeTasks.empty')}
         </p>
       ) : (
@@ -383,7 +466,7 @@ function ActiveTasksBody({
               <Link
                 to={`/praxis/${praxis.id}/edit`}
                 className="font-display min-w-0"
-                style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--rail-ink, var(--color-text-primary))', textDecoration: 'none' }}
               >
                 {praxis.task_title}
               </Link>
@@ -394,9 +477,12 @@ function ActiveTasksBody({
                     fontSize: 'var(--text-md)',
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
-                    color: 'var(--faction-default-card-muted)',
+                    // The na kit's muted ink was the fallback and stays it: the
+                    // pill is the rail's own annotation, so it takes the rail's
+                    // quiet tier rather than the row's task faction (#2361).
+                    color: 'var(--rail-quiet, var(--faction-default-card-muted))',
                     padding: 'var(--space-xs) var(--space-sm)',
-                    border: '1px solid var(--color-border-strong)',
+                    border: '1px solid var(--rail-line, var(--color-border-strong))',
                     borderRadius: 999,
                   }}
                 >
@@ -427,7 +513,7 @@ function ActiveTasksBody({
           also retires the old drift's un-gated `background-size: 200%`, a
           permanently half-drawn spectrum for anyone who reduced motion. */}
       <div className="mt-4">
-        <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)' }}>
+        <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--rail-well, var(--color-bg-surface-alt))' }}>
           <div
             style={{
               height: '100%',
@@ -441,8 +527,14 @@ function ActiveTasksBody({
                  track's far end), not -rainbow-conic (angular), not
                  -rainbow-vertical (180deg, for a tall thin rule) and not
                  -ring (hard wedges). With no repeat and no motion the ramp's
-                 red↔magenta seam never comes into view. */
-              backgroundImage: 'var(--faction-default-rainbow)',
+                 red↔magenta seam never comes into view.
+
+                 A MEMBER SEES THE SAME WINDOW ONTO THEIR OWN HUE (#2361): the
+                 seam's fallback IS this token, so every word above holds
+                 unchanged for an unaffiliated viewer, and a member's ramp is a
+                 single 90deg pass too — one stop, not seven, which the window
+                 reads exactly as happily. */
+              backgroundImage: 'var(--rail-spectrum, var(--faction-default-rainbow))',
               backgroundRepeat: 'no-repeat',
               /* Scale the gradient up by however much the fill is shrunk, so a
                  fifth-width fill reveals the first fifth of one rainbow rather
@@ -462,7 +554,7 @@ function ActiveTasksBody({
         </div>
         <p
           className="font-body text-right"
-          style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 'var(--space-sm)' }}
+          style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--rail-quiet, var(--color-text-secondary))', marginTop: 'var(--space-sm)' }}
         >
           {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
         </p>
@@ -479,7 +571,10 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
   return (
     <>
       {recentActivity.length === 0 ? (
-        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
+        <p
+          className="font-body content-text"
+          style={{ color: 'var(--rail-quiet, var(--color-text-tertiary))' }}
+        >
           {t('sidebar.recentActivity.empty')}
         </p>
       ) : (
@@ -512,7 +607,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
             const titleStyle: CSSProperties = {
               fontSize: 'var(--text-content)',
               lineHeight: 1.3,
-              color: 'var(--color-text-primary)',
+              color: 'var(--rail-ink, var(--color-text-primary))',
               textDecoration: 'none',
             }
             return (
@@ -521,7 +616,9 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                 className="flex gap-3"
                 style={{
                   padding: 'var(--space-md) 0',
-                  borderBottom: isLast ? undefined : '1px solid var(--color-border)',
+                  borderBottom: isLast
+                    ? undefined
+                    : '1px solid var(--rail-line, var(--color-border))',
                 }}
               >
                 {/* The row's FACTION, not a decoration shaped like a signal
@@ -560,7 +657,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                       fontSize: 'var(--text-md)',
                       letterSpacing: '0.18em',
                       textTransform: 'uppercase',
-                      color: 'var(--color-text-secondary)',
+                      color: 'var(--rail-quiet, var(--color-text-secondary))',
                       marginBottom: 'var(--space-xs)',
                     }}
                   >
@@ -575,7 +672,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                       {headline}
                     </div>
                   )}
-                  <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)' }}>
+                  <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--rail-quiet, var(--color-text-tertiary))' }}>
                     {relativeTime(item.timestamp)}
                     {row?.points ? ` · ${row.points}` : ''}
                   </div>
@@ -600,7 +697,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
             fontSize: 'var(--text-base)',
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
-            color: 'var(--color-text-secondary)',
+            color: 'var(--rail-quiet, var(--color-text-secondary))',
             textDecoration: 'none',
           }}
         >
@@ -612,9 +709,16 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
 }
 
 /**
- * Always-on right sidebar (Style Guide §4.2), redesigned into the unaffiliated
- * "all paths" rainbow-spectrum identity: character card + in-progress tasks +
- * recent activity.
+ * Always-on right sidebar (Style Guide §4.2): character card + in-progress
+ * tasks + recent activity.
+ *
+ * IT WEARS THE VIEWER'S FACTION (#2361)
+ * -------------------------------------
+ * It was built to the unaffiliated "all paths" rainbow-spectrum identity and
+ * wore it for every viewer. It now takes the viewer's own sheet, inks, frame
+ * radius and display face through the seam `railFaceVars` declares — see that
+ * function for the whole argument, including why an unaffiliated (and an
+ * Albescent) viewer is pixel-identical to what shipped before it.
  *
  * Those panels used to be three separate fetches made here, each one waiting on
  * `/auth/me`. They are one request now, made before this component exists — see
@@ -705,15 +809,33 @@ export default function Sidebar() {
     'recent-activity': <RecentActivityBody recentActivity={recentActivity} />,
   }
 
+  // The whole rail's dress, declared once (#2361). `{}` for an unaffiliated or
+  // Albescent viewer, which is what makes their rail byte-identical.
+  const railFace = railFaceVars(character?.faction_slug)
+  const wearsFactionFace = Object.keys(railFace).length > 0
+
   return (
     // `id` is the target of the fold-away handle's `aria-controls` (#1191).
-    <aside id="wz-sidebar" className="flex flex-col gap-4 w-full">
+    <aside
+      id="wz-sidebar"
+      className="flex flex-col gap-4 w-full"
+      // The DISPLAY FACE is the one thing the seam cannot carry on its own:
+      // `.font-display` is a Tailwind utility with a hardcoded stack, so a
+      // `var()` fallback has nowhere to live. The attribute is the switch —
+      // absent for an unaffiliated viewer, so the one rule in index.css that
+      // repoints it (`[data-rail-face] .font-display`) never matches and the
+      // utility's stack is untouched.
+      {...(wearsFactionFace ? { 'data-rail-face': '' } : null)}
+      style={railFace}
+    >
       {/* ── Character Card ── */}
       {character ? (
         <section style={panelStyle}>
-          {/* Signature rainbow hairline — this panel only. Kept through the
-              identity redesign (#1553): the hairline, the avatar ring and the
-              level track are one mark at three scales. */}
+          {/* Signature hairline — this panel only. Kept through the identity
+              redesign (#1553): the hairline, the avatar ring and the level
+              track are one mark at three scales. Since #2361 it is one mark at
+              three scales in the VIEWER's colour — the unaffiliated spectrum
+              while the seam is unset, the member's own ramp once it is set. */}
           <span
             style={{
               position: 'absolute',
@@ -722,7 +844,7 @@ export default function Sidebar() {
               right: 0,
               height: 3,
               opacity: 0.9,
-              background: 'var(--faction-default-rainbow)',
+              background: 'var(--rail-spectrum, var(--faction-default-rainbow))',
             }}
           />
 
@@ -742,14 +864,17 @@ export default function Sidebar() {
             </Link>
           </div>
 
-          {/* ── Identity: avatar + name + level. No faction word — the rainbow
-                 ring and the whole rail already say unaffiliated, and no points
-                 figure either; there is exactly one of those, below. ── */}
+          {/* ── Identity: avatar + name + level. Still no faction WORD, and
+                 still no points figure; there is exactly one of those, below.
+                 The ring said "unaffiliated" for every viewer until #2361 — it
+                 says the viewer's own faction now, and only an unaffiliated or
+                 Albescent viewer keeps the all-paths spectrum. ── */}
           <div className="flex items-center gap-3.5 mb-4">
-            {/* avatar in a rainbow ring (unaffiliated / all-paths mark) */}
+            {/* avatar in the viewer's ring — the na conic while the seam is
+                unset, the member's own ramp once it is set */}
             <div
               className="shrink-0 rounded-full"
-              style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow-conic)' }}
+              style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--rail-spectrum, var(--faction-default-rainbow-conic))' }}
             >
               {character.avatar_url ? (
                 <img
@@ -771,7 +896,7 @@ export default function Sidebar() {
               <Link
                 to={`/characters/${character.id}`}
                 className="font-display italic block truncate"
-                style={{ fontSize: 'var(--text-heading)', lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                style={{ fontSize: 'var(--text-heading)', lineHeight: 1.05, color: 'var(--rail-ink, var(--color-text-primary))', textDecoration: 'none' }}
               >
                 {character.display_name}
               </Link>
@@ -783,7 +908,7 @@ export default function Sidebar() {
                   fontSize: 'var(--text-base)',
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
-                  color: 'var(--color-text-secondary)',
+                  color: 'var(--rail-quiet, var(--color-text-secondary))',
                 }}
               >
                 {t('sidebar.characterCard.level', { level: character.level })}
@@ -795,7 +920,7 @@ export default function Sidebar() {
           <div className="flex items-baseline gap-2">
             <span
               className="font-display italic"
-              style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)' }}
+              style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--rail-ink, var(--color-text-primary))' }}
             >
               {character.score.toLocaleString()}
             </span>
@@ -806,13 +931,14 @@ export default function Sidebar() {
             </span>
           </div>
 
-          {/* ── The level track. The fill is the spectrum CLIPPED by the fill
-                 width — one full ramp read through a narrower window, so the
-                 mark is the same rainbow the hairline and the ring are. Not a
-                 solid colour, and not a token of its own. ── */}
+          {/* ── The level track. The fill is the ramp CLIPPED by the fill width
+                 — one full pass read through a narrower window, so the mark is
+                 the same one the hairline and the ring are. Not a solid colour,
+                 and not a token of its own: it reads the rail's spectrum seam,
+                 whose unset value is the unaffiliated ramp this always was. ── */}
           <div
             className="overflow-hidden"
-            style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)', marginTop: 'var(--space-md)' }}
+            style={{ height: 6, borderRadius: 999, background: 'var(--rail-well, var(--color-bg-surface-alt))', marginTop: 'var(--space-md)' }}
             {...(track
               ? {
                   role: 'progressbar',
@@ -832,7 +958,7 @@ export default function Sidebar() {
                 height: '100%',
                 width: `${track?.fillPercent ?? 0}%`,
                 borderRadius: 999,
-                background: 'var(--faction-default-rainbow)',
+                background: 'var(--rail-spectrum, var(--faction-default-rainbow))',
                 transition: 'width 300ms',
               }}
             />
