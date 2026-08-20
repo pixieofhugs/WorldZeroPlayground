@@ -153,7 +153,7 @@ const dress: ProfileDress = {
     'repeating-linear-gradient(45deg, var(--faction-snide-acid) 0 6px, var(--faction-snide-acid-deep) 6px 12px)',
   // Everymen's `barTrack` twin, on this skin's own ink slab. PAPER is the warm
   // xerox white this frame already spends as its light, and at 12% the track
-  // reads 1.35:1 against the slab where the bare white read 1.39:1 — one value
+  // reads 1.35:1 against the slab where the bare white read 1.38:1 — one value
   // each, both cascades, because S.N.I.D.E. does not flip.
   barTrack: `color-mix(in srgb, ${PAPER} 12%, transparent)`,
   sectionHeading: heading,

@@ -75,7 +75,8 @@ const ROW_SIGIL = 13
 /** The ransom card's dot field. A DECIDED KEEP (#2139 ②), and the reason is the
  *  ground: the only surface that mounts it is {@link RansomCard}, filled with
  *  `--faction-snide-ink`, which has ONE value in index.css. So acid at 9% is
- *  theme-correct in both cascades — the medallion's case in #2343 and not the
+ *  theme-correct in both cascades — 1.22:1 against that ink either way, which is
+ *  the dot screen doing its job — the medallion's case in #2343 and not the
  *  hero's, where an acid alpha over a ground that had started flipping painted
  *  nothing. It is invisible to the colour arm because a module constant reaches
  *  the style object as an `Identifier` (Gap D wearing paint), and #2139 ruled
