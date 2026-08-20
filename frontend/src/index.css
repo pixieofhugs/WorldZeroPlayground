@@ -5749,6 +5749,13 @@
  * THE DRIFT IS NOT HERE. It is `src/motion.ornament.css`, delivered past first
  * paint. Colour and layout may never defer; motion is exactly what that sheet
  * is for. */
+.spectrum-frame {
+  /* A floor, not an override — an inline `position` at the mount still wins.
+     Both mounts today set `relative` themselves; without this a third that
+     forgot would send the ring off to the nearest positioned ancestor, which is
+     a ring drawn around the wrong element rather than a missing one. */
+  position: relative;
+}
 .spectrum-frame::before {
   content: "";
   position: absolute;
