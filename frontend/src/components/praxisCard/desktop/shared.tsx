@@ -86,10 +86,12 @@ export const frameBase: CSSProperties = {
   minWidth: 280,
   boxSizing: "border-box",
   // NO borderRadius here on purpose. The prototype's frame radius is per-faction
-  // (Snide 0 · Everymen 2 · UA 7 · Singularity/Ephemerists 8 · chronicle 9 ·
+  // (Snide 0 · Everymen 2 · UA/Singularity/Ephemerists/chronicle 8 ·
   // Default/Albescent 10 · Coven's sticker 16). A shared value flattens the very
   // thing that distinguishes an evidence slab from a sticker. Each archetype sets
-  // its own.
+  // its own — UA and the chronicle by reading `--faction-{key}-card-radius`,
+  // which is this list said in tokens (#2361), collapsed to one middle rung by
+  // the owner's ruling on #2403.
 };
 
 /**
