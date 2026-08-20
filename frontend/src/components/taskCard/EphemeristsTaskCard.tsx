@@ -12,8 +12,8 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
-import EphemerisNet from "../factionMarks/EphemerisNet";
 import {
+  CardGravityField,
   CompassRose,
   Cornice,
   GLYPHS,
@@ -223,10 +223,21 @@ export default function EphemeristsTaskCard({
             that used to pin a 110px canvas for the glyph registers went with
             #2067, which is what makes the hero row rise ~75px. The paint and the
             disc-vs-band ruling live at `cardMasthead/factionBands`. */}
-        {/* 0.10, not the page's 0.17 (#2144's table). On a card the net sits
-            behind 12px body text rather than behind a solid fill, and at the
-            page's weight its lines cross letterforms. */}
-        <EphemerisNet opacity={0.1} />
+        {/* THE ORNAMENT, AND THE ALTERNATION (#2398, epic #2195). The kit's one
+            ornament is the GRAVITY FIELD, and it drops away on an ornamented
+            page ground — the branch is `CardGravityField`'s, shared with the
+            praxis card so the two cannot drift.
+
+            IT REPLACES THE CHART NET, which this card mounted at 0.10 (#2144's
+            card weight). The law's second clause is "either burst, or plain":
+            where a faction's ornament is not worn the ground is BARE, never a
+            substitute pattern — and the net is exactly that here, the PAGE's
+            drawing worn a second time on the card standing on it. Keeping both
+            would also have made the alternation a no-op on the one route it
+            exists for, since the card would still be busy after dropping the
+            field. The net is untouched everywhere it belongs: the backdrop, the
+            task detail page and the faction select card. */}
+        <CardGravityField width={size.cardWidth} />
 
         <EphemeristsBand />
         <Cornice flutes={40} />

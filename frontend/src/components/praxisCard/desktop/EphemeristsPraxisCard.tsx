@@ -2,6 +2,7 @@ import {
   BRASS,
   BRASS_LIGHT,
   CAPTION,
+  CardGravityField,
   Cornice,
   DECO,
   INK,
@@ -94,6 +95,15 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  */
 const LEAF_BLEED = "0 calc(var(--space-xl) * -1)";
 
+/**
+ * The field's NOMINAL width — `--praxis-card-basis`'s own default, which is what
+ * `frameBase` gives a card in a roomy column. The plate cannot state a width (one
+ * card, both form factors: ADR-0067), and the field does not need one measured:
+ * the well is set in from the right edge and the canvas anchored there, so a
+ * wider card scales the rows up rather than stranding the well mid-sheet.
+ */
+const FIELD_WIDTH = 394;
+
 export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
@@ -111,6 +121,18 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         transition: "background 150ms, color 150ms",
       }}
     >
+      {/* THE ORNAMENT, AND THE ALTERNATION (#2398, epic #2195). This card had no
+          ground at all: the kit's ornament is the GRAVITY FIELD (#1830) and the
+          composer was its only wearer. The law is that BOTH cards wear it — and
+          drop it on an ornamented page ground, which is the branch inside
+          `CardGravityField`, shared with the task card so the two cannot drift.
+
+          It sits at `z-index: 1`, under the band's 2 and the cornice's 3: a
+          GROUND, above the plate's fill and below every piece of chrome. Nothing
+          below this comment branches on the ground — the alternation never
+          reaches a frame, a masthead, a score stamp or a rune strip. */}
+      <CardGravityField width={FIELD_WIDTH} />
+
       {/* THE RESTRAINED MASTHEAD (#2185) — the same band `EphemeristsTaskCard`
           wears, mounted from `cardMasthead/factionBands`, with the cornice
           ruling it off exactly as it does there. */}

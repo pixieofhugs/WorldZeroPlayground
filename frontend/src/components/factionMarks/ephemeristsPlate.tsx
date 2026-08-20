@@ -43,6 +43,7 @@
  */
 import type { CSSProperties } from "react";
 import { mediaUrl } from "../../utils/media";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /* ── The plate's palette, under the names the skins read ── */
 
@@ -525,6 +526,68 @@ export function GravityField({ width, height }: { width: number; height: number 
         opacity={0.16}
       />
     </svg>
+  );
+}
+
+/**
+ * How far down a card the field is drawn. Geometry, so a raw number (§4a).
+ *
+ * The rows are struck at absolute px — the field is the same drawing on a card
+ * as on the composer's sheet, not a scaled copy — so the mount has to say how
+ * much sheet there is, and a card's height is its content's. Twenty rows covers
+ * every card the kit renders, and the frame's own `overflow: hidden` crops the
+ * rest; the alternative, a field that stops two thirds of the way down, is what
+ * `GravityField`'s own note calls worse than no field.
+ *
+ * ponytail: the ceiling is a card taller than this — a praxis entry with a long
+ * body and a media well could reach it, and the field would stop short rather
+ * than misdraw. The upgrade path is a measured height (`ResizeObserver` on the
+ * frame) or a viewBox in percentage units; neither is worth a hook for an
+ * ornament nobody can see the bottom of.
+ */
+const CARD_FIELD_HEIGHT = 1040;
+
+/**
+ * THE CARD'S GRAVITY FIELD — the kit's ornament, and the alternation (#2398).
+ *
+ * The law (#2195, owner 2026-08-17): a card on an ornamented ground drops its
+ * background texture; a card on a plain ground wears its faction's ornament.
+ * The Ephemerists' ornament is {@link GravityField}, and this is the whole of
+ * the branch for both cards — one mount, so the two cannot drift and there is
+ * one place to invert if the law changes.
+ *
+ * It is the SAME DRAWING the composer strikes, not a card-sized second copy
+ * (§6): only the mount differs, and it differs in two ways the composer's sheet
+ * does not need.
+ *
+ * • `z-index: 1` — a GROUND, above the plate's own fill and below every piece of
+ *   chrome. Both frames stack their band at 2 and their cornice at 3, so this
+ *   number is read against those and not chosen freely.
+ * • the weight. The rows are struck at the design's own opacity on a page-sized
+ *   sheet; a card's ground sits behind 12px reading copy, which is the same
+ *   reason the chart net has three weights and takes the lowest on a card
+ *   (#2144). 0.62 lands the strongest row at ~0.15, a shade over the net's 0.10.
+ *
+ * `width` is the card's NOMINAL width: the well is measured in from the right
+ * edge and the canvas is anchored there, so a wider card scales the rows up
+ * rather than stranding the well mid-sheet.
+ */
+export function CardGravityField({ width }: { width: number }) {
+  const groundIsBusy = useGroundIsBusy();
+  if (groundIsBusy) return null;
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 1,
+        pointerEvents: "none",
+        opacity: 0.62,
+      }}
+    >
+      <GravityField width={width} height={CARD_FIELD_HEIGHT} />
+    </div>
   );
 }
 
