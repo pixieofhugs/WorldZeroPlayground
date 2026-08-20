@@ -168,6 +168,32 @@ describe('local/no-raw-colour-values stays silent where colour is tokenized', ()
 })
 
 describe('the legacy list stays honest', () => {
+  /**
+   * #2139's actual finding, and the one thing on this file that is not about a
+   * regex: the report is a FLOOR, not the class. Two shapes stay invisible to
+   * this rule ON PURPOSE — a module constant read as an `Identifier`, and a
+   * component's own colour-named prop — so any "N files remaining" figure taken
+   * from the list below undercounts, silently, by construction.
+   *
+   * Pinned because a warning that lives only in a comment is one refactor from
+   * gone, and the failure it prevents is somebody quoting the list as an extent.
+   * The assertion is on the WORD, not the sentence: rewording is fine, deleting
+   * the framing is not.
+   */
+  it('warns, in both places a reader meets it, that the report is a floor', async () => {
+    const header = readFileSync(
+      new URL('../../.eslint-legacy-raw-colours.txt', import.meta.url),
+      'utf8',
+    )
+    expect(header).toMatch(/FLOOR, NOT THE CLASS/)
+
+    const results = await eslint.lintText("export const s = { color: '#dc2626' }", {
+      filePath: 'src/rawColourFixture.tsx',
+    })
+    const description = eslint.getRulesMetaForResults(results)[RULE]?.docs?.description
+    expect(description).toMatch(/FLOOR, NOT THE CLASS/)
+  })
+
   it('is not empty, and every entry is a real path the rule can be turned off for', async () => {
     const entries = legacyEntries()
 

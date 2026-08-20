@@ -699,7 +699,7 @@ const noRawStyleValues = {
         type: 'problem',
         docs: {
           description:
-            'Disallow raw colour literals (hex, rgb/rgba/hsl/hsla) and stock Tailwind colour utilities — use a --color-*/--faction-* token from index.css (WORLD_ZERO_STYLE.md).',
+            'Disallow raw colour literals (hex, rgb/rgba/hsl/hsla) and stock Tailwind colour utilities — use a --color-*/--faction-* token from index.css (WORLD_ZERO_STYLE.md). THIS RULE\'S REPORT IS A FLOOR, NOT THE CLASS (#2139): any "N files remaining" figure computed from .eslint-legacy-raw-colours.txt inherits that error silently, because a shape the rule cannot see can never appear on a list seeded from the rule\'s own report. Known blind spots: a module constant read as an Identifier, and a component\'s own colour-named prop.',
         },
         schema: [],
       },
