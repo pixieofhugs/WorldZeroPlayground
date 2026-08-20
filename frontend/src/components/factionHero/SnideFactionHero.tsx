@@ -31,13 +31,24 @@ import i18n from "../../i18n";
 const WALL = "var(--faction-snide-wall)";
 /** Type on that ground (16.03:1 light / 17.52:1 dark). */
 const NOTE_INK = "var(--faction-snide-note-ink)";
-/** The quiet tier on it (6.75:1 / 12.38:1). */
-const NOTE_MUTED = "var(--faction-snide-note-muted)";
+/* The wall's quiet tier (6.75:1 / 12.38:1) stood here and has no site left on
+   this hero: its one reader was the wordmark's expansion, which #2368 made a
+   subhead in the full ink. The tier itself is untouched — the four panels below
+   the hero still read it. */
 /** The wall's own texture ink — the hue `.snide-backdrop` draws its raster with. */
 const GRAIN = "var(--faction-snide-wall-text)";
 const ACID = "var(--faction-snide-acid)";
 /** The plate acid owes the wall (#2173). Invariant, so the bar dissolves at night. */
 const PLATE = "var(--faction-snide-ink)";
+/**
+ * The CHROME hue, which flips #6fae00 -> #b6ff2e — a different token from `ACID`
+ * and the medallion's only ink (#2368). It is legal on that disc precisely
+ * because the disc is frozen on `PLATE` and BOTH of its ends were measured
+ * there: 6.93:1 by day, 15.55:1 by night.
+ */
+const CHROME = "var(--faction-snide)";
+/** The stock the disc gave up, kept as the raster that reads on it. Invariant. */
+const STOCK = "var(--faction-snide-paper)";
 
 const HERO_GHOSTS = [
   { w: 122, h: 152, top: -24, left: 54, rot: -12 },
@@ -190,6 +201,13 @@ export default function SnideFactionHero({
               slammed line box the glyphs deliberately overflow, and a plate on
               the block would have clipped them top and bottom. Horizontal
               padding is the strike of the redaction and stays here. */}
+          {/* THE WORDMARK AND ITS EXPANSION ARE ONE HEADING (#2368). `<hgroup>`
+              is the platform's own device for a heading plus its subhead — the
+              HTML spec defines it as exactly one h1-h6 with `<p>`s around it —
+              so the relationship is in the markup rather than in a `<div>` that
+              happens to sit underneath. The h1's own top margin collapses
+              through this box, so nothing moves. */}
+          <hgroup style={{ margin: 0 }}>
           <h1
             style={{
               fontFamily: "var(--faction-snide-font-impact)",
@@ -204,21 +222,45 @@ export default function SnideFactionHero({
           >
             <span style={{ color: ACID, background: PLATE, padding: "0 var(--space-md)" }}>{name}</span>
           </h1>
-          <div
+          {/* THE EXPANSION IS A SUBHEAD, NOT A CAPTION (#2368).
+              It was `var(--font-body)` — Courier Prime, the app's generic body
+              face — at `--text-base` in the wall's QUIET tier, which is the
+              recipe for a footnote, on a page where the faction owns five faces
+              of its own. Three things move together, because a subhead is a
+              STEP in a hierarchy and any one of them alone leaves it a caption:
+
+              THE FACE is `-font-cond` (Bebas Neue). Of the five it is the one
+              built for a letterspaced caps line under a wordmark — a condensed
+              grotesque with no lowercase to lose — where `-font-type` (Special
+              Elite) is already the eyebrow's typewriter, `-font-black` is the
+              motto sticker's, `-font-impact` is the wordmark itself, and
+              `-font-marker` is the scrawl. It is also the only one of the five
+              that costs nothing: `--font-accent` is a SHELL face, already in the
+              render-blocking sheet for every visitor, while the other four live
+              in the deferred `fonts.faction.css` (#2079).
+
+              THE TIER is the wall's full ink, the one the h1 register reads.
+              15.95:1 by day, 17.52:1 by night — the same pairing SNIDE_WALL_PAIRS
+              already measures; nothing is minted.
+
+              THE SIZE is `--text-xl`, the top rung of the scale and the step the
+              other uppercase heading register takes; `--text-base` was the
+              eyebrow's rung, and a subhead cannot sit below the line above it. */}
+          <p
             style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "var(--text-base)",
+              fontFamily: "var(--faction-snide-font-cond)",
+              fontSize: "var(--text-xl)",
+              lineHeight: 1.05,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              // `-card-muted` is the SLAB's quiet tier and reads 1.24:1 on the
-              // light wall (#2173's other half). The wall's quiet tier flips.
-              color: NOTE_MUTED,
+              color: NOTE_INK,
               margin: "var(--space-md) 0 0",
               transform: "rotate(-0.4deg)",
             }}
           >
             {i18n.t("feed:identity.snide.fullName")}
-          </div>
+          </p>
+          </hgroup>
           {/* motto */}
           <div
             style={{
@@ -262,58 +304,64 @@ export default function SnideFactionHero({
                 width: 94,
                 height: 94,
                 borderRadius: "50%",
-                background: "var(--faction-snide-paper)",
+                // THE DISC IS BLACK IN BOTH CASCADES — THE OWNER'S RULING
+                // (#2368), and it REVERSES the ground #2364 settled on eleven
+                // days of history above. The stock was `--faction-snide-paper`,
+                // and #2364 answered a mark that flipped on a frozen disc by
+                // freezing the mark. The ruling answers it from the other end:
+                // the disc is the press's own ink, invariant, and BOTH ends of
+                // the chrome hue were measured on it — 6.93:1 at #6fae00,
+                // 15.55:1 at #b6ff2e. Both clear AA, so the mark is allowed to
+                // go on flipping and is deliberately NOT frozen here.
+                background: PLATE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                // THE DISC IS FROZEN, SO ITS RIM AND ITS MARK ARE (#2364). This
-                // rim and the sigil below both painted `--faction-snide` — the
-                // CHROME hue, the one that flips #6fae00 -> #b6ff2e — on a disc
-                // whose stock has exactly one value in both cascades (#2227
-                // pinned it there, and six surfaces spend it as an ink). Acid on
-                // cream measures 2.41:1 by day and **1.07:1** by night: the mark
-                // was simply not there in dark. It is the mirror of #2173 above,
-                // where the ink was frozen and the ground flipped, and #2173's
-                // repair is the wrong tool for it — a plate would take the disc
-                // away, and the disc is paper BY DESIGN, which is what makes the
-                // medallion a slapped sticker rather than another censor bar.
-                // So the mark moves instead, onto the press's own ink, which is
-                // the same answer the three other S.N.I.D.E. surfaces drawing on
-                // this exact stock already shipped (the faction page's inverted
-                // monogram, the praxis-detail avatar tile, the profile laurel):
-                // 16.68:1 in both cascades. Acid is not lost from the hero — it
-                // is the wordmark, the motto sticker, the torn strip and all
-                // three chits — and it cannot be lifted onto cream anyway, since
-                // no acid rung is dark enough for this stock (#2133).
-                border: "2px solid var(--faction-snide-ink)",
-                // The second layer is the medallion's offset register (#1609);
-                // the first is a solid ink rim, not a shadow.
-                boxShadow:
-                  "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
+                // THE RING IS RESOLVED, NOT LEFT BEHIND. The 2px rim and the 4px
+                // ring under it were both `--faction-snide-ink` on a cream disc:
+                // move the disc onto that ink and they are black on black. That
+                // is not merely invisible, it is the medallion's only edge at
+                // night — the disc is #14110b and the DARK wall is #0a0a0b, so
+                // the sticker reads 1.05:1 against the wall it is slapped on. By
+                // day the black disc is 15.95:1 on xerox stock and separates
+                // itself; the rim carries the other cascade, in the chrome hue
+                // its own mark takes (2.30:1 on the light wall by luminance,
+                // where it reads by chroma as the torn strip does, and 16.33:1
+                // on the dark one, where it is the whole edge).
+                //
+                // THE 4px RING IS GONE RATHER THAN RECOLOURED. Six pixels of
+                // solid rim was the drawing of a BLACK ring on a PALE disc; six
+                // pixels of chrome around a black one is a different object. The
+                // 2px that is left is the same rim the stat chits directly below
+                // wear, which is what makes the right-hand column one material.
+                border: `2px solid ${CHROME}`,
+                // What remains is the medallion's offset register (#1609), which
+                // was always the second layer.
+                boxShadow: "3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
               }}
             >
-              {/* The medallion's own raster, and the LAST raw colour on this
-                  file (#1853's list, class 2). It does not flip and must not:
-                  the disc under it is `--faction-snide-paper`, which has one
-                  value in both cascades, so photocopier ink at 6% is correct by
-                  day and by night alike. The literal was still a literal,
-                  though, and `color-mix(in srgb, <token> N%, transparent)` IS
-                  that rgba to the byte — so the density stays here, the hue gets
-                  its name, and the file comes off the list. */}
+              {/* The medallion's own raster. It does not flip and must not —
+                  both the disc and this ink have exactly one value in both
+                  cascades — but it INVERTS with the stock it is printed on
+                  (#2368): photocopier ink at 6% on cream is nothing at all on a
+                  black disc, so the raster is now the paper the face gave up, at
+                  the same 6% and the same pitch. The density is the drawing and
+                  stays at this call site; only the hue moved. */}
               <div
                 className="ht-dots"
                 style={{
                   position: "absolute",
                   inset: 0,
-                  color: `color-mix(in srgb, ${PLATE} 6%, transparent)`,
+                  color: `color-mix(in srgb, ${STOCK} 6%, transparent)`,
                   borderRadius: "50%",
                   pointerEvents: "none",
                 }}
               />
-              {/* The mark itself, in the press's ink for the reason the rim
-                  states (#2364). A drawn mark owes 3:1 (WCAG 1.4.11), not the
-                  text floor; this reads 16.68:1 in both cascades. */}
-              <SnideSigil size={54} color="var(--faction-snide-ink)" />
+              {/* The mark, in the chrome hue the rim takes, for the reason the
+                  disc states (#2368). A drawn mark owes 3:1 (WCAG 1.4.11), not
+                  the text floor; this reads 6.93:1 by day and 15.55:1 by night,
+                  which is why it is allowed to keep flipping. */}
+              <SnideSigil size={54} color={CHROME} />
             </div>
           </div>
 
