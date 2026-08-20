@@ -208,7 +208,7 @@ export default function WowTaskCard({
         <div style={{ padding: size.pad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
-          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+          <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             {/* The decree-lettered eyebrow held the uniform "Task {id}" ordinal and
               nothing else, so #1124's retirement of the id takes the line with
               it. The masthead and its ribbon are the card's top note now. */}

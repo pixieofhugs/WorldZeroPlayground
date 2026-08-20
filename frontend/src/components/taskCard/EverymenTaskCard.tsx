@@ -307,7 +307,7 @@ export default function EverymenTaskCard({
           <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
             {/* Everything but the CTA reads the full call — a card-sized target
                 that stays valid HTML (no <button> nested in an <a>). */}
-            <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+            <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
               {/* The dateline carried the uniform "Task {id}" ordinal and nothing
                   else, so #1124's retirement of the id takes the whole line. */}
               {/* LEVEL and the seal ride in two EQUAL halves with the cog
