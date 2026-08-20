@@ -191,6 +191,14 @@ export function useFactionSections(): Readonly<
  * the rail's `›` glyph because these headings are set in eight display faces,
  * several of which have no U+203A — a missing glyph is a tofu box on a faction's
  * front door, and this costs a hundred bytes to be sure it cannot happen.
+ *
+ * The drawing is ONE hairline on all eight faces — 1px, butt cap, miter join
+ * (#2372), the owner's answer to "is this the Ephemerists' value or everyone's"
+ * being "Everywhere". It was put to her that at 1px beside Anton and Archivo
+ * Black the marker may read as an artefact rather than a mark; she reaffirmed
+ * it. So if a per-faction stroke is ever wanted, that is a NEW decision with
+ * screenshots behind it, not a bug in this line — the seam to carry it is three
+ * props with these values as defaults.
  */
 export function SectionToggle({
   section,
@@ -230,9 +238,9 @@ export function SectionToggle({
           d="M1.5 1.5 L6.5 6 L1.5 10.5"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="1"
+          strokeLinecap="butt"
+          strokeLinejoin="miter"
         />
       </svg>
     </button>
