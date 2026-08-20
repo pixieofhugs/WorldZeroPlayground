@@ -1027,3 +1027,54 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Albescent')
   })
 })
+
+/* ========================================================================== *
+ * #2368 — A SENTENCE MAY NOT END ON AN INTERPOLATED FACTION NAME.
+ *
+ * THE SEAM IS THE RENDERED SENTENCE, not the catalog leaf. `mobile.gateHint`
+ * read "…an invitation to {{faction}}." and every leaf-level check passed it:
+ * one shared key (#1911), it interpolates, it ends in a full stop. The defect
+ * exists only after substitution, and only for ONE of the nine names —
+ * "S.N.I.D.E." is the only faction whose name already ends in a full stop, so
+ * the gate line on its faction page read "…an invitation to S.N.I.D.E..".
+ *
+ * WHY THE FIX IS THE SENTENCE AND NOT THE NAME. Stripping the trailing stop from
+ * `names.snide` would be a change to the faction's NAME — it is an initialism
+ * and the stops are the wordmark, printed that way on the hero, the select card
+ * and the roster. The sentence moves its interpolation off the end instead,
+ * which costs one leaf and leaves all nine names alone.
+ *
+ * THE SWEEP IS EVERY NAME, not the one that was reported: any future faction
+ * whose name ends in a stop lands the same way, and so does any future shared
+ * string that closes on `{{faction}}`.
+ * ========================================================================== */
+describe('no faction sentence renders a double full stop (#2368)', () => {
+  const NAMES = Object.keys(factions.names) as Array<keyof typeof factions.names>
+
+  it('S.N.I.D.E. is the name that makes this a real case', () => {
+    // If this ever goes false the guards below still hold, but the REASON in
+    // this block's header has stopped being true — read it before deleting.
+    const trailing = NAMES.filter((slug) => i18n.t(`factions:names.${slug}`).endsWith('.'))
+    expect(trailing).toEqual(['snide'])
+  })
+
+  it('the gate hint reads cleanly for every faction', () => {
+    for (const slug of NAMES) {
+      const line = i18n.t('factions:mobile.gateHint', { faction: factionName(slug) })
+      expect(line, `factions:mobile.gateHint for ${slug} is "${line}"`).not.toContain('..')
+    }
+  })
+
+  it('no catalog string puts a full stop straight after the name', () => {
+    // THE GENERAL FORM, and it is narrower than "ends on the interpolation".
+    // Five other leaves close on `{{faction}}` and are all correct — "Join
+    // {{faction}}", "Join {{faction}}?", "You left {{faction}}" — because a
+    // label, a question mark and a name that ends in a stop compose fine. It is
+    // specifically the APPENDED FULL STOP that doubles up, wherever it falls.
+    const offenders = catalogLeaves()
+      .filter(([id]) => id.startsWith('factions.json:'))
+      .filter(([, value]) => /\{\{faction\}\}\./.test(value))
+      .map(([id, value]) => `${id} -> "${value}"`)
+    expect(offenders).toEqual([])
+  })
+})
