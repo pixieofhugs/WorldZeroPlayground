@@ -188,7 +188,11 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
     const html = render(
       <AlbescentPraxisCard praxis={WITH_PHOTO} adminProps={admin(WITH_PHOTO)} />,
     );
-    expect(html, "the scope the lift needs").toContain('class="alb-praxis-card"');
+    // A class LIST since #2404 put the shared spectrum frame on this same
+    // wrapper, so the match is on the class rather than on the whole attribute.
+    // Still exact — the word boundaries mean an `alb-praxis-cardigan` typo fails
+    // here exactly as it did before.
+    expect(html, "the scope the lift needs").toMatch(/class="[^"]*\balb-praxis-card\b/);
     expect(html, "the drift itself is untouched").toContain('class="alb-rainbow"');
     expect(html, "the media region").toContain("user-media");
   });
@@ -199,7 +203,7 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
     const html = render(
       <AlbescentPraxisCard praxis={NO_MEDIA} adminProps={admin(NO_MEDIA)} />,
     );
-    expect(html).toContain('class="alb-praxis-card"');
+    expect(html).toMatch(/class="[^"]*\balb-praxis-card\b/);
     expect(html, "no lift on an empty slot").not.toContain("user-media");
   });
 
