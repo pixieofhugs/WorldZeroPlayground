@@ -91,8 +91,11 @@ export function discardRoomStore(praxisId: number): void {
     openStores.delete(praxisId);
     // Fire-and-forget: the delete is ordered behind this connection's close,
     // and IndexedDB serialises what comes after it. No caller has anything to
-    // do with the outcome.
-    void open.clearData();
+    // do with the outcome — but it is swallowed rather than left to reject,
+    // because a browser that refuses storage at all (private mode) would
+    // otherwise turn a disposal nobody is waiting on into an unhandled
+    // rejection. A store that could not be written cannot duplicate anything.
+    void open.clearData().catch(() => undefined);
     return;
   }
   // The static-render harness runs in `node`, where there is no IndexedDB.
