@@ -4368,8 +4368,8 @@
      not the thing that gets painted. Every task card mounts as
 
        row > TaskCard's positioned wrapper > skin root ([data-form-factor])
-           > <article>   ← the frame, the ground and the shadow live here
-           > … > <a>     ← the region a player reads
+           > <article>                  ← the frame, the ground and the shadow
+           > … > <a data-card-link>     ← the region a player reads
 
      and a block box does not inherit its parent's height. So the height is
      handed down that chain one level at a time, and it stops at the region
@@ -4387,11 +4387,11 @@
      ride down with the frame, which is where a corner ornament belongs.
 
      A SKIN MAY NOT BREAK THE CHAIN. `[data-form-factor] > article` and the one
-     anchor per card are the contract this file is written against;
-     `pages/tasks/__tests__/equalHeightRow.test.tsx` renders all nine skins and
-     fails if a redraw moves the frame off the skin root or adds a second link.
-     Nothing here can be restated inline in a component: an inline `display`
-     would beat every rule below. */
+     `data-card-link` anchor per card are the contract this file is written
+     against; `pages/tasks/__tests__/equalHeightRow.test.tsx` renders all nine
+     skins and fails if a redraw moves the frame off the skin root or moves the
+     hook. Nothing here can be restated inline in a component: an inline
+     `display` would beat every rule below. */
   .task-card-row {
     display: flex;
     flex-wrap: wrap;
@@ -4402,12 +4402,29 @@
      so the height keeps travelling instead of stopping at the first block.
      `:has(> [data-form-factor])` is Albescent: its tell wraps a second skin root
      one level deeper than the other eight, and it is named by what it contains
-     rather than counted, so nesting may change without this going quiet. */
+     rather than counted, so nesting may change without this going quiet.
+
+     WHY THE HOOK AND NOT `a[href]` (#2380). These two rules used to end in
+     `:has(a[href])` — *any* descendant holding *any* anchor — and agreed with
+     the paragraph above them only because the reading link was, for a while,
+     the only anchor a card drew. It stopped being: #2167 gave the masthead one
+     (which then had to pin `flex-grow: 0` in TWO components to climb back off
+     this chain), and #2359 gave the CTA slot a link branch for a viewer holding
+     a draft. That branch is a SIBLING of the reading link — deliberately, so
+     the markup stays valid — and it flipped its own row to a column, which
+     turned Everymen's two `flex: 0 1 96px` marks from 96px wide into 96px tall
+     with `width: 100%` behind them: hands the full width of the card.
+
+     `data-card-link` is the fix and it is one attribute: the card-wide anchor
+     says which anchor it is, and the selector asks for that one instead of
+     guessing. A skin that draws a second link now costs nothing, and one that
+     forgets the hook fails the suite named above rather than quietly ceasing to
+     stretch. */
   .task-card-row > *,
   .task-card-row > * :has(> [data-form-factor]),
   .task-card-row [data-form-factor],
   .task-card-row [data-form-factor] > article,
-  .task-card-row [data-form-factor] > article :has(a[href]) {
+  .task-card-row [data-form-factor] > article :has(a[data-card-link]) {
     display: flex;
     flex-direction: column;
   }
@@ -4419,7 +4436,7 @@
   .task-card-row > * :has(> [data-form-factor]),
   .task-card-row [data-form-factor],
   .task-card-row [data-form-factor] > article,
-  .task-card-row [data-form-factor] > article :is(a[href], :has(a[href])) {
+  .task-card-row [data-form-factor] > article :is(a[data-card-link], :has(a[data-card-link])) {
     flex: 1 1 auto;
   }
 
