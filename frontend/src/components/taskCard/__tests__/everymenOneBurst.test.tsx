@@ -40,7 +40,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' 
 
 import EverymenTaskCard from '../EverymenTaskCard'
 import EverymenPraxisCard from '../../praxisCard/desktop/EverymenPraxisCard'
-import type { ArchetypeProps } from '../../praxisCard/shared'
+import type { ArchetypeProps } from '../../praxisCard/desktop/shared'
 import { BackdropContext } from '../../backdrop/BackdropContext'
 import { aTask, aPraxisCard } from '../../../test/fixtures'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
