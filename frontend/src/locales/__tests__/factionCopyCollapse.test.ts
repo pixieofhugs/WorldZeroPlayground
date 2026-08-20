@@ -102,7 +102,11 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `factions:{F}\\.invitation\\.terms\\.1\\.label`, shared: 'factions:invitation.skillsLabel', wording: 'Required skills' },
   { banned: `factions:{F}\\.invitation\\.terms\\.2\\.label`, shared: 'factions:invitation.outputLabel', wording: 'Expected output' },
   { banned: `factions:{F}\\.${JOIN}\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
-  { banned: `factions:{F}\\.${JOIN}\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'Keep completing tasks to earn an invitation to {{faction}}.' },
+  // The interpolation moved off the end of the sentence (#2368): "…to
+  // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
+  // that already carries one, and rendered "S.N.I.D.E..". The imperative is
+  // still here, it just lands last. `catalog.test.ts` holds the general guard.
+  { banned: `factions:{F}\\.${JOIN}\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
   { banned: `factions:{F}\\.mobile\\.eyebrow`, shared: 'factions:detail.eyebrow', wording: 'Faction' },
   { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No praxis submitted yet.' },
   { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent praxis' },
