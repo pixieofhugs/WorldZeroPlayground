@@ -695,8 +695,8 @@
    accent, muted, display face — and nothing about its FRAME. The frame radius
    existed only as English, in `praxisCard/desktop/shared.tsx::frameBase`:
 
-     "the prototype's frame radius is per-faction (Snide 0 · Everymen 2 · UA 7 ·
-      Singularity/Ephemerists 8 · chronicle 9 · Default/Albescent 10 · Coven's
+     "the prototype's frame radius is per-faction (Snide 0 · Everymen 2 ·
+      UA/Singularity/Ephemerists/chronicle 8 · Default/Albescent 10 · Coven's
       sticker 16) … Each archetype sets its own."
 
    A comment is not readable by a component. Any surface that wants to wear a
@@ -712,24 +712,34 @@
    sheet plus two motion overlays, "revealed by a shimmer, never by a colour",
    and a shape of its own would be a second way to pick it out of a line-up.
 
-   THE PRAXIS CARDS HAVE NOT MOVED ONTO THESE and #2361 rules that out until it
-   is provably a no-op. It is not: `EphemeristsPraxisCard` draws NO radius at
-   all — its own docblock lists that as a deliberate deviation, "the design's
+   THE MIDDLE OF THE LIST IS ONE RUNG SINCE #2403. The owner ruled UA's 7 and
+   the chronicle's 9 both to 8 while looking at the nine rails side by side, so
+   UA · Singularity · Ephemerists · chronicle now share a row. That ruling is
+   also what let their FRAMES move ONTO these: #2361 held them on literals until
+   doing so was provably a no-op, and for UA and the chronicle the same commit
+   moved both sides to 8. The ruling is about the LIST, not about one card, so
+   all five frames the two factions draw read the token and the number is stated
+   once — `UaPraxisCard`, `UaTaskCard`, `WowPraxisCard`, `WowTaskCard` and
+   `WowFeedFrame`. INNER panels were never on this list and keep their own
+   literals; `components/__tests__/frameRadiusReadsTheToken.test.tsx` holds that
+   line from the other side.
+
+   EPHEMERISTS IS STILL OFF THE TOKEN and deliberately so: that card draws NO
+   radius at all — its own docblock lists it as a deviation, "the design's
    `border-radius` is 0 here (the design draws none), against the 8 the codex
-   folio used". So `-card-radius: 8` below is the documented list, and reading
-   it from that card would repaint it. The divergence is recorded rather than
-   silently resolved; deciding which of the two is right is a design question,
-   not a token question.
+   folio used". So the 8 below is the documented list, and reading it from that
+   card would repaint it. The divergence is recorded rather than silently
+   resolved; which of the two is right is a design question, not a token one.
 
    The radii are literals with no dark half, so `:root` is their whole story. */
 :root {
   --faction-snide-card-radius: 0;
   --faction-everymen-card-radius: 2px;
-  --faction-ua-card-radius: 7px;
+  --faction-ua-card-radius: 8px;
   --faction-singularity-card-radius: 8px;
   /* 8 per the list; the shipped praxis card draws 0 — see the note above. */
   --faction-ephemerists-card-radius: 8px;
-  --faction-wow-card-radius: 9px; /* "chronicle" in the list */
+  --faction-wow-card-radius: 8px; /* "chronicle" in the list */
   --faction-default-card-radius: 10px; /* Default AND Albescent */
   --faction-coven-card-radius: 16px; /* the slip's die-cut corner */
 }

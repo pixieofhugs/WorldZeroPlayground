@@ -159,7 +159,8 @@ export default function UaTaskCard({
           width: "100%",
           background: "var(--faction-ua-card-parchment)",
           border: "2px solid var(--faction-ua-card-frame)",
-          borderRadius: 7,
+          // The salon sheet's shape, said once (#2361/#2403).
+          borderRadius: "var(--faction-ua-card-radius)",
           color: "var(--faction-ua-card-text)",
           fontFamily: UA_TEXT,
         }}

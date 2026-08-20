@@ -50,7 +50,8 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
     <div
       style={{
         ...frameBase,
-        borderRadius: 9, // chronicle parchment
+        // The chronicle parchment's shape, said once (#2361/#2403).
+        borderRadius: "var(--faction-wow-card-radius)",
         position: "relative",
         overflow: "hidden",
         background: "var(--faction-wow-chronicle-bg)",

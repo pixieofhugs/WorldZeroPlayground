@@ -127,7 +127,8 @@ export default function WowFeedFrame({
     <article
       data-form-factor={formFactor}
       style={{
-        borderRadius: 9,
+        // The chronicle's shape, said once (#2361/#2403).
+        borderRadius: 'var(--faction-wow-card-radius)',
         overflow: 'hidden',
         background: 'var(--faction-wow-card-bg)',
         color: 'var(--faction-wow-card-text)',

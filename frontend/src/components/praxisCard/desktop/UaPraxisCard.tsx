@@ -24,8 +24,10 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  *
  * The gilt double-frame that used to wrap this card was invented, not designed
  * — the handoff draws ONE border, and #848 took gold out of UA entirely. #839
- * fixed the radius at 7; this slice removed the second frame and the dotted
- * tooth. Do not reintroduce either.
+ * fixed the radius at 7 and #2403 rules it to 8 with the rest of the frame
+ * list's middle rung, so it is now read from `--faction-ua-card-radius` rather
+ * than restated here; this slice removed the second frame and the dotted tooth.
+ * Do not reintroduce either.
  */
 export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
@@ -34,7 +36,8 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         ...frameBase,
         position: "relative",
         overflow: "hidden",
-        borderRadius: 7, // ensō salon sheet
+        // The ensō salon sheet's shape, said once (#2361/#2403).
+        borderRadius: "var(--faction-ua-card-radius)",
         background: "var(--faction-ua-card-parchment)",
         border: "2px solid var(--faction-ua-card-frame)",
         boxShadow:
