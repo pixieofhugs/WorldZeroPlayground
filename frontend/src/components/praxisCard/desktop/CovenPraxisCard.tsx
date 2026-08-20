@@ -1,4 +1,5 @@
 import { CovenBand } from "../../cardMasthead/factionBands";
+import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 import {
@@ -80,6 +81,12 @@ import {
  * and a name, not a card's whole content.
  */
 export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  /* THE CAT ALTERNATES (#2396, epic #2195), on the same predicate and at the
+     same reading as `CovenTaskCard`'s: one ornament per faction, worn on both
+     cards, dropped on a patterned ground. A Coven profile keeps it — candlelight
+     is a wash. Nothing else on this card branches; the band, the sheet and the
+     braid are chrome. */
+  const groundIsBusy = useGroundIsBusy();
   return (
     <div
       style={{
@@ -106,8 +113,13 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           narrower — #2135 pins them rather than picking a second placement, and
           the opacity is the 0.09 every mount holds (the measurements are at
           {@link CovenCat}). `.cvn-wheel` owns the turn and its reduced-motion
-          guard in index.css; the body below sits above it on its own layer. */}
-      <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
+          guard in index.css; the body below sits above it on its own layer.
+
+          #2396 takes it off a busy ground: "either burst, or plain" — the slip
+          is then BARE, and no second texture stands in for the cat. */}
+      {!groundIsBusy && (
+        <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
+      )}
 
       {/* THE SLIP'S BAND (#2185) — the same one `CovenTaskCard` wears, twinkle
           field and all, mounted from the shared module. The field is the band's
