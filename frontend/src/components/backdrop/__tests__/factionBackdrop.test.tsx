@@ -42,7 +42,9 @@ import WowBackdrop from '../WowBackdrop'
 /** Render the dispatcher as if a page had themed the ground to `slug`. */
 function backdropFor(slug: string | null): string {
   return renderToStaticMarkup(
-    <BackdropContext.Provider value={{ slug, setSlug: () => {} }}>
+    <BackdropContext.Provider
+      value={{ slug, cardsKeepOrnament: false, setGround: () => {} }}
+    >
       <FactionBackdrop />
     </BackdropContext.Provider>,
   )
