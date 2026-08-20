@@ -2,6 +2,16 @@
 # shrinks — migrating a file means deleting its line here, not adding one. New
 # files may never be added to it.
 #
+# READ THIS BEFORE COUNTING ANYTHING ON IT (#2139). THE RULE'S REPORT IS A
+# FLOOR, NOT THE CLASS. Any "N files remaining" figure computed from this list
+# inherits that error silently, because a shape the rule cannot see can never
+# appear on a list seeded from the rule's own report. #1609's class 1 was the
+# proof: seventeen sites, and the rule reported fourteen — two of the three it
+# missed sat in files on no list at all. The blind spots are named at the foot
+# of this file; the one that cost the most, `filter:`, is closed as of #2139 and
+# added NOTHING to this list, because the four sites it had hidden were already
+# migrated by the time the matcher could see them.
+#
 # Seeded from what `local/no-raw-colour-values` actually reported on the day it
 # landed: 61 files, 140 violations. #1609 burns it down. The three groups below
 # are how the 140 read, not three different rules — every line is one file.
@@ -223,22 +233,46 @@
 #      to name a rung for. **A parked hue question can be answered by the ground
 #      moving; re-read its premise before pricing it.**
 #
-# THE BLIND SPOTS, restated after class 1 (none is a hole in the regex, §4a).
-# Both shapes are still open in the RULE; the class-1 instances of them are gone.
-#   - `filter:` is not a COLOUR_PROP. It hid two class-1 sites outright — the
-#     `SnideProfileBody` credential frame and the `shadow=` prop `TaskCrown`
-#     applies as a filter — and neither was ever on this list, so the list is a
-#     FLOOR on this class and not its extent. Both now read the print token.
-#   - A module constant is Gap D wearing paint (how `const green` survived, and
-#     how `SnideFieldDesk`'s `const CARD_SHADOW` did).
-#   - A property name the rule does not judge, which is the same shape one step
-#     further out and was not previously written down. `EverymenProfileBody`
-#     paints raw `rgba()` through `pageOverlay`, `barTrack` and a
-#     `dividerColor=` JSX attribute; `SnideFieldDesk` through
-#     `const HALFTONE`. None is class 1 — they are grain, a track and a rule —
-#     and none is reportable, so none can go on this list. They are named here so
-#     the next reader knows the list undercounts, and they belong to whoever
-#     takes classes 2-7.
+# THE BLIND SPOTS, RULED ON IN #2139 (none is a hole in the regex, §4a). One is
+# closed in the RULE; the other two are closed at the SITES and stay open in the
+# rule, deliberately.
+#   - `filter:` is not a COLOUR_PROP — CLOSED. It hid two class-1 sites outright
+#     (the `SnideProfileBody` credential frame and the `shadow=` prop `TaskCrown`
+#     applies as a filter) and neither was ever on this list, which is the
+#     clearest single proof that this list is a FLOOR and not an extent.
+#     `filter` joined `COLOUR_PROPS` in #2139 and the seed it produced was EMPTY:
+#     class 1 had already migrated every site the matcher could then see, so the
+#     shrink-only list did not grow by a line. The accepted cost is written at
+#     the constant: `drop-shadow()` carries geometry beside the paint, so the
+#     rule flags a string it can only partly judge, and a reviewer resolves which
+#     half is at fault. That is not a reversal of the three rulings that geometry
+#     is not paint's business — those are about where a VALUE lives, this is
+#     about what a MATCHER reads.
+#   - A module constant is Gap D wearing paint — NOT CLOSED IN THE RULE, on
+#     purpose. Chasing it needs local const-tracking for a handful of sites, and
+#     "widening the matcher" has been the wrong fix here before. The surviving
+#     sites are decided keeps with the reason written AT the site:
+#     `SnideFieldDesk`'s `HALFTONE` (its only mount is the ransom card, filled
+#     with the invariant `--faction-snide-ink`, so the alpha is theme-correct in
+#     both cascades), and `AlbescentInvitation`'s `RULE` (0.07 sits between the
+#     two declared reveal alphas and has one reader; a third rung would cost the
+#     blocking sheet bytes to name a singleton). Two of that file's three
+#     hairlines were NOT keeps — the reason on them said "no token exists" and
+#     `--albescent-reveal-border` / `-border-faint` were byte-identical and
+#     already read by two sibling components, so they took the tokens.
+#     `FactionSelectCard`'s `const green` and `SnideFieldDesk`'s `CARD_SHADOW`
+#     are gone entirely, cleared by #2322 and class 1.
+#   - A component's own colour-named PROP, the same shape one step further out —
+#     NOT A LINT PROBLEM, and NOT a typed prop convention either. `` `var(--${string})` ``
+#     was proposed and checked against the code: five live sites pass a gradient,
+#     a `color-mix()` or a function call through `pageOverlay` / `barTrack` /
+#     `dividerColor`, all correct values for an overlay or a track, and the type
+#     rejects every one. So the sites were fixed and the class let go:
+#     `EverymenProfileBody`'s grain was the one real defect (a frozen
+#     `rgba(34,26,18,0.05)` — `--everymen-ink`'s LIGHT value — over paper that
+#     flips, so it painted nothing by night) and `SnideProfileBody` carried the
+#     same shape twice. All four now read their family's token. Nothing here can
+#     ever go ON this list, which is the point: the list cannot describe them.
 src/components/metataskSeal/skins/EphemeristsSeal.tsx
 src/components/metataskSeal/skins/SnideSeal.tsx
 src/components/praxisCard/desktop/EverymenPraxisCard.tsx

@@ -168,6 +168,66 @@ describe('every faction folds both galleries', () => {
   })
 })
 
+/**
+ * The marker's DRAWING, at the same slug × section seam (#2372). The owner's
+ * ruling, after the per-archetype design was put to her: the hairline goes
+ * "Everywhere" — one stroke beside all eight faces, not eight tuned ones. So
+ * the assertion is a CONSTANT across the sixteen call sites, and this suite is
+ * what goes red the day a per-faction value is re-introduced without saying so.
+ *
+ * The em sizing and `currentColor` are asserted alongside because they are the
+ * two things a stroke change is most likely to be "tidied" into breaking: the
+ * marker must track its heading's size and take its heading's ink, on a page
+ * where both are set eight different ways.
+ */
+describe('the disclosure marker is a hairline on every face', () => {
+  /** The whole control — opening tag through `</button>`, so the assertion is
+   *  scoped to the marker this disclosure actually draws. */
+  function disclosureMarkup(html: string, bodyId: string): string | undefined {
+    const start = html.search(new RegExp(`<button[^>]*aria-controls="${bodyId}"`))
+    if (start < 0) return undefined
+    const end = html.indexOf('</button>', start)
+    return end < 0 ? undefined : html.slice(start, end + '</button>'.length)
+  }
+
+  for (const slug of SLUGS) {
+    for (const section of FACTION_SECTION_IDS) {
+      it(`${slug} · ${section} — 1px, butt cap, miter join`, () => {
+        const markup = disclosureMarkup(page(slug), factionSectionBodyId(section))
+        expect(markup, `${slug}'s ${section} disclosure never closes`).toBeDefined()
+
+        expect(markup).toContain('stroke-width="1"')
+        expect(markup).toContain('stroke-linecap="butt"')
+        expect(markup).toContain('stroke-linejoin="miter"')
+        // The heading's own ink, never a token picked per faction.
+        expect(markup).toContain('stroke="currentColor"')
+        // Sized in `em`, so it tracks the display face it sits beside.
+        expect(markup).toContain('width="0.55em"')
+        expect(markup).toContain('height="0.8em"')
+      })
+    }
+  }
+
+  it('draws no chevron CHARACTER, on any face', () => {
+    // The SVG exists because several of the eight display faces have no U+203A
+    // and would paint a tofu box on a faction's front door. A thinner stroke is
+    // no reason to revisit that — so no chevron glyph may appear inside a
+    // disclosure control, however tempting the one-line version looks.
+    for (const slug of SLUGS) {
+      const html = page(slug)
+      for (const section of FACTION_SECTION_IDS) {
+        const markup = disclosureMarkup(html, factionSectionBodyId(section))
+        expect(markup, `${slug} · ${section}`).toContain('<svg')
+        for (const glyph of ['\u203a', '\u276f', '\u3009', '\u00bb']) {
+          expect(markup, `${slug} · ${section} draws a glyph marker`).not.toContain(
+            glyph,
+          )
+        }
+      }
+    }
+  })
+})
+
 describe('a folded section is still worth reading', () => {
   afterEach(() => {
     Reflect.deleteProperty(globalThis, 'localStorage')
