@@ -7,6 +7,7 @@ import errors from './locales/en/errors.json'
 import factions from './locales/en/factions.json'
 import feed from './locales/en/feed.json'
 import forms from './locales/en/forms.json'
+import glosses from './locales/en/glosses.json'
 import home from './locales/en/home.json'
 import onboarding from './locales/en/onboarding.json'
 import praxis from './locales/en/praxis.json'
@@ -25,6 +26,7 @@ export const resources = {
     factions,
     feed,
     forms,
+    glosses,
     home,
     onboarding,
     praxis,

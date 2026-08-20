@@ -17,6 +17,7 @@ declare module 'i18next' {
       factions: typeof import('./locales/en/factions.json')
       feed: typeof import('./locales/en/feed.json')
       forms: typeof import('./locales/en/forms.json')
+      glosses: typeof import('./locales/en/glosses.json')
       home: typeof import('./locales/en/home.json')
       onboarding: typeof import('./locales/en/onboarding.json')
       praxis: typeof import('./locales/en/praxis.json')
