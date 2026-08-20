@@ -30,6 +30,7 @@ locales/
 | `progression.json` | Level-up ranks + unlock names/descriptions (backend emits keys — ADR-0031) |
 | `taunts.json` | Foe-taunt templates per faction/trigger (backend emits keys — ADR-0031) |
 | `errors.json` | What a failed request tells the player, keyed by error code (backend emits keys — ADR-0031) |
+| `glosses.json` | **Not a namespace.** The Ephemerists' script casts — the same word written in Latin, Arabic, Japanese and cuneiform, cycled as ornament over an English label (#2148). It is imported by `components/factionMarks/EphemeristsGloss.tsx`, not registered with i18next, because the casts do not change with the reader's language. Adding a word here means re-running `scripts/fetch-fonts.mjs`, or its glyphs ship with no font. |
 
 ## How a key works
 

@@ -967,13 +967,26 @@ describe('the Ephemerists score stamp reads in the shared words (#1909)', () => 
       />,
     )
 
-  it('prints the shared English, and none of the glyphs, in the visible text', () => {
+  it('prints the shared English, and no glyph as a LABEL (#1909, #2148)', () => {
     const html = text(full())
     expect(html).toContain('base')
     expect(html).toContain('points')
     expect(html).toContain('votes')
-    for (const glyph of ['基', '点', '票', '習']) {
-      expect(html).not.toContain(glyph)
+    // #1909 cut the kanji that WERE the labels, with the English hidden on a
+    // `title`. #2148 inverts that arrangement rather than undoing it: the
+    // English is the label and the accessible name, and the casts are decoration
+    // inside an `aria-hidden` stack. So what is forbidden is a glyph standing
+    // where a word should be — asserted as the two kanji that are not cast at
+    // all, plus the shape of the ones that are.
+    for (const glyph of ['票', '習']) {
+      expect(html, `${glyph} is a retired label`).not.toContain(glyph)
+    }
+    const markup = full()
+    for (const glyph of ['基', '点']) {
+      expect(
+        markup.slice(markup.indexOf(glyph) - 600, markup.indexOf(glyph)),
+        `${glyph} is ornament inside the gloss, never the label`,
+      ).toContain('aria-hidden="true"')
     }
   })
 

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
+import EphemeristsGloss, { type GlossWord } from "../../factionMarks/EphemeristsGloss";
 import {
   BAND_INK,
   BAND_QUIET,
@@ -157,12 +158,32 @@ const FIGURE: CSSProperties = { fontFamily: DECO, fontSize: "var(--text-xl)", li
  * Two grid cells and no wrapper — see the cell's grid above. `ink` is the whole
  * line's colour, one per row: the ruling forbids a number and its label being
  * told apart by colour, so a row never carries two.
+ *
+ * THE WORD TURNS AND THE FIGURE NEVER DOES (#2148). `gloss` names the catalog
+ * entry the label is cast through; `ordinal` is the row's place among this
+ * cell's turning labels and picks its clock. The figure is left alone on
+ * purpose — the whole conceit rests on the cost of not decoding being a lost
+ * label rather than a lost score.
  */
-function WorkingRow({ figure, label, ink }: { figure: string; label: string; ink: string }) {
+function WorkingRow({
+  figure,
+  label,
+  gloss,
+  ordinal,
+  ink,
+}: {
+  figure: string;
+  label: string;
+  gloss: GlossWord;
+  ordinal: number;
+  ink: string;
+}) {
   return (
     <>
       <span style={{ ...FIGURE, color: ink }}>{figure}</span>
-      <span style={{ ...LABEL, color: ink }}>{label}</span>
+      <span style={{ ...LABEL, color: ink }}>
+        <EphemeristsGloss word={gloss} english={label} ordinal={ordinal} />
+      </span>
     </>
   );
 }
@@ -190,6 +211,10 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         width: "100%",
         maxWidth: working ? STAMP_WIDTH : ROSE,
       }}
+      /* WCAG 2.2.2's pause mechanism for the labels' turn (#2148): the
+         stylesheet's pause rule is a descendant selector, so the whole cell is
+         the scope rather than each label being wrapped in one. */
+      className="eph-turn-scope"
     >
       {crowned && (
         <TaskCrown
@@ -234,7 +259,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                 cell's kanji: they were the only faction-specific score-stamp labels
                 in the app, on a surface the audit ruled generic. The shared gloss
                 each one carried is now the visible label. */}
-            <WorkingRow figure={`${base}`} label={t("card.stamp.base")} ink={CAPTION} />
+            <WorkingRow figure={`${base}`} label={t("card.stamp.base")} gloss="base" ordinal={0} ink={CAPTION} />
 
             {/* The multiplier, in its own ruled chip — the design's "ratio" cell.
                 Not an addend and not a line of the working, so it spans both
@@ -266,7 +291,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             {/* The metatask award, struck in the plate's one accent — a foreign
                 award, not the task's. See the ochre measurement above. */}
             {meta !== null && (
-              <WorkingRow figure={`+${meta}`} label={t("card.stamp.meta")} ink={OCHRE} />
+              <WorkingRow figure={`+${meta}`} label={t("card.stamp.meta")} gloss="bonus" ordinal={1} ink={OCHRE} />
             )}
 
             {/* The tally, cut only when there are votes to record (ADR-0076). The `+`
@@ -275,7 +300,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                 and a numeral sit together, and #1637's whole bound is that only the
                 label is encoded. */}
             {votes !== null && (
-              <WorkingRow figure={`+${votes}`} label={t("card.stamp.votes")} ink={CAPTION} />
+              <WorkingRow figure={`+${votes}`} label={t("card.stamp.votes")} gloss="bonus" ordinal={2} ink={CAPTION} />
             )}
 
             {/* The habit bonus (#1617), cut after the tally: flat, outside the ratio.
@@ -283,7 +308,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
                 #1637 bound holds, so the LABEL is encoded and the figure stays a
                 Western numeral. */}
             {habit !== null && (
-              <WorkingRow figure={`+${habit}`} label={t("card.stamp.habit")} ink={CAPTION} />
+              <WorkingRow figure={`+${habit}`} label={t("card.stamp.habit")} gloss="bonus" ordinal={3} ink={CAPTION} />
             )}
           </div>
         </div>
@@ -325,7 +350,11 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
               marginTop: "var(--space-xs)",
             }}
           >
-            {t("card.stamp.points", { count: total })}
+            <EphemeristsGloss
+              word="points"
+              english={t("card.stamp.points", { count: total })}
+              ordinal={4}
+            />
           </span>
         </div>
       </div>
