@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import i18n from "../../i18n";
+import catalog from "../../locales/en/glosses.json";
 import { CAPS } from "./ephemeristsPlate";
 
 /**
@@ -88,7 +88,7 @@ export const SCRIPTS = ["cuneiform", "arabic", "japanese", "latin"] as const;
 export type Script = (typeof SCRIPTS)[number];
 
 /** Every word the catalog glosses. Derived, so a typo cannot compile. */
-export type GlossWord = keyof typeof import("../../locales/en/glosses.json");
+export type GlossWord = keyof typeof catalog;
 
 /**
  * The hand each script is set in — declared once, for every word.
@@ -111,11 +111,24 @@ export interface Cast {
   style: CSSProperties;
 }
 
-/** The registered casts of one word, read from the catalog. */
+/**
+ * The registered casts of one word, read from the catalog.
+ *
+ * The catalog is IMPORTED rather than registered as an i18next namespace, and
+ * that is a load-time decision as much as a typing one. `i18n.ts` is in the
+ * entry chunk, so every namespace it names is on the critical path — and these
+ * casts are not translatable copy (the Japanese for *points* is the Japanese
+ * for *points* on a Spanish site too), so a namespace would put ~430 gzipped
+ * bytes of ornament in front of first paint for the sake of a lookup that
+ * cannot vary. Imported here it rides the faction chunk, costs the entry chunk
+ * nothing, and `GlossWord` becomes a compile-time key rather than a runtime
+ * miss. The file still lives in `locales/en/` because it is still COPY and that
+ * is where copy is edited (see `locales/README.md`).
+ */
 export function casts(word: GlossWord): Cast[] {
   return SCRIPTS.map((script) => ({
     script,
-    text: i18n.t(`glosses:${word}.${script}` as "glosses:points.latin"),
+    text: catalog[word][script],
     style: FACES[script],
   }));
 }
