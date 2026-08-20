@@ -18,6 +18,10 @@ const handleStyle: CSSProperties = {
   ...panelStyle,
   // panelStyle's --space-lg would swallow a 32px-wide control whole.
   padding: 'var(--space-xs)',
+  // #2404 gave the rail's SHEETS the Default/Albescent 10px rung. This is
+  // chrome outside `#wz-sidebar`, not a sheet — it keeps the app's generic card
+  // radius, which is exactly what it shipped with, for every viewer.
+  borderRadius: 'var(--radius-xl)',
   color: 'var(--color-text-secondary)',
   fontSize: 'var(--text-content)',
   lineHeight: 1,
