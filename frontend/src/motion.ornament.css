@@ -542,3 +542,38 @@
   }
   .eph-rune > span + span { animation-name: eph-rune-turn-back; }
 }
+
+/* ── Albescent — the drifting spectrum frame (#2404). The owner's ruling:
+   "Albescent should be the same [as na], but the rainbow in the borders for all
+   albescent things should slowly move." This is the WHOLE of that difference.
+   The ring itself, its colour and its radius are `.spectrum-frame::before` in
+   index.css, byte-for-byte the same one an unaffiliated viewer wears; Albescent
+   adds this one declaration and nothing else, which is what keeps ADR-0048's
+   "revealed by a shimmer, never by a colour" true now that the two have stopped
+   being pixel-identical (#2361).
+
+   NO KEYFRAME IS DECLARED HERE, deliberately. `alb-drift` is already built in
+   index.css — `background-position: 0 0` → `220px 0` — and `.spectrum-frame`
+   sets the 220px tile it was written for, so the ring walks exactly one tile and
+   arrives back on itself with no seam. Keyframe names are document-global and
+   index.css is the entry sheet that always loads, so the reference across the
+   chunk boundary always resolves. A second keyframe for a slide that already
+   ships would be bytes for nothing.
+
+   A `background-position` slide over a repeating tile is also the cheap
+   compositing answer: no conic is redrawn per frame and nothing forces layout.
+
+   TWO SELECTORS, because the attribute sits in two places. On the rail it is on
+   the `<aside>`, because the panels are three separate elements and one
+   attribute reaches all of them by descent — the same shape as `data-rail-face`.
+   On a single Albescent card it is on the framed element itself.
+
+   Stranded — this sheet not yet delivered, or reduced motion — the frame is
+   simply the still rainbow every unaffiliated viewer already sees. Nothing here
+   carries meaning through motion alone. ── */
+@media (prefers-reduced-motion: no-preference) {
+  [data-spectrum-drift] .spectrum-frame::before,
+  .spectrum-frame[data-spectrum-drift]::before {
+    animation: alb-drift 18s linear infinite;
+  }
+}

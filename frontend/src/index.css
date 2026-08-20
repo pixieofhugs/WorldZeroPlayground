@@ -5695,6 +5695,87 @@
    stays, inert without them. */
 .cvn-wheel { transform-origin: 50% 50%; }
 
+/* THE SPECTRUM FRAME (#2404) — the one frame na and Albescent share.
+ *
+ * The owner's ruling: "NA has a border at least (a rainbow one) and that border
+ * probably has a radius. Albescent should be the same, but the rainbow in the
+ * borders for all albescent things should slowly move." An unaffiliated rail
+ * declares no `--rail-*` local at all (#2361's promise, and it holds), so its
+ * frame fell all the way through to `--color-border` — `rgba(0, 0, 0, 0.07)`, a
+ * 7% black hairline, effectively invisible.
+ *
+ * A MASKED RING, NOT A BORDER, and not `border-image`. `border-image` does not
+ * clip to `border-radius`, which is the usual trap and the reason there is not
+ * one occurrence of it in this file. The `mask-composite` idiom draws the
+ * gradient over the whole box and punches the middle out, so there is no solid
+ * border colour anywhere in it and nothing needs a `border-color` fallback. It
+ * is the same technique `.alb-task-edge`, `.alb-detail-edge`, `.alb-praxis-edge`
+ * and `.alb-feed-edge` already use, for the same reason they use it: the sheets
+ * these dress are components' inline styles, not markup this file can reach
+ * behind. The other radius-safe ring here — `.alb-detail-ring`'s pseudo-rim with
+ * a real `-face` child punched over it — needs a face element to punch WITH, and
+ * a rail panel full of copy has none.
+ *
+ * `::before` RATHER THAN A CHILD SPAN, which is where `.alb-detail-ring`'s
+ * docblock still applies: it records that the rim is a pseudo-element because
+ * spinning the element itself would rotate the content inside it, and the
+ * content has to stay readable. The same holds around a panel of text — so the
+ * drift is a background slide on this pseudo-element, and nothing the reader is
+ * reading moves at all.
+ *
+ * THE LOOP CUT, at the tile size `alb-drift` was written for.
+ * `--faction-default-rainbow-loop` repeats its first colour at 100%, so a frame
+ * that wraps a corner never carries a red-meets-magenta seam past the eye. The
+ * 220px tile is a LENGTH, not a percentage, so a narrow panel and a wide one
+ * drift at the same apparent speed rather than the wide one crawling.
+ *
+ * `border-radius: inherit` rather than a number: the ring takes whatever corner
+ * its own element has. On the rail that is `--faction-default-card-radius`
+ * (10px, the documented Default/Albescent rung) for an unaffiliated viewer and
+ * the member's own `--rail-radius` otherwise — one expression, no second radius
+ * minted, and none of the hardcoded 14/18px the four earlier Albescent edges
+ * had to carry.
+ *
+ * SUPPRESSED, NOT UNMOUNTED, FOR A MEMBER. `--spectrum-frame-image` is `none`
+ * wherever a faction kit is dressing the surface (`railFaceVars` declares it),
+ * so the ring paints nothing and that member's own hairline stands. A rainbow
+ * over a faction kit would be a colour leak.
+ *
+ * DECORATIVE, so it owes no contrast ratio — and the panel's own 1px hairline
+ * stays underneath it, so a sheet whose spectrum reads faint against the page
+ * still reads as a panel. Both cascades: the stops flip with the theme on their
+ * own, so no dark half is written here.
+ *
+ * THE DRIFT IS NOT HERE. It is `src/motion.ornament.css`, delivered past first
+ * paint. Colour and layout may never defer; motion is exactly what that sheet
+ * is for. */
+.spectrum-frame {
+  /* A floor, not an override — an inline `position` at the mount still wins.
+     Both mounts today set `relative` themselves; without this a third that
+     forgot would send the ring off to the nearest positioned ancestor, which is
+     a ring drawn around the wrong element rather than a missing one. */
+  position: relative;
+}
+.spectrum-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  background-image: var(--spectrum-frame-image, var(--faction-default-rainbow-loop));
+  background-size: 220px 100%;
+  opacity: 0.6;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
    faction, so this is a flourish LAYERED over Default, never a repaint.

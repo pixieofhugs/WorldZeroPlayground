@@ -125,6 +125,13 @@ function railFaceVars(slug: string | null | undefined): CSSProperties {
     // `background-image` under a `background-size` window, and a flat colour
     // is not a valid image. na's fallback is a gradient for the same reason.
     '--rail-spectrum': `linear-gradient(90deg, color-mix(in srgb, ${hue} 45%, transparent), ${hue})`,
+    // #2404 — the panels all carry `.spectrum-frame`, whose ring is the na
+    // rainbow. A member's frame is their own `--rail-line` hairline, so the ring
+    // is switched OFF here rather than the class being withheld: a rainbow over
+    // a faction kit would be a colour leak, and `background-image: none` is one
+    // declaration where a conditional class would be a prop threaded through
+    // three panels.
+    '--spectrum-frame-image': 'none',
   } as CSSProperties
 }
 
@@ -190,10 +197,24 @@ export const panelStyle: CSSProperties = {
   position: 'relative',
   overflow: 'hidden',
   background: 'var(--rail-paper, var(--color-bg-surface))',
+  // The hairline STAYS under the spectrum ring (#2404). It is the panel's floor:
+  // if the rainbow reads faint against the page in either cascade, the sheet
+  // still reads as a panel. For a member it is the frame, unchanged.
   border: '1px solid var(--rail-line, var(--color-border))',
-  borderRadius: 'var(--rail-radius, var(--radius-xl))',
+  // #2404 — the unaffiliated rung is the deliberate 10px
+  // `--faction-default-card-radius`, not `--radius-xl`'s 14px, which this
+  // inherited by accident. `.spectrum-frame::before` takes it by `inherit`.
+  borderRadius: 'var(--rail-radius, var(--faction-default-card-radius))',
   padding: 'var(--space-lg)',
 }
+
+/** The class every rail panel carries (#2404). Paired with `panelStyle` at each
+ *  of the three `<section>`s, and unconditional: the ring is switched off for a
+ *  member by `--spectrum-frame-image: none` in `railFaceVars`, not by being
+ *  withheld here, so no panel needs to know who is looking. The fold-away handle
+ *  borrows `panelStyle` alone and deliberately not this — it is chrome outside
+ *  `#wz-sidebar`, not a sheet. */
+const PANEL_FRAME = 'spectrum-frame'
 
 const sectionLabel: CSSProperties = {
   fontFamily: 'var(--font-body)',
@@ -357,6 +378,7 @@ function SidebarPanel({
 
   return (
     <section
+      className={PANEL_FRAME}
       aria-labelledby={`${bodyId}-label`}
       draggable={armed}
       onDragStart={handleDragStart}
@@ -814,6 +836,16 @@ export default function Sidebar() {
   const railFace = railFaceVars(character?.faction_slug)
   const wearsFactionFace = Object.keys(railFace).length > 0
 
+  // #2404 — THE ONE THING THAT TELLS THE TWO APART, and it is motion, not
+  // colour. Albescent still takes the na rail whole: same sheet, same frame,
+  // same spectrum, `railFace` still `{}`. The attribute adds nothing visible on
+  // its own; it is the hook the DEFERRED `motion.ornament.css` matches to walk
+  // `.spectrum-frame`'s rainbow slowly around all three panels, which is exactly
+  // the shimmer ADR-0048 always permitted. One attribute on the aside rather
+  // than a class on each panel, because it reaches every panel by descent —
+  // the same shape as `data-rail-face` above.
+  const driftsTheFrame = character?.faction_slug === 'albescent'
+
   return (
     // `id` is the target of the fold-away handle's `aria-controls` (#1191).
     <aside
@@ -826,11 +858,12 @@ export default function Sidebar() {
       // repoints it (`[data-rail-face] .font-display`) never matches and the
       // utility's stack is untouched.
       {...(wearsFactionFace ? { 'data-rail-face': '' } : null)}
+      {...(driftsTheFrame ? { 'data-spectrum-drift': '' } : null)}
       style={railFace}
     >
       {/* ── Character Card ── */}
       {character ? (
-        <section style={panelStyle}>
+        <section className={PANEL_FRAME} style={panelStyle}>
           {/* Signature hairline — this panel only. Kept through the identity
               redesign (#1553): the hairline, the avatar ring and the level
               track are one mark at three scales. Since #2361 it is one mark at
@@ -982,7 +1015,7 @@ export default function Sidebar() {
           </div>
         </section>
       ) : (
-        <section style={panelStyle}>
+        <section className={PANEL_FRAME} style={panelStyle}>
           <p className="label-caption text-center">{t('sidebar.characterCard.noCharacter')}</p>
         </section>
       )}
