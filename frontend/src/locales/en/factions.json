@@ -424,7 +424,7 @@
     "joining": "Joining…",
     "confirm": "Confirm",
     "memberBadge": "You're a member",
-    "gateHint": "Keep completing tasks to earn an invitation to {{faction}}.",
-    "burnedHint": "You left {{faction}}. It can't take you back until the next era begins."
+    "gateHint": "An invitation to {{faction}} is earned. Keep completing tasks.",
+    "burnedHint": "You left {{faction}}, and it can't take you back until the next era begins."
   }
 }

@@ -1,0 +1,44 @@
+{
+  "points": {
+    "latin": "PVNCTA",
+    "arabic": "نقاط",
+    "japanese": "点数",
+    "cuneiform": "𒌦𒋫"
+  },
+  "signup": {
+    "latin": "ADSCRIBE",
+    "arabic": "اشترك",
+    "japanese": "参加",
+    "cuneiform": "𒃻𒈬"
+  },
+  "base": {
+    "latin": "BASIS",
+    "arabic": "أساس",
+    "japanese": "基本",
+    "cuneiform": "𒊕𒁾"
+  },
+  "bonus": {
+    "latin": "ADDITVM",
+    "arabic": "زيادة",
+    "japanese": "加算",
+    "cuneiform": "𒋛𒀀"
+  },
+  "members": {
+    "latin": "VIATORES",
+    "arabic": "رحالة",
+    "japanese": "行者",
+    "cuneiform": "𒇽𒈨"
+  },
+  "tasks": {
+    "latin": "OPERA",
+    "arabic": "مهام",
+    "japanese": "課題",
+    "cuneiform": "𒆥𒈨"
+  },
+  "praxes": {
+    "latin": "ACTA",
+    "arabic": "أعمال",
+    "japanese": "実践",
+    "cuneiform": "𒀝𒈨"
+  }
+}

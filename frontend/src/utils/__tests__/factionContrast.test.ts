@@ -3347,7 +3347,10 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
     [HERO]: [
       ["WALL", "--faction-snide-wall"],
       ["NOTE_INK", "--faction-snide-note-ink"],
-      ["NOTE_MUTED", "--faction-snide-note-muted"],
+      // NO `NOTE_MUTED` ROW. The hero's one reader of the wall's quiet tier was
+      // the wordmark's expansion, and #2368 made that a SUBHEAD in the full ink;
+      // the alias came off the file with it. The tier is untouched and the four
+      // panels in BODY still read it, which is what the row below still checks.
       ["GRAIN", "--faction-snide-wall-text"],
       ["ACID", "--faction-snide-acid"],
       ["PLATE", "--faction-snide-ink"],
@@ -3575,34 +3578,23 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
  * S.N.I.D.E. surfaces that draw on this same disc already shipped: the press's
  * own `-ink`, 16.68:1 in both cascades. Their rows are here so the family is
  * pinned rather than only the site that was reported.
+ *
+ * THE HERO IS NO LONGER ONE OF THEM (#2368). The owner ruled its medallion black
+ * in both cascades, so that disc is the press's `-ink` now and its marks are
+ * measured by the block below — on a frozen ground whose BOTH ends were checked,
+ * which is why the sigil is allowed to keep flipping there. Nothing about this
+ * block changed: the cream stock is still frozen, and the three surfaces still
+ * drawing on it still owe it a frozen mark.
  */
 describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
   const DISC = "--faction-snide-paper";
-  const HERO = "components/factionHero/SnideFactionHero.tsx";
 
-  /** The three surfaces that already draw a mark on this disc, as tokens. */
+  /** The three surfaces that draw a mark on this disc. */
   const DISC_MARKS: ReadonlyArray<readonly [string, string]> = [
     ["the faction page's inverted monogram (SnideFactionBody)", "--faction-snide-ink"],
     ["the praxis detail's avatar tile (SnidePraxisDetail)", "--faction-snide-ink"],
     ["the profile laurel's glyph (SnideProfileBody)", "--faction-snide-ink"],
   ];
-
-  /**
-   * The hero medallion's two marks, read OFF THE SOURCE rather than listed, so
-   * the rows cannot go on measuring a token the component stopped painting.
-   */
-  function heroMedallionMarks(): Array<[string, string]> {
-    const source = stripComments(sourceOf(HERO));
-    expect(source, `the hero medallion no longer grounds on ${DISC}`).toContain(`background: "var(${DISC})"`);
-    const rim = source.match(/border:\s*"2px solid var\((--[a-z-]+)\)"/);
-    const sigil = source.match(/<SnideSigil[^>]*color="var\((--[a-z-]+)\)"/);
-    expect(rim, "no `2px solid` rim on the hero medallion").not.toBeNull();
-    expect(sigil, "the hero draws no `SnideSigil` in a token colour").not.toBeNull();
-    return [
-      ["the hero medallion's rim", rim![1]],
-      ["the hero medallion's sigil", sigil![1]],
-    ];
-  }
 
   it("the disc itself cannot flip — the premise the rest of this block rests on", () => {
     const [light, dark] = BOTH_THEMES.map((theme) => resolveColor(DISC, theme).raw);
@@ -3611,7 +3603,7 @@ describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
   });
 
   it("every mark drawn on it is frozen too", () => {
-    for (const [role, token] of [...heroMedallionMarks(), ...DISC_MARKS]) {
+    for (const [role, token] of DISC_MARKS) {
       const [light, dark] = BOTH_THEMES.map((theme) => resolveColor(token, theme).raw);
       expect(light, `${token} resolved to nothing in light`).not.toBeNull();
       expect(
@@ -3625,7 +3617,7 @@ describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
     it(`every mark clears the 3:1 graphical floor (${theme})`, () => {
       const ground = resolveColor(DISC, theme);
       expect(ground.color, `${DISC} (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
-      for (const [role, token] of [...heroMedallionMarks(), ...DISC_MARKS]) {
+      for (const [role, token] of DISC_MARKS) {
         const mark = resolveColor(token, theme);
         expect(mark.color, `${token} (${theme}) resolved to "${mark.raw}"`).not.toBeNull();
         const ratio = contrastRatio(mark.color!, ground.color!);
@@ -3634,6 +3626,201 @@ describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
           `${role}: ${token} on ${DISC} (${theme}) is ${formatRatio(ratio)}. A drawn mark owes WCAG 1.4.11's 3:1, and the acid a S.N.I.D.E. surface reaches for by reflex reads 2.40:1 on this stock even in light — there is no acid rung dark enough for cream (#2133's arithmetic, one surface over).`,
         ).toBeGreaterThanOrEqual(AA_LARGE);
       }
+    });
+  }
+});
+
+/**
+ * #2368 — THE BLACK STICKER, AND THE EDGE IT HAS ON THE WALL.
+ *
+ * OWNER RULING: the hero medallion's disc is black in BOTH cascades. That
+ * reverses the ground of the block above for this one surface (the other three
+ * still draw on the cream stock), and it re-opens from the other side the
+ * pairing #2364 closed: with the disc frozen on the press's `-ink`, a mark that
+ * flips is legal again, because BOTH ends of the chrome hue were measured on it
+ * — 6.93:1 at the light `#6fae00`, 15.55:1 at the dark `#b6ff2e`. Both clear AA,
+ * so the sigil keeps flipping rather than being frozen to one value.
+ *
+ * WHAT THE RULING BREAKS, WHICH IS WHY THIS BLOCK EXISTS. The medallion's rim
+ * and its 4px ring were `--faction-snide-ink` on a cream disc. Move the disc
+ * onto that same ink and the rim is black on black. It is not ornament: the disc
+ * is `#14110b` and the DARK wall is `#0a0a0b`, so at night the sticker reads
+ * **1.05:1** against the wall it is slapped on and the rim is the only edge it
+ * has. By day the disc is 15.95:1 on xerox stock and separates itself.
+ *
+ * SO THE ASSERTION IS NOT A RATIO ON ONE PAIRING. It is: in EACH cascade, at
+ * least one of {disc, rim} clears the 3:1 graphical floor against the wall.
+ * Neither side can state that alone — a disc-vs-wall row fails in dark by
+ * design, and a rim-vs-wall row fails in light by design (the chrome hue is
+ * 2.30:1 on xerox stock) — and no per-token manifest can see it at all.
+ *
+ * THE SUBHEAD IS HERE TOO because it is the same surface and the same kind of
+ * claim: the wordmark's expansion was `var(--font-body)` at `--text-base` in the
+ * wall's QUIET tier, i.e. a caption, on a page whose faction owns five faces.
+ * The ink it lands on is measured on the hero's real ground, which is the wall.
+ */
+describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => {
+  const HERO = "components/factionHero/SnideFactionHero.tsx";
+  const WALL = "--faction-snide-wall";
+
+  /**
+   * The aliases the rows below are written against, so a rename fails loudly
+   * instead of matching nothing — the same guard shape the #2343 block uses.
+   */
+  const ALIASES: ReadonlyArray<readonly [string, string]> = [
+    ["WALL", "--faction-snide-wall"],
+    ["NOTE_INK", "--faction-snide-note-ink"],
+    ["PLATE", "--faction-snide-ink"],
+    ["ACID", "--faction-snide-acid"],
+    ["CHROME", "--faction-snide"],
+    ["STOCK", "--faction-snide-paper"],
+  ];
+
+  function heroSource(): string {
+    // `stripComments` only knows `/* … */`; this surface argues for itself in
+    // `//` lines BETWEEN declarations, which is exactly where the rows below
+    // read. Both go, so a paragraph of reasoning cannot hide a declaration.
+    const source = stripComments(sourceOf(HERO)).replace(/^[^\S\n]*\/\/.*$/gm, "");
+    for (const [alias, token] of ALIASES) {
+      expect(
+        source,
+        `${HERO} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
+      ).toMatch(new RegExp(`const ${alias} = ["']var\\(${token}\\)["']`));
+    }
+    return source;
+  }
+
+  /** An alias (bare, `{X}` or `${X}`) or a literal `var(--token)`, as its token. */
+  function tokenOf(expression: string, role: string): string {
+    const trimmed = expression.replace(/[`"'${}]/g, "").replace(/[,;]$/, "").trim();
+    const alias = ALIASES.find(([name]) => name === trimmed);
+    if (alias) return alias[1];
+    const bare = trimmed.match(/^var\((--[a-z-]+)\)$/);
+    expect(bare, `${role} paints \`${trimmed}\`, which is neither an alias this guard knows nor a var()`).not.toBeNull();
+    return bare![1];
+  }
+
+  /** The medallion, read OFF THE SOURCE so no row measures a token it stopped painting. */
+  function medallion(): { disc: string; marks: Array<[string, string]>; raster: string } {
+    const source = heroSource();
+    const disc = source.match(/borderRadius: "50%",\s*background: ([^,\n]+),/);
+    const rim = source.match(/border: [`"]2px solid ([^`"]+)[`"]/);
+    const sigil = source.match(/<SnideSigil[^>]*color=([^\s/>]+)/);
+    // The medallion's own raster — the 6% one; the hero's wall grain is 5.5%
+    // and the five pasted ghosts are 7%/3.5%/2.5%.
+    const raster = source.match(/color-mix\(in srgb, ([^\s]+) 6%, transparent\)/);
+    expect(disc, "no disc in the hero — nothing here is measuring the medallion").not.toBeNull();
+    expect(rim, "no `2px solid` rim on the hero medallion").not.toBeNull();
+    expect(sigil, "the hero draws no `SnideSigil` in a colour this guard can read").not.toBeNull();
+    expect(raster, "the medallion's 6% raster is gone").not.toBeNull();
+    return {
+      disc: tokenOf(disc![1], "the medallion's disc"),
+      marks: [
+        ["the medallion's rim", tokenOf(rim![1], "the medallion's rim")],
+        ["the medallion's sigil", tokenOf(sigil![1], "the medallion's sigil")],
+      ],
+      raster: tokenOf(raster![1], "the medallion's raster"),
+    };
+  }
+
+  it("the disc is black in both cascades — the owner's ruling, as a measurement", () => {
+    const { disc } = medallion();
+    const [light, dark] = BOTH_THEMES.map((theme) => resolveColor(disc, theme));
+    expect(light.raw, `${disc} resolved to nothing in light`).not.toBeNull();
+    expect(dark.raw, `the medallion grounds on ${disc}, which flips ${light.raw} -> ${dark.raw}. The ruling is that this disc is black no matter what the cascade does.`).toBe(light.raw);
+    expect(
+      relativeLuminance(light.color!),
+      `${disc} is ${light.raw}, whose relative luminance is not a black disc's. Freezing the stock is only half the ruling.`,
+    ).toBeLessThan(0.05);
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`every mark on the disc clears the 3:1 graphical floor (${theme})`, () => {
+      const { disc, marks, raster } = medallion();
+      const ground = resolveColor(disc, theme);
+      expect(ground.color, `${disc} (${theme}) resolved to "${ground.raw}"`).not.toBeNull();
+      for (const [role, token] of marks) {
+        const mark = resolveColor(token, theme);
+        expect(mark.color, `${token} (${theme}) resolved to "${mark.raw}"`).not.toBeNull();
+        const ratio = contrastRatio(mark.color!, ground.color!);
+        expect(
+          ratio,
+          `${role}: ${token} on ${disc} (${theme}) is ${formatRatio(ratio)}. A drawn mark owes WCAG 1.4.11's 3:1, and the failure this catches is the cheap one — leaving a mark in the ink the disc itself became.`,
+        ).toBeGreaterThanOrEqual(AA_LARGE);
+      }
+      // The raster owes no ratio — it is a texture — but painting it in the
+      // disc's own ink means painting nothing at all.
+      expect(raster, "the medallion's raster is the disc's own colour, so it draws nothing").not.toBe(disc);
+    });
+  }
+
+  for (const theme of BOTH_THEMES) {
+    it(`the sticker has an edge against the wall (${theme})`, () => {
+      const { disc, marks } = medallion();
+      const wall = resolveColor(WALL, theme);
+      expect(wall.color, `${WALL} (${theme}) resolved to "${wall.raw}"`).not.toBeNull();
+      const rim = marks[0][1];
+      const readings = [disc, rim].map((token) => {
+        const value = resolveColor(token, theme);
+        expect(value.color, `${token} (${theme}) resolved to "${value.raw}"`).not.toBeNull();
+        return { token, ratio: contrastRatio(value.color!, wall.color!) };
+      });
+      const best = Math.max(...readings.map((r) => r.ratio));
+      expect(
+        best,
+        `neither the disc nor its rim separates the medallion from the wall in ${theme}: ${readings
+          .map((r) => `${r.token} ${formatRatio(r.ratio)}`)
+          .join(", ")}. One of the two has to carry the edge in each cascade — the black disc does it by day (15.95:1 on xerox stock), and at night it is 1.05:1 on the #0a0a0b wall and only the rim is left.`,
+      ).toBeGreaterThanOrEqual(AA_LARGE);
+    });
+  }
+
+  /** The wordmark's expansion line, as `style={{ … }}` up to the string it renders. */
+  function subhead(): string {
+    const source = heroSource();
+    const at = source.indexOf("identity.snide.fullName");
+    expect(at, `${HERO} no longer renders the faction's full name`).toBeGreaterThan(-1);
+    const open = source.lastIndexOf("style={{", at);
+    expect(open, "the expansion line is rendered by no styled element").toBeGreaterThan(-1);
+    return source.slice(open, at);
+  }
+
+  it("the expansion line speaks in one of the faction's own five faces", () => {
+    const face = subhead().match(/fontFamily: "var\((--[a-z-]+)\)"/);
+    expect(face, "the expansion line sets no fontFamily at all").not.toBeNull();
+    expect(
+      face![1],
+      `the expansion line is set in ${face![1]} on a page whose faction owns five faces of its own (-font-impact, -font-cond, -font-black, -font-type, -font-marker).`,
+    ).toMatch(/^--faction-snide-font-/);
+  });
+
+  it("it is marked up as the wordmark's subhead, not a caption hanging off it", () => {
+    const source = heroSource();
+    const group = source.match(/<hgroup[\s\S]*?<\/hgroup>/);
+    expect(group, "the wordmark and its expansion are not grouped as a heading and its subhead").not.toBeNull();
+    expect(group![0], "the h1 is not in the group").toContain("<h1");
+    expect(group![0], "the expansion is not in the group").toContain("identity.snide.fullName");
+    const ink = subhead().match(/color: ([^,\n]+),/);
+    expect(ink, "the expansion line sets no colour").not.toBeNull();
+    expect(
+      tokenOf(ink![1], "the expansion line"),
+      "a subhead is a step in the hierarchy, not a footnote — the wall's QUIET tier is the caption rung this line came off.",
+    ).not.toBe("--faction-snide-note-muted");
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`the subhead's ink clears AA on the hero's real ground (${theme})`, () => {
+      const ink = subhead().match(/color: ([^,\n]+),/);
+      expect(ink, "the expansion line sets no colour").not.toBeNull();
+      const token = tokenOf(ink![1], "the expansion line");
+      const text = resolveColor(token, theme);
+      const ground = resolveColor(WALL, theme);
+      expect(text.color, `${token} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+      const ratio = contrastRatio(text.color!, ground.color!);
+      expect(
+        ratio,
+        `the wordmark's subhead: ${token} on ${WALL} (${theme}) is ${formatRatio(ratio)}. The hero's ground is the wall, not the slab — the card tiers read 1.05:1 and 1.24:1 on it by day (#2173).`,
+      ).toBeGreaterThanOrEqual(AA_NORMAL);
     });
   }
 });

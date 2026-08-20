@@ -45,9 +45,25 @@ const ACCENT = 'var(--albescent-reveal-ink)'
 const MUTED = 'var(--albescent-reveal-text-muted)'
 const SERIF = 'var(--font-faction-vellum)'
 const MONO = "'Courier Prime', monospace"
-// Structural hairlines — no token exists; mirrors AlbescentComment's practice.
-const HAIRLINE = 'rgba(0,0,0,0.10)'
-const HAIRLINE_FAINT = 'rgba(0,0,0,0.055)'
+// Structural hairlines. These read as module constants, which is why the colour
+// arm never saw them (#2139 ②: a value that reaches the style object as an
+// `Identifier` is Gap D wearing paint, and local const-tracking is not worth the
+// rule's complexity). What the old comment here got wrong was the reason it gave
+// for staying raw — "no token exists". Two of the three DO exist and are
+// byte-identical: the reveal block declares `--albescent-reveal-border` at 0.1
+// and `-border-faint` at 0.055, `AlbescentSelectCard` and `AlbescentSeal`
+// already read them, and the letter is one of the two or three components that
+// block was minted for. So this repaints nothing and stops the letter freezing
+// its own copy of a value the family owns.
+const HAIRLINE = 'var(--albescent-reveal-border)'
+const HAIRLINE_FAINT = 'var(--albescent-reveal-border-faint)'
+// A DECIDED KEEP, and this one really has no rung: 0.07 sits between the two
+// declared alphas and nothing else in the reveal block or outside it draws at
+// it. Minting a third rung for one reader would cost the one blocking
+// stylesheet bytes (§6, #2019) to name a value with a single site. Albescent is
+// always-light by design — these tokens are declared once with no dark half —
+// so a frozen black here is not a dark-mode defect. If #2301 gives the reveal a
+// dark half, this is the line that will not follow, and the two above will.
 const RULE = 'rgba(0,0,0,0.07)'
 
 // i18n key stems under factions:albescent.letter — resolved at render.

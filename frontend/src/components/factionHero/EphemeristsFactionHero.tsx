@@ -1,6 +1,7 @@
 import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
+import EphemeristsGloss, { type GlossWord } from "../factionMarks/EphemeristsGloss";
 import {
   BAND,
   BAND_INK,
@@ -81,10 +82,13 @@ export default function EphemeristsFactionHero({
   praxes: number;
 }) {
   // The faction labels its own counts — page passes raw numbers only.
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.ephemerists.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
+  /* THE CAPTIONS TRAVEL, THE COUNTS DO NOT (#2148). `gloss` names the catalog
+     entry each caption is cast through; the figure beside it stays a Western
+     numeral, always. */
+  const stats: { value: number; label: string; gloss: GlossWord }[] = [
+    { value: members, label: i18n.t("feed:factionHero.ephemerists.stats.members"), gloss: "members" },
+    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks"), gloss: "tasks" },
+    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes"), gloss: "praxes" },
   ];
   return (
     <header
@@ -203,10 +207,13 @@ export default function EphemeristsFactionHero({
             stats sit beside the emblem, never a full-width band). */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)", alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
           <EmblemOctagon size={112} />
-          <div style={{ alignSelf: "stretch", border: `1px solid ${BRASS}` }}>
+          {/* `eph-turn-scope` is WCAG 2.2.2's pause mechanism for the captions'
+              turn: the stylesheet's rule is a descendant selector, so the ledger
+              is the scope rather than each caption carrying a wrapper. */}
+          <div className="eph-turn-scope" style={{ alignSelf: "stretch", border: `1px solid ${BRASS}` }}>
             {stats.map((s, i) => (
               <div
-                key={s.label}
+                key={s.gloss}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -217,7 +224,7 @@ export default function EphemeristsFactionHero({
                 }}
               >
                 <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: BAND_QUIET }}>
-                  {s.label}
+                  <EphemeristsGloss word={s.gloss} english={s.label} ordinal={i} />
                 </span>
                 <span className="content-title" style={{ fontFamily: DECO, lineHeight: 0.85, color: GOLD }}>
                   {s.value}
