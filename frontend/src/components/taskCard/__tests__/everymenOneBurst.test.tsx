@@ -138,8 +138,12 @@ describe('Everymen draws ONE burst (#2195)', () => {
     // This is the check that keeps the count at one without another survey.
     expect(EVERYMEN_SOURCES.length, 'the Everymen kit is in the scan').toBeGreaterThan(8)
     for (const path of EVERYMEN_SOURCES) {
+      // Comments stripped: several of these files NAME the geometry they used
+      // to draw, which is the record of the collapse and must not read as a
+      // relapse. Only `/* */` — a `//` line is not where a gradient is written.
+      const code = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
       expect(
-        readFileSync(path, 'utf8'),
+        code,
         `${path.slice(SRC.length)} draws its own conic — mount \`em-burst\` instead`,
       ).not.toContain('repeating-conic-gradient')
     }

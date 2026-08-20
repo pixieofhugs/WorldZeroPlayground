@@ -89,7 +89,6 @@ import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   ComposerFooter,
-  ComposerGround,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -325,27 +324,17 @@ export default function EverymenEditPraxis({ state }: Props) {
           </ComposerMasthead>
   );
   const ground = (
-          /* Poster rays fanning from behind the masthead, a gold glow in one
-             corner and an olive one in the other, all masked away from the copy.
-             Anchored (inset 0, unanimated): the burst's origin is the masthead,
-             and a drifting layer would walk it off the plate. */
-          <ComposerGround
-            inset={0}
-            background={
-              "radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),"
-              + " radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),"
-              + " repeating-conic-gradient(from 0deg at 50% 8%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)"
-            }
-            style={{
-              /* Alpha, not colour: a mask reads only the channel, so black here
-                 is "keep" and transparent is "drop" (the same literal the v2
-                 task card's mask carries). */
-              WebkitMaskImage:
-                "radial-gradient(130% 70% at 50% 8%, #000 40%, transparent 92%)",
-              maskImage:
-                "radial-gradient(130% 70% at 50% 8%, #000 40%, transparent 92%)",
-            }}
-          />
+          /* The faction's ONE ornament (#2195). The work order transcribed the
+             bill's burst with its own origin (50% 8%) and its own mask — one of
+             the nine Everymen geometries the owner collapsed, and one of the two
+             the epic's survey missed. It mounts the shared drawing now.
+
+             Not a `ComposerGround`: that component's job is the position, the
+             inset and the drift, and `.em-burst` already carries an anchored
+             inset-0 layer with `pointer-events: none`. The composer never
+             stands on a faction backdrop, so it wears the ornament always and
+             takes no alternation branch. */
+          <div aria-hidden className="em-burst" />
   );
 
   const dress: ComposerDress = {

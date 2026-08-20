@@ -887,6 +887,21 @@ export default function EverymenTaskDetail({
           boxSizing: "border-box",
         }}
       >
+        {/* The faction's ONE ornament (#2195). This sheet fanned its own rising
+            sun from below the bottom edge, in its own red at its own pitch —
+            one of nine Everymen bursts. It mounts the shared drawing now.
+
+            `z-index: -1` because the column's copy is NOT positioned, and a
+            positioned sibling at auto would paint the rays over it. The mount
+            above makes a stacking context (`position: relative; z-index: 1`),
+            so -1 lands above `.em-broadsheet`'s own newsprint and below every
+            word on it — §5's stacking half, the same reasoning `.em-dispatch`'s
+            margin rule records.
+
+            No alternation branch: a detail page never mounts a faction
+            backdrop, so this ground is always plain and the ornament is always
+            worn (#2195, out of scope). */}
+        <div aria-hidden="true" className="em-burst" style={{ zIndex: -1 }} />
         <div
           style={{
             display: "flex",
