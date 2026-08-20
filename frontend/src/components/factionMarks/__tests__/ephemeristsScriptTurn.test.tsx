@@ -30,12 +30,12 @@
  * easily: all five frames are laid in ONE grid cell, so the slot is the widest
  * of them by layout rather than by a measurement pass a test could not run.
  */
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from "vitest"
 import '../../../i18n'
 import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
@@ -53,6 +53,7 @@ import EphemeristsScoreStamp from '../../praxisCard/scoreStamp/EphemeristsScoreS
 import EphemeristsFactionHero from '../../factionHero/EphemeristsFactionHero'
 import { aTask } from '../../../test/fixtures'
 import catalog from '../../../locales/en/glosses.json'
+import { readStripped, sourceFiles, toRelative } from '../../../test/sourceScan'
 
 const SRC = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..')
 const FONTS_CSS =
@@ -60,6 +61,14 @@ const FONTS_CSS =
   readFileSync(join(SRC, 'fonts.faction.css'), 'utf-8')
 const INDEX_CSS = readFileSync(join(SRC, 'index.css'), 'utf-8')
 const WORDS = Object.keys(catalog) as GlossWord[]
+
+/** Every English copy catalog but the gloss catalog itself. */
+const catalogs = (): string[] => {
+  const dir = join(SRC, 'locales', 'en')
+  return readdirSync(dir)
+    .filter((entry) => entry.endsWith('.json') && entry !== 'glosses.json')
+    .map((entry) => join(dir, entry))
+}
 
 const TASK = aTask({ in_progress_count: 2 })
 
@@ -120,21 +129,21 @@ describe('one catalog, and it is the only one (#2148)', () => {
   it('writes no cast anywhere but the catalog', () => {
     // The defect #2148 names: five arrays at five moments, two of them already
     // drifted. Any second copy of a cast string — in a component, in another
-    // locale file — is that defect coming back.
-    const elsewhere = [
-      join(SRC, 'components', 'taskCard', 'EphemeristsTaskCard.tsx'),
-      join(SRC, 'components', 'praxisCard', 'scoreStamp', 'EphemeristsScoreStamp.tsx'),
-      join(SRC, 'components', 'factionHero', 'EphemeristsFactionHero.tsx'),
-      join(SRC, 'components', 'factionMarks', 'EphemeristsGloss.tsx'),
-      join(SRC, 'locales', 'en', 'feed.json'),
-      join(SRC, 'locales', 'en', 'praxis.json'),
-    ]
-    for (const path of elsewhere) {
-      const source = readFileSync(path, 'utf-8')
-      for (const cast of everyCast()) {
-        expect(source, `${cast} is written in ${path}`).not.toContain(cast)
+    // locale file — is that defect coming back, so the whole of `src/` is asked
+    // rather than the three surfaces that happen to gloss today.
+    //
+    // Comments are stripped, as `catalogLexicon` does: a docstring may quote a
+    // cast (the score stamp's names `PVNCTA` to explain why it does NOT set it),
+    // a rendered string may not.
+    const offenders: string[] = []
+    const written = everyCast()
+    for (const path of [...sourceFiles(), ...catalogs()]) {
+      const source = readStripped(path)
+      for (const cast of written) {
+        if (source.includes(cast)) offenders.push(`${cast} in ${toRelative(path)}`)
       }
     }
+    expect(offenders, 'a cast belongs to locales/en/glosses.json and nowhere else').toEqual([])
   })
 
   it('takes the resting frame from the live catalogue, never from a hardcoded cast', () => {
