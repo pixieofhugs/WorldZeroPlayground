@@ -150,9 +150,18 @@ describe('the stamp reads working-then-total (#2145)', () => {
     )
   })
 
-  it('labels the total “points”, in English (#2145 §5)', () => {
-    expect(render().replace(/<[^>]*>/g, '')).toContain(i18n.t('praxis:card.stamp.points', { count: 26.5 }))
-    expect(render()).not.toContain('PVNCTA')
+  it('labels the total “points”, in English (#2145 §5, #2148)', () => {
+    // #2145's ruling was that this label is a CONSUMER of the faction's script
+    // rotation and not a place to hardcode Latin, which #2148 made literal: the
+    // Latin cast is in the markup, drawn by the shared gloss, but the English is
+    // the resting frame and the only thing an assistive reader is offered.
+    const html = render()
+    const english = i18n.t('praxis:card.stamp.points', { count: 26.5 })
+    expect(html).toContain(`<span class="sr-only">${english}</span>`)
+    const at = html.indexOf('PVNCTA')
+    const stack = html.lastIndexOf('class="eph-turn', at)
+    expect(stack, 'the Latin cast is drawn by the shared gloss').toBeGreaterThan(0)
+    expect(html.slice(stack, at), 'and that stack is aria-hidden').toContain('aria-hidden="true"')
   })
 })
 
@@ -177,22 +186,28 @@ describe('the stamp reads working-then-total (#2145)', () => {
 describe('every line of the working reads figure-then-word (#2285)', () => {
   type Span = { style: string; text: string }
 
-  /** Every styled `<span>` in document order. */
-  const spans = (html: string): Span[] =>
-    [...html.matchAll(/<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g)].map((m) => ({
-      style: m[1],
-      text: m[2],
-    }))
-
   const decl = (span: Span, prop: string) =>
     span.style.split(';').find((d) => d.startsWith(`${prop}:`)) ?? `no ${prop}`
 
-  /** A row, found by its label — and the span that opened immediately before it. */
+  /**
+   * A row, found by its label — the figure cell, and the label CELL.
+   *
+   * Since #2148 the word is a gloss stack inside the label cell, so that cell is
+   * no longer a leaf and `spans()` cannot see it. The `sr-only` copy of the word
+   * is the anchor instead: the label cell is the styled span that opens
+   * immediately before it, and the figure is the last leaf that closed before
+   * that. The row's VOICE is what these assertions read, and it still lives on
+   * the cell — which is the point, since a per-cast font would be exactly the
+   * drift #2285 forbids.
+   */
   function row(html: string, label: string) {
-    const all = spans(html)
-    const at = all.findIndex((s) => s.text === label)
+    const marker = `<span class="sr-only">${label}</span>`
+    const at = html.indexOf(marker)
     expect(at, `the ${label} row is printed`).toBeGreaterThan(0)
-    return { figure: all[at - 1], label: all[at] }
+    const cellAt = html.lastIndexOf('<span style="', at)
+    const style = html.slice(cellAt).match(/^<span style="([^"]*)"/)![1]
+    const figure = [...html.slice(0, cellAt).matchAll(/<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g)].pop()!
+    return { figure: { style: figure[1], text: figure[2] }, label: { style, text: label } }
   }
 
   /** Base, the multiplier's two terms aside, and the three lines added to it. */
