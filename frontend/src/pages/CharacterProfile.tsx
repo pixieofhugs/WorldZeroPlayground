@@ -255,12 +255,15 @@ export default function CharacterProfile() {
     : null;
   const progression: ProfileProgression | null = track
     ? {
-        // At the top of the curve `levelTrack` reports no next rung; the panel
-        // keeps the degenerate shape it has always had — the current level
-        // named as "next", the band collapsed to a point, the bar full.
-        nextLevel: track.nextLevel ?? character.level,
+        // At the top of the curve `levelTrack` reports no next rung, and it is
+        // passed through untouched (#2383). Two coercions used to stand here —
+        // the current level named as "next", the band's far edge faked as the
+        // near one — and they are what printed "next · lvl 8" beside "0 / 0
+        // pts this level" on a level-8 profile. The skins branch on the `null`
+        // the way the field desk always has. Do not reintroduce a `??` here.
+        nextLevel: track.nextLevel,
         currentThreshold: track.currentThreshold,
-        nextThreshold: track.nextThreshold || track.currentThreshold,
+        nextThreshold: track.nextThreshold,
         pointsIntoLevel: track.pointsIntoLevel,
         levelSpan: track.levelSpan,
         progressPercent: track.fillPercent,
