@@ -63,6 +63,7 @@ import {
   samePresence,
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
+import { roomStoreName, trackRoomStore } from "./roomStore";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -97,34 +98,14 @@ function roomServerUrl(): string {
   return `${apiBase.replace(/^http/, "ws")}${ROOM_PATH}`;
 }
 
-/** The IndexedDB database holding one praxis's offline copy of its document. */
-function roomStoreName(praxisId: number): string {
-  return `praxis-room-${praxisId}`;
-}
-
-/**
- * Drop this browser's copy of a document the server has destroyed (#1745).
- *
- * Publishing flattens the room into `body_text` and deletes the stored
- * document; `pullBack` then seeds a **new** one from that text. This store
- * holds the old one, and the two were built independently — merged, the praxis
- * would hold its body twice. That is the ADR-0073 duplication footgun arriving
- * from the client side, and it is invisible when it happens, because both
- * copies say the same thing.
- *
- * It is also the local half of the privacy rule: the tombstones the server just
- * dropped — text a member typed and deleted — are in here too.
- *
- * Deleting the database rather than `clearData()`ing a handle: constructing an
- * `IndexeddbPersistence` purely to empty it would re-create the store it is
- * emptying. A delete blocked by an open handle completes once that handle
- * closes, which is the provider teardown this fires alongside.
+/*
+ * The local copy of a room document — its database name and its disposal —
+ * lives in `roomStore.ts` (#2381). It left this file because the disposal has a
+ * trap in it (a delete is blocked for as long as the store is open) and a rule
+ * that can only be reached through a provider cannot be proved in a harness
+ * with no DOM. The provider's part is to announce its store while it holds it,
+ * below.
  */
-export function discardRoomStore(praxisId: number): void {
-  // The static-render harness runs in `node`, where there is no IndexedDB.
-  if (typeof indexedDB === "undefined") return;
-  indexedDB.deleteDatabase(roomStoreName(praxisId));
-}
 
 export interface PraxisRoom {
   /** The co-edited markdown body. Bound to CodeMirror by `BodyTextarea`. */
@@ -266,8 +247,12 @@ export function PraxisRoomProvider({
     //
     // Publishing destroys the server's document and `pullBack` re-seeds a fresh
     // one (#1745), so this store is dropped in the same beat — see
-    // `discardRoomStore` below.
+    // `discardRoomStore` in `roomStore.ts`.
     const offline = new IndexeddbPersistence(roomStoreName(praxisId), doc);
+    // Announce it while it is open. A discard that arrives now — the composer
+    // that publishes is holding this very store — has to go through this handle
+    // rather than through a delete the handle would block (#2381).
+    const untrackStore = trackRoomStore(praxisId, offline);
     // Did this room's socket ever open? A local `let` rather than a ref because
     // the latch belongs to THIS provider: a new `praxisId` builds a new socket,
     // which has opened nothing, and a ref shared across effect runs would tell
@@ -349,6 +334,7 @@ export function PraxisRoomProvider({
       // `destroy()` closes the store; `clearData()` is what would delete it,
       // and must not be called here — the point of the store is that it
       // outlives the tab.
+      untrackStore();
       void offline.destroy();
       doc.destroy();
       setTypes(null);

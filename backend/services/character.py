@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, func, or_, select, union
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
+from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
@@ -236,27 +237,55 @@ async def get_account_invited_faction_slugs(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> list[str]:
-    """Faction slugs the account holds a current-era invitation for (ADR-0019).
+    """Faction slugs a new life on this account may be born into (ADR-0019, #2385).
 
-    Account-pooled: an invite on *any* of the account's characters counts. The
-    ``na`` sentinel and ``albescent`` are excluded — they are never invite-joinable.
-    Returns ``[]`` when the era is unseeded or no invites exist (the norm until #272
-    delivers invitations).
+    Account-pooled over every one of the account's characters: a faction counts
+    if any of them **holds** a current-era invitation letter for it, or **has
+    ever held it** this era — its current faction, plus every
+    :class:`FactionDefectionHistory` row it has left behind.
+
+    The "has ever held" half is #2385. ``defect_to_faction`` deletes the letter
+    when a character walks out — deliberately, per #2218: a live row re-arms
+    that character's bell into offering a rejoin the guard refuses. But #2218's
+    reason is per-character while this pool is account-wide, so one life's
+    defection also removed the faction as a *birth* option for every future
+    life. The account's earned history is not what that delete meant to take.
+
+    This does **not** re-open the per-character door. The life that walked out
+    still cannot go back; that is enforced separately, from *that character's*
+    own defection history, by
+    :func:`services.faction_service.can_join_faction` and
+    :func:`services.faction_service.unjoinable_faction_slugs`.
+
+    Current faction needs no era filter of its own: it is a character's live
+    state, and an era reset is what clears it (``era.reset_faction``), so a slug
+    still standing there is still held in the era in hand.
+
+    The ``na`` sentinel and ``albescent`` are excluded — they are never
+    invite-joinable. Returns ``[]`` when the era is unseeded.
     """
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
         return []
+    account_character_ids = select(Character.id).where(
+        Character.account_id == account_id
+    )
     result = await session.execute(
-        select(InvitationLetter.faction_slug)
-        .distinct()
-        .join(Character, Character.id == InvitationLetter.character_id)
-        .where(
-            Character.account_id == account_id,
-            InvitationLetter.era_id == era_row.id,
-            InvitationLetter.faction_slug.notin_(list(_ALBESCENT_SENTINEL_SLUGS)),
+        union(
+            select(InvitationLetter.faction_slug).where(
+                InvitationLetter.character_id.in_(account_character_ids),
+                InvitationLetter.era_id == era_row.id,
+            ),
+            select(Character.faction_slug).where(
+                Character.account_id == account_id
+            ),
+            select(FactionDefectionHistory.faction_slug).where(
+                FactionDefectionHistory.character_id.in_(account_character_ids),
+                FactionDefectionHistory.era_id == era_row.id,
+            ),
         )
     )
-    return sorted(row[0] for row in result.all())
+    return sorted({row[0] for row in result.all()} - _ALBESCENT_SENTINEL_SLUGS)
 
 
 async def list_era_invitations_for_character(
@@ -266,8 +295,9 @@ async def list_era_invitations_for_character(
 ) -> list[str]:
     """Faction slugs THIS character holds an invitation letter for in ``era_id`` (#243).
 
-    Unlike :func:`get_account_invited_faction_slugs` (account-pooled, used to gate
-    creation/join), this is per-character: it powers the /auth/me invitation
+    Unlike :func:`get_account_invited_faction_slugs` (account-pooled, and since
+    #2385 counting factions once held as well as currently lettered), this is
+    strictly letters, strictly this character: it powers the /auth/me invitation
     watcher, which diffs the active life's own earned invites. ``Character.account``
     is ``lazy="raise"``, so the letter rows are queried explicitly by character_id
     (mirroring how #459 badges do sibling queries). The ``na`` sentinel and

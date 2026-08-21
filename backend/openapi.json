@@ -9537,7 +9537,7 @@
     },
     "/me/invited-factions": {
       "get": {
-        "description": "Faction slugs the account holds a current-era invitation for (empty until #272).",
+        "description": "Faction slugs a new life on this account may be born into (ADR-0019).\n\nNot just live invitation letters: since #2385 this also counts any faction\nan existing life on the account currently holds or has ever held this era.\nWalking out burns the door for *that* character, not for the account.",
         "operationId": "my_invited_factions_me_invited_factions_get",
         "parameters": [
           {
