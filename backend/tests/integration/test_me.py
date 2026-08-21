@@ -154,8 +154,21 @@ async def test_switch_active_character_non_active_rejected(
 
 @pytest.mark.asyncio
 async def test_invited_factions_empty_by_default(
-    client: AsyncClient, character: Character, auth_headers: dict
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    faction_ua: Faction,
+    auth_headers: dict,
 ):
+    """A life that has never been anywhere earns the account no birth options.
+
+    The shared ``character`` fixture is born into ``ua``, which since #2385 is
+    itself a birth option (a faction the account holds). Put it back on the
+    unaffiliated sentinel — the real default — for the empty case.
+    """
+    character.faction_slug = "na"
+    await db_session.commit()
+
     resp = await client.get("/me/invited-factions", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json() == []
