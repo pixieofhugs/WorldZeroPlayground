@@ -11,6 +11,7 @@
     "emptyCaughtUp": "All caught up",
     "emptyCaughtUpHint": "Nothing is waiting on your vote.",
     "count": "{{count}} shown",
+    "countWindowed": "Showing first {{count}}",
     "loadMore": "Load more",
     "taskFilter": {
       "notice": "Proof of action, narrowed to a single task.",

@@ -60,6 +60,12 @@ const ELIGIBILITY_ON = 'canSignUp'
  * one component printing it is what keeps the desktop eyebrow and the mobile
  * caption from drifting apart — they both used to print it, in two spellings,
  * one of them hardcoded English.
+ *
+ * It names the WINDOW rather than stating a bare number (#2384): beside a
+ * dropdown and a search box, "50 shown" reads as a page-size setting a player
+ * could change, and the "Load more" that explains it is a page-scroll below. So
+ * the copy branches on `hasMore` — the same flag that raises that button, never
+ * `tasks.length === PAGE_LIMIT`, which is wrong once the window has grown.
  */
 export default function TaskFilterBar({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
@@ -67,6 +73,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
   const {
     user,
     tasks,
+    hasMore,
     factions,
     statusFilters,
     taskType,
@@ -179,7 +186,9 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       rails={rails}
       facets={[factionFacet(factions, selectedFactions, setSelectedFactions)]}
       onClearAll={clearFilters}
-      summary={t('listPage.count', { count: tasks.length })}
+      summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
+        count: tasks.length,
+      })}
       search={{
         value: query,
         onChange: setQuery,
