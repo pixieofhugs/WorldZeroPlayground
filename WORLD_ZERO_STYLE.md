@@ -1123,7 +1123,7 @@ The Ephemerists' mark vocabulary lived in three files: the kit, plus a transcrip
 
 **Only the texture branches.** The frame, the masthead band, the points mark, the CTA, the dashed rules and the striped bars are identical on both sides of the predicate. That is testable without a DOM and it is worth testing: strip the ornament layer from the plain render and the busy render must be byte-identical. A "go plain" that starts taking chrome with it is how an ornament rule turns into a second card.
 
-**And the byte win is smaller than it looks, because most of the copies were never on the critical path.** Nine geometries collapsed to one, three textures deleted, four tokens retired — and the blocking stylesheet moved only **−107 bytes gzipped**. Seven of the nine copies were inline styles in *lazy archetype chunks*, which the budget correctly does not count; the shared class is new weight in the one sheet that does. **Price a collapse by where the copies live, not by how many there are.**
+**And the byte win is smaller than it looks, because most of the copies were never on the critical path.** Nine geometries collapsed to one, three textures deleted, four tokens retired — and the blocking stylesheet moved only **−106 bytes gzipped** (22,994 → 22,888 at gzip level 9, the level the repo's own budget script uses; a default-level measurement here reports a different number and has stalled PRs before). Seven of the nine copies were inline styles in *lazy archetype chunks*, which the budget correctly does not count; the shared class is new weight in the one sheet that does. **Price a collapse by where the copies live, not by how many there are.**
 
 ### S.N.I.D.E. wears no tape, and it was SPECIFIED (#1708)
 
