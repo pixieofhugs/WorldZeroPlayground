@@ -179,7 +179,14 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
     // perimeter, so it could not land on a photo and needs nothing here.
     const edge = ruleBodies(css, ".alb-praxis-edge").find((b) => /padding\s*:\s*2px/.test(b));
     expect(edge, "the edge rule").toBeDefined();
-    expect(edge).toMatch(/content-box/);
+    // The mask moved to the shared `.spectrum-frame::before` list in #2407 — one
+    // ring for all six mounts — so what proves it is still masked back to a 2px
+    // perimeter is the pairing: this rule's inset, that rule's exclude idiom.
+    // `ruleBodies` matches a selector only where nothing follows it before the
+    // brace, which is why the shared list ends on `.spectrum-frame::before`.
+    expect(ruleBodies(css, ".spectrum-frame::before")[0], "the shared ring").toMatch(
+      /content-box/,
+    );
   });
 });
 
