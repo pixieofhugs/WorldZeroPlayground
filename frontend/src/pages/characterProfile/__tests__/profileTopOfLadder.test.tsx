@@ -36,6 +36,17 @@ import FactionProfileBody, { type ProfileBodyProps } from '../FactionProfileBody
 const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', 'singularity']
 const FORM_FACTORS = ['desktop', 'mobile'] as const
 
+/**
+ * Where a level track is actually mounted. Every kit draws one on a laptop; on
+ * a phone WOW alone does not — its mobile skin trades the track for a tally of
+ * deeds. The exclusion is pinned by its own test at the bottom of this file so
+ * it cannot quietly become a hole.
+ */
+const TRACK_MOUNTS: Record<(typeof FORM_FACTORS)[number], readonly string[]> = {
+  desktop: SLUGS,
+  mobile: SLUGS.filter((slug) => slug !== 'wow'),
+}
+
 /** Level 8 is the last rung of era 1's curve; `levelTrack` reports this shape. */
 const AT_THE_TOP: ProfileBodyProps['progression'] = {
   nextLevel: null,
@@ -113,7 +124,7 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
   })
 
   for (const formFactor of FORM_FACTORS) {
-    for (const slug of SLUGS) {
+    for (const slug of TRACK_MOUNTS[formFactor]) {
       it(`${slug}/${formFactor} says the top of the ladder and nothing about 0 / 0`, () => {
         mocks.formFactor = formFactor
         const text = renderText(slug, AT_THE_TOP, 8)
@@ -127,7 +138,7 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
   // The other half: mid-climb is untouched. A fix that simply deleted the two
   // figures would pass every assertion above.
   for (const formFactor of FORM_FACTORS) {
-    for (const slug of SLUGS) {
+    for (const slug of TRACK_MOUNTS[formFactor]) {
       it(`${slug}/${formFactor} still draws the band and the next rung mid-climb`, () => {
         mocks.formFactor = formFactor
         const text = renderText(slug, MID_CLIMB, 7)
@@ -139,4 +150,20 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
       })
     }
   }
+
+  // The one exclusion above, asserted rather than assumed: WOW's phone skin
+  // trades the whole track for a tally of deeds, so it has no climb readout to
+  // get wrong. If it ever grows one, this fails and the skin joins the loops.
+  it('wow/mobile draws no level track at all, in either state', () => {
+    mocks.formFactor = 'mobile'
+    for (const [track, level] of [
+      [AT_THE_TOP, 8],
+      [MID_CLIMB, 7],
+    ] as const) {
+      const text = renderText('wow', track, level)
+      expect(text).not.toContain('pts this level')
+      expect(text).not.toContain('next · ')
+      expect(text).not.toContain(TOP_OF_LADDER)
+    }
+  })
 })
