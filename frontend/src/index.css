@@ -2512,7 +2512,12 @@
      was measured on a different sheet and is still right there. */
   --everymen-deep-accent: #a01c21;
   --everymen-field: #c1272d;
-  --everymen-field-deep: #8d1c20;
+  /* `--everymen-field-deep` USED to sit here — the poster field's shadow rung.
+     Its only two readers were the faction hero's rays and the directory tile's,
+     and #2195 collapsed every Everymen ray onto one shared drawing that strikes
+     them in the bill's ink (or, on a red plate, in the cream). A ramp rung with
+     no reader is weight in the blocking sheet; the field itself keeps its
+     reader and stays. */
 }
 
 /* The card CONTRACT — four names the shared archetype reads, each pointing at
@@ -3581,7 +3586,6 @@
      Declared rather than aliased, for the reason `-paper-accent` gives. */
   --everymen-deep-accent: #f4726c;
   --everymen-field: #3c1416;
-  --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
      ink would vanish), and the masthead's red bar carries INK, not cream —
      white/cream on #e2433f fails AA, which is the same call
@@ -3671,6 +3675,11 @@
     radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),
     radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),
     repeating-conic-gradient(from 0deg at 50% 50%, var(--em-burst-ray, var(--faction-everymen-bill-ray)) 0 5.2deg, transparent 5.2deg 10.4deg);
+  /* Spelled out rather than left to autoprefixer. Measured: the built sheet is
+     BYTE-IDENTICAL either way (same content hash), so this costs nothing, and
+     a browserslist edit that dropped the prefix would take the mask off in
+     Safari with every check still green — an unmasked burst runs the rays
+     through the copy. */
   -webkit-mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
   mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
 }
