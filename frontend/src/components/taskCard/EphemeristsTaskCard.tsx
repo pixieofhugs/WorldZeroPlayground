@@ -235,7 +235,7 @@ export default function EphemeristsTaskCard({
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
-          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+          <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             {/* #1020's brass cartouche stood here, ruling off the uniform "Task
                 {id}" ordinal at both ends. #1124 retired the id from every card
                 and the cartouche held nothing else, so both are gone. */}

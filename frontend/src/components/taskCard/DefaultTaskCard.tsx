@@ -113,9 +113,16 @@ export default function DefaultTaskCard({
         }}
       >
         {/* Everything but the CTA reads the full call — a card-sized target
-            that stays valid HTML (no <button> nested in an <a>). */}
+            that stays valid HTML (no <button> nested in an <a>).
+
+            `data-card-link` is the hook the equal-height row hands a card's
+            spare height down to (index.css, the `.task-card-row` block). It
+            marks THIS anchor as the card-wide one; a card may draw others —
+            the masthead does, and the CTA slot does for a viewer holding a
+            draft — and none of them are on that chain (#2380). */}
         <Link
           to={`/tasks/${task.id}`}
+          data-card-link=""
           style={{ display: "block", textDecoration: "none", color: "inherit" }}
         >
           {/* Hero — level, a hairline, the marks in their ring, the modifier.

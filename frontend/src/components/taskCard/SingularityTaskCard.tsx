@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import { SingularityBand } from "../cardMasthead/factionBands";
 import { CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
@@ -115,6 +116,9 @@ export default function SingularityTaskCard({
   onSignup,
 }: CardProps) {
   const formFactor = useFormFactor();
+  // THE ORNAMENT ALTERNATES (#2195): on a patterned page ground the standing
+  // raster comes off and the chassis is BARE — never a substitute texture.
+  const groundIsBusy = useGroundIsBusy();
   const size = SIZES[formFactor];
   const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
@@ -138,18 +142,22 @@ export default function SingularityTaskCard({
           fontFamily: MONO,
         }}
       >
-        {/* The standing raster — a fixed scrim, no motion. */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            zIndex: 3,
-            background:
-              "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
-          }}
-        />
+        {/* The standing raster — a fixed scrim, no motion, and the kit's ONE
+            ornament (#2394): the praxis card now draws this same line. Gone,
+            not softened, when the page ground is already a pattern. */}
+        {!groundIsBusy && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 3,
+              background:
+                "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
+            }}
+          />
+        )}
 
         {/* The scan sweep. `.sg-scan` owns both the resting offset and the
             reduced-motion-guarded travel (#842's keyframe, reused). */}
@@ -176,7 +184,7 @@ export default function SingularityTaskCard({
         <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
           {/* Everything but the CTA reads the full call — a card-sized target
               that stays valid HTML (no <button> nested in an <a>). */}
-          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+          <Link to={`/tasks/${task.id}`} data-card-link="" style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
               <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span style={{ ...LABEL, fontSize: "var(--text-md)", marginBottom: "var(--space-xs)" }}>
