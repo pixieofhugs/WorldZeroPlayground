@@ -651,27 +651,51 @@ export function ProfileSkin({
                         marginBottom: 'var(--space-sm)',
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                          // points into level: a number the player cares about
-                          fontSize: 'var(--text-content)',
-                          color: headerMuted,
-                        }}
-                      >
-                        {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: kit.eyebrowFont,
-                          fontSize: 'var(--text-md)',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          color: headerMuted,
-                        }}
-                      >
-                        {t('profile.nextLevel', { level: progression.nextLevel })}
-                      </span>
+                      {/* THE TOP OF THE CURVE IS ITS OWN LINE (#2383), for all
+                          seven kits at once — this row is the only one they
+                          have. Above the last rung the band has zero width and
+                          there is no level to name, so the two figures would
+                          read "0 / 0 pts this level" and "next · lvl 8" on a
+                          level-8 character. The field desk's sentence replaces
+                          both, in each kit's body voice: the eyebrow slot is
+                          uppercased and letter-spaced for a two-word label,
+                          and a sentence shouted through it would be the second
+                          bug. The slot is the whole row. */}
+                      {progression.nextLevel === null ? (
+                        <span
+                          style={{
+                            fontFamily: kit.bodyFont ?? kit.eyebrowFont,
+                            fontSize: 'var(--text-content)',
+                            color: headerMuted,
+                          }}
+                        >
+                          {t('sidebar.characterCard.topLevel')}
+                        </span>
+                      ) : (
+                        <>
+                          <span
+                            style={{
+                              fontFamily: kit.bodyFont ?? kit.eyebrowFont,
+                              // points into level: a number the player cares about
+                              fontSize: 'var(--text-content)',
+                              color: headerMuted,
+                            }}
+                          >
+                            {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: kit.eyebrowFont,
+                              fontSize: 'var(--text-md)',
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase',
+                              color: headerMuted,
+                            }}
+                          >
+                            {t('profile.nextLevel', { level: progression.nextLevel })}
+                          </span>
+                        </>
+                      )}
                     </div>
                     <div
                       style={{

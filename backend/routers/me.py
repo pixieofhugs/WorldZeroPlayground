@@ -58,7 +58,12 @@ async def my_invited_factions(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db),
 ):
-    """Faction slugs the account holds a current-era invitation for (empty until #272)."""
+    """Faction slugs a new life on this account may be born into (ADR-0019).
+
+    Not just live invitation letters: since #2385 this also counts any faction
+    an existing life on the account currently holds or has ever held this era.
+    Walking out burns the door for *that* character, not for the account.
+    """
     return await get_account_invited_faction_slugs(account.id, session)
 
 

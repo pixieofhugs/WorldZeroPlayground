@@ -459,15 +459,36 @@ function DesktopProfile({
                       marginBottom: 'var(--space-sm)',
                     }}
                   >
-                    <span
-                      className="font-body"
-                      style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
-                    >
-                      {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                    </span>
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
-                      {t('profile.nextLevel', { level: progression.nextLevel })}
-                    </span>
+                    {/* THE TOP OF THE CURVE IS ITS OWN LINE (#2383). There is
+                        no rung above the last one, so the band collapses to
+                        zero width and there is no level to name: both figures
+                        would print as noise ("0 / 0 pts this level", "next ·
+                        lvl 8"). The field desk has always drawn one sentence
+                        here instead, and this is the same string in the same
+                        body voice — the eyebrow's caps are for a two-word
+                        label, not for a sentence. The slot is the whole row,
+                        which is the point: the line is four times the length
+                        of the eyebrow it replaces. */}
+                    {progression.nextLevel === null ? (
+                      <span
+                        className="font-body"
+                        style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
+                      >
+                        {t('sidebar.characterCard.topLevel')}
+                      </span>
+                    ) : (
+                      <>
+                        <span
+                          className="font-body"
+                          style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
+                        >
+                          {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
+                        </span>
+                        <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
+                          {t('profile.nextLevel', { level: progression.nextLevel })}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div
                     style={{
@@ -494,10 +515,15 @@ function DesktopProfile({
                       one the bar tracked. The bar reads the band; this line
                       annotates it, in the voice the home page's "185 all-time"
                       caption uses. `.label-caption` is the minted tier
-                      (#1307), so no new style is invented for it. */}
-                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
-                    {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
-                  </div>
+                      (#1307), so no new style is invented for it. At the top
+                      of the curve there is no threshold for it to annotate and
+                      the line goes (#2383) — the era-points figure it carried
+                      is still on the credential beside this panel. */}
+                  {progression.nextLevel !== null && (
+                    <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
+                      {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -716,12 +742,24 @@ function MobileProfile({
                       marginBottom: 'var(--space-sm)',
                     }}
                   >
-                    <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
-                      {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                    </span>
-                    <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
-                      {t('profile.nextLevel', { level: progression.nextLevel })}
-                    </span>
+                    {/* The phone's half of the top-of-the-curve line (#2383) —
+                        see the laptop branch above. Narrower still here, which
+                        is exactly why the sentence gets the whole row rather
+                        than the right-hand eyebrow slot. */}
+                    {progression.nextLevel === null ? (
+                      <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
+                        {t('sidebar.characterCard.topLevel')}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
+                          {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
+                        </span>
+                        <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
+                          {t('profile.nextLevel', { level: progression.nextLevel })}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <div style={{ height: 10, borderRadius: 20, background: 'var(--color-border)', overflow: 'hidden' }}>
                     <div
@@ -741,10 +779,15 @@ function MobileProfile({
                       one the bar tracked. The bar reads the band; this line
                       annotates it, in the voice the home page's "185 all-time"
                       caption uses. `.label-caption` is the minted tier
-                      (#1307), so no new style is invented for it. */}
-                  <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
-                    {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
-                  </div>
+                      (#1307), so no new style is invented for it. At the top
+                      of the curve there is no threshold for it to annotate and
+                      the line goes (#2383) — the era-points figure it carried
+                      is still on the credential beside this panel. */}
+                  {progression.nextLevel !== null && (
+                    <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
+                      {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -613,6 +613,64 @@ async def test_create_in_invited_faction(
 
 
 @pytest.mark.asyncio
+async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    faction_ephemerists: Faction,
+    auth_headers: dict,
+):
+    """#2385: the burn is per-character; the account's earned history survives it.
+
+    Both directions of the same seam, on one account and one faction: life 1
+    walks out of UA, so UA's door is shut *for life 1* forever
+    (``can_join_faction`` / #2218's letter delete), while UA stays a birth
+    option for life 2, which has never been there.
+    """
+    from models.invitation_letter import InvitationLetter
+
+    # Life 1 holds both letters and is at the second-character gate.
+    stats = await db_session.scalar(
+        select(CharacterStats).where(CharacterStats.character_id == character.id)
+    )
+    stats.level = CURRENT_ERA.second_character_level_required
+    db_session.add(
+        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+    )
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+        )
+    )
+    await db_session.commit()
+
+    # Life 1 walks out of UA. #2218 deletes the UA letter on the way.
+    resp = await client.post(
+        "/factions/choose", json={"faction_slug": "ephemerists"}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+
+    # Direction 1 — the per-character door stays shut for life 1.
+    resp = await client.post(
+        "/factions/choose", json={"faction_slug": "ua"}, headers=auth_headers
+    )
+    assert resp.status_code == 403
+    assert resp.json()["detail"]["code"] == ErrorCode.faction_rejoin_forbidden.value
+
+    # Direction 2 — UA is still a birth option for a life that never burned it.
+    resp = await client.post(
+        "/characters",
+        json={"display_name": "Second Life", "faction_slug": "ua"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["faction_slug"] == "ua"
+
+
+@pytest.mark.asyncio
 async def test_username_derived_from_display_name(
     client: AsyncClient,
     account: Account,

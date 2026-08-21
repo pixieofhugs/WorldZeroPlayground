@@ -5904,6 +5904,12 @@
    stops differ in alpha interpolates differently once you flatten it, and
    moving that into `opacity` would be a repaint.
 
+   IT COMES OFF WITH THE AURORA (#2397, epic #2195). This is the praxis card's
+   other background texture and its only mount, so a busy page ground takes both
+   — leaving the drift standing alone would be the "substitute texture" the
+   alternation forbids. `AlbescentPraxisCard` owns that branch; the sparks and
+   the drifting frame stay, so the card is still revealed by motion (ADR-0048).
+
    What did change, deliberately, is the hue SET: orange and teal rejoin the
    wash, dark's red and yellow land back on their stops, and eight stops share
    the same 220px tile where six did — a fuller spectrum in finer stripes. The
@@ -6009,7 +6015,26 @@
    • The aurora BLENDS rather than sits behind. `mix-blend-mode: multiply` on the
      light sheet and `screen` on the dark one is what keeps ink legible through
      an overlay — the design put the bloom UNDER the copy at `normal`, which is
-     not a position an overlay can take. Same call `.alb-rainbow` already makes. */
+     not a position an overlay can take. Same call `.alb-rainbow` already makes.
+
+   THE AURORA IS THE KIT'S ONE ORNAMENT, AND IT ALTERNATES (#2397, epic #2195).
+   Since #2397 `.alb-task-aurora` has TWO mounts, not one: the task card and the
+   PRAXIS card, which wore `.alb-rainbow`'s drift and no aurora. One drawing per
+   faction, not one per surface — the `-task-` in the name records where it was
+   first drawn, not what it belongs to, and a praxis-shaped copy of the same
+   seven blooms would have stated a second drawing. It travels well because it
+   carries its own geometry: everything visible is on the `::before` at
+   `inset: 22%`, blurred past recognition, so the only thing it asks of a host is
+   a positioned parent that clips.
+
+   Both mounts are CONDITIONAL in their components: a card standing on a
+   patterned page ground drops the bloom and the vellum is BARE ("either burst,
+   or plain", owner 2026-08-17). On the praxis card `.alb-rainbow` comes off with
+   it, being that card's other background texture. Nothing here branches — the
+   predicate is `useGroundIsBusy()` and the components mount or omit the span, so
+   a plain card costs no rules and this sheet stays a drawing rather than a
+   decision. THE EDGE NEVER BRANCHES: it is chrome, and since #2407 it is the
+   shared `.spectrum-frame` ring five other mounts wear. */
 @keyframes alb-task-drift {
   0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
   50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
