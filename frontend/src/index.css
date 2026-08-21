@@ -2514,7 +2514,12 @@
      was measured on a different sheet and is still right there. */
   --everymen-deep-accent: #a01c21;
   --everymen-field: #c1272d;
-  --everymen-field-deep: #8d1c20;
+  /* `--everymen-field-deep` USED to sit here — the poster field's shadow rung.
+     Its only two readers were the faction hero's rays and the directory tile's,
+     and #2195 collapsed every Everymen ray onto one shared drawing that strikes
+     them in the bill's ink (or, on a red plate, in the cream). A ramp rung with
+     no reader is weight in the blocking sheet; the field itself keeps its
+     reader and stays. */
 }
 
 /* The card CONTRACT — four names the shared archetype reads, each pointing at
@@ -2676,19 +2681,17 @@
      one, so the dark cascade walks the same hue up until it clears (5.45:1).
      Dashed rules and filled bars keep `--everymen-red`; only ink uses this. */
   --faction-everymen-sheet-accent: #c1272d;
-  /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
-  --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
-  --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
-  /* ── The dispatch sheet (praxis detail v2, #1123) ── The ruled newsprint a
-     filed report is printed on: one ledger-blue line every 24px. Only the rule
-     colour is new; the sheet's STOCK is `--faction-everymen-sheet-panel` above,
-     reused deliberately rather than repainted, because that is the ground every
-     ink on this page was measured against (§3, "a new ground invalidates every
-     contrast claim"). `--faction-everymen-sheet-accent` pays 4.95:1 on that
-     stock and only 4.49:1 on `--everymen-paper`, so on this page
-     `--everymen-paper` is a FILL — the voter bars' track — and never a ground
-     for text. */
-  --faction-everymen-dispatch-rule: rgba(100, 140, 200, 0.12);
+  /* ── Two ornament alphas USED to live here ── The broadsheet's rising-sun ray
+     and its glow, and the dispatch sheet's ledger-blue rule. #2195 collapsed
+     Everymen's nine burst geometries to one shared `.em-burst` (which strikes
+     its rays in `--faction-everymen-bill-ray`) and retired the ruled paper
+     outright, leaving all three with no reader. The dispatch sheet's STOCK is
+     still `--faction-everymen-sheet-panel` above, reused deliberately rather
+     than repainted, because that is the ground every ink on that page was
+     measured against (§3, "a new ground invalidates every contrast claim").
+     `--faction-everymen-sheet-accent` pays 4.95:1 on that stock and only 4.49:1
+     on `--everymen-paper`, so on that page `--everymen-paper` is a FILL — the
+     voter bars' track — and never a ground for text. */
 
   /* ══ Everymen — THE WORK ORDER (edit-praxis composer, #1187) ══
      One token, for the reason the two blocks above are short: the composer is
@@ -3585,7 +3588,6 @@
      Declared rather than aliased, for the reason `-paper-accent` gives. */
   --everymen-deep-accent: #f4726c;
   --everymen-field: #3c1416;
-  --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
      ink would vanish), and the masthead's red bar carries INK, not cream —
      white/cream on #e2433f fails AA, which is the same call
@@ -3614,11 +3616,6 @@
   --faction-everymen-sheet-panel: #2c231c;
   --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
   --faction-everymen-sheet-accent: #f4726c;
-  --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
-  --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
-  /* The ledger rule inverts with the paper: a pale blue line ON the near-black
-     newsprint instead of a dark one in it (#1123). */
-  --faction-everymen-dispatch-rule: rgba(150, 185, 230, 0.09);
   /* The work order's frame at night: the design's skin row swaps gold for the
      deep accent, which is the one edge on the sheet that does NOT lift with the
      paper — a printed poster frame stays the colour it was printed in (#1187). */
@@ -3649,7 +3646,61 @@
   opacity: 0.95;
 }
 
-/* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
+/* ══ EVERYMEN'S ONE ORNAMENT — the union bill's poster burst (#2195/#2393) ══
+   The law, owner 2026-08-17: each faction has ONE ornament, and ONE drawing of
+   it — not one per surface. Everymen had nine burst geometries (the epic's
+   2026-08-17 survey named seven; `EverymenEditPraxis` and the faction page's
+   member spotlight were the two it missed). This rule is all nine.
+
+   The drawing is the task card's, which the owner named canonical: two corner
+   glows and the rays converging on the sheet's CENTRE (#2034), under a radial
+   mask that opens from 16% so the rays fade before they reach the copy.
+
+   A MOUNT SUPPLIES ONLY ITS BOX. Every one of the nine is `aria-hidden` texture
+   inside a clipped, positioned parent, so the layer's own geometry and its
+   `pointer-events: none` live here rather than nine times inline.
+
+   THE RAY INK is the one thing a mount may re-point, through `--em-burst-ray` —
+   see `.em-burst-knockout`. A register is not a second drawing; the geometry,
+   the stops and the mask are what the ruling collapses, and they are not
+   overridable.
+
+   NOT A BRANCH ON ANYTHING. Whether a card wears this at all is decided in the
+   card by `useGroundIsBusy()` (#2387): on a patterned page ground the layer is
+   not mounted, and there is no third texture underneath it — either burst, or
+   plain. */
+.em-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),
+    radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),
+    repeating-conic-gradient(from 0deg at 50% 50%, var(--em-burst-ray, var(--faction-everymen-bill-ray)) 0 5.2deg, transparent 5.2deg 10.4deg);
+  /* Spelled out rather than left to autoprefixer. Measured: the built sheet is
+     BYTE-IDENTICAL either way (same content hash), so this costs nothing, and
+     a browserslist edit that dropped the prefix would take the mask off in
+     Safari with every check still green — an unmasked burst runs the rays
+     through the copy. */
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
+  mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
+}
+
+/* The same drawing struck on the union's DARK plates — the faction hero's
+   masthead, the duel seal's stamped red bar, the profile banner and the member
+   spotlight's ink slab. The bill's ray is near-black on paper by day and cream
+   on paper by night, and neither is visible on a red plate; cream at 10% is,
+   and it needs no dark half because it is this family's invariant light and the
+   plates it lands on do not flip either. */
+.em-burst-knockout {
+  --em-burst-ray: color-mix(in srgb, var(--everymen-cream) 10%, transparent);
+}
+
+/* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══
+   The manila stock, its halftone and its burlap weave. The RAYS are no longer
+   here: the wall mounts the shared `.em-burst` like every other Everymen
+   surface, and its two corner glows went with them — they were the bill's own
+   two glows repainted a couple of percent apart. */
 .em-backdrop {
   position: fixed;
   inset: 0;
@@ -3657,14 +3708,11 @@
   pointer-events: none;
   background-color: var(--everymen-paper);
   background-image:
-    radial-gradient(42% 32% at 100% 0%, color-mix(in srgb, var(--everymen-gold) 16%, transparent), transparent 70%),
-    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--everymen-olive) 13%, transparent), transparent 70%),
-    repeating-conic-gradient(from 0deg at 50% -6%, color-mix(in srgb, var(--everymen-red) 6%, transparent) 0 5deg, transparent 5deg 11deg),
     radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 6%, transparent) 0.6px, transparent 0.9px),
     repeating-linear-gradient(45deg, color-mix(in srgb, var(--everymen-paper-text) 3.5%, transparent) 0 1px, transparent 1px 5px),
     repeating-linear-gradient(-45deg, color-mix(in srgb, var(--everymen-paper-text) 3%, transparent) 0 1px, transparent 1px 5px),
     linear-gradient(180deg, var(--everymen-paper), var(--everymen-paper-deep));
-  background-size: 100% 100%, 100% 100%, 100% 100%, 6px 6px, auto, auto, 100% 100%;
+  background-size: 6px 6px, auto, auto, 100% 100%;
 }
 .em-backdrop::after {
   content: "";
@@ -3673,46 +3721,41 @@
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
-/* ══ Everymen broadsheet backdrop (task detail v2, #1033; theme-aware) ══
-   The rising sun the union prints its bills under — rays fanning UP from below
-   the bottom edge, over the newsprint. Distinct from `.em-backdrop` above,
-   whose rays fall from the top: that one dresses the faction-context pages, this
-   one is the sheet the task detail is printed on. Fixed, like every other
-   faction backdrop, so the paper runs to the viewport edge instead of stopping
-   at the 1200 content cap. The two ray alphas are tokens because they differ
-   per theme; the rule itself never branches on the theme. */
+/* ══ Everymen broadsheet sheet (task detail v2, #1033; theme-aware) ══
+   The newsprint a job is posted on. It USED to fan its own rising sun from
+   below the bottom edge, in its own red at its own 2.6/6.4deg pitch — one of
+   the nine geometries #2195 collapsed. The archetype mounts `.em-burst` now, so
+   this rule owns the paper and only the paper. The two ray alphas it needed
+   (`--faction-everymen-sheet-ray/-glow`) went with the drawing.
+
+   Painted on the detail COLUMN, not the viewport — the site background shows
+   around it (owner QA on #1055, applied to every task-detail skin). The
+   archetype supplies position / z-index / radius / padding. */
 .em-broadsheet {
-  /* Painted on the detail COLUMN, not the viewport — the site background shows
-     around it (owner QA on #1055, applied to every task-detail skin). The
-     archetype supplies position / z-index / radius / padding; this rule owns
-     only the newsprint and its rising-sun rays. */
   background-color: var(--everymen-paper-deep);
-  background-image:
-    repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
-    radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
 }
 
 /* ══ Everymen dispatch sheet (praxis detail v2, #1123; theme-aware) ══
-   The report as it was FILED: ruled newsprint with a red margin rule down the
-   left edge, printed on the same panel stock the broadsheet's plates use. The
-   sibling of `.em-broadsheet` above — that one is the sheet a JOB is posted on
-   (rising-sun rays, no rules); this one is the sheet a job's PROOF is typed on,
-   which is why it is ruled and margined instead.
+   The stock a filed report is typed on: the same panel the broadsheet's plates
+   use, under a red margin rule down the left edge.
+
+   IT USED TO BE RULED, one ledger-blue line every 24px over a dot grid, on the
+   doctrine that rays meant a job POSTED and ruled paper meant proof FILED. The
+   owner retired that doctrine on #2195 — either the faction's burst, or plain,
+   never a third texture — so the rules and the grid are gone and this sheet is
+   bare newsprint. The margin rule is not a texture: it is a single left-edge
+   line, and it stays.
 
    Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
-   the archetype supplies position / border / radius / padding, this rule owns
-   only the paper. The margin rule is a background LAYER rather than a positioned
-   ornament on purpose — a positioned span would paint above the static copy at
-   `z-index: 0`, and `-1` would put it behind this opaque paint, i.e. nowhere
-   (§5's stacking half). It sits at 21–23px, inside the archetype's smallest
-   inset (`--space-xl`, 24px on mobile), so copy never runs into it. */
+   the archetype supplies position / border / radius / padding. The margin rule
+   is a background LAYER rather than a positioned ornament on purpose — a
+   positioned span would paint above the static copy at `z-index: 0`, and `-1`
+   would put it behind this opaque paint, i.e. nowhere (§5's stacking half). It
+   sits at 21–23px, inside the archetype's smallest inset (`--space-xl`, 24px on
+   mobile), so copy never runs into it. */
 .em-dispatch {
   background-color: var(--faction-everymen-sheet-panel);
-  background-image:
-    linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px),
-    repeating-linear-gradient(to bottom, transparent 0 23px, var(--faction-everymen-dispatch-rule) 23px 24px),
-    radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 5%, transparent) 0.6px, transparent 0.9px);
-  background-size: auto, auto, 6px 6px;
+  background-image: linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px);
 }
 
 /* ══ Cozy Coven's viewport backdrop USED to live here ══

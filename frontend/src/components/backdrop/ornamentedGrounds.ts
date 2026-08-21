@@ -32,7 +32,7 @@
  *
  * | slug | what it draws | verdict |
  * |---|---|---|
- * | everymen | `.em-backdrop`: conic rays + 6px dot grid + ±45° hatch | pattern |
+ * | everymen | `.em-backdrop`: the shared `.em-burst` rays + 6px dot grid + ±45° hatch | pattern |
  * | snide | `.snide-backdrop`: 5px dot grid + 28°/-19° crosshatch | pattern |
  * | singularity | `SingularityBackdrop`: 32px circuit grid + 4px scanlines | pattern |
  * | ephemerists | `EphemeristsBackdrop`: the `EphemerisNet` chart at 0.17 | pattern |

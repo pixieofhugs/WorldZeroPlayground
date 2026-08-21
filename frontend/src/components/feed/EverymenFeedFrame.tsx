@@ -94,25 +94,14 @@ export default function EverymenFeedFrame({
           overflow: 'hidden',
         }}
       >
-        {/* Newsprint stock — a burlap crosshatch, a warm mottle and a screen-print
-            halftone, all struck in the paper's own ink at ornament alphas. */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: 'none',
-            backgroundImage: [
-              'repeating-linear-gradient(45deg, color-mix(in srgb, var(--everymen-paper-text) 6%, transparent) 0 1px, transparent 1px 4px)',
-              'repeating-linear-gradient(-45deg, color-mix(in srgb, var(--everymen-paper-text) 4%, transparent) 0 1px, transparent 1px 4px)',
-              'radial-gradient(130% 90% at 5% 0%, color-mix(in srgb, var(--everymen-cream) 16%, transparent), transparent 55%)',
-              'radial-gradient(120% 85% at 100% 100%, color-mix(in srgb, var(--everymen-paper-deep) 60%, transparent), transparent 52%)',
-              'radial-gradient(color-mix(in srgb, var(--everymen-ink) 45%, transparent) 0.7px, transparent 0.9px)',
-            ].join(', '),
-            backgroundSize: 'auto, auto, auto, auto, 5px 5px',
-          }}
-        />
+        {/* THE STOCK IS BARE (#2195). The slip carried a burlap crosshatch, a
+            warm mottle and a screen-print halftone — a THIRD Everymen texture,
+            neither the faction's burst nor nothing. The owner ruled "either
+            burst, or plain": where a kit's ornament is not worn the ground is
+            bare, not a different pattern. The slip is not a task or praxis card
+            and does not wear the burst, so it is plain newsprint. The double
+            frame and the red masthead band below are chrome and are untouched —
+            they are what make this the union's slip. */}
 
         {/* ── The masthead band ──────────────────────────────────────────────
             Three tracks so the kind stays optically CENTRED on the slip rather

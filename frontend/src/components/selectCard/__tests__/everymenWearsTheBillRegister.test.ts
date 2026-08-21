@@ -194,15 +194,16 @@ answer — not by widening this test.`,
     );
   });
 
-  it("draws no second burst — #2195 owns the collapse", () => {
-    // The tile's `repeating-conic-gradient` from 50% 34% is one of the SEVEN
-    // Everymen burst geometries #2195 lists by line, and that issue rules them
-    // into ONE shared drawing which does not exist yet. So the tile goes plain
-    // rather than transcribing the card's copy into an eighth place. When the
-    // shared class lands, this mount wants nothing but the class name.
+  it("mounts the shared burst and draws no second one — #2393", () => {
+    // The tile's own `repeating-conic-gradient` from 50% 34% was one of the
+    // Everymen burst geometries #2195 ruled into ONE shared drawing. #2393
+    // built it as `.em-burst` in index.css, so the tile wears the class and
+    // transcribes nothing. The geometry itself is pinned in
+    // `taskCard/__tests__/everymenOneBurst.test.tsx`.
     expect(code(TILE), "either the shared burst, or plain — never a new transcription").not.toContain(
       "repeating-conic-gradient",
     );
+    expect(code(TILE), "the tile mounts the kit's one ornament").toContain('className="em-burst"');
   });
 
   it("mounts the shared marks and re-draws neither", () => {

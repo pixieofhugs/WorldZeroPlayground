@@ -99,10 +99,6 @@ const NOTICE = 'var(--faction-everymen-card-notice)'
 const POSTER = 'var(--font-accent)' // Bebas Neue
 const BODY = 'var(--font-body)'
 
-/** The masthead's faint radial guilloche, as on `EverymenBackdrop`. */
-const GUILLOCHE =
-  `repeating-conic-gradient(from 0deg at 50% -8%, color-mix(in srgb, ${CREAM} 10%, transparent) 0 5deg, transparent 5deg 11deg)`
-
 export default function EverymenDuelSealConfirm({
   duel,
   viewerCharacterId,
@@ -156,10 +152,14 @@ export default function EverymenDuelSealConfirm({
           flexShrink: 0,
           padding: 'var(--space-lg) var(--space-xl)',
           background: RED,
-          backgroundImage: GUILLOCHE,
           color: CREAM,
         }}
       >
+        {/* The faction's ONE ornament (#2195). The stamped bar carried its own
+            guilloche — a conic from 50% -8% at its own pitch, one of nine
+            Everymen bursts — and mounts the shared drawing now. `knockout`
+            because the plate is red, not paper. */}
+        <div aria-hidden className="em-burst em-burst-knockout" />
         {/* Duel-division seal: a rotated dashed medallion, pure ornament. */}
         <span
           aria-hidden

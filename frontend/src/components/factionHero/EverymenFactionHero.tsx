@@ -50,18 +50,11 @@ export default function EverymenFactionHero({
         boxShadow: "8px 10px 0 color-mix(in srgb, var(--everymen-ink) 35%, transparent)",
       }}
     >
-      {/* sunburst rays from the upper-left */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          opacity: 0.5,
-          background:
-            "repeating-conic-gradient(from 0deg at 22% 38%, var(--everymen-field-deep) 0deg 8deg, transparent 8deg 16deg)",
-        }}
-      />
+      {/* The faction's ONE ornament (#2195). The masthead fanned its own rays
+          from 22% 38% at its own pitch — one of nine Everymen bursts — and now
+          mounts the shared drawing. `knockout` because this is a red plate:
+          the bill's ray ink is measured for paper and vanishes here. */}
+      <div aria-hidden="true" className="em-burst em-burst-knockout" />
       {/* halftone dot wash */}
       <div
         aria-hidden="true"
