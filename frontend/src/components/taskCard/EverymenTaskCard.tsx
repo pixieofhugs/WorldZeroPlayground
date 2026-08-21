@@ -7,6 +7,7 @@ import { EverymenCog } from "../factionMarks/everymenCogs";
 import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -251,6 +252,7 @@ export default function EverymenTaskCard({
   onSignup,
 }: CardProps) {
   const formFactor = useFormFactor();
+  const groundIsBusy = useGroundIsBusy();
   const size = SIZES[formFactor];
   const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
@@ -275,27 +277,23 @@ export default function EverymenTaskCard({
         }}
       >
         <div style={{ position: "relative", overflow: "hidden", border: `1px solid ${INK}`, borderRadius: 1 }}>
-          {/* Poster rays and two corner glows, masked away from the copy.
-              The burst converges on the sheet's CENTRE (#2034) — it fanned from
-              the upper third, which put its vanishing point inside the masthead
-              band that hides it. Only the conic moves: the two corner glows are
-              anchored to their own corners, and the mask still opens from 16%,
-              so the rays still fade before they reach the brief. */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              backgroundImage:
-                "radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),"
-                + " radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),"
-                + " repeating-conic-gradient(from 0deg at 50% 50%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)",
-              WebkitMaskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
-              maskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
-            }}
-          />
+          {/* THE FACTION'S ONE ORNAMENT, and it alternates (#2195/#2393).
+
+              The drawing — poster rays converging on the sheet's centre under
+              two corner glows and a radial mask — is `.em-burst` in index.css.
+              It was written out here, and eight other Everymen surfaces each
+              wrote out a variant of it; the owner ruled one drawing per faction,
+              so this card names the class the rest of the kit now mounts too.
+
+              On a PATTERNED page ground it is not mounted at all: a card on an
+              ornamented ground goes plain, and plain means bare — never a
+              second texture. The predicate is any patterned ground, not just
+              Everymen's own (owner ruled (a)); a faction page claims an
+              exemption and keeps it. Nothing ELSE on this card branches — the
+              masthead, the frame, the seal, the dashed rule and the CTA bar are
+              identical either way, which is what makes this an ornament rule
+              and not a second card. */}
+          {!groundIsBusy && <div aria-hidden="true" className="em-burst" />}
 
           {/* Masthead — the union's red bar, mounted from the shared band
               (#2185) so the Everymen praxis card wears the identical one. It

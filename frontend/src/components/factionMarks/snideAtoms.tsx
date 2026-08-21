@@ -13,6 +13,25 @@
 import type { CSSProperties } from "react";
 
 /**
+ * THE BARE WALL — the same ramp with nothing printed on it (#2395, epic #2195).
+ *
+ * The law, owner 2026-08-17: **a card on an ornamented ground goes plain, a card
+ * on a plain ground wears its faction's ornament.** S.N.I.D.E.'s ornament is the
+ * four printed layers of {@link WALL} — the xerox raster, the scanline and the
+ * two washed corners. The ramp underneath is not ornament, it is the card's
+ * GROUND COLOUR, and a card still needs one: dropping the whole recipe would
+ * leave a transparent slab on a patterned page rather than a plain one. So
+ * "plain" here is the ramp alone, which is also "either burst, or plain" —
+ * bare stock, never a substitute texture.
+ *
+ * NO NEW PAIRING COMES WITH IT. `factionContrast.test.ts` (SNIDE_WALL_PAIRS)
+ * measures the `-note-*` inks on all four readings of the wall, and the two ramp
+ * stops are two of them; taking the washes off leaves a strict subset.
+ */
+export const WALL_PLAIN =
+  "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)";
+
+/**
  * THE FLYPOSTED WALL — S.N.I.D.E.'s one ground (#2177).
  *
  * Five layers bottom-to-top over the `-wall` ramp: the diagonal xerox raster, a
@@ -39,7 +58,7 @@ export const WALL = [
   "repeating-linear-gradient(0deg, var(--faction-snide-note-scan) 0 1px, transparent 1px 4px)",
   "radial-gradient(120% 80% at 8% -10%, var(--faction-snide-note-wash-acid), transparent 60%)",
   "radial-gradient(90% 70% at 100% 110%, var(--faction-snide-note-wash-pink), transparent 62%)",
-  "linear-gradient(180deg, var(--faction-snide-wall) 0%, var(--faction-snide-wall-deep) 100%)",
+  WALL_PLAIN,
 ].join(", ");
 
 /**

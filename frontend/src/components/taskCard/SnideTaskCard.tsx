@@ -8,7 +8,8 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { PenCircle, WALL } from "../factionMarks/snideAtoms";
+import { PenCircle, WALL, WALL_PLAIN } from "../factionMarks/snideAtoms";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /**
  * S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023).
@@ -154,6 +155,8 @@ export default function SnideTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  // #2395: the ornament alternates. See the ground comment below.
+  const groundIsBusy = useGroundIsBusy();
   const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
@@ -168,6 +171,15 @@ export default function SnideTaskCard({
           composer and to the praxis card: this card was its only mount when it
           was written inline here, and it is one of three now.
 
+          IT ALTERNATES (#2395, epic #2195). On a page whose own ground is
+          already a pattern the card drops the four printed layers and grounds on
+          the bare ramp ({@link WALL_PLAIN}) — "either burst, or plain", so what
+          is left is bare stock and never a substitute texture. Exactly one route
+          makes that true today: a character profile of a player whose faction
+          paints a pattern. A faction page is EXEMPT (owner, 2026-08-18) and says
+          so through `useFactionBackdrop`, so S.N.I.D.E.'s own page still shows
+          the full wall on the full wall. The CHROME below never branches on it.
+
           THE EDGE AND THE SHADOW ARE LOAD-BEARING. On the S.N.I.D.E. faction
           page `useFactionBackdrop` paints the page with this same wall, so these
           two are the only thing that still separates the card from what it is
@@ -180,7 +192,7 @@ export default function SnideTaskCard({
           boxSizing: "border-box",
           width: "100%",
           color: INK,
-          background: WALL,
+          background: groundIsBusy ? WALL_PLAIN : WALL,
           border: "1px solid var(--faction-snide-note-wall-edge)",
           boxShadow: "var(--faction-snide-note-wall-shadow)",
           transform: "rotate(-0.4deg)",

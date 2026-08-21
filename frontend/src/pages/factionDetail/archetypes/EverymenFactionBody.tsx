@@ -507,10 +507,12 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", overflow: "hidden", background: INK, color: CREAM, border: `3px solid ${INK}`, boxShadow: `0 0 0 3px ${GOLD}`, textAlign: "center" }}>
-                <div
-                  aria-hidden="true"
-                  style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5, background: `repeating-conic-gradient(from 0deg at 50% 30%, color-mix(in srgb, var(--everymen-red-deep) 60%, transparent) 0deg 8deg, transparent 8deg 16deg)` }}
-                />
+                {/* The faction's ONE ornament (#2195). The spotlight fanned its
+                    own rays from 50% 30% in a red-deep mix — one of the nine
+                    Everymen geometries, and one of the two the epic's survey
+                    missed — and mounts the shared drawing now. `knockout`
+                    because the tile is an ink slab, not paper. */}
+                <div aria-hidden="true" className="em-burst em-burst-knockout" />
                 <div style={{ position: "relative", zIndex: 2, padding: "var(--space-xl) var(--space-lg) var(--space-lg)" }}>
                   <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-md)" }}>
                     {t("everymen.spotlight.label")}

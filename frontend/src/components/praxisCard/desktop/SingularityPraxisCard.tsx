@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { SingularityBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -91,6 +92,9 @@ const scanSweepStyle: CSSProperties = {
 };
 
 export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  // THE ORNAMENT ALTERNATES (#2195): on a patterned page ground the raster
+  // comes off and the slab is BARE — never a quieter substitute texture.
+  const groundIsBusy = useGroundIsBusy();
   return (
     <div
       style={{
@@ -101,9 +105,16 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         background: "var(--faction-singularity-card-bg)",
         border: "1px solid var(--faction-singularity-frame)",
         boxShadow: "0 4px 18px var(--color-cast-shadow)",
-        // The standing raster — ornament geometry, raw by §4a.
-        backgroundImage:
-          "repeating-linear-gradient(to bottom, transparent 0 2px, var(--faction-singularity-scanline) 2px 3px)",
+        /* THE STANDING RASTER — ornament geometry, raw by §4a, and the ONE
+           drawing the kit has (#2394). This card used to run its own second
+           pitch (`to bottom, transparent 0 2px`) off a private
+           `--faction-singularity-scanline` at 0.03; that token is retired and
+           this is the line the task card, the feed frame, the comment voice,
+           the select card, the profile body, the edit-praxis panel and both
+           detail pages all already draw. Dropped entirely on a busy ground. */
+        backgroundImage: groundIsBusy
+          ? undefined
+          : "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
         /* NO PADDING ON THE FRAME since #2185: the window chrome is full-bleed,
            and an inset frame would have floated it off three edges. The slab's
            inset moved to the body box below. */

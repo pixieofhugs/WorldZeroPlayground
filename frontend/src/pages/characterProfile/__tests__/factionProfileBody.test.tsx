@@ -479,12 +479,19 @@ describe.each(["desktop", "mobile"] as const)(
  * Brace-counted rather than regex-sliced on purpose: `@media` blocks nest, and
  * a guard that only checks the class name appears "somewhere near" a
  * no-preference block passes for a rule that sits just outside one.
+ *
+ * BOTH SHEETS, since #2407 moved `.alb-profile-edge`'s travel into the deferred
+ * `motion.ornament.css`. The question this asks is unchanged — is the animation
+ * gated — and the answer must not depend on which sheet delivers it; reading
+ * only the entry sheet would turn a correct deferral into a red test, and
+ * reading only the deferred one would stop noticing an ungated twin left behind.
  */
 describe("#1630 motion sits behind the reduced-motion guard", () => {
-  const css = readFileSync(
-    fileURLToPath(new URL("../../../index.css", import.meta.url)),
-    "utf8",
-  );
+  const css = ["../../../index.css", "../../../motion.ornament.css"]
+    .map((sheet) =>
+      readFileSync(fileURLToPath(new URL(sheet, import.meta.url)), "utf8"),
+    )
+    .join("\n");
 
   /** The source split into (inside a no-preference block, outside it). */
   const partitionByGuard = (source: string): [string, string] => {
