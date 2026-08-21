@@ -145,6 +145,32 @@ describe("MetataskPicker", () => {
     );
     expect(html).toContain(i18n.t("editPraxis.attach.alreadyAttached", { ns: "forms" }));
   });
+
+  // #2382: a refused attach — stacking past the metatask cap — used to land in
+  // the archetype's banner at the foot of the sheet BEHIND this overlay, so
+  // Attach looked inert. The refusal has to print inside the picker itself.
+  it("prints a refused attach inside the sheet", () => {
+    const html = renderToStaticMarkup(
+      <MetataskPicker
+        state={mkState({
+          metatasks: rows,
+          metataskPickerOpen: true,
+          error: "You can only apply 3 metatasks.",
+        })}
+      />,
+    );
+    expect(html).toContain("You can only apply 3 metatasks.");
+    expect(html).toContain('role="alert"');
+  });
+
+  it("draws no banner when nothing has been refused", () => {
+    const html = renderToStaticMarkup(
+      <MetataskPicker
+        state={mkState({ metatasks: rows, metataskPickerOpen: true })}
+      />,
+    );
+    expect(html).not.toContain('role="alert"');
+  });
 });
 
 describe("MetataskRemoveConfirm", () => {

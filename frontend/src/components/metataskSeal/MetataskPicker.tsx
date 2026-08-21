@@ -31,6 +31,7 @@ import MetataskSeal from "./MetataskSeal";
 import { drawAtRoot } from "../ui/drawAtRoot";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionCssVar, factionName } from "../../utils/factions";
+import { ErrorBanner } from "../../pages/editPraxis/archetypes/shared";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 const ALL_FILTER = "all" as const;
@@ -259,6 +260,18 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
             );
           })}
         </div>
+
+        {/*
+         * A refused attach belongs to the sheet, not the page under it (#2382).
+         * `addMetatask` reports one through the composer's shared `error`, and
+         * the only thing that renders that is the archetype's own ErrorBanner,
+         * at the foot of a long sheet BEHIND this overlay — so sealing a
+         * metatask past the cap read as an Attach button that did nothing at
+         * all. Same banner, drawn where the click was. It sits above the footer
+         * rather than inside it so the buttons never reflow under a long
+         * message.
+         */}
+        <ErrorBanner message={state.error} />
 
         {/* Footer — confirms the pending choice */}
         <div
