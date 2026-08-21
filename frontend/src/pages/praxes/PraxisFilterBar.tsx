@@ -21,11 +21,16 @@ import type { PraxesFeedState, SortOrder, VotedFilter, EraScope } from './usePra
  * to state it as well — and the answer is to state it once, here, beside the
  * controls that change it. Neither header prints it now; this is the only copy,
  * and it is the bar's because the bar is what moves it.
+ *
+ * It names the WINDOW rather than stating a bare number (#2384) — see
+ * `TaskFilterBar` for why, and for why the branch is `hasMore` rather than a
+ * length comparison. Same wording on both lists, on purpose.
  */
 export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
-  const { items, filters, setFilters, clearAllFilters, canFilterByVote, factions } = state
+  const { items, filters, setFilters, clearAllFilters, canFilterByVote, factions, hasMore } =
+    state
 
   const rails: FilterRail[] = [
     {
@@ -88,7 +93,9 @@ export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
         ),
       ]}
       onClearAll={clearAllFilters}
-      summary={t('listPage.count', { count: items.length })}
+      summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
+        count: items.length,
+      })}
       search={{
         value: state.query,
         onChange: state.setQuery,

@@ -1,6 +1,7 @@
 {
   "listPage": {
     "count": "{{count}} shown",
+    "countWindowed": "Showing first {{count}}",
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters.",
     "emptyFiltered": "Nothing open under those terms. Clear the search or pick a different faction.",
