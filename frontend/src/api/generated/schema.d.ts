@@ -1020,7 +1020,11 @@ export interface paths {
         };
         /**
          * My Invited Factions
-         * @description Faction slugs the account holds a current-era invitation for (empty until #272).
+         * @description Faction slugs a new life on this account may be born into (ADR-0019).
+         *
+         *     Not just live invitation letters: since #2385 this also counts any faction
+         *     an existing life on the account currently holds or has ever held this era.
+         *     Walking out burns the door for *that* character, not for the account.
          */
         get: operations["my_invited_factions_me_invited_factions_get"];
         put?: never;
