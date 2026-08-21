@@ -7,6 +7,7 @@ import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
 import { CovenCat, SLIP_SHEET } from "../factionMarks/covenSlip";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
@@ -121,6 +122,12 @@ export default function CovenTaskCard({
 }: CardProps) {
   const formFactor = useFormFactor();
   const size = SIZES[formFactor];
+  /* THE CAT ALTERNATES (#2396, epic #2195). True on exactly one route today —
+     a character profile painted in a PATTERNED faction's ground — and false
+     everywhere else, including a Coven profile, whose candlelight is a wash.
+     Only the watermark branches: the sheet, band, braid, cauldron and CTA are
+     chrome and never move. */
+  const groundIsBusy = useGroundIsBusy();
   const cta = taskCardSignupCta(task, onSignup);
   const showMultiplier = !isNeutralMultiplier(multiplier);
 
@@ -162,8 +169,14 @@ export default function CovenTaskCard({
             38px clear of the edge.
 
             Opacity holds at 0.09 rather than taking #2041's 0.15; the reason,
-            with the measurements, is at {@link CovenCat}. */}
-        <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
+            with the measurements, is at {@link CovenCat}.
+
+            AND IT COMES OFF ON A BUSY GROUND (#2396): "either burst, or plain"
+            — where the cat is not worn the slip is BARE, never a substitute
+            texture. Nothing takes its place below. */}
+        {!groundIsBusy && (
+          <CovenCat size={190} style={{ right: -6, bottom: -4, opacity: 0.09 }} />
+        )}
 
         {/* Masthead. THE WORDMARK MOVES (#2029): it floated over the slip
             under a pentagram badge, with a braid tied off beneath it; v3 pins it
