@@ -37,11 +37,17 @@ import DefaultProfileBody from './archetypes/DefaultProfileBody'
  * places did the same arithmetic the two bars disagreed.
  */
 export interface ProfileProgression {
-  /** The level the current score is climbing toward (capped at max level). */
-  nextLevel: number
+  /**
+   * The level the current score is climbing toward — `null` at the top of the
+   * era's curve, exactly as `levelTrack` reports it (#2383). This used to be
+   * `number`, which forced `CharacterProfile` to coerce the `null` into the
+   * current level: a level-8 character was told the next level was 8, beside a
+   * band of "0 / 0 pts". A skin MUST branch on this rather than re-coerce.
+   */
+  nextLevel: number | null
   /** Absolute score where the current level began. */
   currentThreshold: number
-  /** Absolute score where nextLevel begins. */
+  /** Absolute score where nextLevel begins; `0` at the top of the curve. */
   nextThreshold: number
   /** The bar's numerator: points banked inside the current level. */
   pointsIntoLevel: number

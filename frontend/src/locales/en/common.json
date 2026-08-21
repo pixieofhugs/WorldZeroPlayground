@@ -297,7 +297,7 @@
       "points_one": "point",
       "points_other": "points",
       "toNextLevel": "{{points}} to Level {{level}}",
-      "topLevel": "Top of the era's ladder",
+      "topLevel": "Nowhere to go from here but the top",
       "allTime": "{{points}} all-time",
       "trackLabel": "{{score}} of {{target}} points toward Level {{level}}",
       "noCharacter": "No character yet"
