@@ -577,3 +577,34 @@
     animation: alb-drift 18s linear infinite;
   }
 }
+
+/* ── Albescent — the five card edges' travel (#2407). The rings themselves are
+   `.spectrum-frame::before`'s selector list in index.css, one rule for all six
+   mounts; what arrives here is only the walk, which is the whole of what these
+   five surfaces were carrying in the render-blocking sheet.
+
+   FOUR KEYFRAMES BECAME ONE. `alb-task-edge`, `alb-detail-edge`,
+   `alb-praxis-edge` and `alb-feed-edge` were byte-identical — 0% → 300% at 16s
+   — so the four names retire and the four selectors share one declaration.
+
+   THE FIFTH IS NOT A DUPLICATE AND DOES NOT RETIRE. `alb-profile-edge` travels
+   200% because the profile band's ring tiles at `background-size: 200% 100%`,
+   two band-widths where the other four are three: the travel and the tile are
+   one number stated twice, and 300% there would overshoot the seam and jump.
+   Its 9s pace is the design's, and differs too.
+
+   Stranded — this sheet not yet delivered, or reduced motion — each edge is the
+   static spectrum ring an unaffiliated player already sees on the same surface.
+   The frame is drawn, in its final colours, at its final size; it simply is not
+   walking. Nothing here carries meaning through motion alone. ── */
+@keyframes alb-edge-travel { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-task-edge,
+  .alb-detail-edge,
+  .alb-praxis-edge,
+  .alb-feed-edge {
+    animation: alb-edge-travel 16s linear infinite;
+  }
+  .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
+}
