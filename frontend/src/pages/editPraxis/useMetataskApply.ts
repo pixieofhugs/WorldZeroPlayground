@@ -39,10 +39,20 @@ export interface MetataskApply {
   seedApplied: (applied: TaskOut[]) => void;
 }
 
-export function useMetataskApply(
-  praxis: PraxisOut | null,
-  setError: (message: string) => void,
-): MetataskApply {
+/**
+ * Both mutations answer with the re-scored praxis, so all three paths below
+ * write it back through `setPraxis` (#2464). The seal stack alone is not the
+ * whole state a seal changes: the composer's score stamp reads `praxis.score`
+ * and `praxis.metatask_points`, and leaving those at whatever the initial load
+ * returned is why sealing a +100 metatask onto a task worth 10 kept printing
+ * 10. Not a refetch — the server already sent the number (#1382 / #2402).
+ */
+export function useMetataskApply(options: {
+  praxis: PraxisOut | null;
+  setPraxis: (praxis: PraxisOut) => void;
+  setError: (message: string) => void;
+}): MetataskApply {
+  const { praxis, setPraxis, setError } = options;
   // The applied metatasks as full rows (source of truth for the seal stack);
   // `appliedMetatasks` (the id Set) is derived from it below.
   const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
@@ -66,12 +76,12 @@ export function useMetataskApply(
       setError("");
       try {
         if (appliedMetatasks.has(mt.id)) {
-          await removeMetatask(praxis.id, mt.id);
+          setPraxis(await removeMetatask(praxis.id, mt.id));
           setAppliedMetataskList((previous) =>
             previous.filter((m) => m.id !== mt.id),
           );
         } else {
-          await applyMetatask(praxis.id, mt.id);
+          setPraxis(await applyMetatask(praxis.id, mt.id));
           setAppliedMetataskList((previous) => [...previous, mt]);
         }
       } catch (err) {
@@ -82,7 +92,7 @@ export function useMetataskApply(
         setApplyingMetatask(null);
       }
     },
-    [praxis, applyingMetatask, appliedMetatasks, setError],
+    [praxis, setPraxis, applyingMetatask, appliedMetatasks, setError],
   );
 
   // Section D: the picker seals one metatask at a time, then closes.
@@ -96,7 +106,7 @@ export function useMetataskApply(
       setApplyingMetatask(mt.id);
       setError("");
       try {
-        await applyMetatask(praxis.id, mt.id);
+        setPraxis(await applyMetatask(praxis.id, mt.id));
         setAppliedMetataskList((previous) => [...previous, mt]);
         setMetataskPickerOpen(false);
       } catch (err) {
@@ -107,7 +117,7 @@ export function useMetataskApply(
         setApplyingMetatask(null);
       }
     },
-    [praxis, applyingMetatask, appliedMetatasks, setError],
+    [praxis, setPraxis, applyingMetatask, appliedMetatasks, setError],
   );
 
   // Section E: the seal's × asks first — open the confirm for that metatask.
@@ -131,7 +141,7 @@ export function useMetataskApply(
     setApplyingMetatask(target.id);
     setError("");
     try {
-      await removeMetatask(praxis.id, target.id);
+      setPraxis(await removeMetatask(praxis.id, target.id));
       setAppliedMetataskList((previous) =>
         previous.filter((mt) => mt.id !== target.id),
       );
@@ -143,7 +153,7 @@ export function useMetataskApply(
     } finally {
       setApplyingMetatask(null);
     }
-  }, [praxis, metataskRemovalTarget, setError]);
+  }, [praxis, setPraxis, metataskRemovalTarget, setError]);
 
   // Clear first: the picker now prints `error` itself (#2382), and the composer
   // shares one error slot, so a failure from publish or a duel would otherwise
