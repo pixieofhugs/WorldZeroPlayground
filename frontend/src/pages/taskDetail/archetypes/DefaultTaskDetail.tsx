@@ -570,6 +570,12 @@ export default function DefaultTaskDetail({
           >
             {task.created_by_avatar_url ? (
               <img
+                // `.user-media` marks the region that is the PLAYER's, not the
+                // site's, so a faction skin can hold its wash off it (#1646 /
+                // #1942). Inert on the other eight — only the Albescent
+                // wrappers scope a rule to it. The `initialsOf` monogram below
+                // is the site's own furniture and deliberately carries none.
+                className="user-media"
                 src={mediaUrl(task.created_by_avatar_url)}
                 alt={authorName}
                 style={{
@@ -811,9 +817,16 @@ export default function DefaultTaskDetail({
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
       <div
+        // THE SHEET'S LIFT IS A CLASS, NOT AN INLINE NUMBER (#1942). It still
+        // computes to `z-index: 1` for every skin that renders this column —
+        // index.css `.task-detail-sheet` says so — but an inline z-index cannot
+        // be beaten by a selector, and Albescent needs to clear it: the integer
+        // makes this a stacking context, which capped the byline photo and the
+        // whole submissions gallery below `.alb-detail-aurora`'s wash. See the
+        // `.alb-detail .task-detail-sheet` rule for the whole reasoning.
+        className="task-detail-sheet"
         style={{
           position: "relative",
-          zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
           // The page surface the design puts everything on, carried by the

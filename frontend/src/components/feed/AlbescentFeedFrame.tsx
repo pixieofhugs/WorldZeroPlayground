@@ -50,6 +50,25 @@ import type { FeedFrameProps } from './feedFrameProps'
  * stay clickable — the archive interaction lives in `FeedItemSlot` and is
  * untouched by anything in this file.
  *
+ * ### The two spans go THROUGH the chassis, not beside it (#1942)
+ *
+ * They were siblings of the card until #1646's ruling — the drift keeps the
+ * chrome and stops at user media — reached this surface. It could not be
+ * honoured from outside. `.sidebar-card` declares `backdrop-filter`, and a
+ * computed `backdrop-filter` other than `none` makes an element a stacking
+ * context: the card paints ATOMICALLY, so no `z-index` on the actor's photograph
+ * inside it can rise above a wash mounted outside it. That filter is not
+ * removable either — index.css says so at its own site, because #1148's
+ * `position: fixed` companion modals need the card as their containing block.
+ *
+ * So the wash is handed down as `children` and mounts INSIDE the card, where the
+ * lift resolves. Nothing else about the mount changes: the chassis appends
+ * whatever it is given after its band and body, so both spans still paint last
+ * over everything but the photo, and `alb-feed-aurora` / `alb-feed-edge` still
+ * cover the card's border box — see the `inset: -1px` in index.css, which is the
+ * one compensation the new containing block costs. The card is still
+ * `DefaultFeedFrame` byte for byte with the two spans removed.
+ *
  * index.css owns both classes, both theme halves and the reduced-motion guard; a
  * component may not inject a stylesheet (#911). It declares no new colour value:
  * the wash reads `--faction-default-aurora` and the travelling hairline reads
@@ -72,12 +91,14 @@ import type { FeedFrameProps } from './feedFrameProps'
  * responsive half lives in the chassis this forwards to whole, and the light is
  * the same light at both widths.
  */
-export default function AlbescentFeedFrame(props: FeedFrameProps) {
+export default function AlbescentFeedFrame({ children, ...frame }: FeedFrameProps) {
   return (
     <div className="alb-feed">
-      <DefaultFeedFrame slug="albescent" {...props} />
-      <span aria-hidden="true" className="alb-feed-aurora" />
-      <span aria-hidden="true" className="alb-feed-edge" />
+      <DefaultFeedFrame slug="albescent" {...frame}>
+        {children}
+        <span aria-hidden="true" className="alb-feed-aurora" />
+        <span aria-hidden="true" className="alb-feed-edge" />
+      </DefaultFeedFrame>
     </div>
   )
 }
