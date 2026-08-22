@@ -189,7 +189,7 @@ export async function sealViaUi(page: Page, title = `Duel entry ${RUN}`): Promis
   // which made `toBeHidden()` green on a submit that never happened. The duel
   // then stayed `active`, `DuelCard` drew nothing, and the failure surfaced four
   // steps later as a missing rail (#2453). A real opponent types a title too.
-  await page.getByTestId('composer-title').fill(title)
+  await page.getByTestId('praxis-title').fill(title)
 
   // The composer's primary — it opens the seal sheet rather than publishing,
   // because a duel is attached (controls.tsx sealsADuel).

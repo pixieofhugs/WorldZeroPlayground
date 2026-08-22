@@ -883,7 +883,7 @@ export function TitleField({
       // anything (#2453) — its accessible name is `titleLabel` when a skin draws
       // no label of its own and `skin.ariaLabel` when one does, so there is no
       // one string to reach for.
-      data-testid="composer-title"
+      data-testid="praxis-title"
       value={state.title}
       onChange={(event) => {
         const next = event.target.value;

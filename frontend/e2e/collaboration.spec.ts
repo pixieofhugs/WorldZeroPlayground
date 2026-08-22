@@ -295,7 +295,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // refuses an untitled praxis client-side (`errors.titleRequired`) — after
       // the propose confirm has already been dismissed, so the refusal was
       // invisible and Alice's proposal simply never existed (#2453).
-      await aPage.getByTestId('composer-title').fill(`Collab ${RUN}-${s}`)
+      await aPage.getByTestId('praxis-title').fill(`Collab ${RUN}-${s}`)
       await aPage.locator('.cm-content').first().fill('Alice weaves her part')
 
       // Let the room's debounced flush land BEFORE proposing. The document is
