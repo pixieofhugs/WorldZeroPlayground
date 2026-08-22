@@ -16,9 +16,18 @@
  * prove is the two halves of the wiring:
  *
  *  1. a rule exists that raises `.user-media` above the drift's `z-index`, and
- *     it is SCOPED to the two Albescent wrappers rather than global;
- *  2. both surfaces actually emit `.user-media`, and the Albescent card emits
- *     the wrapper class the rule scopes on.
+ *     it is SCOPED to the four Albescent wrappers rather than global;
+ *  2. those surfaces actually emit `.user-media`, and the Albescent card emits
+ *     the wrapper class the rule scopes on;
+ *  3. (#1942) the two STACKING TRAPS that made the lift inert on the feed and
+ *     the task detail are cleared, and each is cleared Albescent-scoped.
+ *
+ * The third is the correction #1942 had to make to its own issue body. A
+ * `z-index` only competes inside its own stacking context, so a lift that
+ * resolves on two surfaces can be a no-op on a third — which is why the numbers
+ * below are read from the ornaments' own rules and the traps are asserted by
+ * name. The task detail's markup hooks are in `pages/taskDetail/__tests__` and
+ * the feed's ornament mount in `components/__tests__/albescentFeedFrame`.
  *
  * Drop either and the other is decorative — a class nobody reads, or a rule
  * nothing matches. The picture itself is visual QA and is stated as outstanding
@@ -123,15 +132,17 @@ function detailState(): PraxisDetailState {
 }
 
 describe("the stylesheet lifts user media above the Albescent drift (#1646)", () => {
-  const SELECTORS = /\.alb-praxis-card\s+\.user-media\s*,\s*\.alb-praxis\s+\.user-media\s*\{/;
-  const lift = ruleBodies(css, ".alb-praxis .user-media");
+  const SELECTORS =
+    /\.alb-praxis-card\s+\.user-media\s*,\s*\.alb-praxis\s+\.user-media\s*,\s*\.alb-detail\s+\.user-media\s*,\s*\.alb-feed\s+\.user-media\s*\{/;
+  const lift = ruleBodies(css, ".alb-feed .user-media");
 
-  it("both Albescent wrappers share one lift rule", () => {
-    // The card scope and the detail scope, in one selector list — the whole
-    // fix. `ruleBodies` matches the trailing selector of a list, so the leading
-    // one is pinned by the regex.
+  it("all four Albescent wrappers share one lift rule", () => {
+    // The praxis card, the praxis detail, the task detail and the feed card, in
+    // one selector list — #1942 widened #1941's two to four rather than minting
+    // a second mechanism. `ruleBodies` matches the trailing selector of a list,
+    // so the leading three are pinned by the regex.
     expect(css, "the scoped lift rule").toMatch(SELECTORS);
-    expect(lift.length, ".alb-praxis .user-media rule must exist").toBeGreaterThan(0);
+    expect(lift.length, ".alb-feed .user-media rule must exist").toBeGreaterThan(0);
   });
 
   it("positions the media, which is what makes z-index apply at all", () => {
@@ -140,13 +151,16 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
     }
   });
 
-  it("clears every drift layer on both surfaces", () => {
-    // Derived, not typed twice: `.alb-rainbow` sits at 0 on the card and the
-    // three `.alb-praxis-*` ornaments at 2 on the detail. Retune either and
-    // this fails rather than silently letting the wash back over the photo.
+  it("clears every drift layer on all four surfaces", () => {
+    // Derived, not typed twice: `.alb-rainbow` sits at 0 on the praxis card, the
+    // feed's two layers at 1, and the `.alb-praxis-*` / `.alb-detail-*`
+    // ornaments at 2. Retune any of them and this fails rather than silently
+    // letting the wash back over the photo.
     const floor = Math.max(
       topZ(ruleBodies(css, ".alb-rainbow")),
       topZ(ruleBodies(css, ".alb-praxis-edge")),
+      topZ(ruleBodies(css, ".alb-detail-edge")),
+      topZ(ruleBodies(css, ".alb-feed-edge")),
     );
     for (const body of lift) {
       expect(topZ([body]), "media above the drift").toBeGreaterThan(floor);
@@ -154,12 +168,55 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("is scoped — no global .user-media rule reorders the other eight skins", () => {
-    // `PraxisMediaGallery` is one component for all nine praxis archetypes and
-    // `MediaGallery` serves the detail page, so an unscoped lift would ride
-    // over skins that stack their own layers (Ephemerists' plate at 1,
-    // Singularity's content at 2). Both mentions in the file are the one
-    // scoped selector list.
-    expect(css.match(/\.user-media/g) ?? []).toHaveLength(2);
+    // `PraxisMediaGallery` is one component for all nine praxis archetypes,
+    // `MediaGallery` serves the detail page and the byline photo + the feed
+    // avatar are the shared chassis's, so an unscoped lift would ride over skins
+    // that stack their own layers (Ephemerists' plate at 1, Singularity's
+    // content at 2). All four mentions in the file are the one scoped list.
+    expect(css.match(/\.user-media/g) ?? []).toHaveLength(4);
+  });
+
+  it("clears the task detail's stacking trap, and only under .alb-detail", () => {
+    // THE LIFT ALONE IS INERT HERE, which is what #1942's first attempt found.
+    // `DefaultTaskDetail`'s 1200 column is positioned at `z-index: 1`, i.e. a
+    // stacking context, so every descendant was capped at 1 while
+    // `.alb-detail-aurora` washed from 2 — no number on the photo could reach
+    // past it. `auto` un-caps the subtree without moving the sheet itself.
+    expect(ruleBodies(css, ".task-detail-sheet")[0], "the shared column's own lift").toMatch(
+      /z-index\s*:\s*1/,
+    );
+    const cleared = ruleBodies(css, ".alb-detail .task-detail-sheet");
+    expect(cleared.length, "the Albescent-scoped clearing rule").toBe(1);
+    expect(cleared[0]).toMatch(/z-index\s*:\s*auto/);
+  });
+
+  it("clears the feed avatar anchor's ceiling the same way", () => {
+    // #1893's lift makes the avatar's anchor a stacking context at 1 — the same
+    // level `.alb-feed-aurora` sits at, and earlier in the DOM, so the wash won.
+    // The number had to leave the inline style to be overridable at all; the
+    // value is unchanged for every other card.
+    const anchor = ruleBodies(css, ".feed-avatar-link")[0];
+    expect(anchor, "the anchor's lift, as a class").toBeDefined();
+    expect(anchor).toMatch(/z-index\s*:\s*1/);
+    expect(anchor, "still out of the flex row's shrink").toMatch(/flex-shrink\s*:\s*0/);
+  });
+
+  it("puts the relocated feed ornaments back on the card's border box", () => {
+    // The two spans moved INSIDE `.sidebar-card` (its `backdrop-filter` makes it
+    // a stacking context that nothing inside could escape). An absolutely
+    // positioned child resolves against the PADDING box, so `inset: 0` would now
+    // start one pixel in and the travelling ring would miss the hairline it is
+    // meant to bring alive. The card's border is 1px.
+    const ornaments = ruleBodies(css, ".alb-feed-edge").filter((body) =>
+      /inset\s*:/.test(body),
+    );
+    expect(ornaments.length, "the feed ornaments' shared box").toBeGreaterThan(0);
+    for (const body of ornaments) {
+      expect(body, "offset back out to the border box").toMatch(/inset\s*:\s*-1px/);
+    }
+    expect(ruleBodies(css, ".sidebar-card")[0], "the 1px this compensates").toMatch(
+      /border\s*:\s*1px/,
+    );
   });
 
   it("sits at the top level, so reduced motion still stills the same layers", () => {
