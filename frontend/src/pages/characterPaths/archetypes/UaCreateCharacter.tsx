@@ -122,7 +122,22 @@ const SLUG = 'ua'
 const SHEET = 'var(--faction-ua-card-bg)' /* the sun-bleached sheet */
 const FIELD = 'var(--faction-ua-panel)' /* inset panel — fields, wells */
 const INK = 'var(--faction-ua-card-text)'
-const MUTED = 'var(--faction-ua-card-muted)'
+/* THE QUIET TIER IS `-card-body`, NOT `-card-muted`, AND THAT IS MEASURED (#2348).
+ *
+ * `UaEditPraxis` sets its labels, counters and exits in `--faction-ua-card-muted`
+ * and this file started as a copy of that. On the BARE sheet muted is right —
+ * 5.45 light / 5.64 dark, and `factionContrast.test.ts` measures exactly that.
+ * But this sheet is not bare: `ComposerGround` washes the lotus and the ensō
+ * over it at `--faction-ua-card-lotus-opacity`, and on that COMPOSITE muted
+ * reads 4.38 / 3.79 — under AA in both themes. `-card-body` is the same family
+ * one rung up and reads 5.74 / 6.78 there, so the quiet type takes it. Every
+ * number is in `__tests__/uaCreateCharacterContrast.test.ts`.
+ *
+ * This is §3's "same ink, second ground", not a preference: nothing about the
+ * ink changed, the ground gained a layer. The FIELDS keep muted's own tier
+ * available because `--faction-ua-panel` is opaque and sits above the wash —
+ * but nothing on this page needs it, so the constant is not declared. */
+const BODY = 'var(--faction-ua-card-body)'
 const ACCENT = 'var(--faction-ua-card-accent)' /* the design's accentDeep */
 const RULE = 'var(--faction-ua-rule)' /* the neutral hairline */
 const HAIR = 'var(--faction-ua-hair)' /* the faintest divider, below -rule */
@@ -181,7 +196,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
 
   /* The label tier's face and colour are the skin's; its geometry (uppercase,
    * 0.14em, --text-lg) is the layout's and is inherited untouched. */
-  const labelStyle = { fontFamily: UA_TEXT, color: MUTED }
+  const labelStyle = { fontFamily: UA_TEXT, color: BODY }
 
   const fieldBox = {
     width: '100%',
@@ -199,7 +214,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
   /** The counter row under a field: quiet, and alarmed on the cap. */
   const counter = (used: number, max: number) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: UA_TEXT, fontSize: 'var(--text-lg)' }}>
-      <span style={{ color: used >= max ? ALARM : MUTED }}>
+      <span style={{ color: used >= max ? ALARM : BODY }}>
         {t('createCharacter.charsLeft', { count: max - used })}
       </span>
     </div>
@@ -296,8 +311,8 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
               style={{ ...fieldBox, fontFamily: UA_DISPLAY, fontWeight: 600 }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: UA_TEXT, fontSize: 'var(--text-lg)' }}>
-              <span style={{ color: MUTED }}>@{handle}</span>
-              <span style={{ color: displayName.length >= NAME_MAX ? ALARM : MUTED }}>
+              <span style={{ color: BODY }}>@{handle}</span>
+              <span style={{ color: displayName.length >= NAME_MAX ? ALARM : BODY }}>
                 {t('createCharacter.charsLeft', { count: NAME_MAX - displayName.length })}
               </span>
             </div>
@@ -362,7 +377,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                 color: INK,
                 border: `1px solid ${RULE}`,
               })}
-              statusStyle={{ fontFamily: UA_TEXT, color: MUTED }}
+              statusStyle={{ fontFamily: UA_TEXT, color: BODY }}
               errorStyle={{ color: ALARM }}
             />
           </ComposerSection>
@@ -431,7 +446,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                   fontFamily: UA_TEXT,
                   fontStyle: 'italic',
                   fontSize: 'var(--text-content)',
-                  color: MUTED,
+                  color: BODY,
                   margin: 0,
                   lineHeight: 1.55,
                 }}
@@ -463,12 +478,12 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                     border: 'none',
                     padding: 0,
                     cursor: 'pointer',
-                    color: MUTED,
+                    color: BODY,
                   })}
                 >
                   {t('createCharacter.cancel')}
                 </button>
-                <span style={{ fontFamily: UA_TEXT, fontSize: 'var(--text-content)', color: MUTED }}>
+                <span style={{ fontFamily: UA_TEXT, fontSize: 'var(--text-content)', color: BODY }}>
                   {t('createCharacter.startsAt')}
                 </span>
               </>
