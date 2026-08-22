@@ -615,6 +615,10 @@ async def list_characters_for_viewer(
     exclude_active_task_id: Optional[int] = None,
     exclude_account_id: Optional[int] = None,
     viewer_account: Optional[Account] = None,
+    # Resolved by the route, not here: it is an ``account_role`` row, and an
+    # admin is treated as revealed (#2400). Defaults False, so a caller that
+    # does not ask keeps the unprivileged answer.
+    viewer_is_admin: bool = False,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -635,11 +639,11 @@ async def list_characters_for_viewer(
     picker asks for it so it does not have to re-derive the roster client-side
     (#1385); the duel service remains the enforcement.
 
-    ``viewer_account`` is the optional caller behind ``GET /characters`` and
-    ``GET /leaderboard``, and is consulted for one thing: whether an explicit
-    ``?faction=albescent`` is the faction page's roster question or a prober's
-    (#2422). ``None`` — anonymous, or a caller who passed none — keeps the
-    anti-oracle answer.
+    ``viewer_account`` (with ``viewer_is_admin``) is the optional caller behind
+    ``GET /characters`` and ``GET /leaderboard``, and is consulted for one
+    thing: whether an explicit ``?faction=albescent`` is the faction page's
+    roster question or a prober's (#2422). ``None`` — anonymous, or a caller who
+    passed none — keeps the anti-oracle answer.
     """
     from services.praxis import multi_membership_faction_slugs
 
@@ -695,7 +699,10 @@ async def list_characters_for_viewer(
     # fold is the shared helper's answer, not this route's — including whether
     # this viewer has been revealed and may ask for Albescent alone (#2422).
     roster_faction_slugs = faction_filter_slugs(
-        [faction_slug], reveal_albescent=is_albescent_revealed(viewer_account)
+        [faction_slug],
+        reveal_albescent=is_albescent_revealed(
+            viewer_account, is_admin=viewer_is_admin
+        ),
     )
     if roster_faction_slugs:
         query = query.where(Character.faction_slug.in_(roster_faction_slugs))

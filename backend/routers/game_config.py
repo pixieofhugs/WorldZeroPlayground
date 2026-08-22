@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import get_current_account_optional
+from db import get_db
+from dependencies import account_has_admin_role, get_current_account_optional
 from game_config import CURRENT_ERA
 from models.account import Account
 from schemas.game_config import (
@@ -17,6 +19,7 @@ router = APIRouter()
 @router.get("", response_model=GameConfigOut)
 async def get_game_config(
     account: Account | None = Depends(get_current_account_optional),
+    session: AsyncSession = Depends(get_db),
 ) -> GameConfigOut:
     # NOTE — this docstring ships verbatim to the PUBLIC ``/openapi.json``, so
     # it says what the route does without naming what it hides. The reason lives
@@ -25,8 +28,12 @@ async def get_game_config(
 
     Optional auth — anonymous callers stay anonymous and get the public answer.
     The account is read only to decide which level-ladder rungs this caller may
-    be told about (``services.progression.visible_level_profiles``).
+    be told about (``services.progression.visible_level_profiles``), including
+    whether it holds a moderation role.
     """
+    is_admin = account is not None and await account_has_admin_role(
+        account.id, session
+    )
     factions = [
         FactionConfigOut(
             slug=faction.slug,
@@ -49,7 +56,7 @@ async def get_game_config(
                 for unlock in profile.unlocks
             ],
         )
-        for profile in visible_level_profiles(account)
+        for profile in visible_level_profiles(account, is_admin=is_admin)
     ]
 
     return GameConfigOut(

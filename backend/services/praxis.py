@@ -299,6 +299,9 @@ async def list_praxes(
     # this is the row whose sticky reveal flag decides whether an explicit
     # ?faction=albescent is answered literally (#2422).
     viewer_account: Optional[Account] = None,
+    # Resolved by the route: admin status is an ``account_role`` row, and an
+    # admin is treated as revealed (#2400).
+    viewer_is_admin: bool = False,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -358,7 +361,10 @@ async def list_praxes(
     # slugs on both, Albescent included (#1975) — and so a revealed viewer's
     # explicit ask un-folds on both, too (#2422).
     faction_slugs = faction_filter_slugs(
-        faction, reveal_albescent=is_albescent_revealed(viewer_account)
+        faction,
+        reveal_albescent=is_albescent_revealed(
+            viewer_account, is_admin=viewer_is_admin
+        ),
     )
     if faction_slugs:
         query = query.where(Task.primary_faction_slug.in_(faction_slugs))

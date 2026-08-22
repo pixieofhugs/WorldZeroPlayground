@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import get_current_account_optional
+from dependencies import account_has_admin_role, get_current_account_optional
 from models.account import Account
 from schemas.character import CharacterOut
 from services.character import build_character_outs, list_characters_for_viewer
@@ -25,12 +25,16 @@ async def get_leaderboard(
     Auth is **optional** and always was in effect — this is a public board and
     anonymous callers must keep getting an answer. The account is read for one
     thing: a caller revealed to Albescent may ask for that roster directly
-    rather than getting the Unaffiliated fold (#2422).
+    rather than getting the Unaffiliated fold (#2422) — which an admin is, for
+    that question and no other (#2400).
     """
     rows = await list_characters_for_viewer(
         session,
         faction_slug=faction,
         viewer_account=account,
+        viewer_is_admin=(
+            account is not None and await account_has_admin_role(account.id, session)
+        ),
         limit=limit,
         offset=offset,
     )
