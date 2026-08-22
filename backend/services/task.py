@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode, raise_coded
 from faction_slugs import CROSS_FACTION_SLUG, faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
@@ -21,6 +22,7 @@ from services.era import (
     get_current_era_row_safe,
     get_or_create_stats,
 )
+from services.albescent_reveal import is_albescent_revealed
 from services.faction_service import hidden_faction_slugs
 from services.meta_task import character_sees_metatasks
 from services.praxis import (
@@ -621,6 +623,10 @@ async def list_tasks(
     limit: int = 50,
     offset: int = 0,
     viewer: Optional[Character] = None,
+    # The viewer's *account*, not a second spelling of `viewer`: the reveal flag
+    # is account-scoped and sticky across lives (ADR-0041), and an authenticated
+    # caller with no character still has one (#2422).
+    viewer_account: Optional[Account] = None,
     skip_level_check: bool = False,
     # Deliberately not folded into `skip_level_check`: that one answers "may this
     # viewer see tasks above their level", this one answers "may they see the
@@ -870,8 +876,11 @@ async def list_tasks(
     # which is what a cleared client-side filter sends — means "no faction
     # filter", never "match nothing". faction_filter_slugs also folds Albescent
     # under Unaffiliated (#1975); it is the ONE place that fold happens, shared
-    # with the praxis feed and the character roster.
-    faction_slugs = faction_filter_slugs(faction)
+    # with the praxis feed and the character roster — including the one direction
+    # a revealed viewer may un-fold (#2422).
+    faction_slugs = faction_filter_slugs(
+        faction, reveal_albescent=is_albescent_revealed(viewer_account)
+    )
     if faction_slugs:
         query = query.where(Task.primary_faction_slug.in_(faction_slugs))
     if min_points is not None:
