@@ -119,7 +119,6 @@ import {
   Sign,
 } from '../../../components/factionMarks/ephemeristsPlate'
 import { EphemeristsMasthead } from '../../../components/factionMarks/EphemeristsMasthead'
-import EphemeristsNotationBand from '../../../components/factionMarks/EphemeristsNotationBand'
 
 const SLUG = 'ephemerists'
 
@@ -131,13 +130,14 @@ const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 const ALARM = 'var(--faction-ephemerists-card-alarm)'
 
 /**
- * The notation band's seed. It is REQUIRED and must be stable per SURFACE, so
- * that two Ephemerists pages do not draw one row of marks — and every other
- * mount feeds it a record id (`praxis:7`, `task:7`). This page has no record:
- * the character does not exist yet, which is the whole point of it. The surface
- * itself is therefore the only stable thing there is to name, and naming it is
- * correct rather than a fallback — a per-keystroke seed off the typed name would
- * redraw the band on every letter.
+ * The masthead's seed, which it feeds to the notation band in its header.
+ *
+ * REQUIRED, and stable per SURFACE so that two Ephemerists pages do not draw one
+ * row of marks — every other mount hands it a record id (`praxis:7`, `task:7`).
+ * This page has no record: the character does not exist yet, which is the whole
+ * point of it. The surface itself is therefore the only stable thing there is to
+ * name, and naming it is the right answer rather than a fallback — a seed taken
+ * off the typed name would redraw the band on every keystroke.
  */
 const SEED = 'createCharacter'
 
@@ -495,10 +495,14 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
           }
           end={
             <>
-              {/* The rune strip ahead of the cast (#2067) — the same component
-                  the task card, the task page and the composer mount, so the
-                  motif is one drawing on every surface that paints a plate CTA. */}
-              <EphemeristsNotationBand side="top" seed={SEED} />
+              {/* NO NOTATION BAND BRACKETING THIS BUTTON, and that is the law
+                  rather than an omission. #2367: a PAGE wears the band in its
+                  HEADER and a CARD wears it at the call to action. This is a
+                  page, and `EphemeristsMasthead` above is already carrying it —
+                  a second row here would be the card's rule applied to a
+                  surface that is not one. (`EphemeristsEditPraxis` mounts both,
+                  and its own note records that as a reported gap, not a
+                  pattern to copy.) */}
               <button
                 type="submit"
                 disabled={!canSubmit}
