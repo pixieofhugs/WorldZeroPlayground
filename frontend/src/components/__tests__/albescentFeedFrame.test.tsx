@@ -64,7 +64,7 @@ const FAT_PAYLOAD = {
   task_title: 'Reforest the verge',
   task_point_value: 40,
   task_level_required: 2,
-  points_earned: 12,
+  value: 4,
   praxis_title: 'A returned proof',
   praxis_type: 'collab',
   from_character_id: 4,

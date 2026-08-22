@@ -100,10 +100,9 @@ async def test_changing_a_vote_replaces_the_original_row_with_a_changed_one(
     changed = _of_type(after, "vote_changed_on_mine")
     assert len(changed) == 1, f"expected one changed-vote item, got: {after}"
     assert changed[0]["payload"]["value"] == second
-    # The praxis's whole score, not a per-vote figure and not the product this
-    # used to assert (#2199). One voter, no metatask, ×1.0 — so base + stars.
-    # The surface-to-surface pin lives in test_activity_feed_vote_points.py.
-    assert changed[0]["payload"]["points_earned"] == active_task.point_value + second
+    # `value` is the whole number the row prints (#2402): what this voter added,
+    # which is their star value exactly. The praxis's total is not on the
+    # payload. The measured pin lives in test_activity_feed_vote_points.py.
     assert changed[0]["payload"]["praxis_id"] == praxis_id
     assert changed[0]["actor_display_name"] == character2.display_name
 
