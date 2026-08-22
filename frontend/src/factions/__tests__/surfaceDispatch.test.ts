@@ -106,7 +106,7 @@ const BESPOKE: Record<string, string[]> = {
   // anyway: every Albescent registration is a WRAPPER rather than a skin
   // (ADR-0027), so it renders `DefaultCreateCharacter`, WHICH IS the na kit. The
   // `leaves %s to the surface Default` row below covers it either way.
-  createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven'],
+  createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity'],
   // Was `mobileFactionPage` with this exact slug list until ADR-0078 collapsed
   // faction detail to one responsive component per faction. Same move the
   // praxis-card row made below: the row follows the surviving surface rather
