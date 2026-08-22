@@ -961,6 +961,11 @@ export interface paths {
         /**
          * Get Leaderboard
          * @description Top characters by current era score, optionally filtered by faction.
+         *
+         *     Auth is **optional** and always was in effect — this is a public board and
+         *     anonymous callers must keep getting an answer. The account is read for one
+         *     thing: a caller revealed to Albescent may ask for that roster directly
+         *     rather than getting the Unaffiliated fold (#2422).
          */
         get: operations["get_leaderboard_leaderboard_get"];
         put?: never;
@@ -6239,7 +6244,9 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
