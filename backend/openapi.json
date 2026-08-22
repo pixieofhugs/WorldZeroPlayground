@@ -1598,6 +1598,11 @@
             "title": "Account Id",
             "type": "integer"
           },
+          "albescent_level_required": {
+            "default": 0,
+            "title": "Albescent Level Required",
+            "type": "integer"
+          },
           "albescent_revealed": {
             "default": false,
             "title": "Albescent Revealed",
@@ -1692,6 +1697,7 @@
           "can_start_as_albescent",
           "albescent_revealed",
           "second_character_level_required",
+          "albescent_level_required",
           "era_name",
           "can_propose_task",
           "can_propose_metatask",
@@ -9134,7 +9140,7 @@
     },
     "/factions/choose": {
       "post": {
-        "description": "Choose or defect to a new faction.\n\nWorks for the initial faction join and later defections.\nPlayers cannot rejoin factions they have left, except UA Masters and Albescent.\n\nAnswers the refreshed `CurrentUser`, not the faction row (#1383). Membership\ndresses the whole site off `/auth/me` — the faction slug, the level-jump\nallowance, the capability flags and the sticky `albescent_revealed` reveal\nmove together — so all four callers threw the `{slug}` away and re-asked\n`/auth/me` for the object this handler is already positioned to build.",
+        "description": "Choose or defect to a new faction.\n\nWorks for the initial faction join and later defections.\nPlayers cannot rejoin factions they have left, except Albescent.\n\nAnswers the refreshed `CurrentUser`, not the faction row (#1383). Membership\ndresses the whole site off `/auth/me` — the faction slug, the level-jump\nallowance, the capability flags and the sticky `albescent_revealed` reveal\nmove together — so all four callers threw the `{slug}` away and re-asked\n`/auth/me` for the object this handler is already positioned to build.",
         "operationId": "choose_faction_factions_choose_post",
         "parameters": [
           {

@@ -1,4 +1,4 @@
-"""The Albescent unlock becomes a stamped account fact, and the earner is evicted (#2399).
+"""The Albescent unlock becomes a stamped fact, and the earner is evicted (#2399).
 
 Schema **and** data, and the two are deliberately independent of each other.
 
@@ -42,8 +42,8 @@ Create Date: 2026-08-22
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA
 

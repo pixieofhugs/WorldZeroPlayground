@@ -335,7 +335,7 @@ async def test_me_can_create_additional_character_false_when_below_level_4(
 
 
 @pytest.mark.asyncio
-async def test_me_can_start_as_albescent_true_when_level_8_plus(
+async def test_me_reports_albescent_from_the_stamped_column(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -344,7 +344,13 @@ async def test_me_can_start_as_albescent_true_when_level_8_plus(
     era,
     faction_ua,
 ):
-    """Account with a level-8 character who has all faction completions: both flags true."""
+    """#2399: the flag is the stamped column, never a live recomputation.
+
+    The old ADR-0021 gate would have answered True on the first request below —
+    level 8 with a submitted praxis in every faction was exactly what it asked
+    for. It must not any more: nothing has stamped this account, so the door is
+    shut however much work is lying around.
+    """
     from game_config import CURRENT_ERA
     from models.character_stats import CharacterStats
     from models.faction import Faction, FactionStatus
@@ -359,10 +365,10 @@ async def test_me_can_start_as_albescent_true_when_level_8_plus(
         )
     )
     stats = result.scalar_one()
-    stats.level = 8
+    stats.level = CURRENT_ERA.albescent_level_required
     await db_session.commit()
 
-    # Seed one submitted praxis per non-sentinel faction so the full gate passes
+    # Exactly the ADR-0021 seeding: one submitted praxis per non-sentinel faction.
     sentinel_slugs = frozenset({"na", "albescent"})
     for faction_slug in CURRENT_ERA.factions:
         if faction_slug in sentinel_slugs:
@@ -372,10 +378,7 @@ async def test_me_can_start_as_albescent_true_when_level_8_plus(
         )
         if faction_result.scalar_one_or_none() is None:
             db_session.add(
-                Faction(
-                    slug=faction_slug,
-                    status=FactionStatus.visible,
-                )
+                Faction(slug=faction_slug, status=FactionStatus.visible)
             )
             await db_session.flush()
 
@@ -390,23 +393,29 @@ async def test_me_can_start_as_albescent_true_when_level_8_plus(
         )
         db_session.add(task)
         await db_session.flush()
-
-        praxis = Praxis(
-            task_id=task.id,
-            created_by_id=character.id,
-            type=PraxisType.solo,
-            title=f"Albescent gate praxis: {faction_slug}",
-            body_text="proof",
-            status=PraxisStatus.submitted,
+        db_session.add(
+            Praxis(
+                task_id=task.id,
+                created_by_id=character.id,
+                type=PraxisType.solo,
+                title=f"Albescent gate praxis: {faction_slug}",
+                body_text="proof",
+                status=PraxisStatus.submitted,
+            )
         )
-        db_session.add(praxis)
-
     await db_session.commit()
 
-    resp = await client.get("/auth/me", headers=auth_headers)
-    assert resp.status_code == 200
-    data = resp.json()
+    data = (await client.get("/auth/me", headers=auth_headers)).json()
     assert data["can_create_additional_character"] is True
+    assert data["can_start_as_albescent"] is False
+    # The ceiling rides along so the standing letter can name which lives may
+    # still answer it without duplicating the number as a frontend literal.
+    assert data["albescent_level_required"] == CURRENT_ERA.albescent_level_required
+
+    account.albescent_unlocked = True
+    await db_session.commit()
+
+    data = (await client.get("/auth/me", headers=auth_headers)).json()
     assert data["can_start_as_albescent"] is True
 
 
