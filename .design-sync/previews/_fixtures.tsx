@@ -425,7 +425,7 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
   friend_completion: makeFeedItem({ type: 'friend_completion' }),
   vote_on_mine: makeFeedItem({
     type: 'vote_on_mine',
-    payload: { praxis_id: 501, praxis_title: 'Charcoal study, north portico', points_earned: 12 },
+    payload: { praxis_id: 501, praxis_title: 'Charcoal study, north portico', value: 4 },
   }),
   global_task: makeFeedItem({
     type: 'global_task',
