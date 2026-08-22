@@ -737,19 +737,25 @@ async def apply_metatask_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-@router.delete("/{praxis_id}/metatasks/{task_id}", status_code=204)
+@router.delete("/{praxis_id}/metatasks/{task_id}", response_model=PraxisOut)
 async def remove_metatask_route(
     praxis_id: int,
     task_id: int,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Detach a previously applied metatask from a praxis."""
-    await remove_metatask(
+    """Detach a previously applied metatask from a praxis.
+
+    Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
+    seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
+    has already recomputed both — a bare 204 left the composer's score stamp
+    printing the higher total until a reload.
+    """
+    praxis = await remove_metatask(
         praxis_id=praxis_id,
         task_id=task_id,
         character_id=character.id,
         session=session,
         era=CURRENT_ERA,
     )
-    return Response(status_code=204)
+    return await build_praxis_out(praxis, session, viewer=character)
