@@ -864,7 +864,7 @@ export interface paths {
          * @description Choose or defect to a new faction.
          *
          *     Works for the initial faction join and later defections.
-         *     Players cannot rejoin factions they have left, except UA Masters and Albescent.
+         *     Players cannot rejoin factions they have left, except Albescent.
          *
          *     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
          *     dresses the whole site off `/auth/me` — the faction slug, the level-jump
@@ -2431,6 +2431,11 @@ export interface components {
         CurrentUser: {
             /** Account Id */
             account_id: number;
+            /**
+             * Albescent Level Required
+             * @default 0
+             */
+            albescent_level_required: number;
             /**
              * Albescent Revealed
              * @default false
