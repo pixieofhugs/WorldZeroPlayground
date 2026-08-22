@@ -111,9 +111,11 @@ export async function challengeViaUi(page: Page, opponentName: string): Promise<
   await duelChip.click()
   await expect(duelChip).toHaveAttribute('aria-pressed', 'true')
 
-  // InviteSearch (duel mode) is a SHARED control: this aria-label is stable
-  // across every archetype (controls.tsx searchAriaDuel, not skin-overridable).
-  const search = page.getByLabel('search an opponent')
+  // InviteSearch (duel mode). By SLOT, not by its aria-label: one box serves
+  // both the collab invite and the duel challenge, and which of the two catalog
+  // labels it wears is a fact about copy (#2453). In duel mode the box is open
+  // from the start — the `+ invite` disclosure is the collab's alone.
+  const search = page.getByTestId('composer-invite-search')
   await search.fill(opponentName)
 
   // Results dropdown (role=listbox) auto-opens once the query (≥ 2 chars) returns
@@ -121,10 +123,19 @@ export async function challengeViaUi(page: Page, opponentName: string): Promise<
   const option = page.getByRole('listbox').getByText(opponentName, { exact: false })
   await option.click()
 
-  // Challenge attached: the search input is replaced by the opponent chip showing
-  // "⚔ <name> · challenged" (statusChallenged). Prove it landed before returning.
-  await expect(page.getByText(opponentName)).toBeVisible()
-  await expect(page.getByText('challenged')).toBeVisible()
+  // Challenge attached: the search input is replaced by the facing pair (#1417).
+  // Anchored on the pair itself and on the opponent's own NAME — never on the
+  // badge's words. This line used to read `getByText('challenged')`, which was
+  // `editPraxis.invite.statusChallenged` until #1417 rewrote it to "Challenge
+  // sent" on 2026-08-01; the helper has failed here on every nightly since, and
+  // #1676 (08-15) fixed the two locators ABOVE without ever reaching this one.
+  await expect(pair(page)).toBeVisible()
+  await expect(pair(page).getByText(opponentName)).toBeVisible()
+}
+
+/** The composer's attached-duel block — proof `praxis.duel_id` is set. */
+function pair(page: Page) {
+  return page.getByTestId('composer-duel-pair')
 }
 
 /**
@@ -146,7 +157,10 @@ export async function acceptDuelViaUi(page: Page): Promise<void> {
  * confirm dialog rather than publishing as a plain solo praxis).
  */
 export async function waitForDuelAttached(page: Page, opponentName: string): Promise<void> {
-  await expect(page.getByText(opponentName)).toBeVisible()
+  // The pair only draws its two sides once `state.duel` has landed, so the
+  // opponent's name INSIDE it is the proof — a bare page-wide getByText would
+  // also be satisfied by a roster or a feed card elsewhere on the composer.
+  await expect(pair(page).getByText(opponentName)).toBeVisible()
 }
 
 /**
@@ -154,19 +168,23 @@ export async function waitForDuelAttached(page: Page, opponentName: string): Pro
  * confirm when a duel is attached (controls.tsx sealsADuel → requestDuelSeal),
  * then confirm inside the dialog.
  *
- * CORRECTED (#1676): the composer submit is NOT "Seal it". `PublishButton` only
- * replaces its idle label for the collab consensus gate and the duel PULL-BACK;
- * an unsealed duel side falls through to the archetype's own `idleLabel`, which
- * is the shared `editPraxis.composer.submit` ("Submit") in all eight composers.
- * "Seal it" exists only as the DIALOG's confirm (praxis.json duelSeal.confirm),
- * so the old pre-dialog locator matched nothing.
+ * BY SLOT, NOT BY LABEL (#2453). Both halves of this step have been re-anchored
+ * on wording once already and both broke again:
+ *  - the composer submit was "Seal it" (#954), then the shared "Submit" (#1676),
+ *    and `PublishButton` swaps that label again for the collab gate and the duel
+ *    pull-back — three strings for one slot;
+ *  - the dialog was `getByRole('dialog', { name: 'Seal the duel?' })` with a
+ *    /seal it/i confirm, and #1928 renamed both to "Lock the duel?" / "Lock it"
+ *    the day after #1676 landed.
+ * `composer-primary`, `duel-seal-sheet` and `duel-seal-confirm` name the slots,
+ * so a copy edit cannot reach them.
  */
 export async function sealViaUi(page: Page): Promise<void> {
-  // The composer submit — it opens the seal dialog rather than publishing,
+  // The composer's primary — it opens the seal sheet rather than publishing,
   // because a duel is attached (controls.tsx sealsADuel).
-  await page.getByRole('button', { name: 'Submit', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Seal the duel?' })
-  await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: /seal it/i }).click()
-  await expect(dialog).toBeHidden()
+  await page.getByTestId('composer-primary').click()
+  const sheet = page.getByTestId('duel-seal-sheet')
+  await expect(sheet).toBeVisible()
+  await sheet.getByTestId('duel-seal-confirm').click()
+  await expect(sheet).toBeHidden()
 }
