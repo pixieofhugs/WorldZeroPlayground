@@ -573,7 +573,7 @@ export default function EverymenTaskDetail({
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryBar}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryBar}>
             {t(signupCtaKey(task.signup_reason))}
           </button>
           <div

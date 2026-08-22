@@ -192,6 +192,12 @@ function DuelPair({
   const canRescind = duel == null || duel.status === "pending";
   return (
     <div
+      // The nightly duel spec's proof that a challenge attached (#2453). It used
+      // to read the badge's WORDS — `getByText('challenged')` — which #1417
+      // rewrote to "Challenge sent" on 2026-08-01, and the spec has been red
+      // there ever since. The pair only mounts once `praxis.duel_id` is set, so
+      // its presence is the fact the spec is actually asserting.
+      data-testid="composer-duel-pair"
       className="flex flex-col items-center gap-3"
       style={{ flex: "1 1 100%", fontFamily: skin.fontFamily }}
     >
@@ -383,6 +389,10 @@ export function InviteSearch({
       {!duelMode && !pickerOpen && (
         <button
           type="button"
+          // The disclosure the collab invite search sits behind since #1417 —
+          // and the step the nightly collab spec walked straight past, filling
+          // an input that had not been rendered for three weeks (#2453).
+          data-testid="composer-invite-open"
           onClick={() => setPickerOpen(true)}
           // A title, not an aria-label: the visible words are already the
           // button's name, and an aria-label would replace them for a screen
@@ -416,6 +426,10 @@ export function InviteSearch({
           // rule in index.css for why it is one attribute rather than a class
           // and why the ring is `currentColor`.
           data-composer-field
+          // One box, two jobs (collab invite / duel opponent), and the two
+          // aria-labels that tell them apart are catalog copy. The nightly
+          // reaches for the box itself (#2453).
+          data-testid="composer-invite-search"
           // Opened by the chip, so it takes the caret with it — the click that
           // asked for a search box is not also a request to go and find it.
           autoFocus={pickerOpen}
@@ -1561,6 +1575,12 @@ export function PublishButton({
   return (
     <button
       type="button"
+      // The composer's one primary action, whatever it currently says (#2453).
+      // Its label is three different strings by state and has moved twice —
+      // "Seal it" in #954, the shared "Submit" after #1676 — so the nightly duel
+      // spec presses the SLOT. `CollabSignals` carries the same id for the same
+      // reason; between them exactly one is on screen at a time.
+      data-testid="composer-primary"
       onClick={() => void onClick()}
       disabled={state.submitting || state.switchingMode !== null}
       className={skin.className}
@@ -1659,6 +1679,12 @@ export function CollabSignals({
       {(!proposalLive || !gate.iCast) && (
         <button
           type="button"
+          // Same slot id as `PublishButton`'s primary (#2453) — one of the two
+          // renders, never both. `data-collab-signal` names WHICH act the press
+          // performs, because Propose and Approve are one button distinguished
+          // only by wording, and wording is what the nightly must stop reading.
+          data-testid="composer-primary"
+          data-collab-signal={proposalLive ? "approve" : "propose"}
           title={collabCopy(
             slug,
             proposalLive ? "approveDescription" : "proposeDescription",
