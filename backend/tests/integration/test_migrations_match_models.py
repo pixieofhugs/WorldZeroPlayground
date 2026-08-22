@@ -45,9 +45,10 @@ is the same move as raising a coverage floor instead of writing the test. Both
 the failure message below and the file's own header exist to make that move a
 conscious one; there is deliberately no review gate and no second CI job.
 
-``ponytail:`` its ceiling, stated plainly — the diff goes red for *any* change to the migrated
-schema, and cannot itself tell an unmigrated model change from a migrated one —
-because on a fresh database the root's ``create_all`` produces both. What it
+``ponytail:`` its ceiling, stated plainly — the diff goes red for *any* change to
+the migrated schema, and cannot itself tell an unmigrated model change from one
+that is migrated, because on a fresh database the root's ``create_all`` produces
+both. What it
 guarantees is that no schema change reaches ``main`` without a human looking at
 it in the diff and answering "where is the migration?". Upgrade path, if that
 ever stops being enough: load the snapshot into a database, ``alembic stamp`` it,
