@@ -395,11 +395,29 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
           }
           labelStyle={sectionLabel}
         >
+          {/* Dressed rather than left in site chrome. `.btn-outline` brings its
+              own near-white `--color-bg-surface` ground and neutral ink, which
+              reads as a browser control dropped on the plate; every other
+              control on this sheet is `radius 0` on `INNER` inside a brass
+              line. The error ink is passed for a measured reason — see the
+              prop's own note: the neutral danger red is 3.54:1 on this ground
+              in light. */}
           <PortraitPicker
             inputRef={fileInputRef}
             onChange={handleAvatarChange}
             chosenFile={avatarFile}
             error={avatarError}
+            buttonStyle={composerLabelStyle({
+              ...label,
+              cursor: 'pointer',
+              borderRadius: 0,
+              padding: 'var(--space-sm) var(--space-lg)',
+              background: INNER,
+              color: INK,
+              border: `1.5px solid ${BRASS}`,
+            })}
+            statusStyle={{ fontFamily: READING, color: QUIET }}
+            errorStyle={{ color: ALARM }}
           />
         </ComposerSection>
 

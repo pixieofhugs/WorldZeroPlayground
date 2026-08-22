@@ -206,6 +206,7 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
             onChange={handleAvatarChange}
             chosenFile={avatarFile}
             error={avatarError}
+            errorStyle={{ color: ALARM }}
             style={{ marginTop: 'var(--space-sm)' }}
           />
 

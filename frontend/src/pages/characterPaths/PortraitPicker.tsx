@@ -51,6 +51,20 @@ export interface PortraitPickerProps {
   style?: CSSProperties
   buttonStyle?: CSSProperties
   statusStyle?: CSSProperties
+  /**
+   * The avatar error's ink, for a surface whose ground the neutral does not
+   * clear (#2346). Same shape and same reason as `ErrorBanner`'s `style`: the
+   * danger hue itself stays the platform's (ADR-0061), but WHICH ink reads on it
+   * is a property of the ground, and this control is mounted on eight of them.
+   *
+   * Measured, because it is the reason this prop exists: `--color-danger` is
+   * 3.54:1 on the Ephemerists plate and 3.42:1 on the na page under its
+   * backdrop wash, both in light. Each archetype passes its own
+   * `--faction-{key}-card-alarm`, which is #1302's shape and clears both.
+   *
+   * Optional — a caller that passes nothing renders byte-identically to before.
+   */
+  errorStyle?: CSSProperties
 }
 
 const rowStyle: CSSProperties = {
@@ -68,7 +82,7 @@ const defaultStatusStyle: CSSProperties = {
   wordBreak: 'break-word',
 }
 
-const errorStyle: CSSProperties = {
+const defaultErrorStyle: CSSProperties = {
   fontFamily: 'var(--font-body)',
   color: 'var(--color-danger)',
   margin: 'var(--space-sm) 0 0',
@@ -83,6 +97,7 @@ export default function PortraitPicker({
   style,
   buttonStyle,
   statusStyle,
+  errorStyle,
 }: PortraitPickerProps) {
   const { t } = useTranslation('forms')
   // Always called, then discarded when the caller supplied its own (hooks order).
@@ -133,7 +148,7 @@ export default function PortraitPicker({
         style={{ display: 'none' }}
       />
       {error && (
-        <p className="content-text" style={errorStyle}>
+        <p className="content-text" style={{ ...defaultErrorStyle, ...errorStyle }}>
           {error}
         </p>
       )}
