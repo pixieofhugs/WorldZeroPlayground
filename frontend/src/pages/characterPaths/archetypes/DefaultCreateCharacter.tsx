@@ -31,13 +31,11 @@
  * that reason, so the two stay a pair rather than one of them quietly becoming
  * the phone's only first-run prose field.
  *
- * INKS ARE THE `--faction-default-*` FAMILY, not the global `--color-text-*`
- * tiers the two source files used. This is a faction-dispatched surface now, and
- * `local/no-global-ink-on-faction-surface` reads every file under an
- * `archetypes/` directory: the neutral tier is a real token painted over the
- * seam a frame repoints. `DefaultEditPraxis` names the same family for the same
- * reason. Layout is flex/relative single-column on the phone — no fixed-px grid
- * drives the page (SPEC-faction-ui-profile §1a).
+ * INKS ARE UNCHANGED FROM WHAT BOTH FILES SHIPPED — the app's own neutral
+ * tiers, kept because they are what this page's real ground was measured
+ * against. See the constant block below for the numbers and for the lint
+ * exemption they justify. Layout is flex/relative single-column on the phone —
+ * no fixed-px grid drives the page (SPEC-faction-ui-profile §1a).
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -56,15 +54,47 @@ import {
   type CreateCharacterState,
 } from '../useCreateCharacter'
 
-/* The na kit's own inks and grounds, named once. Same family, same order as
-   `DefaultEditPraxis` names them. */
-const INK = 'var(--faction-default-card-text)'
-const MUTED = 'var(--faction-default-card-muted)'
-const FAINT = 'var(--faction-default-composer-faint)'
+/* The na kit's inks and grounds, named once.
+ *
+ * THE THREE TEXT TIERS ARE THE APP'S OWN NEUTRALS, AND THAT IS MEASURED RATHER
+ * THAN INHERITED. `local/no-global-ink-on-faction-surface` bans `--color-text-*`
+ * under an `archetypes/` directory, and this file carries the one documented
+ * exemption from it (see `eslint.config.js`, and the paired measurement in
+ * `__tests__/createCharacterContrast.test.ts` which is the other half of it).
+ *
+ * The reason is the GROUND. Every other `Default*` archetype draws on the na
+ * CARD — `DefaultEditPraxis` sits on `--faction-default-card-bg` — where the na
+ * card inks are the measured pair. This page has no card: it is bare app page,
+ * so what is actually behind this type is `--color-bg-page` with the
+ * `.na-backdrop` watercolour washed over it. Measured on that COMPOSITE in
+ * light, the card family does not clear AA and the neutrals do:
+ *
+ *     ink                                 light   dark
+ *     --color-text-secondary              6.06    6.68   ← used here
+ *     --color-text-tertiary               6.10    7.17   ← used here
+ *     --faction-default-card-muted        4.36    4.75
+ *     --faction-default-composer-faint    3.50    4.18
+ *
+ * So the neutral tier is not "a real token at the wrong tier" here, which is
+ * what the rule exists to catch on a faction SHEET; it is the tier this ground
+ * was chosen against. #1932 recorded the same ruling for `pages/players/`:
+ * widening that glob "would ban the global tiers on the surface they are right
+ * for". Do not swap these for `--faction-default-*` without re-measuring over
+ * the wash — the flat token reads 4.49 and the composite 3.50.
+ */
+const INK = 'var(--color-text-primary)'
+const MUTED = 'var(--color-text-secondary)'
+const FAINT = 'var(--color-text-tertiary)'
+/* NOT `--color-danger`, and this is a fix rather than a preference (#2346).
+ * The neutral functional red is 3.42:1 on this page's washed ground in light —
+ * a fail, and it is what both source files shipped. `-card-alarm` exists for all
+ * eight keys, is already measured, and reads 5.89 / 7.85 here. That is #1302's
+ * shape, the same one every composer error banner follows: a shared functional
+ * ink inside a faction frame takes the faction's own card family. */
 const ALARM = 'var(--faction-default-card-alarm)'
-const FIELD = 'var(--faction-default-composer-field)'
-const BORDER = 'var(--faction-default-border)'
-const ON_ACCENT = 'var(--faction-default-on-accent)'
+const FIELD = 'var(--color-bg-surface)'
+const BORDER = 'var(--color-border-strong)'
+const ON_ACCENT = 'var(--color-bg-page)'
 const RING = 'var(--faction-default-rainbow-conic)'
 
 export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {

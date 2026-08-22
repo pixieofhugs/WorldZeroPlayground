@@ -976,6 +976,45 @@ export default [
   },
   {
     /**
+     * THE ONE ARCHETYPE WHOSE GROUND IS THE APP'S OWN PAGE (#2346).
+     *
+     * A deliberate exemption and NOT a legacy entry — nothing here is going to
+     * migrate, so a shrinking list would be lying about it.
+     *
+     * The tier arm bans the global `--color-text-*` family on a faction sheet,
+     * and its message gives the measurements that justify it: 2.19:1 on
+     * S.N.I.D.E., 2.27 on Singularity, 2.01 on the Ephemerists plate. Every one
+     * of those is a FACTION SHEET. `DefaultCreateCharacter` is the `na`
+     * archetype of a page that HAS no sheet: unlike `DefaultEditPraxis`, which
+     * draws on `--faction-default-card-bg`, character creation is bare app page,
+     * so what is behind its type is `--color-bg-page` with the `.na-backdrop`
+     * watercolour over it.
+     *
+     * Measured on that composite in light, the swap the rule would force is the
+     * REGRESSION and the neutral is the passing value:
+     *
+     *     --color-text-secondary            6.06   (--faction-default-card-muted     4.36)
+     *     --color-text-tertiary             6.10   (--faction-default-composer-faint 3.50)
+     *
+     * #1932 already recorded this ruling for `pages/players/`: widening the glob
+     * "would ban the global tiers on the surface they are right for". This is
+     * that case reached from the other direction — the glob is a convention over
+     * directory names, and one na archetype landed inside it.
+     *
+     * THE EXEMPTION IS PAIRED, the way `roomPresence.ts`'s is. Its other half is
+     * `src/pages/characterPaths/__tests__/createCharacterContrast.test.ts`, which
+     * resolves these inks over the washed page ground in both themes. Do not
+     * delete that file while this entry exists: "the rule cannot judge this node"
+     * is never "this node needs no judging", and between them they are the whole
+     * guard.
+     */
+    files: ['src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx'],
+    rules: {
+      'local/no-global-ink-on-faction-surface': 'off',
+    },
+  },
+  {
+    /**
      * Tests assert ON the token they are guarding — `factionContrast.test.ts`
      * resolves `--color-text-tertiary` by name to prove `--label-ink` is unset
      * to it, and a fixture for this very rule must contain what it forbids.
