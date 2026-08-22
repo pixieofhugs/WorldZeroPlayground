@@ -18,6 +18,7 @@ from schemas.faction import (
     FactionStatusOut,
     InvitationLetterOut,
 )
+from services.albescent_reveal import is_albescent_revealed
 from services.auth import get_current_account
 from services.character import ALBESCENT_FACTION_SLUG
 from services.current_user import build_current_user
@@ -45,7 +46,7 @@ async def list_factions(
         select(Faction).where(Faction.status == FactionStatus.visible).order_by(Faction.slug)
     )
     factions = result.scalars().all()
-    reveal_albescent = account is not None and account.albescent_revealed
+    reveal_albescent = is_albescent_revealed(account)
     return [
         FactionOut.model_validate(faction)
         for faction in factions
@@ -104,7 +105,7 @@ async def get_faction_status(
             status=status,
         )
         for slug, status in status_map.items()
-        if slug != ALBESCENT_FACTION_SLUG or account.albescent_revealed
+        if slug != ALBESCENT_FACTION_SLUG or is_albescent_revealed(account)
     ]
     return FactionPageOut(
         current_faction_slug=character.faction_slug,
