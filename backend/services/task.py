@@ -630,7 +630,8 @@ async def list_tasks(
     skip_level_check: bool = False,
     # Deliberately not folded into `skip_level_check`: that one answers "may this
     # viewer see tasks above their level", this one answers "may they see the
-    # moderation queue". They happen to be true together today.
+    # moderation queue" — and, since #2400, "is this viewer treated as revealed
+    # to Albescent". They happen to be true together today.
     is_admin: bool = False,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Task]:
@@ -879,7 +880,8 @@ async def list_tasks(
     # with the praxis feed and the character roster — including the one direction
     # a revealed viewer may un-fold (#2422).
     faction_slugs = faction_filter_slugs(
-        faction, reveal_albescent=is_albescent_revealed(viewer_account)
+        faction,
+        reveal_albescent=is_albescent_revealed(viewer_account, is_admin=is_admin),
     )
     if faction_slugs:
         query = query.where(Task.primary_faction_slug.in_(faction_slugs))

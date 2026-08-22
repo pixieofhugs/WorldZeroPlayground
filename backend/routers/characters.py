@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import (
+    account_has_admin_role,
     get_current_account_optional,
     get_current_character,
     get_current_character_optional,
@@ -72,8 +73,12 @@ async def list_characters(
         ),
         # Optional auth, and only the reveal flag is read from it: a revealed
         # caller may ask for the Albescent roster directly (#2422). Anonymous
-        # callers are unaffected — `account` is None and the fold stands.
+        # callers are unaffected — `account` is None and the fold stands. An
+        # admin counts as revealed for that question and no other (#2400).
         viewer_account=account,
+        viewer_is_admin=(
+            account is not None and await account_has_admin_role(account.id, session)
+        ),
         limit=limit,
         offset=offset,
     )

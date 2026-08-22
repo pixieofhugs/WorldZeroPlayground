@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import get_current_account_optional
+from dependencies import account_has_admin_role, get_current_account_optional
 from models.account import Account
 from schemas.character import CharacterOut
 from services.character import build_character_outs, list_characters_for_viewer
@@ -31,6 +31,10 @@ async def get_leaderboard(
         session,
         faction_slug=faction,
         viewer_account=account,
+        # An admin counts as revealed for that question and no other (#2400).
+        viewer_is_admin=(
+            account is not None and await account_has_admin_role(account.id, session)
+        ),
         limit=limit,
         offset=offset,
     )

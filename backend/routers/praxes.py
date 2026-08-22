@@ -24,6 +24,7 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_db
 from dependencies import (
+    account_has_admin_role,
     get_current_account_optional,
     get_current_character,
     get_current_character_optional,
@@ -217,8 +218,12 @@ async def list_praxes_route(
         voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
         viewer_account_id=viewer.account_id if viewer else None,
-        # Optional auth; only the Albescent reveal flag is read from it (#2422).
+        # Optional auth; only the Albescent reveal flag is read from it (#2422),
+        # for which an admin counts as revealed (#2400).
         viewer_account=account,
+        viewer_is_admin=(
+            account is not None and await account_has_admin_role(account.id, session)
+        ),
         limit=limit,
         offset=offset,
     )
