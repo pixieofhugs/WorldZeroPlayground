@@ -23,9 +23,14 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
-from dependencies import get_current_character, get_current_character_optional
+from dependencies import (
+    get_current_account_optional,
+    get_current_character,
+    get_current_character_optional,
+)
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
 from schemas.base import WireModel
@@ -131,6 +136,7 @@ async def list_praxes_route(
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
+    account: Optional[Account] = Depends(get_current_account_optional),
 ):
     # Five rejections of the same shape — a query parameter naming a value no
     # enum member matches — so they share one code and name their field in
@@ -211,6 +217,8 @@ async def list_praxes_route(
         voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
         viewer_account_id=viewer.account_id if viewer else None,
+        # Optional auth; only the Albescent reveal flag is read from it (#2422).
+        viewer_account=account,
         limit=limit,
         offset=offset,
     )

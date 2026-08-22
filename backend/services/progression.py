@@ -9,6 +9,7 @@ is told about it.
 
 from game_config import CURRENT_ERA, EraConfig, LevelProfile
 from models.account import Account
+from services.albescent_reveal import is_albescent_revealed
 
 #: The one unlock key that names a secret society.
 #:
@@ -44,7 +45,7 @@ def visible_level_profiles(
     unlocks, so the ladder stays index-aligned with ``era.level_thresholds`` and
     the level-up pop-up still fires at the level it always did.
     """
-    if account is not None and account.albescent_revealed:
+    if is_albescent_revealed(account):
         return list(era.level_profiles)
 
     return [

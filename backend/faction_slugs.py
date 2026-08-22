@@ -61,6 +61,8 @@ _UNAFFILIATED_FILTER_GROUP: tuple[str, ...] = (
 
 def faction_filter_slugs(
     selected: Iterable[str | None] | None,
+    *,
+    reveal_albescent: bool = False,
 ) -> list[str]:
     """The slugs a caller's faction *filter* must match — #1975's one seam.
 
@@ -87,6 +89,23 @@ def faction_filter_slugs(
     while every other unrecognised slug returns 200-with-nothing is an oracle
     for the slug's existence.
 
+    ``reveal_albescent`` is who is asking (#2422). The faction detail page asks
+    that same ``?faction=albescent`` in good faith on behalf of a member, and
+    was handed the prober's answer: every unaffiliated row in the game, rendered
+    as members of the order. For a caller
+    :func:`services.albescent_reveal.is_albescent_revealed` says yes to, the
+    explicit ask un-folds and returns the order alone. It defaults to ``False``,
+    so an anonymous or unrevealed caller — and any call site that has no viewer
+    to consult — keeps the anti-oracle answer, unchanged. Still never a 422.
+
+    **The un-fold is one-directional, and that is the ruling, not an oversight.**
+    ``na`` keeps expanding to both slugs for *everyone*, revealed or not:
+    Unaffiliated is the bucket Albescent hides in, and being revealed lets you
+    ask for Albescent directly, it does not evict them from the bucket. The facet
+    has no Albescent option of its own, so a literal ``na`` would leave Albescent
+    rows matching no filter at all — exactly the unreachability #1975 exists to
+    fix. Giving Albescent its own facet option is a separate design call.
+
     Not applied to the admin roster (``services.admin_service``): moderation
     reads the truth, and that surface has no facet of this kind.
 
@@ -98,11 +117,12 @@ def faction_filter_slugs(
     for slug in selected or ():
         if not slug:
             continue
-        group = (
-            _UNAFFILIATED_FILTER_GROUP
-            if slug in _UNAFFILIATED_FILTER_GROUP
-            else (slug,)
-        )
+        if slug == ALBESCENT_FACTION_SLUG and reveal_albescent:
+            group: tuple[str, ...] = (ALBESCENT_FACTION_SLUG,)
+        elif slug in _UNAFFILIATED_FILTER_GROUP:
+            group = _UNAFFILIATED_FILTER_GROUP
+        else:
+            group = (slug,)
         for member in group:
             if member not in out:
                 out.append(member)

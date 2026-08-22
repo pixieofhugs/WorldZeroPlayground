@@ -9327,7 +9327,7 @@
     },
     "/leaderboard": {
       "get": {
-        "description": "Top characters by current era score, optionally filtered by faction.",
+        "description": "Top characters by current era score, optionally filtered by faction.\n\nAuth is **optional** and always was in effect — this is a public board and\nanonymous callers must keep getting an answer. The account is read for one\nthing: a caller revealed to Albescent may ask for that roster directly\nrather than getting the Unaffiliated fold (#2422).",
         "operationId": "get_leaderboard_leaderboard_get",
         "parameters": [
           {
@@ -9365,6 +9365,22 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
           }
         ],
         "responses": {
@@ -9393,6 +9409,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Leaderboard",
         "tags": [
           "leaderboard"

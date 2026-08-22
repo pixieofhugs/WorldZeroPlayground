@@ -15,6 +15,13 @@ The rule: selecting **Unaffiliated** matches ``na`` **or** ``albescent``;
 Albescent is never separable and never an option of its own. Before this an
 Albescent row matched *no* filter at all — unreachable rather than hidden.
 
+#2422 added the one exception, and it is about *who is asking*: a caller the
+society has been revealed to may name ``albescent`` and get the order alone,
+because the faction detail page asks that question in good faith on behalf of a
+member. ``na`` still folds for everyone. The tests below the divider pin both
+halves, and — the load-bearing one — that an unrevealed caller's two answers are
+still byte-for-byte the same.
+
 Slugs come from ``faction_slugs``, never from literals, so a change of sentinel
 does not need finding here.
 """
@@ -25,8 +32,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
+from models.account import Account
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from services.auth import create_jwt
 from tests.integration.factories import make_character, make_solo_praxis, make_task
 
 #: A faction that is neither half of the unaffiliated bucket. ``faction_ua``
@@ -84,10 +93,24 @@ async def world(db_session: AsyncSession, era: Era, faction_albescent: Faction) 
     return rows
 
 
-async def _ids(client: AsyncClient, url: str) -> set[int]:
-    resp = await client.get(url)
+async def _ids(client: AsyncClient, url: str, headers: dict | None = None) -> set[int]:
+    resp = await client.get(url, headers=headers or {})
     assert resp.status_code == 200, resp.text
     return {row["id"] for row in resp.json()}
+
+
+@pytest_asyncio.fixture
+async def revealed_headers(db_session: AsyncSession) -> dict:
+    """Auth headers for an account the society has already been revealed to.
+
+    ``albescent_revealed`` is sticky and set on join
+    (``services.faction_service``); setting it directly is the same state a
+    member carries, without dragging the whole join flow into a filter test.
+    """
+    acc = Account(email="revealed@example.com", albescent_revealed=True)
+    db_session.add(acc)
+    await db_session.commit()
+    return {"Authorization": f"Bearer {create_jwt(acc.id)}"}
 
 
 #: ``(surface key, URL template)`` for every route the faction facet feeds.
@@ -167,3 +190,77 @@ async def test_no_row_is_labelled_albescent(
     resp = await client.get(url.format(slug=UNAFFILIATED_FACTION_SLUG))
     assert resp.status_code == 200
     assert "Albescent" not in resp.text
+
+
+# ---------------------------------------------------------------------------
+# #2422 — the fold is viewer-aware, and asymmetric on purpose
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("key,url", SURFACES)
+@pytest.mark.asyncio
+async def test_revealed_viewer_gets_only_albescent(
+    client: AsyncClient, world: dict, revealed_headers: dict, key: str, url: str
+):
+    """A revealed caller asking for Albescent gets the order, not the bucket.
+
+    This is the roster question the faction page asks in good faith on behalf of
+    a member (#2422). Before this it got the anti-oracle answer — every
+    unaffiliated row in the game, rendered as members of the order.
+    """
+    found = await _ids(
+        client, url.format(slug=ALBESCENT_FACTION_SLUG), revealed_headers
+    )
+    assert world[key][ALBESCENT_FACTION_SLUG] in found
+    assert world[key][UNAFFILIATED_FACTION_SLUG] not in found
+    assert world[key][OTHER_FACTION_SLUG] not in found
+
+
+@pytest.mark.parametrize("key,url", SURFACES)
+@pytest.mark.asyncio
+async def test_revealed_viewer_still_finds_albescent_under_unaffiliated(
+    client: AsyncClient, world: dict, revealed_headers: dict, key: str, url: str
+):
+    """``?faction=na`` keeps folding for everyone — the asymmetry is the ruling.
+
+    Unaffiliated is the bucket Albescent hides in; being revealed lets you ask
+    for Albescent directly, it does not evict them from the bucket. The facet has
+    no Albescent option (and #2409 does not add one), so a literal ``na`` would
+    leave Albescent rows matching no facet at all — #1975's bug, back again.
+    """
+    found = await _ids(
+        client, url.format(slug=UNAFFILIATED_FACTION_SLUG), revealed_headers
+    )
+    assert world[key][UNAFFILIATED_FACTION_SLUG] in found
+    assert world[key][ALBESCENT_FACTION_SLUG] in found
+    assert world[key][OTHER_FACTION_SLUG] not in found
+
+
+@pytest.mark.parametrize("key,url", SURFACES)
+@pytest.mark.asyncio
+async def test_unrevealed_viewer_cannot_separate_albescent(
+    client: AsyncClient, world: dict, auth_headers: dict, key: str, url: str
+):
+    """The anti-oracle property, pinned directly for a logged-in prober.
+
+    ``test_albescent_is_not_separable`` above pins it for anonymous callers.
+    Holding a token must not buy the answer: for an account that has not been
+    revealed the two responses are identical, exactly as they were before the
+    fold learned who was asking.
+    """
+    guessed = await _ids(client, url.format(slug=ALBESCENT_FACTION_SLUG), auth_headers)
+    folded = await _ids(
+        client, url.format(slug=UNAFFILIATED_FACTION_SLUG), auth_headers
+    )
+    assert guessed == folded
+    assert world[key][ALBESCENT_FACTION_SLUG] in guessed
+    assert world[key][UNAFFILIATED_FACTION_SLUG] in guessed
+
+
+@pytest.mark.asyncio
+async def test_leaderboard_still_answers_anonymous_callers(
+    client: AsyncClient, world: dict
+):
+    """The route gained optional auth for the reveal check, never required auth."""
+    resp = await client.get("/leaderboard")
+    assert resp.status_code == 200, resp.text
