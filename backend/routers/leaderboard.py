@@ -25,13 +25,13 @@ async def get_leaderboard(
     Auth is **optional** and always was in effect — this is a public board and
     anonymous callers must keep getting an answer. The account is read for one
     thing: a caller revealed to Albescent may ask for that roster directly
-    rather than getting the Unaffiliated fold (#2422) — which an admin is, for
-    that question and no other (#2400).
+    rather than getting the Unaffiliated fold (#2422).
     """
     rows = await list_characters_for_viewer(
         session,
         faction_slug=faction,
         viewer_account=account,
+        # An admin counts as revealed for that question and no other (#2400).
         viewer_is_admin=(
             account is not None and await account_has_admin_role(account.id, session)
         ),

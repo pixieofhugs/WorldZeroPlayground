@@ -28,9 +28,11 @@ async def get_game_config(
 
     Optional auth — anonymous callers stay anonymous and get the public answer.
     The account is read only to decide which level-ladder rungs this caller may
-    be told about (``services.progression.visible_level_profiles``), including
-    whether it holds a moderation role.
+    be told about (``services.progression.visible_level_profiles``).
     """
+    # Deliberately outside the docstring, per the NOTE above: the reason a
+    # moderation role is read here is #2400, and naming it publicly would name
+    # what it unhides. `services.albescent_reveal` holds the reason.
     is_admin = account is not None and await account_has_admin_role(
         account.id, session
     )
