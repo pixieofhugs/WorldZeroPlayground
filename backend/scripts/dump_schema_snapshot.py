@@ -61,7 +61,9 @@ HEADER = f"""\
 #
 # Columns are sorted by name, not by ordinal position, so that adding one moves a
 # single line. Constraint and index definitions are Postgres's own canonical text
-# (pg_get_constraintdef / pg_get_indexdef).
+# (pg_get_constraintdef / pg_get_indexdef) — which is why docker-compose and CI
+# have to stay on the same Postgres major version: a bump can reword lines here
+# that no migration touched. That is still a diff to read, not one to skip.
 """
 
 
