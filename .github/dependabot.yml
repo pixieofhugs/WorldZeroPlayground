@@ -1,0 +1,47 @@
+# Dependency version updates (#2428).
+#
+# This file only opens update PRs on a schedule. It does NOT tell you when a
+# package you already have is disclosed -- that is Dependabot *alerts*, a
+# repository setting no file can turn on. See #2428 for the owner checklist.
+#
+# `package-ecosystem: github-actions` is deliberately omitted. Its PRs edit
+# .github/workflows/, which no agent can rebase, and branch protection is
+# strict:true so every one would cost a manual cycle. Owner's call, 2026-08-22.
+version: 2
+updates:
+  # /backend covers BOTH requirements.txt and requirements-prod.txt: the pip
+  # fetcher globs every *.txt in the directory, and separately follows the
+  # `-r requirements-prod.txt` include. The runtime set is in scope, not just
+  # the pytest family.
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-python:
+        # Minor and patch only. A major lands as its own PR on purpose -- it
+        # needs individual review, and grouping one in would stall every other
+        # bump behind it under strict:true.
+        update-types:
+          - minor
+          - patch
+        # pycrdt and pycrdt-websocket are `==` pinned because they agree on a
+        # CRDT wire format and a stored document shape (ADR-0073): a minor bump
+        # is a data-compatibility change, not a library upgrade. Excluding them
+        # from the group keeps each one a separate, visible PR instead of a line
+        # in a batch of fifteen.
+        exclude-patterns:
+          - pycrdt
+          - pycrdt-websocket
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-npm:
+        update-types:
+          - minor
+          - patch
