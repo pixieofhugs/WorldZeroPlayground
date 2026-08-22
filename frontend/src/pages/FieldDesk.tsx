@@ -298,7 +298,6 @@ function NewSelfDossier({ onBegin }: { onBegin: () => void }) {
       <div className="content-title" style={dossierTitle}>
         {t('fieldDesk.beginNewSelf')}
       </div>
-      <div style={slotOpen}>{t('fieldDesk.slotOpen')}</div>
     </button>
   )
 }
@@ -703,13 +702,4 @@ const medallion: CSSProperties = {
   fontSize: 28,
   color: 'var(--color-text-primary)',
   marginBottom: 'var(--space-lg)',
-}
-const slotOpen: CSSProperties = {
-  fontSize: 'var(--text-md)',
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  color: 'var(--color-success)',
-  marginTop: 'var(--space-lg)',
-  borderTop: '1px solid var(--color-border-strong)',
-  paddingTop: 'var(--space-md)',
 }
