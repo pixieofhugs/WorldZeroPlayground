@@ -176,6 +176,7 @@ function user(): CurrentUser {
     can_see_retired_tasks: false,
     can_see_pending_tasks: false,
     can_comment: true,
+    albescent_level_required: 8,
     second_character_level_required: 5,
     era_name: 'Era 1',
     level_jump_reach: 0,

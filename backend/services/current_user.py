@@ -92,6 +92,7 @@ async def build_current_user(
         # the two separate answers they are.
         albescent_revealed=is_albescent_revealed(account, is_admin=is_admin),
         second_character_level_required=era.second_character_level_required,
+        albescent_level_required=era.albescent_level_required,
         era_name=era.name,
         **asdict(capabilities),
     )

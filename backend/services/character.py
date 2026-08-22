@@ -20,8 +20,7 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
-from models.task import Task
+from models.praxis import Praxis, PraxisMember, PraxisStatus
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.albescent_reveal import is_albescent_revealed
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
@@ -124,12 +123,33 @@ async def account_peak_character_level(
     return peak or 0
 
 
-async def _account_covers_every_faction(
-    account_id: int,
+async def _character_covers_every_faction(
+    character: Character,
+    era_id: int,
     session: AsyncSession,
     era: EraConfig,
 ) -> bool:
-    """Coverage half of the Albescent gate — see :func:`can_start_as_albescent`."""
+    """Coverage half of the earn gate — see :func:`character_earns_albescent`.
+
+    "Invited to **or** has been a member of", for ONE life, in ONE era. Three
+    sources, because no single one of them can ever reach seven:
+
+    * **invitation letters** — but a character is never invited to the faction
+      it currently holds (``_deliver_earned_invitations`` puts
+      ``character.faction_slug`` in ``uninvitable``, #1425), and
+      :func:`services.faction_service.defect_to_faction` *deletes* the letter
+      when you walk out (#2218). A live-letter count is therefore capped below
+      seven for anybody who has ever actually joined anything.
+    * **the current faction** — the one the letters structurally cannot show.
+    * **defection rows** — every faction this life has held and left this era.
+      ``FactionDefectionHistory`` is append-only ("nothing is ever deleted
+      here"), and the same transaction that deletes a letter writes the row for
+      that identical slug, so the #2218 delete can never cost coverage.
+
+    No new table: all three already exist. Era-scoped like the rows themselves —
+    which is exactly why the *result* has to be stamped rather than re-derived
+    (see :func:`stamp_albescent_unlock`).
+    """
     required_faction_slugs = frozenset(
         slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
     )
@@ -137,22 +157,86 @@ async def _account_covers_every_faction(
         return True
 
     covered_result = await session.execute(
-        select(Task.primary_faction_slug)
-        .distinct()
-        .join(Praxis, Praxis.task_id == Task.id)
-        .join(Character, Character.id == Praxis.created_by_id)
-        .where(
-            Character.account_id == account_id,
-            Character.status.in_(list(_ROSTER_STATUSES)),
-            Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.in_(
-                [ModerationStatus.visible, ModerationStatus.flagged]
+        union(
+            select(InvitationLetter.faction_slug).where(
+                InvitationLetter.character_id == character.id,
+                InvitationLetter.era_id == era_id,
             ),
-            Task.primary_faction_slug.in_(list(required_faction_slugs)),
+            select(FactionDefectionHistory.faction_slug).where(
+                FactionDefectionHistory.character_id == character.id,
+                FactionDefectionHistory.era_id == era_id,
+            ),
         )
     )
-    covered_slugs = frozenset(row[0] for row in covered_result.all())
+    # Current faction folded in here rather than as a third UNION arm: it is a
+    # value already in hand on the row, not a query.
+    covered_slugs = {row[0] for row in covered_result.all()} | {
+        character.faction_slug
+    }
     return covered_slugs >= required_faction_slugs
+
+
+async def character_earns_albescent(
+    character: Character,
+    era_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """Does THIS life, by itself, earn Albescent for its account (#2399)?
+
+    Both halves on the **same character** — at ``era.albescent_level_required``
+    *and* covering every joinable faction. That is the binding ADR-0021
+    explicitly rejected as "too punishing"; #2399 restores it, and the new ADR
+    records why that rejection no longer holds (ADR-0022 made an invitation cost
+    two completed tasks **plus** 50 points per faction, so this bar is strictly
+    harder than the one-task-per-faction bar ADR-0021 set, not cheaper).
+
+    Banned lives never earn: a banned life's work does not carry its account
+    through the gate, the same rule :data:`_ROSTER_STATUSES` states everywhere
+    else.
+
+    This answers "was it earned *now*", which is not the question the site asks
+    — see :func:`can_start_as_albescent` for the one it does.
+    """
+    if character.status not in _ROSTER_STATUSES:
+        return False
+    level = await session.scalar(
+        select(CharacterStats.level).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era_id,
+        )
+    )
+    if (level or 0) < era.albescent_level_required:
+        return False
+    return await _character_covers_every_faction(character, era_id, session, era)
+
+
+async def stamp_albescent_unlock(
+    character: Character,
+    era_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """Record the unlock on the account if ``character`` has just earned it (#2399).
+
+    Sticky and monotonic: set once, never unset, exactly like
+    ``albescent_revealed``. Returns whether this call is the one that flipped it,
+    so a caller can tell "newly earned" from "already had it" — nothing needs
+    that yet, but it is the difference between an idempotent write and a silent
+    one.
+
+    Cheap on the hot path: an account that already holds the unlock short-circuits
+    before any query, which is every recalc after the first.
+
+    ``Character.account`` is ``lazy="raise"``, so the account is fetched by id.
+    """
+    account = await session.get(Account, character.account_id)
+    if account is None or account.albescent_unlocked:
+        return False
+    if not await character_earns_albescent(character, era_id, session, era):
+        return False
+    account.albescent_unlocked = True
+    return True
 
 
 @dataclasses.dataclass(frozen=True)
@@ -172,21 +256,25 @@ async def load_account_eligibility(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> AccountEligibility:
-    """Both unlock flags off a single level query (plus coverage when it can matter).
+    """One level query for the second-life gate, one column read for Albescent.
 
-    Both gates read the same account-collective level, so asking for the peak once
-    answers both — and the Albescent coverage query is only worth issuing when the
-    level half already passed.
+    The two flags stopped sharing a query at #2399. The second-life gate is still
+    a live account-collective level test. The Albescent gate is no longer
+    computed at all: it is the stamped ``account.albescent_unlocked`` column,
+    written by :func:`stamp_albescent_unlock` when a life earns it and never
+    recomputed — which is what lets the unlock survive an era reset that wipes
+    every row the earn predicate reads.
+
+    ``session.get`` on an account /auth/me is already carrying is an identity-map
+    hit, not a round trip.
     """
     peak_level = await account_peak_character_level(account_id, era_id, session)
+    account = await session.get(Account, account_id)
     return AccountEligibility(
         can_create_additional_character=(
             peak_level >= era.second_character_level_required
         ),
-        can_start_as_albescent=(
-            peak_level >= era.albescent_level_required
-            and await _account_covers_every_faction(account_id, session, era)
-        ),
+        can_start_as_albescent=bool(account is not None and account.albescent_unlocked),
     )
 
 
@@ -210,23 +298,24 @@ async def can_start_as_albescent(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """True when this account may move a character into the Albescent faction.
+    """Has this account ever earned the Albescent door (#2399)?
 
-    Albescent is joined in the field via defection (``defect_to_faction``) —
-    it is never a starting faction and never a character-creation option.
+    Account-scoped and **historical**: the stamped ``albescent_unlocked``
+    column, not a live computation. One life earned it once; the account keeps
+    it for ever, across era resets included — "getting to level 8 is very hard.
+    This is a thank you to players who have put in that effort."
 
-    ADR-0021: the unlock is **account-collective**, and the two gates are
-    **independent** — they need not be satisfied by the same character:
+    Supersedes ADR-0021, which made this two independent account-pooled queries.
+    The earn rule is now :func:`character_earns_albescent` — both halves on one
+    life — and it is asked at *stamp* time, never here.
 
-    (a) *Level* — **some** active character on the account is at level
-        ``era.albescent_level_required`` or above in the current era.
-    (b) *Coverage* — pooled across **all** the account's lives combined, there is
-        a submitted, non-hidden praxis for **every** non-sentinel faction in the
-        era (i.e. every faction except ``na`` and ``albescent``).
-
-    Coverage pools over the account roster (banned excluded) — the same "a
-    player's own lives" set as :data:`_ROSTER_STATUSES`. A banned life's work
-    does not carry the account through the gate.
+    This is the account half only, and on its own it is not permission to join.
+    A character at ``era.albescent_level_required`` may not take Albescent no
+    matter how unlocked its account is ("Available only for New Game+"); that
+    ceiling lives at the door, in
+    :func:`services.faction_service.defect_to_faction`, because it is a fact
+    about the *character* and this function has none in hand. A newly created
+    life is level 0, so character creation needs no such test.
     """
     era_row = await get_current_era_row(session)
     eligibility = await load_account_eligibility(account_id, era_row.id, session, era)
@@ -262,8 +351,17 @@ async def get_account_invited_faction_slugs(
     state, and an era reset is what clears it (``era.reset_faction``), so a slug
     still standing there is still held in the era in hand.
 
-    The ``na`` sentinel and ``albescent`` are excluded — they are never
-    invite-joinable. Returns ``[]`` when the era is unseeded.
+    The ``na`` sentinel is excluded — it is never chosen, it is the default.
+
+    ``albescent`` is excluded too, and then added back for an account that has
+    **earned** it (#2399). It is not invite-joinable and never will be; it rides
+    this list because this list is the answer to "what may a new life be born
+    into", and since #2399 Albescent is one of those answers. A new life is level
+    0, so the "never the earner" ceiling cannot bite at creation — the only
+    surface where it can is the standing letter, which re-dresses a life that
+    already has a level.
+
+    Returns ``[]`` when the era is unseeded.
     """
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
@@ -286,7 +384,10 @@ async def get_account_invited_faction_slugs(
             ),
         )
     )
-    return sorted({row[0] for row in result.all()} - _ALBESCENT_SENTINEL_SLUGS)
+    slugs = {row[0] for row in result.all()} - _ALBESCENT_SENTINEL_SLUGS
+    if await can_start_as_albescent(account_id, session, era):
+        slugs.add(ALBESCENT_FACTION_SLUG)
+    return sorted(slugs)
 
 
 async def list_era_invitations_for_character(
@@ -449,17 +550,19 @@ async def create_character(
             )
 
     # ADR-0019: born unaffiliated by default. A non-None faction must be one the
-    # account holds an invitation for. Albescent is never a creation option.
-    # The default is era-owned (ADR-0042) and defaults to `na` on EraConfig, so
-    # this reads era.starting_faction_slug rather than the slug itself.
+    # account may be born into. The default is era-owned (ADR-0042) and defaults
+    # to `na` on EraConfig, so this reads era.starting_faction_slug rather than
+    # the slug itself.
+    #
+    # #2399 removed the special Albescent branch that used to sit here. Albescent
+    # IS a creation option now — for an account that earned it — and
+    # `get_account_invited_faction_slugs` is where that is decided, so this is
+    # one check for all eight factions instead of a rule stated twice. An
+    # un-earned account asking for it falls through to the ordinary
+    # "you don't hold an invitation" refusal, which is also the one that keeps
+    # ADR-0027's secrecy: the answer does not confirm the faction exists.
     if requested_faction_slug is None:
         starting_faction_slug = era.starting_faction_slug
-    elif requested_faction_slug == ALBESCENT_FACTION_SLUG:
-        raise_coded(
-            400,
-            ErrorCode.faction_albescent_not_at_creation,
-            "Albescent is joined in the field, not chosen at creation.",
-        )
     else:
         invited = await get_account_invited_faction_slugs(account_id, session, era)
         if requested_faction_slug not in invited:

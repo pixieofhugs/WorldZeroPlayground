@@ -154,11 +154,15 @@ class ErrorCode(str, enum.Enum):
     #: #454. Raised from two surfaces — defecting and character creation —
     #: because it is one rule: you hold the current era's letter or you do not.
     faction_invitation_required = "FACTION_INVITATION_REQUIRED"
-    #: ADR-0021. Albescent is joined in the field once the *account* qualifies…
+    #: #2399 (supersedes ADR-0021). The *account* has never earned the Albescent
+    #: door — no life on it has reached the level while covering every faction.
     faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
-    #: …and never at character creation, which is a different answer to a
-    #: different question and so a different code.
-    faction_albescent_not_at_creation = "FACTION_ALBESCENT_NOT_AT_CREATION"
+    #: #2399. The account earned it, but THIS life is at
+    #: ``era.albescent_level_required`` and it is too late for this one. The only
+    #: MAXIMUM level gate in the game — every other level test is a floor — and
+    #: a different answer to a different question than the code above, hence its
+    #: own code. "Available only for New Game+".
+    faction_albescent_new_game_plus_only = "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
 
     # -- Character creation --------------------------------------------------
     character_name_required = "CHARACTER_NAME_REQUIRED"

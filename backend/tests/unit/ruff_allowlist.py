@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 777
+RUFF_FINDING_TOTAL = 773
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -168,7 +168,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/duel.py::I001": 1,
     "services/era.py::E501": 2,
     "services/era.py::I001": 1,
-    "services/faction_service.py::F401": 2,
+    "services/faction_service.py::F401": 1,
     "services/media.py::E501": 4,
     "services/media.py::I001": 1,
     "services/media_sweep.py::E501": 5,
@@ -202,8 +202,8 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_admin.py::F401": 3,
     "tests/integration/test_admin.py::I001": 4,
     "tests/integration/test_admin_task_import.py::F401": 2,
-    "tests/integration/test_albescent_unlock.py::E501": 3,
-    "tests/integration/test_auth.py::E501": 3,
+    "tests/integration/test_albescent_unlock.py::E501": 2,
+    "tests/integration/test_auth.py::E501": 2,
     "tests/integration/test_auth.py::I001": 1,
     "tests/integration/test_badges.py::E501": 1,
     "tests/integration/test_ban_and_departure.py::E501": 9,
@@ -231,7 +231,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_era_reset_script.py::I001": 1,
     "tests/integration/test_era_scoped_recalc.py::E501": 1,
     "tests/integration/test_faction_filter_folds_albescent.py::E501": 1,
-    "tests/integration/test_factions.py::E501": 3,
+    "tests/integration/test_factions.py::E501": 2,
     "tests/integration/test_factions.py::I001": 2,
     "tests/integration/test_failed_praxis.py::E501": 1,
     "tests/integration/test_failed_praxis.py::F401": 2,

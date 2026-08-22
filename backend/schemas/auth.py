@@ -24,6 +24,13 @@ class CurrentUser(WireModel):
     # FieldDesk "locked dossier" gate copy reads these (#270/#274): the level an
     # existing life must reach to unlock a second life, and the live era's name.
     second_character_level_required: int = 0
+    # The Albescent CEILING (#2399), not a floor: a life AT this level may no
+    # longer take Albescent ("Available only for New Game+"). The standing letter
+    # needs it to say which of the account's lives it can still be answered by,
+    # and the server is the authority — this is the same era-value-on-the-wire
+    # idiom as `second_character_level_required` above, so the number is never
+    # duplicated as a frontend literal.
+    albescent_level_required: int = 0
     era_name: str = ""
     can_propose_task: bool = False
     can_propose_metatask: bool = False
