@@ -290,7 +290,30 @@ test.describe('collaboration UI (clicked buttons)', () => {
       //    it to become editable -- which is the room finishing its first sync.
       await bPage.locator('.cm-content').first().fill('Bob weaves his part')
       await aPage.goto(`/praxis/${praxisId}/edit`)
+      // Title first, and typed rather than posted: `handleSignup` creates the
+      // praxis with a task id and a type and NOTHING else, and `publish()`
+      // refuses an untitled praxis client-side (`errors.titleRequired`) — after
+      // the propose confirm has already been dismissed, so the refusal was
+      // invisible and Alice's proposal simply never existed (#2453).
+      await aPage.getByTestId('composer-title').fill(`Collab ${RUN}-${s}`)
       await aPage.locator('.cm-content').first().fill('Alice weaves her part')
+
+      // Let the room's debounced flush land BEFORE proposing. The document is
+      // written to the record on a trailing-edge debounce
+      // (`praxis_room._FLUSH_DEBOUNCE_SECONDS`, 2s) and that same flush is what
+      // fires `on_room_edit` — so a propose issued within the window is
+      // cancelled two seconds later by the player's own last keystroke, and Bob
+      // arrives to find no proposal to approve. `body_text` reaching the record
+      // is the flush; there is no other observable for it.
+      await expect
+        .poll(
+          async () => {
+            const res = await alice.ctx.request.get(`${API}/praxes/${praxisId}`)
+            return (await res.json()).body_text as string
+          },
+          { timeout: 15_000, message: 'the praxis room never flushed to the record' },
+        )
+        .toContain('Alice weaves her part')
 
       // 6. Alice proposes publishing. `data-collab-signal` says which of the two
       //    acts the one primary slot performs — the labels ("Propose publishing"

@@ -879,6 +879,11 @@ export function TitleField({
       // index.css for all eight skins, in place of the eight inline
       // `outline: none` declarations that used to sit in every `fieldBox`.
       data-composer-field
+      // The required field the nightly has to fill before it can publish
+      // anything (#2453) — its accessible name is `titleLabel` when a skin draws
+      // no label of its own and `skin.ariaLabel` when one does, so there is no
+      // one string to reach for.
+      data-testid="composer-title"
       value={state.title}
       onChange={(event) => {
         const next = event.target.value;

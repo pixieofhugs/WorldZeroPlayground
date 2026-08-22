@@ -179,7 +179,18 @@ export async function waitForDuelAttached(page: Page, opponentName: string): Pro
  * `composer-primary`, `duel-seal-sheet` and `duel-seal-confirm` name the slots,
  * so a copy edit cannot reach them.
  */
-export async function sealViaUi(page: Page): Promise<void> {
+export async function sealViaUi(page: Page, title = `Duel entry ${RUN}`): Promise<void> {
+  // NAME THE ENTRY FIRST. `accept_duel` (services/duel.py) mints the opponent's
+  // praxis with no title, and `useEditPraxis.publish()` refuses an untitled
+  // praxis — `errors.titleRequired`, client-side, before any request. So the
+  // opponent's seal never left the browser, and the OLD post-condition here
+  // could not tell: `publish()` closes the seal sheet on its very first line, on
+  // purpose, so an error lands in plain sight rather than behind the overlay —
+  // which made `toBeHidden()` green on a submit that never happened. The duel
+  // then stayed `active`, `DuelCard` drew nothing, and the failure surfaced four
+  // steps later as a missing rail (#2453). A real opponent types a title too.
+  await page.getByTestId('composer-title').fill(title)
+
   // The composer's primary — it opens the seal sheet rather than publishing,
   // because a duel is attached (controls.tsx sealsADuel).
   await page.getByTestId('composer-primary').click()
@@ -187,4 +198,11 @@ export async function sealViaUi(page: Page): Promise<void> {
   await expect(sheet).toBeVisible()
   await sheet.getByTestId('duel-seal-confirm').click()
   await expect(sheet).toBeHidden()
+
+  // Proof the seal LANDED, not merely that the overlay went. A submitted praxis
+  // has no editor on it either way: the first sealer gets the waiting surface
+  // (ADR-0059) and the second gets redirected to the read page, and neither
+  // draws a write-up box. An untitled refusal, by contrast, leaves the composer
+  // exactly where it was.
+  await expect(page.locator('.cm-content')).toHaveCount(0)
 }
