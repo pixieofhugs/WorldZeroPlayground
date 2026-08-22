@@ -81,6 +81,22 @@ class Account(TimestampMixin, Base):
     albescent_revealed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # Sticky Albescent *unlock* — the door, not the sight of it (#2399). Flips
+    # True the first time one life on this account is simultaneously at
+    # `era.albescent_level_required` and has been invited to or has held every
+    # joinable faction this era; never unset. Same shape and the same reasoning
+    # as `albescent_revealed` above, for a stronger reason: letters and
+    # defection rows are era-scoped and `apply_era_reset` returns every life to
+    # `na` at level 0, so after a reset there is nothing left to derive this
+    # from. It has to be stamped (`services.character.stamp_albescent_unlock`,
+    # called from `recalculate_character_stats`) or it cannot survive at all.
+    #
+    # NOT the same question as `albescent_revealed`: revealed = "this account
+    # may be shown the order exists", unlocked = "this account may put a life
+    # into it". Joining sets both; earning sets only this one.
+    albescent_unlocked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     # foreign_keys pins this to character.account_id — active_character_id adds a
     # second FK path between the tables that would otherwise be ambiguous.
