@@ -5801,7 +5801,10 @@
  * rounded sheet they trace (18px and 16px, both inline at the mount). The other
  * three hang off an unrounded wrapper — `.alb-task`, `.alb-detail`, `.alb-feed`
  * — where `inherit` would resolve to 0 and square the ring off, so those keep
- * the literal radius they already carried, in the rules further down.
+ * the literal radius they already carried, in the rules further down. (#1942
+ * moved `.alb-feed-edge` inside the card it traces; it keeps its literal anyway,
+ * because it is offset back out to the BORDER box and `inherit` would hand it
+ * the padding box's corner. See its own rule.)
  *
  * SUPPRESSED, NOT UNMOUNTED, FOR A MEMBER. `--spectrum-frame-image` is `none`
  * wherever a faction kit is dressing the surface (`railFaceVars` declares it),
@@ -5983,18 +5986,69 @@
    own colours is back in the spectrum and un-hidden. Confining the wash TO the
    photo is the complaint inverted.
 
-   SCOPED TO THE TWO ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared
-   hook — `PraxisMediaGallery` is one component for all nine praxis archetypes
-   and `MediaGallery` serves the detail page — so an unscoped lift would reorder
+   SCOPED TO THE ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared hook —
+   `PraxisMediaGallery` is one component for all nine praxis archetypes and
+   `MediaGallery` serves the detail page — so an unscoped lift would reorder
    skins that stack their own layers (Ephemerists' plate at 1, Singularity's
    content at 2). The other eight sheets must render byte-identical.
 
    Nothing here is inside a motion query: reduced motion still stills the drift,
-   and it stills it over exactly the same layers. */
+   and it stills it over exactly the same layers.
+
+   #1942 ADDED THE OTHER TWO SURFACES, AND THEY EACH NEEDED A TRAP CLEARED FIRST.
+   The number below did not change and could not have: a `z-index` only competes
+   inside its own stacking context, and on the feed card and the task detail the
+   media sat inside one the wash was outside of, so `3` was INERT there however
+   large it grew. Both traps are cleared at their own sites, below and in the
+   mount; read those two rules as part of this one. 3 still clears every layer in
+   one number — `.alb-rainbow` at 0, the feed's two at 1, the `.alb-praxis-*` and
+   `.alb-detail-*` ornaments at 2. */
 .alb-praxis-card .user-media,
-.alb-praxis .user-media {
+.alb-praxis .user-media,
+.alb-detail .user-media,
+.alb-feed .user-media {
   position: relative;
   z-index: 3;
+}
+
+/* TRAP ONE: THE TASK DETAIL'S 1200 COLUMN (#1942). `DefaultTaskDetail` mounts
+   its sheet at `z-index: 1` so the surface sits above the page it is drawn on;
+   positioned with an integer, that is a stacking context, and it capped every
+   descendant at 1 while `.alb-detail-aurora` washed over from 2. Nothing inside
+   could reach the light, which is why the byline photo and — since #1941 lifted
+   them — the whole gallery of `AlbescentPraxisCard` thumbnails were washed a
+   second time on this one page.
+
+   `auto`, not a bigger number: the column must keep painting BENEATH the
+   ornaments (they are a wash over the sheet, ADR-0048), and only stop being the
+   ceiling for what is inside it. The `z-index: 1` it gives up is the column's
+   own — it is the only one in that subtree, so the sheet paints exactly where it
+   did and the lift above is the one thing that now escapes.
+
+   ALBESCENT-SCOPED. `DefaultTaskDetail` is the page the unaffiliated player and
+   several skins read; the base rule below keeps their column exactly as it was.
+   The number lives here rather than inline at the mount for one reason: an
+   inline `z-index` cannot be overridden by a selector, so a stylesheet fix was
+   not available until it moved. */
+.task-detail-sheet {
+  z-index: 1;
+}
+.alb-detail .task-detail-sheet {
+  z-index: auto;
+}
+
+/* TRAP TWO'S HALF THAT LIVES HERE: the feed avatar's anchor (#1893's lift,
+   #1942's ceiling). `FEED_BODY_LIFTED` puts this anchor above the body's
+   stretched click overlay, and an integer `z-index` on a positioned element is a
+   stacking context — so a photo inside it could never rise past the anchor's own
+   1, which is exactly where `.alb-feed-aurora` sits. Same move as the column: the
+   number comes out of the inline style so `.alb-feed .user-media` above can win
+   on the anchor itself where the child is a photograph. Everywhere else it
+   computes to the 1 it always was. */
+.feed-avatar-link {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 /* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
@@ -6483,10 +6537,20 @@
   position: relative;
   isolation: isolate;
 }
+/* `inset: -1px`, NOT 0, BECAUSE THE MOUNT MOVED (#1942). These two spans used to
+   hang off `.alb-feed`, one level outside the card, where `inset: 0` landed on
+   `.sidebar-card`'s margin box — i.e. its border box, hairline included. They are
+   now mounted INSIDE the card (see AlbescentFeedFrame for why: the card's
+   `backdrop-filter` makes it a stacking context, so no lift on a photo within it
+   could reach a wash outside it). An absolutely positioned child resolves against
+   its parent's PADDING box, so the same `0` would now start one pixel in and the
+   travelling ring would float just inside the border it is meant to bring alive.
+   The −1px is that border's width, and the radius stays `--radius-xl` — the
+   card's own corner, measured on the same border box this offset restores. */
 .alb-feed-aurora,
 .alb-feed-edge {
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 1;
   pointer-events: none;
   border-radius: var(--radius-xl);
@@ -6515,8 +6579,12 @@
    forever without a red-meets-magenta seam passing through every cycle — and it
    has no paint rule of its own at all since #2407, because a 1px inset at 0.6 IS
    the shared `.spectrum-frame::before` default. The radius above is `--radius-xl`
-   rather than the shared `inherit` because the span hangs off `.alb-feed`, which
-   is unrounded; `.sidebar-card` inside it is the thing with the corner. */
+   rather than the shared `inherit` for a reason that OUTLIVED its cause: the span
+   used to hang off the unrounded `.alb-feed`, where `inherit` would have squared
+   the ring off. Since #1942 it is mounted inside `.sidebar-card`, whose corner IS
+   `--radius-xl`, so the two now agree — the literal is kept because it is
+   measured on the border box the `-1px` above restores, and `inherit` would take
+   the padding box's corner instead. */
 
 @media (prefers-reduced-motion: no-preference) {
   .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
