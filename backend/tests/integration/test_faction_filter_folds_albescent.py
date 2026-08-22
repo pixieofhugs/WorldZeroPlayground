@@ -15,6 +15,13 @@ The rule: selecting **Unaffiliated** matches ``na`` **or** ``albescent``;
 Albescent is never separable and never an option of its own. Before this an
 Albescent row matched *no* filter at all — unreachable rather than hidden.
 
+#2422 added the one exception, and it is about *who is asking*: a caller the
+society has been revealed to may name ``albescent`` and get the order alone,
+because the faction detail page asks that question in good faith on behalf of a
+member. ``na`` still folds for everyone. The tests below the divider pin both
+halves, and — the load-bearing one — that an unrevealed caller's two answers are
+still byte-for-byte the same.
+
 Slugs come from ``faction_slugs``, never from literals, so a change of sentinel
 does not need finding here.
 """
