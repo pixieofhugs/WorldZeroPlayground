@@ -77,6 +77,35 @@
  * Every mark comes from `components/factionMarks` (§6/#849); this file draws no
  * balloon, no pennant and no rule of its own.
  *
+ * ## The measurement (#2350's agent-verifiable half)
+ *
+ * Measured on the real ground, both themes, worst case light:
+ *
+ *     what                                                  light   dark
+ *     heading / cream                                       14.02   14.72
+ *     @handle, counters, status line, hint, "starts at"       4.76    6.85
+ *     section labels + cancel / cream                         5.32    8.83
+ *     error banner and a spent counter / cream                7.57    9.56
+ *     field text, portrait button, unpicked calling / plate  12.49   12.77
+ *     the picked calling / plum                               5.16    5.16
+ *     the cast's label and its ✦ / gilt                       7.64    7.64
+ *
+ * The 4.76 floor is WOW's own shipped floor and is the quiet ink on the cream —
+ * NOT on the plate, where it is 4.25 (see {@link MUTED}). All eight pairings are
+ * already rows in `utils/__tests__/factionContrast.test.ts`; restating them in a
+ * second file would be a second name for one measurement, which is the split
+ * `__tests__/createCharacterContrast.test.ts` records in as many words.
+ *
+ * ONE NUMBER IS DELIBERATELY NOT IN THAT TABLE. The cast dims to `opacity: 0.5`
+ * until there is a name to submit, which folds the band AND its label over the
+ * sheet: 3.14:1 in light, 1.81:1 in dark. That is an inactive user-interface
+ * component, which WCAG 1.4.3 exempts by name, and it is the shipped pattern on
+ * both sibling archetypes (`DefaultCreateCharacter`'s phone bar and
+ * `EphemeristsCreateCharacter`'s cast). Forking WOW's answer would make one
+ * skin the odd one out on a page whose dim state is shared; it is written down
+ * here so the next reader does not have to re-derive it, and flagged in the PR
+ * as a cross-archetype question rather than settled in this file.
+ *
  * ## Presentation only
  *
  * `useCreateCharacter` stays the single source of state for every archetype.
