@@ -12,8 +12,8 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
-import EphemerisNet from "../factionMarks/EphemerisNet";
 import {
+  CardGravityField,
   CompassRose,
   Cornice,
   GLYPHS,
@@ -200,12 +200,16 @@ export default function EphemeristsTaskCard({
         className="eph-turn-scope"
         style={{
           position: "relative",
-          /* THE NET'S MOUNT (#2144's card weight, landed by #2146). Isolating
-             makes the plate its own stacking context, so the net's `z-index: -1`
-             paints after the plate's own fill and before every descendant. NOT
-             the design's `z-index: 1` lift on the content: lifting static
-             children needs `position: relative` on them, which would override
-             the absolutely positioned ornament this skin is full of. */
+          /* THE GROUND'S MOUNT. Isolating makes the plate its own stacking
+             context, so the card's whole layering — ground 1, band 2, cornice 3
+             — is settled inside the card and cannot be reordered from outside
+             it. It arrived for the chart net's `z-index: -1` (#2144's card
+             weight, landed by #2146); #2398 replaced that ground with the
+             gravity field, which lifts to 1 instead, and the isolation stays
+             because the card still owes its own context. NOT the design's
+             `z-index: 1` lift on the CONTENT: lifting static children needs
+             `position: relative` on them, which would override the absolutely
+             positioned ornament this skin is full of. */
           isolation: "isolate",
           overflow: "hidden",
           boxSizing: "border-box",
@@ -223,10 +227,21 @@ export default function EphemeristsTaskCard({
             that used to pin a 110px canvas for the glyph registers went with
             #2067, which is what makes the hero row rise ~75px. The paint and the
             disc-vs-band ruling live at `cardMasthead/factionBands`. */}
-        {/* 0.10, not the page's 0.17 (#2144's table). On a card the net sits
-            behind 12px body text rather than behind a solid fill, and at the
-            page's weight its lines cross letterforms. */}
-        <EphemerisNet opacity={0.1} />
+        {/* THE ORNAMENT, AND THE ALTERNATION (#2398, epic #2195). The kit's one
+            ornament is the GRAVITY FIELD, and it drops away on an ornamented
+            page ground — the branch is `CardGravityField`'s, shared with the
+            praxis card so the two cannot drift.
+
+            IT REPLACES THE CHART NET, which this card mounted at 0.10 (#2144's
+            card weight). The law's second clause is "either burst, or plain":
+            where a faction's ornament is not worn the ground is BARE, never a
+            substitute pattern — and the net is exactly that here, the PAGE's
+            drawing worn a second time on the card standing on it. Keeping both
+            would also have made the alternation a no-op on the one route it
+            exists for, since the card would still be busy after dropping the
+            field. The net is untouched everywhere it belongs: the backdrop, the
+            task detail page and the faction select card. */}
+        <CardGravityField width={size.cardWidth} />
 
         <EphemeristsBand />
         <Cornice flutes={40} />

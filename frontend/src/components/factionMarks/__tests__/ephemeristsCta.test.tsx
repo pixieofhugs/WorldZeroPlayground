@@ -23,8 +23,9 @@
  *    all four must wear it; a fifth appearing here is a design decision that
  *    should fail rather than land quietly.
  *
- * The net's card weight (0.10) rides along, because #2144 shipped two of its
- * three weights and left this one to the issue that owns the card file.
+ * The card's GROUND rides along, because it is drawn in this file's card and
+ * nowhere else a CTA suite would look: #2144's chart net at 0.10 held the mount
+ * until #2195 ruled one ornament per faction, and the gravity field took it.
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -117,17 +118,29 @@ describe("the task card is the definition's first consumer", () => {
     expect(tag).toContain("border-bottom:3px double var(--faction-ephemerists-plate-brass-rule)");
   });
 
-  it("lays the ephemeris net under the plate at the card weight (#2144)", () => {
-    // 0.10, not the page's 0.17: on a card the net sits behind 12px body text
-    // rather than behind a solid fill, and at 0.17 its lines cross letterforms.
-    expect(html).toContain('viewBox="0 0 1000 600"');
-    expect(html).toMatch(/opacity:0\.1[;"]/);
+  it("grounds the plate on the GRAVITY FIELD, not the chart net (#2398)", () => {
+    // This assertion is a REVERSAL, deliberately. #2144 gave the net three
+    // weights and this card took the card weight of 0.10 — then #2195 ruled
+    // that a faction has ONE ornament and that where it is not worn the ground
+    // is BARE, never a substitute pattern. The Ephemerists' ornament is the
+    // gravity field, and the net is the PAGE's drawing, so a card standing on
+    // an Ephemerists page ground was wearing the same mark twice.
+    //
+    // The net's card weight is NOT retired with this mount:
+    // `EphemeristsSelectCard` still draws it at 0.10, and `ephemerisNet`'s own
+    // suite pins the weight itself. The alternation is
+    // `ephemeristsGravityAlternation.test.tsx`; what is held here is only that
+    // this card's ground is the field.
+    expect(html).toContain('preserveAspectRatio="xMaxYMin slice"');
+    expect(html).toContain('d="M-6 ');
+    expect(html).not.toContain('viewBox="0 0 1000 600"');
   });
 
-  it("isolates the plate, so the net paints over the fill and under everything", () => {
-    // `isolation: isolate` and a negative index, NOT a `z-index: 1` lift — the
-    // lift needs `position: relative` on static children, which overrides the
-    // absolutely positioned ornament this skin is full of.
+  it("isolates the plate, so the ground paints over the fill and under the chrome", () => {
+    // `isolation: isolate` settles the card's whole layering inside the card:
+    // ground 1, band 2, cornice 3. NOT the design's `z-index: 1` lift on the
+    // CONTENT — that lift needs `position: relative` on static children, which
+    // overrides the absolutely positioned ornament this skin is full of.
     const tag = opened(html, 'class="eph-turn-scope"');
     expect(tag).toContain("isolation:isolate");
   });
