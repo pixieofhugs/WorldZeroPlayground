@@ -1400,6 +1400,11 @@ export interface paths {
         /**
          * Remove Metatask Route
          * @description Detach a previously applied metatask from a praxis.
+         *
+         *     Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
+         *     seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
+         *     has already recomputed both — a bare 204 left the composer's score stamp
+         *     printing the higher total until a reload.
          */
         delete: operations["remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete"];
         options?: never;
@@ -7063,11 +7068,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PraxisOut"];
+                };
             };
             /** @description Validation Error */
             422: {
