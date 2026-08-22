@@ -25,6 +25,13 @@ export interface FilterBarProps {
   onClearAll: () => void
   /** "Showing N tasks" — the page owns the count, the bar only states it. */
   summary?: string
+  /**
+   * A read is in flight and the rows on screen are the PREVIOUS filter's
+   * (#2431). The bar marks itself `aria-busy` and its summary slot says so —
+   * `summary` still states a count, but a stale one, so the two swap rather
+   * than stack.
+   */
+  busy?: boolean
   search?: {
     value: string
     onChange: (value: string) => void
@@ -75,6 +82,7 @@ export default function FilterBar({
   facets,
   onClearAll,
   summary,
+  busy,
   search,
 }: FilterBarProps) {
   const { t } = useTranslation('common')
@@ -84,13 +92,26 @@ export default function FilterBar({
   // the player just opened, which is the behaviour we want anyway.
   const [open, setOpen] = useState(formFactor === 'desktop')
   const chips = deriveChips({ rails, facets })
+  // ponytail: `busy` goes true the instant the read starts, so a warm backend
+  // can swap these words in and out inside ~100ms and read as a flicker rather
+  // than as feedback. The upgrade path is a ~120ms grace before it flips, held
+  // in `useResource` so all four surfaces inherit it — not built here, because
+  // the reported symptom is a wait long enough to read as broken and a
+  // threshold is a tuning knob with no measurement behind it yet (#2431).
+  const summaryText = busy ? t('filters.bar.updating') : summary
 
   return (
-    <section className="filter-bar" aria-label={t('filters.bar.region')}>
+    <section
+      className="filter-bar"
+      aria-label={t('filters.bar.region')}
+      aria-busy={busy ? 'true' : undefined}
+    >
       <div className="filter-bar__spectrum" aria-hidden="true" />
       <div className="filter-bar__body">
         <div className="filter-bar__head">
-          {summary && <span className="filter-bar__summary">{summary}</span>}
+          {summaryText && (
+            <span className="filter-bar__summary">{summaryText}</span>
+          )}
           <button
             type="button"
             className="filter-bar__toggle"

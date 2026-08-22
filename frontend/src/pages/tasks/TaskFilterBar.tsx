@@ -73,6 +73,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
   const {
     user,
     tasks,
+    loading,
     hasMore,
     factions,
     statusFilters,
@@ -189,6 +190,16 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
         count: tasks.length,
       })}
+      // The same condition the list's `data-stale` uses, NOT bare `loading`
+      // (#2431): busy means "rows on screen belong to the previous filter", so
+      // the count above is stale and the bar says it is updating instead of
+      // restating a number it is about to replace. A FIRST load has no such
+      // rows — `loading && tasks.length === 0` is the list's own branch and it
+      // already prints "Loading tasks…", so bare `loading` would state the wait
+      // twice and call an empty first read an "update". It would also blank the
+      // count on every page-level render in a harness that runs no effects,
+      // which is what #2262's guard caught.
+      busy={loading && tasks.length > 0}
       search={{
         value: query,
         onChange: setQuery,
