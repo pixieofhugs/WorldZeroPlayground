@@ -1,19 +1,21 @@
-"""#2199 — the vote notification's number must be the number on the praxis.
+"""#2402 — the vote notification's number is what THAT voter added.
 
 **The seam under test** is ``GET /activity-feed`` →
-:func:`services.activity_feed.get_activity_feed`, specifically the
-``points_earned`` field of the ``vote_on_mine`` / ``vote_changed_on_mine``
-payload — the "+N pts" the row prints.
+:func:`services.activity_feed.get_activity_feed`, specifically the ``value``
+field of the ``vote_on_mine`` / ``vote_changed_on_mine`` payload — the number
+the row's "+N pts" prints.
 
-The defect was arithmetic invented at the payload: ``value * task_point_value``,
-a product where the score is a sum. The reporter was told 120 and found 34.
+The reported defect was a row reading ``+19 pts`` under "voted on your praxis"
+when the voter had given somewhere between one and five stars: 19 was the
+praxis's whole current score (#2199's ``points_earned``, now gone).
 
-The assertion is deliberately NOT ``points_earned == base + stars``: that is the
-same class of mistake, a formula restated at a second site, and it would go
-quietly wrong the moment a metatask, a faction modifier or a duel outcome joins
-the sum. The praxis detail route already publishes the authoritative total
-(``PraxisOut.score``, ADR-0053), so these tests pin the two surfaces *to each
-other* — which is exactly what the reporter did by clicking through.
+These tests restate no formula. Each one **measures** the praxis's score on the
+authoritative surface (``PraxisOut.score``, ADR-0053) either side of a vote and
+pins the row's number to the movement it caused — so what is under test is the
+claim the fix rests on: ``points_from_votes`` is a plain ``sum(Vote.value)``
+added after the multipliers, therefore one vote's contribution to the total is
+its own star value, exactly. If a metatask, a faction modifier or a duel
+outcome ever made that false, these go red.
 """
 
 import pytest
@@ -56,7 +58,7 @@ async def _file_praxis(
 
 
 @pytest.mark.asyncio
-async def test_vote_notification_prints_the_praxis_score_not_a_product(
+async def test_the_row_prints_what_the_vote_added_not_the_praxis_total(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -64,8 +66,9 @@ async def test_vote_notification_prints_the_praxis_score_not_a_product(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The bell and the praxis page agree — the whole of #2199."""
+    """The number on the row is the movement that vote caused — the whole of #2402."""
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated once")
+    before = await _praxis_score(client, praxis_id, auth_headers)
 
     stars = 4
     vote = await client.post(
@@ -74,19 +77,21 @@ async def test_vote_notification_prints_the_praxis_score_not_a_product(
     assert vote.status_code == 200, vote.text
 
     row = await _one_vote_row(client, auth_headers, "vote_on_mine")
-    score = await _praxis_score(client, praxis_id, auth_headers)
+    after = await _praxis_score(client, praxis_id, auth_headers)
 
-    assert row["payload"]["points_earned"] == score, (
-        "the notification and the praxis page must print the same total; "
-        f"feed said {row['payload']['points_earned']}, praxis says {score}"
+    assert row["payload"]["value"] == stars
+    assert after - before == pytest.approx(stars), (
+        "a vote adds exactly its star value to the praxis score; "
+        f"score moved {before} -> {after} on a {stars}-star vote"
     )
-    # The product this replaced, spelled out so the regression cannot creep back
-    # in behind an equality that a coincidence also satisfies.
-    assert row["payload"]["points_earned"] != stars * active_task.point_value
+    # The praxis total is not on the payload at all any more: it is a different
+    # number from the one this row is about, and printing it was the bug.
+    assert "points_earned" not in row["payload"]
+    assert row["payload"]["value"] != after
 
 
 @pytest.mark.asyncio
-async def test_a_changed_vote_reprints_the_score_that_now_stands(
+async def test_a_changed_vote_prints_the_value_that_now_stands(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -94,8 +99,15 @@ async def test_a_changed_vote_reprints_the_score_that_now_stands(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """The other half of the vote partition (#1712) reads the same total."""
+    """The other half of the vote partition (#1712).
+
+    ponytail: the ceiling is that this row can only ever say what the vote is
+    worth now, never that it rose by two — no prior value is stored anywhere.
+    The upgrade path is a ``previous_value`` column on ``Vote`` set in
+    ``cast_or_update_vote``; deliberately out of scope for #2402.
+    """
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated twice")
+    before = await _praxis_score(client, praxis_id, auth_headers)
 
     for value in (3, 5):
         vote = await client.post(
@@ -104,14 +116,16 @@ async def test_a_changed_vote_reprints_the_score_that_now_stands(
         assert vote.status_code == 200, vote.text
 
     row = await _one_vote_row(client, auth_headers, "vote_changed_on_mine")
-    score = await _praxis_score(client, praxis_id, auth_headers)
+    after = await _praxis_score(client, praxis_id, auth_headers)
 
     assert row["payload"]["value"] == 5
-    assert row["payload"]["points_earned"] == score
+    assert after - before == pytest.approx(5), (
+        "a re-rate replaces the vote, it does not add a second one"
+    )
 
 
 @pytest.mark.asyncio
-async def test_the_total_counts_every_voter_not_just_the_one_that_notified(
+async def test_two_voters_get_two_different_numbers(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -121,13 +135,15 @@ async def test_the_total_counts_every_voter_not_just_the_one_that_notified(
     auth_headers2: dict,
     auth_headers3: dict,
 ):
-    """Two voters, one row each — and both rows print the praxis's whole score.
+    """Each row is about its own voter — the assertion #2199's total inverted.
 
-    This is the assertion a restated ``base + this vote`` would fail: the second
-    voter's stars are already in the total the first voter's row prints, because
-    the number is the praxis's score and not a per-vote share.
+    Under the praxis-total payload both rows printed the same figure, each one
+    silently including the other voter's stars. Two voters who gave different
+    ratings must reach the author as two different numbers, and the pair of them
+    must account for the whole rise in the score.
     """
     praxis_id = await _file_praxis(client, active_task, auth_headers, "Rated by two")
+    before = await _praxis_score(client, praxis_id, auth_headers)
 
     for headers, value in ((auth_headers2, 4), (auth_headers3, 2)):
         vote = await client.post(
@@ -138,5 +154,7 @@ async def test_the_total_counts_every_voter_not_just_the_one_that_notified(
     rows = await _vote_rows(client, auth_headers, "vote_on_mine")
     assert len(rows) == 2, rows
 
-    score = await _praxis_score(client, praxis_id, auth_headers)
-    assert {row["payload"]["points_earned"] for row in rows} == {score}
+    after = await _praxis_score(client, praxis_id, auth_headers)
+    printed = sorted(row["payload"]["value"] for row in rows)
+    assert printed == [2, 4]
+    assert after - before == pytest.approx(sum(printed))
