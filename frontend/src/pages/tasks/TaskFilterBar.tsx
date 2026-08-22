@@ -73,6 +73,7 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
   const {
     user,
     tasks,
+    loading,
     hasMore,
     factions,
     statusFilters,
@@ -189,6 +190,10 @@ export default function TaskFilterBar({ state }: { state: TasksState }) {
       summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
         count: tasks.length,
       })}
+      // The same `loading` the list branches on (#2431). While it is true the
+      // count above is the PREVIOUS filter's, so the bar says it is updating
+      // instead of restating a number it is about to replace.
+      busy={loading}
       search={{
         value: query,
         onChange: setQuery,

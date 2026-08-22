@@ -29,8 +29,16 @@ import type { PraxesFeedState, SortOrder, VotedFilter, EraScope } from './usePra
 export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
-  const { items, filters, setFilters, clearAllFilters, canFilterByVote, factions, hasMore } =
-    state
+  const {
+    items,
+    loading,
+    filters,
+    setFilters,
+    clearAllFilters,
+    canFilterByVote,
+    factions,
+    hasMore,
+  } = state
 
   const rails: FilterRail[] = [
     {
@@ -96,6 +104,8 @@ export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
       summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
         count: items.length,
       })}
+      // See `TaskFilterBar` — same flag, same reason (#2431).
+      busy={loading}
       search={{
         value: state.query,
         onChange: state.setQuery,
