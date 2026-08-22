@@ -27,7 +27,7 @@
     "react-easy-crop": "^6.2.2",
     "react-i18next": "^17.0.9",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^6.24.0",
+    "react-router-dom": "^6.30.6",
     "remark-gfm": "^4.0.1",
     "y-codemirror.next": "^0.3.5",
     "y-indexeddb": "^9.0.12",
