@@ -50,13 +50,13 @@ from pathlib import Path
 
 import asyncpg
 import pytest_asyncio
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.engine import make_url
 
-from alembic.config import Config
-from alembic.script import ScriptDirectory
-from config import settings
 import models  # noqa: F401 — registers every mapped class on Base.metadata
+from config import settings
 from models.base import Base
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -138,7 +138,9 @@ async def migration_db() -> str:
 
     admin = await asyncpg.connect(_dsn("postgres"))
     try:
-        await admin.execute(f'DROP DATABASE IF EXISTS "{MIGRATION_TEST_DB}" WITH (FORCE)')
+        await admin.execute(
+            f'DROP DATABASE IF EXISTS "{MIGRATION_TEST_DB}" WITH (FORCE)'
+        )
         await admin.execute(f'CREATE DATABASE "{MIGRATION_TEST_DB}"')
     finally:
         await admin.close()
@@ -147,7 +149,9 @@ async def migration_db() -> str:
 
     admin = await asyncpg.connect(_dsn("postgres"))
     try:
-        await admin.execute(f'DROP DATABASE IF EXISTS "{MIGRATION_TEST_DB}" WITH (FORCE)')
+        await admin.execute(
+            f'DROP DATABASE IF EXISTS "{MIGRATION_TEST_DB}" WITH (FORCE)'
+        )
     finally:
         await admin.close()
 
@@ -201,11 +205,14 @@ async def test_migrations_match_models(migration_db: str) -> None:
 
     down = _alembic("downgrade", "-1")
     assert down.returncode == 0, (
-        "The head revision has no working downgrade().\n\n" + _report("downgrade -1", down)
+        "The head revision has no working downgrade().\n\n"
+        + _report("downgrade -1", down)
     )
 
     reupgrade = _alembic("upgrade", "head")
-    assert reupgrade.returncode == 0, _report("upgrade head (after downgrade)", reupgrade)
+    assert reupgrade.returncode == 0, _report(
+        "upgrade head (after downgrade)", reupgrade
+    )
 
     recheck = _alembic("check")
     assert recheck.returncode == 0, (
@@ -224,5 +231,6 @@ def test_revision_ids_fit_the_version_table() -> None:
     }
     assert not too_long, (
         f"Revision ids longer than {VERSION_NUM_MAX_LEN} chars overflow "
-        f"alembic_version.version_num and fail after the DDL has already run: {too_long}"
+        f"alembic_version.version_num and fail after the DDL has already "
+        f"run: {too_long}"
     )
