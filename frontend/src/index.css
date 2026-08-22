@@ -7577,6 +7577,26 @@
   --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8);
 }
 
+/* A list showing the PREVIOUS filter's rows while the next read is in flight
+   (#2431). `useResource` deliberately keeps the old rows in `data` so the list
+   cannot flash empty, and every surface's `loading && length === 0` branch is
+   therefore false on every filter change after first paint — so without this
+   the stale cards stayed fully lit and fully clickable, and clicking a facet
+   changed nothing on screen at all. `pointer-events: none` is the substance:
+   these rows are about to be replaced and must not be navigable meanwhile. The
+   filter bar states the same fact in words, in `aria-busy` and its summary. */
+[data-stale='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* The dimming itself applies to everyone; only the FADE is opt-in. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-stale='true'] {
+    transition: opacity 150ms;
+  }
+}
+
 .filter-bar {
   border: 1px solid var(--color-border);
   border-radius: var(--space-md);
