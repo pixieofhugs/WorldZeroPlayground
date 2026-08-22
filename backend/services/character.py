@@ -23,6 +23,7 @@ from models.invitation_letter import InvitationLetter
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
+from services.albescent_reveal import is_albescent_revealed
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.media import delete_stored_avatar
 
@@ -613,6 +614,7 @@ async def list_characters_for_viewer(
     faction_slug: Optional[str] = None,
     exclude_active_task_id: Optional[int] = None,
     exclude_account_id: Optional[int] = None,
+    viewer_account: Optional[Account] = None,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -632,6 +634,12 @@ async def list_characters_for_viewer(
     :func:`services.duel._characters_share_account` makes. The duel-opponent
     picker asks for it so it does not have to re-derive the roster client-side
     (#1385); the duel service remains the enforcement.
+
+    ``viewer_account`` is the optional caller behind ``GET /characters`` and
+    ``GET /leaderboard``, and is consulted for one thing: whether an explicit
+    ``?faction=albescent`` is the faction page's roster question or a prober's
+    (#2422). ``None`` — anonymous, or a caller who passed none — keeps the
+    anti-oracle answer.
     """
     from services.praxis import multi_membership_faction_slugs
 
@@ -684,8 +692,11 @@ async def list_characters_for_viewer(
     # One slug in, possibly several out: selecting Unaffiliated also matches
     # Albescent members (#1975), who are shown as Unaffiliated everywhere and
     # otherwise matched no filter at all. `.in_()` rather than `==` because the
-    # fold is the shared helper's answer, not this route's.
-    roster_faction_slugs = faction_filter_slugs([faction_slug])
+    # fold is the shared helper's answer, not this route's — including whether
+    # this viewer has been revealed and may ask for Albescent alone (#2422).
+    roster_faction_slugs = faction_filter_slugs(
+        [faction_slug], reveal_albescent=is_albescent_revealed(viewer_account)
+    )
     if roster_faction_slugs:
         query = query.where(Character.faction_slug.in_(roster_faction_slugs))
     if exclude_account_id is not None:
