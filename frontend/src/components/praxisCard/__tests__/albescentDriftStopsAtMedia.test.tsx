@@ -50,8 +50,11 @@ import "../../../i18n";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 import { aPraxis, aPraxisCard } from "../../../test/fixtures";
 import type { AdminProps } from "../shared";
+import type { CharacterOut } from "../../../api/auth";
 import type { MediaItemOut, PraxisCardOut } from "../../../api/praxis";
 import type { PraxisDetailState } from "../../../pages/praxisDetail/usePraxisDetail";
+import FactionAvatar from "../../avatar/FactionAvatar";
+import { DefaultComment } from "../../comments/CommentThread";
 import AlbescentPraxisCard from "../desktop/AlbescentPraxisCard";
 import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
 import AlbescentPraxisDetail from "../../../pages/praxisDetail/archetypes/AlbescentPraxisDetail";
@@ -284,5 +287,144 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
     expect(html, "the detail's Albescent scope").toContain('class="alb-praxis"');
     expect(html, "the media region").toContain("user-media");
     expect(html, "the ornaments still mount").toContain("alb-praxis-aurora");
+  });
+});
+
+/**
+ * #2457 — the three photographs the live QA on #2456 found still under the wash.
+ *
+ * ## The seam is `FactionAvatar`, not the three mounts
+ *
+ * All three route through one component. The praxis-card byline draws
+ * `<FactionAvatar size={28}>`; the comment composer draws
+ * `<FactionAvatar size="sm">`; and the reason the issue measured 28, 24 and 20
+ * for what look like three different elements is that the `na` skin insets its
+ * photo by a 2px spectrum ring. So the hook lands ONCE, in `FactionAvatar`, and
+ * every mount under an Albescent wrapper is fixed together — including the
+ * praxis-card byline on the praxis list, on praxis detail and on the feed, which
+ * is the half of the defect wider than the page it was found on. There is no
+ * per-surface markup to check because there is no per-surface markup.
+ *
+ * ## Why the hook rides the DISC and not the `<img>`
+ *
+ * Unlike every earlier site (#1941's gallery, #1942/#2456's two plain `<img>`s),
+ * this photograph is not alone in its box: the membership sigil is an absolutely
+ * positioned sibling clipped to the photo's lower-right, and at the byline's 28px
+ * the photo's own edge passes almost exactly through the badge's centre — about
+ * half the badge lies over the picture.
+ *
+ * That makes `photo > wash > badge` UNSATISFIABLE. The badge already paints above
+ * the photo (it is a positioned later sibling, and its ring is drawn to read as a
+ * cut-out against the face); this issue requires the photo above the wash; and
+ * `badge > photo > wash` forces `badge > wash`. Lifting the bare `<img>` would
+ * satisfy #1646's furniture rule to the letter and slice the sigil in half on
+ * every faction avatar under an Albescent wash — a new defect, not a fix.
+ *
+ * So the hook goes on the avatar's root disc, which is what `MediaGallery` and
+ * `PraxisMediaGallery` already do: `.user-media` marks a REGION that is the
+ * player's. The sigil welded onto a photograph rides up with it; the deviation
+ * bought is a 15% multiply over a 12-14px disc. And the hook is CONDITIONAL on
+ * there being a photograph at all, so a monogram disc — its generated initial,
+ * its spectrum ring and its sigil, all the site's own furniture — carries no hook
+ * and keeps the wash entire. That is #1646 intact everywhere furniture stands on
+ * its own.
+ *
+ * No CSS changed: the count asserted above is still four, because the lift rule
+ * is the one #1941/#1942 already wrote.
+ */
+describe("the avatar disc a photograph sits on carries the hook (#2457)", () => {
+  const FACE: CharacterOut = {
+    id: 42,
+    username: "ada",
+    display_name: "Adabel",
+    avatar_url: "avatars/adabel.png",
+    faction_slug: "na",
+    bio: "",
+    tagline: "",
+    location: "",
+    level: 3,
+    score: 0,
+    all_time_score: 0,
+    status: "active",
+    created_at: "2026-01-01T00:00:00Z",
+    badges: [],
+    invitations: [],
+  };
+
+  const composer = (character: CharacterOut) =>
+    render(
+      <DefaultComment
+        mode="composer"
+        character={character}
+        value=""
+        onChange={() => {}}
+        onSubmit={() => {}}
+        submitting={false}
+      />,
+    );
+
+  it("wraps the photograph AND its sigil, because the two cannot be separated", () => {
+    const html = render(<FactionAvatar character={FACE} size={28} />);
+    // The disc's own root is the hook: it opens the markup, so everything the
+    // avatar draws — the photo and the corner sigil that overlaps it — is inside
+    // one lifted box and keeps the order it was designed in.
+    expect(html, "the hook opens the disc").toMatch(/^<span class="user-media"/);
+    expect(html, "the photograph is inside it").toContain("avatars/adabel.png");
+    // The corner sigil badge, by the offset that puts it ON the face — the
+    // overlap that makes `photo > wash > badge` unsatisfiable in the first place.
+    expect(html, "and so is the sigil stamped on it").toContain(
+      "position:absolute;right:-3px;bottom:-3px",
+    );
+    // Once, on the disc — the `<img>` is deliberately NOT hooked a second time,
+    // which is what keeps the sigil above the face.
+    expect(html.match(/user-media/g) ?? [], "exactly one hook").toHaveLength(1);
+  });
+
+  it("leaves a monogram disc unhooked — furniture keeps the wash (#1646)", () => {
+    const html = render(
+      <FactionAvatar character={{ ...FACE, avatar_url: "" }} size={28} />,
+    );
+    expect(html, "the generated initial").toContain("A");
+    expect(html, "no photograph, no lift").not.toContain("user-media");
+  });
+
+  it("lifts the praxis-card byline everywhere that card renders", () => {
+    // `media_items: []`, so the only `.user-media` this card can emit is the
+    // byline's — the gallery hook #1941 shipped is not in play.
+    const praxis = aPraxisCard({
+      media_items: [],
+      created_by_avatar_url: "avatars/quill.png",
+    });
+    const html = render(
+      <AlbescentPraxisCard praxis={praxis} adminProps={admin(praxis)} />,
+    );
+    expect(html, "the scope the lift needs").toMatch(/class="[^"]*\balb-praxis-card\b/);
+    expect(html, "the author's own face").toContain("avatars/quill.png");
+    expect(html.match(/user-media/g) ?? [], "the byline disc, hooked").toHaveLength(1);
+  });
+
+  it("lifts the comment composer's own photograph", () => {
+    // The composer is mounted inside `.alb-detail` by the task detail page
+    // (`pages/taskDetail/__tests__/albescentDetail`) and inside `.alb-praxis` by
+    // praxis detail, so the hook here reaches the lift on both.
+    expect(composer(FACE), "the viewer's face").toContain("user-media");
+    expect(
+      composer({ ...FACE, avatar_url: "" }),
+      "a monogram composer keeps the wash",
+    ).not.toContain("user-media");
+  });
+
+  it("does not reorder the other eight skins — the hook is inert off Albescent", () => {
+    // Same avatar, no Albescent wrapper anywhere above it: the class is emitted
+    // and nothing matches it, which is the whole design of a scoped lift.
+    const praxis = aPraxisCard({
+      media_items: [],
+      created_by_avatar_url: "avatars/quill.png",
+    });
+    const html = render(
+      <DefaultPraxisCard praxis={praxis} adminProps={admin(praxis)} />,
+    );
+    expect(html, "shared avatar, shared hook").toContain("user-media");
+    expect(html, "and no Albescent scope above it").not.toContain("alb-praxis-card");
   });
 });
