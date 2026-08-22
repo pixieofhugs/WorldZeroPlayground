@@ -130,6 +130,12 @@ def _enum_values_in_models() -> dict[str, set[str]]:
 @pytest_asyncio.fixture
 async def migration_db() -> str:
     """An empty database of our own, dropped again however the test ends."""
+    assert _BASE_URL.database != MIGRATION_TEST_DB, (
+        f"{MIGRATION_TEST_DB!r} is this test's scratch database and gets DROPped "
+        "below — the rest of the suite must not be pointed at it. Set "
+        "TEST_DATABASE_URL to a different database name."
+    )
+
     admin = await asyncpg.connect(_dsn("postgres"))
     try:
         await admin.execute(f'DROP DATABASE IF EXISTS "{MIGRATION_TEST_DB}" WITH (FORCE)')
