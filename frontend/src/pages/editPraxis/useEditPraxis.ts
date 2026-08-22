@@ -45,7 +45,7 @@ import {
 } from "../../api/duel";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
-import { discardRoomStore } from "./praxisRoom";
+import { discardRoomStore } from "./roomStore";
 import { editNeedsProposalConfirm } from "./proposalGuard";
 import {
   deleteCollabConfirm,
@@ -337,6 +337,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       // there (#1743); the record catches up on the room's own debounce, and
       // #1745 makes the freeze flatten it at exactly this moment instead.
       await submitPraxis(praxisId);
+      // The seal just destroyed the server's document (ADR-0073 rule 7), so
+      // this browser's copy goes with it — here, in the act, and not only on
+      // the effect below. A solo publish navigates to the read page in the same
+      // commit that flips the status, so the composer never re-renders as
+      // published and that effect never runs for the one client guaranteed to
+      // be holding a stale store: the one that published (#2381).
+      discardRoomStore(praxisId);
       let refreshed: PraxisOut | null = null;
       let refreshedDuel: DuelDetailOut | null = duel;
       try {
@@ -713,9 +720,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // A published praxis has no room document any more — the server destroyed it
   // (#1745). Drop this browser's copy with it, or `pullBack` merges the old
-  // document into the freshly seeded one and the body appears twice. Keyed on
-  // the status rather than on `publish()` so that a co-author who learns of the
-  // publication by loading the page clears theirs too.
+  // document into the freshly seeded one and the body appears twice.
+  //
+  // The **second** half of that disposal, not the only one (#2381). This half
+  // is for the client that did not publish: a co-author who learns of it by
+  // loading the page, or a collab whose window lapsed and was sealed
+  // server-side with nobody's finger on a button. The publishing client is
+  // covered in `publish()` above, because for it there is no render in between
+  // to key an effect on.
   const publishedPraxisId = isPublished ? (praxis?.id ?? null) : null;
   useEffect(() => {
     if (publishedPraxisId !== null) discardRoomStore(publishedPraxisId);

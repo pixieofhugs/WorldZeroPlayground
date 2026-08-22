@@ -1,5 +1,6 @@
 import type { CardProps } from "./TaskCard";
 import DefaultTaskCard from "./DefaultTaskCard";
+import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /**
  * Albescent — the task card's tell (#1023, ADR-0048). The SECOND Albescent
@@ -28,8 +29,17 @@ import DefaultTaskCard from "./DefaultTaskCard";
  * {@link CardProps} and forwards it whole, so a change to the contract or to the
  * na card reaches Albescent with no edit here. That is the property a
  * hand-copied skin could never keep.
+ *
+ * #2397 (epic #2195) makes the AURORA the kit's one ornament and alternates it:
+ * on a patterned page ground the bloom comes off and the sheet is BARE. The edge
+ * is CHROME and never branches — it is `.spectrum-frame`'s shared ring since
+ * #2407, worn by six mounts, five of which are not this card's to decide. So an
+ * Albescent card on the Everymen wall is still revealed by motion (the drifting
+ * frame), which is what ADR-0048 requires; only the texture under the vellum
+ * yields.
  */
 export default function AlbescentTaskCard(props: CardProps) {
+  const groundIsBusy = useGroundIsBusy();
   return (
     <div
       /* The wrapper's one job besides holding the overlays: it repoints
@@ -43,7 +53,9 @@ export default function AlbescentTaskCard(props: CardProps) {
       style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}
     >
       <DefaultTaskCard {...props} />
-      <span aria-hidden="true" className="alb-task-aurora" />
+      {/* The ornament. "Either burst, or plain" (owner, 2026-08-17): where it is
+          not worn the vellum is bare, and no quieter texture stands in. */}
+      {!groundIsBusy && <span aria-hidden="true" className="alb-task-aurora" />}
       <span aria-hidden="true" className="alb-task-edge" />
     </div>
   );

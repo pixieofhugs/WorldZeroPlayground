@@ -125,8 +125,8 @@ cmd //c rmdir "<worktree>\frontend\node_modules"
 
 Then `git worktree remove --force <path>`.
 
-**When that fails with `Permission denied` on `.git/worktrees/<name>`** — it will, on the
-OneDrive checkout, because of the `fsmonitor--daemon/cookies` directory — Git Bash `rm -rf`
+**When that fails with `Permission denied` on `.git/worktrees/<name>`** — the
+`fsmonitor--daemon/cookies` directory is the usual cause — Git Bash `rm -rf`
 succeeds where both git's own unlink and Python's `shutil.rmtree` fail. Remove the working
 directory, remove the metadata directory, then `git worktree prune`.
 

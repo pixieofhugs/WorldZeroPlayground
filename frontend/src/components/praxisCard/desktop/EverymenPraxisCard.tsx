@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { factionCssVar } from "../../../utils/factions";
 import { EverymenBand } from "../../cardMasthead/factionBands";
+import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -27,9 +28,18 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * The masthead is kept deliberately low and tightly tracked so it frames the
  * report rather than shouting over the headline — and since #2185 that setting
  * is the task card's, not a second one measured here.
+ *
+ * THE SHEET IS NO LONGER RULED (#2195/#2393). This card carried a 17/18px
+ * ledger line at its own alpha, and the grill that opened the ornament epic
+ * started at exactly that: why does the Everymen praxis card have ruled paper
+ * when the task card has a sunburst? The answer the owner gave is that a
+ * faction has ONE ornament and both its cards wear it, so the rule is gone and
+ * the bill's burst is here instead — and where the burst is not worn, the sheet
+ * is BARE, not ruled. The red margin rule below is not a texture; it is a
+ * single left-edge line and it stays.
  */
 
-/** The red margin rule down the ruled sheet. Static (#586). */
+/** The red margin rule down the sheet. Static (#586). */
 const everymenMarginRule: CSSProperties = {
   position: "absolute",
   left: 22,
@@ -40,6 +50,7 @@ const everymenMarginRule: CSSProperties = {
 };
 
 export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const groundIsBusy = useGroundIsBusy();
   return (
     <div
       style={{
@@ -52,16 +63,13 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         position: "relative",
         fontFamily: "var(--font-faction-typewriter)",
         color: factionCssVar("everymen", "card-text"),
-        // ornament (#1609): the BROADSHEET's ruled line, at its own 17/18px
-        // pitch and its own 0.08. It is deliberately NOT
-        // `--faction-everymen-dispatch-rule` (0.12, every 24px) — that token
-        // names the dispatch SLIP's rule, and collapsing two drawings the
-        // family keeps apart would be picking a winner (§6, #1654). Stays raw.
-        backgroundImage:
-          "repeating-linear-gradient(to bottom, transparent, transparent 17px, rgba(100,140,200,0.08) 17px, rgba(100,140,200,0.08) 18px)",
         transition: "background 150ms, color 150ms",
       }}
     >
+      {/* THE FACTION'S ONE ORNAMENT, and it alternates (#2195/#2393) — the same
+          `.em-burst` the task card mounts, on the same terms: dropped entirely
+          on a patterned page ground, and nothing else on the card branches. */}
+      {!groundIsBusy && <div aria-hidden="true" className="em-burst" />}
       {/* THE MASTHEAD IS THE BILL'S OWN NOW (#2185).
 
           This card drew its own red bar — `--everymen-red`, `--font-accent` at

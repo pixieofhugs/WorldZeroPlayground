@@ -180,8 +180,15 @@ describe('Everymen task card — the poster rays (#2034)', () => {
     // The design's one portable line in the Everymen flourish block. Only the
     // conic gradient moves; the two corner glows and the mask keep their own
     // anchors, so the copy stays legible under the rays.
-    const html = render()
-    expect(html).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
-    expect(html).toContain('radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)')
+    //
+    // THE DRAWING LEFT THIS FILE in #2393: the card wrote the geometry out
+    // inline, and so did eight other Everymen surfaces, each at its own pitch.
+    // The owner ruled one drawing per faction, so the geometry is `.em-burst`
+    // in index.css and the card mounts it. Both halves are asserted — a card
+    // that stopped mounting the class would still pass a stylesheet-only check.
+    expect(render(), 'the card mounts the kit ornament').toContain('class="em-burst"')
+    const burst = ruleBodies(CSS, '.em-burst').join('\n')
+    expect(burst).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
+    expect(burst).toContain('radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)')
   })
 })

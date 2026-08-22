@@ -1,5 +1,6 @@
 import { SnideBand } from "../../cardMasthead/factionBands";
-import { WALL } from "../../factionMarks/snideAtoms";
+import { WALL, WALL_PLAIN } from "../../factionMarks/snideAtoms";
+import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -26,6 +27,13 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * the wall, and the wall's own alarm/notice/credit for the marks the shared
  * slots paint. All of it is measured on the ramp's two stops AND its two washed
  * corners, in both themes, in `factionContrast.test.ts` (SNIDE_WALL_PAIRS).
+ *
+ * IT ALTERNATES (#2395). On a page that already paints a pattern — one route,
+ * a character profile of a player whose faction is a patterned one — the four
+ * printed layers come off and the card grounds on the bare ramp
+ * ({@link WALL_PLAIN}): "either burst, or plain", bare stock and never a
+ * substitute texture. Faction pages are EXEMPT (owner, 2026-08-18) and claim it
+ * through `useFactionBackdrop`, so S.N.I.D.E.'s own page is unchanged.
  *
  * ON TASK DETAIL IT IS BLACK. That page's column already wears the wall, and a
  * wall inside a wall stops reading as a thing pasted ON something. The switch is
@@ -69,7 +77,13 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * The dashed acid rule above the vote widget is the design's, and is the one
  * divider the slab carries.
  */
-const GROUND = `var(--snd-praxis-ground, ${WALL})`;
+/**
+ * The wall, or the bare ramp when the PAGE is already patterned (#2395, epic
+ * #2195) — the container's `--snd-praxis-ground` still overrides both, because
+ * the task-detail black is a separate ruling and that column themes no backdrop.
+ */
+const ground = (busy: boolean) =>
+  `var(--snd-praxis-ground, ${busy ? WALL_PLAIN : WALL})`;
 const INK = "var(--snd-praxis-ink, var(--faction-snide-note-ink))";
 const MUTED = "var(--snd-praxis-muted, var(--faction-snide-note-muted))";
 /** The pink that is TEXT on the wall; acid is an ink only on a slab (#2066). */
@@ -77,6 +91,10 @@ const ACCENT = "var(--snd-praxis-accent, var(--faction-snide-note-pink-ink))";
 const PAPER = "var(--snd-praxis-paper, var(--faction-snide-note-paper))";
 
 export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  // #2395: the ornament alternates — see `ground` above. Only the BODY TEXTURE
+  // branches; the band, the acid border, the drop shadow and the dashed rule are
+  // chrome and are untouched.
+  const groundIsBusy = useGroundIsBusy();
   return (
     <div
       className="snd-praxis-frame"
@@ -84,7 +102,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         ...frameBase,
         // No borderRadius: the evidence slab has hard corners in the prototype.
         position: "relative",
-        background: GROUND,
+        background: ground(groundIsBusy),
         border: "1.5px solid var(--faction-snide-acid-deep)",
         boxShadow: "6px 8px 0 var(--faction-snide-slab-shadow)",
         /* NO PADDING ON THE FRAME since #2185: the band is full-bleed, and an

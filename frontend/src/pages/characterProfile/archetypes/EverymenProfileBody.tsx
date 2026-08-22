@@ -27,9 +27,6 @@ const PAPER = 'var(--everymen-paper)'
 const BEBAS = 'var(--font-accent)' // Bebas Neue
 const MONO = 'var(--font-body)' // Courier Prime
 
-const SUNBURST =
-  'repeating-conic-gradient(from 0deg at 50% 40%, rgba(255,255,255,0.05) 0deg 6deg, transparent 6deg 12deg)'
-
 function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
@@ -117,10 +114,13 @@ const dress: ProfileDress = {
         aria-hidden
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: GOLD, zIndex: 3 }}
       />
-      <div
-        aria-hidden
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: SUNBURST }}
-      />
+      {/* The faction's ONE ornament (#2195). The banner fanned its own rays
+          from 50% 40%, in a raw white rather than a token — one of nine
+          Everymen bursts — and mounts the shared drawing now. `knockout`
+          because the banner is a red gradient, not paper. This is the profile
+          BANNER, which is chrome: it never alternates, and the cards standing
+          in front of it are what read `useGroundIsBusy()`. */}
+      <div aria-hidden className="em-burst em-burst-knockout" />
     </>
   ),
   // CREAM, not `ink`: the slot is on the banner, not on the page.

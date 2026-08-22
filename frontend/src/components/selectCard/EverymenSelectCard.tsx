@@ -119,14 +119,12 @@ import { CARD_CTA } from "../taskCard/cardCta";
  *
  * ── WHERE THE TASK CARD HAS NO ANSWER, and nothing is invented ─────────────
  *
- *   • THE BURST. The tile fanned a `repeating-conic-gradient` from 50% 34% in
- *     `--everymen-field-deep`. #2195 ruled that Everymen's SEVEN burst
- *     geometries — this tile's is one of the seven it lists by line — collapse
- *     to ONE shared drawing, and that a card may wear the burst or go plain,
- *     never a third texture. That shared drawing does not exist yet; #2195 is
- *     open and is not this issue. So the tile goes PLAIN rather than
- *     transcribing the card's copy of the geometry into an eighth place. When
- *     #2195 lands, this is one mount that already wants nothing but the class.
+ *   • THE BURST. The tile fanned its own conic from 50% 34% in
+ *     `--everymen-field-deep`, which was one of the geometries #2195 ruled into
+ *     ONE shared drawing. This tile went plain in the gap rather than
+ *     transcribe the card's copy into another place. #2393 built the shared
+ *     class, so the tile mounts `.em-burst` and draws nothing: the answer this
+ *     entry was waiting for arrived, and it is a class name.
  *   • THE PLAQUE'S PLATE. The card's only bordered block on the paper is the
  *     x-modifier badge, and its gold rule pays 1.88:1 on the light stock — a
  *     price the card never has to defend, because the badge is hidden at x1.00
@@ -180,8 +178,19 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
     }}>
       <div style={{
         flex: 1, display: "flex", flexDirection: "column", overflow: "hidden",
+        // `zIndex: 0` makes this a stacking context, which is what lets the
+        // burst below sit at -1: above this box, under every static block in
+        // it. Without it a -1 layer escapes to the root and paints behind the
+        // tile's own paper, i.e. nowhere.
+        position: "relative", zIndex: 0,
         border: `1px solid ${INK}`, borderRadius: 1,
       }}>
+        {/* THE SHARED DRAWING LANDED (#2393). This tile went plain rather than
+            transcribe the card's burst into an eighth place; `.em-burst` now
+            exists, so it mounts it and transcribes nothing. It is a directory
+            tile, not a task or praxis card, so the alternation does not reach
+            it — the law the owner wrote governs the two card families. */}
+        <div aria-hidden="true" className="em-burst" style={{ zIndex: -1 }} />
         {/* The mast, in the band's anatomy rather than the band itself: the
             faction's mark hard left, the bill's shout centred on the bar. The
             band names the faction; this names what the bill is for, which is

@@ -17,6 +17,8 @@
  * between them. Put the cog back inside a single stretched middle block and the
  * halves disappear and this goes red.
  */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -65,6 +67,12 @@ describe('Everymen task card — the hero cog', () => {
     // the burst's vertical convergence from the upper third to the centre, which
     // leaves that axis exactly where it was; this asserts the `50%` that matters
     // rather than the pair, so the two changes cannot be confused for each other.
-    expect(markup).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
+    //
+    // The rays moved to `.em-burst` in index.css in #2393 (one drawing per
+    // faction), so the axis is read from the stylesheet — the card's job here
+    // is only to mount it.
+    expect(markup, 'the card still mounts the burst').toContain('class="em-burst"')
+    const css = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+    expect(css).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
   })
 })

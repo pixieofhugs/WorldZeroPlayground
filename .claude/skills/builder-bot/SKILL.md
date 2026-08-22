@@ -330,9 +330,9 @@ auto-starting another batch.
 ## Hazards block — paste into EVERY subagent prompt, verbatim
 
 ```
-1. Commit + push INCREMENTALLY. OneDrive silently reverts long-uncommitted edits; the Edit
-   tool can silently drop writes — `grep` each file on disk after editing to confirm. Never
-   batch into one final commit. Prefer a worktree OUTSIDE OneDrive (C:\Users\pixie\AppData\Local\Temp\).
+1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
+   worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
+   confirm the write landed. Never batch into one final commit.
 2. node_modules: the worktree lacks it. `mklink` is a **cmd.exe builtin and is NOT on
    PATH** in Bash or PowerShell — it needs the call through `cmd`, or use `npm ci`:
    Bash: `cmd //c mklink /J "$(pwd)/frontend/node_modules" "<ABSOLUTE Windows path to main>\frontend\node_modules"`

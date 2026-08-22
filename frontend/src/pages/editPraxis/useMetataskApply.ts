@@ -145,10 +145,13 @@ export function useMetataskApply(
     }
   }, [praxis, metataskRemovalTarget, setError]);
 
-  const openMetataskPicker = useCallback(
-    () => setMetataskPickerOpen(true),
-    [],
-  );
+  // Clear first: the picker now prints `error` itself (#2382), and the composer
+  // shares one error slot, so a failure from publish or a duel would otherwise
+  // greet the author the moment the sheet opens.
+  const openMetataskPicker = useCallback(() => {
+    setError("");
+    setMetataskPickerOpen(true);
+  }, [setError]);
   const closeMetataskPicker = useCallback(
     () => setMetataskPickerOpen(false),
     [],

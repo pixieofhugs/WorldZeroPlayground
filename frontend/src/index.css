@@ -1393,7 +1393,9 @@
   --faction-singularity-rule: rgba(74, 222, 128, 0.2);
   --faction-singularity-bracket: #60a5fa; /* cyan corner brackets */
   --faction-singularity-scan: rgba(96, 165, 250, 0.16); /* scanline sweep peak */
-  --faction-singularity-scanline: rgba(74, 222, 128, 0.03); /* the standing raster */
+  /* The standing raster is NOT here. One drawing per faction (#2394): the whole
+     kit — both cards included — draws it off --faction-singularity-term-scan,
+     and the 0.03 twin this line used to hold was the praxis card's alone. */
   --faction-singularity-stamp-bg: #030b06;
   --faction-singularity-stamp-border: rgba(96, 165, 250, 0.5);
   --faction-singularity-stamp-rule: rgba(74, 222, 128, 0.25);
@@ -2512,7 +2514,12 @@
      was measured on a different sheet and is still right there. */
   --everymen-deep-accent: #a01c21;
   --everymen-field: #c1272d;
-  --everymen-field-deep: #8d1c20;
+  /* `--everymen-field-deep` USED to sit here — the poster field's shadow rung.
+     Its only two readers were the faction hero's rays and the directory tile's,
+     and #2195 collapsed every Everymen ray onto one shared drawing that strikes
+     them in the bill's ink (or, on a red plate, in the cream). A ramp rung with
+     no reader is weight in the blocking sheet; the field itself keeps its
+     reader and stays. */
 }
 
 /* The card CONTRACT — four names the shared archetype reads, each pointing at
@@ -2674,19 +2681,17 @@
      one, so the dark cascade walks the same hue up until it clears (5.45:1).
      Dashed rules and filled bars keep `--everymen-red`; only ink uses this. */
   --faction-everymen-sheet-accent: #c1272d;
-  /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
-  --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
-  --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
-  /* ── The dispatch sheet (praxis detail v2, #1123) ── The ruled newsprint a
-     filed report is printed on: one ledger-blue line every 24px. Only the rule
-     colour is new; the sheet's STOCK is `--faction-everymen-sheet-panel` above,
-     reused deliberately rather than repainted, because that is the ground every
-     ink on this page was measured against (§3, "a new ground invalidates every
-     contrast claim"). `--faction-everymen-sheet-accent` pays 4.95:1 on that
-     stock and only 4.49:1 on `--everymen-paper`, so on this page
-     `--everymen-paper` is a FILL — the voter bars' track — and never a ground
-     for text. */
-  --faction-everymen-dispatch-rule: rgba(100, 140, 200, 0.12);
+  /* ── Two ornament alphas USED to live here ── The broadsheet's rising-sun ray
+     and its glow, and the dispatch sheet's ledger-blue rule. #2195 collapsed
+     Everymen's nine burst geometries to one shared `.em-burst` (which strikes
+     its rays in `--faction-everymen-bill-ray`) and retired the ruled paper
+     outright, leaving all three with no reader. The dispatch sheet's STOCK is
+     still `--faction-everymen-sheet-panel` above, reused deliberately rather
+     than repainted, because that is the ground every ink on that page was
+     measured against (§3, "a new ground invalidates every contrast claim").
+     `--faction-everymen-sheet-accent` pays 4.95:1 on that stock and only 4.49:1
+     on `--everymen-paper`, so on that page `--everymen-paper` is a FILL — the
+     voter bars' track — and never a ground for text. */
 
   /* ══ Everymen — THE WORK ORDER (edit-praxis composer, #1187) ══
      One token, for the reason the two blocks above are short: the composer is
@@ -3583,7 +3588,6 @@
      Declared rather than aliased, for the reason `-paper-accent` gives. */
   --everymen-deep-accent: #f4726c;
   --everymen-field: #3c1416;
-  --everymen-field-deep: #5a1d20;
   /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
      ink would vanish), and the masthead's red bar carries INK, not cream —
      white/cream on #e2433f fails AA, which is the same call
@@ -3612,11 +3616,6 @@
   --faction-everymen-sheet-panel: #2c231c;
   --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
   --faction-everymen-sheet-accent: #f4726c;
-  --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
-  --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
-  /* The ledger rule inverts with the paper: a pale blue line ON the near-black
-     newsprint instead of a dark one in it (#1123). */
-  --faction-everymen-dispatch-rule: rgba(150, 185, 230, 0.09);
   /* The work order's frame at night: the design's skin row swaps gold for the
      deep accent, which is the one edge on the sheet that does NOT lift with the
      paper — a printed poster frame stays the colour it was printed in (#1187). */
@@ -3647,7 +3646,61 @@
   opacity: 0.95;
 }
 
-/* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
+/* ══ EVERYMEN'S ONE ORNAMENT — the union bill's poster burst (#2195/#2393) ══
+   The law, owner 2026-08-17: each faction has ONE ornament, and ONE drawing of
+   it — not one per surface. Everymen had nine burst geometries (the epic's
+   2026-08-17 survey named seven; `EverymenEditPraxis` and the faction page's
+   member spotlight were the two it missed). This rule is all nine.
+
+   The drawing is the task card's, which the owner named canonical: two corner
+   glows and the rays converging on the sheet's CENTRE (#2034), under a radial
+   mask that opens from 16% so the rays fade before they reach the copy.
+
+   A MOUNT SUPPLIES ONLY ITS BOX. Every one of the nine is `aria-hidden` texture
+   inside a clipped, positioned parent, so the layer's own geometry and its
+   `pointer-events: none` live here rather than nine times inline.
+
+   THE RAY INK is the one thing a mount may re-point, through `--em-burst-ray` —
+   see `.em-burst-knockout`. A register is not a second drawing; the geometry,
+   the stops and the mask are what the ruling collapses, and they are not
+   overridable.
+
+   NOT A BRANCH ON ANYTHING. Whether a card wears this at all is decided in the
+   card by `useGroundIsBusy()` (#2387): on a patterned page ground the layer is
+   not mounted, and there is no third texture underneath it — either burst, or
+   plain. */
+.em-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),
+    radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),
+    repeating-conic-gradient(from 0deg at 50% 50%, var(--em-burst-ray, var(--faction-everymen-bill-ray)) 0 5.2deg, transparent 5.2deg 10.4deg);
+  /* Spelled out rather than left to autoprefixer. Measured: the built sheet is
+     BYTE-IDENTICAL either way (same content hash), so this costs nothing, and
+     a browserslist edit that dropped the prefix would take the mask off in
+     Safari with every check still green — an unmasked burst runs the rays
+     through the copy. */
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
+  mask-image: radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%);
+}
+
+/* The same drawing struck on the union's DARK plates — the faction hero's
+   masthead, the duel seal's stamped red bar, the profile banner and the member
+   spotlight's ink slab. The bill's ray is near-black on paper by day and cream
+   on paper by night, and neither is visible on a red plate; cream at 10% is,
+   and it needs no dark half because it is this family's invariant light and the
+   plates it lands on do not flip either. */
+.em-burst-knockout {
+  --em-burst-ray: color-mix(in srgb, var(--everymen-cream) 10%, transparent);
+}
+
+/* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══
+   The manila stock, its halftone and its burlap weave. The RAYS are no longer
+   here: the wall mounts the shared `.em-burst` like every other Everymen
+   surface, and its two corner glows went with them — they were the bill's own
+   two glows repainted a couple of percent apart. */
 .em-backdrop {
   position: fixed;
   inset: 0;
@@ -3655,14 +3708,11 @@
   pointer-events: none;
   background-color: var(--everymen-paper);
   background-image:
-    radial-gradient(42% 32% at 100% 0%, color-mix(in srgb, var(--everymen-gold) 16%, transparent), transparent 70%),
-    radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--everymen-olive) 13%, transparent), transparent 70%),
-    repeating-conic-gradient(from 0deg at 50% -6%, color-mix(in srgb, var(--everymen-red) 6%, transparent) 0 5deg, transparent 5deg 11deg),
     radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 6%, transparent) 0.6px, transparent 0.9px),
     repeating-linear-gradient(45deg, color-mix(in srgb, var(--everymen-paper-text) 3.5%, transparent) 0 1px, transparent 1px 5px),
     repeating-linear-gradient(-45deg, color-mix(in srgb, var(--everymen-paper-text) 3%, transparent) 0 1px, transparent 1px 5px),
     linear-gradient(180deg, var(--everymen-paper), var(--everymen-paper-deep));
-  background-size: 100% 100%, 100% 100%, 100% 100%, 6px 6px, auto, auto, 100% 100%;
+  background-size: 6px 6px, auto, auto, 100% 100%;
 }
 .em-backdrop::after {
   content: "";
@@ -3671,46 +3721,41 @@
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
-/* ══ Everymen broadsheet backdrop (task detail v2, #1033; theme-aware) ══
-   The rising sun the union prints its bills under — rays fanning UP from below
-   the bottom edge, over the newsprint. Distinct from `.em-backdrop` above,
-   whose rays fall from the top: that one dresses the faction-context pages, this
-   one is the sheet the task detail is printed on. Fixed, like every other
-   faction backdrop, so the paper runs to the viewport edge instead of stopping
-   at the 1200 content cap. The two ray alphas are tokens because they differ
-   per theme; the rule itself never branches on the theme. */
+/* ══ Everymen broadsheet sheet (task detail v2, #1033; theme-aware) ══
+   The newsprint a job is posted on. It USED to fan its own rising sun from
+   below the bottom edge, in its own red at its own 2.6/6.4deg pitch — one of
+   the nine geometries #2195 collapsed. The archetype mounts `.em-burst` now, so
+   this rule owns the paper and only the paper. The two ray alphas it needed
+   (`--faction-everymen-sheet-ray/-glow`) went with the drawing.
+
+   Painted on the detail COLUMN, not the viewport — the site background shows
+   around it (owner QA on #1055, applied to every task-detail skin). The
+   archetype supplies position / z-index / radius / padding. */
 .em-broadsheet {
-  /* Painted on the detail COLUMN, not the viewport — the site background shows
-     around it (owner QA on #1055, applied to every task-detail skin). The
-     archetype supplies position / z-index / radius / padding; this rule owns
-     only the newsprint and its rising-sun rays. */
   background-color: var(--everymen-paper-deep);
-  background-image:
-    repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
-    radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
 }
 
 /* ══ Everymen dispatch sheet (praxis detail v2, #1123; theme-aware) ══
-   The report as it was FILED: ruled newsprint with a red margin rule down the
-   left edge, printed on the same panel stock the broadsheet's plates use. The
-   sibling of `.em-broadsheet` above — that one is the sheet a JOB is posted on
-   (rising-sun rays, no rules); this one is the sheet a job's PROOF is typed on,
-   which is why it is ruled and margined instead.
+   The stock a filed report is typed on: the same panel the broadsheet's plates
+   use, under a red margin rule down the left edge.
+
+   IT USED TO BE RULED, one ledger-blue line every 24px over a dot grid, on the
+   doctrine that rays meant a job POSTED and ruled paper meant proof FILED. The
+   owner retired that doctrine on #2195 — either the faction's burst, or plain,
+   never a third texture — so the rules and the grid are gone and this sheet is
+   bare newsprint. The margin rule is not a texture: it is a single left-edge
+   line, and it stays.
 
    Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
-   the archetype supplies position / border / radius / padding, this rule owns
-   only the paper. The margin rule is a background LAYER rather than a positioned
-   ornament on purpose — a positioned span would paint above the static copy at
-   `z-index: 0`, and `-1` would put it behind this opaque paint, i.e. nowhere
-   (§5's stacking half). It sits at 21–23px, inside the archetype's smallest
-   inset (`--space-xl`, 24px on mobile), so copy never runs into it. */
+   the archetype supplies position / border / radius / padding. The margin rule
+   is a background LAYER rather than a positioned ornament on purpose — a
+   positioned span would paint above the static copy at `z-index: 0`, and `-1`
+   would put it behind this opaque paint, i.e. nowhere (§5's stacking half). It
+   sits at 21–23px, inside the archetype's smallest inset (`--space-xl`, 24px on
+   mobile), so copy never runs into it. */
 .em-dispatch {
   background-color: var(--faction-everymen-sheet-panel);
-  background-image:
-    linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px),
-    repeating-linear-gradient(to bottom, transparent 0 23px, var(--faction-everymen-dispatch-rule) 23px 24px),
-    radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 5%, transparent) 0.6px, transparent 0.9px);
-  background-size: auto, auto, 6px 6px;
+  background-image: linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px);
 }
 
 /* ══ Cozy Coven's viewport backdrop USED to live here ══
@@ -5726,9 +5771,9 @@
  * one occurrence of it in this file. The `mask-composite` idiom draws the
  * gradient over the whole box and punches the middle out, so there is no solid
  * border colour anywhere in it and nothing needs a `border-color` fallback. It
- * is the same technique `.alb-task-edge`, `.alb-detail-edge`, `.alb-praxis-edge`
- * and `.alb-feed-edge` already use, for the same reason they use it: the sheets
- * these dress are components' inline styles, not markup this file can reach
+ * is the same technique the five Albescent edges use — since #2407 it is
+ * literally the same rule — for the same reason they use it: the sheets these
+ * dress are components' inline styles, not markup this file can reach
  * behind. The other radius-safe ring here — `.alb-detail-ring`'s pseudo-rim with
  * a real `-face` child punched over it — needs a face element to punch WITH, and
  * a rail panel full of copy has none.
@@ -5750,8 +5795,13 @@
  * its own element has. On the rail that is `--faction-default-card-radius`
  * (10px, the documented Default/Albescent rung) for an unaffiliated viewer and
  * the member's own `--rail-radius` otherwise — one expression, no second radius
- * minted, and none of the hardcoded 14/18px the four earlier Albescent edges
- * had to carry.
+ * minted. It is the DEFAULT for the whole list below, and #2407 could only take
+ * it on two of the five card edges: `inherit` reads the DIRECT parent, and only
+ * `.alb-praxis-edge` and `.alb-profile-edge` are mounted straight inside the
+ * rounded sheet they trace (18px and 16px, both inline at the mount). The other
+ * three hang off an unrounded wrapper — `.alb-task`, `.alb-detail`, `.alb-feed`
+ * — where `inherit` would resolve to 0 and square the ring off, so those keep
+ * the literal radius they already carried, in the rules further down.
  *
  * SUPPRESSED, NOT UNMOUNTED, FOR A MEMBER. `--spectrum-frame-image` is `none`
  * wherever a faction kit is dressing the surface (`railFaceVars` declares it),
@@ -5773,16 +5823,40 @@
      a ring drawn around the wrong element rather than a missing one. */
   position: relative;
 }
+/* ONE RING, SIX MOUNTS (#2407).
+ *
+ * The five `.alb-*-edge` spans below were five hand-written copies of exactly
+ * this device: the same `mask … exclude` idiom, the same tiling loop cut, the
+ * same `pointer-events: none` overlay — differing only in width, tile, opacity
+ * and corner. They join the selector list and each states its own four
+ * differences in its own rule further down the sheet; later source order at
+ * equal specificity, so every one of them paints the pixels it painted before.
+ * This is a byte reclaim, not a redesign — nothing here is allowed to move.
+ *
+ * The defaults are the CHEAPEST cover, not a claim about which mount is
+ * canonical: `padding: 1px` and `opacity: 0.6` are the rail's and the feed
+ * card's, so those two say nothing, and `background-size: 300% 100%` is the
+ * four card edges', so only the rail (a LENGTH tile, below) and the profile
+ * band (200%) restate it.
+ *
+ * `.spectrum-frame::before` sits LAST in the list on purpose. It is the one
+ * member whose whole rule the tests look up by name, and the `ruleBodies`
+ * helper in `utils/__tests__/cssVars.ts` matches a selector only where nothing
+ * follows it before the brace — so a trailing position is what keeps it
+ * findable while the five element selectors resolve to their own rules. */
+.alb-task-edge,
+.alb-detail-edge,
+.alb-praxis-edge,
+.alb-feed-edge,
+.alb-profile-edge,
 .spectrum-frame::before {
-  content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
   pointer-events: none;
   border-radius: inherit;
   padding: 1px;
   background-image: var(--spectrum-frame-image, var(--faction-default-rainbow-loop));
-  background-size: 220px 100%;
+  background-size: 300% 100%;
   opacity: 0.6;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -5791,6 +5865,17 @@
   mask:
     linear-gradient(#000 0 0) content-box exclude,
     linear-gradient(#000 0 0);
+}
+/* The rail's own three. A pseudo-element needs `content` to exist at all; the
+   five spans are real elements and must not be given it. `z-index: 1` lifts it
+   over the panel's copy — the four card edges declare their own (1, 2, 2, 1)
+   and `.alb-profile-edge` deliberately declares none, so it cannot be shared.
+   And the 220px tile is the LENGTH cut this ring was written for, so a narrow
+   panel and a wide one drift at the same apparent speed. */
+.spectrum-frame::before {
+  content: "";
+  z-index: 1;
+  background-size: 220px 100%;
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
@@ -5818,6 +5903,12 @@
    eye. This works only because every stop carried the SAME alpha — a ramp whose
    stops differ in alpha interpolates differently once you flatten it, and
    moving that into `opacity` would be a repaint.
+
+   IT COMES OFF WITH THE AURORA (#2397, epic #2195). This is the praxis card's
+   other background texture and its only mount, so a busy page ground takes both
+   — leaving the drift standing alone would be the "substitute texture" the
+   alternation forbids. `AlbescentPraxisCard` owns that branch; the sparks and
+   the drifting frame stay, so the card is still revealed by motion (ADR-0048).
 
    What did change, deliberately, is the hue SET: orange and teal rejoin the
    wash, dark's red and yellow land back on their stops, and eight stops share
@@ -5924,8 +6015,26 @@
    • The aurora BLENDS rather than sits behind. `mix-blend-mode: multiply` on the
      light sheet and `screen` on the dark one is what keeps ink legible through
      an overlay — the design put the bloom UNDER the copy at `normal`, which is
-     not a position an overlay can take. Same call `.alb-rainbow` already makes. */
-@keyframes alb-task-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+     not a position an overlay can take. Same call `.alb-rainbow` already makes.
+
+   THE AURORA IS THE KIT'S ONE ORNAMENT, AND IT ALTERNATES (#2397, epic #2195).
+   Since #2397 `.alb-task-aurora` has TWO mounts, not one: the task card and the
+   PRAXIS card, which wore `.alb-rainbow`'s drift and no aurora. One drawing per
+   faction, not one per surface — the `-task-` in the name records where it was
+   first drawn, not what it belongs to, and a praxis-shaped copy of the same
+   seven blooms would have stated a second drawing. It travels well because it
+   carries its own geometry: everything visible is on the `::before` at
+   `inset: 22%`, blurred past recognition, so the only thing it asks of a host is
+   a positioned parent that clips.
+
+   Both mounts are CONDITIONAL in their components: a card standing on a
+   patterned page ground drops the bloom and the vellum is BARE ("either burst,
+   or plain", owner 2026-08-17). On the praxis card `.alb-rainbow` comes off with
+   it, being that card's other background texture. Nothing here branches — the
+   predicate is `useGroundIsBusy()` and the components mount or omit the span, so
+   a plain card costs no rules and this sheet stays a drawing rather than a
+   decision. THE EDGE NEVER BRANCHES: it is chrome, and since #2407 it is the
+   shared `.spectrum-frame` ring five other mounts wear. */
 @keyframes alb-task-drift {
   0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
   50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
@@ -5947,17 +6056,13 @@
 .alb-task {
   --faction-default-cta-rule-opacity: 0.45;
 }
+/* The ring is the shared one (#2407, top of the `.spectrum-frame` block); these
+   are the two things this mount says differently. `opacity: 1` is stated rather
+   than left off because the shared rule's default is the rail's 0.6, and the
+   task card's edge has always been full strength. */
 .alb-task-edge {
   padding: 3px;
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 300% 100%;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
+  opacity: 1;
 }
 .alb-task-aurora {
   overflow: hidden;
@@ -5993,7 +6098,6 @@
     radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 100%);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .alb-task-edge { animation: alb-task-edge 16s linear infinite; }
   .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
 }
 
@@ -6040,7 +6144,6 @@
   0%, 100% { transform: translateX(-18%); }
   50% { transform: translateX(18%); }
 }
-@keyframes alb-detail-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
 @keyframes alb-detail-spin { to { transform: rotate(360deg); } }
 
 .alb-detail {
@@ -6133,21 +6236,16 @@
 }
 
 /* The spectrum edge, drifting. A masked ring rather than a border, for the same
-   reason `.alb-task-edge` is one: the sheet it dresses is a component's inline
-   style, not markup this file can reach into. It lands on Default's own hairline
-   so the effect reads as that border coming alive. */
+   reason the rail's is one: the sheet it dresses is a component's inline style,
+   not markup this file can reach into. It lands on Default's own hairline so the
+   effect reads as that border coming alive. The mask itself is the shared
+   `.spectrum-frame::before` list (#2407); a 2px inset at 0.75 is the whole of
+   what this mount says differently. Its 18px corner is in the positioning rule
+   above rather than `border-radius: inherit`, because the span hangs off
+   `.alb-detail`, which is unrounded — `inherit` would square it. */
 .alb-detail-edge {
   padding: 2px;
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 300% 100%;
   opacity: 0.75;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
 }
 
 /* The prism worth ring — the design's one departure from na's anatomy, reached
@@ -6186,7 +6284,6 @@
   .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
   .alb-detail-foil::before { animation: alb-detail-wheel 44s linear infinite; }
   .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
-  .alb-detail-edge { animation: alb-detail-edge 16s linear infinite; }
   .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
 }
 
@@ -6235,7 +6332,6 @@
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
-@keyframes alb-praxis-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
 
 .alb-praxis {
   isolation: isolate;
@@ -6316,27 +6412,23 @@
 }
 
 /* The spectrum edge, drifting. A masked ring rather than a border, for the same
-   reason `.alb-task-edge` and `.alb-detail-edge` are: the sheet it dresses is a
-   component's inline style, not markup this file can reach into. It lands on
-   Default's own hairline so the effect reads as that border coming alive. */
+   reason the other four are: the sheet it dresses is a component's inline style,
+   not markup this file can reach into. It lands on Default's own hairline so the
+   effect reads as that border coming alive. The mask is the shared
+   `.spectrum-frame::before` list (#2407); a 2px inset at 0.72 is all this mount
+   says differently. The 18px corner in the positioning rule above is now
+   redundant with the shared `border-radius: inherit` — this span IS mounted
+   straight inside the 1200px sheet, whose own `borderRadius: 18` is inline at
+   the mount — but it is shared with `.alb-praxis-aurora` and `.alb-praxis-ring`,
+   which are not, so it stays. */
 .alb-praxis-edge {
   padding: 2px;
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 300% 100%;
   opacity: 0.72;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
   .alb-praxis-ring::before { animation: alb-praxis-wheel 58s linear infinite; }
-  .alb-praxis-edge { animation: alb-praxis-edge 16s linear infinite; }
 }
 
 /* Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth
@@ -6386,7 +6478,6 @@
   0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
   50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
 }
-@keyframes alb-feed-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
 
 .alb-feed {
   position: relative;
@@ -6421,24 +6512,14 @@
 }
 
 /* The hairline, travelling. The loop cut is the seamless one, so the ring scrolls
-   forever without a red-meets-magenta seam passing through every cycle. */
-.alb-feed-edge {
-  padding: 1px;
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 300% 100%;
-  opacity: 0.6;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-}
+   forever without a red-meets-magenta seam passing through every cycle — and it
+   has no paint rule of its own at all since #2407, because a 1px inset at 0.6 IS
+   the shared `.spectrum-frame::before` default. The radius above is `--radius-xl`
+   rather than the shared `inherit` because the span hangs off `.alb-feed`, which
+   is unrounded; `.sidebar-card` inside it is the thing with the corner. */
 
 @media (prefers-reduced-motion: no-preference) {
   .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
-  .alb-feed-edge { animation: alb-feed-edge 16s linear infinite; }
 }
 
 /* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
@@ -8169,34 +8250,30 @@
 
    The ramp is --faction-default-rainbow-loop, the spectrum's TILING cut whose
    last stop is its first — which is what lets the position walk a full tile and
-   arrive back with no seam. At `background-size: 200% 100%` one tile is two
-   band-widths, so `0 → 200%` is exactly one loop; the design's 9s is the pace.
-   No dark half is declared because none is needed: the token flips on its own.
+   arrive back with no seam. THE 200% IS DELIBERATE AND IT IS A PAIR: this is the
+   one of the five edges whose tile is TWO band-widths rather than three, so its
+   keyframe must travel 200% where the other four travel 300%, or the ring would
+   stop short of the seam and jump. #2407 retired the four identical 300%
+   keyframes into one and kept this one for exactly that reason — change the
+   `background-size` below and `@keyframes alb-profile-edge` in
+   `motion.ornament.css` has to change with it. The design's 9s is the pace, and
+   no dark half is declared because none is needed: the token flips on its own.
 
    Stilled, this paints an ordinary static spectrum ring on top of an identical
    static spectrum frame, i.e. nothing — so it can freeze outright where
-   `.alb-spark` had to park at a resting opacity. */
-@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+   `.alb-spark` had to park at a resting opacity.
+
+   The ring itself is the shared `.spectrum-frame::before` list (#2407), which is
+   also where `border-radius: inherit` now comes from: this span mounts straight
+   inside `DefaultProfileBody`'s identity band, whose `borderRadius: 16` is
+   inline at the mount in BOTH form factors, so the hardcoded 16 that had to
+   track it is gone. No z-index, deliberately, which is why the shared rule
+   declares none: a positioned overlay already paints above the static sheet it
+   sits beside, whatever their DOM order. */
 .alb-profile-edge {
-  /* No z-index: a positioned overlay already paints above the static sheet it
-     sits beside, whatever their DOM order. */
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: 16px;
   padding: var(--space-xs);
-  background-image: var(--faction-default-rainbow-loop);
   background-size: 200% 100%;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
+  opacity: 1;
 }
 
 /* Coven — the candle catching the profile header (#1630). Eight `Spark`
