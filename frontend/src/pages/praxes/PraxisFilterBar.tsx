@@ -104,8 +104,9 @@ export default function PraxisFilterBar({ state }: { state: PraxesFeedState }) {
       summary={t(hasMore ? 'listPage.countWindowed' : 'listPage.count', {
         count: items.length,
       })}
-      // See `TaskFilterBar` — same flag, same reason (#2431).
-      busy={loading}
+      // The list's own `data-stale` condition, not bare `loading` — see
+      // `TaskFilterBar` for why a first load is not an "update" (#2431).
+      busy={loading && items.length > 0}
       search={{
         value: state.query,
         onChange: state.setQuery,
