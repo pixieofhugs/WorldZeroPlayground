@@ -27,7 +27,7 @@ import "../../../i18n";
 import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import { aTask } from '../../../test/fixtures'
+import { aPraxisCard, aTask } from '../../../test/fixtures'
 import { factionName, setAlbescentRevealed } from "../../../utils/factions";
 
 const TITLE = "Sit with something until it turns pale";
@@ -214,5 +214,95 @@ describe("Albescent task detail — Default plus the light", () => {
     const { text } = render(<AlbescentTaskDetail state={baseState()} />);
     expect(text).toContain("people working on this");
     expect(text).toContain("6");
+  });
+});
+
+/**
+ * The drift stops at user media, here too (#1646 ruling, #1942 scope).
+ *
+ * THE SEAM: the class hooks this page emits, paired with the stylesheet contract
+ * asserted in `components/praxisCard/__tests__/albescentDriftStopsAtMedia`. Drop
+ * either and the other is decorative — a class nobody reads, or a rule nothing
+ * matches.
+ *
+ * WHAT NO TEST HERE CAN PROVE. `renderToStaticMarkup` has no DOM, no layout and
+ * no computed styles, so nothing below shows a photograph coming out untinted.
+ * The overlap is visual QA, and it is outstanding on the PR.
+ *
+ * The scope ruling (owner, 2026-08-20) is the gallery AS WELL AS the byline: a
+ * photograph in the submissions row is as much the player's as the one beside
+ * the title. Those thumbnails already carried `.user-media` from #1941 and were
+ * washed twice all the same — once by their own card's `.alb-rainbow`, which they
+ * escaped, and again by `.alb-detail-aurora`, which they could not, because the
+ * 1200 column's `z-index: 1` capped them. Asserted, not assumed.
+ */
+describe("the drift stops at user media on this page too (#1942)", () => {
+  const PHOTO = {
+    id: 91,
+    praxis_id: 55,
+    type: "image" as const,
+    file_path: "proofs/estuary.png",
+    display_order: 0,
+    created_at: "2026-01-01T00:00:00Z",
+  };
+
+  it("clears the stacking trap by naming the sheet", () => {
+    // The one hook the CSS fix needs. Without it `.alb-detail .task-detail-sheet`
+    // matches nothing and the lift stays inert however large its number.
+    const { html } = render(<AlbescentTaskDetail state={baseState()} />);
+    expect(html, "the 1200 column's class").toContain('class="task-detail-sheet"');
+    const sheet = html.slice(html.indexOf('class="task-detail-sheet"'));
+    // And the number is gone from that tag's inline style, which is the whole
+    // reason a selector can reach it — an inline `z-index` cannot be overridden.
+    expect(
+      sheet.slice(0, sheet.indexOf(">")),
+      "no inline z-index left on the sheet",
+    ).not.toContain("z-index");
+  });
+
+  it("hooks the byline photograph", () => {
+    const { html } = render(
+      <AlbescentTaskDetail
+        state={baseState({
+          task: aTask({ ...TASK, created_by_avatar_url: "avatars/wren.png" }),
+        })}
+      />,
+    );
+    expect(html, "the author's own photo").toContain("user-media");
+  });
+
+  it("leaves the initials fallback in the wash — it is the site's furniture", () => {
+    // #1646's distinction, and the whole of the ruling: a generated monogram is
+    // not a photograph. `TASK` carries no avatar url, so this is the fallback.
+    const { html } = render(<AlbescentTaskDetail state={baseState()} />);
+    expect(html).not.toContain("user-media");
+  });
+
+  it("carries the gallery's thumbnails out with it", () => {
+    // Owner's scope ruling. The hook is #1941's, already on `PraxisMediaGallery`
+    // — no duplicate was added — so what this pins is that the gallery reaches
+    // this page WITH it, on the Albescent card the dispatcher picks for an
+    // Albescent task.
+    const { html } = render(
+      <AlbescentTaskDetail
+        state={baseState({
+          sortedSubmissions: [
+            aPraxisCard({
+              id: 55,
+              task_faction_slug: "albescent",
+              media_items: [PHOTO],
+            }),
+          ],
+        })}
+      />,
+    );
+    expect(html, "the Albescent card the gallery dispatches to").toContain(
+      "alb-praxis-card",
+    );
+    expect(html, "its thumbnails' hook").toContain("user-media");
+    // Both scopes are present on one page, which is the double wash the ruling
+    // named: the card's own drift and the page's aurora.
+    expect(html).toContain("alb-rainbow");
+    expect(html).toContain("alb-detail-aurora");
   });
 });

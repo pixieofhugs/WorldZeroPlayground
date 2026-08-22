@@ -133,9 +133,22 @@ describe('FeedRowContent — the body-wide target', () => {
     // The actor's own anchor and the avatar disc's — both a different
     // destination from the stretched one, so both have to win the hit test over
     // the box they share with it.
+    //
+    // TWO SPELLINGS OF ONE LIFT (#1942). The name still carries it inline; the
+    // AVATAR's anchor takes it as `.feed-avatar-link`, which declares the same
+    // three properties in index.css. The move was forced: an inline `z-index`
+    // cannot be overridden by a selector, and an integer z-index makes this
+    // anchor a stacking context — so the Albescent card could not lift the
+    // player's photograph out of its own wash while the number was inline. The
+    // hit-test claim is unchanged either way; `albescentDriftStopsAtMedia`
+    // asserts the class still computes to `z-index: 1`.
     const actorAnchors = anchorsTo(html, '/characters/4')
     expect(actorAnchors).toHaveLength(2)
-    for (const tag of actorAnchors) expect(tag).toContain(LIFT)
+    const inline = actorAnchors.filter((tag) => tag.includes(LIFT))
+    const byClass = actorAnchors.filter((tag) => tag.includes('feed-avatar-link'))
+    expect(inline, "the name's anchor keeps the inline lift").toHaveLength(1)
+    expect(byClass, "the avatar's anchor takes it as a class").toHaveLength(1)
+    expect(byClass[0], 'and takes it INSTEAD, not as well').not.toContain(LIFT)
     // …and neither of them grew an overlay of its own.
     expect(overlayCount(html)).toBe(1)
   })

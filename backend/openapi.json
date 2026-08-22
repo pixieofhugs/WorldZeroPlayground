@@ -5981,7 +5981,7 @@
         "type": "object"
       },
       "VoteChangedOnMineItem": {
-        "description": "A voter went back and re-rated the viewer's praxis (#1712).\n\nSame payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the\nnumbers that stand *now* — and deliberately no \"changed from\" fields: no\nprior value is stored. The two are distinct types rather than one type with\na flag because the item KEY has to differ, so archiving the original cannot\nsilence the change.",
+        "description": "A voter went back and re-rated the viewer's praxis (#1712).\n\nSame payload as ``VoteOnMineItem`` — ``value`` is the vote that stands\n*now* — and deliberately no \"changed from\" fields: no prior value is\nstored, so the row can print what the vote is worth but never the size of\nthe change. The two are distinct types rather than one type with\na flag because the item KEY has to differ, so archiving the original cannot\nsilence the change.",
         "properties": {
           "actor_avatar_url": {
             "anyOf": [
@@ -6141,19 +6141,8 @@
       },
       "VoteOnMinePayload": {
         "additionalProperties": false,
-        "description": "Someone voted on the viewer's praxis.\n\n``points_earned`` is the praxis's **whole current score** — the same number\n``PraxisOut.score`` publishes, same type, off the same scoring path\n(ADR-0014/0053). It is what the author sees when they click the row through,\nwhich is the promise #2199 was filed about: the row used to print\n``value × task_point_value``, a product where the score is a sum, and\nannounced 120 points against a praxis worth 34.\n\nOptional because it is filled in a **second pass**: scoring is async and\nbatched, so the per-row mapper that builds this payload cannot reach it (see\n``services.activity_feed._score_vote_items``). A praxis that cannot be scored\nleaves it ``None`` and the row prints no number — never an invented one.",
+        "description": "Someone voted on the viewer's praxis.\n\n``value`` is the whole story the row needs: the \"+N pts\" it prints is the\nstars this voter gave, which is **exactly** what their vote added to the\npraxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and\n``Contribution`` adds it *after* the faction and duel multipliers, so a\nsingle vote's contribution depends on nothing else — not the other votes,\nthe author's faction, the task's points, a metatask or a duel.\n\nSo this is a delta, not a total, and there is no ``points_earned`` here.\n#2199 put the praxis's whole score on this payload, filled by a second\nscoring pass, because the per-vote number then in use was *invented*\n(``value × task_point_value``, a product where the score is a sum, which\nannounced 120 points against a praxis worth 34). The delta is not a\nrestated formula though — it is the raw input the sum is over — so it\ncannot diverge from the scoring path the way that arithmetic did, and the\npass that read the total is gone.",
         "properties": {
-          "points_earned": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Points Earned"
-          },
           "praxis_id": {
             "title": "Praxis Id",
             "type": "integer"
@@ -6187,8 +6176,7 @@
           "value",
           "praxis_id",
           "praxis_title",
-          "task_point_value",
-          "points_earned"
+          "task_point_value"
         ],
         "title": "VoteOnMinePayload",
         "type": "object"
