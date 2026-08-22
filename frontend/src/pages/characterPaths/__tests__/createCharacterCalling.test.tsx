@@ -13,9 +13,15 @@
  *     the real rule — nudge, don't explain.
  *
  * The seam is the rendered markup of the two skins, because that is where both
- * decisions live: `useCreateCharacter` is untouched by either half. The desktop
- * skin is not exported, so it is reached through the page's own dispatch —
- * `useFormFactor` answers 'desktop' under `renderToStaticMarkup` (no matchMedia).
+ * decisions live: `useCreateCharacter` is untouched by either half.
+ *
+ * SINCE #2346 BOTH SKINS ARE BRANCHES OF ONE ARCHETYPE, so the form factor is
+ * mocked rather than inferred. It used to be enough that `useFormFactor` answers
+ * 'desktop' under `renderToStaticMarkup` (no matchMedia) and that the phone skin
+ * was a separate module taking `state` as a prop. Now
+ * `DefaultCreateCharacter` reads the hook itself and picks the branch, so
+ * rendering it un-mocked would give BOTH mounts the desktop column and quietly
+ * assert the same markup twice.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -25,15 +31,23 @@ import '../../../i18n'
 import type { CreateCharacterState } from '../useCreateCharacter'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 
-const hoisted = vi.hoisted(() => ({ state: null as CreateCharacterState | null }))
+const hoisted = vi.hoisted(() => ({
+  state: null as CreateCharacterState | null,
+  formFactor: 'desktop' as 'mobile' | 'desktop',
+}))
 
 vi.mock('../useCreateCharacter', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../useCreateCharacter')>()),
   useCreateCharacter: () => hoisted.state,
 }))
 
+vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../hooks/useFormFactor')>()),
+  useFormFactor: () => hoisted.formFactor,
+}))
+
 const CreateCharacter = (await import('../../CreateCharacter')).default
-const DefaultCreateCharacter = (await import('../mobileArchetypes/DefaultCreateCharacter')).default
+const DefaultCreateCharacter = (await import('../archetypes/DefaultCreateCharacter')).default
 
 /** The size both pickers draw the mark at — a disc's 12px is below the floor the marks read at. */
 const PICKER_SIGIL = 18
@@ -78,12 +92,18 @@ function render(element: ReactElement): { html: string; text: string } {
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 
-/** The mobile skin takes the state as a prop; the desktop skin is reached through the page. */
+/**
+ * The two mounts. Each pins the form factor, because one archetype now draws
+ * both branches (#2346) — the phone one directly, the desktop one through the
+ * page's own dispatch, which is still the only way to reach it un-exported.
+ */
 function renderMobile(state: CreateCharacterState) {
+  hoisted.formFactor = 'mobile'
   return render(<DefaultCreateCharacter state={state} />)
 }
 
 function renderDesktop(state: CreateCharacterState) {
+  hoisted.formFactor = 'desktop'
   hoisted.state = state
   return render(<CreateCharacter />)
 }

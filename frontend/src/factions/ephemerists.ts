@@ -14,6 +14,7 @@ import { lazyArchetype } from './lazyArchetype'
 const EphemeristsAvatar = lazyArchetype(() => import('../components/avatar/EphemeristsAvatar'))
 const EphemeristsBackdrop = lazyArchetype(() => import('../components/backdrop/EphemeristsBackdrop'))
 const EphemeristsComment = lazyArchetype(() => import('../components/comments/voices/EphemeristsComment'))
+const EphemeristsCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EphemeristsCreateCharacter'))
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
 const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
@@ -54,6 +55,12 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionHero: () => EphemeristsFactionHero,
   factionBody: () => EphemeristsFactionBody,
   profileBody: () => EphemeristsProfileBody,
+  // The first registration on `createCharacter` (#2347), landing in the same PR
+  // as the surface itself — the manifest forbids merging a slot no faction
+  // fills. The slug this dispatches on is the calling being PICKED, not a
+  // loaded record, so the page reskins to this plate live and returns to the
+  // Default the moment the pick is cleared.
+  createCharacter: () => EphemeristsCreateCharacter,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFieldDesk: () => EphemeristsFieldDesk,
 }

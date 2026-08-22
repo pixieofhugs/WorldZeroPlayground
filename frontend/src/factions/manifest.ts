@@ -65,6 +65,7 @@ import type { ProfileBodyProps } from '../pages/characterProfile/FactionProfileB
 import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../pages/editPraxis/useEditPraxis'
+import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 
@@ -127,6 +128,23 @@ export interface FactionManifest {
   readonly factionHero?: Lazy<ComponentType<FactionHeroProps>>
   readonly factionBody?: Lazy<Stateful<FactionDetailState>>
   readonly profileBody?: Lazy<ComponentType<ProfileBodyProps>>
+  /**
+   * Character creation (#2346). ONE responsive component per faction — each
+   * archetype reads `useFormFactor()` itself, the way `editPraxis` and the
+   * profile bodies do. This is NOT the retired mobile-only
+   * `mobileCreateCharacter` coming back under a new name; see the retirement
+   * note below for what that slot was and why it went.
+   *
+   * The slug this dispatches on is not the viewer's faction and not the
+   * character's — no character exists yet. It is `factionSlug` out of
+   * {@link CreateCharacterState}, the calling being picked RIGHT NOW, so the
+   * page reskins live as the pick changes and returns to Default when it is
+   * cleared. `''` means born unaffiliated and resolves to the Default (na)
+   * archetype, which is also where an unregistered slug lands: `albescent` is
+   * pickable here since #2399 and deliberately renders Default, because every
+   * Albescent registration is a wrapper rather than a skin (ADR-0027, #2401).
+   */
+  readonly createCharacter?: Lazy<Stateful<CreateCharacterState>>
 
   // ─── Duel surfaces ─────────────────────────────────────────────────────────
   // ONE responsive component per faction, both form factors (#1313): the seven
@@ -210,6 +228,17 @@ export interface FactionManifest {
   // render the Default directly. A future faction skin for one of them adds the
   // field back with a registration in the same commit — a slot no faction fills
   // is not a seam, it is a lookup that always returns the same answer.
+  //
+  // #2346 IS THAT COMMIT, for the first of the four, and it is worth reading
+  // what it did and did not restore. `createCharacter` above is a NEW,
+  // RESPONSIVE surface, not `mobileCreateCharacter` un-retired: the mobile-only
+  // slot stays dead and `mobileArchetypes/DefaultCreateCharacter` was folded
+  // into `archetypes/DefaultCreateCharacter` rather than left as a second
+  // mobile path, so the page has one archetype per faction at both widths like
+  // every collapse above it. And it landed WITH its first registrations
+  // (ephemerists, #2347) in the same PR, which is the whole of the rule this
+  // note states — the chassis was never merged with an empty slot. The other
+  // three remain retired and unclaimed.
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
 }
 
@@ -242,6 +271,7 @@ export const SURFACE_KEYS = [
   'factionHero',
   'factionBody',
   'profileBody',
+  'createCharacter',
   'duelSeal',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
