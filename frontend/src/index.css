@@ -880,6 +880,50 @@
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, var(--faction-default-stop-4), var(--faction-default-stop-6), var(--faction-default-stop-7));
 }
 
+/* ── THE SHEET, AS A MATCHED TRIPLE (#2497, epic #2496) ──
+   The na card ground — the paint that was `background: --faction-default-card-bg`
+   at eight `Default*` mounts — said once, as a background LAYER LIST rather than
+   as a colour. `utils/factions.ts` spreads it through `factionSheet()`; nothing
+   reads these three names by hand.
+
+   IT IS A TRIPLE AND MAY NOT BE COLLAPSED TO ONE TOKEN. A background list is a
+   list in three properties at once — image, blend mode, clip — and CSS CYCLES
+   the short ones rather than padding them. Albescent's prism (#2499) is ONE
+   layer in light and FIVE in dark, so a lone `-sheet` token with a hardcoded
+   `background-blend-mode: multiply` beside it would hand dark's five radials one
+   blend value and cycle it: right by accident in light, wrong in dark. The three
+   move together or they do not move.
+
+   `-sheet-clip` IS `padding-box` AND THAT IS LOAD-BEARING. Every consumer writes
+   `background-clip: var(--…-sheet-clip), border-box`, so the sheet's own layers
+   stop at the padding box while the BACKGROUND COLOUR — clipped by the list's
+   bottom-most value, per CSS Backgrounds 3 §3.11 — still runs out to the border
+   box. That is what keeps the dark card byte-identical: `--faction-default-card-line`
+   is `rgba(255,255,255,0.14)` at night, a TRANSLUCENT hairline with the sheet
+   colour showing through it, and clipping the colour to the padding box would put
+   the page behind it instead. It is also what lets `DefaultTaskCard` append its
+   spectrum border as one more `border-box` layer and stay arity-correct however
+   many layers the sheet grows to.
+
+   NA DECLARES TODAY'S EXACT VALUE, so its render is byte-identical by
+   construction rather than by inspection: an opaque `card-bg` → `card-bg` ramp
+   over a `card-bg` colour is the flat sheet it replaces, `normal` blends nothing.
+   `factionSheetIsFlat` in `utils/__tests__/defaultSheetToken.test.ts` holds that.
+
+   ONE DECLARATION, BOTH CASCADES, and that is not a shortcut past "authored per
+   theme": the value composes from `--faction-default-card-bg`, which the dark
+   block rebinds, so `:root, [data-theme]` re-resolves it at night on its own —
+   the same argument `-total-rainbow` above makes, and the copy #1661 deleted.
+   na's two themes really are one composition. The light/dark ASYMMETRY the epic
+   rules on (#2496 ruling 9) is Albescent's, and Albescent's override is what gets
+   authored twice. */
+:root, [data-theme] {
+  --faction-default-card-sheet:
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: normal;
+  --faction-default-card-sheet-clip: padding-box;
+}
+
 :root {
   /* ── The edit-praxis COMPOSER's own tiers (#1181, epic #1179, ADR-0065) ──
      The card set above gives the composer its SHEET (--faction-default-card-bg),
@@ -5907,6 +5951,44 @@
   content: "";
   z-index: 1;
   background-size: 220px 100%;
+}
+
+/* ── `.spectrum-frame`'s TWO SIBLINGS (#2497, epic #2496) ──
+   The na spectrum shows up in three geometries and `.spectrum-frame` above only
+   ever named one of them, the ring. The other two were unclassed inline styles
+   at seventeen mounts across the ten `Default*` files Albescent wears, which is
+   why the design canvas reached for a DOM WALK to animate them: with no selector
+   to hang a rule on, there was nothing else to reach for. These two classes are
+   that selector, and #2500 is what will animate them.
+
+   • `.spectrum-rule` — the LINEAR cut: bands, hairlines, dividers, the sheet-head
+     stripe. `--faction-default-rainbow`, the 90deg seven-stop ramp.
+   • `.spectrum-dial` — the CONIC cut: the points ring and the score total's
+     annulus. `--faction-default-rainbow-conic`, the smooth wheel, which is what a
+     ring needs and what a linear ramp reads as mud on (see `factionFill`'s
+     shape note — the spectrum comes cut for its geometry).
+
+   EACH CARRIES EXACTLY THE PAINT ITS MOUNT HAD INLINE AND NOTHING ELSE. Height,
+   opacity, radius and position stay at the call site: those are per-mount
+   GEOMETRY (the profile band is 3px at 0.7, the task-detail rules are 1–2px at
+   0.55) and folding them in here would repaint seventeen surfaces to save a
+   line. The one thing every mount agreed on is the ramp, so the ramp is the one
+   thing that moved.
+
+   THE INDIRECTION IS `.spectrum-frame`'s, verbatim: an overridable
+   `--spectrum-*-image` with the na ramp as its fallback. That is the seam a
+   faction kit dressing the surface suppresses through (`railFaceVars` sets
+   `--spectrum-frame-image: none` for a member), and a per-mount override needs no
+   new selector to exist. Both cascades — the stops flip on their own, so no dark
+   half is written here.
+
+   DECORATIVE, so no contrast ratio is owed; every mount is `aria-hidden` chrome
+   beside type that carries its own ink. */
+.spectrum-rule {
+  background-image: var(--spectrum-rule-image, var(--faction-default-rainbow));
+}
+.spectrum-dial {
+  background-image: var(--spectrum-dial-image, var(--faction-default-rainbow-conic));
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
