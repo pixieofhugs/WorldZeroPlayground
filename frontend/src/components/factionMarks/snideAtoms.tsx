@@ -52,6 +52,11 @@ export const WALL_PLAIN =
  * the wall (#2066). The two ends of that rule are measured against all four of
  * this ground's readings (both ramp stops and both washed corners, both themes)
  * in `utils/__tests__/factionContrast.test.ts`.
+ *
+ * THAT RULE WAS CHALLENGED AND HELD (#2333). #2269's option 1 proposed
+ * collapsing the composer's register onto `-card-*`; the clause is withdrawn.
+ * The two families flip differently, and the collapse measures 1.56:1 on
+ * `-composer-alarm`.
  */
 export const WALL = [
   "repeating-linear-gradient(115deg, var(--faction-snide-note-grain) 0 2px, transparent 2px 7px)",

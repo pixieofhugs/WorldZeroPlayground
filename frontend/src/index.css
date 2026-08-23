@@ -1223,7 +1223,13 @@
      `factionContrast.test.ts`, SNIDE_WALL_PAIRS. The composer is the surface
      that gates this ground, because it is the only one of the three carrying
      form fields and placeholder text, and it is tall enough to put its footer
-     inside the pink corner. */
+     inside the pink corner.
+
+     CHALLENGED AND HELD (#2333). #2269's option 1 read "same surface" as "same
+     tokens" and would have collapsed this 19-token register onto `-card-*`; the
+     clause is withdrawn. Same ground, different tier: `-composer-*` FLIPS with
+     the sheet, `-card-*` is pinned near-black for the slabs pasted ON the wall,
+     and `-composer-alarm` collapsed to `-card-alarm` measures 1.56:1 here. */
   --faction-snide-composer-sheet: #f4f1e8; /* the invite dropdown's stock (FLIPS) */
   --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
   /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
