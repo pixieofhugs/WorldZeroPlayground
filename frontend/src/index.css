@@ -6109,9 +6109,21 @@
   mix-blend-mode: screen;
   opacity: 0.2475;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .alb-rainbow { animation: alb-drift 18s linear infinite; }
-}
+/* THE DRIFT ITSELF IS IN `src/motion.ornament.css` (#2498), with the other eight
+   Albescent ornament motions. Only the keyframe stayed, because `.spectrum-frame
+   ::before` reaches `alb-drift` from that sheet across a chunk boundary and this
+   is the entry sheet the reference resolves against (#2404).
+
+   ponytail: the drift still walks `background-position`, which epic #2496's
+   technique ruling retires everywhere else in this pass. It is left because the
+   conversion cannot pay here: `alb-drift`'s other consumer IS a pseudo-element
+   (`.spectrum-frame::before`), so it cannot grow the pre-painted child the idiom
+   needs without a real span in the rail's markup — the keyframe therefore cannot
+   retire, and converting this half alone adds a second keyframe plus a child
+   while leaving the walk standing on the rail. It is also the cheaper walk of
+   the two: a 220px LENGTH tile under `background-repeat: repeat`, not a gradient
+   re-rasterised at element width. Upgrade path: #2500 is already opening these
+   mounts, so convert both consumers together once the rail's ring is a span. */
 
 /* The other half of the tell (#842). The design draws the drift AND three faint
    gold ✦ sparks scattered over the sheet; #821 shipped only the drift, so the
@@ -6261,10 +6273,6 @@
    a plain card costs no rules and this sheet stays a drawing rather than a
    decision. THE EDGE NEVER BRANCHES: it is chrome, and since #2407 it is the
    shared `.spectrum-frame` ring five other mounts wear. */
-@keyframes alb-task-drift {
-  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
-  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
-}
 .alb-task-edge,
 .alb-task-aurora {
   position: absolute;
@@ -6323,10 +6331,6 @@
     radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 100%),
     radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 100%);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
-}
-
 /* Albescent — the TASK DETAIL's tell (#1038, ADR-0048). The third surface to
    unfreeze, same rule as the first two: `DefaultTaskDetail` unchanged, with
    light washed over it. The design's own header states the thesis — "Albescent's
@@ -6358,20 +6362,6 @@
      inverted form of the design's `reduce → none`. Stilled, the page is a static
      wash and a static prism ring — the tell is dimmer, but nothing about it
      carries meaning through motion alone. */
-@keyframes alb-detail-drift {
-  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
-  50% { transform: translate3d(5%, 4%, 0) scale(1.24) rotate(7deg); }
-}
-@keyframes alb-detail-wheel {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-@keyframes alb-detail-sheen {
-  0%, 100% { transform: translateX(-18%); }
-  50% { transform: translateX(18%); }
-}
-@keyframes alb-detail-spin { to { transform: rotate(360deg); } }
-
 .alb-detail {
   position: relative;
   max-width: 1200px;
@@ -6506,13 +6496,6 @@
   text-align: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
-  .alb-detail-foil::before { animation: alb-detail-wheel 44s linear infinite; }
-  .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
-  .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
-}
-
 /* Albescent — the PRAXIS DETAIL's tell (#1140, epic #1085, ADR-0048). The fourth
    surface to unfreeze, and the same rule as the three before it: the shared
    `DefaultPraxisDetail` page unchanged, with light washed over it. The design's
@@ -6550,15 +6533,6 @@
 
    The 18px radius tracks `DefaultPraxisDetail`'s own sheet corner. If that
    changes, this follows. */
-@keyframes alb-praxis-drift {
-  0%, 100% { transform: translate3d(-4%, -5%, 0) scale(1.16) rotate(0deg); }
-  50% { transform: translate3d(4%, 5%, 0) scale(1.26) rotate(-6deg); }
-}
-@keyframes alb-praxis-wheel {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
 .alb-praxis {
   isolation: isolate;
 }
@@ -6652,11 +6626,6 @@
   opacity: 0.72;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
-  .alb-praxis-ring::before { animation: alb-praxis-wheel 58s linear infinite; }
-}
-
 /* Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth
    surface to unfreeze, and the same rule as the four before it: the shared
    chassis an unaffiliated player sees, with light washed over it. Strip these two
@@ -6700,11 +6669,6 @@
 
    • MOTION IS OPT-IN, gated on `no-preference`. Stilled, the card is a static
      wash and a static edge; nothing carries meaning through motion alone. */
-@keyframes alb-feed-drift {
-  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
-  50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
-}
-
 .alb-feed {
   position: relative;
   isolation: isolate;
@@ -6757,10 +6721,6 @@
    `--radius-xl`, so the two now agree — the literal is kept because it is
    measured on the border box the `-1px` above restores, and `inherit` would take
    the padding box's corner instead. */
-
-@media (prefers-reduced-motion: no-preference) {
-  .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
-}
 
 /* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
    are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's
