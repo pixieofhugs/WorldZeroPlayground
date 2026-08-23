@@ -8424,9 +8424,9 @@
      • the platform's reduce-motion setting, which stills it outright — WCAG's
        own glossary allows a mechanism "relied upon to be provided by either
        the platform or by user agents";
-     • hovering the card, or focusing anything in it, which pauses both turns
-       in place. That one is also why the CTA's word cannot change under a
-       cursor or a focus ring on its way to a click.
+     • hovering the card, or focusing anything in it, which pauses every turn
+       inside it in place. That one is also why the CTA's word cannot change
+       under a cursor or a focus ring on its way to a click.
    `animation-play-state` is a pause proper, not a reset: the frame showing
    stays showing and the cycle resumes where it stopped.
 
@@ -8439,12 +8439,30 @@
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .eph-turn-points {
-    animation: eph-turn 6.5s ease-in-out infinite;
-  }
-  /* Half a second longer, so the card never changes both words at once. */
-  .eph-turn-cta {
-    animation: eph-turn 7s ease-in-out infinite;
+  /* ONE RULE, ONE PERIOD, A PHASE PER LABEL (#2392, closing #2148's own
+     acceptance line).
+
+     This was two rules — `.eph-turn-points` at 6.5s and `.eph-turn-cta` at 7s,
+     alternated by the label's ordinal. Two rules stagger exactly two labels, so
+     the score stamp's five turned in three groups, and neither period was in
+     the 9–11s band #2148 asked for. A period plus a per-instance phase does for
+     N what a second rule did for two.
+
+     `--eph-turn-period` is declared HERE and nowhere else, so retuning the
+     clock is one number in one place — the component's phase is a fraction OF
+     it (see `EphemeristsGloss`), not a second literal that could drift out of
+     step with it.
+
+     THE PHASE IS NEGATIVE, and that is not a detail. A positive delay would
+     leave a label sitting at its normal opacity 1 until the clock started and
+     then snap it to the keyframes' 0% — a visible flick, worse the later the
+     label. A negative delay starts the animation already part-way through, so
+     every label is mid-plateau at first paint and nothing moves that should
+     not. */
+  .eph-turn {
+    --eph-turn-period: 10s;
+    animation: eph-turn var(--eph-turn-period) ease-in-out infinite;
+    animation-delay: var(--eph-turn-phase, 0s);
   }
   .eph-turn-scope:hover .eph-turn,
   .eph-turn-scope:focus-within .eph-turn {

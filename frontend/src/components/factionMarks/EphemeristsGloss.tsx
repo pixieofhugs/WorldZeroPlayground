@@ -145,33 +145,39 @@ export function nextTurn(current: number, count: number): number {
 }
 
 /**
- * The two clocks index.css declares, and how a surface spreads its labels over
- * them.
+ * WHEN ONE LABEL'S TURN FALLS, as a fraction of the clock every label shares.
  *
- * `.eph-turn-points` runs 6.5s and `.eph-turn-cta` 7s, so two adjacent labels
- * never change on the same beat. `clock` is the label's ORDINAL on its surface,
- * not its meaning — a hero stat caption taking the "cta" rule is the second
- * label on that surface and nothing more.
+ * There used to be two clocks — `.eph-turn-points` at 6.5s and `.eph-turn-cta`
+ * at 7s — alternated by ordinal, which staggers exactly two labels. The score
+ * stamp has five. #2392 collapsed them into one rule with a period and a
+ * per-instance `animation-delay`, so the stagger is arithmetic HERE and the
+ * period is one number in `index.css`.
  *
- * ponytail: TWO CLOCKS, NOT N. A surface with three or more turning labels
- * reuses a clock, so its first and third labels do share a beat (they turn to
- * different scripts, which is what keeps it from reading as a slot machine).
- * #2148 asks for a ~9–11s period and a per-instance phase; both are one rule in
- * `index.css` — `animation: eph-turn var(--eph-turn-period, 10s) …` plus an
- * `animation-delay: var(--eph-turn-phase, 0s)` — after which this prop becomes
- * two inline custom properties and no class at all. index.css is the style
- * agent's file, so that rung is deferred rather than guessed at here.
+ * THE STEP IS IRRATIONAL ON PURPOSE: −0.382 of a period, the golden-ratio
+ * conjugate, rather than `period / count`. A label does not know how many
+ * siblings it has, and an irrational step keeps successive ordinals distinct
+ * and well spread for ANY count — the stamp's five land 0, 3.82, 7.64, 1.46 and
+ * 5.28 seconds into a 10s cycle, no two nearer than 1.4s — where a rational one
+ * would fold ordinals back onto each other the moment a surface grew.
+ *
+ * It is NEGATIVE so the clock starts part-way in rather than after a wait: a
+ * positive delay would hold the label at opacity 1 and then snap it to the
+ * keyframes' 0%. See the rule in `index.css`.
+ *
+ * The value is a `calc` over the period token rather than a computed number of
+ * seconds so that retuning the period retunes the stagger with it; a literal
+ * here would be a second copy of the clock, free to drift out of step.
  */
-const CLOCKS = ["points", "cta"] as const;
-export const clockFor = (ordinal: number): string => CLOCKS[ordinal % CLOCKS.length];
+const phaseFor = (ordinal: number): string =>
+  `calc(var(--eph-turn-period) * ${(-0.382 * ordinal).toFixed(3)})`;
 
 /**
  * ONE TURNING LABEL.
  *
  * `english` is the live catalogue string the surface would otherwise have
  * printed — it stays the accessible name and the resting frame. `ordinal` is
- * the label's position among the turning labels of its surface; see
- * {@link clockFor}.
+ * the label's position among the turning labels of its surface, and all it
+ * decides is WHEN this one turns; see {@link phaseFor}.
  *
  * The stack needs an ancestor carrying `eph-turn-scope` for WCAG 2.2.2's
  * pause-on-hover/focus mechanism, which is a class on the surface's own
@@ -193,9 +199,16 @@ export default function EphemeristsGloss({
     <>
       <span className="sr-only">{english}</span>
       <span
-        className={`eph-turn eph-turn-${clockFor(ordinal)}`}
+        className="eph-turn"
         aria-hidden="true"
-        style={{ display: "grid", textAlign: "center", whiteSpace: "nowrap" }}
+        style={
+          {
+            display: "grid",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+            "--eph-turn-phase": phaseFor(ordinal),
+          } as CSSProperties
+        }
         onAnimationIteration={() => setFrame((showing) => nextTurn(showing, frames.length))}
       >
         {frames.map((cast, index) => (
