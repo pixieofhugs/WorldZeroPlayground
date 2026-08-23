@@ -53,6 +53,22 @@ const RETIRED = [
   "background-image:var(--faction-default-rainbow)",
 ];
 
+/**
+ * The BASE rule for a class — the one whose prelude is EXACTLY the selector.
+ *
+ * `ruleBodies` matches by substring, so `.alb-desk .spectrum-rule` counts as a
+ * `.spectrum-rule` rule to it. That dresser scope arrived with #2505 and it is
+ * the seam this class was built for — #2497's own docblock names it ("a dresser
+ * reaches them with `.alb-x .spectrum-rule`"). What the claim below is really
+ * about is the base rule, which every mount reads and which therefore may
+ * declare only the ramp; an ancestor-scoped rule repaints nothing else.
+ */
+function baseRuleBodies(css: string, selector: string): string[] {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, prelude]) => prelude.trim() === selector)
+    .map(([, , body]) => body);
+}
+
 describe("the two classes carry the paint their mounts had inline (#2497)", () => {
   const cases = [
     [".spectrum-rule", "var(--faction-default-rainbow)"],
@@ -61,7 +77,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
 
   for (const [selector, ramp] of cases) {
     it(`${selector} paints ${ramp} and nothing else`, () => {
-      const bodies = ruleBodies(CSS, selector);
+      const bodies = baseRuleBodies(CSS, selector);
       expect(bodies, `${selector} is not declared in index.css`).toHaveLength(1);
       const declarations = bodies[0]
         .split(";")
@@ -75,7 +91,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
   }
 
   it("keeps the conic off the linear cut — a 7-stop ramp is mud on a ring", () => {
-    expect(ruleBodies(CSS, ".spectrum-rule")[0]).not.toContain("conic");
+    expect(baseRuleBodies(CSS, ".spectrum-rule")[0]).not.toContain("conic");
   });
 });
 
