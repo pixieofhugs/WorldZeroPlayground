@@ -619,6 +619,14 @@
    working for free — `--spectrum-frame-image: none` on a member reaches the
    parent, and the child inherits the `none`.
 
+   #2499 HANGS THE NINTH ON IT AND RETIRES A WALK. `.alb-praxis-card-edge` is
+   the Albescent praxis card's ring, which until then was `.spectrum-frame` plus
+   `data-spectrum-drift` — the RAIL's ring, walking the rail's 220px tile with
+   `alb-drift`. The card underneath it grew the same 3px spectrum border the task
+   card wears, so its ring had to become the task card's ring; joining this list
+   is what makes that true of the motion as well as the paint, and it leaves the
+   rail as the last `background-position` walk in the kit.
+
    #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
    the epic's technique ruling taken at its word. `.alb-composer-edge` is the
    edit-praxis sheet's ring and states nothing anywhere — it takes the shared
@@ -631,6 +639,7 @@
 @keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge::before,
+  .alb-praxis-card-edge::before,
   .alb-detail-edge::before,
   .alb-praxis-edge::before,
   .alb-feed-edge::before,
@@ -655,42 +664,45 @@
   }
 }
 
-/* ── Albescent — the nine ornament motions the five washed surfaces carry
-   (#2498). The sheet's own candidate list above named "the Albescent drifts";
-   this is that list, cashed. Each passes the test the list states: every
-   consumer treats the motion as ornament, and the un-animated frame is the one
-   a reduced-motion reader already gets — index.css says so in words at each
-   mount ("stilled, the page is a static wash and a static prism ring; nothing
-   carries meaning through motion alone").
+/* ── Albescent — the ornament motions the washed surfaces carry (#2498). The
+   sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named "the
+   Albescent drifts"; this is that list, cashed. Each passes the test the list
+   states: every consumer treats the motion as ornament, and the un-animated
+   frame is the one a reduced-motion reader already gets.
 
-   ONLY THE ANIMATION TRAVELLED. Every one of these nine has an UNGATED twin in
-   index.css holding its resting form, and the resting form is the animation's
-   own first frame: `.alb-task-aurora::before` rests at
-   `translate3d(-6%, -4%, 0) scale(1.12)`, which is `alb-task-drift`'s 0%, and
-   the three other auroras and the two wheels do the same. So a stranded sheet
-   is not an approximation of the still frame, it IS the still frame, and there
-   is no jump at the moment the sheet lands.
+   ONLY THE ANIMATION TRAVELLED. Every one has an UNGATED twin in index.css
+   holding its resting form, and the resting form is the animation's own first
+   frame, so a stranded sheet is not an approximation of the still frame, it IS
+   the still frame, and there is no jump when the sheet lands.
 
-   `.alb-rainbow` RUNS A KEYFRAME THAT STAYED BEHIND, and that is deliberate for
-   the reason stated at `.spectrum-frame::before` above: `alb-drift` is reached
-   from this sheet across the chunk boundary already, keyframe names are
-   document-global, and index.css is the entry sheet the reference always
-   resolves against. Its `ponytail:` note in index.css records why the walk
-   itself is not converted to a transform in this pass.
+   FIVE OF THE NINE RETIRED WITH THEIR SURFACES (#2499). `alb-task-drift`,
+   `alb-detail-drift`, `alb-praxis-drift` and `alb-feed-drift` each breathed one
+   of the four aurora overlays; `alb-detail-sheen` passed a diagonal near-white
+   sweep across the task detail. All five drawings are now ONE static prism
+   ground on the na card's own sheet (`.alb-prism` in index.css), so there is
+   nothing left to breathe — a background layer has no `::before` to translate.
+   The sweep in particular did not disappear: it is the light cascade's whole
+   ground, standing still, which is what the design board locked. `.alb-rainbow`
+   went with them and took the last non-rail consumer of `alb-drift`.
+
+   That is also why the rest frame had to become PAINT. These five were the only
+   reason an Albescent surface looked different with the sheet delivered than
+   without it; with them gone the ground carries the identity, and the ground may
+   never defer. index.css deepens it under `prefers-reduced-motion: reduce`
+   instead (epic ruling 6).
 
    `.alb-spark` IS THE ONE THAT MAY NEVER FOLLOW, and it is the only Albescent
-   animation index.css still runs. Its gate does not merely add motion — it
-   drops the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint
-   may not defer, so the opacity has to stay in index.css; with the animation
-   deferred and the sheet stranded the spark would be an invisible mark rather
-   than a still one. `__tests__/motionSplit.test.ts` asserts both halves of that.
+   animation index.css still runs. Its gate does not merely add motion — it drops
+   the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint may not
+   defer, so the opacity has to stay in index.css; with the animation deferred and
+   the sheet stranded the spark would be an invisible mark rather than a still
+   one. `__tests__/motionSplit.test.ts` asserts both halves of that.
 
    TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
    were byte-for-byte the same declaration — a centred element turning through
    360deg — differing only in the duration their consumers pass, which lives on
-   the `animation` shorthand and not in the keyframe. Now that both consumers
-   sit in this one block, one name serves them, the same way `alb-edge-travel`
-   serves five above.
+   the `animation` shorthand and not in the keyframe. One name serves them, the
+   same way `alb-edge-travel` serves nine above.
 
    `alb-detail-spin` LOST ITS SURFACE FOR THE SAME REASON, and is `alb-spin`
    (#2501). A bare 360deg turn is the most general shape on this sheet; the score
@@ -698,41 +710,15 @@
    says `detail` reads as a mistake even when it is the byte-identical
    de-duplication the two rules above already are. One keyframe, two rims, two
    durations on their own shorthands. ── */
-@keyframes alb-task-drift {
-  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
-  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
-}
-@keyframes alb-detail-drift {
-  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
-  50% { transform: translate3d(5%, 4%, 0) scale(1.24) rotate(7deg); }
-}
-@keyframes alb-praxis-drift {
-  0%, 100% { transform: translate3d(-4%, -5%, 0) scale(1.16) rotate(0deg); }
-  50% { transform: translate3d(4%, 5%, 0) scale(1.26) rotate(-6deg); }
-}
-@keyframes alb-feed-drift {
-  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
-  50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
-}
 @keyframes alb-wheel {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
-@keyframes alb-detail-sheen {
-  0%, 100% { transform: translateX(-18%); }
-  50% { transform: translateX(18%); }
-}
 @keyframes alb-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
-  .alb-rainbow { animation: alb-drift 18s linear infinite; }
-  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
-  .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
   .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
-  .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
   .alb-detail-ring::before { animation: alb-spin 46s linear infinite; }
-  .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
   .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
-  .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
   /* Albescent's faction page (#2504). The labyrinth turns; the mark itself is
      `FactionSigil`'s and this rule never names it, so na's swept ring on a
      future unaffiliated page stays still. `alb-spin` rather than a
