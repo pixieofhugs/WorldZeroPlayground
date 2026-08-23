@@ -6031,6 +6031,11 @@
    use, so the two pages rule their headings identically instead of by
    coincidence. */
 .faction-plate {
+  /* The containing block for one optional child: the ornament
+     `DefaultFactionBody` mounts in each region when a dresser hands it one
+     (#2504). na hands it nothing, and this line then costs a plate nothing — a
+     box with no absolutely positioned descendant does not move for it. */
+  position: relative;
   background-color: var(--faction-default-card-bg);
   background-image: var(--faction-default-card-sheet);
   background-blend-mode: var(--faction-default-card-sheet-blend);
@@ -6053,12 +6058,6 @@
   border-radius: 1px;
   opacity: 0.55;
 }
-/* The plate is the containing block for one optional child: the ornament
-   `DefaultFactionBody` mounts in each region when a dresser hands it one
-   (#2504). na hands it nothing and this line then costs a plate nothing —
-   `position: relative` on a box with no absolute descendant changes no pixel. */
-.faction-plate { position: relative; }
-
 /* ── THE na FRONTISPIECE (#2504, epic #2496 ruling 11) ──
    The eighth faction hero, and the fall-through: `pickVariant` had no default
    for `factionHero`, so a faction that registered none got `PageTitle` plus a
