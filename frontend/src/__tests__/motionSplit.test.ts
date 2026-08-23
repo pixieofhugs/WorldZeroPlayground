@@ -93,8 +93,8 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-profile-edge::before':
-    "the five Albescent spectrum edges' travelling ramp (#2498). Two tiles of " +
+  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-profile-edge::before, .alb-plate-edge::before':
+    "the six Albescent spectrum edges' travelling ramp (#2498, +#2504). Two tiles of " +
     'the ring\'s own `background-image: inherit`, six mount-widths wide inside ' +
     "index.css's `overflow: hidden`, slid by transform because " +
     '`background-position` repaints every frame on the main thread. Declared ' +

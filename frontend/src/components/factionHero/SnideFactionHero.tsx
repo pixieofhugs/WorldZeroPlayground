@@ -1,3 +1,4 @@
+import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 
@@ -65,12 +66,7 @@ export default function SnideFactionHero({
   members,
   tasks,
   praxes,
-}: {
-  name: string;
-  members: number;
-  tasks: number;
-  praxes: number;
-}) {
+}: FactionHeroProps) {
   const stats = [
     { value: members, label: i18n.t("feed:factionHero.snide.stats.members") },
     { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
