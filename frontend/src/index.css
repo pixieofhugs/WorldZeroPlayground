@@ -411,7 +411,14 @@
      NOT a read of --faction-default-on-accent below, whose value happens to
      match. That one is measured against na's card ACCENT (#1a1209, a near-black
      ink used as a surface); this one is measured against the spine hue. Two
-     surfaces that agree on an ink today are still two questions. */
+     surfaces that agree on an ink today are still two questions.
+
+     Why the NEUTRAL and not the rainbow, when a `background:` is where ADR-0039
+     says the ramp is expressible: the chip has a name printed on it, which is
+     factionFill's `pill` question, and `pill` already answers it — no single ink
+     is legible across seven stops, so an na label never sits on the ramp. It
+     also labels a caret drawn in `border-color`, a scalar that is already the
+     neutral, and a rainbow chip over a grey caret reads as two people. */
   --faction-default-on-fill: #ffffff; /* #6b6a7a — ink only 3.56:1; white 5.29:1 */
 
   /* ── Text on the comment-composer ACCENT (#924) ── The AA-legible ink for the
