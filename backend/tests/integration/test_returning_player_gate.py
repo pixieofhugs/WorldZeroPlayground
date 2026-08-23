@@ -74,7 +74,8 @@ class _StubGoogleClient:
 
 
 async def _account_count(session: AsyncSession) -> int:
-    return (await session.execute(select(func.count()).select_from(Account))).scalar_one()
+    result = await session.execute(select(func.count()).select_from(Account))
+    return result.scalar_one()
 
 
 async def _tombstone(session: AsyncSession) -> AccountTombstone | None:
@@ -306,7 +307,9 @@ async def test_the_gate_reads_its_date_and_the_confirm_lands_in_a_fresh_account(
     assert await _account_count(db_session) == accounts_before + 1
     # Fresh, not the corpse.
     fresh = (
-        await db_session.execute(select(Account).where(Account.email == _RETURNING_EMAIL))
+        await db_session.execute(
+            select(Account).where(Account.email == _RETURNING_EMAIL)
+        )
     ).scalar_one()
     assert fresh.id != departed.id
     assert fresh.status is AccountStatus.active
