@@ -31,6 +31,7 @@ import SingularityScoreStamp from '../SingularityScoreStamp'
 import WowScoreStamp from '../WowScoreStamp'
 import CovenScoreStamp from '../CovenScoreStamp'
 import UaScoreStamp from '../UaScoreStamp'
+import AlbescentScoreStamp from '../AlbescentScoreStamp'
 
 /** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -273,9 +274,37 @@ describe('the stamp leaves an unscored praxis (#1444)', () => {
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
-    for (const slug of ['albescent', 'na', null]) {
+    for (const slug of ['na', null]) {
       expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp))).toBe(DefaultScoreStamp)
     }
+  })
+
+  /**
+   * Albescent claims the surface (#2501, epic #2496) — the LAST faction with a
+   * roster to do so. It used to sit in the fall-through list above, which is why
+   * this pair replaces it there rather than being added beside it.
+   */
+  it('gives Albescent its own stamp — the last roster faction to claim one (#2501)', () => {
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'albescent', DefaultScoreStamp))).toBe(
+      AlbescentScoreStamp,
+    )
+  })
+
+  it('wraps the na stamp WHOLE — the hook element and nothing else (epic ruling 4)', () => {
+    // "Upgrade, never replace." The delta is one class for the cascade to reach
+    // the two spectra through; strip it and the two stamps are byte-identical.
+    // A forked anatomy — a re-implemented row, a re-derived total, one extra
+    // span — fails here, which is the property a markup-contains check would
+    // miss.
+    const scored = praxis({
+      task_faction_slug: 'albescent',
+      is_top_for_task: false,
+      moderation_status: 'visible',
+    })
+    const props = { praxis: scored } as unknown as ScoreStampProps
+    expect(renderToStaticMarkup(<AlbescentScoreStamp {...props} />)).toBe(
+      `<div class="alb-stamp">${renderToStaticMarkup(<DefaultScoreStamp {...props} />)}</div>`,
+    )
   })
 
   it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
