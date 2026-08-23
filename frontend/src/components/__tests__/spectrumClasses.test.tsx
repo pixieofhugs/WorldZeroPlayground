@@ -33,7 +33,7 @@ import { describe, expect, it, vi } from "vitest";
 import "../../i18n";
 import { aTask } from "../../test/fixtures";
 import type { PraxisCardOut } from "../../api/praxis";
-import { ruleBodies, stripComments } from "../../utils/__tests__/cssVars";
+import { stripComments } from "../../utils/__tests__/cssVars";
 
 vi.mock("../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
