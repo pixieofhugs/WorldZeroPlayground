@@ -33,7 +33,7 @@ import { describe, expect, it, vi } from "vitest";
 import "../../i18n";
 import { aTask } from "../../test/fixtures";
 import type { PraxisCardOut } from "../../api/praxis";
-import { ruleBodies, stripComments } from "../../utils/__tests__/cssVars";
+import { stripComments } from "../../utils/__tests__/cssVars";
 
 vi.mock("../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
@@ -53,6 +53,31 @@ const RETIRED = [
   "background-image:var(--faction-default-rainbow)",
 ];
 
+/**
+ * The BASE rule for a class — the one whose prelude is EXACTLY the selector.
+ *
+ * `ruleBodies` matches by substring, so a dresser scope like `.alb-stamp
+ * .spectrum-rule` (#2501) or `.alb-desk .spectrum-rule` (#2505) counts as a
+ * `.spectrum-rule` rule to it. That is right for the cascade questions it
+ * usually answers and wrong for this one: a dresser scope is the DESIGNED use
+ * of these names — #2497's own docblock says so ("a dresser reaches them with
+ * `.alb-x .spectrum-rule`", two classes, so it wins on specificity from
+ * wherever it is written) — and it must not read as a second declaration.
+ *
+ * What still has to hold, and what this keeps holding, is that the shared class
+ * itself is declared exactly once and carries exactly its ramp. An
+ * ancestor-scoped rule repaints nothing else.
+ *
+ * #2501 and #2505 arrived at this same narrowing independently, one as
+ * `ownRule` and one as `baseRuleBodies`. One survives, and it is the one
+ * without a hand-escaped regex: an exact prelude comparison cannot drift.
+ */
+function baseRuleBodies(css: string, selector: string): string[] {
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, prelude]) => prelude.trim() === selector)
+    .map(([, , body]) => body);
+}
+
 describe("the two classes carry the paint their mounts had inline (#2497)", () => {
   const cases = [
     [".spectrum-rule", "var(--faction-default-rainbow)"],
@@ -61,7 +86,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
 
   for (const [selector, ramp] of cases) {
     it(`${selector} paints ${ramp} and nothing else`, () => {
-      const bodies = ruleBodies(CSS, selector);
+      const bodies = baseRuleBodies(CSS, selector);
       expect(bodies, `${selector} is not declared in index.css`).toHaveLength(1);
       const declarations = bodies[0]
         .split(";")
@@ -75,7 +100,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
   }
 
   it("keeps the conic off the linear cut — a 7-stop ramp is mud on a ring", () => {
-    expect(ruleBodies(CSS, ".spectrum-rule")[0]).not.toContain("conic");
+    expect(baseRuleBodies(CSS, ".spectrum-rule")[0]).not.toContain("conic");
   });
 });
 

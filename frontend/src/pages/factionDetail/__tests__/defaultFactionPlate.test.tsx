@@ -74,13 +74,17 @@ function page(slug: string): string {
 describe("the Default faction body draws real plates (#2497)", () => {
   it("dresses all three of its regions, kicker and rule included", () => {
     const html = page(DEFAULT_SLUG);
-    // Members, Tasks and Recently-completed. Counted rather than named, so a
-    // fourth region added later cannot ship undressed.
-    expect((html.match(/class="faction-plate"/g) ?? []).length).toBe(3);
-    expect((html.match(/faction-plate-kicker/g) ?? []).length).toBe(3);
+    // About, Members, Tasks and Recently-completed. Counted rather than named,
+    // so a further region added later cannot ship undressed — which is exactly
+    // what caught #2504's two: About came DOWN from the page (it was the
+    // description card `FactionDetail` drew above the body) and Champion is
+    // drawn only when there is a member to name, so this fixture's empty roster
+    // sees four here and the fifth is counted in `defaultFactionHero.test.tsx`.
+    expect((html.match(/class="faction-plate"/g) ?? []).length).toBe(4);
+    expect((html.match(/faction-plate-kicker/g) ?? []).length).toBe(4);
     // The hairline is the shared spectrum ramp, not a rule of its own — that is
     // what lets Albescent move it with the cards' bands (#2500).
-    expect((html.match(/spectrum-rule faction-plate-rule/g) ?? []).length).toBe(3);
+    expect((html.match(/spectrum-rule faction-plate-rule/g) ?? []).length).toBe(4);
   });
 
   it("keeps the plate OUTSIDE the disclosure, so a fold hides the gallery alone", () => {

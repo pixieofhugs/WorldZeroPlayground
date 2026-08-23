@@ -30,5 +30,12 @@
   },
   "mark": {
     "label": "PLACEHOLDER — START HERE"
+  },
+  "returning": {
+    "title": "Welcome back",
+    "body": "You deleted your World Zero account on {{date}}. Nothing from it carries over — your characters, praxis, votes and comments are gone. Start fresh as a new player?",
+    "note": "PLACEHOLDER — one line, set beside the tick",
+    "confirm": "Start fresh",
+    "error": "That didn't go through. Try again."
   }
 }

@@ -123,6 +123,7 @@ const composer = () =>
 const hero = () =>
   routed(
     <UaFactionHero
+      slug="ua"
       name="University of Asthmatics"
       members={214}
       tasks={9}

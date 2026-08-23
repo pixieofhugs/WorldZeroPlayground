@@ -63,14 +63,25 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // the phone too, and it never needs a second row it would have had to stay out
 // of.
 //
-// THE `editPraxis` ROW IS NEW (#1181) and, like `praxisDetail` above, it grows
-// no further — all seven skins are already registered and epic #1179 rebuilds
-// them in place rather than adding or dropping registrations. It exists because
-// retiring `mobileEditPraxis` also retired the only test that proved composer
-// dispatch at all (`mobileArchetypes/__tests__/dispatch.test.tsx`), and the
-// composer should not be the one big surface with no row here. `albescent` and
-// `na` are absent deliberately: ADR-0065 §4 says Albescent registers nothing on
-// this surface and falls through to `DefaultEditPraxis`, WHICH IS the na kit.
+// THE `editPraxis` ROW IS NEW (#1181). It exists because retiring
+// `mobileEditPraxis` also retired the only test that proved composer dispatch at
+// all (`mobileArchetypes/__tests__/dispatch.test.tsx`), and the composer should
+// not be the one big surface with no row here.
+//
+// It said it would grow no further, and #2505 grew it by one. The claim was
+// about SKINS — all seven of those are registered and epic #1179 rebuilt them in
+// place — and `albescent` is not one: it is a WRAPPER that renders
+// `DefaultEditPraxis` whole and hands it one ornament span, the same shape as
+// its `taskDetail` and `praxisDetail` rows. ADR-0065 §4's "Albescent registers
+// nothing on this surface" was true while the two kits were pixel-identical and
+// stopped being true at #2404, which ruled that Albescent's borders move. `na`
+// is still absent, and permanently: it IS `DefaultEditPraxis`.
+//
+// THE `mobileFieldDesk` ROW takes `albescent` for the same reason (#2505, epic
+// #2496 ruling 5) and on the same terms — `AlbescentFieldDesk` renders
+// `DefaultFieldDesk` whole and only sets its existing spectrum hairline
+// travelling. Ruling 5 also says what is NOT here: the desktop `/field-desk`
+// page dispatches on no faction at all, so there is no desktop row to add.
 //
 // THE `praxisDetail` ROW IS BACK, and it grows one slug per landed skin. ADR-0061
 // made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
@@ -93,7 +104,7 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
-  editPraxis: [...CORE_SIX, 'wow'],
+  editPraxis: [...CORE_SIX, 'wow', 'albescent'],
   // THE `createCharacter` ROW IS NEW (#2346/#2347) and it is the one row here
   // that is expected to GROW, one slug per landed archetype — #2348–#2353 fan
   // out in parallel behind the chassis, which is exactly the shape the note
@@ -113,8 +124,11 @@ const BESPOKE: Record<string, string[]> = {
   // than dying with the retired one. `factionBody` is what a phone renders now,
   // and it carries the same seven registrations the phone twin did — which is
   // why the deleted twin was drift rather than a second design.
-  factionBody: [...CORE_SIX, 'wow'],
-  mobileFieldDesk: [...CORE_SIX, 'wow'],
+  // `albescent` appended by #2504 — a WRAPPER over `DefaultFactionBody`, not an
+  // eighth skin: it forwards the whole na body and hands its plates one ornament
+  // node. The row is here because the dispatch is real, not because the dress is.
+  factionBody: [...CORE_SIX, 'wow', 'albescent'],
+  mobileFieldDesk: [...CORE_SIX, 'wow', 'albescent'],
   // Was `mobilePraxisCard` with this exact slug list until ADR-0067 collapsed
   // the praxis card to one responsive component per faction. The row moved to
   // the surviving surface rather than dying with the retired one: all eight

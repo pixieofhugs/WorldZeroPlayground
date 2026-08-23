@@ -128,8 +128,21 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         }}
       >
         {/* The signature hairline — the hairline, the avatar ring and the level
-            track are one mark at three scales (#1553). */}
+            track are one mark at three scales (#1553).
+
+            The RAMP is `.spectrum-rule` since #2505, the eighteenth mount of
+            #2497's linear cut and the same one-word move those seventeen made:
+            the class carries `--faction-default-rainbow` and nothing else, so
+            the paint is byte-identical and the geometry stays inline where it
+            belongs. It is here rather than in #2497 because that issue converted
+            the ten `Default*` files Albescent already wore, and this was not one
+            of them until now. The class is what lets `AlbescentFieldDesk` reach
+            this rule with `.alb-desk .spectrum-rule` and set it travelling —
+            the dresser seam #2497's own docblock names, and the reason the
+            travelling edge REPLACES this rule instead of stacking a second
+            spectrum on top of it. */}
         <span
+          className="spectrum-rule"
           style={{
             position: 'absolute',
             top: 0,
@@ -137,7 +150,6 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             right: 0,
             height: 3,
             opacity: 0.9,
-            background: 'var(--faction-default-rainbow)',
           }}
         />
 

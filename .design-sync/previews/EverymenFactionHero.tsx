@@ -7,6 +7,7 @@ import { EverymenFactionHero } from 'worldzero-frontend'
 export function UnionMasthead() {
   return (
     <EverymenFactionHero
+      slug="everymen"
       name="Everymen"
       members={302}
       tasks={47}
