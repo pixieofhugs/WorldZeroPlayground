@@ -86,6 +86,38 @@ export function loginWith(provider: AuthProvider): void {
   window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/auth/${provider}`
 }
 
+/**
+ * The one thing the returning-player consent gate is told (#2162): the date the
+ * account was deleted. A date, not a timestamp — the backend truncates it.
+ */
+export type ReturningPlayerOut = components['schemas']['ReturningPlayerOut']
+
+/**
+ * The interrupted sign-in waiting on an answer, or a rejection if there is none.
+ *
+ * NO ARGUMENTS, and there is nothing the caller could pass: the identity lives
+ * in the signed session cookie the OAuth callback parked it in, never in a URL.
+ * A 404 means the gate has nothing behind it — walked into by typing the
+ * address, or come back to after the ten-minute window lapsed — and the caller's
+ * move either way is to send the visitor to `/start` to begin a sign-in.
+ */
+export async function getReturningPlayer(): Promise<ReturningPlayerOut> {
+  const { data } = await apiGet('/auth/returning-player')
+  return data
+}
+
+/**
+ * Consent to start fresh. Sets the session cookie and clears the tombstone.
+ *
+ * Explicitly NOT a restore, and there is nothing to restore: deletion blanked
+ * the characters, praxis, votes and comments (ADR-0081). What comes back is a
+ * brand-new account on the same provider identity, so the caller must refetch
+ * `/auth/me` afterwards — this returns an acknowledgement, not a session.
+ */
+export async function startFresh(): Promise<void> {
+  await apiPost('/auth/returning-player')
+}
+
 /** Dev-only: log in as a test account without Google OAuth */
 export async function devLogin(): Promise<void> {
   await apiPost('/auth/dev-login')

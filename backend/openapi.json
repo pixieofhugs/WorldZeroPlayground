@@ -5360,6 +5360,21 @@
         "title": "RelationshipTypeEnum",
         "type": "string"
       },
+      "ReturningPlayerOut": {
+        "description": "What the consent gate is allowed to know (``GET /auth/returning-player``).\n\nOne field, and the reason there is only one is the reason this model exists\nat all. The caller has authenticated as *nobody* — they hold a signed,\nten-minute session cookie stamped by an OAuth handshake they just completed,\nand nothing else. Anything added here is a fact about an account that no\nlonger exists, disclosed on that basis.\n\nA **date, not a timestamp**: the gate's sentence is *\"you deleted your World\nZero account on 3 March\"*, and the hour and minute would be a finer signal\nbought for nothing the sentence needs. The tombstone's ``created_at`` is\ntruncated in ``services.auth.ReturningPlayerConsentRequired``, so the\nprecision is dropped before it ever reaches a response model.",
+        "properties": {
+          "deleted_on": {
+            "format": "date",
+            "title": "Deleted On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted_on"
+        ],
+        "title": "ReturningPlayerOut",
+        "type": "object"
+      },
       "SidebarOut": {
         "description": "Everything the rail's three data panels draw, in one response.\n\nOne field per panel, and nothing else. Identity is deliberately absent: the\ncharacter card reads ``user.character`` from ``/auth/me``, which ~20 call\nsites already refetch, and fattening that payload would make every one of\nthem heavier (#1349). This carries only what the panels need.\n\nRequests are a NUMBER, not a list (#1456). The rail listed them until\n#1423; under ADR-0070 the Requests queue on ``/updates`` is the only\nsurface a request can be answered on, so all that is left here is the\nbadge on the collapsed handle, the mobile bell and the mobile FieldDesk —\nthree consumers of one integer. Shipping up to a hundred hydrated feed\nitems on a page-load path to produce it was the whole of the cost.\n\nThe count is the same one ``counts.requests`` reports, so the badge and\nthe queue's card list cannot disagree — see\n:func:`services.activity_feed.get_sidebar_feed`.",
         "properties": {
@@ -5463,6 +5478,20 @@
           "active_praxes"
         ],
         "title": "SidebarOut",
+        "type": "object"
+      },
+      "StartFreshOut": {
+        "description": "Acknowledgement for ``POST /auth/returning-player``.\n\nSame posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,\nand the body exists so the generated client has a declared shape rather than\nan untyped object. The caller learns who it now is from ``/auth/me``, which\nis the one place that answers that question.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "StartFreshOut",
         "type": "object"
       },
       "SuspendAction": {
@@ -8127,6 +8156,48 @@
           }
         ],
         "summary": "Auth Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/returning-player": {
+      "get": {
+        "description": "What the consent gate says (#2162): a date, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
+        "operationId": "returning_player_gate_auth_returning_player_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturningPlayerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Returning Player Gate",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "The one button: yes, start fresh (#2162).\n\nExplicitly **not** an offer of any old data, and there is none to offer —\n``delete_account`` blanked it and there is no undo (ADR-0081). All this does\nis finish the sign-in the gate interrupted, as a stranger.\n\nThe tombstone goes FIRST, and that ordering is what does the work: with it\ncleared, ``create_or_get_account`` finds no reason to pause and falls\nthrough to the ordinary stranger path — the same mint, the same email\nbranch, the same rules. There is no second creation path here and no\n\"consent given\" flag threaded through the service to be got wrong.\n\n``email_verified=True`` is a fact this server established, not a claim the\ncaller made: the sign-in that parked this session got past\n``create_or_get_account``'s verified-email gate before it ever reached the\ntombstone (ADR-0075, and ``test_returning_player_gate`` pins the ordering),\nand the parked address rode here inside a cookie signed with ``SECRET_KEY``.",
+        "operationId": "confirm_returning_player_auth_returning_player_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartFreshOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Confirm Returning Player",
         "tags": [
           "auth"
         ]
