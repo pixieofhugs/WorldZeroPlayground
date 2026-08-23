@@ -327,10 +327,18 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
   ];
 
   it("runs a transform, and no alb keyframe walks a gradient parameter", () => {
-    const keyframes = [...MOTION.matchAll(/@keyframes (alb-[\w-]+)\s*\{/g)].map(
-      ([, name]) => name,
-    );
-    expect(keyframes, "the five mounts' one keyframe").toEqual(["alb-edge-travel"]);
+    // FIVE KEYFRAMES BECAME ONE — asserted over what the five rules NAME, not
+    // over the sheet's whole inventory of `alb-` keyframes. #2498's second half
+    // moved nine more Albescent ornament motions here off the blocking sheet,
+    // and an inventory assertion would have read that as this collapse coming
+    // undone. What it is really claiming is that no mount needs a keyframe of
+    // its own, and that is a statement about the five rules.
+    const named = [
+      ...new Set(
+        WALK.map(([selector]) => child(selector).get("animation")?.split(/\s+/)[0]),
+      ),
+    ];
+    expect(named, "the five mounts' one keyframe").toEqual(["alb-edge-travel"]);
     const at = MOTION.indexOf("@keyframes alb-edge-travel");
     expect(
       MOTION.slice(at, MOTION.indexOf("}", MOTION.indexOf("}", at) + 1)).replace(
@@ -338,6 +346,21 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
         " ",
       ),
     ).toContain("transform: translateX(-50%)");
+
+    // The other half of the title, now that there is a population to say it
+    // about: every `alb-` keyframe on this sheet moves a transform and nothing
+    // else. A gradient parameter — `background-position`, or an `@property`
+    // angle — reappearing in any of them is the expensive idiom coming back.
+    const keyframes = [
+      ...MOTION.matchAll(/@keyframes (alb-[\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g),
+    ];
+    expect(keyframes.length, "no alb keyframes found — the regex has rotted").toBe(8);
+    for (const [, name, body] of keyframes) {
+      expect(
+        [...new Set([...body.matchAll(/([-\w]+)\s*:/g)].map(([, one]) => one))],
+        `@keyframes ${name} animates something a compositor cannot`,
+      ).toEqual(["transform"]);
+    }
   });
 
   for (const [selector, loops, duration] of WALK) {

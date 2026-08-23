@@ -641,3 +641,76 @@
     animation-duration: 9s;
   }
 }
+
+/* ── Albescent — the nine ornament motions the five washed surfaces carry
+   (#2498). The sheet's own candidate list above named "the Albescent drifts";
+   this is that list, cashed. Each passes the test the list states: every
+   consumer treats the motion as ornament, and the un-animated frame is the one
+   a reduced-motion reader already gets — index.css says so in words at each
+   mount ("stilled, the page is a static wash and a static prism ring; nothing
+   carries meaning through motion alone").
+
+   ONLY THE ANIMATION TRAVELLED. Every one of these nine has an UNGATED twin in
+   index.css holding its resting form, and the resting form is the animation's
+   own first frame: `.alb-task-aurora::before` rests at
+   `translate3d(-6%, -4%, 0) scale(1.12)`, which is `alb-task-drift`'s 0%, and
+   the three other auroras and the two wheels do the same. So a stranded sheet
+   is not an approximation of the still frame, it IS the still frame, and there
+   is no jump at the moment the sheet lands.
+
+   `.alb-rainbow` RUNS A KEYFRAME THAT STAYED BEHIND, and that is deliberate for
+   the reason stated at `.spectrum-frame::before` above: `alb-drift` is reached
+   from this sheet across the chunk boundary already, keyframe names are
+   document-global, and index.css is the entry sheet the reference always
+   resolves against. Its `ponytail:` note in index.css records why the walk
+   itself is not converted to a transform in this pass.
+
+   `.alb-spark` IS THE ONE THAT MAY NEVER FOLLOW, and it is the only Albescent
+   animation index.css still runs. Its gate does not merely add motion — it
+   drops the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint
+   may not defer, so the opacity has to stay in index.css; with the animation
+   deferred and the sheet stranded the spark would be an invisible mark rather
+   than a still one. `__tests__/motionSplit.test.ts` asserts both halves of that.
+
+   TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
+   were byte-for-byte the same declaration — a centred element turning through
+   360deg — differing only in the duration their consumers pass, which lives on
+   the `animation` shorthand and not in the keyframe. Now that both consumers
+   sit in this one block, one name serves them, the same way `alb-edge-travel`
+   serves five above. ── */
+@keyframes alb-task-drift {
+  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
+  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
+}
+@keyframes alb-detail-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.24) rotate(7deg); }
+}
+@keyframes alb-praxis-drift {
+  0%, 100% { transform: translate3d(-4%, -5%, 0) scale(1.16) rotate(0deg); }
+  50% { transform: translate3d(4%, 5%, 0) scale(1.26) rotate(-6deg); }
+}
+@keyframes alb-feed-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
+}
+@keyframes alb-wheel {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes alb-detail-sheen {
+  0%, 100% { transform: translateX(-18%); }
+  50% { transform: translateX(18%); }
+}
+@keyframes alb-detail-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-rainbow { animation: alb-drift 18s linear infinite; }
+  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
+  .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
+  .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
+  .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
+  .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
+  .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
+  .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
+  .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
+}
