@@ -160,13 +160,16 @@ describe("Albescent task detail — Default plus the light", () => {
     const { html } = render(<AlbescentTaskDetail state={baseState()} />);
     for (const layer of [
       "alb-detail",
-      "alb-detail-aurora",
+      // #2499: the ground, as a class on the wrapper rather than a span. The
+      // aurora it replaced is asserted gone below.
+      "alb-prism",
       "alb-detail-foil",
       "alb-detail-edge",
       "alb-detail-ring",
     ]) {
       expect(html, `light layer: ${layer}`).toContain(layer);
     }
+    expect(html, "no overlay wash beside the ground").not.toContain("alb-detail-aurora");
     // Ornament only — it must never sit in the tab order or eat a click.
     expect(html).toContain("aria-hidden");
   });
@@ -234,7 +237,16 @@ describe("Albescent task detail — Default plus the light", () => {
  * the title. Those thumbnails already carried `.user-media` from #1941 and were
  * washed twice all the same — once by their own card's `.alb-rainbow`, which they
  * escaped, and again by `.alb-detail-aurora`, which they could not, because the
- * 1200 column's `z-index: 1` capped them. Asserted, not assumed.
+ * 1200 column's `z-index: 1` capped them.
+ *
+ * #2499 MADE THE DOUBLE WASH STRUCTURALLY IMPOSSIBLE, and that is worth stating
+ * because it is the strongest thing the move off an overlay bought. Both washes
+ * are now the same TOKEN — `.alb-prism` sets `--faction-default-card-sheet` on
+ * the page wrapper and again on each card inside it — and a custom property is
+ * resolved once per element. Two declarations of one value paint one ground.
+ * What is still an overlay on this page is the prism WHEEL at `z-index: 2`, so
+ * the lift and the trap-clearing below both stand; they are simply defending
+ * against one layer rather than two.
  */
 describe("the drift stops at user media on this page too (#1942)", () => {
   const PHOTO = {
@@ -300,9 +312,10 @@ describe("the drift stops at user media on this page too (#1942)", () => {
       "alb-praxis-card",
     );
     expect(html, "its thumbnails' hook").toContain("user-media");
-    // Both scopes are present on one page, which is the double wash the ruling
-    // named: the card's own drift and the page's aurora.
-    expect(html).toContain("alb-rainbow");
-    expect(html).toContain("alb-detail-aurora");
+    // Both scopes are present on one page — the card's ground and the page's —
+    // and since #2499 they are the same declaration, so the wash cannot stack.
+    expect(html.match(/alb-prism/g) ?? [], "the page and the card").toHaveLength(2);
+    // The wheel is what the lift still has to clear, and it is still here.
+    expect(html).toContain("alb-detail-foil");
   });
 });

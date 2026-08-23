@@ -354,7 +354,12 @@ describe("the travel is a transform on a pre-painted child (#2498)", () => {
     const keyframes = [
       ...MOTION.matchAll(/@keyframes (alb-[\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g),
     ];
-    expect(keyframes.length, "no alb keyframes found — the regex has rotted").toBe(8);
+    // Was 8 until #2499 retired `alb-task-drift`, `alb-detail-drift`,
+    // `alb-praxis-drift`, `alb-feed-drift` and `alb-detail-sheen` with the five
+    // aurora overlays they breathed. EXACT, not a floor: the number going UP
+    // without a reason written here is a mount minting a keyframe of its own,
+    // which is what #2407 and #2498 each spent a PR collapsing.
+    expect(keyframes.length, "no alb keyframes found — the regex has rotted").toBe(3);
     for (const [, name, body] of keyframes) {
       expect(
         [...new Set([...body.matchAll(/([-\w]+)\s*:/g)].map(([, one]) => one))],

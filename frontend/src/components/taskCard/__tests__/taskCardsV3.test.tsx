@@ -272,7 +272,9 @@ describe('albescent draws the same rule, fainter (#2030)', () => {
     const albescent = render(SKINS.find((s) => s.slug === 'albescent')!)
     const unaffiliated = render(SKINS.find((s) => s.slug === 'na')!)
     expect(albescent.html).toContain(unaffiliated.html)
-    expect(albescent.html).toContain('class="alb-task"')
+    // Two classes since #2499 — `alb-task` is the cascade this test is about and
+    // `alb-prism` is the ground, which the alternation may drop independently.
+    expect(albescent.html).toContain('class="alb-task alb-prism"')
     expect(unaffiliated.html).toContain('opacity:var(--faction-default-cta-rule-opacity, 0.6)')
   })
 })

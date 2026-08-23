@@ -325,16 +325,48 @@ export function factionFill(
  * var(--faction-ua-card-bg)` rendered before. A faction that later wants a sheet
  * of its own declares three names and gets it with no call site edited.
  *
- * `DefaultTaskCard` does NOT call this: its spectrum border is a second image
- * layer on the same element, so it appends to all three lists itself. That is
- * the shape any surface with extra layers takes, and the reason the clip token
- * is a list rather than a scalar.
+ * The two cards that wear the SPECTRUM BORDER do not call this — they call
+ * {@link factionSpectrumSheet} below, which is this composition with one more
+ * layer appended to all three lists.
  */
 export function factionSheet(slug?: string | null): CSSProperties {
   return {
     backgroundColor: factionCssVar(slug, "card-bg"),
     backgroundImage: factionCssVar(slug, "card-sheet"),
     backgroundBlendMode: factionCssVar(slug, "card-sheet-blend"),
+    backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
+  };
+}
+
+/**
+ * The sheet with the na SPECTRUM PAINTED INTO ITS BORDER BOX (#2499, epic #2496).
+ *
+ * THE SPECTRUM IS THE BORDER. A gradient cannot be a `border-color`, so the ramp
+ * is a background layer under the sheet, the element wears a TRANSPARENT border,
+ * and `background-origin: border-box` is what makes the ramp start out at the
+ * frame rather than at the padding box. Every caller states the border WIDTH and
+ * the corner itself: those are the card's geometry, not the sheet's.
+ *
+ * WHY IT IS A HELPER AND NOT FIVE LINES TWICE. Both card archetypes now wear the
+ * idiom, and the one way to get it wrong is silent: a background list is a list
+ * in three properties at once, and CSS CYCLES the short ones rather than padding
+ * them. Append the ramp to the image list only and Albescent's dark prism — five
+ * radials plus the ground ramp — hands its sixth layer the FIRST blend mode
+ * again. It renders; it is simply wrong, in one cascade, on one faction. Saying
+ * the append once is what makes the arity right by construction, which is the
+ * same argument `--faction-default-card-sheet`'s own note in index.css makes.
+ *
+ * `--faction-default-rainbow` rather than the loop cut: this ramp does not tile
+ * and does not travel, so it wants the seven-stop spectrum, not the seamless
+ * one. The Albescent surfaces put a TRAVELLING ring on top of it (`.alb-task-edge`
+ * and `.alb-praxis-card-edge`), and that ring carries the loop cut itself.
+ */
+export function factionSpectrumSheet(slug?: string | null): CSSProperties {
+  return {
+    backgroundColor: factionCssVar(slug, "card-bg"),
+    backgroundImage: `${factionCssVar(slug, "card-sheet")}, var(--faction-default-rainbow)`,
+    backgroundBlendMode: `${factionCssVar(slug, "card-sheet-blend")}, normal`,
+    backgroundOrigin: "border-box",
     backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
   };
 }

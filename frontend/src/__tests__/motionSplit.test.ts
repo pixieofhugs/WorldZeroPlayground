@@ -93,15 +93,16 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-plate-edge::before, .alb-profile-edge::before':
+  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-plate-edge::before, .alb-profile-edge::before':
     "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
-    'plates joined at #2504, the composer and the phone home at #2505). Two ' +
+    'plates joined at #2504, the composer and the phone home at #2505, the praxis ' +
+    "CARD's own 3px ring at #2499 when it stopped borrowing the rail's 1px one). Two " +
     "tiles of the mount's own `background-image: inherit`, six mount-widths wide inside " +
     "index.css's `overflow: hidden`, slid by transform because " +
     '`background-position` repaints every frame on the main thread. Declared ' +
     'nowhere but inside the gate: with the sheet absent there is no child, and ' +
     "the still ramp is the mount's own background in index.css — the exact " +
-    'frame a reduced-motion reader already gets. Six of the seven are masked ' +
+    'frame a reduced-motion reader already gets. Eight of the nine are masked ' +
     'rings; `.alb-desk .spectrum-rule` is a filled hairline, which turns out to ' +
     'be the same travelling problem and takes the same child.',
   '.alb-profile-edge::before':
@@ -248,14 +249,22 @@ reduced-motion gate.`,
     // The sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named
     // "the Albescent drifts" as a candidate on one test: does every consumer
     // treat the motion as ornament, and is the un-animated frame the one a
-    // reduced-motion reader already gets? Each of these nine says so in its own
-    // words in index.css — "stilled, the page is a static wash and a static
-    // prism ring; nothing carries meaning through motion alone" — and each
-    // leaves its resting `transform` behind in index.css, so nothing jumps.
+    // reduced-motion reader already gets? Each of these says so in its own words
+    // in index.css — "stilled, the page is a static prism ground and a static
+    // prism ring" — and each leaves its resting `transform` behind in index.css,
+    // so nothing jumps.
+    //
+    // SIX OF THE NINE RETIRED AT #2499, and the list shrinking is the point of
+    // that issue rather than a regression: `.alb-rainbow` and the four
+    // `*-aurora::before` drifts were five hand-drawn washes of one idea, and
+    // `.alb-detail-foil::after` was the sweep that idea is now made of. All six
+    // are one static prism ground on the na sheet (`.alb-prism`), which is PAINT
+    // and therefore may never live here. What is left is the three marks that
+    // genuinely turn.
     //
     // `alb-drift`'s KEYFRAME is the one thing that did not travel. #2404 already
     // reaches it from here across the chunk boundary because index.css is the
-    // always-loaded entry sheet, and railSpectrumFrame.test.ts asserts that.
+    // always-loaded entry sheet, and it still has a consumer: the RAIL.
     const albescent = (css: string): string[] => [
       ...new Set(
         [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
@@ -269,17 +278,30 @@ reduced-motion gate.`,
 
     const here = albescent(SHEET)
     for (const selector of [
-      '.alb-rainbow',
-      '.alb-task-aurora::before',
-      '.alb-detail-aurora::before',
       '.alb-detail-foil::before',
-      '.alb-detail-foil::after',
       '.alb-detail-ring::before',
-      '.alb-praxis-aurora::before',
       '.alb-praxis-ring::before',
-      '.alb-feed-aurora::before',
     ]) {
       expect(here, `${selector} still animates from somewhere else`).toContain(selector)
+    }
+
+    // The six #2499 retired, asserted GONE from both sheets rather than merely
+    // absent from the list above — a wash that reappeared as an overlay would
+    // otherwise pass by not being named.
+    for (const retired of [
+      '.alb-rainbow',
+      '.alb-task-aurora',
+      '.alb-detail-aurora',
+      '.alb-detail-foil::after',
+      '.alb-praxis-aurora',
+      '.alb-feed-aurora',
+    ]) {
+      expect(
+        `${SHEET}\n${INDEX}`,
+        `${retired} is back. #2499 made the Albescent ground a LAYER of the na
+card's own background (\`.alb-prism\`); an overlay span beside it is the divergence
+the owner reported — two cards drawing the same light two different ways.`,
+      ).not.toContain(`${retired} {`)
     }
 
     // THE SPARK IS THE ONE THAT MAY NOT FOLLOW, and it is the only one left.

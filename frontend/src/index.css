@@ -5927,6 +5927,7 @@
  * own 10px corner straight off `ComposerSheet`'s inline style. Its whole
  * declaration is this one line. */
 .alb-task-edge,
+.alb-praxis-card-edge,
 .alb-detail-edge,
 .alb-praxis-edge,
 .alb-feed-edge,
@@ -6235,77 +6236,180 @@
   --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
 }
 
-/* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
-   with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
-   faction, so this is a flourish LAYERED over Default, never a repaint.
+/* ══ ALBESCENT — THE PRISM SWEEP (#2499, epic #2496 ruling 2) ══
+   The GROUND of every ordinary Albescent surface: the task card, the praxis
+   card, the task detail, the praxis detail and the feed row. One class, one
+   drawing, five mounts — and it retires five aurora overlays that were five
+   different drawings of the same idea.
 
-   The wash reads --faction-default-rainbow-loop (#1213) — the spectrum's TILING
-   cut, whose last stop is its first, which is exactly what lets `alb-drift`
-   walk the background 220px and arrive back without a seam. `.alb-task-edge`
-   below already reads that token; this class hand-wrote its own copy of the
-   same idea: five of the seven hues at `rgba(…, .3)`, dropping orange and teal,
-   and in dark two of the five had drifted off the stops outright (#ff6054 for
-   red, #f7c14a for yellow).
+   THE OWNER'S BUG IS WHY THIS IS ONE CLASS. Reported live: "the background and
+   borders on the praxis and task cards are still different from each other."
+   They were. The praxis card wore `.alb-rainbow` — a rotated 220px repeating
+   LINEAR ramp, multiplied at 0.15, which reads as stripes — and the task card
+   wore `.alb-task-aurora`, six blurred RADIALS at 0.34, which reads as cloud.
+   Different geometry, different strength, different idiom, on two cards meant to
+   be the same paper. A token on the na card cannot diverge that way: there is
+   one value and both cards read it.
 
-   THE INLINE ALPHA was the only thing keeping it off the token, and the alpha
-   does not have to live in the gradient. For an empty blended layer the two
-   places are exactly interchangeable, because the composite is linear in the
-   source alpha and the source alpha is the product of the two:
+   IT IS A LAYER OF THE CARD'S OWN BACKGROUND, NEVER AN OVERLAY, and that is the
+   design board's own first sentence ("Prism sweep · locked"): "painted as a
+   layer of the card's OWN background — not an overlay — so every word, rule and
+   score stamp sits in front of it." Three things follow that no overlay could
+   give:
+     • copy, rules, seals, score stamps and PHOTOGRAPHS all sit in front of it,
+       so #1646's lift stops being needed for the wash (see its rule below —
+       what still needs lifting is the two detail pages' remaining ornaments);
+     • a nested card cannot be washed twice. The praxis thumbnails inside an
+       Albescent task detail took `.alb-detail-aurora` on top of their own card's
+       drift (#1942's whole trap). A token is set once per element and inherited,
+       so the same value declared twice paints once;
+     • it costs nothing to still. There is no span to animate and no keyframe to
+       defer — the ground is on the render-blocking sheet and arrives with the
+       first paint, for everyone.
 
-     Co = αs·(1−αb)·Cs + αs·αb·B(Cb,Cs) + (1−αs)·αb·Cb ,  αs = stop-α × opacity
+   THE BLEND MODES ARE NOT NEGOTIABLE, and the board says why: "Unaffiliated is a
+   white sheet… Screen and soft-light blends do nothing on white; only a multiply
+   can show colour." Light multiplies, dark screens. It is also why the triple
+   exists: light is TWO layers and dark is SIX, so a lone `multiply` beside them
+   would be right by accident in one cascade and cycled wrong in the other.
 
-   so a per-stop .3 under `opacity: .5` composites identically to opaque stops
-   under `opacity: .15`, whatever the sheet beneath it is doing, and .55 under
-   .45 is .2475. Those are the two values below: the product, not a re-tune by
-   eye. This works only because every stop carried the SAME alpha — a ramp whose
-   stops differ in alpha interpolates differently once you flatten it, and
-   moving that into `opacity` would be a repaint.
+   MEASURED ON THE REAL COMPOSITED GROUND, at the WORST pixel on the card rather
+   than at a stop or a hotspot centre, and against `--faction-default-card-muted`
+   — the tightest pairing the na card has, and the one #2504 established as the
+   binding constraint. The five dark radials OVERLAP by construction, so the
+   worst point is where three of them meet (40%/56%), not any one centre.
 
-   IT COMES OFF WITH THE AURORA (#2397, epic #2195). This is the praxis card's
-   other background texture and its only mount, so a busy page ground takes both
-   — leaving the drift standing alone would be the "substitute texture" the
-   alternation forbids. `AlbescentPraxisCard` owns that branch; the sparks and
-   the drifting frame stay, so the card is still revealed by motion (ADR-0048).
+     light   the board's six stops, verbatim, at full strength.
+             worst pixel: muted 5.43:1, ink 16.36:1, ground 87.8% L
+             (flat: 6.05 / 18.22 / 98.4% L).
 
-   What did change, deliberately, is the hue SET: orange and teal rejoin the
-   wash, dark's red and yellow land back on their stops, and eight stops share
-   the same 220px tile where six did — a fuller spectrum in finer stripes. The
-   dark rule keeps only its compositing, since the token flips on its own. */
+     dark    the board's five radials — its centres, its sizes, its hues — at
+             alpha 0.16 rather than opaque. AT THE BOARD'S LITERAL OPAQUE STOPS
+             THE MUTED TIER READS 3.02:1 across the middle of the card, a plain
+             AA failure, because the board priced its depth against the body ink
+             and the five blooms pile up where they overlap. This is exactly the
+             finding #2504 wrote into WORLD_ZERO_STYLE §3 for the same token on
+             the same family, so the depth is set the same way it set the hero's.
+             worst pixel: muted 5.02:1, ink 12.69:1, ground 1.67% L
+             (flat: 5.44 / 13.75 / 1.16% L — the bloom lifts the ground by ~44%).
+
+   THE COMPONENT OWNS ITS GROUND, and this is the one rule that keeps a NESTED
+   card from going wrong. The design board hit the defect and had to patch it by
+   hand: it dressed the page with a descendant selector, so a praxis card inside
+   an Albescent surface inherited the page's `multiply` WITHOUT the prism layer
+   that justifies it, and its own border spectrum multiplied into its cream fill —
+   one card brighter than every card beside it. The board's fix was
+   `background-blend-mode: normal !important` walled round the nested card.
+
+   NOTHING HERE CAN CAUSE THAT, and it is worth saying why rather than testing
+   it and hoping. These rules declare three CUSTOM PROPERTIES and no background
+   property at all. Custom properties inherit as a set, and the actual
+   `background-blend-mode` is written only where `background-image` is written —
+   inside `factionSheet()` / `factionSpectrumSheet()`, `.faction-plate` and
+   `.faction-hero`, each of which takes all three from the same family on the
+   same element. `background-blend-mode` is not itself inherited, so an element
+   that does not compose the sheet gets `normal` however deep it sits. A nested
+   card therefore either paints the whole triple or none of it; it can never take
+   the blend and miss the layer. `__tests__/albescentPrismSheet.test.ts` holds the
+   line that would break it: no Albescent selector may set `background-blend-mode`
+   on a DESCENDANT, and only one may paint a descendant's background at all —
+   `.alb-desk .spectrum-rule`, which re-cuts an ORNAMENT's ramp, not a ground.
+
+   THE FACTION PAGE IS NOT IN THIS LIST, deliberately. `.alb-faction-hero` and
+   `.alb-faction-body` above carry #2504's own deeper cut of the same sweep, and
+   epic ruling 9 makes their light/dark asymmetry — hero alone by day, hero and
+   body by night — a ruled looks decision. Neither ever wore an aurora, so
+   neither is in this issue's retirement list, and repainting them here would be
+   the "fix" ruling 9 forbids. */
+.alb-prism {
+  --faction-default-card-sheet:
+    linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: multiply, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box;
+}
+[data-theme="dark"] .alb-prism {
+  --faction-default-card-sheet:
+    radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+    radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+    radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+    radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+    radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
+}
+
+/* THE REST FRAME (epic #2496 ruling 6). Under `prefers-reduced-motion: reduce`
+   the sheet is COMPOSITED WITH ITSELF: the same layer list, listed twice, under
+   the same blend. Not one new colour value, and "deeper" is not a re-tune by eye
+   — it is the drawing applied a second time.
+
+   WHY IT EXISTS. Stilled, an Albescent surface loses everything that moves: the
+   travelling edge, the turning foil, the wheeling ring. All of that lives in the
+   DEFERRED `motion.ornament.css`, which means a reader who never receives that
+   sheet lands in exactly the reduced-motion frame — that equivalence is the
+   whole safety argument for deferring it at all. So without a rest frame "the
+   motion sheet did not arrive" and "this player is not in Albescent" become the
+   same picture, and nothing in CI can tell them apart. The precedent is
+   `.alb-spark`, which parks at a steady low opacity rather than freezing,
+   because a spark frozen at its keyframe start is invisible.
+
+   MEASURED THE SAME WAY, worst pixel, tightest pairing:
+     light  muted 4.89:1, ink 14.72:1, ground 78.5% L — a 9.3pp drop, plainly
+            visible, and still clear of AA on the prose tier.
+     dark   muted 4.60:1, ink 11.63:1, ground 2.28% L — the bloom lifts ~37%
+            further than the moving frame's. Dark has the least headroom on this
+            card (5.44:1 flat to a 4.5 floor), which is why the base alpha is
+            0.16 and not more: the rest frame has to fit UNDER the ceiling too.
+
+   Paint, so it is in this sheet and not the deferred one — `motion.ornament.css`
+   may never carry a colour. */
+@media (prefers-reduced-motion: reduce) {
+  .alb-prism {
+    --faction-default-card-sheet:
+      linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+      linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+      linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+    --faction-default-card-sheet-blend: multiply, multiply, normal;
+    --faction-default-card-sheet-clip: padding-box, padding-box, padding-box;
+  }
+  [data-theme="dark"] .alb-prism {
+    --faction-default-card-sheet:
+      radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+      radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+      radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+      radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+      radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+      radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+      linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+    --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, screen, screen, screen, screen, screen, normal;
+    --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
+  }
+}
+
+/* `.alb-rainbow` RETIRED HERE (#2499). It was the praxis card's ground — a
+   190%-wide `--faction-default-rainbow-loop` rotated 24deg, tiled at 220px and
+   walked by `alb-drift` — and it is the half of the owner's live report that was
+   Albescent's own to fix: the praxis card read as STRIPES where the task card
+   read as CLOUD. `.alb-prism` above is now both cards' ground, so there is no
+   second texture left to diverge.
+
+   THE KEYFRAME STAYS, and it is not orphaned: the RAIL's own drifting ring still
+   runs it from the deferred sheet (#2404, the drift-attribute rule), reaching
+   it across the chunk boundary because keyframe names are document-global and
+   this is the entry sheet the reference resolves against.
+
+   ponytail: `alb-drift` still walks `background-position`, which epic #2496's
+   technique ruling retires everywhere else. Its one remaining consumer IS a
+   pseudo-element, so it cannot grow the pre-painted child the transform idiom
+   needs without a real span in the rail's markup. Upgrade path: give the rail's
+   ring a span, then it joins `alb-edge-travel` and this keyframe retires too. */
 @keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
-.alb-rainbow {
-  position: absolute;
-  left: -45%;
-  top: -45%;
-  width: 190%;
-  height: 190%;
-  transform: rotate(24deg);
-  pointer-events: none;
-  z-index: 0;
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 220px 100%;
-  background-repeat: repeat;
-  mix-blend-mode: multiply;
-  opacity: 0.15;
-}
-[data-theme="dark"] .alb-rainbow {
-  mix-blend-mode: screen;
-  opacity: 0.2475;
-}
-/* THE DRIFT ITSELF IS IN `src/motion.ornament.css` (#2498), with the other eight
-   Albescent ornament motions. Only the keyframe stayed, because `.spectrum-frame
-   ::before` reaches `alb-drift` from that sheet across a chunk boundary and this
-   is the entry sheet the reference resolves against (#2404).
-
-   ponytail: the drift still walks `background-position`, which epic #2496's
-   technique ruling retires everywhere else in this pass. It is left because the
-   conversion cannot pay here: `alb-drift`'s other consumer IS a pseudo-element
-   (`.spectrum-frame::before`), so it cannot grow the pre-painted child the idiom
-   needs without a real span in the rail's markup — the keyframe therefore cannot
-   retire, and converting this half alone adds a second keyframe plus a child
-   while leaving the walk standing on the rail. It is also the cheaper walk of
-   the two: a 220px LENGTH tile under `background-repeat: repeat`, not a gradient
-   re-rasterised at element width. Upgrade path: #2500 is already opening these
-   mounts, so convert both consumers together once the rail's ring is a span. */
 
 /* The other half of the tell (#842). The design draws the drift AND three faint
    gold ✦ sparks scattered over the sheet; #821 shipped only the drift, so the
@@ -6313,7 +6417,7 @@
    position, size and animation-delay at the call site, so the three never
    pulse together.
 
-   Unlike .alb-rainbow, the spark's motion IS the mark: a spark frozen at its
+   Unlike the prism ground, the spark's motion IS the mark: a spark frozen at its
    own keyframe start would be invisible (opacity 0), so reduced motion parks it
    at a steady low opacity rather than freezing the animation. The glyph is a
    typographic ✦, not an emoji (§10), and stays behind the card content. */
@@ -6331,26 +6435,41 @@
   .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
 }
 
-/* THE DRIFT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the light over the
-   whole sheet, and every layer above is built that way. This narrows it by one
-   element: the proof photo is the one thing on the sheet that is not the site's
-   to tint. Everything else — copy, score box, seals, footer, the empty media
-   slot's dashed drop-target — is chrome the drift is supposed to colour, and
-   still is.
+/* THE ALBESCENT LIGHT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the
+   light over the whole sheet. This narrows it by one element: the proof photo is
+   the one thing on the sheet that is not the site's to tint. Everything else —
+   copy, score box, seals, footer, the empty media slot's dashed drop-target — is
+   chrome the light is supposed to colour, and still is.
+
+   #2499 TOOK AWAY MOST OF WHAT THIS DEFENDS AGAINST, and left exactly enough to
+   keep the rule. The GROUND is no longer an overlay at all: `.alb-prism` sets a
+   background layer on the card's own sheet, and a background paints behind its
+   element's content by construction, so no photograph on any of these four
+   surfaces is under the prism. What is still painted OVER content, and therefore
+   still needs excluding, is the ornament that is not a ground:
+
+     `.alb-praxis-card`  the three `.alb-spark` glyphs. Positioned at `z-index: 0`,
+                         which paints ABOVE non-positioned in-flow content — that
+                         is the painting order, not an accident of the number.
+     `.alb-praxis`       `.alb-praxis-ring`, a blurred conic annulus at 2.
+     `.alb-detail`       `.alb-detail-foil`, a blurred conic wheel at 2.
+     `.alb-feed`         `.alb-feed-edge` at 1. Masked back to the hairline, so it
+                         cannot reach a photo — kept in the list because the
+                         surface may gain a wash again and because dropping it
+                         would take `.feed-avatar-link`'s ceiling with it.
 
    THE LIFT, NOT A HOLE. There is no way to punch a blended overlay out around a
    rectangle, so the media is raised ABOVE it instead: a blend composites against
    what is already painted beneath it, so anything painted after is untouched.
-   `z-index: 3` clears both surfaces' overlays in one number — `.alb-rainbow`
-   sits at 0 and the three `.alb-praxis-*` layers at 2. `position` is required
-   for `z-index` to apply at all; `relative` keeps the box exactly where flow put
-   it.
+   `z-index: 3` clears every one of the layers above in one number. `position` is
+   required for `z-index` to apply at all; `relative` keeps the box exactly where
+   flow put it.
 
-   Two rejected shapes, for the next reader. Moving the wash BEHIND the card
-   content erases the tell outright, because Default's sheet is opaque — and
-   making it translucent is the repaint ADR-0048 forbids, since Albescent in its
-   own colours is back in the spectrum and un-hidden. Confining the wash TO the
-   photo is the complaint inverted.
+   One rejected shape, for the next reader: confining the light TO the photo is
+   the complaint inverted. The OTHER historical rejection — "move the wash behind
+   the card content" — was rejected because Default's sheet is opaque and there
+   was no way to get behind it. #2497 made the sheet a token and #2499 took that
+   option, which is why the ground is not in the list above.
 
    SCOPED TO THE ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared hook —
    `PraxisMediaGallery` is one component for all nine praxis archetypes and
@@ -6358,17 +6477,15 @@
    skins that stack their own layers (Ephemerists' plate at 1, Singularity's
    content at 2). The other eight sheets must render byte-identical.
 
-   Nothing here is inside a motion query: reduced motion still stills the drift,
-   and it stills it over exactly the same layers.
+   Nothing here is inside a motion query: reduced motion stills the ornaments and
+   it stills them over exactly the same layers.
 
-   #1942 ADDED THE OTHER TWO SURFACES, AND THEY EACH NEEDED A TRAP CLEARED FIRST.
-   The number below did not change and could not have: a `z-index` only competes
-   inside its own stacking context, and on the feed card and the task detail the
-   media sat inside one the wash was outside of, so `3` was INERT there however
-   large it grew. Both traps are cleared at their own sites, below and in the
-   mount; read those two rules as part of this one. 3 still clears every layer in
-   one number — `.alb-rainbow` at 0, the feed's two at 1, the `.alb-praxis-*` and
-   `.alb-detail-*` ornaments at 2. */
+   #1942 ADDED TWO OF THE FOUR SURFACES, AND THEY EACH NEEDED A TRAP CLEARED
+   FIRST. The number below did not change and could not have: a `z-index` only
+   competes inside its own stacking context, and on the feed card and the task
+   detail the media sat inside one the ornament was outside of, so `3` was INERT
+   there however large it grew. Both traps are cleared at their own sites, below
+   and in the mount; read those two rules as part of this one. */
 .alb-praxis-card .user-media,
 .alb-praxis .user-media,
 .alb-detail .user-media,
@@ -6380,10 +6497,11 @@
 /* TRAP ONE: THE TASK DETAIL'S 1200 COLUMN (#1942). `DefaultTaskDetail` mounts
    its sheet at `z-index: 1` so the surface sits above the page it is drawn on;
    positioned with an integer, that is a stacking context, and it capped every
-   descendant at 1 while `.alb-detail-aurora` washed over from 2. Nothing inside
+   descendant at 1 while the page's ornaments washed over from 2. Nothing inside
    could reach the light, which is why the byline photo and — since #1941 lifted
    them — the whole gallery of `AlbescentPraxisCard` thumbnails were washed a
-   second time on this one page.
+   second time on this one page. (#2499 retired the aurora that found this
+   trap; `.alb-detail-foil`'s wheel still sits at 2, so the clearing stands.)
 
    `auto`, not a bigger number: the column must keep painting BENEATH the
    ornaments (they are a wash over the sheet, ADR-0048), and only stop being the
@@ -6407,10 +6525,10 @@
    #1942's ceiling). `FEED_BODY_LIFTED` puts this anchor above the body's
    stretched click overlay, and an integer `z-index` on a positioned element is a
    stacking context — so a photo inside it could never rise past the anchor's own
-   1, which is exactly where `.alb-feed-aurora` sits. Same move as the column: the
-   number comes out of the inline style so `.alb-feed .user-media` above can win
-   on the anchor itself where the child is a photograph. Everywhere else it
-   computes to the 1 it always was. */
+   1, which is exactly where the card's own ornament sits. Same move as the
+   column: the number comes out of the inline style so `.alb-feed .user-media`
+   above can win on the anchor itself where the child is a photograph.
+   Everywhere else it computes to the 1 it always was. */
 .feed-avatar-link {
   position: relative;
   z-index: 1;
@@ -6420,43 +6538,37 @@
 /* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
    unfreeze, and built to the same rule as the first: the exact spectrum sheet an
    unaffiliated player sees, plus a flourish that reveals the society to someone
-   already looking. Two of them here — the card's rainbow edge comes ALIVE and
-   drifts, and an aurora blooms and breathes under the vellum. Neither repaints
-   anything: strip both classes and the card is `DefaultTaskCard`, byte for byte.
+   already looking. Strip the classes and the card is `DefaultTaskCard`, byte for
+   byte.
 
-   Both are drawn as OVERLAYS because the card they dress is a component, not
-   markup this file can reach into. Two consequences, both deliberate:
+   THE AURORA IS RETIRED (#2499, epic #2496 ruling 2). `.alb-task-aurora` was six
+   blurred radials, blurred past recognition and blended over the vellum at 0.34
+   — an OVERLAY, because in 2023 the card's ground was a component's inline style
+   this file could not reach into. It can now: `--faction-default-card-sheet` is
+   a token, and `.alb-prism` above sets it. The bloom moved from on top of the
+   card to inside its background, which is where the design board always drew it,
+   and the praxis card — which wore a different texture entirely — now reads the
+   same value. The KIT'S ONE ORNAMENT is still one drawing; it is simply a ground
+   now rather than a span.
 
-   • The edge is a masked ring rather than a border — `mask … exclude` punches
-     the middle out of a 3px inset, so only the frame paints. It lands exactly on
-     Default's own static rainbow border, so the effect reads as that border
-     moving. Its radius must track Default's (14px); if that card's corner
-     changes, this follows.
-   • The aurora BLENDS rather than sits behind. `mix-blend-mode: multiply` on the
-     light sheet and `screen` on the dark one is what keeps ink legible through
-     an overlay — the design put the bloom UNDER the copy at `normal`, which is
-     not a position an overlay can take. Same call `.alb-rainbow` already makes.
+   THE EDGE STAYS, AND STAYS AN OVERLAY. It is a masked ring rather than a border
+   because a `border-image` does not clip to `border-radius`: `mask … exclude`
+   punches the middle out of a 3px inset so only the frame paints, landing exactly
+   on `DefaultTaskCard`'s own static rainbow border so the effect reads as that
+   border coming alive. Its radius must track that card's (14px); if the corner
+   changes, this follows. Since #2407 it is the shared `.spectrum-frame` ring that
+   seven other mounts wear, and since #2499 the praxis card wears the twin of it.
 
-   THE AURORA IS THE KIT'S ONE ORNAMENT, AND IT ALTERNATES (#2397, epic #2195).
-   Since #2397 `.alb-task-aurora` has TWO mounts, not one: the task card and the
-   PRAXIS card, which wore `.alb-rainbow`'s drift and no aurora. One drawing per
-   faction, not one per surface — the `-task-` in the name records where it was
-   first drawn, not what it belongs to, and a praxis-shaped copy of the same
-   seven blooms would have stated a second drawing. It travels well because it
-   carries its own geometry: everything visible is on the `::before` at
-   `inset: 22%`, blurred past recognition, so the only thing it asks of a host is
-   a positioned parent that clips.
-
-   Both mounts are CONDITIONAL in their components: a card standing on a
-   patterned page ground drops the bloom and the vellum is BARE ("either burst,
-   or plain", owner 2026-08-17). On the praxis card `.alb-rainbow` comes off with
-   it, being that card's other background texture. Nothing here branches — the
-   predicate is `useGroundIsBusy()` and the components mount or omit the span, so
-   a plain card costs no rules and this sheet stays a drawing rather than a
-   decision. THE EDGE NEVER BRANCHES: it is chrome, and since #2407 it is the
-   shared `.spectrum-frame` ring five other mounts wear. */
-.alb-task-edge,
-.alb-task-aurora {
+   THE ALTERNATION NEEDS A NEW MECHANISM, and it has one (#2397, epic #2195). The
+   law — "either burst, or plain", owner 2026-08-17 — is that a card standing on a
+   patterned page ground shows no ground texture of its own. A SPAN could satisfy
+   it by not being mounted; a background LAYER has nothing to unmount, so the
+   wrapper drops `.alb-prism` instead and the na sheet stands. Same predicate
+   (`useGroundIsBusy()`), same law, one class instead of one span. Nothing here
+   branches, so a plain card still costs no rules. THE EDGE NEVER BRANCHES: it is
+   chrome, and it is what keeps ADR-0048's reveal-by-motion true on a card that
+   has gone plain. */
+.alb-task-edge {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -6475,43 +6587,31 @@
 /* The ring is the shared one (#2407, top of the `.spectrum-frame` block); these
    are the two things this mount says differently. `opacity: 1` is stated rather
    than left off because the shared rule's default is the rail's 0.6, and the
-   task card's edge has always been full strength. */
-.alb-task-edge {
+   task card's edge has always been full strength. `.alb-praxis-card-edge` below
+   states exactly the same two, which is the point: since #2499 the two cards
+   wear the same 3px spectrum border and the same ring over it. */
+.alb-task-edge,
+.alb-praxis-card-edge {
   padding: 3px;
   opacity: 1;
 }
-.alb-task-aurora {
-  overflow: hidden;
-}
-.alb-task-aurora::before {
-  content: "";
+/* The praxis card's twin of it (#2499). Its own rule states only the two things
+   the task card's does not: this span hangs off a wrapper whose corner is the
+   token, so the shared `border-radius: inherit` is right and no literal is
+   needed; and `z-index: 1` clears the three `.alb-spark` glyphs at 0.
+
+   IT REPLACED A 1px RING AT 0.6. Until #2499 this card borrowed the RAIL's ring
+   through `.spectrum-frame` and the rail's drift hook — the rail's width, walking
+   the rail's 220px tile — because the card underneath it had a 1px cream hairline.
+   `DefaultPraxisCard` now wears the same 3px spectrum border `DefaultTaskCard`
+   does, so the ring over it has to be the same 3px at the same full strength or
+   the two cards read as different objects, which is the half of the owner's
+   report that was na's. It also puts the card on `alb-edge-travel` with the six
+   others, so the last surface walking a `background-position` is the rail. */
+.alb-praxis-card-edge {
   position: absolute;
-  inset: 22%;
-  filter: blur(52px) saturate(0.62);
-  mix-blend-mode: multiply;
-  opacity: 0.34;
-  transform: translate3d(-6%, -4%, 0) scale(1.12);
-  background-image:
-    radial-gradient(62% 78% at 8% 16%, #c1272d, transparent 100%),
-    radial-gradient(58% 72% at 34% 4%, #c2541f, transparent 100%),
-    radial-gradient(60% 74% at 56% 18%, #ca8a04, transparent 100%),
-    radial-gradient(64% 78% at 84% 12%, #16a34a, transparent 100%),
-    radial-gradient(66% 80% at 98% 62%, #2563eb, transparent 100%),
-    radial-gradient(64% 78% at 62% 96%, #be185d, transparent 100%),
-    radial-gradient(60% 74% at 22% 92%, #1d6e72, transparent 100%);
-}
-[data-theme="dark"] .alb-task-aurora::before {
-  filter: blur(42px) saturate(0.95);
-  mix-blend-mode: screen;
-  opacity: 0.3;
-  background-image:
-    radial-gradient(62% 78% at 8% 16%, #e2433f, transparent 100%),
-    radial-gradient(58% 72% at 34% 4%, #e07a3a, transparent 100%),
-    radial-gradient(60% 74% at 56% 18%, #e6b94f, transparent 100%),
-    radial-gradient(64% 78% at 84% 12%, #4ade80, transparent 100%),
-    radial-gradient(66% 80% at 98% 62%, #60a5fa, transparent 100%),
-    radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 100%),
-    radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 100%);
+  inset: 0;
+  z-index: 1;
 }
 /* Albescent — the TASK DETAIL's tell (#1038, ADR-0048). The third surface to
    unfreeze, same rule as the first two: `DefaultTaskDetail` unchanged, with
@@ -6519,8 +6619,19 @@
    difference is the light, not the layout" — so nothing here repaints, moves or
    renames anything na draws.
 
-   THREE THINGS THIS BLOCK DECIDES, all of which a "make it match the design"
-   edit would undo:
+   THE AURORA AND THE SHEEN ARE RETIRED (#2499, epic #2496 ruling 2).
+   `.alb-detail-aurora` was seven blurred blooms drifting over the sheet and
+   `.alb-detail-foil::after` a diagonal near-white sweep passing across it. The
+   PRISM SWEEP is the second of those two drawings made static and moved into the
+   sheet's own background — a 114deg near-white ramp, multiplied — so the surface
+   keeps the sweep and stops carrying two washes of the same light. `.alb-prism`
+   on the wrapper is the whole of it, and it reaches the column, the praxis
+   thumbnails inside it and any plate the page draws, because every one of them
+   reads `--faction-default-card-sheet`. THE WHEEL STAYS: `.alb-detail-foil
+   ::before` is a turning prism disc, which is a mark rather than a ground.
+
+   WHAT THIS BLOCK STILL DECIDES, each of which a "make it match the design" edit
+   would undo:
 
    • THE LIGHT IS CLIPPED TO THE COMPONENT, NOT THE PAGE. The design paints its
      ground on the viewport; the owner ruled the site background must still show
@@ -6530,27 +6641,26 @@
      to land exactly on `DefaultTaskDetail`'s sheet, whose own `py-8` band that
      is. The 18px radius tracks that sheet's corner; if it changes, this follows.
 
-   • THE LAYERS SIT ON TOP, BLENDED. Default's column paints an OPAQUE sheet, so
-     an ornament behind it is invisible — z-index:-1 is not a position available
-     here. And the column is positioned, so a positioned overlay at z-index:0
-     would paint above the copy anyway with none of the blending that keeps ink
-     legible. Same call `.alb-rainbow` and `.alb-task-aurora` already make:
-     multiply on the light sheet, screen on the dark one, pointer-events:none,
-     and opacities trimmed a notch below the design's (which drew these UNDER the
-     copy, where they could be stronger). `isolation` keeps the blend inside the
-     component so it cannot tint the page around it.
+   • WHAT IS LEFT SITS ON TOP, BLENDED. Default's column paints an OPAQUE sheet,
+     so an ornament behind it is invisible — `z-index: -1` is not a position
+     available here. And the column is positioned, so a positioned overlay at
+     `z-index: 0` would paint above the copy anyway with none of the blending
+     that keeps ink legible. Multiply on the light sheet, screen on the dark one,
+     `pointer-events: none`. `isolation` keeps the blend inside the component so
+     it cannot tint the page around it. THE GROUND NO LONGER NEEDS ANY OF THAT —
+     a background layer is behind the copy by construction, which is exactly why
+     the wash moved into the sheet and the wheel did not.
 
    • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
      inverted form of the design's `reduce → none`. Stilled, the page is a static
-     wash and a static prism ring — the tell is dimmer, but nothing about it
-     carries meaning through motion alone. */
+     prism ground and a static prism ring — and since #2499 the ground DEEPENS for
+     that reader rather than merely standing still (ruling 6). */
 .alb-detail {
   position: relative;
   max-width: 1200px;
   margin: 0 auto;
   isolation: isolate;
 }
-.alb-detail-aurora,
 .alb-detail-foil,
 .alb-detail-edge {
   position: absolute;
@@ -6565,42 +6675,11 @@
   overflow: hidden;
 }
 
-/* The aurora that breathes under the vellum — seven blooms, blurred past
-   recognition, so it reads as coloured light rather than as shapes. */
-.alb-detail-aurora::before {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  filter: blur(60px) saturate(0.6);
-  mix-blend-mode: multiply;
-  opacity: 0.22;
-  transform: translate3d(-5%, -4%, 0) scale(1.14);
-  background-image:
-    radial-gradient(58% 46% at 10% 10%, #c1272d, transparent 100%),
-    radial-gradient(54% 42% at 38% 2%, #c2541f, transparent 100%),
-    radial-gradient(56% 44% at 62% 14%, #ca8a04, transparent 100%),
-    radial-gradient(58% 46% at 88% 8%, #16a34a, transparent 100%),
-    radial-gradient(60% 48% at 96% 54%, #2563eb, transparent 100%),
-    radial-gradient(58% 46% at 58% 92%, #be185d, transparent 100%),
-    radial-gradient(56% 44% at 16% 88%, #1d6e72, transparent 100%);
-}
-[data-theme="dark"] .alb-detail-aurora::before {
-  filter: blur(52px) saturate(0.95);
-  mix-blend-mode: screen;
-  opacity: 0.24;
-  background-image:
-    radial-gradient(58% 46% at 10% 10%, #e2433f, transparent 100%),
-    radial-gradient(54% 42% at 38% 2%, #e07a3a, transparent 100%),
-    radial-gradient(56% 44% at 62% 14%, #e6b94f, transparent 100%),
-    radial-gradient(58% 46% at 88% 8%, #4ade80, transparent 100%),
-    radial-gradient(60% 48% at 96% 54%, #60a5fa, transparent 100%),
-    radial-gradient(58% 46% at 58% 92%, #f472b6, transparent 100%),
-    radial-gradient(56% 44% at 16% 88%, #3aa0a4, transparent 100%);
-}
-
-/* The holographic foil: a prism wheel turning behind the page (::before) and a
-   diagonal sheen passing across it (::after). Two pseudo-elements rather than
-   two spans — the component may not carry ornament markup it does not need. */
+/* The holographic foil: a prism wheel turning behind the page. A pseudo-element
+   rather than a span — the component may not carry ornament markup it does not
+   need. Its `::after` sheen retired with the aurora (#2499): a diagonal
+   near-white sweep across the sheet is exactly what `.alb-prism` now paints INTO
+   the sheet, so keeping both would be the same light drawn twice. */
 .alb-detail-foil::before {
   content: "";
   position: absolute;
@@ -6615,22 +6694,10 @@
   mix-blend-mode: multiply;
   opacity: 0.16;
 }
-.alb-detail-foil::after {
-  content: "";
-  position: absolute;
-  inset: -20% -30%;
-  opacity: 0.1;
-  background-image: linear-gradient(104deg, transparent 12%, rgba(255, 255, 255, 0.55) 26%, #ca8a04 34%, #16a34a 42%, #1d6e72 50%, #2563eb 58%, #be185d 66%, rgba(255, 255, 255, 0.55) 74%, transparent 88%);
-}
 [data-theme="dark"] .alb-detail-foil::before {
   filter: blur(48px) saturate(1.1);
   mix-blend-mode: screen;
   opacity: 0.24;
-}
-[data-theme="dark"] .alb-detail-foil::after {
-  mix-blend-mode: screen;
-  opacity: 0.14;
-  background-image: linear-gradient(104deg, transparent 12%, rgba(255, 255, 255, 0.55) 26%, #e6b94f 34%, #4ade80 42%, #3aa0a4 50%, #60a5fa 58%, #f472b6 66%, rgba(255, 255, 255, 0.55) 74%, transparent 88%);
 }
 
 /* The spectrum edge, drifting. A masked ring rather than a border, for the same
@@ -6682,10 +6749,18 @@
    surface to unfreeze, and the same rule as the three before it: the shared
    `DefaultPraxisDetail` page unchanged, with light washed over it. The design's
    dress is Lora + Courier Prime + Bebas Neue — the site's own three faces, not a
-   faction face — on na's spectrum palette, so every delta here is MOTION: a
-   drifting aurora, a slowly turning prism ring, an edge that comes alive.
+   faction face — on na's spectrum palette, so every delta here is the light and
+   the motion: a prism ground, a slowly turning prism ring, an edge that comes
+   alive.
 
-   WHAT THIS BLOCK DECIDES, each of which a "make it match the design" edit
+   THE AURORA IS RETIRED (#2499, epic #2496 ruling 2). `.alb-praxis-aurora` was
+   the third of five hand-drawn washes across this kit — seven blooms here, six
+   on the task card, a rotated stripe tile on the praxis card — all of them the
+   same idea drawn differently because each was an OVERLAY invented at its own
+   mount. `.alb-prism` on the wrapper replaces all five with one value on the na
+   sheet, so the page and every card standing on it read the same ground.
+
+   WHAT THIS BLOCK STILL DECIDES, each of which a "make it match the design" edit
    would undo:
 
    • THE LIGHT IS MOUNTED INSIDE THE SHEET, not wrapped around the page. The
@@ -6696,29 +6771,28 @@
      `inset: 0` inside a sheet that already clips (`overflow: hidden`, 18px
      radius). That makes the #1028 ruling structural rather than arithmetic: the
      light CANNOT paint the viewport, so the site background still shows around
-     the component.
+     the component. The GROUND keeps that property for a different and stronger
+     reason — it is a layer of the sheet's own background, so it cannot leave the
+     sheet at all.
 
-   • THE LAYERS SIT ON TOP, BLENDED. Default's column paints an opaque sheet, so
-     an ornament behind it is invisible and `z-index: -1` is not a position
+   • WHAT IS LEFT SITS ON TOP, BLENDED. Default's column paints an opaque sheet,
+     so an ornament behind it is invisible and `z-index: -1` is not a position
      available here; and the sheet is positioned, so a positioned overlay at
      `z-index: 0` would paint above the copy with none of the blending that keeps
-     ink legible (§5). Same call `.alb-rainbow`, `.alb-task-aurora` and
-     `.alb-detail-aurora` already make: multiply on the light sheet, screen on
-     the dark one, `pointer-events: none`, opacities trimmed a notch below the
-     design's. `isolation` on `.alb-praxis` keeps the blend inside the component
-     so it cannot tint the page around it.
+     ink legible (§5). Multiply on the light sheet, screen on the dark one,
+     `pointer-events: none`. `isolation` on `.alb-praxis` keeps the blend inside
+     the component so it cannot tint the page around it.
 
    • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
      inverted form of the design's `reduce → none`. Stilled, the page is a static
-     wash, a static ring and a static edge; nothing carries meaning through
-     motion alone.
+     prism ground, a static ring and a static edge — and since #2499 that ground
+     DEEPENS for that reader rather than merely standing still (ruling 6).
 
    The 18px radius tracks `DefaultPraxisDetail`'s own sheet corner. If that
    changes, this follows. */
 .alb-praxis {
   isolation: isolate;
 }
-.alb-praxis-aurora,
 .alb-praxis-ring,
 .alb-praxis-edge {
   position: absolute;
@@ -6727,39 +6801,6 @@
   pointer-events: none;
   border-radius: 18px;
   overflow: hidden;
-}
-
-/* The aurora that breathes under the vellum — seven blooms, blurred past
-   recognition, so it reads as coloured light rather than as shapes. */
-.alb-praxis-aurora::before {
-  content: "";
-  position: absolute;
-  inset: -22%;
-  filter: blur(64px) saturate(0.6);
-  mix-blend-mode: multiply;
-  opacity: 0.2;
-  transform: translate3d(-4%, -5%, 0) scale(1.16);
-  background-image:
-    radial-gradient(56% 40% at 8% 6%, #c1272d, transparent 100%),
-    radial-gradient(52% 38% at 34% 0%, #c2541f, transparent 100%),
-    radial-gradient(54% 40% at 64% 10%, #ca8a04, transparent 100%),
-    radial-gradient(56% 42% at 92% 6%, #16a34a, transparent 100%),
-    radial-gradient(58% 44% at 98% 58%, #2563eb, transparent 100%),
-    radial-gradient(56% 42% at 54% 96%, #be185d, transparent 100%),
-    radial-gradient(54% 40% at 12% 90%, #1d6e72, transparent 100%);
-}
-[data-theme="dark"] .alb-praxis-aurora::before {
-  filter: blur(56px) saturate(0.95);
-  mix-blend-mode: screen;
-  opacity: 0.22;
-  background-image:
-    radial-gradient(56% 40% at 8% 6%, #e2433f, transparent 100%),
-    radial-gradient(52% 38% at 34% 0%, #e07a3a, transparent 100%),
-    radial-gradient(54% 40% at 64% 10%, #e6b94f, transparent 100%),
-    radial-gradient(56% 42% at 92% 6%, #4ade80, transparent 100%),
-    radial-gradient(58% 44% at 98% 58%, #60a5fa, transparent 100%),
-    radial-gradient(56% 42% at 54% 96%, #f472b6, transparent 100%),
-    radial-gradient(54% 40% at 12% 90%, #3aa0a4, transparent 100%);
 }
 
 /* The prism RING, turning. A conic spectrum disc masked back to an annulus —
@@ -6801,8 +6842,8 @@
    says differently. The 18px corner in the positioning rule above is now
    redundant with the shared `border-radius: inherit` — this span IS mounted
    straight inside the 1200px sheet, whose own `borderRadius: 18` is inline at
-   the mount — but it is shared with `.alb-praxis-aurora` and `.alb-praxis-ring`,
-   which are not, so it stays. */
+   the mount — but it is shared with `.alb-praxis-ring`, which is
+   not, so it stays. */
 .alb-praxis-edge {
   padding: 2px;
   opacity: 0.72;
@@ -6810,32 +6851,29 @@
 
 /* Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth
    surface to unfreeze, and the same rule as the four before it: the shared
-   chassis an unaffiliated player sees, with light washed over it. Strip these two
-   spans and the card is `DefaultFeedFrame`, byte for byte.
+   chassis an unaffiliated player sees, with light washed over it. Strip the
+   class and the span and the card is `DefaultFeedFrame`, byte for byte.
 
-   NOT ONE NEW COLOUR VALUE IS DECLARED HERE, and that is the point. Both layers
-   read na's own spectrum tokens — `--faction-default-aurora` (with its opacity
-   and blur, both of which already flip with the theme) and
-   `--faction-default-rainbow-loop`. A hue of Albescent's own would put the
-   society back in the spectrum and un-hide it (#783 / WORLD_ZERO_STYLE §3), so
-   the whole delta is MOTION: a wash that drifts and a hairline that travels.
+   NOT ONE NEW COLOUR VALUE IS DECLARED HERE, and that is still the point. A hue
+   of Albescent's own would put the society back in the spectrum and un-hide it
+   (#783 / WORLD_ZERO_STYLE §3), so the delta is the shared prism ground plus one
+   travelling hairline.
 
-   WHAT THIS BLOCK DECIDES:
+   THE WASH IS RETIRED AS A SPAN (#2499, epic #2496 ruling 2). `.alb-feed-aurora`
+   read `--faction-default-aurora` — the composer's own ground token — and had to
+   contradict its blend to do it: that token says `normal` because it describes a
+   ground painted BEHIND copy, and an overlay at `normal` is a 20% coloured film
+   sitting on the ink. The whole contradiction dissolves once the wash is a ground
+   again. `.alb-prism` sets `--faction-default-card-sheet`, `DefaultFeedFrame`
+   already composes it through `factionSheet(slug)`, and the light lands behind
+   every word without a blend-mode argument at any tier.
 
-   • THE BLEND IS NOT READ FROM `--faction-default-aurora-blend`, deliberately.
-     That token says `normal` in light because it describes the composer's
-     GROUND, painted behind the copy. Here the same wash is an OVERLAY — a
-     component's inline sheet is not markup this file can reach behind, and
-     `z-index: -1` is not a position available (§5). At `normal` a 20% coloured
-     film would sit on top of the ink; `multiply` on the light sheet and `screen`
-     on the dark one is what keeps it legible. Reading the token here would be a
-     var() at the wrong tier: it passes every lint gate and means the wrong
-     thing. Same call `.alb-task-aurora` and `.alb-praxis-aurora` already make.
+   WHAT THIS BLOCK STILL DECIDES:
 
    • THE EDGE IS A 1px MASKED RING, not a border, for the same reason
      `.alb-task-edge` and `.alb-praxis-edge` are. It lands on `.sidebar-card`'s
      own hairline so the effect reads as that border coming alive, and it is a
-     hairline rather than the task card's 3px so the chassis's own 4px rule down
+     hairline rather than the two cards' 3px so the chassis's own 4px rule down
      the left edge stays the louder of the two. #1148 made that rule the VERTICAL
      spectrum (it was `card-accent`, a near-black ink drawn as a border), so the
      two are now the same palette in two geometries — a still ramp down the left
@@ -6845,19 +6883,19 @@
      look like.
 
    • THE RADIUS IS THE TOKEN, not a literal. `.sidebar-card` corners with
-     `--radius-xl`, so this follows it for free — unlike the three earlier
-     Albescent blocks, which had to hardcode 14 / 18px to track a component's
-     inline style.
+     `--radius-xl`, so this follows it for free — unlike the earlier Albescent
+     blocks, which had to hardcode 14 / 18px to track a component's inline style.
 
    • MOTION IS OPT-IN, gated on `no-preference`. Stilled, the card is a static
-     wash and a static edge; nothing carries meaning through motion alone. */
+     prism ground and a static edge, and the ground deepens for that reader
+     (#2499, ruling 6). */
 .alb-feed {
   position: relative;
   isolation: isolate;
 }
-/* `inset: -1px`, NOT 0, BECAUSE THE MOUNT MOVED (#1942). These two spans used to
-   hang off `.alb-feed`, one level outside the card, where `inset: 0` landed on
-   `.sidebar-card`'s margin box — i.e. its border box, hairline included. They are
+/* `inset: -1px`, NOT 0, BECAUSE THE MOUNT MOVED (#1942). This span used to hang
+   off `.alb-feed`, one level outside the card, where `inset: 0` landed on
+   `.sidebar-card`'s margin box — i.e. its border box, hairline included. It is
    now mounted INSIDE the card (see AlbescentFeedFrame for why: the card's
    `backdrop-filter` makes it a stacking context, so no lift on a photo within it
    could reach a wash outside it). An absolutely positioned child resolves against
@@ -6865,32 +6903,12 @@
    travelling ring would float just inside the border it is meant to bring alive.
    The −1px is that border's width, and the radius stays `--radius-xl` — the
    card's own corner, measured on the same border box this offset restores. */
-.alb-feed-aurora,
 .alb-feed-edge {
   position: absolute;
   inset: -1px;
   z-index: 1;
   pointer-events: none;
   border-radius: var(--radius-xl);
-}
-
-/* The wash. Seven blooms blurred past recognition, so a short wide card reads it
-   as coloured light travelling across the sheet rather than as seven shapes. */
-.alb-feed-aurora {
-  overflow: hidden;
-}
-.alb-feed-aurora::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  background-image: var(--faction-default-aurora);
-  filter: var(--faction-default-aurora-filter);
-  opacity: var(--faction-default-aurora-opacity);
-  mix-blend-mode: multiply;
-  transform: translate3d(-5%, -4%, 0) scale(1.14);
-}
-[data-theme="dark"] .alb-feed-aurora::before {
-  mix-blend-mode: screen;
 }
 
 /* The hairline, travelling. The loop cut is the seamless one, so the ring scrolls

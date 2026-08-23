@@ -18,7 +18,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { factionSheet } from "../factions";
+import { factionSheet, factionSpectrumSheet } from "../factions";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
 
 const CSS = readFileSync(
@@ -112,6 +112,31 @@ describe("factionSheet() is the only reader of the triple (#2497)", () => {
   it("albescent resolves to the same family, so the two stay indistinguishable", () => {
     expect(factionSheet("albescent")).toEqual(factionSheet("na"));
     expect(factionSheet(null)).toEqual(factionSheet("na"));
+  });
+
+  it("appends the spectrum ramp to all THREE lists, never just the image", () => {
+    // The one silent way to get the spectrum border wrong, and the reason both
+    // cards call one helper (#2499). A background list is a list in three
+    // properties at once and CSS CYCLES the short ones: append the ramp to the
+    // image only and Albescent's SIX-layer dark prism hands its seventh layer
+    // the first blend mode again. It renders. It is simply wrong, in one
+    // cascade, on one faction — which is the defect nothing else here can fail
+    // on, because na's sheet is one layer and cycling one value is a no-op.
+    const ramped = factionSpectrumSheet();
+    const flat = factionSheet();
+    for (const [property, tail] of [
+      ["backgroundImage", ", var(--faction-default-rainbow)"],
+      ["backgroundBlendMode", ", normal"],
+    ] as const) {
+      expect(ramped[property], `${property} must gain exactly one layer`).toBe(
+        `${flat[property]}${tail}`,
+      );
+    }
+    // The clip already carried its trailing `border-box` — that is where the
+    // ramp paints, and it is the layer the colour is clipped by.
+    expect(ramped.backgroundClip).toBe(flat.backgroundClip);
+    // And the ramp only reaches the frame if the origin says so.
+    expect(ramped.backgroundOrigin).toBe("border-box");
   });
 
   it("a themed slug names its OWN family and never inherits na's cream", () => {
