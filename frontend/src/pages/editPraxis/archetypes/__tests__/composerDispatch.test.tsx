@@ -47,6 +47,7 @@ vi.mock("../../useEditPraxis", async (importOriginal) => ({
 // Imported after the mocks are registered.
 import EditPraxis from "../../../EditPraxis";
 import DefaultEditPraxis from "../DefaultEditPraxis";
+import AlbescentEditPraxis from "../AlbescentEditPraxis";
 import { surfaceMap } from "../../../../factions";
 import { pickVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
@@ -200,7 +201,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     ).toBe(DefaultEditPraxis);
   });
 
-  it.each(["__unregistered__", "na", "albescent", null])(
+  it.each(["__unregistered__", "na", null])(
     "falls %s through to DefaultEditPraxis (ADR-0065 §4)",
     (slug) => {
       expect(
@@ -208,6 +209,17 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
       ).toBe(DefaultEditPraxis);
     },
   );
+
+  // `albescent` was on that list until #2505 (epic #2496). ADR-0065 §4's
+  // "Albescent registers nothing here" held while the two kits were
+  // pixel-identical; #2404 ruled that Albescent's borders move, and this is the
+  // composer's share of that. It is still not a skin — see the wrapper's own
+  // assertions below.
+  it("albescent resolves to its wrapper, not to the na composer (#2505)", () => {
+    expect(
+      resolvedArchetype(pickVariant(surfaceMap("editPraxis"), "albescent", DefaultEditPraxis)),
+    ).toBe(AlbescentEditPraxis);
+  });
 
   it.each(WIDTHS)("renders the composer's own regions on %s", (width) => {
     const markup = render(width, baseState());

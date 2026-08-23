@@ -93,14 +93,17 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-profile-edge::before, .alb-plate-edge::before':
-    "the six Albescent spectrum edges' travelling ramp (#2498, +#2504). Two tiles of " +
-    'the ring\'s own `background-image: inherit`, six mount-widths wide inside ' +
+  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-plate-edge::before, .alb-profile-edge::before':
+    "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
+    'plates joined at #2504, the composer and the phone home at #2505). Two ' +
+    "tiles of the mount's own `background-image: inherit`, six mount-widths wide inside " +
     "index.css's `overflow: hidden`, slid by transform because " +
     '`background-position` repaints every frame on the main thread. Declared ' +
     'nowhere but inside the gate: with the sheet absent there is no child, and ' +
-    "the still ring is the mount's own background in index.css — the exact " +
-    'frame a reduced-motion reader already gets.',
+    "the still ramp is the mount's own background in index.css — the exact " +
+    'frame a reduced-motion reader already gets. Six of the seven are masked ' +
+    'rings; `.alb-desk .spectrum-rule` is a filled hairline, which turns out to ' +
+    'be the same travelling problem and takes the same child.',
   '.alb-profile-edge::before':
     'the same child, two band-widths instead of three, because the profile ' +
     "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +

@@ -617,15 +617,27 @@
    `background-image: inherit` rather than a second reference to the ramp: it
    keeps ONE declaration of the loop cut, and it keeps the rail's suppression
    working for free — `--spectrum-frame-image: none` on a member reaches the
-   parent, and the child inherits the `none`. ── */
+   parent, and the child inherits the `none`.
+
+   #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
+   the epic's technique ruling taken at its word. `.alb-composer-edge` is the
+   edit-praxis sheet's ring and states nothing anywhere — it takes the shared
+   ring's defaults in index.css and this child's defaults here.
+   `.alb-desk .spectrum-rule` is NOT a ring at all: it is the mobile field
+   desk's filled 3px identity hairline, which cannot wear the mask idiom (that
+   would punch its middle out) but wants exactly this track — a loop-cut ramp,
+   a 300% tile, `overflow: hidden` and a pre-painted child slid by transform. A
+   filled bar and a masked ring turn out to be the same travelling problem. ── */
 @keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge::before,
   .alb-detail-edge::before,
   .alb-praxis-edge::before,
   .alb-feed-edge::before,
-  .alb-profile-edge::before,
-  .alb-plate-edge::before {
+  .alb-composer-edge::before,
+  .alb-desk .spectrum-rule::before,
+  .alb-plate-edge::before,
+  .alb-profile-edge::before {
     content: "";
     position: absolute;
     top: 0;

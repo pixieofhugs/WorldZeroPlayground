@@ -55,6 +55,11 @@ const AlbescentProfileBody = lazyArchetype(() => import('../pages/characterProfi
 // is: each pulls in the whole na surface it dresses.
 const AlbescentFactionHero = lazyArchetype(() => import('../components/factionHero/AlbescentFactionHero'))
 const AlbescentFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/AlbescentFactionBody'))
+// #2505 (epic #2496) — the composer and the phone home. Lazy like every wrapper
+// above: each pulls in a whole na page, which is the weight route-splitting
+// exists to keep off the initial load.
+const AlbescentEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/AlbescentEditPraxis'))
+const AlbescentFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/AlbescentFieldDesk'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -220,4 +225,39 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * society shows its pale face only where it is doing the sealing.
    */
   metataskSeal: () => AlbescentSeal,
+
+  /**
+   * The composer (#2505, epic #2496) — the SEVENTH surface to unfreeze and the
+   * same "Default + light" shape as the six above. `AlbescentEditPraxis` renders
+   * `DefaultEditPraxis` whole and hands ONE ornament span to that component's
+   * `ornament` slot, so the ring is clipped to the composer sheet rather than
+   * painted over the page (#1028). It reverses one line of ADR-0065 §4 —
+   * "Albescent registers nothing here" — which was true while the two kits were
+   * pixel-identical and stopped being true at #2404.
+   *
+   * The delta is CHROME ONLY, and that is a measurement, not a preference. The
+   * canvas draws a bloom behind the live textarea; on the composited na ground
+   * the composer's quiet ink already reads 3.67:1 light / 3.02:1 dark, so any
+   * added wash spends a budget that is overdrawn. A composer is where people
+   * read their own words while typing — legibility beats the tell, so the tell
+   * moved to the sheet's edge, where it owes no ratio.
+   *
+   * One responsive component, both widths (ADR-0065 §2): there is no
+   * `mobileEditPraxis` surface to register a second row on.
+   */
+  editPraxis: () => AlbescentEditPraxis,
+
+  /**
+   * The phone home (#2505, epic #2496 ruling 5) — the EIGHTH, and the one that
+   * adds no element at all. `AlbescentFieldDesk` renders `DefaultFieldDesk`
+   * whole inside one classed div, and `.alb-desk .spectrum-rule` sets the
+   * identity band's existing na hairline travelling. The band already carried a
+   * static spectrum rule, so the travelling edge REPLACES it; a sibling span
+   * would have stood a second spectrum on a band that has one.
+   *
+   * MOBILE ONLY, BY RULING. The desktop `/field-desk` page dispatches on no
+   * faction at all — one unskinned page for nine — and this row does not give it
+   * a seam. Desktop follows the same wrapper pattern when it is needed.
+   */
+  mobileFieldDesk: () => AlbescentFieldDesk,
 }
