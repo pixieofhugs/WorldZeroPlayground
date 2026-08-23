@@ -205,14 +205,7 @@ export default function EphemeristsGloss({
       <span
         className="eph-turn"
         aria-hidden="true"
-        style={
-          {
-            display: "grid",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-            "--ephturn-phase": phaseFor(ordinal),
-          } as CSSProperties
-        }
+        style={{ display: "grid", textAlign: "center", whiteSpace: "nowrap", "--ephturn-phase": phaseFor(ordinal) } as CSSProperties}
         onAnimationIteration={() => setFrame((showing) => nextTurn(showing, frames.length))}
       >
         {frames.map((cast, index) => (
