@@ -1,4 +1,5 @@
 import { AdminOverlay } from "../shared";
+import { factionSheet } from "../../../utils/factions";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -34,7 +35,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet
-        background: "var(--faction-default-card-bg)",
+        ...factionSheet(),
         color: "var(--faction-default-card-text)",
         border: "1px solid var(--faction-default-card-line)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
@@ -63,6 +64,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         voteRule={
           <div
             aria-hidden
+            className="spectrum-rule"
             style={{
               height: 2,
               // Rainbow appearance 3 of 3: the one divider on the sheet. The
@@ -70,7 +72,6 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
               // values — a single number keeps this off a `dark ?` branch, and
               // the difference is one step of a wash behind a 2px rule.
               opacity: 0.45,
-              background: "var(--faction-default-rainbow)",
               margin: "var(--space-lg) 0 var(--space-md)",
             }}
           />

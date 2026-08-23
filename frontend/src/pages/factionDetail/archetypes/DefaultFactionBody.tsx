@@ -12,6 +12,18 @@ import type { FactionDetailState } from "../useFactionDetail";
 
 const NA_SLUG = "na";
 
+/**
+ * The plate's hairline — the na spectrum, running out from the kicker to the
+ * plate's far edge (#2497).
+ *
+ * A constant rather than a component: it takes no props and holds no state, so a
+ * component would be a function call around one inert span. Both classes are
+ * index.css's — `.spectrum-rule` is the ramp (shared with the sheet-head bands
+ * and the section heads, so Albescent's kit moves all of them at once) and
+ * `.faction-plate-rule` is this cut's geometry.
+ */
+const PLATE_RULE = <span aria-hidden className="spectrum-rule faction-plate-rule" />;
+
 /** Flex-wrap card grid — varied card sizes are intentional, not a CSS grid.
  *  The recently-completed PRAXIS gallery only, since #1945: the task row above
  *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
@@ -29,10 +41,22 @@ const CARD_GRID: CSSProperties = {
  * the shared {@link FactionDetailState}. Any faction without a bespoke body
  * falls through to this, so it must stay visually identical to before.
  *
- * NOTE: the styling here is intentionally PLACEHOLDER — real per-faction visual
- * design is deferred to Claude design. Data wiring + structure are final; the
- * section chrome (member tiles, layout) is meant to be restyled by a faction's
- * own body archetype.
+ * IT HAS A PLATE NOW (#2497). Its three regions were bare `<h2>` + grid under a
+ * `mb-8`, which is what the note below used to call PLACEHOLDER: every other
+ * body draws a kicker over a sheet with a rule under it, and this one drew a
+ * heading on the page. They wear `.faction-plate` — sheet, frame and padding —
+ * with `.faction-plate-kicker` for the header row and `.spectrum-rule` for the
+ * hairline, so the na spectrum here is the same ornament it is on the cards and
+ * Albescent's kit dresses all of them with one rule.
+ *
+ * THE DISCLOSURE DID NOT MOVE. `SectionPanel` still wraps each gallery and still
+ * hides it with `hidden`; the plate is the section's dress and sits OUTSIDE it,
+ * so the kicker and its rule stay visible when a region is folded. Putting the
+ * sheet on `SectionPanel` would have painted a second plate inside all seven
+ * sibling archetypes that mount it.
+ *
+ * NOTE: the member TILES are still deliberately plain — real per-faction visual
+ * design is deferred to Claude design. Data wiring + structure are final.
  *
  * THE JOIN BLOCK (#1314). This archetype used to carry only the burn notice,
  * because the factions falling through to it were waiting on #951's join/gate
@@ -187,11 +211,18 @@ export default function DefaultFactionBody({
         </div>
       )}
 
-      {/* ── Members ── PLACEHOLDER: design to restyle ── */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          {t("detail.default.membersHeading", { total: members.length })}
-        </h2>
+      {/* ── Members ── no disclosure, by `sectionDisclosure`'s own ruling: the
+          Roll is how a player joins and how the gate explains itself, so it is
+          not foldable. It wears the plate all the same — the plate is the
+          region's dress and the disclosure is a separate job on a separate
+          element. ── */}
+      <section className="faction-plate">
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            {t("detail.default.membersHeading", { total: members.length })}
+          </h2>
+          {PLATE_RULE}
+        </div>
         {members.length === 0 ? (
           <p className="font-body text-muted content-text">{t("detail.membersEmpty")}</p>
         ) : (
@@ -216,13 +247,16 @@ export default function DefaultFactionBody({
           This body has no `SectionHeading` of its own — it draws the bare
           `.label-heading` the other seven replaced with a house component — so
           the disclosure goes straight inside the `<h2>` here (#2311). */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          <SectionToggle
-            section={sections.tasks}
-            label={t("detail.default.tasksHeading", { total: tasks.length })}
-          />
-        </h2>
+      <section className="faction-plate">
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            <SectionToggle
+              section={sections.tasks}
+              label={t("detail.default.tasksHeading", { total: tasks.length })}
+            />
+          </h2>
+          {PLATE_RULE}
+        </div>
         <SectionPanel section={sections.tasks}>
           {tasks.length === 0 ? (
             <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
@@ -246,11 +280,14 @@ export default function DefaultFactionBody({
         </SectionPanel>
       </section>
 
-      {/* ── Recently completed ── PLACEHOLDER: design to restyle ── */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-        </h2>
+      {/* ── Recently completed ── */}
+      <section className="faction-plate">
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+          </h2>
+          {PLATE_RULE}
+        </div>
         <SectionPanel section={sections.praxis}>
           {recentPraxis.length === 0 ? (
             <p className="font-body text-muted content-text">

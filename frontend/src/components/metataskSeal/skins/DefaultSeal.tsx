@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../../utils/factions'
+import { factionName, factionSheet } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -22,7 +22,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
     <div
       className="relative"
       style={{
-        background: 'var(--faction-default-card-bg)',
+        ...factionSheet(),
         color: 'var(--faction-default-card-text)',
         border: '2px solid var(--faction-default-border)',
         borderRadius: 12,
@@ -33,13 +33,12 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
       {/* the whole rainbow, no allegiance — a full-spectrum accent, top edge */}
       <span
         aria-hidden="true"
-        className="absolute"
+        className="absolute spectrum-rule"
         style={{
           top: 0,
           left: 0,
           right: 0,
           height: 3,
-          background: 'var(--faction-default-rainbow)',
         }}
       />
 

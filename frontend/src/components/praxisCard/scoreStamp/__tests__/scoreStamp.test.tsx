@@ -775,9 +775,12 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
     // the point card takes the task card's mark; `na` was drawing one points mark
     // twice. What the assertion is for is unchanged: a rebuild must not lose the
     // mark, because under ADR-0049 it is the one figure that never drops out.
-    expect(markup).toContain('var(--faction-default-rainbow-conic)')
-    // The spectrum is the shared token, never a pasted gradient literal.
-    expect(markup).toContain('var(--faction-default-rainbow)')
+    // Both ramps moved into index.css in #2497 — `.spectrum-dial` for the
+    // ring's conic annulus, `.spectrum-rule` for the bar across the top edge —
+    // so the classes are what the markup carries now. The promise is the same
+    // one, one indirection further out: a shared cut, never a pasted literal.
+    expect(markup).toContain('spectrum-dial')
+    expect(markup).toContain('spectrum-rule')
     expect(markup).not.toMatch(HEX)
   })
 })
