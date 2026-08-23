@@ -101,8 +101,8 @@ const dress: ProfileDress = {
     border: `3px solid ${INK}`,
     // ornament (#1609): the union banner's flat offset shadow — a printed
     // register mark, not elevation, so it takes neither `--color-cast-shadow`
-    // nor the ink. The 8/10px offset and the 40% ARE the drawing and stay here;
-    // only the ink is a token now.
+    // nor the ink. The 8/10px offset IS the drawing and stays here; the 40% is
+    // the one strength every register prints at (#2302).
     boxShadow: '8px 10px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-4xl)',

@@ -83,10 +83,11 @@ const ROW_SIGIL = 13
  *  that local const-tracking is not worth the rule's complexity for a handful of
  *  sites. Move this onto a flipping ground and it becomes a defect again. */
 const HALFTONE = 'radial-gradient(rgba(182,255,46,0.09) 32%, transparent 34%)'
-/** The flyposter's flat offset register (#1609) — zero blur, and its strength is
- *  this file's drawing, so only the ink is a token. This one was invisible to the
- *  raw-colour ratchet: a module constant is Gap D wearing paint. */
-const CARD_SHADOW = '5px 6px 0 color-mix(in srgb, var(--color-print-offset) 50%, transparent)'
+/** The flyposter's flat offset register (#1609) — zero blur, at the uniform 40%
+ *  every register prints at (#2302; this card printed at 50%). Only the 5/6px
+ *  offset is this file's drawing now. This one was invisible to the raw-colour
+ *  ratchet: a module constant is Gap D wearing paint. */
+const CARD_SHADOW = '5px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)'
 
 /** The eyebrow voice. NO INK: its two mounts stand on different grounds -- the
  *  masthead's on the wall, the "view all" link's on the black jobs slab -- and
@@ -410,7 +411,8 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
           // clip chip, the comment voice, the score stamp's multiplier and the
           // task card's CTA. `-on-accent` is the measured 5.38:1.
           // The boxShadow is a flat offset print register, not lift (#1609): the
-          // ink is `--color-print-offset`, the 40% is this mark's own strength.
+          // ink is `--color-print-offset`, and the 40% is the one strength every
+          // register prints at (#2302), not this mark's own.
           style={{ fontFamily: BLACK, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: 'var(--faction-snide-on-accent)', background: PINK, boxShadow: '2px 3px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.findTask')}
