@@ -84,8 +84,11 @@ export function barredLives(
   return answerable(lives).filter((life) => life.level >= bar)
 }
 
-// Albescent vellum tokens (index.css). Albescent is always-light by design —
-// these vars are identical in both themes, so the letter never flips dark.
+// Albescent vellum tokens (index.css). THE LETTER FLIPS (#2301): this comment
+// used to say the vars were identical in both themes and the letter never went
+// dark. Since #2301 the reveal block has a `[data-theme="dark"]` half whose
+// values are the na card's own — nothing below changes, because every colour
+// here was already a token and the cascade does the rest.
 const BG = 'var(--albescent-reveal-surface)'
 const INK = 'var(--albescent-reveal-text)'
 const ACCENT = 'var(--albescent-reveal-ink)'
@@ -104,14 +107,15 @@ const MONO = "'Courier Prime', monospace"
 // its own copy of a value the family owns.
 const HAIRLINE = 'var(--albescent-reveal-border)'
 const HAIRLINE_FAINT = 'var(--albescent-reveal-border-faint)'
-// A DECIDED KEEP, and this one really has no rung: 0.07 sits between the two
-// declared alphas and nothing else in the reveal block or outside it draws at
-// it. Minting a third rung for one reader would cost the one blocking
-// stylesheet bytes (§6, #2019) to name a value with a single site. Albescent is
-// always-light by design — these tokens are declared once with no dark half —
-// so a frozen black here is not a dark-mode defect. If #2301 gives the reveal a
-// dark half, this is the line that will not follow, and the two above will.
-const RULE = 'rgba(0,0,0,0.07)'
+// `RULE` — a third hairline, frozen at rgba(0,0,0,0.07) — stood here. The note
+// on it was right about its own terms and right about what would end it: "a
+// frozen black here is not a dark-mode defect … if #2301 gives the reveal a
+// dark half, this is the line that will not follow". #2301 did, so it would
+// have been a black rule on a near-black sheet at 1.02:1 — drawn, and invisible.
+// It did not need the third rung it was refused, either: the canvas draws the
+// letter's `border-top` and its `border-bottom` at the SAME strength after dark,
+// so the terms slip's top rule is `HAIRLINE_FAINT` now like the term rows below
+// it. By day that is 1.17:1 → 1.13:1 at one site.
 
 // i18n key stems under factions:albescent.letter — resolved at render.
 //
@@ -229,7 +233,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       </div>
 
       {/* terms slip */}
-      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${RULE}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
+      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
         <div style={{
           ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy

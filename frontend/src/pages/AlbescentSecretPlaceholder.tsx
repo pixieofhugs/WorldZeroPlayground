@@ -1,10 +1,26 @@
 /**
  * Albescent "sealed" placeholder (#394). What an outsider sees at
  * `/factions/albescent` — deliberately NOT a 404, an in-world dead end.
- * Styled in the Albescent "Register" idiom (ADR-0017 / #231): always-light
- * vellum, near-black ink, Cormorant Garamond italic, quiet mono label, faint
- * fleur-de-lis glyph. Albescent surfaces never dim in dark mode — the
- * `--albescent-reveal-*` tokens carry identical values in both themes.
+ * Styled in the Albescent "Register" idiom (ADR-0017 / #231): vellum stock,
+ * Cormorant Garamond italic, quiet mono label, faint fleur-de-lis glyph.
+ *
+ * IT FOLLOWS THE FLIP (#2301, epic #2496 ruling 7), and it does so with no edit
+ * below. This docstring used to end "Albescent surfaces never dim in dark mode —
+ * the `--albescent-reveal-*` tokens carry identical values in both themes", and
+ * that is no longer true: the reveal register has a dark half whose values are
+ * the na card's own. Every colour on this page is either `BG`/`INK` or `ink()`
+ * mixed down from `INK`, so the sheet, the rules and the glyph all invert
+ * through the cascade with nothing branching on a `dark` boolean.
+ *
+ * ⚠ ADR-0017's ruling 7 still says Albescent's surfaces are "always-light
+ * (identical values in both the light and dark cascades, exactly as
+ * singularity's are always-dark)". That clause is now contradicted here and
+ * NEEDS AN AMENDMENT the owner has not yet made — flagged on #2301 rather than
+ * rewritten in passing. (Its other half is already dead: the
+ * `--faction-albescent-card-*` tokens it prescribes were deleted by #783, so
+ * Albescent has rendered as unaffiliated everywhere since.) Singularity's
+ * always-dark is untouched and stays — this ruling is about the vellum, not
+ * about retiring theme-invariant surfaces as a class.
  */
 import { useTranslation } from 'react-i18next'
 // Cormorant Garamond ships in the lazily-fetched faction sheet (#2079), and this

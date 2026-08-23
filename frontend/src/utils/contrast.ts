@@ -105,8 +105,35 @@ export function parseColor(input: string): Rgba | null {
     return { r, g, b, a: alpha };
   }
 
+  const faded = COLOR_MIX_FADE.exec(value);
+  if (faded) {
+    const base = parseColor(faded[1].trim());
+    const percent = readAlpha(`${faded[2]}%`);
+    if (base === null || percent === null || base.a !== 1) return null;
+    return { ...base, a: percent };
+  }
+
   return null;
 }
+
+// `color-mix(in srgb, <color> <p>%, transparent)` — fading a colour with
+// `transparent` is the only way CSS lets a custom property carry "that token, at
+// an alpha", and it is what the Albescent letter's night ink is written as
+// (#2301). Because sRGB mixing is premultiplied, mixing an OPAQUE colour with
+// `transparent` leaves the channels alone and lands the alpha at `p` — so this
+// is exactly `rgba(<color>, p/100)` and needs no mixing math.
+//
+// STRICTLY THIS ONE SHAPE. A mix of two real colours, another colour space, or
+// a second percentage still returns null, and null is a FAILURE to every caller
+// (see the note on this function) — never a skip. So this only ever ADDS
+// measurements: nothing that resolves through here could pass before, because
+// before, every `color-mix()` was an unmeasurable hole.
+//
+// The rendered sweeps never needed it — Chromium hands them the resolved
+// `color(srgb …)` above. It is the VALUE-level sweep, reading index.css in node
+// with no browser to resolve anything, that could not see through it.
+const COLOR_MIX_FADE =
+  /^color-mix\(\s*in\s+srgb\s*,\s*(.+?)\s+([\d.]+)%\s*,\s*transparent\s*\)$/i;
 
 function readChannel(token: string): number | null {
   const numeric = Number.parseFloat(token);

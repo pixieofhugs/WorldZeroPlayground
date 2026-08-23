@@ -30,25 +30,29 @@ import FactionSigil from "../sigil/FactionSigil";
  * a PURE move: not a byte of the markup below changed, and the six
  * `state` × `members` renders are identical before and after.
  *
- * ── THE REPAINT IS PARKED, DELIBERATELY (#2301) ─────────────────────────────
+ * ── THE PARKED REPAINT, NOW SETTLED (#2301) ─────────────────────────────────
  *
  * The other seven children each gathered their tile's register off its own task
- * card. This one cannot, and the reason is not scheduling — there is no register
- * to gather. `AlbescentTaskCard` is fifty lines that draw nothing of their own:
- * it renders `DefaultTaskCard` and washes two motion overlays over it, because
- * ADR-0048 and that card's own docstring rule that *"a secret society hiding in
- * plain sight is revealed by a shimmer, never by a colour — a repaint in
- * Albescent's own hues would put it back in the spectrum and un-hide it."* Its
- * token families are `--faction-default-*`. Adopting them here would delete this
- * tile's face outright.
+ * card. This one could not, and the reason was not scheduling — there was no
+ * register to gather. `AlbescentTaskCard` is fifty lines that draw nothing of
+ * their own: it renders `DefaultTaskCard` and washes two motion overlays over
+ * it, because ADR-0048 and that card's own docstring rule that *"a secret
+ * society hiding in plain sight is revealed by a shimmer, never by a colour — a
+ * repaint in Albescent's own hues would put it back in the spectrum and un-hide
+ * it."* Its token families are `--faction-default-*`.
  *
  * That tension — a reveal surface painting in `--albescent-reveal-*` while every
- * ordinary surface must not — is real, and it is NOT settled here. The owner has
- * ruled the reveal family gets a dark half (#2301, still `needs-design`) and
- * `index.css` still carries a comment forbidding exactly that. Whatever #2301
- * lands is what decides this tile's ground, so the colour is left untouched and
- * the extraction stands on its own. The light half is therefore still UNMEASURED
- * here, which is the one acceptance line of #2321 this tile does not yet meet.
+ * ordinary surface must not — is real, and #2301 has now dissolved rather than
+ * resolved it. The reveal register gained a dark half whose values ARE the na
+ * card's (`--faction-default-card-bg` / `-text` / `-muted`), so after dark this
+ * tile paints in the very family adopting outright would have handed it, and it
+ * still keeps its own pale face by day. Nothing below changed to get that: every
+ * colour here was already a reveal token, and the cascade did the rest.
+ *
+ * Both halves are measured now, which closes the one acceptance line of #2321
+ * this tile did not meet. Its inks, being the reveal register's, are the three
+ * rows `factionContrast.test.ts` holds under `albescent reveal sheet, …` in
+ * BOTH themes: 17.07 / 6.74 / 4.64 by day, 13.75 / 8.04 / 5.44 by night.
  *
  * The sigil comes from the shared canonical dispatcher — `FactionSigil` resolves
  * `albescent` to `AlbescentSigil` (the labyrinth, which carries no hue of its

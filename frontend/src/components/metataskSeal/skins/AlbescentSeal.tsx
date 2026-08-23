@@ -7,9 +7,15 @@ import type { SealSkinProps } from '../types'
  * Albescent seal — the pale correspondence register (#930). A seal is a foreign
  * sticker that keeps its ISSUER's voice, so this is one of the rare moments the
  * secret society shows its face: near-black ink on a near-white sheet, with a
- * single soft spectrum strip as its only colour. It reads the always-light
+ * single soft spectrum strip as its only colour. It reads the
  * `--albescent-reveal-*` reveal tokens (never a `--faction-albescent-*` theme,
  * which does not exist by design) so it stays restrained and un-tinted.
+ *
+ * IT FOLLOWS THE FLIP (#2301) and needs no edit to do it: every colour above is
+ * a reveal token, and after dark those resolve to the na card's own stock and
+ * ink. So the sticker is a pale sheet by day and an na-dark one by night, on
+ * whatever host card it has been stuck to. Its `-border` is what keeps it a
+ * distinct object when the host card happens to be na's too (2.74:1).
  */
 export default function AlbescentSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')

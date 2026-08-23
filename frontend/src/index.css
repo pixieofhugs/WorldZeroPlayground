@@ -7034,19 +7034,62 @@
      the guard that keeps them retired is not a ratio, it is the name being
      gone. `selectCard/__tests__/snideWearsTheClippingRegister.test.ts` pins it. */
   /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
-     Always-light, the same mechanism Singularity uses to stay always-dark.
 
-     This is NOT a faction theme and must never become one. Albescent has no
-     --faction-albescent-* block: it renders as unaffiliated everywhere, because
-     it is a secret society hiding in plain sight, and factionCssVar('albescent')
-     deliberately resolves to --faction-default-*. These tokens are reached only
-     by direct reference, from the two or three components that ARE the reveal
-     (the invitation letter, the secret placeholder, and the sigil they draw) —
-     the one moment the society shows its face. Renamed from --al-* so nobody
-     mistakes it for the theme that was removed.
+     IT FLIPS (#2301, epic #2496 ruling 7). This block used to say "always-light,
+     the same mechanism Singularity uses to stay always-dark", and the note under
+     it recorded that #1661 deleted the dark half. That instruction is SUPERSEDED
+     by owner ruling: a dark-mode reader gets a dark letter. Singularity stays
+     always-dark — that is deliberate and untouched; this is a ruling about the
+     vellum, not about retiring theme-invariant surfaces as a class. Albescent's
+     was the last always-light sheet of its kind, the Ephemerists' vellum having
+     flipped first (#2141).
+
+     This is STILL NOT a faction theme and must never become one. Albescent has
+     no --faction-albescent-* block: it renders as unaffiliated everywhere,
+     because it is a secret society hiding in plain sight, and
+     factionCssVar('albescent') deliberately resolves to --faction-default-*.
+     These tokens are reached only by direct reference, from the surfaces that
+     ARE the reveal — the invitation letter, the secret placeholder, the select
+     tile and the metatask seal. (The header used to say "the two or three
+     components"; that count was stale from the day #2329 split the select cards
+     into one file each. The labyrinth sigil is NOT among them: it paints in
+     --faction-default-rainbow-conic and has carried no reveal hue since #1891.)
 
      Do not point an ordinary Albescent surface at these. If a card, a feed row,
-     or a profile reads --albescent-reveal-*, the society is no longer hidden. */
+     or a profile reads --albescent-reveal-*, the society is no longer hidden.
+
+     ── THE DARK HALF MINTS NO COLOUR OF ITS OWN, WHICH IS THE POINT ──
+
+     Not one literal below. Every night value is the na card's own pair, or a
+     mix of it — `--faction-default-card-bg` / `-card-text` / `-card-muted`,
+     which already flip. That is the drawn design (canvas `Invitation.dc.html`),
+     and it is the epic's pattern rather than an exception to it: an Albescent
+     surface IS the na surface with light over it, so after dark the letter's
+     stock and ink are simply the na card's stock and ink. There is nothing here
+     to keep in sync with anything, the AA question is already answered by the na
+     card's own measured pair, and the society still owns no hue anyone could
+     point at.
+
+     The guard drove it. `factionContrast.test.ts` runs BOTH_THEMES and already
+     held three reveal pairings; the moment the tokens split they became three
+     real dark measurements, and they were let FAIL first — 1.02:1 for the ink
+     and 1.01:1 for the muted tier, which is the day's near-black ink sitting on
+     a near-black sheet, i.e. the letter with its text rubbed out. The values
+     below are what answers that, not what was tuned to fit it afterwards.
+
+     THE HAIRLINES ARE THE TRAP AND THEY ARE MIXED, NOT ALPHA'D. Keeping the day
+     alphas and only swapping the sheet leaves black at 0.10 and 0.055 on a
+     near-black ground: 1.03:1 and 1.02:1, three rules that are simply not there.
+     The design mixes them DOWN FROM THE CARD'S TEXT instead — 34% and 30% — so
+     they land at 2.74:1 and 2.42:1, heavier than their daytime 1.25:1 and
+     1.13:1 because the ground they will sit on is the prism (#2499), not paper.
+
+     Measured, composited, on the real sheet (day → night):
+       -text        17.07 → 13.75    both AAA; the night value is the na ink
+       -ink          6.74 →  8.04    the design's 74% mix
+       -text-muted   4.64 →  5.44    the tier #594 scarred; MORE margin at night
+       -border       1.25 →  2.74
+       -border-faint 1.13 →  2.42 */
   --albescent-reveal-surface: #ffffff;
   --albescent-reveal-text: #1c1c1a; /* near-black ink, no hue */
   /* Muted ink over the #ffffff sheet, at the AA-cleared alpha #594 landed on:
@@ -7059,9 +7102,48 @@
   --albescent-reveal-border-faint: rgba(0, 0, 0, 0.055);
   --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-/* The dark half of the block above held nothing but the `--gestalt-*` flips,
-   so it went with them (#1661). snide + albescent are theme-invariant and never
-   had a dark body here. */
+[data-theme="dark"] {
+  /* The stock and the ink are the na card's, aliased — the design's own two
+     lines, and the only two it needed. 13.75:1, and it flips because the na
+     card's pair already does. */
+  --albescent-reveal-surface: var(--faction-default-card-bg);
+  --albescent-reveal-text: var(--faction-default-card-text);
+  /* The quiet tier — the one with a scar on it. #594 shipped it at 0.44α /
+     2.78:1 by mistake and 0.61α / 4.64:1 is what it was fixed to, so the night
+     twin is answered the way that one was: on the composited value, never a raw
+     hex. The design draws only TWO ink levels after dark (74% for the body, full
+     strength for the headline), so the letter's third tier has no counterpart on
+     the board and is ruled here: it takes the na card's OWN quiet tier, which is
+     opaque, already painted on every na card, and already measured at 5.44:1 —
+     more margin than the 4.64 it clears by day, not less. */
+  --albescent-reveal-text-muted: var(--faction-default-card-muted);
+  /* The design's body ink: 74% of the card's text. 8.04:1. A mix rather than an
+     rgba() so nothing here freezes a copy of #f0e6d0 — repaint the na card and
+     the letter follows, which is the whole reason the design aliases instead of
+     minting. */
+  --albescent-reveal-ink: color-mix(in srgb, var(--faction-default-card-text) 74%, transparent);
+  /* THE HAIRLINES ARE THE TRAP, AND MIXING IS WHAT SPRINGS IT. Left as black at
+     the daytime 0.10 and 0.055 they would sit on a near-black sheet at 1.03:1
+     and 1.02:1 — three structural rules that are simply not drawn. The design
+     mixes them down from the card's TEXT instead, 34% and 30%, for 2.74:1 and
+     2.42:1. Heavier than the daytime 1.25:1 / 1.13:1 on purpose: after dark
+     these rules land on the prism (#2499), not on paper.
+     `-border-faint` also absorbs the letter's third hairline. `RULE` — a lone
+     rgba(0,0,0,0.07) module constant in `AlbescentInvitation` — had no rung of
+     its own and was kept raw because minting one for a single reader was not
+     worth the blocking bytes. The design settles it by drawing the letter's
+     `border-top` and its `border-bottom` at the SAME 30%, so the constant folds
+     in here and the one line the old comment predicted "will not follow" now
+     follows. By day that is 1.17:1 → 1.13:1, one site, imperceptible. */
+  --albescent-reveal-border: color-mix(in srgb, var(--faction-default-card-text) 34%, transparent);
+  --albescent-reveal-border-faint: color-mix(in srgb, var(--faction-default-card-text) 30%, transparent);
+  /* The board is silent on the cast, so the file's own unanimous rule decides
+     it: same geometry, deeper black (Ephemerists 0.55 → 0.8, SNIDE 0.55 → 0.85,
+     Everymen 0.5 → 0.8). Albescent's is a paper cast rather than a lift, so it
+     is scaled to the bottom of that band. Left alone it would be black at 0.055
+     on a near-black page — not wrong, just nothing at all. */
+  --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    WOW — THE LISTS (#895): the duel seal and the duel rail.
