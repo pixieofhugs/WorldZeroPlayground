@@ -225,6 +225,71 @@ reduced-motion gate.`,
     ).toEqual([])
   })
 
+  it('carries every Albescent ornament animation but the spark (#2498)', () => {
+    // The sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named
+    // "the Albescent drifts" as a candidate on one test: does every consumer
+    // treat the motion as ornament, and is the un-animated frame the one a
+    // reduced-motion reader already gets? Each of these nine says so in its own
+    // words in index.css — "stilled, the page is a static wash and a static
+    // prism ring; nothing carries meaning through motion alone" — and each
+    // leaves its resting `transform` behind in index.css, so nothing jumps.
+    //
+    // `alb-drift`'s KEYFRAME is the one thing that did not travel. #2404 already
+    // reaches it from here across the chunk boundary because index.css is the
+    // always-loaded entry sheet, and railSpectrumFrame.test.ts asserts that.
+    const albescent = (css: string): string[] => [
+      ...new Set(
+        [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+          .filter(([, , body]) => /\banimation(-name)?\s*:/.test(body))
+          .flatMap(([, prelude]) =>
+            prelude.split(',').map((one) => one.trim().replace(/\s+/g, ' ')),
+          )
+          .filter((selector) => selector.startsWith('.alb-')),
+      ),
+    ]
+
+    const here = albescent(SHEET)
+    for (const selector of [
+      '.alb-rainbow',
+      '.alb-task-aurora::before',
+      '.alb-detail-aurora::before',
+      '.alb-detail-foil::before',
+      '.alb-detail-foil::after',
+      '.alb-detail-ring::before',
+      '.alb-praxis-aurora::before',
+      '.alb-praxis-ring::before',
+      '.alb-feed-aurora::before',
+    ]) {
+      expect(here, `${selector} still animates from somewhere else`).toContain(selector)
+    }
+
+    // THE SPARK IS THE ONE THAT MAY NOT FOLLOW, and it is the only one left.
+    expect(
+      albescent(INDEX),
+      `Every Albescent animation index.css still runs. Only .alb-spark may be
+here: its gate does not merely add motion, it drops the glyph to opacity 0 and
+lets the keyframe carry it back up. A paint declaration may never defer, so the
+opacity has to stay — and with the animation deferred and the sheet stranded the
+spark would be an invisible mark rather than a still one, which is the exact
+degradation this sheet is not allowed to cause.`,
+    ).toEqual(['.alb-spark'])
+  })
+
+  it('leaves the spark behind for a reason that is still true', () => {
+    // Asserted, not asserted-in-a-comment: if the gated rule ever stops setting
+    // the paint, the spark becomes a legible still frame and may follow.
+    const gated = GATES.flatMap((body) => declarations(body))
+    expect(gated.some(([selector]) => selector === '.alb-spark')).toBe(false)
+
+    const spark = ruleBodies(INDEX, '.alb-spark').filter((body) =>
+      /\banimation\s*:/.test(body),
+    )
+    expect(spark, '.alb-spark no longer animates from index.css at all').toHaveLength(1)
+    expect(spark[0], 'the spark animates without touching paint — it may follow').toContain(
+      'opacity: 0',
+    )
+  })
+
   it('is reached only through src/factionFaces.ts, so it stays off the entry HTML', () => {
     // Comments stripped, because index.css and the sheet itself both discuss the
     // filename at length and should go on doing so — only an `import` counts.
