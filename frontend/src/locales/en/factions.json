@@ -87,6 +87,7 @@
         "witnessed": "Your account, witnessed and inscribed"
       },
       "whoHeading": "Who takes up the work",
+      "newGamePlus": "Available only for New Game+",
       "lifeMeta": "@{{username}} · {{faction}}",
       "cta": {
         "join": "Accept the order",

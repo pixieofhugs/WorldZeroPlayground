@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import (
+    account_has_admin_role,
     get_current_account_optional,
     get_current_character,
 )
@@ -18,6 +19,7 @@ from schemas.faction import (
     FactionStatusOut,
     InvitationLetterOut,
 )
+from services.albescent_reveal import is_albescent_revealed
 from services.auth import get_current_account
 from services.character import ALBESCENT_FACTION_SLUG
 from services.current_user import build_current_user
@@ -28,6 +30,19 @@ from services.faction_service import (
 )
 
 router = APIRouter()
+
+
+async def _viewer_is_admin(
+    account: Account | None, session: AsyncSession
+) -> bool:
+    """Admin status for the optional viewer of a reveal-gated listing (#2400).
+
+    An admin is treated as revealed to Albescent so moderation can read the
+    surfaces it moderates without inflating its own progress — the bypass is
+    defined once in :func:`services.albescent_reveal.is_albescent_revealed` and
+    only fed from here. Anonymous callers never reach the role query.
+    """
+    return account is not None and await account_has_admin_role(account.id, session)
 
 
 @router.get("", response_model=list[FactionOut])
@@ -45,7 +60,9 @@ async def list_factions(
         select(Faction).where(Faction.status == FactionStatus.visible).order_by(Faction.slug)
     )
     factions = result.scalars().all()
-    reveal_albescent = account is not None and account.albescent_revealed
+    reveal_albescent = is_albescent_revealed(
+        account, is_admin=await _viewer_is_admin(account, session)
+    )
     return [
         FactionOut.model_validate(faction)
         for faction in factions
@@ -63,7 +80,7 @@ async def choose_faction(
     """Choose or defect to a new faction.
 
     Works for the initial faction join and later defections.
-    Players cannot rejoin factions they have left, except UA Masters and Albescent.
+    Players cannot rejoin factions they have left, except Albescent.
 
     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
     dresses the whole site off `/auth/me` — the faction slug, the level-jump
@@ -98,13 +115,16 @@ async def get_faction_status(
     status_map, letters = await get_invitation_status(
         character.id, era_row.id, session
     )
+    reveal_albescent = is_albescent_revealed(
+        account, is_admin=await _viewer_is_admin(account, session)
+    )
     all_factions = [
         FactionStatusOut(
             slug=slug,
             status=status,
         )
         for slug, status in status_map.items()
-        if slug != ALBESCENT_FACTION_SLUG or account.albescent_revealed
+        if slug != ALBESCENT_FACTION_SLUG or reveal_albescent
     ]
     return FactionPageOut(
         current_faction_slug=character.faction_slug,

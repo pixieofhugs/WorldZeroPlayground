@@ -57,7 +57,7 @@
     "CovenTaskDetail": "src/pages/taskDetail/archetypes/CovenTaskDetail.tsx",
     "CovenVote": "src/components/vote/CovenVote.tsx",
     "CredentialCard": "src/components/CredentialCard.tsx",
-    "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
+    "DefaultCreateCharacter": "src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx",
     "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",

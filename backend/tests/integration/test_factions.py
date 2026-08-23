@@ -248,13 +248,30 @@ async def _make_account_albescent_eligible(
     character: Character,
     era: Era,
 ) -> None:
-    """Meet the ADR-0021 bar: level 8 + a submitted praxis in every non-sentinel faction."""
+    """Put ``character`` in a state where the Albescent door opens for it (#2399).
+
+    Two facts, and they are about two different things — which is the whole
+    shape of the re-cut (ADR-0080):
+
+    * the **account** holds the stamped unlock. How it was earned is not this
+      file's question; the earn predicate has its own tests in
+      ``test_albescent_unlock.py``, and stamping directly here keeps these tests
+      about reveal, listing and stickiness rather than re-deriving the rule.
+    * the **character** is below ``era.albescent_level_required``. It has to be:
+      #2399's ceiling means a life *at* the bar can never take Albescent, so a
+      helper that left it at level 8 would be setting up the one state in which
+      every join below is refused.
+
+    This replaces the ADR-0021 seeding (level 8 + a submitted praxis per
+    faction), which measured coverage a way the game no longer counts.
+    """
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA
     from models.character_stats import CharacterStats
-    from models.praxis import Praxis, PraxisStatus, PraxisType
-    from models.task import Task, TaskStatus
+
+    account = await session.get(Account, character.account_id)
+    account.albescent_unlocked = True
 
     result = await session.execute(
         select(CharacterStats).where(
@@ -263,32 +280,7 @@ async def _make_account_albescent_eligible(
         )
     )
     stats = result.scalar_one()
-    stats.level = CURRENT_ERA.albescent_level_required
-
-    sentinel_slugs = frozenset({"na", "albescent"})
-    for faction_slug in CURRENT_ERA.factions:
-        if faction_slug in sentinel_slugs:
-            continue
-        await _seed_faction(session, faction_slug)
-        task = Task(
-            title=f"Albescent gate task: {faction_slug}",
-            description="test",
-            point_value=5,
-            level_required=0,
-            status=TaskStatus.active,
-            created_by=character.id,
-            primary_faction_slug=faction_slug,
-        )
-        session.add(task)
-        await session.flush()
-        session.add(Praxis(
-            task_id=task.id,
-            created_by_id=character.id,
-            type=PraxisType.solo,
-            title=f"Albescent gate praxis: {faction_slug}",
-            body_text="proof",
-            status=PraxisStatus.submitted,
-        ))
+    stats.level = CURRENT_ERA.albescent_level_required - 1
     await session.commit()
 
 
@@ -451,10 +443,11 @@ async def test_hidden_ladder_rung_still_fires_the_ability(
 ):
     """Hiding the ``join_albescent`` rung must not withhold the ability (#1891).
 
-    The ladder filter is announcement copy only. Eligibility is decided by
-    ``era.albescent_level_required`` in ``services.character``, which never
-    consults ``level_profiles`` — this is the tripwire for anyone who later
-    routes the gate through the ladder and turns a display filter into an
+    The ladder filter is announcement copy only. Eligibility is decided by the
+    stamped ``account.albescent_unlocked`` column in ``services.character``
+    (ADR-0080) plus the ceiling in ``services.faction_service``, neither of
+    which ever consults ``level_profiles`` — this is the tripwire for anyone who
+    later routes the gate through the ladder and turns a display filter into an
     enforcement gate.
 
     An unrevealed account that reaches the level is therefore never told the
@@ -511,9 +504,12 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     )
     assert join.status_code == 200
 
-    # Leave Albescent for a real faction (albescent can_always_rejoin, and the
-    # target is one covered by the eligibility seeding). Leaving still means
-    # joining wow, so the character needs wow's invitation letter (#454).
+    # Leave Albescent for a real faction (albescent can_always_rejoin). Leaving
+    # still means joining wow, so the character needs wow's Faction row and its
+    # invitation letter (#454) — the ADR-0021 seeding used to create every
+    # faction row as a side effect of pooling praxes across them, and #2399's
+    # helper does not, so the row is asked for here explicitly.
+    await _seed_faction(db_session, "wow")
     await _seed_invitation(db_session, character.id, "wow", era.id)
     leave = await client.post(
         "/factions/choose",

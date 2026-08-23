@@ -293,7 +293,7 @@ export default function DefaultTaskDetail({
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryButton}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryButton}>
             {t(signupCtaKey(task.signup_reason))}
           </button>
           <div

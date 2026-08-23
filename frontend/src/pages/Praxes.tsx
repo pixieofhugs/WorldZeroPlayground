@@ -73,7 +73,12 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
         <PraxisFeedEmpty kind={emptyState} onClearAll={clearAllFilters} />
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-start">
+          <div
+            className="flex flex-wrap gap-4 items-start"
+            /* The previous filter's rows until the read lands (#2431) — dimmed
+               and inert, with "Load more" outside as its own sibling. */
+            data-stale={loading && items.length > 0 ? 'true' : undefined}
+          >
             {items.map((p) => (
               <PraxisCard key={`praxis-${p.id}`} praxis={p} />
             ))}

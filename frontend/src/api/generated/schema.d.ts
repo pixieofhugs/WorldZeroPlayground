@@ -864,7 +864,7 @@ export interface paths {
          * @description Choose or defect to a new faction.
          *
          *     Works for the initial faction join and later defections.
-         *     Players cannot rejoin factions they have left, except UA Masters and Albescent.
+         *     Players cannot rejoin factions they have left, except Albescent.
          *
          *     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
          *     dresses the whole site off `/auth/me` — the faction slug, the level-jump
@@ -961,6 +961,11 @@ export interface paths {
         /**
          * Get Leaderboard
          * @description Top characters by current era score, optionally filtered by faction.
+         *
+         *     Auth is **optional** and always was in effect — this is a public board and
+         *     anonymous callers must keep getting an answer. The account is read for one
+         *     thing: a caller revealed to Albescent may ask for that roster directly
+         *     rather than getting the Unaffiliated fold (#2422).
          */
         get: operations["get_leaderboard_leaderboard_get"];
         put?: never;
@@ -1395,6 +1400,11 @@ export interface paths {
         /**
          * Remove Metatask Route
          * @description Detach a previously applied metatask from a praxis.
+         *
+         *     Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
+         *     seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
+         *     has already recomputed both — a bare 204 left the composer's score stamp
+         *     printing the higher total until a reload.
          */
         delete: operations["remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete"];
         options?: never;
@@ -2426,6 +2436,11 @@ export interface components {
         CurrentUser: {
             /** Account Id */
             account_id: number;
+            /**
+             * Albescent Level Required
+             * @default 0
+             */
+            albescent_level_required: number;
             /**
              * Albescent Revealed
              * @default false
@@ -6242,7 +6257,9 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -7051,11 +7068,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PraxisOut"];
+                };
             };
             /** @description Validation Error */
             422: {

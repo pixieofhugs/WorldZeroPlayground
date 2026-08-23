@@ -461,9 +461,16 @@ async def test_creating_a_character_with_a_blank_name_is_coded(
 
 
 @pytest.mark.asyncio
-async def test_creating_a_character_in_albescent_is_coded(
+async def test_creating_a_character_in_albescent_unearned_is_coded(
     client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
 ):
+    """#2399 retired ``FACTION_ALBESCENT_NOT_AT_CREATION``.
+
+    Albescent IS a creation option now — for an account that earned it — so an
+    un-earned account falls through to the ordinary "you don't hold an
+    invitation" refusal every other unreachable faction gets. That is also the
+    answer ADR-0027 wants: it does not confirm the faction exists.
+    """
     response = await client.post(
         "/characters",
         json={"display_name": "Newcomer", "faction_slug": ALBESCENT_FACTION_SLUG},
@@ -472,7 +479,7 @@ async def test_creating_a_character_in_albescent_is_coded(
     assert response.status_code == 400, response.text
     assert (
         response.json()["detail"]["code"]
-        == ErrorCode.faction_albescent_not_at_creation.value
+        == ErrorCode.faction_invitation_required.value
     )
 
 

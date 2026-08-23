@@ -94,6 +94,19 @@ const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
   editPraxis: [...CORE_SIX, 'wow'],
+  // THE `createCharacter` ROW IS NEW (#2346/#2347) and it is the one row here
+  // that is expected to GROW, one slug per landed archetype — #2348–#2353 fan
+  // out in parallel behind the chassis, which is exactly the shape the note
+  // above warns about. Append your slug; do not restate the list.
+  //
+  // `albescent` and `na` are absent, and the REASON for albescent changed while
+  // this was being built. It is no longer "albescent can never be picked at
+  // creation" — #2399 re-cut the gate and it can be, since a new life is level 0
+  // and clears the level-8 ceiling. Molly's ruling is that it gets no archetype
+  // anyway: every Albescent registration is a WRAPPER rather than a skin
+  // (ADR-0027), so it renders `DefaultCreateCharacter`, WHICH IS the na kit. The
+  // `leaves %s to the surface Default` row below covers it either way.
+  createCharacter: ['ephemerists', 'snide', 'wow'],
   // Was `mobileFactionPage` with this exact slug list until ADR-0078 collapsed
   // faction detail to one responsive component per faction. Same move the
   // praxis-card row made below: the row follows the surviving surface rather

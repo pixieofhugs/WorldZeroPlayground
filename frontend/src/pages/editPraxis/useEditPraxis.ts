@@ -164,7 +164,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     confirmRemoveMetatask,
     cancelRemoveMetatask,
     seedApplied: seedAppliedMetatasks,
-  } = useMetataskApply(praxis, setError);
+  } = useMetataskApply({ praxis, setPraxis, setError });
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
   // One-shot post-publish beat for the member whose cast closed the gate (#591).

@@ -63,7 +63,7 @@
     "FACTION_REJOIN_FORBIDDEN": "Cannot rejoin a faction you have left.",
     "FACTION_INVITATION_REQUIRED": "You don't hold an invitation for that faction.",
     "FACTION_ALBESCENT_NOT_ELIGIBLE": "The order has not extended its hand to you.",
-    "FACTION_ALBESCENT_NOT_AT_CREATION": "Albescent is joined in the field, not chosen at creation.",
+    "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY": "Available only for New Game+.",
 
     "CHARACTER_NAME_REQUIRED": "A chosen name is required.",
     "CHARACTER_DEPARTED_NOT_RESTORABLE": "This life was ended by its player and cannot be restored.",

@@ -9,6 +9,7 @@ is told about it.
 
 from game_config import CURRENT_ERA, EraConfig, LevelProfile
 from models.account import Account
+from services.albescent_reveal import is_albescent_revealed
 
 #: The one unlock key that names a secret society.
 #:
@@ -34,17 +35,23 @@ HIDDEN_UNTIL_REVEALED_UNLOCK_KEY = "join_albescent"
 def visible_level_profiles(
     account: Account | None,
     era: EraConfig = CURRENT_ERA,
+    *,
+    is_admin: bool = False,
 ) -> list[LevelProfile]:
     """The era's level profiles with rungs this account may not be told about removed.
 
     Anonymous callers (``account is None``) are unrevealed by definition, so the
     public answer is the filtered one — fail closed.
 
+    ``is_admin`` is passed through to the reveal seam, which treats an admin as
+    revealed (#2400). Resolved by the caller: admin status is a DB row, and this
+    function stays sync and session-free config filtering.
+
     Profiles are never dropped, only rungs: a level keeps its rank and its other
     unlocks, so the ladder stays index-aligned with ``era.level_thresholds`` and
     the level-up pop-up still fires at the level it always did.
     """
-    if account is not None and account.albescent_revealed:
+    if is_albescent_revealed(account, is_admin=is_admin):
         return list(era.level_profiles)
 
     return [

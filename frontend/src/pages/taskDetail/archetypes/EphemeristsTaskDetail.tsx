@@ -713,7 +713,7 @@ export default function EphemeristsTaskDetail({
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
           <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
-          <button className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
+          <button data-testid="task-signup-cta" className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />

@@ -1,14 +1,25 @@
 /**
- * The Albescent invitation's life chooser (#395) only offers active,
- * non-Albescent lives — a banned life can't be carried, and a life already of
- * the Order has nothing left to accept. Pure filter, tested directly (no jsdom
- * in this repo — see vite.config.ts).
+ * The Albescent invitation's life chooser (#395, re-cut by #2399).
+ *
+ * It offers active, non-Albescent lives — a banned life can't be carried, and a
+ * life already of the Order has nothing left to accept — and since #2399 it also
+ * excludes lives at `albescent_level_required`. Albescent is a New Game+
+ * faction: the life that earned the account its door is exactly the life that
+ * may not walk through it. Those lives are not dropped from the letter, they are
+ * listed by `barredLives` and carry "Available only for New Game+", so the
+ * refusal is legible before it is attempted.
+ *
+ * `eligibleLives` and `barredLives` must PARTITION the answerable set — every
+ * active non-Albescent life lands in exactly one — which is the property that
+ * makes "shown but not selectable" true rather than merely usually true.
+ *
+ * Pure filters, tested directly (no jsdom in this repo — see vite.config.ts).
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-import { eligibleLives } from '../AlbescentInvitation'
+import { barredLives, eligibleLives } from '../AlbescentInvitation'
 import type { CharacterOut } from '../../api/auth'
 import factions from '../../locales/en/factions.json'
 
@@ -33,10 +44,15 @@ function life(overrides: Partial<CharacterOut>): CharacterOut {
   }
 }
 
+const CEILING = 8
+
 describe('eligibleLives', () => {
-  it('keeps active, non-Albescent lives', () => {
-    const lives = [life({ id: 1, faction_slug: 'ua' }), life({ id: 2, faction_slug: 'wow' })]
-    expect(eligibleLives(lives).map((l) => l.id)).toEqual([1, 2])
+  it('keeps active, non-Albescent lives below the ceiling', () => {
+    const lives = [
+      life({ id: 1, faction_slug: 'ua', level: 1 }),
+      life({ id: 2, faction_slug: 'wow', level: 7 }),
+    ]
+    expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([1, 2])
   })
 
   // Was written against `paused`, the one status the roster carried and the
@@ -44,17 +60,82 @@ describe('eligibleLives', () => {
   // life dropped, its sibling kept — is asserted on the surviving non-active
   // status instead of deleted with it.
   it('drops a non-active life while keeping its sibling', () => {
-    const lives = [life({ id: 1, status: 'banned' }), life({ id: 2 })]
-    expect(eligibleLives(lives).map((l) => l.id)).toEqual([2])
+    const lives = [life({ id: 1, status: 'banned', level: 0 }), life({ id: 2, level: 0 })]
+    expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([2])
   })
 
   it('drops lives already of the Order', () => {
-    const lives = [life({ id: 1, faction_slug: 'albescent' }), life({ id: 2, faction_slug: 'na' })]
-    expect(eligibleLives(lives).map((l) => l.id)).toEqual([2])
+    const lives = [
+      life({ id: 1, faction_slug: 'albescent', level: 0 }),
+      life({ id: 2, faction_slug: 'na', level: 0 }),
+    ]
+    expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([2])
   })
 
   it('returns empty when nobody is fit to answer', () => {
-    expect(eligibleLives([life({ status: 'banned' })])).toEqual([])
+    expect(eligibleLives([life({ status: 'banned' })], CEILING)).toEqual([])
+  })
+
+  /* ---------------------------------------------------------------------- *
+   * #2399 — the ceiling. The ONLY maximum-level test in the frontend.
+   * ---------------------------------------------------------------------- */
+
+  it('drops the life AT the ceiling — it is too late for that one', () => {
+    const lives = [life({ id: 1, level: CEILING }), life({ id: 2, level: CEILING - 1 })]
+    expect(eligibleLives(lives, CEILING).map((l) => l.id)).toEqual([2])
+  })
+
+  it('keeps the level directly below the bar — the boundary is >=, not >', () => {
+    expect(eligibleLives([life({ id: 1, level: CEILING - 1 })], CEILING)).toHaveLength(1)
+  })
+
+  it('drops a life ABOVE the ceiling, not only one exactly on it', () => {
+    expect(eligibleLives([life({ id: 1, level: CEILING + 3 })], CEILING)).toEqual([])
+  })
+
+  it('treats a non-positive bar as no ceiling, never as a bar of zero', () => {
+    // `albescent_level_required` is 0 on the wire for an unseeded era. Reading
+    // that as a real ceiling would bar the whole roster and print "New Game+"
+    // at everybody; the server still refuses at the door either way, so the
+    // permissive reading is the one that cannot invent a refusal.
+    const lives = [life({ id: 1, level: 8 }), life({ id: 2, level: 0 })]
+    expect(eligibleLives(lives, 0).map((l) => l.id)).toEqual([1, 2])
+    expect(barredLives(lives, 0)).toEqual([])
+  })
+})
+
+describe('barredLives', () => {
+  it('lists the lives the ceiling shut out, rather than hiding them', () => {
+    const lives = [life({ id: 1, level: CEILING }), life({ id: 2, level: 2 })]
+    expect(barredLives(lives, CEILING).map((l) => l.id)).toEqual([1])
+  })
+
+  it('never lists a life that is not answerable in the first place', () => {
+    const lives = [
+      life({ id: 1, level: CEILING, status: 'banned' }),
+      life({ id: 2, level: CEILING, faction_slug: 'albescent' }),
+    ]
+    expect(barredLives(lives, CEILING)).toEqual([])
+  })
+
+  it('partitions the answerable set with eligibleLives — no life in both, none lost', () => {
+    const lives = [
+      life({ id: 1, level: 0 }),
+      life({ id: 2, level: CEILING - 1 }),
+      life({ id: 3, level: CEILING }),
+      life({ id: 4, level: CEILING + 5 }),
+      life({ id: 5, level: 3, status: 'banned' }),
+      life({ id: 6, level: 3, faction_slug: 'albescent' }),
+    ]
+    const eligible = eligibleLives(lives, CEILING).map((l) => l.id)
+    const barred = barredLives(lives, CEILING).map((l) => l.id)
+
+    expect(eligible).toEqual([1, 2])
+    expect(barred).toEqual([3, 4])
+    expect(eligible.filter((id) => barred.includes(id))).toEqual([])
+    // Lives 5 and 6 are answerable by neither, and that is the point: they are
+    // not shut out by the CEILING, so they carry no New Game+ line.
+    expect([...eligible, ...barred].sort()).toEqual([1, 2, 3, 4])
   })
 })
 

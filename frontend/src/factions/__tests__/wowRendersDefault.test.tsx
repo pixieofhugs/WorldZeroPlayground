@@ -152,6 +152,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'duelSeal',
   'mobileFieldDesk',
   'metataskSeal',
+  // #2350 — THE CHARTER: WOW's dress over character creation, the surface
+  // #2346 declared. Derived, not drawn (the owner ruled no design was needed):
+  // the register is the decree task card's and the geometry is the writ's.
+  'createCharacter',
 ])
 
 describe('wow is fully skinned: every surface the manifest declares is claimed', () => {

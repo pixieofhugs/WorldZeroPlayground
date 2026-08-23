@@ -600,6 +600,14 @@ const SNIDE_WALL_INKS = [
   ["composer ink", "--faction-snide-composer-ink"],
   ["composer prose", "--faction-snide-composer-muted"],
   ["composer faint ink", "--faction-snide-composer-faint"],
+  // BARE, and that is the point of the row (#2349). The generator below already
+  // measures this ink UNDER the danger veil, because the composer's error
+  // BANNER carries one. Character creation spends the same ink with nothing
+  // beneath it — the portrait picker's error line, and a character counter that
+  // has hit its cap — and a reading through a veil does not vouch for the
+  // reading without one, the same way `-wall-credit` and `-wall-alarm` needed
+  // bare rows when the faction page started printing them unveiled.
+  ["composer alarm, bare", "--faction-snide-composer-alarm"],
 ] as const;
 
 const SNIDE_WALL_PAIRS: Pair[] = [
