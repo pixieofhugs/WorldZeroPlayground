@@ -105,7 +105,7 @@ const renderStamp = (): string =>
 const renderHero = (): string =>
   renderToStaticMarkup(
     <MemoryRouter>
-      <EphemeristsFactionHero name="The Ephemerists" members={12} tasks={5} praxes={31} />
+      <EphemeristsFactionHero slug="ephemerists" name="The Ephemerists" members={12} tasks={5} praxes={31} />
     </MemoryRouter>,
   )
 

@@ -8,13 +8,14 @@
  * assertion therefore has to be made where both halves are mounted together —
  * this file renders the page and counts occurrences.
  *
- * BOTH BRANCHES are walked. `albescent` claims no `factionHero`, so it takes
- * the shared `PageTitle` + description chrome instead, and its body is
- * `DefaultFactionBody`, which draws NO description — so the fall-through branch
- * gets its one and only copy from that chrome and the placeholder card there
- * must stay. Deleting it to match the hero deletion would take the description
- * to zero for every faction without a hero, which is why this case asserts
- * exactly one rather than none.
+ * BOTH BRANCHES are walked, and what the second branch MEANS changed in #2504.
+ * `albescent` still registers no hero of its own, but there is a fall-through
+ * one now (`DefaultFactionHero`), and a hero carries no description — so the
+ * `PageTitle` + description chrome this case used to count has left the page
+ * altogether. Its one copy went DOWN rather than away: `DefaultFactionBody` grew
+ * the About plate the seven bespoke bodies have always drawn. The number here is
+ * unchanged, and that is the whole point — the region moved and the sentence did
+ * not multiply. Had the chrome simply been deleted, this case would read zero.
  *
  * `useFactionDetail` is mocked for the reason the responsive suite gives: it is
  * effect-driven and effects never run under `renderToStaticMarkup`. The state

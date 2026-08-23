@@ -24,7 +24,7 @@ import "../../../i18n";
 import EphemeristsFactionHero from "../EphemeristsFactionHero";
 
 const html = renderToStaticMarkup(
-  <EphemeristsFactionHero name="The Ephemerists" members={4} tasks={9} praxes={2} />,
+  <EphemeristsFactionHero slug="ephemerists" name="The Ephemerists" members={4} tasks={9} praxes={2} />,
 );
 
 describe("the Ephemerists hero wears the notation band (#2367)", () => {

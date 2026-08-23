@@ -200,6 +200,7 @@
   },
   "factionHero": {
     "stats": {
+      "members": "Members",
       "tasks": "Tasks open",
       "praxes": "Praxis submitted"
     },
