@@ -20,20 +20,27 @@
  * `--faction-snide-note-wall-shadow`, which trades its offset for a hairline —
  * and geometry lives at the call site.
  *
- * **Change a strength.** The nine surviving values are per-site drawing, not a
- * scale, so nothing else in the repo would notice one drifting. The ledger below
- * is what notices.
+ * **Change a strength.** Nothing else in the repo would notice one site drifting
+ * off the single strength, which is how nine of them grew in the first place.
+ * The ledger below is what notices.
  *
  * **Regrow the class.** The ratchet cannot see this class in three of the shapes
  * it is written in — `filter:`, a `shadow=` JSX prop, a module constant — so
  * `no-raw-colour-values` reporting zero proves nothing here. Two of the
  * seventeen were never on the legacy list at all.
  *
- * WHAT IS DELIBERATELY NOT ASSERTED
- * ---------------------------------
- * That the nine strengths collapse to one. That is the honest next move and it is
- * a DESIGN call that needs eyes on seventeen surfaces; the token exists so it can
- * be made in one line. A test pinning it either way would be voting.
+ * WHAT #2302 COLLAPSED
+ * --------------------
+ * The nine per-site strengths are gone: every register prints at ONE strength,
+ * 40%, which was already the plurality at six of the seventeen. Owner's ruling,
+ * 2026-08-22 (#2302 phase 1). Six marks moved VISIBLY and on purpose — the four
+ * light ones (20/22/30/32) darkened, the two heaviest (50/55) lightened — because
+ * a uniform state is the thing phase 2 is meant to look at.
+ *
+ * So this file no longer pins nine values; it pins the one, plus how many marks
+ * each file strikes. If phase 2 says a mark needed to be different, phase 3 mints
+ * at most a light and a heavy TIER — a named token, argued here — and a per-site
+ * percentage typed straight into a `style=` is the thing this test refuses.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -49,22 +56,24 @@ const themes = readThemes(
   readFileSync(fileURLToPath(new URL('../index.css', import.meta.url)), 'utf8'),
 )
 
+/** The one strength every offset register is struck at (#2302 phase 1). */
+const STRENGTH = 40
+
 /**
- * The strength each migrated site prints at, as it printed before the token.
- * Sorted per file so the entry is a set of values rather than a source order that
- * moves when a file is reordered.
+ * How many registers each file strikes. A count, not a list of values, because
+ * there is only one value left to list.
  *
- * If you added a NEW offset register, add its strength here — and say in the PR
+ * If you added a NEW offset register, bump the count here — and say in the PR
  * whether you looked at it, because this file is the only thing standing in for a
  * pair of eyes.
  */
-const STRENGTH_LEDGER: Record<string, number[]> = {
-  'components/factionHero/SnideFactionHero.tsx': [32, 40, 40],
-  'components/metataskSeal/skins/SnideSeal.tsx': [35, 40],
-  'pages/characterProfile/archetypes/EverymenProfileBody.tsx': [40],
-  'pages/characterProfile/archetypes/SnideProfileBody.tsx': [45, 50, 55],
-  'pages/factionDetail/archetypes/SnideFactionBody.tsx': [20, 22, 30, 35, 40, 45],
-  'pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx': [40, 50],
+const SITE_LEDGER: Record<string, number> = {
+  'components/factionHero/SnideFactionHero.tsx': 3,
+  'components/metataskSeal/skins/SnideSeal.tsx': 2,
+  'pages/characterProfile/archetypes/EverymenProfileBody.tsx': 1,
+  'pages/characterProfile/archetypes/SnideProfileBody.tsx': 3,
+  'pages/factionDetail/archetypes/SnideFactionBody.tsx': 6,
+  'pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx': 2,
 }
 
 /** Every `color-mix(in srgb, var(--color-print-offset) N%, transparent)` in `source`. */
@@ -113,15 +122,25 @@ describe(`${TOKEN} is theme-invariant on purpose`, () => {
   })
 })
 
-describe('every offset register keeps the strength it was printed at', () => {
+describe('every offset register prints at the one strength', () => {
   const found = new Map<string, number[]>()
   for (const path of sourceFiles()) {
     const strengths = strengthsIn(readStripped(path))
     if (strengths.length > 0) found.set(toRelative(path), strengths)
   }
 
-  it('matches the ledger, file for file and value for value', () => {
-    expect(Object.fromEntries([...found].sort())).toEqual(STRENGTH_LEDGER)
+  it('strikes no mark at any other percentage', () => {
+    const offStrength = [...found].flatMap(([file, strengths]) =>
+      strengths.filter((value) => value !== STRENGTH).map((value) => `${file}: ${value}%`),
+    )
+
+    expect(offStrength).toEqual([])
+  })
+
+  it('matches the ledger, file for file and count for count', () => {
+    const counts = [...found].map(([file, strengths]): [string, number] => [file, strengths.length])
+
+    expect(Object.fromEntries(counts.sort())).toEqual(SITE_LEDGER)
   })
 
   it('covers all seventeen sites the migration names', () => {

@@ -339,15 +339,18 @@
      looking for the shadow under a card, it is the token above, not this one.
 
      STRENGTH STAYS AT THE CALL SITE — `color-mix(in srgb,
-     var(--color-print-offset) 32%, transparent)` — which is the same split the
+     var(--color-print-offset) 40%, transparent)` — which is the same split the
      cast token makes for blur and offset and the same one `shared.tsx`'s byline
-     rule makes as a percentage of `currentColor`: how hard THIS mark is printed
-     is the component's drawing, and only the paint was ever off-theme. All NINE
-     strengths that survive (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 /
-     0.55) are kept exactly, so this rung repaints no pixel. Collapsing them onto
-     one is the honest next move and it is a DESIGN call that needs eyes on
-     seventeen surfaces; minting the name is what makes it a one-line change when
-     someone makes it.
+     rule makes as a percentage of `currentColor`: only the paint was ever
+     off-theme. But there is now exactly ONE strength to write. #1609 kept all
+     nine (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 / 0.55) so it
+     repainted no pixel; #2302 collapsed them onto 40%, which was already the
+     plurality at six of seventeen, on the owner's ruling of 2026-08-22. That
+     DID repaint: four light marks darkened and two heavy ones lightened, on
+     purpose, because a uniform state is the thing to be looked at. If a mark
+     turns out to need a lighter or harder impression, the answer is a named
+     TIER argued here — at most three — not a percentage typed at one call site.
+     `printOffsetToken.test.ts` holds the line at one.
 
      THEME-INVARIANT ON PURPOSE — there is no dark half, and that is the decision
      rather than an omission. Nothing behind these marks moves: they are struck on
