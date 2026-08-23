@@ -167,9 +167,13 @@ export function nextTurn(current: number, count: number): number {
  * The value is a `calc` over the period token rather than a computed number of
  * seconds so that retuning the period retunes the stagger with it; a literal
  * here would be a second copy of the clock, free to drift out of step.
+ *
+ * The token is `--ephturn-`, not `--eph-turn-`: `--eph-*` is the retired
+ * illuminated-codex COLOUR family, which four suites forbid outright on a plate
+ * surface. See the rule in `index.css`.
  */
 const phaseFor = (ordinal: number): string =>
-  `calc(var(--eph-turn-period) * ${(-0.382 * ordinal).toFixed(3)})`;
+  `calc(var(--ephturn-period) * ${(-0.382 * ordinal).toFixed(3)})`;
 
 /**
  * ONE TURNING LABEL.
@@ -206,7 +210,7 @@ export default function EphemeristsGloss({
             display: "grid",
             textAlign: "center",
             whiteSpace: "nowrap",
-            "--eph-turn-phase": phaseFor(ordinal),
+            "--ephturn-phase": phaseFor(ordinal),
           } as CSSProperties
         }
         onAnimationIteration={() => setFrame((showing) => nextTurn(showing, frames.length))}

@@ -276,21 +276,30 @@ describe('no cast can render as tofu (#2148)', () => {
  * surface that actually has five labels. A count of DISTINCT phases is the
  * assertion, because a reused clock is exactly the failure that hides — the
  * labels still turn, they just turn together.
+ *
+ * THE TOKEN IS NAMED `--ephturn-*` and the missing hyphen is deliberate:
+ * `--eph-*` is the retired illuminated-codex COLOUR family, and four suites
+ * (`scoreStamp`, `ephemeristsMasthead`, `ephemeristsPlateSurfaces`,
+ * `ephemeristsFeedFrame`) assert no plate surface renders it. A motion token
+ * spelled `--eph-turn-phase` fails all four, so the spelling is asserted here
+ * rather than rediscovered by whoever "tidies" it.
  */
 describe('one clock, a phase per label (#2392)', () => {
+  const PHASE = /--ephturn-phase:([^&";]+)/g
+
   it('declares the period once, in the 9-11s band #2148 asked for', () => {
     expect(
       INDEX_CSS.match(/animation:\s*eph-turn/g)?.length,
       'one rule, not one per clock',
     ).toBe(1)
-    const period = INDEX_CSS.match(/--eph-turn-period:\s*([\d.]+)s/)
+    const period = INDEX_CSS.match(/--ephturn-period:\s*([\d.]+)s/)
     expect(period, 'the period is a token').not.toBeNull()
     expect(Number(period![1])).toBeGreaterThanOrEqual(9)
     expect(Number(period![1])).toBeLessThanOrEqual(11)
   })
 
   it('gives the score stamp five labels and five different beats', () => {
-    const phases = [...renderStamp().matchAll(/--eph-turn-phase:([^&";]+)/g)].map((m) => m[1])
+    const phases = [...renderStamp().matchAll(PHASE)].map((m) => m[1])
     expect(phases.length, 'five turning labels on the stamp').toBe(5)
     expect(new Set(phases).size, 'and no two of them on the same beat').toBe(5)
   })
@@ -300,10 +309,14 @@ describe('one clock, a phase per label (#2392)', () => {
       ['task card', renderCard()],
       ['faction hero', renderHero()],
     ] as const) {
-      const phases = [...html.matchAll(/--eph-turn-phase:([^&";]+)/g)].map((m) => m[1])
+      const phases = [...html.matchAll(PHASE)].map((m) => m[1])
       expect(phases.length, `${surface} turns more than one label`).toBeGreaterThan(1)
       expect(new Set(phases).size, `${surface} staggers them`).toBe(phases.length)
     }
+  })
+
+  it('keeps the clock out of the retired codex colour namespace', () => {
+    expect(renderStamp(), 'a gloss renders no --eph-* token').not.toMatch(/--eph-[a-z]/)
   })
 })
 

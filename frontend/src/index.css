@@ -8448,10 +8448,17 @@
      the 9–11s band #2148 asked for. A period plus a per-instance phase does for
      N what a second rule did for two.
 
-     `--eph-turn-period` is declared HERE and nowhere else, so retuning the
-     clock is one number in one place — the component's phase is a fraction OF
-     it (see `EphemeristsGloss`), not a second literal that could drift out of
-     step with it.
+     `--ephturn-period` is declared HERE and nowhere else, so retuning the clock
+     is one number in one place — the component's phase is a fraction OF it (see
+     `EphemeristsGloss`), not a second literal that could drift out of step with
+     it.
+
+     THE NAME IS `--ephturn-`, NOT `--eph-turn-`, and the missing hyphen is
+     load-bearing: `--eph-*` is the RETIRED illuminated-codex colour family
+     (`--eph-vellum`, `--eph-rubric`, …), and four suites assert that no plate
+     surface renders `/--eph-[a-z]/` because the two palettes must never mix on
+     one surface. A motion token wearing that prefix would trip them, and would
+     blur a namespace whose whole job is to be un-mixable.
 
      THE PHASE IS NEGATIVE, and that is not a detail. A positive delay would
      leave a label sitting at its normal opacity 1 until the clock started and
@@ -8460,9 +8467,9 @@
      every label is mid-plateau at first paint and nothing moves that should
      not. */
   .eph-turn {
-    --eph-turn-period: 10s;
-    animation: eph-turn var(--eph-turn-period) ease-in-out infinite;
-    animation-delay: var(--eph-turn-phase, 0s);
+    --ephturn-period: 10s;
+    animation: eph-turn var(--ephturn-period) ease-in-out infinite;
+    animation-delay: var(--ephturn-phase, 0s);
   }
   .eph-turn-scope:hover .eph-turn,
   .eph-turn-scope:focus-within .eph-turn {
