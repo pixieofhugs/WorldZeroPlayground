@@ -5898,7 +5898,7 @@
      a ring drawn around the wrong element rather than a missing one. */
   position: relative;
 }
-/* ONE RING, SIX MOUNTS (#2407).
+/* ONE RING, SEVEN MOUNTS (#2407; the seventh is #2505's composer).
  *
  * The five `.alb-*-edge` spans below were five hand-written copies of exactly
  * this device: the same `mask … exclude` idiom, the same tiling loop cut, the
@@ -5918,12 +5918,19 @@
  * member whose whole rule the tests look up by name, and the `ruleBodies`
  * helper in `utils/__tests__/cssVars.ts` matches a selector only where nothing
  * follows it before the brace — so a trailing position is what keeps it
- * findable while the five element selectors resolve to their own rules. */
+ * findable while the five element selectors resolve to their own rules.
+ *
+ * `.alb-composer-edge` (#2505) joins and states NOTHING of its own, which is
+ * the first mount to prove these defaults were the right ones: it wants the
+ * 1px inset, the 0.6, the 300% tile, and `inherit` reads the composer sheet's
+ * own 10px corner straight off `ComposerSheet`'s inline style. Its whole
+ * declaration is this one line. */
 .alb-task-edge,
 .alb-detail-edge,
 .alb-praxis-edge,
 .alb-feed-edge,
 .alb-profile-edge,
+.alb-composer-edge,
 .spectrum-frame::before {
   position: absolute;
   inset: 0;
@@ -8494,6 +8501,39 @@
   padding: var(--space-xs);
   background-size: 200% 100%;
   opacity: 1;
+}
+
+/* Albescent — the MOBILE field desk's identity band (#2505, epic #2496 ruling
+   5). The phone home already carries the na spectrum as a 3px hairline across
+   the top of the identity block — #1553's "one mark at three scales" — so the
+   travelling edge REPLACES that rule rather than standing a second spectrum on
+   top of it. This is the whole of the replacement, and it is three lines,
+   because `DefaultFieldDesk` marks that hairline `.spectrum-rule` (#2497's
+   linear cut) and two classes beat one from anywhere in the sheet. Strip
+   `alb-desk` and the two homes are byte-identical.
+
+   NOT THE MASKED RING. The other seven mounts of the drift are `.spectrum-frame`
+   rings around a sheet; this is a FILLED bar, and the `mask … exclude` idiom
+   would punch its middle out and leave two hairlines. What it shares with them
+   is the TRACK: the loop cut, a 300% tile, `overflow: hidden`, and — from
+   motion.ornament.css, inside the gate — the same pre-painted `::before` slid by
+   `alb-edge-travel`. No keyframe is minted here; the epic's technique ruling is
+   satisfied by reusing the one six mounts already share.
+
+   THE LOOP CUT, because the child tiles. `--faction-default-rainbow` ends on
+   magenta and begins on red, so two tiles of it meet at a hard seam every
+   cycle; `-rainbow-loop` repeats its first stop at 100%, which is the entire
+   reason that token exists. The rest frame therefore shows a THIRD of the ramp
+   where na's band shows the whole of it — the same trade every `.spectrum-frame`
+   mount already makes, and the honest one: rest and travel must show the same
+   stripe width, or turning motion on would be a design change.
+
+   The desktop `/field-desk` page has no faction dispatch at all and this does
+   not give it one (ruling 5). Both cascades — the stops flip on their own. */
+.alb-desk .spectrum-rule {
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  overflow: hidden;
 }
 
 /* Coven — the candle catching the profile header (#1630). Eight `Spark`
