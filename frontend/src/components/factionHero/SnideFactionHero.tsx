@@ -255,7 +255,30 @@ export default function SnideFactionHero({
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               color: NOTE_INK,
-              margin: "var(--space-md) 0 0",
+              // THE MARGIN CLEARS THE PLATE, NOT THE LETTERS (#2495). This was
+              // `--space-md`, 12px, which is the gap you would set between a
+              // wordmark and its subhead if the wordmark ended where its h1
+              // does. It does not: the plate above is a background on an INLINE
+              // span, and an inline box's background covers the FONT's content
+              // area — ascent plus descent — which is the whole point of it
+              // being inline (see the h1). Anton's is 1.5054em (hhea 2409/-674
+              // over a 2048 upm), so at 82px the bar is 123.4px tall inside a
+              // 65.6px line box and 28.9px of it hangs BELOW the h1: the
+              // subhead's single 14px line sat entirely under the censor bar,
+              // and in light its ink IS the bar (`-note-ink` and `-ink` are both
+              // #14110b), so the line read 1.00:1 and only the tail past the
+              // plate's right edge escaped. `--space-4xl` is the smallest rung
+              // that clears the 28.9px overhang AND the further dip the h1's
+              // `rotate(-1.5deg)` gives the plate's bottom-LEFT corner — up to
+              // ~14px of (columnWidth / 2) x sin(1.5deg) on a full-width
+              // desktop column, minus what the subhead's own `rotate(-0.4deg)`
+              // takes back — while still leaving a visible gap rather than a
+              // tangency. `--space-3xl` clears the flat overhang by 11px and the
+              // rotated corner by ~1px, which is not a gap. The floor is
+              // asserted in `snidePlateClearsTheSubhead.test.tsx` off the h1's
+              // OWN font-size and leading, so moving the wordmark's size moves
+              // the requirement with it.
+              margin: "var(--space-4xl) 0 0",
               transform: "rotate(-0.4deg)",
             }}
           >
