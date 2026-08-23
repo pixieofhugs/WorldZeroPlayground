@@ -8496,6 +8496,58 @@
   opacity: 1;
 }
 
+/* Albescent — the AVATAR's tell (#2502, epic #2496, ADR-0048), the seventh
+   surface to unfreeze and the same shape as the six before it: `DefaultAvatar`
+   whole, plus one span. The disc's spectrum ring is a 2px pad on a conic, with
+   the portrait or the monogram in the content box inside it; this overlay is
+   that band redrawn on top of itself, and `motion.ornament.css` turns it.
+
+   AN ANNULUS BY RADIAL MASK, not by the `padding … content-box exclude` idiom
+   the five `.alb-*-edge` rings share (`.spectrum-frame::before`, #2407). That
+   mask excludes a RECTANGLE, which is a 1px frame on a rounded card and four
+   detached lens-shaped caps on a circle: the content box's corners reach further
+   from the centre than the disc's edge does, so the whole diagonal of the ring
+   would be masked away. `.alb-praxis-ring::before` above is the mount that
+   already draws a conic back to a ring this way, and this is its cut with the
+   band width `DefaultAvatar` states inline (2px, at every diameter — the ring is
+   a drawn stroke, not a scaling inset).
+
+   FULLY OPAQUE, WHICH IS CORRECTNESS RATHER THAN TASTE. The static ring stays
+   underneath and is the SAME conic; a translucent overlay would show two
+   spectra at two rotations through each other and read as mud rather than as a
+   ring turning. At opacity 1 the band is exactly the ring it covers, turned —
+   which is also what makes the still frame free.
+
+   NO NEW COLOUR AND NO DARK HALF. It reads `--faction-default-rainbow-conic`,
+   the same token the disc under it paints; the stops flip on their own. A hue of
+   Albescent's own would put the society back in the spectrum and un-hide it
+   (#783 / WORLD_ZERO_STYLE §3).
+
+   THE 48px GATE IS THE COMPONENT'S, NOT A MEDIA QUERY'S. Below it the span is
+   never rendered at all — see `AlbescentAvatar` for why a byline in a roster of
+   twenty must cost what na costs, and why a 2px band turning on a 24px disc
+   reads as a spinner. A container query would still ship the node to forty
+   mounts to hide it.
+
+   `pointer-events: none` because the disc is very often inside a link, and no
+   `z-index`: it is a positioned overlay, so it already paints above the in-flow
+   ring beside it and below the sigil badge that follows it in the DOM. Both of
+   those are load-bearing — see the `ornament` slot's docstring in
+   `FactionAvatar.tsx`.
+
+   Stranded (this ornament's motion is deferred) or stilled (reduced motion), it
+   is the static spectrum ring an unaffiliated player already wears, drawn in its
+   final colours at its final size. Decorative, so it owes no contrast ratio. */
+.alb-avatar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background-image: var(--faction-default-rainbow-conic);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 0);
+  mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 0);
+}
+
 /* Coven — the candle catching the profile header (#1630). Eight `Spark`
    marks scattered over the identity band, twinkling on a 5.5s loop with a
    per-mark delay so the field never pulses in unison.

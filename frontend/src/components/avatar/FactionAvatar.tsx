@@ -96,7 +96,30 @@ export function userMediaHook(character: CharacterOut): string | undefined {
   return character.avatar_url ? 'user-media' : undefined
 }
 
-function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
+/**
+ * The na disc, and — since #2502 — the one seam a dresser may reach into it by.
+ *
+ * `ornament` mounts BETWEEN the ring and the sigil badge, which is the only
+ * position that works and the reason this is a slot rather than a sibling span
+ * in a wrapper. The badge is an absolutely positioned LATER sibling clipped to
+ * the disc's lower-right, and at every size its centre falls just inside the
+ * disc's edge — so an overlay mounted outside this component paints above the
+ * badge and draws a spectrum arc straight across it, undoing the cut-out its
+ * own ring-shadow exists to make. Earlier in the DOM it would paint above the
+ * ring it dresses and beneath the badge that occludes it, exactly as the static
+ * ring does today. `z-index: -1` is not the alternative: the ring span is
+ * in-flow and opaque, so a negative layer is invisible rather than merely low.
+ *
+ * The prop is deliberately NOT on {@link FactionAvatarProps}. That interface is
+ * the manifest's contract for all nine skins, and this is one component's
+ * internal seam — the same shape `DefaultProfileBody`'s `identityOrnament`
+ * takes.
+ */
+export function DefaultAvatar({
+  character,
+  size = 'md',
+  ornament,
+}: FactionAvatarProps & { ornament?: ReactNode }) {
   const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
@@ -144,6 +167,7 @@ function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
           </span>
         )}
       </span>
+      {ornament}
       {/* seven-segment sigil corner mark */}
       <span
         style={{

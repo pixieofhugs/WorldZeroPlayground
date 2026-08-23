@@ -48,6 +48,8 @@ const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/
 const AlbescentFeedFrame = lazyArchetype(() => import('../components/feed/AlbescentFeedFrame'))
 // #1630 — the profile unfreeze, lazy for the same reason as every wrapper above.
 const AlbescentProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/AlbescentProfileBody'))
+// #2502 — the avatar unfreeze, lazy for the same reason as every wrapper above.
+const AlbescentAvatar = lazyArchetype(() => import('../components/avatar/AlbescentAvatar'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -161,6 +163,27 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * ornament mounts in each of Default's two branches.
    */
   profileBody: () => AlbescentProfileBody,
+
+  /**
+   * The avatar tell (#2502, epic #2496) — the SEVENTH surface to unfreeze and
+   * the same "Default + motion" shape as the six above. `AlbescentAvatar` hands
+   * `DefaultAvatar` one ornament span through its `ornament` slot and changes
+   * nothing else: the disc, the monogram and the `DefaultSigil` corner mark are
+   * na's, unaltered, and the badge stays na's on purpose — a labyrinth on every
+   * byline would be a very loud un-hiding.
+   *
+   * THE ONE ROW IN THIS FILE THAT IS CONDITIONAL ON SIZE. The ring turns at 48px
+   * and up and is absent at the 24/32px byline steps, because this is the one
+   * Albescent surface that renders BESIDE other players' rather than being
+   * looked at on its own. The component's docstring carries the reasoning.
+   *
+   * It also ends an inconsistency rather than only adding a tell: `.user-media`
+   * (#2457) made a player tell-bearing or not depending on whether they had
+   * uploaded a photograph. The ring is chrome outside the portrait and mounts
+   * inside that hook, so both discs now carry exactly the same amount of
+   * Albescent.
+   */
+  avatar: () => AlbescentAvatar,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as
