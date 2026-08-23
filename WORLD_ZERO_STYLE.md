@@ -302,6 +302,57 @@ Albescent's kit ruled that its dark half blooms the na card — five static radi
 
 So the depth came out of the arithmetic rather than the brief: at 6% the five stops read 12.22:1 for ink and **4.83:1** for muted at a hotspot, and both clear. Three things generalise. **A screen can only lift and a multiply can only darken, so which direction a wash runs tells you which cascade is at risk before you measure anything** — the same prism sweep multiplied on the light cream sheet *improves* ink (18.22 → 16.39) and costs muted only 6.05 → 5.45, which is why the light half could be bolder than the dark half at no argument. **The hotspots are the measurement, not the average**: a radial's centre is the worst reading it will ever produce, so spread the centres and keep the falloff short, because two stacked hotspots compound and that is where the remaining margin goes. And **quoting a ratio in a ruling does not make it the constraint** — record the pairing the number belongs to, or the next reader builds to a figure that was never about the ink that fails.
 
+### A locked design's VALUES are still priced by the sheet's tightest ink (#2499, epic #2496)
+
+The section above is the rule; this is what it costs when the numbers arrive from a settled
+design board rather than from a brief. `Prism-Sweep.dc.html` is headed "locked" and states its
+own ground study as LOCKED, and its dark half is five pastel radials screened into the na card.
+Composited the way a compositor actually does it — every layer contributing its falloff at every
+point, not one hotspot at a time — `--faction-default-card-muted` reads **3.02:1** across the
+middle of the card. Not marginal: a plain AA failure on a whole prose tier, in a locked design.
+
+**Take the drawing and price the depth.** The five centres, sizes and hues shipped verbatim; what
+changed is one alpha, and the PR says which number moved and why. That is the same move #2504
+made and it is worth naming as the pattern rather than as two incidents: *a design board draws
+the shape, and the sheet's quietest ink decides how far it may go.* Neither half is negotiable
+and they are not in conflict — a board that measured luminance is not making a contrast claim.
+(This one quoted "the darkest pixel sits around 96% luminance". It is 87.8% by WCAG relative
+luminance and about 95% as a plain sRGB channel average, which is what the board meant. Check
+which luminance a note is quoting before you read it as a contrast budget.)
+
+**And the worst pixel is not a hotspot centre once the blooms OVERLAP.** #2504's own advice —
+spread the centres, keep the falloff short — assumed a wash whose radials do not pile up, and
+it is right for the hero it was written about. This board's five overlap by construction, so
+measuring each centre in turn reported **4.83:1** while the point where three of them meet read
+3.02. Measure a wash on a GRID, not at its stops: for a linear ramp the two are the same
+question and for a radial set they are not, and the difference here was a whole AA grade.
+
+### A ground that ALTERNATES needs a class, not a span — and a component owns its ground (#2499)
+
+Two things follow from moving a faction's wash off an overlay and into the na card's own sheet
+token, and both are the kind that fail silently.
+
+**The alternation law survives a change of mechanism only if you carry it across by hand.** "One
+ornament per faction; a card on an ornamented ground goes plain" (#2397) was satisfied by not
+MOUNTING a span. A background layer has nothing to unmount, so the wrapper drops the CLASS
+instead and the na sheet stands. Left unattended the components keep calling the predicate, keep
+branching, and render an identical card either way — and every existing test passes, because
+they all ask about a span that no longer exists. **When a mechanism changes under a law, re-point
+the law's test at the new mechanism in the same commit, and check the assertion cannot pass
+vacuously**: the "worn and plain differ by the ornament and nothing else" test becomes
+`worn === plain` the moment the branch stops doing anything.
+
+**A blend that reaches a nested component without the layer that justifies it makes one card
+brighter than every card beside it.** The design board hit this itself and walled it off with
+`background-blend-mode: normal !important` around the nested praxis card: it dressed the page
+with a descendant selector, so a card that owns its own ground inherited the page's `multiply`
+and multiplied its own border spectrum into its cream fill. The shape that cannot do that is the
+sheet TRIPLE — set three custom properties on the element carrying the class, and let each
+component compose image, blend and clip together. Custom properties inherit as a set;
+`background-blend-mode` does not inherit at all, so a nested card either paints the whole triple
+or gets `normal`. **The component owns its ground. A page may hand it a value; it may never paint
+half of one onto it.**
+
 ### When AA forces a colour CODE onto one hue's lightness, the axis left is chroma (#2019)
 
 A design can hand you a set of inks whose whole job is to be told apart. Coven's rebuilt score stamp colour-codes its working — base pink, multiplier gold, votes blue, and the blue is deliberate because votes are the one term that comes from other people — and all three of the design's own values failed AA on the light plate: **3.27 / 1.89 / 3.18** on the plate's darker stop. Walking each down its own hue line is the routine half, and it is §"a spine hue is a FILL" arriving one issue later: the gold has no yellow that clears near-white paper, so light lands on an olive, exactly where `--faction-wow-accent-deep` had to.
