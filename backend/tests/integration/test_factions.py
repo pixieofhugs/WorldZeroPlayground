@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from models.account import Account
 from models.character import Character
 from models.era import Era
@@ -407,14 +408,28 @@ async def test_albescent_join_reveals_and_lists(
     era: Era,
     db_session: AsyncSession,
 ):
-    """A successful Albescent defect flips albescent_revealed and unlocks the
-    faction in GET /factions for that account."""
+    """A successful Albescent defect flips albescent_revealed and keeps the
+    faction listed in GET /factions for that account.
+
+    Since #2518 the listing is already open before the join — reveal follows
+    QUALIFY, and this account is qualified by construction, so there is no
+    pre-join hidden state left to assert here. The masked case moved to
+    ``test_list_factions_hides_albescent_when_unrevealed`` (no unlock, no
+    listing) and to ``test_albescent_reveal_on_qualify.py``.
+
+    What is still this test's own: the *column write*. ``albescent_revealed``
+    stays load-bearing rather than subsumed by the unlock, because an account
+    that joined before #2399 existed carries the reveal without ever having been
+    stamped — the owner account's shape. The join is what writes it.
+    """
     await _seed_faction(db_session, "albescent")
     await _make_account_albescent_eligible(db_session, character, era)
 
-    # Pre-join: hidden.
+    # Pre-join: already listed, because qualifying is now what reveals (#2518).
     before = await client.get("/factions", headers=auth_headers)
-    assert "albescent" not in [f["slug"] for f in before.json()]
+    assert "albescent" in [f["slug"] for f in before.json()]
+    await db_session.refresh(account)
+    assert account.albescent_revealed is False
 
     resp = await client.post(
         "/factions/choose",
@@ -433,7 +448,7 @@ async def test_albescent_join_reveals_and_lists(
 
 
 @pytest.mark.asyncio
-async def test_hidden_ladder_rung_still_fires_the_ability(
+async def test_the_ladder_rung_is_display_only_never_the_gate(
     client: AsyncClient,
     character: Character,
     account: Account,
@@ -441,44 +456,54 @@ async def test_hidden_ladder_rung_still_fires_the_ability(
     era: Era,
     db_session: AsyncSession,
 ):
-    """Hiding the ``join_albescent`` rung must not withhold the ability (#1891).
+    """The ``join_albescent`` rung is announcement copy, never the gate (#1891).
 
-    The ladder filter is announcement copy only. Eligibility is decided by the
-    stamped ``account.albescent_unlocked`` column in ``services.character``
-    (ADR-0080) plus the ceiling in ``services.faction_service``, neither of
-    which ever consults ``level_profiles`` — this is the tripwire for anyone who
-    later routes the gate through the ladder and turns a display filter into an
-    enforcement gate.
+    Eligibility is decided by the stamped ``account.albescent_unlocked`` column
+    in ``services.character`` (ADR-0080) plus the ceiling in
+    ``services.faction_service``, neither of which ever consults
+    ``level_profiles`` — this is the tripwire for anyone who later routes the
+    gate through the ladder and turns a display filter into an enforcement gate.
 
-    An unrevealed account that reaches the level is therefore never told the
-    order's name, and can still walk through the door the moment something
-    tells it the door is there.
+    #2518 flipped which direction demonstrates it. This test used to show a
+    *hidden* rung over a working ability: an account could qualify without being
+    revealed, so the ladder stayed dark while the door stood open. That state is
+    exactly the defect #2518 closed and is now unreachable — qualifying reveals.
+
+    The gap survives the other way round, and that is what runs below: an
+    account revealed by an old join but never stamped (the owner account's shape
+    after #2399's eviction) is *shown* the rung and still refused at the door.
+    Display says yes, enforcement says no, and the two are read off different
+    columns — which is the same tripwire, from the side that still exists.
     """
     await _seed_faction(db_session, "albescent")
-    await _make_account_albescent_eligible(db_session, character, era)
-    assert account.albescent_revealed is False
+    account.albescent_revealed = True
+    await db_session.commit()
 
-    # The rung is not on this account's ladder...
+    # The rung IS on this account's ladder — it is revealed...
     config = (await client.get("/game-config", headers=auth_headers)).json()
     keys = {
         unlock["key"]
         for profile in config["level_profiles"]
         for unlock in profile["unlocks"]
     }
-    assert "join_albescent" not in keys
+    assert "join_albescent" in keys
 
-    # ...but the ability it describes has fired.
+    # ...but the ability it describes has NOT fired: nothing stamped the door.
     me = (await client.get("/auth/me", headers=auth_headers)).json()
-    assert me["can_start_as_albescent"] is True
-    assert me["albescent_revealed"] is False
+    assert me["albescent_revealed"] is True
+    assert me["can_start_as_albescent"] is False
 
-    # And the join it gates still succeeds.
+    # And the join it advertises is refused, on the eligibility code — proof the
+    # gate read the unlock column and not the ladder that just showed the rung.
     resp = await client.post(
         "/factions/choose",
         json={"faction_slug": "albescent"},
         headers=auth_headers,
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 403
+    assert (
+        resp.json()["detail"]["code"] == ErrorCode.faction_albescent_not_eligible.value
+    )
 
 
 @pytest.mark.asyncio
