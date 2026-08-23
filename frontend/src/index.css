@@ -406,6 +406,23 @@
   --faction-snide-on-fill: #14110b; /* #6fae00 — white only 2.72:1; ink 6.93:1 */
   --faction-ephemerists-on-fill: #14110b; /* #c9a24b — white only 2.40:1; ink 7.85:1 */
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
+  /* na/albescent joined the family in #2297, when a remote collaborator's hover
+     label in the praxis composer stopped taking the caret's anchored mix as its
+     ground and took the remote's own SOLID hue instead — so --faction-default
+     became a fill with text on it, which is exactly what this tier is for.
+
+     NOT a read of --faction-default-on-accent below, whose value happens to
+     match. That one is measured against na's card ACCENT (#1a1209, a near-black
+     ink used as a surface); this one is measured against the spine hue. Two
+     surfaces that agree on an ink today are still two questions.
+
+     Why the NEUTRAL and not the rainbow, when a `background:` is where ADR-0039
+     says the ramp is expressible: the chip has a name printed on it, which is
+     factionFill's `pill` question, and `pill` already answers it — no single ink
+     is legible across seven stops, so an na label never sits on the ramp. It
+     also labels a caret drawn in `border-color`, a scalar that is already the
+     neutral, and a rainbow chip over a grey caret reads as two people. */
+  --faction-default-on-fill: #ffffff; /* #6b6a7a — ink only 3.56:1; white 5.29:1 */
 
   /* ── Text on the comment-composer ACCENT (#924) ── The AA-legible ink for the
      submit button, which is painted in the voice's card-accent (NOT the fill), so
@@ -2999,6 +3016,8 @@
   --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
   --faction-wow-on-fill: #14110b; /* #a875c9 — white only 3.47:1; ink 5.43:1 */
   --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
+  /* na/albescent lifts too (#6b6a7a -> #8b8aa0), so it flips with the rest. */
+  --faction-default-on-fill: #14110b; /* #8b8aa0 — white only 3.36:1; ink 5.60:1 */
 
   /* ── Text on the comment-composer ACCENT (dark, #924) ── The accents brighten in
      dark, so most flip to ink. snide (pink) and singularity (green) have
