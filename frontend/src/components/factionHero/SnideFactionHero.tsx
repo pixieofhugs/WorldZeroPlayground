@@ -87,9 +87,10 @@ export default function SnideFactionHero({
         color: NOTE_INK,
         // ornament (#1609): the flyposter's flat offset register — the print
         // metaphor, not elevation, so not `--color-cast-shadow`. The ink is
-        // `--color-print-offset`; the 8/10px offset and the 32% are the drawing
-        // and stay at this call site.
-        boxShadow: "8px 10px 0 color-mix(in srgb, var(--color-print-offset) 32%, transparent)",
+        // `--color-print-offset`; the 8/10px offset is the drawing and stays at
+        // this call site. The 40% is not this mark's own — #2302 collapsed the
+        // nine strengths onto one, and this mark used to print at 32%.
+        boxShadow: "8px 10px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
         paddingBottom: "var(--space-xs)",
       }}
     >
