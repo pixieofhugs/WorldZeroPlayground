@@ -6722,6 +6722,49 @@
    measured on the border box the `-1px` above restores, and `inherit` would take
    the padding box's corner instead. */
 
+/* ── Albescent — the SCORE STAMP's tell (#2501, epic #2496). The last faction
+   with a roster to claim a `scoreStamp` row, and the shortest wrapper in the kit:
+   `AlbescentScoreStamp` renders `DefaultScoreStamp` whole and adds `.alb-stamp`.
+
+   NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
+   an aurora, a ring or an edge off their surface, because na drew nothing there
+   to move. This stamp already carries the na spectrum TWICE — its own docstring
+   says so — and since #2497 both mounts are classed, so the whole tell is those
+   two getting up and walking:
+
+     `.spectrum-rule`  the 2px band across the stamp's top edge → TRAVELS
+     `.spectrum-dial`  the 96px points ring's annulus           → TURNS
+
+   That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
+   ("upgrade, never replace") kept honestly: strip `.alb-stamp` and every pixel is
+   the one an unaffiliated player sees.
+
+   THREE DECLARATIONS IS THE WHOLE COST ON THIS SHEET, because the moving parts
+   are #2498's shape: each spectrum grows a travelling/turning `::before` that is
+   declared NOWHERE BUT INSIDE the reduced-motion gate in
+   `src/motion.ornament.css`. Stranded — reduced motion, or the deferred sheet not
+   yet delivered — there is no child at all and the still frame is the mount's own
+   background right here, which is the na stamp exactly. What has to live on the
+   blocking sheet is only what a child cannot bring with it:
+
+   • `overflow: hidden` on the band, the clip the pre-painted ramp slides inside.
+     It changes nothing on its own — the band has no overflowing content — and it
+     inherits the band's inline `10px 10px 0 0` corner for free.
+   • `position: relative` on the dial, so the rim's `inset: 0` resolves against
+     the 96px ring rather than against the stamp plate two levels up.
+   • `position: relative` on the dial's ONE CHILD — `DefaultPointsRing`'s inner
+     disc, which holds the total. The rim is a pseudo-element precisely so the
+     numeral does not turn with it (the call `.alb-detail-ring` already makes),
+     and an absolutely positioned `::before` paints over a STATIC sibling however
+     late it sits in the DOM. Lifting the disc into the positioned layer puts it
+     back on top. No offsets, so it moves nothing while the rim is absent.
+
+   Both cascades come from the tokens, so no dark half is written here. Decorative:
+   both spans are `aria-hidden` chrome and no contrast is owed. ── */
+.alb-stamp .spectrum-rule { overflow: hidden; }
+.alb-stamp .spectrum-dial { position: relative; }
+.alb-stamp .spectrum-dial > * { position: relative; }
+
 /* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
    are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's
    fullness and the reading word, not the motion — it reads correctly stilled,

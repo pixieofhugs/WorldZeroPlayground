@@ -264,11 +264,27 @@ describe("Albescent praxis detail — where the light sits", () => {
   });
 
   it("dresses nothing but those three layers", () => {
-    // The wrapper plus exactly three ornament spans. Anything else carrying an
-    // `alb-` class would mean a block had been skinned — the report card and
-    // the steward bar above all, which ADR-0061 keeps outside the costume.
+    // The wrapper plus exactly three ornament spans, and — since #2501 — the
+    // score stamp's own wrapper, which this page does not put there: the rail is
+    // `ScoreStamp`'s (ADR-0053) and it dispatches on the TASK's faction, so an
+    // Albescent task lands `AlbescentScoreStamp` inside the page whatever the
+    // page does. The set is asserted rather than the count so a NEW dress is
+    // named here instead of silently keeping a number right. Anything else
+    // carrying an `alb-` class would mean a block had been skinned — the report
+    // card and the steward bar above all, which ADR-0061 keeps outside the
+    // costume.
     const html = render(AlbescentPraxisDetail, state({ showAdminBar: true, user: VIEWER }));
-    expect(html.match(/alb-/g)?.length, "wrapper + three layers, nothing else").toBe(4);
+    expect(
+      [...new Set(html.match(/alb-[\w-]+/g))].sort(),
+      "wrapper + three layers + the dispatched stamp, nothing else",
+    ).toEqual([
+      "alb-praxis",
+      "alb-praxis-aurora",
+      "alb-praxis-edge",
+      "alb-praxis-ring",
+      "alb-stamp",
+    ]);
+    expect(html.match(/alb-/g)?.length, "each of the five drawn once").toBe(5);
     expect(html, "the report card is mounted bare").toContain("sidebar-card");
   });
 

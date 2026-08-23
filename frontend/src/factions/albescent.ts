@@ -36,6 +36,9 @@ const AlbescentSelectCard = lazyArchetype(() => import('../components/selectCard
 const AlbescentTaskCard = lazyArchetype(() => import('../components/taskCard/AlbescentTaskCard'))
 const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
 const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
+// #2501 — the score stamp. Lazy like every wrapper here: it pulls in the whole
+// na stamp, which is weight the initial load does not need.
+const AlbescentScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/AlbescentScoreStamp'))
 const AlbescentSeal = lazyArchetype(() => import('../components/metataskSeal/skins/AlbescentSeal'))
 // #1038 — the task-detail unfreeze. Lazy like its siblings (#1063): a wrapper
 // that pulls in the whole na anatomy is exactly the weight route-splitting exists
@@ -70,6 +73,20 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * other surface still falls through to Default (#783).
    */
   praxisCard: () => AlbescentPraxisCard,
+
+  /**
+   * The score stamp (#2501, epic #2496). Albescent was the only faction with a
+   * roster and no `scoreStamp` row, so a member's total showed the bare na stamp
+   * while all seven other factions' were dressed — undressed by ACCIDENT, not by
+   * the design that keeps this faction hidden.
+   *
+   * Same shape as every row above: `AlbescentScoreStamp` renders
+   * `DefaultScoreStamp` whole and adds one class, and the only delta is MOTION —
+   * the two na spectra the stamp already carries (the top band, the points ring's
+   * annulus) start to move. No token, no copy, no forked anatomy; strip the class
+   * and the two stamps are byte-identical.
+   */
+  scoreStamp: () => AlbescentScoreStamp,
 
   /**
    * The task-card tell (#1023, ADR-0048) — the second surface to unfreeze, and
