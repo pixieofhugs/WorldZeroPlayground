@@ -143,6 +143,11 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
     expect(mounts.map((file) => rel(file.path)).sort()).toEqual([
       "components/cardMasthead/factionBands.tsx",
       "components/feed/SingularityFeedFrame.tsx",
+      // The sixth window bar (#2353): character creation, dressed as a terminal
+      // session. It mounts the cluster and NOT `SingularityProcessLight` — the
+      // bar it wears is this frame's and the card band's rather than the
+      // composer's, because a page with no session has no process to light.
+      "pages/characterPaths/archetypes/SingularityCreateCharacter.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",

@@ -14,6 +14,7 @@ import { lazyArchetype } from './lazyArchetype'
 const SingularityAvatar = lazyArchetype(() => import('../components/avatar/SingularityAvatar'))
 const SingularityBackdrop = lazyArchetype(() => import('../components/backdrop/SingularityBackdrop'))
 const SingularityComment = lazyArchetype(() => import('../components/comments/voices/SingularityComment'))
+const SingularityCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/SingularityCreateCharacter'))
 const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
 const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
 const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
@@ -48,6 +49,11 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   taskDetail: () => SingularityTaskDetail,
   praxisDetail: () => SingularityPraxisDetail,
   editPraxis: () => SingularityEditPraxis,
+  // The terminal dresses character creation (#2353, epic #2346). The slug this
+  // dispatches on is the calling being PICKED, not a loaded record, so the page
+  // reskins to this chassis live and returns to the Default the moment the pick
+  // is cleared.
+  createCharacter: () => SingularityCreateCharacter,
   factionHero: () => SingularityFactionHero,
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
