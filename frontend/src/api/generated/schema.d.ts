@@ -976,6 +976,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete My Account
+         * @description End this account: tombstone every row, unlink its media (ADR-0081, #2160).
+         *
+         *     Irreversible, and takes no body — the confirmation is the client's
+         *     (#2161). The route is deliberately unable to delete anyone else's: the
+         *     account comes from the JWT, never from a path parameter.
+         *
+         *     No grace period and no scheduled follow-up; see ``services.account_deletion``.
+         *     The JWT the caller still holds is inert the moment this returns —
+         *     ``get_current_account`` refuses any account that is not ``active`` — so
+         *     signing out is ``POST /auth/logout`` like any other sign-out, and the cookie
+         *     flags stay stated in exactly one place.
+         */
+        delete: operations["delete_my_account_me_account_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/active-character": {
         parameters: {
             query?: never;
@@ -6271,6 +6301,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CharacterOut"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_my_account_me_account_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
