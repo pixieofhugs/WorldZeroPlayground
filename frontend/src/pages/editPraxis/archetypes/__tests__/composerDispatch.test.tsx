@@ -359,13 +359,18 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     expect(markup).not.toContain("repeating-linear-gradient");
   });
 
-  it("na falls through to the spectrum kit's own band (ADR-0065 §4)", () => {
+  it("na falls through to the spectrum kit's own frame (ADR-0065 §4)", () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <DefaultEditPraxis state={waitingState(null)} />
       </MemoryRouter>,
     );
-    expect(markup).toContain("--faction-default-rainbow-loop");
+    // The spectrum was a walked masthead band (`--faction-default-rainbow-loop`)
+    // until #2520 made it the sheet's static 3px frame — so the dress still
+    // carries na's spectrum onto this stage, in the kit's own border idiom.
+    expect(markup).toContain("border:3px solid transparent");
+    expect(markup).toContain("var(--faction-default-rainbow)");
+    expect(markup).not.toContain("--faction-default-rainbow-loop");
   });
 
   it.each(
