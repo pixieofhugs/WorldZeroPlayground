@@ -5898,7 +5898,7 @@
      a ring drawn around the wrong element rather than a missing one. */
   position: relative;
 }
-/* ONE RING, SIX MOUNTS (#2407).
+/* ONE RING, SEVEN MOUNTS (#2407, +#2504).
  *
  * The five `.alb-*-edge` spans below were five hand-written copies of exactly
  * this device: the same `mask … exclude` idiom, the same tiling loop cut, the
@@ -5924,6 +5924,7 @@
 .alb-praxis-edge,
 .alb-feed-edge,
 .alb-profile-edge,
+.alb-plate-edge,
 .spectrum-frame::before {
   position: absolute;
   inset: 0;
@@ -6162,6 +6163,69 @@
     border-left: 0;
     border-top: 1px solid var(--faction-default-card-line);
   }
+}
+
+/* ── Albescent — THE FACTION PAGE (#2504, epic #2496) ──
+   The seventh and eighth surfaces to unfreeze, and the same rule as the six
+   before them: the na page whole, with light over it. Two wrapper classes, no
+   fork, no copy, no colour of Albescent's own — every value below is a cut of
+   the SHARED spectrum, which is what keeps the society a shimmer rather than a
+   livery (ADR-0027, #783).
+
+   IT IS A TOKEN OVERRIDE, NOT SELECTOR SURGERY (epic ruling 2). Both rules
+   declare the na card's sheet TRIPLE on a wrapper, and every surface inside
+   inherits it: the hero's plate, the five body plates, and the task and praxis
+   cards those plates hold, all of which already read
+   `--faction-default-card-sheet` and none of which is named here. The three
+   properties move together because CSS CYCLES a short list rather than padding
+   it — one layer in light, six in dark, so a lone `multiply` beside them would
+   be right by accident in one cascade and wrong in the other.
+
+   THE LIGHT/DARK ASYMMETRY IS THE DESIGN (epic ruling 9) and it is why the two
+   selectors differ. By day the wash lands on `.alb-faction-hero` ALONE — one
+   static 114deg near-white sweep, multiplied, so the frontispiece has a prism
+   cast and the page below it is the na page exactly. By night the bloom
+   carries on to `.alb-faction-body` as well, which is how it reaches the plates
+   and the cards. That is ruled, measured and deliberate; it is not a rule
+   somebody forgot to write twice.
+
+   NOTHING HERE MOVES. Every layer is static: `motion.ornament.css` turns the
+   labyrinth and travels the plates' rings, on the deferred sheet and inside the
+   reduced-motion gate. A wash that animated a gradient parameter would
+   re-rasterise the whole sheet every frame, which is the one technique this epic
+   forbids outright.
+
+   MEASURED ON THE REAL GROUND, and the numbers picked the depth.
+     light  the sweep MULTIPLIES, so it can only darken a cream sheet: ink runs
+            18.22:1 flat and 16.39:1 at the deepest stop, muted 6.05 → 5.45.
+            Both improve for ink and both clear AA for muted.
+     dark   the bloom SCREENS, so it can only lift, and the tightest pairing on
+            the na card decides how far it may. `--faction-default-card-muted`
+            reads 5.44:1 flat, and that — not the primary ink at 13.75:1 — is the
+            ceiling: at a hotspot these five run 4.83:1 muted and 12.22:1 ink,
+            both still clear. Pitching the bloom to make the INK land near 8.9
+            would have taken the muted tier to ~4.4 and put a whole prose tier
+            under AA, so the depth is set by the tighter of the two pairings. The
+            five centres are spread and their falloff is short for the same
+            reason — stacked hotspots are what would eat the remaining margin. */
+.alb-faction-hero {
+  --faction-default-card-sheet:
+    linear-gradient(114deg, #ffffff 0%, #fbf1ff 18%, #eef3ff 34%, #eafaf1 50%, #fffae9 66%, #ffeff3 82%, #ffffff 100%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: multiply, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box;
+}
+[data-theme="dark"] .alb-faction-hero,
+[data-theme="dark"] .alb-faction-body {
+  --faction-default-card-sheet:
+    radial-gradient(46% 120% at 8% 6%, rgba(230, 185, 79, 0.06), transparent 62%),
+    radial-gradient(46% 120% at 32% 94%, rgba(74, 222, 128, 0.06), transparent 62%),
+    radial-gradient(46% 120% at 54% 4%, rgba(58, 160, 164, 0.06), transparent 62%),
+    radial-gradient(46% 120% at 76% 96%, rgba(96, 165, 250, 0.06), transparent 62%),
+    radial-gradient(46% 120% at 97% 8%, rgba(244, 114, 182, 0.06), transparent 62%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card

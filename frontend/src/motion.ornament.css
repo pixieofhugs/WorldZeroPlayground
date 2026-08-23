@@ -624,7 +624,8 @@
   .alb-detail-edge::before,
   .alb-praxis-edge::before,
   .alb-feed-edge::before,
-  .alb-profile-edge::before {
+  .alb-profile-edge::before,
+  .alb-plate-edge::before {
     content: "";
     position: absolute;
     top: 0;
@@ -713,4 +714,12 @@
   .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
   .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
   .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
+  /* Albescent's faction page (#2504). The labyrinth turns; the mark itself is
+     `FactionSigil`'s and this rule never names it, so na's swept ring on a
+     future unaffiliated page stays still. `alb-detail-spin` rather than a
+     keyframe of its own — a static conic rasterises once and a rotate on it is
+     pixel-identical over the loop, which is the epic's technique ruling, and the
+     wheel above cannot be shared because it carries a centring translate this
+     mount does not have. The plates' rings travel on the list above. */
+  .alb-faction-hero .faction-hero-sigil { animation: alb-detail-spin 48s linear infinite; }
 }

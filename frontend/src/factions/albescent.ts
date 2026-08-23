@@ -48,6 +48,10 @@ const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/
 const AlbescentFeedFrame = lazyArchetype(() => import('../components/feed/AlbescentFeedFrame'))
 // #1630 — the profile unfreeze, lazy for the same reason as every wrapper above.
 const AlbescentProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/AlbescentProfileBody'))
+// #2504 — the faction page's two halves, lazy for the reason every wrapper above
+// is: each pulls in the whole na surface it dresses.
+const AlbescentFactionHero = lazyArchetype(() => import('../components/factionHero/AlbescentFactionHero'))
+const AlbescentFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/AlbescentFactionBody'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -171,6 +175,23 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * plausible enough that the gap went unnoticed. Its tier WORDS stay gone
    * (#783): the widget prints plain numerals via `reframeLabel`.
    */
+  /**
+   * The FACTION PAGE's two halves (#2504, epic #2496) — the seventh and eighth
+   * surfaces to unfreeze, and the same "Default + light" shape as the six above.
+   * `/factions/albescent` routes through `AlbescentGate`, which hands a revealed
+   * account `<FactionDetail slug="albescent" />`, so these rows are reached by
+   * exactly the viewers ADR-0027 allows to see the society at all.
+   *
+   * Both are WRAPPERS over na surfaces that did not exist a week ago: the page
+   * had no fall-through hero at all, so Albescent got the page's placeholder
+   * chrome. `DefaultFactionHero` is that gap closed (epic ruling 11), and these
+   * two add the prism sheet, the turning labyrinth, the plates' travelling ring
+   * and — in dark only, per ruling 9 — the bloom. No copy, no colour, no slot
+   * moves; strip the two wrapper classes and the page is na's exactly.
+   */
+  factionHero: () => AlbescentFactionHero,
+  factionBody: () => AlbescentFactionBody,
+
   vote: () => AlbescentVote,
 
   /**
