@@ -189,7 +189,7 @@ describe('the rotation is decoration over a stable accessible name (#2148)', () 
       ['score stamp', renderStamp()],
       ['faction hero', renderHero()],
     ] as const) {
-      expect(html, `${surface} mounts a gloss`).toContain('class="eph-turn eph-turn-')
+      expect(html, `${surface} mounts a gloss`).toContain('class="eph-turn"')
       // WCAG 2.2.2's pause mechanism is a descendant selector; a stack with no
       // scope above it cannot be paused at all.
       expect(html, `${surface} carries the pause scope`).toContain('eph-turn-scope')
@@ -260,6 +260,50 @@ describe('no cast can render as tofu (#2148)', () => {
         `none — and the two look identical to a reviewer whose OS has one.\n` +
         `Add the character to TEXT_FACES in frontend/scripts/fetch-fonts.mjs and re-run it.`,
     ).toEqual([])
+  })
+})
+
+/**
+ * ONE RULE, A PHASE PER LABEL (#2392) — what #2148 asked for and did not ship.
+ *
+ * The clock used to be TWO rules, `.eph-turn-points` at 6.5s and `.eph-turn-cta`
+ * at 7s, alternated by ordinal. Two rules stagger two labels; the score stamp
+ * has FIVE, so its 1st/3rd/5th shared a rule and turned on the same beat. The
+ * period was 6.5–7s where #2148 asks for 9–11s.
+ *
+ * Each half is asserted where it is decided: the PERIOD in the stylesheet (one
+ * declaration, or it is not one token), the PHASE in the rendered markup of the
+ * surface that actually has five labels. A count of DISTINCT phases is the
+ * assertion, because a reused clock is exactly the failure that hides — the
+ * labels still turn, they just turn together.
+ */
+describe('one clock, a phase per label (#2392)', () => {
+  it('declares the period once, in the 9-11s band #2148 asked for', () => {
+    expect(
+      INDEX_CSS.match(/animation:\s*eph-turn/g)?.length,
+      'one rule, not one per clock',
+    ).toBe(1)
+    const period = INDEX_CSS.match(/--eph-turn-period:\s*([\d.]+)s/)
+    expect(period, 'the period is a token').not.toBeNull()
+    expect(Number(period![1])).toBeGreaterThanOrEqual(9)
+    expect(Number(period![1])).toBeLessThanOrEqual(11)
+  })
+
+  it('gives the score stamp five labels and five different beats', () => {
+    const phases = [...renderStamp().matchAll(/--eph-turn-phase:([^&";]+)/g)].map((m) => m[1])
+    expect(phases.length, 'five turning labels on the stamp').toBe(5)
+    expect(new Set(phases).size, 'and no two of them on the same beat').toBe(5)
+  })
+
+  it('phases the labels of every other glossed surface apart too', () => {
+    for (const [surface, html] of [
+      ['task card', renderCard()],
+      ['faction hero', renderHero()],
+    ] as const) {
+      const phases = [...html.matchAll(/--eph-turn-phase:([^&";]+)/g)].map((m) => m[1])
+      expect(phases.length, `${surface} turns more than one label`).toBeGreaterThan(1)
+      expect(new Set(phases).size, `${surface} staggers them`).toBe(phases.length)
+    }
   })
 })
 
