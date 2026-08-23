@@ -7,6 +7,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionSpectrumSheet } from "../../utils/factions";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
 /**
@@ -101,20 +102,15 @@ export default function DefaultTaskCard({
           // rainbow painted into the border box behind it, and the sheet
           // painted into the padding box on top.
           //
-          // THE ONLY SHEET THAT DOES NOT CALL `factionSheet()` (#2497), because
-          // it is the only one with a layer of its own: the ramp is appended to
-          // all three of the sheet's lists, so the arity stays right however
-          // many layers the sheet grows to. `factionSheet` composes exactly
-          // this shape minus the ramp — see its note for why the trailing
-          // `border-box` on the clip is what keeps the card's own colour out
-          // to the edge.
+          // The composition was five hand-written lines here until #2499 gave
+          // the praxis card the same border and moved both onto
+          // `factionSpectrumSheet()`. Only the GEOMETRY is this card's — the 3px
+          // frame and the 14px corner; the ramp has to be appended to all three
+          // of the sheet's lists and saying that twice is the way to get the
+          // arity wrong on one of them. See the helper's note.
           border: "3px solid transparent",
           borderRadius: 14,
-          backgroundImage:
-            "var(--faction-default-card-sheet), var(--faction-default-rainbow)",
-          backgroundBlendMode: "var(--faction-default-card-sheet-blend), normal",
-          backgroundOrigin: "border-box",
-          backgroundClip: "var(--faction-default-card-sheet-clip), border-box",
+          ...factionSpectrumSheet(),
           boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
           color: "var(--faction-default-card-text)",
           fontFamily: MONO,
