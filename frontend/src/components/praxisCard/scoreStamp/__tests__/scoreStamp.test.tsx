@@ -1211,12 +1211,43 @@ describe('the na stamp rules its working in the spectrum (#2520)', () => {
     expect(markup).toContain('margin-left:auto')
   })
 
-  it('prints the rule under the working when there is no tally to divide', () => {
+  it('prints the rule under the TOTAL, above the working', () => {
     // The board's own words: where there is no votes divider the same single
-    // rule prints under BASE instead, so the geometry matches across states.
+    // rule prints "under BASE — the row directly after the total — so the
+    // geometry matches the votes case". Under the total, above the working.
     const markup = renderToStaticMarkup(
       <DefaultScoreStamp praxis={praxis(STATES['+ metatask'])} />,
     )
-    expect(markup.indexOf(RULE)).toBeGreaterThan(markup.lastIndexOf('meta'))
+    expect(markup.indexOf(RULE)).toBeLessThan(markup.lastIndexOf('meta'))
   })
+
+  // THE ORPHAN GUARD (owner ruling 2026-08-23, ADR-0076).
+  //
+  // This is the assertion the position exists for, and it is why the rule is
+  // anchored under the total rather than under the working. Anchored below, a
+  // sealed metatask nobody has voted on has rows and NO flat terms, so the rule
+  // became the last thing on the sheet with nothing beneath it — the orphan
+  // ADR-0076 was written to stop, and the reversal the old comment on
+  // `DefaultScoreStamp` warned against by name before #2520 removed it.
+  //
+  // Stated as "something always follows the rule" rather than as an index
+  // comparison against one row label, so it keeps holding if the breakdown
+  // grows a row this suite does not know about.
+  for (const [name, p] of Object.entries(STATES)) {
+    if (name === 'base only') continue
+    it(`never leaves the rule orphaned — ${name}`, () => {
+      const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis(p)} />)
+      const at = markup.indexOf(RULE)
+      expect(at, 'the rule is drawn at all').toBeGreaterThan(-1)
+      // Everything after the rule's own closing tag must still carry ink, not
+      // just the plate's closing markup. `</span>` and not `/>`: React does not
+      // self-close a void-less element, so a `/>` search runs straight past the
+      // rule and makes this assertion vacuous — which it was, until the probe
+      // that was supposed to fail did not.
+      const close = markup.indexOf('</span>', at)
+      expect(close, "the rule's closing tag").toBeGreaterThan(-1)
+      const after = markup.slice(close + '</span>'.length)
+      expect(text(after).trim(), 'nothing follows the rule').not.toBe('')
+    })
+  }
 })

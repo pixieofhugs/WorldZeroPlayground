@@ -201,6 +201,48 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         />
       </div>
 
+      {/* THE STAMP'S ONE RULE (#2520, epic #2496) — a 2px spectrum, inset from
+          the plate's edges by the plate's own padding, run to the width of the
+          breakdown column. It replaces the 1px grey line the flat-terms block
+          used to hang off its own `border-top`.
+
+          IT SITS UNDER THE TOTAL, ABOVE THE WORKING, and that position is a
+          ruling rather than a layout preference (owner, 2026-08-23). The board
+          says the rule "prints under BASE — the row directly after the total —
+          so the geometry matches the votes case", and anchoring it here is what
+          makes "one spectrum rule per stamp, in every state" true WITHOUT ever
+          leaving it orphaned. Anchored below the working instead, a sealed
+          metatask nobody has voted on has rows and no flat terms, so the rule
+          would be the last thing on the sheet with nothing beneath it — the
+          orphan ADR-0076 exists to stop, and the exact reversal the old comment
+          on this file warned against by name.
+
+          `hasWorking`, not `hasFlatTerms`: base-only draws no breakdown at all
+          (#1131 / ADR-0076) and so prints no rule, which is the one state the
+          board also leaves bare. Every other state has rows or a tally beneath
+          this line, so it always parts something from something.
+
+          `position: relative` is the mount Albescent's travelling child needs.
+          `.alb-stamp .spectrum-rule::before` is absolutely positioned, so
+          without a containing block here it would resolve against the plate and
+          paint the ramp straight over the working out. That the class reaches
+          both this rule and the band above is the point of #2520: the two stamps
+          are one stamp, and the society's delta is that these SAME spectra move
+          (index.css owns the resting paint, motion.ornament.css the travel). */}
+      {hasWorking && (
+        <span
+          aria-hidden
+          className="spectrum-rule"
+          style={{
+            display: "block",
+            position: "relative",
+            height: 2,
+            borderRadius: 2,
+            marginBottom: "var(--space-xs)",
+          }}
+        />
+      )}
+
       {/* Ruled leader-line rows — label, a hairline running out to fill the gap,
           then the figure. */}
       {rows.map((row) => (
@@ -238,52 +280,15 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         </div>
       ))}
 
-      {/* THE STAMP'S ONE RULE (#2520, epic #2496) — a 2px spectrum, inset from
-          the plate's edges by the plate's own padding, run to the width of the
-          breakdown column.
-
-          It replaces the 1px grey line the flat-terms block used to hang off its
-          own `border-top`, and it is anchored HERE rather than on that block so
-          the geometry holds in every state: with a tally it parts the working
-          from the flat terms exactly where the grey divider sat; with a sealed
-          metatask and no votes it prints under the working instead. `Score-
-          Stamp.dc.html` draws all four states to make that the point — one
-          spectrum rule per stamp, wherever the stamp ends.
-
-          `hasWorking`, not `hasFlatTerms`: base-only draws no breakdown at all
-          (#1131 / ADR-0076), and a rule under a bare disc would be the orphan
-          that ruling exists to stop.
-
-          `position: relative` is the mount Albescent's travelling child needs.
-          `.alb-stamp .spectrum-rule::before` is absolutely positioned, so
-          without a containing block here it would resolve against the plate and
-          paint the ramp straight over the working out. That the class reaches
-          both this rule and the band above is the point of #2520: the two stamps
-          are one stamp, and the society's delta is that these SAME spectra move
-          (index.css owns the resting paint, motion.ornament.css the travel). */}
-      {hasWorking && (
-        <span
-          aria-hidden
-          className="spectrum-rule"
-          style={{
-            display: "block",
-            position: "relative",
-            height: 2,
-            borderRadius: 2,
-            marginTop: "var(--space-xs)",
-          }}
-        />
-      )}
-
-      {/* The flat terms, under the rule above — everything over it is inside
+      {/* The flat terms — everything over the rule is inside
           `(base + meta) × mult` and everything under it is flat (#1617). Both
           leave at 0: the habit bonus always did, and the tally does since
           ADR-0076, and with neither the block goes.
 
           THE RULE IS NO LONGER THIS BLOCK'S `border-top`. It was, which is why
           it had to be conditional on `rows.length` from in here; it is now the
-          stamp's own rule above, drawn once for the whole sheet, so this block
-          carries nothing but its ink and the space under that rule. */}
+          stamp's own element under the total, drawn once for the whole sheet,
+          so this block carries nothing but its ink and its own space. */}
       {hasFlatTerms && (
         <div
           style={{
