@@ -7,6 +7,7 @@ import { EphemeristsFactionHero } from 'worldzero-frontend'
 export function CodexFrontispiece() {
   return (
     <EphemeristsFactionHero
+      slug="ephemerists"
       name="The Ephemerists"
       members={97}
       tasks={51}

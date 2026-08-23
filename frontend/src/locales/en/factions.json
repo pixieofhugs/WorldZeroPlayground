@@ -35,6 +35,7 @@
     "descriptionEmpty": "No description yet.",
     "membersEmptyWithSpotlight": "No other members yet.",
     "memberLevel": "Level {{level}}",
+    "spotlightLabel": "Champion",
     "spotlightStat_one": "Level {{level}} · {{score}} point",
     "spotlightStat_other": "Level {{level}} · {{score}} points",
     "errors": {

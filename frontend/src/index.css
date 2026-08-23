@@ -6052,6 +6052,117 @@
   border-radius: 1px;
   opacity: 0.55;
 }
+/* The plate is the containing block for one optional child: the ornament
+   `DefaultFactionBody` mounts in each region when a dresser hands it one
+   (#2504). na hands it nothing and this line then costs a plate nothing —
+   `position: relative` on a box with no absolute descendant changes no pixel. */
+.faction-plate { position: relative; }
+
+/* ── THE na FRONTISPIECE (#2504, epic #2496 ruling 11) ──
+   The eighth faction hero, and the fall-through: `pickVariant` had no default
+   for `factionHero`, so a faction that registered none got `PageTitle` plus a
+   bordered blurb where the other seven got a plate.
+
+   THE SPECTRUM IS THE BORDER — the same 3px-transparent-frame idiom
+   `DefaultTaskCard` wears, and for the same reason: a gradient cannot be a
+   `border-color`, so the ramp is painted into the BORDER box and the sheet over
+   the padding box on top. The ramp is appended to all three of the sheet's
+   lists, which is what keeps the arity right when Albescent's override grows the
+   sheet from one layer to six (see `--faction-default-card-sheet`'s note).
+
+   STATIC, AND THAT IS THE WHOLE na/Albescent DELTA. Nothing here drifts, blooms
+   or turns; `.alb-faction-hero` below adds all three by overriding tokens and
+   naming one spinning mark, and strips back to exactly this rule.
+
+   THREE COLUMNS: mark | wordmark | counts, with the counts behind a hairline —
+   `auto minmax(0, 1fr) auto`, so a long faction name wraps inside its column
+   instead of pushing the counts off the plate. On a phone the mark and the
+   wordmark stay side by side and the counts drop to a full-width three-column
+   row under a rule of the same weight. A media query rather than
+   `useFormFactor()`: nothing in the component branches on width, so nothing
+   should wait for JS to find that out.
+
+   The two label tiers are the CARD's ink (`--faction-default-card-muted`), not
+   the page's `--label-ink` seam. The sheet under them is a card sheet, and it is
+   the one Albescent repaints — a label reading the page seam would keep the
+   page's ink over a bloomed ground. */
+.faction-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xl);
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  border-radius: var(--faction-default-card-radius);
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+  background-color: var(--faction-default-card-bg);
+  background-image: var(--faction-default-card-sheet), var(--faction-default-rainbow);
+  background-blend-mode: var(--faction-default-card-sheet-blend), normal;
+  background-origin: border-box;
+  background-clip: var(--faction-default-card-sheet-clip), border-box;
+  color: var(--faction-default-card-text);
+}
+/* A flex box, so the mark can be turned: `transform` does not apply to an
+   inline element, and the sigils are inline spans. */
+.faction-hero-sigil {
+  display: flex;
+}
+.faction-hero-kicker,
+.faction-hero-count-label {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faction-default-card-muted);
+}
+.faction-hero-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-display);
+  line-height: 1.02;
+  margin: var(--space-xs) 0 0;
+}
+.faction-hero-tagline {
+  font-family: var(--font-body);
+  font-size: var(--text-content);
+  color: var(--faction-default-card-muted);
+  margin-top: var(--space-xs);
+}
+.faction-hero-counts {
+  display: grid;
+  grid-auto-flow: column;
+  gap: var(--space-xl);
+  padding-left: var(--space-xl);
+  border-left: 1px solid var(--faction-default-card-line);
+}
+.faction-hero-count-value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-title);
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+.faction-hero-count-label {
+  display: block;
+}
+@media (max-width: 767px) {
+  .faction-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-lg);
+    padding: var(--space-xl);
+  }
+  .faction-hero-counts {
+    grid-column: 1 / -1;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--faction-default-card-line);
+  }
+}
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
