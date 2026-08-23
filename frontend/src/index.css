@@ -8874,59 +8874,51 @@
   opacity: 1;
 }
 
-/* Albescent — the MOBILE field desk's identity card (#2505, re-cut by #2519,
-   epic #2496 ruling 5). ONE CARRIER PER OBJECT: the card's own travelling edge
-   is the spectrum, and na's 3px hairline across the top of the identity block —
-   #1553's "one mark at three scales" — comes OFF, which is what the design
-   canvas draws and the sentence it draws it under: *"the desk ships a static
-   3px spectrum bar across the top of the identity card; under the tell that bar
-   doubles the edge, so it comes off and the plate's own travelling border does
-   the work."*
+/* ── THE DOUBLED CARRIERS COME OFF (#2519, epic #2496) ──
+   The other half of the rule the block above states, and it is one rule because
+   the design canvas states it once: *"one carrier per object — whatever bar,
+   strip or hairline was doing that job comes off."* Two na marks were doing it,
+   on two surfaces that have now grown edges of their own, so both go.
 
-   WHAT #2505 DID INSTEAD, and why it is not the same thing. It classed the bar
-   `.spectrum-rule`, re-cut it to the loop tile and set it travelling. That
-   replaced the STATIC rule, truthfully — but not the CARRIER: the bar was still
-   the only spectrum on the card and the card still had no edge, so the surface
+     `.alb-desk .spectrum-rule`  the mobile field desk's 3px identity hairline
+       — #1553's "one mark at three scales", across the top of the identity
+       card. The board: *"the desk ships a static 3px spectrum bar across the top
+       of the identity card; under the tell that bar doubles the edge, so it
+       comes off and the plate's own travelling border does the work."*
+
+     `.alb-composer .ep-edge`  the edit-praxis sheet's masthead band, drawn by
+       `ComposerMasthead` and worn by the composer and by the waiting surface
+       after it (#1189), so both stages lose it together — right, they are the
+       same sheet. The board: *"the masthead's own 3px spectrum rule goes with
+       it; the border carries the spectrum now."*
+
+   WHAT #2505 DID INSTEAD, and why it is not the same thing. On the desk it
+   classed the bar, re-cut it to the loop tile and set it TRAVELLING — which
+   replaced the static rule, truthfully, but not the carrier: the bar was still
+   the only spectrum on the card, and the card still had no edge, so the surface
    read as the na home with a moving stripe rather than as an object the
-   spectrum is holding. The carrier moved here, and the bar's whole re-cut went
-   with it (the loop ramp, the 300% tile and the `overflow: hidden` track are
-   `.alb-desk-edge`'s now, taken from the shared ring).
+   spectrum is holding. On the composer it did not replace anything at all; it
+   added a 1px ring at 0.6 BESIDE a 3px band. The desk's whole re-cut now lives
+   on `.alb-desk-edge` (the loop ramp, the 300% tile and the `overflow: hidden`
+   track come from the shared ring), and the composer carries one mark.
 
-   `display: none` RATHER THAN AN UNMOUNT, because the hairline is na's and
-   `DefaultFieldDesk` draws it for every unaffiliated player. Two classes beat
-   one from anywhere in the sheet, so this needs no `!important` and no
-   structural selector; strip `alb-desk` and the two homes are byte-identical.
-   It is also the one property that can do this from outside: a background
-   written on a descendant of an `.alb-*` wrapper is what
-   `__tests__/albescentPrismSheet.test.ts` forbids, and with this rule reduced
-   to a `display` that sheet no longer paints ANY descendant.
+   THE BOARD COUNTS THREE MARKS ON THE COMPOSER AND THIS REPO HAS TWO, which is
+   a fixture difference and not a missing deletion: the canvas dresses a live
+   mount from outside and its DOM held a 2px top strip AND `.ep-edge`, where this
+   repo draws both from the one `ComposerMasthead` element.
 
-   The desktop `/field-desk` page has no faction dispatch at all and this does
-   not give it one (ruling 5). */
-.alb-desk .spectrum-rule {
-  display: none;
-}
+   `display: none` RATHER THAN AN UNMOUNT, because both marks are na's and the
+   `Default*` components draw them for every unaffiliated player. Two classes
+   beat one from anywhere in the sheet, so neither needs an `!important` or a
+   structural selector; strip the wrapper class and the na surface is back, byte
+   for byte. `display` is also the one property that can do this from OUTSIDE: a
+   background written on a descendant of an `.alb-*` wrapper is what
+   `__tests__/albescentPrismSheet.test.ts` forbids, and with the desk rule
+   reduced to this the sheet no longer paints any descendant at all.
 
-/* Albescent — the COMPOSER's masthead band (#2519, epic #2496). The same move
-   as the desk hairline above, on the surface that had the worst of it: the
-   design canvas draws the composer's spectrum in the sheet's EDGE and takes the
-   strip off — *"the masthead's own 3px spectrum rule goes with it; the border
-   carries the spectrum now"* — and #2505 added `.alb-composer-edge` BESIDE the
-   band instead, at the shared list's faintest defaults. Two spectra on one
-   sheet, the added one dimmer than the one it was meant to replace.
-
-   THE BOARD COUNTS THREE MARKS HERE AND THIS REPO HAS TWO, which is a fixture
-   difference and not a missing deletion. The canvas dresses a live mount from
-   outside and its DOM held a 2px top strip AND `.ep-edge`; in this repo both
-   are the one element `ComposerMasthead` renders, so hiding it takes the strip
-   and the rule together. After this rule the sheet carries exactly one.
-
-   `.ep-edge` IS na's SHARED ORNAMENT CLASS, mounted by `ComposerMasthead` and
-   worn by the composer and by the waiting surface after it (#1189), so both
-   stages lose the band together — which is right, they are the same sheet. na's
-   band is untouched: strip `alb-composer` and the two composers are
-   byte-identical. `display`, not a background, for the reason the desk rule
-   above gives. */
+   The desktop `/field-desk` page has no faction dispatch and this does not give
+   it one (ruling 5). */
+.alb-desk .spectrum-rule,
 .alb-composer .ep-edge {
   display: none;
 }
