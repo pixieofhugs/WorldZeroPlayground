@@ -677,7 +677,14 @@
    360deg — differing only in the duration their consumers pass, which lives on
    the `animation` shorthand and not in the keyframe. Now that both consumers
    sit in this one block, one name serves them, the same way `alb-edge-travel`
-   serves five above. ── */
+   serves five above.
+
+   `alb-detail-spin` LOST ITS SURFACE FOR THE SAME REASON, and is `alb-spin`
+   (#2501). A bare 360deg turn is the most general shape on this sheet; the score
+   stamp's points ring needed exactly it, and a second consumer under a name that
+   says `detail` reads as a mistake even when it is the byte-identical
+   de-duplication the two rules above already are. One keyframe, two rims, two
+   durations on their own shorthands. ── */
 @keyframes alb-task-drift {
   0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
   50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
@@ -702,54 +709,75 @@
   0%, 100% { transform: translateX(-18%); }
   50% { transform: translateX(18%); }
 }
-@keyframes alb-detail-spin { to { transform: rotate(360deg); } }
+@keyframes alb-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-rainbow { animation: alb-drift 18s linear infinite; }
   .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
   .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
   .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
   .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
-  .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
+  .alb-detail-ring::before { animation: alb-spin 46s linear infinite; }
   .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
   .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
   .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
 }
 
-/* ── Albescent — the SCORE STAMP's two spectra (#2501, epic #2496). The stamp's
-   whole delta from na: the 2px band across its top edge travels, and the 96px
-   points ring's annulus turns. Both pseudo-elements, their resting paint and
-   their geometry in index.css; only these two lines are motion.
+/* ── Albescent — the SCORE STAMP's two spectra (#2501, epic #2496). The whole
+   delta between a member's stamp and an unaffiliated player's: the 2px band
+   across its top edge travels, and the 96px points ring's annulus turns.
 
-   NEITHER WALKS A GRADIENT PARAMETER — the epic's technique ruling. Each moves a
-   STATIC pre-painted gradient with `transform`, so the ramp is rasterised once
-   and the frames are the compositor's: `alb-edge-travel` directly above is the
-   `background-position` idiom this replaces, and #2498 is why it is not copied.
+   NO KEYFRAME IS DECLARED HERE, and both reuses were checked rather than
+   assumed. `alb-edge-travel` above is "slide a two-tile child by one tile" and
+   the band is exactly that; `alb-spin` is a bare 360deg turn and the ring is
+   exactly that. Minting `alb-stamp-travel` and `alb-stamp-turn` beside them
+   would have been four byte-identical keyframes under four names, which is the
+   duplication #2407 and #2498 each spent a PR collapsing.
 
-   TWO NEW NAMES, and the near-duplicates were checked rather than assumed.
-   `alb-detail-spin` (index.css) is byte-identical to the turn and `ticker-roll`
-   (above) is byte-identical to the travel, so both could have been referenced
-   across the sheet boundary the way `.spectrum-frame[data-spectrum-drift]` reaches
-   `alb-drift`. Neither is: this sheet is deferred and outside the byte ledger
-   `bundle-budget.mjs` keeps, so the two keyframes cost the critical path nothing,
-   and the alternative binds a secret society's ornament to the activity ticker's
-   scroll distance — a coupling no reader of either file would expect. Bytes are
-   the only argument for sharing here and they are not being spent.
+   NEITHER WALKS A GRADIENT PARAMETER — the epic's technique ruling, and
+   `spectrumRingCollapse.test.ts` now enforces it over every `alb-` keyframe on
+   this sheet. Each moves a STATIC pre-painted gradient with `transform`, so the
+   ramp rasterises once and the frames are the compositor's.
+
+   BOTH CHILDREN EXIST ONLY INSIDE THIS GATE, the shape #2498 gave the five card
+   edges. Stranded — reduced motion, or this sheet never delivered — there is no
+   `::before` on either mount and the still stamp is `.spectrum-rule` and
+   `.spectrum-dial` painting their own backgrounds from index.css: the exact
+   spectrum stamp every unaffiliated player already sees, drawn in its final
+   colours at its final size. Nothing here carries meaning through motion alone.
+
+   THE BAND STATES ITS RAMP; THE RING INHERITS ITS OWN. That asymmetry is the one
+   decision in this block. The ring's resting paint is
+   `--faction-default-rainbow-conic` and two tiles of a wheel is a wheel, so
+   `background-image: inherit` registers the rim exactly over the annulus it
+   replaces — the same trick the five edges use. The band cannot: `.spectrum-rule`
+   is `--faction-default-rainbow`, the seven-stop sweep whose last stop is NOT its
+   first, so tiling it twice would put a violet-meets-red seam through every
+   cycle. `--faction-default-rainbow-loop` is the same spectrum cut to close, and
+   naming it is what buys the seamless loop.
 
    THE PACES ARE THE SIBLING SURFACES', not new numbers: 46s for a turn is
-   `.alb-detail-ring`'s and 16s for a travel is the four card edges'. A stamp
-   sits on the same page as those, and two rainbows moving at different speeds
-   beside each other is the "two rainbows arguing" the feed block warns about.
-
-   The travel is exactly one of the child's two tiles — `-50%` of `200%` — and
-   the tile is the loop cut, so it arrives back on itself with no seam.
-
-   Stranded — this sheet not yet delivered, or reduced motion — the stamp is the
-   static spectrum stamp every unaffiliated player already sees: band drawn, ring
-   drawn, in final colours at final size, simply not moving. Nothing here carries
-   meaning through motion alone. ── */
-@keyframes alb-stamp-travel { to { transform: translateX(-50%); } }
-@keyframes alb-stamp-turn { to { transform: rotate(360deg); } }
+   `.alb-detail-ring`'s, and 16s across the band is the four card edges' old
+   mount-width pace. A stamp sits on the same page as both, and two rainbows
+   moving at different speeds beside each other is the "two rainbows arguing" the
+   feed block warns about. ── */
 @media (prefers-reduced-motion: no-preference) {
-  .alb-stamp .spectrum-rule::before { animation: alb-stamp-travel 16s linear infinite; }
-  .alb-stamp .spectrum-dial::before { animation: alb-stamp-turn 46s linear infinite; }
+  .alb-stamp .spectrum-rule::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    background-image: var(--faction-default-rainbow-loop);
+    background-size: 50% 100%;
+    animation: alb-edge-travel 16s linear infinite;
+  }
+  .alb-stamp .spectrum-dial::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-image: inherit;
+    animation: alb-spin 46s linear infinite;
+  }
 }
