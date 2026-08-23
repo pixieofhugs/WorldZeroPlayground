@@ -241,7 +241,11 @@ async def _uploaded_media(
     doomed: list[tuple[int, int, str]] = []
     for row in rows:
         owner = next(
-            (cid for prefix, cid in prefixes.items() if row.file_path.startswith(prefix)),
+            (
+                cid
+                for prefix, cid in prefixes.items()
+                if row.file_path.startswith(prefix)
+            ),
             None,
         )
         if owner is not None:

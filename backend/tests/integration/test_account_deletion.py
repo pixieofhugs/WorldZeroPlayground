@@ -34,7 +34,7 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.comment import Comment
 from models.era import Era
-from models.praxis import MediaItem, MediaType, Praxis
+from models.praxis import MediaItem, MediaType
 from models.praxis_room import PraxisRoomUpdate
 from models.vote import Vote
 from services.account_deletion import (
@@ -64,7 +64,7 @@ def media_root(tmp_path, monkeypatch):
 
 
 def _write_media_file(media_root, *segments: str) -> str:
-    """Write one file the way ``process_and_save_media`` does; return its stored path."""
+    """Write a file the way ``process_and_save_media`` does; return the stored path."""
     relative_path = os.path.join(*segments)
     absolute_path = os.path.join(str(media_root), relative_path)
     os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
@@ -93,7 +93,7 @@ async def test_votes_the_departing_player_cast_still_count_for_the_recipient(
         )
     ).scalar_one()
     score_before = stats.score
-    assert score_before > 0, "the fixture must produce a scored praxis to prove anything"
+    assert score_before > 0, "the fixture must score the praxis or this proves nothing"
 
     await delete_account(character.account_id, db_session)
     await db_session.flush()
@@ -194,7 +194,9 @@ async def test_identity_is_blanked_across_account_character_praxis_and_comment(
             select(PraxisRoomUpdate).where(PraxisRoomUpdate.praxis_id == praxis.id)
         )
     ).scalars().all()
-    assert drafts == [], "the CRDT draft retains deleted text; blanking the body is not enough"
+    assert drafts == [], (
+        "the CRDT draft retains deleted text; blanking the body is not enough"
+    )
 
 
 async def test_the_email_is_released_for_a_fresh_signup(
@@ -250,7 +252,9 @@ async def test_media_the_account_uploaded_leaves_the_disk_with_its_row(
 ) -> None:
     task = await make_task(db_session, character2, title="host")
     praxis = await make_solo_praxis(db_session, task, character)
-    stored = _write_media_file(media_root, str(character.id), str(praxis.id), "u1", "p.jpg")
+    stored = _write_media_file(
+        media_root, str(character.id), str(praxis.id), "u1", "p.jpg"
+    )
     item = MediaItem(praxis_id=praxis.id, type=MediaType.image, file_path=stored)
     character.avatar_url = _write_media_file(
         media_root, str(character.id), "avatar", "u2", "face.jpg"
@@ -262,7 +266,8 @@ async def test_media_the_account_uploaded_leaves_the_disk_with_its_row(
     await db_session.flush()
 
     assert not os.path.exists(os.path.join(str(media_root), stored))
-    assert not os.path.exists(os.path.join(str(media_root), character.avatar_url or "x"))
+    avatar = character.avatar_url or "never-written"
+    assert not os.path.exists(os.path.join(str(media_root), avatar))
     remaining = (
         await db_session.execute(
             select(MediaItem).where(MediaItem.praxis_id == praxis.id)
