@@ -22,6 +22,8 @@ import { EditorView, drawSelection } from "@codemirror/view";
 import type { Extension } from "@codemirror/state";
 import type { CSSProperties } from "react";
 
+import { factionCssVar, getAllFactions } from "../../../utils/factions";
+
 /**
  * What the host must add to a skin's `textareaStyle` for the editor inside it
  * to behave like the textarea it replaced.
@@ -42,6 +44,55 @@ export const BODY_EDITOR_HOST_STYLE: CSSProperties = {
 };
 
 /**
+ * A co-author's hover label, taken off the caret's ground (#2297).
+ *
+ * `y-codemirror.next` gives `.cm-ySelectionInfo` `color: white` on
+ * `background-color: inherit`, so its ground is whatever the caret above it is
+ * — and since #2267 that is `color-mix(in srgb, <remote hue> 60%, currentColor)`,
+ * anchored to the VIEWER's own body ink. White on that mix failed AA on all 64
+ * light-and-dark pairings in dark at 1.20:1, and the fix is not a better ink:
+ * contrast is luminance distance only, so for a fixed set of grounds the ink
+ * maximising the WORST pairing is pure black or pure white, and both were
+ * measured. The best possible ink against the worst viewer is 3.91:1 in light.
+ * AA is unsatisfiable while the label keeps that ground, so the GROUND moves.
+ *
+ * It moves to the remote's own SOLID hue, inked with that slug's `-on-fill` —
+ * the tier whose entire contract is "AA-legible text on `--faction-{key}`"
+ * (#649). Eight pairings instead of 64: the viewer's composer stops being a
+ * variable the moment the label stops standing on the viewer's ink.
+ * `__tests__/roomPresenceContrast.test.ts` measures every one of them, and the
+ * `na`/Albescent arm is why `--faction-default-on-fill` exists at all.
+ *
+ * THE CARET IS UNCHANGED. Only this label's ground moves; the bar, its dot and
+ * the selection band keep the anchored mix #2267 measured, so the deltaE floor
+ * that keeps eight remotes telling apart is untouched — and the solid hues the
+ * labels now take sit FURTHER apart than the mixes, not closer.
+ *
+ * WHY EIGHT RULES AND NOT ONE. The label's colour is per-remote, and the only
+ * per-remote node in the library's DOM is the caret `<span>`, whose one
+ * writable attribute is the `style` string built out of `paintUser`'s `color`.
+ * Reading the slug back off that attribute keeps the whole change declarative:
+ * nothing extra is smuggled into the style attribute (which is the injection
+ * shape `roomPresence.ts` exists to prevent), `color` stays a colour, and the
+ * hue set stays closed at eight because both the selector and the declarations
+ * are built by `factionCssVar()` — the same function `paintUser` calls, so the
+ * match cannot drift from the value it is matching.
+ *
+ * Specificity: `.ͼN .cm-ySelectionCaret[style*=…] .cm-ySelectionInfo` is (0,4,0)
+ * against the library base theme's (0,2,0) `.ͼ1 .cm-ySelectionInfo`, so this
+ * wins on weight rather than on mount order. The library's hover rule is left
+ * alone — it sets `opacity` and nothing this touches.
+ */
+const REMOTE_LABEL_INK = Object.fromEntries(
+  // `null` is the na / Albescent / unrecognised arm: `factionCssVar` folds all
+  // three onto `--faction-default` (ADR-0039 §2), which is one rule, not three.
+  [...getAllFactions().map((faction) => faction.slug), null].map((slug) => [
+    `.cm-ySelectionCaret[style*="${factionCssVar(slug)}"] .cm-ySelectionInfo`,
+    { backgroundColor: factionCssVar(slug), color: factionCssVar(slug, "on-fill") },
+  ]),
+);
+
+/**
  * CodeMirror's code-editor defaults, undone.
  *
  * Every value here is structural or `inherit`; the only colours are
@@ -56,12 +107,14 @@ export const BODY_EDITOR_HOST_STYLE: CSSProperties = {
  * - **the caret's height** — see `BODY_EDITOR_SELECTION` below
  * - **the caret's colour and the selection's** — same
  *
- * Plus one rule that is not a CodeMirror default at all: where a co-author's
- * name label sits on the first line (`.cm-ySelectionInfo`, #1951). It lives
- * here because it is `y-codemirror.next` colliding with the box THIS file
- * builds, and because one rule beats eight per-skin copies of it.
+ * Plus two things that are not CodeMirror defaults at all, both on a co-author's
+ * name label (`.cm-ySelectionInfo`): where it sits on the first line (#1951),
+ * and what it stands on (#2297 — see REMOTE_LABEL_INK). They live here because
+ * they are `y-codemirror.next` colliding with the box THIS file builds, and
+ * because one rule beats eight per-skin copies of it.
  */
 const BODY_EDITOR_SKIN_THEME = EditorView.theme({
+  ...REMOTE_LABEL_INK,
   "&": {
     // Fill the host, including the part of it the skin's min-height created.
     flex: "1 1 auto",

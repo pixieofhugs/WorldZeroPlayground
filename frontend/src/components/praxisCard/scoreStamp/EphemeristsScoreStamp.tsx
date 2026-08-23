@@ -161,9 +161,10 @@ const FIGURE: CSSProperties = { fontFamily: DECO, fontSize: "var(--text-xl)", li
  *
  * THE WORD TURNS AND THE FIGURE NEVER DOES (#2148). `gloss` names the catalog
  * entry the label is cast through; `ordinal` is the row's place among this
- * cell's turning labels and picks its clock. The figure is left alone on
- * purpose — the whole conceit rests on the cost of not decoding being a lost
- * label rather than a lost score.
+ * cell's turning labels and phases its beat away from theirs — this cell is the
+ * surface #2392 was filed for, with five labels on one clock. The figure is
+ * left alone on purpose — the whole conceit rests on the cost of not decoding
+ * being a lost label rather than a lost score.
  */
 function WorkingRow({
   figure,

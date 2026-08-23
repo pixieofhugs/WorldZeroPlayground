@@ -406,6 +406,23 @@
   --faction-snide-on-fill: #14110b; /* #6fae00 — white only 2.72:1; ink 6.93:1 */
   --faction-ephemerists-on-fill: #14110b; /* #c9a24b — white only 2.40:1; ink 7.85:1 */
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
+  /* na/albescent joined the family in #2297, when a remote collaborator's hover
+     label in the praxis composer stopped taking the caret's anchored mix as its
+     ground and took the remote's own SOLID hue instead — so --faction-default
+     became a fill with text on it, which is exactly what this tier is for.
+
+     NOT a read of --faction-default-on-accent below, whose value happens to
+     match. That one is measured against na's card ACCENT (#1a1209, a near-black
+     ink used as a surface); this one is measured against the spine hue. Two
+     surfaces that agree on an ink today are still two questions.
+
+     Why the NEUTRAL and not the rainbow, when a `background:` is where ADR-0039
+     says the ramp is expressible: the chip has a name printed on it, which is
+     factionFill's `pill` question, and `pill` already answers it — no single ink
+     is legible across seven stops, so an na label never sits on the ramp. It
+     also labels a caret drawn in `border-color`, a scalar that is already the
+     neutral, and a rainbow chip over a grey caret reads as two people. */
+  --faction-default-on-fill: #ffffff; /* #6b6a7a — ink only 3.56:1; white 5.29:1 */
 
   /* ── Text on the comment-composer ACCENT (#924) ── The AA-legible ink for the
      submit button, which is painted in the voice's card-accent (NOT the fill), so
@@ -2999,6 +3016,8 @@
   --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
   --faction-wow-on-fill: #14110b; /* #a875c9 — white only 3.47:1; ink 5.43:1 */
   --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
+  /* na/albescent lifts too (#6b6a7a -> #8b8aa0), so it flips with the rest. */
+  --faction-default-on-fill: #14110b; /* #8b8aa0 — white only 3.36:1; ink 5.60:1 */
 
   /* ── Text on the comment-composer ACCENT (dark, #924) ── The accents brighten in
      dark, so most flip to ink. snide (pink) and singularity (green) have
@@ -8427,9 +8446,9 @@
      • the platform's reduce-motion setting, which stills it outright — WCAG's
        own glossary allows a mechanism "relied upon to be provided by either
        the platform or by user agents";
-     • hovering the card, or focusing anything in it, which pauses both turns
-       in place. That one is also why the CTA's word cannot change under a
-       cursor or a focus ring on its way to a click.
+     • hovering the card, or focusing anything in it, which pauses every turn
+       inside it in place. That one is also why the CTA's word cannot change
+       under a cursor or a focus ring on its way to a click.
    `animation-play-state` is a pause proper, not a reset: the frame showing
    stays showing and the cycle resumes where it stopped.
 
@@ -8442,12 +8461,37 @@
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .eph-turn-points {
-    animation: eph-turn 6.5s ease-in-out infinite;
-  }
-  /* Half a second longer, so the card never changes both words at once. */
-  .eph-turn-cta {
-    animation: eph-turn 7s ease-in-out infinite;
+  /* ONE RULE, ONE PERIOD, A PHASE PER LABEL (#2392, closing #2148's own
+     acceptance line).
+
+     This was two rules — `.eph-turn-points` at 6.5s and `.eph-turn-cta` at 7s,
+     alternated by the label's ordinal. Two rules stagger exactly two labels, so
+     the score stamp's five turned in three groups, and neither period was in
+     the 9–11s band #2148 asked for. A period plus a per-instance phase does for
+     N what a second rule did for two.
+
+     `--ephturn-period` is declared HERE and nowhere else, so retuning the clock
+     is one number in one place — the component's phase is a fraction OF it (see
+     `EphemeristsGloss`), not a second literal that could drift out of step with
+     it.
+
+     THE NAME IS `--ephturn-`, NOT `--eph-turn-`, and the missing hyphen is
+     load-bearing: `--eph-*` is the RETIRED illuminated-codex colour family
+     (`--eph-vellum`, `--eph-rubric`, …), and four suites assert that no plate
+     surface renders `/--eph-[a-z]/` because the two palettes must never mix on
+     one surface. A motion token wearing that prefix would trip them, and would
+     blur a namespace whose whole job is to be un-mixable.
+
+     THE PHASE IS NEGATIVE, and that is not a detail. A positive delay would
+     leave a label sitting at its normal opacity 1 until the clock started and
+     then snap it to the keyframes' 0% — a visible flick, worse the later the
+     label. A negative delay starts the animation already part-way through, so
+     every label is mid-plateau at first paint and nothing moves that should
+     not. */
+  .eph-turn {
+    --ephturn-period: 10s;
+    animation: eph-turn var(--ephturn-period) ease-in-out infinite;
+    animation-delay: var(--ephturn-phase, 0s);
   }
   .eph-turn-scope:hover .eph-turn,
   .eph-turn-scope:focus-within .eph-turn {

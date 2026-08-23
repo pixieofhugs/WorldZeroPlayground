@@ -5,7 +5,8 @@
 //
 // TWO THINGS THAT SHAPE WHAT A CARD CAN SHOW, both learned the hard way:
 //
-//  1. `ordinal` picks the CLOCK (via clockFor), NOT the cast. There is no prop
+//  1. `ordinal` picks the PHASE (#2392 — when this label's turn falls, as an
+//     `animation-delay` off the shared clock), NOT the cast. There is no prop
 //     that pins a script. The visible frame starts at 0 — the English reading —
 //     and advances only in `onAnimationIteration`. A static screenshot therefore
 //     catches the English frame, always. Cells that "sweep the script axis" by
