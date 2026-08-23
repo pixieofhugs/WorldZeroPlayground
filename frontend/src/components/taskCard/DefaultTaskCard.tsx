@@ -258,11 +258,11 @@ export default function DefaultTaskCard({
             >
               <span
                 aria-hidden="true"
+                className="spectrum-rule"
                 style={{
                   width: 7,
                   height: 7,
                   borderRadius: 2,
-                  background: "var(--faction-default-rainbow)",
                   display: "inline-block",
                   flex: "none",
                 }}
@@ -292,9 +292,9 @@ export default function DefaultTaskCard({
             <div
               aria-hidden="true"
               data-cta-rule="default"
+              className="spectrum-rule"
               style={{
                 height: 1,
-                background: "var(--faction-default-rainbow)",
                 opacity: "var(--faction-default-cta-rule-opacity, 0.6)",
                 margin: "0 0 var(--space-lg)",
               }}

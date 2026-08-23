@@ -33,13 +33,12 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
       {/* the whole rainbow, no allegiance — a full-spectrum accent, top edge */}
       <span
         aria-hidden="true"
-        className="absolute"
+        className="absolute spectrum-rule"
         style={{
           top: 0,
           left: 0,
           right: 0,
           height: 3,
-          background: 'var(--faction-default-rainbow)',
         }}
       />
 

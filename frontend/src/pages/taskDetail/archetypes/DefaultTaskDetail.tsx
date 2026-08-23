@@ -28,8 +28,11 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  */
 const GALLERY_PREVIEW = 3;
 
-/** The na spectrum, the one ornament this whole page is built out of. */
-const SPECTRUM = "var(--faction-default-rainbow)";
+/* The na spectrum — the one ornament this whole page is built out of — is now
+   `.spectrum-rule` in index.css (#2497). It was this file's own `SPECTRUM`
+   const at five mounts, which is a shared value said privately: nothing outside
+   could dress it, so Albescent's kit had to walk the DOM to find it. The class
+   carries the ramp and each mount keeps its own geometry. */
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -190,12 +193,12 @@ export default function DefaultTaskDetail({
       </span>
       <span
         aria-hidden
+        className="spectrum-rule"
         style={{
           flex: "1 1 20%",
           minWidth: 20,
           height: 2,
           borderRadius: 1,
-          backgroundImage: SPECTRUM,
           opacity: 0.55,
         }}
       />
@@ -223,12 +226,12 @@ export default function DefaultTaskDetail({
               {basePoints}
             </span>
             <span
+              className="spectrum-rule"
               style={{
                 marginLeft: "auto",
                 display: "block",
                 padding: "var(--space-xs)",
                 borderRadius: 7,
-                backgroundImage: SPECTRUM,
               }}
             >
               <span
@@ -251,7 +254,7 @@ export default function DefaultTaskDetail({
               </span>
             </span>
           </div>
-          <div aria-hidden style={{ height: 1, backgroundImage: SPECTRUM }} />
+          <div aria-hidden className="spectrum-rule" style={{ height: 1 }} />
         </>
       )}
       <div
@@ -398,10 +401,10 @@ export default function DefaultTaskDetail({
   // is still the column's width and the cell fills it.
   const actionPanel = (
     <div
+      className="spectrum-rule"
       style={{
         padding: "var(--space-xs)",
         borderRadius: 18,
-        backgroundImage: SPECTRUM,
         boxSizing: "border-box",
       }}
     >
@@ -462,12 +465,12 @@ export default function DefaultTaskDetail({
           <>
             <span
               aria-hidden
+              className="spectrum-rule"
               style={{
                 width: 7,
                 height: 7,
                 borderRadius: 2,
                 flex: "none",
-                backgroundImage: SPECTRUM,
               }}
             />
             <span className="label-caption">{eyebrowFaction}</span>
@@ -723,12 +726,12 @@ export default function DefaultTaskDetail({
         </span>
         <span
           aria-hidden
+          className="spectrum-rule"
           style={{
             flex: "1 1 20%",
             minWidth: 20,
             height: 2,
             borderRadius: 1,
-            backgroundImage: SPECTRUM,
             opacity: 0.55,
           }}
         />

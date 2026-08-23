@@ -73,11 +73,11 @@ function SectionHeading({ title, eyebrow }: { title: string; eyebrow?: string })
       {eyebrow && <span style={{ ...EYEBROW, letterSpacing: '0.08em' }}>{eyebrow}</span>}
       <span
         aria-hidden
+        className="spectrum-rule"
         style={{
           flex: 1,
           height: 3,
           borderRadius: 3,
-          background: 'var(--faction-default-rainbow)',
           opacity: 0.5,
         }}
       />
@@ -106,11 +106,11 @@ function FdlLaurel() {
       }}
     >
       <span
+        className="spectrum-dial"
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: 'var(--faction-default-rainbow-conic)',
         }}
       />
       <span
@@ -161,6 +161,7 @@ function BadgeRow({
       }}
     >
       <span
+        className="spectrum-dial"
         style={{
           flexShrink: 0,
           width: 34,
@@ -168,7 +169,6 @@ function BadgeRow({
           borderRadius: '50%',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
           padding: 2.5,
-          background: 'var(--faction-default-rainbow-conic)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -348,12 +348,12 @@ function DesktopProfile({
       <div style={{ position: 'relative', zIndex: 1 }}>
       {/* ── ① Identity + progression — spectrum band, credential pinned ── */}
       <div
+        className="spectrum-rule"
         style={{
           position: 'relative',
           overflow: 'hidden',
           borderRadius: 16,
           padding: 'var(--space-xs)',
-          background: 'var(--faction-default-rainbow)',
           boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
           marginBottom: 'var(--space-2xl)',
         }}
@@ -499,11 +499,11 @@ function DesktopProfile({
                     }}
                   >
                     <div
+                      className="spectrum-rule"
                       style={{
                         height: '100%',
                         borderRadius: 20,
                         width: `${progression.progressPercent}%`,
-                        background: 'var(--faction-default-rainbow)',
                         transition: 'width 300ms',
                       }}
                     />
