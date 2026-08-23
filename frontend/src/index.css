@@ -339,15 +339,18 @@
      looking for the shadow under a card, it is the token above, not this one.
 
      STRENGTH STAYS AT THE CALL SITE — `color-mix(in srgb,
-     var(--color-print-offset) 32%, transparent)` — which is the same split the
+     var(--color-print-offset) 40%, transparent)` — which is the same split the
      cast token makes for blur and offset and the same one `shared.tsx`'s byline
-     rule makes as a percentage of `currentColor`: how hard THIS mark is printed
-     is the component's drawing, and only the paint was ever off-theme. All NINE
-     strengths that survive (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 /
-     0.55) are kept exactly, so this rung repaints no pixel. Collapsing them onto
-     one is the honest next move and it is a DESIGN call that needs eyes on
-     seventeen surfaces; minting the name is what makes it a one-line change when
-     someone makes it.
+     rule makes as a percentage of `currentColor`: only the paint was ever
+     off-theme. But there is now exactly ONE strength to write. #1609 kept all
+     nine (0.2 / 0.22 / 0.3 / 0.32 / 0.35 / 0.4 / 0.45 / 0.5 / 0.55) so it
+     repainted no pixel; #2302 collapsed them onto 40%, which was already the
+     plurality at six of seventeen, on the owner's ruling of 2026-08-22. That
+     DID repaint: four light marks darkened and two heavy ones lightened, on
+     purpose, because a uniform state is the thing to be looked at. If a mark
+     turns out to need a lighter or harder impression, the answer is a named
+     TIER argued here — at most three — not a percentage typed at one call site.
+     `printOffsetToken.test.ts` holds the line at one.
 
      THEME-INVARIANT ON PURPOSE — there is no dark half, and that is the decision
      rather than an omission. Nothing behind these marks moves: they are struck on
@@ -1240,7 +1243,13 @@
      `factionContrast.test.ts`, SNIDE_WALL_PAIRS. The composer is the surface
      that gates this ground, because it is the only one of the three carrying
      form fields and placeholder text, and it is tall enough to put its footer
-     inside the pink corner. */
+     inside the pink corner.
+
+     CHALLENGED AND HELD (#2333). #2269's option 1 read "same surface" as "same
+     tokens" and would have collapsed this 19-token register onto `-card-*`; the
+     clause is withdrawn. Same ground, different tier: `-composer-*` FLIPS with
+     the sheet, `-card-*` is pinned near-black for the slabs pasted ON the wall,
+     and `-composer-alarm` collapsed to `-card-alarm` measures 1.56:1 here. */
   --faction-snide-composer-sheet: #f4f1e8; /* the invite dropdown's stock (FLIPS) */
   --faction-snide-composer-ink: #14110b; /* type on the wall (FLIPS) — 9.87:1 in the pink corner */
   /* The task's prose, the pill, every section label. #5f5c50 read 5.36:1 on the
@@ -8437,9 +8446,9 @@
      • the platform's reduce-motion setting, which stills it outright — WCAG's
        own glossary allows a mechanism "relied upon to be provided by either
        the platform or by user agents";
-     • hovering the card, or focusing anything in it, which pauses both turns
-       in place. That one is also why the CTA's word cannot change under a
-       cursor or a focus ring on its way to a click.
+     • hovering the card, or focusing anything in it, which pauses every turn
+       inside it in place. That one is also why the CTA's word cannot change
+       under a cursor or a focus ring on its way to a click.
    `animation-play-state` is a pause proper, not a reset: the frame showing
    stays showing and the cycle resumes where it stopped.
 
@@ -8452,12 +8461,37 @@
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .eph-turn-points {
-    animation: eph-turn 6.5s ease-in-out infinite;
-  }
-  /* Half a second longer, so the card never changes both words at once. */
-  .eph-turn-cta {
-    animation: eph-turn 7s ease-in-out infinite;
+  /* ONE RULE, ONE PERIOD, A PHASE PER LABEL (#2392, closing #2148's own
+     acceptance line).
+
+     This was two rules — `.eph-turn-points` at 6.5s and `.eph-turn-cta` at 7s,
+     alternated by the label's ordinal. Two rules stagger exactly two labels, so
+     the score stamp's five turned in three groups, and neither period was in
+     the 9–11s band #2148 asked for. A period plus a per-instance phase does for
+     N what a second rule did for two.
+
+     `--ephturn-period` is declared HERE and nowhere else, so retuning the clock
+     is one number in one place — the component's phase is a fraction OF it (see
+     `EphemeristsGloss`), not a second literal that could drift out of step with
+     it.
+
+     THE NAME IS `--ephturn-`, NOT `--eph-turn-`, and the missing hyphen is
+     load-bearing: `--eph-*` is the RETIRED illuminated-codex colour family
+     (`--eph-vellum`, `--eph-rubric`, …), and four suites assert that no plate
+     surface renders `/--eph-[a-z]/` because the two palettes must never mix on
+     one surface. A motion token wearing that prefix would trip them, and would
+     blur a namespace whose whole job is to be un-mixable.
+
+     THE PHASE IS NEGATIVE, and that is not a detail. A positive delay would
+     leave a label sitting at its normal opacity 1 until the clock started and
+     then snap it to the keyframes' 0% — a visible flick, worse the later the
+     label. A negative delay starts the animation already part-way through, so
+     every label is mid-plateau at first paint and nothing moves that should
+     not. */
+  .eph-turn {
+    --ephturn-period: 10s;
+    animation: eph-turn var(--ephturn-period) ease-in-out infinite;
+    animation-delay: var(--ephturn-phase, 0s);
   }
   .eph-turn-scope:hover .eph-turn,
   .eph-turn-scope:focus-within .eph-turn {
