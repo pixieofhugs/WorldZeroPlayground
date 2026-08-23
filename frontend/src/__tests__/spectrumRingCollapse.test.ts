@@ -221,16 +221,16 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
     }
   });
 
-  it("four identical keyframes became one, and the fifth is not a duplicate", () => {
+  it("five mounts share one keyframe", () => {
     expect(MOTION).toContain("@keyframes alb-edge-travel");
-    // 200%, not 300%, because the profile band's tile is 200% — the travel and
-    // the tile are one number stated twice. Retiring this one would jump.
-    expect(MOTION).toContain(
-      "@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }",
+    // #2498 retired the fifth. It existed because a `background-position` walk
+    // states its travel in the TILE's units, so the profile band's 200% tile
+    // needed its own end stop; a transform states travel in the CHILD's units,
+    // and the child carries the difference as a width. One keyframe, two widths.
+    expect(MOTION, "@keyframes alb-profile-edge did not retire").not.toContain(
+      "@keyframes alb-profile-edge",
     );
-    expect(new Map(before(".alb-profile-edge")).get("background-size")).toBe(
-      "200% 100%",
-    );
+    expect(INDEX).not.toContain("@keyframes alb-profile-edge");
   });
 
   it("reduced motion still stops every one of the five", () => {
@@ -243,8 +243,10 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
     ]) {
       // Either its own rule or a member of the shared list — and no line-ending
       // assumption, which is a real trap on a checkout that normalises to CRLF.
+      // Since #2498 the travel is on a `::before` of each of the five, so the
+      // pseudo-element is optional here rather than assumed either way.
       const at = MOTION.search(
-        new RegExp(`\\${selector}\\s*[,{]`),
+        new RegExp(`\\${selector}(::before)?\\s*[,{]`),
       );
       expect(at, `${selector} has no drift rule at all`).toBeGreaterThan(0);
       const gateAt = MOTION.lastIndexOf("@media", at);
@@ -252,6 +254,143 @@ describe("the travel moved to the deferred sheet, and only the travel (#2407)", 
         MOTION.slice(gateAt, at),
         `${selector} travels outside the reduced-motion gate`,
       ).toContain("prefers-reduced-motion: no-preference");
+    }
+  });
+});
+
+/**
+ * THE TRAVEL STOPS WALKING A GRADIENT PARAMETER (#2498, epic #2496).
+ *
+ * `background-position` is not a compositor property, so a walk repaints the
+ * whole ring every frame on the main thread. The epic's technique ruling names
+ * the replacement exactly: "translate a 300%-wide gradient child inside
+ * `overflow: hidden` rather than walking `background-position`."
+ *
+ * THE CHILD EXISTS ONLY INSIDE THE GATE, which is what keeps this free. Under
+ * reduced motion — or with the deferred sheet not yet delivered — there is no
+ * `::before` at all, and the still ring is the mount's own background painted
+ * from index.css exactly as it was before this change. The child arrives already
+ * registered with it: at `translateX(0)` its first tile starts at the padding
+ * box's left edge, which is where `background-position: 0%` put the image.
+ *
+ * SO THE SEAM IS ARITHMETIC, not a screenshot. Two numbers have to survive the
+ * change of idiom, and both are derived here rather than retyped:
+ *
+ *   the TILE   — `width × background-size-x` must equal the mount's own
+ *                `background-size`, or turning motion on changes the stripe
+ *                width, which is a design change wearing a perf change's clothes.
+ *   the SPEED  — travel per second. The old walk moved `tile × loops` per
+ *                duration; the new one moves half the child's width per
+ *                duration. A wrong width or a wrong duration is invisible to
+ *                every test that only asks whether something animates.
+ *
+ * And the travel must be a whole number of tiles, or the loop seams.
+ */
+describe("the travel is a transform on a pre-painted child (#2498)", () => {
+  /** The travelling child of one mount, resolved over the deferred sheet. */
+  function child(selector: string): Map<string, string> {
+    const out = new Map<string, string>();
+    for (const [, prelude, body] of MOTION.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!prelude.split(",").some((one) => one.trim() === `${selector}::before`)) {
+        continue;
+      }
+      for (const [, property, value] of body.matchAll(/([-\w]+)\s*:\s*([^;]+)/g)) {
+        out.set(property.trim(), value.trim().replace(/\s+/g, " "));
+      }
+    }
+    return out;
+  }
+
+  /** `600%` and `50% 100%` both read as their first number: 600, 50. */
+  const percent = (value: string | undefined): number =>
+    Number((value ?? "").trim().split(/\s+/)[0].replace("%", ""));
+
+  /** The last `<n>s` an `animation` shorthand or an override states. */
+  const seconds = (rule: Map<string, string>): number =>
+    Number(
+      `${rule.get("animation") ?? ""} ${rule.get("animation-duration") ?? ""}`
+        .split(/\s+/)
+        .map((word) => word.match(/^([\d.]+)s$/)?.[1])
+        .filter(Boolean)
+        .at(-1),
+    );
+
+  /** How the walk used to be stated: whole image-widths, and over how long. */
+  const WALK: Array<[string, number, number]> = [
+    // `background-position: 0% 50%` → `300% 50%` over a 300% tile is -6 mount
+    // widths, i.e. TWO image widths; the 200% band's `0%` → `200%` is one.
+    [".alb-task-edge", 2, 16],
+    [".alb-detail-edge", 2, 16],
+    [".alb-praxis-edge", 2, 16],
+    [".alb-feed-edge", 2, 16],
+    [".alb-profile-edge", 1, 9],
+  ];
+
+  it("runs a transform, and no alb keyframe walks a gradient parameter", () => {
+    // FIVE KEYFRAMES BECAME ONE — asserted over what the five rules NAME, not
+    // over the sheet's whole inventory of `alb-` keyframes. #2498's second half
+    // moved nine more Albescent ornament motions here off the blocking sheet,
+    // and an inventory assertion would have read that as this collapse coming
+    // undone. What it is really claiming is that no mount needs a keyframe of
+    // its own, and that is a statement about the five rules.
+    const named = [
+      ...new Set(
+        WALK.map(([selector]) => child(selector).get("animation")?.split(/\s+/)[0]),
+      ),
+    ];
+    expect(named, "the five mounts' one keyframe").toEqual(["alb-edge-travel"]);
+    const at = MOTION.indexOf("@keyframes alb-edge-travel");
+    expect(
+      MOTION.slice(at, MOTION.indexOf("}", MOTION.indexOf("}", at) + 1)).replace(
+        /\s+/g,
+        " ",
+      ),
+    ).toContain("transform: translateX(-50%)");
+
+    // The other half of the title, now that there is a population to say it
+    // about: every `alb-` keyframe on this sheet moves a transform and nothing
+    // else. A gradient parameter — `background-position`, or an `@property`
+    // angle — reappearing in any of them is the expensive idiom coming back.
+    const keyframes = [
+      ...MOTION.matchAll(/@keyframes (alb-[\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g),
+    ];
+    expect(keyframes.length, "no alb keyframes found — the regex has rotted").toBe(8);
+    for (const [, name, body] of keyframes) {
+      expect(
+        [...new Set([...body.matchAll(/([-\w]+)\s*:/g)].map(([, one]) => one))],
+        `@keyframes ${name} animates something a compositor cannot`,
+      ).toEqual(["transform"]);
+    }
+  });
+
+  for (const [selector, loops, duration] of WALK) {
+    it(`${selector} keeps its tile, its speed and its seamless loop`, () => {
+      const rule = child(selector);
+      expect(rule.size, `${selector} has no travelling child`).toBeGreaterThan(0);
+      expect(rule.get("background-image"), "one ramp, declared once").toBe("inherit");
+
+      const mount = percent(new Map(before(selector)).get("background-size"));
+      const span = percent(rule.get("width"));
+      const tile = (span * percent(rule.get("background-size"))) / 100;
+      expect(tile, `${selector} tile, as a % of the mount`).toBe(mount);
+
+      // `translateX(-50%)` of the child, so half its width per cycle.
+      expect(span / 2 / tile, `${selector} loop is not a whole tile`).toBe(1);
+      expect(span / 2 / seconds(rule), `${selector} travels at a new speed`).toBe(
+        (mount * loops) / duration,
+      );
+    });
+  }
+
+  it("declares that child nowhere but inside the gate", () => {
+    // A resting `::before` in index.css would be a second, still ring under the
+    // travelling one — and a byte on the render-blocking sheet, for motion.
+    expect(INDEX).not.toContain("-edge::before");
+  });
+
+  it("clips the overflowing child to the ring's own box", () => {
+    for (const [selector] of BEFORE) {
+      expect(resolve(selector).get("overflow"), `${selector} overflow`).toBe("hidden");
     }
   });
 });

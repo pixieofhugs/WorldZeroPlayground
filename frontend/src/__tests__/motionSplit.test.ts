@@ -93,6 +93,18 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
+  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-profile-edge::before':
+    "the five Albescent spectrum edges' travelling ramp (#2498). Two tiles of " +
+    'the ring\'s own `background-image: inherit`, six mount-widths wide inside ' +
+    "index.css's `overflow: hidden`, slid by transform because " +
+    '`background-position` repaints every frame on the main thread. Declared ' +
+    'nowhere but inside the gate: with the sheet absent there is no child, and ' +
+    "the still ring is the mount's own background in index.css — the exact " +
+    'frame a reduced-motion reader already gets.',
+  '.alb-profile-edge::before':
+    'the same child, two band-widths instead of three, because the profile ' +
+    "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +
+    'and not a tile, which is the whole reason five keyframes could become one.',
 }
 
 /** Delete every `prefix { … }` block, brace-matched, and return what is left. */
@@ -177,8 +189,12 @@ MOTION_SCAFFOLDING with the reason, the way .wow-balloon-sweep::after is.`,
   })
 
   it('keeps MOTION_SCAFFOLDING honest — every entry still exists', () => {
+    // Whitespace-insensitive, because the keys come from `declarations()`, which
+    // collapses runs of whitespace — so a multi-selector entry's key can never
+    // match the sheet's own one-per-line house style literally.
+    const flat = SHEET.replace(/\s+/g, ' ')
     for (const [selector, reason] of Object.entries(MOTION_SCAFFOLDING)) {
-      expect(SHEET, reason).toContain(selector)
+      expect(flat, reason).toContain(selector)
     }
   })
 
@@ -207,6 +223,71 @@ sweep's parked \`top\`, the shock ring's \`opacity: 0\`, the watermark's
 \`transform-origin\`. An animation there is on the critical path AND outside the
 reduced-motion gate.`,
     ).toEqual([])
+  })
+
+  it('carries every Albescent ornament animation but the spark (#2498)', () => {
+    // The sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named
+    // "the Albescent drifts" as a candidate on one test: does every consumer
+    // treat the motion as ornament, and is the un-animated frame the one a
+    // reduced-motion reader already gets? Each of these nine says so in its own
+    // words in index.css — "stilled, the page is a static wash and a static
+    // prism ring; nothing carries meaning through motion alone" — and each
+    // leaves its resting `transform` behind in index.css, so nothing jumps.
+    //
+    // `alb-drift`'s KEYFRAME is the one thing that did not travel. #2404 already
+    // reaches it from here across the chunk boundary because index.css is the
+    // always-loaded entry sheet, and railSpectrumFrame.test.ts asserts that.
+    const albescent = (css: string): string[] => [
+      ...new Set(
+        [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+          .filter(([, , body]) => /\banimation(-name)?\s*:/.test(body))
+          .flatMap(([, prelude]) =>
+            prelude.split(',').map((one) => one.trim().replace(/\s+/g, ' ')),
+          )
+          .filter((selector) => selector.startsWith('.alb-')),
+      ),
+    ]
+
+    const here = albescent(SHEET)
+    for (const selector of [
+      '.alb-rainbow',
+      '.alb-task-aurora::before',
+      '.alb-detail-aurora::before',
+      '.alb-detail-foil::before',
+      '.alb-detail-foil::after',
+      '.alb-detail-ring::before',
+      '.alb-praxis-aurora::before',
+      '.alb-praxis-ring::before',
+      '.alb-feed-aurora::before',
+    ]) {
+      expect(here, `${selector} still animates from somewhere else`).toContain(selector)
+    }
+
+    // THE SPARK IS THE ONE THAT MAY NOT FOLLOW, and it is the only one left.
+    expect(
+      albescent(INDEX),
+      `Every Albescent animation index.css still runs. Only .alb-spark may be
+here: its gate does not merely add motion, it drops the glyph to opacity 0 and
+lets the keyframe carry it back up. A paint declaration may never defer, so the
+opacity has to stay — and with the animation deferred and the sheet stranded the
+spark would be an invisible mark rather than a still one, which is the exact
+degradation this sheet is not allowed to cause.`,
+    ).toEqual(['.alb-spark'])
+  })
+
+  it('leaves the spark behind for a reason that is still true', () => {
+    // Asserted, not asserted-in-a-comment: if the gated rule ever stops setting
+    // the paint, the spark becomes a legible still frame and may follow.
+    const gated = GATES.flatMap((body) => declarations(body))
+    expect(gated.some(([selector]) => selector === '.alb-spark')).toBe(false)
+
+    const spark = ruleBodies(INDEX, '.alb-spark').filter((body) =>
+      /\banimation\s*:/.test(body),
+    )
+    expect(spark, '.alb-spark no longer animates from index.css at all').toHaveLength(1)
+    expect(spark[0], 'the spark animates without touching paint — it may follow').toContain(
+      'opacity: 0',
+    )
   })
 
   it('is reached only through src/factionFaces.ts, so it stays off the entry HTML', () => {

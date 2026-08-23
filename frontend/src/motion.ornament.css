@@ -578,33 +578,139 @@
   }
 }
 
-/* ── Albescent — the five card edges' travel (#2407). The rings themselves are
-   `.spectrum-frame::before`'s selector list in index.css, one rule for all six
-   mounts; what arrives here is only the walk, which is the whole of what these
-   five surfaces were carrying in the render-blocking sheet.
+/* ── Albescent — the five card edges' travel (#2407, re-cut by #2498). The rings
+   themselves are `.spectrum-frame::before`'s selector list in index.css, one
+   rule for all six mounts; what arrives here is only the walk, which is the
+   whole of what these five surfaces were carrying in the render-blocking sheet.
 
-   FOUR KEYFRAMES BECAME ONE. `alb-task-edge`, `alb-detail-edge`,
-   `alb-praxis-edge` and `alb-feed-edge` were byte-identical — 0% → 300% at 16s
-   — so the four names retire and the four selectors share one declaration.
+   IT IS NO LONGER A WALK. #2407 shipped this as `background-position`, and
+   epic #2496's technique ruling retires that idiom: `background-position` is not
+   a compositor property, so every frame repainted the whole ring on the main
+   thread — five of them, on lists. What travels now is a PRE-PAINTED CHILD,
+   several ring-widths of ramp slid by `transform`, which rasterises once.
 
-   THE FIFTH IS NOT A DUPLICATE AND DOES NOT RETIRE. `alb-profile-edge` travels
-   200% because the profile band's ring tiles at `background-size: 200% 100%`,
-   two band-widths where the other four are three: the travel and the tile are
-   one number stated twice, and 300% there would overshoot the seam and jump.
-   Its 9s pace is the design's, and differs too.
+   THE CHILD IS DECLARED NOWHERE ELSE, so it belongs whole in this sheet: with
+   the gate closed, or this sheet not yet delivered, there is no `::before` at
+   all and the still ring is the mount's own background in index.css — the exact
+   frame that shipped before, not an approximation of it. It arrives already
+   registered, too: at `translateX(0)` the child's first tile starts at the
+   padding box's left edge, which is where `background-position: 0%` put the
+   image. Border width is 0 on all six, so the child's `inset`-relative box, the
+   background's origin box and index.css's `overflow: hidden` are one box.
 
-   Stranded — this sheet not yet delivered, or reduced motion — each edge is the
-   static spectrum ring an unaffiliated player already sees on the same surface.
-   The frame is drawn, in its final colours, at its final size; it simply is not
-   walking. Nothing here carries meaning through motion alone. ── */
-@keyframes alb-edge-travel { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
-@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+   FIVE KEYFRAMES BECAME ONE, where #2407 could only get four. A walk states its
+   travel in the TILE's units, so the profile band's 200% tile needed an end stop
+   of its own; a transform states travel in the CHILD's units, so the difference
+   moves into a width and the fifth name retires. Each child is two tiles wide
+   and slides exactly one — `translateX(-50%)` — which is why the loop cannot
+   seam wherever the ramp happens to be cut.
+
+   THE TWO NUMBERS THAT HAD TO SURVIVE, both asserted in
+   `__tests__/spectrumRingCollapse.test.ts` as arithmetic over the old walk:
+
+     tile   600% × 50% = the 300% these four already tiled at;
+            400% × 50% = the 200% the profile band already tiled at.
+     speed  the four moved 6 mount-widths per 16s, so one 300% tile per 8s.
+            The band moved 2 per 9s, which is one 200% tile per 9s — unchanged,
+            because its walk was already exactly one loop.
+
+   `background-image: inherit` rather than a second reference to the ramp: it
+   keeps ONE declaration of the loop cut, and it keeps the rail's suppression
+   working for free — `--spectrum-frame-image: none` on a member reaches the
+   parent, and the child inherits the `none`. ── */
+@keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
-  .alb-task-edge,
-  .alb-detail-edge,
-  .alb-praxis-edge,
-  .alb-feed-edge {
-    animation: alb-edge-travel 16s linear infinite;
+  .alb-task-edge::before,
+  .alb-detail-edge::before,
+  .alb-praxis-edge::before,
+  .alb-feed-edge::before,
+  .alb-profile-edge::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 600%;
+    background-image: inherit;
+    background-size: 50% 100%;
+    animation: alb-edge-travel 8s linear infinite;
   }
-  .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
+  /* Two band-widths, not three, and the design's own 9s pace. */
+  .alb-profile-edge::before {
+    width: 400%;
+    animation-duration: 9s;
+  }
+}
+
+/* ── Albescent — the nine ornament motions the five washed surfaces carry
+   (#2498). The sheet's own candidate list above named "the Albescent drifts";
+   this is that list, cashed. Each passes the test the list states: every
+   consumer treats the motion as ornament, and the un-animated frame is the one
+   a reduced-motion reader already gets — index.css says so in words at each
+   mount ("stilled, the page is a static wash and a static prism ring; nothing
+   carries meaning through motion alone").
+
+   ONLY THE ANIMATION TRAVELLED. Every one of these nine has an UNGATED twin in
+   index.css holding its resting form, and the resting form is the animation's
+   own first frame: `.alb-task-aurora::before` rests at
+   `translate3d(-6%, -4%, 0) scale(1.12)`, which is `alb-task-drift`'s 0%, and
+   the three other auroras and the two wheels do the same. So a stranded sheet
+   is not an approximation of the still frame, it IS the still frame, and there
+   is no jump at the moment the sheet lands.
+
+   `.alb-rainbow` RUNS A KEYFRAME THAT STAYED BEHIND, and that is deliberate for
+   the reason stated at `.spectrum-frame::before` above: `alb-drift` is reached
+   from this sheet across the chunk boundary already, keyframe names are
+   document-global, and index.css is the entry sheet the reference always
+   resolves against. Its `ponytail:` note in index.css records why the walk
+   itself is not converted to a transform in this pass.
+
+   `.alb-spark` IS THE ONE THAT MAY NEVER FOLLOW, and it is the only Albescent
+   animation index.css still runs. Its gate does not merely add motion — it
+   drops the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint
+   may not defer, so the opacity has to stay in index.css; with the animation
+   deferred and the sheet stranded the spark would be an invisible mark rather
+   than a still one. `__tests__/motionSplit.test.ts` asserts both halves of that.
+
+   TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
+   were byte-for-byte the same declaration — a centred element turning through
+   360deg — differing only in the duration their consumers pass, which lives on
+   the `animation` shorthand and not in the keyframe. Now that both consumers
+   sit in this one block, one name serves them, the same way `alb-edge-travel`
+   serves five above. ── */
+@keyframes alb-task-drift {
+  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
+  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
+}
+@keyframes alb-detail-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.24) rotate(7deg); }
+}
+@keyframes alb-praxis-drift {
+  0%, 100% { transform: translate3d(-4%, -5%, 0) scale(1.16) rotate(0deg); }
+  50% { transform: translate3d(4%, 5%, 0) scale(1.26) rotate(-6deg); }
+}
+@keyframes alb-feed-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.22) rotate(-5deg); }
+}
+@keyframes alb-wheel {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes alb-detail-sheen {
+  0%, 100% { transform: translateX(-18%); }
+  50% { transform: translateX(18%); }
+}
+@keyframes alb-detail-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-rainbow { animation: alb-drift 18s linear infinite; }
+  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
+  .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
+  .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
+  .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
+  .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
+  .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
+  .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
+  .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
 }
