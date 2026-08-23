@@ -6293,6 +6293,28 @@
              worst pixel: muted 5.02:1, ink 12.69:1, ground 1.67% L
              (flat: 5.44 / 13.75 / 1.16% L — the bloom lifts the ground by ~44%).
 
+   THE COMPONENT OWNS ITS GROUND, and this is the one rule that keeps a NESTED
+   card from going wrong. The design board hit the defect and had to patch it by
+   hand: it dressed the page with a descendant selector, so a praxis card inside
+   an Albescent surface inherited the page's `multiply` WITHOUT the prism layer
+   that justifies it, and its own border spectrum multiplied into its cream fill —
+   one card brighter than every card beside it. The board's fix was
+   `background-blend-mode: normal !important` walled round the nested card.
+
+   NOTHING HERE CAN CAUSE THAT, and it is worth saying why rather than testing
+   it and hoping. These rules declare three CUSTOM PROPERTIES and no background
+   property at all. Custom properties inherit as a set, and the actual
+   `background-blend-mode` is written only where `background-image` is written —
+   inside `factionSheet()` / `factionSpectrumSheet()`, `.faction-plate` and
+   `.faction-hero`, each of which takes all three from the same family on the
+   same element. `background-blend-mode` is not itself inherited, so an element
+   that does not compose the sheet gets `normal` however deep it sits. A nested
+   card therefore either paints the whole triple or none of it; it can never take
+   the blend and miss the layer. `__tests__/albescentPrismSheet.test.ts` holds the
+   line that would break it: no Albescent selector may set `background-blend-mode`
+   on a DESCENDANT, and only one may paint a descendant's background at all —
+   `.alb-desk .spectrum-rule`, which re-cuts an ORNAMENT's ramp, not a ground.
+
    THE FACTION PAGE IS NOT IN THIS LIST, deliberately. `.alb-faction-hero` and
    `.alb-faction-body` above carry #2504's own deeper cut of the same sweep, and
    epic ruling 9 makes their light/dark asymmetry — hero alone by day, hero and
@@ -6377,8 +6399,8 @@
    read as CLOUD. `.alb-prism` above is now both cards' ground, so there is no
    second texture left to diverge.
 
-   THE KEYFRAME STAYS, and it is not orphaned: `.spectrum-frame[data-spectrum-drift]
-   ::before` in the deferred sheet still runs it for the RAIL (#2404), reaching
+   THE KEYFRAME STAYS, and it is not orphaned: the RAIL's own drifting ring still
+   runs it from the deferred sheet (#2404, the drift-attribute rule), reaching
    it across the chunk boundary because keyframe names are document-global and
    this is the entry sheet the reference resolves against.
 
@@ -6578,9 +6600,9 @@
    token, so the shared `border-radius: inherit` is right and no literal is
    needed; and `z-index: 1` clears the three `.alb-spark` glyphs at 0.
 
-   IT REPLACED A 1px RING AT 0.6. Until #2499 this card wore `.spectrum-frame`
-   plus `data-spectrum-drift` — the RAIL's ring, at the rail's width, walking the
-   rail's 220px tile — because the card underneath it had a 1px cream hairline.
+   IT REPLACED A 1px RING AT 0.6. Until #2499 this card borrowed the RAIL's ring
+   through `.spectrum-frame` and the rail's drift hook — the rail's width, walking
+   the rail's 220px tile — because the card underneath it had a 1px cream hairline.
    `DefaultPraxisCard` now wears the same 3px spectrum border `DefaultTaskCard`
    does, so the ring over it has to be the same 3px at the same full strength or
    the two cards read as different objects, which is the half of the owner's

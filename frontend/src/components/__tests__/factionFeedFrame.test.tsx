@@ -44,20 +44,26 @@ function frameFor(slug: string | null, tag: string | null = null): string {
 }
 
 /**
- * Albescent's card with the light taken off — the wrapper and the two ornament
- * spans, and nothing else. What is left must be `DefaultFeedFrame` byte for
+ * Albescent's card with the light taken off — the wrapper and its one ornament
+ * span, and nothing else. What is left must be `DefaultFeedFrame` byte for
  * byte; that is ADR-0048's whole claim for this faction, and the two assertions
  * below are the only place it is checked on this surface.
  *
- * Deliberately literal. It removes exactly the three strings the wrapper adds,
- * so a fourth thing creeping into `AlbescentFeedFrame` — a class, a div, a data
+ * Deliberately literal. It removes exactly the strings the wrapper adds, so a
+ * further thing creeping into `AlbescentFeedFrame` — a class, a div, a data
  * attribute — survives the peel and fails the comparison, which is the point.
+ *
+ * #2499 CHANGED WHAT "THE LIGHT" IS AND THE PEEL STILL WORKS, which is the best
+ * evidence this shape was the right one. The wash was a second span; it is now
+ * `alb-prism` in the wrapper's class list, setting the na card's own sheet token.
+ * One string leaves the peel and one gains a word, and the claim — strip
+ * Albescent and this IS the unaffiliated card — is untouched.
  */
 const peelTheLight = (html: string) =>
   html
-    .replace('<div class="alb-feed">', "")
+    .replace('<div class="alb-feed alb-prism">', "")
     .replace(
-      /<span aria-hidden="true" class="alb-feed-aurora"><\/span><span aria-hidden="true" class="alb-feed-edge"><\/span>/,
+      /<span aria-hidden="true" class="alb-feed-edge"><\/span>/,
       "",
     )
     .replace(/<\/div>$/, "");
@@ -105,11 +111,12 @@ describe("FactionFeedFrame dispatch", () => {
 
     expect(peelTheLight(albescent)).toBe(neutral);
     expect(albescent).not.toBe(neutral);
-    // Both flourishes present, and both inert: they are decoration over a card
-    // full of links and controls, so they are hidden from assistive tech here
-    // and `pointer-events: none` in index.css.
-    expect(albescent).toContain('aria-hidden="true" class="alb-feed-aurora"');
+    // The ring is present and inert: it is decoration over a card full of links
+    // and controls, so it is hidden from assistive tech here and
+    // `pointer-events: none` in index.css. The ground needs neither, being a
+    // background layer rather than an element.
     expect(albescent).toContain('aria-hidden="true" class="alb-feed-edge"');
+    expect(albescent).toContain('class="alb-feed alb-prism"');
   });
 
   it("tints albescent from na's token family, never one of its own (#783)", () => {

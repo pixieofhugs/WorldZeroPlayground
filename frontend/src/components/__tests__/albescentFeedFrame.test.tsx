@@ -118,9 +118,10 @@ describe('every type this chassis carries', () => {
     // with.
     for (const type of CHASSIS_TYPES) {
       const html = render(item(type))
-      expect(html, `${type} is dressed`).toContain('class="alb-feed"')
+      // `alb-prism` joined `alb-feed` at #2499: the wash stopped being a span
+      // and became a layer of the card's own background, reached by the class.
+      expect(html, `${type} is dressed`).toContain('class="alb-feed alb-prism"')
       expect(html, `${type} keeps its kicker`).toContain(feedKicker(type))
-      expect(html, `${type} carries the wash`).toContain('class="alb-feed-aurora"')
       expect(html, `${type} carries the edge`).toContain('class="alb-feed-edge"')
     }
   })
@@ -150,7 +151,7 @@ describe('every type this chassis carries', () => {
     // It is state, not an event, and the backend 400s on it. The chassis still
     // draws — a card with no dismiss control is not a card with no chrome.
     const html = render(item('awaiting_submission'))
-    expect(html).toContain('class="alb-feed"')
+    expect(html).toContain('class="alb-feed alb-prism"')
     expect(html).not.toContain(ARCHIVE_LABEL)
     expect(html).not.toContain(RESTORE_LABEL)
     expect(html).not.toContain('disabled')
@@ -160,12 +161,12 @@ describe('every type this chassis carries', () => {
     // Epic decision 9 held for this skin too: the handlers did not move, so
     // accepting a duel or a collab from inside this card still works.
     const duel = render(item('duel_challenge'))
-    expect(duel).toContain('class="alb-feed"')
+    expect(duel).toContain('class="alb-feed alb-prism"')
     expect(duel).toContain(i18n.t('feed:duelChallenge.accept'))
     expect(duel).toContain(i18n.t('feed:duelChallenge.decline'))
 
     const collab = render(item('collab_invite'))
-    expect(collab).toContain('class="alb-feed"')
+    expect(collab).toContain('class="alb-feed alb-prism"')
     expect(collab).toContain(i18n.t('feed:collabInvite.accept'))
     expect(collab).toContain(i18n.t('feed:collabInvite.decline'))
   })
@@ -195,10 +196,13 @@ describe('the society stays hidden', () => {
     }
   })
 
-  it('hides both ornament layers from assistive tech', () => {
+  it('hides the ornament layer from assistive tech', () => {
+    // One span since #2499. The ground needs no hiding at all — a background
+    // layer is not in the accessibility tree to begin with, which is one more
+    // thing the move off an overlay buys.
     const html = render(item('friend_completion'))
-    expect(html).toContain('aria-hidden="true" class="alb-feed-aurora"')
     expect(html).toContain('aria-hidden="true" class="alb-feed-edge"')
+    expect(html, 'the retired wash is not back as a span').not.toContain('alb-feed-aurora')
   })
 })
 
@@ -226,7 +230,8 @@ describe('the society stays hidden', () => {
  * layout, no compositing. That is visual QA and it is outstanding on the PR.
  */
 describe('the drift stops at user media (#1942)', () => {
-  const ORNAMENTS = ['alb-feed-aurora', 'alb-feed-edge']
+  // One ornament since #2499; the wash is the card's own background now.
+  const ORNAMENTS = ['alb-feed-edge']
 
   function ornamentMount() {
     const tree = AlbescentFeedFrame({
@@ -243,7 +248,7 @@ describe('the drift stops at user media (#1942)', () => {
     }
   }
 
-  it('hands both ornaments to the chassis instead of mounting them beside it', () => {
+  it('hands the ornament to the chassis instead of mounting it beside it', () => {
     const { wrapper, chassisChildren } = ornamentMount()
     // `.alb-feed` holds ONE child now — the chassis. An ornament left out here
     // is an ornament outside the card's stacking context, i.e. inert.
@@ -256,12 +261,14 @@ describe('the drift stops at user media (#1942)', () => {
     }
   })
 
-  it('still puts them last, so the wash covers the body it is handed', () => {
-    // The relocation must not turn into "the light moved behind the content" —
-    // #1646 rejected that outright, because Default's sheet is opaque and the
-    // tell would simply vanish.
+  it('still puts it last, so the ring traces the body it is handed', () => {
+    // The relocation must not turn into "the ornament moved behind the content".
+    // #1646 rejected that for the WASH, when Default's sheet was opaque and the
+    // tell would have vanished; #2497 made the sheet a token and #2499 took the
+    // option, so it is the ring — which traces a border and has to paint over
+    // it — that the ordering is now about.
     const { chassisChildren } = ornamentMount()
-    const last = chassisChildren.slice(-2).map((child) =>
+    const last = chassisChildren.slice(-1).map((child) =>
       (child as ReactElement<{ className?: string }>).props.className,
     )
     expect(last).toEqual(ORNAMENTS)

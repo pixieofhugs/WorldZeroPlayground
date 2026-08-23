@@ -15,8 +15,8 @@
  * here can measure an overlap or prove a photo came out untinted. What it can
  * prove is the two halves of the wiring:
  *
- *  1. a rule exists that raises `.user-media` above the drift's `z-index`, and
- *     it is SCOPED to the four Albescent wrappers rather than global;
+ *  1. a rule exists that raises `.user-media` above the ornaments' `z-index`,
+ *     and it is SCOPED to the four Albescent wrappers rather than global;
  *  2. those surfaces actually emit `.user-media`, and the Albescent card emits
  *     the wrapper class the rule scopes on;
  *  3. (#1942) the two STACKING TRAPS that made the lift inert on the feed and
@@ -154,19 +154,25 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
     }
   });
 
-  it("clears every drift layer on all four surfaces", () => {
-    // Derived, not typed twice: `.alb-rainbow` sits at 0 on the praxis card, the
-    // feed's two layers at 1, and the `.alb-praxis-*` / `.alb-detail-*`
-    // ornaments at 2. Retune any of them and this fails rather than silently
-    // letting the wash back over the photo.
+  it("clears every Albescent layer that still paints over content", () => {
+    // Derived, not typed twice: the sparks sit at 0 on the praxis card, the
+    // feed's ring at 1, and the `.alb-praxis-*` / `.alb-detail-*` ornaments at
+    // 2. Retune any of them and this fails rather than silently letting light
+    // back over the photo.
+    //
+    // #2499 took the four WASHES out of this list by moving them into the card's
+    // own background, where a photograph is in front of them by construction.
+    // The sparks replace `.alb-rainbow` as the praxis card's floor — they are
+    // positioned at `z-index: 0`, which paints ABOVE non-positioned in-flow
+    // content, so the lift is still doing work on that surface.
     const floor = Math.max(
-      topZ(ruleBodies(css, ".alb-rainbow")),
+      topZ(ruleBodies(css, ".alb-spark")),
       topZ(ruleBodies(css, ".alb-praxis-edge")),
       topZ(ruleBodies(css, ".alb-detail-edge")),
       topZ(ruleBodies(css, ".alb-feed-edge")),
     );
     for (const body of lift) {
-      expect(topZ([body]), "media above the drift").toBeGreaterThan(floor);
+      expect(topZ([body]), "media above the light").toBeGreaterThan(floor);
     }
   });
 
@@ -260,7 +266,8 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
     // Still exact — the word boundaries mean an `alb-praxis-cardigan` typo fails
     // here exactly as it did before.
     expect(html, "the scope the lift needs").toMatch(/class="[^"]*\balb-praxis-card\b/);
-    expect(html, "the drift itself is untouched").toContain('class="alb-rainbow"');
+    // The ground is a class on this same wrapper since #2499, not a span.
+    expect(html, "the light itself is untouched").toMatch(/class="[^"]*\balb-prism\b/);
     expect(html, "the media region").toContain("user-media");
   });
 
@@ -284,9 +291,9 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
 
   it("praxis detail mounts the gallery inside .alb-praxis", () => {
     const html = render(<AlbescentPraxisDetail state={detailState()} />);
-    expect(html, "the detail's Albescent scope").toContain('class="alb-praxis"');
+    expect(html, "the detail's Albescent scope").toContain('class="alb-praxis alb-prism"');
     expect(html, "the media region").toContain("user-media");
-    expect(html, "the ornaments still mount").toContain("alb-praxis-aurora");
+    expect(html, "the ornaments still mount").toContain("alb-praxis-ring");
   });
 });
 
