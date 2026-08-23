@@ -7,9 +7,15 @@
  * skins inherit (ADR-0065). It is not a placeholder: `default` ≡ `na` ≡
  * Unaffiliated is one visual identity (ADR-0039/0046/0048), so this IS the
  * Unaffiliated composer and the fall-through every undressed faction renders.
- * **Albescent registers nothing here and falls through to it** — in the design's
- * `SKINS` table the two rows are the same `chrome: 'spectrum', aurora: true`
- * with identical fonts, differing only in a card ground; that is not a skin.
+ *
+ * **ADR-0065 §4 said Albescent registers nothing here.** That was true while the
+ * two kits were pixel-identical, and #2404 ended it: the owner's ruling is that
+ * the rainbow in Albescent's borders moves. Since #2505 (epic #2496) Albescent
+ * registers `AlbescentEditPraxis`, which renders THIS component whole and hands
+ * one `aria-hidden` span to the `ornament` slot below. The design's `SKINS`
+ * table is still right that the two rows are the same dress — the delta is
+ * motion at the sheet's edge and nothing else, which is why the slot takes a
+ * layer instead of the archetype taking a fork.
  *
  * ## The layout, in order
  *
@@ -121,6 +127,27 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
+  /**
+   * One ornament layer, mounted INSIDE the sheet (#2505, epic #2496).
+   *
+   * The epic's wrapper pattern is "a sibling span, or a slot on `DefaultX` when
+   * light must clip to the sheet", and the composer is squarely the second case:
+   * the sheet's `overflow: hidden` is what enforces #1028 — no composer ornament
+   * may reach the viewport — so a layer hung off a wrapper OUTSIDE this
+   * component would paint the page, which is the exact failure six task-detail
+   * skins shipped and the clip exists to prevent.
+   *
+   * Optional and undressed by default, so na renders byte-identically: the only
+   * caller is `AlbescentEditPraxis`, and the only thing it passes is a
+   * decorative, `aria-hidden` span. It rides in the `ground` slot, after na's
+   * own aurora and before the masthead, so it stacks above the wash and below
+   * the content column without a z-index of its own.
+   *
+   * The WAITING stage does not take it. That surface is a different page
+   * (`PraxisWaitingSurface`, #1189) with its own dress, and dressing it is not
+   * this issue.
+   */
+  ornament?: React.ReactNode;
 }
 
 /* The na kit runs entirely on the global --faction-default-* tokens, so it flips
@@ -236,7 +263,7 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   quietButtonStyle: { color: FAINT },
 };
 
-export default function DefaultEditPraxis({ state }: Props) {
+export default function DefaultEditPraxis({ state, ornament }: Props) {
   const { t } = useTranslation("forms");
   const sizes = useComposerSizes();
   const [tab, setTab] = useState<ComposerTab>("write");
@@ -281,7 +308,16 @@ export default function DefaultEditPraxis({ state }: Props) {
         sizes={sizes}
         style={sheetStyle}
         masthead={masthead}
-        ground={ground}
+        ground={
+          ornament ? (
+            <>
+              {ground}
+              {ornament}
+            </>
+          ) : (
+            ground
+          )
+        }
       >
         {/* `Draft`, alone (#1828). The autosave line moved to the write-up
             header and the spectrum mark is the waiting surface's beat. */}
