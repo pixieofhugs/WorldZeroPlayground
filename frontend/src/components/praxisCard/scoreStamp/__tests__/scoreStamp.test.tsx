@@ -654,19 +654,21 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       const html = text(markup)
       expectBaseRow(html, showsBase)
       expectVotesRow(html, showsVotes)
-      // The LEADER HAIRLINE is what only a working row draws — the rule that
-      // runs out from a label to fill the gap before its figure. In the
-      // base-only state the mark is alone and no row survives (ADR-0076), and a
-      // tally block implies rows (votes un-suppress the base row), so the
-      // hairline is present exactly when there is working to show.
+      // THE SPECTRUM RULE is what only a sheet with working draws — the stamp's
+      // one rule, under the rows or between them and the tally. In the base-only
+      // state the mark is alone and no row survives (ADR-0076), and a tally
+      // block implies rows (votes un-suppress the base row), so the rule is
+      // present exactly when there is working to show.
       //
       // This used to read `--faction-default-card-muted`, on the stated grounds
       // that the ink dressed the rows and the tally "and nothing else on the
       // sheet". #2042 made that false: the total mark is
       // `DefaultPointsRing` now and it letters its unit in the same ink, so the
-      // proxy stopped distinguishing a sheet with working from one without.
-      if (showsBase) expect(markup).toContain('min-width:6px')
-      else expect(markup).not.toContain('min-width:6px')
+      // proxy stopped distinguishing a sheet with working from one without. It
+      // then read `min-width:6px`, the grey leader hairline, until #2520 traded
+      // both grey lines on this sheet for the one spectrum rule.
+      if (showsBase) expect(markup).toContain('position:relative;height:2px')
+      else expect(markup).not.toContain('position:relative;height:2px')
       expect(html).toContain(formatPoints(fields.score))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
@@ -700,10 +702,10 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
    * have nothing to check here.
    */
   const STAMPS = [
-    // `min-width:6px` is the leader hairline a working row runs out to its
-    // figure — see the note in the conditional-states block above for why this
-    // is no longer `--faction-default-card-muted`.
-    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/, 'min-width:6px'],
+    // `position:relative;height:2px` is the na sheet's one spectrum rule, drawn
+    // wherever its working ends (#2520) — see the note in the conditional-states
+    // block above for the two proxies that came before it.
+    ['the unaffiliated sheet', DefaultScoreStamp, 'base', /votes/, 'position:relative;height:2px'],
     ['Everymen', EverymenScoreStamp, 'base', /votes/, 'TALLY'],
     ['the Ephemerists', EphemeristsScoreStamp, EPHEMERISTS_LABEL.base, /票/, null],
     ['S.N.I.D.E.', SnideScoreStamp, 'base', /votes/, '2px dashed'],
@@ -877,14 +879,20 @@ describe('the unaffiliated disc shrink-wraps when nothing follows it (#1894)', (
     }
   })
 
-  it('still hangs no flat-terms rule on a metatask praxis nobody has voted on', () => {
-    // `padding-top` is the flat-terms block's alone on this sheet — the rows
-    // carry `padding:var(--space-xs) 0` and nothing else pads one edge.
+  it('draws no tally block on a metatask praxis nobody has voted on', () => {
+    // The flat-terms block is `margin-top:var(--space-sm)` and this sheet's only
+    // reader of `card.stamp.fromVotes`, so the tally's absence is countable off
+    // the copy. Until #2520 this case ALSO asserted that no rule was drawn —
+    // the rule was that block's own `border-top` and could not exist without
+    // it. The stamp's rule is its own element now and prints here too, which is
+    // the design's "one spectrum rule per stamp, in every state"; what must
+    // still not appear is the empty tally.
     const markup = renderToStaticMarkup(
       <DefaultScoreStamp praxis={praxis({ ...bareFields, metatask_points: 3, score: 13 })} />,
     )
     expect(markup).toContain('meta')
-    expect(markup).not.toContain('padding-top')
+    expect(text(markup)).not.toContain('from votes')
+    expect(markup).not.toContain('margin-top:var(--space-sm)')
   })
 })
 
@@ -1136,5 +1144,79 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
     expect(text(markup)).toContain('habit')
     expect(markup).not.toContain('習')
     expect(markup).not.toContain('title="habit"')
+  })
+})
+
+/**
+ * ONE SPECTRUM RULE PER STAMP, in every state (#2520, epic #2496).
+ *
+ * `Score-Stamp.dc.html` draws three columns — shipped (a flat 1px grey line),
+ * na (a 2px STATIC spectrum rule) and Albescent (that same stamp with the rule
+ * travelling and the ring turning). #2501 built the third column and skipped the
+ * second, so the society's stamp animated a rule the unaffiliated stamp did not
+ * have and the two differed STRUCTURALLY, when the design says they differ only
+ * by motion. This is the second column.
+ *
+ * The seam is the rendered markup of `DefaultScoreStamp`, and the claim is
+ * COUNTABLE: the stamp carries the band across its top edge plus AT MOST ONE
+ * rule over its working. A presence check would pass against a rule per row,
+ * which is the shape the board's own comment rejects — "one spectrum rule per
+ * stamp is enough".
+ *
+ * The four cases are the board's four fixtures. Base-only draws no breakdown at
+ * all (#1131 / ADR-0076), so it draws no rule either: the band is the whole
+ * spectrum on it.
+ *
+ * `position: relative` on the rule is not decoration. `.alb-stamp
+ * .spectrum-rule::before` is absolutely positioned, so a rule that is not itself
+ * a containing block hands Albescent's travelling child the stamp PLATE, and the
+ * ramp paints over the working out.
+ */
+describe('the na stamp rules its working in the spectrum (#2520)', () => {
+  const fields = {
+    task_point_value: 12,
+    display_multiplier: 1,
+    metatask_points: 0,
+    points_from_votes: 0,
+    habit_bonus_points: 0,
+  }
+  /** The band's mount plus the working's, counted by the shared class. */
+  const spectra = (markup: string) => markup.split('spectrum-rule').length - 1
+  const RULE = 'position:relative;height:2px'
+
+  const STATES = {
+    'base only': { ...fields, score: 12 },
+    '+ metatask': { ...fields, metatask_points: 20, score: 32 },
+    '+ votes': { ...fields, points_from_votes: 4, score: 16 },
+    both: { ...fields, metatask_points: 20, points_from_votes: 4, score: 36 },
+  }
+
+  for (const [name, p] of Object.entries(STATES)) {
+    const bare = name === 'base only'
+    it(`draws the band and ${bare ? 'no' : 'exactly one'} rule — ${name}`, () => {
+      const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis(p)} />)
+      expect(spectra(markup)).toBe(bare ? 1 : 2)
+      if (bare) expect(markup).not.toContain(RULE)
+      else expect(markup).toContain(RULE)
+    })
+  }
+
+  it('drops the grey divider, and the grey leader hairlines with it', () => {
+    const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis(STATES.both)} />)
+    // The votes divider the spectrum rule replaces.
+    expect(markup).not.toContain('border-top:1px solid var(--faction-default-card-line)')
+    // The leader line each row ran out to its figure. The figures keep their
+    // column — `margin-left:auto` on the value does what the spacer did.
+    expect(markup).not.toContain('min-width:6px')
+    expect(markup).toContain('margin-left:auto')
+  })
+
+  it('prints the rule under the working when there is no tally to divide', () => {
+    // The board's own words: where there is no votes divider the same single
+    // rule prints under BASE instead, so the geometry matches across states.
+    const markup = renderToStaticMarkup(
+      <DefaultScoreStamp praxis={praxis(STATES['+ metatask'])} />,
+    )
+    expect(markup.indexOf(RULE)).toBeGreaterThan(markup.lastIndexOf('meta'))
   })
 })

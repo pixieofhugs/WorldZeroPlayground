@@ -13,9 +13,16 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * Rebuilt to the Unaffiliated praxis-detail design (#1091, epic #1085). That
  * skin IS the unaffiliated one, so "restyle the default stamp" and "build the
  * design's score rail" are the same object: a total mark carrying the total
- * over a `POINTS` caption, then the working out as RULED LEADER-LINE ROWS —
- * `LABEL … hairline … value` — and, under a rule of its own, the votes tally.
- * A 2px spectrum bar is pinned across the top edge.
+ * over a `POINTS` caption, then the working out as `LABEL … value` rows, then
+ * ONE 2px spectrum rule, then the votes tally. A 2px spectrum bar is pinned
+ * across the top edge.
+ *
+ * THE GREY LINES ARE GONE (#2520, epic #2496). `Score-Stamp.dc.html` gives the
+ * na stamp the spectrum treatment so that Albescent's delta can be MOTION alone
+ * — the society was animating a rule the unaffiliated stamp did not have. The
+ * rows' grey leader hairlines go (the figures keep their column on
+ * `margin-left: auto`), the tally's grey `border-top` divider goes, and one
+ * spectrum rule stands in for both wherever the working ends.
  *
  * THE MARK IS NO LONGER THIS DESIGN'S STRUCK DISC. #2042 found `na` drawing its
  * points mark twice and the owner ruled that the point card takes the task card's,
@@ -159,9 +166,9 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           rainbow, and the owner's ruling on #2042 is that the point card reflects
           the card's total look. {@link DefaultPointsRing} is the one drawing now.
 
-          THE RAINBOW IS STILL ON THIS OBJECT TWICE, and both appearances are
-          structural rather than clipped to type: the 2px spectrum bar across the
-          top edge, and the ring's annulus. What goes is the four-stop
+          THE RAINBOW IS STRUCTURAL ON THIS OBJECT, never clipped to type: the
+          2px bar across the top edge, the ring's annulus, and — since #2520 —
+          the one rule over the working. What goes is the four-stop
           `-total-rainbow` fill on the figure and the gold caption under it — the
           ring letters its unit in `-card-muted`, which measures 6.15:1 light and
           4.82:1 dark on this plate against the gold's 5.00:1 / 8.23:1. Both clear
@@ -219,16 +226,8 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             {row.label}
           </span>
           <span
-            aria-hidden
             style={{
-              flex: "1 1 auto",
-              minWidth: 6,
-              height: 1,
-              background: "var(--faction-default-card-line)",
-            }}
-          />
-          <span
-            style={{
+              marginLeft: "auto",
               fontFamily: "var(--faction-default-card-font)",
               fontSize: "var(--text-lg)",
               whiteSpace: "nowrap",
@@ -239,26 +238,56 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         </div>
       ))}
 
-      {/* The flat terms, under a rule of their own — the rule is the multiplier's
-          edge: everything over it is inside `(base + meta) × mult` and everything
-          under it is flat (#1617). Both leave at 0: the habit bonus always did,
-          and the tally does since ADR-0076. With neither, the block goes rather
-          than hanging an empty rule under the disc.
+      {/* THE STAMP'S ONE RULE (#2520, epic #2496) — a 2px spectrum, inset from
+          the plate's edges by the plate's own padding, run to the width of the
+          breakdown column.
 
-          `rows.length > 0` whenever this block is drawn — votes or habit both
-          un-suppress the base row — so the rule is only ever conditional in the
-          direction the compiler cannot see.
+          It replaces the 1px grey line the flat-terms block used to hang off its
+          own `border-top`, and it is anchored HERE rather than on that block so
+          the geometry holds in every state: with a tally it parts the working
+          from the flat terms exactly where the grey divider sat; with a sealed
+          metatask and no votes it prints under the working instead. `Score-
+          Stamp.dc.html` draws all four states to make that the point — one
+          spectrum rule per stamp, wherever the stamp ends.
 
-          The guard is `hasFlatTerms`, NOT `hasWorking`: the implication runs one
-          way only. A sealed metatask nobody has voted on has rows and no flat
-          terms, and widening this to `hasWorking` would draw the block's rule
-          under it with nothing beneath — the orphan ADR-0076 exists to stop. */}
+          `hasWorking`, not `hasFlatTerms`: base-only draws no breakdown at all
+          (#1131 / ADR-0076), and a rule under a bare disc would be the orphan
+          that ruling exists to stop.
+
+          `position: relative` is the mount Albescent's travelling child needs.
+          `.alb-stamp .spectrum-rule::before` is absolutely positioned, so
+          without a containing block here it would resolve against the plate and
+          paint the ramp straight over the working out. That the class reaches
+          both this rule and the band above is the point of #2520: the two stamps
+          are one stamp, and the society's delta is that these SAME spectra move
+          (index.css owns the resting paint, motion.ornament.css the travel). */}
+      {hasWorking && (
+        <span
+          aria-hidden
+          className="spectrum-rule"
+          style={{
+            display: "block",
+            position: "relative",
+            height: 2,
+            borderRadius: 2,
+            marginTop: "var(--space-xs)",
+          }}
+        />
+      )}
+
+      {/* The flat terms, under the rule above — everything over it is inside
+          `(base + meta) × mult` and everything under it is flat (#1617). Both
+          leave at 0: the habit bonus always did, and the tally does since
+          ADR-0076, and with neither the block goes.
+
+          THE RULE IS NO LONGER THIS BLOCK'S `border-top`. It was, which is why
+          it had to be conditional on `rows.length` from in here; it is now the
+          stamp's own rule above, drawn once for the whole sheet, so this block
+          carries nothing but its ink and the space under that rule. */}
       {hasFlatTerms && (
         <div
           style={{
-            borderTop: rows.length > 0 ? "1px solid var(--faction-default-card-line)" : undefined,
-            marginTop: "var(--space-xs)",
-            paddingTop: rows.length > 0 ? "var(--space-sm)" : undefined,
+            marginTop: "var(--space-sm)",
             fontFamily: "var(--font-body)",
             fontSize: "var(--text-base)",
             letterSpacing: "0.06em",
