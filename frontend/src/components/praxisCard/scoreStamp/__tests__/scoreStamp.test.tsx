@@ -302,9 +302,19 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
       moderation_status: 'visible',
     })
     const props = { praxis: scored } as unknown as ScoreStampProps
-    expect(renderToStaticMarkup(<AlbescentScoreStamp {...props} />)).toBe(
+    const dressed = renderToStaticMarkup(<AlbescentScoreStamp {...props} />)
+    expect(dressed).toBe(
       `<div class="alb-stamp">${renderToStaticMarkup(<DefaultScoreStamp {...props} />)}</div>`,
     )
+    // And the two mounts the cascade dresses are UNDER that hook. The equality
+    // above cannot see this: it would still hold the day `DefaultScoreStamp`
+    // re-inlines its ramps, at which point `.alb-stamp .spectrum-rule` and
+    // `.alb-stamp .spectrum-dial` match nothing and the whole tell goes quiet
+    // with every test in the repo green. `spectrumClasses.test.tsx` and
+    // `pointsMarkUnification.test.tsx` hold the na side of each; this is the
+    // pairing with the dresser.
+    expect(dressed, 'the band the spectrum rule travels on').toContain('spectrum-rule')
+    expect(dressed, 'the annulus the spectrum dial turns').toContain('spectrum-dial')
   })
 
   it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
