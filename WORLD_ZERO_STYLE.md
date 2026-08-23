@@ -353,6 +353,36 @@ component compose image, blend and clip together. Custom properties inherit as a
 or gets `normal`. **The component owns its ground. A page may hand it a value; it may never paint
 half of one onto it.**
 
+### The na kit carries the SPECTRUM; a dresser's delta is MOTION (#2520, epic #2496)
+
+The Albescent kit's whole claim is "the na component plus ornament, never a skin", and its
+canvas states the corollary the built surfaces missed: **na's own kit gains the spectrum
+treatment, and Albescent's delta is motion alone.** Four surfaces shipped from issue prose
+without the drawing and all four got this the same way round — the society ANIMATED a rule the
+unaffiliated player did not have, so the two kits differed *structurally* where the design says
+they differ only by whether the rainbow moves. Three consequences, each of which was a live
+inconsistency on the site:
+
+- **A flat 1px grey line on an na surface is a spectrum rule waiting to happen.** The score
+  stamp ruled its working in grey (a hairline per row, plus a divider over the tally); it now
+  draws ONE 2px spectrum rule wherever its working ends, and the grey goes. One rule per object,
+  in every state it has — where there is no divider to upgrade, the same rule prints under the
+  rows instead, so the geometry does not change shape between states.
+- **The spectrum arrives as a BORDER, not as a bar pinned to an edge.** `border: 3px solid
+  transparent` with the ramp appended to all three of the sheet's background lists
+  (`factionSpectrumSheet()`), `background-origin: border-box`. The task card, the praxis card
+  (#2499), the metatask seal and the composer sheet now all say it that way. A 3px strip across
+  a top edge is the same rainbow said in a second dialect, and a kit that says one thing four
+  ways cannot read as one material.
+- **na must not be moving already.** The composer's masthead band was walked by `.ep-edge` for
+  every player, so the society's travelling sheet edge was not a tell at all — it was a second
+  moving rainbow beside na's own. The band is off, and na's spectrum on that page is a static
+  frame. **Before giving a dresser a motion, check the na surface is still.**
+
+The board's own comment on the seal says 2px and its CSS says 3px. Build the CSS, flag the
+discrepancy, and do not average the two — 3px is also what the two cards already wear, which is
+the tiebreak the prose could not give.
+
 ### When AA forces a colour CODE onto one hue's lightness, the axis left is chroma (#2019)
 
 A design can hand you a set of inks whose whole job is to be told apart. Coven's rebuilt score stamp colour-codes its working — base pink, multiplier gold, votes blue, and the blue is deliberate because votes are the one term that comes from other people — and all three of the design's own values failed AA on the light plate: **3.27 / 1.89 / 3.18** on the plate's darker stop. Walking each down its own hue line is the routine half, and it is §"a spine hue is a FILL" arriving one issue later: the gold has no yellow that clears near-white paper, so light lands on an olive, exactly where `--faction-wow-accent-deep` had to.
