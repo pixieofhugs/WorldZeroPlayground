@@ -15,7 +15,7 @@ import DefaultFactionHero from "./DefaultFactionHero";
  * WHAT THE CLASS BUYS, all of it in index.css and motion.ornament.css:
  *   the prism sheet — a token override, per epic ruling 2, so the na plate
  *                     repaints itself rather than being selector-surgeried;
- *   the labyrinth turns — `alb-detail-spin`, the repo's cheap idiom: a rotate on
+ *   the labyrinth turns — `alb-spin`, the repo's cheap idiom: a rotate on
  *                     a static mark, not a walked gradient parameter;
  *   the bloom, in DARK ONLY — epic ruling 9. Light washes the hero and nothing
  *                     else; dark carries it on to the plates and the cards. That
