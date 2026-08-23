@@ -5995,6 +5995,57 @@
   background-image: var(--faction-default-rainbow-conic);
 }
 
+/* ── THE na PLATE (#2497, epic #2496) ──
+   A kicker, a sheet and a hairline: the three-part block every other faction
+   body already draws for itself (`WowFactionBody`'s `PLATE_FRAME`, the Coven's
+   slip, the Ephemerists' plate) and the `Default` body did not, which is why its
+   own docstring still called its chrome PLACEHOLDER. `DefaultFactionBody`'s four
+   regions wear it.
+
+   `SectionPanel` IS NOT THIS AND MUST NOT BECOME IT. That component is the
+   disclosure half — an id and `hidden={!section.open}` — and seven sibling
+   archetypes mount it, every one of them inside a plate it already draws in its
+   own dress. Putting a sheet on the wrapper would paint a second plate inside
+   each of those seven. The disclosure and the plate are different jobs on
+   different elements, and the plate is the one that was missing.
+
+   THE SHEET IS THE SAME TRIPLE THE CARDS READ, spelled out rather than spread
+   from `factionSheet()` because this is a stylesheet and there is no call site to
+   spread into. The trailing `border-box` on the clip does the same job here as it
+   does there — the frame is a translucent hairline at night and the sheet has to
+   show through it. Epic ruling 9 washes plates as well as cards in dark, and this
+   is the declaration that makes that one override rather than nine.
+
+   THE HAIRLINE IS `.spectrum-rule`, not a token of its own: the plate's rule is
+   the na spectrum, so it is the same ornament the sheet-head band and the
+   section heads are, and it moves when they move. Only its GEOMETRY lives here —
+   the same `flex: 1 1 20%` / 2px / 0.55 cut `DefaultTaskDetail`'s section heads
+   use, so the two pages rule their headings identically instead of by
+   coincidence. */
+.faction-plate {
+  background-color: var(--faction-default-card-bg);
+  background-image: var(--faction-default-card-sheet);
+  background-blend-mode: var(--faction-default-card-sheet-blend);
+  background-clip: var(--faction-default-card-sheet-clip), border-box;
+  border: 1px solid var(--faction-default-card-line);
+  border-radius: var(--faction-default-card-radius);
+  padding: var(--space-lg) var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+.faction-plate-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.faction-plate-rule {
+  flex: 1 1 20%;
+  min-width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0.55;
+}
+
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
    faction, so this is a flourish LAYERED over Default, never a repaint.
