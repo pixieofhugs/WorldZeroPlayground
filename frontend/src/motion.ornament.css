@@ -719,12 +719,19 @@
    A ROTATION OF A STATIC CONIC, which is the epic's technique ruling: an
    `@property` angle inside a `conic-gradient()` re-rasterises the gradient every
    frame, while `transform: rotate()` rasterises once and spins on the GPU —
-   pixel-identical over a 360deg loop. `alb-detail-spin` is that keyframe and it
-   already exists in index.css for the task detail's worth ring, so this reuses
-   the name rather than minting a ninth `to { rotate(360deg) }`. It lives on the
-   BLOCKING sheet, which is the safe direction for a cross-sheet reference: a
-   viewer who never receives this file cannot be missing the keyframe, only the
-   `animation` that would have run it.
+   pixel-identical over a 360deg loop. `alb-detail-spin` above is that keyframe
+   already — the task detail's worth ring runs it — so this mounts a NINTH
+   consumer on the eight names this sheet holds rather than minting a spin of
+   its own.
+
+   IT IS `alb-detail-spin` AND NOT `alb-wheel`, which is the other turn on this
+   sheet and the one #2498 merged two names into. `alb-wheel` carries
+   `translate(-50%, -50%)` because both of its consumers are pseudo-elements
+   centred by `top: 50%; left: 50%`; a `transform` is one property, so a mount
+   that does not need the centring cannot borrow it without being displaced by
+   half its own size. `.alb-avatar-ring` is `inset: 0` on a square disc, so the
+   plain rotation is the one that fits. Two turns, two geometries, and the
+   distinction is load-bearing rather than a leftover.
 
    24s IS THE FAMILY'S PACE, RE-CUT FOR A SMALL DISC. What a viewer perceives is
    speed at the rim, not angular velocity: the 92px worth ring at 46s travels
