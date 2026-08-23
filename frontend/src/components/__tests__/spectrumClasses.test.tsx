@@ -33,7 +33,7 @@ import { describe, expect, it, vi } from "vitest";
 import "../../i18n";
 import { aTask } from "../../test/fixtures";
 import type { PraxisCardOut } from "../../api/praxis";
-import { ruleBodies, stripComments } from "../../utils/__tests__/cssVars";
+import { stripComments } from "../../utils/__tests__/cssVars";
 
 vi.mock("../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
@@ -53,6 +53,26 @@ const RETIRED = [
   "background-image:var(--faction-default-rainbow)",
 ];
 
+/**
+ * The class's OWN rule — `.spectrum-rule { … }` and not `.alb-stamp
+ * .spectrum-rule { … }`.
+ *
+ * `ruleBodies` matches a descendant PREFIX as well, which is right for the
+ * cascade questions it usually answers and wrong for this one. #2497's note in
+ * index.css says a dresser reaches these two classes with `.alb-x
+ * .spectrum-rule` — two classes, so it wins on specificity from wherever it is
+ * written — and #2501 shipped the first pair of them (the Albescent score
+ * stamp's travelling band and turning ring). A dresser is the DESIGNED use of
+ * these names, so it must not read as a second declaration of the class.
+ *
+ * What still has to hold, and what the anchor keeps holding, is that the shared
+ * class itself is declared exactly once and carries exactly its ramp.
+ */
+const ownRule = (selector: string): string[] =>
+  [...CSS.matchAll(new RegExp(`(?:^|[};])\\s*\\${selector}\\s*\\{([^}]*)\\}`, "g"))].map(
+    (match) => match[1],
+  );
+
 describe("the two classes carry the paint their mounts had inline (#2497)", () => {
   const cases = [
     [".spectrum-rule", "var(--faction-default-rainbow)"],
@@ -61,7 +81,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
 
   for (const [selector, ramp] of cases) {
     it(`${selector} paints ${ramp} and nothing else`, () => {
-      const bodies = ruleBodies(CSS, selector);
+      const bodies = ownRule(selector);
       expect(bodies, `${selector} is not declared in index.css`).toHaveLength(1);
       const declarations = bodies[0]
         .split(";")
@@ -75,7 +95,7 @@ describe("the two classes carry the paint their mounts had inline (#2497)", () =
   }
 
   it("keeps the conic off the linear cut — a 7-stop ramp is mud on a ring", () => {
-    expect(ruleBodies(CSS, ".spectrum-rule")[0]).not.toContain("conic");
+    expect(ownRule(".spectrum-rule")[0]).not.toContain("conic");
   });
 });
 
