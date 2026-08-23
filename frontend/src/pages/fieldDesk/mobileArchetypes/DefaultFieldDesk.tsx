@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -98,7 +98,20 @@ const secondaryActionStyle: CSSProperties = {
   border: '1px solid var(--color-border-strong)',
 }
 
-export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
+export default function DefaultFieldDesk({
+  state,
+  identityOrnament,
+}: {
+  state: FieldDeskHomeState
+  /**
+   * One inert node, mounted inside the IDENTITY CARD (#2519, epic #2496). The
+   * epic's named slot — `AlbescentProfileBody` uses the same word for the same
+   * job — and it exists because a dresser's spectrum edge has to clip to this
+   * card's own rounded box, which a span wrapped around the whole page cannot
+   * do. na hands nothing and renders no ornament markup at all.
+   */
+  identityOrnament?: ReactNode
+}) {
   const { t } = useTranslation('common')
   const { character, eraName, levelTrack, activeTasks, pendingRow, offersACharacterChoice } =
     state
@@ -127,6 +140,8 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           padding: 'var(--space-lg)',
         }}
       >
+        {identityOrnament}
+
         {/* The signature hairline — the hairline, the avatar ring and the level
             track are one mark at three scales (#1553).
 
@@ -136,11 +151,12 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             the paint is byte-identical and the geometry stays inline where it
             belongs. It is here rather than in #2497 because that issue converted
             the ten `Default*` files Albescent already wore, and this was not one
-            of them until now. The class is what lets `AlbescentFieldDesk` reach
-            this rule with `.alb-desk .spectrum-rule` and set it travelling —
-            the dresser seam #2497's own docblock names, and the reason the
-            travelling edge REPLACES this rule instead of stacking a second
-            spectrum on top of it. */}
+            of them until now. The class is the dresser seam #2497's own
+            docblock names, and what it carries now is a `display: none`: under
+            `.alb-desk` this bar comes OFF, because the identity card grows a
+            travelling spectrum edge of its own and one carrier per object is
+            the design canvas's rule (#2519). For na it is unchanged, and it is
+            still the mark #1553 drew. */}
         <span
           className="spectrum-rule"
           style={{

@@ -5898,8 +5898,9 @@
      a ring drawn around the wrong element rather than a missing one. */
   position: relative;
 }
-/* ONE RING, EIGHT MOUNTS (#2407; the seventh is #2504's plate, the eighth
-   #2505's composer).
+/* ONE RING, NINE MOUNTS (#2407; the seventh is #2504's plate, the eighth
+   #2505's composer, the ninth #2519's field-desk identity card — which took
+   this shape when the desk's own hairline stopped being its carrier).
  *
  * The five `.alb-*-edge` spans below were five hand-written copies of exactly
  * this device: the same `mask … exclude` idiom, the same tiling loop cut, the
@@ -5921,11 +5922,17 @@
  * follows it before the brace — so a trailing position is what keeps it
  * findable while the five element selectors resolve to their own rules.
  *
- * `.alb-composer-edge` (#2505) joins and states NOTHING of its own, which is
- * the first mount to prove these defaults were the right ones: it wants the
- * 1px inset, the 0.6, the 300% tile, and `inherit` reads the composer sheet's
- * own 10px corner straight off `ComposerSheet`'s inline style. Its whole
- * declaration is this one line. */
+ * THE DEFAULTS ARE FOR HAIRLINES, NOT FOR CARRIERS, and #2519 is the issue
+ * that had to say so. `.alb-composer-edge` (#2505) and `.alb-plate-edge`
+ * (#2504) joined and stated nothing of their own, so each shipped as a 1px ring
+ * at 0.6 on a surface the design canvas draws carrying a 3px border at full
+ * strength. Both now restate the carrier's two values in the block further down
+ * that `.alb-task-edge` has always owned, together with `.alb-desk-edge`, the
+ * ninth mount (#2519). What they still take from here is the geometry: the
+ * mask, the loop-cut ramp, the 300% tile, and `border-radius: inherit`, which
+ * reads each mount's own corner — the composer sheet's 10px off
+ * `ComposerSheet`'s inline style, the plate's `--faction-default-card-radius`,
+ * the desk card's `--radius-xl`. */
 .alb-task-edge,
 .alb-praxis-card-edge,
 .alb-detail-edge,
@@ -5934,6 +5941,7 @@
 .alb-profile-edge,
 .alb-plate-edge,
 .alb-composer-edge,
+.alb-desk-edge,
 .spectrum-frame::before {
   position: absolute;
   inset: 0;
@@ -6312,8 +6320,10 @@
    card therefore either paints the whole triple or none of it; it can never take
    the blend and miss the layer. `__tests__/albescentPrismSheet.test.ts` holds the
    line that would break it: no Albescent selector may set `background-blend-mode`
-   on a DESCENDANT, and only one may paint a descendant's background at all —
-   `.alb-desk .spectrum-rule`, which re-cuts an ORNAMENT's ramp, not a ground.
+   on a DESCENDANT, and since #2519 NONE may paint a descendant's background at
+   all. The one that could — `.alb-desk .spectrum-rule`, re-cutting an
+   ORNAMENT's ramp rather than a ground — stopped needing to when the field
+   desk's carrier moved off na's hairline and onto a ring of its own.
 
    THE FACTION PAGE IS NOT IN THIS LIST, deliberately. `.alb-faction-hero` and
    `.alb-faction-body` above carry #2504's own deeper cut of the same sweep, and
@@ -6584,12 +6594,55 @@
 .alb-task {
   --faction-default-cta-rule-opacity: 0.45;
 }
-/* The ring is the shared one (#2407, top of the `.spectrum-frame` block); these
-   are the two things this mount says differently. `opacity: 1` is stated rather
-   than left off because the shared rule's default is the rail's 0.6, and the
-   task card's edge has always been full strength. `.alb-praxis-card-edge` below
-   states exactly the same two, which is the point: since #2499 the two cards
-   wear the same 3px spectrum border and the same ring over it. */
+/* ── THE CARRIER, AT ITS ONE WEIGHT (#2519, epic #2496) ──
+   The ring is the shared one (#2407, top of the `.spectrum-frame` block); these
+   are the two things a CARRIER says differently from a hairline. `opacity: 1`
+   is stated rather than left off because the shared rule's default is the
+   rail's 0.6, and a carrier is never dimmed.
+
+   FIVE MOUNTS, ONE WEIGHT, AND THAT IS THE RULE ITSELF. The design canvas draws
+   every Albescent object carrying its spectrum as a 3px border at full strength
+   — the idiom `DefaultTaskCard` ships — and says the rule out loud: ONE CARRIER
+   PER OBJECT, and whatever bar, strip or hairline was doing that job comes off.
+   #2504 and #2505 built three of these mounts from the issue prose without the
+   drawing and each took the shared list's defaults instead (1px at 0.6), which
+   is the FAINTEST possible mark, added beside the marks the drawing removes.
+   This rule is the correction, and it is one rule so the five cannot diverge
+   again:
+
+     `.alb-task-edge`         the task card's, since #1038
+     `.alb-praxis-card-edge`  the praxis card's twin of it, since #2499
+     `.alb-plate-edge`        the faction page's five plates (#2504 → #2519)
+     `.alb-composer-edge`     the edit-praxis sheet (#2505 → #2519)
+     `.alb-desk-edge`         the mobile field desk's identity card (ditto)
+
+   A MASKED RING RATHER THAN THE BOARD'S REAL BORDER, on all five, and the
+   choice is per-surface reasoning that lands in the same place five times.
+   `.alb-task-edge`'s own note has the general form of it — a `border-image`
+   does not clip to `border-radius`, so the mask idiom is what draws a rounded
+   3px frame at all — and three more things decide it here:
+
+     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px, the
+       composer sheet's and the desk card's are inline in `Default*`. Growing
+       any of them to a 3px transparent border is an edit to na's own geometry,
+       which is #2520's half of this pass and not this issue's.
+     • A REAL BORDER HERE WOULD BREAK #2499's GUARANTEE. Painting the ramp into
+       a border box means writing `background-image` on a DESCENDANT of the
+       `.alb-*` wrapper, and `__tests__/albescentPrismSheet.test.ts` forbids
+       exactly that: the blend and the layer must be written on one element or a
+       nested card takes the blend without the layer. The overlay is the shape
+       that cannot cause it.
+     • IT LANDS ON THE SAME PIXELS. Inset 0 with a 3px pad paints the outer 3px
+       of the mount's own box, covering na's 1px hairline and 2px of sheet — the
+       drawing's 3px border, at the drawing's strength, in the idiom this repo
+       already had. Where the board and the repo differ is the technique, not
+       the picture.
+
+   The travel is one deferred rule these five share with the other four rings
+   (`alb-edge-travel`, motion.ornament.css); no keyframe is minted here. */
+.alb-plate-edge,
+.alb-desk-edge,
+.alb-composer-edge,
 .alb-task-edge,
 .alb-praxis-card-edge {
   padding: 3px;
@@ -8821,37 +8874,53 @@
   opacity: 1;
 }
 
-/* Albescent — the MOBILE field desk's identity band (#2505, epic #2496 ruling
-   5). The phone home already carries the na spectrum as a 3px hairline across
-   the top of the identity block — #1553's "one mark at three scales" — so the
-   travelling edge REPLACES that rule rather than standing a second spectrum on
-   top of it. This is the whole of the replacement, and it is three lines,
-   because `DefaultFieldDesk` marks that hairline `.spectrum-rule` (#2497's
-   linear cut) and two classes beat one from anywhere in the sheet. Strip
-   `alb-desk` and the two homes are byte-identical.
+/* ── THE DOUBLED CARRIERS COME OFF (#2519, epic #2496) ──
+   The other half of the rule the block above states, and it is one rule because
+   the design canvas states it once: *"one carrier per object — whatever bar,
+   strip or hairline was doing that job comes off."* Two na marks were doing it,
+   on two surfaces that have now grown edges of their own, so both go.
 
-   NOT THE MASKED RING. The other seven mounts of the drift are `.spectrum-frame`
-   rings around a sheet; this is a FILLED bar, and the `mask … exclude` idiom
-   would punch its middle out and leave two hairlines. What it shares with them
-   is the TRACK: the loop cut, a 300% tile, `overflow: hidden`, and — from
-   motion.ornament.css, inside the gate — the same pre-painted `::before` slid by
-   `alb-edge-travel`. No keyframe is minted here; the epic's technique ruling is
-   satisfied by reusing the one six mounts already share.
+     `.alb-desk .spectrum-rule`  the mobile field desk's 3px identity hairline
+       — #1553's "one mark at three scales", across the top of the identity
+       card. The board: *"the desk ships a static 3px spectrum bar across the top
+       of the identity card; under the tell that bar doubles the edge, so it
+       comes off and the plate's own travelling border does the work."*
 
-   THE LOOP CUT, because the child tiles. `--faction-default-rainbow` ends on
-   magenta and begins on red, so two tiles of it meet at a hard seam every
-   cycle; `-rainbow-loop` repeats its first stop at 100%, which is the entire
-   reason that token exists. The rest frame therefore shows a THIRD of the ramp
-   where na's band shows the whole of it — the same trade every `.spectrum-frame`
-   mount already makes, and the honest one: rest and travel must show the same
-   stripe width, or turning motion on would be a design change.
+     `.alb-composer .ep-edge`  the edit-praxis sheet's masthead band, drawn by
+       `ComposerMasthead` and worn by the composer and by the waiting surface
+       after it (#1189), so both stages lose it together — right, they are the
+       same sheet. The board: *"the masthead's own 3px spectrum rule goes with
+       it; the border carries the spectrum now."*
 
-   The desktop `/field-desk` page has no faction dispatch at all and this does
-   not give it one (ruling 5). Both cascades — the stops flip on their own. */
-.alb-desk .spectrum-rule {
-  background-image: var(--faction-default-rainbow-loop);
-  background-size: 300% 100%;
-  overflow: hidden;
+   WHAT #2505 DID INSTEAD, and why it is not the same thing. On the desk it
+   classed the bar, re-cut it to the loop tile and set it TRAVELLING — which
+   replaced the static rule, truthfully, but not the carrier: the bar was still
+   the only spectrum on the card, and the card still had no edge, so the surface
+   read as the na home with a moving stripe rather than as an object the
+   spectrum is holding. On the composer it did not replace anything at all; it
+   added a 1px ring at 0.6 BESIDE a 3px band. The desk's whole re-cut now lives
+   on `.alb-desk-edge` (the loop ramp, the 300% tile and the `overflow: hidden`
+   track come from the shared ring), and the composer carries one mark.
+
+   THE BOARD COUNTS THREE MARKS ON THE COMPOSER AND THIS REPO HAS TWO, which is
+   a fixture difference and not a missing deletion: the canvas dresses a live
+   mount from outside and its DOM held a 2px top strip AND `.ep-edge`, where this
+   repo draws both from the one `ComposerMasthead` element.
+
+   `display: none` RATHER THAN AN UNMOUNT, because both marks are na's and the
+   `Default*` components draw them for every unaffiliated player. Two classes
+   beat one from anywhere in the sheet, so neither needs an `!important` or a
+   structural selector; strip the wrapper class and the na surface is back, byte
+   for byte. `display` is also the one property that can do this from OUTSIDE: a
+   background written on a descendant of an `.alb-*` wrapper is what
+   `__tests__/albescentPrismSheet.test.ts` forbids, and with the desk rule
+   reduced to this the sheet no longer paints any descendant at all.
+
+   The desktop `/field-desk` page has no faction dispatch and this does not give
+   it one (ruling 5). */
+.alb-desk .spectrum-rule,
+.alb-composer .ep-edge {
+  display: none;
 }
 
 /* Albescent — the AVATAR's tell (#2502, epic #2496, ADR-0048), the seventh

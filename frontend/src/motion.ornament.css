@@ -629,13 +629,17 @@
 
    #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
    the epic's technique ruling taken at its word. `.alb-composer-edge` is the
-   edit-praxis sheet's ring and states nothing anywhere — it takes the shared
-   ring's defaults in index.css and this child's defaults here.
-   `.alb-desk .spectrum-rule` is NOT a ring at all: it is the mobile field
-   desk's filled 3px identity hairline, which cannot wear the mask idiom (that
-   would punch its middle out) but wants exactly this track — a loop-cut ramp,
-   a 300% tile, `overflow: hidden` and a pre-painted child slid by transform. A
-   filled bar and a masked ring turn out to be the same travelling problem. ── */
+   edit-praxis sheet's ring; `.alb-desk-edge` is the mobile field desk's
+   identity card's.
+
+   #2519 SWAPPED THE SECOND OF THOSE FOR ANOTHER RING and the list is shorter by
+   nothing. It used to read `.alb-desk .spectrum-rule` — the desk's filled 3px
+   identity hairline, travelling in place of a ring the card did not have. The
+   design canvas puts the spectrum in the CARD's edge and takes the bar off (one
+   carrier per object), so the mount became `.alb-desk-edge`, a ninth masked
+   ring, and the track it needed — the loop-cut ramp, the 300% tile, the
+   `overflow: hidden` — is the shared ring's already. Nine mounts, nine rings,
+   one child. ── */
 @keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge::before,
@@ -644,7 +648,7 @@
   .alb-praxis-edge::before,
   .alb-feed-edge::before,
   .alb-composer-edge::before,
-  .alb-desk .spectrum-rule::before,
+  .alb-desk-edge::before,
   .alb-plate-edge::before,
   .alb-profile-edge::before {
     content: "";

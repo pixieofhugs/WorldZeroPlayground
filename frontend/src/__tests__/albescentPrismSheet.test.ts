@@ -337,19 +337,24 @@ TRIPLE on the element that carries the class and let the component compose it.`,
     ).toEqual([]);
   });
 
-  it("paints a descendant's background at exactly one mount, and it is an ORNAMENT", () => {
-    // `.alb-desk .spectrum-rule` (#2505) is the legitimate shape and the reason
-    // the rule above is about the BLEND rather than about backgrounds: the thing
-    // being dressed is one of na's own ornament classes, put there for a dresser
-    // to reach, and what changes is the ramp's CUT — `--faction-default-rainbow`
-    // to the seamless loop — so the bar can tile and travel. It is not a
-    // component's ground, and it takes the whole background rather than half of
-    // one. A SECOND entry here has to argue the same case in this comment.
+  it("paints a descendant's background nowhere at all", () => {
+    // WAS EXACTLY ONE, AND IS NOW NONE (#2519). The one legitimate mount was
+    // `.alb-desk .spectrum-rule` (#2505) — one of na's own ornament classes,
+    // put there for a dresser to reach, re-cut from `--faction-default-rainbow`
+    // to the seamless loop so the field desk's identity bar could tile and
+    // travel. The design canvas takes that bar OFF (one carrier per object: the
+    // card grows a ring of its own), so the rule is a `display: none` now and
+    // this list is empty.
+    //
+    // AN ENTRY HERE HAS TO ARGUE ITS CASE IN THIS COMMENT, and the bar is why
+    // the standard above is about the BLEND rather than about backgrounds: an
+    // ornament class is not a component's ground and takes the whole background
+    // rather than half of one. That door stays open; nothing is behind it.
     expect(
       descendants
         .filter((rule) => /(^|[;\s])background(-image|-color|-clip|-origin)?\s*:/.test(rule.body))
         .map((rule) => rule.prelude),
-    ).toEqual([".alb-desk .spectrum-rule"]);
+    ).toEqual([]);
   });
 
   it("never sets a background property beside the prism triple", () => {
