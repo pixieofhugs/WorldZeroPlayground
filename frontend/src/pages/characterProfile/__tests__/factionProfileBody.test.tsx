@@ -526,7 +526,11 @@ describe("#1630 motion sits behind the reduced-motion guard", () => {
   it.each(["alb-profile-edge", "cvn-profile-spark"])(
     "%s animates only under no-preference",
     (className) => {
-      const animates = new RegExp(`\\.${className}\\s*\\{[^}]*animation`);
+      // The pseudo-element is optional because #2498 moved `.alb-profile-edge`'s
+      // travel onto a `::before` — a pre-painted ramp slid by transform. The
+      // question is still "is the animation gated", on whichever element runs it,
+      // and an ungated `.alb-profile-edge { animation }` still fails below.
+      const animates = new RegExp(`\\.${className}(::before)?\\s*\\{[^}]*animation`);
       expect(animates.test(GUARDED), `${className} guarded rule`).toBe(true);
       expect(animates.test(UNGUARDED), `${className} UNguarded rule`).toBe(false);
     },

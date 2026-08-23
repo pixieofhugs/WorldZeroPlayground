@@ -5933,6 +5933,13 @@
   background-image: var(--spectrum-frame-image, var(--faction-default-rainbow-loop));
   background-size: 300% 100%;
   opacity: 0.6;
+  /* The TRACK for the travelling child (#2498). Five of the six mounts grow a
+     `::before` inside the reduced-motion gate in `motion.ornament.css`, several
+     times this box wide, and slide it by transform instead of walking this
+     background. Border width is 0 here, so `overflow` clips to the same rounded
+     box the mask does — nothing that stands still moves by one pixel, and with
+     the deferred sheet absent there is no child to clip. */
+  overflow: hidden;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);

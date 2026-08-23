@@ -93,6 +93,18 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
+  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-profile-edge::before':
+    "the five Albescent spectrum edges' travelling ramp (#2498). Two tiles of " +
+    'the ring\'s own `background-image: inherit`, six mount-widths wide inside ' +
+    "index.css's `overflow: hidden`, slid by transform because " +
+    '`background-position` repaints every frame on the main thread. Declared ' +
+    'nowhere but inside the gate: with the sheet absent there is no child, and ' +
+    "the still ring is the mount's own background in index.css — the exact " +
+    'frame a reduced-motion reader already gets.',
+  '.alb-profile-edge::before':
+    'the same child, two band-widths instead of three, because the profile ' +
+    "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +
+    'and not a tile, which is the whole reason five keyframes could become one.',
 }
 
 /** Delete every `prefix { … }` block, brace-matched, and return what is left. */
@@ -177,8 +189,12 @@ MOTION_SCAFFOLDING with the reason, the way .wow-balloon-sweep::after is.`,
   })
 
   it('keeps MOTION_SCAFFOLDING honest — every entry still exists', () => {
+    // Whitespace-insensitive, because the keys come from `declarations()`, which
+    // collapses runs of whitespace — so a multi-selector entry's key can never
+    // match the sheet's own one-per-line house style literally.
+    const flat = SHEET.replace(/\s+/g, ' ')
     for (const [selector, reason] of Object.entries(MOTION_SCAFFOLDING)) {
-      expect(SHEET, reason).toContain(selector)
+      expect(flat, reason).toContain(selector)
     }
   })
 
