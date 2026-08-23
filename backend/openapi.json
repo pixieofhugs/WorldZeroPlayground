@@ -9426,6 +9426,54 @@
         ]
       }
     },
+    "/me/account": {
+      "delete": {
+        "description": "End this account: tombstone every row, unlink its media (ADR-0081, #2160).\n\nIrreversible, and takes no body — the confirmation is the client's\n(#2161). The route is deliberately unable to delete anyone else's: the\naccount comes from the JWT, never from a path parameter.\n\nNo grace period and no scheduled follow-up; see ``services.account_deletion``.\nThe JWT the caller still holds is inert the moment this returns —\n``get_current_account`` refuses any account that is not ``active`` — so\nsigning out is ``POST /auth/logout`` like any other sign-out, and the cookie\nflags stay stated in exactly one place.",
+        "operationId": "delete_my_account_me_account_delete",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete My Account",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/me/active-character": {
       "post": {
         "description": "Carry a different owned, active life; return the refreshed current user.",

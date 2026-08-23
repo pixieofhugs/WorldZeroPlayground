@@ -124,6 +124,21 @@ async def create_or_get_account(
     # gated too, not just linking: an Account created under an unverified
     # address is the same takeover one sign-in later, with the roles reversed.
     #
+    # An identity we do not currently know is also the only moment a *deleted*
+    # account's retained digest is ever looked at, so this is where the 90-day
+    # retention is enforced (ADR-0081, #2160): purge-on-access, because there is
+    # no job runner. The returning tombstone is what #2162's gate will read to
+    # offer "start fresh as a new player"; the call is here today for the purge,
+    # and deliberately changes nothing about what this function returns — a
+    # returning player lands in a NEW account, which is the whole reason the
+    # deleted one released its email and dropped its OAuth rows.
+    #
+    # Imported inside the function: ``services.account_deletion`` imports
+    # ``services.character``, which imports this module.
+    from services.account_deletion import resolve_account_tombstone
+
+    await resolve_account_tombstone(provider, provider_user_id, session)
+
     # `is not True` rather than a falsy test: Google has emitted this claim as
     # the *string* "true", and every other non-bool is equally a provider whose
     # answer we did not understand.

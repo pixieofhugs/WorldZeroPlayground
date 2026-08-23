@@ -13,25 +13,32 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
-from models.mixins import TimestampMixin
+from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from models.character import Character
 
 
 class AccountStatus(enum.Enum):
-    """Account lifecycle. ``suspended`` is the only non-``active`` state written.
+    """Account lifecycle: playable, moderated, or ended by the player.
 
-    There is no ``deleted``: nothing in the codebase ever set it, and the two
-    gates that read status (``dependencies.py``, ``services/auth.py``) test for
-    ``active`` — so a `deleted` account behaved exactly like a suspended one
-    while implying an account-erasure flow that does not exist. Removed in the
-    #1398 squash rather than left as a value the DB would accept and no code
-    could produce.
+    ``deleted`` was removed in the #1398 squash because nothing set it — it
+    implied an account-erasure flow that did not exist, and behaved exactly
+    like ``suspended`` at the two gates that read status (``dependencies.py``,
+    ``services/auth.py``, both testing for ``active``). #2160 is that flow, so
+    the value comes back with something behind it:
+    ``services.account_deletion.delete_account`` is its one writer.
+
+    It is still true that the status gates cannot tell it from ``suspended``,
+    and that is fine — a tombstone must not be signed into either. What makes
+    it a distinct value is that everything *else* about the row is different:
+    the email is a released placeholder, every life is departed, and the
+    identifying columns are blank. ADR-0081.
     """
 
     active = "active"
     suspended = "suspended"
+    deleted = "deleted"
 
 
 class AuthProvider(enum.StrEnum):
@@ -141,3 +148,49 @@ class OAuthProvider(TimestampMixin, Base):
     account: Mapped["Account"] = relationship(
         "Account", back_populates="oauth_providers", lazy="raise"
     )
+
+
+class AccountTombstone(CreatedAtMixin, Base):
+    """What survives the OAuth identity of a deleted account (ADR-0081, #2160).
+
+    The ``OAuthProvider`` rows are gone — a deleted account must not be
+    resolvable by ``(provider, provider_user_id)``, or the next sign-in would
+    hand the player back the corpse instead of a fresh start. What is kept is
+    the *provider* in the clear and a **salted SHA-256 digest** of the
+    identifier, which is enough to recognise "this is the same person coming
+    back" (#2162's gate) and not enough to reconstruct who they were: the raw
+    ``sub``/snowflake is nowhere in the database, and the digest is unusable
+    without ``settings.SECRET_KEY``.
+
+    ``created_at`` is the deletion timestamp — the row is written once, in the
+    deleting request, and never updated, so no second column is warranted.
+    Retention is ``TOMBSTONE_RETENTION_DAYS`` and enforced **purge-on-access**
+    in ``services.account_deletion.resolve_account_tombstone``: there is no job
+    runner, so a returning player is the only clock this row has.
+
+    ``account_id`` stays because the tombstone is a fact *about that account*,
+    which still exists (blanked) and still carries the votes and praxes other
+    players' scores are computed from. It leaks nothing the row does not
+    already: the account it points at has no identifying field left.
+    """
+
+    __tablename__ = "account_tombstone"
+
+    # The pair #2162 looks up, and the same shape ``OAuthProvider`` uses for the
+    # live identity. Unique so "one identity, at most one tombstone" is a
+    # database fact rather than a convention: a player who deletes, signs up
+    # again and deletes again inside the retention window would otherwise leave
+    # two rows and make the lookup ambiguous. ``delete_account`` clears any
+    # earlier row for the same pair before inserting.
+    __table_args__ = (UniqueConstraint("provider", "provider_user_hash"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=False
+    )
+    # Values come from :class:`AuthProvider`; a plain ``String`` for the same
+    # reason ``OAuthProvider.provider`` is one (ADR-0041).
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    #: 64 lowercase hex characters — see
+    #: ``services.account_deletion.hash_provider_user_id``.
+    provider_user_hash: Mapped[str] = mapped_column(String, nullable=False)
