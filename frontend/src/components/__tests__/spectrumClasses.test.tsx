@@ -56,12 +56,21 @@ const RETIRED = [
 /**
  * The BASE rule for a class — the one whose prelude is EXACTLY the selector.
  *
- * `ruleBodies` matches by substring, so `.alb-desk .spectrum-rule` counts as a
- * `.spectrum-rule` rule to it. That dresser scope arrived with #2505 and it is
- * the seam this class was built for — #2497's own docblock names it ("a dresser
- * reaches them with `.alb-x .spectrum-rule`"). What the claim below is really
- * about is the base rule, which every mount reads and which therefore may
- * declare only the ramp; an ancestor-scoped rule repaints nothing else.
+ * `ruleBodies` matches by substring, so a dresser scope like `.alb-stamp
+ * .spectrum-rule` (#2501) or `.alb-desk .spectrum-rule` (#2505) counts as a
+ * `.spectrum-rule` rule to it. That is right for the cascade questions it
+ * usually answers and wrong for this one: a dresser scope is the DESIGNED use
+ * of these names — #2497's own docblock says so ("a dresser reaches them with
+ * `.alb-x .spectrum-rule`", two classes, so it wins on specificity from
+ * wherever it is written) — and it must not read as a second declaration.
+ *
+ * What still has to hold, and what this keeps holding, is that the shared class
+ * itself is declared exactly once and carries exactly its ramp. An
+ * ancestor-scoped rule repaints nothing else.
+ *
+ * #2501 and #2505 arrived at this same narrowing independently, one as
+ * `ownRule` and one as `baseRuleBodies`. One survives, and it is the one
+ * without a hand-escaped regex: an exact prelude comparison cannot drift.
  */
 function baseRuleBodies(css: string, selector: string): string[] {
   return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]

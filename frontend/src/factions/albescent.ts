@@ -36,6 +36,9 @@ const AlbescentSelectCard = lazyArchetype(() => import('../components/selectCard
 const AlbescentTaskCard = lazyArchetype(() => import('../components/taskCard/AlbescentTaskCard'))
 const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
 const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
+// #2501 — the score stamp. Lazy like every wrapper here: it pulls in the whole
+// na stamp, which is weight the initial load does not need.
+const AlbescentScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/AlbescentScoreStamp'))
 const AlbescentSeal = lazyArchetype(() => import('../components/metataskSeal/skins/AlbescentSeal'))
 // #1038 — the task-detail unfreeze. Lazy like its siblings (#1063): a wrapper
 // that pulls in the whole na anatomy is exactly the weight route-splitting exists
@@ -48,6 +51,10 @@ const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/
 const AlbescentFeedFrame = lazyArchetype(() => import('../components/feed/AlbescentFeedFrame'))
 // #1630 — the profile unfreeze, lazy for the same reason as every wrapper above.
 const AlbescentProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/AlbescentProfileBody'))
+// #2504 — the faction page's two halves, lazy for the reason every wrapper above
+// is: each pulls in the whole na surface it dresses.
+const AlbescentFactionHero = lazyArchetype(() => import('../components/factionHero/AlbescentFactionHero'))
+const AlbescentFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/AlbescentFactionBody'))
 // #2505 (epic #2496) — the composer and the phone home. Lazy like every wrapper
 // above: each pulls in a whole na page, which is the weight route-splitting
 // exists to keep off the initial load.
@@ -75,6 +82,20 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * other surface still falls through to Default (#783).
    */
   praxisCard: () => AlbescentPraxisCard,
+
+  /**
+   * The score stamp (#2501, epic #2496). Albescent was the only faction with a
+   * roster and no `scoreStamp` row, so a member's total showed the bare na stamp
+   * while all seven other factions' were dressed — undressed by ACCIDENT, not by
+   * the design that keeps this faction hidden.
+   *
+   * Same shape as every row above: `AlbescentScoreStamp` renders
+   * `DefaultScoreStamp` whole and adds one class, and the only delta is MOTION —
+   * the two na spectra the stamp already carries (the top band, the points ring's
+   * annulus) start to move. No token, no copy, no forked anatomy; strip the class
+   * and the two stamps are byte-identical.
+   */
+  scoreStamp: () => AlbescentScoreStamp,
 
   /**
    * The task-card tell (#1023, ADR-0048) — the second surface to unfreeze, and
@@ -176,6 +197,23 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * plausible enough that the gap went unnoticed. Its tier WORDS stay gone
    * (#783): the widget prints plain numerals via `reframeLabel`.
    */
+  /**
+   * The FACTION PAGE's two halves (#2504, epic #2496) — the seventh and eighth
+   * surfaces to unfreeze, and the same "Default + light" shape as the six above.
+   * `/factions/albescent` routes through `AlbescentGate`, which hands a revealed
+   * account `<FactionDetail slug="albescent" />`, so these rows are reached by
+   * exactly the viewers ADR-0027 allows to see the society at all.
+   *
+   * Both are WRAPPERS over na surfaces that did not exist a week ago: the page
+   * had no fall-through hero at all, so Albescent got the page's placeholder
+   * chrome. `DefaultFactionHero` is that gap closed (epic ruling 11), and these
+   * two add the prism sheet, the turning labyrinth, the plates' travelling ring
+   * and — in dark only, per ruling 9 — the bloom. No copy, no colour, no slot
+   * moves; strip the two wrapper classes and the page is na's exactly.
+   */
+  factionHero: () => AlbescentFactionHero,
+  factionBody: () => AlbescentFactionBody,
+
   vote: () => AlbescentVote,
 
   /**

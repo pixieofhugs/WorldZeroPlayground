@@ -124,7 +124,10 @@ const BESPOKE: Record<string, string[]> = {
   // than dying with the retired one. `factionBody` is what a phone renders now,
   // and it carries the same seven registrations the phone twin did — which is
   // why the deleted twin was drift rather than a second design.
-  factionBody: [...CORE_SIX, 'wow'],
+  // `albescent` appended by #2504 — a WRAPPER over `DefaultFactionBody`, not an
+  // eighth skin: it forwards the whole na body and hands its plates one ornament
+  // node. The row is here because the dispatch is real, not because the dress is.
+  factionBody: [...CORE_SIX, 'wow', 'albescent'],
   mobileFieldDesk: [...CORE_SIX, 'wow', 'albescent'],
   // Was `mobilePraxisCard` with this exact slug list until ADR-0067 collapsed
   // the praxis card to one responsive component per faction. The row moved to

@@ -69,7 +69,7 @@ describe('every S.N.I.D.E. surface wears the Anarchy A', () => {
       'faction-page hero',
       () =>
         render(
-          <SnideFactionHero name={factionName('snide')} members={214} tasks={9} praxes={1489} />,
+          <SnideFactionHero slug="snide" name={factionName('snide')} members={214} tasks={9} praxes={1489} />,
         ),
       SIZES.hero,
     ],

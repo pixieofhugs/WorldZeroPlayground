@@ -8,6 +8,7 @@ import { SingularityFactionHero } from 'worldzero-frontend'
 export function BootSequence() {
   return (
     <SingularityFactionHero
+      slug="singularity"
       name="Singularity"
       members={126}
       tasks={40}

@@ -93,10 +93,10 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-profile-edge::before':
-    "the Albescent spectrum edges' travelling ramp (#2498; the composer and the " +
-    'phone home joined at #2505). Two tiles of the mount\'s own ' +
-    '`background-image: inherit`, six mount-widths wide inside ' +
+  '.alb-task-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-plate-edge::before, .alb-profile-edge::before':
+    "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
+    'plates joined at #2504, the composer and the phone home at #2505). Two ' +
+    "tiles of the mount's own `background-image: inherit`, six mount-widths wide inside " +
     "index.css's `overflow: hidden`, slid by transform because " +
     '`background-position` repaints every frame on the main thread. Declared ' +
     'nowhere but inside the gate: with the sheet absent there is no child, and ' +
@@ -108,6 +108,22 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'the same child, two band-widths instead of three, because the profile ' +
     "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +
     'and not a tile, which is the whole reason five keyframes could become one.',
+  '.alb-stamp .spectrum-rule::before':
+    "the Albescent score stamp's travelling band (#2501). Two tiles of " +
+    '`--faction-default-rainbow-loop` across a 200%-wide child, slid one tile by ' +
+    'transform inside the `overflow: hidden` index.css puts on the band. The loop ' +
+    'cut is NAMED rather than inherited, unlike the five edges above: the band ' +
+    'rests on `--faction-default-rainbow`, whose last stop is not its first, so ' +
+    'tiling that would seam. Declared nowhere but inside the gate — with the sheet ' +
+    "absent there is no child and the still band is `.spectrum-rule`'s own " +
+    'background, which is the na band exactly.',
+  '.alb-stamp .spectrum-dial::before':
+    "the same stamp's turning rim (#2501). `background-image: inherit` takes the " +
+    "annulus's own conic, so the rim registers exactly over the ring it replaces " +
+    'and the sheet arriving late changes no pixel. It is a pseudo-element and not ' +
+    'the mount so that the TOTAL inside the ring does not turn with it — the call ' +
+    '`.alb-detail-ring` already makes. Declared nowhere but inside the gate: with ' +
+    "the sheet absent the annulus is `.spectrum-dial`'s own background.",
 }
 
 /** Delete every `prefix { … }` block, brace-matched, and return what is left. */
@@ -318,5 +334,61 @@ whole sheet back into the render-blocking stylesheet — build green,
 bundle-budget.mjs the only witness. Reach it the way factions/lazyArchetype.tsx
 does, with \`import('../factionFaces')\`.`,
     ).toEqual(['factionFaces.ts'])
+  })
+})
+
+/**
+ * EVERY `animation` NAMES A KEYFRAME THAT EXISTS (#2504).
+ *
+ * A dangling keyframe reference is the one way to break an ornament that
+ * nothing else here catches. CSS does not error on it — `animation: gone 48s`
+ * against no `@keyframes gone` is simply dropped, so the build is green, the
+ * rule is present, the selector matches, and the element sits still. It looks
+ * exactly like the reduced-motion state the sheet is designed to degrade to,
+ * which is why review does not catch it either.
+ *
+ * It happened: #2501 renamed `alb-detail-spin` to `alb-spin` while #2504 was
+ * being written against the old name. Two branches, two regions of one file, no
+ * textual conflict — git merged both and the faction hero's labyrinth silently
+ * stopped turning. Found by reading, not by a test, which is the gap this
+ * closes.
+ *
+ * Both sheets at once, in both directions: keyframe names are document-global,
+ * and `index.css` is the entry sheet that always loads, so a reference may cross
+ * the chunk boundary in either direction and still resolve (`alb-drift` does
+ * exactly that, deliberately — see the note on `.spectrum-frame::before`).
+ */
+describe('no animation names a keyframe that was renamed out from under it', () => {
+  const BOTH = `${INDEX}\n${SHEET}`
+  const declared = new Set(
+    [...BOTH.matchAll(/@keyframes\s+([\w-]+)/g)].map(([, name]) => name),
+  )
+
+  /** The name in an `animation` shorthand: the one word that is not a value. */
+  const KEYWORDS =
+    /^(none|infinite|normal|reverse|alternate|alternate-reverse|forwards|backwards|both|running|paused|linear|ease|ease-in|ease-out|ease-in-out|step-start|step-end|initial|inherit|unset)$/
+
+  const referenced = new Set<string>()
+  for (const [, value] of BOTH.matchAll(/(?:^|[;{]|\s)animation\s*:\s*([^;}]+)/g)) {
+    for (const word of value.trim().split(/\s+/)) {
+      if (
+        /^[a-zA-Z][\w-]*$/.test(word) &&
+        !KEYWORDS.test(word) &&
+        !word.startsWith('var(')
+      ) {
+        referenced.add(word)
+      }
+    }
+  }
+
+  it('found animations to check at all', () => {
+    // Without this the regex can rot to zero matches and the suite below passes
+    // by having nothing to say — the vacuous green this repo has been bitten by.
+    expect(referenced.size).toBeGreaterThan(5)
+    expect(declared.size).toBeGreaterThan(5)
+  })
+
+  it('declares every keyframe any rule animates', () => {
+    expect([...referenced].filter((name) => !declared.has(name))).toEqual([])
   })
 })

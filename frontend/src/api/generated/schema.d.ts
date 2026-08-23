@@ -620,6 +620,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/returning-player": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Returning Player Gate
+         * @description What the consent gate says (#2162): a date, and nothing else.
+         *
+         *     Read from the parked sign-in rather than the tombstone, so this route makes
+         *     no lookup keyed on anything the caller supplied — there is nothing to
+         *     supply. The identity is in the signed session or the gate does not exist.
+         */
+        get: operations["returning_player_gate_auth_returning_player_get"];
+        put?: never;
+        /**
+         * Confirm Returning Player
+         * @description The one button: yes, start fresh (#2162).
+         *
+         *     Explicitly **not** an offer of any old data, and there is none to offer —
+         *     ``delete_account`` blanked it and there is no undo (ADR-0081). All this does
+         *     is finish the sign-in the gate interrupted, as a stranger.
+         *
+         *     The tombstone goes FIRST, and that ordering is what does the work: with it
+         *     cleared, ``create_or_get_account`` finds no reason to pause and falls
+         *     through to the ordinary stranger path — the same mint, the same email
+         *     branch, the same rules. There is no second creation path here and no
+         *     "consent given" flag threaded through the service to be got wrong.
+         *
+         *     ``email_verified=True`` is a fact this server established, not a claim the
+         *     caller made: the sign-in that parked this session got past
+         *     ``create_or_get_account``'s verified-email gate before it ever reached the
+         *     tombstone (ADR-0075, and ``test_returning_player_gate`` pins the ordering),
+         *     and the parked address rode here inside a cookie signed with ``SECRET_KEY``.
+         */
+        post: operations["confirm_returning_player_auth_returning_player_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/characters": {
         parameters: {
             query?: never;
@@ -4204,6 +4248,29 @@ export interface components {
          */
         RelationshipTypeEnum: "friend" | "foe";
         /**
+         * ReturningPlayerOut
+         * @description What the consent gate is allowed to know (``GET /auth/returning-player``).
+         *
+         *     One field, and the reason there is only one is the reason this model exists
+         *     at all. The caller has authenticated as *nobody* — they hold a signed,
+         *     ten-minute session cookie stamped by an OAuth handshake they just completed,
+         *     and nothing else. Anything added here is a fact about an account that no
+         *     longer exists, disclosed on that basis.
+         *
+         *     A **date, not a timestamp**: the gate's sentence is *"you deleted your World
+         *     Zero account on 3 March"*, and the hour and minute would be a finer signal
+         *     bought for nothing the sentence needs. The tombstone's ``created_at`` is
+         *     truncated in ``services.auth.ReturningPlayerConsentRequired``, so the
+         *     precision is dropped before it ever reaches a response model.
+         */
+        ReturningPlayerOut: {
+            /**
+             * Deleted On
+             * Format: date
+             */
+            deleted_on: string;
+        };
+        /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
          *
@@ -4232,6 +4299,19 @@ export interface components {
             global_activity_count: number;
             /** Pending Requests Count */
             pending_requests_count: number;
+        };
+        /**
+         * StartFreshOut
+         * @description Acknowledgement for ``POST /auth/returning-player``.
+         *
+         *     Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
+         *     and the body exists so the generated client has a declared shape rather than
+         *     an untyped object. The caller learns who it now is from ``/auth/me``, which
+         *     is the one place that answers that question.
+         */
+        StartFreshOut: {
+            /** Message */
+            message: string;
         };
         /** SuspendAction */
         SuspendAction: {
@@ -5641,6 +5721,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    returning_player_gate_auth_returning_player_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturningPlayerOut"];
+                };
+            };
+        };
+    };
+    confirm_returning_player_auth_returning_player_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartFreshOut"];
                 };
             };
         };

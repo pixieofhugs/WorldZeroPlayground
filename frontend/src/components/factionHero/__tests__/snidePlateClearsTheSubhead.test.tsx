@@ -64,7 +64,7 @@ function spaceToken(name: string): number {
 
 const html = renderToStaticMarkup(
   <MemoryRouter>
-    <SnideFactionHero name={factionName('snide')} members={214} tasks={9} praxes={1489} />
+    <SnideFactionHero slug="snide" name={factionName('snide')} members={214} tasks={9} praxes={1489} />
   </MemoryRouter>,
 )
 
