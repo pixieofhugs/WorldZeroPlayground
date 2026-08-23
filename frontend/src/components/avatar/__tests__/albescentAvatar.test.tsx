@@ -7,8 +7,18 @@
  * reveals the society to someone already looking at that surface; an avatar is
  * the one that renders BESIDE other players' — comment leaves, praxis bylines,
  * the players roster, duel banners. One turning ring in a column of still ones
- * is a spotlight, not a shimmer. So the ornament mounts at 48px and up and is
- * absent, not merely stilled, at the 24/32px steps.
+ * is a spotlight, not a shimmer. So the ornament mounts at 64px and up and is
+ * absent, not merely stilled, below that.
+ *
+ * 64 is ABOVE EVERY MOUNT THAT EXISTS, on purpose (owner ruling 2026-08-23).
+ * The largest `<FactionAvatar>` in the app is the players roster's LEAD card at
+ * 54; everything else is 24-44. #2502 specified 48, which would have lit the
+ * ring on the top row of the roster and nowhere else — the column-of-others case
+ * the gate exists to prevent, with the largest disc in the column. The tell
+ * therefore ships DORMANT and lights up by itself when a surface first shows one
+ * player's disc large and alone. 54 sits in the still list below, so raising a
+ * mount past the gate is a decision someone has to take deliberately — this
+ * suite goes red rather than the ring quietly appearing on the roster.
  *
  * THE PHOTO AND THE MONOGRAM ARE THE SAME AMOUNT OF ALBESCENT. `.user-media`
  * rides the whole disc when there is a photograph (#2457), which lifts a photo
@@ -73,9 +83,10 @@ const markup = (props: { size?: 'sm' | 'md' | number; photo?: boolean }): string
   )
 
 describe('the ring turns only where the disc is looked at (#2502)', () => {
-  // 48 is the gate; 47 is the proof it is a gate and not a coincidence of the
-  // two named steps. 96 is the profile disc, the largest mount in the app.
-  it.each([48, 56, 64, 96])('mounts the turning ring at %spx', (size) => {
+  // 64 is the gate; 63 below is the proof it is a gate and not a coincidence of
+  // the named steps. No mount in the app reaches it today — that is the ruling,
+  // and the 54 case in the still list is what holds the gate above the roster.
+  it.each([64, 96, 128])('mounts the turning ring at %spx', (size) => {
     expect(markup({ size })).toContain('alb-avatar-ring')
   })
 
@@ -84,7 +95,9 @@ describe('the ring turns only where the disc is looked at (#2502)', () => {
     ['md', 'md' as const],
     ['24', 24],
     ['32', 32],
-    ['47', 47],
+    ['42 — a roster row', 42],
+    ['54 — the roster LEAD, the largest mount in the app', 54],
+    ['63', 63],
   ])('leaves the disc still at %s', (_label, size) => {
     expect(markup({ size })).not.toContain('alb-avatar-ring')
   })
@@ -99,7 +112,7 @@ describe('the ring turns only where the disc is looked at (#2502)', () => {
 })
 
 describe('a photo disc and a monogram disc are the same amount of Albescent', () => {
-  it.each([48, 96])('rings both at %spx', (size) => {
+  it.each([64, 96])('rings both at %spx', (size) => {
     expect(markup({ size, photo: true })).toContain('alb-avatar-ring')
     expect(markup({ size, photo: false })).toContain('alb-avatar-ring')
   })
@@ -113,7 +126,7 @@ describe('a photo disc and a monogram disc are the same amount of Albescent', ()
     // `.alb-praxis .user-media` et al. raise a photo disc above the wash. A ring
     // mounted outside that root would be washed on a photo and not on a
     // monogram — the inconsistency this issue exists to end, re-created.
-    const html = markup({ size: 48, photo: true })
+    const html = markup({ size: 64, photo: true })
     const hook = html.indexOf('class="user-media"')
     expect(hook).toBeGreaterThanOrEqual(0)
     expect(html.indexOf('alb-avatar-ring')).toBeGreaterThan(hook)
@@ -125,10 +138,10 @@ describe('it is Default plus one span, on both branches', () => {
     ['monogram', MONOGRAM],
     ['photo', PHOTO],
   ])('strips back to DefaultAvatar byte for byte — %s', (_label, who) => {
-    const alb = renderToStaticMarkup(<AlbescentAvatar character={who} size={48} />)
+    const alb = renderToStaticMarkup(<AlbescentAvatar character={who} size={64} />)
     expect(alb).toContain(ORNAMENT)
     expect(alb.replace(ORNAMENT, '')).toBe(
-      renderToStaticMarkup(<DefaultAvatar character={who} size={48} />),
+      renderToStaticMarkup(<DefaultAvatar character={who} size={64} />),
     )
   })
 
