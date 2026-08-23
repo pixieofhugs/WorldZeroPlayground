@@ -134,26 +134,14 @@ describe("the na mounts wear the class, not the declaration (#2497)", () => {
           }
         />,
       ),
-    "the seal's accent strip": () =>
-      renderToStaticMarkup(
-        <DefaultSeal
-          metatask={{
-            id: 1,
-            title: "A small kindness",
-            condition: "Do it twice",
-            bonus_points: 3,
-            metatask_faction_slug: "na",
-          } as never}
-        />,
-      ),
   };
 
   for (const [name, render] of Object.entries(surfaces)) {
     it(`${name} is classed`, () => {
       const markup = render().replace(/\s*([:;,])\s*/g, "$1");
-      // All three draw at least one LINEAR cut, so the rule class is the one
-      // every surface here must show. The conic sibling is held from the other
-      // side by `pointsMarkUnification.test.tsx`, which probes for it by name.
+      // Both draw at least one LINEAR cut, so the rule class is the one every
+      // surface here must show. The conic sibling is held from the other side
+      // by `pointsMarkUnification.test.tsx`, which probes for it by name.
       expect(markup).toContain("spectrum-rule");
       for (const declaration of RETIRED) {
         expect(
@@ -163,4 +151,54 @@ describe("the na mounts wear the class, not the declaration (#2497)", () => {
       }
     });
   }
+});
+
+/**
+ * THE SEAL'S SPECTRUM IS ITS BORDER NOW (#2520, epic #2496).
+ *
+ * It was the third mount in the block above — a `.spectrum-rule` strip pinned
+ * across the top edge. `Score-Stamp.dc.html` drops the bar and paints the
+ * spectrum into the border box itself, which is the idiom `DefaultTaskCard` and
+ * (since #2499) `DefaultPraxisCard` already wear, so the na kit reads as one
+ * material rather than as three different ways of saying "rainbow".
+ *
+ * The seam is the same one the block above uses — the rendered markup — and the
+ * claim has two halves, because either alone passes against the wrong thing: the
+ * strip is GONE, and the ramp arrives through `factionSpectrumSheet()`, appended
+ * to all three of the sheet's background lists so Albescent's five-layer dark
+ * prism cannot be handed the wrong blend mode (see the helper's own note).
+ */
+describe("the seal wears the spectrum as a border, not a bar (#2520)", () => {
+  const markup = () =>
+    renderToStaticMarkup(
+      <DefaultSeal
+        metatask={{
+          id: 1,
+          title: "A small kindness",
+          condition: "Do it twice",
+          bonus_points: 3,
+          metatask_faction_slug: "na",
+        } as never}
+      />,
+    ).replace(/\s*([:;,])\s*/g, "$1");
+
+  it("draws no accent strip at all", () => {
+    expect(markup()).not.toContain("spectrum-rule");
+  });
+
+  it("paints the ramp into a transparent 3px frame", () => {
+    const html = markup();
+    // The design board's comment says 2px and its CSS says 3px; the CSS is what
+    // is drawn, and 3px is the width the task card and the praxis card already
+    // use — flagged on the PR rather than averaged.
+    expect(html).toContain("border:3px solid transparent");
+    expect(html).toContain(
+      "background-image:var(--faction-default-card-sheet),var(--faction-default-rainbow)",
+    );
+    // `background-origin: border-box` is what makes the ramp start at the frame
+    // instead of at the padding box, and the padding-box clip is what keeps the
+    // sheet off it. Without either the border is a flat sheet colour.
+    expect(html).toContain("background-origin:border-box");
+    expect(html).toContain("border-box");
+  });
 });

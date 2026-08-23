@@ -174,11 +174,16 @@ describe("WOW claims the composer surface", () => {
     expect(na, "which the na page has no notion of").not.toContain(
       "--faction-wow-quest-ribbon",
     );
-    expect(na, "na's masthead is the spectrum").toContain(
+    // na's spectrum is its sheet's 3px frame since #2520 — the walked masthead
+    // band it used to be is off, on both skins.
+    expect(na, "na's frame is the spectrum").toContain(
+      "border:3px solid transparent",
+    );
+    expect(na, "and it no longer walks a band").not.toContain(
       "--faction-default-rainbow-loop",
     );
-    expect(wow, "and WOW's is not").not.toContain(
-      "--faction-default-rainbow-loop",
+    expect(wow, "WOW's sheet is its own").not.toContain(
+      "border:3px solid transparent",
     );
   });
 });
