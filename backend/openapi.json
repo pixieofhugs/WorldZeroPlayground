@@ -11102,7 +11102,7 @@
     },
     "/praxes/{praxis_id}/metatasks/{task_id}": {
       "delete": {
-        "description": "Detach a previously applied metatask from a praxis.",
+        "description": "Detach a previously applied metatask from a praxis.\n\nAnswers with the re-scored praxis, like its apply sibling (#2464). Peeling a\nseal off changes ``score`` and ``metatask_points``, and ``remove_metatask``\nhas already recomputed both — a bare 204 left the composer's score stamp\nprinting the higher total until a reload.",
         "operationId": "remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete",
         "parameters": [
           {
@@ -11141,7 +11141,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PraxisOut"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {
