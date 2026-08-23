@@ -78,6 +78,7 @@ export { default as EphemerisNet } from "../src/components/factionMarks/Ephemeri
 export { default as EphemeristsAvatar } from "../src/components/avatar/EphemeristsAvatar";
 export { default as EphemeristsBackdrop } from "../src/components/backdrop/EphemeristsBackdrop";
 export { default as EphemeristsComment } from "../src/components/comments/voices/EphemeristsComment";
+export { default as EphemeristsCreateCharacter } from "../src/pages/characterPaths/archetypes/EphemeristsCreateCharacter";
 export { default as EphemeristsDuelSealConfirm } from "../src/components/duel/EphemeristsDuelSealConfirm";
 export { default as EphemeristsEditPraxis } from "../src/pages/editPraxis/archetypes/EphemeristsEditPraxis";
 export { default as EphemeristsFactionBody } from "../src/pages/factionDetail/archetypes/EphemeristsFactionBody";
@@ -215,6 +216,7 @@ export { default as SiteFooter } from "../src/components/layout/SiteFooter";
 export { default as SnideAvatar } from "../src/components/avatar/SnideAvatar";
 export { default as SnideBackdrop } from "../src/components/backdrop/SnideBackdrop";
 export { default as SnideComment } from "../src/components/comments/voices/SnideComment";
+export { default as SnideCreateCharacter } from "../src/pages/characterPaths/archetypes/SnideCreateCharacter";
 export { default as SnideDuelSealConfirm } from "../src/components/duel/SnideDuelSealConfirm";
 export { default as SnideEditPraxis } from "../src/pages/editPraxis/archetypes/SnideEditPraxis";
 export { default as SnideFactionBody } from "../src/pages/factionDetail/archetypes/SnideFactionBody";
@@ -264,6 +266,7 @@ export { default as WatercolorBackground } from "../src/components/layout/Waterc
 export { default as WowAvatar } from "../src/components/avatar/WowAvatar";
 export { default as WowBackdrop } from "../src/components/backdrop/WowBackdrop";
 export { default as WowComment } from "../src/components/comments/voices/WowComment";
+export { default as WowCreateCharacter } from "../src/pages/characterPaths/archetypes/WowCreateCharacter";
 export { default as WowDuelSealConfirm } from "../src/components/duel/WowDuelSealConfirm";
 export { default as WowEditPraxis } from "../src/pages/editPraxis/archetypes/WowEditPraxis";
 export { default as WowFactionBody } from "../src/pages/factionDetail/archetypes/WowFactionBody";
