@@ -25,8 +25,12 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+
 import {
   AA_LARGE,
+  AA_NORMAL,
   compositeOver,
   contrastRatio,
   deltaE76,
@@ -36,6 +40,7 @@ import {
 } from "../../../utils/contrast";
 import { readThemes, resolveVar, type Theme } from "../../../utils/__tests__/cssVars";
 import { paintedAwareness, type AwarenessLike } from "../roomPresence";
+import { BODY_EDITOR_BASE_THEME } from "../archetypes/bodyEditorTheme";
 
 const THEMES = readThemes(
   readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
@@ -144,6 +149,109 @@ describe("a remote caret is a graphical mark on the VIEWER's composer ground (#2
         }
       });
     }
+  }
+});
+
+/**
+ * The hover label's own pairing (#2297) — a DIFFERENT question from the caret's.
+ *
+ * `y-codemirror.next` draws the name label as a child of the caret span with
+ * `color: white` on `background-color: inherit`, so until now its ground WAS
+ * the value measured above, and the ink was the library's white. That failed AA
+ * on all 64 dark pairings at 1.20:1, and no ink could have rescued it: contrast
+ * is luminance distance only, so the ink maximising the worst pairing over a
+ * fixed set of grounds is pure black or pure white, and the better of the two
+ * against the worst viewer measures 3.91:1 in light. The GROUND had to move.
+ *
+ * It moved to the remote's SOLID hue, inked with that slug's `-on-fill`, in
+ * `bodyEditorTheme.ts`. That collapses the cross-product: the viewer's composer
+ * is no longer a term, so this is 8 pairings x 2 themes rather than 64 x 2. And
+ * the ground is 4.5:1 territory, not 3:1 — the label is TEXT, not a mark.
+ *
+ * Measured end to end rather than restated: the grounds and inks below are
+ * parsed out of the CSS the theme will actually mount, and matched to a remote
+ * by the same `[style*=…]` needle the browser will match, against the very
+ * `style` attribute the library builds out of `paintUser`'s value. A theme rule
+ * that stopped covering a slug, or covered it with the wrong tier, fails here.
+ */
+const LABEL_NEEDLE = /\[style\*="([^"]+)"\]/;
+
+/** Every `.cm-ySelectionInfo` colour rule the body editor's theme mounts. */
+const LABEL_RULES = EditorState.create({ extensions: [BODY_EDITOR_BASE_THEME] })
+  .facet(EditorView.styleModule)
+  .flatMap((module) => module.getRules().split("\n"))
+  .filter((rule) => rule.includes(".cm-ySelectionInfo") && LABEL_NEEDLE.test(rule))
+  .map((rule) => {
+    const body = rule.slice(rule.indexOf("{") + 1, rule.lastIndexOf("}"));
+    const declarations = new Map(
+      body
+        .split(";")
+        .filter((part) => part.includes(":"))
+        .map((part) => [
+          part.slice(0, part.indexOf(":")).trim(),
+          part.slice(part.indexOf(":") + 1).trim(),
+        ]),
+    );
+    return {
+      needle: LABEL_NEEDLE.exec(rule)![1],
+      ground: declarations.get("background-color") ?? "",
+      ink: declarations.get("color") ?? "",
+    };
+  });
+
+/** The `style` attribute `YRemoteCaretWidget.toDOM` builds, verbatim. */
+function caretStyleAttribute(slug: string): string {
+  const color = paintedColorFor(slug);
+  return `background-color: ${color}; border-color: ${color}`;
+}
+
+/** The `var(--token)` a declaration is, or `null` if it is anything else. */
+function tokenIn(declaration: string): string | null {
+  return /^var\((--[a-z-]+)\)$/.exec(declaration)?.[1] ?? null;
+}
+
+describe("a co-author's hover label stands on that co-author's own hue (#2297)", () => {
+  for (const slug of REMOTE_SLUGS) {
+    it(`matches exactly one label rule for a ${slug} co-author`, () => {
+      const style = caretStyleAttribute(slug);
+      const matched = LABEL_RULES.filter((rule) => style.includes(rule.needle));
+      expect(
+        matched.map((rule) => rule.needle),
+        `the caret style attribute for ${slug} is "${style}"`,
+      ).toHaveLength(1);
+    });
+  }
+
+  it("grounds every label on a bare faction hue, not on the caret's mix", () => {
+    // The whole ruling in one assertion. `inherit` — the library's value — or
+    // any `color-mix()` here puts the viewer's own ink back under the label and
+    // reopens the unsatisfiable pairing.
+    for (const rule of LABEL_RULES) {
+      expect(tokenIn(rule.ground), `label ground "${rule.ground}"`).toMatch(
+        /^--faction-[a-z]+$/,
+      );
+      expect(tokenIn(rule.ink), `label ink "${rule.ink}"`).toMatch(
+        /^--faction-[a-z]+-on-fill$/,
+      );
+    }
+  });
+
+  for (const theme of BOTH_THEMES) {
+    it(`clears ${AA_NORMAL}:1 for every remote, whoever is watching (${theme})`, () => {
+      for (const slug of REMOTE_SLUGS) {
+        const rule = LABEL_RULES.find((candidate) =>
+          caretStyleAttribute(slug).includes(candidate.needle),
+        )!;
+        const ratio = contrastRatio(
+          solid(tokenIn(rule.ink)!, theme),
+          solid(tokenIn(rule.ground)!, theme),
+        );
+        expect(
+          ratio,
+          `a ${slug} co-author's name label (${theme}) is ${formatRatio(ratio)}: ${rule.ink} on ${rule.ground}`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL);
+      }
+    });
   }
 });
 
