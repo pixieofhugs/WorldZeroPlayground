@@ -149,6 +149,30 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     expect(html).toContain("alb-faction-hero");
     expect(html).toContain("alb-faction-body");
   });
+
+  /* ── THE EDGE IS FOR PLATES THAT HOLD TEXT (#2519, epic #2496) ──
+     The design canvas gives every plate the spectrum as a 3px travelling border
+     — *"it is the Albescent tell"* — and then cuts the rule the other way for
+     two of the five: *"the edge is for plates that hold text, the rule is for
+     plates that hold cards with edges of their own."* Tasks and
+     Recently-completed hold task and praxis cards that already wear a 3px
+     spectrum border, so a ring on the plate around them is a frame enclosing
+     frames (WORLD_ZERO_STYLE §5). Counted rather than checked for presence,
+     because five-of-five and three-of-five both contain the class. ── */
+  it("rings the three text plates and neither of the two card plates", () => {
+    const html = page(FALL_THROUGH, [aCharacter({ id: 1, username: "topdog" })]);
+    const count = (needle: string) => html.split(needle).length - 1;
+    // About, Champion, Members, Tasks, Recently completed.
+    expect(count("faction-plate-kicker")).toBe(5);
+    expect(count("alb-plate-edge")).toBe(3);
+  });
+
+  it("the two card plates keep the plate's own hairline", () => {
+    // What they carry INSTEAD of the edge, and it is na's own: every plate draws
+    // `.spectrum-rule` beside its kicker, and none of them lost it.
+    const html = page(FALL_THROUGH, [aCharacter({ id: 1, username: "topdog" })]);
+    expect(html.split("faction-plate-rule").length - 1).toBe(5);
+  });
 });
 
 describe("the seven bespoke heroes are untouched by the new fallback (#2504)", () => {

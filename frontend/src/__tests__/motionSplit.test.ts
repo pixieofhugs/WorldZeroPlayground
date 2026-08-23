@@ -93,7 +93,7 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk .spectrum-rule::before, .alb-plate-edge::before, .alb-profile-edge::before':
+  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk-edge::before, .alb-plate-edge::before, .alb-profile-edge::before':
     "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
     'plates joined at #2504, the composer and the phone home at #2505, the praxis ' +
     "CARD's own 3px ring at #2499 when it stopped borrowing the rail's 1px one). Two " +
@@ -102,9 +102,11 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     '`background-position` repaints every frame on the main thread. Declared ' +
     'nowhere but inside the gate: with the sheet absent there is no child, and ' +
     "the still ramp is the mount's own background in index.css — the exact " +
-    'frame a reduced-motion reader already gets. Eight of the nine are masked ' +
-    'rings; `.alb-desk .spectrum-rule` is a filled hairline, which turns out to ' +
-    'be the same travelling problem and takes the same child.',
+    'frame a reduced-motion reader already gets. All NINE are masked rings ' +
+    'since #2519: the odd one out used to be `.alb-desk .spectrum-rule`, a ' +
+    "filled hairline travelling in place of an edge the field desk's identity " +
+    'card did not have, and the design canvas takes that bar off and gives the ' +
+    'card a ring — one carrier per object.',
   '.alb-profile-edge::before':
     'the same child, two band-widths instead of three, because the profile ' +
     "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +

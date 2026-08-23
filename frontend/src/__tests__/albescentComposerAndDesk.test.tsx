@@ -16,13 +16,18 @@
  * where it owes no ratio. "Byte-identical apart from one `aria-hidden` span"
  * is that decision, stated so that walking it back turns this red.
  *
- * THE FIELD DESK'S CLAIM IS COUNTABLE, deliberately. Its identity band already
- * carried a static na spectrum rule, so the travelling edge had to REPLACE it
- * rather than double up: the band draws exactly one `.spectrum-rule`, before and
- * after, and the whole delta is a class on an ancestor.
+ * THE CLAIM IS COUNTABLE, deliberately, and #2519 is why it had to become a
+ * count of WEIGHTS as well as of elements. Both surfaces already carried a na
+ * spectrum mark — the composer's masthead band, the desk's identity hairline —
+ * and #2505 read "replace rather than double up" as re-cutting the mark it
+ * found. The design canvas does the reverse: the mark comes OFF and the object
+ * grows a 3px travelling border, one carrier per object. A render test cannot
+ * see that difference, because both readings render an `aria-hidden` span; what
+ * separates them is the declared width, the declared strength, and whether the
+ * old bar is still drawn. Those three are asserted against the stylesheet.
  *
- * The stylesheet half asserts that neither surface hand-rolled anything: the
- * ring and the travelling child are the rules six mounts already share.
+ * The stylesheet half also asserts that neither surface hand-rolled anything:
+ * the ring and the travelling child are the rules seven other mounts share.
  *
  * Harness: `renderToStaticMarkup`, no DOM (SPEC-testing.md).
  */
@@ -32,7 +37,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import '../i18n'
-import { stripComments, ruleBodies } from '../utils/__tests__/cssVars'
+import { stripComments } from '../utils/__tests__/cssVars'
 import DefaultEditPraxis from '../pages/editPraxis/archetypes/DefaultEditPraxis'
 import AlbescentEditPraxis from '../pages/editPraxis/archetypes/AlbescentEditPraxis'
 import DefaultFieldDesk from '../pages/fieldDesk/mobileArchetypes/DefaultFieldDesk'
@@ -148,10 +153,15 @@ describe('AlbescentEditPraxis is DefaultEditPraxis plus one span (#2505)', () =>
     const state = composerState()
     const albescent = html(<AlbescentEditPraxis state={state} />)
     expect(occurrences(albescent, 'alb-composer-edge')).toBe(1)
-    // Removing the one ornament has to reproduce the na composer byte for byte.
-    // Any wash, retune or copy of its own — the thing ADR-0048 forbids and the
-    // thing the composer's contrast budget cannot afford — fails here.
-    expect(albescent.replace(EDGE, '')).toBe(html(<DefaultEditPraxis state={state} />))
+    // Removing the one ornament and the cascade handle has to reproduce the na
+    // composer byte for byte. Any wash, retune or copy of its own — the thing
+    // ADR-0048 forbids and the thing the composer's contrast budget cannot
+    // afford — fails here. The wrapper (#2519) paints nothing: it exists so
+    // index.css can take na's masthead band off this sheet, which is a rule in
+    // the stylesheet and not a fork of the markup.
+    expect(albescent.replace(EDGE, '')).toBe(
+      `<div class="alb-composer">${html(<DefaultEditPraxis state={state} />)}</div>`,
+    )
   })
 
   it('mounts the edge inside the sheet, not over the page (#1028)', () => {
@@ -226,18 +236,38 @@ const deskState = (): FieldDeskHomeState => ({
   offersACharacterChoice: true,
 })
 
-describe('AlbescentFieldDesk is DefaultFieldDesk in a classed div (#2505)', () => {
-  it('wraps the na home whole and adds no element', () => {
+const DESK_EDGE = '<span aria-hidden="true" class="alb-desk-edge"></span>'
+
+describe('AlbescentFieldDesk is DefaultFieldDesk plus one span (#2505, #2519)', () => {
+  it('wraps the na home whole and adds only the ring', () => {
     const state = deskState()
-    expect(html(<AlbescentFieldDesk state={state} />)).toBe(
+    expect(html(<AlbescentFieldDesk state={state} />).replace(DESK_EDGE, '')).toBe(
       `<div class="alb-desk">${html(<DefaultFieldDesk state={state} />)}</div>`,
     )
   })
 
-  it('the identity band carries ONE spectrum rule, replaced not doubled', () => {
-    // The travelling edge is that same rule set moving, so a second spectrum
-    // anywhere on this page is the "double up" the issue rules out. Counted,
-    // because a presence check cannot tell one from two.
+  it('mounts the ring INSIDE the identity card, ahead of the hairline', () => {
+    // The ring has to clip to the card's own rounded box, which is why it
+    // arrives through `identityOrnament` rather than as a layer on the wrapper
+    // (#2519). Its position in the markup is what proves it landed in the card:
+    // after the page heading, and before the hairline the card draws first.
+    const markup = html(<AlbescentFieldDesk state={deskState()} />)
+    expect(occurrences(markup, 'alb-desk-edge')).toBe(1)
+    const ring = markup.indexOf('alb-desk-edge')
+    expect(ring).toBeGreaterThan(markup.indexOf('<header>'))
+    expect(ring).toBeLessThan(markup.indexOf('spectrum-rule'))
+  })
+
+  it('na renders no ornament at all when the slot is left empty', () => {
+    expect(html(<DefaultFieldDesk state={deskState()} />)).not.toContain('alb-')
+  })
+
+  it('the identity card carries ONE spectrum rule in the markup, either way', () => {
+    // na's hairline is still DRAWN under Albescent — it is taken off in the
+    // stylesheet, not unmounted, because it belongs to `DefaultFieldDesk` and
+    // every unaffiliated player still sees it. What must never happen is a
+    // SECOND `.spectrum-rule` appearing on this page. Counted, because a
+    // presence check cannot tell one from two.
     for (const markup of [
       html(<DefaultFieldDesk state={deskState()} />),
       html(<AlbescentFieldDesk state={deskState()} />),
@@ -272,27 +302,91 @@ const preludesNaming = (css: string, selector: string) =>
     .map(([, prelude]) => prelude)
     .filter((prelude) => prelude.split(',').some((one) => one.trim() === selector))
 
-describe('neither surface hand-rolled an ornament (#2505)', () => {
-  it('the composer edge joins the shared ring and declares nothing of its own', () => {
-    const rules = preludesNaming(INDEX, '.alb-composer-edge')
-    expect(rules, 'the composer edge should be in exactly one rule').toHaveLength(1)
-    expect(rules[0]).toContain('.spectrum-frame::before')
-    expect(ruleBodies(INDEX, '.alb-composer-edge')).toHaveLength(0)
+/** Every rule whose selector list names this class as a whole token. */
+const bodiesNaming = (css: string, selector: string) =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, prelude]) => prelude.split(',').some((one) => one.trim() === selector))
+    .map(([, , body]) => body)
+
+/* ── ONE CARRIER PER OBJECT (#2519) ───────────────────────────────────────
+   The seam is the DECLARED CSS: how wide the carrier is, how strong, and how
+   many spectrum marks the surface has. #2504 and #2505 built these three
+   surfaces from issue prose rather than the design canvas and each joined the
+   shared ring's selector list saying nothing, so each shipped at that rule's
+   defaults — `padding: 1px; opacity: 0.6`, the faintest mark the kit can draw —
+   BESIDE the bar or strip the drawing removes. Nothing rendered wrong; the page
+   simply did not say what it was drawn to say. A count and two values are what
+   tell those two states apart without a compositor. ── */
+describe('the carrier is 3px at full strength, in ONE rule (#2519)', () => {
+  const CARRIERS = [
+    '.alb-task-edge',
+    '.alb-praxis-card-edge',
+    '.alb-plate-edge',
+    '.alb-composer-edge',
+    '.alb-desk-edge',
+  ]
+
+  it('all five carriers are declared by the same rule', () => {
+    // One rule, so they cannot drift apart again — which is exactly how three
+    // of them ended up at 1px/0.6 while the other two were at 3px/1.
+    const carrying = [...INDEX.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
+      ([, , body]) => /padding:\s*3px/.test(body) && /opacity:\s*1\b/.test(body),
+    )
+    const shared = carrying.filter(([, prelude]) =>
+      CARRIERS.every((one) => prelude.split(',').some((each) => each.trim() === one)),
+    )
+    expect(shared, 'the five carriers are not one rule').toHaveLength(1)
   })
 
-  it('the field desk hairline is re-cut for travel, not repainted', () => {
-    const body = ruleBodies(INDEX, '.alb-desk .spectrum-rule').join(' ')
-    expect(body, 'no rest state for the travelling band').not.toBe('')
-    // The LOOP cut, whose last stop is its first — two tiles of the plain ramp
-    // meet at a hard seam every cycle.
-    expect(body).toContain('var(--faction-default-rainbow-loop)')
-    // The track for the pre-painted child.
-    expect(body).toContain('overflow: hidden')
-    expect(body).toContain('background-size: 300% 100%')
+  for (const selector of CARRIERS) {
+    it(`${selector} states the carrier's width and strength`, () => {
+      const body = bodiesNaming(INDEX, selector).join(' ')
+      expect(body, `${selector} is not declared in index.css`).not.toBe('')
+      expect(body, `${selector} is not 3px`).toMatch(/padding:\s*3px/)
+      expect(body, `${selector} is dimmed`).toMatch(/opacity:\s*1\b/)
+    })
+  }
+
+  it('the composer carries ONE spectrum mark, not two', () => {
+    // The design draws the composer's spectrum in the sheet's edge alone and
+    // takes na's masthead band off. #2505 added the edge beside the band, so the
+    // sheet carried two and the added one was the fainter of them.
+    const body = bodiesNaming(INDEX, '.alb-composer .ep-edge').join(' ')
+    expect(body, 'na’s masthead band is still on the Albescent sheet').toMatch(
+      /display:\s*none/,
+    )
+  })
+
+  it('the field desk carries ONE spectrum mark, not two', () => {
+    // Same shape: the identity card's hairline comes off and the card's own
+    // ring is the carrier. #2505 travelled the BAR instead, so the card still
+    // had no edge.
+    const body = bodiesNaming(INDEX, '.alb-desk .spectrum-rule').join(' ')
+    expect(body, 'the identity hairline still doubles the card’s edge').toMatch(
+      /display:\s*none/,
+    )
+    expect(body, 'the bar is still being repainted for travel').not.toContain(
+      'background',
+    )
+  })
+
+  // The faction page's third mount of this rule — the plate ring, and the two
+  // plates that must NOT wear it — is asserted where that body is rendered:
+  // `pages/factionDetail/__tests__/defaultFactionHero.test.tsx`.
+})
+
+describe('neither surface hand-rolled an ornament (#2505)', () => {
+  it('the composer edge joins the shared ring for its geometry', () => {
+    const rules = preludesNaming(INDEX, '.alb-composer-edge')
+    // Two: the shared masked ring (mask, ramp, tile, corner) and the carrier's
+    // own width and strength (#2519). Nothing else may name it.
+    expect(rules, 'the composer edge hand-rolled a rule').toHaveLength(2)
+    expect(rules.some((one) => one.includes('.spectrum-frame::before'))).toBe(true)
+    expect(rules.some((one) => one.includes('.alb-task-edge'))).toBe(true)
   })
 
   it('both travel on the shared child, inside the reduced-motion gate', () => {
-    for (const selector of ['.alb-composer-edge::before', '.alb-desk .spectrum-rule::before']) {
+    for (const selector of ['.alb-composer-edge::before', '.alb-desk-edge::before']) {
       const at = MOTION.indexOf(selector)
       expect(at, `${selector} has no travel rule`).toBeGreaterThan(0)
       const gateAt = MOTION.lastIndexOf('@media', at)
