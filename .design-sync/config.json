@@ -86,6 +86,7 @@
     "EphemeristsAvatar": "src/components/avatar/EphemeristsAvatar.tsx",
     "EphemeristsBackdrop": "src/components/backdrop/EphemeristsBackdrop.tsx",
     "EphemeristsComment": "src/components/comments/voices/EphemeristsComment.tsx",
+    "EphemeristsCreateCharacter": "src/pages/characterPaths/archetypes/EphemeristsCreateCharacter.tsx",
     "EphemeristsDuelSealConfirm": "src/components/duel/EphemeristsDuelSealConfirm.tsx",
     "EphemeristsEditPraxis": "src/pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
     "EphemeristsFactionBody": "src/pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
@@ -223,6 +224,7 @@
     "SnideAvatar": "src/components/avatar/SnideAvatar.tsx",
     "SnideBackdrop": "src/components/backdrop/SnideBackdrop.tsx",
     "SnideComment": "src/components/comments/voices/SnideComment.tsx",
+    "SnideCreateCharacter": "src/pages/characterPaths/archetypes/SnideCreateCharacter.tsx",
     "SnideDuelSealConfirm": "src/components/duel/SnideDuelSealConfirm.tsx",
     "SnideEditPraxis": "src/pages/editPraxis/archetypes/SnideEditPraxis.tsx",
     "SnideFactionBody": "src/pages/factionDetail/archetypes/SnideFactionBody.tsx",
@@ -272,6 +274,7 @@
     "WowAvatar": "src/components/avatar/WowAvatar.tsx",
     "WowBackdrop": "src/components/backdrop/WowBackdrop.tsx",
     "WowComment": "src/components/comments/voices/WowComment.tsx",
+    "WowCreateCharacter": "src/pages/characterPaths/archetypes/WowCreateCharacter.tsx",
     "WowDuelSealConfirm": "src/components/duel/WowDuelSealConfirm.tsx",
     "WowEditPraxis": "src/pages/editPraxis/archetypes/WowEditPraxis.tsx",
     "WowFactionBody": "src/pages/factionDetail/archetypes/WowFactionBody.tsx",
@@ -742,6 +745,18 @@
     },
     "MobileStickyBar": {
       "cardMode": "column"
+    },
+    "EphemeristsCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",
