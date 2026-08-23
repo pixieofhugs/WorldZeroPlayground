@@ -6722,6 +6722,73 @@
    measured on the border box the `-1px` above restores, and `inherit` would take
    the padding box's corner instead. */
 
+/* ── Albescent — the SCORE STAMP's tell (#2501, epic #2496). The last faction
+   with a roster to claim the surface, and the shortest wrapper in the kit:
+   `AlbescentScoreStamp` renders `DefaultScoreStamp` whole and adds `.alb-stamp`.
+
+   NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
+   an aurora, a ring or an edge off their surface, because na drew nothing there
+   to move. This stamp already carries the na spectrum TWICE — its own docstring
+   says so — and since #2497 both mounts are classed, so the whole tell is those
+   two getting up and walking:
+
+     `.spectrum-rule`  the 2px band across the stamp's top edge → TRAVELS
+     `.spectrum-dial`  the 96px points ring's annulus           → TURNS
+
+   That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
+   ("upgrade, never replace") kept honestly: strip `.alb-stamp` and every pixel
+   is the one an unaffiliated player sees.
+
+   NEITHER RULE ANIMATES A GRADIENT PARAMETER, which is the epic's technique
+   ruling. Both paint a STATIC gradient onto a pseudo-element that is then moved
+   by `transform`, so each rasterises once and rides the compositor: a
+   `background-position` walk or an `@property` angle would redraw the ramp every
+   frame for a pixel-identical result. The animations themselves are in
+   `src/motion.ornament.css`; only the resting paint is here.
+
+   WHY EACH MOUNT GROWS A PSEUDO-ELEMENT RATHER THAN TURNING ITSELF.
+   • The dial CONTAINS the total. Spinning the element would spin the numeral
+     inside it, which is the one thing on this object that must stay readable —
+     the same call `.alb-detail-ring` makes, and the reason its rim is a
+     pseudo-element and its face a real child. Here the face is `DefaultPointsRing`'s
+     own child div, so the rim arrives as `::before` and the child is lifted to
+     `position: relative` to keep painting over it. The dial's inline
+     `border-radius: 50%` and its `--space-xs` padding still cut the annulus; the
+     `::before` only replaces what fills it, and the base `background-image` is
+     left in place, fully covered, so a UA-agent deleting one line cannot leave a
+     bare disc.
+   • The band is 2px and its ramp is `--faction-default-rainbow`, a single
+     non-tiling sweep — nothing to slide. So the child is two tiles of
+     `--faction-default-rainbow-loop` (the TILING cut, whose last stop is its
+     first) laid across `200%`, and one tile of travel arrives back on itself with
+     no seam. `overflow: hidden` is what makes the pre-painted child legal, and it
+     inherits the band's inline `10px 10px 0 0` corner for free.
+
+   Both cascades come from the tokens, so no dark half is written here.
+
+   Decorative: both spans are `aria-hidden` chrome and no contrast is owed. And
+   stilled — reduced motion, or the deferred sheet never delivered — this is the
+   static spectrum stamp, drawn in its final colours at its final size. Nothing
+   here carries meaning through motion alone. ── */
+.alb-stamp .spectrum-rule { overflow: hidden; }
+.alb-stamp .spectrum-rule::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 200%;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 50% 100%;
+}
+.alb-stamp .spectrum-dial { position: relative; }
+.alb-stamp .spectrum-dial::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image: var(--faction-default-rainbow-conic);
+}
+.alb-stamp .spectrum-dial > * { position: relative; }
+
 /* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
    are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's
    fullness and the reading word, not the motion — it reads correctly stilled,

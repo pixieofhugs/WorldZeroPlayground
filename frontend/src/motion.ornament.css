@@ -714,3 +714,42 @@
   .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
   .alb-feed-aurora::before { animation: alb-feed-drift 46s ease-in-out infinite; }
 }
+
+/* ── Albescent — the SCORE STAMP's two spectra (#2501, epic #2496). The stamp's
+   whole delta from na: the 2px band across its top edge travels, and the 96px
+   points ring's annulus turns. Both pseudo-elements, their resting paint and
+   their geometry in index.css; only these two lines are motion.
+
+   NEITHER WALKS A GRADIENT PARAMETER — the epic's technique ruling. Each moves a
+   STATIC pre-painted gradient with `transform`, so the ramp is rasterised once
+   and the frames are the compositor's: `alb-edge-travel` directly above is the
+   `background-position` idiom this replaces, and #2498 is why it is not copied.
+
+   TWO NEW NAMES, and the near-duplicates were checked rather than assumed.
+   `alb-detail-spin` (index.css) is byte-identical to the turn and `ticker-roll`
+   (above) is byte-identical to the travel, so both could have been referenced
+   across the sheet boundary the way `.spectrum-frame[data-spectrum-drift]` reaches
+   `alb-drift`. Neither is: this sheet is deferred and outside the byte ledger
+   `bundle-budget.mjs` keeps, so the two keyframes cost the critical path nothing,
+   and the alternative binds a secret society's ornament to the activity ticker's
+   scroll distance — a coupling no reader of either file would expect. Bytes are
+   the only argument for sharing here and they are not being spent.
+
+   THE PACES ARE THE SIBLING SURFACES', not new numbers: 46s for a turn is
+   `.alb-detail-ring`'s and 16s for a travel is the four card edges'. A stamp
+   sits on the same page as those, and two rainbows moving at different speeds
+   beside each other is the "two rainbows arguing" the feed block warns about.
+
+   The travel is exactly one of the child's two tiles — `-50%` of `200%` — and
+   the tile is the loop cut, so it arrives back on itself with no seam.
+
+   Stranded — this sheet not yet delivered, or reduced motion — the stamp is the
+   static spectrum stamp every unaffiliated player already sees: band drawn, ring
+   drawn, in final colours at final size, simply not moving. Nothing here carries
+   meaning through motion alone. ── */
+@keyframes alb-stamp-travel { to { transform: translateX(-50%); } }
+@keyframes alb-stamp-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-stamp .spectrum-rule::before { animation: alb-stamp-travel 16s linear infinite; }
+  .alb-stamp .spectrum-dial::before { animation: alb-stamp-turn 46s linear infinite; }
+}
