@@ -18,11 +18,22 @@ import DefaultFactionBody from "./DefaultFactionBody";
  *     the whole body clips to the page. Same reason `AlbescentPraxisDetail` uses
  *     `ornament` and `AlbescentProfileBody` uses `identityOrnament`.
  *
- * `.alb-plate-edge` is a member of the shared masked-ring list in index.css
- * (#2407) and of the travelling-child list in motion.ornament.css (#2498) — it
- * declares no geometry of its own, because the list's defaults are already this
- * mount's. Stilled, or before the deferred sheet arrives, it is the same still
- * ring the rail wears.
+ * THE EDGE IS THE TELL, AND #2504 SHIPPED THE FAINTEST VERSION OF IT (#2519).
+ * `.alb-plate-edge` joined the shared masked-ring list in index.css (#2407) and
+ * declared nothing, so it took that rule's defaults — 1px at 0.6 — on a page
+ * whose whole light-mode delta is that the borders talk. The design canvas draws
+ * a 3px spectrum border at full strength on every plate and says why: *"the
+ * prism WASH stays on the hero alone, so the borders sing against a flat cream
+ * ground instead of a tinted one, and body copy keeps its contrast."* It is now
+ * a 3px ring at opacity 1, in the one rule the task card, the praxis card, the
+ * composer and the field desk share, so the five carriers cannot drift apart
+ * again. The wash is untouched — epic ruling 9 still washes the hero alone by
+ * day, and that flat ground is the point of the change, not a gap in it.
+ *
+ * IT MOUNTS ON THREE PLATES, NOT FIVE, and `plateOrnament`'s docstring carries
+ * the reason: the two card-holding sections hold cards with edges of their own.
+ * Stilled, or before the deferred sheet arrives, it is a still 3px spectrum
+ * frame — the same picture, standing.
  *
  * No copy, no token of its own, no slot moved: a page that announced itself as
  * Albescent would un-hide the society (ADR-0027, #783).

@@ -92,11 +92,22 @@ export default function DefaultFactionBody({
 }: {
   state: FactionDetailState;
   /**
-   * One inert node, mounted inside every plate (#2504). This is the `ornament`
-   * SLOT the epic's pattern names: `AlbescentFactionBody` hands the plates a
-   * spectrum ring that must clip to the SHEET rather than to the page, and a
-   * sibling span wrapped around this whole component cannot do that. na hands
-   * nothing, and a plate then renders no ornament markup at all.
+   * One inert node, mounted inside every plate that HOLDS TEXT (#2504, narrowed
+   * by #2519). This is the `ornament` SLOT the epic's pattern names:
+   * `AlbescentFactionBody` hands the plates a spectrum ring that must clip to
+   * the SHEET rather than to the page, and a sibling span wrapped around this
+   * whole component cannot do that. na hands nothing, and a plate then renders
+   * no ornament markup at all.
+   *
+   * THE TWO CARD PLATES DO NOT TAKE IT, and that is the design canvas's own cut
+   * of its "one carrier per object" rule: *"the edge is for plates that hold
+   * text, the rule is for plates that hold cards with edges of their own."*
+   * Tasks and Recently-completed hold task and praxis cards, each already
+   * wearing a 3px spectrum border, so an edge on the plate around them is a
+   * frame enclosing frames — WORLD_ZERO_STYLE §5's "a bordered panel may not sit
+   * directly inside another bordered panel", with the spectrum making it loud.
+   * Those two keep the plate's `.spectrum-rule` hairline, which is what the
+   * board leaves them; the ornament is simply not mounted there.
    */
   plateOrnament?: ReactNode;
 }) {
@@ -342,7 +353,8 @@ export default function DefaultFactionBody({
           `.label-heading` the other seven replaced with a house component — so
           the disclosure goes straight inside the `<h2>` here (#2311). */}
       <section className="faction-plate">
-        {plateOrnament}
+        {/* No `plateOrnament` — see its docstring. This plate holds cards that
+            carry their own edge, so it carries the RULE instead. */}
         <div className="faction-plate-kicker">
           <h2 className="label-heading">
             <SectionToggle
@@ -377,7 +389,7 @@ export default function DefaultFactionBody({
 
       {/* ── Recently completed ── */}
       <section className="faction-plate">
-        {plateOrnament}
+        {/* No `plateOrnament` — the other card-holding plate. */}
         <div className="faction-plate-kicker">
           <h2 className="label-heading">
             <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />

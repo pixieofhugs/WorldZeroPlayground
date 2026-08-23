@@ -32,19 +32,41 @@
  *
  * ## The mount
  *
- * `ornament` rather than a wrapper span, because the light has to clip to the
- * sheet — the epic's pattern names exactly this case, and `ComposerSheet`'s
- * `overflow: hidden` is what enforces #1028's "no composer ornament reaches the
- * viewport". A layer hung outside `DefaultEditPraxis` would paint the page.
+ * The ORNAMENT arrives through the `ornament` slot and not as a layer in the
+ * wrapper below, because the light has to clip to the sheet — the epic's
+ * pattern names exactly this case, and `ComposerSheet`'s `overflow: hidden` is
+ * what enforces #1028's "no composer ornament reaches the viewport". A layer
+ * hung outside `DefaultEditPraxis` would paint the page. The wrapper div is a
+ * CASCADE HANDLE and paints nothing at all; it is the same pair
+ * `AlbescentFieldDesk` uses, and every other Albescent surface has one.
  *
- * `.alb-composer-edge` DECLARES NOTHING OF ITS OWN. It joins
- * `.spectrum-frame::before`'s shared selector list in index.css and takes every
- * default: 1px inset, 0.6 opacity, the 300% loop-cut tile, and `border-radius:
- * inherit`, which reads the composer sheet's own 10px corner straight off
- * `ComposerSheet`. The travel is `alb-edge-travel` in motion.ornament.css —
- * a pre-painted child slid by `transform`, never a walked gradient parameter
- * (the epic's technique ruling). Six mounts share both rules; this is the
- * seventh, and it added two selector lines.
+ * ## One carrier, not two (#2519)
+ *
+ * `.alb-composer-edge` shipped in #2505 declaring NOTHING of its own, so it took
+ * the shared list's defaults — a 1px ring at 0.6 — and it took them BESIDE the
+ * mark the design canvas removes. The board draws the composer's spectrum in the
+ * sheet's edge alone: *"the masthead's own 3px spectrum rule goes with it — the
+ * border carries the spectrum now."* So the ring is a 3px carrier at full
+ * strength, in the block `.alb-task-edge` owns, and the wrapper class below is
+ * what lets index.css take na's masthead band off this sheet
+ * (`.alb-composer .ep-edge { display: none }`). One spectrum mark on the
+ * composer, where there were two and the added one was the fainter.
+ *
+ * The band is na's own ornament and na keeps it: strip `alb-composer` and the
+ * span, and the two composers are byte-identical.
+ *
+ * What the ring still takes from the shared list is geometry — the mask, the
+ * 300% loop-cut tile, and `border-radius: inherit`, which reads the composer
+ * sheet's own 10px corner straight off `ComposerSheet`. The travel is
+ * `alb-edge-travel` in motion.ornament.css — a pre-painted child slid by
+ * `transform`, never a walked gradient parameter (the epic's technique ruling).
+ * Eight mounts share both rules; no keyframe is minted here.
+ *
+ * ONE MARK THE BOARD REMOVES IS STILL HERE, deliberately: the task slip's 2px
+ * left ink rule. It is not a spectrum carrier, it is na's own dress
+ * (`DEFAULT_COMPOSER_DRESS.slip`, an inline `borderLeft` on a shared component
+ * with no class to reach), and the board takes it off na's composer as well as
+ * Albescent's. That makes it #2520's half of this pass, not this file's.
  *
  * Stilled — reduced motion, or the deferred sheet not yet delivered — there is
  * no travelling child and the ring is a static na spectrum hairline just inside
@@ -64,9 +86,11 @@ import { type EditPraxisState } from "../useEditPraxis";
 
 export default function AlbescentEditPraxis({ state }: { state: EditPraxisState }) {
   return (
-    <DefaultEditPraxis
-      state={state}
-      ornament={<span aria-hidden="true" className="alb-composer-edge" />}
-    />
+    <div className="alb-composer">
+      <DefaultEditPraxis
+        state={state}
+        ornament={<span aria-hidden="true" className="alb-composer-edge" />}
+      />
+    </div>
   );
 }
