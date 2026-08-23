@@ -5975,20 +5975,24 @@
    line. The one thing every mount agreed on is the ramp, so the ramp is the one
    thing that moved.
 
-   THE INDIRECTION IS `.spectrum-frame`'s, verbatim: an overridable
-   `--spectrum-*-image` with the na ramp as its fallback. That is the seam a
-   faction kit dressing the surface suppresses through (`railFaceVars` sets
-   `--spectrum-frame-image: none` for a member), and a per-mount override needs no
-   new selector to exist. Both cascades — the stops flip on their own, so no dark
-   half is written here.
+   NO `--spectrum-*-image` INDIRECTION, deliberately, where `.spectrum-frame`
+   above has one. That token exists because the RAIL has to suppress its ring for
+   a member (`railFaceVars` declares `--spectrum-frame-image: none`), i.e. it has
+   a live declarer. These two have none: every mount is inside a `Default*` file,
+   which is na's own kit, and a dresser reaches them with `.alb-x .spectrum-rule`
+   — two classes, so it wins on specificity from wherever it is written. Minting
+   an override name with nothing declaring it is scaffolding for later, and
+   `factionTokensDeclared.test.ts` fails it on exactly that ground.
+
+   Both cascades — the stops flip on their own, so no dark half is written here.
 
    DECORATIVE, so no contrast ratio is owed; every mount is `aria-hidden` chrome
    beside type that carries its own ink. */
 .spectrum-rule {
-  background-image: var(--spectrum-rule-image, var(--faction-default-rainbow));
+  background-image: var(--faction-default-rainbow);
 }
 .spectrum-dial {
-  background-image: var(--spectrum-dial-image, var(--faction-default-rainbow-conic));
+  background-image: var(--faction-default-rainbow-conic);
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card

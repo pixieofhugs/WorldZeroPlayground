@@ -106,6 +106,7 @@ import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
+import { factionSheet } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import {
   bylineFaces,
@@ -647,7 +648,7 @@ export default function DefaultPraxisDetail({
           // The page surface the design puts everything on, carried by the
           // COLUMN rather than the viewport — the site background must still
           // show around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
-          background: 'var(--faction-default-card-bg)',
+          ...factionSheet(),
           color: 'var(--faction-default-card-text)',
           border: '1px solid var(--faction-default-border)',
           borderRadius: 18,

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName, factionSheet } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -841,7 +841,7 @@ export default function DefaultTaskDetail({
           // full-bleed faction wash is not wanted here, and the column needed a
           // surface and padding), but the stated reason was false; do not cite
           // it as precedent for "a class with no CSS".
-          background: "var(--faction-default-card-bg)",
+          ...factionSheet(),
           color: "var(--faction-default-card-text)",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,

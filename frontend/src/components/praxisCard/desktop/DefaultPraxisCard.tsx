@@ -1,4 +1,5 @@
 import { AdminOverlay } from "../shared";
+import { factionSheet } from "../../../utils/factions";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -34,7 +35,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet
-        background: "var(--faction-default-card-bg)",
+        ...factionSheet(),
         color: "var(--faction-default-card-text)",
         border: "1px solid var(--faction-default-card-line)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",

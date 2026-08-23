@@ -100,12 +100,21 @@ export default function DefaultTaskCard({
           // The spectrum IS the border: a transparent 3px frame with the
           // rainbow painted into the border box behind it, and the sheet
           // painted into the padding box on top.
+          //
+          // THE ONLY SHEET THAT DOES NOT CALL `factionSheet()` (#2497), because
+          // it is the only one with a layer of its own: the ramp is appended to
+          // all three of the sheet's lists, so the arity stays right however
+          // many layers the sheet grows to. `factionSheet` composes exactly
+          // this shape minus the ramp — see its note for why the trailing
+          // `border-box` on the clip is what keeps the card's own colour out
+          // to the edge.
           border: "3px solid transparent",
           borderRadius: 14,
           backgroundImage:
-            "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)), var(--faction-default-rainbow)",
+            "var(--faction-default-card-sheet), var(--faction-default-rainbow)",
+          backgroundBlendMode: "var(--faction-default-card-sheet-blend), normal",
           backgroundOrigin: "border-box",
-          backgroundClip: "padding-box, border-box",
+          backgroundClip: "var(--faction-default-card-sheet-clip), border-box",
           boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
           color: "var(--faction-default-card-text)",
           fontFamily: MONO,

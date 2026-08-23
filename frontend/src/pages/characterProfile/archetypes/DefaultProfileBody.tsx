@@ -41,7 +41,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
-import { factionFill, isKnownFaction } from '../../../utils/factions'
+import { factionFill, factionSheet, isKnownFaction } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 // The ② About block and the ① tagline slot are shared with every faction kit —
@@ -362,7 +362,7 @@ function DesktopProfile({
         <div
           style={{
             borderRadius: 12,
-            background: 'var(--faction-default-card-bg)',
+            ...factionSheet(),
             padding: 'var(--space-xl)',
             display: 'flex',
             gap: 'var(--space-2xl)',
@@ -653,7 +653,7 @@ function MobileProfile({
           <div
             style={{
               borderRadius: 12,
-              background: isUnaffiliated ? 'var(--faction-default-card-bg)' : 'var(--color-bg-surface-alt)',
+              ...(isUnaffiliated ? factionSheet() : { background: 'var(--color-bg-surface-alt)' }),
               padding: 'var(--space-lg)',
               display: 'flex',
               flexDirection: 'column',
