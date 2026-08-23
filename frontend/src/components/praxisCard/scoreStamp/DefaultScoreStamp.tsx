@@ -130,6 +130,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           other, clipped to type). */}
       <span
         aria-hidden
+        className="spectrum-rule"
         style={{
           position: "absolute",
           top: 0,
@@ -137,7 +138,6 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           right: 0,
           height: 2,
           borderRadius: "10px 10px 0 0",
-          background: "var(--faction-default-rainbow)",
         }}
       />
 
