@@ -307,3 +307,26 @@ describe('desktop factions grid — no invitation panel (#2310)', () => {
     expect(without).toBe(withLetters)
   })
 })
+
+describe('mobile factions directory — the tile column centres its tiles (#2579)', () => {
+  /**
+   * `FactionSelectCard`'s contract is a FLUID box: `width: 100%` up to a 360px
+   * max. A flex item with a declared cross size is not stretched, so a column
+   * with the default `align-items: stretch` places each tile at cross-START —
+   * the left edge — and every pixel past 360 opens as dead space on the right.
+   * Below 360 the tile fills the screen and nothing looks wrong, which is why
+   * this read as a tablet bug rather than a phone one.
+   *
+   * Pinned as the declaration rather than a measured box because the harness is
+   * node + renderToStaticMarkup with no layout engine: there is no geometry to
+   * measure here, only the rule that produces it.
+   */
+  it('centres the column so a tile narrower than the viewport is not left-stranded', () => {
+    const { html } = view()
+    const start = html.indexOf('data-testid="faction-tile-column"')
+    expect(start, 'tile column rendered').toBeGreaterThan(-1)
+    const openTag = html.slice(html.lastIndexOf('<', start), html.indexOf('>', start) + 1)
+    expect(openTag, 'column axis').toContain('flex-direction:column')
+    expect(openTag, 'tiles centred on the cross axis').toContain('align-items:center')
+  })
+})
