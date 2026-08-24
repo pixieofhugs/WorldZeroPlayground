@@ -51,10 +51,9 @@ export { SURFACE_KEYS } from './manifest'
  * mobile twin and the balloon vote widget; #840 added the score stamp and #835
  * the edit-praxis composer ("The Squire's Writ") — which #836 gave a mobile twin
  * and #1181 collapsed back to one responsive component when ADR-0065 retired the
- * `mobileEditPraxis` surface. It is still override-only — every OTHER surface hands
- * `wow` its `Default*` archetype, so WOW is themed-and-partly-skinned, not fully
- * dressed. `wowRendersDefault.test.tsx` pins which six surfaces are claimed and
- * that the rest fall back.
+ * `mobileEditPraxis` surface. It claims every key in `SURFACE_KEYS` now, and
+ * `surfaceDispatch.test.ts` is what holds it there: that file derives the bar
+ * from what the reference factions skin, so a new surface raises it by itself.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,
