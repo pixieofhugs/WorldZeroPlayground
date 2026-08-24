@@ -233,12 +233,19 @@ export function scanPageForContrast(): Finding[] {
    * of the three where the 1:1 pairing is the intended output rather than a
    * bug or a WCAG carve-out.
    *
-   * Albescent's strings render as `[REDACTED]` painted in their own ground's
-   * colour for a viewer who has not been revealed to the society, so the line
-   * reads as blank until it is selected. That is a deliberate 1.00:1 and it can
-   * never be "fixed" — which is exactly why it is exempted HERE and not added
-   * to `contrastBaseline.ts`. That list is debt awaiting a child issue and only
-   * ever shrinks; an entry that is never going to be deleted would rot it.
+   * TWO SURFACES, NOT THE WHOLE SITE. Only the `/factions` Albescent select
+   * tile and the leaderboard's eighth lane redact; every ordinary label still
+   * says "Unaffiliated" and is scanned normally (ADR-0082 §2). So this
+   * exemption should stay rare — if it starts skipping large parts of a page,
+   * the redaction has spread beyond its ruling and THAT is the bug to file.
+   *
+   * On those two surfaces Albescent's strings render as `[REDACTED]` painted in
+   * their own ground's colour for a viewer who has not been revealed to the
+   * society, so the line reads as blank until it is selected. That is a
+   * deliberate 1.00:1 and it can never be "fixed" — which is exactly why it is
+   * exempted HERE and not added to `contrastBaseline.ts`. That list is debt
+   * awaiting a child issue and only ever shrinks; an entry that is never going
+   * to be deleted would rot it.
    *
    * NOT `aria-hidden`, which is the exemption it superficially resembles. A
    * screen reader announces "REDACTED" plainly and that is the ruling: the

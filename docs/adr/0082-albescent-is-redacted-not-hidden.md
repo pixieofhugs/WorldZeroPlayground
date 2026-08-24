@@ -7,8 +7,9 @@ The faction-listing surfaces stop concealing Albescent's existence and start wit
 words. Everything else in ADR-0027 stands: Albescent is a distinct faction, its members and
 their work are public, the sealed placeholder is not a 404, and the reveal is a sticky
 account-collective flag.
-**Relates to:** #2409 (this decision), #1891 (the client-side name gate this generalises —
-its ruling 1 is untouched), [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md)
+**Relates to:** #2409 (this decision), #1891 (the client-side name gate — **still governing
+every label site**; this ADR reverses one sentence of it on two surfaces only, see §2, and its
+ruling 1 is untouched everywhere), [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md)
 / #2399 (who qualifies), #2518 (reveal follows QUALIFY, not join), #2400 (the admin bypass),
 #2422 (the roster fold on the same predicate), #1855 (whose eighth-lane ruling this reverses),
 #390 / #394 (the original secrecy build), CONTEXT.md ("Account", "Faction")
@@ -26,8 +27,9 @@ Three years of that shape produced two problems.
 **It taught the player nothing.** A secret nobody can perceive is not a mystery, it is an
 absence. There is no door to find, because there is no door.
 
-**It was a lie with a seam in it.** #1891's gate answered "Unaffiliated" — so an Albescent
-member's byline read as unaffiliated, and the disguise was load-bearing. Meanwhile the reveal
+**It was a lie with a seam in it** — on the surfaces that are about the society. #1891's gate
+answered "Unaffiliated" everywhere, which is right for a byline and wrong for a faction
+directory: a tile that simply is not there teaches nothing. Meanwhile the reveal
 predicate widened twice (#2400's admin bypass, #2518's reveal-on-qualify) and every widening
 made the omission harder to keep coherent: a qualified player holds an invitation letter that
 **names the order out loud** on the Field Desk, and under omission that player then saw
@@ -38,9 +40,13 @@ secrecy."*
 
 ## Decision
 
-**Albescent is present everywhere the other factions are, and every Albescent-scoped string
-renders as `[REDACTED]` until the account is revealed.** The mark is painted in its own
-ground's colour, so it reads as blank until a player drags a cursor across it.
+**Albescent is present everywhere the other factions are, and on the two surfaces that are
+ABOUT the society its strings render as `[REDACTED]` until the account is revealed.** The mark
+is painted in its own ground's colour, so it reads as blank until a player drags a cursor
+across it.
+
+**Everywhere else the name is a LABEL it keeps saying "Unaffiliated", exactly as #1891 ruled.**
+That boundary is §2 and it is the part of this ADR most likely to be mistaken for a bug.
 
 A locked door with no keyhole. No progress readout, no criteria, no explanation —
 *"I'm not going to give them hints on how."*
@@ -56,14 +62,34 @@ still resolves `is_admin || albescent_revealed || albescent_unlocked` in one pla
 governs `services.progression`, `faction_slugs` (#2422) and the `albescent_revealed` field on
 `/auth/me`. What changed is that the faction directory stopped being one of its readers.
 
-### 2. The redaction is a rendering rule over the ordinary catalogue
+### 2. TWO surfaces redact; every label keeps #1891's mask
 
-`utils/factions.ts` already held an impure, module-level gate: one slug answering differently
-per viewer, so ~35 call sites became secret by construction rather than by review. That gate is
-**generalised from one key to the Albescent-scoped namespace** (`redactableText`), and what it
-returns changes from "Unaffiliated" to `[REDACTED]`.
+**This is the boundary, and it is deliberate. Read it before "fixing" the inconsistency.**
 
-It is a rendering rule and not a second catalogue, deliberately. Albescent's copy is authored
+| Surface | Behaviour | Why |
+|---|---|---|
+| The `/factions` select tile (`components/selectCard/AlbescentSelectCard.tsx`) | **Redacts** — `[REDACTED]` in the ground's own colour, control disabled | The tile is ABOUT the society. A blank where a name goes is the door. |
+| The leaderboard's eighth lane (`pages/players/{Desktop,Mobile}Players.tsx`) | **Redacts** the same way — blank until selected | Same: the lane exists to be noticed. |
+| **Everything else** — praxis bylines, task cards, metatask seals, the character switcher, sidebar `aria-label`s, ~35 sites through `factionName` | **Says "Unaffiliated"**, unchanged from #1891 | A name that LABELS a thing already on screen. |
+
+The reasoning for the third row is #1891's own, and it is what the owner's ruling restored:
+*"Where a name LABELS a thing already on screen, masking it to 'Unaffiliated' is right — a
+blank where every other card has a name advertises that something is being withheld."*
+Redaction is a **mechanic on two surfaces**, not a global rename of the word.
+
+This ADR first shipped (PR #2542) reading the decision globally: `factionName` answered
+`[REDACTED]` for every caller, so all ~35 label sites inverted at once and a player's praxis
+byline read `[REDACTED]` in ordinary ink. **The owner ruled that back on 2026-08-23.** The
+sentence of #1891 this ADR reverses is reversed *only inside those two surfaces*.
+
+Mechanically: `utils/factions.ts` keeps the impure, module-level gate #1891 built, and
+`factionName` / `factionDescription` are **unchanged** by this ADR. Beside them sit
+`redactableText` (generalised from one key to the Albescent-scoped namespace) and
+`isFactionRedacted`, which are **opt-in** — a surface that wants the mark calls them. With two
+call sites there is deliberately no registry, no context and no config: a lookup table is
+precisely the thing that would grow back into the global rename.
+
+The redaction is a rendering rule and not a second catalogue, deliberately. Albescent's copy is authored
 exactly as every other faction's is, so the moment an account is revealed the real words are
 already in place — there is nothing to swap in, and nothing that can be written in one
 catalogue and forgotten in the other.
@@ -115,6 +141,8 @@ into `/factions` moves that line, and this is where it now sits:**
   *chooser* still drops the row rather than redacting it — #1891 ruling 3 stands, because
   masking a picker hands an unrevealed player two identical rows, which is louder than the leak
   it replaces.
+- **A LABEL is not a redaction site at all**, so nothing about the ~35 label callers changed:
+  they masked to "Unaffiliated" before this ADR and they mask to it after.
 - **The client is now the redaction boundary, and it is a tease rather than a wall.** A reader
   of the network tab can see that a faction called `albescent` exists. That is the accepted
   cost of the mechanic; it always was, one layer down.
@@ -174,6 +202,10 @@ would otherwise fight forever.
 - **Author a second catalogue of redacted strings.** Rejected. Two catalogues drift, and the
   revealed copy would then be a thing that has to be written twice. The redaction is a
   rendering rule so that authoring stays ordinary.
+- **Redact the word EVERYWHERE, so `factionName` answers the mark for all ~35 label sites.**
+  Built first, then rejected by the owner (see §2). It reads as a bug rather than a mechanic:
+  a praxis byline that says `[REDACTED]` in ordinary ink is a label failing, not a door. It
+  also discards #1891's reasoning wholesale when only one sentence of it was in question.
 - **`aria-hidden` the mark, so assistive tech skips it.** Rejected — see §6.
 - **Add a second redaction over the lane's share percentage.** Rejected by the owner: the lane
   shows as the others do. The size leak is accepted.
@@ -185,13 +217,17 @@ would otherwise fight forever.
 - `GET /factions` is a genuinely public, viewer-independent listing again. Two admin-bypass
   tests that proved the filter now prove its absence — the admin and the plain payloads must be
   **equal**.
-- Every surface that labels a thing with its faction shows `[REDACTED]` for an Albescent
-  subject to an unrevealed viewer, where it used to show "Unaffiliated". That includes praxis
-  bylines, task cards and the character switcher — about thirty-five call sites, all of them
-  through one gate, none of them edited.
+- **No label site changed.** Praxis bylines, task cards, metatask seals and the character
+  switcher still read "Unaffiliated" for an Albescent subject seen by an unrevealed viewer —
+  about thirty-five call sites, all through one gate, none of them edited, exactly as #1891
+  left them.
+- **Two surfaces read differently from the rest of the app, on purpose.** Anyone comparing the
+  select tile to a praxis byline will see an inconsistency; §2 is the answer, and normalising
+  either way undoes a ruling.
 - Faction percentages on the leaderboard all changed, because the denominator grew.
 - `descriptions.albescent` is still the owner's `PLACEHOLDER` to write. It redacts either way,
   and slots in with no code change when it is written.
-- A future surface that draws an Albescent-scoped string is redacted for free, provided it
-  reads the catalogue through `redactableText` — which is the same bargain #1891 struck and
-  the same failure mode it accepted.
+- A future surface is NOT redacted for free — `redactableText` is opt-in, so a new surface
+  that draws the catalogue directly says "Unaffiliated" like every other label. That is the
+  correct default under this ruling: a third surface redacts only when someone decides it is
+  about the society, and that decision belongs in a review, not in a fall-through.
