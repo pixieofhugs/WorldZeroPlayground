@@ -207,6 +207,48 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // step — which is the whole point of an allowlist that was always meant to
 // empty. A NEW WOW gap is a red row below, not a line to add back here.
 
+/* -------------------------------------------------------------------------- */
+/* Albescent claims every surface, so the matrix has no holes (#2531)          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ALBESCENT REGISTERS EVERY KEY IN `SURFACE_KEYS`, and this is the row that
+ * turns "count the matrix by hand" into something CI counts.
+ *
+ * The 2026-08-23 audit found four keys absent — `backdrop`, `comment`,
+ * `createCharacter`, `duelSeal` — and each absence was readable two ways with
+ * nothing in the tree saying which was true: na draws no mark there so a wrapper
+ * would have nothing to grab, or nobody got to it. #2531 filled all four, so the
+ * manifest is now the single place that answers "does Albescent dress this?",
+ * and it answers for every surface.
+ *
+ * A REGISTRATION HERE IS NOT A SKIN, and this bar is not the one `REQUIRED`
+ * holds Coven and WOW to. Every Albescent row is a WRAPPER over na's rendering
+ * (ADR-0027, ADR-0048): a RE-CUT one re-cuts a mark na already draws, a
+ * PASS-THROUGH one renders the Default byte-identically and exists so the map
+ * stops lying about who dresses what. Both are "registered"; neither is a
+ * treatment of its own. `src/__tests__/albescentWrapperKinds.test.tsx` is where
+ * each of the four is held to its declared kind.
+ *
+ * Which is why it is asserted for `albescent` alone rather than derived into a
+ * rule for every faction: a faction with a kit of its own registers a surface
+ * when its design lands, so a missing row there is a design not yet drawn.
+ * Albescent is the one slug for which "renders the Default" is the DESIGNED
+ * answer, and therefore the one slug for which a hole is always a bug.
+ */
+describe('albescent registers every surface (#2531)', () => {
+  it.each(SURFACE_KEYS)('claims %s', (surface) => {
+    expect(
+      surfaceMap(surface)['albescent'],
+      `albescent has no \`${surface}\` row in factions/albescent.ts.\n` +
+        `Every Albescent surface is a wrapper over na — a re-cut where na draws a\n` +
+        `mark, a pass-through where it does not — so an ABSENT row is not "renders\n` +
+        `the Default", it is a reader left to guess which of those two was meant.\n` +
+        `Add the row, with one line of docblock saying which kind it is (#2531).`,
+    ).toBeDefined()
+  })
+})
+
 describe('Coven is bespoke on every core surface, never the Default', () => {
   it.each(REQUIRED)('coven skins %s', (surface) => {
     expect(surfaceMap(surface)['coven']).toBeDefined()
