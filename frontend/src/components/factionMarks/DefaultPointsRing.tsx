@@ -38,6 +38,13 @@ import type { CSSProperties } from "react";
  * Every value is a token, so both themes come from the `[data-theme="dark"]`
  * cascade and Albescent's `.alb-task` repointing reaches the mark for free —
  * there is no ternary and no prop for either.
+ *
+ * A FOURTH MOUNT, ON A GROUND NO CASCADE REPOINTS (#2562). The metatask seal
+ * draws this ring for both `na` and `albescent`, and the Albescent seal is the
+ * first surface where the repointing above does NOT reach: it is painted from
+ * `--albescent-reveal-*`, a family of its own, on a sheet that is pure white by
+ * day. That is what `valueColor` / `unitColor` are for, and they are the only
+ * thing this mark learned — the ground was already a prop.
  */
 
 /** Lora, via the shared display token — the face the `na` task-card design names. */
@@ -64,6 +71,20 @@ export interface DefaultPointsRingProps {
    * rather than as a patch laid on it.
    */
   ground?: string;
+  /**
+   * The figure's ink, and the caption's, when the surface the ring lands on is
+   * not painted from the `na` family at all (#2562).
+   *
+   * The pattern every other shared mark already sets — `PenCircle`,
+   * `UaEnsoScore` — and it arrives here for the ALBESCENT SEAL, which mounts
+   * this drawing the way it mounts every na drawing but is lettered in the
+   * `--albescent-reveal-*` reveal tokens: its sheet is pure white by day, where
+   * the na family's ground is not, and an Albescent surface printing
+   * `--faction-default-card-text` would be that skin's one rule broken. Both
+   * card mounts and the score stamp pass nothing and are unchanged.
+   */
+  valueColor?: string;
+  unitColor?: string;
   style?: CSSProperties;
 }
 
@@ -73,6 +94,8 @@ export default function DefaultPointsRing({
   size,
   valueSize = "var(--text-heading)",
   ground = "var(--faction-default-card-bg)",
+  valueColor = "var(--faction-default-card-text)",
+  unitColor = "var(--faction-default-card-muted)",
   style,
 }: DefaultPointsRingProps) {
   return (
@@ -108,7 +131,7 @@ export default function DefaultPointsRing({
             fontFamily: LORA,
             fontWeight: 600,
             fontSize: valueSize,
-            color: "var(--faction-default-card-text)",
+            color: valueColor,
           }}
         >
           {value}
@@ -119,7 +142,7 @@ export default function DefaultPointsRing({
             fontSize: "var(--text-md)",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "var(--faction-default-card-muted)",
+            color: unitColor,
             marginTop: "var(--space-xs)",
           }}
         >

@@ -158,7 +158,7 @@
     },
     "seal": {
       "label": "{{faction}} Metatask",
-      "bonus": "+{{points}} PTS",
+      "bonusFigure": "+{{points}}",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"
     }

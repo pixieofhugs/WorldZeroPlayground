@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import CardMasthead from "./CardMasthead";
 import SingularityLamps from "../factionMarks/SingularityLamps";
 import { UA_DISPLAY } from "../factionMarks/uaAtoms";
@@ -32,18 +32,46 @@ import { factionName } from "../../utils/factions";
  * and neither has a slug to look one up with. A record keyed by slug would have
  * been a lookup table with seven constant keys.
  *
- * ONLY SEVEN BANDS EXIST, and the eighth and ninth are absent by RULE (ADR-0048,
- * NOT superseded by #2185): the Albescent card IS the unaffiliated sheet plus a
- * drift, and a band naming the society would un-hide it. On a praxis card — a
- * public card, on other people's feeds — that is a disclosure, not a style
- * choice. There is no `DefaultBand` and no `AlbescentBand` to import, which is
- * the strongest form the rule can take in a module.
+ * SEVEN BANDS ARE THE CARD KITS' WHOLE LIST, and the eighth and ninth are absent
+ * from it by RULE (ADR-0048, NOT superseded by #2185): the Albescent card IS the
+ * unaffiliated sheet plus a drift, and a band naming the society would un-hide
+ * it. On a praxis card — a public card, on other people's feeds — that is a
+ * disclosure, not a style choice.
+ *
+ * THE EIGHTH BAND IS THE METATASK SEAL'S, AND ONLY THE SEAL'S (#2562). The owner
+ * ruled that all nine seals wear one, because the seal's own label already
+ * prints "ALBESCENT METATASK" in plain sight and two bandless seals out of nine
+ * defeat the change. {@link SpectrumBand} below is that band; `na` and
+ * `albescent` both mount it, which is how Albescent mounts every other na
+ * drawing. There is still no `AlbescentBand`, and there is no band a CARD may
+ * give either slug — that is the form the surviving half of the rule takes here.
  *
  * The ORNAMENT that rides BELOW a band is not here — WOW's bunting, the
  * Ephemerists' cornice. Those are strung under the band by the surface that
  * wants them, and the two kits do not agree about them; what the ruling binds is
  * the band itself.
  */
+
+/**
+ * WHAT A BAND MAY BE TOLD — one optional override, and nothing else (#2562).
+ *
+ * A band takes no props on a card, and that is the file's whole posture: the
+ * paint is the faction's, the wordmark is the faction's name from the one place
+ * that owns it (ADR-0038), and a caller has nothing to say about either. The
+ * metatask seal is the one surface where the band heads a FOREIGN OBJECT rather
+ * than the faction's own card, so its band reads "<FACTION> METATASK" — the
+ * shared `praxis:detail.seal.label`, in the faction's own hand and at the band's
+ * own size, because a sticker that only said the faction's name would not say
+ * what it is.
+ *
+ * IT IS AN OVERRIDE, NOT A SLOT. Every band still defaults to its own name, so
+ * the two card kits are unchanged and a band cannot be turned into a generic
+ * header by a caller that forgets to pass anything.
+ */
+export interface FactionBandProps {
+  /** The words on the band. Defaults to the faction's name. */
+  title?: ReactNode;
+}
 
 /* ── Coven ─────────────────────────────────────────────────────────────── */
 
@@ -97,7 +125,7 @@ function TwinkleField() {
  * the praxis card does the same" — it comes with the band rather than being
  * rebuilt beside it.
  */
-function CovenBand() {
+function CovenBand({ title }: FactionBandProps) {
   return (
     <div
       style={{
@@ -124,7 +152,7 @@ function CovenBand() {
             it lives in `textTransform`, where casing belongs — the name itself
             comes from the one place that owns it (ADR-0038). */}
         <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase" }}>
-          {factionName("coven")}
+          {title ?? factionName("coven")}
         </div>
       </CardMasthead>
     </div>
@@ -149,7 +177,7 @@ const DECO = "var(--font-faction-deco)";
  * card with `overflow: hidden`, so a content-box border would push it 2px wider
  * than the card and be clipped on the right.
  */
-function EphemeristsBand() {
+function EphemeristsBand({ title }: FactionBandProps) {
   return (
     <CardMasthead
       slug="ephemerists"
@@ -172,7 +200,7 @@ function EphemeristsBand() {
         {/* #1910: the band spells the faction's name, so it reads the one key
             that stays per-faction rather than a second copy. The
             `textTransform` above already carried the plate's upper case. */}
-        {factionName("ephemerists")}
+        {title ?? factionName("ephemerists")}
       </span>
     </CardMasthead>
   );
@@ -200,7 +228,7 @@ const EVERYMEN_LABEL: CSSProperties = {
  * own: the mast is deeper on the desktop sheet. Everything else here is one
  * value at both sizes.
  */
-function EverymenBand() {
+function EverymenBand({ title }: FactionBandProps) {
   const formFactor = useFormFactor();
   return (
     <CardMasthead
@@ -219,7 +247,7 @@ function EverymenBand() {
       }}
     >
       <span style={{ ...EVERYMEN_LABEL, fontSize: "var(--text-title)", lineHeight: 1 }}>
-        {factionName("everymen")}
+        {title ?? factionName("everymen")}
       </span>
     </CardMasthead>
   );
@@ -239,7 +267,7 @@ const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
  * not a faction mark, and the grid centres the title on the BAND, so a wider
  * left cluster does not push it off true.
  */
-function SingularityBand() {
+function SingularityBand({ title }: FactionBandProps) {
   return (
     <CardMasthead
       slug="singularity"
@@ -260,7 +288,7 @@ function SingularityBand() {
           lineHeight: 1,
         }}
       >
-        {factionName("singularity")}
+        {title ?? factionName("singularity")}
       </span>
     </CardMasthead>
   );
@@ -276,7 +304,7 @@ const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
  * ordinal left behind, and that width is exactly where the centred wordmark now
  * sits. The clipping keeps its acid elsewhere.
  */
-function SnideBand() {
+function SnideBand({ title }: FactionBandProps) {
   return (
     <CardMasthead
       slug="snide"
@@ -293,7 +321,7 @@ function SnideBand() {
     >
       {/* eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead. */}
       <span style={{ fontFamily: IMPACT, fontSize: 22, letterSpacing: "0.06em", lineHeight: 1, color: "var(--faction-snide-acid)" }}>
-        {factionName("snide")}
+        {title ?? factionName("snide")}
       </span>
     </CardMasthead>
   );
@@ -311,7 +339,7 @@ function SnideBand() {
  * leaf's own ink; the accent keeps the band's bottom rule, where a hairline owes
  * nothing.
  */
-function UaBand() {
+function UaBand({ title }: FactionBandProps) {
   return (
     <CardMasthead
       slug="ua"
@@ -329,7 +357,7 @@ function UaBand() {
           lineHeight: 1,
         }}
       >
-        {factionName("ua")}
+        {title ?? factionName("ua")}
       </span>
     </CardMasthead>
   );
@@ -371,7 +399,7 @@ const GILT_MID = "var(--faction-wow-gilt-mid)";
  * gilt it is a line you can see — and on the task card it is the string the
  * bunting below hangs from.
  */
-function WowBand() {
+function WowBand({ title }: FactionBandProps) {
   return (
     <CardMasthead
       slug="wow"
@@ -384,9 +412,65 @@ function WowBand() {
       }}
     >
       <span style={{ fontFamily: MED, fontSize: "var(--text-title)", letterSpacing: "0.04em", lineHeight: 1, color: GILT_MID }}>
-        {factionName("wow")}
+        {title ?? factionName("wow")}
       </span>
     </CardMasthead>
+  );
+}
+
+/* ── Unaffiliated / Albescent — THE METATASK SEAL'S BAND ONLY ──────────────── */
+
+/**
+ * The spectrum band (#2562) — a small-caps name over the whole rainbow, ruled
+ * off with the hairline the two seals already draw.
+ *
+ * IT IS NOT A CARD BAND, and the module docstring above says why: the two cards
+ * stay bandless under ADR-0048 and the owner's ruling that added this one is
+ * scoped to the metatask seal. Two mounts, both seals: `DefaultSeal` (`na`, and
+ * the fallthrough for any unregistered issuer) and `AlbescentSeal`.
+ *
+ * TWO PROPS, NOT TWO COMPONENTS. Every other band in this file is a per-faction
+ * file's own drawing, so it takes nothing; this one is a single na drawing that
+ * Albescent mounts — the way Albescent mounts every na drawing — and the two
+ * differ in exactly two facts. The `slug` picks the name, the sigil and the
+ * band's destination; the `ink` is the label's, and it MUST be passed because
+ * the two grounds are different tokens (`--faction-default-card-bg` and
+ * `--albescent-reveal-surface`, which is pure white by day). A default here
+ * would be an Albescent seal quietly wearing the na family's ink, which is the
+ * one thing that skin's docblock forbids.
+ *
+ * THE GROUND IS THE STICKER'S OWN, so the band is the rule and the lettering and
+ * nothing else — a painted ground under a seal this small would read as a second
+ * sticker. The hairline is `.spectrum-rule`, the class #2497 minted for these
+ * inline ramps, so Albescent's `alb-moves` turns it from the cascade without
+ * this file knowing (#2500).
+ */
+function SpectrumBand({
+  slug,
+  ink,
+  title,
+}: FactionBandProps & { slug: "na" | "albescent"; ink: string }) {
+  return (
+    <div style={{ position: "relative", zIndex: 2, flexGrow: 0 }}>
+      <CardMasthead slug={slug} style={{ padding: "var(--space-sm) var(--space-lg)" }}>
+        <span
+          className="font-body"
+          style={{
+            fontSize: "var(--text-xl)",
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            lineHeight: 1,
+            color: ink,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {title ?? factionName(slug)}
+        </span>
+      </CardMasthead>
+      {/* The hairline the band is ruled off with. Geometry stays at the call
+          site (§4a); the ramp is the class's. */}
+      <span aria-hidden="true" className="block spectrum-rule" style={{ height: 2 }} />
+    </div>
   );
 }
 
@@ -396,6 +480,7 @@ export {
   EverymenBand,
   SingularityBand,
   SnideBand,
+  SpectrumBand,
   UaBand,
   WowBand,
 };

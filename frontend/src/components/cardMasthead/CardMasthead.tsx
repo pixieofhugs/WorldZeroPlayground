@@ -22,6 +22,21 @@ import { factionName } from "../../utils/factions";
  * praxis card that reasoning binds harder, not softer: the card is PUBLIC, so a
  * band naming Albescent would reveal the society on a stranger's feed.
  *
+ * THE METATASK SEAL IS THE ONE SCOPED EXCEPTION (#2562). All NINE seals wear a
+ * band there, `na` and `albescent` included, by owner ruling — and the reason it
+ * is safe on that surface and only that one is that the seal's own label already
+ * prints "ALBESCENT METATASK" in plain sight via the shared `detail.seal.label`.
+ * The band adds no exposure the label has not already made, and leaving two of
+ * nine bandless defeats the change. The band's LINK comes with it, so an
+ * Albescent seal is also the first surface to point at `/factions/albescent` —
+ * still the `AlbescentGate` dead end and still not a faction page, which is why
+ * that half is a routing fact rather than a second disclosure. `na` cannot point
+ * at its own slug at all; see the `to` below.
+ *
+ * THE RULING DOES NOT TRAVEL. The task card and the praxis card stay bandless
+ * for both slugs; `factionBands`' `SpectrumBand` is exported for the seal alone
+ * and no card kit may mount it.
+ *
  * THE BAND IS A LINK TO THE FACTION (#2167). A card has three regions and three
  * destinations: the body reads the task, the CTA signs up, and the band — which
  * says nothing but the faction's name — reads the faction. It is derived here
@@ -138,7 +153,16 @@ export default function CardMasthead({
 }: CardMastheadProps) {
   return (
     <Link
-      to={`/factions/${slug}`}
+      /* `na` GOES TO THE DIRECTORY, NOT TO `/factions/na` (#2562). There is no
+         unaffiliated faction page: `/factions/:slug` looks the slug up in the
+         faction list, `na` is not in it, and the route renders "Faction not
+         found" — which `pages/characterPaths/mobileArchetypes/
+         DefaultEditCharacter.tsx` already routes around the same way. It lives
+         HERE rather than at the one mount for the reason the derivation itself
+         does: a rule written at a call site is a rule the next band can drift
+         from. The seven faction bands are unaffected; `na` reached this
+         component for the first time with the metatask seal's band. */
+      to={slug === "na" ? "/factions" : `/factions/${slug}`}
       /* The band's text IS the faction's name, so unlabelled this announces as
          "Cozy Coven, link" — the name without the destination. The label keeps
          the name and says where it goes; it names the faction, never the
