@@ -45,18 +45,39 @@ import {
   parseColor,
   type Rgba,
 } from '../../../utils/contrast'
-import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { readThemes, resolveVar, stripComments, type Theme } from '../../../utils/__tests__/cssVars'
 
 const CSS_TEXT = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
 const THEMES = readThemes(CSS_TEXT)
 const BOTH: Theme[] = ['light', 'dark']
 
+/**
+ * The one placeholder rule, selector and body, taken from the stylesheet.
+ *
+ * The selector is captured too because it is load-bearing: Tailwind preflight
+ * already paints `input::placeholder, textarea::placeholder` #9ca3af, and a
+ * bare `::placeholder` is a whole specificity rung under it. See the rule's own
+ * note in `index.css`.
+ */
+function placeholderRule(): { selector: string; body: string } {
+  // Comments go first: the rule's own note says "::placeholder" several times,
+  // and scanning them would read the prose as the selector. Indices rather than
+  // one big regex — `[^{}]*::placeholder[^{}]*` backtracks for tens of seconds
+  // over a stylesheet this size.
+  const css = stripComments(CSS_TEXT)
+  const at = css.indexOf('::placeholder')
+  if (at < 0) throw new Error('no ::placeholder rule in index.css — that IS the bug #2488 filed')
+  const open = css.indexOf('{', at)
+  const close = css.indexOf('}', open)
+  const start = Math.max(css.lastIndexOf('}', at), css.lastIndexOf('{', at), css.lastIndexOf(';', at))
+  return { selector: css.slice(start + 1, open).trim(), body: css.slice(open + 1, close) }
+}
+
 /** The declared placeholder alpha, taken from the rule itself. */
 function placeholderAlpha(): number {
-  const rule = /::placeholder\s*\{([^}]*)\}/.exec(CSS_TEXT)
-  if (!rule) throw new Error('no ::placeholder rule in index.css — that IS the bug #2488 filed')
-  const mix = /color-mix\(\s*in srgb\s*,\s*currentColor\s+([\d.]+)%\s*,\s*transparent\s*\)/.exec(rule[1])
-  if (!mix) throw new Error(`::placeholder no longer mixes currentColor: ${rule[1].trim()}`)
+  const { body } = placeholderRule()
+  const mix = /color-mix\(\s*in srgb\s*,\s*currentColor\s+([\d.]+)%\s*,\s*transparent\s*\)/.exec(body)
+  if (!mix) throw new Error(`::placeholder no longer mixes currentColor: ${body.trim()}`)
   return Number(mix[1]) / 100
 }
 
@@ -105,11 +126,19 @@ function groundOf(tokens: string[], theme: Theme): Rgba {
 }
 
 describe('placeholder text has a chosen colour, on every field ground', () => {
-  it('index.css declares one shared rule', () => {
-    // The whole of defect 3: zero declarations repo-wide meant the browser
-    // default was in play on every dark panel in the app.
+  it('index.css declares one shared rule, at a selector that can reach a field', () => {
+    // The whole of defect 3: no declaration in this sheet meant Tailwind
+    // preflight's one fixed grey was in play on every panel in the app.
+    const { selector, body } = placeholderRule()
     expect(placeholderAlpha()).toBeGreaterThan(0)
-    expect(/::placeholder\s*\{[^}]*opacity:\s*1/.test(CSS_TEXT), "Firefox's UA sheet dims ::placeholder to 0.54; the reset is not optional")
+    // NOT cosmetic. Preflight's `input::placeholder` outranks a bare
+    // `::placeholder`, so dropping either element name here leaves the rule in
+    // the sheet and the grey on the screen.
+    expect(selector, 'preflight paints input::placeholder; a bare ::placeholder loses to it')
+      .toContain('input::placeholder')
+    expect(selector, 'and textarea::placeholder — the about and tagline fields')
+      .toContain('textarea::placeholder')
+    expect(/opacity:\s*1/.test(body), "Firefox's UA sheet dims ::placeholder to 0.54; the reset is not optional")
       .toBe(true)
   })
 
