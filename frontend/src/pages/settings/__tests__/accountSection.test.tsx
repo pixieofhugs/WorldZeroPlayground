@@ -33,7 +33,13 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-vi.mock('../../../auth/AuthContext', () => ({
+// Partial, not wholesale. `AuthContext` also exports `SESSION_HINT_KEY`, which
+// the Cookies section (#2156) imports so its storage inventory names the real
+// key instead of a retyped copy. A wholesale factory blanks every export it
+// does not list, so mocking this module for `useAuth` alone took that constant
+// down with it and the whole Settings tree failed to render.
+vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user, signOut: harness.signOut }),
 }))
 
