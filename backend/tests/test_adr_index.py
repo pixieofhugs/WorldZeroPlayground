@@ -28,7 +28,7 @@ import adr_index  # noqa: E402  (needs the sys.path line above)
 @pytest.fixture(scope="module")
 def adrs() -> list[adr_index.Adr]:
     """Every numbered ADR, parsed. Fails loudly on the first malformed header."""
-    paths = sorted(adr_index.ADR_DIR.glob("[0-9][0-9][0-9][0-9]-*.md"))
+    paths = sorted(adr_index.ADR_DIR.glob(adr_index.NUMBERED_GLOB))
     assert paths, f"no numbered ADRs found under {adr_index.ADR_DIR}"
 
     parsed, broken = [], []

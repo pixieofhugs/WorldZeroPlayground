@@ -64,7 +64,9 @@ _STATUS = re.compile(
 #: so strip the prefix rather than printing it twice.
 _TITLE_PREFIX = re.compile(r"\AADR-\d{4}\s*[—:-]\s*")
 
-_NUMBERED = "[0-9]" * 4 + "-*.md"
+#: The registry is the directory listing, so the pattern that defines it is
+#: named once and shared with the test.
+NUMBERED_GLOB = "[0-9][0-9][0-9][0-9]-*.md"
 
 STATUS_VOCABULARY = ("Accepted", "Reversed", "Superseded by", "Amended by")
 
@@ -128,9 +130,9 @@ def parse(path: Path) -> Adr:
     )
 
 
-def load(adr_dir: Path = ADR_DIR) -> list[Adr]:
+def load() -> list[Adr]:
     """Every numbered ADR, in number order."""
-    return [parse(path) for path in sorted(adr_dir.glob(_NUMBERED))]
+    return [parse(path) for path in sorted(ADR_DIR.glob(NUMBERED_GLOB))]
 
 
 def _cell(text: str) -> str:
@@ -138,9 +140,9 @@ def _cell(text: str) -> str:
     return text.replace("|", "\\|")
 
 
-def render(adrs: list[Adr], by_number: dict[str, Adr] | None = None) -> str:
+def render(adrs: list[Adr]) -> str:
     """The full text of `docs/adr/README.md`."""
-    index = by_number if by_number is not None else {a.number: a for a in adrs}
+    index = {a.number: a for a in adrs}
     live = sum(1 for a in adrs if a.is_live)
 
     lines = [
