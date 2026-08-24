@@ -76,13 +76,19 @@ const SLUGS = [
  *
  * The pattern is matched against `ns:dotted.key` with `{F}` standing for any
  * slug. Some families' per-faction key sat under a per-faction SECTION name
- * (`coven.manifesto.empty`, `snide.join.gateBody`, `ua.join.…`), which
- * is why several patterns name the section alternatives rather than a fixed
- * path — a literal grep returns zero for those, which is how the audit
- * undercounted them.
+ * (`coven.manifesto.empty`, `ephemerists.plate.…`), which is why `ABOUT`
+ * still names the section alternatives rather than a fixed path — a literal
+ * grep returns zero for those, which is how the 2026-08-16 audit undercounted
+ * them.
+ *
+ * The join panel used to need the same treatment: a
+ * `(join|roll|road|dispatch|registry|access)` alternation, one arm per faction,
+ * whose only job was to paper over seven names for one block. #2299 gave all
+ * seven the literal `join`, so the alternation is retired rather than widened
+ * — retiring it is the whole point. WIDENING IT BACK would re-admit the
+ * per-faction parent name this repo just paid to remove.
  */
 const ABOUT = '(about|manifesto|charter|practice|apparatus|manifest)'
-const JOIN = '(join|roll|road|dispatch|registry|access)'
 const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // --- common.json: the phone FieldDesk masthead -------------------------
   //
@@ -101,12 +107,12 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `factions:{F}\\.${ABOUT}\\.heading`, shared: 'factions:detail.aboutHeading', wording: 'About' },
   { banned: `factions:{F}\\.invitation\\.terms\\.1\\.label`, shared: 'factions:invitation.skillsLabel', wording: 'Required skills' },
   { banned: `factions:{F}\\.invitation\\.terms\\.2\\.label`, shared: 'factions:invitation.outputLabel', wording: 'Expected output' },
-  { banned: `factions:{F}\\.${JOIN}\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
+  { banned: `factions:{F}\\.join\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
   // The interpolation moved off the end of the sentence (#2368): "…to
   // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
   // that already carries one, and rendered "S.N.I.D.E..". The imperative is
   // still here, it just lands last. `catalog.test.ts` holds the general guard.
-  { banned: `factions:{F}\\.${JOIN}\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
+  { banned: `factions:{F}\\.join\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
   { banned: `factions:{F}\\.mobile\\.eyebrow`, shared: 'factions:detail.eyebrow', wording: 'Faction' },
   { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No praxis submitted yet.' },
   { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent praxis' },

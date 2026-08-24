@@ -476,7 +476,9 @@ describe('the four functional controls say one thing across every faction (#1863
   it('the join-panel confirm button reads Confirm, in one casing', () => {
     // The join panel's key used to sit under a per-faction section name
     // (`road`, `access`, `dispatch`…), which is why a literal grep for it
-    // returned zero and the audit undercounted the family. One key now.
+    // returned zero and the 2026-08-16 audit undercounted the family. #2299
+    // retired those names: all seven panels are `<slug>.join.*` now, so the
+    // literal grep this comment warns about finally works.
     const buttons = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
@@ -542,8 +544,9 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
    * pattern does not need a `.txt` arm.
    */
   const TERMINAL_VOICE = [
-    'factions.json:singularity.join.eligibleKicker',
-    'factions.json:singularity.join.gateKicker',
+    // `singularity.join.eligibleKicker` (`> ACCESS GRANTED`) and
+    // `.gateKicker` (`> NODE NOT YET ONLINE`) stood here. #2299 cut the kicker
+    // from all seven panels, so the two prompts left with their keys.
     'factions.json:singularity.join.joinButton',
     'factions.json:singularity.join.joining',
     'factions.json:singularity.invitation.kicker',
