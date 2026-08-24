@@ -69,7 +69,7 @@
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
  */
-import { useRef, type CSSProperties } from 'react'
+import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -216,6 +216,9 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
     showPicker,
   } = state
 
+  /** One id per field, so each label names its own control (#2488). */
+  const fieldId = useId()
+
   /** Cinzel small caps, the plate's label voice, over the layout's tracking. */
   const label = { fontFamily: CAPS, fontWeight: 500, letterSpacing: '0.24em' }
   /** Section heads sit on the plate, where the caption gold is measured. */
@@ -228,7 +231,6 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
     border: `1.5px solid ${LINE}`,
     borderRadius: 0,
     padding: 'var(--space-md)',
-    outline: 'none',
     boxSizing: 'border-box',
     fontFamily: READING,
     fontSize: 'var(--text-content)',
@@ -336,8 +338,10 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
         </div>
 
         {/* Chosen name */}
-        <ComposerSection rule={false} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
+        <ComposerSection rule={false} htmlFor={`${fieldId}-name`} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
           <input
+            id={`${fieldId}-name`}
+            data-composer-field
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={NAME_MAX}
@@ -354,8 +358,10 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
         </ComposerSection>
 
         {/* About */}
-        <ComposerSection rule={false} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
+        <ComposerSection rule={false} htmlFor={`${fieldId}-about`} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
           <textarea
+            id={`${fieldId}-about`}
+            data-composer-field
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={BIO_MAX}
@@ -370,8 +376,10 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
             alarm on the cap the way the name field's does: this is the field the
             profile header's identity slot is laid out against, so running out of
             room is worth seeing before the text stops appearing. */}
-        <ComposerSection rule={false} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
+        <ComposerSection rule={false} htmlFor={`${fieldId}-tagline`} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
           <textarea
+            id={`${fieldId}-tagline`}
+            data-composer-field
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
             maxLength={TAGLINE_MAX}

@@ -120,7 +120,7 @@
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
  */
-import { useRef, type CSSProperties } from 'react'
+import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -234,6 +234,9 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
     showPicker,
   } = state
 
+  /** One id per field, so each label names its own control (#2488). */
+  const fieldId = useId()
+
   /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
   /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
@@ -244,7 +247,6 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
     border: RULE,
     borderRadius: FIELD_RADIUS,
     padding: 'var(--space-md)',
-    outline: 'none',
     boxSizing: 'border-box',
     fontFamily: CHROME,
     fontSize: 'var(--text-content)',
@@ -388,8 +390,10 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
           </div>
 
           {/* Chosen name */}
-          <ComposerSection rule={false} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false} htmlFor={`${fieldId}-name`} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
             <input
+              id={`${fieldId}-name`}
+              data-composer-field
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               maxLength={NAME_MAX}
@@ -406,8 +410,10 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
           </ComposerSection>
 
           {/* About */}
-          <ComposerSection rule={false} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false} htmlFor={`${fieldId}-about`} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
             <textarea
+              id={`${fieldId}-about`}
+              data-composer-field
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={BIO_MAX}
@@ -422,8 +428,10 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               alarm on the cap the way the name field's does: this is the field the
               profile header's identity slot is laid out against, so running out of
               room is worth seeing before the text stops appearing. */}
-          <ComposerSection rule={false} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false} htmlFor={`${fieldId}-tagline`} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
             <textarea
+              id={`${fieldId}-tagline`}
+              data-composer-field
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               maxLength={TAGLINE_MAX}
