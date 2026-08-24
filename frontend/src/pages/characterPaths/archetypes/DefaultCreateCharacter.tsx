@@ -37,7 +37,7 @@
  * exemption they justify. Layout is flex/relative single-column on the phone —
  * no fixed-px grid drives the page (SPEC-faction-ui-profile §1a).
  */
-import { useRef, type CSSProperties } from 'react'
+import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -136,6 +136,9 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
     showPicker,
   } = state
 
+  /** One id per field, so each label names its own control (#2488). */
+  const fieldId = useId()
+
   return (
     <div className="page" data-skin="default">
       <button onClick={() => navigate('/')} style={backLink}>{t('createCharacter.back')}</button>
@@ -146,8 +149,10 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
           <h1 style={titleStyle}>{t('createCharacter.heading')}</h1>
 
           {/* Chosen name */}
-          <label style={eyebrow}>{t('createCharacter.nameLabel')}</label>
+          <label htmlFor={`${fieldId}-name`} style={eyebrow}>{t('createCharacter.nameLabel')}</label>
           <input
+            id={`${fieldId}-name`}
+            data-composer-field
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={NAME_MAX}
@@ -163,8 +168,10 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
           </div>
 
           {/* About */}
-          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.aboutLabel')}</label>
+          <label htmlFor={`${fieldId}-about`} style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.aboutLabel')}</label>
           <textarea
+            id={`${fieldId}-about`}
+            data-composer-field
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={BIO_MAX}
@@ -181,8 +188,10 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
               danger on the cap the way the name field's does: this is the field
               the profile header's identity slot is laid out against, so running
               out of room is worth seeing before the text stops appearing. */}
-          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.taglineLabel')}</label>
+          <label htmlFor={`${fieldId}-tagline`} style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.taglineLabel')}</label>
           <textarea
+            id={`${fieldId}-tagline`}
+            data-composer-field
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
             maxLength={TAGLINE_MAX}
@@ -200,7 +209,12 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
           {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar).
               The picker owns the hidden input and the "what's chosen" readout (#1149);
               the credential card on the right opens the same input through fileInputRef. */}
-          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></label>
+          {/* A SPAN, not a <label>: the portrait key and the calling grid below
+              it head a group of BUTTONS, and a <label> with nothing to point at
+              is an accessible name attached to nothing (#2488). `ComposerSection`
+              draws these the same way on every faction plate — a heading when no
+              `htmlFor` is passed — so this is the shared answer, not a local one. */}
+          <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></span>
           <PortraitPicker
             inputRef={fileInputRef}
             onChange={handleAvatarChange}
@@ -213,9 +227,9 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
           {/* Faction picker — only when the account holds invitations (ADR-0019) */}
           {showPicker && (
             <>
-              <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>
+              <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>
                 {t('createCharacter.callingLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.callingOptional')}</span>
-              </label>
+              </span>
               <div style={pickerGrid}>
                 {invited.map((slug) => {
                   const selected = factionSlug === slug
@@ -318,6 +332,9 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
     showPicker,
   } = state
 
+  /** One id per field, so each label names its own control (#2488). */
+  const fieldId = useId()
+
   // One string for the ring's accessible name and its visible caption (#1149).
   // The ring never showed the browser's "No file chosen" — its input has always
   // been hidden — but it had no accessible name either: the name fell through to
@@ -370,8 +387,10 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
 
       {/* Name */}
       <div>
-        <label style={label}>{t('createCharacter.nameLabel')}</label>
+        <label htmlFor={`${fieldId}-name`} style={label}>{t('createCharacter.nameLabel')}</label>
         <input
+          id={`${fieldId}-name`}
+          data-composer-field
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={NAME_MAX}
@@ -391,7 +410,8 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
       {/* Faction picker — only when the account holds invitations (ADR-0019) */}
       {showPicker && (
         <div>
-          <label style={label}>{t('createCharacter.callingLabel')}</label>
+          {/* A SPAN, not a <label> — see the desktop column's note. */}
+          <span style={label}>{t('createCharacter.callingLabel')}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)' }}>
             {invited.map((slug) => {
               const selected = factionSlug === slug
@@ -464,14 +484,14 @@ const eyebrow: CSSProperties = {
 }
 const nameInput: CSSProperties = {
   display: 'block', width: '100%', marginTop: 'var(--space-sm)', background: 'transparent', border: 'none',
-  borderBottom: `1.5px solid ${INK}`, outline: 'none',
+  borderBottom: `1.5px solid ${INK}`,
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-title)',
   color: INK, padding: 'var(--space-xs) 0 var(--space-sm)',
 }
 const bioInput: CSSProperties = {
   display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box', resize: 'none',
   background: FIELD, border: `1px solid ${BORDER}`,
-  borderRadius: 5, outline: 'none', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
+  borderRadius: 5, fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
   lineHeight: 1.6, color: INK, padding: 'var(--space-md)',
 }
 const pickerGrid: CSSProperties = {
@@ -536,7 +556,7 @@ const label: CSSProperties = {
 const field: CSSProperties = {
   display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box',
   background: 'var(--color-bg-page)', border: `1px solid ${BORDER}`,
-  borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)',
+  borderRadius: 8, fontFamily: 'var(--font-body)',
   color: INK, padding: 'var(--space-md)',
 }
 const mobileMetaRow: CSSProperties = {
