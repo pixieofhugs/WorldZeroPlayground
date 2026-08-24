@@ -22,7 +22,7 @@ interface NavLinkSpec {
 
 export default function NavBar() {
   const { t } = useTranslation('common')
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { adminMode, toggleAdminMode } = useAdminMode()
   /**
    * WHY THE NAV LINK CARRIES THE PENDING COUNT TOO (#1457)
@@ -222,14 +222,11 @@ export default function NavBar() {
                   {t('nav.createCharacter')}
                 </NavLink>
               )}
-              {/* STILL HERE ON PURPOSE — the port is not incomplete. #2154's
-                  brief has sign-out leaving the bar for the Settings Account
-                  section, but that section is #2155 and it has not landed.
-                  Removing it now would ship a desktop with no way to sign out,
-                  and `main` auto-deploys. #2155 is its remover. */}
-              <button onClick={signOut} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)' }}>
-                {t('nav.logout')}
-              </button>
+              {/* Sign out is GONE from the bar (#2155). It now lives once, in
+                  the Settings Account card, which the theme toggle beside this
+                  is the way in to. Removed only in the PR that shipped that
+                  card — these were the app's two sign-out call sites, and
+                  `main` auto-deploys. */}
             </>
           ) : (
             /* One button, two ways in (#1773) — so it opens the choice rather
