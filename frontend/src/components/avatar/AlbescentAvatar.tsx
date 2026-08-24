@@ -77,7 +77,9 @@ import type { FactionAvatarProps } from './FactionAvatar'
  * stylesheet (#911), and an inline `animation:` would bypass the reduced-motion
  * guard (#1003). Stilled, the layer is the spectrum ring it covers, drawn in the
  * same conic at rest: it can park rather than freeze to nothing, the way
- * `.alb-profile-edge` does and `.alb-spark` cannot.
+ * `.alb-profile-edge` does. (The counter-example used to be `.alb-spark`, whose
+ * keyframe start was invisible; #2555 retired the twinkle from the kit, and
+ * Coven's `.cvn-profile-spark` is the surviving mark that must park.)
  */
 /**
  * The disc is "large and alone" at or above this, and one of many below it.
