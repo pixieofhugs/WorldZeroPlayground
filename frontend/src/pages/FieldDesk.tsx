@@ -539,7 +539,7 @@ const SEE_MORE_HREF: Record<BrowseTab, string> = {
  * landing tab costs one, and the other costs nothing until it is asked for.
  */
 function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
-  const { t } = useTranslation('home')
+  const { t } = useTranslation(['home', 'common'])
   const { user } = useAuth()
   const [tab, setTab] = useState<BrowseTab>('tasks')
   // `null` = never fetched, `[]` = fetched and empty. The pair is what makes the
@@ -620,7 +620,7 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
       </div>
 
       {items === null ? (
-        <p className="font-body text-muted">{t('signedIn.browse.loading')}</p>
+        <p className="font-body text-muted">{t('common:loading')}</p>
       ) : items.length === 0 ? (
         <p className="font-body text-muted">{t(`signedIn.browse.empty.${tab}`)}</p>
       ) : (

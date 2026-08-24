@@ -25,7 +25,7 @@ import MetataskPicker from "../components/metataskSeal/MetataskPicker";
 import MetataskRemoveConfirm from "../components/metataskSeal/MetataskRemoveConfirm";
 
 export default function EditPraxis() {
-  const { t } = useTranslation("forms");
+  const { t } = useTranslation(["forms", "common"]);
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
 
@@ -49,7 +49,7 @@ export default function EditPraxis() {
     return (
       <div className="py-8 font-body text-muted">
         <PageTitle title={t("editPraxis.loadingPageTitle")} />
-        {t("editPraxis.loading")}
+        {t("common:loading")}
       </div>
     );
   }

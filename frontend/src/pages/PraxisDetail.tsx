@@ -36,11 +36,11 @@ import { surfaceMap } from '../factions'
 import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
 
 export default function PraxisDetail() {
-  const { t } = useTranslation('praxis')
+  const { t } = useTranslation(['praxis', 'common'])
   const { id } = useParams<{ id: string }>()
   const state = usePraxisDetail(id)
 
-  if (state.loading) return <div className="py-8 font-body text-muted">{t('detail.loading')}</div>
+  if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (state.fetchError) return (
     <div className="py-8">
       <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">

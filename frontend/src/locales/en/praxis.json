@@ -73,7 +73,6 @@
     }
   },
   "detail": {
-    "loading": "Loading...",
     "retry": "Try refreshing.",
     "notFound": "Not found.",
     "sections": {
@@ -165,7 +164,6 @@
   "comments": {
     "heading_one": "{{count}} comment",
     "heading_other": "{{count}} comments",
-    "loading": "Loading…",
     "loadError": "Could not load comments.",
     "composerPlaceholder": "Say something worth keeping…",
     "mentionHint": "@ to mention",

@@ -37,7 +37,6 @@
     "loadError": "Couldn't load tasks."
   },
   "detail": {
-    "loading": "Loading...",
     "fetchError": "<0>Try refreshing.</0>",
     "notFound": "Task not found.",
     "pageTitle": "Task",

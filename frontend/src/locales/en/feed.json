@@ -2,10 +2,8 @@
   "page": {
     "title": "Updates",
     "eyebrow": "Activity Feed",
-    "loading": "Loading...",
     "loadError": "Couldn't load the activity feed.",
     "loadMore": "Load older updates",
-    "loadingMore": "Loading…",
     "loadMoreError": "Couldn't load more updates.",
     "showing_one": "Showing {{count}} update",
     "showing_other": "Showing {{count}} updates"

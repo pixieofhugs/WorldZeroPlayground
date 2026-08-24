@@ -89,7 +89,7 @@ export default function Updates() {
 
       {/* ── Feed ── */}
       {loading ? (
-        <div className="py-8 font-body text-muted">{t('page.loading')}</div>
+        <div className="py-8 font-body text-muted">{tc('loading')}</div>
       ) : fetchError ? (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
           {fetchError}{' '}
@@ -125,7 +125,7 @@ export default function Updates() {
             disabled={loadingMore}
             className="feed-load-more"
           >
-            {loadingMore ? t('page.loadingMore') : t('page.loadMore')}
+            {loadingMore ? tc('loading') : t('page.loadMore')}
           </button>
         </div>
       )}

@@ -19,7 +19,7 @@ import { TAGLINE_MAX } from '../useCreateCharacter'
  * (SPEC-faction-ui-profile §1a).
  */
 export default function DefaultEditCharacter({ state }: { state: EditCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -49,7 +49,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
     handleDelete,
   } = state
 
-  if (loading) return <p className="font-body text-muted">{t('editCharacter.loading')}</p>
+  if (loading) return <p className="font-body text-muted">{t('common:loading')}</p>
   if (!character) return <p className="font-body text-muted">{t('editCharacter.notFound')}</p>
   if (!isOwner) return <p className="font-body text-muted">{t('editCharacter.notOwner')}</p>
 

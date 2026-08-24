@@ -340,7 +340,7 @@ export default function CommentThread({
    */
   seed?: CommentOut[] | null
 }) {
-  const { t } = useTranslation('praxis')
+  const { t } = useTranslation(['praxis', 'common'])
   const { user } = useAuth()
   const [comments, setComments] = useState<CommentOut[]>(seed ?? [])
   const [loading, setLoading] = useState(seed == null)
@@ -393,7 +393,7 @@ export default function CommentThread({
       )}
       {loading && (
         <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-          {t('comments.loading')}
+          {t('common:loading')}
         </p>
       )}
       {error && (

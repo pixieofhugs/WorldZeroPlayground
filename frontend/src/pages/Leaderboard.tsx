@@ -68,7 +68,7 @@ export default function Leaderboard() {
   if (loading) {
     return (
       <div className="py-8">
-        <p className="font-body content-text text-muted">{t('leaderboard.loading')}</p>
+        <p className="font-body content-text text-muted">{t('loading')}</p>
       </div>
     )
   }
