@@ -628,9 +628,12 @@
    rail as the last `background-position` walk in the kit.
 
    #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
-   the epic's technique ruling taken at its word. `.alb-composer-edge` is the
-   edit-praxis sheet's ring; `.alb-desk-edge` is the mobile field desk's
-   identity card's.
+   the epic's technique ruling taken at its word. `.alb-desk-edge` is the mobile
+   field desk's identity card's ring. The other was `.alb-composer-edge`, the
+   edit-praxis sheet's, and #2553 deleted it: the composer sheet had carried na's
+   OWN 3px spectrum border since #2520, so the ring was a second frame just
+   inside the first. Eight mounts now, and no keyframe left with it — the other
+   eight still reference `alb-edge-travel`.
 
    #2519 SWAPPED THE SECOND OF THOSE FOR ANOTHER RING and the list is shorter by
    nothing. It used to read `.alb-desk .spectrum-rule` — the desk's filled 3px
@@ -647,7 +650,6 @@
   .alb-detail-edge::before,
   .alb-praxis-edge::before,
   .alb-feed-edge::before,
-  .alb-composer-edge::before,
   .alb-desk-edge::before,
   .alb-plate-edge::before,
   .alb-profile-edge::before {
