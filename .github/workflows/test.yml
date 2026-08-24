@@ -57,7 +57,7 @@ jobs:
         working-directory: backend
 
       - name: Run tests with coverage
-        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=80
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=92
         working-directory: backend
 
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript
