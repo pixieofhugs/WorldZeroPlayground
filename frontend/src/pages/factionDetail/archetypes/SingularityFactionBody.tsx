@@ -206,10 +206,17 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           {/* The panel opened on a shell prompt (`singularity.manifest.command`,
               "> cat /faction/manifest.txt"). #1909 cut it: no other faction had
               a command line over its about panel, and the audit ruled the
-              surface generic. Singularity is the one faction with no
-              about-panel HEADING to fall back on — #1910 gives all seven the
-              shared "About", and until it lands this block opens on the
-              description itself. */}
+              surface generic. That left this the ONE about panel on the site with
+              no heading at all, pending #1910 — which closed without giving it
+              one, so the region a reader met first was the only unlabelled one
+              anywhere (#2547).
+
+              `SectionHeading` is this file's own, the same component the Tasks
+              and Praxis sections below already use, so the phosphor title and its
+              signal rule come for free. No string is minted: `detail.aboutHeading`
+              is the shared key the other seven read, and `factionCopyCollapse`
+              names it as the one the family collapsed onto. */}
+          <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
           <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
               paragraphs.map((para, i) => (
