@@ -506,7 +506,10 @@ describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', ()
     const body = text(html())
     expect(body).toContain(i18n.t('praxis:detail.seal.label', { faction: 'The Ephemerists' }))
     expect(body).toContain('Logged as a dawn field-observation')
-    expect(body).toContain(i18n.t('praxis:detail.seal.bonus', { points: 35 }))
+    // Two nodes since #2562: the bonus is drawn in the compass rose, the score
+    // stamp's anatomy, so the catalog split the one "+N PTS" string in two.
+    expect(body).toContain(i18n.t('praxis:detail.seal.bonusFigure', { points: 35 }))
+    expect(body).toContain(i18n.t('praxis:card.stamp.points', { count: 35 }))
   })
 
   it('sits FLAT — the specimen tilt is staging, not the seal', () => {

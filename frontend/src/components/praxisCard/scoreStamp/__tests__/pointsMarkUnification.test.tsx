@@ -4,8 +4,9 @@
  * ## The two seams
  *
  * 1. THE MOUNT SEAM — the rendered markup of every surface a faction draws its
- *    points mark on: its task card, its praxis-card score stamp, and — for
- *    S.N.I.D.E. — its TASK DETAIL page. #2042's finding was that each faction drew
+ *    points mark on: its task card, its praxis-card score stamp, its METATASK
+ *    SEAL since #2562 (section 1b, eight of the nine), and — for S.N.I.D.E. —
+ *    its TASK DETAIL page. #2042's finding was that each faction drew
  *    its points mark on each with almost no sharing, so what has to hold is that
  *    one drawing now appears on all of them and the other copies are GONE. Every
  *    surface is named per faction below; nothing here asserts a count of unified
@@ -29,7 +30,9 @@
  *
  * WOW IS DELIBERATELY IN THE NOT-UNIFIED TABLE, with the arithmetic that keeps it
  * there. Three unified plus one measured refusal is the shape of #2042; a silent
- * omission is not.
+ * omission is not. #2562 re-measured that refusal on a third ground — the
+ * metatask seal's chronicle sheet — and it holds; the block at the end of this
+ * file carries the second set of figures.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -67,6 +70,8 @@ import EphemeristsScoreStamp from "../EphemeristsScoreStamp";
 import SingularityScoreStamp from "../SingularityScoreStamp";
 import SnideScoreStamp from "../SnideScoreStamp";
 import WowScoreStamp from "../WowScoreStamp";
+import MetataskSeal from "../../../metataskSeal/MetataskSeal";
+import { EVERYMEN_COG_PATH } from "../../../factionMarks/everymenCogs";
 import SnideTaskDetail from "../../../../pages/taskDetail/archetypes/SnideTaskDetail";
 import type { TaskDetailState } from "../../../../pages/taskDetail/useTaskDetail";
 import { aTask } from "../../../../test/fixtures";
@@ -141,6 +146,21 @@ function snideDetail(): string {
   return renderToStaticMarkup(
     <MemoryRouter>
       <SnideTaskDetail state={state} />
+    </MemoryRouter>,
+  );
+}
+
+/**
+ * One metatask seal, dispatched on its ISSUING faction (#2562).
+ *
+ * A seal is a foreign sticker, so the slug that picks the skin is
+ * `metatask_faction_slug` and not the task's own — and its band is a `<Link>`
+ * like every other `CardMasthead`, hence the router.
+ */
+function seal(slug: string): string {
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <MetataskSeal metatasks={[aTask({ metatask_faction_slug: slug, point_value: 10 })]} />
     </MemoryRouter>,
   );
 }
@@ -339,6 +359,95 @@ describe("each mount overrides what its ground demands (#2042)", () => {
  * deletes this block; until then a WOW surface quietly adopting the other's mark
  * fails, because that is the guess #2042 says not to make.
  */
+/* -------------------------------------------------------------------------- */
+/* 1b. The metatask seal — a further surface for eight of the nine marks       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE SEAL IS A SURFACE THIS CENSUS OWNS (#2562), and it has to be, for exactly
+ * the reason the docstring above gives: a surface this list omits is invisible
+ * rather than red. #2562 gave all nine metatask seals one anatomy and drew the
+ * bonus as the faction's own points mark, so eight of these are the drawing's
+ * THIRD or FOURTH mount and every one of them is named below.
+ *
+ * IT IS A SEPARATE TABLE RATHER THAN A COLUMN ON `UNIFIED`, and that is not
+ * tidiness. `UNIFIED` pairs a fragment with a `retired` list applied to every
+ * surface in the entry, and the na seal legitimately emits one of the retired
+ * declarations: the band's `DefaultSigil` paints
+ * `--faction-default-rainbow-conic` inline, which is the SIGIL doing what it has
+ * always done and not the ring re-inlining its annulus. Folding the seal in
+ * would have meant weakening that assertion for the card and the stamp too.
+ *
+ * WOW IS ABSENT ON PURPOSE and is measured below with the other refusal.
+ */
+const SEALED = [
+  {
+    faction: "na",
+    skin: "components/metataskSeal/skins/DefaultSeal.tsx",
+    mark: "components/factionMarks/DefaultPointsRing.tsx",
+    fragment: 'class="spectrum-dial"',
+  },
+  {
+    // The society mounts the na drawing, which is how it mounts every na
+    // drawing — lettered in `--albescent-reveal-*` rather than the na family,
+    // which is what `valueColor`/`unitColor` arrived for.
+    faction: "albescent",
+    skin: "components/metataskSeal/skins/AlbescentSeal.tsx",
+    mark: "components/factionMarks/DefaultPointsRing.tsx",
+    fragment: 'class="spectrum-dial"',
+  },
+  {
+    faction: "coven",
+    skin: "components/metataskSeal/skins/CovenSeal.tsx",
+    mark: "components/factionMarks/CovenCauldron.tsx",
+    // The pot's belled body — drawn nowhere else, and not on `CovenBand`.
+    fragment: "M25 54 C25 92 42 112 66 112",
+  },
+  {
+    faction: "ephemerists",
+    skin: "components/metataskSeal/skins/EphemeristsSeal.tsx",
+    mark: "components/factionMarks/ephemeristsPlate.tsx (CompassRose)",
+    fragment: "M50 8 L55.5 26 L44.5 26 Z",
+  },
+  {
+    // The one seal whose mark is FURNITURE rather than a points device: the
+    // Everymen cog, filled with the mast's own red and holding the figure. The
+    // owner named it on #2562; `PointsRoundel` stays the card's and the stamp's.
+    faction: "everymen",
+    skin: "components/metataskSeal/skins/EverymenSeal.tsx",
+    mark: "components/factionMarks/everymenCogs.tsx (EverymenCog)",
+    fragment: EVERYMEN_COG_PATH,
+  },
+  {
+    faction: "singularity",
+    skin: "components/metataskSeal/skins/SingularitySeal.tsx",
+    mark: "components/factionMarks/SingularityReadout.tsx",
+    fragment: "background:var(--faction-singularity-term-readout)",
+  },
+  {
+    faction: "snide",
+    skin: "components/metataskSeal/skins/SnideSeal.tsx",
+    mark: "components/factionMarks/snideAtoms.tsx (PenCircle)",
+    fragment: PEN_LOOP,
+  },
+  {
+    // The ensō's own signature, not the ring's: `UaSigil` is drawn TWICE on this
+    // seal — once as the band's faction mark and once as the score ring — which
+    // is the shipped shape on `UaTaskCard` too. `min(` is `UaEnsoScore`'s
+    // numeral ceiling and only it emits one.
+    faction: "ua",
+    skin: "components/metataskSeal/skins/UaSeal.tsx",
+    mark: "components/factionMarks/uaAtoms.tsx (UaEnsoScore)",
+    fragment: "font-size:min(var(--text-title)",
+  },
+] as const;
+
+describe.each(SEALED)("$faction's metatask seal mounts the shared mark (#2562)", (entry) => {
+  it(`${entry.skin} draws ${entry.mark}, exactly once`, () => {
+    expect(occurrences(seal(entry.faction), entry.fragment)).toBe(1);
+  });
+});
+
 describe("WOW still draws two marks, on purpose (#2042)", () => {
   it("keeps the crowned plaque on the card and the star on the stamp", () => {
     const decree = card(WowTaskCard);
@@ -546,5 +655,59 @@ describe("the WOW plaque has no ground on the stamp (#2042)", () => {
     );
     // Light 2.00:1, dark 6.38:1 — the frame alone cannot carry the plate in both.
     if (theme === "light") expect(ratio, formatRatio(ratio)).toBeLessThan(AA_LARGE);
+  });
+});
+
+/**
+ * THE SAME REFUSAL, RE-MEASURED ON THE METATASK SEAL (#2562).
+ *
+ * #2562 gave eight of nine seals their faction's points mark and told this one
+ * to re-measure rather than assume, because the seal is a THIRD ground: not the
+ * decree's parchment the plaque was drawn on and not the stamp's plate it could
+ * not be inset into, but `--faction-wow-chronicle-bg`, the chronicle sheet.
+ *
+ * The verdict is the same and the arithmetic is different, which is why it is
+ * written out rather than cited. The plaque's fill against this sheet is a plate
+ * you cannot see, and the gold frame that would be all that survives of it is
+ * under the 3:1 a non-text mark owes — in light, where WOW is a cream card.
+ *
+ * So `WowSeal` draws the anatomy without the device: the figure over its
+ * caption, in `-stamp-total` over `-card-accent`, both measured on this sheet in
+ * `factionContrast.test.ts`. If a future ruling gives WOW a plate of its own,
+ * BOTH of these blocks go green together and the plaque travels to both
+ * surfaces at once — which is the outcome #2042 wanted and could not have.
+ */
+describe("the WOW plaque has no ground on the metatask seal either (#2562)", () => {
+  it.each(BOTH)("the plaque's fill is the seal's own sheet in %s", (theme) => {
+    // 1.12:1 light · 1.15:1 dark.
+    const ratio = contrastRatio(
+      opaque("--faction-wow-chronicle-panel", theme),
+      opaque("--faction-wow-chronicle-bg", theme),
+    );
+    expect(ratio, formatRatio(ratio)).toBeLessThan(1.2);
+  });
+
+  it("and its gold frame is under 3:1 on that sheet in light", () => {
+    // 2.24:1 light (7.36:1 dark) — one cascade is enough to refuse.
+    const ratio = contrastRatio(
+      opaque("--faction-wow-chronicle-gold", "light"),
+      opaque("--faction-wow-chronicle-bg", "light"),
+    );
+    expect(ratio, formatRatio(ratio)).toBeLessThan(AA_LARGE);
+  });
+
+  it.each(BOTH)("so the seal keeps the figure it can letter, in %s", (theme) => {
+    // The replacement is not a fallback: 5.38:1 light · 9.70:1 dark for the
+    // figure, 5.79:1 · 7.94:1 for the caption under it.
+    const figure = contrastRatio(
+      opaque("--faction-wow-stamp-total", theme),
+      opaque("--faction-wow-chronicle-bg", theme),
+    );
+    expect(figure, formatRatio(figure)).toBeGreaterThanOrEqual(AA_NORMAL);
+    const caption = contrastRatio(
+      opaque("--faction-wow-card-accent", theme),
+      opaque("--faction-wow-chronicle-bg", theme),
+    );
+    expect(caption, formatRatio(caption)).toBeGreaterThanOrEqual(AA_NORMAL);
   });
 });
