@@ -71,7 +71,6 @@
     "DefaultScoreStamp": "src/components/praxisCard/scoreStamp/DefaultScoreStamp.tsx",
     "DefaultSeal": "src/components/metataskSeal/skins/DefaultSeal.tsx",
     "DefaultSelectCard": "src/components/selectCard/DefaultSelectCard.tsx",
-    "DefaultSettings": "src/pages/settings/mobileArchetypes/DefaultSettings.tsx",
     "DefaultSigil": "src/components/sigil/DefaultSigil.tsx",
     "DefaultTaskCard": "src/components/taskCard/DefaultTaskCard.tsx",
     "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
@@ -403,10 +402,6 @@
     "DefaultProposeTask": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "DefaultSettings": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "DefaultTaskDetail": {
       "cardMode": "single",

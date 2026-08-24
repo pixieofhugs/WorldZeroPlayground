@@ -5,7 +5,6 @@ import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
 import { SignInSheet } from './SignInOptions'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
-import { useTheme } from '../hooks/useTheme'
 import PendingBadge from './layout/PendingBadge'
 
 interface NavLinkSpec {
@@ -24,9 +23,7 @@ interface NavLinkSpec {
 export default function NavBar() {
   const { t } = useTranslation('common')
   const { user, signOut } = useAuth()
-  const { theme, toggle } = useTheme()
   const { adminMode, toggleAdminMode } = useAdminMode()
-  const dark = theme === 'dark'
   /**
    * WHY THE NAV LINK CARRIES THE PENDING COUNT TOO (#1457)
    * ------------------------------------------------------
@@ -174,21 +171,29 @@ export default function NavBar() {
           </button>
         )}
 
-        {/* Theme toggle */}
-        <button
-          onClick={toggle}
-          className="label-caption"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 'var(--space-xs) var(--space-sm)',
-            color: 'var(--color-text-tertiary)',
-            transition: 'color 150ms',
-          }}
-        >
-          {dark ? t('nav.themeToggle.toLight') : t('nav.themeToggle.toDark')}
-        </button>
+        {/* The desktop way IN to Settings (#2154). This slot used to be a bare
+            theme flip; the theme is now one row of the Appearance section, on a
+            page that also holds animations, notifications, privacy, language,
+            your data and the account. A bar that flips the palette and hides
+            everything else beside it is a bar that has to grow a button per
+            setting. One link, and the page holds the rest.
+
+            Signed in only: `/settings` is a `ProtectedRoute`, so for a guest
+            this would be a link to a redirect. Hidden, not disabled. */}
+        {user && (
+          <NavLink
+            to="/settings"
+            className="label-caption"
+            style={({ isActive }) => ({
+              textDecoration: 'none',
+              padding: 'var(--space-xs) var(--space-sm)',
+              color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+              transition: 'color 150ms',
+            })}
+          >
+            {t('settings.open')}
+          </NavLink>
+        )}
 
         {/* User area */}
         <div className="flex items-center gap-3 shrink-0">
@@ -217,6 +222,11 @@ export default function NavBar() {
                   {t('nav.createCharacter')}
                 </NavLink>
               )}
+              {/* STILL HERE ON PURPOSE — the port is not incomplete. #2154's
+                  brief has sign-out leaving the bar for the Settings Account
+                  section, but that section is #2155 and it has not landed.
+                  Removing it now would ship a desktop with no way to sign out,
+                  and `main` auto-deploys. #2155 is its remover. */}
               <button onClick={signOut} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)' }}>
                 {t('nav.logout')}
               </button>
