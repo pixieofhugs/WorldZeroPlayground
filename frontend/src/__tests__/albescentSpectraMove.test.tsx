@@ -40,7 +40,7 @@
  * no compositor in CI (SPEC-testing.md), so nothing here proves a pixel. The
  * pixels are visual QA and stated outstanding on the PR.
  */
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -126,6 +126,176 @@ describe('the census: every Albescent surface with a classed spectrum wears the 
     expect(at).toBeGreaterThan(-1)
     expect(INDEX.slice(at, INDEX.indexOf('}', at))).toContain('display: none')
   })
+})
+
+/**
+ * THE ORNAMENT / FRAME TABLE, MADE EXECUTABLE (#2543).
+ *
+ * The census above is per FILE — it asserts the marker string appears in each
+ * Albescent wrapper. That cannot see the selector the marker exists to feed.
+ * `.alb-moves .spectrum-rule:empty` reads a MOUNT, and `:empty` is the whole
+ * ornament/frame distinction: nest one span inside a hairline and that spectrum
+ * stops moving with every test in the repo still green. So this is the same
+ * census, per MOUNT. Every `.spectrum-rule` in the kit, in source order within
+ * its file, with the side of the line it is on:
+ *
+ *   ORNAMENT — an `aria-hidden` hairline, band, chip or progress fill with no
+ *     children. `:empty` reaches it, so it travels. It must STAY CHILDLESS.
+ *   FRAME — a padded ramp wrapped around an opaque inner sheet. `:empty` must
+ *     NOT reach it, because a travelling child paints over the content the
+ *     frame frames. It must KEEP ITS CHILDREN.
+ *
+ * Four frames, and they are exactly the four `.alb-moves`'s own comment names
+ * in prose: the ×mult badge and the action panel on the task detail, the proof
+ * panel on the praxis detail, the profile's identity band. This is that
+ * paragraph, in a form the suite can read.
+ *
+ * `.spectrum-dial` has no rows and that is not an omission: neither of its
+ * selectors carries `:empty`. The rim is drawn whether or not there is a face,
+ * and `.alb-moves .spectrum-dial > *` lifts the face when there is one, so a
+ * dial has no childless-ness to pin. `FdlLaurel`'s dial is childless and the
+ * roster medallion's is not; both are correct, which is why neither is listed.
+ *
+ * READ FROM SOURCE, NOT FROM A RENDER, deliberately. Several of these mounts
+ * sit behind a prop or a form factor (`hasWorking`, `eyebrowFaction`,
+ * `desktop`), so a fixture rendering each surface once would cover a subset and
+ * call the rest guarded — the same blindness this issue is about. A scan sees
+ * every mount a file declares, reachable in that fixture or not.
+ */
+type Mount = readonly ['ornament' | 'frame', string]
+
+const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
+  '../components/metataskSeal/skins/AlbescentSeal.tsx': [
+    ['ornament', "the pale sheet's spectrum strip"],
+  ],
+  '../components/praxisCard/desktop/DefaultPraxisCard.tsx': [
+    ['ornament', 'the vote divider'],
+  ],
+  '../components/praxisCard/scoreStamp/DefaultScoreStamp.tsx': [
+    ['ornament', 'the rule over the working out'],
+  ],
+  '../components/taskCard/DefaultTaskCard.tsx': [
+    ['ornament', 'the in-progress chip'],
+    ['ornament', 'the CTA rule'],
+  ],
+  '../pages/characterProfile/archetypes/DefaultProfileBody.tsx': [
+    ['ornament', "`SectionHeading`'s hairline, drawn three times"],
+    ['frame', 'the identity band — `.alb-profile-edge` already travels on it'],
+    ['ornament', 'the level-bar fill (epic #2496 ruling 3 names this one)'],
+  ],
+  '../pages/factionDetail/archetypes/DefaultFactionBody.tsx': [
+    ['ornament', "`PLATE_RULE`, the plate's hairline"],
+  ],
+  '../pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx': [
+    ['ornament', "the desk's head bar — `display: none` under `.alb-desk`"],
+  ],
+  '../pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx': [
+    ['ornament', "`sectionHead`'s trailing hairline"],
+    ['frame', 'the proof panel, around the media gallery'],
+    ['ornament', 'the sheet-head band'],
+  ],
+  '../pages/taskDetail/archetypes/DefaultTaskDetail.tsx': [
+    ['ornament', "`sectionHead`'s trailing hairline"],
+    ['frame', 'the ×mult badge, around the multiplier readout'],
+    ['ornament', 'the breakdown hairline'],
+    ['frame', 'the action panel, around the worth cell and the CTA'],
+    ['ornament', 'the eyebrow faction chip'],
+    ['ornament', "the gallery head's hairline"],
+  ],
+}
+
+const SRC = fileURLToPath(new URL('../', import.meta.url))
+
+/**
+ * Every `.spectrum-rule` element a file declares, in source order, and whether
+ * it is written CHILDLESS — which is what `:empty` matches at runtime. Childless
+ * is a self-closing tag, or an open tag whose next non-space characters are its
+ * own close.
+ */
+function ruleMounts(source: string): { line: number; childless: boolean }[] {
+  const mounts: { line: number; childless: boolean }[] = []
+  for (const attr of source.matchAll(/className=(["'])([^"']*)\1/g)) {
+    if (!attr[2].split(/\s+/).includes('spectrum-rule')) continue
+    const at = attr.index ?? 0
+    // Walk to the end of this opening tag. A `>` inside a prop expression, a
+    // string or a comment is not the tag's, so braces, quotes and comments are
+    // all tracked past it — `DefaultPraxisCard`'s divider carries a `//` note
+    // holding both an apostrophe and a backtick, and either one read as a quote
+    // swallows the `/>` and reports a childless mount as full.
+    let i = at + attr[0].length
+    let depth = 0
+    let quote = ''
+    for (; i < source.length; i += 1) {
+      const c = source[i]
+      if (quote) {
+        if (c === '\\') i += 1
+        else if (c === quote) quote = ''
+      } else if (c === '/' && source[i + 1] === '/') {
+        i = source.indexOf('\n', i)
+      } else if (c === '/' && source[i + 1] === '*') {
+        i = source.indexOf('*/', i) + 1
+      } else if (c === '"' || c === "'" || c === '`') quote = c
+      else if (c === '{') depth += 1
+      else if (c === '}') depth -= 1
+      else if (c === '>' && depth === 0) break
+    }
+    mounts.push({
+      line: source.slice(0, at).split('\n').length,
+      childless: source[i - 1] === '/' || /^\s*<\//.test(source.slice(i + 1)),
+    })
+  }
+  return mounts
+}
+
+/** Every file under `src/` that mounts one, tests aside — so a NEW file cannot
+ *  grow a spectrum without appearing in the table above. */
+const filesWithARule = () =>
+  readdirSync(SRC, { recursive: true, encoding: 'utf8' })
+    .map((entry) => entry.split(/[\\/]/).join('/'))
+    .filter((rel) => rel.endsWith('.tsx') && !rel.includes('__tests__'))
+    .filter((rel) => ruleMounts(readFileSync(`${SRC}${rel}`, 'utf8')).length > 0)
+    .map((rel) => `../${rel}`)
+    .sort()
+
+describe('the census, per mount: which spectra travel and which frame content', () => {
+  it('the table classifies every file in src/ that mounts a rule', () => {
+    expect(filesWithARule()).toEqual(Object.keys(SPECTRUM_MOUNTS).sort())
+  })
+
+  for (const [path, table] of Object.entries(SPECTRUM_MOUNTS)) {
+    const file = path.slice(path.lastIndexOf('/') + 1)
+
+    table.forEach(([kind, name], index) => {
+      const rule =
+        kind === 'ornament'
+          ? 'ORNAMENT — childless, so `:empty` reaches it and it travels'
+          : 'FRAME — holds content, so `:empty` misses it and it stays still'
+
+      it(`${file}: ${name} is ${rule}`, () => {
+        const found = ruleMounts(read(path))
+        expect(
+          found.length,
+          `${file} declares ${found.length} \`.spectrum-rule\` mounts and the ` +
+            `table classifies ${table.length}. A new mount needs a row saying ` +
+            'whether it travels or frames something.',
+        ).toBe(table.length)
+
+        const mount = found[index]
+        expect(
+          mount.childless,
+          kind === 'ornament'
+            ? `${file}:${mount.line} — ${name} is an ORNAMENT and has GAINED A ` +
+              'CHILD, so `.alb-moves .spectrum-rule:empty` no longer matches it ' +
+              'and it has silently stopped moving. Keep the mount empty and put ' +
+              'the child in a sibling, or move it to the frame side of the table ' +
+              'and say why it may stand still.'
+            : `${file}:${mount.line} — ${name} is a FRAME and has LOST ITS ` +
+              'CHILDREN, so `.alb-moves .spectrum-rule:empty` now matches it and ' +
+              'a travelling child will paint over what the frame frames.',
+        ).toBe(kind === 'ornament')
+      })
+    })
+  }
 })
 
 describe('the track lives on the blocking sheet', () => {
