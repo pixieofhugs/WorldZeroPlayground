@@ -879,11 +879,30 @@ export interface paths {
         };
         /**
          * List Factions
-         * @description Return all non-hidden factions.
+         * @description Return all non-hidden factions — Albescent included, for everyone.
          *
-         *     Albescent is a secret society (ADR-0027, #390): it is omitted unless the
-         *     current account has been revealed to it. Optional auth — anonymous callers
-         *     stay anonymous and never see Albescent.
+         *     **This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is
+         *     still a secret society, but secrecy is now expressed as REDACTION at the
+         *     render rather than as omission at the wire: the eighth row ships to every
+         *     caller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``
+         *     for a viewer ``/auth/me`` has not revealed. Hiding a row taught an
+         *     unrevealed player nothing; a row they can see and cannot read is the locked
+         *     door with no keyhole the mechanic is actually about.
+         *
+         *     The optional-auth dependency went with the filter. It existed to answer one
+         *     question — "is this viewer revealed?" — and this handler no longer asks it,
+         *     so resolving an account here would be a read nothing consumes. The predicate
+         *     itself is untouched and still governs the surfaces that DO ask
+         *     (``services.progression``, ``faction_slugs``, ``services.current_user``);
+         *     what changed is that the faction directory stopped being one of them.
+         *
+         *     What this handler is NOT is a redaction point. ``FactionOut`` is
+         *     ``{slug, status}`` and carries no prose, so serving the row leaks the slug
+         *     and nothing else — the same slug the wire has always carried on every
+         *     Albescent-authored task and praxis. Whether ``/factions`` should one day
+         *     serve a *redacted row* rather than the real one, so the tease survives a
+         *     reader of the network tab, is the follow-on ADR-0082 names and does not
+         *     settle.
          */
         get: operations["list_factions_factions_get"];
         put?: never;
@@ -934,8 +953,13 @@ export interface paths {
          * Get Faction Status
          * @description Return faction page data: current faction, per-faction status, and letters.
          *
-         *     Albescent (ADR-0027, #390) is omitted from ``all_factions`` unless this
-         *     account has been revealed to the secret society.
+         *     ``all_factions`` carries Albescent for every caller since #2409 — the same
+         *     move ``list_factions`` makes, and it has to be the same move or the two
+         *     payloads the directory joins would disagree about how many cards there are.
+         *     The status this row reports is the ordinary invite-gated one, so an
+         *     unrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every
+         *     string redacts. Reveal governs the word; ``defect_to_faction``'s eligibility
+         *     guard still governs the door (ADR-0082).
          *
          *     ``invitations`` is not filtered the same way, and does not need to be:
          *     ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
@@ -6255,9 +6279,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -6268,15 +6290,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FactionOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

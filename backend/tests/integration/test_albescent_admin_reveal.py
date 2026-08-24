@@ -5,8 +5,6 @@ short-circuited by ``is_admin``. These tests drive it through every route that
 consults it, because the risk of this change is not the predicate — it is a
 reader that inlines the column instead and drifts:
 
-* ``GET /factions``          → ``routers.factions.list_factions``
-* ``GET /factions/status``   → ``routers.factions.get_faction_status``
 * ``GET /game-config``       → ``services.progression.visible_level_profiles``
 * ``GET /auth/me``           → ``services.current_user.build_current_user``
 * ``GET /characters``, ``/leaderboard``, ``/praxes``, ``/tasks`` with
@@ -16,6 +14,13 @@ And the half that must NOT move: ``POST /factions/choose`` still refuses an
 unqualified admin, and ``can_start_as_albescent`` still answers False. Seeing is
 not doing. The last test pins the scope note in the issue — the sticky column is
 never written for an admin, so the reveal goes when the role does.
+
+``GET /factions`` and ``GET /factions/status`` are no longer on that list.
+#2409 stopped both from consulting the predicate at all — the row ships to
+everyone and the client redacts its strings (ADR-0082) — so the case that used
+to prove the bypass there now proves the opposite: the two payloads are
+viewer-independent. It is kept rather than deleted because a filter creeping
+back into either handler is exactly the drift this file exists to catch.
 """
 
 import pytest
@@ -47,8 +52,8 @@ async def faction_albescent(db_session: AsyncSession, faction_ua: Faction) -> Fa
     """The Albescent ``Faction`` row — ``visible``, exactly as ``seed.py`` makes it.
 
     Secrecy is per-viewer, not a faction status: seeding it hidden would excuse
-    the bug, since ``list_factions`` drops non-visible rows before the reveal
-    filter ever runs.
+    the bug, since ``list_factions`` drops non-visible rows before anything else
+    runs — and since #2409 that status filter is the only one it applies.
     """
     existing = await db_session.scalar(
         select(Faction).where(Faction.slug == ALBESCENT_FACTION_SLUG)
@@ -146,31 +151,40 @@ def _unlock_keys(payload: dict) -> set[str]:
 
 
 @pytest.mark.asyncio
-async def test_faction_listing_shows_albescent_to_an_admin(
+async def test_the_faction_listings_no_longer_ask_who_is_asking(
     client: AsyncClient, admin: dict, plain: dict
 ):
+    """#2409 took both faction listings out of this predicate's readership.
+
+    They were the first two rows of this file's route table, and the
+    assertion here has INVERTED for the plain account: it now reads the same
+    eighth row the admin does. That is not the admin bypass weakening — it is
+    the bypass having nothing left to bypass on these two routes. Secrecy moved
+    from the wire to the render (ADR-0082), and what the plain account still
+    does not get is the WORD: ``/auth/me`` answers ``albescent_revealed: false``
+    for it and ``true`` for the admin, which
+    ``test_auth_me_reports_the_admin_as_revealed`` below already pins.
+
+    Equality rather than two membership checks, because equality is the whole
+    claim: these payloads must not differ by viewer at all any more. A filter
+    creeping back for some third reason would fail this even if it happened to
+    keep Albescent in both.
+    """
     admin_resp = await client.get("/factions", headers=admin["headers"])
     plain_resp = await client.get("/factions", headers=plain["headers"])
     admin_slugs = {f["slug"] for f in admin_resp.json()}
     plain_slugs = {f["slug"] for f in plain_resp.json()}
     assert ALBESCENT_FACTION_SLUG in admin_slugs
-    assert ALBESCENT_FACTION_SLUG not in plain_slugs
+    assert admin_slugs == plain_slugs
 
-
-@pytest.mark.asyncio
-async def test_faction_status_page_lists_albescent_for_an_admin(
-    client: AsyncClient, admin: dict, plain: dict
-):
-    admin_resp = await client.get("/factions/status", headers=admin["headers"])
-    plain_resp = await client.get("/factions/status", headers=plain["headers"])
-    assert admin_resp.status_code == 200, admin_resp.text
-    assert plain_resp.status_code == 200, plain_resp.text
-    assert ALBESCENT_FACTION_SLUG in {
-        f["slug"] for f in admin_resp.json()["all_factions"]
-    }
-    assert ALBESCENT_FACTION_SLUG not in {
-        f["slug"] for f in plain_resp.json()["all_factions"]
-    }
+    admin_page = await client.get("/factions/status", headers=admin["headers"])
+    plain_page = await client.get("/factions/status", headers=plain["headers"])
+    assert admin_page.status_code == 200, admin_page.text
+    assert plain_page.status_code == 200, plain_page.text
+    admin_rows = {f["slug"] for f in admin_page.json()["all_factions"]}
+    plain_rows = {f["slug"] for f in plain_page.json()["all_factions"]}
+    assert ALBESCENT_FACTION_SLUG in admin_rows
+    assert admin_rows == plain_rows
 
 
 @pytest.mark.asyncio

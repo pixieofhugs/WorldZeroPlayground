@@ -1,5 +1,19 @@
 # Albescent is a secret society, revealed by a sticky per-account flag
 
+**Status:** Accepted, **partly superseded 2026-08-23 by
+[ADR-0082](0082-albescent-is-redacted-not-hidden.md)** — the **hiding posture** below is
+reversed. The faction-listing surfaces no longer conceal Albescent's existence; the row is
+served to everyone and its strings render as `[REDACTED]`. Concretely, the four bullets under
+"Hidden until reveal" and the first bullet under "Consequences" no longer describe the code.
+Everything else here stands and is carried forward by ADR-0082: the two-tier split itself,
+the public first tier, the sealed placeholder rather than a 404, and the sticky
+account-collective reveal.
+
+Also amended by [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md)
+(which re-cut ADR-0021's eligibility, not this ADR's secrecy) and by #2518 (reveal follows
+QUALIFY rather than join, so the "eligibility → invitation → join → reveal" flow below now
+reveals one step earlier).
+
 Albescent is a **distinct faction**, not a visual alias of UA (see #232). Its
 *existence as a faction* is a **secret**: hidden from an account until that
 account has, at some point, had a character who joined Albescent. Two visibility

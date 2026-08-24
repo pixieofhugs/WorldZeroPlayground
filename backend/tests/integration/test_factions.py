@@ -363,40 +363,66 @@ async def test_choose_nonexistent_faction(
 
 
 @pytest.mark.asyncio
-async def test_list_factions_hides_albescent_when_unrevealed(
+async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     client: AsyncClient,
     account: Account,
     auth_headers: dict,
     faction_ua: Faction,
     db_session: AsyncSession,
 ):
-    """Albescent is a secret society: an account with no albescent history never
-    sees it in GET /factions, even though the row is a visible faction."""
+    """The row is served to everyone now — redaction happens at the render (#2409).
+
+    This case is the LEFT side of the reveal predicate and it is deliberately
+    the un-qualified one: no ``albescent_unlocked``, no ``albescent_revealed``,
+    no admin role. Before #2409 that account got a seven-row list; it now gets
+    the eighth row like everybody else, and what it does NOT get is the word —
+    ``utils/factions.ts`` resolves every Albescent-scoped string to
+    ``[REDACTED]`` for a viewer whose ``/auth/me`` says unrevealed.
+
+    Moving the row across the wire moves the boundary, which is the whole point
+    of ADR-0082: the server no longer withholds the *row*, and this test is what
+    pins that. Withholding the row's CONTENTS is the follow-on ADR-0082 enables;
+    until it lands, ``FactionOut`` is `{slug, status}` and carries no prose to
+    leak.
+    """
     await _seed_faction(db_session, "albescent")
     await db_session.commit()
 
     resp = await client.get("/factions", headers=auth_headers)
     assert resp.status_code == 200
     slugs = [f["slug"] for f in resp.json()]
-    assert "albescent" not in slugs
-    # Non-secret visible factions still show.
+    assert "albescent" in slugs
     assert "ua" in slugs
+    # The account is genuinely on the unrevealed side — otherwise this passes
+    # for the wrong reason the moment a fixture starts stamping the unlock.
+    await db_session.refresh(account)
+    assert account.albescent_revealed is False
+    assert account.albescent_unlocked is False
 
 
 @pytest.mark.asyncio
-async def test_list_factions_hides_albescent_when_anonymous(
+async def test_list_factions_serves_albescent_to_an_anonymous_caller(
     client: AsyncClient,
     faction_ua: Faction,
     db_session: AsyncSession,
 ):
-    """Anonymous callers stay anonymous and never see the secret society."""
+    """No auth at all is still the unrevealed side, and it still gets the row.
+
+    ``list_factions`` took an optional-auth dependency for exactly one reason —
+    to answer "is this viewer revealed?" — so #2409 deleted the dependency along
+    with the filter rather than leave a resolved-and-ignored account behind. A
+    signed-out visitor and a signed-in unrevealed one get byte-identical lists,
+    which is the strongest statement that the listing no longer depends on who
+    is asking.
+    """
     await _seed_faction(db_session, "albescent")
     await db_session.commit()
 
     resp = await client.get("/factions")
     assert resp.status_code == 200
     slugs = [f["slug"] for f in resp.json()]
-    assert "albescent" not in slugs
+    assert "albescent" in slugs
+    assert "ua" in slugs
 
 
 @pytest.mark.asyncio
@@ -414,8 +440,8 @@ async def test_albescent_join_reveals_and_lists(
     Since #2518 the listing is already open before the join — reveal follows
     QUALIFY, and this account is qualified by construction, so there is no
     pre-join hidden state left to assert here. The masked case moved to
-    ``test_list_factions_hides_albescent_when_unrevealed`` (no unlock, no
-    listing) and to ``test_albescent_reveal_on_qualify.py``.
+    ``test_list_factions_serves_albescent_to_an_unrevealed_account`` (no unlock,
+    a served row and a redacted word) and to ``test_albescent_reveal_on_qualify.py``.
 
     What is still this test's own: the *column write*. ``albescent_revealed``
     stays load-bearing rather than subsumed by the unlock, because an account
