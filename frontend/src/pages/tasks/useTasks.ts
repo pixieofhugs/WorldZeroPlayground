@@ -57,7 +57,8 @@ import { useGameConfig } from '../../hooks/useGameConfig'
 import { readOneOf } from '../../utils/urlParams'
 import { hadSessionLastVisit, useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
-import { usePagedResource } from '../../hooks/usePagedResource'
+import { usePagedResource, viewerCacheKey } from '../../hooks/usePagedResource'
+import { AMBIENT_TTL_MS, createKeyedResourceCache } from '../../hooks/cachedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useTaskSignup } from '../../hooks/useTaskSignup'
 import {
@@ -68,6 +69,20 @@ import type { CurrentUser } from '../../api/auth'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
+
+/**
+ * The browse's first page, per filter combination, for five minutes (#2432) —
+ * **Class B** (ADR-0072), and one of the class's first two consumers.
+ *
+ * Every filter change used to be a full uncached `GET /tasks`, clearing a
+ * filter included, so leaving a view and coming back cost exactly what arriving
+ * at it cost. Keyed on the viewer plus every axis in the URL, so a combination
+ * you have already seen is free; emptied by an era rollover and by any write.
+ *
+ * Module scope, not the hook body: the point is that the desktop list and the
+ * mobile browse skin, and a second visit to either, share one held page.
+ */
+const TASK_PAGE_CACHE = createKeyedResourceCache<TaskOut[]>(AMBIENT_TTL_MS)
 
 /**
  * The URL params the task browse owns, beside `useSearchQueryParam`'s `?q=`.
@@ -486,6 +501,11 @@ export function useTasks(): TasksState {
           }),
     [taskType, sort, status, factionKey, canSignUp, trimmedQuery, viewerPending],
     PAGE_LIMIT,
+    // No cache while the viewer is unknown: that read resolves `[]` without
+    // asking the server, and holding a placeholder under a key is worse than
+    // not holding one. The key carries the viewer for the reason `TaskOut`
+    // gives — `can_sign_up` and friends are computed for the caller.
+    viewerPending ? undefined : { cache: TASK_PAGE_CACHE, viewer: viewerCacheKey(user) },
   )
   const tasks = data ?? []
 
