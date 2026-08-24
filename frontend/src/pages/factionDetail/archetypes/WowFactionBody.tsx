@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -491,16 +491,26 @@ function JoinBlock({
 
       <div style={{ background: CARD, padding: "var(--space-lg)", textAlign: "center" }}>
         {membership.state === "member" && (
-          <div style={{ fontFamily: MED, fontSize: "var(--text-title)", lineHeight: 1.15, color: PLUM }}>
-            {t("wow.join.memberTitle")}
-          </div>
+          <>
+            <div style={{ fontFamily: MED, fontSize: "var(--text-title)", lineHeight: 1.15, color: PLUM }}>
+              {t("wow.join.memberTitle")}
+            </div>
+            {/* #2299 (b): the eighth slot the other six already fill — a sworn
+                knight is told what they rank as. The WORD is the owner's
+                (PLACEHOLDER in factions.json); this is only the mount. */}
+            <div
+              className="content-text"
+              style={{ fontFamily: LORA, color: MUTED, margin: "var(--space-sm) 0 0" }}
+            >
+              <Trans t={t} i18nKey="wow.join.memberStanding">
+                Standing · <b style={{ color: PLUM }}>PLACEHOLDER</b>
+              </Trans>
+            </div>
+          </>
         )}
 
         {membership.state === "eligible" && !confirming && (
           <>
-            <div className="label-caption" style={{ fontFamily: MED }}>
-              {t("wow.join.eligibleKicker")}
-            </div>
             <div
               style={{
                 fontFamily: MED,
@@ -588,9 +598,6 @@ function JoinBlock({
             does not get to put its own spin on a door it closed. */}
         {membership.state === "gate" && (
           <>
-            <div className="label-caption" style={{ fontFamily: MED }}>
-              {t("wow.join.gateKicker")}
-            </div>
             <div
               style={{
                 fontFamily: MED,

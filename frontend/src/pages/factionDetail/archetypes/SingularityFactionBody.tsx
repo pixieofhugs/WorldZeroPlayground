@@ -331,10 +331,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   color: VOID,
                 }}
               >
-                {t("singularity.access.heading")}
-              </span>
-              <span style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.1em", color: phosphor(60) }}>
-                {t("singularity.access.reLabel")}
+                {t("singularity.join.heading")}
               </span>
             </div>
             <div style={{ position: "relative", padding: "var(--space-xl) var(--space-lg)" }}>
@@ -352,10 +349,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         letterSpacing: "0.04em",
                       }}
                     >
-                      {t("singularity.access.memberTitle")}
+                      {t("singularity.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: signal(60), margin: "var(--space-md) 0 0", letterSpacing: "0.04em" }}>
-                      <Trans t={t} i18nKey="singularity.access.memberStanding">
+                      <Trans t={t} i18nKey="singularity.join.memberStanding">
                         array · <span style={{ color: SIGNAL }}>online</span>
                       </Trans>
                     </div>
@@ -364,9 +361,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
-                      {t("singularity.access.eligibleKicker")}
-                    </div>
                     <div
                       style={{
                         fontFamily: FONT,
@@ -378,10 +372,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         marginBottom: "var(--space-md)",
                       }}
                     >
-                      {t("singularity.access.eligibleTitle")}
+                      {t("singularity.join.eligibleTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: "var(--space-lg)" }}>
-                      {t("singularity.access.eligibleBody")}
+                      {t("singularity.join.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -399,7 +393,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         cursor: "pointer",
                       }}
                     >
-                      {t("singularity.access.joinButton")}
+                      {t("singularity.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -438,7 +432,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         }}
                       >
                         {membership.joining
-                          ? t("singularity.access.joining")
+                          ? t("singularity.join.joining")
                           : t("mobile.confirm")}
                       </button>
                       <button
@@ -464,11 +458,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
-                      {burned
-                        ? t("detail.burned.kicker")
-                        : t("singularity.access.gateKicker")}
-                    </div>
+                    {/* #2299 cut the faction's own gate kicker; the shared
+                        burned notice keeps its own overline. */}
+                    {burned && (
+                      <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
+                        {t("detail.burned.kicker")}
+                      </div>
+                    )}
                     <div
                       style={{
                         fontFamily: FONT,
@@ -482,7 +478,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     >
                       {burned
                         ? t("detail.burned.title", { faction: factionName(faction.slug) })
-                        : t("singularity.access.gateTitle", { faction: factionName(faction.slug) })}
+                        : t("singularity.join.gateTitle", { faction: factionName(faction.slug) })}
                     </div>
                     <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60) }}>
                       {burned

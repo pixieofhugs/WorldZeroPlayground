@@ -69,34 +69,36 @@ const FactionDetail = (await import('../../FactionDetail')).default
  * headings say the same words on every faction now and can no longer tell one
  * body from another. What is left, and what the audit deliberately KEPT in each
  * house's own voice, is the join panel's own name for itself: The Road, THE
- * ROLL, ACCESS, the S.N.I.D.E. letterhead, Those practising, THE MUSTER, the
+ * ROLL, ACCESS, S.N.I.D.E., Those practising, THE MUSTER, the
  * circle. Seven distinct strings, one per body, still drawn at both widths —
  * which is the property this suite exists for.
  */
 const OWN_VOICE: Record<string, readonly string[]> = {
   coven: ['coven.join.heading'],
-  ephemerists: ['ephemerists.road.heading'],
-  everymen: ['everymen.roll.heading'],
-  singularity: ['singularity.access.heading'],
-  // S.N.I.D.E.'s panel is a dispatch on letterhead rather than a titled block.
-  snide: ['snide.dispatch.letterhead'],
-  ua: ['ua.registry.heading'],
+  ephemerists: ['ephemerists.join.heading'],
+  everymen: ['everymen.join.heading'],
+  singularity: ['singularity.join.heading'],
+  // S.N.I.D.E.'s panel is a dispatch, so its heading is the letterhead
+  // wordmark. #2299 renamed the KEY (`letterhead` -> `heading`); the memo
+  // framing lives in the value and the CSS and did not move.
+  snide: ['snide.join.heading'],
+  ua: ['ua.join.heading'],
   wow: ['wow.join.heading'],
 }
 
 /**
  * Each faction's own Join verb. `albescent` is the fall-through to
  * `DefaultFactionBody`, whose join block is the one lifted out of the retired
- * `DefaultFactionPage` — it keeps that skin's `mobile.join` key, because the
- * catalogs are under concurrent edit and this PR must not rename one.
+ * `DefaultFactionPage` — it keeps that skin's `mobile.join` key. The other
+ * seven are `<slug>.join.joinButton` since #2299 gave them one key path.
  */
 const JOIN_BUTTON: Record<string, string> = {
   coven: 'coven.join.joinButton',
-  ephemerists: 'ephemerists.road.joinButton',
-  everymen: 'everymen.roll.joinButton',
-  singularity: 'singularity.access.joinButton',
-  snide: 'snide.dispatch.joinButton',
-  ua: 'ua.registry.joinButton',
+  ephemerists: 'ephemerists.join.joinButton',
+  everymen: 'everymen.join.joinButton',
+  singularity: 'singularity.join.joinButton',
+  snide: 'snide.join.joinButton',
+  ua: 'ua.join.joinButton',
   wow: 'wow.join.joinButton',
   albescent: 'mobile.join',
 }

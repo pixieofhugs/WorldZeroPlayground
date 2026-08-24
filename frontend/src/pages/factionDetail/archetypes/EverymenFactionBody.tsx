@@ -356,7 +356,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                 borderBottom: `2px solid ${GOLD}`,
               }}
             >
-              {t("everymen.roll.heading")}
+              {t("everymen.join.heading")}
             </div>
             <div style={{ position: "relative", padding: "var(--space-xl)" }}>
               <Halftone />
@@ -372,10 +372,10 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         color: PAPER_TEXT,
                       }}
                     >
-                      {t("everymen.roll.memberTitle")}
+                      {t("everymen.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: MUTED, margin: "var(--space-sm) 0 0" }}>
-                      <Trans t={t} i18nKey="everymen.roll.memberStanding">
+                      <Trans t={t} i18nKey="everymen.join.memberStanding">
                         Standing · <b style={{ color: PAPER_ACCENT }}>card-carrying</b>
                       </Trans>
                     </div>
@@ -384,9 +384,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
-                      {t("everymen.roll.eligibleKicker")}
-                    </div>
                     <div
                       style={{
                         fontFamily: BEBAS,
@@ -397,10 +394,10 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         marginBottom: "var(--space-sm)",
                       }}
                     >
-                      {t("everymen.roll.eligibleTitle")}
+                      {t("everymen.join.eligibleTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: PAPER_TEXT, marginBottom: "var(--space-lg)" }}>
-                      {t("everymen.roll.eligibleBody")}
+                      {t("everymen.join.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -418,7 +415,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         cursor: "pointer",
                       }}
                     >
-                      {t("everymen.roll.joinButton")}
+                      {t("everymen.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -455,7 +452,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         }}
                       >
                         {membership.joining
-                          ? t("everymen.roll.joining")
+                          ? t("everymen.join.joining")
                           : t("mobile.confirm")}
                       </button>
                       <button
@@ -471,11 +468,13 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
-                      {burned
-                        ? t("detail.burned.kicker")
-                        : t("everymen.roll.gateKicker")}
-                    </div>
+                    {/* #2299 cut the faction's own gate kicker; the shared
+                        burned notice keeps its own overline. */}
+                    {burned && (
+                      <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
+                        {t("detail.burned.kicker")}
+                      </div>
+                    )}
                     <div
                       style={{
                         fontFamily: BEBAS,
@@ -488,7 +487,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                     >
                       {burned
                         ? t("detail.burned.title", { faction: factionName(faction.slug) })
-                        : t("everymen.roll.gateTitle")}
+                        : t("everymen.join.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.65, color: PAPER_TEXT }}>
                       {burned

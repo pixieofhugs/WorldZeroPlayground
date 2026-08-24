@@ -26,7 +26,6 @@
     "loggedOutHint": "Everyone starts unaffiliated. Earn an invitation through task work to join a faction."
   },
   "detail": {
-    "loading": "Loading...",
     "retry": "Try refreshing.",
     "notFound": "Faction not found.",
     "backToFactions": "Back to factions.",
@@ -104,16 +103,14 @@
       "provenance": "Plate struck {{date}} · station of the Ephemerists, {{rightAscension}} {{declination}}",
       "provenanceUndated": "Station of the Ephemerists, {{rightAscension}} {{declination}}"
     },
-    "road": {
+    "join": {
       "heading": "The Road",
       "memberTitle": "Your name is in the codex",
       "memberStanding": "Standing · <1>keeper of the road</1>",
-      "eligibleKicker": "The codex lies open —",
       "eligibleTitle": "Walk with the keepers",
       "eligibleBody": "Take a task, triangulate what you find, and submit it to the record. The road is long and forks often.",
       "joinButton": "TAKE THE ROAD ▸",
       "joining": "SEALING…",
-      "gateKicker": "Not yet in the codex —",
       "gateTitle": "Earn your place on the road"
     },
     "spotlight": {
@@ -147,16 +144,14 @@
     }
   },
   "everymen": {
-    "roll": {
+    "join": {
       "heading": "THE ROLL",
       "memberTitle": "You're on the roll",
       "memberStanding": "Standing · <1>card-carrying</1>",
-      "eligibleKicker": "Doors are open —",
       "eligibleTitle": "Join the ranks",
       "eligibleBody": "Anyone willing to put in the shift belongs here. Pick up the work in front of you and finish what you start.",
       "joinButton": "ENLIST ▸",
       "joining": "ENLISTING…",
-      "gateKicker": "Not on the roll — yet",
       "gateTitle": "Earn your invitation"
     },
     "spotlight": {
@@ -190,17 +185,14 @@
     }
   },
   "singularity": {
-    "access": {
+    "join": {
       "heading": "ACCESS",
-      "reLabel": "re: you",
       "memberTitle": "NODE ONLINE",
       "memberStanding": "array · <1>online</1>",
-      "eligibleKicker": "> ACCESS GRANTED",
       "eligibleTitle": "JOIN THE ARRAY",
       "eligibleBody": "Become a node of the array. Run tasks, generate signals, cast them into the consensus. The threshold is already behind us.",
       "joinButton": "> CONNECT",
       "joining": "> CONNECTING…",
-      "gateKicker": "> NODE NOT YET ONLINE",
       "gateTitle": "{{faction}} is processing your data"
     },
     "spotlight": {
@@ -234,17 +226,14 @@
     }
   },
   "snide": {
-    "dispatch": {
-      "letterhead": "S.N.I.D.E.",
-      "reLabel": "re: you",
+    "join": {
+      "heading": "S.N.I.D.E.",
       "memberTitle": "You're on the inside",
       "memberStanding": "Standing · <1>accomplice</1>",
-      "eligibleKicker": "the door's open —",
       "eligibleTitle": "Come cause trouble",
       "eligibleBody": "No forms. No gods. No managers. Just show up and mean it.",
       "joinButton": "I'M IN",
       "joining": "BREAKING IN…",
-      "gateKicker": "not one of us — yet",
       "gateTitle": "Make some noise"
     },
     "spotlight": {
@@ -278,18 +267,14 @@
     }
   },
   "ua": {
-    "registry": {
+    "join": {
       "heading": "Those practising",
       "memberTitle": "You practise here",
       "memberStanding": "Standing · <1>practising</1>",
-      "eligibleKicker": "Come sit with the work —",
       "eligibleTitle": "Make one true piece a day",
       "eligibleBody": "We practise. Not for the badge — for the making itself. Begin whenever you are ready.",
       "joinButton": "Begin the practice",
-      "confirmSwitch": "Begin the practice with {{faction}}? You won't be able to rejoin {{current}} after leaving.",
-      "confirm": "Begin the practice with {{faction}}?",
       "joining": "Beginning…",
-      "gateKicker": "Not practising — yet",
       "gateTitle": "Earn your place at the table"
     },
     "spotlight": {
@@ -367,12 +352,11 @@
     "join": {
       "heading": "THE MUSTER",
       "memberTitle": "Thou art sworn",
-      "eligibleKicker": "the lists are open —",
+      "memberStanding": "Standing · <1>PLACEHOLDER</1>",
       "eligibleTitle": "Enlist in the Crusade",
       "eligibleBody": "the armour is one-size, the oath is for life",
       "joinButton": "TAKE THE OATH ⚔",
       "joining": "SWEARING…",
-      "gateKicker": "Unsworn — for now",
       "gateTitle": "Earn thy summons"
     },
     "spotlight": {
@@ -408,8 +392,7 @@
     "termsHeading": "Terms of matriculation",
     "skillsLabel": "Required skills",
     "outputLabel": "Expected output",
-    "dismiss": "Maybe later",
-    "confirm": "Confirm"
+    "dismiss": "Maybe later"
   },
   "mobile": {
     "loadError": "Couldn't load factions.",
@@ -417,11 +400,6 @@
     "unaffiliatedBody": "Every path is open. Each faction watches its own work — do enough of it, and an invitation finds you.",
     "topMembers": "Top members",
     "recentPraxis": "Recent praxis",
-    "membersStat": "Members",
-    "tasksStat": "Tasks",
-    "membersEmpty": "No members yet.",
-    "praxisEmpty": "No praxis yet.",
-    "memberStat": "lvl {{level}} · {{score}} pts",
     "join": "Join {{faction}}",
     "joining": "Joining…",
     "confirm": "Confirm",

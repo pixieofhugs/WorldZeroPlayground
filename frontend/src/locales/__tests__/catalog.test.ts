@@ -419,7 +419,7 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
     'factions.json:wow.invitation.cta.joined',
     'feed.json:factionSelect.wow.status.member',
     // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
-    'factions.json:ephemerists.road.joining',
+    'factions.json:ephemerists.join.joining',
     // The #1864 GENERIC row that stood here — `common.json:profile.
     // praxisEmptyTitle` — is gone: #2046 carries the owner's ruling that the
     // collapsed praxis empty state reads "No praxis submitted yet." Fifteen
@@ -476,7 +476,9 @@ describe('the four functional controls say one thing across every faction (#1863
   it('the join-panel confirm button reads Confirm, in one casing', () => {
     // The join panel's key used to sit under a per-faction section name
     // (`road`, `access`, `dispatch`…), which is why a literal grep for it
-    // returned zero and the audit undercounted the family. One key now.
+    // returned zero and the 2026-08-16 audit undercounted the family. #2299
+    // retired those names: all seven panels are `<slug>.join.*` now, so the
+    // literal grep this comment warns about finally works.
     const buttons = catalogLeaves()
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
@@ -542,10 +544,11 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
    * pattern does not need a `.txt` arm.
    */
   const TERMINAL_VOICE = [
-    'factions.json:singularity.access.eligibleKicker',
-    'factions.json:singularity.access.gateKicker',
-    'factions.json:singularity.access.joinButton',
-    'factions.json:singularity.access.joining',
+    // `singularity.join.eligibleKicker` (`> ACCESS GRANTED`) and
+    // `.gateKicker` (`> NODE NOT YET ONLINE`) stood here. #2299 cut the kicker
+    // from all seven panels, so the two prompts left with their keys.
+    'factions.json:singularity.join.joinButton',
+    'factions.json:singularity.join.joining',
     'factions.json:singularity.invitation.kicker',
     // `singularity.invitation.perks.1` stood here — #1874's mechanic slot,
     // which refused in the array's own register (`> no modifiers…`) because
@@ -596,11 +599,11 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     const labels: Record<string, string> = {
       coven: factions.coven.join.heading,
       wow: factions.wow.join.heading,
-      ephemerists: factions.ephemerists.road.heading,
-      everymen: factions.everymen.roll.heading,
-      singularity: factions.singularity.access.heading,
-      snide: factions.snide.dispatch.letterhead,
-      ua: factions.ua.registry.heading,
+      ephemerists: factions.ephemerists.join.heading,
+      everymen: factions.everymen.join.heading,
+      singularity: factions.singularity.join.heading,
+      snide: factions.snide.join.heading,
+      ua: factions.ua.join.heading,
     }
     for (const [slug, label] of Object.entries(labels)) {
       expect(label, slug).toBeTypeOf('string')
