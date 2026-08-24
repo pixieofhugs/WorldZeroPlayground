@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-15
+
 **Supersedes:** the **votes row** clause of **ADR-0047** — and only that clause.
 **Relates to:** ADR-0047 (the conditional score stamp), ADR-0049 (the logic /
 presentation seam that gives all nine skins one selector), ADR-0053

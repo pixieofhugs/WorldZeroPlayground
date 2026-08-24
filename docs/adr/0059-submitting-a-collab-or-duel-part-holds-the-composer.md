@@ -1,7 +1,8 @@
 # ADR-0059 — Submitting a collab or duel part holds the composer
 
-**Status:** Accepted
+**Status:** Amended by ADR-0062
 **Date:** 2026-07-28
+
 **Relates to:** #1071 (epic), #1073 (ADR-0060, the sibling behaviour change),
 #591 (the `CollabSuccess` hold this generalises), #646 (moved author controls
 off the public roster and into the composer footer), #590 (`pullBack`)

@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-29
+
 **Relates to:** #1219 (epic), #1220 (this ADR's issue)
 **Amends:** [ADR-0054](0054-one-theme-aware-task-crown.md) — its "the rainbow ring
 stays a fixed brand constant" clause. The brand palette is not a constant any more;

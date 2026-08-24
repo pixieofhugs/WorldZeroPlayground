@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-17
+
 **Relates to:** `SPEC-backend-architecture.md` §3 (aggregate map) + §5 (auth layering + the HTTPException rationale), ADR-0041 (identity), ADR-0042 (era-as-ruleset)
 
 ## Context

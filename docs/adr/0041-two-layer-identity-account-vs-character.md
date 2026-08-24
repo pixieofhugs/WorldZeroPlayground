@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-17
+
 **Relates to:** ADR-0025 (the active character is the actor), CONTEXT.md ("Account", "Character")
 
 > Harvested from the retired `SPEC-architecture.md §3` during the 2026-07-17 docs

@@ -1,5 +1,8 @@
 # Rename faction slugs to match identity (retire the legacy-slug reuse)
 
+**Status:** Accepted
+**Date:** 2026-06-22
+
 Earlier work rebranded factions but kept the old slugs to avoid DB/plumbing churn:
 `analog` displayed as "Everymen", `gestalt` as "Warriors of Whimsy" (still shown as
 "Gestalt" in code), `journeymen` as "The Ephemerists". The slug↔name mismatch became the

@@ -1,7 +1,8 @@
 # ADR-0067 — Praxis cards collapse to one responsive component per faction
 
-**Status:** Accepted
+**Status:** Amended by ADR-0069
 **Date:** 2026-07-30
+
 **Relates to:** ADR-0056 (the same move for task cards), ADR-0035 (the split this
 supersedes for one more surface)
 **Supersedes ADR-0035 for praxis cards** — ADR-0035 stands for every other mobile

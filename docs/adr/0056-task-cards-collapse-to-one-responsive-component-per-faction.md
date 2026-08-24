@@ -1,7 +1,8 @@
 # ADR-0056 — Task cards collapse to one responsive component per faction
 
 **Status:** Accepted
-**Date:** 2026-07-27 (proposed) · 2026-07-28 (accepted)
+**Date:** 2026-07-28
+
 **Relates to:** #1020 (epic), #1022, #1023
 **Supersedes ADR-0035 for task cards** — ADR-0035 stands for every other mobile
 surface; only the task-card surface is unified here.

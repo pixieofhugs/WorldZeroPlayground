@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-28
+
 **Relates to:** #1071 (epic), #1072 (ADR-0059, the sibling behaviour change)
 **Pairs with:** ADR-0013 (collaborations are co-owned), ADR-0047 (praxis card
 shows computed total, not Merit)

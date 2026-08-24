@@ -1,6 +1,7 @@
 # Duels resolve at era close
 
-/ status: accepted
+**Status:** Accepted
+**Date:** 2026-07-20
 
 ## Context
 

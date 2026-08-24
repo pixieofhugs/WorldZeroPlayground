@@ -1,9 +1,15 @@
 # ADR-0028 — The Task Crown replaces the Faction Distinction Laurel
 
-**Status:** Accepted, amended 2026-07-29 by [ADR-0054](0054-one-theme-aware-task-crown.md) — the crown's per-card recolour of its inner disc + glyph only; everything else here stands.
+**Status:** Amended by ADR-0054
 **Date:** 2026-07-03
+
 **Supersedes:** the cross-task "faction champion" semantics of the Faction Distinction Laurel (`FdlLaurel` / `topPraxisIndex`)
 **Relates to:** #354 (this mark), #390 / Albescent secrecy ([ADR-0027](0027-albescent-is-a-secret-society.md) — the revealed Albescent faction page carries the Task Crown like the other six)
+
+## Amendment
+
+**Amended 2026-07-29 by [ADR-0054](0054-one-theme-aware-task-crown.md)** — the crown's
+per-card recolour of its inner disc + glyph only; everything else here stands.
 
 ## Context
 

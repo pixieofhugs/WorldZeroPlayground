@@ -1,5 +1,8 @@
 # Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface
 
+**Status:** Accepted
+**Date:** 2026-07-03
+
 Building on [ADR-0019](0019-characters-start-unaffiliated-invite-gated-factions.md)
 (characters are born unaffiliated `na`; faction membership is invite-gated), this
 records the resulting **default faction behaviour** and the Factions-grid shape:

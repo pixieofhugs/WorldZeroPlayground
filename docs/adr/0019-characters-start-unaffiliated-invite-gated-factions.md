@@ -1,5 +1,8 @@
 # Characters start unaffiliated; faction membership is gated by account-pooled invitation
 
+**Status:** Accepted
+**Date:** 2026-06-25
+
 New characters are no longer forced into UA. Every character is **born unaffiliated**
 (`faction_slug = "na"`), and UA is demoted to an ordinary, invite-able faction with no
 starter privilege. A character may **join, switch to, or be born into** faction X iff the

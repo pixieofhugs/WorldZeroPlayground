@@ -1,5 +1,8 @@
 # Player profile: one faction-agnostic contract; badges are a code registry evaluated on read
 
+**Status:** Accepted
+**Date:** 2026-07-14
+
 Issue #459 (foundation of the player-profile epic; the seven faction skins are #460).
 Design source: `player-profile-contract.json` + `guidelines/player-profile-contract.html`
 in the "World Zero Design System" cloud project.

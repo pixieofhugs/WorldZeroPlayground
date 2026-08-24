@@ -1,5 +1,8 @@
 # Praxis card adopts the register-row content model, with the vote-reframe as hero
 
+**Status:** Accepted
+**Date:** 2026-06-22
+
 The praxis card "reads flat next to the task cards" (`SPEC-faction-ui-profile.md §1 #2`). The
 cause is content, not frame: every faction already has an ornate frame, but the card renders
 only title + task link + a 4pt byline score, ignoring the data that makes a *completed* praxis

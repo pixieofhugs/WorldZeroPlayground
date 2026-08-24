@@ -1,7 +1,8 @@
 # ADR-0058 — Task detail collapses to one responsive component per faction
 
 **Status:** Accepted
-**Date:** 2026-07-28 (proposed) · 2026-07-28 (accepted)
+**Date:** 2026-07-28
+
 **Relates to:** #1028 (epic), #1030, #1031–#1038, #1039
 **Supersedes ADR-0035 for task detail** — ADR-0035 stands for every other
 mobile surface; only the task-detail surface is unified here.

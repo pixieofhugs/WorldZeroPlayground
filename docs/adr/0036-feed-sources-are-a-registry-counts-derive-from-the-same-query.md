@@ -1,6 +1,7 @@
 # Feed types are a registry; badge counts derive from the same query
 
-/ status: accepted
+**Status:** Accepted
+**Date:** 2026-07-14
 
 ## Context
 

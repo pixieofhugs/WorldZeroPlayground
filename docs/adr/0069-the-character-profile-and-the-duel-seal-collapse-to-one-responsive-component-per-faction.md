@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-30
+
 **Relates to:** ADR-0056 (task cards), ADR-0058 (task detail), ADR-0063 (praxis
 detail), ADR-0065 (the edit-praxis composer), ADR-0067 (praxis cards) — the same
 move, surface by surface. ADR-0035 established the split all of them narrow.

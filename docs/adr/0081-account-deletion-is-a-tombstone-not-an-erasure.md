@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-23
+
 **Relates to:** ADR-0041 (Account vs Character identity — deletion is an
 *account* act, and anti-self-voting is why the vote rows are account-keyed),
 ADR-0011 (duel forfeit on a life ending), ADR-0073 (the room is not the record —

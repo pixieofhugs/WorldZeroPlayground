@@ -1,5 +1,8 @@
 # ADR-0009: Blocks are mutual and visible
 
+**Status:** Superseded by ADR-0077
+**Date:** 2026-06-24
+
 > **Superseded in full by [ADR-0077](0077-a-block-is-its-own-record-not-a-status-on-a-friend-foe-edge.md)**
 > — a block is its own record, not a status on a friend/foe edge.
 >
@@ -15,7 +18,6 @@
 > decided in June 2026 and of what ADR-0077 had to answer; it is not the live
 > decision.
 
-Status: Superseded by ADR-0077 (2026-08-16). Accepted 2026-06-24.
 
 ## Context
 
