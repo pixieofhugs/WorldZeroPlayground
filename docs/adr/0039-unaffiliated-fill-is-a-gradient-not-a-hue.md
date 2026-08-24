@@ -1,15 +1,23 @@
 # ADR-0039 — Unaffiliated's fill is a gradient, not a hue
 
+**Status:** Accepted
+**Date:** 2026-07-16
+
 > **Status (2026-07-17 audit): NOT YET LANDED.** `factionFill`/`na→default`
 > routing is not in `utils/factions.ts` yet (the `?? "ua"` fallback still stands).
 > ADR dated one day prior to the audit — pending implementation, not drift.
 
-**Status:** Accepted
-**Date:** 2026-07-16
 **Relates to:** #636 (this decision), #418 (the `--faction-default-*` token set
 this reaches), ADR-0030 (players start unaffiliated — why `na` is on-screen at
 all), #232 (albescent went first-class and dropped its `ua` alias — the last
 time a slug's identity was untangled from UA's)
+
+## Amendment
+
+**2026-08-24 (#2536): the audit banner above is stale — this landed.** `factionFill()` is
+exported from `frontend/src/utils/factions.ts`, `na` maps to `default` in `CSS_KEY`, and the
+`?? "ua"` fallback the banner names is gone. The 2026-07-17 note is kept as the historical
+record it is; the decision is built.
 
 ## Context
 

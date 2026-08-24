@@ -1,5 +1,8 @@
 # The backend owns no faction color
 
+**Status:** Accepted
+**Date:** 2026-06-22
+
 Faction color is a *design* fact (canon lives in the vault design docs; see ADR-0001), and
 nearly all visible theming is driven by `index.css` CSS vars via `factionCssVar()`. The
 backend `era_1.py` `color` field was a denormalized copy that drifted (it served Singularity

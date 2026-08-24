@@ -1,5 +1,8 @@
 # A page is a composition of independently-themed surfaces, not one faction block
 
+**Status:** Accepted
+**Date:** 2026-06-22
+
 A faction page is not themed as a single block. Each surface independently resolves its
 own contextual faction (`SPEC-faction-ui-profile.md §2`): task-scoped surfaces (card,
 praxis, page frame, backdrop, vote) theme to the **task's** faction; actor-scoped

@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-20
+
 **Relates to:** #784 (Cozy Coven splits off Warriors of Whimsy), #812/#814 (WOW
 rejoins the rainbow as yellow), #821 (the praxis-card redesign), ADR-0049,
 `docs/agents/design-fidelity.md`

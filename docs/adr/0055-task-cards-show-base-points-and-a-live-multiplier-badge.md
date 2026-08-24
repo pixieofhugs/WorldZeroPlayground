@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-27
+
 **Relates to:** #1020 (epic), #1022, #1023
 **Distinct from:** ADR-0053 (Retire Merit) — that retired the post-vote, duel-inclusive
 praxis `display_multiplier`. This ADR is about a different, still-live mechanism: the

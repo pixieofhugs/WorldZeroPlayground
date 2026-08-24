@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-23
+
 **Amends:** **ADR-0048** (Albescent unfreezes one surface at a time, as designs
 land) — its premise stands and its *mode* is closed; **ADR-0017 ruling 7**, whose
 always-light vellum clause is retired below.

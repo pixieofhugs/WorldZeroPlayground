@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-17
+
 **Relates to:** ADR-0044 (CharacterStats star-schema), `services/scoring.py::compute_votes_available`
 
 > Harvested from the retired `SPEC-game-rules.md` during the 2026-07-17 docs

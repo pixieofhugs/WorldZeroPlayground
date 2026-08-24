@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-14
+
 **Relates to:** epic #654 (the Players constellation), #656 (the desktop
 constellation), #684 §1 (the decision this reverses), #730 (the measured stage +
 the three-chip legend), ADR-0039 (the unaffiliated spectrum), #1698 (the site

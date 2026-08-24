@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-01
+
 **Relates to:** ADR-0008 (sign-up eligibility is one game-logic predicate),
 ADR-0051 (duel acceptance bypasses the task-level gate), ADR-0029
 (`faction_permits` is the single faction-rules seam), #292 (one named home for

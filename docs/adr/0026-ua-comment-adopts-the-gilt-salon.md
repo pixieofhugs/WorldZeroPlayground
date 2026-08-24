@@ -1,7 +1,8 @@
 # ADR-0026 — The UA comment adopts the gilt-salon identity
 
-**Status:** Accepted, amended 2026-07-20 (see *Amendment* below)
+**Status:** Accepted
 **Date:** 2026-07-02
+
 **Supersedes:** the UA-palette clause of [ADR-0018](0018-comment-voice-reuses-task-card-atoms.md)
 **Relates to:** ADR-0006 (comment system; still owns model/dispatch), the gilt-salon UA rebrand (PR #361), issue #377
 

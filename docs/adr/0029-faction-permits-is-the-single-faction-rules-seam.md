@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-03
+
 **Relates to:** #171 (this seam), #292 (generalizes the same "bundled sub-rule" smell to level/vote/flag/sign-up axes)
 
 ## Context

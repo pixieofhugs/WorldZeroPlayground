@@ -1,5 +1,8 @@
 # UI copy lives in a catalog, not inline JSX
 
+**Status:** Superseded by ADR-0032
+**Date:** 2026-06-25
+
 > **Superseded by ADR-0032** (react-i18next-copy-catalog): locale #2 is now
 > scheduled, so the deferred i18next migration this ADR planned for has
 > happened. `frontend/src/copy/en.ts` is gone; copy lives in

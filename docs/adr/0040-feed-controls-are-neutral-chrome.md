@@ -1,6 +1,7 @@
 # ADR-0040: Feed controls are neutral chrome; faction skinning stops at the card boundary
 
-Status: Accepted (2026-07-16)
+**Status:** Accepted
+**Date:** 2026-07-16
 
 ## Context
 

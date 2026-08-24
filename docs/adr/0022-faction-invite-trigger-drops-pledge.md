@@ -1,5 +1,8 @@
 # Faction invite is earned by 2 tasks + 50 points; pledge-allegiance gate dropped
 
+**Status:** Accepted
+**Date:** 2026-06-25
+
 A character earns its own `InvitationLetter` for faction X (current era) by completing
 **2 tasks for X** and **50 points from X's tasks** — both faction-scoped and measured
 per-character. The prior third condition — a *"Pledge allegiance to X"* praxis with ≥2 votes

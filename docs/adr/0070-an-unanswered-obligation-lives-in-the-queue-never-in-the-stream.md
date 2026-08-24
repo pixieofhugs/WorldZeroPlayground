@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-30
+
 **Relates to:** ADR-0023 (the activity feed stays a read-time projection),
 ADR-0036 (feed sources are a registry; counts derive from the same query),
 epic #1192 (the feed gains an archive), epic #1419 (the Updates page gains a
