@@ -16,8 +16,8 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { RENDERED_BASELINE, baselineKey, resolveFillBand, triageFindings } from "../../../e2e/contrastBaseline";
-import type { Finding } from "../../../e2e/contrastScan";
+import { RENDERED_BASELINE, baselineKey, resolveFillBand, triageFindings } from "../contrastBaseline";
+import type { Finding } from "../contrastScan";
 
 function finding(overrides: Partial<Finding> = {}): Finding {
   return {

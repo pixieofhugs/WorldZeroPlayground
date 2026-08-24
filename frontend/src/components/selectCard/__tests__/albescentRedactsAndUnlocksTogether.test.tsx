@@ -65,7 +65,7 @@ describe("the Albescent tile redacts and locks on one answer (#2409)", () => {
     setAlbescentRevealed(false);
     const html = card();
     // Two halves of one exemption: the class paints the mark in the sheet's own
-    // colour, the attribute is what `e2e/contrastScan.ts` skips on. Split them
+    // colour, the attribute is what `src/utils/contrastScan.ts` skips on. Split them
     // and either the mark becomes legible or the nightly sweep goes red on a
     // 1.00:1 pairing that is never going to be fixed.
     expect(html).toContain('class="redacted"');
