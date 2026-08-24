@@ -111,8 +111,9 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'the same child, two band-widths instead of three, because the profile ' +
     "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +
     'and not a tile, which is the whole reason five keyframes could become one.',
-  '.alb-stamp .spectrum-rule::before':
-    "the Albescent score stamp's travelling band (#2501). Two tiles of " +
+  '.alb-moves .spectrum-rule:empty::before':
+    "every ornament spectrum on a dispatched Albescent surface (#2501, widened " +
+    'by #2500). Two tiles of ' +
     '`--faction-default-rainbow-loop` across a 200%-wide child, slid one tile by ' +
     'transform inside the `overflow: hidden` index.css puts on the band. The loop ' +
     'cut is NAMED rather than inherited, unlike the five edges above: the band ' +
@@ -120,8 +121,9 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'tiling that would seam. Declared nowhere but inside the gate — with the sheet ' +
     "absent there is no child and the still band is `.spectrum-rule`'s own " +
     'background, which is the na band exactly.',
-  '.alb-stamp .spectrum-dial::before':
-    "the same stamp's turning rim (#2501). `background-image: inherit` takes the " +
+  '.alb-moves .spectrum-dial::before':
+    'every points ring, medallion and annulus on one (#2501, widened by ' +
+    '#2500). `background-image: inherit` takes the ' +
     "annulus's own conic, so the rim registers exactly over the ring it replaces " +
     'and the sheet arriving late changes no pixel. It is a pseudo-element and not ' +
     'the mount so that the TOTAL inside the ring does not turn with it — the call ' +

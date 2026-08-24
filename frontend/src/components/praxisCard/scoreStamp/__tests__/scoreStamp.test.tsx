@@ -304,12 +304,12 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
     const props = { praxis: scored } as unknown as ScoreStampProps
     const dressed = renderToStaticMarkup(<AlbescentScoreStamp {...props} />)
     expect(dressed).toBe(
-      `<div class="alb-stamp">${renderToStaticMarkup(<DefaultScoreStamp {...props} />)}</div>`,
+      `<div class="alb-stamp alb-moves">${renderToStaticMarkup(<DefaultScoreStamp {...props} />)}</div>`,
     )
     // And the two mounts the cascade dresses are UNDER that hook. The equality
     // above cannot see this: it would still hold the day `DefaultScoreStamp`
-    // re-inlines its ramps, at which point `.alb-stamp .spectrum-rule` and
-    // `.alb-stamp .spectrum-dial` match nothing and the whole tell goes quiet
+    // re-inlines its ramps, at which point `.alb-moves .spectrum-rule` and
+    // `.alb-moves .spectrum-dial` match nothing and the whole tell goes quiet
     // with every test in the repo green. `spectrumClasses.test.tsx` and
     // `pointsMarkUnification.test.tsx` hold the na side of each; this is the
     // pairing with the dresser.
@@ -1167,8 +1167,8 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
  * all (#1131 / ADR-0076), so it draws no rule either: the band is the whole
  * spectrum on it.
  *
- * `position: relative` on the rule is not decoration. `.alb-stamp
- * .spectrum-rule::before` is absolutely positioned, so a rule that is not itself
+ * `position: relative` on the rule is not decoration. `.alb-moves
+ * .spectrum-rule:empty::before` is absolutely positioned, so a rule that is not itself
  * a containing block hands Albescent's travelling child the stamp PLATE, and the
  * ramp paints over the working out.
  */

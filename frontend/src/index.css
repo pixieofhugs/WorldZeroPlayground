@@ -6020,6 +6020,67 @@
   background-image: var(--faction-default-rainbow-conic);
 }
 
+/* ── `alb-moves` — THE DRESSER THE TWO CLASSES ABOVE WERE MINTED FOR (#2500,
+   epic #2496 ruling 3). The block above says it in as many words: "a dresser
+   reaches them with `.alb-x .spectrum-rule` … and #2500 is what will animate
+   them." This is that class, and it is the whole of it.
+
+   ONE MARKER, NOT A LIST OF WRAPPERS. `.alb-stamp .spectrum-rule` (#2501) was
+   the first dresser and named one surface; eight more surfaces each carry na
+   spectra of their own, and a nine-selector list restated in four rule bodies is
+   a place for one of them to be forgotten silently. The marker rides on the
+   wrapper each Albescent archetype already draws — the manifest row IS the
+   claim, so a surface that stops being dispatched stops moving by construction.
+   `__tests__/albescentSpectraMove.test.tsx` holds the census.
+
+   `:empty` SEPARATES TWO DIFFERENT OBJECTS WEARING ONE CLASS, and it is the one
+   decision in this block. Most `.spectrum-rule` mounts are ORNAMENT — an
+   `aria-hidden` hairline, band, chip or progress fill with no children — and
+   those are what "the na spectrum" means on these surfaces. Four are FRAMES: a
+   padded ramp with an opaque inner sheet sitting in it (the ×mult badge and the
+   action panel on the task detail, the proof panel on the praxis detail, the
+   profile's identity band). Three reasons they stay still, and any one is
+   enough:
+
+     • a travelling child inside a frame paints over the frame's CONTENT, so it
+       needs the content lifted back into the positioned layer — which changes
+       the stacking of a panel holding live controls;
+     • the clip that child needs is `overflow: hidden` on a box whose contents
+       are a gallery, a CTA and a credential card, not an empty 2px band;
+     • the identity band already carries `.alb-profile-edge`, a ring travelling
+       on its own clock. Moving the ramp underneath it would put two spectra at
+       two speeds on one object — the doubling #2519 spent a PR undoing.
+
+   Every one of those four sits on a surface whose own carrier already travels,
+   so no Albescent surface is left standing still by this line.
+
+   WHAT LIVES HERE IS ONLY WHAT A DEFERRED CHILD CANNOT BRING WITH IT, the shape
+   #2498 and #2501 established: the clip, and the containing block the child's
+   `inset` resolves against. The travel and the turn are in
+   `src/motion.ornament.css` behind the reduced-motion gate. Stranded — reduced
+   motion, or that sheet not yet delivered — there is no child at all and the
+   still frame is each mount's own background right above, which is the na
+   surface exactly. Nothing here carries meaning through motion alone.
+
+   A mount that declares its own `position` inline keeps it: an inline style beats
+   a stylesheet, and `absolute` is a containing block too (the score stamp's band
+   is exactly that). Decorative on every mount, so no contrast is owed, and both
+   cascades come from the tokens, so no dark half is written here. */
+.alb-moves .spectrum-rule:empty {
+  position: relative;
+  overflow: hidden;
+}
+.alb-moves .spectrum-dial {
+  position: relative;
+}
+/* The dial's face — the disc holding the numeral, the monogram or the portrait.
+   The rim is a pseudo-element precisely so the face does not turn with it, and an
+   absolutely positioned `::before` paints over a STATIC sibling however late it
+   sits in the DOM. No offsets, so this moves nothing while the rim is absent. */
+.alb-moves .spectrum-dial > * {
+  position: relative;
+}
+
 /* ── THE na PLATE (#2497, epic #2496) ──
    A kicker, a sheet and a hairline: the three-part block every other faction
    body already draws for itself (`WowFactionBody`'s `PLATE_FRAME`, the Coven's
@@ -6975,9 +7036,10 @@
    measured on the border box the `-1px` above restores, and `inherit` would take
    the padding box's corner instead. */
 
-/* ── Albescent — the SCORE STAMP's tell (#2501, epic #2496). The last faction
-   with a roster to claim a `scoreStamp` row, and the shortest wrapper in the kit:
-   `AlbescentScoreStamp` renders `DefaultScoreStamp` whole and adds `.alb-stamp`.
+/* ── Albescent — the SCORE STAMP's tell (#2501, epic #2496, generalised by
+   #2500). The last faction with a roster to claim a `scoreStamp` row, and the
+   shortest wrapper in the kit: `AlbescentScoreStamp` renders `DefaultScoreStamp`
+   whole and adds a class.
 
    NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
    an aurora, a ring or an edge off their surface, because na drew nothing there
@@ -6989,34 +7051,17 @@
      `.spectrum-dial`  the 96px points ring's annulus           → TURNS
 
    That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
-   ("upgrade, never replace") kept honestly: strip `.alb-stamp` and every pixel is
+   ("upgrade, never replace") kept honestly: strip the class and every pixel is
    the one an unaffiliated player sees.
 
-   THREE DECLARATIONS IS THE WHOLE COST ON THIS SHEET, because the moving parts
-   are #2498's shape: each spectrum grows a travelling/turning `::before` that is
-   declared NOWHERE BUT INSIDE the reduced-motion gate in
-   `src/motion.ornament.css`. Stranded — reduced motion, or the deferred sheet not
-   yet delivered — there is no child at all and the still frame is the mount's own
-   background right here, which is the na stamp exactly. What has to live on the
-   blocking sheet is only what a child cannot bring with it:
-
-   • `overflow: hidden` on the band, the clip the pre-painted ramp slides inside.
-     It changes nothing on its own — the band has no overflowing content — and it
-     inherits the band's inline `10px 10px 0 0` corner for free.
-   • `position: relative` on the dial, so the rim's `inset: 0` resolves against
-     the 96px ring rather than against the stamp plate two levels up.
-   • `position: relative` on the dial's ONE CHILD — `DefaultPointsRing`'s inner
-     disc, which holds the total. The rim is a pseudo-element precisely so the
-     numeral does not turn with it (the call `.alb-detail-ring` already makes),
-     and an absolutely positioned `::before` paints over a STATIC sibling however
-     late it sits in the DOM. Lifting the disc into the positioned layer puts it
-     back on top. No offsets, so it moves nothing while the rim is absent.
-
-   Both cascades come from the tokens, so no dark half is written here. Decorative:
-   both spans are `aria-hidden` chrome and no contrast is owed. ── */
-.alb-stamp .spectrum-rule { overflow: hidden; }
-.alb-stamp .spectrum-dial { position: relative; }
-.alb-stamp .spectrum-dial > * { position: relative; }
+   THE THREE DECLARATIONS THAT STOOD HERE ARE GONE, and nothing about this stamp
+   changed. They were `.alb-stamp .spectrum-rule`/`-dial`/`-dial > *`, and #2500
+   found eight more Albescent surfaces carrying the same two classes and standing
+   still. The stamp's wrapper wears `alb-moves` beside `alb-stamp` now, and the
+   rules it used to own are that marker's, near `.spectrum-rule`'s own
+   declaration further up this sheet — same properties, same durations, nine
+   surfaces instead of one. `.alb-stamp` survives because
+   `DefaultScoreStamp`'s own note points at it; it declares nothing. ── */
 
 /* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
    are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's

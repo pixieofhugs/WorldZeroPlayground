@@ -56,8 +56,8 @@ const RETIRED = [
 /**
  * The BASE rule for a class — the one whose prelude is EXACTLY the selector.
  *
- * `ruleBodies` matches by substring, so a dresser scope like `.alb-stamp
- * .spectrum-rule` (#2501) or `.alb-desk .spectrum-rule` (#2505) counts as a
+ * `ruleBodies` matches by substring, so a dresser scope like `.alb-moves
+ * .spectrum-rule` (#2501, #2500) or `.alb-desk .spectrum-rule` (#2505) counts as a
  * `.spectrum-rule` rule to it. That is right for the cascade questions it
  * usually answers and wrong for this one: a dresser scope is the DESIGNED use
  * of these names — #2497's own docblock says so ("a dresser reaches them with
