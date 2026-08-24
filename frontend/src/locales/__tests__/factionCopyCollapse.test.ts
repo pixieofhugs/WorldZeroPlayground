@@ -72,7 +72,8 @@ const SLUGS = [
 ]
 
 /**
- * The 40 families, as `[banned key pattern, shared key, agreed wording]`.
+ * #1911's 40 families, as `[banned key pattern, shared key, agreed wording]` —
+ * minus the two the terms slip owned, retired in place below (#2298).
  *
  * The pattern is matched against `ns:dotted.key` with `{F}` standing for any
  * slug. Some families' per-faction key sat under a per-faction SECTION name
@@ -105,8 +106,12 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // --- factions.json: the faction detail page ---------------------------
   { banned: `factions:{F}\\.${ABOUT}\\.empty`, shared: 'factions:detail.descriptionEmpty', wording: 'No description yet.' },
   { banned: `factions:{F}\\.${ABOUT}\\.heading`, shared: 'factions:detail.aboutHeading', wording: 'About' },
-  { banned: `factions:{F}\\.invitation\\.terms\\.1\\.label`, shared: 'factions:invitation.skillsLabel', wording: 'Required skills' },
-  { banned: `factions:{F}\\.invitation\\.terms\\.2\\.label`, shared: 'factions:invitation.outputLabel', wording: 'Expected output' },
+  // Two rows stood here — `{F}.invitation.terms.1.label` and `.2.label`,
+  // collapsed onto `invitation.skillsLabel` / `.outputLabel`. #2298 deleted the
+  // terms slip out of all eight letters, shared labels included, so both rules
+  // now police a key on neither side of the collapse. A rule guarding a family
+  // that no longer exists is dead weight, and it cannot fail: retired, not
+  // rewritten. `catalog.test.ts` is where the slip's absence is pinned.
   { banned: `factions:{F}\\.join\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
   // The interpolation moved off the end of the sentence (#2368): "…to
   // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
