@@ -77,10 +77,10 @@ describe("FactionSigil dispatcher (#659)", () => {
 
   // #1626 gave albescent its own adapter row here, holding the surveyor's
   // cross-hair; #1891 deleted it; Sigil Studies v2 reinstates it holding the
-  // labyrinth, by owner ruling. `factions/albescent.ts` still registers no
-  // `sigil` row and still must not (its manifest takes only
-  // Default-plus-a-flourish surfaces, #783), so the row lives in the dispatcher.
-  // Asserted in full further down.
+  // labyrinth, by owner ruling. Since #2529 `factions/albescent.ts` REGISTERS
+  // that row like every other faction/surface pair — it used to be spread into
+  // the map at the call site, which is the bypass the block at the bottom of
+  // this file now pins. Asserted in full further down.
   it("renders the labyrinth for the albescent slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
     expect(html).toContain("/factionMarks/labyrinth.svg");
