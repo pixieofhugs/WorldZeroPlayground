@@ -27,12 +27,12 @@
  * simply absent under the DOM-less test harness and any SSR-shaped render. A
  * refusal degrades to "no mark", which costs the resume and nothing else.
  */
-const HANDOFF_KEY = 'wz_onboarding_handoff'
+export const ONBOARDING_HANDOFF_KEY = 'wz_onboarding_handoff'
 
 /** Called immediately before the flow hands the browser to a provider. */
 export function markOnboardingHandoff(): void {
   try {
-    sessionStorage.setItem(HANDOFF_KEY, 'true')
+    sessionStorage.setItem(ONBOARDING_HANDOFF_KEY, 'true')
   } catch {
     // Storage refused. The player lands at `/` signed in and browses from
     // there — the pre-resume behaviour, not a broken one.
@@ -42,7 +42,7 @@ export function markOnboardingHandoff(): void {
 /** Whether this tab left the flow for a provider and has not been back since. */
 export function onboardingHandoffPending(): boolean {
   try {
-    return sessionStorage.getItem(HANDOFF_KEY) === 'true'
+    return sessionStorage.getItem(ONBOARDING_HANDOFF_KEY) === 'true'
   } catch {
     return false
   }
@@ -51,7 +51,7 @@ export function onboardingHandoffPending(): boolean {
 /** Forget the mark. The flow does this on mount, having already read it. */
 export function clearOnboardingHandoff(): void {
   try {
-    sessionStorage.removeItem(HANDOFF_KEY)
+    sessionStorage.removeItem(ONBOARDING_HANDOFF_KEY)
   } catch {
     // Nothing was stored if the write refused, so nothing needs removing.
   }
