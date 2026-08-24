@@ -48,7 +48,15 @@ import { aTask } from '../../../test/fixtures'
  *
  * 18 is `modifiedPoints` in every state below, so this is the plural.
  */
-const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+/**
+ * THE KEY MOVED IN #2554. The worth cell is the faction's own `ScoreStamp`
+ * now, not a second readout each page draws, so the unit is the stamp's
+ * shared `praxis:card.stamp.points` — lower case, because that catalog was
+ * never shouted. `tasks:detail.points.total` survives on Albescent alone,
+ * whose prism ring overrides the cell; it differs only in case, which is
+ * why the haystacks below are lowered rather than the anchor forked.
+ */
+const POINTS_UNIT = i18n.t("praxis:card.stamp.points", { count: 18 });
 
 
 const TASK = aTask({
@@ -233,7 +241,7 @@ describe("Everymen task detail — the broadsheet", () => {
     // the stamped total rather than the `base` eyebrow: #1704 drops that row at
     // the identity multiplier, so the total is what "the box is still here"
     // looks like today.
-    expect(text).toContain(POINTS_UNIT);
+    expect(text.toLowerCase()).toContain(POINTS_UNIT);
     expect(text).not.toContain("Sign up");
   });
 });

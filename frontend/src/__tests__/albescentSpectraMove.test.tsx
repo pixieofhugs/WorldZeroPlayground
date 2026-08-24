@@ -203,8 +203,9 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
   ],
   '../pages/taskDetail/archetypes/DefaultTaskDetail.tsx': [
     ['ornament', "`sectionHead`'s trailing hairline"],
-    ['frame', 'the ×mult badge, around the multiplier readout'],
-    ['ornament', 'the breakdown hairline'],
+    // The ×mult badge's frame and the breakdown hairline left this file in
+    // #2554 along with the readout that held them — the worth cell is
+    // `DefaultScoreStamp` now, and its own spectra are censused there.
     ['frame', 'the action panel, around the worth cell and the CTA'],
     ['ornament', 'the eyebrow faction chip'],
     ['ornament', "the gallery head's hairline"],

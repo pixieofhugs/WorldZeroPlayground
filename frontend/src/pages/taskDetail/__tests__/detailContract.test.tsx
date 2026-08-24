@@ -46,7 +46,15 @@ import { aTask } from '../../../test/fixtures'
  *
  * 18 is `modifiedPoints` in every state below, so this is the plural.
  */
-const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+/**
+ * THE KEY MOVED IN #2554. The worth cell is the faction's own `ScoreStamp`
+ * now, not a second readout each page draws, so the unit is the stamp's
+ * shared `praxis:card.stamp.points` — lower case, because that catalog was
+ * never shouted. `tasks:detail.points.total` survives on Albescent alone,
+ * whose prism ring overrides the cell; it differs only in case, which is
+ * why the haystacks below are lowered rather than the anchor forked.
+ */
+const POINTS_UNIT = i18n.t("praxis:card.stamp.points", { count: 18 });
 
 
 /** The comment thread's pre-fetch state — present iff the thread mounted. */
@@ -244,7 +252,7 @@ describe("task-detail worth readout", () => {
       const { text } = render(<Archetype state={baseState()} />);
       expect(text).not.toContain(BASE_ROW);
       expect(text).toContain("18");
-      expect(text).toContain(POINTS_UNIT);
+      expect(text.toLowerCase()).toContain(POINTS_UNIT);
     });
 
     it(`${slug} keeps base, chip and total once a factor is real`, () => {
@@ -361,7 +369,10 @@ describe("task-detail reading order", () => {
       const description = at(text, "Make something small and honest.");
       const byline = at(text, "Wren Abalone");
       const headcount = at(text, "people working on this");
-      const panel = at(text, POINTS_UNIT);
+      // Lowered, not re-anchored: the case is the only difference between
+      // the eight stamped skins and Albescent's ring, and `toLowerCase`
+      // preserves length so the index still orders against the rest.
+      const panel = at(text.toLowerCase(), POINTS_UNIT);
 
       expect(title, "description after the title").toBeLessThan(description);
       expect(description, "byline after the description").toBeLessThan(byline);

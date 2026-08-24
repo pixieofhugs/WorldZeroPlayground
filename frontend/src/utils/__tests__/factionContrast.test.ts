@@ -2893,7 +2893,11 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
   const READERS: Record<string, string> = {
     "pages/characterProfile/archetypes/UaProfileBody.tsx": "a gradient stop, not text",
     "pages/editPraxis/archetypes/UaEditPraxis.tsx": "the composer's errorColor",
-    "pages/taskDetail/archetypes/UaTaskDetail.tsx": "the ensō numeral, display size",
+    // `pages/taskDetail/archetypes/UaTaskDetail.tsx` left this list in #2554:
+    // that page drew its own ensō at display size and now mounts
+    // `UaScoreStamp`, which letters the same mark in `--faction-ua-card-accent`.
+    // The scope is one file smaller because a drawing was deleted, not because
+    // a rule was relaxed — the entry goes rather than being kept unread.
   };
 
   it("is read only where the numeral is display type or the mark is not text", () => {

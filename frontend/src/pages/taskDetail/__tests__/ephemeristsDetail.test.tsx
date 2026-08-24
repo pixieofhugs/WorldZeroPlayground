@@ -131,7 +131,13 @@ describe("Ephemerists task detail — the Valley plate", () => {
     // Two incised glyph registers (`epg-glyph`) were asserted here. #2210
     // retired them: the notation band is the head's only ornament row, and the
     // block further down is what says so.
-    expect(html, "the stepped octagon medallion").toContain("M30 4 L70 4 L96 30");
+    // THE STEPPED OCTAGON MEDALLION LEFT IN #2554 — a ~60-line drawing this
+    // page made of a score the faction's `EphemeristsScoreStamp` already
+    // struck in its compass rose (#2145). The rose's graduated limb is the
+    // mark that stands here now.
+    expect(html, "the compass rose that replaced it").toContain(
+      '<circle cx="50" cy="50" r="47"',
+    );
     expect(text, "the masthead wordmark").toContain("The Ephemerists");
     // The kite's opening move; brushed rather than ruled since Sigil Studies v2.
     expect(html, "the masthead's kite sigil").toContain("M19.1 30.8");
