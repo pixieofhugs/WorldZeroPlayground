@@ -57,7 +57,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  */
 export default function AlbescentScoreStamp(props: ScoreStampProps) {
   return (
-    <div className="alb-stamp">
+    <div className="alb-stamp alb-moves">
       <DefaultScoreStamp {...props} />
     </div>
   );

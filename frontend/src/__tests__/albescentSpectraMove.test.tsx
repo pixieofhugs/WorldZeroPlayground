@@ -120,9 +120,11 @@ describe('the census: every Albescent surface with a classed spectrum wears the 
    * and this is the line that says so.
    */
   it('the field desk drops its bar rather than moving it', () => {
-    const bodies = ruleBodies(INDEX, '.alb-desk .spectrum-rule')
-    expect(bodies.length).toBeGreaterThan(0)
-    expect(bodies.join('\n')).toContain('display: none')
+    // The mount shares a rule with the composer's retired band, so the prelude
+    // is a list and `ruleBodies` (whole-prelude matching) cannot reach it.
+    const at = INDEX.indexOf('.alb-desk .spectrum-rule')
+    expect(at).toBeGreaterThan(-1)
+    expect(INDEX.slice(at, INDEX.indexOf('}', at))).toContain('display: none')
   })
 })
 

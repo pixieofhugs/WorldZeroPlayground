@@ -40,7 +40,7 @@ import DefaultFactionBody from "./DefaultFactionBody";
  */
 export default function AlbescentFactionBody({ state }: { state: FactionDetailState }) {
   return (
-    <div className="alb-faction-body">
+    <div className="alb-faction-body alb-moves">
       <DefaultFactionBody
         state={state}
         plateOrnament={<span aria-hidden="true" className="alb-plate-edge" />}

@@ -56,7 +56,7 @@ export default function AlbescentTaskCard(props: CardProps) {
          the light, since the difference is a shimmer and never a colour. It is
          unconditional: it is not a ground texture.
          `alb-prism` is the ground, and it is the one the alternation takes. */
-      className={groundIsBusy ? "alb-task" : "alb-task alb-prism"}
+      className={groundIsBusy ? "alb-task alb-moves" : "alb-task alb-moves alb-prism"}
       style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}
     >
       <DefaultTaskCard {...props} />

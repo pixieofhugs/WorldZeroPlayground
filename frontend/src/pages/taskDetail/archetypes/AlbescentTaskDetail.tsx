@@ -168,7 +168,7 @@ export default function AlbescentTaskDetail({
   );
 
   return (
-    <div className="alb-detail alb-prism">
+    <div className="alb-detail alb-moves alb-prism">
       <DefaultTaskDetail state={state} worthSlot={worth} />
       <span aria-hidden="true" className="alb-detail-foil" />
       <span aria-hidden="true" className="alb-detail-edge" />

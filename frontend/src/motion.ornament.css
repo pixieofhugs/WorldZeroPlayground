@@ -733,9 +733,33 @@
   .alb-faction-hero .faction-hero-sigil { animation: alb-spin 48s linear infinite; }
 }
 
-/* ── Albescent — the SCORE STAMP's two spectra (#2501, epic #2496). The whole
-   delta between a member's stamp and an unaffiliated player's: the 2px band
-   across its top edge travels, and the 96px points ring's annulus turns.
+/* ── Albescent — EVERY na SPECTRUM ON A DISPATCHED SURFACE (#2501, widened by
+   #2500; epic #2496 ruling 3). "Nothing dispatched to Albescent holds a still
+   spectrum", read literally: the two classes #2497 minted for the seventeen
+   inline ramps scattered through the `Default*` files get up and walk wherever
+   an Albescent wrapper is over them.
+
+     `.spectrum-rule`  every band, hairline, chip and progress fill → TRAVELS
+     `.spectrum-dial`  every points ring, medallion and annulus     → TURNS
+
+   READOUTS TOO, WHICH IS THE RULING AND NOT AN OVERSHOOT. There is no
+   chrome/readout distinction in this epic: the task card's points ring, the
+   stamp's total, the profile's level bar and its badge medallions are all in
+   this list. Ruling 10 draws the other edge — a surface not in a manifest
+   (`LevelUpPopup` and its `--faction-default-stop-*`) is untouched, because
+   `alb-moves` only ever rides on a wrapper the manifest dispatches.
+
+   TWO SELECTORS FOR NINE SURFACES. #2501 shipped this as `.alb-stamp
+   .spectrum-rule`/`-dial`, which is the same two rules scoped to one wrapper;
+   the census in `__tests__/albescentSpectraMove.test.tsx` found eight more
+   surfaces wearing the same classes and standing still. The marker replaces the
+   scope and the declarations below are #2501's own, byte for byte — the stamp's
+   two spectra move at exactly the pace and phase they moved at yesterday.
+
+   `:empty` IS THE ORNAMENT/FRAME LINE and index.css carries the whole argument
+   for it beside `.spectrum-rule`'s declaration. Short form: four mounts wear
+   this class as a padded ramp AROUND content rather than as an ornament, and a
+   travelling child inside one paints over the content it frames.
 
    NO KEYFRAME IS DECLARED HERE, and both reuses were checked rather than
    assumed. `alb-edge-travel` above is "slide a two-tile child by one tile" and
@@ -749,30 +773,40 @@
    this sheet. Each moves a STATIC pre-painted gradient with `transform`, so the
    ramp rasterises once and the frames are the compositor's.
 
-   BOTH CHILDREN EXIST ONLY INSIDE THIS GATE, the shape #2498 gave the five card
+   BOTH CHILDREN EXIST ONLY INSIDE THIS GATE, the shape #2498 gave the nine card
    edges. Stranded — reduced motion, or this sheet never delivered — there is no
-   `::before` on either mount and the still stamp is `.spectrum-rule` and
+   `::before` on either mount and the still surface is `.spectrum-rule` and
    `.spectrum-dial` painting their own backgrounds from index.css: the exact
-   spectrum stamp every unaffiliated player already sees, drawn in its final
-   colours at its final size. Nothing here carries meaning through motion alone.
+   spectrum an unaffiliated player already sees, drawn in its final colours at
+   its final size. Nothing here carries meaning through motion alone.
 
    THE BAND STATES ITS RAMP; THE RING INHERITS ITS OWN. That asymmetry is the one
    decision in this block. The ring's resting paint is
    `--faction-default-rainbow-conic` and two tiles of a wheel is a wheel, so
    `background-image: inherit` registers the rim exactly over the annulus it
-   replaces — the same trick the five edges use. The band cannot: `.spectrum-rule`
+   replaces — the same trick the nine edges use. The band cannot: `.spectrum-rule`
    is `--faction-default-rainbow`, the seven-stop sweep whose last stop is NOT its
    first, so tiling it twice would put a violet-meets-red seam through every
    cycle. `--faction-default-rainbow-loop` is the same spectrum cut to close, and
    naming it is what buys the seamless loop.
 
+   ONE CLOCK EACH, NOT ONE PER MOUNT, and the issue's "give each mount its own
+   duration so they drift apart rather than pulsing together" is already answered
+   two ways. Nothing here PULSES: both keyframes are linear and endless, so there
+   is no crest for two mounts to reach at once — the canvas's 12-42s randomiser
+   and its negative `animation-delay` were desyncing a preview of blooms, which
+   #2499 retired. And the tile is the MOUNT's own width, so a 7px chip and a
+   400px band on one clock travel at wildly different apparent speeds and never
+   read as one machine. What a shared clock does buy is the thing #2501 measured:
+   two rainbows at two speeds on one page are "two rainbows arguing". Across the
+   kit the family is already spread — 8s and 9s for the masked edges, 16s here,
+   24s the avatar, 44/46/48/58s the wheels.
+
    THE PACES ARE THE SIBLING SURFACES', not new numbers: 46s for a turn is
    `.alb-detail-ring`'s, and 16s across the band is the four card edges' old
-   mount-width pace. A stamp sits on the same page as both, and two rainbows
-   moving at different speeds beside each other is the "two rainbows arguing" the
-   feed block warns about. ── */
+   mount-width pace. ── */
 @media (prefers-reduced-motion: no-preference) {
-  .alb-stamp .spectrum-rule::before {
+  .alb-moves .spectrum-rule:empty::before {
     content: "";
     position: absolute;
     top: 0;
@@ -783,7 +817,7 @@
     background-size: 50% 100%;
     animation: alb-edge-travel 16s linear infinite;
   }
-  .alb-stamp .spectrum-dial::before {
+  .alb-moves .spectrum-dial::before {
     content: "";
     position: absolute;
     inset: 0;
