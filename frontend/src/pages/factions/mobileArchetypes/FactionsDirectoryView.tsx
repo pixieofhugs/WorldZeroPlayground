@@ -80,11 +80,13 @@ export default function FactionsDirectoryView({
           as the cards below. Deliberately not extracted — single caller.
 
           Driven off `visible` (the rows actually rendered), NOT the static
-          FACTION_RAINBOW_ORDER: Albescent is a secret society omitted from
-          /factions until the account is revealed to it (ADR-0027, #390,
-          routers/factions.py:53). A hardcoded seven-stripe bar would both
-          break the stripe==row correspondence for unrevealed players and
-          leak Albescent's existence in its own colour. */}
+          FACTION_RAINBOW_ORDER, and that matters MORE since ADR-0082 rather
+          than less. This used to read "Albescent is a secret society omitted
+          from /factions until the account is revealed to it (ADR-0027)" — the
+          server no longer omits it, so the bar now draws EIGHT stripes for
+          everyone, the eighth in the neutral default because Albescent owns no
+          hue (#783). A list hardcoded to seven would break the stripe==row
+          correspondence in the other direction. */}
       {visible.length > 0 && (
         <div
           aria-hidden="true"

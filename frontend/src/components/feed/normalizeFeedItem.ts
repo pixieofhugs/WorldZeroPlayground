@@ -355,12 +355,23 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
       }
     case 'vote_on_mine':
     case 'vote_changed_on_mine':
-      // One row shape, two sentences. The payload is identical — `points_earned`
-      // is the score that stands right now either way — and the ONLY thing that
+      // One row shape, two sentences. The payload is identical — `value` is the
+      // vote that stands right now either way — and the ONLY thing that
       // differs is whether this is news of a vote or news of a vote moving
       // (#1712). The changed row must not pose as a fresh vote: the author has
       // already been told a number, and "voted on your praxis" beside a
       // different one is the silent rewrite this type exists to end.
+      //
+      // The number is what THIS voter added, not the praxis's whole score
+      // (#2402, reversing #2199): `points_from_votes` is a plain `sum(
+      // Vote.value)` added after the multipliers, so a single vote's
+      // contribution to the total is its own `value`, exactly — the raw input
+      // the sum is over, not arithmetic restated at this seam.
+      //
+      // ponytail: a *changed* vote can only print the value that stands now,
+      // never the size of the change, because no prior value is stored. The
+      // upgrade path is a `previous_value` column on `Vote` set in
+      // `cast_or_update_vote` (see `_vote_item_factory`).
       return {
         slug,
         actor,
@@ -375,9 +386,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
-          p.points_earned != null
-            ? i18n.t('feed:row.pointsEarned', { points: p.points_earned })
-            : null,
+          p.value != null ? i18n.t('feed:row.pointsEarned', { points: p.value }) : null,
         level: null,
         actions: [],
       }

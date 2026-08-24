@@ -1,9 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 84">
-<!-- The labyrinth. Ported verbatim from Sigil Studies v2's Albescent
-     "New" band, whose mark is a clip-path in ABSOLUTE units (which is why
-     the study ships three hand-scaled copies, at 84, 34 and 15). This is
-     the 84px variant, the highest-precision of the three, in a viewBox so
-     it scales from one drawing. It is an ALPHA STENCIL: the fill is
-     discarded and the ink comes from a token, the way enso.webp works. -->
-<path fill="#000" d="M55.5 6.7L59.1 8.3L62.5 10.2L65.6 12.5L68.5 15.1L71.1 17.9L73.5 21L75.4 24.4L77.1 27.9L78.3 31.6L79.2 35.4L79.7 39.2L79.8 43.1L79.5 47L78.8 50.8L77.7 54.5L76.2 58.1L74.4 61.5L72.2 64.7L69.7 67.7L66.9 70.4L63.9 72.8L60.6 74.9L57.1 76.7L53.5 78L49.7 79L45.9 79.6L42 79.8L38.1 79.6L34.3 79L30.5 78L26.9 76.7L23.4 74.9L20.1 72.8L17.1 70.4L14.3 67.7L11.8 64.7L9.6 61.5L7.8 58.1L6.3 54.5L5.2 50.8L4.5 47L4.2 43.1L4.3 39.2L4.8 35.4L5.7 31.6L6.9 27.9L8.6 24.4L10.5 21L12.9 17.9L15.5 15.1L18.4 12.5L21.5 10.2L24.9 8.3L28.5 6.7L30.9 13L27.9 14.3L25.2 15.9L22.6 17.7L20.2 19.9L18 22.2L16.1 24.8L14.5 27.5L13.2 30.4L12.1 33.4L11.4 36.5L11 39.7L10.9 42.9L11.2 46.1L11.8 49.2L12.7 52.3L13.9 55.2L15.4 58.1L17.2 60.7L19.2 63.2L21.5 65.4L24 67.4L26.7 69.1L29.6 70.5L32.6 71.6L35.7 72.4L38.8 72.9L42 73.1L45.2 72.9L48.3 72.4L51.4 71.6L54.4 70.5L57.3 69.1L60 67.4L62.5 65.4L64.8 63.2L66.8 60.7L68.6 58.1L70.1 55.2L71.3 52.3L72.2 49.2L72.8 46.1L73.1 42.9L73 39.7L72.6 36.5L71.9 33.4L70.8 30.4L69.5 27.5L67.9 24.8L66 22.2L63.8 19.9L61.4 17.7L58.8 15.9L56.1 14.3L53.1 13ZM32.1 67.9L29.5 66.7L27 65.3L24.7 63.6L22.6 61.8L20.6 59.7L18.9 57.4L17.5 54.9L16.3 52.3L15.4 49.6L14.7 46.9L14.4 44L14.3 41.2L14.5 38.4L15 35.6L15.8 32.8L16.9 30.2L18.3 27.7L19.9 25.3L21.7 23.1L23.7 21.2L26 19.4L28.4 17.9L30.9 16.6L33.6 15.6L36.3 14.9L39.2 14.4L42 14.3L44.8 14.4L47.7 14.9L50.4 15.6L53.1 16.6L55.6 17.9L58 19.4L60.3 21.2L62.3 23.1L64.1 25.3L65.7 27.7L67.1 30.2L68.2 32.8L69 35.6L69.5 38.4L69.7 41.2L69.6 44L69.3 46.9L68.6 49.6L67.7 52.3L66.5 54.9L65.1 57.4L63.4 59.7L61.4 61.8L59.3 63.6L57 65.3L54.5 66.7L51.9 67.9L49.5 61.6L51.5 60.7L53.4 59.7L55.1 58.4L56.7 57L58.2 55.4L59.5 53.6L60.6 51.8L61.5 49.8L62.2 47.8L62.7 45.7L62.9 43.5L63 41.4L62.8 39.2L62.4 37.1L61.8 35L61 33.1L60 31.1L58.8 29.4L57.4 27.7L55.8 26.2L54.1 24.9L52.3 23.7L50.4 22.7L48.4 22L46.3 21.4L44.2 21.1L42 21L39.8 21.1L37.7 21.4L35.6 22L33.6 22.7L31.7 23.7L29.9 24.9L28.2 26.2L26.6 27.7L25.2 29.4L24 31.1L23 33.1L22.2 35L21.6 37.1L21.2 39.2L21 41.4L21.1 43.5L21.3 45.7L21.8 47.8L22.5 49.8L23.4 51.8L24.5 53.6L25.8 55.4L27.3 57L28.9 58.4L30.6 59.7L32.5 60.7L34.5 61.6ZM48.3 25.5L50 26.3L51.5 27.2L53 28.2L54.4 29.4L55.6 30.8L56.7 32.2L57.6 33.8L58.4 35.4L59 37.1L59.4 38.9L59.6 40.7L59.6 42.5L59.5 44.3L59.2 46.1L58.6 47.8L58 49.5L57.1 51.1L56.1 52.6L54.9 54L53.6 55.3L52.2 56.4L50.7 57.4L49 58.2L47.4 58.8L45.6 59.3L43.8 59.5L42 59.6L40.2 59.5L38.4 59.3L36.6 58.8L35 58.2L33.3 57.4L31.8 56.4L30.4 55.3L29.1 54L27.9 52.6L26.9 51.1L26 49.5L25.4 47.8L24.8 46.1L24.5 44.3L24.4 42.5L24.4 40.7L24.6 38.9L25 37.1L25.6 35.4L26.4 33.8L27.3 32.2L28.4 30.8L29.6 29.4L31 28.2L32.5 27.2L34 26.3L35.7 25.5L38.1 31.8L37.1 32.3L36.1 32.8L35.2 33.5L34.3 34.2L33.6 35L32.9 35.9L32.3 36.9L31.9 37.9L31.5 39L31.2 40.1L31.1 41.2L31.1 42.3L31.2 43.4L31.4 44.5L31.7 45.6L32.1 46.7L32.7 47.6L33.3 48.6L34 49.4L34.8 50.2L35.7 50.9L36.6 51.5L37.6 52L38.7 52.4L39.8 52.7L40.9 52.9L42 52.9L43.1 52.9L44.2 52.7L45.3 52.4L46.4 52L47.4 51.5L48.3 50.9L49.2 50.2L50 49.4L50.7 48.6L51.3 47.6L51.9 46.7L52.3 45.6L52.6 44.5L52.8 43.4L52.9 42.3L52.9 41.2L52.8 40.1L52.5 39L52.1 37.9L51.7 36.9L51.1 35.9L50.4 35L49.7 34.2L48.8 33.5L47.9 32.8L46.9 32.3L45.9 31.8Z"/>
+<!-- The labyrinth, re-cut for optical size (ladder B, owner ruling 2026-08-22).
+     Same mark as before: three concentric walls, each broken by one entrance,
+     the middle wall opening opposite the other two. What changed is only the
+     BAND-TO-GAP RATIO, because the previous cut could not survive a small mount:
+     its walls were 16% of the radius with 8% gaps over a 26-90% span, which at
+     22px put the gaps at 0.9 device pixels and antialiased them into a solid
+     ring -- i.e. into na DefaultSigil silhouette, the one thing this mark must
+     not converge on.
+     This cut spends more of the radius (15-97%) and splits it 20% wall / 11%
+     gap, and widens each entrance from 42 to 54 degrees about its ORIGINAL
+     centre (270 deg outer and inner, 90 deg middle), so nothing moves -- the
+     openings only get wide enough to read.
+     Arcs, not the polyline the 84px clip-path port produced: exact at every
+     scale and a tenth of the bytes.
+     It is an ALPHA STENCIL. The fill is discarded and the ink comes from a
+     token, the way enso.webp works -- see AlbescentSigil. -->
+<path fill="#000" d="M60.5 5.7A40.74 40.74 0 1 1 23.5 5.7L27.32 13.18A32.34 32.34 0 1 0 56.68 13.18ZM29.42 66.7A27.72 27.72 0 1 1 54.58 66.7L50.77 59.21A19.32 19.32 0 1 0 33.23 59.21ZM48.67 28.9A14.7 14.7 0 1 1 35.33 28.9L39.14 36.39A6.3 6.3 0 1 0 44.86 36.39Z"/>
 </svg>

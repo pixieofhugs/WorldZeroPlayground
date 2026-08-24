@@ -78,6 +78,10 @@ Python conventions live in `backend/CLAUDE.md`; frontend conventions in
 - DB: `docker-compose up -d`; `alembic upgrade head` after pulling
 - Tests: `pytest --cov=. --cov-fail-under=80` from `/backend`
 
+Every backend command above needs `backend/.venv` activated, and the backend
+preview does **not** work from a worktree — worktrees carry no venv. Read
+`docs/agents/running-locally.md` before starting the stack.
+
 ## Agent skills
 
 This repo is configured for the engineering skill set (`triage`, `qa`, `review`, `tdd`, etc.). Details live in `docs/agents/`.

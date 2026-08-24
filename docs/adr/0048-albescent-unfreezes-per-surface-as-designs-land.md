@@ -1,6 +1,6 @@
 # ADR-0048 — Albescent unfreezes one surface at a time, as designs land
 
-**Status:** Accepted
+**Status:** Amended by ADR-0083
 **Date:** 2026-07-19
 **Amends:** **ADR-0046** (Albescent is frozen: new surfaces fall through to NA)
 **Relates to:** ADR-0027 (Albescent is a secret society), ADR-0039 (the NA/default
@@ -45,3 +45,12 @@ longer frozen wholesale.
   tell depends on the NA resemblance.
 - Future Albescent surfaces follow this ADR: land a design, unfreeze that one surface,
   keep the rest on NA.
+
+## Amendment (2026-08-23) — the per-surface mode is closed
+
+**ADR-0083** (Albescent is one ornament vocabulary over na, not a skin per
+surface). The premise above stands unchanged — Albescent is still released
+against a design rather than invented — but the *mode* is closed: there is now
+one design for the whole identity, so a surface **adopts** the vocabulary
+instead of commissioning its own. The last bullet above, "future Albescent
+surfaces follow this ADR", is the clause that changes.

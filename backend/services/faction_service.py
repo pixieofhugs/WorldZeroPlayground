@@ -171,9 +171,9 @@ async def defect_to_faction(
     Raises 422 if the target is the current faction or the unaffiliated
     sentinel, 404 if the target doesn't exist, and 403 if the player previously
     left this faction and it doesn't allow rejoining, if the character does not
-    hold the target faction's current-era invitation letter (#454), or if the
-    target is Albescent and the account has not met the ADR-0021 eligibility
-    bar (level + full faction coverage).
+    hold the target faction's current-era invitation letter (#454), or — for
+    Albescent — if the account has never earned the unlock, or if this character
+    is itself at ``era.albescent_level_required`` (#2399: "never the earner").
     """
     if character.faction_slug == target_slug:
         raise_coded(
@@ -219,17 +219,33 @@ async def defect_to_faction(
             "You don't hold an invitation for that faction.",
         )
 
-    # ADR-0021: Albescent is joined in the field via defection, but only once the
-    # *account* (not this character) has met the eligibility bar. Albescent's
-    # can_always_rejoin=True slips the selectability guard above, so enforce here.
-    if target_slug == ALBESCENT_FACTION_SLUG and not await can_start_as_albescent(
-        character.account_id, session, era
-    ):
-        raise_coded(
-            403,
-            ErrorCode.faction_albescent_not_eligible,
-            "The order has not extended its hand to you.",
-        )
+    # #2399 (supersedes ADR-0021): Albescent is joined in the field via
+    # defection, and the door has two locks. Albescent's can_always_rejoin=True
+    # slips the selectability guard above, so both are enforced here.
+    if target_slug == ALBESCENT_FACTION_SLUG:
+        # (1) The ACCOUNT must have earned it — one of its lives, once, at the
+        # level and covering every faction. Sticky, so this is a column read.
+        if not await can_start_as_albescent(character.account_id, session, era):
+            raise_coded(
+                403,
+                ErrorCode.faction_albescent_not_eligible,
+                "The order has not extended its hand to you.",
+            )
+        # (2) …and THIS life must still have its climb ahead of it. **The only
+        # maximum-level gate in the game**: every other level test in this
+        # codebase is a floor, and this one is a ceiling, so it reads backwards
+        # on purpose. The life that earned the door is exactly the life that may
+        # not walk through it — Albescent is the New Game+ faction, taken by a
+        # sibling who starts over, never by the one who finished.
+        #
+        # Character creation needs no twin of this check: a new life is level 0.
+        stats = await get_or_create_stats(session, character.id, era_row.id)
+        if stats.level >= era.albescent_level_required:
+            raise_coded(
+                403,
+                ErrorCode.faction_albescent_new_game_plus_only,
+                "Available only for New Game+.",
+            )
 
     # Record defection from current faction (if it's a real faction, not na)
     old_slug = character.faction_slug

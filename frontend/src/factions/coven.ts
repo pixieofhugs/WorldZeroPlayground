@@ -14,6 +14,7 @@ import { lazyArchetype } from './lazyArchetype'
 const CovenAvatar = lazyArchetype(() => import('../components/avatar/CovenAvatar'))
 const CovenBackdrop = lazyArchetype(() => import('../components/backdrop/CovenBackdrop'))
 const CovenComment = lazyArchetype(() => import('../components/comments/voices/CovenComment'))
+const CovenCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/CovenCreateCharacter'))
 const CovenDuelSealConfirm = lazyArchetype(() => import('../components/duel/CovenDuelSealConfirm'))
 const CovenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/CovenEditPraxis'))
 const CovenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/CovenFactionBody'))
@@ -48,6 +49,10 @@ export const COVEN_MANIFEST: FactionManifest = {
   taskDetail: () => CovenTaskDetail,
   praxisDetail: () => CovenPraxisDetail,
   editPraxis: () => CovenEditPraxis,
+  // The slug this dispatches on is the calling being PICKED, not a loaded
+  // record, so the page reskins to this slip live and returns to the Default
+  // the moment the pick is cleared (#2351).
+  createCharacter: () => CovenCreateCharacter,
   factionHero: () => CovenFactionHero,
   factionBody: () => CovenFactionBody,
   profileBody: () => CovenProfileBody,

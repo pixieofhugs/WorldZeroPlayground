@@ -110,9 +110,14 @@ app.add_middleware(
     # 3600` into the stored value and never reads it back, so its hour is
     # decorative; the default this replaces is FOURTEEN DAYS of replayability
     # for an abandoned sign-in. Starlette feeds this to `TimestampSigner.
-    # unsign()`, so it is server-enforced rather than a browser hint. Safe to
-    # cut this short because nothing in `backend/` reads `request.session`
-    # except authlib.
+    # unsign()`, so it is server-enforced rather than a browser hint.
+    #
+    # `routers/auth.py` is the second reader since #2162 — it parks a returning
+    # deleted player's interrupted sign-in here while the consent gate asks its
+    # one question — and it wants this same number for its own reason: an
+    # unanswered gate should lapse, not linger. So the ten minutes now has two
+    # arguments behind it rather than one, and shortening it further would
+    # start refusing people who read the sentence before clicking.
     max_age=600,
     # LOAD-BEARING — never "strict". The callback arrives via a cross-site 302
     # from the provider, so `Lax`'s carve-out for top-level safe-method

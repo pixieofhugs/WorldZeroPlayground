@@ -16,7 +16,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { CharacterOut, CurrentUser } from '../../../api/auth'
-import { FACTION_RAINBOW_ORDER, factionName } from '../../../utils/factions'
+import { FACTION_RAINBOW_ORDER, REDACTED, factionName } from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
@@ -136,11 +136,18 @@ describe('desktop podium', () => {
 })
 
 describe('the faction race', () => {
-  it('races seven lanes — one per faction, never an eighth for the unaffiliated', () => {
+  it('races eight lanes — the seven plus Albescent, never one for the unaffiliated', () => {
     const { text } = render(<DesktopPlayers {...props()} />)
     for (const slug of FACTION_RAINBOW_ORDER) {
       expect(text, `${slug} has a lane`).toContain(factionName(slug))
     }
+    // The eighth lane (#2409). This viewer is unrevealed — the default state of
+    // the module flag — so the lane is present and its name is the redaction
+    // mark, not the word. Both halves matter: the row exists, and it does not
+    // say "Albescent".
+    expect(text, 'albescent has a lane').toContain(REDACTED)
+    expect(text, 'and it does not name the society').not.toContain('Albescent')
+    // UNCHANGED by #2409: `na` is a state, not a faction.
     expect(text, 'no unaffiliated lane').not.toContain(factionName(null))
   })
 
@@ -152,8 +159,12 @@ describe('the faction race', () => {
   })
 
   it('shows four lanes and an affordance for the rest on the phone', () => {
+    // Four of EIGHT since #2409, so the affordance counts four rather than
+    // three. The number is asserted rather than derived because deriving it
+    // from the lane list would make this case agree with any lane count,
+    // including a wrong one.
     const { text } = render(<MobilePlayers {...props()} />)
-    expect(text).toContain('3 more factions')
+    expect(text).toContain('4 more factions')
   })
 })
 

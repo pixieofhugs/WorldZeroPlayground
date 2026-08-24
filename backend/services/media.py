@@ -260,6 +260,73 @@ def restore_media_to_mount(stored_paths: Iterable[str]) -> int:
     )
 
 
+def _unlink_owned(stored_path: str | None, owner_directory: str, owner: str) -> bool:
+    """Unlink a stored file that lies inside ``owner_directory``. Best-effort.
+
+    The ownership half of the guard, extracted in #2160 so the two things that
+    erase a file on a player's own instruction — an avatar
+    (:func:`delete_stored_avatar`) and a praxis-media upload
+    (:func:`delete_stored_media`) — share one implementation of it rather than
+    two that can drift. The only difference between the callers is which
+    directory counts as theirs, so that is the only parameter.
+
+    Returns whether a file was actually removed. Failures are logged and
+    swallowed: a filesystem problem must never block the state change the caller
+    is really making, and the residue is an orphan that
+    ``scripts/sweep_orphan_media.py`` exists to collect.
+    """
+    absolute_path = resolve_stored_media_path(stored_path or "")
+    if absolute_path is None:
+        return False
+    if not absolute_path.startswith(os.path.realpath(owner_directory) + os.sep):
+        logger.warning(
+            "Refusing to unlink %s for %s: outside that owner's media directory.",
+            absolute_path,
+            owner,
+        )
+        return False
+    try:
+        os.remove(absolute_path)
+    except OSError:
+        logger.info("Could not remove media file %s", absolute_path)
+        return False
+    # Each upload owns its directory (#1336/#1565), so the unlink leaves that
+    # directory empty. rmdir refuses a non-empty one, which is exactly the guard
+    # we want for older rows that still share a per-praxis or per-character
+    # directory with a sibling upload.
+    try:
+        os.rmdir(os.path.dirname(absolute_path))
+    except OSError:
+        pass
+    return True
+
+
+def delete_stored_media(stored_path: str, character_id: int) -> bool:
+    """Unlink a praxis-media file **this character uploaded** (#2160).
+
+    ``process_and_save_media`` writes every upload under
+    ``MEDIA_ROOT/<uploader_character_id>/<praxis_id>/<unique>/``, so the leading
+    path segment is the uploader — which is what makes "my photos" answerable at
+    all: ``MediaItem`` has no uploader column, and a collaborator's upload sits
+    under a praxis that is not theirs.
+
+    That same segment is the ownership guard, and it has to be, for the reason
+    spelled out on :func:`delete_stored_avatar`: ``MediaItemOut.file_path``
+    ships the raw relative path publicly, so a stored value is not automatically
+    ours to unlink just because it resolves inside ``MEDIA_ROOT``.
+
+    Called only from ``services.account_deletion``: a player ending their own
+    account is the one path that erases praxis media. Removing a single media
+    item from a live praxis deliberately still leaves the file (the row goes,
+    the sweep collects the bytes), and moderation never deletes anything.
+    """
+    return _unlink_owned(
+        stored_path,
+        os.path.join(settings.MEDIA_ROOT, str(character_id)),
+        f"character {character_id}",
+    )
+
+
 def delete_stored_avatar(stored_avatar_url: str | None, character_id: int) -> None:
     """Unlink an avatar file **this character owns**, best-effort. Two callers, one rule.
 
@@ -288,36 +355,18 @@ def delete_stored_avatar(stored_avatar_url: str | None, character_id: int) -> No
     avatar upload, or their own account deletion, unlink it. Traversal was never
     the gap; the guard correctly refuses ``..``, absolute paths and remote URLs.
     Ownership was.
+
+    Every avatar this server writes lands under ``<character_id>/avatar/<uuid>/``
+    (``process_and_save_avatar``), so that directory is the owner test — anything
+    else in the column came from a player and is not ours to delete. The test
+    itself lives in :func:`_unlink_owned`, shared with the praxis-media leg since
+    #2160.
     """
-    absolute_path = resolve_stored_media_path(stored_avatar_url or "")
-    if absolute_path is None:
-        return
-    # Every avatar this server writes lands under `<character_id>/avatar/<uuid>/`
-    # (`process_and_save_avatar`). Anything else in the column came from a player,
-    # and is not ours to delete.
-    owner_directory = os.path.realpath(
-        os.path.join(settings.MEDIA_ROOT, str(character_id), "avatar")
+    _unlink_owned(
+        stored_avatar_url,
+        os.path.join(settings.MEDIA_ROOT, str(character_id), "avatar"),
+        f"character {character_id}",
     )
-    if not absolute_path.startswith(owner_directory + os.sep):
-        logger.warning(
-            "Refusing to unlink %s for character %s: outside that character's "
-            "avatar directory.",
-            absolute_path,
-            character_id,
-        )
-        return
-    try:
-        os.remove(absolute_path)
-    except OSError:
-        logger.info("Could not remove avatar file %s", absolute_path)
-        return
-    # Each upload owns its directory, so the unlink leaves that directory empty.
-    # rmdir refuses a non-empty one, which is exactly the guard we want for
-    # pre-#1565 avatars still sitting directly in the shared ``<id>/avatar``.
-    try:
-        os.rmdir(os.path.dirname(absolute_path))
-    except OSError:
-        pass
 
 
 def _detect_media_type(content_type: str) -> MediaType:
@@ -481,6 +530,7 @@ __all__ = [
     "MEDIA_MAX_MEGABYTES",
     "QUARANTINE_SUFFIX",
     "delete_stored_avatar",
+    "delete_stored_media",
     "process_and_save_avatar",
     "process_and_save_media",
     "quarantine_root",

@@ -90,6 +90,7 @@ export default function DuelSealSheet({
   if (isMobile) {
     return drawAtRoot(
       <div
+        data-testid="duel-seal-sheet"
         role="dialog"
         aria-modal="true"
         aria-label={label}
@@ -105,6 +106,10 @@ export default function DuelSealSheet({
 
   return drawAtRoot(
     <div
+      // The seal/forfeit sheet, found by slot rather than by its heading: that
+      // heading moved from "Seal the duel?" to "Lock the duel?" in #1928 and
+      // took the nightly duel spec with it (#2453).
+      data-testid="duel-seal-sheet"
       role="dialog"
       aria-modal="true"
       aria-label={label}

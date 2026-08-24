@@ -116,9 +116,10 @@ const WALL_PANEL: CSSProperties = {
   color: NOTE_INK,
   border: "1px solid var(--faction-snide-note-wall-edge)",
   // ornament (#1609): flat offset print register — the flyposter metaphor, not
-  // elevation, so it does not take `--color-cast-shadow`. Ink tokenized,
-  // strength left here: how hard this panel is printed is the drawing.
-  boxShadow: "6px 8px 0 color-mix(in srgb, var(--color-print-offset) 45%, transparent)",
+  // elevation, so it does not take `--color-cast-shadow`. Ink tokenized, and
+  // the strength is the uniform 40% every register prints at (#2302; this panel
+  // printed at 45%). Only the 6/8px offset is still this panel's own drawing.
+  boxShadow: "6px 8px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
 };
 
 /** Faint halftone dot wash — the wall's own raster, at this panel's density. */
@@ -335,10 +336,11 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — tilted xerox flyer */}
         <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-          {/* Offset register (#1609) at this flyer's own 22% — unchanged through
-              both stock moves (#2227, then #2343), because only the stock ever
-              moved. It is the one of the four that reads BEST on cream. */}
-          <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 22%, transparent)", padding: "var(--space-xl)" }}>
+          {/* Offset register (#1609) at the uniform 40% (#2302). It printed at
+              22% through both stock moves (#2227, then #2343) because only the
+              stock ever moved; it is the one of the four that reads BEST on
+              cream, so it is the first place to look if 40% is too heavy. */}
+          <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
             <Halftone />
             <div
               style={{
@@ -422,7 +424,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         // applies this as a `filter`, and `filter` is not a
                         // COLOUR_PROP — so the ratchet never reported it. It was a
                         // blind spot, not a keep-raw ruling.
-                        shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 35%, transparent))"
+                        shadow="drop-shadow(2px 2px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))"
                         style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
                       />
                     )}
@@ -674,12 +676,13 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
-                {/* Offset register (#1609) at this panel's own 30%, overriding
-                    `WALL_PANEL`'s 45%. The 2px acid frame is this poster's own
-                    louder edge and overrides the panel's hairline: a DRAWN mark,
-                    so #2173 leaves it, and on cream it reads by chroma the way
-                    the hero's torn strip does. */}
-                <div style={{ ...WALL_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 color-mix(in srgb, var(--color-print-offset) 30%, transparent)", padding: "var(--space-lg)", textAlign: "center" }}>
+                {/* Offset register (#1609) at the uniform 40% (#2302) — it used
+                    to lighten this poster to 30% against `WALL_PANEL`, which no
+                    longer differs. The 2px acid frame is this poster's own louder
+                    edge and overrides the panel's hairline: a DRAWN mark, so
+                    #2173 leaves it, and on cream it reads by chroma the way the
+                    hero's torn strip does. */}
+                <div style={{ ...WALL_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone />
                   {/* The poster's "★ WANTED ★" rule stood here. #1909 cut
                       `snide.spotlight.wanted`: Snide was the only faction with
@@ -733,8 +736,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           )}
 
           <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-            {/* Offset register (#1609) at this panel's own 20% — the lightest impression on the wall. */}
-            <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 20%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
+            {/* Offset register (#1609) at the uniform 40% (#2302). This was the
+                lightest impression on the wall at 20%, so it is the widest move
+                of the seventeen and the first candidate for a light tier. */}
+            <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
               <Halftone />
               <div
                 style={{

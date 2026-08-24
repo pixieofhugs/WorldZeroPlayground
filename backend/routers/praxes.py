@@ -23,9 +23,15 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
-from dependencies import get_current_character, get_current_character_optional
+from dependencies import (
+    account_has_admin_role,
+    get_current_account_optional,
+    get_current_character,
+    get_current_character_optional,
+)
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
 from models.praxis import MediaItem, Praxis, PraxisType
 from schemas.base import WireModel
@@ -131,6 +137,7 @@ async def list_praxes_route(
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
+    account: Optional[Account] = Depends(get_current_account_optional),
 ):
     # Five rejections of the same shape — a query parameter naming a value no
     # enum member matches — so they share one code and name their field in
@@ -211,6 +218,12 @@ async def list_praxes_route(
         voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
         viewer_account_id=viewer.account_id if viewer else None,
+        # Optional auth; only the Albescent reveal flag is read from it (#2422),
+        # for which an admin counts as revealed (#2400).
+        viewer_account=account,
+        viewer_is_admin=(
+            account is not None and await account_has_admin_role(account.id, session)
+        ),
         limit=limit,
         offset=offset,
     )
@@ -724,19 +737,25 @@ async def apply_metatask_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-@router.delete("/{praxis_id}/metatasks/{task_id}", status_code=204)
+@router.delete("/{praxis_id}/metatasks/{task_id}", response_model=PraxisOut)
 async def remove_metatask_route(
     praxis_id: int,
     task_id: int,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Detach a previously applied metatask from a praxis."""
-    await remove_metatask(
+    """Detach a previously applied metatask from a praxis.
+
+    Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
+    seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
+    has already recomputed both — a bare 204 left the composer's score stamp
+    printing the higher total until a reload.
+    """
+    praxis = await remove_metatask(
         praxis_id=praxis_id,
         task_id=task_id,
         character_id=character.id,
         session=session,
         era=CURRENT_ERA,
     )
-    return Response(status_code=204)
+    return await build_praxis_out(praxis, session, viewer=character)

@@ -65,7 +65,7 @@ class FactionConfig:
     # descriptions.<slug>). Config owns which factions exist + their mechanics;
     # the DB Faction row carries slug + status only.
     slug: str
-    can_always_rejoin: bool          # True for UA Masters and Albescent
+    can_always_rejoin: bool          # True for Albescent (the only one in Era 1)
     own_task_modifier: float         # solo own-faction task multiplier
     other_task_modifier: float       # solo other-faction task multiplier
     collab_own_modifier: float       # collaborative own-faction task multiplier

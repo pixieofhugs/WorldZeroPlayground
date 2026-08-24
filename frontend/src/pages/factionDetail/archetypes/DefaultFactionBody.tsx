@@ -1,16 +1,29 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
-import { factionCssVar, factionName } from "../../../utils/factions";
+import { factionCssVar, factionName, factionDescription } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
+import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
 const NA_SLUG = "na";
+
+/**
+ * The plate's hairline — the na spectrum, running out from the kicker to the
+ * plate's far edge (#2497).
+ *
+ * A constant rather than a component: it takes no props and holds no state, so a
+ * component would be a function call around one inert span. Both classes are
+ * index.css's — `.spectrum-rule` is the ramp (shared with the sheet-head bands
+ * and the section heads, so Albescent's kit moves all of them at once) and
+ * `.faction-plate-rule` is this cut's geometry.
+ */
+const PLATE_RULE = <span aria-hidden className="spectrum-rule faction-plate-rule" />;
 
 /** Flex-wrap card grid — varied card sizes are intentional, not a CSS grid.
  *  The recently-completed PRAXIS gallery only, since #1945: the task row above
@@ -29,10 +42,31 @@ const CARD_GRID: CSSProperties = {
  * the shared {@link FactionDetailState}. Any faction without a bespoke body
  * falls through to this, so it must stay visually identical to before.
  *
- * NOTE: the styling here is intentionally PLACEHOLDER — real per-faction visual
- * design is deferred to Claude design. Data wiring + structure are final; the
- * section chrome (member tiles, layout) is meant to be restyled by a faction's
- * own body archetype.
+ * IT HAS A PLATE NOW (#2497). Its three regions were bare `<h2>` + grid under a
+ * `mb-8`, which is what the note below used to call PLACEHOLDER: every other
+ * body draws a kicker over a sheet with a rule under it, and this one drew a
+ * heading on the page. They wear `.faction-plate` — sheet, frame and padding —
+ * with `.faction-plate-kicker` for the header row and `.spectrum-rule` for the
+ * hairline, so the na spectrum here is the same ornament it is on the cards and
+ * Albescent's kit dresses all of them with one rule.
+ *
+ * THE DISCLOSURE DID NOT MOVE. `SectionPanel` still wraps each gallery and still
+ * hides it with `hidden`; the plate is the section's dress and sits OUTSIDE it,
+ * so the kicker and its rule stay visible when a region is folded. Putting the
+ * sheet on `SectionPanel` would have painted a second plate inside all seven
+ * sibling archetypes that mount it.
+ *
+ * IT HAS FIVE REGIONS NOW, NOT THREE (#2504). About and Champion arrived with
+ * the na frontispiece, and both are moves rather than inventions. ABOUT was the
+ * page's own bordered blurb card in `FactionDetail.tsx` — the branch the hero
+ * replaced — and it comes down here because the description belongs to the body
+ * (#2137) and because the seven bespoke bodies have always drawn it here.
+ * CHAMPION is the spotlight those same seven draw, ranked the same way, off the
+ * `members` list the page has already fetched: no field was added to the wire
+ * for it, because none was missing.
+ *
+ * NOTE: the member TILES are still deliberately plain — real per-faction visual
+ * design is deferred to Claude design. Data wiring + structure are final.
  *
  * THE JOIN BLOCK (#1314). This archetype used to carry only the burn notice,
  * because the factions falling through to it were waiting on #951's join/gate
@@ -54,8 +88,28 @@ const CARD_GRID: CSSProperties = {
  */
 export default function DefaultFactionBody({
   state,
+  plateOrnament,
 }: {
   state: FactionDetailState;
+  /**
+   * One inert node, mounted inside every plate that HOLDS TEXT (#2504, narrowed
+   * by #2519). This is the `ornament` SLOT the epic's pattern names:
+   * `AlbescentFactionBody` hands the plates a spectrum ring that must clip to
+   * the SHEET rather than to the page, and a sibling span wrapped around this
+   * whole component cannot do that. na hands nothing, and a plate then renders
+   * no ornament markup at all.
+   *
+   * THE TWO CARD PLATES DO NOT TAKE IT, and that is the design canvas's own cut
+   * of its "one carrier per object" rule: *"the edge is for plates that hold
+   * text, the rule is for plates that hold cards with edges of their own."*
+   * Tasks and Recently-completed hold task and praxis cards, each already
+   * wearing a 3px spectrum border, so an edge on the plate around them is a
+   * frame enclosing frames — WORLD_ZERO_STYLE §5's "a bordered panel may not sit
+   * directly inside another bordered panel", with the spectrum making it loud.
+   * Those two keep the plate's `.spectrum-rule` hairline, which is what the
+   * board leaves them; the ornament is simply not mounted there.
+   */
+  plateOrnament?: ReactNode;
 }) {
   const { t } = useTranslation("factions");
   const {
@@ -77,6 +131,26 @@ export default function DefaultFactionBody({
 
   const accent = factionCssVar(faction.slug, "border");
   const name = factionName(faction.slug);
+
+  /**
+   * The champion, and the roll below them — DERIVED, with no server field added
+   * (#2504). The seven bespoke bodies already rank this list exactly this way,
+   * so a `champion` on the wire would be the eighth answer to a question the
+   * page can already answer from data it has fetched. `all_time_score` rather
+   * than the era `score` for the same reason they use it: the two agree inside
+   * an era and only this one survives a reset, so the plate does not blank
+   * itself on day one of an era.
+   */
+  const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
+  const champion: CharacterOut | undefined = ranked[0];
+  const roll = ranked.slice(1);
+
+  /** The blurb, as paragraphs — the shape every sibling body reads it in. */
+  const paragraphs = factionDescription(faction.slug)
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
   const currentSlug = membership.currentFactionSlug;
   const switching = currentSlug && currentSlug !== NA_SLUG;
 
@@ -187,16 +261,78 @@ export default function DefaultFactionBody({
         </div>
       )}
 
-      {/* ── Members ── PLACEHOLDER: design to restyle ── */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          {t("detail.default.membersHeading", { total: members.length })}
-        </h2>
-        {members.length === 0 ? (
-          <p className="font-body text-muted content-text">{t("detail.membersEmpty")}</p>
+      {/* ── About ── the region #2497 deliberately left undressed, because the
+          blurb was still the PAGE's card in `FactionDetail.tsx` and that card
+          had no heading, so plating it meant minting a heading string. It needed
+          neither: the shared `detail.aboutHeading` has existed all along — every
+          one of the seven bespoke bodies draws its About under it, and
+          `factionCopyCollapse.test.ts` names it as the one key the family
+          collapsed onto. So no string is minted here; the region simply moves
+          from the page to the body, where the other seven have always kept it,
+          and #2137's "the body owns the description" finally holds on this
+          branch too. Split on blank lines like every sibling does. ── */}
+      <section className="faction-plate">
+        {plateOrnament}
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">{t("detail.aboutHeading")}</h2>
+          {PLATE_RULE}
+        </div>
+        {paragraphs.length === 0 ? (
+          <p className="font-body text-muted content-text">{t("detail.descriptionEmpty")}</p>
+        ) : (
+          paragraphs.map((paragraph) => (
+            <p key={paragraph} className="font-body content-text mb-2 last:mb-0">
+              {paragraph}
+            </p>
+          ))
+        )}
+      </section>
+
+      {/* ── Champion ── the highest all-time score on the roll, and NO backend.
+          The list it ranks is the one the page has already fetched, so an
+          endpoint here would be a second, slower answer to a question already
+          answered. Drawn only when there is a member to name; the roll below
+          then drops them, which is what `membersEmptyWithSpotlight` is for. ── */}
+      {champion && (
+        <section className="faction-plate">
+          {plateOrnament}
+          <div className="faction-plate-kicker">
+            <h2 className="label-heading">{t("detail.spotlightLabel")}</h2>
+            {PLATE_RULE}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <CharacterBadge character={champion} />
+            <span className="font-body text-muted content-text">
+              {t("detail.spotlightStat", {
+                level: champion.level,
+                score: champion.all_time_score.toLocaleString(),
+                count: champion.all_time_score,
+              })}
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* ── Members ── no disclosure, by `sectionDisclosure`'s own ruling: the
+          Roll is how a player joins and how the gate explains itself, so it is
+          not foldable. It wears the plate all the same — the plate is the
+          region's dress and the disclosure is a separate job on a separate
+          element. ── */}
+      <section className="faction-plate">
+        {plateOrnament}
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            {t("detail.default.membersHeading", { total: members.length })}
+          </h2>
+          {PLATE_RULE}
+        </div>
+        {roll.length === 0 ? (
+          <p className="font-body text-muted content-text">
+            {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
+          </p>
         ) : (
           <div className="flex flex-wrap gap-3">
-            {members.map((m) => (
+            {roll.map((m) => (
               <div
                 key={m.id}
                 style={{
@@ -216,13 +352,18 @@ export default function DefaultFactionBody({
           This body has no `SectionHeading` of its own — it draws the bare
           `.label-heading` the other seven replaced with a house component — so
           the disclosure goes straight inside the `<h2>` here (#2311). */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          <SectionToggle
-            section={sections.tasks}
-            label={t("detail.default.tasksHeading", { total: tasks.length })}
-          />
-        </h2>
+      <section className="faction-plate">
+        {/* No `plateOrnament` — see its docstring. This plate holds cards that
+            carry their own edge, so it carries the RULE instead. */}
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            <SectionToggle
+              section={sections.tasks}
+              label={t("detail.default.tasksHeading", { total: tasks.length })}
+            />
+          </h2>
+          {PLATE_RULE}
+        </div>
         <SectionPanel section={sections.tasks}>
           {tasks.length === 0 ? (
             <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
@@ -246,11 +387,15 @@ export default function DefaultFactionBody({
         </SectionPanel>
       </section>
 
-      {/* ── Recently completed ── PLACEHOLDER: design to restyle ── */}
-      <section className="mb-8">
-        <h2 className="label-heading mb-3">
-          <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
-        </h2>
+      {/* ── Recently completed ── */}
+      <section className="faction-plate">
+        {/* No `plateOrnament` — the other card-holding plate. */}
+        <div className="faction-plate-kicker">
+          <h2 className="label-heading">
+            <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
+          </h2>
+          {PLATE_RULE}
+        </div>
         <SectionPanel section={sections.praxis}>
           {recentPraxis.length === 0 ? (
             <p className="font-body text-muted content-text">

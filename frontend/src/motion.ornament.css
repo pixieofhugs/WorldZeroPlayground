@@ -578,33 +578,286 @@
   }
 }
 
-/* ── Albescent — the five card edges' travel (#2407). The rings themselves are
-   `.spectrum-frame::before`'s selector list in index.css, one rule for all six
-   mounts; what arrives here is only the walk, which is the whole of what these
-   five surfaces were carrying in the render-blocking sheet.
+/* ── Albescent — the five card edges' travel (#2407, re-cut by #2498). The rings
+   themselves are `.spectrum-frame::before`'s selector list in index.css, one
+   rule for all six mounts; what arrives here is only the walk, which is the
+   whole of what these five surfaces were carrying in the render-blocking sheet.
 
-   FOUR KEYFRAMES BECAME ONE. `alb-task-edge`, `alb-detail-edge`,
-   `alb-praxis-edge` and `alb-feed-edge` were byte-identical — 0% → 300% at 16s
-   — so the four names retire and the four selectors share one declaration.
+   IT IS NO LONGER A WALK. #2407 shipped this as `background-position`, and
+   epic #2496's technique ruling retires that idiom: `background-position` is not
+   a compositor property, so every frame repainted the whole ring on the main
+   thread — five of them, on lists. What travels now is a PRE-PAINTED CHILD,
+   several ring-widths of ramp slid by `transform`, which rasterises once.
 
-   THE FIFTH IS NOT A DUPLICATE AND DOES NOT RETIRE. `alb-profile-edge` travels
-   200% because the profile band's ring tiles at `background-size: 200% 100%`,
-   two band-widths where the other four are three: the travel and the tile are
-   one number stated twice, and 300% there would overshoot the seam and jump.
-   Its 9s pace is the design's, and differs too.
+   THE CHILD IS DECLARED NOWHERE ELSE, so it belongs whole in this sheet: with
+   the gate closed, or this sheet not yet delivered, there is no `::before` at
+   all and the still ring is the mount's own background in index.css — the exact
+   frame that shipped before, not an approximation of it. It arrives already
+   registered, too: at `translateX(0)` the child's first tile starts at the
+   padding box's left edge, which is where `background-position: 0%` put the
+   image. Border width is 0 on all six, so the child's `inset`-relative box, the
+   background's origin box and index.css's `overflow: hidden` are one box.
 
-   Stranded — this sheet not yet delivered, or reduced motion — each edge is the
-   static spectrum ring an unaffiliated player already sees on the same surface.
-   The frame is drawn, in its final colours, at its final size; it simply is not
-   walking. Nothing here carries meaning through motion alone. ── */
-@keyframes alb-edge-travel { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
-@keyframes alb-profile-edge { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+   FIVE KEYFRAMES BECAME ONE, where #2407 could only get four. A walk states its
+   travel in the TILE's units, so the profile band's 200% tile needed an end stop
+   of its own; a transform states travel in the CHILD's units, so the difference
+   moves into a width and the fifth name retires. Each child is two tiles wide
+   and slides exactly one — `translateX(-50%)` — which is why the loop cannot
+   seam wherever the ramp happens to be cut.
+
+   THE TWO NUMBERS THAT HAD TO SURVIVE, both asserted in
+   `__tests__/spectrumRingCollapse.test.ts` as arithmetic over the old walk:
+
+     tile   600% × 50% = the 300% these four already tiled at;
+            400% × 50% = the 200% the profile band already tiled at.
+     speed  the four moved 6 mount-widths per 16s, so one 300% tile per 8s.
+            The band moved 2 per 9s, which is one 200% tile per 9s — unchanged,
+            because its walk was already exactly one loop.
+
+   `background-image: inherit` rather than a second reference to the ramp: it
+   keeps ONE declaration of the loop cut, and it keeps the rail's suppression
+   working for free — `--spectrum-frame-image: none` on a member reaches the
+   parent, and the child inherits the `none`.
+
+   #2499 HANGS THE NINTH ON IT AND RETIRES A WALK. `.alb-praxis-card-edge` is
+   the Albescent praxis card's ring, which until then was `.spectrum-frame` plus
+   `data-spectrum-drift` — the RAIL's ring, walking the rail's 220px tile with
+   `alb-drift`. The card underneath it grew the same 3px spectrum border the task
+   card wears, so its ring had to become the task card's ring; joining this list
+   is what makes that true of the motion as well as the paint, and it leaves the
+   rail as the last `background-position` walk in the kit.
+
+   #2505 HANGS TWO MORE MOUNTS ON THIS ONE RULE and mints no keyframe, which is
+   the epic's technique ruling taken at its word. `.alb-composer-edge` is the
+   edit-praxis sheet's ring; `.alb-desk-edge` is the mobile field desk's
+   identity card's.
+
+   #2519 SWAPPED THE SECOND OF THOSE FOR ANOTHER RING and the list is shorter by
+   nothing. It used to read `.alb-desk .spectrum-rule` — the desk's filled 3px
+   identity hairline, travelling in place of a ring the card did not have. The
+   design canvas puts the spectrum in the CARD's edge and takes the bar off (one
+   carrier per object), so the mount became `.alb-desk-edge`, a ninth masked
+   ring, and the track it needed — the loop-cut ramp, the 300% tile, the
+   `overflow: hidden` — is the shared ring's already. Nine mounts, nine rings,
+   one child. ── */
+@keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
-  .alb-task-edge,
-  .alb-detail-edge,
-  .alb-praxis-edge,
-  .alb-feed-edge {
+  .alb-task-edge::before,
+  .alb-praxis-card-edge::before,
+  .alb-detail-edge::before,
+  .alb-praxis-edge::before,
+  .alb-feed-edge::before,
+  .alb-composer-edge::before,
+  .alb-desk-edge::before,
+  .alb-plate-edge::before,
+  .alb-profile-edge::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 600%;
+    background-image: inherit;
+    background-size: 50% 100%;
+    animation: alb-edge-travel 8s linear infinite;
+  }
+  /* Two band-widths, not three, and the design's own 9s pace. */
+  .alb-profile-edge::before {
+    width: 400%;
+    animation-duration: 9s;
+  }
+}
+
+/* ── Albescent — the ornament motions the washed surfaces carry (#2498). The
+   sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named "the
+   Albescent drifts"; this is that list, cashed. Each passes the test the list
+   states: every consumer treats the motion as ornament, and the un-animated
+   frame is the one a reduced-motion reader already gets.
+
+   ONLY THE ANIMATION TRAVELLED. Every one has an UNGATED twin in index.css
+   holding its resting form, and the resting form is the animation's own first
+   frame, so a stranded sheet is not an approximation of the still frame, it IS
+   the still frame, and there is no jump when the sheet lands.
+
+   FIVE OF THE NINE RETIRED WITH THEIR SURFACES (#2499). `alb-task-drift`,
+   `alb-detail-drift`, `alb-praxis-drift` and `alb-feed-drift` each breathed one
+   of the four aurora overlays; `alb-detail-sheen` passed a diagonal near-white
+   sweep across the task detail. All five drawings are now ONE static prism
+   ground on the na card's own sheet (`.alb-prism` in index.css), so there is
+   nothing left to breathe — a background layer has no `::before` to translate.
+   The sweep in particular did not disappear: it is the light cascade's whole
+   ground, standing still, which is what the design board locked. `.alb-rainbow`
+   went with them and took the last non-rail consumer of `alb-drift`.
+
+   That is also why the rest frame had to become PAINT. These five were the only
+   reason an Albescent surface looked different with the sheet delivered than
+   without it; with them gone the ground carries the identity, and the ground may
+   never defer. index.css deepens it under `prefers-reduced-motion: reduce`
+   instead (epic ruling 6).
+
+   `.alb-spark` IS THE ONE THAT MAY NEVER FOLLOW, and it is the only Albescent
+   animation index.css still runs. Its gate does not merely add motion — it drops
+   the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint may not
+   defer, so the opacity has to stay in index.css; with the animation deferred and
+   the sheet stranded the spark would be an invisible mark rather than a still
+   one. `__tests__/motionSplit.test.ts` asserts both halves of that.
+
+   TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
+   were byte-for-byte the same declaration — a centred element turning through
+   360deg — differing only in the duration their consumers pass, which lives on
+   the `animation` shorthand and not in the keyframe. One name serves them, the
+   same way `alb-edge-travel` serves nine above.
+
+   `alb-detail-spin` LOST ITS SURFACE FOR THE SAME REASON, and is `alb-spin`
+   (#2501). A bare 360deg turn is the most general shape on this sheet; the score
+   stamp's points ring needed exactly it, and a second consumer under a name that
+   says `detail` reads as a mistake even when it is the byte-identical
+   de-duplication the two rules above already are. One keyframe, two rims, two
+   durations on their own shorthands. ── */
+@keyframes alb-wheel {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes alb-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-detail-foil::before { animation: alb-wheel 44s linear infinite; }
+  .alb-detail-ring::before { animation: alb-spin 46s linear infinite; }
+  .alb-praxis-ring::before { animation: alb-wheel 58s linear infinite; }
+  /* Albescent's faction page (#2504). The labyrinth turns; the mark itself is
+     `FactionSigil`'s and this rule never names it, so na's swept ring on a
+     future unaffiliated page stays still. `alb-spin` rather than a
+     keyframe of its own — a static conic rasterises once and a rotate on it is
+     pixel-identical over the loop, which is the epic's technique ruling, and the
+     wheel above cannot be shared because it carries a centring translate this
+     mount does not have. The plates' rings travel on the list above. */
+  .alb-faction-hero .faction-hero-sigil { animation: alb-spin 48s linear infinite; }
+}
+
+/* ── Albescent — EVERY na SPECTRUM ON A DISPATCHED SURFACE (#2501, widened by
+   #2500; epic #2496 ruling 3). "Nothing dispatched to Albescent holds a still
+   spectrum", read literally: the two classes #2497 minted for the seventeen
+   inline ramps scattered through the `Default*` files get up and walk wherever
+   an Albescent wrapper is over them.
+
+     `.spectrum-rule`  every band, hairline, chip and progress fill → TRAVELS
+     `.spectrum-dial`  every points ring, medallion and annulus     → TURNS
+
+   READOUTS TOO, WHICH IS THE RULING AND NOT AN OVERSHOOT. There is no
+   chrome/readout distinction in this epic: the task card's points ring, the
+   stamp's total, the profile's level bar and its badge medallions are all in
+   this list. Ruling 10 draws the other edge — a surface not in a manifest
+   (`LevelUpPopup` and its `--faction-default-stop-*`) is untouched, because
+   `alb-moves` only ever rides on a wrapper the manifest dispatches.
+
+   TWO SELECTORS FOR NINE SURFACES. #2501 shipped this as `.alb-stamp
+   .spectrum-rule`/`-dial`, which is the same two rules scoped to one wrapper;
+   the census in `__tests__/albescentSpectraMove.test.tsx` found eight more
+   surfaces wearing the same classes and standing still. The marker replaces the
+   scope and the declarations below are #2501's own, byte for byte — the stamp's
+   two spectra move at exactly the pace and phase they moved at yesterday.
+
+   `:empty` IS THE ORNAMENT/FRAME LINE and index.css carries the whole argument
+   for it beside `.spectrum-rule`'s declaration. Short form: four mounts wear
+   this class as a padded ramp AROUND content rather than as an ornament, and a
+   travelling child inside one paints over the content it frames.
+
+   NO KEYFRAME IS DECLARED HERE, and both reuses were checked rather than
+   assumed. `alb-edge-travel` above is "slide a two-tile child by one tile" and
+   the band is exactly that; `alb-spin` is a bare 360deg turn and the ring is
+   exactly that. Minting `alb-stamp-travel` and `alb-stamp-turn` beside them
+   would have been four byte-identical keyframes under four names, which is the
+   duplication #2407 and #2498 each spent a PR collapsing.
+
+   NEITHER WALKS A GRADIENT PARAMETER — the epic's technique ruling, and
+   `spectrumRingCollapse.test.ts` now enforces it over every `alb-` keyframe on
+   this sheet. Each moves a STATIC pre-painted gradient with `transform`, so the
+   ramp rasterises once and the frames are the compositor's.
+
+   BOTH CHILDREN EXIST ONLY INSIDE THIS GATE, the shape #2498 gave the nine card
+   edges. Stranded — reduced motion, or this sheet never delivered — there is no
+   `::before` on either mount and the still surface is `.spectrum-rule` and
+   `.spectrum-dial` painting their own backgrounds from index.css: the exact
+   spectrum an unaffiliated player already sees, drawn in its final colours at
+   its final size. Nothing here carries meaning through motion alone.
+
+   THE BAND STATES ITS RAMP; THE RING INHERITS ITS OWN. That asymmetry is the one
+   decision in this block. The ring's resting paint is
+   `--faction-default-rainbow-conic` and two tiles of a wheel is a wheel, so
+   `background-image: inherit` registers the rim exactly over the annulus it
+   replaces — the same trick the nine edges use. The band cannot: `.spectrum-rule`
+   is `--faction-default-rainbow`, the seven-stop sweep whose last stop is NOT its
+   first, so tiling it twice would put a violet-meets-red seam through every
+   cycle. `--faction-default-rainbow-loop` is the same spectrum cut to close, and
+   naming it is what buys the seamless loop.
+
+   ONE CLOCK EACH, NOT ONE PER MOUNT, and the issue's "give each mount its own
+   duration so they drift apart rather than pulsing together" is already answered
+   two ways. Nothing here PULSES: both keyframes are linear and endless, so there
+   is no crest for two mounts to reach at once — the canvas's 12-42s randomiser
+   and its negative `animation-delay` were desyncing a preview of blooms, which
+   #2499 retired. And the tile is the MOUNT's own width, so a 7px chip and a
+   400px band on one clock travel at wildly different apparent speeds and never
+   read as one machine. What a shared clock does buy is the thing #2501 measured:
+   two rainbows at two speeds on one page are "two rainbows arguing". Across the
+   kit the family is already spread — 8s and 9s for the masked edges, 16s here,
+   24s the avatar, 44/46/48/58s the wheels.
+
+   THE PACES ARE THE SIBLING SURFACES', not new numbers: 46s for a turn is
+   `.alb-detail-ring`'s, and 16s across the band is the four card edges' old
+   mount-width pace. ── */
+@media (prefers-reduced-motion: no-preference) {
+  .alb-moves .spectrum-rule:empty::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    background-image: var(--faction-default-rainbow-loop);
+    background-size: 50% 100%;
     animation: alb-edge-travel 16s linear infinite;
   }
-  .alb-profile-edge { animation: alb-profile-edge 9s linear infinite; }
+  .alb-moves .spectrum-dial::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-image: inherit;
+    animation: alb-spin 46s linear infinite;
+  }
+}
+
+/* ── ALBESCENT'S AVATAR RING (#2502, epic #2496) ──
+   A ROTATION OF A STATIC CONIC, which is the epic's technique ruling: an
+   `@property` angle inside a `conic-gradient()` re-rasterises the gradient every
+   frame, while `transform: rotate()` rasterises once and spins on the GPU —
+   pixel-identical over a 360deg loop. `alb-spin` above is that keyframe
+   already — the task detail's worth ring runs it — so this mounts a NINTH
+   consumer on the eight names this sheet holds rather than minting a spin of
+   its own.
+
+   IT IS `alb-spin` AND NOT `alb-wheel`, which is the other turn on this
+   sheet and the one #2498 merged two names into. `alb-wheel` carries
+   `translate(-50%, -50%)` because both of its consumers are pseudo-elements
+   centred by `top: 50%; left: 50%`; a `transform` is one property, so a mount
+   that does not need the centring cannot borrow it without being displaced by
+   half its own size. `.alb-avatar-ring` is `inset: 0` on a square disc, so the
+   plain rotation is the one that fits. Two turns, two geometries, and the
+   distinction is load-bearing rather than a leftover.
+
+   24s IS THE FAMILY'S PACE, RE-CUT FOR A SMALL DISC. What a viewer perceives is
+   speed at the rim, not angular velocity: the 92px worth ring at 46s travels
+   ~6.3px/s, and the same rim speed on the 48px disc this gate opens at is a
+   ~24s turn. One duration for every size above the gate — a larger disc turns
+   marginally faster at the rim, which is what "one clock, wound once" looks
+   like, and a per-diameter table would be tuning nobody asked for.
+
+   Stilled or stranded, the ring is the spectrum ring na already wears, parked at
+   rotation 0 over an identical static one — so this one freezes outright where
+   `.alb-spark` has to park at a resting opacity. Nothing about membership is
+   carried by the motion that is not also carried by the ring standing still;
+   what is carried by the motion is that a viewer LOOKING at the disc notices it.
+   ── */
+@media (prefers-reduced-motion: no-preference) {
+  .alb-avatar-ring { animation: alb-spin 24s linear infinite; }
 }

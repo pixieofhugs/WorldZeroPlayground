@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../../utils/factions'
+import { factionName, factionSpectrumSheet } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -10,9 +10,16 @@ import type { SealSkinProps } from '../types'
  * whose issuing faction has no bespoke skin registered falls through to it via
  * {@link MetataskSeal}'s dispatch table (e.g. `wow` until #931), so integrations
  * render end to end before the per-faction skins land. It stays a tasteful
- * neutral card — a full-spectrum rainbow accent strip and an uppercase register
- * are its only signature — showing the "<FACTION> METATASK" label, the condition
- * and the "+N PTS" bonus, plus the `×` peel control when `removable`.
+ * neutral card — a full-spectrum rainbow FRAME and an uppercase register are its
+ * only signature — showing the "<FACTION> METATASK" label, the condition and the
+ * "+N PTS" bonus, plus the `×` peel control when `removable`.
+ *
+ * THE SPECTRUM IS THE BORDER, NOT A BAR (#2520, epic #2496). A 3px strip was
+ * pinned across the top edge until `Score-Stamp.dc.html` ruled otherwise: "drop
+ * the bar and paint the spectrum into the border box itself". That is the idiom
+ * `DefaultTaskCard` and `DefaultPraxisCard` already wear, so the na kit reads as
+ * one material — which is the precondition for "Albescent = na + motion" being
+ * true rather than aspirational.
  */
 export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
@@ -22,27 +29,19 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
     <div
       className="relative"
       style={{
-        background: 'var(--faction-default-card-bg)',
+        // The 3px spectrum frame, not a 3px bar across the top edge (#2520).
+        // Only the geometry is stated here; the composition — the ramp appended
+        // to all THREE of the sheet's lists — belongs to the helper, because a
+        // background list is a list in three properties at once and CSS cycles
+        // the short ones rather than padding them.
+        border: '3px solid transparent',
+        ...factionSpectrumSheet(),
         color: 'var(--faction-default-card-text)',
-        border: '2px solid var(--faction-default-border)',
         borderRadius: 12,
         padding: 'var(--space-md) var(--space-lg)',
         overflow: 'hidden',
       }}
     >
-      {/* the whole rainbow, no allegiance — a full-spectrum accent, top edge */}
-      <span
-        aria-hidden="true"
-        className="absolute"
-        style={{
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: 'var(--faction-default-rainbow)',
-        }}
-      />
-
       {removable && (
         <button
           type="button"

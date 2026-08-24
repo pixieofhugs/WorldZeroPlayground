@@ -1,0 +1,35 @@
+# Ruff — the backend's only linter (#2427).
+#
+# This file exists for `[tool.ruff]` and nothing else. There is no `[project]`
+# or `[build-system]` table because nothing ever installs `backend/` as a
+# package; adding one would change how pip and the Docker image behave for no
+# gain. `pytest.ini` sits alongside this file and keeps precedence for pytest's
+# rootdir, so pytest is unaffected by this file's existence.
+#
+# The gate is `tests/unit/test_ruff_clean.py`, not a CI workflow step:
+# `.github/workflows/**` is owner-only, and the `test` job already runs pytest.
+# Same precedent as the uncoded-error ratchet and the model-convention test.
+#
+# Out of scope by owner ruling: `ruff format` / black, and mypy. Each is its
+# own issue. Do not add `[tool.ruff.format]` here to sneak the first one in.
+
+[tool.ruff]
+target-version = "py312"
+
+# The ruff default, taken deliberately rather than tuned. Raising it to 100
+# would drop E501 from 585 findings to 66 — which is exactly why it is not
+# raised here: the number to move is the allowlist, not the threshold.
+line-length = 88
+
+[tool.ruff.lint]
+# Deliberately narrow (#2427): pycodestyle errors, pyflakes, import sorting.
+# A broad ruleset on a mature codebase produces thousands of findings and gets
+# switched off. Widening this list later is one line — but every rule added
+# here has to be either clean or grandfathered in `tests/unit/ruff_allowlist.py`
+# in the same commit, because the ratchet compares in both directions.
+select = ["E", "F", "I"]
+
+# There is deliberately no `ignore` list. Grandfathering happens per file *and
+# per rule code* in tests/unit/ruff_allowlist.py, which only shrinks; an
+# `ignore` entry would switch a rule off everywhere and forever, including in
+# code nobody has written yet.

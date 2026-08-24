@@ -43,6 +43,31 @@ function frameFor(slug: string | null, tag: string | null = null): string {
   );
 }
 
+/**
+ * Albescent's card with the light taken off — the wrapper and its one ornament
+ * span, and nothing else. What is left must be `DefaultFeedFrame` byte for
+ * byte; that is ADR-0048's whole claim for this faction, and the two assertions
+ * below are the only place it is checked on this surface.
+ *
+ * Deliberately literal. It removes exactly the strings the wrapper adds, so a
+ * further thing creeping into `AlbescentFeedFrame` — a class, a div, a data
+ * attribute — survives the peel and fails the comparison, which is the point.
+ *
+ * #2499 CHANGED WHAT "THE LIGHT" IS AND THE PEEL STILL WORKS, which is the best
+ * evidence this shape was the right one. The wash was a second span; it is now
+ * `alb-prism` in the wrapper's class list, setting the na card's own sheet token.
+ * One string leaves the peel and one gains a word, and the claim — strip
+ * Albescent and this IS the unaffiliated card — is untouched.
+ */
+const peelTheLight = (html: string) =>
+  html
+    .replace('<div class="alb-feed alb-prism">', "")
+    .replace(
+      /<span aria-hidden="true" class="alb-feed-edge"><\/span>/,
+      "",
+    )
+    .replace(/<\/div>$/, "");
+
 describe("FactionFeedFrame dispatch", () => {
   it("gives all six designed factions a bespoke frame", () => {
     // Every designed faction must render something OTHER than the neutral
@@ -68,22 +93,30 @@ describe("FactionFeedFrame dispatch", () => {
     // #1203 is that design: still the unaffiliated card, still not one colour of
     // its own, with two ornament layers washed over it.
     //
-    // Containment is the whole statement, and it is stronger than the equality
-    // it replaces: the unaffiliated chassis appears INSIDE the Albescent one,
-    // untouched and contiguous, so strip the wrapper and the two spans and the
-    // card is Default byte for byte. A skin that hand-copied the chrome — the
-    // failure this file exists to catch — would drift out of this the first time
-    // the shared chassis changed, without anyone editing this test.
+    // "Strip the wrapper and the two spans and the card is Default byte for
+    // byte" is the whole statement, and it is stronger than the equality it
+    // replaces. A skin that hand-copied the chrome — the failure this file
+    // exists to catch — would drift out of this the first time the shared
+    // chassis changed, without anyone editing this test.
+    //
+    // It USED to be spelled `toContain`, because the two spans were siblings of
+    // the card and the neutral chassis was therefore a contiguous substring.
+    // #1942 moved them INSIDE it — `.sidebar-card`'s `backdrop-filter` makes it
+    // a stacking context, so a wash mounted outside could not be lifted off the
+    // actor's photograph within — and a substring can no longer say this.
+    // Peeling the light off and comparing what is LEFT says the same property
+    // and does not care where the spans hang.
     const neutral = frameFor("no-such-faction");
     const albescent = frameFor("albescent");
 
-    expect(albescent).toContain(neutral);
+    expect(peelTheLight(albescent)).toBe(neutral);
     expect(albescent).not.toBe(neutral);
-    // Both flourishes present, and both inert: they are decoration over a card
-    // full of links and controls, so they are hidden from assistive tech here
-    // and `pointer-events: none` in index.css.
-    expect(albescent).toContain('aria-hidden="true" class="alb-feed-aurora"');
+    // The ring is present and inert: it is decoration over a card full of links
+    // and controls, so it is hidden from assistive tech here and
+    // `pointer-events: none` in index.css. The ground needs neither, being a
+    // background layer rather than an element.
     expect(albescent).toContain('aria-hidden="true" class="alb-feed-edge"');
+    expect(albescent).toContain('class="alb-feed alb-prism"');
   });
 
   it("tints albescent from na's token family, never one of its own (#783)", () => {
@@ -94,7 +127,7 @@ describe("FactionFeedFrame dispatch", () => {
     // utils/__tests__/factionAlbescentHidesInPlainSight.test.ts applies to every
     // other surface, and the reason a --faction-albescent-* block cannot creep
     // back in through this one.
-    expect(frameFor("albescent")).toContain(frameFor(null));
+    expect(peelTheLight(frameFor("albescent"))).toBe(frameFor(null));
     expect(frameFor("albescent")).not.toContain("--faction-albescent");
   });
 

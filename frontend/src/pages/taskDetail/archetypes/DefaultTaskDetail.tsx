@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionFill, factionName } from "../../../utils/factions";
+import { factionFill, factionName, factionSheet } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -28,8 +28,11 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  */
 const GALLERY_PREVIEW = 3;
 
-/** The na spectrum, the one ornament this whole page is built out of. */
-const SPECTRUM = "var(--faction-default-rainbow)";
+/* The na spectrum — the one ornament this whole page is built out of — is now
+   `.spectrum-rule` in index.css (#2497). It was this file's own `SPECTRUM`
+   const at five mounts, which is a shared value said privately: nothing outside
+   could dress it, so Albescent's kit had to walk the DOM to find it. The class
+   carries the ramp and each mount keeps its own geometry. */
 
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
@@ -190,12 +193,12 @@ export default function DefaultTaskDetail({
       </span>
       <span
         aria-hidden
+        className="spectrum-rule"
         style={{
           flex: "1 1 20%",
           minWidth: 20,
           height: 2,
           borderRadius: 1,
-          backgroundImage: SPECTRUM,
           opacity: 0.55,
         }}
       />
@@ -223,12 +226,12 @@ export default function DefaultTaskDetail({
               {basePoints}
             </span>
             <span
+              className="spectrum-rule"
               style={{
                 marginLeft: "auto",
                 display: "block",
                 padding: "var(--space-xs)",
                 borderRadius: 7,
-                backgroundImage: SPECTRUM,
               }}
             >
               <span
@@ -251,7 +254,7 @@ export default function DefaultTaskDetail({
               </span>
             </span>
           </div>
-          <div aria-hidden style={{ height: 1, backgroundImage: SPECTRUM }} />
+          <div aria-hidden className="spectrum-rule" style={{ height: 1 }} />
         </>
       )}
       <div
@@ -293,7 +296,7 @@ export default function DefaultTaskDetail({
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryButton}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryButton}>
             {t(signupCtaKey(task.signup_reason))}
           </button>
           <div
@@ -398,10 +401,10 @@ export default function DefaultTaskDetail({
   // is still the column's width and the cell fills it.
   const actionPanel = (
     <div
+      className="spectrum-rule"
       style={{
         padding: "var(--space-xs)",
         borderRadius: 18,
-        backgroundImage: SPECTRUM,
         boxSizing: "border-box",
       }}
     >
@@ -462,12 +465,12 @@ export default function DefaultTaskDetail({
           <>
             <span
               aria-hidden
+              className="spectrum-rule"
               style={{
                 width: 7,
                 height: 7,
                 borderRadius: 2,
                 flex: "none",
-                backgroundImage: SPECTRUM,
               }}
             />
             <span className="label-caption">{eyebrowFaction}</span>
@@ -570,6 +573,12 @@ export default function DefaultTaskDetail({
           >
             {task.created_by_avatar_url ? (
               <img
+                // `.user-media` marks the region that is the PLAYER's, not the
+                // site's, so a faction skin can hold its wash off it (#1646 /
+                // #1942). Inert on the other eight — only the Albescent
+                // wrappers scope a rule to it. The `initialsOf` monogram below
+                // is the site's own furniture and deliberately carries none.
+                className="user-media"
                 src={mediaUrl(task.created_by_avatar_url)}
                 alt={authorName}
                 style={{
@@ -717,12 +726,12 @@ export default function DefaultTaskDetail({
         </span>
         <span
           aria-hidden
+          className="spectrum-rule"
           style={{
             flex: "1 1 20%",
             minWidth: 20,
             height: 2,
             borderRadius: 1,
-            backgroundImage: SPECTRUM,
             opacity: 0.55,
           }}
         />
@@ -811,9 +820,16 @@ export default function DefaultTaskDetail({
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
       <div
+        // THE SHEET'S LIFT IS A CLASS, NOT AN INLINE NUMBER (#1942). It still
+        // computes to `z-index: 1` for every skin that renders this column —
+        // index.css `.task-detail-sheet` says so — but an inline z-index cannot
+        // be beaten by a selector, and Albescent needs to clear it: the integer
+        // makes this a stacking context, which capped the byline photo and the
+        // whole submissions gallery below `.alb-detail-aurora`'s wash. See the
+        // `.alb-detail .task-detail-sheet` rule for the whole reasoning.
+        className="task-detail-sheet"
         style={{
           position: "relative",
-          zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
           // The page surface the design puts everything on, carried by the
@@ -828,7 +844,7 @@ export default function DefaultTaskDetail({
           // full-bleed faction wash is not wanted here, and the column needed a
           // surface and padding), but the stated reason was false; do not cite
           // it as precedent for "a class with no CSS".
-          background: "var(--faction-default-card-bg)",
+          ...factionSheet(),
           color: "var(--faction-default-card-text)",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,

@@ -189,11 +189,20 @@ function render(
   );
 }
 
-/** The wrapper element and the three ornament layers, removed. */
+/**
+ * The wrapper element and the ornament layers, removed.
+ *
+ * The wrapper carries TWO classes since #2499: `alb-praxis` (the isolation and
+ * the media scope) and `alb-prism` (the ground). The second is not a span and
+ * never was an element — it overrides `--faction-default-card-sheet`, which
+ * `DefaultPraxisDetail` composes through `factionSheet()`. Peeling it is peeling
+ * a class, and the claim underneath is unchanged: undressed, this IS the shared
+ * page.
+ */
 function undress(html: string): string {
   return html
     .replace(/<span[^>]*class="alb-praxis-[a-z]+"[^>]*><\/span>/g, "")
-    .replace(/^<div class="alb-praxis">/, "")
+    .replace(/^<div class="alb-praxis alb-moves alb-prism">/, "")
     .replace(/<\/div>$/, "");
 }
 
@@ -241,7 +250,7 @@ describe("Albescent praxis detail is Default plus light", () => {
 });
 
 describe("Albescent praxis detail — where the light sits", () => {
-  it("mounts all three layers INSIDE the sheet, not around the page", () => {
+  it("mounts both layers INSIDE the sheet, not around the page", () => {
     // WORLD_ZERO_STYLE §5 / the #1028 ruling: a skin owns its own column, never
     // the window. The layers arrive through `DefaultPraxisDetail`'s `ornament`
     // slot, so they sit after the 1200 sheet's own style and inherit its
@@ -250,7 +259,7 @@ describe("Albescent praxis detail — where the light sits", () => {
     const sheet = html.indexOf("max-width:1200px");
     expect(sheet, "the sheet renders").toBeGreaterThan(-1);
 
-    for (const layer of ["alb-praxis-aurora", "alb-praxis-ring", "alb-praxis-edge"]) {
+    for (const layer of ["alb-praxis-ring", "alb-praxis-edge"]) {
       const at = html.indexOf(layer);
       expect(at, `${layer} renders`).toBeGreaterThan(-1);
       expect(at, `${layer} sits inside the sheet`).toBeGreaterThan(sheet);
@@ -263,12 +272,32 @@ describe("Albescent praxis detail — where the light sits", () => {
     expect(html, "no fixed inset ground").not.toContain("position:fixed");
   });
 
-  it("dresses nothing but those three layers", () => {
-    // The wrapper plus exactly three ornament spans. Anything else carrying an
-    // `alb-` class would mean a block had been skinned — the report card and
-    // the steward bar above all, which ADR-0061 keeps outside the costume.
+  it("dresses nothing but those two layers", () => {
+    // The wrapper plus exactly two ornament spans, and — since #2501 — the
+    // score stamp's own wrapper, which this page does not put there: the rail is
+    // `ScoreStamp`'s (ADR-0053) and it dispatches on the TASK's faction, so an
+    // Albescent task lands `AlbescentScoreStamp` inside the page whatever the
+    // page does. The set is asserted rather than the count so a NEW dress is
+    // named here instead of silently keeping a number right. Anything else
+    // carrying an `alb-` class would mean a block had been skinned — the report
+    // card and the steward bar above all, which ADR-0061 keeps outside the
+    // costume.
     const html = render(AlbescentPraxisDetail, state({ showAdminBar: true, user: VIEWER }));
-    expect(html.match(/alb-/g)?.length, "wrapper + three layers, nothing else").toBe(4);
+    expect(
+      [...new Set(html.match(/alb-[\w-]+/g))].sort(),
+      "wrapper + prism + two layers + the dispatched stamp, nothing else",
+    ).toEqual([
+      "alb-moves",
+      "alb-praxis",
+      "alb-praxis-edge",
+      "alb-praxis-ring",
+      "alb-prism",
+      "alb-stamp",
+    ]);
+    // `alb-moves` is drawn TWICE — once on this wrapper and once on the score
+    // stamp the sidebar dispatches, which is its own manifest row (#2501) and
+    // carries its own marker.
+    expect(html.match(/alb-/g)?.length, "the six drawn once each, the marker twice").toBe(7);
     expect(html, "the report card is mounted bare").toContain("sidebar-card");
   });
 

@@ -57,6 +57,7 @@ const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
+const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
 
 /** The one loading surface: route chunk in flight, or the session still resolving. */
 function PageLoading() {
@@ -123,6 +124,11 @@ export default function App() {
               `ProtectedRoute`: the arc explains the game BEFORE it asks for an
               account, which is the whole point of it (#1861). */}
           <Route path="/start" element={<Onboarding />} />
+          {/* Where `backend/routers/auth.py` sends a returning deleted player
+              (#2162). No `ProtectedRoute` and no session yet — being asked
+              BEFORE an account exists is the entire point of the gate. Under
+              `/start` because confirming continues into that arc. */}
+          <Route path="/start/again" element={<ReturningCard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetail />} />
           <Route path="/praxis" element={<Praxes />} />

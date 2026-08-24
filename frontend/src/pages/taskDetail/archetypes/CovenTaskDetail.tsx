@@ -484,7 +484,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={pinkButton}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={pinkButton}>
             {t(signupCtaKey(task.signup_reason))}
           </button>
           <div

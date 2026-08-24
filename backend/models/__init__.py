@@ -1,6 +1,6 @@
 # Import all models so Alembic can detect them via Base.metadata.
 from models.faction import Faction
-from models.account import Account, OAuthProvider
+from models.account import Account, AccountTombstone, OAuthProvider
 from models.roles import Role, AccountRole
 from models.character import Character
 from models.era import Era
@@ -36,6 +36,7 @@ from models.terms_acceptance import TermsAcceptance
 __all__ = [
     "Faction",
     "Account",
+    "AccountTombstone",
     "OAuthProvider",
     "Role",
     "AccountRole",

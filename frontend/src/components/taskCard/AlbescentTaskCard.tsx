@@ -19,43 +19,47 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
  * card keeps na's copy down to the sign-up call. Every other Albescent surface
  * stays frozen on Default until its own design lands (ADR-0046 / ADR-0048).
  *
- * Both flourishes are overlays: `.alb-task-edge` is a masked ring that lands on
- * Default's own rainbow border so the border appears to move, and
- * `.alb-task-aurora` blends over the sheet. index.css owns both, their dark
- * halves and their reduced-motion guard — a component may not inject a
- * stylesheet (#911).
+ * THE GROUND IS NO LONGER AN OVERLAY (#2499, epic #2496 ruling 2).
+ * `.alb-task-aurora` was a blended span over the sheet; the prism sweep is a
+ * LAYER OF THE CARD'S OWN BACKGROUND, reached by overriding
+ * `--faction-default-card-sheet` under `.alb-prism`. `DefaultTaskCard` reads
+ * that token and knows nothing about Albescent, which is the whole point of the
+ * seam. The edge stays an overlay: a gradient cannot be a `border-color`, so a
+ * masked ring is still the only way to make Default's own rainbow border move.
+ * index.css owns both, their dark halves, their reduced-motion frame and their
+ * gate — a component may not inject a stylesheet (#911).
  *
  * There is deliberately nothing between this and Default: it takes
  * {@link CardProps} and forwards it whole, so a change to the contract or to the
  * na card reaches Albescent with no edit here. That is the property a
  * hand-copied skin could never keep.
  *
- * #2397 (epic #2195) makes the AURORA the kit's one ornament and alternates it:
- * on a patterned page ground the bloom comes off and the sheet is BARE. The edge
- * is CHROME and never branches — it is `.spectrum-frame`'s shared ring since
- * #2407, worn by six mounts, five of which are not this card's to decide. So an
- * Albescent card on the Everymen wall is still revealed by motion (the drifting
- * frame), which is what ADR-0048 requires; only the texture under the vellum
- * yields.
+ * THE ALTERNATION LAW SURVIVES THE CHANGE OF MECHANISM (#2397, epic #2195). "One
+ * ornament per faction; a card on an ornamented ground goes plain" — the card
+ * used to satisfy it by not MOUNTING the aurora span. A background layer has
+ * nothing to unmount, so the card now drops the CLASS and the na sheet stands
+ * underneath, unchanged. Same predicate, same law, and the plain card is still
+ * byte-for-byte the unaffiliated one plus an edge. That edge is CHROME and never
+ * branches — it is `.spectrum-frame`'s shared ring since #2407, worn by eight
+ * mounts, seven of which are not this card's to decide — so an Albescent card on
+ * the Everymen wall is still revealed by motion, which is what ADR-0048
+ * requires; only the ground yields.
  */
 export default function AlbescentTaskCard(props: CardProps) {
   const groundIsBusy = useGroundIsBusy();
   return (
     <div
-      /* The wrapper's one job besides holding the overlays: it repoints
-         `--faction-default-cta-rule-opacity` for everything inside it, so the
-         spectrum rule above the sign-up lands at 0.45 here and 0.6 on the
-         unaffiliated sheet (#2030). A THIRD flourish of the same kind as the
-         other two — the difference is a shimmer, never a colour — and it stays
-         a cascade rather than a prop, which is what keeps the markup below
-         byte-for-byte the na card's. */
-      className="alb-task"
+      /* Two classes, two jobs.
+         `alb-task` repoints `--faction-default-cta-rule-opacity` for everything
+         inside it, so the spectrum rule above the sign-up lands at 0.45 here and
+         0.6 on the unaffiliated sheet (#2030) — a flourish of the same kind as
+         the light, since the difference is a shimmer and never a colour. It is
+         unconditional: it is not a ground texture.
+         `alb-prism` is the ground, and it is the one the alternation takes. */
+      className={groundIsBusy ? "alb-task alb-moves" : "alb-task alb-moves alb-prism"}
       style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}
     >
       <DefaultTaskCard {...props} />
-      {/* The ornament. "Either burst, or plain" (owner, 2026-08-17): where it is
-          not worn the vellum is bare, and no quieter texture stands in. */}
-      {!groundIsBusy && <span aria-hidden="true" className="alb-task-aurora" />}
       <span aria-hidden="true" className="alb-task-edge" />
     </div>
   );

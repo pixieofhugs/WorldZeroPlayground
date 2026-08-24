@@ -51,9 +51,17 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  *
  * ### Where the light sits
  *
- * Inside the sheet, on top, blended. `DefaultPraxisDetail` paints an OPAQUE
- * column, so an ornament layered behind it is invisible — `z-index: -1` is not a
- * position available here (§5). The three layers go through the shared
+ * THE GROUND IS IN THE SHEET (#2499, epic #2496 ruling 2). `.alb-praxis-aurora`
+ * was seven blooms blended over the column — the third of five hand-drawn washes
+ * across this kit, all the same idea drawn differently because each was invented
+ * at its own mount. `.alb-prism` on this wrapper replaces all five with one value
+ * on the na card's own sheet token, which `DefaultPraxisDetail` composes through
+ * `factionSheet()`. A background layer sits behind every word by construction, so
+ * the ground needs none of the blending argument the ornaments below still do.
+ *
+ * WHAT IS LEFT IS INSIDE THE SHEET, ON TOP, BLENDED. `DefaultPraxisDetail` paints
+ * an OPAQUE column, so an ornament layered behind it is invisible — `z-index: -1`
+ * is not a position available here (§5). The two layers go through the shared
  * component's optional `ornament` slot rather than being wrapped around it from
  * outside, because the breadcrumb above the sheet is variable-height and no
  * fixed inset would land on the sheet's top edge. Mounted there they inherit the
@@ -61,10 +69,12 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * COMPONENT and the site background still shows around it (the #1028 ruling).
  * `isolation: isolate` on the wrapper keeps the blend from reaching the page.
  *
- * index.css owns every class here, both theme halves and the reduced-motion
- * guard; a component may not inject a stylesheet (#911). Stilled, the page is a
- * static wash, a static ring and a static edge — nothing about it carries
- * meaning through motion alone.
+ * index.css owns every class here, both theme halves, the reduced-motion gate and
+ * the reduced-motion REST FRAME; a component may not inject a stylesheet (#911).
+ * Stilled, the page is a static prism ground, a static ring and a static edge —
+ * and the ground DEEPENS for that reader rather than merely standing still
+ * (#2499, epic ruling 6), so "Albescent" and "the motion sheet has not arrived"
+ * are no longer the same picture.
  *
  * No `useFormFactor()` call and no mobile sibling: praxis detail is one
  * responsive component (ADR-0063), and the responsive half lives in
@@ -73,12 +83,11 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  */
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
   return (
-    <div className="alb-praxis">
+    <div className="alb-praxis alb-moves alb-prism">
       <DefaultPraxisDetail
         state={state}
         ornament={
           <>
-            <span aria-hidden="true" className="alb-praxis-aurora" />
             <span aria-hidden="true" className="alb-praxis-ring" />
             <span aria-hidden="true" className="alb-praxis-edge" />
           </>
