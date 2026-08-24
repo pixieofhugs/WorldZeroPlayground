@@ -4352,6 +4352,47 @@
   h4 {
     @apply font-display;
   }
+
+  /* ══ Placeholder ink (#2488) ══
+     Until this rule there was NOT ONE `::placeholder` declaration in the repo,
+     so every field in the app wore the user agent's grey — a colour chosen
+     against a white page by a browser vendor, on eight faction plates that are
+     not a white page. It lands hardest on the dark ones, which is where the
+     defect was reported.
+
+     ONE RULE, NOT NINE, and `currentColor` is what makes that possible. It is
+     the same trick and the same reasoning as the composer's focus ring (#2266,
+     `[data-composer-field]:focus-visible` below): every field already sets a
+     `color` that was measured as body text against its own ground, so a
+     placeholder derived from it inherits that measurement instead of needing a
+     ninth token measured eight ways. A fixed neutral cannot do this job —
+     `--color-text-tertiary` is 3.11:1 over Singularity's terminal panel (see
+     `.sidebar-card`'s note), and `local/no-global-ink-on-faction-surface` bans
+     it on a faction plate for exactly that reason.
+
+     WHY 80% AND NOT SOMETHING QUIETER. A placeholder should be a tier under the
+     value, and the alpha is pinned by the two skins whose ink is closest to the
+     floor on its own field: Coven reads 7.29:1 in light and Singularity 7.81:1,
+     against 11-18:1 for the other six. Every step of quiet is spent on those
+     two. Measured on each field's composited ground, 80% is the round number
+     that keeps all sixteen readings (eight grounds, both themes) over AA —
+     Coven light 4.76:1 is the whole margin, Singularity light 5.43:1 is next,
+     dark never drops below 7.19:1. At 65% Coven light is 3.41:1 and Singularity
+     4.01:1, which is the bug in a different colour. `placeholderInk.test.ts`
+     holds the alpha to those grounds; do not lower it by eye.
+
+     `opacity: 1` is NOT redundant. Firefox's UA sheet puts `opacity: 0.54` on
+     `::placeholder`, which would multiply into the mix and land the ink at 43%
+     — under AA on every ground in this file. Setting the colour without
+     resetting the opacity is the classic half-fix.
+
+     The CodeMirror write-up body is NOT covered and cannot be: its placeholder
+     is a `.cm-placeholder` span inside a contenteditable div, not a form
+     control, and it has its own measured ink (`--faction-*-composer-faint`). */
+  ::placeholder {
+    color: color-mix(in srgb, currentColor 80%, transparent);
+    opacity: 1;
+  }
 }
 
 @layer components {
