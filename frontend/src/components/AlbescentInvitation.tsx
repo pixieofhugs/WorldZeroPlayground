@@ -17,7 +17,8 @@ import '../factionFaces'
  *
  * Ported from the World Zero Design System "Albescent Join Screen" (AlRecruit):
  * a vellum letter — white cotton paper, hairline rules, Cormorant italic, the
- * surveyor's-mark sigil, a "terms, plainly" slip and the "Accept the order" CTA.
+ * surveyor's-mark sigil, a slip and the "Accept the order" CTA. #2298 emptied
+ * the slip of its terms and refilled it with the perks, as name + description.
  *
  * Shown only when the account's server-computed `can_start_as_albescent` flag is
  * true (ADR-0021 — account-collective eligibility). The player picks WHICH life
@@ -114,26 +115,25 @@ const HAIRLINE_FAINT = 'var(--albescent-reveal-border-faint)'
 // have been a black rule on a near-black sheet at 1.02:1 — drawn, and invisible.
 // It did not need the third rung it was refused, either: the canvas draws the
 // letter's `border-top` and its `border-bottom` at the SAME strength after dark,
-// so the terms slip's top rule is `HAIRLINE_FAINT` now like the term rows below
-// it. By day that is 1.17:1 → 1.13:1 at one site.
+// so the slip's top rule is `HAIRLINE_FAINT` now like the rows below it — the
+// perk rows since #2298, the term rows before it. By day that is 1.17:1 →
+// 1.13:1 at one site.
 
 // i18n key stems under factions:albescent.letter — resolved at render.
 //
-// The fourth row was "standing / unranked, by design"
-// (`terms.standingLabel` + `terms.standingValue`). #1909 CUT both: they are the
-// Albescent twin of the `{F}.invitation.terms[3]` standing row the audit cut
-// across all seven other letters, which meant three different things by faction
-// and was static flavour presented as live standing.
-const TERM_KEYS: ReadonlyArray<{ label: string; value: string }> = [
-  { label: 'terms.tollLabel', value: 'terms.tollValue' },
-  { label: 'terms.skillsLabel', value: 'terms.skillsValue' },
-  { label: 'terms.outputLabel', value: 'terms.outputValue' },
-]
-
-const PERK_KEYS: ReadonlyArray<string> = [
-  'perks.record',
-  'perks.duties',
-  'perks.witnessed',
+// The whole terms slip stood here as `TERM_KEYS` — toll, skills, output, and
+// before them a fourth "standing" row #1909 cut. #2298 cut the remaining three
+// across all eight letters and gave the slip's box to the perks, so what is
+// left is the perk stems.
+//
+// `duties` is Albescent's real mechanic, the way `perks[1]` is on the other
+// seven — same ponytail as `MECHANIC_INDEX` in InvitationLetterPopup: the slot
+// is positional, and a `mechanic` flag on the catalog object is the upgrade if
+// a letter ever needs it elsewhere.
+const PERK_KEYS: ReadonlyArray<{ stem: string; mechanic: boolean }> = [
+  { stem: 'perks.record', mechanic: false },
+  { stem: 'perks.duties', mechanic: true },
+  { stem: 'perks.witnessed', mechanic: false },
 ]
 
 export interface AlbescentInvitationProps {
@@ -210,53 +210,43 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
           <FactionSigil slug={ALBESCENT_SLUG} size={44} />
         </div>
+        {/* The wordmark takes the letterhead's old bottom margin. `letterhead`
+            ("Faction no. 7 · enlistment · in confidence") and `handExtended`
+            ("A hand is extended —") stood on either side of the rule below:
+            #2298 cut both, as Albescent's twins of the overline and the kicker
+            the other seven letters lost in the same pass. */}
         <div style={{
-          ...monoCaps, letterSpacing: '0.34em', color: ACCENT, marginBottom: 'var(--space-sm)',
+          ...monoCaps, letterSpacing: '0.34em', color: ACCENT, marginBottom: 'var(--space-xl)',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
           fontSize: 9,
         }}>{t('albescent.letter.wordmark')}</div>
-        <div style={{
-          ...monoCaps, letterSpacing: '0.28em', marginBottom: 'var(--space-xl)',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
-          fontSize: 8,
-        }}>{t('albescent.letter.letterhead')}</div>
         <div style={{ width: 54, height: 1, background: HAIRLINE, margin: '0 auto var(--space-xl)' }} />
-        <div style={{
-          ...monoCaps, letterSpacing: '0.2em', marginBottom: 'var(--space-md)',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
-          fontSize: 8,
-        }}>{t('albescent.letter.handExtended')}</div>
         <h2 style={headline}>{t('albescent.letter.headline')}</h2>
         <p style={pitch}>
           {t('albescent.letter.pitch')}
         </p>
       </div>
 
-      {/* terms slip */}
-      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
-        <div style={{
-          ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
-          fontSize: 7,
-        }}>{t('albescent.letter.termsHeading')}</div>
-        <div style={termsGrid}>
-          {TERM_KEYS.map((term) => (
-            <div key={term.label} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-sm) 0' }}>
-              <div style={{
-                ...monoCaps, letterSpacing: '0.14em',
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
-                fontSize: 7,
-              }}>{tDynamic(`albescent.letter.${term.label}`)}</div>
-              <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 'var(--space-xs)' }}>{tDynamic(`albescent.letter.${term.value}`)}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 'var(--space-md)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs) var(--space-lg)' }}>
-          {PERK_KEYS.map((perk) => (
-            <div key={perk} style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>— {tDynamic(`albescent.letter.${perk}`)}</div>
-          ))}
-        </div>
-      </div>
+      {/* Perks, in the slip's box (#2298). Same rule, gutters and padding the
+          "terms, plainly" slip carried; no heading, and the perks stack their
+          name over their description rather than sitting in the loose em-dash
+          row that used to run under the term grid. */}
+      <ul style={{ position: 'relative', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', margin: '0 var(--space-3xl)', borderTop: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
+        {PERK_KEYS.map(({ stem, mechanic }) => (
+          <li key={stem} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '0 0 var(--space-sm)' }}>
+            {/* The slip's label treatment — mono, uppercase, tracked — but at a
+                read size, not the 7px engraving: a perk name is copy now, where
+                a term label was stationery. The order's own accent marks the
+                one perk that states a real mechanic; the two flavour names sit
+                in the muted ink, so the mechanic reads first. */}
+            <div style={{
+              ...monoCaps, letterSpacing: '0.14em', fontSize: 'var(--text-md)',
+              color: mechanic ? ACCENT : MUTED,
+            }}>{tDynamic(`albescent.letter.${stem}.name`)}</div>
+            <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 'var(--space-xs)' }}>{tDynamic(`albescent.letter.${stem}.desc`)}</div>
+          </li>
+        ))}
+      </ul>
 
       {/* answer */}
       <div style={{ position: 'relative', padding: 'var(--space-xl) var(--space-3xl) var(--space-2xl)' }}>
@@ -365,11 +355,6 @@ const pitch: CSSProperties = {
   color: ACCENT,
   maxWidth: 440,
   margin: '0 auto',
-}
-const termsGrid: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 'var(--space-xs) var(--space-xl)',
 }
 const lifeChip: CSSProperties = {
   position: 'relative',

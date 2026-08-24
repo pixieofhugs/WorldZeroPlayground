@@ -66,8 +66,11 @@ describe('en copy catalog shape', () => {
   // #850: the academic "prospectus" framing is retired for UA. The key itself
   // was renamed, not just its value — a key named `prospectus` holding "The
   // Practice" is the drift this rename exists to stop. The top-level
-  // `invitation.prospectus` string is a DIFFERENT key: it is the overline of the
-  // one adaptive popup shared by every faction and deliberately survives.
+  // `invitation.prospectus` string WAS a different key — the overline of the one
+  // adaptive popup shared by every faction, which is why #850 left it standing.
+  // #2298 cut it anyway, on its own grounds: it named the surface the reader was
+  // already looking at. So the word is gone from this catalog entirely, and the
+  // assertion below is now absence rather than survival.
   it('frames the UA faction page as the practice, not a prospectus', () => {
     // The `ua.practice` block itself is gone: its two leaves were the about
     // panel's heading and empty state, and #1911 settled both onto
@@ -78,8 +81,8 @@ describe('en copy catalog shape', () => {
     expect(factions.ua).not.toHaveProperty('practice')
   })
 
-  it('keeps the shared invitation prospectus overline', () => {
-    expect(factions.invitation.prospectus).toBe('a prospectus')
+  it('says prospectus nowhere at all, overline included (#2298)', () => {
+    expect(factions.invitation).not.toHaveProperty('prospectus')
   })
 })
 
@@ -341,9 +344,11 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
    * reason given. Nothing else may.
    */
   const SURVIVORS = [
-    // ---- the five the ruling names as look-alikes, and is not about ----
-    // The oath idiom. A knight is sworn and sealed; no praxis is being submitted.
-    'factions.json:wow.invitation.cta.joined',
+    // ---- the four the ruling names as look-alikes, and is not about ----
+    // The oath idiom. A knight is sworn and sealed; no praxis is being
+    // submitted. `wow.invitation.cta.joined` ("sworn and sealed, knight") was
+    // the other half of this pair and #2298 deleted it with the whole
+    // `cta.joined` family — no letter had a call site for it.
     'feed.json:factionSelect.wow.status.member',
     // An interjection. The ruling retired *huzzahs* as a name for POINTS, not
     // the cry — WOW may still shout it.
@@ -362,13 +367,19 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     'feed.json:factionSelect.coven.blurb',
     // Singularity generates *signals* into a consensus. The praxis it submits is
     // a praxis; what it broadcasts is a signal, and that survives.
+    // `singularity.invitation.terms.2.value` ("signal, into consensus") stood
+    // with these; #2298 cut the terms slip out of all seven letters.
     'factions.json:singularity.invitation.pitch',
-    'factions.json:singularity.invitation.terms.2.value',
     'feed.json:factionSelect.singularity.blurb',
     'feed.json:factionSelect.singularity.status.locked',
     // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
     // left this row's wording untouched where it rewrote its three siblings.
-    'factions.json:snide.invitation.perks.2',
+    // #2298 split the perk into name + desc; the wording is on `.desc`, and the
+    // `.name` beside it repeats it because the name itself is still owed and
+    // ships as `PLACEHOLDER — name for: <the description>`. Both leave together
+    // when the owner writes the name.
+    'factions.json:snide.invitation.perks.2.desc',
+    'factions.json:snide.invitation.perks.2.name',
     // "Join the ranks" / "one rank brighter" is the membership, not the level.
     'factions.json:everymen.invitation.headline',
     'taunts.json:coven.level_up.0',
@@ -386,7 +397,13 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
   ].sort()
 
   it('finds enough voiced strings that the sweep cannot pass by scanning nothing', () => {
-    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(200)
+    // 180, not the original 200: #2298 took 42 leaves off the invitation
+    // letters (seven kickers, 28 terms and seven dead `cta.joined`), and the
+    // invitation IS a voiced surface, so the population this sweep walks
+    // shrank with them. The floor's job is to fail if the walk ever finds
+    // nothing — it is not a census, and lowering it to the new truth is the
+    // honest move rather than counting deleted copy.
+    expect(catalogLeaves().filter(([id]) => isVoicedSurface(id)).length).toBeGreaterThan(180)
   })
 
   it('no voiced string says a retired word, beyond the named survivors', () => {
@@ -415,8 +432,8 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
    */
   const SEAL_SURVIVORS = [
     // Imagery / non-violations, same rulings as the block above.
+    // `wow.invitation.cta.joined` left with the `cta.joined` family (#2298).
     'factions.json:wow.invitation.pitch',
-    'factions.json:wow.invitation.cta.joined',
     'feed.json:factionSelect.wow.status.member',
     // The join-pact spinner, not a praxis. Named in the issue as a look-alike.
     'factions.json:ephemerists.join.joining',
@@ -429,8 +446,11 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
   ].sort()
 
   const FILED_SURVIVORS = [
-    // A filing cabinet, not the submit verb.
-    'factions.json:snide.invitation.perks.2',
+    // A filing cabinet, not the submit verb. Two leaves since #2298 split the
+    // perk into name + desc: the wording is the `.desc`, and the `.name` is the
+    // placeholder that quotes it back until the owner writes the name.
+    'factions.json:snide.invitation.perks.2.desc',
+    'factions.json:snide.invitation.perks.2.name',
     'praxis.json:listPage.emptyFiltered',
     // Pure metaphor — a mind filing contingencies submits no praxis.
     'progression.json:unlocks.three_plans.desc',
@@ -549,7 +569,10 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     // from all seven panels, so the two prompts left with their keys.
     'factions.json:singularity.join.joinButton',
     'factions.json:singularity.join.joining',
-    'factions.json:singularity.invitation.kicker',
+    // `singularity.invitation.kicker` (`> PRIVILEGE ELEVATED`) stood here.
+    // #2298 cut the kicker from all eight letters — the same ruling #2299
+    // applied to the join panel two rows up — so the prompt left with its key.
+    //
     // `singularity.invitation.perks.1` stood here — #1874's mechanic slot,
     // which refused in the array's own register (`> no modifiers…`) because
     // Singularity had no perk to advertise. #2332 gave it one, in plain voice,

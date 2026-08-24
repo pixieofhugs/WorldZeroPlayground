@@ -131,7 +131,10 @@ describe('the University of Asthmatics counts points, not marks (#1702)', () => 
     // one UA key fewer, so the bar moves down by exactly that one. #2299 took
     // four more — UA's two join kickers, and the `confirm`/`confirmSwitch`
     // pair it was the only faction to voice for itself, which now read the
-    // shared `detail.join.*` the other six already did.
-    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThanOrEqual(46)
+    // shared `detail.join.*` the other six already did. #2298 moves it three
+    // further down: the letter lost its kicker, its four terms leaves and its
+    // dead `cta.joined` — six — and the three perks each gained a `name`
+    // beside their description, which is three back.
+    expect(catalogLeaves().filter(([key]) => key.split(/[.:]/).includes('ua')).length).toBeGreaterThanOrEqual(43)
   })
 })

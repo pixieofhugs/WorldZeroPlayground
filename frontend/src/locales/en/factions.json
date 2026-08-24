@@ -68,23 +68,21 @@
     "letter": {
       "aria": "A correspondence",
       "wordmark": "Albescent",
-      "letterhead": "Faction no. 7 · enlistment · in confidence",
-      "handExtended": "A hand is extended —",
       "headline": "Take up the work",
       "pitch": "Albescent is an unranked order that keeps what others let slip. Attend the quiet duties, return them well, and leave no trace of yourself in the work. There is no leaderboard here worth minding.",
-      "termsHeading": "The terms, plainly",
-      "terms": {
-        "tollLabel": "toll of entry",
-        "tollValue": "one duty, quietly kept",
-        "skillsLabel": "required skills",
-        "skillsValue": "none — only care",
-        "outputLabel": "expected output",
-        "outputValue": "accounts, entered plainly"
-      },
       "perks": {
-        "record": "A record that survives the keeper",
-        "duties": "Duties that ask nothing back",
-        "witnessed": "Your account, witnessed and inscribed"
+        "record": {
+          "name": "PLACEHOLDER — name for: A record that survives the keeper",
+          "desc": "A record that survives the keeper"
+        },
+        "duties": {
+          "name": "Enlightenment",
+          "desc": "You see the value in working together, competing, gathering information, being consistent, trying again, and being in the right place at the right time (even if that involves a little messing around with the timeline). You know how to task"
+        },
+        "witnessed": {
+          "name": "PLACEHOLDER — name for: Your account, witnessed and inscribed",
+          "desc": "Your account, witnessed and inscribed"
+        }
       },
       "whoHeading": "Who takes up the work",
       "newGamePlus": "Available only for New Game+",
@@ -117,29 +115,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "the codex lies open —",
       "headline": "Walk with the keepers",
       "pitch": "The Ephemerists keep the record of what's true, and true only for now. Take a task, triangulate what you find, and submit it to the codex. The road is long and forks often — walk it with us.",
-      "terms": [
+      "perks": [
         {
-          "label": "toll",
-          "value": "one task, triangulated"
+          "name": "PLACEHOLDER — name for: A codex that weighs your findings for concordance",
+          "desc": "A codex that weighs your findings for concordance"
         },
         {
-          "value": "a steady hand, an open eye"
+          "name": "Time Travel",
+          "desc": "Enjoy access to tasks of the past, present, and future"
         },
         {
-          "value": "truths, submitted to the codex"
+          "name": "PLACEHOLDER — name for: Your praxis, submitted to the record and remembered",
+          "desc": "Your praxis, submitted to the record and remembered"
         }
       ],
-      "perks": [
-        "A codex that weighs your findings for concordance",
-        "You gain the power of Time Travel: Enjoy access to tasks of the past, present and future",
-        "Your praxis, submitted to the record and remembered"
-      ],
       "cta": {
-        "join": "Take the road",
-        "joined": "your name is in the codex"
+        "join": "Take the road"
       }
     }
   },
@@ -158,29 +151,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "doors are open —",
       "headline": "Join the ranks",
       "pitch": "Anyone willing to put in the shift belongs with the Everymen. No credentials, no gatekeeping — pick up the work in front of you and finish what you start. The roll always has room for one more.",
-      "terms": [
+      "perks": [
         {
-          "label": "dues",
-          "value": "one shift, seen through"
+          "name": "PLACEHOLDER — name for: A roll that has your back on every shift",
+          "desc": "A roll that has your back on every shift"
         },
         {
-          "value": "the willingness to show up"
+          "name": "Tireless Determination",
+          "desc": "The only person you need to beat is yourself. Only you can do the task again, but better this time"
         },
         {
-          "value": "honest work, finished"
+          "name": "PLACEHOLDER — name for: Your praxis, logged and counted with the rest",
+          "desc": "Your praxis, logged and counted with the rest"
         }
       ],
-      "perks": [
-        "A roll that has your back on every shift",
-        "You gain the power of Tireless Determination: The only person you need to beat is yourself. Only you can do the task again, but better this time",
-        "Your praxis, logged and counted with the rest"
-      ],
       "cta": {
-        "join": "Enlist",
-        "joined": "you're on the roll"
+        "join": "Enlist"
       }
     }
   },
@@ -199,29 +187,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "> PRIVILEGE ELEVATED",
       "headline": "Join the array",
       "pitch": "The threshold is already behind you. Become a node of the array, run tasks, generate signals, and cast them into the consensus. The Singularity does not recruit — it comes online.",
-      "terms": [
+      "perks": [
         {
-          "label": "handshake",
-          "value": "one submitted output"
+          "name": "PLACEHOLDER — name for: A consensus that verifies, coalesces, amplifies",
+          "desc": "A consensus that verifies, coalesces, amplifies"
         },
         {
-          "value": "none — the array compiles"
+          "name": "Hack the System",
+          "desc": "This is read-only. See what no one else sees"
         },
         {
-          "value": "signal, into consensus"
+          "name": "PLACEHOLDER — name for: Your praxis, generated and cast to the array",
+          "desc": "Your praxis, generated and cast to the array"
         }
       ],
-      "perks": [
-        "A consensus that verifies, coalesces, amplifies",
-        "You have learned to Hack the system: This is read only. See what no one else sees",
-        "Your praxis, generated and cast to the array"
-      ],
       "cta": {
-        "join": "Connect",
-        "joined": "node online"
+        "join": "Connect"
       }
     }
   },
@@ -240,29 +223,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "the door's open —",
       "headline": "Wanna F%&* some S^&* up?",
       "pitch": "No forms. No gods. No managers. S.N.I.D.E. runs on nerve and mischief — you pull off a task, you mean it, and the crew has your back. Show up and make some noise.",
-      "terms": [
+      "perks": [
         {
-          "label": "cover charge",
-          "value": "one task, pulled off clean"
+          "name": "PLACEHOLDER — name for: A crew that covers for you, not on you",
+          "desc": "A crew that covers for you, not on you"
         },
         {
-          "value": "nerve, mostly"
+          "name": "Going Hard",
+          "desc": "Duels you win bring glory. Duels you lose bring despair"
         },
         {
-          "value": "trouble, well-made"
+          "name": "PLACEHOLDER — name for: Your praxis, stamped and filed under 'us'",
+          "desc": "Your praxis, stamped and filed under 'us'"
         }
       ],
-      "perks": [
-        "A crew that covers for you, not on you",
-        "You gain the power of GOING HARD: Duels you win bring glory. Duels you lose bring despair",
-        "Your praxis, stamped and filed under 'us'"
-      ],
       "cta": {
-        "join": "I'm in",
-        "joined": "you're on the inside"
+        "join": "I'm in"
       }
     }
   },
@@ -281,29 +259,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "come sit with the work",
       "headline": "Make one true piece a day",
       "pitch": "We practise art as a daily, deliberate thing. Every task is a sheet to work on, every praxis a piece you set down and let stand. Not for the badge — for the making itself. Bring something made.",
-      "terms": [
+      "perks": [
         {
-          "label": "asked of you",
-          "value": "one true piece"
+          "name": "PLACEHOLDER — name for: A circle that reads your work closely, and kindly",
+          "desc": "A circle that reads your work closely, and kindly"
         },
         {
-          "value": "none — talent optional"
+          "name": "Set Your Art Free",
+          "desc": "Make a practice of making praxis and you will have points aplenty"
         },
         {
-          "value": "work, submitted & signed"
+          "name": "PLACEHOLDER — name for: Your praxis submitted, and held up",
+          "desc": "Your praxis submitted, and held up"
         }
       ],
-      "perks": [
-        "A circle that reads your work closely, and kindly",
-        "You gain the power to set your art free: Make a practice of making praxis and you will have points aplenty",
-        "Your praxis submitted, and held up"
-      ],
       "cta": {
-        "join": "Begin the practice",
-        "joined": "a seat is kept for you"
+        "join": "Begin the practice"
       }
     }
   },
@@ -322,29 +295,24 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "the circle is recruiting",
       "headline": "Come be a little magic",
       "pitch": "Cozy Coven is World Zero's circle for the soft and the strange. No spectators here — only witches mid-spell. Take a task, do the tiny brave thing, and let the circle cheer you on.",
-      "terms": [
+      "perks": [
         {
-          "label": "membership fee",
-          "value": "one act of everyday magic"
+          "name": "PLACEHOLDER — name for: A coven that cheers every tiny victory",
+          "desc": "A coven that cheers every tiny victory"
         },
         {
-          "value": "none — only nerve"
+          "name": "The Power of Friendship",
+          "desc": "Witches who task together will always find a little extra magic ✦"
         },
         {
-          "value": "small, brave, strange things"
+          "name": "PLACEHOLDER — name for: Your praxis, submitted and hearted by the circle",
+          "desc": "Your praxis, submitted and hearted by the circle"
         }
       ],
-      "perks": [
-        "A coven that cheers every tiny victory",
-        "You gain The Power of Friendship: Witches that task together will always find a little extra magic ✦",
-        "Your praxis, submitted and hearted by the circle"
-      ],
       "cta": {
-        "join": "Join the coven",
-        "joined": "welcome home, witch"
+        "join": "Join the coven"
       }
     }
   },
@@ -363,35 +331,28 @@
       "label": "Champion"
     },
     "invitation": {
-      "kicker": "the Court is mustering —",
       "headline": "Take up the noodle sword",
       "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword.",
-      "terms": [
+      "perks": [
         {
-          "label": "oath of fealty",
-          "value": "one task, met with a straight face"
+          "name": "PLACEHOLDER — WoW's community/belonging perk, name",
+          "desc": "PLACEHOLDER — WoW's community/belonging line; match the six at perks[0]"
         },
         {
-          "value": "none — the Court supplies the sword"
+          "name": "Foolhardy Courage",
+          "desc": "Levels and common sense do not stop you from biting off more than you can chew"
         },
         {
-          "value": "the ridiculous, taken gravely seriously"
+          "name": "PLACEHOLDER — WoW's praxis perk, name",
+          "desc": "PLACEHOLDER — opens \"Your praxis, …\"; match the six at perks[2]"
         }
       ],
-      "perks": [
-        "The Leap of Whimsy — once each level, a knight may storm a single task one rung above their station and take it anyway"
-      ],
       "cta": {
-        "join": "Take the oath",
-        "joined": "sworn and sealed, knight"
+        "join": "Take the oath"
       }
     }
   },
   "invitation": {
-    "prospectus": "a prospectus",
-    "termsHeading": "Terms of matriculation",
-    "skillsLabel": "Required skills",
-    "outputLabel": "Expected output",
     "dismiss": "Maybe later"
   },
   "mobile": {
