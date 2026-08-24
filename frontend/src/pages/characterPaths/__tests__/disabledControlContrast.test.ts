@@ -161,7 +161,11 @@ describe('no character-path control fades itself out of legibility', () => {
       // is disabled when the page OPENS. `disabled={deleting}` and friends are
       // transient busy states and are deliberately not swept in here.
       const gated = text.match(/disabled=\{!/g)?.length ?? 0
-      const marked = text.match(/control-off/g)?.length ?? 0
+      // Counted as CLASS LISTS, not as occurrences of the word: the Singularity
+      // band carries `control-off sg-control-off`, which is one marked control
+      // and two substring hits, and the prose around these sites names the
+      // class too.
+      const marked = text.match(/className="[^"]*\bcontrol-off\b[^"]*"/g)?.length ?? 0
       expect(gated, 'the file still draws a gated control').toBeGreaterThan(0)
       expect(marked, `${gated} gated control(s) carry the class`).toBe(gated)
     })

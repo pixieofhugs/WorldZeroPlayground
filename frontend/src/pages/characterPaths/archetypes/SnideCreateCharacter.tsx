@@ -477,6 +477,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
               <button
                 type="submit"
                 disabled={!canSubmit}
+                className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     /* The composer's own band: 15 / 0.2em in the TITLE face. A
@@ -493,7 +494,6 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
                     color: PRESS_INK,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}

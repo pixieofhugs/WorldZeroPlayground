@@ -524,7 +524,13 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="eph-cta"
+                /* `.eph-cta` supplies the ground and the ink (#2146), which is
+                   why neither is named below. `.control-off` is declared after
+                   it in `index.css` and carries `!important`, so the disabled
+                   half beats the plate's paint without a second class-vs-inline
+                   argument — this band had no colour to fade in the first
+                   place, which is half of why #2486 replaces the fill. */
+                className="eph-cta control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     // Design band: 12 / 500 / 0.24em — the engraved label
@@ -539,7 +545,6 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
                   justifyContent: 'center',
                   gap: 'var(--space-sm)',
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
