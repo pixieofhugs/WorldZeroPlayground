@@ -7043,12 +7043,17 @@
 
    NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
    an aurora, a ring or an edge off their surface, because na drew nothing there
-   to move. This stamp already carries the na spectrum TWICE — its own docstring
-   says so — and since #2497 both mounts are classed, so the whole tell is those
-   two getting up and walking:
+   to move. This stamp already carries the na spectrum, and since #2497 its
+   mounts are classed, so the whole tell is na's own marks getting up and walking:
 
-     `.spectrum-rule`  the 2px band across the stamp's top edge → TRAVELS
-     `.spectrum-dial`  the 96px points ring's annulus           → TURNS
+     `.spectrum-dial`  the 96px points ring's annulus  → TURNS (always drawn)
+     `.spectrum-rule`  the rule over the working out   → TRAVELS (when there is one)
+
+   A THIRD LINE STOOD HERE — `.spectrum-rule`, the 2px band across the stamp's
+   top edge. #2559 removed it from `DefaultScoreStamp`: #2042 had already made
+   the disc a spectrum RING, so the band was a second structural rainbow on one
+   object (ADR-0083 §3b, one carrier per object). Nothing in this sheet changed
+   for it — the marker dresses the class, not the mount.
 
    That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
    ("upgrade, never replace") kept honestly: strip the class and every pixel is

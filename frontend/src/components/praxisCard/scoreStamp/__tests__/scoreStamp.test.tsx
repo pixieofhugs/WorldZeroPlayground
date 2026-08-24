@@ -313,7 +313,13 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
     // with every test in the repo green. `spectrumClasses.test.tsx` and
     // `pointsMarkUnification.test.tsx` hold the na side of each; this is the
     // pairing with the dresser.
-    expect(dressed, 'the band the spectrum rule travels on').toContain('spectrum-rule')
+    // This fixture has a working out (`praxis()` defaults carry votes and a
+    // multiplier), so the rule over it is drawn. The BAND across the top edge
+    // was what this line named until #2559 took it off — the mount that is
+    // there in EVERY state, base-only included, is the ring.
+    expect(dressed, 'the rule over the working the spectrum rule travels on').toContain(
+      'spectrum-rule',
+    )
     expect(dressed, 'the annulus the spectrum dial turns').toContain('spectrum-dial')
   })
 
@@ -809,7 +815,7 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
     expect(html).toContain('7 from votes')
   })
 
-  it('keeps a total mark and the spectrum bar, both from tokens', () => {
+  it('keeps a total mark and the working rule, both from tokens', () => {
     const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({})} />)
     // The mark is the shared spectrum ring (#2042). It was this design's STRUCK
     // DISC — pinned here as its `rotate(-7deg)` tilt — until the owner ruled that
@@ -817,9 +823,13 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
     // twice. What the assertion is for is unchanged: a rebuild must not lose the
     // mark, because under ADR-0049 it is the one figure that never drops out.
     // Both ramps moved into index.css in #2497 — `.spectrum-dial` for the
-    // ring's conic annulus, `.spectrum-rule` for the bar across the top edge —
+    // ring's conic annulus, `.spectrum-rule` for the rule over the working —
     // so the classes are what the markup carries now. The promise is the same
     // one, one indirection further out: a shared cut, never a pasted literal.
+    //
+    // `.spectrum-rule` named the BAND across the top edge until #2559 removed
+    // it (ADR-0083 §3b). It still holds here because this fixture has a working
+    // out; `.spectrum-dial` is the one that holds unconditionally.
     expect(markup).toContain('spectrum-dial')
     expect(markup).toContain('spectrum-rule')
     expect(markup).not.toMatch(HEX)
@@ -1158,13 +1168,20 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
  * by motion. This is the second column.
  *
  * The seam is the rendered markup of `DefaultScoreStamp`, and the claim is
- * COUNTABLE: the stamp carries the band across its top edge plus AT MOST ONE
- * rule over its working. A presence check would pass against a rule per row,
- * which is the shape the board's own comment rejects — "one spectrum rule per
- * stamp is enough".
+ * COUNTABLE: **at most one spectrum rule per stamp, and none when there is no
+ * working out.** A presence check would pass against a rule per row, which is
+ * the shape the board's own comment rejects — "one spectrum rule per stamp is
+ * enough".
+ *
+ * THE BAND ACROSS THE TOP EDGE IS NO LONGER ONE OF THE COUNT (#2559). This
+ * describe used to assert 1 and 2 — band plus rule. #2042 made the disc
+ * {@link DefaultPointsRing}, a spectrum ring, so the band became the SECOND
+ * structural rainbow on one object and came off under ADR-0083 §3b ("one
+ * carrier per object"). The counts are 0 and 1 now, and the ring's
+ * `.spectrum-dial` is this stamp's one carrier.
  *
  * The four cases are the board's four fixtures. Base-only draws no breakdown at
- * all (#1131 / ADR-0076), so it draws no rule either: the band is the whole
+ * all (#1131 / ADR-0076), so it draws no rule either: the ring is the whole
  * spectrum on it.
  *
  * `position: relative` on the rule is not decoration. `.alb-moves
@@ -1180,7 +1197,7 @@ describe('the na stamp rules its working in the spectrum (#2520)', () => {
     points_from_votes: 0,
     habit_bonus_points: 0,
   }
-  /** The band's mount plus the working's, counted by the shared class. */
+  /** Every `.spectrum-rule` mount on the plate, counted by the shared class. */
   const spectra = (markup: string) => markup.split('spectrum-rule').length - 1
   const RULE = 'position:relative;height:2px'
 
@@ -1193,9 +1210,9 @@ describe('the na stamp rules its working in the spectrum (#2520)', () => {
 
   for (const [name, p] of Object.entries(STATES)) {
     const bare = name === 'base only'
-    it(`draws the band and ${bare ? 'no' : 'exactly one'} rule — ${name}`, () => {
+    it(`draws ${bare ? 'no' : 'exactly one'} spectrum rule — ${name}`, () => {
       const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis(p)} />)
-      expect(spectra(markup)).toBe(bare ? 1 : 2)
+      expect(spectra(markup)).toBe(bare ? 0 : 1)
       if (bare) expect(markup).not.toContain(RULE)
       else expect(markup).toContain(RULE)
     })
