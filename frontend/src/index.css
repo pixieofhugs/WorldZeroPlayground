@@ -6422,9 +6422,11 @@
    sheet lands in exactly the reduced-motion frame — that equivalence is the
    whole safety argument for deferring it at all. So without a rest frame "the
    motion sheet did not arrive" and "this player is not in Albescent" become the
-   same picture, and nothing in CI can tell them apart. The precedent is
-   `.alb-spark`, which parks at a steady low opacity rather than freezing,
-   because a spark frozen at its keyframe start is invisible.
+   same picture, and nothing in CI can tell them apart. The precedent used to be
+   `.alb-spark`, which parked at a steady low opacity rather than freezing
+   because a spark frozen at its keyframe start is invisible; #2555 retired it,
+   and Coven's `.cvn-profile-spark` further down this file is the same call made
+   for the same reason on a mark that is still drawn.
 
    MEASURED THE SAME WAY, worst pixel, tightest pairing:
      light  muted 4.89:1, ink 14.72:1, ground 78.5% L — a 9.3pp drop, plainly
@@ -6482,29 +6484,24 @@
    ring a span, then it joins `alb-edge-travel` and this keyframe retires too. */
 @keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
 
-/* The other half of the tell (#842). The design draws the drift AND three faint
-   gold ✦ sparks scattered over the sheet; #821 shipped only the drift, so the
-   sheet shimmered but never caught the light. Each spark carries its own
-   position, size and animation-delay at the call site, so the three never
-   pulse together.
+/* `.alb-spark` RETIRED HERE (#2555). #842 called it "the other half of the tell"
+   — three faint gold ✦ twinkling over the praxis card at their own positions,
+   sizes and delays — and the owner ruled the twinkle is not part of the Albescent
+   kit. A DELETION and not a re-tune: there is no quieter spark, and nothing takes
+   its place on the card.
 
-   Unlike the prism ground, the spark's motion IS the mark: a spark frozen at its
-   own keyframe start would be invisible (opacity 0), so reduced motion parks it
-   at a steady low opacity rather than freezing the animation. The glyph is a
-   typographic ✦, not an emoji (§10), and stays behind the card content. */
-@keyframes alb-spark { 0%, 100% { opacity: 0; transform: scale(0.5) rotate(0); } 50% { opacity: 0.75; transform: scale(1) rotate(28deg); } }
-.alb-spark {
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  line-height: 1;
-  color: #bf7f3a;
-  opacity: 0.4;
-}
-[data-theme="dark"] .alb-spark { color: #f2cc72; }
-@media (prefers-reduced-motion: no-preference) {
-  .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
-}
+   THE KEYFRAME WENT WITH IT, because it had exactly one reference — the gated
+   rule directly under it. That is the only reason it was safe to take: an
+   `@keyframes` NAME being unused-looking is not the test, a grep for the
+   `animation:` that references it is (`alb-drift` two rules up is the shape that
+   survives a retirement on the strength of one remaining consumer).
+
+   WHAT THIS LEAVES. The card's whole delta over the unaffiliated one is now the
+   prism ground and `.alb-praxis-card-edge`'s travelling ring, which is what
+   ADR-0083 says an Albescent surface is: one ornament vocabulary shared with na,
+   moving. It also means NO Albescent animation runs from this sheet any more —
+   they are all in the deferred `motion.ornament.css`, and `motionSplit.test.ts`
+   asserts that set is now empty rather than "the spark, alone". */
 
 /* THE ALBESCENT LIGHT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the
    light over the whole sheet. This narrows it by one element: the proof photo is
@@ -6519,9 +6516,14 @@
    surfaces is under the prism. What is still painted OVER content, and therefore
    still needs excluding, is the ornament that is not a ground:
 
-     `.alb-praxis-card`  the three `.alb-spark` glyphs. Positioned at `z-index: 0`,
-                         which paints ABOVE non-positioned in-flow content — that
-                         is the painting order, not an accident of the number.
+     `.alb-praxis-card`  `.alb-praxis-card-edge` at 1. The three `.alb-spark`
+                         glyphs at 0 were what this entry was written for; #2555
+                         retired them and the ring is what is left. Masked back to
+                         the 3px carrier, so — like the feed's below — it cannot
+                         reach a photo, and it stays listed for the same two
+                         reasons: the surface may gain a wash again, and the four
+                         wrappers share ONE lift rule, so dropping a scope here
+                         would be a second mechanism rather than a smaller one.
      `.alb-praxis`       `.alb-praxis-ring`, a blurred conic annulus at 2.
      `.alb-detail`       `.alb-detail-foil`, a blurred conic wheel at 2.
      `.alb-feed`         `.alb-feed-edge` at 1. Masked back to the hairline, so it
@@ -6712,7 +6714,17 @@
 /* The praxis card's twin of it (#2499). Its own rule states only the two things
    the task card's does not: this span hangs off a wrapper whose corner is the
    token, so the shared `border-radius: inherit` is right and no literal is
-   needed; and `z-index: 1` clears the three `.alb-spark` glyphs at 0.
+   needed; and the `z-index`.
+
+   THE `z-index: 1` STAYS, AND ITS ORIGINAL REASON DOES NOT (#2555). It was
+   written to clear the three `.alb-spark` glyphs at 0, and those are gone. It is
+   kept because it is the FAMILY's number, not this card's workaround:
+   `.alb-task-edge` carries the same `z-index: 1` on a card that never had a
+   spark near it, and both rings have to sit above whatever their wrapped na card
+   positions inside itself while staying under `.user-media`'s 3. Dropping to
+   `auto` would leave the ring beatable by any positioned descendant of
+   `DefaultPraxisCard` that declares a positive one — an invisible-until-it-isn't
+   dependency on a component this rule cannot see into.
 
    IT REPLACED A 1px RING AT 0.6. Until #2499 this card borrowed the RAIL's ring
    through `.spectrum-frame` and the rail's drift hook — the rail's width, walking
@@ -8961,8 +8973,10 @@
    no dark half is declared because none is needed: the token flips on its own.
 
    Stilled, this paints an ordinary static spectrum ring on top of an identical
-   static spectrum frame, i.e. nothing — so it can freeze outright where
-   `.alb-spark` had to park at a resting opacity.
+   static spectrum frame, i.e. nothing — so it can freeze outright. The contrast
+   used to be drawn against `.alb-spark`, which had to PARK at a resting opacity
+   because its keyframe start was invisible; #2555 retired the spark, and Coven's
+   `.cvn-profile-spark` is now this file's example of a mark that must park.
 
    The ring itself is the shared `.spectrum-frame::before` list (#2407), which is
    also where `border-radius: inherit` now comes from: this span mounts straight
@@ -9084,13 +9098,16 @@
 
    The delay is the one thing that differs per instance, so it arrives as a
    custom property set at the call site (`--cvn-spark-delay`) — the shape
-   `.alb-spark` and `--ev-spark-delay` already use, and the reason this is one
-   rule instead of eight.
+   `--ev-spark-delay` already uses, and the reason this is one rule instead of
+   eight. (`.alb-spark` was the third member of that shape and is retired, #2555:
+   the twinkle is not part of the Albescent kit. Coven's candle and Everymen's
+   are unaffected — this is a ruling about one faction's vocabulary, not about
+   the idiom.)
 
    Reduced motion parks the field at a steady low opacity rather than freezing
    it: opacity .12 is the keyframe's own resting value and a spark stopped there
-   reads as dirt on the paper. Same call `.alb-spark` makes for the same
-   reason. */
+   reads as dirt on the paper. This is now the file's own example of that call
+   rather than a restatement of the Albescent one. */
 @keyframes cvn-profile-spark {
   0%, 100% { opacity: 0.12; transform: scale(0.8); }
   50% { opacity: 0.85; transform: scale(1.08); }

@@ -147,10 +147,18 @@ describe.each(CARDS)('the Albescent %s', (_name, card) => {
   })
 })
 
-it('leaves the three sparks on a busy ground — a glyph is not a ground texture', () => {
-  // #842's half of the tell. Three ✦ at 9–15px are the praxis card's, and they
-  // are why a plain Albescent card still does not read as an unaffiliated one.
-  expect(onGround('everymen', praxisCard)).toContain('alb-spark')
+it('draws no spark on any ground — the twinkle is not in the kit (#2555)', () => {
+  // #842 gave this card three twinkling ✦ as "the other half of the tell". The
+  // owner ruled the twinkle out of the kit: a DELETION, not a quieter twinkle,
+  // so what is asserted is that no ground grows one back — the busy one included,
+  // since that is where the glyph used to be the last thing left.
+  //
+  // What a plain Albescent card carries instead is the travelling spectrum edge
+  // asserted above. That is ADR-0083's claim exactly: Albescent's delta over na
+  // is MOTION across one ornament vocabulary, not a mark of its own.
+  for (const ground of [null, 'everymen', 'albescent'] as const) {
+    expect(onGround(ground, praxisCard), 'the spark is back').not.toContain('alb-spark')
+  }
 })
 
 it('draws no ornament SPAN for the ground on either card', () => {
