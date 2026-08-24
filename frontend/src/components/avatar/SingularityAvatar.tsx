@@ -7,11 +7,12 @@ import { SingularitySigil } from "../sigil/SingularitySigil";
  * always-dark: its tokens are identical across themes, so no theme mutation is
  * needed. Colors via --faction-singularity-* tokens.
  */
-export default function SingularityAvatar({ character, size }: FactionAvatarProps) {
+export default function SingularityAvatar({ character, size, badge }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
+      badge={badge}
       circle={{
         borderColor: "var(--faction-singularity-border-hard)",
         bg: "var(--faction-singularity-card-bg)",
