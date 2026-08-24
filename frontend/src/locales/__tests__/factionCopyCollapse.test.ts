@@ -313,3 +313,74 @@ describe('every i18n key literal in the source tree resolves (#1911)', () => {
     expect(missing).toEqual([])
   })
 })
+
+/* -------------------------------------------------------------------------- *
+ * #2299 / #2585 — the join panel is one key path and one slot set.
+ * -------------------------------------------------------------------------- */
+
+/**
+ * Seven factions render the same block ③, and each used to file it under its own
+ * parent name with its own ragged slot set: 71 strings, 14 possible slots,
+ * nobody holding all 14. The raggedness was invisible until you lined the seven
+ * up, which is what this suite does.
+ *
+ * BOTH HALVES ARE LOAD-BEARING and neither catches the other's bug. A wrong
+ * PATH is caught by `tsc` — the key union is generated from this catalog — but
+ * a slot QUIETLY DROPPED from one faction is not: the panel renders one line
+ * short, and every other test still passes. A slot quietly ADDED to one faction
+ * is the same failure in the other direction, and is exactly how the 14
+ * accumulated in the first place.
+ */
+const JOIN_FACTIONS = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow']
+const JOIN_SLOTS = [
+  'eligibleBody',
+  'eligibleTitle',
+  'gateTitle',
+  'heading',
+  'joinButton',
+  'joining',
+  'memberStanding',
+  'memberTitle',
+]
+
+describe('the join panel is one key path and one slot set (#2299)', () => {
+  const leaves = catalogLeaves()
+
+  for (const slug of JOIN_FACTIONS) {
+    it(`${slug} fills the eight slots under ${slug}.join, and only those`, () => {
+      const prefix = `factions:${slug}.join.`
+      const slots = leaves
+        .map(([id]) => id)
+        .filter((id) => id.startsWith(prefix))
+        .map((id) => id.slice(prefix.length))
+        .sort()
+      expect(slots).toEqual(JOIN_SLOTS)
+    })
+  }
+
+  it('no faction keeps a per-faction parent name for the block', () => {
+    // The five retired names. `wow` and `coven` were already `join`.
+    const retired = new RegExp(
+      `^factions:(${JOIN_FACTIONS.join('|')})\.(access|dispatch|registry|road|roll)\.`,
+    )
+    expect(leaves.map(([id]) => id).filter((id) => retired.test(id))).toEqual([])
+  })
+
+  it('no faction keeps its own confirm, kicker, overline or letterhead', () => {
+    // Rulings (a)-(d) plus §1. Each of these was one or two factions doing
+    // alone what the other five or six did not do at all — connecting chrome,
+    // or a voiced copy of a string `detail.join.*` already shares.
+    // `detail.join.*` is the SHARED block, not a faction branch — it is where
+    // the confirm pair lives and must keep living, so the sweep is pinned to
+    // the seven slugs rather than to any `*.join.` parent.
+    const cut = new RegExp(
+      `^factions:(${JOIN_FACTIONS.join('|')})` +
+        `\.join\.(confirm|confirmSwitch|eligibleKicker|gateKicker|reLabel|letterhead)$`,
+    )
+    expect(leaves.map(([id]) => id).filter((id) => cut.test(id))).toEqual([])
+    // The shared confirm pair UA now reads is the one the other six already did.
+    expect(i18n.t('factions:detail.join.confirm', { faction: 'Cozy Coven' })).toBe(
+      'Join Cozy Coven?',
+    )
+  })
+})
