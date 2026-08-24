@@ -5926,13 +5926,24 @@
  * that had to say so. `.alb-composer-edge` (#2505) and `.alb-plate-edge`
  * (#2504) joined and stated nothing of their own, so each shipped as a 1px ring
  * at 0.6 on a surface the design canvas draws carrying a 3px border at full
- * strength. Both now restate the carrier's two values in the block further down
- * that `.alb-task-edge` has always owned, together with `.alb-desk-edge`, the
- * ninth mount (#2519). What they still take from here is the geometry: the
- * mask, the loop-cut ramp, the 300% tile, and `border-radius: inherit`, which
- * reads each mount's own corner — the composer sheet's 10px off
- * `ComposerSheet`'s inline style, the plate's `--faction-default-card-radius`,
- * the desk card's `--radius-xl`. */
+ * strength. `.alb-plate-edge` now restates the carrier's two values in the
+ * block further down that `.alb-task-edge` has always owned, together with
+ * `.alb-desk-edge`, the ninth mount (#2519). What it still takes from here is
+ * the geometry: the mask, the loop-cut ramp, the 300% tile, and
+ * `border-radius: inherit`, which reads each mount's own corner — the plate's
+ * `--faction-default-card-radius`, the desk card's `--radius-xl`.
+ *
+ * `.alb-composer-edge` LEFT BOTH LISTS AT #2553, and widening it here was not
+ * what broke it. The composer sheet already carried a 3px na spectrum frame —
+ * #2520 gave it a `3px solid transparent` border with the ramp painted into the
+ * border box — so this ring was the SECOND 3px frame on that sheet, sitting one
+ * frame inside the first, and #2519 only made the pair symmetrical. It could
+ * not be moved onto na's frame either: the ornament must live INSIDE the sheet
+ * (#1028's `overflow: hidden` is what stops a composer ornament reaching the
+ * viewport), and that clip resolves at the PADDING box, so no descendant can
+ * reach the border a covering ring would need. na's frame is the carrier and it
+ * stands still — ADR-0083 §3a's frame rule, with this exact clip named as one
+ * of its three reasons. */
 .alb-task-edge,
 .alb-praxis-card-edge,
 .alb-detail-edge,
@@ -5940,7 +5951,6 @@
 .alb-feed-edge,
 .alb-profile-edge,
 .alb-plate-edge,
-.alb-composer-edge,
 .alb-desk-edge,
 .spectrum-frame::before {
   position: absolute;
@@ -6249,61 +6259,46 @@
    the SHARED spectrum, which is what keeps the society a shimmer rather than a
    livery (ADR-0027, #783).
 
-   IT IS A TOKEN OVERRIDE, NOT SELECTOR SURGERY (epic ruling 2). Both rules
-   declare the na card's sheet TRIPLE on a wrapper, and every surface inside
-   inherits it: the hero's plate, the five body plates, and the task and praxis
-   cards those plates hold, all of which already read
-   `--faction-default-card-sheet` and none of which is named here. The three
-   properties move together because CSS CYCLES a short list rather than padding
-   it — one layer in light, six in dark, so a lone `multiply` beside them would
-   be right by accident in one cascade and wrong in the other.
+   IT IS A TOKEN OVERRIDE, NOT SELECTOR SURGERY (epic ruling 2). The wrapper
+   declares the na card's sheet TRIPLE, and every surface inside inherits it:
+   the hero's plate, the five body plates, and the task and praxis cards those
+   plates hold, all of which already read `--faction-default-card-sheet` and
+   none of which is named. The three properties move together because CSS CYCLES
+   a short list rather than padding it — one layer in light, six in dark, so a
+   lone `multiply` beside them would be right by accident in one cascade and
+   wrong in the other.
 
-   THE LIGHT/DARK ASYMMETRY IS THE DESIGN (epic ruling 9) and it is why the two
-   selectors differ. By day the wash lands on `.alb-faction-hero` ALONE — one
-   static 114deg near-white sweep, multiplied, so the frontispiece has a prism
-   cast and the page below it is the na page exactly. By night the bloom
-   carries on to `.alb-faction-body` as well, which is how it reaches the plates
-   and the cards. That is ruled, measured and deliberate; it is not a rule
-   somebody forgot to write twice.
+   THE GROUND IS DECLARED WITH `.alb-prism` NOW (#2550), and there is nothing
+   left in this block. Two rules stood here — `.alb-faction-hero` in light, and
+   the hero and the body together in dark — carrying #2504's own deeper cut of
+   the prism, which made a SECOND Albescent ground beside the one the cards
+   read: five blooms at 0.06 against `.alb-prism`'s five at 0.16, a 46%/120%
+   geometry against its 62%/66%, five different centres, a different light ramp,
+   and nothing at all declared for the body in light. Side by side with a task
+   card the faction page did not read as the same faction, which is the report
+   `.alb-prism` was minted to close for the two cards. Both classes now join the
+   prism's four selector lists, so there is ONE declaration of this ground and
+   it cannot drift again.
 
-   NOTHING HERE MOVES. Every layer is static: `motion.ornament.css` turns the
-   labyrinth and travels the plates' rings, on the deferred sheet and inside the
-   reduced-motion gate. A wash that animated a gradient parameter would
-   re-rasterise the whole sheet every frame, which is the one technique this epic
-   forbids outright.
+   EPIC RULING 9 IS REVERSED, and the reversal is the owner's, not a builder's.
+   Ruling 9 made the light/dark asymmetry — hero alone by day, hero and body by
+   night — a ruled looks decision, and the comment above `.alb-prism` cited it
+   to keep the faction page OUT of that list. #2550 supersedes it: Albescent's
+   backgrounds are in general the task and praxis cards'.
 
-   MEASURED ON THE REAL GROUND, and the numbers picked the depth.
-     light  the sweep MULTIPLIES, so it can only darken a cream sheet: ink runs
-            18.22:1 flat and 16.39:1 at the deepest stop, muted 6.05 → 5.45.
-            Both improve for ink and both clear AA for muted.
-     dark   the bloom SCREENS, so it can only lift, and the tightest pairing on
-            the na card decides how far it may. `--faction-default-card-muted`
-            reads 5.44:1 flat, and that — not the primary ink at 13.75:1 — is the
-            ceiling: at a hotspot these five run 4.83:1 muted and 12.22:1 ink,
-            both still clear. Pitching the bloom to make the INK land near 8.9
-            would have taken the muted tier to ~4.4 and put a whole prose tier
-            under AA, so the depth is set by the tighter of the two pairings. The
-            five centres are spread and their falloff is short for the same
-            reason — stacked hotspots are what would eat the remaining margin. */
-.alb-faction-hero {
-  --faction-default-card-sheet:
-    linear-gradient(114deg, #ffffff 0%, #fbf1ff 18%, #eef3ff 34%, #eafaf1 50%, #fffae9 66%, #ffeff3 82%, #ffffff 100%),
-    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
-  --faction-default-card-sheet-blend: multiply, normal;
-  --faction-default-card-sheet-clip: padding-box, padding-box;
-}
-[data-theme="dark"] .alb-faction-hero,
-[data-theme="dark"] .alb-faction-body {
-  --faction-default-card-sheet:
-    radial-gradient(46% 120% at 8% 6%, rgba(230, 185, 79, 0.06), transparent 62%),
-    radial-gradient(46% 120% at 32% 94%, rgba(74, 222, 128, 0.06), transparent 62%),
-    radial-gradient(46% 120% at 54% 4%, rgba(58, 160, 164, 0.06), transparent 62%),
-    radial-gradient(46% 120% at 76% 96%, rgba(96, 165, 250, 0.06), transparent 62%),
-    radial-gradient(46% 120% at 97% 8%, rgba(244, 114, 182, 0.06), transparent 62%),
-    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
-  --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, normal;
-  --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
-}
+   THE MEASUREMENTS THAT WERE HERE WENT WITH THE VALUES. The binding ones are at
+   `.alb-prism`'s own rule and they measure the same pairing on the same na
+   card — `--faction-default-card-muted`, worst pixel, 5.43:1 light and 5.02:1
+   dark — so the heavier ground is still clear of AA on this page's prose. The
+   alpha is not to be re-tuned for the faction page: it is set so the
+   reduced-motion rest frame, which composites the layer list twice, fits under
+   the ceiling too.
+
+   NOTHING ABOUT THE FACTION PAGE MOVES with the ground either. Every layer is
+   static: `motion.ornament.css` turns the labyrinth and travels the plates'
+   rings, on the deferred sheet and inside the reduced-motion gate. A wash that
+   animated a gradient parameter would re-rasterise the whole sheet every frame,
+   which is the one technique ADR-0083 §4 forbids outright. */
 
 /* ══ ALBESCENT — THE PRISM SWEEP (#2499, epic #2496 ruling 2) ══
    The GROUND of every ordinary Albescent surface: the task card, the praxis
@@ -6386,20 +6381,33 @@
    ORNAMENT's ramp rather than a ground — stopped needing to when the field
    desk's carrier moved off na's hairline and onto a ring of its own.
 
-   THE FACTION PAGE IS NOT IN THIS LIST, deliberately. `.alb-faction-hero` and
-   `.alb-faction-body` above carry #2504's own deeper cut of the same sweep, and
-   epic ruling 9 makes their light/dark asymmetry — hero alone by day, hero and
-   body by night — a ruled looks decision. Neither ever wore an aurora, so
-   neither is in this issue's retirement list, and repainting them here would be
-   the "fix" ruling 9 forbids. */
-.alb-prism {
+   THE FACTION PAGE JOINED THIS LIST AT #2550, and the comment that stood here
+   said the opposite. It read: *"THE FACTION PAGE IS NOT IN THIS LIST,
+   deliberately… epic ruling 9 makes their light/dark asymmetry a ruled looks
+   decision… repainting them here would be the 'fix' ruling 9 forbids."* That
+   was a correct account of what had been ruled and is superseded. The owner's
+   ruling on #2550 is that Albescent's backgrounds are in general the task and
+   praxis cards' — so `.alb-faction-hero` and `.alb-faction-body` read this
+   drawing, and #2504's fainter cut of it is deleted rather than kept beside it.
+   RULING 9 IS REVERSED; do not restore the two rules citing it.
+
+   They join the SELECTORS rather than copying the values, in all four rules
+   below, so this ground has one declaration and the faction page cannot drift
+   away from the cards again. Their contrast is the same pairing this rule
+   already measures — `--faction-default-card-muted` on the na card — so the
+   numbers above are the faction page's numbers too. */
+.alb-prism,
+.alb-faction-hero,
+.alb-faction-body {
   --faction-default-card-sheet:
     linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
     linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
   --faction-default-card-sheet-blend: multiply, normal;
   --faction-default-card-sheet-clip: padding-box, padding-box;
 }
-[data-theme="dark"] .alb-prism {
+[data-theme="dark"] .alb-prism,
+[data-theme="dark"] .alb-faction-hero,
+[data-theme="dark"] .alb-faction-body {
   --faction-default-card-sheet:
     radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
     radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
@@ -6422,9 +6430,11 @@
    sheet lands in exactly the reduced-motion frame — that equivalence is the
    whole safety argument for deferring it at all. So without a rest frame "the
    motion sheet did not arrive" and "this player is not in Albescent" become the
-   same picture, and nothing in CI can tell them apart. The precedent is
-   `.alb-spark`, which parks at a steady low opacity rather than freezing,
-   because a spark frozen at its keyframe start is invisible.
+   same picture, and nothing in CI can tell them apart. The precedent used to be
+   `.alb-spark`, which parked at a steady low opacity rather than freezing
+   because a spark frozen at its keyframe start is invisible; #2555 retired it,
+   and Coven's `.cvn-profile-spark` further down this file is the same call made
+   for the same reason on a mark that is still drawn.
 
    MEASURED THE SAME WAY, worst pixel, tightest pairing:
      light  muted 4.89:1, ink 14.72:1, ground 78.5% L — a 9.3pp drop, plainly
@@ -6437,7 +6447,9 @@
    Paint, so it is in this sheet and not the deferred one — `motion.ornament.css`
    may never carry a colour. */
 @media (prefers-reduced-motion: reduce) {
-  .alb-prism {
+  .alb-prism,
+  .alb-faction-hero,
+  .alb-faction-body {
     --faction-default-card-sheet:
       linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
       linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
@@ -6445,7 +6457,9 @@
     --faction-default-card-sheet-blend: multiply, multiply, normal;
     --faction-default-card-sheet-clip: padding-box, padding-box, padding-box;
   }
-  [data-theme="dark"] .alb-prism {
+  [data-theme="dark"] .alb-prism,
+  [data-theme="dark"] .alb-faction-hero,
+  [data-theme="dark"] .alb-faction-body {
     --faction-default-card-sheet:
       radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
       radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
@@ -6482,29 +6496,24 @@
    ring a span, then it joins `alb-edge-travel` and this keyframe retires too. */
 @keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
 
-/* The other half of the tell (#842). The design draws the drift AND three faint
-   gold ✦ sparks scattered over the sheet; #821 shipped only the drift, so the
-   sheet shimmered but never caught the light. Each spark carries its own
-   position, size and animation-delay at the call site, so the three never
-   pulse together.
+/* `.alb-spark` RETIRED HERE (#2555). #842 called it "the other half of the tell"
+   — three faint gold ✦ twinkling over the praxis card at their own positions,
+   sizes and delays — and the owner ruled the twinkle is not part of the Albescent
+   kit. A DELETION and not a re-tune: there is no quieter spark, and nothing takes
+   its place on the card.
 
-   Unlike the prism ground, the spark's motion IS the mark: a spark frozen at its
-   own keyframe start would be invisible (opacity 0), so reduced motion parks it
-   at a steady low opacity rather than freezing the animation. The glyph is a
-   typographic ✦, not an emoji (§10), and stays behind the card content. */
-@keyframes alb-spark { 0%, 100% { opacity: 0; transform: scale(0.5) rotate(0); } 50% { opacity: 0.75; transform: scale(1) rotate(28deg); } }
-.alb-spark {
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  line-height: 1;
-  color: #bf7f3a;
-  opacity: 0.4;
-}
-[data-theme="dark"] .alb-spark { color: #f2cc72; }
-@media (prefers-reduced-motion: no-preference) {
-  .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
-}
+   THE KEYFRAME WENT WITH IT, because it had exactly one reference — the gated
+   rule directly under it. That is the only reason it was safe to take: an
+   `@keyframes` NAME being unused-looking is not the test, a grep for the
+   `animation:` that references it is (`alb-drift` two rules up is the shape that
+   survives a retirement on the strength of one remaining consumer).
+
+   WHAT THIS LEAVES. The card's whole delta over the unaffiliated one is now the
+   prism ground and `.alb-praxis-card-edge`'s travelling ring, which is what
+   ADR-0083 says an Albescent surface is: one ornament vocabulary shared with na,
+   moving. It also means NO Albescent animation runs from this sheet any more —
+   they are all in the deferred `motion.ornament.css`, and `motionSplit.test.ts`
+   asserts that set is now empty rather than "the spark, alone". */
 
 /* THE ALBESCENT LIGHT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the
    light over the whole sheet. This narrows it by one element: the proof photo is
@@ -6519,9 +6528,14 @@
    surfaces is under the prism. What is still painted OVER content, and therefore
    still needs excluding, is the ornament that is not a ground:
 
-     `.alb-praxis-card`  the three `.alb-spark` glyphs. Positioned at `z-index: 0`,
-                         which paints ABOVE non-positioned in-flow content — that
-                         is the painting order, not an accident of the number.
+     `.alb-praxis-card`  `.alb-praxis-card-edge` at 1. The three `.alb-spark`
+                         glyphs at 0 were what this entry was written for; #2555
+                         retired them and the ring is what is left. Masked back to
+                         the 3px carrier, so — like the feed's below — it cannot
+                         reach a photo, and it stays listed for the same two
+                         reasons: the surface may gain a wash again, and the four
+                         wrappers share ONE lift rule, so dropping a scope here
+                         would be a second mechanism rather than a smaller one.
      `.alb-praxis`       `.alb-praxis-ring`, a blurred conic annulus at 2.
      `.alb-detail`       `.alb-detail-foil`, a blurred conic wheel at 2.
      `.alb-feed`         `.alb-feed-edge` at 1. Masked back to the hairline, so it
@@ -6674,8 +6688,12 @@
      `.alb-task-edge`         the task card's, since #1038
      `.alb-praxis-card-edge`  the praxis card's twin of it, since #2499
      `.alb-plate-edge`        the faction page's five plates (#2504 → #2519)
-     `.alb-composer-edge`     the edit-praxis sheet (#2505 → #2519)
      `.alb-desk-edge`         the mobile field desk's identity card (ditto)
+
+   FOUR, NOT FIVE, SINCE #2553. `.alb-composer-edge` was in this list; the
+   edit-praxis sheet's carrier is na's own 3px border (#2520) and the ring was a
+   second frame just inside it. The shared masked-ring block above records why
+   it could not be moved onto na's frame instead.
 
    A MASKED RING RATHER THAN THE BOARD'S REAL BORDER, on all five, and the
    choice is per-surface reasoning that lands in the same place five times.
@@ -6683,10 +6701,11 @@
    does not clip to `border-radius`, so the mask idiom is what draws a rounded
    3px frame at all — and three more things decide it here:
 
-     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px, the
-       composer sheet's and the desk card's are inline in `Default*`. Growing
-       any of them to a 3px transparent border is an edit to na's own geometry,
-       which is #2520's half of this pass and not this issue's.
+     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px and
+       the desk card's is inline in `DefaultFieldDesk`. Growing either to a 3px
+       transparent border is an edit to na's own geometry, which is #2520's half
+       of this pass and not this issue's. (On the composer sheet #2520 DID grow
+       it, and that is what made the ring there a duplicate — #2553.)
      • A REAL BORDER HERE WOULD BREAK #2499's GUARANTEE. Painting the ramp into
        a border box means writing `background-image` on a DESCENDANT of the
        `.alb-*` wrapper, and `__tests__/albescentPrismSheet.test.ts` forbids
@@ -6703,7 +6722,6 @@
    (`alb-edge-travel`, motion.ornament.css); no keyframe is minted here. */
 .alb-plate-edge,
 .alb-desk-edge,
-.alb-composer-edge,
 .alb-task-edge,
 .alb-praxis-card-edge {
   padding: 3px;
@@ -6712,7 +6730,17 @@
 /* The praxis card's twin of it (#2499). Its own rule states only the two things
    the task card's does not: this span hangs off a wrapper whose corner is the
    token, so the shared `border-radius: inherit` is right and no literal is
-   needed; and `z-index: 1` clears the three `.alb-spark` glyphs at 0.
+   needed; and the `z-index`.
+
+   THE `z-index: 1` STAYS, AND ITS ORIGINAL REASON DOES NOT (#2555). It was
+   written to clear the three `.alb-spark` glyphs at 0, and those are gone. It is
+   kept because it is the FAMILY's number, not this card's workaround:
+   `.alb-task-edge` carries the same `z-index: 1` on a card that never had a
+   spark near it, and both rings have to sit above whatever their wrapped na card
+   positions inside itself while staying under `.user-media`'s 3. Dropping to
+   `auto` would leave the ring beatable by any positioned descendant of
+   `DefaultPraxisCard` that declares a positive one — an invisible-until-it-isn't
+   dependency on a component this rule cannot see into.
 
    IT REPLACED A 1px RING AT 0.6. Until #2499 this card borrowed the RAIL's ring
    through `.spectrum-frame` and the rail's drift hook — the rail's width, walking
@@ -7043,12 +7071,17 @@
 
    NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
    an aurora, a ring or an edge off their surface, because na drew nothing there
-   to move. This stamp already carries the na spectrum TWICE — its own docstring
-   says so — and since #2497 both mounts are classed, so the whole tell is those
-   two getting up and walking:
+   to move. This stamp already carries the na spectrum, and since #2497 its
+   mounts are classed, so the whole tell is na's own marks getting up and walking:
 
-     `.spectrum-rule`  the 2px band across the stamp's top edge → TRAVELS
-     `.spectrum-dial`  the 96px points ring's annulus           → TURNS
+     `.spectrum-dial`  the 96px points ring's annulus  → TURNS (always drawn)
+     `.spectrum-rule`  the rule over the working out   → TRAVELS (when there is one)
+
+   A THIRD LINE STOOD HERE — `.spectrum-rule`, the 2px band across the stamp's
+   top edge. #2559 removed it from `DefaultScoreStamp`: #2042 had already made
+   the disc a spectrum RING, so the band was a second structural rainbow on one
+   object (ADR-0083 §3b, one carrier per object). Nothing in this sheet changed
+   for it — the marker dresses the class, not the mount.
 
    That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
    ("upgrade, never replace") kept honestly: strip the class and every pixel is
@@ -8961,8 +8994,10 @@
    no dark half is declared because none is needed: the token flips on its own.
 
    Stilled, this paints an ordinary static spectrum ring on top of an identical
-   static spectrum frame, i.e. nothing — so it can freeze outright where
-   `.alb-spark` had to park at a resting opacity.
+   static spectrum frame, i.e. nothing — so it can freeze outright. The contrast
+   used to be drawn against `.alb-spark`, which had to PARK at a resting opacity
+   because its keyframe start was invisible; #2555 retired the spark, and Coven's
+   `.cvn-profile-spark` is now this file's example of a mark that must park.
 
    The ring itself is the shared `.spectrum-frame::before` list (#2407), which is
    also where `border-radius: inherit` now comes from: this span mounts straight
@@ -8977,11 +9012,10 @@
   opacity: 1;
 }
 
-/* ── THE DOUBLED CARRIERS COME OFF (#2519, epic #2496) ──
-   The other half of the rule the block above states, and it is one rule because
-   the design canvas states it once: *"one carrier per object — whatever bar,
-   strip or hairline was doing that job comes off."* Two na marks were doing it,
-   on two surfaces that have now grown edges of their own, so both go.
+/* ── THE DOUBLED CARRIER COMES OFF (#2519, epic #2496) ──
+   The other half of the rule the block above states: *"one carrier per object —
+   whatever bar, strip or hairline was doing that job comes off."* One na mark is
+   doing it, on a surface that has now grown an edge of its own, so it goes.
 
      `.alb-desk .spectrum-rule`  the mobile field desk's 3px identity hairline
        — #1553's "one mark at three scales", across the top of the identity
@@ -8989,11 +9023,14 @@
        of the identity card; under the tell that bar doubles the edge, so it
        comes off and the plate's own travelling border does the work."*
 
-     `.alb-composer .ep-edge`  the edit-praxis sheet's masthead band, drawn by
-       `ComposerMasthead` and worn by the composer and by the waiting surface
-       after it (#1189), so both stages lose it together — right, they are the
-       same sheet. The board: *"the masthead's own 3px spectrum rule goes with
-       it; the border carries the spectrum now."*
+   `.alb-composer .ep-edge` STOOD HERE AND HID NOTHING (#2553). It was written
+   for the edit-praxis sheet's masthead band, drawn by `ComposerMasthead` — but
+   #2520 had already taken the masthead out of `DEFAULT_COMPOSER_DRESS`
+   altogether and made na's spectrum the sheet's own 3px border, so na renders
+   no `.ep-edge` on this page for anyone (`composerRule.test.tsx` asserts that
+   from na's side). The mark the composer's ring was actually doubling was that
+   new border, which is why the RING is what came off in #2553 and this rule
+   went with it as dead weight.
 
    WHAT #2505 DID INSTEAD, and why it is not the same thing. On the desk it
    classed the bar, re-cut it to the loop tile and set it TRAVELLING — which
@@ -9005,24 +9042,17 @@
    on `.alb-desk-edge` (the loop ramp, the 300% tile and the `overflow: hidden`
    track come from the shared ring), and the composer carries one mark.
 
-   THE BOARD COUNTS THREE MARKS ON THE COMPOSER AND THIS REPO HAS TWO, which is
-   a fixture difference and not a missing deletion: the canvas dresses a live
-   mount from outside and its DOM held a 2px top strip AND `.ep-edge`, where this
-   repo draws both from the one `ComposerMasthead` element.
-
-   `display: none` RATHER THAN AN UNMOUNT, because both marks are na's and the
-   `Default*` components draw them for every unaffiliated player. Two classes
-   beat one from anywhere in the sheet, so neither needs an `!important` or a
-   structural selector; strip the wrapper class and the na surface is back, byte
-   for byte. `display` is also the one property that can do this from OUTSIDE: a
+   `display: none` RATHER THAN AN UNMOUNT, because the mark is na's and
+   `DefaultFieldDesk` draws it for every unaffiliated player. Two classes beat
+   one from anywhere in the card, so it needs no `!important` and no structural
+   selector; strip the wrapper class and the na surface is back, byte for byte. `display` is also the one property that can do this from OUTSIDE: a
    background written on a descendant of an `.alb-*` wrapper is what
    `__tests__/albescentPrismSheet.test.ts` forbids, and with the desk rule
    reduced to this the sheet no longer paints any descendant at all.
 
    The desktop `/field-desk` page has no faction dispatch and this does not give
    it one (ruling 5). */
-.alb-desk .spectrum-rule,
-.alb-composer .ep-edge {
+.alb-desk .spectrum-rule {
   display: none;
 }
 
@@ -9084,13 +9114,16 @@
 
    The delay is the one thing that differs per instance, so it arrives as a
    custom property set at the call site (`--cvn-spark-delay`) — the shape
-   `.alb-spark` and `--ev-spark-delay` already use, and the reason this is one
-   rule instead of eight.
+   `--ev-spark-delay` already uses, and the reason this is one rule instead of
+   eight. (`.alb-spark` was the third member of that shape and is retired, #2555:
+   the twinkle is not part of the Albescent kit. Coven's candle and Everymen's
+   are unaffected — this is a ruling about one faction's vocabulary, not about
+   the idiom.)
 
    Reduced motion parks the field at a steady low opacity rather than freezing
    it: opacity .12 is the keyframe's own resting value and a spark stopped there
-   reads as dirt on the paper. Same call `.alb-spark` makes for the same
-   reason. */
+   reads as dirt on the paper. This is now the file's own example of that call
+   rather than a restatement of the Albescent one. */
 @keyframes cvn-profile-spark {
   0%, 100% { opacity: 0.12; transform: scale(0.8); }
   50% { opacity: 0.85; transform: scale(1.08); }

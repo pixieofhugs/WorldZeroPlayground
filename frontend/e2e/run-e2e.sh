@@ -11,7 +11,9 @@
 #      to touch anything not ending in _e2e).
 #   3. Runs `alembic upgrade head` — DATABASE_URL is exported because
 #      alembic/env.py reads os.environ, NOT backend/.env. Fails loudly on drift.
-#   4. Seeds via seed.py (env vars override .env, so it seeds the e2e db).
+#   4. Seeds via seed.py (env vars override .env, so it seeds the e2e db), then
+#      adds the suite's own fixtures (fixture_tasks.py) to that database only —
+#      seed.py is production bootstrap and holds no test data.
 #   5. Starts the branch backend on a dedicated port (default 8001) so the
 #      docker-compose backend on :8000 can't shadow the code under test.
 #   6. Runs `npx playwright test` — the playwright config starts the frontend
@@ -75,6 +77,13 @@ echo "==> alembic upgrade head"
 
 echo "==> seed"
 "$PYTHON_BIN" seed.py
+
+# Suite fixtures, not game content. seed.py is production bootstrap (start.sh
+# runs it on every deploy) and must stay ignorant that a test suite exists, so
+# the tasks the specs need are inserted here, into the e2e database only. See
+# the docblock in fixture_tasks.py for why the era config cannot hold them.
+echo "==> e2e task fixture"
+"$PYTHON_BIN" "$SCRIPT_DIR/fixture_tasks.py"
 
 echo "==> start backend on :$E2E_BACKEND_PORT"
 "$PYTHON_BIN" -m uvicorn main:app --port "$E2E_BACKEND_PORT" &

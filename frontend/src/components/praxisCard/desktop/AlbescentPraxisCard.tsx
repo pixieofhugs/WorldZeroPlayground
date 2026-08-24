@@ -1,5 +1,4 @@
 import DefaultPraxisCard from "./DefaultPraxisCard";
-import { AlbescentSparks } from "../shared";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { frameBase, type ArchetypeProps } from "./shared";
 
@@ -10,12 +9,16 @@ import { frameBase, type ArchetypeProps } from "./shared";
  * someone already looking. A repaint in Albescent's own colours would put it back
  * in the spectrum and un-hide it, so this stays "na + light".
  *
- * #842 added the other half of the tell: the design pairs the wash with three
- * faint gold sparks ({@link AlbescentSparks}), and only the wash had shipped.
+ * #842 ADDED THREE TWINKLING ✦ AND #2555 TOOK THEM BACK OUT. They were "the
+ * other half of the tell" for two years; the owner ruled the twinkle is not part
+ * of the Albescent kit, and it came out rather than getting quieter. Nothing
+ * replaces it: this card's whole delta over the unaffiliated one is now the prism
+ * ground and the travelling edge below, which is what ADR-0083 says an Albescent
+ * surface is — one ornament vocabulary shared with na, moving.
  *
  * #1646 narrows the light by one element: it stops at the proof photo, which is
  * the one thing here that is not the site's to tint. The class on this wrapper is
- * the scope index.css needs to raise `.user-media` above the sparks for THIS skin
+ * the scope index.css needs to raise `.user-media` above the ring for THIS skin
  * only — the media gallery is shared by all nine archetypes.
  *
  * ── #2499 (epic #2496) — THE OWNER'S LIVE REPORT, AND WHAT IT COST ──
@@ -49,11 +52,11 @@ import { frameBase, type ArchetypeProps } from "./shared";
  * the CLASS instead and the na sheet stands. Strip `alb-prism` and what is left
  * is the unaffiliated card exactly — which is what "plain" has always meant here.
  *
- * WHAT DOES NOT BRANCH, because it is chrome: the travelling ring, the masthead,
- * the score box — and the three `AlbescentSparks`. The sparks are three ✦ glyphs,
- * not a ground texture, and they are what keeps an Albescent card on someone
- * else's patterned profile from reading as a plain unaffiliated card. ADR-0048
- * reveals the society by motion; the alternation takes the ground, never the tell.
+ * WHAT DOES NOT BRANCH, because it is chrome: the travelling ring, the masthead
+ * and the score box. The ring is now the ONLY thing carrying the tell on a
+ * patterned ground — the sparks used to be named here as the second carrier, and
+ * #2555 retired them. ADR-0048 reveals the society by motion and the ring moves,
+ * so the alternation still takes the ground and never the tell.
  *
  * The radius is the token rather than the literal 10 it was typed as. Same
  * number, and now the one place it is written: `--faction-default-card-radius` is
@@ -69,7 +72,6 @@ export function AlbescentPraxisCard(props: ArchetypeProps) {
     >
       <DefaultPraxisCard {...props} />
       <span aria-hidden className="alb-praxis-card-edge" />
-      <AlbescentSparks />
     </div>
   );
 }
