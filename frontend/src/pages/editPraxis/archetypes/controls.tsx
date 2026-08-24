@@ -4,7 +4,7 @@
  * (paperclips, customs stamps, sticky notes); these are the inner essentials
  * that must always render: file picker, member chips, search dropdown.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
@@ -1011,6 +1011,54 @@ const BODY_TOOLBAR_BUTTONS = [
   labelKey: string;
 }>;
 
+/**
+ * How long a connecting room may stay quiet before the composer stops saying
+ * "opening…" and says it is not coming (#2557).
+ *
+ * `PraxisRoom.unreachable` is the honest signal and it stays the primary one:
+ * the provider stopped retrying, so nothing further will happen in that room.
+ * But y-websocket only reaches that verdict after exhausting its own backoff,
+ * and the tail before it is exactly where a player sits in front of a field
+ * that takes no keystroke. This is a floor on how long "…" is allowed to be the
+ * whole answer, not a second theory about the socket.
+ *
+ * Generous against a slow seed (the round trip is normally well under a second)
+ * and still in seconds rather than in the tail. `bodyUnavailableDress.test.ts`
+ * ratchets the upper bound, which is the direction this can rot in.
+ */
+export const ROOM_SEED_GRACE_MS = 8000;
+
+/**
+ * The write-up box's dress while the room has not seeded (#2557).
+ *
+ * The editor is `editable.of(false)` until the seed lands — correct, ADR-0073
+ * rule 1 — and `contenteditable="false"` leaves the content div unfocusable, so
+ * a click puts no caret in it and no keystroke reaches any handler. What was
+ * wrong was that the box went on looking exactly as ready as a live one. This
+ * is the announcement to match the refusal.
+ *
+ * `cursor` is inherited and `@codemirror/view`'s base theme declares none, so
+ * the one declaration here reaches `.cm-content` — the element the pointer is
+ * really over — without a themed rule that would have to be reconfigured.
+ *
+ * `opacity` and not an ink: the ink is the skin's, eight times over, and a
+ * neutral picked here would be unreachable from the root a faction frame
+ * repoints (#1819). Dimming the whole box costs no token and follows every
+ * skin's ground and rule for free. WCAG 1.4.3 exempts inactive components from
+ * the contrast floor, and this box is inactive in the strongest sense the
+ * platform has.
+ *
+ * ponytail: one ratio for all eight skins in both themes, unmeasured in a
+ * browser (this harness has none) — "reads as unavailable without reading as
+ * broken" is an eyeball question. If one ground turns out wrong, the upgrade is
+ * a `--composer-unavailable-opacity` custom property in `index.css` that a skin
+ * may repoint, not eight literals here.
+ */
+const BODY_UNAVAILABLE_STYLE: CSSProperties = {
+  cursor: "not-allowed",
+  opacity: 0.6,
+};
+
 export function BodyTextarea({
   state,
   skin,
@@ -1053,6 +1101,38 @@ export function BodyTextarea({
   const contentAttributes = useMemo(
     () => bodyContentAttributes(skin),
     [skin.id, skin.ariaLabel],
+  );
+
+  // The room exists but has not told us what the praxis says yet. Everything
+  // the player can see about that state hangs off this one flag — see the host
+  // and the notice below.
+  const awaitingRoom = ytext !== null && !seeded;
+  // The notice is the field's accessible description AND where a click on the
+  // dead box sends focus, so it needs a stable id of its own: `skin.id` is
+  // optional (#2085 took the visible heading off all eight sheets) and cannot
+  // be relied on for one.
+  const noticeId = useId();
+  const noticeRef = useRef<HTMLParagraphElement>(null);
+
+  // "Not coming" in seconds rather than in y-websocket's retry tail (#2557).
+  // See ROOM_SEED_GRACE_MS. Reset on re-entry — a new praxis opens a new room,
+  // which has waited for nothing yet.
+  const [seedGraceElapsed, setSeedGraceElapsed] = useState(false);
+  useEffect(() => {
+    if (!awaitingRoom) return;
+    setSeedGraceElapsed(false);
+    const timer = setTimeout(() => setSeedGraceElapsed(true), ROOM_SEED_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [awaitingRoom]);
+
+  // Two states, one line. The room has either not arrived yet or is not going
+  // to (#1804), and the difference matters entirely to the person waiting: "…"
+  // is worth sitting through and the other is not. `unreachable` is the
+  // provider's own verdict; the grace above is a deadline on reaching one.
+  const waitingNotice = t(
+    room?.unreachable || seedGraceElapsed
+      ? "editPraxis.composer.bodyUnreachable"
+      : "editPraxis.composer.bodyConnecting",
   );
 
   // ---- The editor, bound to the ROOM's text (never seeded from here) ----
@@ -1199,13 +1279,13 @@ export function BodyTextarea({
     ...skin.toolbarButtonStyle,
   };
 
-  // The room exists but has not told us what the praxis says yet. The editor is
-  // read-only until it does (#1742, re-derived in #1743 — see `PraxisRoom.seeded`
-  // for the reason that outlived the retired `PUT`), so the toolbar is a set of
-  // controls the player cannot use: hidden, not drawn disabled. It would not
-  // merely look wrong — `dispatch` writes past `editable`, so a press here would
-  // put markdown into a document still waiting for its seed.
-  const awaitingRoom = ytext !== null && !seeded;
+  // The editor is read-only until the room seeds (#1742, re-derived in #1743 —
+  // see `PraxisRoom.seeded` for the reason that outlived the retired `PUT`), so
+  // the toolbar is a set of controls the player cannot use: hidden, not drawn
+  // disabled. It would not merely look wrong — `dispatch` writes past
+  // `editable`, so a press here would put markdown into a document still
+  // waiting for its seed. (`awaitingRoom` itself is derived up with the notice
+  // it drives.)
 
   return (
     <div>
@@ -1248,21 +1328,51 @@ export function BodyTextarea({
         ref={hostRef}
         id={skin.id}
         data-composer-body
+        // The refusal, said out loud (#2557). `aria-disabled` and not
+        // `disabled`: this is a div, and the thing actually refusing is the
+        // `contenteditable="false"` pane CodeMirror builds inside it — so this
+        // is the announcement, never the enforcement. The style is what stops
+        // the box looking as ready as a live one.
+        aria-disabled={awaitingRoom || undefined}
+        // The notice under the box is the field's description while there is
+        // one, so the reason is reachable to a screen reader without hunting
+        // for a caption.
+        aria-describedby={awaitingRoom ? noticeId : undefined}
+        // Hover is the earliest moment the reason can be given, and `title` is
+        // the platform's own answer — no new component, no CSS, no dependency.
+        //
+        // ponytail: a native tooltip is delayed, unstyled and absent on touch,
+        // where the dimmed box and the `not-allowed` cursor plus the notice are
+        // what remain. The upgrade is a real inline explainer owned by the
+        // style seam, not a hand-rolled popover here.
+        title={awaitingRoom ? waitingNotice : undefined}
+        // And a click is answered instead of swallowed. Focus lands on the
+        // notice, which is a live region — so the reason is spoken, scrolled to
+        // and (for a keyboard route in) ringed, rather than the click doing
+        // nothing whatsoever. `onClick` fires on the host even though the pane
+        // inside it cannot take focus, because the pane is not disabled in the
+        // form sense: it is merely not editable.
+        onClick={awaitingRoom ? () => noticeRef.current?.focus() : undefined}
         className="content-text"
-        style={{ ...BODY_EDITOR_HOST_STYLE, ...skin.textareaStyle }}
+        style={{
+          ...BODY_EDITOR_HOST_STYLE,
+          ...skin.textareaStyle,
+          ...(awaitingRoom ? BODY_UNAVAILABLE_STYLE : null),
+        }}
       />
       {awaitingRoom && (
-        <p className="label-caption">
-          {/* Two states, one line. The room has either not arrived yet or has
-              stopped trying (#1804), and the difference matters entirely to the
-              person waiting: "…" is worth sitting through, and the other is
-              not. Left silent, a refused room is an editor that will never
-              accept a keystroke and never says why. */}
-          {t(
-            room?.unreachable
-              ? "editPraxis.composer.bodyUnreachable"
-              : "editPraxis.composer.bodyConnecting",
-          )}
+        // `role="status"` (a polite live region) so the connecting → unreachable
+        // swap is announced rather than repainting silently under someone who
+        // has looked away. `tabIndex={-1}` makes it a focus TARGET without
+        // making it a tab stop — #693 keeps Tab running title → body.
+        <p
+          ref={noticeRef}
+          id={noticeId}
+          role="status"
+          tabIndex={-1}
+          className="label-caption"
+        >
+          {waitingNotice}
         </p>
       )}
       {/* Said where it is felt, to the member most likely to be reading it: the

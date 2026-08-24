@@ -595,6 +595,15 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
               <button
                 type="submit"
                 disabled={!canSubmit}
+                /* The second class is the ONE disabled override in the app
+                   (#2486). `--faction-singularity-term-bg` is #07130c in the
+                   LIGHT cascade — this chassis does not flip — so the house
+                   neutral would lay a pale slab on a black terminal and the
+                   disabled control would read as the loudest thing on the page.
+                   `.sg-control-off` re-points the pair at this kit's own panel
+                   and dim ink; it declares no paint of its own, so what
+                   disabled LOOKS like is still said in exactly one rule. */
+                className="control-off sg-control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     /* 13 in the terminal's own band sits between the label rung
@@ -611,7 +620,6 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                     boxShadow: CTA_GLOW,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}

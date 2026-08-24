@@ -492,6 +492,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
               <button
                 type="submit"
                 disabled={!canSubmit}
+                className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     fontFamily: UA_TEXT,
@@ -508,7 +509,6 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                     background: FILL,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}

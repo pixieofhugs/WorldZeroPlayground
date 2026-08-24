@@ -146,37 +146,35 @@ const composerState = () =>
     currentCharacterId: 3,
   }) as unknown as EditPraxisState
 
-const EDGE = '<span aria-hidden="true" class="alb-composer-edge"></span>'
-
-describe('AlbescentEditPraxis is DefaultEditPraxis plus one span (#2505)', () => {
-  it('adds the edge exactly once, and changes nothing else', () => {
+describe('AlbescentEditPraxis is DefaultEditPraxis under one class (#2553)', () => {
+  it("mounts NO second frame — na's 3px sheet border is the carrier", () => {
+    // #2553. `.alb-composer-edge` was a 3px masked ring in the `ornament` slot,
+    // and #2520 had already given na's own sheet a 3px spectrum border, so the
+    // composer wore two 3px spectrum frames one inside the other. The ring is
+    // clipped by `ComposerSheet`'s `overflow: hidden` to the PADDING box, so it
+    // could never cover na's border the way `.alb-task-edge` covers the task
+    // card's — it could only sit a frame's width inside it. Owner ruling: na's
+    // sheet frame is the survivor.
     const state = composerState()
     const albescent = html(<AlbescentEditPraxis state={state} />)
-    expect(occurrences(albescent, 'alb-composer-edge')).toBe(1)
-    // Removing the one ornament and the cascade handle has to reproduce the na
-    // composer byte for byte. Any wash, retune or copy of its own — the thing
-    // ADR-0048 forbids and the thing the composer's contrast budget cannot
-    // afford — fails here. The wrapper (#2519) paints nothing: it exists so
-    // index.css can take na's masthead band off this sheet, which is a rule in
-    // the stylesheet and not a fork of the markup.
-    expect(albescent.replace(EDGE, '')).toBe(
+    expect(occurrences(albescent, 'alb-composer-edge')).toBe(0)
+    // And no OTHER ornament crept in to replace it: strip the cascade handle and
+    // the na composer is back byte for byte (ADR-0083 §1). Any wash, retune or
+    // copy of its own — the thing the composer's contrast budget cannot afford —
+    // fails here.
+    expect(albescent).toBe(
       `<div class="alb-composer">${html(<DefaultEditPraxis state={state} />)}</div>`,
     )
   })
 
-  it('mounts the edge inside the sheet, not over the page (#1028)', () => {
-    // The clip is `ComposerSheet`'s `overflow: hidden`, so the ornament has to
-    // arrive through the slot rather than from a wrapper around the archetype.
-    // Its position in the markup is what proves that: inside the sheet, ahead of
-    // the content column's first region.
+  it("leaves na's sheet frame as the one 3px spectrum on the sheet (#2520)", () => {
+    // The surviving carrier, asserted where it is declared: a transparent 3px
+    // border with the ramp painted into the border box under it. The task card
+    // wears the same idiom at the same width, which is the "they must read as
+    // the same object" half of the report.
     const albescent = html(<AlbescentEditPraxis state={composerState()} />)
-    const edge = albescent.indexOf('alb-composer-edge')
-    // After the breadcrumb, which `ComposerPage` draws outside the sheet…
-    expect(albescent.indexOf('<nav')).toBeGreaterThan(-1)
-    expect(edge).toBeGreaterThan(albescent.indexOf('<nav'))
-    // …and before the first thing the content column says, so it is a sibling of
-    // the ground rather than a layer over the page or over the copy.
-    expect(edge).toBeLessThan(albescent.indexOf(PRAXIS.title as string))
+    expect(albescent).toContain('border:3px solid transparent')
+    expect(albescent).toContain('background-origin:border-box')
   })
 
   it('na renders no ornament at all when the slot is left empty', () => {
@@ -318,15 +316,19 @@ const bodiesNaming = (css: string, selector: string) =>
    simply did not say what it was drawn to say. A count and two values are what
    tell those two states apart without a compositor. ── */
 describe('the carrier is 3px at full strength, in ONE rule (#2519)', () => {
+  // FOUR, NOT FIVE, SINCE #2553. `.alb-composer-edge` left this list when the
+  // composer's carrier became na's own 3px sheet border — the ring was the
+  // SECOND 3px spectrum frame on that sheet, not the first, and #2520 had
+  // already put the first there. Widening it here (#2519) made the doubling
+  // symmetrical rather than causing it.
   const CARRIERS = [
     '.alb-task-edge',
     '.alb-praxis-card-edge',
     '.alb-plate-edge',
-    '.alb-composer-edge',
     '.alb-desk-edge',
   ]
 
-  it('all five carriers are declared by the same rule', () => {
+  it('all four carriers are declared by the same rule', () => {
     // One rule, so they cannot drift apart again — which is exactly how three
     // of them ended up at 1px/0.6 while the other two were at 3px/1.
     const carrying = [...INDEX.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
@@ -335,7 +337,7 @@ describe('the carrier is 3px at full strength, in ONE rule (#2519)', () => {
     const shared = carrying.filter(([, prelude]) =>
       CARRIERS.every((one) => prelude.split(',').some((each) => each.trim() === one)),
     )
-    expect(shared, 'the five carriers are not one rule').toHaveLength(1)
+    expect(shared, 'the carriers are not one rule').toHaveLength(1)
   })
 
   for (const selector of CARRIERS) {
@@ -347,13 +349,22 @@ describe('the carrier is 3px at full strength, in ONE rule (#2519)', () => {
     })
   }
 
-  it('the composer carries ONE spectrum mark, not two', () => {
-    // The design draws the composer's spectrum in the sheet's edge alone and
-    // takes na's masthead band off. #2505 added the edge beside the band, so the
-    // sheet carried two and the added one was the fainter of them.
-    const body = bodiesNaming(INDEX, '.alb-composer .ep-edge').join(' ')
-    expect(body, 'na’s masthead band is still on the Albescent sheet').toMatch(
-      /display:\s*none/,
+  it('the composer carries ONE spectrum mark, not two (#2553)', () => {
+    // The design draws the composer's spectrum in the sheet's edge alone. na's
+    // masthead band — the mark #2505 thought it was replacing — has not been
+    // rendered since #2520 removed the masthead from `DEFAULT_COMPOSER_DRESS`,
+    // so `.alb-composer .ep-edge { display: none }` was hiding nothing and the
+    // ring was doubling the sheet's own frame instead. Both are gone: no rule
+    // in index.css may name the composer's ring at all.
+    expect(
+      bodiesNaming(INDEX, '.alb-composer-edge'),
+      'the composer still declares a ring of its own',
+    ).toHaveLength(0)
+    expect(INDEX, 'a dead rule still hides a band na no longer draws').not.toContain(
+      '.alb-composer .ep-edge',
+    )
+    expect(MOTION, 'the composer ring still has a travel rule').not.toContain(
+      'alb-composer-edge',
     )
   })
 
@@ -375,18 +386,19 @@ describe('the carrier is 3px at full strength, in ONE rule (#2519)', () => {
   // `pages/factionDetail/__tests__/defaultFactionHero.test.tsx`.
 })
 
-describe('neither surface hand-rolled an ornament (#2505)', () => {
-  it('the composer edge joins the shared ring for its geometry', () => {
-    const rules = preludesNaming(INDEX, '.alb-composer-edge')
+describe('the desk did not hand-roll an ornament (#2505)', () => {
+  it('the desk edge joins the shared ring for its geometry', () => {
+    const rules = preludesNaming(INDEX, '.alb-desk-edge')
     // Two: the shared masked ring (mask, ramp, tile, corner) and the carrier's
-    // own width and strength (#2519). Nothing else may name it.
-    expect(rules, 'the composer edge hand-rolled a rule').toHaveLength(2)
+    // own width and strength (#2519). Nothing else may name it. The composer's
+    // ring was the third mount checked here until #2553 deleted it.
+    expect(rules, 'the desk edge hand-rolled a rule').toHaveLength(2)
     expect(rules.some((one) => one.includes('.spectrum-frame::before'))).toBe(true)
     expect(rules.some((one) => one.includes('.alb-task-edge'))).toBe(true)
   })
 
-  it('both travel on the shared child, inside the reduced-motion gate', () => {
-    for (const selector of ['.alb-composer-edge::before', '.alb-desk-edge::before']) {
+  it('it travels on the shared child, inside the reduced-motion gate', () => {
+    for (const selector of ['.alb-desk-edge::before']) {
       const at = MOTION.indexOf(selector)
       expect(at, `${selector} has no travel rule`).toBeGreaterThan(0)
       const gateAt = MOTION.lastIndexOf('@media', at)

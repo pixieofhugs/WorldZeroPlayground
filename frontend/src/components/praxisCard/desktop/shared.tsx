@@ -225,7 +225,35 @@ export function PraxisBody({
           gap: "var(--space-md)",
         }}
       >
-        <div style={{ flex: `1 1 ${TEXT_MEASURE}px`, minWidth: 0 }}>
+        {/*
+         * `overflowWrap` is the other half of `minWidth: 0` (#2556). The zero
+         * floor is what lets this column shrink past its content so the stamp
+         * is never pushed off the card — but shrinking a box does not tell the
+         * text inside it where it may break, and a title with no space in it
+         * (the keysmash the bug was reported on) has a min-content width of
+         * the whole word. It kept that width, painted out of the column, and
+         * ran UNDER the stamp beside it.
+         *
+         * It sits here rather than on the title because `overflow-wrap` is
+         * INHERITED: one declaration covers all three user-authored strings in
+         * this column — title, task line, excerpt — where patching
+         * `PraxisTitle` would leave a long task title doing the same thing one
+         * line down. Nine archetypes compose this head (Albescent through
+         * `DefaultPraxisCard`), so this is the single slot for all of them.
+         *
+         * `anywhere` rather than `break-word` for the reason `.markdown-preview`
+         * gives in index.css: it also lets min-content shrink, so an unbroken
+         * run cannot inflate this flex item and squeeze its sibling. Truncation
+         * is NOT the alternative — the title is a link, and clipping it hides
+         * where it goes.
+         *
+         * An eyebrow that is a WORDMARK is the one thing that must opt out
+         * (§"A wordmark is a MARK", #2000): a break that invents a new word is
+         * worse than an overflow. No archetype passes one today, and the slot's
+         * own `overflow-wrap: normal` beats this inherited value if one ever
+         * does — the same escape `comments/shared.tsx` already uses.
+         */}
+        <div style={{ flex: `1 1 ${TEXT_MEASURE}px`, minWidth: 0, overflowWrap: "anywhere" }}>
           {eyebrow}
           <PraxisTitle praxis={praxis} style={titleStyle} fonts={fonts} />
           {/*

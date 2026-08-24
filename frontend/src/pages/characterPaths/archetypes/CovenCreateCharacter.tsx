@@ -578,6 +578,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               <button
                 type="submit"
                 disabled={!canSubmit}
+                className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     // The one place Coven speaks in the LABEL face rather than
@@ -593,11 +594,13 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                     background: CTA_BAND,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  // The dimmed disabled band is the Default's and the plate's,
-                  // kept so one page does not disable in two languages. WCAG
-                  // 1.4.3 exempts an inactive component from the contrast floor,
-                  // which is what this is: `disabled` is set on the same line.
-                  opacity: canSubmit ? 1 : 0.5,
+                  // The disabled band is still the Default's and the plate's —
+                  // one page does not disable in two languages — but it is
+                  // `.control-off` now rather than `opacity: 0.5` (#2486). The
+                  // WCAG 1.4.3 exemption this used to lean on was ruled the
+                  // wrong reading: `CTA_BAND` is a GRADIENT, so opacity folded
+                  // a two-stop fill and the label together, and there was never
+                  // a single colour here to fade against in the first place.
                 }}
               >
                 {/* The four-point spark leading the cast — the kit's ornament

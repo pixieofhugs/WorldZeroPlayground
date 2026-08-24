@@ -246,7 +246,11 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
           {error && <p style={errorBox}>{error}</p>}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', marginTop: 'var(--space-xl)' }}>
-            <button type="submit" disabled={!canSubmit} style={primaryBtn}>
+            {/* The DESKTOP Create had the inverse of the phone bar's bug
+                (#2486): no disabled treatment at all, so a control the form
+                gates read exactly like a live one. `.control-off` gives the two
+                the same answer. */}
+            <button type="submit" disabled={!canSubmit} className="control-off" style={primaryBtn}>
               {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
             </button>
             <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('createCharacter.cancel')}</button>
@@ -423,7 +427,7 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
 
       {/* Sticky Create bar */}
       <div style={stickyBar}>
-        <button type="submit" disabled={!canSubmit} style={{ ...mobilePrimaryBtn, opacity: canSubmit ? 1 : 0.5 }}>
+        <button type="submit" disabled={!canSubmit} className="control-off" style={mobilePrimaryBtn}>
           {submitting ? t('createCharacter.submitBusy') : t('createCharacter.mobile.submit')}
         </button>
       </div>
