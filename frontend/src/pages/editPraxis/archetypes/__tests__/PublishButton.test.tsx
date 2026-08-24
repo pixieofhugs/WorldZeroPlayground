@@ -17,7 +17,7 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
-import "../../../../i18n";
+import i18n from "../../../../i18n";
 import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { DuelDetailOut, DuelStatus } from "../../../../api/duel";
 import type { EditPraxisState } from "../../useEditPraxis";
@@ -58,6 +58,7 @@ function collabState(
     moderationStatus?: string;
     publish?: () => Promise<void>;
     pullBack?: () => Promise<void>;
+    title?: string;
   } = {},
 ): EditPraxisState {
   const praxis = {
@@ -76,6 +77,10 @@ function collabState(
   return {
     praxis,
     duel: null,
+    // Titled unless a case says otherwise: the title is a precondition of the
+    // primary since #2484, so a fixture that omits it is describing the gated
+    // composer rather than the ordinary one.
+    title: overrides.title ?? "A title",
     submitting: false,
     switchingMode: null,
     isPublished: false,
@@ -126,6 +131,7 @@ function duelState(
     publish?: () => Promise<void>;
     pullBack?: () => Promise<void>;
     requestDuelSeal?: () => void;
+    title?: string;
   } = {},
 ): EditPraxisState {
   const published = overrides.isPublished ?? true;
@@ -156,6 +162,7 @@ function duelState(
     praxis,
     duel,
     duelMode: true,
+    title: overrides.title ?? "A title",
     submitting: false,
     switchingMode: null,
     isPublished: published,
@@ -197,6 +204,7 @@ describe("PublishButton — a multi-member collab hands over to CollabSignals (#
   it("keeps the archetype's own idle label for a solo praxis", () => {
     const state = {
       praxis: { id: 1, type: "solo", members: [] },
+      title: "A title",
       submitting: false,
       switchingMode: null,
       isPublished: false,
@@ -298,6 +306,7 @@ describe("PublishButton — duel pull-back on the moderated composer (#1077, #11
       praxis: { id: 1, type: "solo", members: [] },
       duel: null,
       duelMode: false,
+      title: "A title",
       submitting: false,
       switchingMode: null,
       isPublished: true,
@@ -326,5 +335,124 @@ describe("PublishButton — duel pull-back on the moderated composer (#1077, #11
     expect(requestDuelSeal).toHaveBeenCalledTimes(1);
     expect(pullBack).not.toHaveBeenCalled();
     expect(publish).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The title precondition (#2484).
+ *
+ * The seam is `PublishButton` invoked as a plain function, for the reason this
+ * file's header gives: it takes no hooks, so the returned element can be
+ * inspected without a DOM. The owner asked for "the control is disabled on an
+ * untitled composer and enabled once a title is typed" — a rendered fact about a
+ * button, which is why it cannot live in `useEditPraxis.test.ts` (pure-function
+ * only, and the hook is deliberately untouched by this change).
+ *
+ * Untitled is the NORMAL entry state for the two flows that mint a praxis:
+ * `handleSignup` posts a task id and a type, `accept_duel` mints the opponent's
+ * side with neither. So these cases are the main path for duels and collabs,
+ * not an edge.
+ */
+describe("PublishButton — the primary is dead until the praxis has a title (#2484)", () => {
+  /** The opening `<button …>` tag, whether or not it came wrapped in a notice. */
+  function tag(el: ReactElement | null): string {
+    const markup = renderToStaticMarkup(el);
+    const opening = /<button[^>]*>/.exec(markup)?.[0];
+    expect(opening, "a primary is drawn either way").toBeTruthy();
+    return opening ?? "";
+  }
+
+  function untitledSolo(title: string): EditPraxisState {
+    return {
+      praxis: { id: 1, type: "solo", members: [] },
+      title,
+      submitting: false,
+      switchingMode: null,
+      isPublished: false,
+      currentCharacterId: 1,
+      publish: async () => {},
+      pullBack: async () => {},
+    } as unknown as EditPraxisState;
+  }
+
+  it("disables the cast while the title box is empty", () => {
+    expect(tag(renderButton(untitledSolo("")))).toContain("disabled");
+  });
+
+  it("counts whitespace as empty — the same trim the server refuses on", () => {
+    expect(tag(renderButton(untitledSolo("   ")))).toContain("disabled");
+  });
+
+  it("comes back to life the moment a title is typed", () => {
+    expect(tag(renderButton(untitledSolo("I caught the papers")))).not.toContain(
+      "disabled",
+    );
+  });
+
+  // The whole point of the ruling: the sheet is never reachable from a state
+  // that would have to be refused, so `publish()`'s dismiss-then-validate
+  // ordering (#718) is left exactly as it was.
+  it("keeps the duel seal sheet unreachable from an untitled composer", () => {
+    const requestDuelSeal = vi.fn();
+    const state = duelState("active", {
+      isPublished: false,
+      title: "",
+      requestDuelSeal,
+    });
+    expectComposerMounts(state);
+    expect(tag(renderButton(state))).toContain("disabled");
+    expect(requestDuelSeal).not.toHaveBeenCalled();
+  });
+
+  it("lets the opponent seal once they have named their side", () => {
+    const state = duelState("active", {
+      isPublished: false,
+      title: "My answer",
+    });
+    expect(tag(renderButton(state))).not.toContain("disabled");
+  });
+
+  // The one branch of this button that does not publish. A moderator failed the
+  // entry and this is the author's way back into the text — gating it on a title
+  // would strand them (#1177).
+  it("leaves the duel pull-back live whatever the title says", () => {
+    const state = duelState("active", {
+      moderationStatus: "failed",
+      title: "",
+    });
+    expectComposerMounts(state);
+    expect(tag(renderButton(state))).not.toContain("disabled");
+  });
+
+  it("wears the house disabled dress and adds no second dimming (#2486/#2573)", () => {
+    const el = renderButton(untitledSolo(""));
+    expect(tag(el)).toContain("control-off");
+    expect(renderToStaticMarkup(el), "no opacity anywhere").not.toMatch(
+      /opacity/,
+    );
+  });
+
+  // A dead control with no explanation is worse than the silent failure it
+  // replaces — and for a duel or a collab this is the entry state, so it is the
+  // first thing the player meets.
+  it("says why, in a live region the button points at", () => {
+    const markup = renderToStaticMarkup(renderButton(untitledSolo("")));
+    const describedBy = /aria-describedby="([^"]+)"/.exec(markup)?.[1];
+    expect(describedBy, "the button names its description").toBeTruthy();
+    expect(markup).toContain(`id="${describedBy}"`);
+    expect(markup).toContain('role="status"');
+    expect(markup).toContain(
+      i18n.t("forms:editPraxis.composer.publishNeedsTitle"),
+    );
+    // And the reason points at the field, by the name the field wears.
+    expect(markup).toMatch(/[Tt]itle/);
+  });
+
+  it("draws no notice, and no description, once there is a title", () => {
+    const markup = renderToStaticMarkup(
+      renderButton(duelState("active", { isPublished: false })),
+    );
+    expect(markup).not.toContain("aria-describedby");
+    expect(markup).not.toContain('role="status"');
   });
 });
