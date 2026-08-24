@@ -317,7 +317,8 @@
       "proofButtonMobile": "Browse photos / files",
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
       "submit": "Submit",
-      "submitBusy": "Submitting…"
+      "submitBusy": "Submitting…",
+      "publishNeedsTitle": "Add a title before you submit — the Title box is at the top of this sheet."
     }
   },
   "proposeTask": {

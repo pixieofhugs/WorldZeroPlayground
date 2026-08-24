@@ -756,6 +756,16 @@ export default function SingularityEditPraxis({ state }: Props) {
             <PublishButton
               state={state}
               skin={{
+                /* The one surface that re-points the house disabled pair
+                   (#2573). `controls.tsx` adds `.control-off` itself when the
+                   title gate holds the band (#2484); the house neutral is a
+                   warm off-white, which on this theme-invariant black chassis
+                   would make the dead control the loudest thing on the page. So
+                   this hands it the terminal's own panel and dim ink instead —
+                   a token override, not a second rule about what disabled looks
+                   like. Inert while the band is live: it declares two custom
+                   properties and nothing reads them until `:disabled`. */
+                className: "sg-control-off",
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 // The prompt's block cursor, trailing the word. `.ep-blink` is
