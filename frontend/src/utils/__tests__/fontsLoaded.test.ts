@@ -712,3 +712,117 @@ describe("used weights are requested (#1294)", () => {
     ).toEqual([]);
   });
 });
+
+/**
+ * The INHERITED half of the same axis (#2487).
+ *
+ * #1294 counts a weight only where one brace-scope pins both the family and the
+ * weight, and says so on purpose — widening the match is how a comment or a dead
+ * branch starts inventing faces. That leaves one shape it cannot see, and the
+ * shape is not rare: a composer puts its face on the whole surface through
+ * `pageStyle`, and every style object below inherits it without naming it. Three
+ * S.N.I.D.E. sites sat that way for months — `fontWeight: 700` on Special Elite,
+ * which ships at 400 and nothing else — and #1294 read them as weights on no
+ * family at all.
+ *
+ * The dress contract is what makes the inference safe here rather than a guess.
+ * Each `*EditPraxis` archetype declares exactly one `pageStyle` naming exactly
+ * one family, in the same file, and Tailwind's preflight resets headings AND
+ * form controls to `font-weight: inherit` — so a weight in that file with no
+ * family beside it is a weight on the page face. Nothing outside this directory
+ * has an anchor that firm, which is why the walk stops here.
+ *
+ * It objects only to SYNTHESIS, not to substitution. A browser draws the bold
+ * itself when a weight of 600 or more resolves to a face below 600 (CSS Fonts 4
+ * §5.2.4), and that is the visible defect: a typewriter face smeared rather than
+ * thickened. 700 landing on EB Garamond's real 600 is a substitution — arguably
+ * wrong too, but that is a design call about which cut to draw, not a letterform
+ * the browser invented, and this guard has no standing to make it.
+ */
+describe("an inherited page face is not asked to fake a bold (#2487)", () => {
+  const COMPOSER_DIR = join(SRC_DIR, "pages", "editPraxis", "archetypes");
+  const composers = readdirSync(COMPOSER_DIR).filter((name) => name.endsWith("EditPraxis.tsx"));
+  const faces = loadedFaces();
+  const familyNames = new Set(faces.map((face) => face.family));
+
+  /** The families a composer's `pageStyle` puts on everything below it. */
+  function pageFamilies(file: string): string[] {
+    const source = inlineConstants(file, readFileSync(file, "utf-8"));
+    const anchor = source.indexOf("pageStyle:");
+    if (anchor === -1) return [];
+    const offset = source.slice(anchor).search(/font-?[fF]amily\s*[:=]/);
+    if (offset === -1) return [];
+    return [...enclosingScope(source, anchor + offset).matchAll(/var\((--[a-z0-9-]+)\)/g)].flatMap(
+      (reference) => familiesBehindToken(reference[1], familyNames),
+    );
+  }
+
+  /** CSS Fonts 4 §5.2.4 — below 600 the browser has to draw the bold itself. */
+  const synthesisesBold = (desired: number, used: number | undefined) =>
+    desired >= 600 && (used === undefined || used < 600);
+
+  it("resolves a page face wherever one is declared (sanity check on the anchor)", () => {
+    expect(composers.length).toBeGreaterThan(1);
+    for (const name of composers) {
+      const file = join(COMPOSER_DIR, name);
+      // Albescent is the archetype with no dress of its own: it wraps
+      // `DefaultEditPraxis` in a class and declares no `pageStyle`, so there is
+      // no face of its own to inherit and nothing here to check. Every other
+      // one must resolve, or this guard is silently checking nothing.
+      const declaresPageStyle = readFileSync(file, "utf-8").includes("pageStyle:");
+      expect(pageFamilies(file).length > 0, `${name}: pageStyle anchor moved`).toBe(
+        declaresPageStyle,
+      );
+    }
+    expect(pageFamilies(join(COMPOSER_DIR, "SnideEditPraxis.tsx"))).toEqual(["special elite"]);
+  });
+
+  it("knows a faked bold from a substituted one", () => {
+    expect(synthesisesBold(700, matchedWeight(700, [400]))).toBe(true); // Special Elite
+    expect(synthesisesBold(700, matchedWeight(700, [400, 600]))).toBe(false); // EB Garamond
+    expect(synthesisesBold(500, matchedWeight(500, [400]))).toBe(false); // Poiret One
+  });
+
+  it("sets no unpinned weight the page face has to synthesise", () => {
+    const faked: string[] = [];
+    for (const name of composers) {
+      const file = join(COMPOSER_DIR, name);
+      const source = inlineConstants(file, readFileSync(file, "utf-8"));
+      const page = pageFamilies(file);
+      const available = faces
+        .filter((face) => page.includes(face.family) && !face.italic)
+        .map((face) => face.weight);
+      for (const declaration of source.matchAll(/font-?[wW]eight\s*[:=][^;\n]*/g)) {
+        // A scope that names its own family is #1294's business, not this one.
+        if (/font-?[fF]amily/.test(enclosingScope(source, declaration.index))) continue;
+        for (const digits of declaration[0].matchAll(/\b(\d{3})\b/g)) {
+          const desired = Number(digits[1]);
+          if (synthesisesBold(desired, matchedWeight(desired, available))) {
+            // `inlineConstants` substitutes within a line, so the count holds.
+            const line = source.slice(0, declaration.index).split("\n").length;
+            faked.push(`${name}:${line} — fontWeight ${desired} inherits ${page.join(" / ")}`);
+          }
+        }
+      }
+    }
+
+    expect(
+      [...new Set(faked)].sort(),
+      `These weights land on a face the loader ships no cut for, so the browser draws
+` +
+        `the bold itself — a smear across the letterforms rather than a heavier cut,
+` +
+        `and one no probe can see because the family still resolves (#2487).
+` +
+        `Drop the declaration and reach for emphasis the face supports — size,
+` +
+        `letterspacing, case, or the ink tier. Do NOT add the cut to the payload;
+` +
+        `the byte budget is already in WARN (#2469). If the element really is meant
+` +
+        `to wear a family that HAS the cut, name that family in the same style
+` +
+        `object: pinning them together is what makes the pair checkable.`,
+    ).toEqual([]);
+  });
+});
