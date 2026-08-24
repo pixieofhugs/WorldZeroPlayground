@@ -1,6 +1,15 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One run per ref. A superseded push cancels its own in-flight jobs rather
+# than racing them to completion. main is exempt — see below.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   test:
