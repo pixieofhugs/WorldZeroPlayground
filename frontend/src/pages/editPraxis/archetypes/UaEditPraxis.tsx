@@ -153,7 +153,17 @@ const ALARM = "var(--faction-ua-card-alarm)";
 const FIELD = "var(--faction-ua-panel)"; /* inset panel — fields, wells */
 const INK = "var(--faction-ua-card-text)";
 const BODY = "var(--faction-ua-card-body)";
-const MUTED = "var(--faction-ua-card-muted)";
+/* THE QUIET TIER IS `-card-body`, NOT `-card-muted` (#2485). The sheet is
+ * washed — `ComposerGround` lays the lotus and the ensō over it at
+ * `--faction-ua-card-lotus-opacity` — so what a label sits on is the wash,
+ * not the token this file used to measure against. `-card-muted` reads 5.45 /
+ * 5.64 flat and 4.38 / 3.79 on that composite, under AA in BOTH themes;
+ * `-card-body` is the same family one rung up and clears at 5.74 / 6.78.
+ * `UaCreateCharacter` shipped exactly this swap on its own washed leaf
+ * (#2348), and `uaCreateCharacterContrast.test.ts` records the refusal as a
+ * measurement. `-card-muted` stays right on every UNWASHED UA surface — the
+ * task card, the praxis detail, the feed frame — which is why the token is
+ * untouched and only this sheet moves. */
 const ACCENT = "var(--faction-ua-card-accent)"; /* the design's accentDeep */
 const RULE = "var(--faction-ua-rule)"; /* the neutral hairline */
 const HAIR = "var(--faction-ua-hair)"; /* the faintest divider, below -rule */
@@ -198,7 +208,7 @@ export default function UaEditPraxis({ state }: Props) {
 
   /* The label tier's face and colour are the skin's; its geometry (uppercase,
    * 0.14em, --text-lg) is the layout's and is inherited untouched. */
-  const labelStyle = { fontFamily: UA_TEXT, color: MUTED };
+  const labelStyle = { fontFamily: UA_TEXT, color: BODY };
 
   const fieldBox = {
     width: "100%",
@@ -232,7 +242,7 @@ export default function UaEditPraxis({ state }: Props) {
     labelStyle,
     titleStyle: { fontFamily: UA_DISPLAY, fontWeight: 600, color: INK },
     descriptionStyle: { color: BODY },
-    pillStyle: { fontFamily: UA_TEXT, color: MUTED },
+    pillStyle: { fontFamily: UA_TEXT, color: BODY },
   } as const;
   const primaryStyle = composerLabelStyle({
     fontFamily: UA_TEXT,
@@ -281,7 +291,7 @@ export default function UaEditPraxis({ state }: Props) {
     rule: () => rule,
     mark: statusMark,
     statusStyle: { fontFamily: UA_TEXT, color: INK, fontWeight: 600 },
-    metaStyle: { fontFamily: UA_TEXT, color: MUTED },
+    metaStyle: { fontFamily: UA_TEXT, color: BODY },
     labelStyle,
     slip,
     panelStyle: {
@@ -291,9 +301,9 @@ export default function UaEditPraxis({ state }: Props) {
     },
     headingStyle: { fontFamily: UA_DISPLAY, fontWeight: 600, color: INK },
     bodyStyle: { color: BODY },
-    quietStyle: { fontFamily: UA_TEXT, color: MUTED },
+    quietStyle: { fontFamily: UA_TEXT, color: BODY },
     primaryStyle,
-    quietButtonStyle: { fontFamily: UA_TEXT, color: MUTED },
+    quietButtonStyle: { fontFamily: UA_TEXT, color: BODY },
   };
 
   /* Your part is in, so the composer is not a composer any more (ADR-0059).
@@ -376,7 +386,7 @@ export default function UaEditPraxis({ state }: Props) {
                       padding: "var(--space-sm) var(--space-lg)",
                       borderRadius: RADIUS,
                       background: active ? FILL : FIELD,
-                      color: active ? ON_FILL : MUTED,
+                      color: active ? ON_FILL : BODY,
                       border: `1px solid ${active ? FILL : RULE}`,
                     })}
                   >
@@ -415,12 +425,12 @@ export default function UaEditPraxis({ state }: Props) {
                 dropdownBg: SHEET,
                 dropdownBorder: `1px solid ${RULE}`,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
-                leaveStyle: { fontFamily: UA_TEXT, color: MUTED },
-                /* The sheet's own corner. `MUTED` is `--faction-ua-card-muted`
-                 * and this composer IS the card sheet, so the roster's inks are
-                 * unchanged — the `+ invite` chip is the one that moves, off
-                 * the TASK's faction and onto this one (#2267). */
-                collab: { radius: RADIUS, quiet: MUTED },
+                leaveStyle: { fontFamily: UA_TEXT, color: BODY },
+                /* The sheet's own corner. `BODY` is `--faction-ua-card-body`
+                 * and this composer IS the card sheet, so the roster's inks ride
+                 * the sheet's own quiet tier — the `+ invite` chip is the one
+                 * that moves, off the TASK's faction and onto this one (#2267). */
+                collab: { radius: RADIUS, quiet: BODY },
               }}
             />
           </ComposerSection>
@@ -448,7 +458,7 @@ export default function UaEditPraxis({ state }: Props) {
               <span
                 style={composerLabelStyle({
                   fontFamily: UA_TEXT,
-                  color: MUTED,
+                  color: BODY,
                   letterSpacing: "0.06em",
                 })}
               >
@@ -470,7 +480,7 @@ export default function UaEditPraxis({ state }: Props) {
                       borderRadius: RADIUS,
                       border: `1px solid ${active ? RULE : "transparent"}`,
                       background: active ? FIELD : "transparent",
-                      color: active ? INK : MUTED,
+                      color: active ? INK : BODY,
                     }),
                 }}
               />
@@ -488,7 +498,7 @@ export default function UaEditPraxis({ state }: Props) {
                 toolbarButtonStyle: {
                   fontFamily: UA_TEXT,
                   background: FIELD,
-                  color: MUTED,
+                  color: BODY,
                   border: `1px solid ${RULE}`,
                   borderRadius: RADIUS,
                 },
@@ -516,7 +526,7 @@ export default function UaEditPraxis({ state }: Props) {
                     style={{
                       fontFamily: UA_TEXT,
                       fontSize: "var(--text-content)",
-                      color: MUTED,
+                      color: BODY,
                       margin: 0,
                     }}
                   >
@@ -586,14 +596,14 @@ export default function UaEditPraxis({ state }: Props) {
                     padding: "var(--space-2xl) var(--space-lg)",
                     textAlign: "center",
                     whiteSpace: "pre-line",
-                    color: MUTED,
+                    color: BODY,
                   }),
                   errorColor: "var(--faction-ua-vermil)",
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {
                     fontFamily: UA_TEXT,
                     fontSize: "var(--text-content)",
-                    color: MUTED,
+                    color: BODY,
                     maxWidth: 260,
                     lineHeight: 1.5,
                     marginTop: "var(--space-sm)",
@@ -617,7 +627,7 @@ export default function UaEditPraxis({ state }: Props) {
             <>
               <SaveDraftButton
                 state={state}
-                skin={{ style: { fontFamily: UA_TEXT, color: MUTED } }}
+                skin={{ style: { fontFamily: UA_TEXT, color: BODY } }}
               />
               <DropButton
                 state={state}
@@ -627,7 +637,7 @@ export default function UaEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: "none",
                     padding: 0,
-                    color: MUTED,
+                    color: BODY,
                     textDecoration: "underline",
                     cursor: "pointer",
                   }),

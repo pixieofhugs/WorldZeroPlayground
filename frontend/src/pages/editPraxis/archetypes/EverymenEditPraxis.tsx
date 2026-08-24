@@ -141,7 +141,20 @@ const ALARM = "var(--faction-everymen-card-alarm)";
 const PANEL = "var(--faction-everymen-sheet-panel)";
 /** Text ink. FLIPS with the paper — deliberately not `--everymen-ink`. */
 const INK = "var(--everymen-paper-text)";
-const MUTED = "var(--everymen-muted)";
+/* THE QUIET RUNG IS `--everymen-quiet`, NOT `--everymen-muted` (#2485). The
+ * sheet mounts `.em-burst` — two corner glows and the ray fan — so the stock
+ * under a label is the washed paper, not the bare token. Measured on that
+ * composite the muted brown reads 4.26:1 under the gold corner and 4.09:1 under
+ * the olive in LIGHT, where it is 5.09 flat; `--everymen-quiet` is #1173's
+ * sibling rung, minted for "the muted role, one stock further down", and clears
+ * both (4.78 / 4.58). In dark it ALIASES `--everymen-muted`, so nothing moves at
+ * night — right, because the wash lifts a dark ground and muted already cleared
+ * there. `EverymenCreateCharacter` shipped this swap on the same burst (#2352)
+ * and `everymenCreateCharacterContrast.test.ts` records the refusal.
+ *
+ * The name still reads MUTED because that is the ROLE it plays in the design's
+ * skin row; what changed is which rung of the family answers for it here. */
+const MUTED = "var(--everymen-quiet)";
 /** Red as a RULE or a FILL. For red as text see {@link ACCENT}. */
 const RED = "var(--everymen-red)";
 /** Red as INK. Only clears AA on {@link PANEL} — never set it on {@link PAPER}. */

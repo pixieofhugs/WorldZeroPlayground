@@ -465,10 +465,21 @@ export default function CovenEditPraxis({ state }: Props) {
   );
   const ground = (
           <>
-            {/* The glow and the lavender wash, at the design's two anchors. */}
+            {/* The glow and the lavender wash, at the design's two anchors.
+
+                THE STRENGTH IS THE FACTION'S, NOT THIS FILE'S (#2485). It was a
+                hard-coded `0.7`, and at that weight every ink on the sheet
+                misses: `-slip-label` 2.80 / 1.95 and `-slip-ink` 3.33 / 3.25 on
+                the composite. Coven has already MINTED this number —
+                `--faction-coven-ward-haze` (0.22 light / 0.28 dark) is the
+                strength the ward backdrop washes its four blooms at, and the
+                block that declares it carries the measurements that picked it.
+                A faction that has minted a wash strength has minted it for every
+                surface that wash lands on; an opacity chosen in TSX is a
+                `dark ? a : b` in numeric clothing (WORLD_ZERO_STYLE §6). */}
             <ComposerGround
               inset={0}
-              opacity={0.7}
+              opacity="var(--faction-coven-ward-haze)"
               background={`radial-gradient(62% 48% at 12% 0%, ${PINK}, transparent 70%), radial-gradient(58% 46% at 100% 100%, var(--faction-coven-slip-lav), transparent 72%)`}
             />
             {/* The wheel and the glyphs, on their own layer so each keeps its
