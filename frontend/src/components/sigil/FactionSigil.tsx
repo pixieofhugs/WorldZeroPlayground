@@ -52,15 +52,25 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
  * and the sidebar's activity rail. Everything about the NAME stays masked —
  * that is #1891/#1926's other half and it is untouched.
  *
- * WHY THE ADAPTER AND NOT THE MANIFEST. `albescent.ts`'s contract is explicit:
- * anything added there must be "a flourish LAYERED OVER Default's structure",
- * because a surface that repaints Albescent in its own colours un-hides the
- * society (#783). A bespoke emblem is not Default-plus-a-flourish, so it is not
- * a manifest row. It resolves here, where the mark→slug question already lives —
- * and it sits BEFORE the spread, so the day albescent does declare a `sigil` the
- * manifest wins and this line quietly stops mattering.
+ * IT IS A MANIFEST ROW NOW (#2529), and the note this replaces named its own
+ * retirement: the adapter used to be spread into the map at the call site,
+ * *ahead* of `surfaceMap('sigil')`, "so the day albescent does declare a `sigil`
+ * the manifest wins and this line quietly stops mattering." That day is #2529.
+ * The old reasoning was that `albescent.ts` takes only "a flourish LAYERED OVER
+ * Default's structure" and a bespoke emblem is not one — true of the SHAPE and
+ * not of the risk it was guarding, which is livery (#783): the labyrinth is
+ * painted from `--faction-default-rainbow-conic`, the same spectrum na wears,
+ * so registering it repaints nothing. What the bypass did cost was real. It made
+ * every census of who skins what report `sigil: 7/8, albescent absent`, and it
+ * put the mark outside the one map a refactor of this surface would carry — the
+ * way it was already dropped once (`Sidebar.tsx:40`).
+ *
+ * Exported, not local, for the reason `UaSigilAdapter` and
+ * `SingularitySigilAdapter` above are: a manifest names it through
+ * `lazyArchetype`, which defers the read past module evaluation and keeps the
+ * dispatcher↔archetype cycle harmless. See the thunk note in `factions/manifest.ts`.
  */
-function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
+export function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
   return <AlbescentSigil size={size ?? 22} color={color} />;
 }
 
@@ -83,17 +93,20 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
   return slug === "albescent" ? "var(--faction-default-stop-6)" : undefined;
 }
 
-function DefaultSigilAdapter({ size }: SigilVariantProps) {
+/**
+ * The na ring — a `Default*` archetype co-located with its dispatcher, which
+ * `manifest.ts` names as the normal shape for three surfaces already. Exported
+ * so a test can resolve the surface the way this component does (`pickVariant`
+ * over `surfaceMap('sigil')`, with the na fallback named) rather than
+ * re-deriving the fallback and proving its own copy instead.
+ */
+export function DefaultSigilAdapter({ size }: SigilVariantProps) {
   // The default ring has no color prop — it draws
   // --faction-default-rainbow-conic.
   return <DefaultSigil size={size} />;
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(
-    { albescent: AlbescentSigilAdapter, ...surfaceMap("sigil") },
-    slug,
-    DefaultSigilAdapter,
-  );
+  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
   return <Variant size={size} color={color} />;
 }
