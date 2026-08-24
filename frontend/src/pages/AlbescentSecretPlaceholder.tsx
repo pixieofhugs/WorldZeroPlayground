@@ -10,9 +10,10 @@
  * below. This docstring used to end "Albescent surfaces never dim in dark mode —
  * the `--albescent-reveal-*` tokens carry identical values in both themes", and
  * that is no longer true: the reveal register has a dark half whose values are
- * the na card's own. Every colour on this page is either `BG`/`INK` or `ink()`
- * mixed down from `INK`, so the sheet, the rules and the glyph all invert
- * through the cascade with nothing branching on a `dark` boolean.
+ * the na card's own. Every colour on this page is a `--albescent-reveal-*`
+ * token — `BG`, `INK`, `MUTED` — or an `ink()` wash mixed down from `INK`, so
+ * the sheet, the rules and the glyph all invert through the cascade with
+ * nothing branching on a `dark` boolean.
  *
  * ADR-0017's ruling 7 used to say Albescent's surfaces are "always-light
  * (identical values in both the light and dark cascades, exactly as
@@ -35,10 +36,26 @@ import '../factionFaces'
 
 const BG = 'var(--albescent-reveal-surface)'
 const INK = 'var(--albescent-reveal-text)'
+/**
+ * The register's quiet TEXT tier — 4.64:1 by day, 5.44:1 at night, both
+ * measured on this sheet by `factionContrast.test.ts` (#2523).
+ *
+ * The eyebrow used to be `ink(30)`, 1.92:1 in light, and the reason nothing
+ * caught that is the reason this constant exists: a per-site mix is a fourth
+ * tier on a register that names three, and no value-level sweep can reach one.
+ * Reading the token is what makes the line measurable, not merely lighter.
+ */
+const MUTED = 'var(--albescent-reveal-text-muted)'
 const FONT = 'var(--font-faction-vellum)'
 const MONO = 'var(--font-body)'
 
-/** A translucent wash of Albescent ink at the given opacity percentage. */
+/**
+ * A translucent wash of Albescent ink at the given opacity percentage.
+ *
+ * ORNAMENT ONLY. Its three callers are the card's hairline, the fleur-de-lis
+ * and the 64px rule — marks that owe no contrast ratio and are meant to stay
+ * whispers. Anything that is READ takes a named tier; see `MUTED`.
+ */
 const ink = (percent: number): string => `color-mix(in srgb, ${INK} ${percent}%, transparent)`
 
 function FleurMark({ size = 56 }: { size?: number }) {
@@ -88,7 +105,7 @@ export default function AlbescentSecretPlaceholder() {
             fontSize: 'var(--text-md)',
             letterSpacing: '0.28em',
             textTransform: 'uppercase',
-            color: ink(30),
+            color: MUTED,
             marginBottom: 'var(--space-xl)',
           }}
         >
