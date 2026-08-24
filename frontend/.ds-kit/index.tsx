@@ -63,7 +63,6 @@ export { default as DefaultProposeTask } from "../src/pages/proposeTask/archetyp
 export { default as DefaultScoreStamp } from "../src/components/praxisCard/scoreStamp/DefaultScoreStamp";
 export { default as DefaultSeal } from "../src/components/metataskSeal/skins/DefaultSeal";
 export { default as DefaultSelectCard } from "../src/components/selectCard/DefaultSelectCard";
-export { default as DefaultSettings } from "../src/pages/settings/mobileArchetypes/DefaultSettings";
 export { default as DefaultSigil } from "../src/components/sigil/DefaultSigil";
 export { default as DefaultTaskCard } from "../src/components/taskCard/DefaultTaskCard";
 export { default as DefaultTaskDetail } from "../src/pages/taskDetail/archetypes/DefaultTaskDetail";
