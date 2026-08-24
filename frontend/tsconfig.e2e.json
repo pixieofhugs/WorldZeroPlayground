@@ -1,14 +1,23 @@
 // Typecheck for the Playwright suite (issue #1780).
 //
-// `tsconfig.json` is `include: ["src"]`, so nothing in CI has ever looked at
-// `frontend/e2e/`. That matters because the suite is not all thin driver:
-// `contrastScan.ts`, `contrastBaseline.ts` and `triageFindings` hold real
+// `tsconfig.json` is `include: ["src"]`, so nothing in CI had ever looked at
+// `frontend/e2e/`. That mattered because the suite was not all thin driver:
+// `contrastScan.ts`, `contrastBaseline.ts` and `triageFindings` held real
 // decisions, and #1762 changed `BaselineEntry.ratio` across two of them with
 // no check able to catch getting it wrong.
 //
+// THOSE THREE HAVE SINCE MOVED under `src/utils/` (the second half of #1780,
+// Molly's ruling of 2026-08-18), so `tsconfig.json` covers them directly now
+// and vitest executes their decisions in a PR. What is left under `e2e/` is
+// driver: page acquisition, fixtures, assertions. This config is what keeps
+// THAT typechecked — a thin driver is still code, and `duel.helpers.ts` and
+// the collaboration spec are neither thin nor small.
+//
 // A separate config rather than widening `tsconfig.json`'s `include`: the
 // specs import `@playwright/test`, and the app's own build graph must not
-// reach a test-runner package. Same reasoning, and the same shape, as
+// reach a test-runner package. That import is the line between a module and a
+// spec, and it is the reason the moved files could move at all — none of them
+// imports it. Same reasoning, and the same shape, as
 // `tsconfig.design-sync.json`.
 //
 // Wired into CI by being chained onto the `typecheck` npm script, which the
@@ -19,9 +28,9 @@
 // nightly-only on purpose (see `e2e.yml`'s header). Only the compiler runs here.
 {
   "extends": "./tsconfig.json",
-  // `e2e` only. Files under `src` still arrive — the contrast modules import
-  // `src/utils/contrast` — but they arrive as dependencies of the specs,
-  // checked with the same options `npm run typecheck` already applies to them.
+  // `e2e` only. Files under `src` still arrive — the specs import the contrast
+  // modules — but they arrive as dependencies, checked with the same options
+  // `npm run typecheck` already applies to them.
   "include": ["e2e"],
   // `tsconfig.json` references `tsconfig.node.json`, which is `composite` and
   // owns `vite.config.ts`. Nothing under `e2e` needs it, and inheriting the

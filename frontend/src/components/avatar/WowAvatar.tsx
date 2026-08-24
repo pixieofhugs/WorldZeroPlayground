@@ -69,7 +69,7 @@ const RANK_PILL_FLOOR_PX = 64;
 /** Smallest legible pill type, once the proportional size drops under it. */
 const RANK_PILL_MIN_FONT_PX = 9;
 
-export default function WowAvatar({ character, size }: FactionAvatarProps) {
+export default function WowAvatar({ character, size, badge }: FactionAvatarProps) {
   const dim = avatarDim(size);
   // The kit's plate: 5px of ring round the field, on 118px. The 2px rim inside
   // it is the shared circle's border.
@@ -96,6 +96,7 @@ export default function WowAvatar({ character, size }: FactionAvatarProps) {
         <BadgedAvatar
           character={character}
           size={dim - 2 * ring}
+          badge={badge}
           circle={{
             borderColor: "var(--faction-wow-crest-field-rim)",
             bg: "var(--faction-wow-avatar-field)",

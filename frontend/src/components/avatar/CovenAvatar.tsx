@@ -27,11 +27,12 @@ import { CovenSigil } from '../sigil/CovenSigil'
  * what the design letters a disc in, and one hand-script capital inside a 24px
  * circle loses its stroke contrast. `INK` on `CARD` is a measured pair.
  */
-export default function CovenAvatar({ character, size }: FactionAvatarProps) {
+export default function CovenAvatar({ character, size, badge }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
+      badge={badge}
       circle={{
         borderColor: BORDER,
         bg: CARD,
