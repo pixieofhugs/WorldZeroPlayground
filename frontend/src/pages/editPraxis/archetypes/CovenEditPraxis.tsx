@@ -657,10 +657,13 @@ export default function CovenEditPraxis({ state }: Props) {
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { color: LABEL },
                 /* The ward slip is a rounded language, so the collab chips take
-                 * the corner this skin's own fields take. The prose tier is the
-                 * slip's `SOFT` — the brief's ink, which is what the roster's
-                 * "· you" byline and its unanswered pills are. */
-                collab: { radius: FIELD_RADIUS, quiet: SOFT },
+                 * the corner this skin's own fields take. `LABEL` and not the
+                 * slip's `SOFT` since #2485: the roster's byline, its unanswered
+                 * pills and the dashed `+ invite` chip are all drawn on
+                 * TRANSPARENT, so their ground is the bloom-washed sheet rather
+                 * than the opaque field `SOFT` was measured on, and on that
+                 * composite soft is 4.46:1 in dark against label's 4.63. */
+                collab: { radius: FIELD_RADIUS, quiet: LABEL },
               }}
             />
           </ComposerSection>

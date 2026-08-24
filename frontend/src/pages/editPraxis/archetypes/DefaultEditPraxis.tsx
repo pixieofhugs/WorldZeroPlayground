@@ -296,7 +296,10 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   slip,
   panelStyle,
   headingStyle: { fontFamily: TITLE_FACE, color: INK },
-  bodyStyle: { color: FAINT },
+  /* The waiting surface draws this inside `panelStyle`, i.e. on the opaque
+     field — the one ground in this dress the aurora never reaches — so prose
+     keeps the card's own rung (6.05 / 5.23). */
+  bodyStyle: { color: MUTED },
   quietStyle: { color: FAINT },
   primaryStyle,
   quietButtonStyle: { color: FAINT },
