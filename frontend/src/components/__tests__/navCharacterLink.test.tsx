@@ -65,7 +65,11 @@ beforeEach(() => {
 describe("the nav's character name leads to the character (#2354)", () => {
   it('points the name at the viewer’s own profile, not at home', () => {
     const html = render()
-    expect(html).toContain('href="/characters/42">Mollusk<')
+    // Matched with a tolerant regex rather than one welded literal: react-router
+    // 7 emits `data-discover="true"` on every <Link>, which lands between the
+    // href and the `>`. The pairing is still asserted — this anchor's href AND
+    // its text — but no longer depends on href being the last attribute.
+    expect(html).toMatch(/href="\/characters\/42"[^>]*>Mollusk</)
   })
 
   it('drops the tooltip that promised a switcher', () => {
