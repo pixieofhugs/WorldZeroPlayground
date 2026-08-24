@@ -7264,6 +7264,62 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   THE REDACTION MARK (#2409, ADR-0082)
+
+   `[REDACTED]` painted in its own ground's colour, so it reads as blank until
+   a player drags a cursor across it. A locked door with no keyhole: the shape
+   of the withheld thing is visible, the thing is not.
+
+   WHY `transparent` AND NOT A GROUND TOKEN. The owner's words are "the same
+   colour as its own ground", and `transparent` is that colour by construction
+   rather than by mirroring. A `--redaction-ink` naming some ground would be a
+   parallel registry of exactly the kind #1269 deleted — it would be right on
+   the two surfaces someone remembered and wrong on the third, and it could
+   never be right at all on the vellum card and the leaderboard row at once,
+   because those are two different grounds. There is nothing here to keep in
+   sync, and a surface written next month inherits the behaviour for free.
+
+   IT IS NOT `visibility: hidden` AND NOT `aria-hidden`. Screen readers
+   announce "REDACTED" plainly and that is the ruling, not an oversight: the
+   secret is equally discoverable to a screen-reader user and to a sighted user
+   who selects the line. Making it inaudible would hand sighted players a tease
+   and blind players nothing.
+
+   THE SELECTION IS THE REVEAL, and it is drawn as the bar lifting: the page's
+   own ink and stock, inverted. Both tokens flip, so the mark reads in both
+   themes at the same measured ratio as ordinary body copy — the pair is
+   `--color-text-primary` / `--color-bg-page` with the roles swapped, and a
+   swap does not change a contrast ratio.
+
+   THE 1:1 PAIRING IS DELIBERATE AND IS EXEMPTED AT THE SITE. `.redacted`
+   carries `data-redacted="true"`, which `e2e/contrastScan.ts` skips alongside
+   its two existing exemptions; the reason is recorded there and in ADR-0082.
+   It is NOT on `e2e/contrastBaseline.ts` — that list is debt awaiting a fix
+   and only ever shrinks, and this pairing is never going to be fixed. The
+   token test pins the ratio as an intended 1.00 rather than looking away.
+
+   THE DESCENDANT ARM IS LOAD-BEARING, not a convenience. `color` inherits, so
+   a bare `.redacted` would be enough for a lane label — but the Albescent
+   select tile draws seven slots that each declare their OWN ink
+   (`--albescent-reveal-text`, `-text-muted`, `-ink`), and every one of those
+   declarations outranks an inherited value. Marking the tile's root and
+   catching the subtree is what lets ONE mark redact a whole surface, instead of
+   seven wrappers that a future eighth slot can be added without.
+
+   No raw value here, so nothing for `no-raw-style-values` to catch — the
+   ratchet is satisfied by construction rather than by an exemption. */
+.redacted,
+.redacted * {
+  color: transparent;
+}
+
+.redacted ::selection,
+.redacted::selection {
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    WOW — THE LISTS (#895): the duel seal and the duel rail.
 
    Appended as its own :root / [data-theme="dark"] pair rather than edited into

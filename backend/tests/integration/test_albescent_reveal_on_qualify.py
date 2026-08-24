@@ -120,10 +120,20 @@ async def test_unqualified_account_still_gets_the_mask(
     era: Era,
     db_session: AsyncSession,
 ):
-    """Widening reveal must not leak the society to someone who has not earned it.
+    """Widening reveal must not hand the WORD to someone who has not earned it.
 
-    ADR-0027's secrecy rule is unamended for this account: no reveal flag, no
-    word in ``/factions``, and no tile to mislabel at creation.
+    Two of the three assertions below are unchanged by #2409 and one is
+    inverted, and the split is exactly ADR-0082's boundary:
+
+    * ``albescent_revealed`` on ``/auth/me`` stays False — that flag is what the
+      client's redaction gate reads, so it is now the whole of the mask rather
+      than a hint about a filter.
+    * the creation CHOOSER still drops the row. #1891 ruling 3 is untouched:
+      masking a chooser hands an unrevealed player two identical rows, which is
+      louder than the leak it replaces. A directory tile LABELS something;
+      ``/me/invited-factions`` builds a picker.
+    * ``/factions`` now SERVES the row (#2409). The eighth card renders for this
+      account and every string on it redacts.
     """
     await _seed_faction(db_session, "albescent")
 
@@ -132,7 +142,7 @@ async def test_unqualified_account_still_gets_the_mask(
     assert me["albescent_revealed"] is False
 
     listed = (await client.get("/factions", headers=auth_headers)).json()
-    assert "albescent" not in [f["slug"] for f in listed]
+    assert "albescent" in [f["slug"] for f in listed]
 
     invited = (await client.get("/me/invited-factions", headers=auth_headers)).json()
     assert "albescent" not in invited

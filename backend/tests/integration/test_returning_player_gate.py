@@ -25,7 +25,7 @@ of it comes back. There is nothing to come back: ``delete_account`` blanked it.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 import pytest
@@ -298,7 +298,7 @@ async def test_the_gate_reads_its_date_and_the_confirm_lands_in_a_fresh_account(
 
     gate = await client.get("/auth/returning-player")
     assert gate.status_code == 200
-    assert gate.json()["deleted_on"] == date.today().isoformat()
+    assert gate.json()["deleted_on"] == datetime.now(timezone.utc).date().isoformat()
 
     confirm = await client.post("/auth/returning-player")
     assert confirm.status_code == 200
