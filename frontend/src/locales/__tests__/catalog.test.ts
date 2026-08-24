@@ -669,26 +669,31 @@ describe('findDuplicateJsonKeys scanner', () => {
 
 describe('i18next runtime', () => {
   it('resolves a nested key', () => {
-    expect(i18n.t('votes:ephemerists.silver')).toBe('silver')
+    expect(i18n.t('votes:ephemerists.tier3')).toBe('silver')
   })
 
   it('interpolates a {{var}}', () => {
     expect(i18n.t('forms:charLimit.reached', { max: 200 })).toBe('200-character limit reached')
   })
 
-  it('resolves kebab-case keys for multi-word labels', () => {
-    expect(i18n.t('votes:wow.a-start')).toBe('a start')
-    expect(i18n.t('votes:snide.not-bad')).toBe('not bad')
+  // Was 'resolves kebab-case keys for multi-word labels', reading `wow.a-start`
+  // and `snide.not-bad`. #2586 numbered the rungs, and those were the catalog's
+  // last kebab-case keys — a key spelling out a two-word label is exactly the
+  // naming the README forbids. The half worth keeping is the other one: that a
+  // multi-word VALUE comes back whole, spaces and all.
+  it('resolves a multi-word label whole', () => {
+    expect(i18n.t('votes:wow.tier1')).toBe('a start')
+    expect(i18n.t('votes:snide.tier2')).toBe('not bad')
   })
 
   it('resolves preserved-case values for all-caps labels', () => {
-    expect(i18n.t('votes:singularity.verified')).toBe('VERIFIED')
-    expect(i18n.t('votes:snide.anarchy')).toBe('ANARCHY')
+    expect(i18n.t('votes:singularity.tier5')).toBe('VERIFIED')
+    expect(i18n.t('votes:snide.tier5')).toBe('ANARCHY')
   })
 
   it('resolves the growing-mandala reading values for UA labels', () => {
-    expect(i18n.t('votes:ua.radiant')).toBe('radiant')
-    expect(i18n.t('votes:ua.faint')).toBe('faint')
+    expect(i18n.t('votes:ua.tier5')).toBe('radiant')
+    expect(i18n.t('votes:ua.tier1')).toBe('faint')
   })
 
   it('throws on a missing key outside production', () => {

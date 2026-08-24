@@ -38,7 +38,9 @@ const HIT_SIZE = 44
 const ROW_GAP = 9
 /** Total row width the single rainbow is stretched across. */
 const ROW_SPAN = DOT_SIZES.length * HIT_SIZE + (DOT_SIZES.length - 1) * ROW_GAP
-const TIER_KEYS = ['so-so', 'decent', 'good', 'great', 'brilliant'] as const
+/** The five rungs, as literal values so `votes:na.tier<N>` typechecks.
+ *  The words themselves live in the catalog, keyed by rung (#2586). */
+const RUNGS = [1, 2, 3, 4, 5] as const
 
 export default function DefaultVote({
   praxisId,
@@ -105,7 +107,7 @@ export default function DefaultVote({
               onMouseEnter={() => setHovered(value)}
               aria-label={t('chrome.rateAria', {
                 value,
-                label: t(`unaffiliated.${TIER_KEYS[index]}`),
+                label: t(`na.tier${RUNGS[index]}`),
               })}
               aria-pressed={picked}
               style={{
