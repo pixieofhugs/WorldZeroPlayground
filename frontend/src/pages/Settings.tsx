@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { factionName } from '../utils/factions'
 import AppearanceSection from './settings/sections/AppearanceSection'
+import CookiesSection from './settings/sections/CookiesSection'
 
 /**
  * Settings — the responsive chassis (#2154), one component for both form
@@ -55,6 +56,7 @@ interface SettingsSection {
  */
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   { key: 'appearance', labelKey: 'settings.appearance.eyebrow', Component: AppearanceSection },
+  { key: 'cookies', labelKey: 'settings.cookies.eyebrow', Component: CookiesSection },
 ]
 
 /** The design's `sec-<key>`; one derivation, used by the anchor and the rail. */
