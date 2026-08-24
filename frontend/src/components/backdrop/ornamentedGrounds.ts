@@ -39,7 +39,14 @@
  * | wow | `.wow-backdrop`: 135° gilt hatch every 24px, + the checker rail | pattern |
  * | coven | `.coven-backdrop`: flat ward-page + four drifting blooms | WASH |
  * | ua | `UaBackdrop`: flat mesa sand + mandala/ensō at 6–7% | WASH |
- * | albescent, na, anything else | `WatercolorBackground` via the dispatcher's fallback | wash |
+ * | albescent | `AlbescentBackdrop`: `WatercolorBackground`, byte-identical (#2531) | WASH |
+ * | na, anything else | `WatercolorBackground` via the dispatcher's fallback | wash |
+ *
+ * `albescent` has a component of its own as of #2531 and is still the na
+ * watercolour — the registration is a PASS-THROUGH, so the row above changes
+ * where the answer comes from and not what it is. It stays off the list below
+ * for the same reason it was never on it: the wash is what an unaffiliated
+ * player's profile stands on, and Albescent must not be told apart from one.
  *
  * `wow` is the one row the owner did not name either way. It is filed as a
  * pattern because the gilt hatch is a `repeating-linear-gradient` over the
