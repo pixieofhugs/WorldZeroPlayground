@@ -172,3 +172,16 @@ describe('both browse tabs ask for already-narrowed data', () => {
     expect(BROWSE_PRAXIS_FILTERS.voted).toBe('no')
   })
 })
+
+describe('the page ground is bare (#2551)', () => {
+  it('paints no dot field behind the desktop FieldDesk', () => {
+    mocks.activePraxes = []
+    // The seam is the root element's own inline style: `pageStyle` was the only
+    // thing that ever put a background on `.page`, and the mobile skins return
+    // before this element exists. An opening tag with no background in it is
+    // the whole ruling.
+    const root = render().match(/^<div class="page"[^>]*>/)
+    expect(root).not.toBeNull()
+    expect(root![0]).not.toContain('background')
+  })
+})

@@ -155,18 +155,20 @@ describe("the stylesheet lifts user media above the Albescent drift (#1646)", ()
   });
 
   it("clears every Albescent layer that still paints over content", () => {
-    // Derived, not typed twice: the sparks sit at 0 on the praxis card, the
-    // feed's ring at 1, and the `.alb-praxis-*` / `.alb-detail-*` ornaments at
-    // 2. Retune any of them and this fails rather than silently letting light
-    // back over the photo.
+    // Derived, not typed twice: the praxis card's ring and the feed's sit at 1,
+    // and the `.alb-praxis-*` / `.alb-detail-*` ornaments at 2. Retune any of
+    // them and this fails rather than silently letting light back over the photo.
     //
     // #2499 took the four WASHES out of this list by moving them into the card's
     // own background, where a photograph is in front of them by construction.
-    // The sparks replace `.alb-rainbow` as the praxis card's floor — they are
-    // positioned at `z-index: 0`, which paints ABOVE non-positioned in-flow
-    // content, so the lift is still doing work on that surface.
+    // #2555 took the SPARKS: the three glyphs at `z-index: 0` were the praxis
+    // card's entry here, and `.alb-praxis-card-edge` at 1 is what is left over
+    // that surface's content. Substituting it rather than dropping the surface is
+    // the point — `topZ` throws on an empty set, so a deleted ornament cannot
+    // quietly lower the floor and make the lift look like it clears more than it
+    // does.
     const floor = Math.max(
-      topZ(ruleBodies(css, ".alb-spark")),
+      topZ(ruleBodies(css, ".alb-praxis-card-edge")),
       topZ(ruleBodies(css, ".alb-praxis-edge")),
       topZ(ruleBodies(css, ".alb-detail-edge")),
       topZ(ruleBodies(css, ".alb-feed-edge")),

@@ -697,12 +697,16 @@
    never defer. index.css deepens it under `prefers-reduced-motion: reduce`
    instead (epic ruling 6).
 
-   `.alb-spark` IS THE ONE THAT MAY NEVER FOLLOW, and it is the only Albescent
-   animation index.css still runs. Its gate does not merely add motion — it drops
-   the glyph to `opacity: 0` and lets the keyframe carry it back up. Paint may not
-   defer, so the opacity has to stay in index.css; with the animation deferred and
-   the sheet stranded the spark would be an invisible mark rather than a still
-   one. `__tests__/motionSplit.test.ts` asserts both halves of that.
+   THE ONE THAT COULD NEVER FOLLOW IS GONE, AND SO IS THE EXCEPTION (#2555).
+   `.alb-spark` was the last Albescent animation index.css still ran, and it was
+   stuck there for a mechanical reason rather than a stylistic one: its gate did
+   not merely add motion, it dropped the glyph to `opacity: 0` and let the
+   keyframe carry it back up, so deferring it would have stranded an INVISIBLE
+   mark rather than a still one. The owner ruled the twinkle out of the Albescent
+   kit, the rule and its keyframe came out of index.css with it, and this sheet is
+   now the sole home of every Albescent animation. `__tests__/motionSplit.test.ts`
+   asserts that set is EMPTY — a stricter shape than the one-name exception it
+   replaced, so a new Albescent animation landing in index.css fails there.
 
    TWO IDENTICAL WHEELS BECAME ONE. `alb-detail-wheel` and `alb-praxis-wheel`
    were byte-for-byte the same declaration — a centred element turning through
@@ -855,8 +859,11 @@
    like, and a per-diameter table would be tuning nobody asked for.
 
    Stilled or stranded, the ring is the spectrum ring na already wears, parked at
-   rotation 0 over an identical static one — so this one freezes outright where
-   `.alb-spark` has to park at a resting opacity. Nothing about membership is
+   rotation 0 over an identical static one — so this one freezes outright rather
+   than having to park at a resting opacity the way a mark whose keyframe start
+   is invisible does (`.alb-spark` was that mark until #2555 retired it; Coven's
+   `.cvn-profile-spark` in index.css is the surviving example). Nothing about
+   membership is
    carried by the motion that is not also carried by the ring standing still;
    what is carried by the motion is that a viewer LOOKING at the disc notices it.
    ── */

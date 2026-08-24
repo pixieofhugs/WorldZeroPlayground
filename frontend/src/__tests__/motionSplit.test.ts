@@ -252,7 +252,7 @@ reduced-motion gate.`,
     ).toEqual([])
   })
 
-  it('carries every Albescent ornament animation but the spark (#2498)', () => {
+  it('carries EVERY Albescent ornament animation, with no exception left (#2555)', () => {
     // The sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named
     // "the Albescent drifts" as a candidate on one test: does every consumer
     // treat the motion as ornament, and is the un-animated frame the one a
@@ -311,31 +311,61 @@ the owner reported — two cards drawing the same light two different ways.`,
       ).not.toContain(`${retired} {`)
     }
 
-    // THE SPARK IS THE ONE THAT MAY NOT FOLLOW, and it is the only one left.
+    // THE ONE EXCEPTION IS GONE, SO THE SET IS EMPTY (#2555).
+    //
+    // This assertion used to read `toEqual(['.alb-spark'])`: the spark was the
+    // single Albescent animation index.css was allowed to keep, and it was stuck
+    // there mechanically rather than by taste — its gate did not merely add
+    // motion, it dropped the glyph to `opacity: 0` and let the keyframe carry it
+    // back up, so deferring it would have stranded an INVISIBLE mark rather than
+    // a still one. The owner ruled the twinkle out of the Albescent kit, the rule
+    // and its keyframe came out of index.css with it, and the exception has
+    // nothing left to except.
+    //
+    // EMPTY IS STRICTER THAN THE ONE-NAME LIST IT REPLACES, which is why it is
+    // the right shape to move the guard to rather than a weakening of it: with
+    // the allow-list at [], ANY Albescent animation appearing in index.css fails
+    // here, including a re-added spark. If a future ornament genuinely has to
+    // animate from the entry sheet, this is the line that makes you say why.
     expect(
       albescent(INDEX),
-      `Every Albescent animation index.css still runs. Only .alb-spark may be
-here: its gate does not merely add motion, it drops the glyph to opacity 0 and
-lets the keyframe carry it back up. A paint declaration may never defer, so the
-opacity has to stay — and with the animation deferred and the sheet stranded the
-spark would be an invisible mark rather than a still one, which is the exact
-degradation this sheet is not allowed to cause.`,
-    ).toEqual(['.alb-spark'])
+      `An Albescent animation is running from src/index.css. Every one of them
+belongs in the deferred sheet: motion may arrive after first paint for free, and
+the still frame is what a reduced-motion reader gets either way. The one historical
+exception (.alb-spark) was retired with the twinkle at #2555, so there is no
+precedent to lean on — if this rule really cannot defer, it is because its gate
+also carries PAINT, and the fix is to split it and leave the paint here.`,
+    ).toEqual([])
   })
 
-  it('leaves the spark behind for a reason that is still true', () => {
-    // Asserted, not asserted-in-a-comment: if the gated rule ever stops setting
-    // the paint, the spark becomes a legible still frame and may follow.
-    const gated = GATES.flatMap((body) => declarations(body))
-    expect(gated.some(([selector]) => selector === '.alb-spark')).toBe(false)
+  it('has no spark left to leave behind (#2555)', () => {
+    // The twinkle is a DELETION, not a re-tune, so what replaces the old
+    // "the exception is still justified" test is a resurrection guard. Three
+    // ways it could come back, all asserted on both sheets at once:
+    //
+    //  1. the rule, under its own name or a dark half;
+    //  2. the keyframe, which had exactly one reference and went with it —
+    //     a @keyframes with no `animation:` referencing it is dead weight in
+    //     the critical sheet and reads as an invitation to re-mount;
+    //  3. an `animation:` naming it from anywhere, which is what would actually
+    //     put a glyph back on screen.
+    //
+    // Both constants are comment-stripped, so the prose in index.css and in
+    // motion.ornament.css may go on discussing the retirement at length.
+    const both = `${SHEET}\n${INDEX}`
+    const why = `The Albescent twinkle is back. #2555 is an owner ruling that it is
+not part of the kit — three ✦ glyphs at hardcoded offsets over the praxis card —
+and the ruling was "it comes out", not "make it subtler". The card's delta over the
+unaffiliated one is the prism ground and the travelling edge (ADR-0083).`
 
-    const spark = ruleBodies(INDEX, '.alb-spark').filter((body) =>
-      /\banimation\s*:/.test(body),
-    )
-    expect(spark, '.alb-spark no longer animates from index.css at all').toHaveLength(1)
-    expect(spark[0], 'the spark animates without touching paint — it may follow').toContain(
-      'opacity: 0',
-    )
+    expect(both, why).not.toContain('.alb-spark {')
+    expect(both, why).not.toContain('@keyframes alb-spark')
+    expect(both, why).not.toMatch(/animation(-name)?\s*:[^;}]*\balb-spark\b/)
+
+    // And the gate list it used to be excluded from is still read by this file,
+    // so the exclusion cannot pass vacuously somewhere else.
+    const gated = GATES.flatMap((body) => declarations(body))
+    expect(gated.some(([selector]) => selector.includes('.alb-spark'))).toBe(false)
   })
 
   it('is reached only through src/factionFaces.ts, so it stays off the entry HTML', () => {
