@@ -93,6 +93,13 @@ const CSS = readFileSync(
  * and the plaque rejoins the list it was always a member of.
  */
 const KNOWN_ROOT_ONLY_ALIASES = [
+  // The ink half of the disabled-control pair (#2486). A "composed neutral" in
+  // the third family's sense: it exists so the value still lives in exactly one
+  // place (`--color-text-secondary`), which the dark block rebinds, so it flips
+  // on its own. Its partner `--control-off-fill` is a literal in each cascade
+  // and is not of this shape — the pair is measured directly, both cascades, in
+  // `pages/characterPaths/__tests__/disabledControlContrast.test.ts`.
+  "--control-off-ink",
   "--faction-coven-card-border",
   "--faction-default-aurora",
   "--faction-default-card-border",

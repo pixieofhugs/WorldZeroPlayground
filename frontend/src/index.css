@@ -9217,3 +9217,94 @@
     animation-play-state: paused;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DISABLED PRIMARY ACTION (#2486)
+
+   Ten controls in this tree start out disabled and one of them is the first
+   thing a new player looks for: character creation's Create button, which is
+   disabled until a name is typed, so the disabled state is the state the page
+   OPENS in. Every one of them dimmed itself with `opacity: 0.5` on the button.
+
+   OPACITY FOLDS THE LABEL INTO THE FILL. It composites the whole element, so
+   the fill fades toward the sheet AND the ink fades over the faded fill — the
+   label loses contrast twice. On the real composited grounds that shipped as
+   3.14:1 in light and 1.81:1 in dark on the WOW cast, and as low as 1.36:1
+   elsewhere. The full table is in `disabledControlContrast.test.ts`.
+
+   THE FILL IS REPLACED, NOT FADED, and that is a measurement rather than a
+   preference. Fading the fill while holding the ink opaque — the obvious
+   half-step — still misses 3:1 on four of six archetypes, because fading a
+   fill toward its sheet walks it toward the ink's own end of the ramp wherever
+   the CTA is a light slab on dark paper. Two bands cannot be faded at all:
+   Coven's is a `linear-gradient` and the Ephemerists' is a class, so there is
+   no single colour to mix against.
+
+   IT IS OPAQUE, and that is the load-bearing half. An alpha fill would put
+   eight faction sheets back under the label and there would be eight ratios to
+   hold instead of one. This way the ground the type lands on IS the token.
+
+   IT STILL READS AS DISABLED. The control loses the faction's saturated CTA
+   paint for a quiet stock, drops its glow, takes the app's SECONDARY ink
+   rather than the CTA's own, and shows `not-allowed`. What it does not do is
+   become illegible: 6.31:1 by day, 6.49:1 by night.
+
+   `!important` IS THE POINT, not a shortcut. The enabled paint is inline on
+   every one of these buttons — it has to be, since it is the skin's — and the
+   disabled state has to beat all eight of them unconditionally. A rule any
+   skin could out-specify is the pattern this replaces.
+
+   #2484's publish control (disabled-until-titled) is the eleventh site and
+   consumes this by adding the class. It should NOT restate the values.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --control-off-fill: #e2ddd2;
+}
+[data-theme="dark"] {
+  --control-off-fill: #2a2833;
+}
+:root, [data-theme] {
+  /* An alias so there is still exactly one place the neutral's value lives —
+     it follows `--color-text-secondary` through the dark cascade and needs no
+     counterpart there. Inventoried in `frozenThemeAliases.test.ts`. */
+  --control-off-ink: var(--color-text-secondary);
+}
+
+.control-off:disabled {
+  background: var(--control-off-fill) !important;
+  color: var(--control-off-ink) !important;
+  /* The Singularity's CTA carries a halo in dark; a glowing disabled control
+     reads as the live one. */
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* The ornaments riding inside these bands — WOW's spark, Coven's, the
+   Ephemerists' open eye, the Singularity's block cursor — are painted in the
+   CTA's ink, by an inline `color` or by an SVG presentation attribute. Left
+   alone they would keep a paint measured on a fill that is no longer there.
+   The attribute selectors are narrow on purpose: a shape that declares no
+   `stroke` must not acquire one, and `none` means none. */
+.control-off:disabled * {
+  color: inherit !important;
+}
+.control-off:disabled [fill]:not([fill="none"]) {
+  fill: currentColor;
+}
+.control-off:disabled [stroke]:not([stroke="none"]) {
+  stroke: currentColor;
+}
+
+/* THE ONE SURFACE THAT RE-POINTS THE PAIR. `--faction-singularity-term-bg` is
+   #07130c in the LIGHT cascade — the terminal is theme-invariant — so the
+   house neutral would lay a pale slab on a black chassis and the disabled
+   control would read as the loudest thing on the page. It takes the terminal's
+   own panel and dim ink instead: 4.72:1 light, 5.56:1 dark.
+
+   A token override, not selector surgery: `.control-off:disabled` above is
+   still the only rule that says what disabled LOOKS like. Every other
+   archetype's sheet flips with the cascade and takes the neutral. */
+.sg-control-off {
+  --control-off-fill: var(--faction-singularity-term-panel);
+  --control-off-ink: var(--faction-singularity-term-dim);
+}
