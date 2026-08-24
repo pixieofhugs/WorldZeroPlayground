@@ -157,7 +157,7 @@ export default function FieldDesk() {
   }
 
   return (
-    <div className="page" style={pageStyle}>
+    <div className="page">
       {/* ── The roster (#1560: only when it has a choice to offer) ─────────── */}
       {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No
           account handle. Inside the gate — a count is an invitation to make
@@ -595,15 +595,6 @@ function BrowseSection({ onSignup }: { onSignup: (taskId: number) => void }) {
 
 // --- token-driven styles (no hardcoded hex) ---------------------------------
 
-const pageStyle: CSSProperties = {
-  // The dot field is the page's own ink at 3.5%, not a fixed black (#1609):
-  // black dots on #13121a are invisible, so the texture simply vanished in dark
-  // mode. `color-mix` on a themed token is how the Everymen and S.N.I.D.E. wall
-  // grounds already draw theirs in index.css — one value, both themes.
-  backgroundImage:
-    'radial-gradient(color-mix(in srgb, var(--color-text-primary) 3.5%, transparent) 1px, transparent 1px)',
-  backgroundSize: '5px 5px',
-}
 const pillStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
