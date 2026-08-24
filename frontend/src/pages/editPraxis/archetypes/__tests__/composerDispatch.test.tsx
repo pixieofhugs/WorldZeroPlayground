@@ -47,6 +47,7 @@ vi.mock("../../useEditPraxis", async (importOriginal) => ({
 // Imported after the mocks are registered.
 import EditPraxis from "../../../EditPraxis";
 import DefaultEditPraxis from "../DefaultEditPraxis";
+import AlbescentEditPraxis from "../AlbescentEditPraxis";
 import { surfaceMap } from "../../../../factions";
 import { pickVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
@@ -200,7 +201,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     ).toBe(DefaultEditPraxis);
   });
 
-  it.each(["__unregistered__", "na", "albescent", null])(
+  it.each(["__unregistered__", "na", null])(
     "falls %s through to DefaultEditPraxis (ADR-0065 §4)",
     (slug) => {
       expect(
@@ -208,6 +209,17 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
       ).toBe(DefaultEditPraxis);
     },
   );
+
+  // `albescent` was on that list until #2505 (epic #2496). ADR-0065 §4's
+  // "Albescent registers nothing here" held while the two kits were
+  // pixel-identical; #2404 ruled that Albescent's borders move, and this is the
+  // composer's share of that. It is still not a skin — see the wrapper's own
+  // assertions below.
+  it("albescent resolves to its wrapper, not to the na composer (#2505)", () => {
+    expect(
+      resolvedArchetype(pickVariant(surfaceMap("editPraxis"), "albescent", DefaultEditPraxis)),
+    ).toBe(AlbescentEditPraxis);
+  });
 
   it.each(WIDTHS)("renders the composer's own regions on %s", (width) => {
     const markup = render(width, baseState());
@@ -347,13 +359,18 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     expect(markup).not.toContain("repeating-linear-gradient");
   });
 
-  it("na falls through to the spectrum kit's own band (ADR-0065 §4)", () => {
+  it("na falls through to the spectrum kit's own frame (ADR-0065 §4)", () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <DefaultEditPraxis state={waitingState(null)} />
       </MemoryRouter>,
     );
-    expect(markup).toContain("--faction-default-rainbow-loop");
+    // The spectrum was a walked masthead band (`--faction-default-rainbow-loop`)
+    // until #2520 made it the sheet's static 3px frame — so the dress still
+    // carries na's spectrum onto this stage, in the kit's own border idiom.
+    expect(markup).toContain("border:3px solid transparent");
+    expect(markup).toContain("var(--faction-default-rainbow)");
+    expect(markup).not.toContain("--faction-default-rainbow-loop");
   });
 
   it.each(

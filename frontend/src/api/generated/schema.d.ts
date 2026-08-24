@@ -620,6 +620,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/returning-player": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Returning Player Gate
+         * @description What the consent gate says (#2162): a date, and nothing else.
+         *
+         *     Read from the parked sign-in rather than the tombstone, so this route makes
+         *     no lookup keyed on anything the caller supplied — there is nothing to
+         *     supply. The identity is in the signed session or the gate does not exist.
+         */
+        get: operations["returning_player_gate_auth_returning_player_get"];
+        put?: never;
+        /**
+         * Confirm Returning Player
+         * @description The one button: yes, start fresh (#2162).
+         *
+         *     Explicitly **not** an offer of any old data, and there is none to offer —
+         *     ``delete_account`` blanked it and there is no undo (ADR-0081). All this does
+         *     is finish the sign-in the gate interrupted, as a stranger.
+         *
+         *     The tombstone goes FIRST, and that ordering is what does the work: with it
+         *     cleared, ``create_or_get_account`` finds no reason to pause and falls
+         *     through to the ordinary stranger path — the same mint, the same email
+         *     branch, the same rules. There is no second creation path here and no
+         *     "consent given" flag threaded through the service to be got wrong.
+         *
+         *     ``email_verified=True`` is a fact this server established, not a claim the
+         *     caller made: the sign-in that parked this session got past
+         *     ``create_or_get_account``'s verified-email gate before it ever reached the
+         *     tombstone (ADR-0075, and ``test_returning_player_gate`` pins the ordering),
+         *     and the parked address rode here inside a cookie signed with ``SECRET_KEY``.
+         */
+        post: operations["confirm_returning_player_auth_returning_player_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/characters": {
         parameters: {
             query?: never;
@@ -835,11 +879,30 @@ export interface paths {
         };
         /**
          * List Factions
-         * @description Return all non-hidden factions.
+         * @description Return all non-hidden factions — Albescent included, for everyone.
          *
-         *     Albescent is a secret society (ADR-0027, #390): it is omitted unless the
-         *     current account has been revealed to it. Optional auth — anonymous callers
-         *     stay anonymous and never see Albescent.
+         *     **This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is
+         *     still a secret society, but secrecy is now expressed as REDACTION at the
+         *     render rather than as omission at the wire: the eighth row ships to every
+         *     caller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``
+         *     for a viewer ``/auth/me`` has not revealed. Hiding a row taught an
+         *     unrevealed player nothing; a row they can see and cannot read is the locked
+         *     door with no keyhole the mechanic is actually about.
+         *
+         *     The optional-auth dependency went with the filter. It existed to answer one
+         *     question — "is this viewer revealed?" — and this handler no longer asks it,
+         *     so resolving an account here would be a read nothing consumes. The predicate
+         *     itself is untouched and still governs the surfaces that DO ask
+         *     (``services.progression``, ``faction_slugs``, ``services.current_user``);
+         *     what changed is that the faction directory stopped being one of them.
+         *
+         *     What this handler is NOT is a redaction point. ``FactionOut`` is
+         *     ``{slug, status}`` and carries no prose, so serving the row leaks the slug
+         *     and nothing else — the same slug the wire has always carried on every
+         *     Albescent-authored task and praxis. Whether ``/factions`` should one day
+         *     serve a *redacted row* rather than the real one, so the tease survives a
+         *     reader of the network tab, is the follow-on ADR-0082 names and does not
+         *     settle.
          */
         get: operations["list_factions_factions_get"];
         put?: never;
@@ -864,7 +927,7 @@ export interface paths {
          * @description Choose or defect to a new faction.
          *
          *     Works for the initial faction join and later defections.
-         *     Players cannot rejoin factions they have left, except UA Masters and Albescent.
+         *     Players cannot rejoin factions they have left, except Albescent.
          *
          *     Answers the refreshed `CurrentUser`, not the faction row (#1383). Membership
          *     dresses the whole site off `/auth/me` — the faction slug, the level-jump
@@ -890,8 +953,13 @@ export interface paths {
          * Get Faction Status
          * @description Return faction page data: current faction, per-faction status, and letters.
          *
-         *     Albescent (ADR-0027, #390) is omitted from ``all_factions`` unless this
-         *     account has been revealed to the secret society.
+         *     ``all_factions`` carries Albescent for every caller since #2409 — the same
+         *     move ``list_factions`` makes, and it has to be the same move or the two
+         *     payloads the directory joins would disagree about how many cards there are.
+         *     The status this row reports is the ordinary invite-gated one, so an
+         *     unrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every
+         *     string redacts. Reveal governs the word; ``defect_to_faction``'s eligibility
+         *     guard still governs the door (ADR-0082).
          *
          *     ``invitations`` is not filtered the same way, and does not need to be:
          *     ``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no
@@ -961,11 +1029,46 @@ export interface paths {
         /**
          * Get Leaderboard
          * @description Top characters by current era score, optionally filtered by faction.
+         *
+         *     Auth is **optional** and always was in effect — this is a public board and
+         *     anonymous callers must keep getting an answer. The account is read for one
+         *     thing: a caller revealed to Albescent may ask for that roster directly
+         *     rather than getting the Unaffiliated fold (#2422).
          */
         get: operations["get_leaderboard_leaderboard_get"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete My Account
+         * @description End this account: tombstone every row, unlink its media (ADR-0081, #2160).
+         *
+         *     Irreversible, and takes no body — the confirmation is the client's
+         *     (#2161). The route is deliberately unable to delete anyone else's: the
+         *     account comes from the JWT, never from a path parameter.
+         *
+         *     No grace period and no scheduled follow-up; see ``services.account_deletion``.
+         *     The JWT the caller still holds is inert the moment this returns —
+         *     ``get_current_account`` refuses any account that is not ``active`` — so
+         *     signing out is ``POST /auth/logout`` like any other sign-out, and the cookie
+         *     flags stay stated in exactly one place.
+         */
+        delete: operations["delete_my_account_me_account_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1395,6 +1498,11 @@ export interface paths {
         /**
          * Remove Metatask Route
          * @description Detach a previously applied metatask from a praxis.
+         *
+         *     Answers with the re-scored praxis, like its apply sibling (#2464). Peeling a
+         *     seal off changes ``score`` and ``metatask_points``, and ``remove_metatask``
+         *     has already recomputed both — a bare 204 left the composer's score stamp
+         *     printing the higher total until a reload.
          */
         delete: operations["remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete"];
         options?: never;
@@ -2426,6 +2534,11 @@ export interface components {
         CurrentUser: {
             /** Account Id */
             account_id: number;
+            /**
+             * Albescent Level Required
+             * @default 0
+             */
+            albescent_level_required: number;
             /**
              * Albescent Revealed
              * @default false
@@ -4159,6 +4272,29 @@ export interface components {
          */
         RelationshipTypeEnum: "friend" | "foe";
         /**
+         * ReturningPlayerOut
+         * @description What the consent gate is allowed to know (``GET /auth/returning-player``).
+         *
+         *     One field, and the reason there is only one is the reason this model exists
+         *     at all. The caller has authenticated as *nobody* — they hold a signed,
+         *     ten-minute session cookie stamped by an OAuth handshake they just completed,
+         *     and nothing else. Anything added here is a fact about an account that no
+         *     longer exists, disclosed on that basis.
+         *
+         *     A **date, not a timestamp**: the gate's sentence is *"you deleted your World
+         *     Zero account on 3 March"*, and the hour and minute would be a finer signal
+         *     bought for nothing the sentence needs. The tombstone's ``created_at`` is
+         *     truncated in ``services.auth.ReturningPlayerConsentRequired``, so the
+         *     precision is dropped before it ever reaches a response model.
+         */
+        ReturningPlayerOut: {
+            /**
+             * Deleted On
+             * Format: date
+             */
+            deleted_on: string;
+        };
+        /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
          *
@@ -4187,6 +4323,19 @@ export interface components {
             global_activity_count: number;
             /** Pending Requests Count */
             pending_requests_count: number;
+        };
+        /**
+         * StartFreshOut
+         * @description Acknowledgement for ``POST /auth/returning-player``.
+         *
+         *     Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
+         *     and the body exists so the generated client has a declared shape rather than
+         *     an untyped object. The caller learns who it now is from ``/auth/me``, which
+         *     is the one place that answers that question.
+         */
+        StartFreshOut: {
+            /** Message */
+            message: string;
         };
         /** SuspendAction */
         SuspendAction: {
@@ -4472,9 +4621,10 @@ export interface components {
          * VoteChangedOnMineItem
          * @description A voter went back and re-rated the viewer's praxis (#1712).
          *
-         *     Same payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the
-         *     numbers that stand *now* — and deliberately no "changed from" fields: no
-         *     prior value is stored. The two are distinct types rather than one type with
+         *     Same payload as ``VoteOnMineItem`` — ``value`` is the vote that stands
+         *     *now* — and deliberately no "changed from" fields: no prior value is
+         *     stored, so the row can print what the vote is worth but never the size of
+         *     the change. The two are distinct types rather than one type with
          *     a flag because the item KEY has to differ, so archiving the original cannot
          *     silence the change.
          */
@@ -4553,21 +4703,23 @@ export interface components {
          * VoteOnMinePayload
          * @description Someone voted on the viewer's praxis.
          *
-         *     ``points_earned`` is the praxis's **whole current score** — the same number
-         *     ``PraxisOut.score`` publishes, same type, off the same scoring path
-         *     (ADR-0014/0053). It is what the author sees when they click the row through,
-         *     which is the promise #2199 was filed about: the row used to print
-         *     ``value × task_point_value``, a product where the score is a sum, and
-         *     announced 120 points against a praxis worth 34.
+         *     ``value`` is the whole story the row needs: the "+N pts" it prints is the
+         *     stars this voter gave, which is **exactly** what their vote added to the
+         *     praxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and
+         *     ``Contribution`` adds it *after* the faction and duel multipliers, so a
+         *     single vote's contribution depends on nothing else — not the other votes,
+         *     the author's faction, the task's points, a metatask or a duel.
          *
-         *     Optional because it is filled in a **second pass**: scoring is async and
-         *     batched, so the per-row mapper that builds this payload cannot reach it (see
-         *     ``services.activity_feed._score_vote_items``). A praxis that cannot be scored
-         *     leaves it ``None`` and the row prints no number — never an invented one.
+         *     So this is a delta, not a total, and there is no ``points_earned`` here.
+         *     #2199 put the praxis's whole score on this payload, filled by a second
+         *     scoring pass, because the per-vote number then in use was *invented*
+         *     (``value × task_point_value``, a product where the score is a sum, which
+         *     announced 120 points against a praxis worth 34). The delta is not a
+         *     restated formula though — it is the raw input the sum is over — so it
+         *     cannot diverge from the scoring path the way that arithmetic did, and the
+         *     pass that read the total is gone.
          */
         VoteOnMinePayload: {
-            /** Points Earned */
-            points_earned: number | null;
             /** Praxis Id */
             praxis_id: number;
             /** Praxis Title */
@@ -5597,6 +5749,46 @@ export interface operations {
             };
         };
     };
+    returning_player_gate_auth_returning_player_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturningPlayerOut"];
+                };
+            };
+        };
+    };
+    confirm_returning_player_auth_returning_player_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartFreshOut"];
+                };
+            };
+        };
+    };
     list_characters_characters_get: {
         parameters: {
             query?: {
@@ -6087,9 +6279,7 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -6100,15 +6290,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FactionOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6239,7 +6420,9 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -6251,6 +6434,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CharacterOut"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_my_account_me_account_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7048,11 +7260,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PraxisOut"];
+                };
             };
             /** @description Validation Error */
             422: {

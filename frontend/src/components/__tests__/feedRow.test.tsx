@@ -198,7 +198,7 @@ describe('normalizeFeedItem', () => {
   // "voted on your praxis" beside `+25 pts` is the bug with extra steps.
 
   it('says the vote CHANGED, and shows the points that stand now', () => {
-    const payload = { vote_id: 4, value: 5, praxis_id: 9, praxis_title: 'Reforest', task_point_value: 5, points_earned: 25 }
+    const payload = { vote_id: 4, value: 5, praxis_id: 9, praxis_title: 'Reforest', task_point_value: 5 }
     const changed = normalizeFeedItem(item('vote_changed_on_mine', payload))!
     const cast = normalizeFeedItem(item('vote_on_mine', payload))!
 
@@ -206,8 +206,29 @@ describe('normalizeFeedItem', () => {
     expect(changed.action).not.toBe(cast.action)
     // Everything else is the vote row verbatim — one sentence is the whole delta.
     expect({ ...changed, action: null }).toEqual({ ...cast, action: null })
-    expect(changed.points).toBe('+25 pts')
+    expect(changed.points).toBe('+5 pts')
     expect(changed.headlineHref).toBe('/praxis/9')
+  })
+
+  // ── the number is the DELTA (#2402) ──────────────────────────────────────
+  //
+  // A row read `+19 pts` under "voted on your praxis" when the voter gave three
+  // stars — 19 was the praxis's whole score. `points_from_votes` is a plain
+  // `sum(Vote.value)` added AFTER the multipliers, so one voter's contribution
+  // is their own `value`, exactly: no dependence on the other votes, the
+  // author's faction, the task's points, a metatask or a duel.
+
+  it('prints the stars this voter gave, not the praxis total', () => {
+    const row = normalizeFeedItem(
+      item('vote_on_mine', {
+        vote_id: 4,
+        value: 3,
+        praxis_id: 9,
+        praxis_title: 'Reforest',
+        task_point_value: 5,
+      }),
+    )!
+    expect(row.points).toBe('+3 pts')
   })
 
   it('renders the changed row rather than dropping it', () => {

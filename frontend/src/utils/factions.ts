@@ -29,7 +29,10 @@ import { hasOwnKey } from "./hasOwnKey";
 // Resolve through a plain-string view of t — the catalog still owns the words;
 // only the compile-time key check is relaxed for these dynamic lookups. Same
 // pattern as utils/taunts.ts.
-const tString = i18n.t as unknown as (key: string) => string;
+const tString = i18n.t as unknown as (
+  key: string,
+  options?: Record<string, unknown>,
+) => string;
 
 /**
  * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
@@ -116,6 +119,11 @@ function resolveCssKey(slug: string | null | undefined): string {
  *   'card-notice' — cautionary / not-yet-done ink ON the card sheet (#694)
  *   'card-alarm'  — destructive ink ON the card sheet (#1449)
  *   'card-credit' — points-earned ink ON the card sheet (#694)
+ *   'card-sheet' / 'card-sheet-blend' / 'card-sheet-clip'
+ *                 — the sheet's background LAYER LIST, its per-layer blend and
+ *                   its per-layer clip (#2497). A matched triple, only the
+ *                   `default` family declares it, and {@link factionSheet} is
+ *                   the one thing that should be reading these three names.
  *
  * Exactly one of those is a SURFACE. `card-bg` is the sheet; `light` is a tint
  * wash; everything else is ink meant for `color:`. Reaching for `card-muted` as
@@ -286,6 +294,87 @@ export function factionFill(
 }
 
 /**
+ * A card SHEET — the ground a `Default*` surface paints itself on (#2497).
+ *
+ * Spread it where `background: factionCssVar(slug, 'card-bg')` used to sit. The
+ * rendered result for `na` is byte-identical to that one line; what it buys is a
+ * seam. Albescent's kit (#2496) is "the na component plus ornament, never a
+ * skin", so its prism sweep (#2499) arrives by overriding three custom
+ * properties under its own wrapper class — no component learns anything, and no
+ * selector surgery reaches into eight files.
+ *
+ * FOUR PROPERTIES, NOT ONE, and each earns its place:
+ *   `background-color`      the ground the sheet's layers blend AGAINST. A
+ *                           `multiply` or `screen` with nothing beneath it is a
+ *                           no-op, so this is what makes the prism composite.
+ *   `background-image`      the sheet itself — a LIST, one layer for na and up to
+ *                           five for Albescent's dark bloom.
+ *   `background-blend-mode` per layer, or CSS cycles one value across five.
+ *   `background-clip`       ditto — and the trailing `border-box` is deliberate,
+ *                           see below.
+ *
+ * WHY THE TRAILING `border-box`. Per CSS Backgrounds 3 the background COLOUR is
+ * clipped by the bottom-most layer's clip value, i.e. the last one written. The
+ * sheet's own layers stop at the padding box (`--…-sheet-clip`) so a wash never
+ * bleeds under the frame; the colour keeps running to the border box, which is
+ * what the dark card needs — `--faction-default-card-line` is
+ * `rgba(255,255,255,0.14)` at night and the sheet shows THROUGH that hairline.
+ * Drop the `border-box` and every dark card's edge changes colour.
+ *
+ * A THEMED SLUG IS SAFE AND DELIBERATELY UNCHANGED. Only the `default` family
+ * declares the triple, so `--faction-ua-card-sheet` is undefined, all three
+ * declarations are invalid at computed-value time, and each falls to its initial
+ * (`none` / `normal` / `border-box`) — which is exactly what `background:
+ * var(--faction-ua-card-bg)` rendered before. A faction that later wants a sheet
+ * of its own declares three names and gets it with no call site edited.
+ *
+ * The two cards that wear the SPECTRUM BORDER do not call this — they call
+ * {@link factionSpectrumSheet} below, which is this composition with one more
+ * layer appended to all three lists.
+ */
+export function factionSheet(slug?: string | null): CSSProperties {
+  return {
+    backgroundColor: factionCssVar(slug, "card-bg"),
+    backgroundImage: factionCssVar(slug, "card-sheet"),
+    backgroundBlendMode: factionCssVar(slug, "card-sheet-blend"),
+    backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
+  };
+}
+
+/**
+ * The sheet with the na SPECTRUM PAINTED INTO ITS BORDER BOX (#2499, epic #2496).
+ *
+ * THE SPECTRUM IS THE BORDER. A gradient cannot be a `border-color`, so the ramp
+ * is a background layer under the sheet, the element wears a TRANSPARENT border,
+ * and `background-origin: border-box` is what makes the ramp start out at the
+ * frame rather than at the padding box. Every caller states the border WIDTH and
+ * the corner itself: those are the card's geometry, not the sheet's.
+ *
+ * WHY IT IS A HELPER AND NOT FIVE LINES TWICE. Both card archetypes now wear the
+ * idiom, and the one way to get it wrong is silent: a background list is a list
+ * in three properties at once, and CSS CYCLES the short ones rather than padding
+ * them. Append the ramp to the image list only and Albescent's dark prism — five
+ * radials plus the ground ramp — hands its sixth layer the FIRST blend mode
+ * again. It renders; it is simply wrong, in one cascade, on one faction. Saying
+ * the append once is what makes the arity right by construction, which is the
+ * same argument `--faction-default-card-sheet`'s own note in index.css makes.
+ *
+ * `--faction-default-rainbow` rather than the loop cut: this ramp does not tile
+ * and does not travel, so it wants the seven-stop spectrum, not the seamless
+ * one. The Albescent surfaces put a TRAVELLING ring on top of it (`.alb-task-edge`
+ * and `.alb-praxis-card-edge`), and that ring carries the loop cut itself.
+ */
+export function factionSpectrumSheet(slug?: string | null): CSSProperties {
+  return {
+    backgroundColor: factionCssVar(slug, "card-bg"),
+    backgroundImage: `${factionCssVar(slug, "card-sheet")}, var(--faction-default-rainbow)`,
+    backgroundBlendMode: `${factionCssVar(slug, "card-sheet-blend")}, normal`,
+    backgroundOrigin: "border-box",
+    backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
+  };
+}
+
+/**
  * Is this slug a real faction with its own theme?
  *
  * Needed because factionCssVar() resolves anything it doesn't know — including
@@ -367,6 +456,75 @@ export function isFactionHiddenFromChoosers(
 }
 
 /**
+ * What an Albescent-scoped string reads as before the reveal (#2409, ADR-0082).
+ *
+ * Not in the i18n catalogue, deliberately. It is not copy — it is the ABSENCE
+ * of copy, the same mark in every locale, and a translator handed a
+ * `redaction.label` key would eventually localise it and give each language its
+ * own tell.
+ */
+export const REDACTED = "[REDACTED]";
+
+/**
+ * Catalogue keys that belong to Albescent, in any namespace.
+ *
+ * The generalisation #2409 asks for: the gate used to know exactly one key
+ * (`factions:names.albescent`) and now knows a NAMESPACE —
+ * `factions:names.albescent`, `factions:descriptions.albescent` and the
+ * `feed:factionSelect.albescent.*` slots the select tile draws. Matching the
+ * SEGMENT rather than the substring is what keeps a future
+ * `factions:albescentRumour` from being swept in by accident.
+ */
+const ALBESCENT_SCOPED_KEY = /(?:^|[.:])albescent(?:[.:]|$)/;
+
+/**
+ * Whether this viewer reads Albescent's strings as `[REDACTED]`.
+ *
+ * Exported so a surface can also PAINT the redaction (the `.redacted` class in
+ * index.css) and disable the control it sits beside. Both must key off this one
+ * answer: #2409 rules that the card un-redacts and unlocks in the same moment,
+ * so there is never a readable card with a dead button or a redacted card with
+ * a live one.
+ *
+ * Same impurity, same reason, as `factionName` — see its docblock.
+ */
+export function isFactionRedacted(slug: string | null | undefined): boolean {
+  return slug === ALBESCENT_FACTION_SLUG && !albescentRevealed;
+}
+
+/**
+ * Read a catalogue string through the redaction gate (#2409, ADR-0082).
+ *
+ * OPT-IN, AND THAT IS THE WHOLE BOUNDARY. A surface that wants the redaction
+ * ASKS for it by calling this; every other reader of the catalogue — including
+ * `factionName` and `factionDescription` — goes on saying "Unaffiliated" as
+ * #1891 ruled. Exactly two surfaces ask: the Albescent select tile and the
+ * leaderboard's eighth lane. See `factionName`'s docblock for why the split.
+ *
+ * Deliberately NOT a registry, a context or a config. Two call sites do not
+ * need a lookup table, and a table is the thing that would quietly grow back
+ * into the global rename this was narrowed away from.
+ *
+ * THE REDACTION IS A RENDERING RULE OVER THE ORDINARY CATALOGUE, never a second
+ * set of strings. Albescent's copy is authored exactly as every other faction's
+ * is, and this function decides whether the viewer gets to read it — so the
+ * moment an account is revealed the real words are already in place, with
+ * nothing to swap in and nothing that can be authored in one catalogue and
+ * forgotten in the other.
+ *
+ * Any Albescent-scoped key redacts; every other key is a plain `t()`. That
+ * keeps a tile which draws a mixed set of slots from having to know which of
+ * them belong to the society.
+ */
+export function redactableText(
+  key: string,
+  options?: Record<string, unknown>,
+): string {
+  if (!albescentRevealed && ALBESCENT_SCOPED_KEY.test(key)) return REDACTED;
+  return tString(key, options);
+}
+
+/**
  * Get a faction's display name by slug from the factions.json catalog
  * (`names.<slug>`). A null / unrecognized slug falls back to the "Unaffiliated"
  * copy under `names.na`. The backend emits only slugs now — never name prose.
@@ -376,11 +534,11 @@ export function isFactionHiddenFromChoosers(
  * for two viewers.
  *
  * Albescent is a secret society: a player who was never invited must not
- * encounter the word, or learn the order exists. The name was leaking through
- * every surface that labels a thing with its faction — praxis bylines, task
- * cards, metatask seals, the character switcher, a sidebar `aria-label` — about
- * thirty-five call sites, each of which would have needed its own gate, and
- * each of which is a place a future page can forget.
+ * encounter the word. The name was leaking through every surface that labels a
+ * thing with its faction — praxis bylines, task cards, metatask seals, the
+ * character switcher, a sidebar `aria-label` — about thirty-five call sites,
+ * each of which would have needed its own gate, and each of which is a place a
+ * future page can forget.
  *
  * Putting the gate HERE is what makes a page written next month secret by
  * construction rather than by review. It is also the only version that covers
@@ -391,10 +549,25 @@ export function isFactionHiddenFromChoosers(
  * than to a blank or a dash — `default` / `na` / Unaffiliated is already one
  * identity here, and a blank advertises the omission.
  *
- * Not a security boundary. The wire still carries the slug, and the server is
- * what withholds Albescent from `/factions` and from the level ladder. This
- * stops the app from SAYING the name; it does not pretend to stop a reader of
- * the network tab.
+ * ── THIS IS *NOT* WHERE THE REDACTION LIVES, AND THE SPLIT IS DELIBERATE ────
+ *
+ * #2409 asked whether the mask should become `[REDACTED]` everywhere. The
+ * owner ruled it should not, and the ruling restores the sentence directly
+ * above: where a name LABELS a thing already on screen, "Unaffiliated" is
+ * right. A byline, a task card, a seal and a switcher row are labels, so this
+ * function is unchanged by ADR-0082.
+ *
+ * The two surfaces that are ABOUT the society — the `/factions` select tile
+ * and the leaderboard's eighth lane — redact instead, by calling
+ * `redactableText` / `isFactionRedacted` themselves. Redaction is a mechanic
+ * on those two surfaces, not a global rename of the word.
+ *
+ * If that reads as an inconsistency, it is a ruled one: ADR-0082 §2 records
+ * which surfaces do which and why, before you "fix" it here.
+ *
+ * Not a security boundary. The wire carries the slug, and since ADR-0082 it
+ * also carries the `/factions` row. This stops the app from SAYING the name; it
+ * does not pretend to stop a reader of the network tab.
  */
 export function factionName(slug: string | null | undefined): string {
   const key =
@@ -411,6 +584,11 @@ export function factionName(slug: string | null | undefined): string {
  * Get a faction's description by slug from the factions.json catalog
  * (`descriptions.<slug>`). An unrecognized slug falls back to the shared
  * "No description yet." copy (`detail.descriptionEmpty`).
+ *
+ * A plain catalogue read, and it stays one: the only page that draws an
+ * Albescent description is the faction detail behind `AlbescentGate`, which a
+ * revealed account is the only one to reach. See `factionName` for the
+ * label-versus-mechanic boundary ADR-0082 §2 draws.
  */
 export function factionDescription(slug: string | null | undefined): string {
   const key = slug ?? "";

@@ -445,7 +445,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={ctaStyle(false)}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={ctaStyle(false)}>
             <Star size={13} color={ON_PLUM} />
             {t(signupCtaKey(task.signup_reason))}
           </button>

@@ -65,7 +65,7 @@ const WIDENED_FEED: ActivityFeedItem[] = [
     type: 'vote_on_mine',
     item_key: 'vote_on_mine:7',
     actor_display_name: 'Dr. Vale',
-    payload: { praxis_id: 42, praxis_title: 'The tool library', points_earned: 12 },
+    payload: { praxis_id: 42, praxis_title: 'The tool library', value: 4 },
   }),
   item({
     type: 'friend_completion',
@@ -163,8 +163,8 @@ describe('the panel carries the whole live feed, not just global news', () => {
     expect(html).toContain('href="/praxis/55"')
   })
 
-  it('shows what a vote was worth', () => {
-    expect(render()).toContain(i18n.t('feed:row.pointsEarned', { points: 12 }))
+  it('shows the stars that voter gave, not the praxis total (#2402)', () => {
+    expect(render()).toContain(i18n.t('feed:row.pointsEarned', { points: 4 }))
   })
 
   it('never prints the deleted placeholder title', () => {

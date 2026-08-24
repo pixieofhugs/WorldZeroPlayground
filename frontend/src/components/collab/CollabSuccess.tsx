@@ -49,6 +49,11 @@ export function CollabSuccess({
   // sat on top of a screen that is supposed to BE the screen. See `drawAtRoot`.
   return drawAtRoot(
     <div
+      // The closing beat, by slot (#2453). The nightly collab spec anchored on
+      // "out there", which has not been anywhere in this app since #1812 rewrote
+      // the collab register — and passed nothing, because the step before it
+      // never completed either.
+      data-testid="collab-success"
       role="dialog"
       aria-modal="true"
       aria-label={collabCopy(factionSlug, 'successHeading')}

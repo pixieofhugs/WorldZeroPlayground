@@ -47,6 +47,9 @@ import {
   type SegmentBox,
 } from '../filterState'
 import type { FactionOut } from '../../../../api/factions'
+// The catalog itself, not a hardcoded string: the assertion has to fail if the
+// key is missing, not merely if the words drift.
+import common from '../../../../locales/en/common.json'
 
 const sortRail = (value: string, onChange = () => {}): FilterRail => ({
   key: 'sort',
@@ -434,5 +437,50 @@ describe('selectedFirst / toggleOption', () => {
     expect(toggleOption(selected, 'coven')).toEqual(['ua', 'coven'])
     expect(toggleOption(selected, 'ua')).toEqual([])
     expect(selected).toEqual(['ua'])
+  })
+})
+
+/**
+ * #2431 — a filter change has to say something before the rows arrive.
+ *
+ * `useResource` keeps the previous rows in `data` for the whole flight (that is
+ * what stops the list flashing empty), and every list surface spells its
+ * loading branch as `loading && items.length === 0` — so after first paint a
+ * facet click changed nothing on screen at all. The bar is the one component
+ * both mounting pages share, so the pending signal lives here.
+ *
+ * This is the props-level seam, and it is the ONLY one this harness can reach:
+ * `renderToStaticMarkup` runs no effects, so a `useResource`-driven render is
+ * always `data: null, loading: true` — the empty branch. `busy` passed directly
+ * is exactly what `TaskFilterBar`/`PraxisFilterBar` do with their `loading`.
+ */
+describe('the bar states a read in flight (#2431)', () => {
+  const SUMMARY = 'Showing 12 tasks'
+  const render = (busy?: boolean) =>
+    renderToStaticMarkup(
+      <FilterBar
+        rails={[eraRail('current')]}
+        facets={[]}
+        onClearAll={() => {}}
+        summary={SUMMARY}
+        busy={busy}
+      />,
+    )
+
+  it("states the caller's summary, and claims nothing, while idle", () => {
+    const html = render()
+    expect(html).toContain(SUMMARY)
+    expect(html).not.toContain('aria-busy')
+    expect(html).not.toContain(common.filters.bar.updating)
+  })
+
+  it('marks the region busy and swaps the count for the updating copy', () => {
+    // Replaces rather than joins: the count in `summary` is the STALE one until
+    // the flight lands, so printing it beside "Updating…" would state a number
+    // the bar is in the middle of disproving.
+    const html = render(true)
+    expect(html).toContain('aria-busy="true"')
+    expect(html).toContain(common.filters.bar.updating)
+    expect(html).not.toContain(SUMMARY)
   })
 })

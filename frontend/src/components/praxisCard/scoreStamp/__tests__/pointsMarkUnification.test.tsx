@@ -210,14 +210,24 @@ const UNIFIED = [
   {
     faction: "na",
     mark: "components/factionMarks/DefaultPointsRing.tsx",
-    // The annulus: the ring's padding band filled with the smooth conic.
-    fragment: "padding:var(--space-xs);background:var(--faction-default-rainbow-conic)",
+    // The annulus: the ring's padding band, filled by `.spectrum-dial` since
+    // #2497 — the conic moved to index.css so Albescent can turn it from the
+    // cascade instead of walking the DOM for an unclassed inline style. The
+    // class is a STRONGER probe than the declaration it replaces: a second copy
+    // of the drawing would have to claim the shared name to pass.
+    fragment: 'class="spectrum-dial"',
     surfaces: {
       "components/taskCard/DefaultTaskCard.tsx": () => card(DefaultTaskCard),
       "components/praxisCard/scoreStamp/DefaultScoreStamp.tsx": () => stamp(DefaultScoreStamp),
     },
-    // The struck disc's tilt and its rainbow-clipped numeral.
-    retired: ["rotate(-7deg)", "var(--faction-default-total-rainbow)"],
+    // The struck disc's tilt and its rainbow-clipped numeral — plus the ring's
+    // own inline conic, retired by #2497. Re-inlining it would put the paint
+    // back out of the cascade's reach without failing the fragment above.
+    retired: [
+      "rotate(-7deg)",
+      "var(--faction-default-total-rainbow)",
+      "background:var(--faction-default-rainbow-conic)",
+    ],
   },
   {
     // THE FOURTH FACTION TO UNIFY (#2145), added here by name because a surface

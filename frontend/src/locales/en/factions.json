@@ -35,6 +35,7 @@
     "descriptionEmpty": "No description yet.",
     "membersEmptyWithSpotlight": "No other members yet.",
     "memberLevel": "Level {{level}}",
+    "spotlightLabel": "Champion",
     "spotlightStat_one": "Level {{level}} · {{score}} point",
     "spotlightStat_other": "Level {{level}} · {{score}} points",
     "errors": {
@@ -87,6 +88,7 @@
         "witnessed": "Your account, witnessed and inscribed"
       },
       "whoHeading": "Who takes up the work",
+      "newGamePlus": "Available only for New Game+",
       "lifeMeta": "@{{username}} · {{faction}}",
       "cta": {
         "join": "Accept the order",

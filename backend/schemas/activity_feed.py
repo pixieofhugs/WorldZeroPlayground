@@ -39,17 +39,21 @@ class FeedPayloadBase(WireModel):
 class VoteOnMinePayload(FeedPayloadBase):
     """Someone voted on the viewer's praxis.
 
-    ``points_earned`` is the praxis's **whole current score** — the same number
-    ``PraxisOut.score`` publishes, same type, off the same scoring path
-    (ADR-0014/0053). It is what the author sees when they click the row through,
-    which is the promise #2199 was filed about: the row used to print
-    ``value × task_point_value``, a product where the score is a sum, and
-    announced 120 points against a praxis worth 34.
+    ``value`` is the whole story the row needs: the "+N pts" it prints is the
+    stars this voter gave, which is **exactly** what their vote added to the
+    praxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and
+    ``Contribution`` adds it *after* the faction and duel multipliers, so a
+    single vote's contribution depends on nothing else — not the other votes,
+    the author's faction, the task's points, a metatask or a duel.
 
-    Optional because it is filled in a **second pass**: scoring is async and
-    batched, so the per-row mapper that builds this payload cannot reach it (see
-    ``services.activity_feed._score_vote_items``). A praxis that cannot be scored
-    leaves it ``None`` and the row prints no number — never an invented one.
+    So this is a delta, not a total, and there is no ``points_earned`` here.
+    #2199 put the praxis's whole score on this payload, filled by a second
+    scoring pass, because the per-vote number then in use was *invented*
+    (``value × task_point_value``, a product where the score is a sum, which
+    announced 120 points against a praxis worth 34). The delta is not a
+    restated formula though — it is the raw input the sum is over — so it
+    cannot diverge from the scoring path the way that arithmetic did, and the
+    pass that read the total is gone.
     """
 
     vote_id: int
@@ -58,7 +62,6 @@ class VoteOnMinePayload(FeedPayloadBase):
     # Praxis.title is nullable in the model, so a praxis genuinely can have none.
     praxis_title: Optional[str] = None
     task_point_value: int
-    points_earned: Optional[float] = None
 
 
 class CompletionPayload(FeedPayloadBase):
@@ -312,9 +315,10 @@ class VoteOnMineItem(FeedItemBase):
 class VoteChangedOnMineItem(FeedItemBase):
     """A voter went back and re-rated the viewer's praxis (#1712).
 
-    Same payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the
-    numbers that stand *now* — and deliberately no "changed from" fields: no
-    prior value is stored. The two are distinct types rather than one type with
+    Same payload as ``VoteOnMineItem`` — ``value`` is the vote that stands
+    *now* — and deliberately no "changed from" fields: no prior value is
+    stored, so the row can print what the vote is worth but never the size of
+    the change. The two are distinct types rather than one type with
     a flag because the item KEY has to differ, so archiving the original cannot
     silence the change.
     """

@@ -5,7 +5,23 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test('marketing home renders for a guest', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: /sign up here/i })).toBeVisible()
+  // Anchored on the hero CTA's test id, never on its copy. This used to read
+  // /sign up here/i, which was home.json `hero.cta.loggedOut` ("Sign Up Here")
+  // until #1862 deleted the key outright and #1899 re-added it pointing at the
+  // onboarding arc, with the literal placeholder string it still carries. The
+  // slot is awaiting final wording, so a text anchor here is a third regression
+  // already scheduled (#2452).
+  //
+  // `data-testid="home-hero-cta"` is on Home.tsx and nowhere else, and
+  // `pages/__tests__/homeLoginNotice.test.tsx` already pins it, so its presence
+  // is proof the marketing Home rendered rather than the FieldDesk.
+  const cta = page.getByTestId('home-hero-cta')
+  await expect(cta).toBeVisible()
+  // ...and that it is the GUEST variant. One CTA renders either way, but signed
+  // out it leads into the arc at /start (#1861) and signed in it goes to
+  // /tasks. Behaviour, not wording: a route is a contract, copy is not.
+  await cta.click()
+  await expect(page).toHaveURL(/\/start$/)
 })
 
 test('the dev-login button logs a bot in', async ({ page }) => {
@@ -20,6 +36,10 @@ test('the dev-login button logs a bot in', async ({ page }) => {
   // Assert being logged in, which is what this test's name actually claims. A
   // destination heading re-breaks every time the FieldDesk's copy moves, which
   // is how its sibling in smoke.spec.ts broke.
-  await expect(page.getByRole('button', { name: /sign up here/i })).toHaveCount(0)
+  //
+  // The marketing hero is gone by its test id for the same reason: this line
+  // named /sign up here/i too, and had been passing vacuously against copy that
+  // no longer existed anywhere in the app.
+  await expect(page.getByTestId('home-hero-cta')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
 })

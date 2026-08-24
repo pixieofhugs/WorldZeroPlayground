@@ -1,15 +1,21 @@
-"""ADR-0021: the Albescent unlock is account-collective, level and coverage decoupled.
+"""#2399: one life earns Albescent, its siblings take it, and the earner never can.
 
-The gate is a *permissions* gate, so these tests pin the axes independently:
+Supersedes the ADR-0021 tests this file used to hold. Three separate things are
+pinned here, because the re-cut only makes sense as all three at once:
 
-* level satisfied / not satisfied, on any character of the account;
-* coverage pooled across the whole roster / partial;
-* and crucially the case #698 fixed — level on one character, coverage on a
-  *different* one. Under the old same-character coupling that account was
-  locked out.
+* **Earn** — :func:`character_earns_albescent` is a *same-character* predicate:
+  one life, at ``era.albescent_level_required``, that has been invited to or has
+  held every joinable faction this era. Coverage = invitation letters UNION the
+  life's current faction UNION its :class:`FactionDefectionHistory` rows.
+* **Stamp** — the account column is sticky and monotonic, written by
+  ``recalculate_character_stats`` and never unwritten. The *read*
+  (``can_start_as_albescent``) is the column, not a live recomputation, which is
+  what makes the unlock survive an era reset.
+* **Take / never the earner** — ``defect_to_faction`` gains a level **ceiling**.
+  It is the only maximum-level gate in the game; every other one is a floor.
 
-Threshold and faction list are read off ``EraConfig`` (never hardcoded); the
-tests also drive a ``replace()``-d era to prove the service honours the
+The threshold and the faction list are read off ``EraConfig`` (never hardcoded),
+and several tests drive a ``replace()``-d era to prove the services honour the
 argument rather than the module singleton.
 """
 from dataclasses import replace
@@ -18,18 +24,29 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from models.faction_defection_history import FactionDefectionHistory
+from models.invitation_letter import InvitationLetter
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
-from services.character import _ALBESCENT_SENTINEL_SLUGS, can_start_as_albescent
+from services.character import (
+    _ALBESCENT_SENTINEL_SLUGS,
+    can_start_as_albescent,
+    character_earns_albescent,
+    get_account_invited_faction_slugs,
+    stamp_albescent_unlock,
+)
+from services.character_stats import recalculate_character_stats
+from services.faction_service import defect_to_faction
 
 
-def _required_faction_slugs(era: EraConfig = CURRENT_ERA) -> list[str]:
+def _joinable_faction_slugs(era: EraConfig = CURRENT_ERA) -> list[str]:
     """Every faction the coverage gate demands, in a stable order."""
     return [slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS]
 
@@ -47,14 +64,16 @@ async def _make_character(
     era_row: Era,
     username: str,
     level: int,
+    faction_slug: str = "na",
     status: CharacterStatus = CharacterStatus.active,
 ) -> Character:
-    """A second/third life on the *same* account, at a given level."""
+    """Another life on the *same* account, at a given level and faction."""
+    await _seed_faction(db_session, faction_slug)
     character = Character(
         account_id=account.id,
         username=username,
         display_name=username.title(),
-        faction_slug="na",
+        faction_slug=faction_slug,
         status=status,
     )
     db_session.add(character)
@@ -87,24 +106,204 @@ async def _set_level(
     await db_session.commit()
 
 
-async def _complete_task_for(
-    db_session: AsyncSession,
-    character: Character,
-    faction_slug: str,
-    *,
-    status: PraxisStatus = PraxisStatus.submitted,
-    moderation_status: ModerationStatus = ModerationStatus.visible,
+async def _give_letter(
+    db_session: AsyncSession, character: Character, era_row: Era, slug: str
 ) -> None:
-    """One submitted, non-hidden praxis on a task whose primary faction is ``faction_slug``."""
-    await _seed_faction(db_session, faction_slug)
+    await _seed_faction(db_session, slug)
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id, faction_slug=slug, era_id=era_row.id
+        )
+    )
+    await db_session.commit()
+
+
+async def _record_defection(
+    db_session: AsyncSession, character: Character, era_row: Era, slug: str
+) -> None:
+    """A faction this life has *held and left* — the half a letter can never show."""
+    await _seed_faction(db_session, slug)
+    db_session.add(
+        FactionDefectionHistory(
+            character_id=character.id, faction_slug=slug, era_id=era_row.id
+        )
+    )
+    await db_session.commit()
+
+
+async def _cover_everything(
+    db_session: AsyncSession, character: Character, era_row: Era
+) -> None:
+    """Full coverage, deliberately split across all three sources.
+
+    The life *holds* the first slug, has *left* the second, and holds letters for
+    the rest — so a predicate that reads only one of the three cannot pass this.
+    """
+    slugs = _joinable_faction_slugs()
+    await _seed_faction(db_session, slugs[0])
+    character.faction_slug = slugs[0]
+    await db_session.commit()
+    await _record_defection(db_session, character, era_row, slugs[1])
+    for slug in slugs[2:]:
+        await _give_letter(db_session, character, era_row, slug)
+
+
+# ---------------------------------------------------------------------------
+# Earn — the same-character predicate
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_one_life_at_the_level_covering_everything_earns(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _cover_everything(db_session, character, era)
+
+    assert await character_earns_albescent(character, era.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_coverage_without_the_level_does_not_earn(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    await _set_level(
+        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
+    )
+    await _cover_everything(db_session, character, era)
+
+    assert await character_earns_albescent(character, era.id, db_session) is False
+
+
+@pytest.mark.asyncio
+async def test_the_level_without_full_coverage_does_not_earn(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    for slug in _joinable_faction_slugs()[:-1]:
+        await _give_letter(db_session, character, era, slug)
+
+    assert await character_earns_albescent(character, era.id, db_session) is False
+
+
+@pytest.mark.asyncio
+async def test_level_on_one_life_and_coverage_on_another_does_not_earn(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """The binding ADR-0021 rejected and #2399 restores: **both on one life**.
+
+    Under ADR-0021 this exact account unlocked. It must not any more.
+    """
+    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    coverer = await _make_character(db_session, account, era, "coverer", level=1)
+    await _cover_everything(db_session, coverer, era)
+
+    assert await character_earns_albescent(character, era.id, db_session) is False
+    assert await character_earns_albescent(coverer, era.id, db_session) is False
+    assert await stamp_albescent_unlock(character, era.id, db_session) is False
+    assert await stamp_albescent_unlock(coverer, era.id, db_session) is False
+    assert await can_start_as_albescent(account.id, db_session) is False
+
+
+@pytest.mark.asyncio
+async def test_a_banned_life_never_earns(
+    db_session: AsyncSession, account: Account, era: Era
+):
+    """A banned life's work does not carry the account through the gate."""
+    banned = await _make_character(
+        db_session,
+        account,
+        era,
+        "banned",
+        level=CURRENT_ERA.albescent_level_required,
+        status=CharacterStatus.banned,
+    )
+    await _cover_everything(db_session, banned, era)
+
+    assert await character_earns_albescent(banned, era.id, db_session) is False
+
+
+@pytest.mark.asyncio
+async def test_earn_honours_the_era_argument_not_the_singleton(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    await _set_level(db_session, character, era, 1)
+    await _cover_everything(db_session, character, era)
+
+    lenient = replace(CURRENT_ERA, albescent_level_required=1)
+    assert await character_earns_albescent(character, era.id, db_session) is False
+    assert await character_earns_albescent(character, era.id, db_session, lenient) is True
+
+
+# ---------------------------------------------------------------------------
+# Stamp — sticky, monotonic, and what the read actually reads
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_the_read_is_the_column_not_a_live_recomputation(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """Coverage that would earn, but was never stamped, does **not** open the door.
+
+    This is the whole point of the column: the unlock is a fact about the past,
+    recorded, not re-derived — because after an era reset there is nothing left
+    to derive it from.
+    """
+    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _cover_everything(db_session, character, era)
+
+    assert await can_start_as_albescent(account.id, db_session) is False
+
+    assert await stamp_albescent_unlock(character, era.id, db_session) is True
+    await db_session.commit()
+    assert await can_start_as_albescent(account.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_the_stamp_is_monotonic(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """Once set it is never unset — not by losing coverage, not by a re-stamp."""
+    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _cover_everything(db_session, character, era)
+    assert await stamp_albescent_unlock(character, era.id, db_session) is True
+    await db_session.commit()
+
+    # Everything that earned it goes away.
+    await db_session.execute(
+        InvitationLetter.__table__.delete().where(
+            InvitationLetter.character_id == character.id
+        )
+    )
+    await db_session.execute(
+        FactionDefectionHistory.__table__.delete().where(
+            FactionDefectionHistory.character_id == character.id
+        )
+    )
+    character.faction_slug = "na"
+    await _set_level(db_session, character, era, 0)
+
+    # A second stamp is a no-op (already unlocked), and the flag stands.
+    assert await stamp_albescent_unlock(character, era.id, db_session) is False
+    assert await can_start_as_albescent(account.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_recalculate_character_stats_stamps_the_unlock(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """The stamp point is the recalc — where level and letters both already move."""
+    await _cover_everything(db_session, character, era)
+    await _seed_faction(db_session, "na")
     task = Task(
-        title=f"Albescent coverage: {faction_slug}",
+        title="Something worth a level",
         description="test",
-        point_value=5,
+        point_value=10,
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug=faction_slug,
+        primary_faction_slug=_joinable_faction_slugs()[0],
     )
     db_session.add(task)
     await db_session.flush()
@@ -113,301 +312,114 @@ async def _complete_task_for(
             task_id=task.id,
             created_by_id=character.id,
             type=PraxisType.solo,
-            title=f"Albescent coverage praxis: {faction_slug}",
+            title="proof",
             body_text="proof",
-            status=status,
-            moderation_status=moderation_status,
+            status=PraxisStatus.submitted,
+            moderation_status=ModerationStatus.visible,
         )
     )
     await db_session.commit()
 
+    # `albescent_level_required=1` so 10 points is enough to clear the bar; the
+    # era's own level_thresholds still decide what level the score buys.
+    cheap = replace(CURRENT_ERA, albescent_level_required=1)
+    await recalculate_character_stats(character.id, db_session, cheap, era_row=era)
+    await db_session.commit()
 
-# ---------------------------------------------------------------------------
-# Single-character accounts — the classic path still behaves
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_one_character_with_level_and_full_coverage_unlocks(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Account with a single life that is both high enough and has covered everything."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, character, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is True
+    await db_session.refresh(account)
+    assert account.albescent_unlocked is True
 
 
 @pytest.mark.asyncio
-async def test_one_character_below_level_stays_locked(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Full coverage does not substitute for the level gate."""
-    await _set_level(
-        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
-    )
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, character, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_one_character_missing_one_faction_stays_locked(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Coverage is ALL non-sentinel factions — one short is still short."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in _required_faction_slugs()[:-1]:
-        await _complete_task_for(db_session, character, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-# ---------------------------------------------------------------------------
-# The #698 case: level and coverage on DIFFERENT characters of one account
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_level_and_coverage_on_different_characters_unlocks(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """ADR-0021's headline case, and the one the old same-character code failed.
-
-    The veteran is at the threshold but has completed nothing; the workhorse has
-    covered every faction but is level 0. Pooled across the account, both
-    conditions hold, so Albescent unlocks.
-    """
-    veteran = character
-    await _set_level(db_session, veteran, era, CURRENT_ERA.albescent_level_required)
-
-    workhorse = await _make_character(db_session, account, era, "workhorse", level=0)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, workhorse, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is True
-
-
-@pytest.mark.asyncio
-async def test_coverage_pools_across_several_characters(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """No single life covers everything; the account collectively does."""
-    slugs = _required_faction_slugs()
-    assert len(slugs) >= 2, "era must have >=2 non-sentinel factions for this test"
-
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    await _complete_task_for(db_session, character, slugs[0])
-
-    sibling = await _make_character(db_session, account, era, "sibling", level=0)
-    for slug in slugs[1:]:
-        await _complete_task_for(db_session, sibling, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is True
-
-
-@pytest.mark.asyncio
-async def test_neither_gate_satisfied_stays_locked(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Several lives, none at level, coverage incomplete even pooled."""
-    slugs = _required_faction_slugs()
-    await _set_level(
-        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
-    )
-    await _complete_task_for(db_session, character, slugs[0])
-
-    sibling = await _make_character(db_session, account, era, "sibling", level=1)
-    if len(slugs) > 2:
-        await _complete_task_for(db_session, sibling, slugs[1])
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_pooled_coverage_without_the_level_stays_locked(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """The two gates are independent, not interchangeable: coverage alone is not enough."""
-    await _set_level(db_session, character, era, 0)
-    sibling = await _make_character(db_session, account, era, "sibling", level=1)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, sibling, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-# ---------------------------------------------------------------------------
-# Scope guards: other accounts, non-roster lives, non-qualifying praxes
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_another_accounts_coverage_does_not_count(
-    db_session: AsyncSession,
-    account: Account,
-    account2: Account,
-    character: Character,
-    character2: Character,
-    era: Era,
-):
-    """Pooling is per-account, not global."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, character2, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_another_life_on_the_account_contributes_coverage(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Coverage pools across the account's roster (``_ROSTER_STATUSES``).
-
-    The level gate is satisfied by one life and the coverage gate entirely by
-    another — the two conditions are independent. This replaces the
-    ``paused``-life version of the same assertion: ``CharacterStatus.paused``
-    was removed in the #1398 squash (nothing ever wrote it), so the roster set
-    is now simply "not banned".
-    """
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    other_life = await _make_character(db_session, account, era, "otherlife", level=0)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, other_life, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is True
-
-
-@pytest.mark.asyncio
-async def test_banned_life_does_not_contribute_coverage(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """A banned life's work does not carry the account through the gate."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    banned = await _make_character(
-        db_session, account, era, "bannedlife", level=0, status=CharacterStatus.banned
-    )
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, banned, slug)
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_banned_life_does_not_satisfy_the_level_gate(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """The level gate reads active lives only."""
-    await _set_level(db_session, character, era, 0)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, character, slug)
-    await _make_character(
-        db_session,
-        account,
-        era,
-        "bannedvet",
-        level=CURRENT_ERA.albescent_level_required,
-        status=CharacterStatus.banned,
-    )
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_unsubmitted_praxis_does_not_count_toward_coverage(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Coverage is completed work: an in-progress praxis is not a completion."""
-    slugs = _required_faction_slugs()
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in slugs[:-1]:
-        await _complete_task_for(db_session, character, slug)
-    await _complete_task_for(
-        db_session, character, slugs[-1], status=PraxisStatus.in_progress
-    )
-
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-
-@pytest.mark.asyncio
-async def test_hidden_praxis_does_not_count_toward_coverage(
-    db_session: AsyncSession, account: Account, character: Character, era: Era
-):
-    """Moderation-hidden work is not coverage; flagged-but-visible work is."""
-    slugs = _required_faction_slugs()
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in slugs[:-1]:
-        await _complete_task_for(db_session, character, slug)
-    await _complete_task_for(
-        db_session,
-        character,
-        slugs[-1],
-        moderation_status=ModerationStatus.hidden,
-    )
-    assert await can_start_as_albescent(account.id, db_session) is False
-
-    # Same praxis, flagged rather than hidden -> counts, and the gate opens.
-    await _complete_task_for(
-        db_session,
-        character,
-        slugs[-1],
-        moderation_status=ModerationStatus.flagged,
-    )
-    assert await can_start_as_albescent(account.id, db_session) is True
-
-
-@pytest.mark.asyncio
-async def test_account_with_no_characters_stays_locked(
+async def test_no_backfill_a_fresh_account_starts_locked(
     db_session: AsyncSession, account: Account, era: Era
 ):
+    assert account.albescent_unlocked is False
     assert await can_start_as_albescent(account.id, db_session) is False
 
 
 # ---------------------------------------------------------------------------
-# The threshold comes from the era argument, not the module singleton
+# Take, and never the earner — the ceiling
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_level_threshold_is_read_from_the_era_argument(
+async def test_a_low_level_sibling_takes_albescent(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """A stricter EraConfig locks an account that CURRENT_ERA would unlock."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    for slug in _required_faction_slugs():
-        await _complete_task_for(db_session, character, slug)
-    assert await can_start_as_albescent(account.id, db_session) is True
+    """Ungated by the *taker's* own progress — the account already paid."""
+    account.albescent_unlocked = True
+    await db_session.commit()
+    await _seed_faction(db_session, "albescent")
+    sibling = await _make_character(db_session, account, era, "sibling", level=0)
 
-    strict_era = replace(
-        CURRENT_ERA,
-        albescent_level_required=CURRENT_ERA.albescent_level_required + 1,
-    )
-    assert await can_start_as_albescent(account.id, db_session, strict_era) is False
+    joined = await defect_to_faction(sibling, "albescent", db_session)
+    assert joined.faction_slug == "albescent"
 
 
 @pytest.mark.asyncio
-async def test_coverage_faction_set_is_read_from_the_era_argument(
+async def test_the_earner_at_the_ceiling_is_refused(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    """Coverage demands exactly the era's non-sentinel factions.
-
-    Narrow the era to a single faction and one completion is enough; the
-    sentinels (``na``, ``albescent``) are never demanded.
-    """
-    slugs = _required_faction_slugs()
+    """"Available only for New Game+" — the game's one MAXIMUM level gate."""
+    account.albescent_unlocked = True
+    await db_session.commit()
+    await _seed_faction(db_session, "albescent")
     await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
-    await _complete_task_for(db_session, character, slugs[0])
-    assert await can_start_as_albescent(account.id, db_session) is False
 
-    narrow_era = replace(
-        CURRENT_ERA,
-        factions={
-            faction_slug: faction_config
-            for faction_slug, faction_config in CURRENT_ERA.factions.items()
-            if faction_slug in _ALBESCENT_SENTINEL_SLUGS or faction_slug == slugs[0]
-        },
+    with pytest.raises(Exception) as excinfo:
+        await defect_to_faction(character, "albescent", db_session)
+    assert (
+        excinfo.value.detail["code"]
+        == ErrorCode.faction_albescent_new_game_plus_only.value
     )
-    assert await can_start_as_albescent(account.id, db_session, narrow_era) is True
+
+
+@pytest.mark.asyncio
+async def test_one_level_below_the_ceiling_still_walks_in(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """The boundary is ``>=``, so the level *below* the bar is the last that fits."""
+    account.albescent_unlocked = True
+    await db_session.commit()
+    await _seed_faction(db_session, "albescent")
+    await _set_level(
+        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
+    )
+
+    joined = await defect_to_faction(character, "albescent", db_session)
+    assert joined.faction_slug == "albescent"
+
+
+@pytest.mark.asyncio
+async def test_a_locked_account_is_still_refused_at_the_door(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    await _seed_faction(db_session, "albescent")
+    with pytest.raises(Exception) as excinfo:
+        await defect_to_faction(character, "albescent", db_session)
+    assert (
+        excinfo.value.detail["code"] == ErrorCode.faction_albescent_not_eligible.value
+    )
+
+
+# ---------------------------------------------------------------------------
+# Character creation — the other door the unlock opens
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_creation_pool_offers_albescent_once_unlocked(
+    db_session: AsyncSession, account: Account, character: Character, era: Era
+):
+    """A new life is born at level 0, so it can never be the earner — no ceiling here."""
+    assert "albescent" not in await get_account_invited_faction_slugs(
+        account.id, db_session
+    )
+
+    account.albescent_unlocked = True
+    await db_session.commit()
+
+    assert "albescent" in await get_account_invited_faction_slugs(
+        account.id, db_session
+    )

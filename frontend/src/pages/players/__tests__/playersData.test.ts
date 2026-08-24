@@ -80,12 +80,24 @@ describe('rankPlayers', () => {
 describe('factionStandings', () => {
   const ranked = rankPlayers(FIELD, 'era')
 
-  it('races the seven factions and nobody else', () => {
+  it('races the seven factions PLUS Albescent, and nobody else', () => {
+    // The eighth lane (#2409, ADR-0082). This case read "the seven factions and
+    // nobody else" and asserted equality with FACTION_RAINBOW_ORDER, which was
+    // #1855's ruling that the design's Albescent row was a deviation to drop.
+    // Reversed: the society races like the rest and reads `[REDACTED]` to a
+    // viewer who has not been revealed to it.
     const slugs = factionStandings(ranked).map((lane) => lane.slug)
-    expect(slugs).toHaveLength(FACTION_RAINBOW_ORDER.length)
-    expect([...slugs].sort()).toEqual([...FACTION_RAINBOW_ORDER].sort())
-    // `na` is a state, not a faction (ADR-0030/ADR-0039) — no eighth lane.
+    expect(slugs).toHaveLength(FACTION_RAINBOW_ORDER.length + 1)
+    expect([...slugs].sort()).toEqual(
+      [...FACTION_RAINBOW_ORDER, 'albescent'].sort(),
+    )
+    // UNCHANGED, and the point of keeping it on the same line as the change
+    // above: `na` is a state, not a faction (ADR-0030/ADR-0039). The two
+    // exclusions were never the same exclusion and only one of them moved.
     expect(slugs).not.toContain('na')
+    // Albescent is NOT in the spectrum — the lane list is its own constant, so
+    // the stripe bar, the backdrop and the filter facet keep seven.
+    expect(FACTION_RAINBOW_ORDER).not.toContain('albescent')
   })
 
   it("sums each faction's members and sorts by points", () => {
@@ -109,10 +121,15 @@ describe('factionStandings', () => {
   })
 
   it('draws an empty faction as a zero-length bar rather than dropping it', () => {
+    // Load-bearing for Albescent specifically since #2409: a fixed lane list is
+    // what guarantees the eighth row is THERE on a page whose loaded characters
+    // happen to include no member of it. A data-driven list would make the
+    // society's absence from one roster page look like the society not existing.
     const lanes = factionStandings(rankPlayers([player({ id: 1, faction_slug: 'coven', score: 10 })], 'era'))
-    expect(lanes).toHaveLength(FACTION_RAINBOW_ORDER.length)
+    expect(lanes).toHaveLength(FACTION_RAINBOW_ORDER.length + 1)
+    expect(lanes.map((lane) => lane.slug)).toContain('albescent')
     const empty = lanes.filter((lane) => lane.points === 0)
-    expect(empty).toHaveLength(FACTION_RAINBOW_ORDER.length - 1)
+    expect(empty).toHaveLength(FACTION_RAINBOW_ORDER.length)
     expect(empty.every((lane) => lane.barPercent === 0 && lane.sharePercent === 0)).toBe(true)
   })
 

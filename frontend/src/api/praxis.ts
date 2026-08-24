@@ -524,10 +524,11 @@ export async function applyMetatask(praxisId: number, taskId: number): Promise<P
   return data
 }
 
-export async function removeMetatask(praxisId: number, taskId: number): Promise<void> {
-  await apiDelete('/praxes/{praxis_id}/metatasks/{task_id}', {
+export async function removeMetatask(praxisId: number, taskId: number): Promise<PraxisOut> {
+  const { data } = await apiDelete('/praxes/{praxis_id}/metatasks/{task_id}', {
     params: { path: { praxis_id: praxisId, task_id: taskId } },
   })
+  return data
 }
 
 // ---------------------------------------------------------------------------

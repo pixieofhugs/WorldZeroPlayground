@@ -7,6 +7,7 @@ import { WowFactionHero } from 'worldzero-frontend'
 export function CorkBoard() {
   return (
     <WowFactionHero
+      slug="wow"
       name="Warriors of Whimsy"
       members={188}
       tasks={44}

@@ -1,5 +1,8 @@
 # The praxis read page is a per-faction archetype surface with an interactive vote caster
 
+**Status:** Superseded by ADR-0061
+**Date:** 2026-06-25
+
 ADR-0005 enriched the praxis **card** (the register-row, list view) and explicitly
 deferred the **Praxis Read** page — `/praxes/:id`, one sealed praxis in full: account
 body, evidence specimens, the **interactive** vote caster, and the full slot set. This
@@ -186,6 +189,44 @@ with #196's metatask-model rework).
 - **Comments** are a separate workstream — reserved slot only (decision 5, #167).
 - **Metatask panel:** omitted (decision 8, #233).
 - **MediaGallery `layout` prop** is added only if the Ephemerists build needs the grid.
+
+## Amendment (2026-08-23) — this record is superseded; what replaced each part
+
+Owner ruling: this ADR is dead. It is **marked, not rewritten** — the decisions
+and the gap tracker above stay as the record of what was decided on 2026-06-25,
+and none of it should be read as live authority. The supersession is spread over
+five records and the status field carries one pointer, so the line at the top
+names the record that re-decided this surface end to end; the rest are here.
+
+- **Decisions 1, 2 and 5 — the staged per-faction seam, the shared slot module,
+  the reserved comments slot.** Superseded by epic #1085: **ADR-0061** (praxis
+  detail is one shared page every faction dresses, and comments become the
+  page's third region rather than a slot this ADR only reserved), **ADR-0063**
+  (one responsive component per faction — the desktop/mobile archetype split
+  this seam grew is retired, `mobilePraxisDetail` with it) and **ADR-0064** (the
+  page owns its chrome). The staging plan finished:
+  `frontend/src/pages/praxisDetail/archetypes/` holds nine archetypes — one per
+  faction plus Default — where this ADR built one (Ephemerists) and pointed
+  every other faction at `DefaultPraxisDetail`. Coven post-dates this record and
+  never appears in the tracker at all.
+- **Decision 3 — the score readout is the point economy, not a distribution.**
+  The rejection held: no `star_distribution` and no `ConcordMeter` exist. The
+  *number* was re-cut after this ADR by **ADR-0053** (a praxis has one number;
+  Merit is retired) and **ADR-0076** (a base-only score reads as a bare total),
+  so read those for what the page shows today.
+- **Decision 6 — the three `PraxisOut` fields.** Shipped.
+  `task_level_required`, `submitted_at` and `created_by_faction_slug` are on
+  `PraxisOut` in `backend/schemas/praxis.py`, which is the record now.
+- **Ruling 7 — Albescent is always-light.** Retired by **ADR-0083 §8**. #2301
+  shipped the reveal register's dark half, so a dark-mode reader gets a dark
+  letter and the always-light clause is contradicted by shipped code. Its other
+  half was already dead: the `--faction-albescent-card-*` tokens this ruling
+  prescribes were deleted by #783 and are absent from
+  `frontend/src/index.css`.
+
+**Singularity's always-dark is untouched.** Theme-invariant surfaces are not
+retired as a class. Ruling 7 died on the vellum's own facts — a register that
+now flips — not on the principle it borrowed to describe itself.
 
 ## Refs
 

@@ -8,8 +8,8 @@ import type { CSSProperties } from "react";
  *
  * THIS FILE IS A REINSTATEMENT, and the scope of it is narrow. #1891 / PR #1926
  * deleted `AlbescentSigil` by owner ruling hours before this design was drawn.
- * The mark then was a surveyor's cross-hair inked on the always-light
- * `--albescent-reveal-*` register, and a distinct emblem in a distinct PALETTE,
+ * The mark then was a surveyor's cross-hair inked on the `--albescent-reveal-*`
+ * register (always-light then; it flips since #2301), and a distinct emblem in a distinct PALETTE,
  * worn by an otherwise-hidden faction on surfaces an unrevealed player reads, is
  * a tell. The owner has ruled that this design supersedes that deletion. **Only
  * the mark comes back.** Every other half of #1891/#1926 is untouched and still

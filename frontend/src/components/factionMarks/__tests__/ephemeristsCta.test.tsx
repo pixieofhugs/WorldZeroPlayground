@@ -160,7 +160,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
-  it("is mounted on the six surfaces that draw one, and no others", () => {
+  it("is mounted on the seven surfaces that draw one, and no others", () => {
     // The issue names three (card, task detail, composer). The grep found two
     // more painting the identical button — the faction page's join/leave pair
     // and the phone's field desk — and #2067's own note that the field desk
@@ -172,6 +172,13 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     // ghost button in `-plate-gold` on the cornice band, which is what a tile
     // painted in the wrong register looks like from here: not a variant of this
     // control, a different one. Repainting it onto the plate made it this one.
+    //
+    // The SEVENTH is character creation (#2347), and it is the first mount
+    // added by a NEW surface rather than found by a grep over old ones. The
+    // `createCharacter` dispatch landed with this archetype, whose commit
+    // control is the same full-bleed band the composer casts from — so it wears
+    // this class for the reason the list exists, and does not restate the
+    // ground or the ink the class already carries.
     const mounts = files
     // Matched at the `className`, not on the bare string: half the Ephemerists
     // kit names this class in prose, and a census a comment can join is a
@@ -181,6 +188,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     expect(mounts.sort()).toEqual([
       "components/selectCard/EphemeristsSelectCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
+      "pages/characterPaths/archetypes/EphemeristsCreateCharacter.tsx",
       "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
       "pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
       "pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",

@@ -14,6 +14,7 @@ import { lazyArchetype } from './lazyArchetype'
 const EverymenAvatar = lazyArchetype(() => import('../components/avatar/EverymenAvatar'))
 const EverymenBackdrop = lazyArchetype(() => import('../components/backdrop/EverymenBackdrop'))
 const EverymenComment = lazyArchetype(() => import('../components/comments/voices/EverymenComment'))
+const EverymenCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EverymenCreateCharacter'))
 const EverymenDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenDuelSealConfirm'))
 const EverymenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EverymenEditPraxis'))
 const EverymenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EverymenFactionBody'))
@@ -48,6 +49,10 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   taskDetail: () => EverymenTaskDetail,
   praxisDetail: () => EverymenPraxisDetail,
   editPraxis: () => EverymenEditPraxis,
+  // The enlistment paper (#2352). The slug this dispatches on is the calling
+  // being PICKED, not a loaded record, so the page reskins to this bill live and
+  // returns to the Default the moment the pick is cleared.
+  createCharacter: () => EverymenCreateCharacter,
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,
   profileBody: () => EverymenProfileBody,

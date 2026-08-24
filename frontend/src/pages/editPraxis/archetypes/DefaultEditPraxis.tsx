@@ -7,13 +7,19 @@
  * skins inherit (ADR-0065). It is not a placeholder: `default` ≡ `na` ≡
  * Unaffiliated is one visual identity (ADR-0039/0046/0048), so this IS the
  * Unaffiliated composer and the fall-through every undressed faction renders.
- * **Albescent registers nothing here and falls through to it** — in the design's
- * `SKINS` table the two rows are the same `chrome: 'spectrum', aurora: true`
- * with identical fonts, differing only in a card ground; that is not a skin.
+ *
+ * **ADR-0065 §4 said Albescent registers nothing here.** That was true while the
+ * two kits were pixel-identical, and #2404 ended it: the owner's ruling is that
+ * the rainbow in Albescent's borders moves. Since #2505 (epic #2496) Albescent
+ * registers `AlbescentEditPraxis`, which renders THIS component whole and hands
+ * one `aria-hidden` span to the `ornament` slot below. The design's `SKINS`
+ * table is still right that the two rows are the same dress — the delta is
+ * motion at the sheet's edge and nothing else, which is why the slot takes a
+ * layer instead of the archetype taking a fork.
  *
  * ## The layout, in order
  *
- * masthead → status row (`Draft` · `Saved just now`) → the task slip (title,
+ * status row (`Draft` · `Saved just now`) → the task slip (title,
  * level pill, description, points mark) → `Title` → `How it was done` → the mode
  * block (the collaborator roster, or the duel pair) → `Write-up` (Write /
  * Preview) → `Proof` → footer (`Save draft` … `Submit`).
@@ -53,12 +59,17 @@
  * branch anywhere in the file. Every hex in `edit-praxis.jsx` is a design-side
  * literal; none of them appear here.
  *
- * ## The two motions
+ * ## The one motion
  *
- * `ep-edge` walks the masthead's spectrum band, `ep-drift` wanders the aurora.
- * Both are CLASSES: the keyframes live in `index.css` behind the shared
- * `prefers-reduced-motion` guard, and an inline `animation:` would bypass that
- * guard (#1003). The other five `ep*` keyframes ship unused, for the skins.
+ * `ep-drift` wanders the aurora. It is a CLASS: the keyframes live in
+ * `index.css` behind the shared `prefers-reduced-motion` guard, and an inline
+ * `animation:` would bypass that guard (#1003).
+ *
+ * `ep-edge` walked the masthead's spectrum band until #2520 took the band off —
+ * na's spectrum is the sheet's STATIC 3px frame now, which is what lets the
+ * epic's "Albescent = na + motion" be true on this page rather than aspirational
+ * (the society's travelling edge had been a second moving rainbow beside na's
+ * own). It joins the other five `ep*` keyframes that ship unused, for the skins.
  *
  * ## Reused, not rebuilt
  *
@@ -79,13 +90,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
+import { factionSpectrumSheet } from "../../../utils/factions";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   ComposerFooter,
   ComposerGround,
-  ComposerMasthead,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -121,6 +132,27 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 interface Props {
   state: EditPraxisState;
+  /**
+   * One ornament layer, mounted INSIDE the sheet (#2505, epic #2496).
+   *
+   * The epic's wrapper pattern is "a sibling span, or a slot on `DefaultX` when
+   * light must clip to the sheet", and the composer is squarely the second case:
+   * the sheet's `overflow: hidden` is what enforces #1028 — no composer ornament
+   * may reach the viewport — so a layer hung off a wrapper OUTSIDE this
+   * component would paint the page, which is the exact failure six task-detail
+   * skins shipped and the clip exists to prevent.
+   *
+   * Optional and undressed by default, so na renders byte-identically: the only
+   * caller is `AlbescentEditPraxis`, and the only thing it passes is a
+   * decorative, `aria-hidden` span. It rides in the `ground` slot, after na's
+   * own aurora and before the masthead, so it stacks above the wash and below
+   * the content column without a z-index of its own.
+   *
+   * The WAITING stage does not take it. That surface is a different page
+   * (`PraxisWaitingSurface`, #1189) with its own dress, and dressing it is not
+   * this issue.
+   */
+  ornament?: React.ReactNode;
 }
 
 /* The na kit runs entirely on the global --faction-default-* tokens, so it flips
@@ -142,12 +174,14 @@ const HAIR = "var(--faction-default-composer-hair)";
 const ON_ACCENT = "var(--faction-default-on-accent)";
 /* The seven wedges, for both marks. */
 const RING = "var(--faction-default-rainbow-conic)";
-/* The masthead band is the LOOP cut, not the seven-stop bar ramp the design
- * literal shows. `ep-edge` walks background-position across a 300%-wide band, so
- * the paint has to tile: the bar ramp's red-at-0% meets magenta-at-100% and
- * shows a hard seam every cycle, which is the exact failure the `-loop` token's
- * own docstring exists to describe. Same spectrum, cut for this geometry. */
-const BAND = "var(--faction-default-rainbow-loop)";
+/* THE MASTHEAD BAND IS GONE (#2520). It was the `-loop` cut of the spectrum,
+ * walked by `.ep-edge` for every player — so na's composer carried a MOVING
+ * rainbow, and Albescent's travelling sheet edge (#2505) was not a delta on it
+ * but a second one. The spectrum is the sheet's 3px frame now, static, which is
+ * the idiom the task card, the praxis card and the seal all wear. `.ep-edge`
+ * and `@keyframes epEdge` stay declared in index.css beside the five other
+ * composer motions no skin reads yet; that block says outright that an unread
+ * motion there is the point of it. */
 
 /* The design's title + body face is Lora (--font-display); its label face is
  * Courier Prime (--font-body), which is what composerLabelStyle already
@@ -172,10 +206,9 @@ const primaryStyle = composerLabelStyle({
 });
 
 /* The chrome, named once and mounted twice: the composer below, and the
-   waiting surface once your part is in (#1189). These are the same ELEMENTS
-   both times, not two constructions of the same idea, so na's spectrum band
-   and drifting aurora cannot drift apart between the two stages. */
-const masthead = <ComposerMasthead background={BAND} animated />;
+   waiting surface once your part is in (#1189). The same ELEMENT both times,
+   not two constructions of the same idea, so na's drifting aurora cannot drift
+   apart between the two stages. */
 const ground = (
   <ComposerGround
     background="var(--faction-default-aurora)"
@@ -185,9 +218,20 @@ const ground = (
     animated
   />
 );
+/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
+   ramp painted into the border box under it, which is the same `border-box`
+   idiom `DefaultTaskCard`, `DefaultPraxisCard` and `DefaultSeal` wear. Only the
+   width is stated here; the composition belongs to the helper, because the ramp
+   has to be appended to all three of the sheet's background lists and saying
+   that at a fourth call site is how one of them gets the arity wrong.
+
+   `ComposerSheet`'s own `overflow: hidden` clips at the PADDING box, so the
+   aurora at `inset: -30%` cannot paint over the frame — the ring stays spectrum
+   all the way round, and Albescent's travelling `.alb-composer-edge` still sits
+   a pixel inside it. */
 const sheetStyle = {
-  background: SHEET,
-  border: `1px solid ${BORDER}`,
+  border: "3px solid transparent",
+  ...factionSpectrumSheet(),
   boxShadow: "0 16px 40px -24px var(--color-cast-shadow)",
 };
 const statusMark = (
@@ -196,10 +240,11 @@ const statusMark = (
 const slip = {
   style: {
     background: FIELD,
+    /* The 2px left ink bar #1706 put here came off with the masthead band
+       (#2520): the design's na column rules this page ONCE, at the sheet's own
+       spectrum frame. The seven dressed skins keep theirs — `composerRule`
+       asserts that from the other side. */
     border: `1px solid ${BORDER}`,
-    /* The design left-rules the slip in the accent (#1706). It sits AFTER the
-       border shorthand on purpose: a shorthand spread last would erase it. */
-    borderLeft: `2px solid ${INK}`,
     borderRadius: 10,
     padding: "var(--space-lg)",
   },
@@ -220,7 +265,8 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   alarm: ALARM,
   pageStyle: { fontFamily: TITLE_FACE, color: INK },
   sheetStyle,
-  masthead,
+  /* No `masthead` since #2520 — the slot is optional, and na's band is the
+     sheet's own spectrum frame now. */
   ground,
   rule: () => <ComposerRule style={{ background: HAIR }} />,
   mark: statusMark,
@@ -236,7 +282,7 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   quietButtonStyle: { color: FAINT },
 };
 
-export default function DefaultEditPraxis({ state }: Props) {
+export default function DefaultEditPraxis({ state, ornament }: Props) {
   const { t } = useTranslation("forms");
   const sizes = useComposerSizes();
   const [tab, setTab] = useState<ComposerTab>("write");
@@ -280,8 +326,16 @@ export default function DefaultEditPraxis({ state }: Props) {
       <ComposerSheet
         sizes={sizes}
         style={sheetStyle}
-        masthead={masthead}
-        ground={ground}
+        ground={
+          ornament ? (
+            <>
+              {ground}
+              {ornament}
+            </>
+          ) : (
+            ground
+          )
+        }
       >
         {/* `Draft`, alone (#1828). The autosave line moved to the write-up
             header and the spectrum mark is the waiting surface's beat. */}

@@ -93,6 +93,42 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
+  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-composer-edge::before, .alb-desk-edge::before, .alb-plate-edge::before, .alb-profile-edge::before':
+    "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
+    'plates joined at #2504, the composer and the phone home at #2505, the praxis ' +
+    "CARD's own 3px ring at #2499 when it stopped borrowing the rail's 1px one). Two " +
+    "tiles of the mount's own `background-image: inherit`, six mount-widths wide inside " +
+    "index.css's `overflow: hidden`, slid by transform because " +
+    '`background-position` repaints every frame on the main thread. Declared ' +
+    'nowhere but inside the gate: with the sheet absent there is no child, and ' +
+    "the still ramp is the mount's own background in index.css — the exact " +
+    'frame a reduced-motion reader already gets. All NINE are masked rings ' +
+    'since #2519: the odd one out used to be `.alb-desk .spectrum-rule`, a ' +
+    "filled hairline travelling in place of an edge the field desk's identity " +
+    'card did not have, and the design canvas takes that bar off and gives the ' +
+    'card a ring — one carrier per object.',
+  '.alb-profile-edge::before':
+    'the same child, two band-widths instead of three, because the profile ' +
+    "band's ring tiles at 200% where the four card edges tile at 300%. A `width` " +
+    'and not a tile, which is the whole reason five keyframes could become one.',
+  '.alb-moves .spectrum-rule:empty::before':
+    "every ornament spectrum on a dispatched Albescent surface (#2501, widened " +
+    'by #2500). Two tiles of ' +
+    '`--faction-default-rainbow-loop` across a 200%-wide child, slid one tile by ' +
+    'transform inside the `overflow: hidden` index.css puts on the band. The loop ' +
+    'cut is NAMED rather than inherited, unlike the five edges above: the band ' +
+    'rests on `--faction-default-rainbow`, whose last stop is not its first, so ' +
+    'tiling that would seam. Declared nowhere but inside the gate — with the sheet ' +
+    "absent there is no child and the still band is `.spectrum-rule`'s own " +
+    'background, which is the na band exactly.',
+  '.alb-moves .spectrum-dial::before':
+    'every points ring, medallion and annulus on one (#2501, widened by ' +
+    '#2500). `background-image: inherit` takes the ' +
+    "annulus's own conic, so the rim registers exactly over the ring it replaces " +
+    'and the sheet arriving late changes no pixel. It is a pseudo-element and not ' +
+    'the mount so that the TOTAL inside the ring does not turn with it — the call ' +
+    '`.alb-detail-ring` already makes. Declared nowhere but inside the gate: with ' +
+    "the sheet absent the annulus is `.spectrum-dial`'s own background.",
 }
 
 /** Delete every `prefix { … }` block, brace-matched, and return what is left. */
@@ -177,8 +213,12 @@ MOTION_SCAFFOLDING with the reason, the way .wow-balloon-sweep::after is.`,
   })
 
   it('keeps MOTION_SCAFFOLDING honest — every entry still exists', () => {
+    // Whitespace-insensitive, because the keys come from `declarations()`, which
+    // collapses runs of whitespace — so a multi-selector entry's key can never
+    // match the sheet's own one-per-line house style literally.
+    const flat = SHEET.replace(/\s+/g, ' ')
     for (const [selector, reason] of Object.entries(MOTION_SCAFFOLDING)) {
-      expect(SHEET, reason).toContain(selector)
+      expect(flat, reason).toContain(selector)
     }
   })
 
@@ -209,6 +249,92 @@ reduced-motion gate.`,
     ).toEqual([])
   })
 
+  it('carries every Albescent ornament animation but the spark (#2498)', () => {
+    // The sheet's own "WHAT IS STILL IN index.css AND COULD FOLLOW" list named
+    // "the Albescent drifts" as a candidate on one test: does every consumer
+    // treat the motion as ornament, and is the un-animated frame the one a
+    // reduced-motion reader already gets? Each of these says so in its own words
+    // in index.css — "stilled, the page is a static prism ground and a static
+    // prism ring" — and each leaves its resting `transform` behind in index.css,
+    // so nothing jumps.
+    //
+    // SIX OF THE NINE RETIRED AT #2499, and the list shrinking is the point of
+    // that issue rather than a regression: `.alb-rainbow` and the four
+    // `*-aurora::before` drifts were five hand-drawn washes of one idea, and
+    // `.alb-detail-foil::after` was the sweep that idea is now made of. All six
+    // are one static prism ground on the na sheet (`.alb-prism`), which is PAINT
+    // and therefore may never live here. What is left is the three marks that
+    // genuinely turn.
+    //
+    // `alb-drift`'s KEYFRAME is the one thing that did not travel. #2404 already
+    // reaches it from here across the chunk boundary because index.css is the
+    // always-loaded entry sheet, and it still has a consumer: the RAIL.
+    const albescent = (css: string): string[] => [
+      ...new Set(
+        [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+          .filter(([, , body]) => /\banimation(-name)?\s*:/.test(body))
+          .flatMap(([, prelude]) =>
+            prelude.split(',').map((one) => one.trim().replace(/\s+/g, ' ')),
+          )
+          .filter((selector) => selector.startsWith('.alb-')),
+      ),
+    ]
+
+    const here = albescent(SHEET)
+    for (const selector of [
+      '.alb-detail-foil::before',
+      '.alb-detail-ring::before',
+      '.alb-praxis-ring::before',
+    ]) {
+      expect(here, `${selector} still animates from somewhere else`).toContain(selector)
+    }
+
+    // The six #2499 retired, asserted GONE from both sheets rather than merely
+    // absent from the list above — a wash that reappeared as an overlay would
+    // otherwise pass by not being named.
+    for (const retired of [
+      '.alb-rainbow',
+      '.alb-task-aurora',
+      '.alb-detail-aurora',
+      '.alb-detail-foil::after',
+      '.alb-praxis-aurora',
+      '.alb-feed-aurora',
+    ]) {
+      expect(
+        `${SHEET}\n${INDEX}`,
+        `${retired} is back. #2499 made the Albescent ground a LAYER of the na
+card's own background (\`.alb-prism\`); an overlay span beside it is the divergence
+the owner reported — two cards drawing the same light two different ways.`,
+      ).not.toContain(`${retired} {`)
+    }
+
+    // THE SPARK IS THE ONE THAT MAY NOT FOLLOW, and it is the only one left.
+    expect(
+      albescent(INDEX),
+      `Every Albescent animation index.css still runs. Only .alb-spark may be
+here: its gate does not merely add motion, it drops the glyph to opacity 0 and
+lets the keyframe carry it back up. A paint declaration may never defer, so the
+opacity has to stay — and with the animation deferred and the sheet stranded the
+spark would be an invisible mark rather than a still one, which is the exact
+degradation this sheet is not allowed to cause.`,
+    ).toEqual(['.alb-spark'])
+  })
+
+  it('leaves the spark behind for a reason that is still true', () => {
+    // Asserted, not asserted-in-a-comment: if the gated rule ever stops setting
+    // the paint, the spark becomes a legible still frame and may follow.
+    const gated = GATES.flatMap((body) => declarations(body))
+    expect(gated.some(([selector]) => selector === '.alb-spark')).toBe(false)
+
+    const spark = ruleBodies(INDEX, '.alb-spark').filter((body) =>
+      /\banimation\s*:/.test(body),
+    )
+    expect(spark, '.alb-spark no longer animates from index.css at all').toHaveLength(1)
+    expect(spark[0], 'the spark animates without touching paint — it may follow').toContain(
+      'opacity: 0',
+    )
+  })
+
   it('is reached only through src/factionFaces.ts, so it stays off the entry HTML', () => {
     // Comments stripped, because index.css and the sheet itself both discuss the
     // filename at length and should go on doing so — only an `import` counts.
@@ -234,5 +360,61 @@ whole sheet back into the render-blocking stylesheet — build green,
 bundle-budget.mjs the only witness. Reach it the way factions/lazyArchetype.tsx
 does, with \`import('../factionFaces')\`.`,
     ).toEqual(['factionFaces.ts'])
+  })
+})
+
+/**
+ * EVERY `animation` NAMES A KEYFRAME THAT EXISTS (#2504).
+ *
+ * A dangling keyframe reference is the one way to break an ornament that
+ * nothing else here catches. CSS does not error on it — `animation: gone 48s`
+ * against no `@keyframes gone` is simply dropped, so the build is green, the
+ * rule is present, the selector matches, and the element sits still. It looks
+ * exactly like the reduced-motion state the sheet is designed to degrade to,
+ * which is why review does not catch it either.
+ *
+ * It happened: #2501 renamed `alb-detail-spin` to `alb-spin` while #2504 was
+ * being written against the old name. Two branches, two regions of one file, no
+ * textual conflict — git merged both and the faction hero's labyrinth silently
+ * stopped turning. Found by reading, not by a test, which is the gap this
+ * closes.
+ *
+ * Both sheets at once, in both directions: keyframe names are document-global,
+ * and `index.css` is the entry sheet that always loads, so a reference may cross
+ * the chunk boundary in either direction and still resolve (`alb-drift` does
+ * exactly that, deliberately — see the note on `.spectrum-frame::before`).
+ */
+describe('no animation names a keyframe that was renamed out from under it', () => {
+  const BOTH = `${INDEX}\n${SHEET}`
+  const declared = new Set(
+    [...BOTH.matchAll(/@keyframes\s+([\w-]+)/g)].map(([, name]) => name),
+  )
+
+  /** The name in an `animation` shorthand: the one word that is not a value. */
+  const KEYWORDS =
+    /^(none|infinite|normal|reverse|alternate|alternate-reverse|forwards|backwards|both|running|paused|linear|ease|ease-in|ease-out|ease-in-out|step-start|step-end|initial|inherit|unset)$/
+
+  const referenced = new Set<string>()
+  for (const [, value] of BOTH.matchAll(/(?:^|[;{]|\s)animation\s*:\s*([^;}]+)/g)) {
+    for (const word of value.trim().split(/\s+/)) {
+      if (
+        /^[a-zA-Z][\w-]*$/.test(word) &&
+        !KEYWORDS.test(word) &&
+        !word.startsWith('var(')
+      ) {
+        referenced.add(word)
+      }
+    }
+  }
+
+  it('found animations to check at all', () => {
+    // Without this the regex can rot to zero matches and the suite below passes
+    // by having nothing to say — the vacuous green this repo has been bitten by.
+    expect(referenced.size).toBeGreaterThan(5)
+    expect(declared.size).toBeGreaterThan(5)
+  })
+
+  it('declares every keyframe any rule animates', () => {
+    expect([...referenced].filter((name) => !declared.has(name))).toEqual([])
   })
 })
