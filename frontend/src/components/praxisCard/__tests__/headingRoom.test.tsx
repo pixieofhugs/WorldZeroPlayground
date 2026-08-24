@@ -113,3 +113,34 @@ describe('the meta line does not restate the stamp (#2114 supersedes #1833)', ()
     expect(html, 'so what the task is worth stays').toContain('12 pts')
   })
 })
+
+describe('an unbreakable title stays inside its column (#2556)', () => {
+  /*
+   * Same row, the other axis. #2114 gave the column a basis so it could SHRINK;
+   * this is what happens once it has. `min-width: 0` lets the column go below
+   * its content's min-content width, and a title with no space in it — the
+   * keysmash the bug was reported on — has a min-content width of the whole
+   * word, so it painted straight out of the box and under the stamp beside it.
+   *
+   * The declaration sits on the COLUMN, not on the title: `overflow-wrap` is
+   * inherited, so one line reaches the title, the task line and the excerpt,
+   * and all three carry a user-authored string. `anywhere` rather than
+   * `break-word` for the reason `.markdown-preview` gives in index.css — it
+   * also lets min-content shrink, so the token cannot push the stamp either.
+   *
+   * Asserted as a declaration, not a rendered width, for the reason at the top
+   * of this file: there is no layout engine behind `renderToStaticMarkup`.
+   */
+  const column = (html: string) =>
+    styleOf(html, new RegExp(`<div[^>]*style="[^"]*flex:1 1 ${TEXT_MEASURE}px[^"]*"[^>]*>`))
+
+  it('the text column says where an unbroken run may break', () => {
+    expect(column(body({ title: 'a'.repeat(40) }))).toContain('overflow-wrap:anywhere')
+  })
+
+  it('without giving back either half of #2114', () => {
+    const style = column(body())
+    expect(style, 'the column still asks for a measure').toContain(`flex:1 1 ${TEXT_MEASURE}px`)
+    expect(style, 'and still yields rather than push the stamp off').toContain('min-width:0')
+  })
+})
