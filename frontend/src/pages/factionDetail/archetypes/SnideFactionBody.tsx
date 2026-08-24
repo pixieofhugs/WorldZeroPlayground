@@ -471,10 +471,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     padding: "0 var(--space-xs)",
                   }}
                 >
-                  {t("snide.dispatch.letterhead")}
-                </span>
-                <span style={{ fontFamily: MONO, fontSize: "var(--text-md)", letterSpacing: "0.16em", textTransform: "uppercase", color: NOTE_MUTED }}>
-                  {t("snide.dispatch.reLabel")}
+                  {t("snide.join.heading")}
                 </span>
               </div>
               <div style={{ position: "relative" }}>
@@ -492,10 +489,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         textTransform: "uppercase",
                       }}
                     >
-                      {t("snide.dispatch.memberTitle")}
+                      {t("snide.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: NOTE_MUTED, margin: "var(--space-sm) 0 0" }}>
-                      <Trans t={t} i18nKey="snide.dispatch.memberStanding">
+                      <Trans t={t} i18nKey="snide.join.memberStanding">
                         Standing · <b style={{ color: NOTE_PINK }}>accomplice</b>
                       </Trans>
                     </div>
@@ -504,18 +501,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div
-                      style={{
-                        fontFamily: MARKER,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside on the dispatch.
-                        fontSize: 16,
-                        color: NOTE_PINK,
-                        transform: "rotate(-1.5deg)",
-                        marginBottom: "var(--space-sm)",
-                      }}
-                    >
-                      {t("snide.dispatch.eligibleKicker")}
-                    </div>
                     <div
                       style={{
                         ...ACID_PLATE,
@@ -529,10 +514,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         marginBottom: "var(--space-sm)",
                       }}
                     >
-                      {t("snide.dispatch.eligibleTitle")}
+                      {t("snide.join.eligibleTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: NOTE_MUTED, marginBottom: "var(--space-lg)" }}>
-                      {t("snide.dispatch.eligibleBody")}
+                      {t("snide.join.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -553,7 +538,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         cursor: "pointer",
                       }}
                     >
-                      {t("snide.dispatch.joinButton")}
+                      {t("snide.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -600,7 +585,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         }}
                       >
                         {membership.joining
-                          ? t("snide.dispatch.joining")
+                          ? t("snide.join.joining")
                           : t("mobile.confirm")}
                       </button>
                       <button
@@ -628,20 +613,22 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    <div
-                      style={{
-                        fontFamily: MARKER,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside on the dispatch.
-                        fontSize: 16,
-                        color: NOTE_PINK,
-                        transform: "rotate(-1.5deg)",
-                        marginBottom: "var(--space-sm)",
-                      }}
-                    >
-                      {burned
-                        ? t("detail.burned.kicker")
-                        : t("snide.dispatch.gateKicker")}
-                    </div>
+                    {/* #2299 cut the faction's own gate kicker; the shared
+                        burned notice keeps its own overline. */}
+                    {burned && (
+                      <div
+                        style={{
+                          fontFamily: MARKER,
+                          // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside on the dispatch.
+                          fontSize: 16,
+                          color: NOTE_PINK,
+                          transform: "rotate(-1.5deg)",
+                          marginBottom: "var(--space-sm)",
+                        }}
+                      >
+                        {t("detail.burned.kicker")}
+                      </div>
+                    )}
                     <div
                       style={{
                         ...ACID_PLATE,
@@ -657,7 +644,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     >
                       {burned
                         ? t("detail.burned.title", { faction: factionName(faction.slug) })
-                        : t("snide.dispatch.gateTitle")}
+                        : t("snide.join.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: NOTE_MUTED }}>
                       {burned

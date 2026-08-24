@@ -76,7 +76,7 @@ const SLUGS = [
  *
  * The pattern is matched against `ns:dotted.key` with `{F}` standing for any
  * slug. Some families' per-faction key sat under a per-faction SECTION name
- * (`coven.manifesto.empty`, `snide.dispatch.gateBody`, `ua.registry.…`), which
+ * (`coven.manifesto.empty`, `snide.join.gateBody`, `ua.join.…`), which
  * is why several patterns name the section alternatives rather than a fixed
  * path — a literal grep returns zero for those, which is how the audit
  * undercounted them.

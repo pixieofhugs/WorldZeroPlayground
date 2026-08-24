@@ -3557,10 +3557,10 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
   it("every acid heading the panel flip landed on paper kept its plate", () => {
     const source = boundSource(BODY);
     for (const [marker, role] of [
-      ['t("snide.dispatch.letterhead")', "the dispatch letterhead"],
-      ['t("snide.dispatch.memberTitle")', "the member standing headline"],
-      ['t("snide.dispatch.eligibleTitle")', "the join headline"],
-      ['t("snide.dispatch.gateTitle")', "the gate / burned headline"],
+      ['t("snide.join.heading")', "the dispatch letterhead"],
+      ['t("snide.join.memberTitle")', "the member standing headline"],
+      ['t("snide.join.eligibleTitle")', "the join headline"],
+      ['t("snide.join.gateTitle")', "the gate / burned headline"],
       ['t("snide.spotlight.label")', "the WANTED spotlight label"],
       ["{spot.display_name}", "the spotlight's stencilled name plate"],
     ] as const) {

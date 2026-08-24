@@ -62,7 +62,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 
   if (loading)
-    return <div className="py-8 font-body text-muted">{t("detail.loading")}</div>;
+    return <div className="py-8 font-body text-muted">{t("index.loading")}</div>;
   if (fetchError)
     return (
       <div className="py-8">

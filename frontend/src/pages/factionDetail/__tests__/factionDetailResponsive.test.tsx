@@ -75,12 +75,12 @@ const FactionDetail = (await import('../../FactionDetail')).default
  */
 const OWN_VOICE: Record<string, readonly string[]> = {
   coven: ['coven.join.heading'],
-  ephemerists: ['ephemerists.road.heading'],
-  everymen: ['everymen.roll.heading'],
-  singularity: ['singularity.access.heading'],
+  ephemerists: ['ephemerists.join.heading'],
+  everymen: ['everymen.join.heading'],
+  singularity: ['singularity.join.heading'],
   // S.N.I.D.E.'s panel is a dispatch on letterhead rather than a titled block.
-  snide: ['snide.dispatch.letterhead'],
-  ua: ['ua.registry.heading'],
+  snide: ['snide.join.heading'],
+  ua: ['ua.join.heading'],
   wow: ['wow.join.heading'],
 }
 
@@ -92,11 +92,11 @@ const OWN_VOICE: Record<string, readonly string[]> = {
  */
 const JOIN_BUTTON: Record<string, string> = {
   coven: 'coven.join.joinButton',
-  ephemerists: 'ephemerists.road.joinButton',
-  everymen: 'everymen.roll.joinButton',
-  singularity: 'singularity.access.joinButton',
-  snide: 'snide.dispatch.joinButton',
-  ua: 'ua.registry.joinButton',
+  ephemerists: 'ephemerists.join.joinButton',
+  everymen: 'everymen.join.joinButton',
+  singularity: 'singularity.join.joinButton',
+  snide: 'snide.join.joinButton',
+  ua: 'ua.join.joinButton',
   wow: 'wow.join.joinButton',
   albescent: 'mobile.join',
 }
