@@ -25,6 +25,27 @@ const NA_SLUG = "na";
  */
 const PLATE_RULE = <span aria-hidden className="spectrum-rule faction-plate-rule" />;
 
+/**
+ * ONE CARRIER PER OBJECT (ADR-0083 3b, #2576).
+ *
+ * `PLATE_RULE` is na's plate hairline -- 2px at 0.55 -- and on the seven
+ * factions that hand no ornament it is the only spectrum on the plate, so it is
+ * correct and it stays. But a plate that mounts `plateOrnament` already has a
+ * structural rainbow: Albescent's `.alb-plate-edge` is a 3px spectrum ring
+ * around the whole plate. Drawing the hairline underneath the heading as well
+ * put two rainbows on one object -- the same doubling #2527 took off the field
+ * desk, #2559 off the score stamp and #2553 off the composer.
+ *
+ * The fix is not to delete the rule, which would strip the other seven; it is to
+ * let the thicker carrier claim the object, exactly as those three did. Stated
+ * once here rather than three times at the call sites, and applied to all five
+ * plates: the two card-holding ones mount no ornament, so nothing changes for
+ * them, and a plate that gains one later gets the rule for free.
+ */
+function plateRule(ornament: ReactNode): ReactNode {
+  return ornament ? null : PLATE_RULE;
+}
+
 /** Flex-wrap card grid — varied card sizes are intentional, not a CSS grid.
  *  The recently-completed PRAXIS gallery only, since #1945: the task row above
  *  wears `.task-card-row`, which keeps the widths ragged and levels the bottom
@@ -251,7 +272,7 @@ export default function DefaultFactionBody({
           {plateOrnament}
           <div className="faction-plate-kicker">
             <h2 className="label-heading">{t("detail.aboutHeading")}</h2>
-            {PLATE_RULE}
+            {plateRule(plateOrnament)}
           </div>
           {paragraphs.length === 0 ? (
             <p className="font-body text-muted content-text">{t("detail.descriptionEmpty")}</p>
@@ -277,6 +298,8 @@ export default function DefaultFactionBody({
                 label={t("detail.default.tasksHeading", { total: tasks.length })}
               />
             </h2>
+            {/* Unconditional: this plate mounts no ornament (see above), so
+                there is no thicker carrier for the hairline to yield to. */}
             {PLATE_RULE}
           </div>
           <SectionPanel section={sections.tasks}>
@@ -308,6 +331,7 @@ export default function DefaultFactionBody({
             <h2 className="label-heading">
               <SectionToggle section={sections.praxis} label={t("detail.default.recentHeading")} />
             </h2>
+            {/* Unconditional, for the same reason as the Tasks plate above. */}
             {PLATE_RULE}
           </div>
           <SectionPanel section={sections.praxis}>
@@ -394,7 +418,7 @@ export default function DefaultFactionBody({
             {plateOrnament}
             <div className="faction-plate-kicker">
               <h2 className="label-heading">{t("detail.spotlightLabel")}</h2>
-              {PLATE_RULE}
+              {plateRule(plateOrnament)}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <CharacterBadge character={champion} />
@@ -419,7 +443,7 @@ export default function DefaultFactionBody({
             <h2 className="label-heading">
               {t("detail.default.membersHeading", { total: members.length })}
             </h2>
-            {PLATE_RULE}
+            {plateRule(plateOrnament)}
           </div>
           {roll.length === 0 ? (
             <p className="font-body text-muted content-text">
