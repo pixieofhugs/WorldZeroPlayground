@@ -30,15 +30,35 @@
  *
  * Both form factors, one row: the ornament mounts inside the identity band in
  * each of `DefaultProfileBody`'s two branches, so the phone stack drifts too.
+ *
+ * ── THE REST OF THE PAGE'S SPECTRA (#2500, epic ruling 3) ───────────────────
+ *
+ * The band was the only thing moving here, and this is the surface where that
+ * showed most: the na profile draws the spectrum SIX more times — three section
+ * heads, the FDL laurel's ring, a medallion behind every badge, and the level
+ * bar's fill — and every one of them stood still under a member's own name.
+ * Ruling 3 is explicit that readouts are not exempt, and a progression bar is
+ * the readout the ruling names.
+ *
+ * The wrapper is what those six needed. This is the one row in the manifest that
+ * hands `Default` a slot and nothing else, so there was no element in the tree
+ * for `.alb-x .spectrum-rule` to descend from; the div below is that element and
+ * declares nothing of its own — `alb-moves` is a marker, and index.css carries
+ * the rules. The identity band is deliberately NOT among the six: it is a frame
+ * with the page inside it rather than an ornament, and it already carries a
+ * travelling ring, so moving its ramp too would put two spectra at two speeds on
+ * one object. `:empty` in the selector is what draws that line.
  */
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import DefaultProfileBody from './DefaultProfileBody'
 
 export default function AlbescentProfileBody(props: ProfileBodyProps) {
   return (
-    <DefaultProfileBody
-      {...props}
-      identityOrnament={<span aria-hidden="true" className="alb-profile-edge" />}
-    />
+    <div className="alb-moves">
+      <DefaultProfileBody
+        {...props}
+        identityOrnament={<span aria-hidden="true" className="alb-profile-edge" />}
+      />
+    </div>
   )
 }

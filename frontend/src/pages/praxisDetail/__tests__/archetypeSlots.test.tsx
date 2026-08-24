@@ -1,5 +1,7 @@
 /**
- * Praxis-read content-slot invariant guard (ADR-0017 §2, ADR-0002).
+ * Praxis-read content-slot invariant guard (ADR-0002, ADR-0061). The guard was
+ * written against ADR-0017 §2, which is now marked **Superseded by ADR-0061**;
+ * the invariant itself is unchanged and ADR-0061 is what records it.
  *
  * Every per-faction praxis-read archetype wears a different skin but must render
  * the same CONTENT slots — an archetype may *arrange* them freely but may not

@@ -333,7 +333,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryAction}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryAction}>
             {t(signupCtaKey(task.signup_reason))}
           </button>
           <div style={{ ...aside, marginTop: "var(--space-sm)" }}>

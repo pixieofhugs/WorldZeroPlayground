@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
-import PageTitle from "../components/ui/PageTitle";
-import { factionCssVar, factionName, factionDescription } from "../utils/factions";
+import { factionName } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useFactionDetail } from "./factionDetail/useFactionDetail";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
+import DefaultFactionHero from "../components/factionHero/DefaultFactionHero";
 
 /**
  * Faction detail page (`/factions/:slug`). Per-faction surface #13 in
@@ -13,10 +13,10 @@ import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
  * tasks, and recently completed praxis.
  *
  * The frontispiece is dispatched per-faction via the `factionHero` surface: a
- * faction opts into a bespoke hero by registering here; otherwise the shared
- * title + description chrome is used. The body (members / tasks / recent-praxis)
- * dispatches the same way, through `factionBody`, falling through to
- * DefaultFactionBody.
+ * faction opts into a bespoke hero by registering here, and anything else falls
+ * through to `DefaultFactionHero` (#2504). The body (members / tasks /
+ * recent-praxis) dispatches the same way, through `factionBody`, falling through
+ * to DefaultFactionBody.
  *
  * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0078). There used to be
  * a `formFactor === "mobile"` early return here that dispatched a whole second
@@ -38,6 +38,15 @@ import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
  * it as paragraphs rather than a blob.
  */
 export interface FactionHeroProps {
+  /**
+   * The faction being drawn. REQUIRED, and it arrived with the na fallback
+   * (#2504): the seven bespoke heroes each hardcode their own mark, and the
+   * eighth cannot — it dispatches `FactionSigil` on this and would silently draw
+   * the unaffiliated ring for every faction if the field were optional and a
+   * caller forgot it. The six `/design-sync` previews construct these props and
+   * are updated with it.
+   */
+  slug: string;
   name: string;
   /** Raw counts — each hero labels them in its own faction voice. */
   members: number;
@@ -75,47 +84,30 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
       </div>
     );
 
-  const accent = factionCssVar(faction.slug, "border");
   const name = factionName(faction.slug);
-  const description = factionDescription(faction.slug);
 
-  // A faction may claim `factionHero` in its manifest; otherwise
-  // (Hero is undefined) the shared title + description chrome is used. The page
-  // backdrop is themed per-faction by useFactionDetail either way.
-  const Hero = pickVariant(surfaceMap('factionHero'), faction.slug);
+  // Every faction has a frontispiece since #2504. A faction may claim its own
+  // through `factionHero`; anything else falls through to the na one, which
+  // dispatches its mark on the slug it is handed. The page backdrop is themed
+  // per-faction by useFactionDetail either way.
+  //
+  // THE PLACEHOLDER CHROME THIS REPLACED took a `PageTitle` plus a bordered
+  // description card, and that card held the ONLY copy of the blurb on this
+  // branch (#2137). It did not simply go: `DefaultFactionBody` grew the About
+  // plate the other seven bodies have always drawn, so the description still
+  // appears exactly once and now sits where every other faction's does.
+  const Hero = pickVariant(surfaceMap('factionHero'), faction.slug, DefaultFactionHero);
   const Body = pickVariant(surfaceMap('factionBody'), faction.slug, DefaultFactionBody);
 
   return (
     <div className="py-8">
-      {Hero ? (
-        <Hero
-          name={name}
-          members={members.length}
-          tasks={tasks.length}
-          praxes={recentPraxis.length}
-        />
-      ) : (
-        <>
-          <PageTitle title={name} eyebrow={t("detail.eyebrow")} />
-
-          {/* ── Description ── PLACEHOLDER: design to restyle ──
-              This is the ONLY copy of the blurb on the fall-through branch, so
-              it stays where the heroes' went (#2137). A faction with no
-              `factionHero` has no `factionBody` either — it falls through to
-              DefaultFactionBody, which draws no description at all — so there
-              is nothing to duplicate here and nothing beneath to inherit it.
-              A faction that later claims a body without a hero would want this
-              card gone; `descriptionOnce.test.tsx` counts the page either way. */}
-          <div
-            className="sidebar-card mb-6"
-            style={{ borderLeft: `4px solid ${accent}`, padding: "var(--space-md) var(--space-lg)" }}
-          >
-            <p className="font-body content-text text-ink">
-              {description}
-            </p>
-          </div>
-        </>
-      )}
+      <Hero
+        slug={faction.slug}
+        name={name}
+        members={members.length}
+        tasks={tasks.length}
+        praxes={recentPraxis.length}
+      />
 
       {/* A failed sign-up from one of the task cards below (#2188). The success
           path navigates to the new praxis composer, so this is only ever a

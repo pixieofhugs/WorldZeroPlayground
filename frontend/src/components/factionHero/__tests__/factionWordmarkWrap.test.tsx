@@ -52,6 +52,7 @@ const routed = (el: ReactElement) =>
 const render = (Hero: ComponentType<FactionHeroProps>, slug: string) =>
   routed(
     <Hero
+      slug={slug}
       name={factionName(slug)}
       members={214}
       tasks={9}

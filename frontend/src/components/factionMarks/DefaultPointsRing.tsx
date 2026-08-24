@@ -77,6 +77,7 @@ export default function DefaultPointsRing({
 }: DefaultPointsRingProps) {
   return (
     <div
+      className="spectrum-dial"
       style={{
         flex: "0 0 auto",
         boxSizing: "border-box",
@@ -86,7 +87,6 @@ export default function DefaultPointsRing({
         // The annulus is the ring's whole thickness — a `--space-*` rung, so the
         // band scales with the app's spacing rather than with a drawn number.
         padding: "var(--space-xs)",
-        background: "var(--faction-default-rainbow-conic)",
         ...style,
       }}
     >

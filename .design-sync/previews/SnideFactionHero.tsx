@@ -7,6 +7,7 @@ import { SnideFactionHero } from 'worldzero-frontend'
 export function FlypostedWall() {
   return (
     <SnideFactionHero
+      slug="snide"
       name="S.N.I.D.E."
       members={143}
       tasks={29}

@@ -1,9 +1,26 @@
 # Albescent unlock is account-collective, with level and coverage decoupled
 
-> **Status: in force (as of #698).** The 2026-07-17 audit found
-> `services/character.py` (`can_start_as_albescent`) implementing the
-> same-character option this ADR explicitly **rejected**. #698 resolved that in
-> this ADR's favour — the code is now two independent account-scoped gates.
+> **Status: SUPERSEDED 2026-08-22 by
+> [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md)
+> (#2399).** Both rulings below are reversed: the unlock is earned by ONE
+> character satisfying BOTH halves, coverage is measured by invitation letters ∪
+> current faction ∪ defection history rather than by completed praxes, and the
+> result is a stamped sticky column rather than a live computation. A character
+> at `era.albescent_level_required` may no longer take Albescent at all.
+>
+> ADR-0080 records why: the "Considered Options" rejection of invite-possession
+> below rested on a premise ADR-0022 has since made false — an invitation now
+> costs two completed tasks **plus** 50 points per faction, so it is a *harder*
+> bar than the one-completed-task-per-faction coverage this ADR set, not a
+> cheaper one.
+>
+> **Do not restore this ADR's rule from the code.** The reverse already happened
+> once: the 2026-07-17 audit found `can_start_as_albescent` implementing the
+> same-character option this ADR rejected, and #698 resolved it in this ADR's
+> favour. The same-character binding is now the ruling, and this document is
+> history.
+
+> **Superseded history — the rule below is no longer in force.**
 
 Albescent becomes a selectable starting/joining faction for an account when **two
 independent conditions** both hold across the account (not on a single character):

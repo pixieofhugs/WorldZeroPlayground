@@ -228,15 +228,16 @@ function paintUser(state: Record<string, unknown>): PaintedPresenceUser {
     // The library's own fallback is `color + '33'`, which on a `var()` yields
     // the invalid `var(--faction-coven)33` and paints no selection at all.
     colorLight: `color-mix(in srgb, ${color} ${SELECTION_TINT}, transparent)`,
-    // ponytail: the hover-only label (`.cm-ySelectionInfo`) keeps the library's
-    // hardcoded white ink, on `background-color: inherit` — which is the value
-    // above, so the anchor moved its ground too. Light improves (24 of 64
-    // pairings under 4.5:1, now 7); dark does not (64 of 64 before and after,
-    // 1.21:1 to 1.20:1) because there the anchor pulls toward a LIGHT body ink.
-    // Untouched here because the fix is a measured on-hue ink tier and
-    // `-on-accent` does not cover all nine (#1232 deleted Ephemerists'), so it
-    // needs index.css — frontend-style's file. Upgrade path unchanged: mint
-    // that tier and override the label's `color` in `BODY_EDITOR_BASE_THEME`.
+    // The hover-only label (`.cm-ySelectionInfo`) no longer stands on this
+    // value (#2297). It used to: the library gives it a hardcoded white ink on
+    // `background-color: inherit`, so the anchor above moved its ground too and
+    // in dark — where `currentColor` is a LIGHT body ink — that was white on
+    // white, 1.20:1 on all 64 pairings. No ink could have fixed it; the best
+    // possible one against the worst viewer is 3.91:1 in light. So the LABEL's
+    // ground moved to the remote's solid hue with that slug's `-on-fill` ink,
+    // in `bodyEditorTheme.ts`'s `REMOTE_LABEL_INK`, which reads the slug back
+    // out of the `var()` below. The caret, its dot and the selection band keep
+    // this anchored mix, which is what #2267 measured and still holds.
   };
 }
 

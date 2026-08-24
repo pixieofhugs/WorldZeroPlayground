@@ -154,11 +154,15 @@ class ErrorCode(str, enum.Enum):
     #: #454. Raised from two surfaces — defecting and character creation —
     #: because it is one rule: you hold the current era's letter or you do not.
     faction_invitation_required = "FACTION_INVITATION_REQUIRED"
-    #: ADR-0021. Albescent is joined in the field once the *account* qualifies…
+    #: #2399 (supersedes ADR-0021). The *account* has never earned the Albescent
+    #: door — no life on it has reached the level while covering every faction.
     faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
-    #: …and never at character creation, which is a different answer to a
-    #: different question and so a different code.
-    faction_albescent_not_at_creation = "FACTION_ALBESCENT_NOT_AT_CREATION"
+    #: #2399. The account earned it, but THIS life is at
+    #: ``era.albescent_level_required`` and it is too late for this one. The only
+    #: MAXIMUM level gate in the game — every other level test is a floor — and
+    #: a different answer to a different question than the code above, hence its
+    #: own code. "Available only for New Game+".
+    faction_albescent_new_game_plus_only = "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
 
     # -- Character creation --------------------------------------------------
     character_name_required = "CHARACTER_NAME_REQUIRED"
@@ -220,6 +224,26 @@ class ErrorCode(str, enum.Enum):
     #: player did not choose, and the only one where "try again" is genuine
     #: advice rather than a shrug. Never raised, for the same reason.
     oauth_state_expired = "OAUTH_STATE_EXPIRED"
+    #: #2162. The provider pair resolved to a suspended Account. Until this
+    #: issue the returning-player branch never read ``status`` at all: the
+    #: sign-in succeeded, minted a cookie, and then 401'd from
+    #: ``get_current_account`` on every request afterwards. A moderated account
+    #: is owed a sentence, not a session that does not work.
+    account_suspended = "ACCOUNT_SUSPENDED"
+    #: #2162, and deliberately NOT folded into :attr:`account_suspended`. The
+    #: two statuses reach the same gate but they are not the same answer — one
+    #: is a moderation decision that a human can appeal, the other is a
+    #: tombstone the player made themselves (ADR-0081). Unreachable today by
+    #: construction, because ``delete_account`` destroys the ``OAuthProvider``
+    #: rows in the transaction that sets the status; it exists so that if the
+    #: pairing ever occurs the outcome is a refusal in the right words rather
+    #: than a session.
+    account_deleted = "ACCOUNT_DELETED"
+    #: #2162. The consent gate was asked for, or answered, with no interrupted
+    #: sign-in behind it — walked into by URL, or come back to after the OAuth
+    #: session cookie's ten minutes lapsed. Not a failure of the sign-in: there
+    #: is no sign-in. The player starts one.
+    returning_player_consent_expired = "RETURNING_PLAYER_CONSENT_EXPIRED"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is

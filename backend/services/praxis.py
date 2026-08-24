@@ -23,6 +23,7 @@ from errors import (
 )
 from faction_slugs import faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
+from models.account import Account
 from models.character import Character
 from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import (
@@ -43,6 +44,7 @@ from schemas.praxis import (
     MediaUploadResultOut,
 )
 from services import collab_consensus
+from services.albescent_reveal import is_albescent_revealed
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
@@ -293,6 +295,13 @@ async def list_praxes(
     voted: Optional[VotedFilter] = None,
     viewer_id: Optional[int] = None,
     viewer_account_id: Optional[int] = None,
+    # Not folded into `viewer_account_id`: that one is an id used in a query,
+    # this is the row whose sticky reveal flag decides whether an explicit
+    # ?faction=albescent is answered literally (#2422).
+    viewer_account: Optional[Account] = None,
+    # Resolved by the route: admin status is an ``account_role`` row, and an
+    # admin is treated as revealed (#2400).
+    viewer_is_admin: bool = False,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -349,8 +358,14 @@ async def list_praxes(
     # Multi-select (#1362): an EMPTY list means "no faction filter", never
     # "match nothing" — clearing every checkbox shows everything. Routed through
     # the same helper as the task browse so Unaffiliated means the same set of
-    # slugs on both, Albescent included (#1975).
-    faction_slugs = faction_filter_slugs(faction)
+    # slugs on both, Albescent included (#1975) — and so a revealed viewer's
+    # explicit ask un-folds on both, too (#2422).
+    faction_slugs = faction_filter_slugs(
+        faction,
+        reveal_albescent=is_albescent_revealed(
+            viewer_account, is_admin=viewer_is_admin
+        ),
+    )
     if faction_slugs:
         query = query.where(Task.primary_faction_slug.in_(faction_slugs))
 

@@ -36,18 +36,25 @@ import type { TaskDetailState } from "../useTaskDetail";
  * inherits is a single `Tasks` crumb and the design's ordinal is gone in both
  * voices.
  *
- * ### Why the light sits ON TOP
+ * ### Where the light sits
  *
- * `DefaultTaskDetail` paints an OPAQUE sheet on its own 1200 column, so an
- * ornament layered behind it is simply invisible — the position the design gives
- * its aurora is not one an overlay can take. Both earlier Albescent surfaces made
- * the same call (`.alb-rainbow`, `.alb-task-aurora`): the flourish blends OVER
- * the sheet, `pointer-events: none`, at an opacity that leaves ink legible.
+ * THE GROUND IS IN THE SHEET (#2499, epic #2496 ruling 2). `.alb-detail-aurora`
+ * was seven blooms blended over the column and `.alb-detail-foil`'s `::after` a
+ * diagonal sweep passing across it; both retired. The prism sweep is that second
+ * drawing, made static and moved into `--faction-default-card-sheet`, which
+ * `DefaultTaskDetail` composes through `factionSheet()`. `.alb-prism` on this
+ * wrapper is the whole of the change, and because it is a TOKEN it reaches every
+ * sheet inside the page — the column, and the `AlbescentPraxisCard` thumbnails in
+ * its gallery. Those thumbnails used to be washed TWICE on this one page (#1942's
+ * trap); a token is set once per element, so they cannot be any more.
  *
- * The overlays are inset by `--space-2xl` top and bottom because that is
- * `DefaultTaskDetail`'s own `py-8` band — the light is clipped to the detail
- * COMPONENT, never painted over the viewport. The site background still shows
- * around it (owner's ruling for this surface, QA on #1055/#1057/#1065).
+ * WHAT IS LEFT SITS ON TOP. `DefaultTaskDetail` paints an OPAQUE sheet on its own
+ * 1200 column, so an ornament layered behind it is invisible — that is not a
+ * position an overlay can take. The prism wheel and the spectrum edge therefore
+ * still blend over the sheet, `pointer-events: none`, at an opacity that leaves
+ * ink legible. They are inset by `--space-2xl` top and bottom because that is the
+ * column's own `py-8` band — the light is clipped to the detail COMPONENT, never
+ * painted over the viewport (owner's ruling, QA on #1055/#1057/#1065).
  *
  * ### One structural delta
  *
@@ -161,9 +168,8 @@ export default function AlbescentTaskDetail({
   );
 
   return (
-    <div className="alb-detail">
+    <div className="alb-detail alb-moves alb-prism">
       <DefaultTaskDetail state={state} worthSlot={worth} />
-      <span aria-hidden="true" className="alb-detail-aurora" />
       <span aria-hidden="true" className="alb-detail-foil" />
       <span aria-hidden="true" className="alb-detail-edge" />
     </div>

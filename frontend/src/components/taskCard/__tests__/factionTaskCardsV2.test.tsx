@@ -300,16 +300,22 @@ describe('snide renders the brief whole and slices only the headline', () => {
 describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => {
   const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 6 }
 
-  it('contains the na sheet whole, and adds only the two flourish overlays', () => {
+  it('contains the na sheet whole, and adds only the wrapper and one edge', () => {
     const albescent = markup(<AlbescentTaskCard task={TASK} {...props} />)
     const unaffiliated = markup(<DefaultTaskCard task={TASK} {...props} />)
 
-    // The strongest statement of the rule: strip the wrapper and the two
-    // overlays and what is left is the unaffiliated card, byte for byte. A
-    // future edit that "just tweaks" one slot for Albescent fails here.
+    // The strongest statement of the rule: strip the wrapper and the edge and
+    // what is left is the unaffiliated card, byte for byte. A future edit that
+    // "just tweaks" one slot for Albescent fails here.
     expect(albescent.html).toContain(unaffiliated.html)
     expect(albescent.html, 'the drifting spectrum edge').toContain('alb-task-edge')
-    expect(albescent.html, 'the breathing aurora').toContain('alb-task-aurora')
+
+    // #2499: the breathing aurora is gone as a SPAN and back as a GROUND. The
+    // card's whole ornament budget is now one class on the wrapper and one ring,
+    // and the class is what the alternation law takes — see
+    // taskCard/__tests__/albescentPrismAlternates.test.tsx.
+    expect(albescent.html, 'the prism ground').toContain('alb-prism')
+    expect(albescent.html, 'and no overlay beside it').not.toContain('alb-task-aurora')
   })
 
   it('speaks na words — a per-faction verb is as identifying as a per-faction hue', () => {

@@ -57,6 +57,7 @@ const MOCK_USER: CurrentUser = {
   can_see_retired_tasks: false,
   can_see_pending_tasks: false,
   can_comment: true,
+  albescent_level_required: 8,
   second_character_level_required: 3,
   era_name: "Era One",
   // #811. Only WOW carries a level-jump reach in Era 1 and this viewer is UA,
