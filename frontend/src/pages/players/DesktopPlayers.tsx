@@ -5,7 +5,7 @@ import PageTitle from '../../components/ui/PageTitle'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
 import FactionSigil from '../../components/sigil/FactionSigil'
 import LevelGem from '../../components/ui/LevelGem'
-import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
+import { factionCssVar, factionName, isFactionRedacted, isKnownFaction } from '../../utils/factions'
 import { relativeTime } from '../../utils/dates'
 import PlayersFilterBar from './PlayersFilterBar'
 import ScoreToggle from './ScoreToggle'
@@ -48,8 +48,12 @@ const ELLIPSIS_GLYPH = '⋮'
  *     spectrum underline every other page has and the design's separate 140px
  *     rainbow rule is NOT drawn. #1699 removed exactly that second rule from
  *     this page; drawing it again is the regression, not the fidelity.
- *   - **Seven lanes in the race, not eight.** The design's "Albescent" row is
- *     unaffiliated players, and `na` is a state rather than a faction — see
+ *   - **Eight lanes in the race, and `na` is still not one of them.** This read
+ *     "seven lanes, not eight" until #2409: the design's eighth row was ruled a
+ *     deviation to be dropped in #1855, and ADR-0082 reverses that ruling. The
+ *     eighth lane is Albescent, reading `[REDACTED]` until the viewer is
+ *     revealed. `na` is unchanged and still gets no lane — it is a state rather
+ *     than a faction, and the two exclusions were never the same one. See
  *     `factionStandings`.
  *   - **The whole roster row navigates to the player.** The design draws no
  *     link; the roster has linked to the public profile since #517 and losing
@@ -421,19 +425,29 @@ function RaceRow({
  * inherit; text-decoration: inherit`, so it renders identically to the `<span>`
  * it replaces. Whether a linked faction name should grow a hover affordance of
  * its own is a style question, deliberately not answered here.
+ *
+ * THE EIGHTH LANE READS `[REDACTED]` (#2409). `factionName` supplies the mark
+ * and `.redacted` paints it in the row's own colour, so an unrevealed viewer
+ * sees a lane with a bar, a points count and a share — and a blank where the
+ * name goes, until they drag a cursor across it. `factionHref` already answers
+ * null for that viewer, so the link half is unreachable rather than merely
+ * unpainted; an href would name the society in the markup, which is the leak
+ * the mark exists to prevent.
  */
 function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
+  const redacted = isFactionRedacted(slug)
   const style = { fontSize: 'var(--text-content)' }
+  const className = `font-display${redacted ? ' redacted' : ''}`
   if (href === null) {
     return (
-      <span className="font-display" style={style}>
+      <span className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
         {factionName(slug)}
       </span>
     )
   }
   return (
-    <Link to={href} className="font-display" style={style}>
+    <Link to={href} className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
       {factionName(slug)}
     </Link>
   )

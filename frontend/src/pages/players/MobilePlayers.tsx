@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
 import FactionSigil from '../../components/sigil/FactionSigil'
 import LevelGem from '../../components/ui/LevelGem'
-import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
+import { factionCssVar, factionName, isFactionRedacted, isKnownFaction } from '../../utils/factions'
 import PlayersFilterBar from './PlayersFilterBar'
 import ScoreToggle from './ScoreToggle'
 import SectionHeading from './SectionHeading'
@@ -132,9 +132,10 @@ export default function MobilePlayers({
                 {/* The lane's name opens its faction page (#1953). A race row is
                     a plain div — it links to nothing else — so this is one
                     anchor, not the nested-anchor case the roster has on
-                    desktop. `factionHref` still gates it: see its docblock for
-                    why a lane can never be `na` or a masked Albescent and why
-                    it is asked anyway. */}
+                    desktop. `factionHref` still gates it, and since #2409 that
+                    gate is load-bearing rather than belt-and-braces: Albescent
+                    IS a lane now, so this is where an unrevealed viewer's row
+                    loses its href. See that docblock. */}
                 <FactionLaneName slug={lane.slug} />
                 <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
                   {Math.round(lane.points)}
@@ -255,19 +256,29 @@ export default function MobilePlayers({
  * text-decoration: inherit`) leaves it looking identical. Whether a linked
  * faction name should grow a hover affordance of its own is a style question,
  * deliberately not answered here.
+ *
+ * THE EIGHTH LANE READS `[REDACTED]` (#2409). `factionName` supplies the mark
+ * and `.redacted` paints it in the row's own colour, so an unrevealed viewer
+ * sees a lane with a bar, a points count and a share — and a blank where the
+ * name goes, until they drag a cursor across it. `factionHref` already answers
+ * null for that viewer, so the link half is unreachable rather than merely
+ * unpainted; an href would name the society in the markup, which is the leak
+ * the mark exists to prevent.
  */
 function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
+  const redacted = isFactionRedacted(slug)
   const style = { fontSize: 'var(--text-content)' }
+  const className = `font-display truncate${redacted ? ' redacted' : ''}`
   if (href === null) {
     return (
-      <span className="font-display truncate" style={style}>
+      <span className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
         {factionName(slug)}
       </span>
     )
   }
   return (
-    <Link to={href} className="font-display truncate" style={style}>
+    <Link to={href} className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
       {factionName(slug)}
     </Link>
   )
