@@ -5231,6 +5231,39 @@
   background-repeat: no-repeat;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   THE ANIMATIONS OFF-SWITCH (#2154)
+
+   One rule, driven by `[data-motion]` on `<html>` from `hooks/useMotion.tsx`.
+   It is the entire mechanism: there is deliberately NO `[data-motion]` clause
+   added to the 42 `@media (prefers-reduced-motion: no-preference)` blocks in
+   this file and `motion.ornament.css`. That sweep was ruled against — it would
+   cost critical-CSS bytes on every block and touch every motion test, to say
+   what these three declarations already say.
+
+   WHY `!important`, WHICH IS NOT LAZINESS. This tree writes a great many
+   `transition:` declarations INLINE in JSX style objects, and a style attribute
+   outranks every selector there is. `!important` is the only thing that reaches
+   them. It also beats the deferred ornament sheet, which loads after this one.
+
+   WHY IT CAN ONLY EVER SUBTRACT. Every animation here lives inside
+   `@media (prefers-reduced-motion: no-preference)`, so a reader whose OS asks
+   for no motion is already still and no value of this attribute can give it
+   back. That is why the Appearance switch renders OFF and DISABLED in that
+   case rather than lying about a control that would do nothing — see
+   `hooks/useMotion.tsx` and `pages/settings/sections/AppearanceSection.tsx`.
+
+   KNOWN GAP: two faction vote skins animate from a `setInterval` in JS, which
+   no stylesheet can reach. Both already honour the OS query. See the note in
+   `hooks/useMotion.tsx`.
+   ══════════════════════════════════════════════════════════════ */
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. Both
    `@keyframes ticker-roll` and `@keyframes wz-blink` moved to
    `src/motion.ornament.css` in #2104, with `.ticker-roll` / `.ticker-live-dot`.
@@ -8235,6 +8268,22 @@
      The design's rgba(240,230,208,.12) / .18 IS this pair, said in dark only. */
   --filter-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --filter-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+
+  /* The thumb's OFF fill (#2154). A segmented rail never needs one — its thumb
+     is always over some segment — but a two-state switch does: the knob has to
+     stay drawn when the switch is off, quieter than when it is on. Same
+     composition, one rung down, so the pair reads as one control in both
+     cascades.
+
+     THE FAMILY NAME IS NOW WRONG AND IS DELIBERATELY LEFT ALONE. Nothing here
+     is about filtering; this is the repo's control-chrome idiom — an opaque
+     well, a neutral thumb, a spectrum ring painted padding-box/border-box — and
+     Settings' Appearance switches (#2154) are its second consumer, with the
+     cookie toggles (#2156) and the notification rail (#1047) to come. Renaming
+     the family to `--control-*` is a real change across ~20 declarations and
+     every FilterBar consumer, and it is a styling call, not a feature one. Read
+     these from outside the filter bar in the meantime; do not mint a twin. */
+  --filter-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
 }
 
 :root {

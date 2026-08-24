@@ -166,8 +166,10 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Mobile-only Settings surface (#520). The page redirects to `/` on
-              desktop, which keeps the desktop NavBar controls the sole path. */}
+          {/* Settings — one responsive surface in both form factors (#2154).
+              #520's desktop redirect is gone by owner ruling; the NavBar's old
+              theme toggle is now the desktop way in, the phone still arrives
+              through `MobileHeader`. */}
           <Route
             path="/settings"
             element={

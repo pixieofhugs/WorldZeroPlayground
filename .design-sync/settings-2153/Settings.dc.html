@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.css">
+<link rel="stylesheet" href="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/styles.css">
+<script src="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: #e9e5dc; }
+  [data-theme] {
+    --wz-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
+    --wz-thumb-on: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+    --wz-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    --wz-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  }
+  a { color: var(--color-accent-primary); text-decoration: none; }
+  a:hover { color: var(--faction-default-stop-2); text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; padding:28px; font-family:var(--font-body); display:flex; flex-direction:column; align-items:center; gap:20px">
+
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center">
+    <span style="font-family:var(--font-accent); letter-spacing:.14em; font-size:13px; color:#6b6050">VIEW</span>
+    <div style="display:flex; gap:0; border:1px solid rgba(0,0,0,.18); border-radius:999px; overflow:hidden; background:#fffdf9">
+      <button type="button" onClick="{{ setDesktop }}" style="{{ vpDesktopStyle }}">Desktop</button>
+      <button type="button" onClick="{{ setMobile }}" style="{{ vpMobileStyle }}">Mobile</button>
+    </div>
+    <div style="display:flex; gap:0; border:1px solid rgba(0,0,0,.18); border-radius:999px; overflow:hidden; background:#fffdf9">
+      <button type="button" onClick="{{ setLight }}" style="{{ thLightStyle }}">Light</button>
+      <button type="button" onClick="{{ setDark }}" style="{{ thDarkStyle }}">Dark</button>
+    </div>
+  </div>
+
+  <div data-theme="{{ themeAttr }}" style="{{ frameStyle }}">
+    <div style="position:absolute; inset:0; background:var(--faction-default-aurora); opacity:var(--faction-default-aurora-opacity); filter:var(--faction-default-aurora-filter); pointer-events:none"></div>
+
+    <div ref="{{ scrollRef }}" style="position:relative; height:100%; overflow-y:auto; background:transparent">
+
+      <div style="{{ headerStyle }}">
+        <div style="font-family:var(--font-accent); letter-spacing:.18em; font-size:13px; color:var(--color-text-secondary)">UNAFFILIATED · WZ_PILGRIM</div>
+        <h1 style="{{ titleStyle }}">Settings</h1>
+        <div style="height:3px; width:120px; border-radius:2px; background:var(--faction-default-rainbow)"></div>
+        <p style="margin:10px 0 0; font-size:13px; line-height:1.6; color:var(--color-text-secondary); max-width:52ch">Changes save the moment you make them.</p>
+      </div>
+
+      <div style="{{ bodyStyle }}">
+
+        <nav style="{{ navStyle }}">
+          <sc-for list="{{ navLinks }}" as="item" hint-placeholder-count="6">
+            <button type="button" onClick="{{ item.onClick }}" style="{{ item.style }}">
+              <span style="{{ item.barStyle }}"></span>
+              <span>{{ item.label }}</span>
+            </button>
+          </sc-for>
+        </nav>
+
+        <div style="{{ paneStyle }}">
+
+                      <section id="sec-appearance" style="{{ cardStyle }}">
+              <div style="{{ cardBarStyle }}"></div>
+              <div style="{{ cardPadStyle }}">
+                <h2 style="{{ h2Style }}">Appearance</h2>
+
+                <div style="{{ rowStyle }}">
+                  <div style="flex:1; min-width:0">
+                    <div style="{{ rowTitleStyle }}">Dark mode</div>
+                    <div style="{{ rowHelpStyle }}">Use the dark palette across every page.</div>
+                  </div>
+                  <button type="button" onClick="{{ toggleDark }}" style="{{ darkTrackStyle }}"><span style="{{ darkKnobStyle }}"></span></button>
+                </div>
+
+                <div style="{{ rowLastStyle }}">
+                  <div style="flex:1; min-width:0">
+                    <div style="{{ rowTitleStyle }}">Animations</div>
+                    <div style="{{ rowHelpStyle }}">Transitions, card hovers, and the level-up celebration. Turn this off to keep the interface still.</div>
+                  </div>
+                  <button type="button" onClick="{{ toggleAnim }}" style="{{ animTrackStyle }}"><span style="{{ animKnobStyle }}"></span></button>
+                </div>
+              </div>
+            </section>
+
+                      <section id="sec-notifications" style="{{ cardStyle }}">
+              <div style="{{ cardBarStyle }}"></div>
+              <div style="{{ cardPadStyle }}">
+                <h2 style="{{ h2Style }}">Notifications</h2>
+                <p style="{{ leadStyle }}">Pick where each kind of notification goes. Off means it only appears in your feed.</p>
+
+                <sc-for list="{{ notifRows }}" as="row" hint-placeholder-count="10">
+                  <div style="{{ row.wrapStyle }}">
+                    <div style="{{ row.labelStyle }}">{{ row.label }}</div>
+                    <div style="{{ row.groupStyle }}">
+                      <span style="{{ row.thumbStyle }}"></span>
+                      <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="3">
+                        <button type="button" onClick="{{ cell.onClick }}" style="{{ cell.style }}">{{ cell.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+                      <section id="sec-cookies" style="{{ cardStyle }}">
+              <div style="{{ cardBarStyle }}"></div>
+              <div style="{{ cardPadStyle }}">
+                <h2 style="{{ h2Style }}">Privacy and cookies</h2>
+                <p style="{{ leadStyle }}">Essential cookies keep you signed in and cannot be switched off. Everything else is your call. Read the <a href="#cookie-policy">cookie policy</a>.</p>
+
+                <sc-for list="{{ cookieGroups }}" as="group" hint-placeholder-count="3">
+                  <div style="{{ group.wrapStyle }}">
+                    <div style="display:flex; align-items:flex-start; gap:16px">
+                      <div style="flex:1; min-width:0">
+                        <div style="{{ group.titleStyle }}">{{ group.title }}</div>
+                        <div style="{{ group.helpStyle }}">{{ group.help }}</div>
+                        <sc-if value="{{ group.showExpand }}" hint-placeholder-val="{{ true }}">
+                          <button type="button" onClick="{{ group.onExpand }}" style="{{ group.linkStyle }}">{{ group.expandLabel }}</button>
+                        </sc-if>
+                      </div>
+                      <sc-if value="{{ group.showToggle }}" hint-placeholder-val="{{ true }}">
+                        <button type="button" onClick="{{ group.onToggle }}" style="{{ group.trackStyle }}"><span style="{{ group.knobStyle }}"></span></button>
+                      </sc-if>
+                    </div>
+                    <sc-if value="{{ group.expanded }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ group.listStyle }}">
+                        <sc-for list="{{ group.cookies }}" as="ck" hint-placeholder-count="3">
+                          <div style="{{ group.ckRowStyle }}">
+                            <code style="{{ group.ckNameStyle }}">{{ ck.name }}</code>
+                            <span style="{{ group.ckPurposeStyle }}">{{ ck.purpose }}</span>
+                            <span style="{{ group.ckTtlStyle }}">{{ ck.ttl }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+                      <section id="sec-language" style="{{ cardStyle }}">
+              <div style="{{ cardBarStyle }}"></div>
+              <div style="{{ cardPadStyle }}">
+                <h2 style="{{ h2Style }}">Language and region</h2>
+                <p style="{{ leadStyle }}">English is the only interface language today. Player-written content stays in the language it was written in.</p>
+                <div style="{{ rowStyle }}">
+                  <div style="flex:1; min-width:0">
+                    <div style="{{ rowTitleStyle }}">Language</div>
+                    <div style="{{ rowHelpStyle }}">Applies to menus, labels, and email.</div>
+                  </div>
+                  <div style="{{ staticValueStyle }}">English</div>
+                </div>
+                <div style="{{ rowLastStyle }}">
+                  <div style="flex:1; min-width:0">
+                    <div style="{{ rowTitleStyle }}">Request another language</div>
+                    <div style="{{ rowHelpStyle }}">{{ langRequestHelp }}</div>
+                  </div>
+                  <button type="button" onClick="{{ requestLanguage }}" style="{{ secondaryBtnStyle }}">{{ langRequestLabel }}</button>
+                </div>
+              </div>
+            </section>
+
+                      <section id="sec-data" style="{{ cardStyle }}">
+              <div style="{{ cardBarStyle }}"></div>
+              <div style="{{ cardPadStyle }}">
+                <h2 style="{{ h2Style }}">Your data</h2>
+                <p style="{{ leadStyle }}">Download everything tied to your account: character, praxes, votes, comments, and notification history.</p>
+                <div style="{{ rowLastStyle }}">
+                  <div style="flex:1; min-width:0">
+                    <div style="{{ rowTitleStyle }}">Export my data</div>
+                    <div style="{{ rowHelpStyle }}">{{ exportHelp }}</div>
+                  </div>
+                  <button type="button" onClick="{{ requestExport }}" style="{{ secondaryBtnStyle }}">{{ exportLabel }}</button>
+                </div>
+              </div>
+            </section>
+
+                      <section id="sec-account" style="{{ dangerCardStyle }}">
+              <div style="{{ cardPadStyle }}">
+                <div style="font-family:var(--font-accent); letter-spacing:.18em; font-size:13px; color:var(--color-danger)">DANGER ZONE</div>
+                <h2 style="{{ h2Style }}">Delete account</h2>
+                <p style="{{ leadStyle }}">This removes your character, your praxes, your votes, and your comments. Points you awarded to other players stay with them. It cannot be undone.</p>
+                <button type="button" onClick="{{ openDelete }}" style="{{ dangerBtnStyle }}">Delete my account</button>
+              </div>
+            </section>
+
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ deleteOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; inset:0; background:var(--color-overlay-strong); display:flex; align-items:center; justify-content:center; padding:20px; z-index:20">
+        <div style="{{ dialogStyle }}">
+          <div style="{{ cardBarStyle }}"></div>
+          <div style="padding:24px">
+            <h3 style="margin:0 0 10px; font-family:var(--font-display); font-size:22px; color:var(--color-text-primary)">Delete your account</h3>
+            <p style="margin:0 0 18px; font-size:13px; line-height:1.6; color:var(--color-text-secondary)">Type your character name <strong style="color:var(--color-text-primary)">wz_pilgrim</strong> to confirm. This is permanent.</p>
+            <input value="{{ deleteName }}" onChange="{{ onDeleteName }}" placeholder="wz_pilgrim" style="{{ inputStyle }}" />
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end; flex-wrap:wrap">
+              <button type="button" onClick="{{ closeDelete }}" style="{{ secondaryBtnStyle }}">Cancel</button>
+              <button type="button" onClick="{{ confirmDelete }}" disabled="{{ deleteDisabled }}" style="{{ confirmBtnStyle }}">Delete account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:980}}">
+const STOPS = [1,2,3,4,5,6,7].map(n => `var(--faction-default-stop-${n})`);
+
+const NOTIF = [
+  ['votes', 'Praxis votes', 'email'],
+  ['comments', 'Comments on my praxis', 'push'],
+  ['mentions', '@mentions', 'push'],
+  ['duels', 'Duel challenges', 'push'],
+  ['collabs', 'Collab invites', 'email'],
+  ['invitations', 'Faction invitation letters', 'email'],
+  ['levels', 'Level ups', 'push'],
+  ['deadlines', 'Task deadlines', 'push'],
+  ['eras', 'Era announcements', 'email'],
+  ['digest', 'Weekly digest', 'email'],
+];
+
+const COOKIES = {
+  essential: {
+    title: 'Essential', locked: true,
+    help: 'Sign-in, security, and your saved preferences. Always on.',
+    list: [
+      { name: 'wz_session', purpose: 'Keeps you signed in', ttl: '30 days' },
+      { name: 'wz_csrf', purpose: 'Blocks forged requests', ttl: 'Session' },
+      { name: 'wz_prefs', purpose: 'Theme, language, motion setting', ttl: '1 year' },
+    ],
+  },
+  analytics: {
+    title: 'Analytics',
+    help: 'Anonymous counts of which pages get used, so we know what to fix.',
+    list: [
+      { name: 'wz_anon_id', purpose: 'Rotating anonymous visitor id', ttl: '90 days' },
+      { name: 'wz_page_ms', purpose: 'Time spent per page', ttl: '90 days' },
+    ],
+  },
+  marketing: {
+    title: 'Marketing', never: true,
+    help: 'We never collect these. World Zero does not run marketing, so there is nothing to turn off.',
+    list: [],
+  },
+};
+
+const SECTIONS = [
+  ['appearance', 'Appearance'],
+  ['notifications', 'Notifications'],
+  ['cookies', 'Privacy and cookies'],
+  ['language', 'Language and region'],
+  ['data', 'Your data'],
+  ['account', 'Account'],
+];
+
+class Component extends DCLogic {
+  state = {
+    mobile: false,
+    dark: false,
+    anim: true,
+    active: 'appearance',
+    notif: Object.fromEntries(NOTIF.map(([k,,d]) => [k, d])),
+    cookies: { essential: true, analytics: true, marketing: false },
+    expanded: {},
+    langRequested: false,
+    exportState: 'idle',
+    deleteOpen: false,
+    deleteName: '',
+  };
+
+  chip(on) {
+    return {
+      padding: '7px 18px', border: 'none', cursor: 'pointer',
+      fontFamily: 'var(--font-accent)', letterSpacing: '.12em', fontSize: '13px',
+      background: on ? '#1a1209' : 'transparent', color: on ? '#f7f4ee' : '#6b6050',
+    };
+  }
+
+  track(on) {
+    return {
+      position: 'relative', flexShrink: 0, width: '48px', height: '28px', borderRadius: '999px',
+      border: '1.5px solid transparent', boxSizing: 'border-box', padding: 0, cursor: 'pointer',
+      background: on
+        ? 'linear-gradient(var(--wz-well),var(--wz-well)) padding-box, var(--faction-default-rainbow) border-box'
+        : 'linear-gradient(var(--wz-well),var(--wz-well)) padding-box, linear-gradient(var(--color-border-strong),var(--color-border-strong)) border-box',
+      transition: this.state.anim ? 'background .18s ease' : 'none',
+    };
+  }
+
+  knob(on) {
+    return {
+      position: 'absolute', top: '3px', left: on ? '22px' : '3px',
+      width: '20px', height: '20px', borderRadius: '999px', display: 'block',
+      background: on ? 'var(--wz-thumb-on)' : 'var(--wz-thumb-off)',
+      boxShadow: 'inset 0 0 0 1px var(--wz-thumb-edge)',
+      transition: this.state.anim ? 'left .18s ease' : 'none',
+    };
+  }
+
+  cell(on) {
+    return {
+      position: 'relative', flex: 1, minHeight: '38px', padding: '8px 0',
+      border: 0, background: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+      fontFamily: 'var(--font-body)', fontSize: '13px',
+      color: on ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+      fontWeight: on ? 700 : 400,
+      transition: this.state.anim ? 'color .18s' : 'none',
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const m = s.mobile;
+    const set = (patch) => this.setState(patch);
+
+    const card = {
+      position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+      background: 'var(--color-bg-surface)', backdropFilter: 'blur(6px)',
+      border: '1px solid var(--color-border)', boxShadow: '0 1px 2px rgba(0,0,0,.04)',
+    };
+
+    const rowBase = {
+      display: 'flex', alignItems: 'flex-start', gap: '20px',
+      padding: '16px 0', borderBottom: '1px solid var(--color-border)',
+    };
+
+    const navItems = SECTIONS.map(([key, label]) => {
+      const on = !m && s.active === key;
+      return {
+        label,
+        onClick: () => {
+          set({ active: key });
+          const host = this.scrollHost;
+          const el = host && host.querySelector('#sec-' + key);
+          if (host && el) host.scrollTop = Math.max(0, el.offsetTop - 16);
+        },
+        style: {
+          display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+          padding: '10px 12px', border: 'none', borderRadius: 'var(--radius-md)',
+          background: on ? 'var(--faction-default-light)' : 'transparent',
+          color: on ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+          fontFamily: 'var(--font-body)', fontSize: '13px', textAlign: 'left',
+          cursor: 'pointer', fontWeight: on ? 700 : 400,
+        },
+        barStyle: {
+          display: 'block', width: '3px', height: '16px', borderRadius: '2px',
+          background: on ? 'var(--faction-default-rainbow-vertical)' : 'var(--color-border-strong)',
+        },
+      };
+    });
+
+    const allValues = NOTIF.map(([k]) => s.notif[k]);
+    const allSame = allValues.every(v => v === allValues[0]) ? allValues[0] : null;
+    const allRow = {
+      label: 'All notifications',
+      isAll: true,
+      wrapStyle: m
+        ? { padding: '14px 0', borderBottom: '1px solid var(--color-border-strong)' }
+        : { display: 'grid', gridTemplateColumns: '1fr 270px', alignItems: 'center', gap: '20px', padding: '12px 0', borderBottom: '1px solid var(--color-border-strong)' },
+      labelStyle: {
+        fontFamily: 'var(--font-accent)', letterSpacing: '.12em', fontSize: '16px',
+        color: 'var(--color-text-primary)', marginBottom: m ? '10px' : 0,
+      },
+      groupStyle: {
+        position: 'relative', display: 'flex', alignItems: 'center',
+        padding: '3px', borderRadius: '999px', border: '1.5px solid transparent',
+        background: 'linear-gradient(var(--wz-well),var(--wz-well)) padding-box, var(--faction-default-rainbow) border-box',
+      },
+      thumbStyle: allSame ? {
+        position: 'absolute', top: '3px', bottom: '3px',
+        width: 'calc((100% - 6px) / 3)',
+        left: 'calc(3px + ' + ['email','push','off'].indexOf(allSame) + ' * (100% - 6px) / 3)',
+        borderRadius: '999px', background: 'var(--wz-thumb-on)',
+        boxShadow: 'inset 0 0 0 1px var(--wz-thumb-edge)',
+        transition: s.anim ? 'left .22s cubic-bezier(.4,1.4,.5,1)' : 'none',
+        pointerEvents: 'none',
+      } : { display: 'none' },
+      cells: ['Email', 'Push', 'Off'].map((cl, i) => ({
+        label: cl,
+        onClick: () => {
+          const v = ['email','push','off'][i];
+          this.setState({ notif: Object.fromEntries(NOTIF.map(([k]) => [k, v])) });
+        },
+        style: this.cell(allSame === ['email','push','off'][i]),
+      })),
+    };
+
+    const notifRows = NOTIF.map(([key, label]) => ({
+      label,
+      wrapStyle: m
+        ? { padding: '14px 0', borderBottom: '1px solid var(--color-border)' }
+        : { display: 'grid', gridTemplateColumns: '1fr 270px', alignItems: 'center', gap: '20px', padding: '10px 0', borderBottom: '1px solid var(--color-border)' },
+      labelStyle: { fontSize: '13px', color: 'var(--color-text-primary)', marginBottom: m ? '10px' : 0 },
+      groupStyle: {
+        position: 'relative', display: 'flex', alignItems: 'center',
+        padding: '3px', borderRadius: '999px',
+        border: '1.5px solid transparent',
+        background: 'linear-gradient(var(--wz-well),var(--wz-well)) padding-box, var(--faction-default-rainbow) border-box',
+      },
+      thumbStyle: {
+        position: 'absolute', top: '3px', bottom: '3px',
+        width: 'calc((100% - 6px) / 3)',
+        left: 'calc(3px + ' + ['email','push','off'].indexOf(s.notif[key]) + ' * (100% - 6px) / 3)',
+        borderRadius: '999px', background: 'var(--wz-thumb-on)',
+        boxShadow: 'inset 0 0 0 1px var(--wz-thumb-edge)',
+        transition: s.anim ? 'left .22s cubic-bezier(.4,1.4,.5,1)' : 'none',
+        pointerEvents: 'none',
+      },
+      cells: ['Email', 'Push', 'Off'].map((cl, i) => ({
+        label: cl,
+        onClick: () => this.setState(p => ({ notif: { ...p.notif, [key]: ['email','push','off'][i] } })),
+        style: this.cell(s.notif[key] === ['email','push','off'][i]),
+      })),
+    }));
+
+    const cookieGroups = Object.entries(COOKIES).map(([key, g], i) => {
+      const on = s.cookies[key];
+      const exp = !!s.expanded[key];
+      return {
+        title: g.title + (g.locked ? ' · required' : '') + (g.never ? ' · never used' : ''),
+        help: g.help,
+        expanded: exp,
+        cookies: g.list,
+        expandLabel: (exp ? 'Hide' : 'Show') + ' ' + g.list.length + ' cookies',
+        showToggle: !g.never,
+        showExpand: !g.never,
+        onExpand: () => this.setState(p => ({ expanded: { ...p.expanded, [key]: !p.expanded[key] } })),
+        onToggle: g.locked ? () => {} : () => this.setState(p => ({ cookies: { ...p.cookies, [key]: !p.cookies[key] } })),
+        wrapStyle: {
+          padding: '16px', marginTop: i === 0 ? '4px' : '10px',
+          border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+          background: 'var(--color-bg-surface-alt)',
+        },
+        titleStyle: { fontFamily: 'var(--font-accent)', letterSpacing: '.1em', fontSize: '16px', color: 'var(--color-text-primary)' },
+        helpStyle: { fontSize: '12px', lineHeight: 1.6, color: 'var(--color-text-secondary)', marginTop: '4px' },
+        linkStyle: {
+          marginTop: '8px', padding: 0, border: 'none', background: 'none',
+          fontFamily: 'var(--font-body)', fontSize: '12px', cursor: 'pointer',
+          color: 'var(--color-accent-primary)', textDecoration: 'underline',
+        },
+        trackStyle: g.locked
+          ? { ...this.track(true), opacity: .45, cursor: 'not-allowed' }
+          : this.track(on),
+        knobStyle: this.knob(g.locked ? true : on),
+        listStyle: { marginTop: '14px', borderTop: '1px solid var(--color-border)', paddingTop: '10px', display: 'grid', gap: '2px' },
+        ckRowStyle: m
+          ? { display: 'grid', gap: '2px', padding: '8px 0', borderBottom: '1px dotted var(--color-border-strong)' }
+          : { display: 'grid', gridTemplateColumns: '150px 1fr 90px', gap: '12px', alignItems: 'baseline', padding: '6px 0' },
+        ckNameStyle: { fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-text-primary)' },
+        ckPurposeStyle: { fontSize: '12px', color: 'var(--color-text-secondary)' },
+        ckTtlStyle: { fontSize: '11px', color: 'var(--color-text-tertiary)', textAlign: m ? 'left' : 'right', letterSpacing: '.04em' },
+      };
+    });
+
+    const exportCopy = {
+      idle: ['Request export', 'We build a zip and email you a link, usually within an hour.'],
+      pending: ['Preparing…', 'Your export is being built. We will email wz_pilgrim@example.com when it is ready.'],
+    }[s.exportState];
+
+    const secondaryBtn = {
+      padding: '10px 18px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+      border: '1px solid var(--color-border-strong)', background: 'transparent',
+      color: 'var(--color-text-primary)', fontFamily: 'var(--font-body)', fontSize: '13px', flexShrink: 0,
+    };
+
+    const canDelete = s.deleteName.trim().toLowerCase() === 'wz_pilgrim';
+
+    return {
+      navLinks: navItems,
+      themeAttr: s.dark ? 'dark' : 'light',
+      setDesktop: () => set({ mobile: false }),
+      setMobile: () => set({ mobile: true }),
+      setLight: () => set({ dark: false }),
+      setDark: () => set({ dark: true }),
+      vpDesktopStyle: this.chip(!m), vpMobileStyle: this.chip(m),
+      thLightStyle: this.chip(!s.dark), thDarkStyle: this.chip(s.dark),
+
+      frameStyle: {
+        position: 'relative', overflow: 'hidden', background: 'var(--color-bg-page)',
+        width: m ? '390px' : '1180px', height: m ? '780px' : '860px',
+        borderRadius: m ? '32px' : 'var(--radius-lg)',
+        border: m ? '8px solid #1a1209' : '1px solid rgba(0,0,0,.18)',
+        boxShadow: '0 24px 60px rgba(0,0,0,.18)',
+      },
+
+      headerStyle: { padding: m ? '28px 20px 18px' : '40px 48px 24px' },
+      titleStyle: {
+        margin: '6px 0 10px', fontFamily: 'var(--font-display)',
+        fontSize: m ? '30px' : '40px', fontWeight: 600, color: 'var(--color-text-primary)',
+      },
+      bodyStyle: m
+        ? { display: 'flex', flexDirection: 'column', gap: '18px', padding: '0 20px 48px' }
+        : { display: 'grid', gridTemplateColumns: '232px 1fr', gap: '36px', padding: '0 48px 56px', alignItems: 'start' },
+      navStyle: m
+        ? { display: 'none' }
+        : { display: 'flex', flexDirection: 'column', gap: '2px', position: 'sticky', top: 0 },
+      paneStyle: { display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 },
+
+      cardStyle: card,
+      dangerCardStyle: { ...card, background: 'var(--color-danger-veil)', border: '1px solid var(--color-danger-edge)' },
+      cardBarStyle: { height: '3px', background: 'var(--faction-default-rainbow)' },
+      cardPadStyle: { padding: m ? '20px' : '26px 28px 24px' },
+      h2Style: {
+        margin: '0 0 6px', fontFamily: 'var(--font-display)', fontWeight: 600,
+        fontSize: m ? '20px' : '23px', color: 'var(--color-text-primary)',
+      },
+      leadStyle: { margin: '0 0 14px', fontSize: '13px', lineHeight: 1.65, color: 'var(--color-text-secondary)', maxWidth: '62ch' },
+      rowStyle: rowBase,
+      rowLastStyle: { ...rowBase, borderBottom: 'none', paddingBottom: 0 },
+      rowTitleStyle: { fontSize: '14px', color: 'var(--color-text-primary)', marginBottom: '3px' },
+      rowHelpStyle: { fontSize: '12px', lineHeight: 1.6, color: 'var(--color-text-secondary)' },
+
+      scrollRef: (el) => { this.scrollHost = el; },
+
+      toggleDark: () => set({ dark: !s.dark }),
+      toggleAnim: () => set({ anim: !s.anim }),
+      darkTrackStyle: this.track(s.dark),
+      darkKnobStyle: this.knob(s.dark),
+      animTrackStyle: this.track(s.anim),
+      animKnobStyle: this.knob(s.anim),
+
+      matrixHeadStyle: m
+        ? { display: 'none' }
+        : { display: 'grid', gridTemplateColumns: '1fr 270px', gap: '20px', paddingBottom: '8px', borderBottom: '1px solid var(--color-border-strong)' },
+      matrixHeadCellStyle: {
+        gridColumn: 'auto', fontFamily: 'var(--font-accent)', letterSpacing: '.14em',
+        fontSize: '12px', color: 'var(--color-text-secondary)', textAlign: 'center',
+      },
+      notifRows: [allRow, ...notifRows],
+      cookieGroups,
+
+      staticValueStyle: {
+        flexShrink: 0, fontSize: '13px', color: 'var(--color-text-primary)',
+        padding: '10px 14px', borderRadius: '999px',
+        border: '1px solid var(--color-border)', background: 'var(--wz-well)',
+      },
+      langRequestLabel: s.langRequested ? 'Request sent' : 'Request a language',
+      langRequestHelp: s.langRequested
+        ? 'Thanks. We will let you know if enough players ask for the same one.'
+        : 'Tell us which language you would use. Requests decide what we translate next.',
+      requestLanguage: () => set({ langRequested: !s.langRequested }),
+
+      exportLabel: exportCopy[0],
+      exportHelp: exportCopy[1],
+      requestExport: () => set({ exportState: s.exportState === 'idle' ? 'pending' : 'idle' }),
+      secondaryBtnStyle: secondaryBtn,
+
+      dangerBtnStyle: {
+        marginTop: '4px', padding: '11px 20px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+        border: '1px solid var(--color-danger)', background: 'transparent',
+        color: 'var(--color-danger)', fontFamily: 'var(--font-accent)', letterSpacing: '.1em', fontSize: '15px',
+      },
+      openDelete: () => set({ deleteOpen: true, deleteName: '' }),
+      closeDelete: () => set({ deleteOpen: false }),
+      confirmDelete: () => set({ deleteOpen: false }),
+      deleteOpen: s.deleteOpen,
+      deleteName: s.deleteName,
+      onDeleteName: (e) => set({ deleteName: e.target.value }),
+      deleteDisabled: !canDelete,
+      dialogStyle: {
+        width: '100%', maxWidth: '460px', overflow: 'hidden', borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-bg-page)', border: '1px solid var(--color-border-strong)',
+        boxShadow: '0 30px 70px rgba(0,0,0,.35)',
+      },
+      inputStyle: {
+        width: '100%', boxSizing: 'border-box', padding: '12px 14px',
+        borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-strong)',
+        background: 'var(--color-bg-surface-alt)', color: 'var(--color-text-primary)',
+        fontFamily: 'var(--font-body)', fontSize: '14px',
+      },
+      confirmBtnStyle: {
+        padding: '10px 18px', borderRadius: 'var(--radius-md)', border: 'none',
+        background: canDelete ? 'var(--color-danger)' : 'var(--color-danger-veil)',
+        color: canDelete ? 'var(--color-on-danger)' : 'var(--color-text-tertiary)',
+        fontFamily: 'var(--font-body)', fontSize: '13px',
+        cursor: canDelete ? 'pointer' : 'not-allowed',
+      },
+    };
+  }
+}
+
+</script>
+</body>
+</html>
