@@ -12,6 +12,9 @@
  *
  * The seam is `assessSweep`: findings in, verdict out, no page, no Playwright.
  */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import { assessSweep, routesFor, SWEEP_FACTIONS, SWEEP_VIEWPORTS } from "../contrastSweep";
@@ -118,6 +121,28 @@ describe("assessSweep", () => {
     );
     expect(verdict.baselineEntries[0]).toContain("ratio: 1.09");
     expect(verdict.baselineEntries[0]).toContain("snide/dark/desktop");
+  });
+
+  /**
+   * The invariant that let the scanner move out of `e2e/` at all (#1780), and
+   * the one an ordinary refactor would break silently. `page.evaluate` ships
+   * the function SOURCE, not its module graph, so an import added to
+   * `contrastScan.ts` compiles, typechecks, lints, and then throws inside the
+   * browser at 3am — the exact latency this issue exists to remove.
+   *
+   * Read off the file rather than the loaded module: an import that vitest has
+   * already resolved is invisible to `Function.prototype.toString`.
+   */
+  it("keeps the scanner importless, because page.evaluate ships no module graph", () => {
+    const scanner = readFileSync(
+      fileURLToPath(new URL("../contrastScan.ts", import.meta.url)),
+      "utf8",
+    );
+    // Strip block comments: the header talks ABOUT imports.
+    const code = scanner.replace(/\/\*[\s\S]*?\*\//g, "");
+
+    expect(code).not.toMatch(/^\s*import\s/m);
+    expect(code).not.toMatch(/\brequire\s*\(/);
   });
 
   it("sweeps every faction on its own detail route plus the shared ones", () => {
