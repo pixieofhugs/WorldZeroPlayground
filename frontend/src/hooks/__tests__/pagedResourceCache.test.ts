@@ -209,6 +209,30 @@ describe('a write invalidates — no five-minute wait on your own action', () =>
     await loadPage(fetchPage, 50, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
+
+  it('a read in flight when the write lands does not file its pre-write rows', async () => {
+    const cache = createKeyedResourceCache<string[]>(AMBIENT_TTL_MS, createCacheEpoch())
+    const cached: PagedCache<string> = { cache, viewer: VIEWER }
+    let release: (rows: string[]) => void = () => {}
+    const fetchPage = vi.fn(
+      () => new Promise<string[]>((resolve) => { release = resolve }),
+    )
+
+    // A slow board read goes out under some filter...
+    const inFlight = loadPage(fetchPage, 50, 50, ['standard'], cached)
+    // ...and the player signs up for a row still on screen before it lands.
+    dropCachesAfterWrite()
+    release(['task-still-claimable'])
+    await inFlight
+
+    // The pre-write answer must NOT have become the cache entry. Unlike the era
+    // rollover this drop does not advance the epoch, so the guard has to be the
+    // cache's own generation.
+    const afterWrite = loadPage(fetchPage, 50, 50, ['standard'], cached)
+    expect(fetchPage).toHaveBeenCalledTimes(2)
+    release(['task-now-claimed'])
+    expect(await afterWrite).toEqual(['task-now-claimed'])
+  })
 })
 
 describe('createKeyedResourceCache — the mechanics the singleton cache does not cover', () => {

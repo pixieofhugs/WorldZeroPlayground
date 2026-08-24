@@ -271,8 +271,19 @@ export function createKeyedResourceCache<T>(
 ): KeyedResourceCache<T> {
   const entries = new Map<string, CacheEntry<T>>()
   const inFlight = new Map<string, Promise<T>>()
+  // Advanced by EVERY drop, not just the epoch's. `epoch.version()` alone is
+  // not enough here: `dropCachesAfterWrite` empties these maps directly and
+  // deliberately does not touch the epoch, because bumping it would also evict
+  // the deploy-scoped Class A caches on every mutation. Without a local
+  // generation, a GET already in the air when a write landed would resolve,
+  // still believe it was current, and file its PRE-write rows in the cache it
+  // was just evicted from -- serving the row you just claimed as claimable for
+  // the rest of the TTL, which is the exact failure the invalidation exists to
+  // prevent.
+  let generation = 0
 
   const drop = (): void => {
+    generation += 1
     entries.clear()
     inFlight.clear()
   }
@@ -289,11 +300,15 @@ export function createKeyedResourceCache<T>(
       const existing = inFlight.get(key)
       if (existing !== undefined) return existing
 
-      // Stamped at issue time: an answer describing the era we were in when the
-      // request went out must not be written back in behind a drop that landed
-      // while it was in the air (mirrors `createResourceCache`).
+      // Stamped at issue time: an answer describing the world we were in when
+      // the request went out must not be written back in behind a drop that
+      // landed while it was in the air (mirrors `createResourceCache`). Both
+      // stamps are read -- the epoch for an era rollover, the local generation
+      // for a write.
       const issuedAtVersion = epoch.version()
-      const isCurrent = (): boolean => epoch.version() === issuedAtVersion
+      const issuedAtGeneration = generation
+      const isCurrent = (): boolean =>
+        epoch.version() === issuedAtVersion && generation === issuedAtGeneration
       const promise = fetchFn().then(
         (value) => {
           if (isCurrent()) {
