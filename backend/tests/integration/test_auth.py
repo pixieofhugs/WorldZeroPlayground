@@ -106,17 +106,32 @@ async def test_auth_me_not_admin_by_default(
 
 
 @pytest.mark.asyncio
-async def test_auth_me_does_not_expose_email(
+async def test_auth_me_exposes_the_callers_own_email_and_no_other(
     client: AsyncClient,
     account: Account,
+    account2: Account,
     auth_headers: dict,
 ):
-    """GET /auth/me must never return email in the response body."""
+    """GET /auth/me returns the caller's own address, and only ever that.
+
+    THIS TEST WAS THE OTHER WAY ROUND UNTIL #2155, and the reversal is a ruling,
+    not a relaxation. It asserted "never return email in the response body" with
+    no ADR behind it; the Settings Account card needs the address a player signed
+    up with, and ``/auth/me`` is authenticated and answers about the caller
+    alone — the same reasoning that already makes ``account_id`` the documented
+    exception on this one endpoint (SPEC-backend-architecture.md §4).
+
+    What has NOT changed is the rule the old test was reaching for: an email
+    belongs to exactly one reader. That half is what is asserted here, and the
+    "which schemas may carry an email at all" half is ratcheted in
+    ``test_auth_me_account_fields.py`` — a leak would now show up there as a new
+    carrier rather than here as a new field.
+    """
     resp = await client.get("/auth/me", headers=auth_headers)
+
     assert resp.status_code == 200
-    body_text = resp.text
-    assert account.email not in body_text
-    assert "email" not in resp.json()
+    assert resp.json()["email"] == account.email
+    assert account2.email not in resp.text
 
 
 @pytest.mark.asyncio
