@@ -1,5 +1,8 @@
 # Albescent unlock is account-collective, with level and coverage decoupled
 
+**Status:** Superseded by ADR-0080
+**Date:** 2026-06-25
+
 > **Status: SUPERSEDED 2026-08-22 by
 > [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md)
 > (#2399).** Both rulings below are reversed: the unlock is earned by ONE

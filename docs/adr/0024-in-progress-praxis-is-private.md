@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-06-30
+
 **Relates to:** ADR-0007 (praxis editing is status-only), ADR-0013 (collaborations are co-owned), ADR-0011 (duel is two linked praxes)
 
 ## Context

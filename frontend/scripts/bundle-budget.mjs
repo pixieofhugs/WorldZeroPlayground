@@ -165,6 +165,31 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
  *
  * FAIL stays at 25,000, now 2,572 bytes away. TARGET stays at 20,000 and is
  * 2,428 away — the closest this has been since it was set.
+ *
+ * CSS ledger (#2535): warn stays at 22,700, against a measured 22,852 -> 22,641.
+ *
+ * THE ENTRY THAT MOVES NOTHING, and it is here because the decision not to move
+ * is the one worth recording. The 272-byte band the entry above chose was eaten
+ * over five days of faction work, and `main` printed WARN CSS for nine straight
+ * merges (#2469) — long enough that three separate agents in one batch each
+ * reported it as "pre-existing, not mine", which is the same tell the #1325
+ * entry names. The ruling on #2469 was: cut bytes, never raise the line, and
+ * never make WARN fail. #2535 is that cut — 19 custom properties nothing reads,
+ * twelve of them the illustration palette of the WOW crest #1989 retired.
+ * Deleting them prints `ok CSS` again.
+ *
+ * WHY WARN DOES NOT FOLLOW IT DOWN. Every prior ratchet left 638, 229, 278 or
+ * 272 bytes of slack. This win is 211 bytes and leaves 59, so there is nothing
+ * to ratchet INTO: a line 59 bytes above the number is tripped by one selector,
+ * which is the WARN-nobody-reads failure the #1325 entry exists to prevent. The
+ * rule the ledger encodes is that the line follows a MEASURED win downward, and
+ * a win this size does not reach the next rung. It comes down when the next cut
+ * lands (#2469 lists the candidates); until then this file records that the
+ * headroom is 59 bytes and the next PR to spend it will say so out loud.
+ *
+ * The deletion is guarded rather than merely done: `factionTokensReferenced`
+ * fails on a declared `--faction-*` / `--spectrum-*` token that nothing reads,
+ * which is what stops the next abandoned family from sitting here for months.
  */
 const BUDGETS = {
   js: { warn: 134_000, fail: 180_000, target: 120_000 },

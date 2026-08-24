@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-17
+
 **Relates to:** CLAUDE.md "Config architecture", `backend/game_config.py`, `backend/eras/`
 
 > Harvested from the retired `SPEC-architecture.md §4` during the 2026-07-17 docs

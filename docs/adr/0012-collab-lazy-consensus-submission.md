@@ -1,6 +1,7 @@
 # Collaborations publish by lazy consensus, not unanimous submission
 
-/ status: accepted
+**Status:** Accepted
+**Date:** 2026-06-25
 
 ## Context
 

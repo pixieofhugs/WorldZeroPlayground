@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-14
+
 **Relates to:** ADR-0041 (the *shape* of identity: Account vs Character), CONTEXT.md
 ("Account"), #1769 (this ADR), #1771 (the verified-email check moves to the linking
 seam), #1772 (a second provider)

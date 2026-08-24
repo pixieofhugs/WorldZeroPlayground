@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-21
+
 **Supersedes:** **ADR-0047** (the praxis card shows the computed total, not Merit)
 **Relates to:** ADR-0014 (Contribution vs Merit), ADR-0011 (duel = two solo sides),
 ADR-0052 (duels resolve at era close), ADR-0049 (the score stamp is a manifest surface)

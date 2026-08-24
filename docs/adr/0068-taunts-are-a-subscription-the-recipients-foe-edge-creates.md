@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-30
+
 **Relates to:** ADR-0031 (backend emits keys; the catalog owns taunt wording),
 ADR-0077 (a block is its own record — superseding ADR-0009, which this ADR was
 written against), the 2026-07-30 architecture audit

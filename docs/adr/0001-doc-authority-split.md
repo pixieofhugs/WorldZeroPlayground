@@ -1,5 +1,8 @@
 # Documentation authority is split: design canon vs. wiring
 
+**Status:** Accepted
+**Date:** 2026-06-22
+
 The vault design docs and the repo (`SPEC-faction-ui-profile.md` + code) disagree about
 faction facts — names, colors, slugs, which surfaces vary. Authority is split by the
 *kind* of fact:

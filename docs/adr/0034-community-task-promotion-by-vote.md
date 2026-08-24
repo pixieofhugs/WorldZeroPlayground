@@ -1,13 +1,14 @@
 # ADR-0034 — Community task promotion by vote (the level-5 unlock)
 
+**Status:** Accepted
+**Date:** 2026-07-14
+
 > **⚠ Status (2026-07-17 audit): NOT BUILT.** No backend implementation exists —
 > no `TaskPromotionVote` model, no promotion-threshold config, and level 5
 > (`voyager`) carries no `promote_tasks` ability. Accepted but unimplemented; do
 > not treat as live behaviour. (CONTEXT.md's "Task promotion" section is being
 > corrected to match.)
 
-**Status:** Accepted
-**Date:** 2026-07-14
 **Relates to:** #455 (this feature); the level-privileges table in `SPEC-game-rules.md`
 (L5: "Vote to promote level-0 tasks"); ADR-0016 (per-faction surfaces share one data
 contract); ADR-0031 (backend emits keys, frontend catalog resolves)

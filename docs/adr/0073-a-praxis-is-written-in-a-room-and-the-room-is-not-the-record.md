@@ -1,16 +1,26 @@
 # ADR-0073 — A praxis is written in a room, and the room is not the record
 
-**Status:** Accepted — **built, except presence.** The room server and its two
-auth doors (#1740), the CodeMirror binding (#1742), the one write path —
-`body_text` as a derived column, the `PUT` deleted, offline in `y-indexeddb`
-(#1743) — and the freeze, with the publish-time discard (#1745), are live.
-Still design only: presence (#1744).
+**Status:** Accepted
 **Date:** 2026-08-14
+
 **Relates to:** ADR-0011 (a duel is two solo praxes), ADR-0012 (lazy consensus;
 "an edit means we're not done"), ADR-0013 (any member may edit), ADR-0059
 (submitting holds the composer; re-entry routes through `pullBack`),
 ADR-0065 (one composer layout every faction dresses), #360 / #1081 / #1164
 (the debounced autosave this retires), #590 (`pullBack`)
+
+## Amendment
+
+The status this record carried until 2026-08-24 read: *"Accepted — **built, except
+presence.** The room server and its two auth doors (#1740), the CodeMirror binding (#1742),
+the one write path — `body_text` as a derived column, the `PUT` deleted, offline in
+`y-indexeddb` (#1743) — and the freeze, with the publish-time discard (#1745), are live.
+Still design only: presence (#1744)."*
+
+**2026-08-24 (#2536): the "still design only" half is stale.** Presence shipped —
+`frontend/src/pages/editPraxis/roomPresence.ts` is a full module, consumed by
+`praxisRoom.tsx` and `archetypes/controls.tsx`, with `__tests__/roomPresence.test.ts` and
+`__tests__/roomPresenceContrast.test.ts` beside it. Every part of this record is built.
 
 ## Context
 

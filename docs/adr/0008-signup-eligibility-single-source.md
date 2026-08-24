@@ -1,6 +1,7 @@
 # ADR-0008: Sign-up eligibility is one game-logic predicate
 
-Status: Accepted (2026-06-24)
+**Status:** Accepted
+**Date:** 2026-06-24
 
 ## Context
 

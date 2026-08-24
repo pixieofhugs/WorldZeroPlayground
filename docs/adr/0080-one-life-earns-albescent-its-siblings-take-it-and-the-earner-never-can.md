@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-22
+
 **Supersedes:** [ADR-0021](0021-albescent-unlock-is-account-collective.md) — entirely. Both of its
 rulings (account-collective, and level/coverage decoupled) are reversed here, and its coverage
 measure is replaced.

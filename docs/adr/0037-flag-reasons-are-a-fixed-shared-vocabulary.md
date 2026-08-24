@@ -1,5 +1,8 @@
 # Flag reasons are a fixed, shared vocabulary
 
+**Status:** Accepted
+**Date:** 2026-07-14
+
 Builds on [ADR-0006](0006-comment-system.md), which introduced the `Flag` table with a
 free-text `reason` column shared by praxis and comment flags. Surfacing flags on the
 moderator review screen (#237) needs `reason` to render as a clean badge and to be the

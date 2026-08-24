@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-16
+
 **Relates to:** ADR-0056 (task cards), ADR-0058 (task detail), ADR-0063 (praxis
 detail), ADR-0065 (the composer), ADR-0067 (praxis cards), ADR-0069 (the
 character profile and the duel seal) — the same move, surface by surface.

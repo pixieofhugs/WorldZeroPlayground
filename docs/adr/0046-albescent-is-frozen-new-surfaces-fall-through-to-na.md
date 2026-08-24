@@ -2,6 +2,7 @@
 
 **Status:** Reversed
 **Date:** 2026-07-18
+
 **Relates to:** #726 (the duel skin this decision parks), #718 (the duel-skin
 epic whose per-faction issues this halts one of), ADR-0027 + #390 (Albescent as
 an invite-gated secret society), #232 (albescent went first-class and dropped

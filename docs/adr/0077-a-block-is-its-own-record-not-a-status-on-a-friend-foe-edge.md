@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-16
+
 **Supersedes:** **ADR-0009** (blocks are mutual and visible) — in full. ADR-0009
 read the problem correctly and answered the wrong two questions; both of its
 answers are reversed here.

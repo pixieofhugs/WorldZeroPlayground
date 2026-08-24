@@ -1,10 +1,8 @@
 # ADR-0079 — Submitting a collab is three signals, not one button
 
-**Status:** Accepted, and **built**. The shared submission-status vocabulary
-shipped first (#1812), the state machine and the retired freeze in #1810, and
-the composer's three affordances, the first-keystroke confirm and the rewritten
-copy in #1811.
+**Status:** Accepted
 **Date:** 2026-08-15
+
 **Relates to:** ADR-0011 (a duel is two solo praxes),
 ADR-0012 (lazy consensus; "an edit means we're not done"),
 ADR-0013 (any member may edit), ADR-0059 (submitting holds the composer;
@@ -13,6 +11,13 @@ dresses), ADR-0073 (the room, the freeze, the publish-time discard), #590
 (`pullBack`), #1745 (the freeze this retires), #1803 (per-member pull-back, whose
 semantics change this dissolves), #1808 (the frozen room's close code, superseded
 here), #1812 (the eight faction copy blocks, deleted)
+
+## Amendment
+
+The status this record carried until 2026-08-24 recorded the build: *"Accepted, and
+**built**. The shared submission-status vocabulary shipped first (#1812), the state machine
+and the retired freeze in #1810, and the composer's three affordances, the first-keystroke
+confirm and the rewritten copy in #1811."*
 
 ## Context
 

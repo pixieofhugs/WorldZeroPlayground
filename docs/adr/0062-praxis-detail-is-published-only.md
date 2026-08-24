@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-28
+
 **Relates to:** #1085 (epic), #1086 (ADR-0061, the sibling behaviour change)
 **Depends on:** ADR-0059 (submitting a collab or duel part holds the
 composer) — this ADR's argument only holds once every open multi-party state

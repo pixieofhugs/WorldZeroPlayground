@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-01
+
 **Relates to:** EPIC #275 (multi-life creation), ADR-0019 (invite gate is account-pooled), issue #293
 
 ## Context

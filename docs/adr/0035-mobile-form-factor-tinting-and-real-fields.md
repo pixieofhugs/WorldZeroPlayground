@@ -1,5 +1,8 @@
 # ADR-0035: Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields
 
+**Status:** Amended by ADR-0056, ADR-0058, ADR-0063, ADR-0065, ADR-0067, ADR-0069, ADR-0078
+**Date:** 2026-07-14
+
 > **Superseded per surface, not in whole.** The tinting cascade, the mandatory
 > `Default` (na) skin and the real-domain-fields rule below still govern every
 > mobile surface. What has moved is the **form-factor split itself**: surface by
@@ -20,7 +23,6 @@
 >
 > ADR-0035 remains the live decision for every surface not listed above.
 
-Status: Accepted (2026-07-14); superseded per surface — see the banner above.
 
 ## Context
 

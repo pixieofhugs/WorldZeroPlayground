@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-20
+
 **Narrows:** **ADR-0047** (its row-selection rules survive intact; only the
 "one presentation" implication is withdrawn)
 **Relates to:** ADR-0039 (`Default*` fall-through), ADR-0050 (WOW/Coven identity),

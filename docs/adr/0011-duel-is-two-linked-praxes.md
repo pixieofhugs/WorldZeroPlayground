@@ -1,6 +1,7 @@
 # A duel is two linked praxes, not one shared praxis
 
-/ status: accepted
+**Status:** Amended by ADR-0052
+**Date:** 2026-06-25
 
 ## Context
 
