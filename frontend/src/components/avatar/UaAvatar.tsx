@@ -14,11 +14,12 @@ import { UaSigil } from "../sigil/UaSigil";
  * Both themes come from the `[data-theme="dark"]` cascade; the badge sits on
  * `--faction-ua-lift`, which dims with everything else.
  */
-export default function UaAvatar({ character, size }: FactionAvatarProps) {
+export default function UaAvatar({ character, size, badge }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
+      badge={badge}
       circle={{
         borderColor: "var(--faction-ua)",
         bg: "var(--faction-ua-panel)",

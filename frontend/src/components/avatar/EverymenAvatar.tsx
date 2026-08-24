@@ -5,11 +5,12 @@ import { EverymenSigil } from '../sigil/EverymenSigil'
  * Everymen avatar — the standard circle plus a red union membership badge
  * (cog sigil) clipped to the lower-right.
  */
-export default function EverymenAvatar({ character, size }: FactionAvatarProps) {
+export default function EverymenAvatar({ character, size, badge }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
+      badge={badge}
       circle={{
         borderColor: 'var(--everymen-ink)',
         bg: 'var(--everymen-paper)',

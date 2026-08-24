@@ -24,6 +24,23 @@ export interface FactionAvatarProps {
   size?: 'sm' | 'md' | number
   /** Cast a faction-coloured glow around the ring. Off unless a surface asks. */
   glow?: boolean
+  /**
+   * Draw the membership sigil clipped to the disc's lower-right. On by default:
+   * the badge is what makes this an avatar rather than a portrait.
+   *
+   * A surface turns it OFF only when it states membership somewhere else and
+   * the badge would be the smaller, mute copy of that statement. The desktop
+   * Players roster is the first (#2245): the owner gave the faction its own
+   * column with a large, clickable, linked sigil in it, "as opposed to putting
+   * it on top of their profile pic".
+   *
+   * THIS ONE *IS* ON `FactionAvatarProps`, unlike `DefaultAvatar`'s `ornament`
+   * slot a few lines down, and the difference is the point. `ornament` is one
+   * component's internal seam; a badge is drawn by all nine skins, so "do not
+   * draw one" has to be a promise all nine keep. Forwarding it costs each skin
+   * one destructured name and one prop.
+   */
+  badge?: boolean
 }
 
 /** 'sm' | 'md' | px → px. The two string steps keep their original values. */
@@ -118,6 +135,7 @@ export function userMediaHook(character: CharacterOut): string | undefined {
 export function DefaultAvatar({
   character,
   size = 'md',
+  badge: showBadge = true,
   ornament,
 }: FactionAvatarProps & { ornament?: ReactNode }) {
   const dim = avatarDim(size)
@@ -169,23 +187,25 @@ export function DefaultAvatar({
       </span>
       {ornament}
       {/* seven-segment sigil corner mark */}
-      <span
-        style={{
-          position: 'absolute',
-          right: -3,
-          bottom: -3,
-          width: badge,
-          height: badge,
-          borderRadius: '50%',
-          background: 'var(--faction-default-card-bg)',
-          boxShadow: '0 0 0 1.5px var(--faction-default-card-bg)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <DefaultSigil size={badge - 3} />
-      </span>
+      {showBadge && (
+        <span
+          style={{
+            position: 'absolute',
+            right: -3,
+            bottom: -3,
+            width: badge,
+            height: badge,
+            borderRadius: '50%',
+            background: 'var(--faction-default-card-bg)',
+            boxShadow: '0 0 0 1.5px var(--faction-default-card-bg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <DefaultSigil size={badge - 3} />
+        </span>
+      )}
     </span>
   )
 }
@@ -247,6 +267,7 @@ function FactionCircle({
 export function BadgedAvatar({
   character,
   size = 'md',
+  badge: showBadge = true,
   circle,
   initialFontSize = [13, 16],
   badgeBg,
@@ -283,30 +304,32 @@ export function BadgedAvatar({
         }
         style={circle}
       />
-      <span
-        style={{
-          position: 'absolute',
-          right: -3,
-          bottom: -3,
-          width: badge,
-          height: badge,
-          borderRadius: '50%',
-          background: badgeBg,
-          border: `1.5px solid ${badgeRing}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {glyph(badge - 5, badgeRing)}
-      </span>
+      {showBadge && (
+        <span
+          style={{
+            position: 'absolute',
+            right: -3,
+            bottom: -3,
+            width: badge,
+            height: badge,
+            borderRadius: '50%',
+            background: badgeBg,
+            border: `1.5px solid ${badgeRing}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {glyph(badge - 5, badgeRing)}
+        </span>
+      )}
     </span>
   )
 }
 
-export default function FactionAvatar({ character, size, glow = false }: FactionAvatarProps) {
+export default function FactionAvatar({ character, size, glow = false, badge }: FactionAvatarProps) {
   const Variant = pickVariant(surfaceMap('avatar'), character.faction_slug, DefaultAvatar)
-  const avatar = <Variant character={character} size={size} />
+  const avatar = <Variant character={character} size={size} badge={badge} />
   if (!glow) return avatar
 
   // ponytail: the glow is applied once here on a wrapper rather than threaded

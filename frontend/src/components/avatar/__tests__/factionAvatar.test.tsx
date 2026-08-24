@@ -7,6 +7,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import type { CharacterOut } from "../../../api/auth";
+import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER } from "../../../utils/factions";
 import FactionAvatar from "../FactionAvatar";
 
 function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
@@ -191,5 +192,60 @@ describe("FactionAvatar — WOW wears its crown at the corner (#2241, #2242)", (
     expect(html).toContain("var(--faction-wow-avatar-ring)");
     expect(html).toContain("var(--faction-wow-crest-field-rim)");
     expect(html).toContain("var(--faction-wow-avatar-pill-text)");
+  });
+});
+
+/**
+ * #2245 — `badge={false}`, and it has to be a promise ALL NINE skins keep.
+ *
+ * The desktop Players roster gives the faction a column of its own with a large
+ * linked sigil in it, so the 17px mark welded to the face two columns left says
+ * the same thing again and smaller. That is the only caller today, and the flag
+ * would be worse than useless if it were honoured by eight skins out of nine:
+ * one faction's members would keep a badge nobody else's has, and the surface
+ * that asked has no way to tell.
+ *
+ * SEAM: the badge's own clip, `right: -3px; bottom: -3px`, which `DefaultAvatar`
+ * and `BadgedAvatar` both write and nothing else on an avatar does. Asserting
+ * on the clip rather than on nine glyphs is what lets one loop cover the lot —
+ * and what keeps this passing when a faction changes its mark, which #2217 and
+ * #2241 have both already done.
+ *
+ * The loop is derived, not typed out: a skin added to the manifest without a
+ * line here would otherwise be exactly the one that gets it wrong.
+ */
+describe("an avatar can be asked not to wear its badge (#2245)", () => {
+  const CLIP = "right:-3px;bottom:-3px";
+  const SLUGS = ["na", ALBESCENT_FACTION_SLUG, ...FACTION_RAINBOW_ORDER];
+
+  it("covers every skin the app can dispatch to", () => {
+    // Nine: the na ring, Albescent's wrapper, and the seven in the rainbow.
+    expect(SLUGS).toHaveLength(9);
+  });
+
+  it.each(SLUGS)("%s badges by default", (slug) => {
+    expect(
+      renderToStaticMarkup(<FactionAvatar character={character({ faction_slug: slug })} />),
+    ).toContain(CLIP);
+  });
+
+  it.each(SLUGS)("%s drops the badge when the surface asks", (slug) => {
+    expect(
+      renderToStaticMarkup(
+        <FactionAvatar character={character({ faction_slug: slug })} badge={false} />,
+      ),
+    ).not.toContain(CLIP);
+  });
+
+  it("drops the badge and nothing else — the disc, its ring and the face stay", () => {
+    const html = renderToStaticMarkup(
+      <FactionAvatar
+        character={character({ faction_slug: "ua", avatar_url: "/media/isolde.png" })}
+        badge={false}
+      />,
+    );
+    expect(html).toContain("isolde.png");
+    expect(html).toContain("var(--faction-ua)");
+    expect(html).not.toContain("/factionMarks/enso.webp");
   });
 });

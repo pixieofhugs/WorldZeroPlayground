@@ -207,7 +207,17 @@ describe('form factors are structurally different, not a breakpoint', () => {
     const mobile = render(<MobilePlayers {...props()} />)
     expect(desktop.text, 'desktop names its columns').toContain('Lvl')
     expect(mobile.text, 'the phone has no column header').not.toContain('Lvl')
-    expect(desktop.text, 'desktop names the row faction').toContain(factionName('ephemerists'))
+    // #2245 GAVE THE FACTION A COLUMN AND TOOK AWAY THE WORD, and this line
+    // used to read `toContain(factionName('ephemerists'))` with the message
+    // "desktop names the row faction". That assertion did not fail when the row
+    // stopped naming it — the faction race prints every faction's name a few
+    // hundred pixels higher up, so it went on passing for the wrong reason.
+    // Assert the header, which only this surface draws, and leave the word
+    // itself to `playersFactionLinks.test.tsx`, which counts it.
+    // Not asserted of mobile: its race heading reads "Faction Points", so the
+    // absence of the column cannot be shown by the absence of the word. 'Lvl'
+    // above already carries "the phone draws no column header at all".
+    expect(desktop.text, 'desktop names the faction column').toContain('Faction')
     expect(mobile.html).toContain('data-testid="mobile-players-directory"')
   })
 
