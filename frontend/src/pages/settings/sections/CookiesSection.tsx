@@ -198,13 +198,15 @@ const inventory: CSSProperties = {
   background: 'var(--color-bg-surface-alt)',
 }
 
-export default function CookiesSection({ sectionId }: SettingsSectionProps) {
+/**
+ * The list itself, split out for ONE reason: the disclosure it lives behind is
+ * shut on first paint, this repo's test env has no DOM to click with, and a
+ * list that never renders under test is a list whose copy nothing checks. It is
+ * the seam `__tests__/cookiesSection.test.tsx` renders directly.
+ */
+export function StorageInventory({ id }: { readonly id: string }) {
   const { t } = useTranslation('common')
   const isMobile = useFormFactor() === 'mobile'
-  const [open, setOpen] = useState(false)
-
-  const listId = `${sectionId}-inventory`
-  const noteId = (key: string) => `${sectionId}-${key}-note`
 
   // Three columns on desktop, one stack on a phone. Sized in `ch` off the
   // longest key rather than the canvas' `150px 1fr 90px`: the left cell holds
@@ -224,6 +226,40 @@ export default function CookiesSection({ sectionId }: SettingsSectionProps) {
         alignItems: 'baseline',
         padding: 'var(--space-xs) 0',
       }
+
+  return (
+    <div id={id} style={inventory}>
+      {STORED_ENTRIES.map((entry) => (
+        <div key={entry.name} style={entryRow}>
+          <code style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
+            {entry.name}
+            {entry.family === 'account' && t('settings.cookies.suffix.account')}
+            {entry.family === 'character' && t('settings.cookies.suffix.character')}
+          </code>
+          <span
+            style={{
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.6,
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {t(entry.purposeKey)}
+          </span>
+          <span style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}>
+            {t(entry.whereKey, { days: SESSION_COOKIE_DAYS })}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function CookiesSection({ sectionId }: SettingsSectionProps) {
+  const { t } = useTranslation('common')
+  const [open, setOpen] = useState(false)
+
+  const listId = `${sectionId}-inventory`
+  const noteId = (key: string) => `${sectionId}-${key}-note`
 
   return (
     <SettingsCard
@@ -270,35 +306,7 @@ export default function CookiesSection({ sectionId }: SettingsSectionProps) {
           })}
         </button>
 
-        {open && (
-          <div id={listId} style={inventory}>
-            {STORED_ENTRIES.map((entry) => (
-              <div key={entry.name} style={entryRow}>
-                <code
-                  style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
-                >
-                  {entry.name}
-                  {entry.family === 'account' && t('settings.cookies.suffix.account')}
-                  {entry.family === 'character' && t('settings.cookies.suffix.character')}
-                </code>
-                <span
-                  style={{
-                    fontSize: 'var(--text-content)',
-                    lineHeight: 1.6,
-                    color: 'var(--color-text-secondary)',
-                  }}
-                >
-                  {t(entry.purposeKey)}
-                </span>
-                <span
-                  style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}
-                >
-                  {t(entry.whereKey, { days: SESSION_COOKIE_DAYS })}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        {open && <StorageInventory id={listId} />}
       </div>
 
       {OFF_GROUPS.map(({ key, titleKey, helpKey, noteKey, switchKey }) => (

@@ -51,13 +51,18 @@ import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
-import CookiesSection, { SESSION_COOKIE_DAYS, STORED_ENTRIES } from '../sections/CookiesSection'
+import CookiesSection, {
+  SESSION_COOKIE_DAYS,
+  STORED_ENTRIES,
+  StorageInventory,
+} from '../sections/CookiesSection'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const SRC = join(HERE, '..', '..', '..')
 const REPO = join(SRC, '..', '..')
 
 const html = () => renderToStaticMarkup(<CookiesSection sectionId="sec-cookies" />)
+const list = () => renderToStaticMarkup(<StorageInventory id="sec-cookies-inventory" />)
 const text = (markup: string) => markup.replace(/<[^>]*>/g, '')
 const control = (markup: string, testId: string) =>
   new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>`).exec(markup)?.[0] ?? ''
@@ -220,6 +225,39 @@ describe('all three switches render, all three inert, all three say why', () => 
       expect(button).toMatch(/aria-describedby="sec-cookies-[a-z]+-note"/)
     },
   )
+})
+
+/**
+ * Rendered directly, because the disclosure is shut on first paint and there is
+ * no DOM here to open it with — see the note on `StorageInventory`.
+ */
+describe('the disclosed list, once opened', () => {
+  it('prints every key, with the family markers spelled out', () => {
+    const body = text(list())
+    for (const entry of STORED_ENTRIES) expect(body, entry.name).toContain(entry.name)
+    expect(body).toContain(`${SEEN_INVITES_KEY_PREFIX}[character id]`)
+    expect(body).toContain(`${LAST_SEEN_LEVEL_KEY_PREFIX}[character id]`)
+    expect(body).toContain(`${SIDEBAR_PANEL_LAYOUT_STORAGE_KEY}[:account id]`)
+    expect(body).toContain(`${FACTION_SECTION_STORAGE_KEY}[:account id]`)
+  })
+
+  it('prints resolved copy beside each key, never a raw catalog path', () => {
+    const body = text(list())
+    expect(body, 'a bare key echoing back means the copy is missing').not.toContain(
+      'settings.cookies.',
+    )
+    expect(body).toContain('Keeps you signed in.')
+    expect(body).toContain('One entry for each of your characters.')
+  })
+
+  it('separates the cookie from the two browser stores', () => {
+    const body = text(list())
+    expect(body).toContain(`Cookie, ${SESSION_COOKIE_DAYS} days`)
+    expect(body, 'local storage has no expiry').toContain('until you clear it')
+    expect(body, 'the handoff mark is sessionStorage, not localStorage').toContain(
+      'until you close it',
+    )
+  })
 })
 
 describe('what a reader is told', () => {
