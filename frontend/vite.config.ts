@@ -78,10 +78,17 @@ export default defineConfig({
          * 57 and then 54 of 422. It does not reproduce on Node 24, whose
          * `require(esm)` is mature, which is why this is invisible locally.
          *
-         * Inlining hands the module to Vite's transform pipeline, so Node's
-         * ESM loader never sees it and the race cannot occur on any Node.
+         * Inlining hands every dep to Vite's transform pipeline, so Node's ESM
+         * loader never sees them and the race cannot occur on any Node.
+         *
+         * ponytail: `true` rather than a react-router-shaped list because
+         * narrowing it to /^react-router/ did NOT fix CI — the race is in the
+         * loader, not in one package, so the whole externalised set has to stop
+         * going through it. The ceiling is transform cost. The upgrade path is
+         * to delete this block once CI runs Node 22+, where the deprecated
+         * Node 20 loader this works around is gone.
          */
-        inline: [/^react-router/],
+        inline: true,
       },
     },
   },
