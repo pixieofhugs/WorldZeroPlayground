@@ -26,7 +26,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../i18n";
 import i18n from "../../../i18n";
-import { factionDescription } from "../../../utils/factions";
+import { factionDescription, setAlbescentRevealed } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 import { aTask, aPraxisCard } from "../../../test/fixtures";
@@ -136,9 +136,17 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
   });
 
   it("still says the faction's description exactly once (#2137)", () => {
-    const blurb = factionDescription(FALL_THROUGH).split(/\n\s*\n/)[0].trim();
-    const html = decode(page(FALL_THROUGH));
-    expect(html.split(blurb).length - 1).toBe(1);
+    // REVEALED: `AlbescentGate` hands this page only to a revealed account, and
+    // since #2409 `factionDescription` answers `[REDACTED]` for anyone else —
+    // which would have this case counting the redaction mark, not the blurb.
+    setAlbescentRevealed(true);
+    try {
+      const blurb = factionDescription(FALL_THROUGH).split(/\n\s*\n/)[0].trim();
+      const html = decode(page(FALL_THROUGH));
+      expect(html.split(blurb).length - 1).toBe(1);
+    } finally {
+      setAlbescentRevealed(false);
+    }
   });
 
   it("names a champion from the members the page already has", () => {

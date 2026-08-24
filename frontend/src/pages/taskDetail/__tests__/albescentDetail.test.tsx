@@ -28,7 +28,7 @@ import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from '../../../test/fixtures'
-import { factionName, setAlbescentRevealed } from "../../../utils/factions";
+import { REDACTED, setAlbescentRevealed } from "../../../utils/factions";
 
 const TITLE = "Sit with something until it turns pale";
 const BRIEF =
@@ -126,11 +126,17 @@ describe("Albescent task detail — Default plus the light", () => {
     expect(text).toContain(TITLE);
     expect(text).toContain(BRIEF);
     // The faction line resolves through `factionName()`, like every skin — and
-    // since #1891 that means it reads "Unaffiliated" to a viewer who was never
-    // invited. The skin itself is UNCHANGED: the look stays, only the word goes,
-    // which is why every other assertion above still holds. The revealed half
-    // of this is asserted below.
-    expect(text).toContain(factionName("na"));
+    // since #2409 that means it reads `[REDACTED]` to a viewer who was never
+    // invited, where #1891 had it read "Unaffiliated". This assertion is the
+    // ordinary-surface half of that inversion: the society is no longer
+    // disguised as the unaffiliated state, it is visibly withheld.
+    //
+    // The skin itself is UNCHANGED, which is #1891 ruling 1 and is why every
+    // other assertion above still holds — the look stays, only the word goes.
+    // `not.toContain(factionName("na"))` deliberately is NOT asserted: "na"
+    // resolves to "Unaffiliated", a word this page can legitimately carry for
+    // other reasons. The revealed half is asserted below.
+    expect(text).toContain(REDACTED);
     expect(text).not.toContain("Albescent");
   });
 
