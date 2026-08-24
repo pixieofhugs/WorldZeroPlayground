@@ -95,7 +95,18 @@ const ALARM = 'var(--faction-default-card-alarm)'
 const FIELD = 'var(--color-bg-surface)'
 const BORDER = 'var(--color-border-strong)'
 const ON_ACCENT = 'var(--color-bg-page)'
-const RING = 'var(--faction-default-rainbow-conic)'
+/* `RING` USED TO BE HERE — `var(--faction-default-rainbow-conic)`, inlined onto
+ * the phone's photo well. It is `.spectrum-dial` now (#2531), the class #2497
+ * minted for exactly this: the conic cut of the na spectrum, said once in
+ * index.css instead of privately at every mount. This mount was written after
+ * that sweep and so was never in it — an eighteenth copy of the same value,
+ * and the only one a stylesheet could not reach.
+ *
+ * Nothing about na changes. `.spectrum-dial` carries that ramp and nothing else,
+ * so the ring is the same rainbow it has always been; what the class buys is
+ * that a DRESSER can reach it (`.alb-moves .spectrum-dial`, two classes, so it
+ * wins from wherever it is written), which is how `AlbescentCreateCharacter`
+ * re-cuts this one mark without a copy of this file existing. */
 
 export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
   const formFactor = useFormFactor()
@@ -357,7 +368,11 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
 
       {/* Photo add */}
       <div style={{ textAlign: 'center' }}>
-        <button type="button" onClick={() => fileRef.current?.click()} aria-label={photoAction} style={ringBtn}>
+        {/* `.spectrum-dial` is the ring's paint (#2497 via #2531). Childless is
+            not required of a dial — the face below is lifted by
+            `.alb-moves .spectrum-dial > *`, the same shape `DefaultPointsRing`
+            wears — so the photo well keeps its span. */}
+        <button type="button" onClick={() => fileRef.current?.click()} aria-label={photoAction} className="spectrum-dial" style={ringBtn}>
           <span style={ringInner}>
             {avatarPreview ? (
               <img src={avatarPreview} alt={handle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -542,7 +557,11 @@ const ringBtn: CSSProperties = {
   // eslint-disable-next-line local/no-raw-style-values -- ornament: rainbow ring thickness drawn around the 104px photo well; the nearest rung (4px) thickens the band by a third.
   padding: 3,
   cursor: 'pointer',
-  border: 'none', background: RING,
+  // The ramp is `.spectrum-dial`'s at the mount below, not a declaration here
+  // (#2531). Preflight already zeroes a button's own background, so the class is
+  // the only paint on this box — geometry stays at the call site, which is the
+  // split `.spectrum-dial`'s own note in index.css states.
+  border: 'none',
 }
 const ringInner: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',

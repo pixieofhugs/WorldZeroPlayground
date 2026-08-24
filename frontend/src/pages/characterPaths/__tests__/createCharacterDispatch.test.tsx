@@ -14,16 +14,17 @@
  * slug is born unaffiliated and MUST land on the `na` kit, and so must a slug no
  * faction registered.
  *
- * ON ALBESCENT, READ THE REASON AND NOT JUST THE ROW. It resolves to Default
- * here, and the row below would have been just as green when the reason was
- * "Albescent can never be picked at creation". That reason is now FALSE: #2399
- * re-cut the gate and Albescent IS a character-creation option for an unlocked
- * account, since a new life is level 0 and always clears the level-8 ceiling.
- * What survives is Molly's ruling that it gets no archetype anyway — every
- * Albescent registration is a WRAPPER rather than a skin (ADR-0027), so the na
- * kit is the floor that pattern is built on. There is deliberately NO assertion
- * here that Albescent is absent from the picker; such a test would be wrong the
- * day it is read, and the picker is the account's invitation set, not this map.
+ * ON ALBESCENT, READ THE REASON AND NOT JUST THE ROW. Its row has been green
+ * under three different reasons, two of which are now false. It was "Albescent
+ * can never be picked at creation" until #2399 re-cut the gate — it IS a
+ * character-creation option for an unlocked account, since a new life is level 0
+ * and always clears the level-8 ceiling. It was then "so it gets no archetype
+ * anyway" until #2531, which registered one. What survives both is the actual
+ * ruling: every Albescent registration is a WRAPPER rather than a skin
+ * (ADR-0027), so the na kit is what draws and the archetype is one class over
+ * it. There is deliberately NO assertion here that Albescent is absent from the
+ * picker; such a test would be wrong the day it is read, and the picker is the
+ * account's invitation set, not this map.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -114,11 +115,24 @@ describe('the calling being picked chooses the archetype', () => {
     expect(cleared).toBe(DefaultCreateCharacter)
   })
 
-  it('albescent renders the Default, deliberately', () => {
+  it('albescent renders the na KIT through a wrapper, not a costume of its own', () => {
     // NOT because it cannot be picked — since #2399 it can, a new life being
-    // level 0. See this file's header for why the na kit is the right answer
-    // rather than a gap.
-    expect(archetypeFor('albescent')).toBe(DefaultCreateCharacter)
+    // level 0. And no longer by falling through, either: #2531 registered the
+    // row, because an absent one reads as "na draws no mark to re-cut here" and
+    // as "nobody got to it" at the same time. What renders is still the na kit —
+    // `AlbescentCreateCharacter` returns `DefaultCreateCharacter` inside one
+    // classed div, so `data-skin` below is the na page's own and the whole delta
+    // is that the phone's rainbow photo ring starts turning. The byte-identity
+    // once that class is stripped is asserted in
+    // `src/__tests__/albescentWrapperKinds.test.tsx`.
+    const Archetype = archetypeFor('albescent')
+    expect(Archetype).not.toBe(DefaultCreateCharacter)
+    const html = renderToStaticMarkup(
+      <MemoryRouter><Archetype state={state({ factionSlug: 'albescent' })} /></MemoryRouter>,
+    )
+    expect(html, 'the na kit is what draws — #796 is the defect class').toContain(
+      'data-skin="default"',
+    )
   })
 
   it('an unknown slug cannot reach Object.prototype (#1821)', () => {

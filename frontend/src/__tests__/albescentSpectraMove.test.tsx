@@ -85,6 +85,11 @@ const WEARS_THE_MARKER: Record<string, string> = {
   '../pages/factionDetail/archetypes/AlbescentFactionBody.tsx': 'faction body',
   // the pale sheet's one strip — classed here, since the seal is Albescent's own
   '../components/metataskSeal/skins/AlbescentSeal.tsx': 'metatask seal',
+  // the phone branch's photo ring. The mount was written after #2497's sweep and
+  // so was never in it — an eighteenth inline copy of the conic, and the only
+  // one a stylesheet could not reach; #2531 classed it and this wrapper is what
+  // reaches it. The desktop branch draws no na spectrum at all.
+  '../pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx': 'character creation',
 }
 
 /**
@@ -100,6 +105,18 @@ const NO_CLASSED_SPECTRUM: Record<string, string> = {
   '../components/avatar/FactionAvatar.tsx': 'avatar',
   '../components/vote/AlbescentVote.tsx': 'vote',
   '../components/selectCard/AlbescentSelectCard.tsx': 'select card',
+  // The three PASS-THROUGH rows #2531 added. Each is listed against the na
+  // component it wraps, because that is where the answer lives: no classed
+  // spectrum there means no still spectrum for a marker to reach, which is the
+  // finding each registration was made to record. The comment sheet is the one
+  // to read twice — na DOES draw a spectrum hairline on it, but the ramp is
+  // `factionFill(slug, 'bar')`, computed per slug, and a class cannot be
+  // conditional (the hold-out `spectrumClasses.test.tsx` already names for the
+  // rung dots). So "no classed spectrum" is true of it for a reason the other
+  // rows do not share, and if that ever changes this row goes red.
+  '../components/layout/WatercolorBackground.tsx': 'backdrop',
+  '../components/comments/CommentThread.tsx': 'comment',
+  '../components/duel/DuelSealConfirm.tsx': 'duel seal',
 }
 
 describe('the census: every Albescent surface with a classed spectrum wears the marker', () => {
