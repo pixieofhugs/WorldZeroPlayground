@@ -129,14 +129,20 @@ const BESPOKE: Record<string, string[]> = {
   // out in parallel behind the chassis, which is exactly the shape the note
   // above warns about. Append your slug; do not restate the list.
   //
-  // `albescent` and `na` are absent, and the REASON for albescent changed while
-  // this was being built. It is no longer "albescent can never be picked at
-  // creation" — #2399 re-cut the gate and it can be, since a new life is level 0
-  // and clears the level-8 ceiling. Molly's ruling is that it gets no archetype
-  // anyway: every Albescent registration is a WRAPPER rather than a skin
-  // (ADR-0027), so it renders `DefaultCreateCharacter`, WHICH IS the na kit. The
-  // `leaves %s to the surface Default` row below covers it either way.
-  createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity'],
+  // `na` is absent and permanently: it IS `DefaultCreateCharacter`.
+  //
+  // `albescent` WAS absent too, and the reason moved twice. It was once
+  // "albescent can never be picked at creation" — #2399 re-cut that gate and it
+  // can be, since a new life is level 0 and clears the level-8 ceiling. Then it
+  // was Molly's ruling that it gets no ARCHETYPE anyway, because every Albescent
+  // registration is a WRAPPER rather than a skin (ADR-0027) and a wrapper over
+  // the na kit is the na kit. That ruling is intact and #2531 appended the slug
+  // anyway: `AlbescentCreateCharacter` is exactly that wrapper — it renders
+  // `DefaultCreateCharacter` whole and re-cuts the one na mark on the page, the
+  // phone's rainbow photo ring, which starts turning. What the empty row could
+  // not say is WHICH of "na draws nothing to grab" and "nobody got to it" was
+  // meant, and it turned out to be neither.
+  createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity', 'albescent'],
   // Was `mobileFactionPage` with this exact slug list until ADR-0078 collapsed
   // faction detail to one responsive component per faction. Same move the
   // praxis-card row made below: the row follows the surviving surface rather

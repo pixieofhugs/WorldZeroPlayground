@@ -10,8 +10,20 @@
  * hand-maintained list of "Albescent renders Default here" wrappers could never
  * keep. ADR-0048 then made "frozen" mean "frozen UNTIL DESIGNED": the few rows
  * below are surfaces whose design has landed, and each is `Default` PLUS a
- * flourish rather than a skin of its own. Everything unlisted still falls
- * through, and that remains the default state, not the exception.
+ * flourish rather than a skin of its own.
+ *
+ * NOTHING IS UNLISTED ANY MORE, AND THAT SENTENCE USED TO END DIFFERENTLY. It
+ * said everything unlisted still falls through, "and that remains the default
+ * state, not the exception". #2531 ended it: the last four keys — `backdrop`,
+ * `comment`, `createCharacter`, `duelSeal` — are registered, so this file names
+ * every surface in `SURFACE_KEYS` and `surfaceDispatch.test.ts` holds it there.
+ * The property that paragraph was defending is NOT lost, because the price of
+ * losing it is now paid by CI rather than by a reader: a NEW surface still costs
+ * one row here, and the guard says so the day the key is added instead of weeks
+ * later, visually. What the audit found was the cost of the other half — a
+ * silent row reads as "na draws no mark here" and as "nobody got to it" at the
+ * same time, and four of them were being read wrong. Three of the four ARE
+ * pass-throughs; they say so now.
  *
  * It had 22 bespoke components (#232) and a 35-declaration token block. Both are
  * gone. The wrappers went too rather than being thinned to pass-throughs: an
@@ -73,6 +85,14 @@ const AlbescentAvatar = lazyArchetype(() => import('../components/avatar/Albesce
 // `FactionSigil.tsx`, and `lazyArchetype` is what makes reading one from here
 // safe (the thunk note in `./manifest.ts`).
 const AlbescentSigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.AlbescentSigilAdapter })))
+// #2531 — the last four keys in `SURFACE_KEYS`, so the matrix has no holes. Lazy
+// like every wrapper above, and for a sharper version of the same reason: three
+// of the four render the Default WHOLE, so a static import here would pull a
+// page, a thread and a dialog into the entry chunk to add nothing to any of them.
+const AlbescentBackdrop = lazyArchetype(() => import('../components/backdrop/AlbescentBackdrop'))
+const AlbescentComment = lazyArchetype(() => import('../components/comments/voices/AlbescentComment'))
+const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
+const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -173,9 +193,12 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * `FeedItemSlot` outside every frame, and nothing here reimplements them.
    *
    * This row exists because the epic settled it as decision 13, which is also the
-   * decision NOT to claim `comment`: Albescent keeps `DefaultComment`, because
-   * the card is sufficiently distinct on its own once the light is on it. So the
-   * faction's feed presence is one manifest line and no voice of its own.
+   * decision not to give Albescent a comment VOICE: it keeps `DefaultComment`,
+   * because the card is sufficiently distinct on its own once the light is on
+   * it. That ruling stands — the `comment` row below is a PASS-THROUGH which
+   * renders `DefaultComment` byte-identically (#2531), so the faction's feed
+   * presence is still one dressed frame and no voice of its own. What changed is
+   * only that the manifest says so out loud rather than by omission.
    *
    * `era_announcement` never reaches this frame — it is chassis-exempt by type
    * for every faction (epic decision 6), so no exclusion is needed here.
@@ -318,4 +341,79 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * a seam. Desktop follows the same wrapper pattern when it is needed.
    */
   mobileFieldDesk: () => AlbescentFieldDesk,
+
+  /* ─── The last four keys (#2531) ─────────────────────────────────────────
+   *
+   * The 2026-08-23 audit found four surfaces this manifest did not name, and the
+   * problem was never that they rendered wrong — they rendered the Default,
+   * which is correct — it was that an ABSENT ROW READS TWO WAYS: na draws no
+   * mark there so a wrapper would have nothing to grab, or nobody got to them.
+   * Nothing in the tree said which. Owner ruling: fill them, as wrappers, so the
+   * matrix has no holes to misread. `surfaceDispatch.test.ts` now counts them.
+   *
+   * ONE IS A RE-CUT AND THREE ARE PASS-THROUGHS, and each row below says which
+   * in its first line. A re-cutting wrapper changes pixels deliberately, where
+   * na already draws a mark; a pass-through renders the Default byte-identically
+   * and exists so the map stops answering by silence. A pass-through that shifts
+   * a pixel is a bug and a re-cut that shifts none did not do its job, so
+   * `src/__tests__/albescentWrapperKinds.test.tsx` holds all four to the kind
+   * they claim. `strip the class and na is byte-identical` stays the invariant
+   * on every one — that is what keeps this dress off unaffiliated players.
+   */
+
+  /**
+   * PASS-THROUGH. The page ground under an Albescent player's profile, which is
+   * the only route that dispatches a backdrop at all (`CharacterProfile` is
+   * `useFactionBackdrop`'s one caller). It renders the site's watercolour — the
+   * na fallback, unchanged — and the answer is load-bearing rather than lazy:
+   * every other faction paints its own ground there, and a secret society whose
+   * members' profiles came with one would be visible from across the room
+   * (ADR-0027). There is also no mark to re-cut inside someone else's `<svg>`.
+   * See the component for why the ornament alternation (#2195) is unaffected.
+   */
+  backdrop: () => AlbescentBackdrop,
+
+  /**
+   * PASS-THROUGH, and the row the issue asked to check hardest. na HAS a comment
+   * voice — the spectrum bubble — and it carries two marks that a wrapper cannot
+   * reach: the sheet's hairline is `factionFill(slug, 'bar')`, a ramp computed
+   * per slug, and a class may not be conditional (`spectrumClasses.test.tsx`
+   * names that same hold-out for the rung dots); the other is gradient-clipped
+   * @mention TEXT, which the epic's pre-painted-`::before` technique cannot
+   * dress at all. Epic #1192 decision 13 had already ruled Albescent keeps
+   * `DefaultComment`, and this changes nothing about that — it records it where
+   * the next reader looks instead of leaving a hole beside the `feedFrame` row
+   * that mentions it.
+   */
+  comment: () => AlbescentComment,
+
+  /**
+   * RE-CUT — the one of the four that changes pixels. na draws a single spectrum
+   * mark on this page, the rainbow ring around the phone branch's photo well,
+   * and this wrapper sets it TURNING: the mount now wears `.spectrum-dial`
+   * (#2497's class, which this file predated) and `.alb-moves` is the dresser it
+   * was minted for. No markup added, no colour, no copy, no new keyframe — the
+   * mark is na's already. The desktop branch carries no na spectrum and is
+   * untouched; one row covers both widths because the archetype reads
+   * `useFormFactor()` itself.
+   *
+   * IT REVERSES ONE LINE OF `surfaceDispatch.test.ts`'s createCharacter note —
+   * "Molly's ruling is that it gets no archetype anyway". That ruling was about a
+   * SKIN, and it still holds: this is a wrapper over the na kit, which is what
+   * that note says Albescent renders. The dispatch slug here is the pick in
+   * progress, so the ring starts turning as the calling is chosen and stops the
+   * moment it is cleared.
+   */
+  createCharacter: () => AlbescentCreateCharacter,
+
+  /**
+   * PASS-THROUGH. `DefaultDuelSealConfirm` is not the na SPECTRUM kit — it draws
+   * no rainbow anywhere, its one accent being the OPPONENT's flat hue (grilled
+   * #310) — so there is no mark to re-cut. Two reasons not to add one: the
+   * dialog is skinned by the TASK's faction, so a non-member sees this row on an
+   * Albescent-owned task, and its forfeit mode is the one duel beat that cannot
+   * be undone, where legibility beats a tell (the trade `editPraxis` above
+   * already made). ONE responsive component, both form factors (#1313).
+   */
+  duelSeal: () => AlbescentDuelSealConfirm,
 }
