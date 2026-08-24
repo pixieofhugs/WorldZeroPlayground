@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next'
 
+import { SpectrumBand } from '../../cardMasthead/factionBands'
+import DefaultPointsRing from '../../factionMarks/DefaultPointsRing'
 import { factionName } from '../../../utils/factions'
+import SealShell, { SEAL_FIGURE, SEAL_MARK } from '../SealShell'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -11,22 +14,34 @@ import type { SealSkinProps } from '../types'
  * `--albescent-reveal-*` reveal tokens (never a `--faction-albescent-*` theme,
  * which does not exist by design) so it stays restrained and un-tinted.
  *
- * IT FOLLOWS THE FLIP (#2301) and needs no edit to do it: every colour above is
- * a reveal token, and after dark those resolve to the na card's own stock and
- * ink. So the sticker is a pale sheet by day and an na-dark one by night, on
- * whatever host card it has been stuck to. Its `-border` is what keeps it a
- * distinct object when the host card happens to be na's too (2.74:1).
+ * IT FOLLOWS THE FLIP (#2301) and needs no edit to do it: every colour here is a
+ * reveal token, and after dark those resolve to the na card's own stock and ink.
+ * So the sticker is a pale sheet by day and an na-dark one by night, on whatever
+ * host card it has been stuck to. Its `-border` is what keeps it a distinct
+ * object when the host card happens to be na's too (2.74:1).
  *
  * ITS ONE COLOUR MOVES (#2500, epic #2496 ruling 3). The strip was the last
  * still spectrum on any Albescent-dispatched surface, and it was still for a
  * mechanical reason rather than a designed one: it named
  * `--faction-default-rainbow` inline, so no stylesheet could reach it. It wears
  * `.spectrum-rule` now — the class #2497 minted for exactly these seventeen
- * inline ramps, and which carries that same token and nothing else, so the
- * resting sheet is the one that shipped yesterday — and the root wears
- * `alb-moves`, the marker every other Albescent wrapper carries. The `opacity`
- * stays at the call site with the height and the radius: those are this mount's
- * geometry, not the ramp.
+ * inline ramps — and the root wears `alb-moves`, the marker every other
+ * Albescent wrapper carries.
+ *
+ * THE STRIP IS THE BAND'S RULE NOW (#2562). The society gets a masthead here and
+ * nowhere else, by owner ruling: the seal's label already prints "ALBESCENT
+ * METATASK" in plain sight, so the band adds no exposure the label has not, and
+ * two bandless seals out of nine defeat the one anatomy. What it mounts is the
+ * `na` band — `SpectrumBand`, the same small-caps-over-a-hairline the two seals
+ * were already drawing by hand — which is how Albescent mounts every na drawing.
+ * The ruling does not travel: `CardMasthead`'s docstring and ADR-0048 still keep
+ * the Albescent task card and praxis card bandless.
+ *
+ * THE RING IS LETTERED IN REVEAL TOKENS, and that is the one thing this skin has
+ * to say to a shared na drawing. `DefaultPointsRing` prints the na family by
+ * default and this sheet is `--albescent-reveal-surface`, pure white by day — so
+ * the ground, the figure's ink and the caption's are all passed. Nothing here
+ * names a `--faction-default-*` colour, which is the rule the whole skin keeps.
  *
  * A seal is a reveal moment, so this is the one place the tell may be looked at
  * directly rather than noticed sideways.
@@ -36,82 +51,48 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
   const faction = factionName(metatask.metatask_faction_slug)
 
   return (
-    <div
-      className="relative alb-moves"
+    <SealShell
+      className="alb-moves"
       style={{
         background: 'var(--albescent-reveal-surface)',
         color: 'var(--albescent-reveal-text)',
         border: '1px solid var(--albescent-reveal-border)',
         borderRadius: 4,
-        padding: 'var(--space-md) var(--space-lg)',
         boxShadow: 'var(--albescent-reveal-shadow)',
         fontFamily: 'var(--font-faction-serif)',
-        overflow: 'hidden',
       }}
-    >
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute font-body leading-none"
+      band={
+        <SpectrumBand
+          slug="albescent"
+          ink="var(--albescent-reveal-text-muted)"
+          title={t('detail.seal.label', { faction })}
+        />
+      }
+      removable={removable}
+      onRemove={() => onRemove?.(metatask.id)}
+      removeColor="var(--albescent-reveal-text-muted)"
+      condition={
+        <span
+          className="block"
           style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            zIndex: 2,
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--albescent-reveal-text-muted)',
-            fontSize: 'var(--text-xl)',
-            cursor: 'pointer',
+            fontSize: 'var(--text-content)',
+            color: 'var(--albescent-reveal-text)',
           }}
         >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
-
-      <span
-        className="label-heading block"
-        style={{ color: 'var(--albescent-reveal-text-muted)' }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
-
-      {/* the soft spectrum strip — the one colour on the sheet, kept pale, and
-          travelling under `alb-moves` above (#2500) */}
-      <span
-        aria-hidden="true"
-        className="block spectrum-rule"
-        style={{
-          height: 2,
-          borderRadius: 2,
-          opacity: 0.35,
-          margin: 'var(--space-xs) 0 var(--space-sm)',
-        }}
-      />
-
-      <span
-        className="block"
-        style={{
-          fontSize: 'var(--text-content)',
-          color: 'var(--albescent-reveal-text)',
-        }}
-      >
-        {metatask.title}
-      </span>
-
-      <span
-        className="block"
-        style={{
-          fontSize: 'var(--text-title)',
-          fontWeight: 600,
-          letterSpacing: '0.02em',
-          color: 'var(--albescent-reveal-ink)',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {t('detail.seal.bonus', { points: metatask.point_value })}
-      </span>
-    </div>
+          {metatask.title}
+        </span>
+      }
+      mark={
+        <DefaultPointsRing
+          value={t('detail.seal.bonusFigure', { points: metatask.point_value })}
+          unit={t('card.stamp.points', { count: metatask.point_value })}
+          size={SEAL_MARK}
+          valueSize={SEAL_FIGURE}
+          ground="var(--albescent-reveal-surface)"
+          valueColor="var(--albescent-reveal-text)"
+          unitColor="var(--albescent-reveal-text-muted)"
+        />
+      }
+    />
   )
 }

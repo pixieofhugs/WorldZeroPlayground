@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next'
 
+import { SpectrumBand } from '../../cardMasthead/factionBands'
+import DefaultPointsRing from '../../factionMarks/DefaultPointsRing'
 import { factionName, factionSpectrumSheet } from '../../../utils/factions'
+import SealShell, { SEAL_FIGURE, SEAL_MARK } from '../SealShell'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -8,11 +11,9 @@ import type { SealSkinProps } from '../types'
  *
  * This is the Unaffiliated (`na`) seal AND the shared fallback: every metatask
  * whose issuing faction has no bespoke skin registered falls through to it via
- * {@link MetataskSeal}'s dispatch table (e.g. `wow` until #931), so integrations
- * render end to end before the per-faction skins land. It stays a tasteful
- * neutral card — a full-spectrum rainbow FRAME and an uppercase register are its
- * only signature — showing the "<FACTION> METATASK" label, the condition and the
- * "+N PTS" bonus, plus the `×` peel control when `removable`.
+ * {@link MetataskSeal}'s dispatch table, so integrations render end to end even
+ * for an issuer the kit has never heard of. It stays a tasteful neutral card — a
+ * full-spectrum rainbow FRAME and an uppercase register are its only signature.
  *
  * THE SPECTRUM IS THE BORDER, NOT A BAR (#2520, epic #2496). A 3px strip was
  * pinned across the top edge until `Score-Stamp.dc.html` ruled otherwise: "drop
@@ -20,14 +21,20 @@ import type { SealSkinProps } from '../types'
  * `DefaultTaskCard` and `DefaultPraxisCard` already wear, so the na kit reads as
  * one material — which is the precondition for "Albescent = na + motion" being
  * true rather than aspirational.
+ *
+ * IT WEARS THE KIT'S ONE SEAL ANATOMY NOW (#2562): {@link SealShell} places the
+ * three fields, `SpectrumBand` heads it, and the bonus is the spectrum RING
+ * rather than a line of accent type — which is the same drawing `na`'s task card
+ * and its score stamp already hold their points in (#2042). The ring's ground is
+ * this sticker's own sheet, so the disc reads as the seal showing through the
+ * annulus rather than as a patch laid on it.
  */
 export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
   const faction = factionName(metatask.metatask_faction_slug)
 
   return (
-    <div
-      className="relative"
+    <SealShell
       style={{
         // The 3px spectrum frame, not a 3px bar across the top edge (#2520).
         // Only the geometry is stated here; the composition — the ramp appended
@@ -38,60 +45,38 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         ...factionSpectrumSheet(),
         color: 'var(--faction-default-card-text)',
         borderRadius: 12,
-        padding: 'var(--space-md) var(--space-lg)',
-        overflow: 'hidden',
       }}
-    >
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute font-body leading-none"
+      band={
+        <SpectrumBand
+          slug="na"
+          ink="var(--faction-default-card-muted)"
+          title={t('detail.seal.label', { faction })}
+        />
+      }
+      removable={removable}
+      onRemove={() => onRemove?.(metatask.id)}
+      removeColor="var(--faction-default-card-muted)"
+      condition={
+        <span
+          className="font-body block"
           style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--faction-default-card-muted)',
-            fontSize: 'var(--text-xl)',
-            cursor: 'pointer',
+            fontSize: 'var(--text-content)',
+            color: 'var(--faction-default-card-text)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
           }}
         >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
-
-      <span
-        className="label-heading block"
-        style={{ color: 'var(--faction-default-card-muted)' }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
-
-      <span
-        className="font-body block"
-        style={{
-          fontSize: 'var(--text-content)',
-          color: 'var(--faction-default-card-text)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.03em',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {metatask.title}
-      </span>
-
-      <span
-        className="font-display block"
-        style={{
-          fontSize: 'var(--text-title)',
-          color: 'var(--faction-default-card-accent)',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {t('detail.seal.bonus', { points: metatask.point_value })}
-      </span>
-    </div>
+          {metatask.title}
+        </span>
+      }
+      mark={
+        <DefaultPointsRing
+          value={t('detail.seal.bonusFigure', { points: metatask.point_value })}
+          unit={t('card.stamp.points', { count: metatask.point_value })}
+          size={SEAL_MARK}
+          valueSize={SEAL_FIGURE}
+        />
+      }
+    />
   )
 }

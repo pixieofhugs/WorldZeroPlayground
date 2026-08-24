@@ -1,14 +1,27 @@
 import { useTranslation } from 'react-i18next'
 
+import { SnideBand } from '../../cardMasthead/factionBands'
+import { PenCircle } from '../../factionMarks/snideAtoms'
 import { factionName } from '../../../utils/factions'
+import SealShell, { SEAL_FIGURE, SEAL_MARK } from '../SealShell'
 import type { SealSkinProps } from '../types'
 
 /**
  * S.N.I.D.E. seal — a photocopier-ink ransom note slapped on the host praxis.
- * It was taped on until #1708 took the two strips off its head.
+ * It was taped on until #1708 took the two strips off its head, and headed by
+ * its own halftone eyebrow until #2562 gave it the kit's note bar.
  * Same three-field contract as every seal (label / condition / bonus) but in
- * S.N.I.D.E.'s own voice: Archivo Black + Anton for the demand, Special Elite
- * for the eyebrow, acid-green on ink with a hot-pink tear.
+ * S.N.I.D.E.'s own voice: Archivo Black + Anton for the demand, acid-green on
+ * ink with a hot-pink tear.
+ *
+ * THE BONUS IS THE PEN CIRCLE (#2042 + #2562) — the loop this faction rings a
+ * total in on its task card, its score stamp and its task detail. THE INKS ARE
+ * PROPS AND THAT IS NOT OPTIONAL: the loop's defaults are the clipping's
+ * (`-note-ink`, `-note-pink-ink`), which flip while this sticker's ground does
+ * not — 1.00:1 in light on exactly this token, the same hex as the ground. This
+ * seal stands on `--faction-snide-card-bg`, which is the task detail's slab, so
+ * it passes that surface's measured pair: `-card-text` 16.68:1 and
+ * `-card-accent` 15.55:1, both cascades.
  */
 
 /** Word-level "cut from a magazine" chip palette, picked deterministically per word. */
@@ -73,70 +86,53 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
   const faction = factionName(metatask.metatask_faction_slug)
 
   return (
-    <div
-      className="relative"
+    <SealShell
       style={{
         background: 'var(--faction-snide-card-bg)',
         color: 'var(--faction-snide-card-text)',
         border: '2px solid var(--faction-snide-pink)',
         borderRadius: 2,
-        padding: 'var(--space-md) var(--space-lg)',
         transform: 'rotate(-1deg)',
         // ornament (#1609): flat offset print register — ink tokenized, and the
-        // strength is now the uniform 40% (#2302; this note printed at 35%). The
-        // halftone dot field below stays raw for its own reason: the density IS
-        // the drawing, not the acid tier. See the legacy list.
+        // strength is now the uniform 40% (#2302; this note printed at 35%).
         boxShadow: '4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
-        overflow: 'hidden',
       }}
-    >
-      <div className="ht-dots" style={{ position: 'absolute', inset: 0, color: 'rgba(182,255,46,0.08)', pointerEvents: 'none' }} />
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute font-body leading-none"
-          style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            zIndex: 2,
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--faction-snide-pink)',
-            fontSize: 'var(--text-xl)',
-            cursor: 'pointer',
-          }}
-        >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
-
-      <span
-        className="label-heading block relative"
-        style={{
-          fontFamily: 'var(--faction-snide-font-type)',
-          color: 'var(--faction-snide-acid)',
-        }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
-
-      <div className="relative" style={{ margin: 'var(--space-sm) 0' }}>
-        <ClippedCondition text={metatask.title} />
-      </div>
-
-      <span
-        className="font-body block relative"
-        style={{
-          fontFamily: 'var(--faction-snide-font-impact)',
-          letterSpacing: '0.04em',
-          fontSize: 'var(--text-title)',
-          color: 'var(--faction-snide-acid)',
-        }}
-      >
-        {t('detail.seal.bonus', { points: metatask.point_value })}
-      </span>
-    </div>
+      band={<SnideBand title={t('detail.seal.label', { faction })} />}
+      removable={removable}
+      onRemove={() => onRemove?.(metatask.id)}
+      /* On the note bar, where the acid is the wordmark's own ink (measured on
+         `-note-bar`). The pink it used stood on the black sheet. */
+      removeColor="var(--faction-snide-acid)"
+      bodyStyle={{
+        // The halftone dot field, kept as the BODY's ground rather than the
+        // sticker's: the band is painted and a field running under it would
+        // print through the one region of the seal the kit owns. The density IS
+        // the drawing, not the acid tier, so the value stays raw (#1609).
+        position: 'relative',
+      }}
+      condition={
+        <>
+          <div
+            className="ht-dots"
+            style={{ position: 'absolute', inset: 0, color: 'rgba(182,255,46,0.08)', pointerEvents: 'none' }}
+          />
+          <div className="relative">
+            <ClippedCondition text={metatask.title} />
+          </div>
+        </>
+      }
+      mark={
+        <PenCircle
+          size={SEAL_MARK}
+          value={t('detail.seal.bonusFigure', { points: metatask.point_value })}
+          unit={t('card.stamp.points', { count: metatask.point_value })}
+          valueColor="var(--faction-snide-card-text)"
+          unitColor="var(--faction-snide-card-accent)"
+          valueSize={SEAL_FIGURE}
+          unitCaps
+          style={{ position: 'relative' }}
+        />
+      }
+    />
   )
 }
