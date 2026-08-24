@@ -26,9 +26,19 @@
  * pass-throughs; they say so now.
  *
  * It had 22 bespoke components (#232) and a 35-declaration token block. Both are
- * gone. The wrappers went too rather than being thinned to pass-throughs: an
- * undeclared surface already falls through, so a file that adds nothing is worse
- * than no file — it is a place for divergence to creep back in.
+ * gone. The wrappers went with them rather than being thinned to pass-throughs,
+ * on the ground that an undeclared surface already falls through, so a file that
+ * adds nothing is worse than no file — a place for divergence to creep back in.
+ *
+ * THREE PASS-THROUGHS EXIST NOW ANYWAY (#2531), and the sentence above is what
+ * they revise. The divergence half of it stands and is now enforced rather than
+ * trusted: a pass-through's acceptance test is that its markup is BYTE-IDENTICAL
+ * to the Default's (`src/__tests__/albescentWrapperKinds.test.tsx`), so it cannot
+ * quietly grow a dress. What it got wrong is the cost of saying nothing — an
+ * absent row reads as "na draws no mark here to re-cut" and as "nobody got to
+ * it" at the same time, and the 2026-08-23 audit found four being read the wrong
+ * way. A file that renders the Default and says WHY in its docblock is not a
+ * file that adds nothing.
  *
  * WHY THE MODULE SURVIVES AT ALL. Albescent stays registered: it is a real
  * faction with members, a roster, an invitation flow and a level-8 unlock. This
