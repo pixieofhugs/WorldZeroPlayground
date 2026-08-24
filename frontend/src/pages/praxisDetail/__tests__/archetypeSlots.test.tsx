@@ -292,7 +292,15 @@ describe("praxis-read earned-points breakdown", () => {
 
 // ─── The task-reference line does not restate the stamp (#1833) ──────────────
 //
-// Each archetype's task-reference band closes with "Level 3 · 30 pts", and the
+/**
+ * What the band says the task is worth, read from the catalog rather than
+ * typed. It was the literal "30 pts" until #2598 took
+ * `praxis:detail.taskRef.points` to the long form — and to an `_one`/`_other`
+ * pair, because "1 points" is wrong where "1 pts" was merely terse.
+ */
+const TASK_WORTH = i18n.t("praxis:detail.taskRef.points", { points: 30, count: 30 });
+
+// Each archetype's task-reference band closes with "Level 3 · 30 points", and the
 // score rail beside it prints 30.0 as the total whenever nothing has moved the
 // score off the base — which, under Era 1's neutral multiplier, is every
 // unvoted praxis. #1131 made the stamp suppress its own base row in exactly
@@ -318,13 +326,13 @@ describe("task-reference points (#1833)", () => {
       // stamp's total and the band's figure are the same string and only the
       // count tells them apart — which is the rule this case is about.
       expect(text.split("30"), "the stamp still carries the total").toHaveLength(2);
-      expect(text, "and the band does not repeat it").not.toContain("30 pts");
+      expect(text, "and the band does not repeat it").not.toContain(TASK_WORTH);
     });
 
     it(`${slug} keeps both figures once votes move the total`, () => {
       // base 30 + 16 from votes = 46: two figures, two questions.
       const { text } = render(<Archetype state={state()} />);
-      expect(text, "what the task is worth").toContain("30 pts");
+      expect(text, "what the task is worth").toContain(TASK_WORTH);
       expect(text, "what this praxis scored").toContain("46");
     });
 
@@ -334,7 +342,7 @@ describe("task-reference points (#1833)", () => {
       const { text } = render(<Archetype state={baseOnly({ moderation_status: "failed" })} />);
       // Stated once again, and this time the one statement is the band's.
       expect(text.split("30"), "no total was banked").toHaveLength(2);
-      expect(text, "so what the task is worth stays").toContain("30 pts");
+      expect(text, "so what the task is worth stays").toContain(TASK_WORTH);
     });
   }
 });

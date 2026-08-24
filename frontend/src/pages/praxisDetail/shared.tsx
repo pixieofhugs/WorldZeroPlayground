@@ -88,7 +88,7 @@ export function scoreWasBanked(praxis: PraxisOut): boolean {
 export function taskRefMeta(praxis: PraxisOut, t: TFunction<'praxis'>): string {
   const level = t('detail.taskRef.level', { level: praxis.task_level_required })
   if (stampRestatesTaskPoints(praxis)) return level
-  return `${level} · ${t('detail.taskRef.points', { points: praxis.task_point_value })}`
+  return `${level} · ${t('detail.taskRef.points', { points: praxis.task_point_value, count: praxis.task_point_value })}`
 }
 
 // ── The detail WALL's alarm inks (#1451) ─────────────────────────────────────

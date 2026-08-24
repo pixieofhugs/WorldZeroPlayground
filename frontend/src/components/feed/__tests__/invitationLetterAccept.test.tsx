@@ -53,7 +53,7 @@ function render(factionSlug: string | null, onNotNow?: () => void): string {
 }
 
 const VIEW_FACTIONS = i18n.t('feed:invitationLetter.viewFactions')
-const ACCEPT = i18n.t('feed:invitationLetter.accept')
+const ACCEPT = i18n.t('common:actions.accept')
 const NOT_NOW = i18n.t('feed:invitationLetter.notNow')
 
 describe('acceptMode — the predicate', () => {

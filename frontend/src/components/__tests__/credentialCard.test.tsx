@@ -10,7 +10,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so the copy keys resolve to English text.
-import '../../i18n'
+import i18n from '../../i18n'
 import CredentialCard from '../CredentialCard'
 import { factionName } from '../../utils/factions'
 
@@ -209,7 +209,13 @@ describe('CredentialCard proportions', () => {
   })
 
   it('sets the level readout at the 12px step', () => {
-    expect(html).toMatch(/font-size:var\(--text-lg\)[^"]*"[^>]*>lvl 4/)
+    // The readout's words come from the catalog, not from here: #2598 took
+    // `common:credential.lvl` from "lvl 4" to "Level 4". The card uppercases
+    // the span, so it still strikes as LEVEL 4 — what this pins is the RUNG.
+    const readout = i18n.t('common:credential.lvl', { level: 4 })
+    expect(html).toMatch(
+      new RegExp(`font-size:var\\(--text-lg\\)[^"]*"[^>]*>${readout}`),
+    )
   })
 })
 

@@ -152,12 +152,12 @@ describe('the chassis', () => {
     const duel = render(item('duel_challenge', FAT_PAYLOAD))
     expect(duel, 'chassis kicker').toContain(feedKicker('duel_challenge'))
     expect(duel, 'accept survives').toContain(i18n.t('feed:duelChallenge.accept'))
-    expect(duel, 'decline survives').toContain(i18n.t('feed:duelChallenge.decline'))
+    expect(duel, 'decline survives').toContain(i18n.t('common:actions.decline'))
 
     const collab = render(item('collab_invite', FAT_PAYLOAD))
     expect(collab).toContain(feedKicker('collab_invite'))
-    expect(collab, 'accept survives').toContain(i18n.t('feed:collabInvite.accept'))
-    expect(collab, 'decline survives').toContain(i18n.t('feed:collabInvite.decline'))
+    expect(collab, 'accept survives').toContain(i18n.t('common:actions.accept'))
+    expect(collab, 'decline survives').toContain(i18n.t('common:actions.decline'))
 
     const letter = render(item('invitation_letter', FAT_PAYLOAD))
     expect(letter).toContain(feedKicker('invitation_letter'))

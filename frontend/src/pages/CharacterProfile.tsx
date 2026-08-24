@@ -223,7 +223,7 @@ export default function CharacterProfile() {
   };
 
   if (loading)
-    return <div className="py-8 font-body text-muted">{t("states.loading")}</div>;
+    return <div className="py-8 font-body text-muted">{t("loading")}</div>;
   if (error)
     return (
       <div className="py-8">

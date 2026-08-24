@@ -163,12 +163,12 @@ describe('every type this chassis carries', () => {
     const duel = render(item('duel_challenge'))
     expect(duel).toContain('class="alb-feed alb-prism"')
     expect(duel).toContain(i18n.t('feed:duelChallenge.accept'))
-    expect(duel).toContain(i18n.t('feed:duelChallenge.decline'))
+    expect(duel).toContain(i18n.t('common:actions.decline'))
 
     const collab = render(item('collab_invite'))
     expect(collab).toContain('class="alb-feed alb-prism"')
-    expect(collab).toContain(i18n.t('feed:collabInvite.accept'))
-    expect(collab).toContain(i18n.t('feed:collabInvite.decline'))
+    expect(collab).toContain(i18n.t('common:actions.accept'))
+    expect(collab).toContain(i18n.t('common:actions.decline'))
   })
 
   it('forwards the tag slot — an archived challenge still says still waiting', () => {

@@ -306,7 +306,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 cursor: loading || busy ? "not-allowed" : "pointer",
               }}
             >
-              {i18n.t("feed:duelChallenge.decline")}
+              {i18n.t("common:actions.decline")}
             </button>
             {/* Either participant can neutrally call off a pending challenge —
                 the opponent's mirror of the challenger's × (#956). */}

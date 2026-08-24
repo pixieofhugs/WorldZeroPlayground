@@ -223,11 +223,11 @@ describe('every type the backend emits, inside this chassis', () => {
   it('keeps the companions answerable inside the chassis', () => {
     const duel = card('duel_challenge')
     expect(duel).toContain(i18n.t('feed:duelChallenge.accept'))
-    expect(duel).toContain(i18n.t('feed:duelChallenge.decline'))
+    expect(duel).toContain(i18n.t('common:actions.decline'))
 
     const collab = card('collab_invite')
-    expect(collab).toContain(i18n.t('feed:collabInvite.accept'))
-    expect(collab).toContain(i18n.t('feed:collabInvite.decline'))
+    expect(collab).toContain(i18n.t('common:actions.accept'))
+    expect(collab).toContain(i18n.t('common:actions.decline'))
 
     expect(card('invitation_letter')).toContain(i18n.t('feed:invitationLetter.viewFactions'))
   })

@@ -25,7 +25,7 @@ import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import '../../../i18n'
+import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { PraxisBody, TEXT_MEASURE } from '../desktop/shared'
 import { aPraxisCard } from '../../../test/fixtures'
@@ -100,7 +100,7 @@ describe('the meta line does not restate the stamp (#2114 supersedes #1833)', ()
     // meta line's `12 pts` is the stamp's own base read out a second time.
     const html = text(body({ score: 16, points_from_votes: 4 }))
     expect(html, 'the stamp still carries both figures').toContain('12')
-    expect(html, 'the meta line does not').not.toContain('12 pts')
+    expect(html, 'the meta line does not').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
     expect(html, 'level, mode and date stay').toContain('L2')
     expect(html).toContain('solo')
   })
@@ -110,7 +110,7 @@ describe('the meta line does not restate the stamp (#2114 supersedes #1833)', ()
     // points readout left and suppressing it would leave the card silent.
     const html = text(body({ score: 12, points_from_votes: 0, moderation_status: 'failed' }))
     expect(html, 'no total was banked').not.toContain('12points')
-    expect(html, 'so what the task is worth stays').toContain('12 pts')
+    expect(html, 'so what the task is worth stays').toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
   })
 })
 

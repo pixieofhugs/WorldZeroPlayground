@@ -447,6 +447,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         size={desktop ? 128 : 104}
         value={modifiedPoints}
         unit={t("detail.points.total", { count: modifiedPoints })}
+        // The shout is CSS, not copy (#2598) — see WowTaskDetail's note. The
+        // loop is shared, and the score stamp's lowercase "pts" must not move,
+        // so this page opts in rather than the atom deciding for everyone.
+        unitCaps
         valueColor={PLATE_TEXT}
         unitColor={PLATE_ACCENT}
         valueSize={desktop ? "var(--text-display)" : "var(--text-heading)"}

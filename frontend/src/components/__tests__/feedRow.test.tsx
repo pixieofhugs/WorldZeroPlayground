@@ -13,7 +13,7 @@ import { normalizeFeedItem, FACTION_ROW_TYPES } from '../feed/normalizeFeedItem'
 import FeedRowContent from '../feed/FeedRowContent'
 import { FeedRowSkinContext, type FeedRowSkin } from '../feed/feedRowSkin'
 import type { ActivityFeedItem } from '../../api/activityFeed'
-import '../../i18n'
+import i18n from '../../i18n'
 import { collabCopy } from '../collab/collabCopy'
 import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
 import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
@@ -40,7 +40,7 @@ describe('normalizeFeedItem', () => {
     expect(row.actorHref).toBe('/characters/3')
     expect(row.headline).toBe('Reforest')
     expect(row.headlineHref).toBe('/praxis/7')
-    expect(row.points).toBe('40 pts')
+    expect(row.points).toBe(i18n.t('feed:row.points', { points: 40, count: 40 }))
     expect(row.badge?.label).toBe('Friend')
   })
 
@@ -58,7 +58,7 @@ describe('normalizeFeedItem', () => {
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
     expect(row.headlineHref).toBe('/praxis/12')
-    expect(row.points).toBe('25 pts')
+    expect(row.points).toBe(i18n.t('feed:row.points', { points: 25, count: 25 }))
     expect(row.badge?.label).toBe('Your Stuff')
     expect(row.actions.map((a) => a.id)).toEqual(['fileYours'])
   })
@@ -489,7 +489,7 @@ describe('FeedRowContent skin seam', () => {
     const html = skinned({
       points: (figure) => <b data-plaque>{`${figure.points}/${figure.level}`}</b>,
     })
-    expect(html).toContain('<b data-plaque="true">40 pts/null</b>')
+    expect(html).toContain(`<b data-plaque="true">${i18n.t('feed:row.points', { points: 40, count: 40 })}/null</b>`)
     // The shared eyebrow line is REPLACED, never printed twice — drawing the
     // figure beside the skin's own is the duplication the seam exists to avoid.
     expect(html).not.toContain('class="eyebrow"')

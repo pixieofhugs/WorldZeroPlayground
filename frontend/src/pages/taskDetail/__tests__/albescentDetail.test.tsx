@@ -23,12 +23,26 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so copy keys resolve to English text.
-import "../../../i18n";
+import i18n from "../../../i18n";
 import AlbescentTaskDetail from "../archetypes/AlbescentTaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from '../../../test/fixtures'
 import { factionName, setAlbescentRevealed } from "../../../utils/factions";
+
+/**
+ * The worth panel's unit word, read from the catalog rather than typed.
+ *
+ * It used to be the literal "POINTS". #2598 moved the shout out of the catalog
+ * value and into CSS — the catalog holds "Point"/"Points" and each of the nine
+ * skins uppercases the element that draws it — so a STATIC render now reads the
+ * catalog's case, while a browser still paints caps. Same move, and the same
+ * reason, as `everymenBillOrnament.test.tsx`'s struck seal.
+ *
+ * 18 is `modifiedPoints` in every state below, so this is the plural.
+ */
+const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+
 
 const TITLE = "Sit with something until it turns pale";
 const BRIEF =
@@ -119,7 +133,7 @@ describe("Albescent task detail — Default plus the light", () => {
       // identity multiplier, on this skin's own worth slot as on Default's, so
       // at ×1.00 the ring's total is the only worth text. The row's inheritance
       // is asserted below, where a real factor makes it say something.
-      "POINTS",
+      POINTS_UNIT,
     ]) {
       expect(text, `inherited slot: ${shared}`).toContain(shared);
     }
@@ -201,7 +215,7 @@ describe("Albescent task detail — Default plus the light", () => {
   it("shows the worth ring's total and hides the badge at the identity factor", () => {
     const { text } = render(<AlbescentTaskDetail state={baseState()} />);
     expect(text).toContain("18");
-    expect(text).toContain("POINTS");
+    expect(text).toContain(POINTS_UNIT);
     expect(text).not.toContain("×");
 
     const lifted = render(

@@ -237,6 +237,7 @@ export function PenCircle({
   valueColor = "var(--faction-snide-note-ink)",
   unitColor = "var(--faction-snide-note-pink-ink)",
   valueSize = "var(--text-heading)",
+  unitCaps = false,
   style,
 }: {
   /** The loop's drawn width in px. Ornament geometry (§4a). */
@@ -251,6 +252,14 @@ export function PenCircle({
   unitColor?: string;
   /** The figure's type ramp rung. The two cards take the default. */
   valueSize?: string;
+  /**
+   * Strike the caption in caps. Off by default, and it is a real per-SITE fact
+   * rather than a knob: the task DETAIL shouts its unit, and the score stamp
+   * next to it must not — `praxis:card.stamp.pointsShort` is the deliberately
+   * lowercase "pts" that #2598's ruling names as an exception, so uppercasing
+   * inside this atom would change a surface the ruling protects.
+   */
+  unitCaps?: boolean;
   style?: CSSProperties;
 }) {
   return (
@@ -311,6 +320,7 @@ export function PenCircle({
           // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption's lead inside the drawn loop; a 4px rung pushes it off the numeral.
           marginTop: 2,
           color: unitColor,
+          ...(unitCaps ? { textTransform: "uppercase" as const } : {}),
         }}
       >
         {unit}

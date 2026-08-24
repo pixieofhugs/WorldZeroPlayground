@@ -2,10 +2,8 @@
   "page": {
     "title": "Updates",
     "eyebrow": "Activity Feed",
-    "loading": "Loading...",
     "loadError": "Couldn't load the activity feed.",
     "loadMore": "Load older updates",
-    "loadingMore": "Loading…",
     "loadMoreError": "Couldn't load more updates.",
     "showing_one": "Showing {{count}} update",
     "showing_other": "Showing {{count}} updates"
@@ -111,9 +109,10 @@
       "awaitingSubmission": "Waiting on your submission",
       "mentionedYou": "mentioned you in a comment"
     },
-    "points": "{{points}} pts",
+    "points_one": "{{points}} point",
+    "points_other": "{{points}} points",
     "pointsEarned": "+{{points}} pts",
-    "level": "lvl {{level}}",
+    "level": "Level {{level}}",
     "quotedHeadline": "“{{headline}}”"
   },
   "dateDivider": {
@@ -123,8 +122,6 @@
   "collabInvite": {
     "sentence": "<1>{{name}}</1> invited you to collaborate",
     "taskMeta": "{{points}} pts · lvl {{level}}",
-    "accept": "Accept",
-    "decline": "Decline",
     "accepted": "Accepted — view collaboration",
     "declined": "Declined",
     "bankFull": {
@@ -139,7 +136,6 @@
     "sentence": "<1>{{name}}</1> has challenged you to a duel",
     "taskMeta": "{{points}} pts · winner takes the points",
     "accept": "Accept Duel",
-    "decline": "Decline",
     "withdraw": "Withdraw",
     "withdrawn": "Withdrawn — the duel was called off",
     "withdrawError": "Could not withdraw the challenge. Try again.",
@@ -165,7 +161,6 @@
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
     "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
     "viewFactions": "View Factions →",
-    "accept": "Accept",
     "notNow": "Not now",
     "accepted": "Joined {{faction}}",
     "setAside": "Set aside — the invitation still stands",

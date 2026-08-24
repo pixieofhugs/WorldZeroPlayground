@@ -1,10 +1,9 @@
 {
   "brand": "World Zero",
-  "loading": "Loading...",
+  "loading": "Loading…",
   "states": {
     "tryRefreshing": "Try refreshing.",
-    "characterNotFound": "Character not found.",
-    "loading": "Loading..."
+    "characterNotFound": "Character not found."
   },
   "relationships": {
     "blocked": "Blocked",
@@ -33,7 +32,7 @@
     "proposedTasksTotal": "{{count}} total",
     "proposedTasksEmpty": "No proposed tasks yet.",
     "handleJoined": "@{{username}} · joined {{joined}}",
-    "lvl": "lvl",
+    "lvl": "Level",
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
     "nextLevel": "next · lvl {{level}}",
     "ptsToNext": "{{score}} / {{threshold}} pts",
@@ -46,7 +45,6 @@
     }
   },
   "leaderboard": {
-    "loading": "Loading...",
     "empty": "No players yet.",
     "loadError": "Couldn't load the leaderboard.",
     "title": "Players",
@@ -57,7 +55,7 @@
     "playersCount_one": "{{count}} player",
     "playersCount_other": "{{count}} players",
     "level": "Level {{level}}",
-    "points": "pts",
+    "points": "Points",
     "podium": {
       "latest": "Latest · {{ago}}"
     },
@@ -99,8 +97,8 @@
   "credential": {
     "fallbackName": "Wanderer",
     "uploadTitle": "Click to upload a photo",
-    "lvl": "lvl {{level}}",
-    "pts": "pts"
+    "lvl": "Level {{level}}",
+    "pts": "Points"
   },
   "fieldDesk": {
     "livesInPlay_one": "{{count}} life in play",
@@ -229,7 +227,6 @@
   "actions": {
     "accept": "Accept",
     "decline": "Decline",
-    "submit": "Submit",
     "proposeTask": "Propose a Task",
     "showMore": "+{{count}} more",
     "showFewer": "Show fewer"
@@ -268,10 +265,10 @@
     }
   },
   "level": {
-    "caption": "lvl"
+    "caption": "Level"
   },
   "avatar": {
-    "rank": "Lvl {{level}}"
+    "rank": "Level {{level}}"
   },
   "praxisType": {
     "solo": "Solo",

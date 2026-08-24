@@ -90,7 +90,7 @@ export default function EditCharacter() {
 }
 
 function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const {
@@ -120,7 +120,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     handleSubmit,
   } = state
 
-  if (loading) return <div className="py-8 font-body text-muted">{t('editCharacter.loading')}</div>
+  if (loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
   if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 

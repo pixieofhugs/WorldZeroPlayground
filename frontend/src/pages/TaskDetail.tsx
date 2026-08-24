@@ -32,11 +32,11 @@ import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation("tasks");
+  const { t } = useTranslation(["tasks", "common"]);
   const state = useTaskDetail(id);
 
   if (state.loading)
-    return <div className="py-8 font-body text-muted">{t("detail.loading")}</div>;
+    return <div className="py-8 font-body text-muted">{t("common:loading")}</div>;
 
   if (state.fetchError)
     return (

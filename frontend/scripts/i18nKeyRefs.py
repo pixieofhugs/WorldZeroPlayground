@@ -19,8 +19,28 @@ i18next PLURAL forms are probed too: a catalog key ending `_one` / `_other` /
 `_zero` / `_two` / `_few` / `_many` is also considered referenced if its BASE is
 referenced, since call sites write `t('x.count', { count: n })`.
 
-Reports:  KEPT (referenced)  and  DELETABLE (not referenced anywhere).
-Exit code 1 if anything is deletable, so it can gate a commit.
+Reports three columns, because two were not enough (#2598):
+
+    KEPT       referenced by APP code
+    TEST-ONLY  referenced, but only from tests — DEAD, see below
+    DELETABLE  not referenced anywhere
+
+A TEST-ONLY KEY IS A DEAD KEY. This script used to count any reference at all,
+which is how `common:actions.accept` / `.decline` / `.submit` survived it: their
+only references were in `sidebarPendingRequests.test.tsx`, in assertions that
+the rendered HTML does **not** contain them. A key whose only reader asserts its
+own absence is not alive, and a tool built to find orphans reported it KEPT.
+Tests are `__tests__/` directories, `*.test.*` / `*.spec.*` files, and the whole
+`e2e/` tree.
+
+Exit code 1 if anything is deletable OR test-only, so it can gate a commit.
+Pass `--ignore-tests` to drop the distinction and fold TEST-ONLY into DELETABLE,
+which is the same verdict stated in two columns instead of three.
+
+The backtick anchor cannot tell a template literal from PROSE: a key named in a
+`backticked` aside inside a comment counts as a reference. That is why the split
+matters rather than merely being tidier — such a mention in a test now lands in
+TEST-ONLY, where it reads as dead, instead of in KEPT, where it read as alive.
 
 DELETABLE IS A CANDIDATE LIST, NEVER A DELETE ORDER. A key composed at runtime
 has no literal anywhere and reads as deletable while being very much alive.
@@ -61,16 +81,28 @@ def leaf_keys(node, prefix=""):
         yield prefix
 
 
-def source_blob(roots):
-    chunks = []
+def is_test_path(path: str) -> bool:
+    """A test file, whose references do not keep a key alive (#2598)."""
+    normalized = path.replace(os.sep, "/")
+    if "/__tests__/" in normalized or "/e2e/" in normalized:
+        return True
+    name = os.path.basename(normalized)
+    return ".test." in name or ".spec." in name
+
+
+def source_blobs(roots) -> tuple[str, str]:
+    """(app code, test code) — the same walk, split by who is reading."""
+    app, tests = [], []
     for root in roots:
         for directory, subdirectories, filenames in os.walk(root):
             subdirectories[:] = [d for d in subdirectories if d not in SKIP_DIRECTORIES]
             for filename in filenames:
-                if filename.endswith(SOURCE_EXTENSIONS):
-                    path = os.path.join(directory, filename)
-                    chunks.append(io.open(path, encoding="utf-8", errors="ignore").read())
-    return "\n".join(chunks)
+                if not filename.endswith(SOURCE_EXTENSIONS):
+                    continue
+                path = os.path.join(directory, filename)
+                text = io.open(path, encoding="utf-8", errors="ignore").read()
+                (tests if is_test_path(path) else app).append(text)
+    return "\n".join(app), "\n".join(tests)
 
 
 def referenced(key: str, blob: str, namespace: str) -> bool:
@@ -80,24 +112,39 @@ def referenced(key: str, blob: str, namespace: str) -> bool:
 
 
 def main() -> int:
-    namespace = sys.argv[1] if len(sys.argv) > 1 else "praxis"
+    argv = [a for a in sys.argv[1:] if not a.startswith("--")]
+    fold_tests = "--ignore-tests" in sys.argv[1:]
+    namespace = argv[0] if argv else "praxis"
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     catalog_path = os.path.join(here, "src", "locales", "en", f"{namespace}.json")
     catalog = json.load(io.open(catalog_path, encoding="utf-8"))
-    blob = source_blob([os.path.join(here, "src"), os.path.join(here, "e2e")])
+    app_blob, test_blob = source_blobs(
+        [os.path.join(here, "src"), os.path.join(here, "e2e")]
+    )
 
-    kept, deletable = [], []
+    kept, test_only, deletable = [], [], []
     for key in leaf_keys(catalog):
         probes = [key]
         for suffix in PLURAL_SUFFIXES:
             if key.endswith(suffix):
                 probes.append(key[: -len(suffix)])
-        (kept if any(referenced(p, blob, namespace) for p in probes) else deletable).append(key)
+        if any(referenced(p, app_blob, namespace) for p in probes):
+            kept.append(key)
+        elif not fold_tests and any(referenced(p, test_blob, namespace) for p in probes):
+            test_only.append(key)
+        else:
+            deletable.append(key)
 
+    for key in test_only:
+        print(f"TEST-ONLY  {key}")
     for key in deletable:
         print(f"DELETABLE  {key}")
-    print(f"\n{len(kept)} kept, {len(deletable)} deletable, {len(kept) + len(deletable)} total")
-    return 1 if deletable else 0
+    total = len(kept) + len(test_only) + len(deletable)
+    summary = f"\n{len(kept)} kept, "
+    if not fold_tests:
+        summary += f"{len(test_only)} test-only, "
+    print(f"{summary}{len(deletable)} deletable, {total} total")
+    return 1 if deletable or test_only else 0
 
 
 if __name__ == "__main__":

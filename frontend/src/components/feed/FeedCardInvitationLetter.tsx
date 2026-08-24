@@ -297,7 +297,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
                   disabled={joining}
                   style={acceptStyle}
                 >
-                  {i18n.t("feed:invitationLetter.accept")}
+                  {i18n.t("common:actions.accept")}
                 </button>
               )}
               {onNotNow && (

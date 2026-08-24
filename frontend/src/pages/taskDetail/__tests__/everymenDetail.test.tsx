@@ -33,8 +33,23 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EverymenTaskDetail from "../archetypes/EverymenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
+import i18n from "../../../i18n";
 import type { PraxisCardOut } from "../../../api/praxis";
 import { aTask } from '../../../test/fixtures'
+
+/**
+ * The worth panel's unit word, read from the catalog rather than typed.
+ *
+ * It used to be the literal "POINTS". #2598 moved the shout out of the catalog
+ * value and into CSS — the catalog holds "Point"/"Points" and each of the nine
+ * skins uppercases the element that draws it — so a STATIC render now reads the
+ * catalog's case, while a browser still paints caps. Same move, and the same
+ * reason, as `everymenBillOrnament.test.tsx`'s struck seal.
+ *
+ * 18 is `modifiedPoints` in every state below, so this is the plural.
+ */
+const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+
 
 const TASK = aTask({
   id: 207,
@@ -218,7 +233,7 @@ describe("Everymen task detail — the broadsheet", () => {
     // the stamped total rather than the `base` eyebrow: #1704 drops that row at
     // the identity multiplier, so the total is what "the box is still here"
     // looks like today.
-    expect(text).toContain("POINTS");
+    expect(text).toContain(POINTS_UNIT);
     expect(text).not.toContain("Sign up");
   });
 });

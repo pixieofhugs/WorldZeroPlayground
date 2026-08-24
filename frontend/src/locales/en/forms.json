@@ -33,7 +33,6 @@
     }
   },
   "editCharacter": {
-    "loading": "Loading...",
     "notFound": "Character not found.",
     "notOwner": "You can only edit your own character.",
     "eyebrow": "Unaffiliated · this is who you are",
@@ -81,7 +80,8 @@
     "tasks": "Tasks"
   },
   "taskMeta": {
-    "points": "{{points}} pts",
+    "points_one": "{{points}} point",
+    "points_other": "{{points}} points",
     "duel": "duel",
     "collab": "collab"
   },
@@ -100,7 +100,6 @@
   },
   "editPraxis": {
     "loadingPageTitle": "Edit Praxis",
-    "loading": "Loading...",
     "errors": {
       "load": "Couldn't load this praxis.",
       "titleRequired": "Title is required.",
@@ -291,7 +290,7 @@
       "statusUnsaved": "Not saved yet",
       "statusSubmitted": "Submitted",
       "taskLabel": "The task",
-      "pointsUnit": "pts",
+      "pointsUnit": "Points",
       "levelLabel": "Level {{level}}",
       "titleLabel": "Title (required)",
       "titlePlaceholder": "Title",
@@ -335,7 +334,6 @@
     "fields": {
       "name": {
         "label": "Task name",
-        "placeholder": "Task Name",
         "tooLong": "Task name must be 200 characters or fewer."
       },
       "description": {
@@ -345,19 +343,18 @@
       },
       "basePoints": {
         "label": "Base points",
-        "placeholder": "pts"
+        "placeholder": "Points"
       },
       "bonusPoints": {
         "label": "Bonus points",
-        "placeholder": "pts",
+        "placeholder": "Points",
         "hint": "Flat bonus added to score"
       },
       "minimumLevel": {
         "label": "Minimum level"
       },
       "notes": {
-        "label": "Notes to admin (optional)",
-        "placeholder": "Notes to Admin (optional)"
+        "label": "Notes to admin (optional)"
       }
     },
     "metaToggle": {
@@ -367,8 +364,9 @@
       "metaHeading": "Metatask preview — {{faction}}",
       "taskHeading": "Task preview — {{faction}} · Pending",
       "bonusPoints": "+{{points}} bonus pts",
-      "points": "{{points}} pts",
-      "level": "lvl {{level}}",
+      "points_one": "{{points}} point",
+      "points_other": "{{points}} points",
+      "level": "Level {{level}}",
       "pending": "Pending review"
     },
     "errors": {

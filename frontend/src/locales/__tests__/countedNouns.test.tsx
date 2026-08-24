@@ -36,6 +36,14 @@ const POINT_BEARING = [
   'common:sidebar.characterCard.points',
   'common:sidebar.characterCard.eraPoints',
   'factions:detail.spotlightStat',
+  // #2598 took these five from "{{points}} pts" to the long form. An
+  // abbreviation does not inflect, so "1 pts" was merely terse; "1 points" is
+  // wrong, and each needed an `_one` twin on the way out of the short form.
+  'feed:row.points',
+  'forms:proposeTask.preview.points',
+  'forms:taskMeta.points',
+  'praxis:card.points',
+  'praxis:detail.taskRef.points',
 ] as const
 
 const VARS = { era: 'Era One', level: 2, points: '1', score: '1' }

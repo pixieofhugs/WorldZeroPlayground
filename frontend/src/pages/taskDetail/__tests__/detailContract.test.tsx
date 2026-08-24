@@ -31,8 +31,23 @@ import { describe, it, expect } from "vitest";
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
+import i18n from "../../../i18n";
 import type { CommentOut } from "../../../api/comments";
 import { aTask } from '../../../test/fixtures'
+
+/**
+ * The worth panel's unit word, read from the catalog rather than typed.
+ *
+ * It used to be the literal "POINTS". #2598 moved the shout out of the catalog
+ * value and into CSS — the catalog holds "Point"/"Points" and each of the nine
+ * skins uppercases the element that draws it — so a STATIC render now reads the
+ * catalog's case, while a browser still paints caps. Same move, and the same
+ * reason, as `everymenBillOrnament.test.tsx`'s struck seal.
+ *
+ * 18 is `modifiedPoints` in every state below, so this is the plural.
+ */
+const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+
 
 /** The comment thread's pre-fetch state — present iff the thread mounted. */
 const THREAD_ANCHOR = "loading…";
@@ -229,7 +244,7 @@ describe("task-detail worth readout", () => {
       const { text } = render(<Archetype state={baseState()} />);
       expect(text).not.toContain(BASE_ROW);
       expect(text).toContain("18");
-      expect(text).toContain("POINTS");
+      expect(text).toContain(POINTS_UNIT);
     });
 
     it(`${slug} keeps base, chip and total once a factor is real`, () => {
@@ -346,7 +361,7 @@ describe("task-detail reading order", () => {
       const description = at(text, "Make something small and honest.");
       const byline = at(text, "Wren Abalone");
       const headcount = at(text, "people working on this");
-      const panel = at(text, "POINTS");
+      const panel = at(text, POINTS_UNIT);
 
       expect(title, "description after the title").toBeLessThan(description);
       expect(description, "byline after the description").toBeLessThan(byline);
