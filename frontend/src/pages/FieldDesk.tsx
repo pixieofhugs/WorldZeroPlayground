@@ -195,25 +195,13 @@ export default function FieldDesk() {
         ) : (
           <div style={rosterRow}>
             {lives.map((life, index) => (
-              <button
+              <RosterLifeCard
                 key={life.id}
-                type="button"
-                onClick={() => enterLife(life.id)}
-                disabled={switching != null}
-                className="fielddesk-life"
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                title={t('fieldDesk.stepInto', { name: life.display_name })}
-              >
-                <CredentialCard
-                  displayName={life.display_name}
-                  handle={life.username}
-                  factionSlug={life.faction_slug}
-                  level={life.level}
-                  score={life.score}
-                  avatarUrl={mediaUrl(life.avatar_url)}
-                  rotation={TILTS[index % TILTS.length]}
-                />
-              </button>
+                life={life}
+                rotation={TILTS[index % TILTS.length]}
+                switching={switching != null}
+                onEnter={() => enterLife(life.id)}
+              />
             ))}
 
             {/* "Begin a new self" — the dossier has no locked face any more
@@ -280,6 +268,81 @@ type FooterKey = 'fieldDesk.footer' | 'fieldDesk.footerFirstLife' | 'fieldDesk.f
 export function rosterFooterKey(lifeCount: number, canCreateAdditional: boolean): FooterKey {
   if (lifeCount === 0) return 'fieldDesk.footerFirstLife'
   return canCreateAdditional ? 'fieldDesk.footer' : 'fieldDesk.footerNoNewSelf'
+}
+
+/**
+ * One life in the roster: the credential card that steps into it, and the door
+ * that edits it (#2552).
+ *
+ * The edit door is what the phone has had all along — all nine
+ * `mobileArchetypes/*FieldDesk.tsx` draw an `Edit` pill in the identity card's
+ * action row — and what the laptop did not, leaving the rail's identity card as
+ * the only non-mobile way into `/characters/:id/edit`. Same placement as the
+ * phone's and the rail's, right-aligned above the card, so the two form factors
+ * agree about where the door is. Same catalog string, too: no new copy for a
+ * door that already exists ten times over.
+ *
+ * It is a SIBLING of the card's button rather than a child of it, because the
+ * card is itself a button and an anchor inside one is invalid DOM. That is also
+ * why the pill sits outside the tilt: the rotation is the card's.
+ *
+ * OWNERSHIP is structural, not a branch. The roster is `getMyCharacters()` —
+ * the account's own lives and nothing else — so every card here is one the
+ * viewer owns and the door is never a control that would only refuse them.
+ * Nothing else on this page draws a `CredentialCard` from someone else's life.
+ *
+ * Exported for its test: `renderToStaticMarkup` never runs effects, so
+ * `FieldDesk` itself can only be rendered with an unresolved roster and there
+ * are no cards in that markup to look at. Same reason `rosterFooterKey` is.
+ */
+export function RosterLifeCard({
+  life,
+  rotation,
+  switching,
+  onEnter,
+}: {
+  life: CharacterOut
+  rotation: number
+  /** True while ANY life is being stepped into — the whole roster goes inert. */
+  switching: boolean
+  onEnter: () => void
+}) {
+  const { t } = useTranslation('common')
+  return (
+    <div>
+      {/* The link's accessible name is just "Edit", as it is on the phone and in
+          the rail. Several cards means several of them, and what tells them
+          apart is this wrapper: WCAG 2.4.4 is link purpose *in context*, and the
+          context is the card named directly below. */}
+      <div style={rosterEditRow}>
+        <Link
+          to={`/characters/${life.id}/edit`}
+          className="hover:opacity-80 active:opacity-60"
+          style={rosterEditPill}
+        >
+          {t('sidebar.characterCard.edit')}
+        </Link>
+      </div>
+      <button
+        type="button"
+        onClick={onEnter}
+        disabled={switching}
+        className="fielddesk-life"
+        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+        title={t('fieldDesk.stepInto', { name: life.display_name })}
+      >
+        <CredentialCard
+          displayName={life.display_name}
+          handle={life.username}
+          factionSlug={life.faction_slug}
+          level={life.level}
+          score={life.score}
+          avatarUrl={mediaUrl(life.avatar_url)}
+          rotation={rotation}
+        />
+      </button>
+    </div>
+  )
 }
 
 /**
@@ -644,6 +707,35 @@ const rosterRow: CSSProperties = {
   gap: 'var(--space-2xl)',
   alignItems: 'flex-start',
   marginTop: 'var(--space-2xl)',
+}
+/** The edit door's row: right-aligned over the card, as on the phone (#2552). */
+const rosterEditRow: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  marginBottom: 'var(--space-sm)',
+}
+/**
+ * The edit door itself — the rail's `identityActionStyle` and the phone desks'
+ * `actionPillStyle` at the same measurements, minus the `--rail-*` seam those
+ * two read, which does not reach the page body. 44 is the WCAG 2.5.5 target
+ * floor and is GEOMETRY, not spacing: deliberately not on the --space-* ramp.
+ */
+const rosterEditPill: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: 44,
+  boxSizing: 'border-box',
+  padding: '0 var(--space-lg)',
+  borderRadius: 999,
+  border: '1px solid var(--color-border-strong)',
+  background: 'var(--color-bg-surface-alt)',
+  fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-primary)',
+  textDecoration: 'none',
+  transition: 'opacity 120ms ease',
 }
 const footerHint: CSSProperties = {
   fontFamily: 'var(--font-display)',

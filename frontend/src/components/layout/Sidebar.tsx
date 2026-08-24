@@ -885,8 +885,15 @@ export default function Sidebar() {
                  ONE door, since #2354. The `CHARACTERS` pill that stood here
                  opened the account's roster in a bottom sheet — the same roster,
                  on the same `rosterOffersAChoice` gate, that the desktop home
-                 lays out in the page behind this rail. `EDIT` stays: it leads
-                 somewhere the home page does not. ── */}
+                 lays out in the page behind this rail.
+
+                 `EDIT` stays, but not for the reason it used to: since #2552 the
+                 home page's roster cards each carry this same door, so it is no
+                 longer the only one. It is the only one the viewer is CERTAIN to
+                 have — those cards live behind `rosterOffersAChoice`, and the
+                 commonest state of all (one life, gate shut) draws no roster at
+                 all. Two doors to the same room while the gate is open; this one
+                 while it is shut. ── */}
           <div className="flex justify-end gap-2 mb-4">
             <Link
               to={`/characters/${character.id}/edit`}
