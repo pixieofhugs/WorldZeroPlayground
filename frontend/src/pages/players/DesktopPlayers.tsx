@@ -5,7 +5,7 @@ import PageTitle from '../../components/ui/PageTitle'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
 import FactionSigil from '../../components/sigil/FactionSigil'
 import LevelGem from '../../components/ui/LevelGem'
-import { factionCssVar, factionName, isFactionRedacted, isKnownFaction } from '../../utils/factions'
+import { REDACTED, factionCssVar, factionName, isFactionRedacted, isKnownFaction } from '../../utils/factions'
 import { relativeTime } from '../../utils/dates'
 import PlayersFilterBar from './PlayersFilterBar'
 import ScoreToggle from './ScoreToggle'
@@ -426,13 +426,19 @@ function RaceRow({
  * it replaces. Whether a linked faction name should grow a hover affordance of
  * its own is a style question, deliberately not answered here.
  *
- * THE EIGHTH LANE READS `[REDACTED]` (#2409). `factionName` supplies the mark
- * and `.redacted` paints it in the row's own colour, so an unrevealed viewer
- * sees a lane with a bar, a points count and a share — and a blank where the
- * name goes, until they drag a cursor across it. `factionHref` already answers
- * null for that viewer, so the link half is unreachable rather than merely
- * unpainted; an href would name the society in the markup, which is the leak
- * the mark exists to prevent.
+ * THE EIGHTH LANE READS `[REDACTED]` (#2409, ADR-0082 §2). `.redacted` paints
+ * the mark in the row's own colour, so an unrevealed viewer sees a lane with a
+ * bar, a points count and a share — and a blank where the name goes, until they
+ * drag a cursor across it. `factionHref` already answers null for that viewer,
+ * so the link half is unreachable rather than merely unpainted; an href would
+ * name the society in the markup, which is the leak the mark exists to prevent.
+ *
+ * THE MARK IS ASKED FOR HERE, not supplied by `factionName`. That function
+ * still answers "Unaffiliated" for an unrevealed viewer, because a byline or a
+ * task card is LABELLING a thing already on screen and a blank there advertises
+ * the omission (#1891). This lane is one of exactly two surfaces that are ABOUT
+ * the society and redact instead — the other is the `/factions` select tile.
+ * The split is ruled, not an oversight; ADR-0082 §2 has the reasoning.
  */
 function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
@@ -442,13 +448,13 @@ function FactionLaneName({ slug }: { slug: string }) {
   if (href === null) {
     return (
       <span className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
-        {factionName(slug)}
+        {redacted ? REDACTED : factionName(slug)}
       </span>
     )
   }
   return (
     <Link to={href} className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
-      {factionName(slug)}
+      {redacted ? REDACTED : factionName(slug)}
     </Link>
   )
 }
