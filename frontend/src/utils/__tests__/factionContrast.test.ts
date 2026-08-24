@@ -1994,6 +1994,56 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // accent` in CARD_PAIRS has measured on that exact ground since #848. A
   // second `what` for one measurement measures nothing; the guard that the ink
   // stays in scope is the reader allowlist below.
+
+  // ── THE TASK DETAIL'S WORTH CELL, RE-MEASURED ON ITS OWN GROUND (#2554) ────
+  //
+  // The nine task-detail archetypes stopped drawing a second points mark and
+  // mount the faction's registered `scoreStamp` instead. That moves each mark
+  // off the praxis card's sheet and onto the detail panel's inner cell, which is
+  // §3's "when a surface gains a sheet, re-measure the inks it already had" —
+  // nine grounds, not one.
+  //
+  // SEVEN OF THE NINE ADD NO ROW, and that is a finding rather than an omission:
+  //   default / wow / singularity / snide — the stamp carries its OWN plate
+  //     (`-stamp-bg`), so the cell behind it is never the ink's ground. Those
+  //     plates are measured above.
+  //   coven — `CovenCauldron` strikes its figure and caption ACROSS the pot,
+  //     filled `--faction-coven-ward-card`, which is also this faction's praxis
+  //     sheet. Same pairing, already asserted as `coven ward panel, *`.
+  //   ephemerists — the figure sits over `CompassRose`'s own disc
+  //     (`-plate-disc`), measured with the medallion.
+  //   albescent — unchanged; its prism ring overrides the cell (#2549/#2550).
+  //
+  // The two that move are the two marks with no ground of their own.
+  {
+    // Everymen's `PointsRoundel` is a stroked ring with no fill, so it lands on
+    // whatever is behind it: `--faction-everymen-card-bg` on the praxis card,
+    // and the broadsheet's pasted-on panel here. The numeral is 33/100 of a
+    // 102px box — display type, so AA_LARGE is its floor, the same call
+    // `everymen seal numeral` makes one sheet down. The roundel's 8px
+    // `★ VERIFIED ★` band and its `points` caption are stamp text, i.e.
+    // ornament (§4), exactly as that row already records.
+    what: "everymen task-detail worth cell, roundel numeral in display type",
+    surface: "--faction-everymen-sheet-panel",
+    text: "--everymen-red",
+    floor: AA_LARGE,
+  },
+  {
+    // UA's ensō is a brush ring, also unfilled. Its praxis sheet is
+    // `--faction-ua-panel` (the parchment ramp's darkest stop); the detail cell
+    // is `--faction-ua-card-bg`, a different token, so the pairing is new even
+    // though neither the ink nor the mark is.
+    what: "ua task-detail worth cell, ensō total in display type",
+    surface: "--faction-ua-card-bg",
+    text: "--faction-ua-card-total",
+    floor: AA_LARGE,
+  },
+  {
+    // The unit under it, at `--text-md` — body scale, so the full floor.
+    what: "ua task-detail worth cell, ensō unit",
+    surface: "--faction-ua-card-bg",
+    text: "--faction-ua-card-points",
+  },
 ];
 
 /**
