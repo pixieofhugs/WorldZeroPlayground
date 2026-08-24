@@ -10,21 +10,21 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
 import {
   Cornice,
   initialsOf,
-  Octagon,
   Sign,
   SMALL_CAPS,
   Tally,
 } from "../../../components/factionMarks/ephemeristsPlate";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -91,7 +91,6 @@ const PLATE = "var(--faction-ephemerists-plate-bg)";
 const INNER = "var(--faction-ephemerists-plate-inner)";
 const INK = "var(--faction-ephemerists-plate-ink)";
 const QUIET = "var(--faction-ephemerists-plate-quiet)";
-const CAPTION = "var(--faction-ephemerists-plate-caption)";
 const BRASS = "var(--faction-ephemerists-plate-brass)";
 const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
 /* `GOLD` stood here. Its one reader was this page's copy of the kit's `Glyph`,
@@ -100,7 +99,6 @@ const BRASS_LIGHT = "var(--faction-ephemerists-plate-brass-light)";
    band and a stain on the papyrus page; nothing else here wants it. */
 const BAND = "var(--faction-ephemerists-plate-band)";
 const BAND_INK = "var(--faction-ephemerists-plate-band-ink)";
-const BAND_QUIET = "var(--faction-ephemerists-plate-band-quiet)";
 const DISC = "var(--faction-ephemerists-plate-disc)";
 const OCHRE = "var(--faction-ephemerists-plate-ochre)";
 const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
@@ -255,19 +253,14 @@ export default function EphemeristsTaskDetail({
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -278,10 +271,13 @@ export default function EphemeristsTaskDetail({
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const plate: CSSProperties = {
     background: PLATE,
@@ -308,8 +304,6 @@ export default function EphemeristsTaskDetail({
     fontSize: "var(--text-md)",
     color: QUIET,
   };
-  /** The same label voice on a panel cell, where the caption gold clears. */
-  const plateEyebrow: CSSProperties = { ...eyebrow, color: CAPTION };
   const quietItalic: CSSProperties = {
     fontFamily: READING,
     fontStyle: "italic",
@@ -609,17 +603,6 @@ export default function EphemeristsTaskDetail({
     </div>
   );
 
-  // ── The ledger: base, the (usually absent) modifier, the medallion total ──
-  const ledgerRow = (label: ReactNode, value: ReactNode) => (
-    <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-sm)" }}>
-      {label}
-      <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
-      <span style={{ fontFamily: DECO, fontSize: "var(--text-content)", color: INK, whiteSpace: "nowrap" }}>
-        {value}
-      </span>
-    </div>
-  );
-
   const scoreCell = (
     <div
       style={{
@@ -639,63 +622,15 @@ export default function EphemeristsTaskDetail({
         gap: "var(--space-md)",
       }}
     >
-      {/* The ledger — both rows or neither (#1704). The modifier row is absent
-          at ×1.00, so under era_1's neutralised modifiers the base row was left
-          reading out the same figure the medallion below already strikes; the
-          ledger comes back whole the day a modifier moves (ADR-0055). The design
-          labels the second row "Bonus"; ADR-0057 leaves no shared word for it, so
-          the label slot takes an incised ankh instead of an invented one. */}
-      {showBreakdown && (
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-          {ledgerRow(<span style={plateEyebrow}>{t("detail.points.base")}</span>, basePoints)}
-          {ledgerRow(
-            <Sign name="ankh" size={11} color={BRASS} weight={1.4} />,
-            t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) }),
-          )}
-        </div>
-      )}
+      {/* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
 
-      {/* The stepped octagon medallion. */}
-      <div
-        style={{
-          position: "relative",
-          flex: "0 0 auto",
-          width: size.medallion,
-          height: size.medallion,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <svg
-          width={size.medallion}
-          height={size.medallion}
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-          style={{ position: "absolute", inset: 0 }}
-        >
-          <Octagon inset={0} stroke={BRASS} width={1.6} fill={DISC} />
-          <Octagon inset={6} stroke={BRASS_LIGHT} width={0.7} />
-          <circle cx="50" cy="50" r="34" fill="none" stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.55" />
-          <path d="M16 70 H84" stroke={BRASS_LIGHT} strokeWidth="0.7" opacity="0.5" />
-        </svg>
-        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 0.82 }}>
-          {/* The medallion is a dark chip in both themes; its inks are the
-              band's, not the sheet's (#2141). */}
-          <span style={{ fontFamily: DECO, fontSize: size.pointsSize, color: BAND_INK }}>{modifiedPoints}</span>
-          <span
-            style={{
-              ...SMALL_CAPS,
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.2em",
-              marginTop: "var(--space-xs)",
-              color: BAND_QUIET,
-            }}
-          >
-            {t("detail.points.total", { count: modifiedPoints })}
-          </span>
-        </div>
-      </div>
+          A brass ledger and a ~60-line hand-drawn stepped octagon medallion
+          stood here — a SECOND drawing of a score, beside the compass rose
+          `EphemeristsScoreStamp` already strikes on every praxis card
+          (#2145). The stamp is size-agnostic by contract, so the plate
+          mounts it and the row policy, the ×1.0 gate and the total's format
+          all come from the one place that owns them. */}
+      <TaskWorthStamp state={state} />
     </div>
   );
 
@@ -703,7 +638,7 @@ export default function EphemeristsTaskDetail({
   //    has no move to make — an unusable control is worse than none.
   const summons = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
           {/* The rune strips bracket the plate's CTA on every surface that
@@ -713,11 +648,20 @@ export default function EphemeristsTaskDetail({
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
           <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
-          <button data-testid="task-signup-cta" className="eph-cta" onClick={handleSignup} style={{ ...primaryButton, margin: "var(--space-md) auto" }}>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread
+              last. `.eph-cta` is the class this faction already shares across
+              three surfaces (#2146), and it still arrives as `className`. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            className="eph-cta"
+            style={{ ...primaryButton, margin: "var(--space-md) auto" }}
+          >
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
-            <span style={{ whiteSpace: "nowrap" }}>{t(signupCtaKey(task.signup_reason))}</span>
+            <span style={{ whiteSpace: "nowrap" }}>{cta.label}</span>
             <Sign name="planet" size={14} color={CTA_INK} weight={1.4} />
-          </button>
+          </CardCtaControl>
           <EphemeristsNotationBand side="bottom" seed={`task:${task.id}`} />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}

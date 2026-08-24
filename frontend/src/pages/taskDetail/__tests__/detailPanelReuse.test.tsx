@@ -83,8 +83,19 @@ function stateFor(slug: string, overrides: Partial<TaskDetailState> = {}) {
   } as TaskDetailState;
 }
 
+/**
+ * Markup with React's `useId` values flattened.
+ *
+ * The Everymen roundel mints an SVG `<defs>` id per mount (`wz-roundel-R3` vs
+ * `wz-roundel-Rra`), so two renders of the same component differ in exactly
+ * those bytes and nowhere else. Normalising them is what keeps the containment
+ * assertion below about the COMPONENT rather than about React's counter.
+ */
 function markup(element: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(
+    /wz-roundel-R[\w:-]+/g,
+    "wz-roundel-ID",
+  );
 }
 
 const archetypes = { ...surfaceMap("taskDetail"), na: DefaultTaskDetail };

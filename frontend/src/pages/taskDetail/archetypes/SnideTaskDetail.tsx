@@ -2,19 +2,19 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { PenCircle } from "../../../components/factionMarks/snideAtoms";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -215,19 +215,14 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -237,10 +232,13 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   /** Special Elite, uppercase, wide — every micro-label on the sheet. */
   const eyebrow: CSSProperties = {
@@ -359,117 +357,29 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The worth: base chip, the (usually absent) ×mult, the circled total ──
-  //
-  // This whole block sits INSIDE a punched box, so its ground is the slab and
-  // every ink here is `-card-*` or an invariant drawn line. The pen circle stays
-  // `--faction-snide-pink` — it is a stroke, and it measures 5.4:1 on the slab —
-  // but the caption inside it and the ×mult annotation are TYPE, and the walked
-  // pink they used to wear falls to 3.1:1 on black, so they take the acid the
-  // slab admits as ink (#2066).
-  //
-  // THE LOOP IS THE SHARED `PenCircle` (#2042). This page hand-drew the same two
-  // paths at the same viewBox until then, which made three copies of one drawing
-  // rather than the two #2042's survey counted. Two things travel with the mount:
-  //  - **The 1.18× growth** the shared loop carries (#2035). This page never had
-  //    it, so the loop is now visibly bigger here. That is a fix, not a
-  //    regression: the growth exists to clear a wide total, and this is the
-  //    surface with the widest — `modifiedPoints` at `--text-display` on desktop,
-  //    where the cards show a narrower figure a rung down. The growth is on the
-  //    SVG alone and the loop still lands inside its own box, so nothing moves.
-  //  - **The inks, as props, non-negotiably.** `PenCircle` defaults to the
-  //    clipping's `-note-*` family, which is the WALL's, and the wall flips while
-  //    this slab does not. `-note-ink` on `-card-bg` is **1.00:1 in light** — the
-  //    identical hex — and `-note-pink-ink` is 3.12:1. `PLATE_TEXT` reads 16.68:1
-  //    light / 17.51:1 dark and `PLATE_ACCENT` 15.55:1 / 16.32:1, which is the
-  //    same pairing this block already had; the mount must keep passing them.
-  //
-  // The base chip's photocopier-black fill is LEFT ALONE and is worth knowing
-  // about: `--faction-snide-ink` is the same `#14110b` as `-card-bg` in light, so
-  // in light theme the chip's ground now matches the sheet under it exactly and
-  // the block reads as acid type rather than as a stamped chip. Its acid stays
-  // 15.6:1 either way, so this is dress, not legibility, and re-inking it is a
-  // design call the ruling did not make.
-  const worth = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-      }}
-    >
-      {showBreakdown && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: BLACK,
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "var(--faction-snide-acid)",
-              background: HARD,
-              padding: "var(--space-xs) var(--space-sm)",
-              transform: "rotate(-1.5deg)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("detail.points.base")} {basePoints}
-          </span>
-          <span
-            style={{
-              fontFamily: MARK,
-              fontSize: "var(--text-title)",
-              lineHeight: 1,
-              color: PLATE_ACCENT,
-              transform: "rotate(4deg)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("detail.points.multiplier", {
-              multiplier: factionMultiplier.toFixed(2),
-            })}
-          </span>
-        </div>
-      )}
+  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
 
-      {/* The total, circled in pink pen — the SHARED loop (#2042), not a third
-          hand-drawn copy of it. See the note above `worth` for the inks. */}
-      <PenCircle
-        size={desktop ? 128 : 104}
-        value={modifiedPoints}
-        unit={t("detail.points.total", { count: modifiedPoints })}
-        // The shout is CSS, not copy (#2598) — see WowTaskDetail's note. The
-        // loop is shared, and the score stamp's lowercase "pts" must not move,
-        // so this page opts in rather than the atom deciding for everyone.
-        unitCaps
-        valueColor={PLATE_TEXT}
-        unitColor={PLATE_ACCENT}
-        valueSize={desktop ? "var(--text-display)" : "var(--text-heading)"}
-      />
-    </div>
-  );
+     A base chip, a ×mult annotation and the shared `PenCircle` loop stood here — a SECOND drawing of a score, beside
+     the one this faction's registered `scoreStamp` surface (ADR-0049) already
+     draws on every praxis card. The stamp is size-agnostic by contract, so the
+     panel mounts it and the row policy, the ×1.0 gate and the total's format
+     all come from the one place that owns them. */
+  const worth = <TaskWorthStamp state={state} />;
 
   // ── The one action slot. Nothing renders when the viewer has no move: an
   //    unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={plateButton(false)}>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={plateButton(false)}>
             <XMark size={17} />
-            <span style={plateLabel}>{t(signupCtaKey(task.signup_reason))}</span>
+            <span style={plateLabel}>{cta.label}</span>
             <XMark size={17} />
-          </button>
+          </CardCtaControl>
           <div
             style={{
               fontFamily: TYPE,

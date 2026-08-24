@@ -9,13 +9,14 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -166,19 +167,14 @@ export default function SingularityTaskDetail({
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -188,10 +184,13 @@ export default function SingularityTaskDetail({
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const innerBox: CSSProperties = {
     background: BG,
@@ -480,86 +479,29 @@ export default function SingularityTaskDetail({
     </div>
   );
 
-  // ── The readout: base, the (usually absent) ×mult badge, and the total ──
-  const scoreBody = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-      {/* The trace line and its rule (#1704). Hidden at ×1.00, so invisible
-          under era_1's neutralized modifiers and automatic the day one moves
-          (ADR-0055) — with no modifier the line only echoed the total below it.
-          The factor is read raw off the state contract, never reconstructed
-          from total / base. */}
-      {showBreakdown && (
-        <>
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-            <span style={{ ...LABEL, fontSize: "var(--text-md)" }}>
-              {t("detail.points.base")}
-            </span>
-            <span
-              style={{
-                fontFamily: MONO,
-                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                lineHeight: 0.85,
-                color: INK,
-              }}
-            >
-              {basePoints}
-            </span>
-            <span
-              style={{
-                marginLeft: "auto",
-                fontFamily: MONO,
-                fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
-                color: CTA_INK,
-                background: BRIGHT,
-                borderRadius: 4,
-                padding: "var(--space-xs) var(--space-sm)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
-            </span>
-          </div>
-          <Rule />
-        </>
-      )}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-          lineHeight: 1,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: MONO,
-            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-            lineHeight: 1,
-            color: BLUE_BRIGHT,
-            textShadow: "var(--faction-singularity-term-halo-blue)",
-          }}
-        >
-          {modifiedPoints}
-        </span>
-        <span style={{ ...LABEL, fontSize: "var(--text-md)", color: BLUE }}>
-          {t("detail.points.total", { count: modifiedPoints })}
-        </span>
-      </div>
-    </div>
-  );
+  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
+
+     A trace line, a ×mult chip, a `Rule` and a haloed mono total stood here — a SECOND drawing of a score, beside
+     the one this faction's registered `scoreStamp` surface (ADR-0049) already
+     draws on every praxis card. The stamp is size-agnostic by contract, so the
+     panel mounts it and the row policy, the ×1.0 gate and the total's format
+     all come from the one place that owns them. */
+  const scoreBody = <TaskWorthStamp state={state} />;
 
   // ── The one action slot. Nothing renders when the viewer has no move to make
   //    — an unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryButton}>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryButton}>
             {prompt}
-            {t(signupCtaKey(task.signup_reason))}
+            {cta.label}
             <Cursor />
-          </button>
+          </CardCtaControl>
           <div
             style={{
               fontFamily: MONO,
