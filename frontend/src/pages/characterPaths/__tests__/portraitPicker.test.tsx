@@ -74,6 +74,31 @@ describe('PortraitPicker — the readout agrees with the state, not with input.f
     expect(described).toBe(statusId)
   })
 
+  it('inks the status line through the label seam, so a faction frame can reach it (#2489)', () => {
+    // The default used to be `--color-text-secondary` stated inline, which is a
+    // real token at the wrong TIER on the eight faction plates this control is
+    // mounted on, and — being inline — the one thing a frame cannot reach past.
+    // `--label-ink` is the seam the house already has: unset to the neutral
+    // tier, repointed by any root that dresses it. Nothing is minted.
+    const { html } = render(<PortraitPicker onChange={() => {}} chosenFile={null} />)
+    expect(html, 'the readout reads the seam').toContain('var(--label-ink)')
+    expect(html, 'and states no global text tier of its own').not.toMatch(/--color-text-/)
+  })
+
+  it('lets a surface override that ink without the seam getting in the way', () => {
+    // The other half: the seven faction archetypes each pass their own FACE and
+    // their own ground-measured ink, which is not the same decision as the
+    // default and is not removable. A caller that passes one still wins.
+    const { html } = render(
+      <PortraitPicker
+        onChange={() => {}}
+        chosenFile={null}
+        statusStyle={{ color: 'var(--faction-ua-card-body)' }}
+      />,
+    )
+    expect(html).toContain('var(--faction-ua-card-body)')
+  })
+
   it('carries an avatar-scoped error under the row', () => {
     const { text } = render(
       <PortraitPicker onChange={() => {}} chosenFile={null} error="Portrait must be under 10 MB." />,

@@ -74,14 +74,51 @@ const rowStyle: CSSProperties = {
   flexWrap: 'wrap',
 }
 
+/**
+ * THE STATUS LINE READS THE LABEL SEAM, NOT THE GLOBAL TIER (#2489).
+ *
+ * This control is mounted on nine grounds — the eight character-creation
+ * archetypes and the neutral Edit Character page — and it used to state
+ * `--color-text-secondary` unconditionally. That is a real token at the wrong
+ * TIER on eight of the nine, and it is what `local/no-global-ink-on-faction-
+ * surface` bans: the rule's own message carries the measurements (2.19:1 on
+ * S.N.I.D.E., 2.27 on Singularity, 2.01 on the Ephemerists plate).
+ *
+ * `--label-ink` is the seam the house already has for exactly this — declared
+ * once in `index.css`, unset to the neutral tier, and repointed by any frame
+ * that dresses its own root. Reading it means a faction root that repoints the
+ * seam now reaches this line, an unrepointed root gets the same neutral it got
+ * before, and NOTHING new is minted. It is not a new prop and not a new class:
+ * an inline value is precisely what a frame cannot reach past (#1783, #1819).
+ *
+ * WHAT THIS DOES NOT DO, on purpose. It does not delete the seven archetypes'
+ * `statusStyle` overrides. They are not seven restatements of one default —
+ * each passes its own FACE as well as its own ink, and the inks differ by
+ * ground (UA's `-card-body`, Singularity's `-term-ink`, Everymen's `-quiet`,
+ * …), which is §3's "contrast is a pairing" and not duplication. Dropping them
+ * in favour of the unset seam would repaint six faction plates with a neutral
+ * measured on the app's own page.
+ */
 const defaultStatusStyle: CSSProperties = {
   fontFamily: 'var(--font-body)',
-  color: 'var(--color-text-secondary)',
+  color: 'var(--label-ink)',
   // Long filenames wrap rather than push the button off the row.
   minWidth: 0,
   wordBreak: 'break-word',
 }
 
+/**
+ * The error ink stays `--color-danger`, and that is a decision rather than an
+ * oversight (#2489, ADR-0061).
+ *
+ * Danger is the PLATFORM speaking, not a faction, so the hue is neutral by rule
+ * — the tier arm bans `--color-text-*` and says nothing about the functional
+ * family, for that reason. What is faction-aware is which ink reads on a given
+ * ground, and that is what {@link PortraitPickerProps.errorStyle} is for; all
+ * eight character archetypes pass their own `--faction-{key}-card-alarm`
+ * through it, `na` included. The one mount that passes nothing is Edit
+ * Character, which is app page and where the neutral is the right answer.
+ */
 const defaultErrorStyle: CSSProperties = {
   fontFamily: 'var(--font-body)',
   color: 'var(--color-danger)',

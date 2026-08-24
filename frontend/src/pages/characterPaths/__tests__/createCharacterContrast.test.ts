@@ -120,16 +120,27 @@ describe('the faction-default TEXT family is not the answer on this ground', () 
   // tier rule would force is refused, as a measurement rather than as prose. If
   // either token is ever walked far enough to clear the wash, this row goes red
   // and the exemption can be reconsidered — which is the outcome worth catching.
-  it.each([
-    '--faction-default-card-muted',
-    '--faction-default-composer-faint',
-  ])('%s still misses AA in light, so the neutral tier stays', (token) => {
-    const ink = resolve(token, 'light')
-    const worst = Math.min(
-      ...WASH.light.map((stop) => contrastRatio(ink, washedGround('light', stop))),
-    )
-    expect(worst, `${token} worst-case is ${formatRatio(worst)}`).toBeLessThan(AA_NORMAL)
-  })
+  //
+  // `--faction-default-composer-faint` WAS THE SECOND MEMBER OF THIS LIST AND IS
+  // NOT ANY MORE (#2485). It never belonged to this page — no `characterPaths`
+  // file reads it; it was here because its 4.49-flat / 3.50-washed gap was the
+  // clearest illustration of the point. #2485 lifted it (its only consumer is
+  // `DefaultEditPraxis`, whose sheet is washed by the aurora and where the whole
+  // quiet ladder was under AA), and at #5f5b53 it reads 4.79 on this ground, so
+  // the row it used to fill would now be asserting something false. The
+  // refusal it recorded is intact: `-card-muted` is a real member of the na
+  // TEXT family, it is what this archetype would be forced onto, and it still
+  // misses at 4.36. The eslint block's table is updated to match.
+  it.each(['--faction-default-card-muted'])(
+    '%s still misses AA in light, so the neutral tier stays',
+    (token) => {
+      const ink = resolve(token, 'light')
+      const worst = Math.min(
+        ...WASH.light.map((stop) => contrastRatio(ink, washedGround('light', stop))),
+      )
+      expect(worst, `${token} worst-case is ${formatRatio(worst)}`).toBeLessThan(AA_NORMAL)
+    },
+  )
 })
 
 describe('keeps the wash list in step with the stylesheet', () => {

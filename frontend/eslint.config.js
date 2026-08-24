@@ -993,8 +993,15 @@ export default [
      * Measured on that composite in light, the swap the rule would force is the
      * REGRESSION and the neutral is the passing value:
      *
-     *     --color-text-secondary            6.06   (--faction-default-card-muted     4.36)
-     *     --color-text-tertiary             6.10   (--faction-default-composer-faint 3.50)
+     *     --color-text-secondary            6.06   (--faction-default-card-muted 4.36)
+     *     --color-text-tertiary             6.10   (--faction-default-card-muted 4.36)
+     *
+     * The second row used to cite `--faction-default-composer-faint` at 3.50.
+     * That token is the COMPOSER's and no file here reads it; #2485 lifted it to
+     * clear the aurora-washed sheet it is actually drawn on, where the whole na
+     * quiet ladder was under AA, and on THIS ground it now reads 4.79. Both
+     * neutrals are therefore paired against `-card-muted`, which is the rung this
+     * archetype would really be forced onto and which still misses.
      *
      * #1932 already recorded this ruling for `pages/players/`: widening the glob
      * "would ban the global tiers on the surface they are right for". This is
