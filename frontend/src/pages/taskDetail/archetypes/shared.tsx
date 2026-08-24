@@ -12,6 +12,11 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CommentThread from "../../../components/comments/CommentThread";
+import ScoreStamp, {
+  type StampablePraxis,
+} from "../../../components/praxisCard/scoreStamp/ScoreStamp";
+import { taskCardSignupCta } from "../../../components/taskCard/signupAffordance";
+import type { TaskCardSignupCta } from "../../../components/taskCard/signupAffordance";
 import { isNeutralMultiplier } from "../../../utils/points";
 import { factionName, UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import type { TaskOut } from "../../../api/tasks";
@@ -163,17 +168,137 @@ export function actionColumnSize({
  * That is the row policy `components/praxisCard/scoreStamp/scoreBreakdown.ts`
  * states for the praxis stamp (ADR-0049, ADR-0053): *a row exists when it tells
  * the viewer something the total mark does not already say*. #1131 fixed this
- * exact shape there. This applies the policy WITHOUT calling that selector — a
- * task has no votes, no metatask points and no habit bonus, so forcing a
- * `ScoredPraxis` on it would be a lie about what a task is.
+ * exact shape there.
  *
- * One gate, not two: the chip lives inside the row in every skin, and its
+ * ONE CALLER LEFT, AND IT IS THE RECORDED ONE (#2554). This used to be the gate
+ * in all nine skins, under a note arguing that calling `scoreBreakdown` here
+ * "would be a lie about what a task is". The owner ruled the other way: eight
+ * archetypes now draw their worth through {@link TaskWorthStamp}, where
+ * `scoreBreakdown` selects the same rows off the same RAW factor and this gate
+ * is honoured by construction rather than by hand. Albescent is the exception —
+ * its prism ring is the one piece of worth markup a faction owns rather than
+ * inherits, so it still needs the shared policy by name.
+ *
+ * One gate, not two: the chip lives inside the row in that skin, and its
  * condition is this same one, so the row drops as a unit with nothing orphaned
  * (`scoreBreakdown`'s own note: a null base always coincides with a null mult).
  * The total keeps its own label and stands alone.
  */
 export function showWorthBreakdown(factionMultiplier: number): boolean {
   return !isNeutralMultiplier(factionMultiplier);
+}
+
+/**
+ * The adapter, and the ONLY fabricated praxis in the tree (#2554).
+ *
+ * `ScoreStamp` draws base · multiplier · total. A task detail has exactly those
+ * three numbers under different names, and no praxis. Rather than fork nine
+ * stamps or widen every skin's prop, the three terms a task DOES have are
+ * carried across and the four a task cannot have are stated at their neutral
+ * values — which is not a fiction about the arithmetic: `scoreBreakdown` hides a
+ * row at exactly those values, so a task's stamp draws no metatask row, no votes
+ * tally and no habit bonus because there is nothing to draw, not because a flag
+ * was set.
+ *
+ * Two fields are dispatch inputs rather than terms, and both are honest:
+ *  - `task_faction_slug` is the same slug the archetype itself dispatched on, so
+ *    the page and its stamp always agree about whose mark this is.
+ *  - `moderation_status` is what #1444's guard reads — it blanks a praxis that
+ *    banked nothing. A task's point value is always live, so `visible` is the
+ *    truthful answer, and it is what keeps that guard from blanking the panel.
+ *
+ * `is_top_for_task` is false because a crown belongs to a praxis, not a task;
+ * `showCrown={false}` says the same thing a second way so neither can drift.
+ */
+function taskWorthAsStampable(state: TaskDetailState): StampablePraxis | null {
+  const { task, basePoints, factionMultiplier, modifiedPoints } = state;
+  if (!task) return null;
+  return {
+    task_point_value: basePoints,
+    display_multiplier: factionMultiplier,
+    score: modifiedPoints,
+    metatask_points: 0,
+    points_from_votes: 0,
+    habit_bonus_points: 0,
+    is_top_for_task: false,
+    task_faction_slug: task.primary_faction_slug,
+    moderation_status: "visible",
+  };
+}
+
+/**
+ * The worth cell every task-detail archetype draws — the faction's OWN score
+ * stamp (ADR-0049), not a second mark invented for this one page (#2554).
+ *
+ * Eight archetypes each hand-drew a base row, a `×mult` chip and a total mark
+ * here while their faction already owned a registered `scoreStamp` surface —
+ * the Ephemerists, for one, drew a compass rose on praxis cards and a ~60-line
+ * stepped octagon here. This mounts the dispatcher, so there is ONE drawing of a
+ * score in the tree and a faction that restyles its stamp restyles both places.
+ *
+ * Albescent does not mount this: `AlbescentTaskDetail` substitutes a prism ring
+ * through `DefaultTaskDetail`'s `worthSlot`, which is a deferral with a reason
+ * (#2549/#2550 are re-cutting that page's ground) and not an oversight.
+ */
+export function TaskWorthStamp({ state }: { state: TaskDetailState }) {
+  const praxis = taskWorthAsStampable(state);
+  if (!praxis) return null;
+  return <ScoreStamp praxis={praxis} showCrown={false} />;
+}
+
+/**
+ * Which control the ONE sign-up slot draws — resolved by the task cards' own
+ * `taskCardSignupCta`, so the two surfaces cannot disagree (#2554).
+ *
+ * ### Why this is a narrowing rather than a straight call
+ *
+ * A card draws a refusal: it spends its one slot saying *why* instead of
+ * offering a claim. A detail page does not, and never has — WORLD_ZERO_STYLE
+ * §1.4 hides a control the viewer cannot use, and the whole panel column
+ * collapses when there is no action (`actionColumnSize`, #1138). That difference
+ * survives here: a `denied` control returns null, exactly as `canSignUp` used to
+ * hide it.
+ *
+ * ### The one refusal that is a door
+ *
+ * `already_active_member` is the reason this function is a bug fix and not a
+ * tidy-up. The card offers a LINK to the draft's editor (#2359); the detail page
+ * for the same task offered nothing. It offers the link now.
+ *
+ * The conjunction from `signupAffordance` is untouched and load-bearing: the
+ * reason ALONE is not a door, because it also covers a submitted or pending
+ * praxis with nothing left to edit. The link needs `in_progress_praxis_id` too.
+ *
+ * ### …but only where the page is not already the door
+ *
+ * The detail page has its own in-progress block — "Continue editing" beside
+ * "drop" — gated on the separate `/praxis/mine` read. Where that block draws,
+ * this slot stands down: two links to the same editor in one panel is not the
+ * gap being closed. The slot is the FALLBACK, for the read where the task's own
+ * `signup_reason` knows about a draft that the page's roster fetch does not.
+ *
+ * ### The anonymous viewer
+ *
+ * `onSignup` is passed unconditionally, which is safe *and* checked twice. The
+ * server returns `can_sign_up: false` and `signup_reason: null` for a viewer it
+ * has no character for (`services/task.py`: `if viewer is None: return base`),
+ * so the resolver returns null on its own; and `state.canSignUp` — which is
+ * `signedIn && can_sign_up` (#1497) — still has to be true before a pressable
+ * control comes back. Neither check re-derives eligibility.
+ */
+export function detailSignupCta(
+  state: TaskDetailState,
+): TaskCardSignupCta | null {
+  const { task } = state;
+  if (!task) return null;
+  const cta = taskCardSignupCta(task, () => {
+    void state.handleSignup();
+  });
+  if (!cta) return null;
+  if (cta.href) {
+    return state.mySubmission || state.isInProgress ? null : cta;
+  }
+  return cta.denied || !state.canSignUp ? null : cta;
 }
 
 /**
