@@ -19,9 +19,12 @@ import { CACHE_EPOCH, type CacheEpoch } from '../utils/cacheEpoch'
  *  - **A — deploy-scoped.** `/game-config`, `/factions`. {@link SESSION_TTL_MS}.
  *    Not "a long TTL": the data cannot go stale within a session at all, because
  *    changing it takes a deploy.
- *  - **B — social / ambient.** Leaderboard, another player's profile, the global
- *    activity feed. {@link AMBIENT_TTL_MS}. A minute-old ranking harms nobody.
- *    Nothing in this class is cached yet; the bound is here for when it is.
+ *  - **B — social / ambient.** The task browse, the praxis feed, leaderboards,
+ *    another player's profile. {@link AMBIENT_TTL_MS}, and a KEY per query —
+ *    see {@link createKeyedResourceCache}, which is what a filtered list needs
+ *    that a Class A singleton does not. A minute-old ranking harms nobody; a
+ *    minute-old list of your own just-completed action does, so a write empties
+ *    them ({@link dropCachesAfterWrite}).
  *  - **C — obligations.** Pending collab invites, duel challenges, awaiting
  *    submission, and any number the viewer just moved. **These do not belong in
  *    this module at all.** A live Accept button beside an already-answered
@@ -56,10 +59,15 @@ export const SESSION_TTL_MS = Number.POSITIVE_INFINITY
 /**
  * **Class B — social / ambient. Five minutes.**
  *
- * Rankings, other players' profiles, the global feed. What breaks if the bound
- * is exceeded: a number is a few minutes old. Who notices: nobody — none of it
- * is a control the viewer is about to act on, and none of it is a claim about
- * the viewer's own obligations.
+ * Rankings, other players' profiles, the global feed, and since #2432 the task
+ * browse and the praxis feed. What breaks if the bound is exceeded: a number is
+ * a few minutes old. Who notices: nobody — none of it is a claim about the
+ * viewer's own obligations.
+ *
+ * The task browse does carry a Sign up button, which ADR-0072's Class C note
+ * warns about. What answers that is not a shorter bound but the invalidation:
+ * every write empties these caches ({@link dropCachesAfterWrite}), so the only
+ * rows that can age are ones nobody in this tab has acted on.
  *
  * Five is the smallest number that keeps ordinary browsing at zero requests: a
  * player crossing /tasks → /players → a profile → /praxes does it in well under
@@ -194,5 +202,129 @@ export function createCachedResource<T>(
     }, [])
 
     return value
+  }
+}
+
+/**
+ * Every keyed cache built below, so a WRITE can empty them all in one call.
+ *
+ * Class B lists are the only caches a mutation invalidates: Class A is
+ * deploy-scoped (a write cannot change `/game-config`) and Class C never enters
+ * this module at all. Registration is automatic rather than a list some future
+ * third consumer has to remember to join.
+ */
+const writeSensitiveCaches = new Set<() => void>()
+
+/**
+ * Empty every keyed list cache — call after any mutating request.
+ *
+ * A five-minute stale read of your OWN action reads as a bug, not a cache
+ * (ADR-0072), and signing up for a task, publishing a praxis or archiving one
+ * each move a row in these lists. So the invalidation is explicit, not a TTL
+ * wait — `utils/requestsBus` is the precedent for wiring one.
+ *
+ * Called from `api/client.ts`, the one seam every POST/PUT/PATCH/DELETE in the
+ * app already passes through, so a mutation added later cannot forget it. It
+ * over-invalidates on purpose: a vote does not change which tasks exist, and
+ * paying one refetch for that is cheaper than an enumeration that rots.
+ */
+export function dropCachesAfterWrite(): void {
+  for (const drop of writeSensitiveCaches) drop()
+}
+
+/**
+ * A cache holding MANY entries under caller-supplied keys — the Class B shape.
+ *
+ * {@link createResourceCache} holds one value because a Class A endpoint takes
+ * no arguments. A list read does: the task browse and the praxis feed are one
+ * endpoint under a dozen filter combinations, and the win only exists if a
+ * combination you have already seen is a hit (#2432). Hence a key, rather than
+ * a second singleton per filter set.
+ */
+export interface KeyedResourceCache<T> {
+  /**
+   * The entry held under `key` if it is still fresh, else `fetchFn()`.
+   * Concurrent readers of one key share a single in-flight request.
+   *
+   * A rejection PROPAGATES, unlike the singleton's swallow-and-keep: the caller
+   * is `useResource`, which owns the page's error state, and a resolved-null
+   * failure would paint an empty list where an error belongs.
+   */
+  read: (key: string, fetchFn: () => Promise<T>) => Promise<T>
+  /** Forget every key. The epoch and {@link dropCachesAfterWrite} call this. */
+  drop: () => void
+}
+
+/**
+ * Build a keyed cache. `ttlMs` has no default for the reason the singleton
+ * gives: naming the class is the point (ADR-0072).
+ *
+ * ponytail: entries are never individually evicted — the map is emptied whole,
+ * by the epoch or by a write, and is bounded in practice by how many filter
+ * combinations one person visits inside a five-minute window (tens of small
+ * arrays). If a caller ever keys on something unbounded — a per-row id, a
+ * keystroke — the upgrade is an LRU bound here, not a second cache.
+ */
+export function createKeyedResourceCache<T>(
+  ttlMs: number,
+  epoch: CacheEpoch = CACHE_EPOCH,
+): KeyedResourceCache<T> {
+  const entries = new Map<string, CacheEntry<T>>()
+  const inFlight = new Map<string, Promise<T>>()
+  // Advanced by EVERY drop, not just the epoch's. `epoch.version()` alone is
+  // not enough here: `dropCachesAfterWrite` empties these maps directly and
+  // deliberately does not touch the epoch, because bumping it would also evict
+  // the deploy-scoped Class A caches on every mutation. Without a local
+  // generation, a GET already in the air when a write landed would resolve,
+  // still believe it was current, and file its PRE-write rows in the cache it
+  // was just evicted from -- serving the row you just claimed as claimable for
+  // the rest of the TTL, which is the exact failure the invalidation exists to
+  // prevent.
+  let generation = 0
+
+  const drop = (): void => {
+    generation += 1
+    entries.clear()
+    inFlight.clear()
+  }
+  epoch.register(drop)
+  writeSensitiveCaches.add(drop)
+
+  return {
+    drop,
+    read: (key, fetchFn) => {
+      const entry = entries.get(key) ?? null
+      if (entry !== null && isFresh(entry, Date.now(), ttlMs)) {
+        return Promise.resolve(entry.value)
+      }
+      const existing = inFlight.get(key)
+      if (existing !== undefined) return existing
+
+      // Stamped at issue time: an answer describing the world we were in when
+      // the request went out must not be written back in behind a drop that
+      // landed while it was in the air (mirrors `createResourceCache`). Both
+      // stamps are read -- the epoch for an era rollover, the local generation
+      // for a write.
+      const issuedAtVersion = epoch.version()
+      const issuedAtGeneration = generation
+      const isCurrent = (): boolean =>
+        epoch.version() === issuedAtVersion && generation === issuedAtGeneration
+      const promise = fetchFn().then(
+        (value) => {
+          if (isCurrent()) {
+            inFlight.delete(key)
+            entries.set(key, { value, fetchedAt: Date.now() })
+          }
+          return value
+        },
+        (cause: unknown) => {
+          // Nothing is cached, and the key is released so the next read retries.
+          if (isCurrent()) inFlight.delete(key)
+          throw cause
+        },
+      )
+      inFlight.set(key, promise)
+      return promise
+    },
   }
 }
