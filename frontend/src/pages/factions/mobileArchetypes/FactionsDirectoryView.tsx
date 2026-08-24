@@ -163,7 +163,18 @@ export default function FactionsDirectoryView({
       ) : error ? (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{error}</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
+        <div
+          data-testid="faction-tile-column"
+          /* `alignItems` centres the tiles. Without it the column takes the
+             default `stretch`, which does NOT apply to a child that declares its
+             own cross size — `FactionSelectCard` is `width: 100%` up to a 360px
+             max — so every tile sat at cross-start and left the space past 360
+             empty on the right (#2579). Below 360 the tile fills the screen and
+             nothing looked wrong, which is why this read as a tablet bug.
+             `pages/Factions.tsx`'s wrapping row is deliberately left alone: its
+             `alignItems: 'flex-start'` is the cross axis of a ROW and is correct. */
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2xl)' }}
+        >
           {visible.map((f) => (
             <FactionSelectCard
               key={f.slug}
