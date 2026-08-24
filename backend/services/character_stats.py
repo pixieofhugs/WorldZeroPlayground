@@ -24,7 +24,7 @@ from models.praxis import (
 )
 from models.task import Task
 from models.vote import Vote
-from services.character import ALBESCENT_FACTION_SLUG
+from services.character import ALBESCENT_FACTION_SLUG, stamp_albescent_unlock
 from services.era import (
     get_closing_era_id,
     get_current_era_row,
@@ -345,6 +345,17 @@ async def recalculate_character_stats(
     await _deliver_earned_invitations(
         author, all_praxes, contributions, session, era, era_row
     )
+
+    # #2399: and then ask whether this life has just earned the Albescent door
+    # for its account. AFTER the delivery above, deliberately — a letter posted
+    # by this same recalc is the seventh faction for someone, and asking first
+    # would make them wait for an unrelated recalc to notice.
+    #
+    # This is the stamp point because it is the one place where BOTH halves of
+    # the earn rule move: `stats.level` was just written a few lines up, and the
+    # letters a line above that. The unlock is sticky and cannot be recomputed
+    # after an era reset, so if it is not written here it is not written at all.
+    await stamp_albescent_unlock(author, era_row.id, session, era)
 
 
 async def recalculate_members_stats(

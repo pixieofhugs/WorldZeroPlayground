@@ -189,6 +189,7 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | Model file | Table | Primary key | Integer (BIGINT) foreign keys |
 |---|---|---|---|
 | `account.py` | `account` | `id` | `active_character_id` |
+| `account.py` | `account_tombstone` | `id` | `account_id` |
 | `account.py` | `oauth_provider` | `id` | `account_id` |
 | `character.py` | `character` | `id` | `account_id` (+ `faction_slug`, string) |
 | `character_block.py` | `character_block` | `id` | `blocker_character_id`, `blocked_character_id` |
@@ -218,7 +219,7 @@ deliberate exception to rules 2 and 3: its primary key is the human-written `slu
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-29 tables, 55 integer foreign keys, 5 string ones.
+30 tables, 56 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

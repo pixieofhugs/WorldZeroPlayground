@@ -106,6 +106,7 @@ import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
+import { factionSheet } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import {
   bylineFaces,
@@ -167,13 +168,13 @@ function MemberDisc({
   return (
     <span
       aria-hidden
+      className="spectrum-dial"
       style={{
         display: 'block',
         width: size,
         height: size,
         borderRadius: '50%',
         padding: 'var(--space-xs)',
-        background: SPECTRUM,
         flexShrink: 0,
       }}
     >
@@ -249,12 +250,12 @@ export default function DefaultPraxisDetail({
       </span>
       <span
         aria-hidden
+        className="spectrum-rule"
         style={{
           flex: '1 1 20%',
           minWidth: 20,
           height: 2,
           borderRadius: 2,
-          background: SPECTRUM,
         }}
       />
       {trailing}
@@ -576,7 +577,7 @@ export default function DefaultPraxisDetail({
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.proof'))}
-      <div style={{ borderRadius: 10, padding: 'var(--space-xs)', background: SPECTRUM }}>
+      <div className="spectrum-rule" style={{ borderRadius: 10, padding: 'var(--space-xs)' }}>
         <div
           style={{
             borderRadius: 6,
@@ -647,7 +648,7 @@ export default function DefaultPraxisDetail({
           // The page surface the design puts everything on, carried by the
           // COLUMN rather than the viewport — the site background must still
           // show around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
-          background: 'var(--faction-default-card-bg)',
+          ...factionSheet(),
           color: 'var(--faction-default-card-text)',
           border: '1px solid var(--faction-default-border)',
           borderRadius: 18,
@@ -659,7 +660,8 @@ export default function DefaultPraxisDetail({
         {/* The spectrum band across the sheet head — the na tell. */}
         <span
           aria-hidden
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: SPECTRUM }}
+          className="spectrum-rule"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4 }}
         />
 
         {/* Ornament only, clipped by this sheet's own overflow (see the slot's

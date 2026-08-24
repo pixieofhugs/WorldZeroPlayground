@@ -119,6 +119,7 @@ const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchet
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
+const WowCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowCreateCharacter'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -175,4 +176,13 @@ export const WOW_MANIFEST: FactionManifest = {
   // both form factors and praxis detail is one shared page. The pavilion
   // profile itself survives inside `WowProfileBody`.)
   mobileFieldDesk: () => WowFieldDesk,
+
+  // #2350 — THE CHARTER: WOW's dress over character creation, the surface #2346
+  // declared and #2347 first filled. Derived rather than drawn — the owner ruled
+  // no design was needed, because the DECREE task card and the WRIT composer
+  // carry the register between them: the decree's head (barber ribbon, pennants,
+  // balloons) over the writ's chassis (gilt sheet, parchment fields, one zigzag,
+  // the full-bleed gold cast band). ONE responsive component; the
+  // `mobileCreateCharacter` slot retired with #901's note above and stays retired.
+  createCharacter: () => WowCreateCharacter,
 }

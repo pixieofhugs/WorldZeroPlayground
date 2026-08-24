@@ -19,8 +19,8 @@ Two numbers, and they are different things:
 The fixture deliberately satisfies every pre-fetch need (a friend, a foe, an
 in-progress praxis, a vote on it), because a source whose context is empty is
 skipped without a round trip — a viewer with no relationships would understate
-the fan-out, and a viewer nobody has voted for would miss the scoring pass
-(#2199) entirely.
+the fan-out, and a viewer nobody has voted for would leave the two vote sources
+returning nothing.
 """
 from contextlib import contextmanager
 
@@ -56,15 +56,11 @@ from services.activity_feed import (
 #: are one ``UNION ALL`` however many sources there are, which is the property
 #: the two constants below exist to hold.
 #:
-#: 20 → 33 in #2199: a page carrying a vote row pays one scoring pass
-#: (``_score_vote_items``) so the "+N pts" it prints is the praxis's real score
-#: rather than arithmetic invented at the payload. Thirteen statements — the
-#: praxis fetch, its four ``selectin`` loaders (see the ``ponytail`` note on
-#: that function), and ``author_contributions_for``'s own bulk queries — every
-#: one **flat** in the number of vote rows, and zero when the page has none.
-#: The fixture below seeds a vote deliberately: pinning the cheap page would
-#: have left the expensive one unpinned, which is how a per-row scoring
-#: regression would get in unseen.
+#: 20 → 33 in #2199: a page carrying a vote row paid for one scoring pass
+#: (``_score_vote_items``) so the "+N pts" it printed was the praxis's real
+#: score rather than arithmetic invented at the payload. Thirteen statements —
+#: the praxis fetch, its four ``selectin`` loaders, and
+#: ``author_contributions_for``'s own bulk queries.
 #:
 #: 33 → 34 in #2280: a sixth pre-fetch round trip for the reader's level, which
 #: answers ``services.meta_task.character_sees_metatasks`` once per call so
@@ -75,7 +71,15 @@ from services.activity_feed import (
 #: not a comparison: stating it in SQL would put a second copy of
 #: ``era.level_to_see_metatasks`` next to an identically-numbered apply
 #: threshold that a faction perk bends and this one does not.
-EXPECTED_FEED_LOAD_STATEMENTS = 34
+#:
+#: 34 → 21 in #2402: all thirteen come back off. The row prints what THAT voter
+#: added, which is their star value exactly — ``points_from_votes`` is a plain
+#: ``sum(Vote.value)`` added after the multipliers — and the vote query already
+#: selects it, so the praxis's total is neither shown nor fetched. The whole
+#: post-pass is gone, not made conditional. The fixture below still seeds a
+#: vote: the two vote sources are part of the fan-out this number pins, and a
+#: scoring pass creeping back onto them would show up here first.
+EXPECTED_FEED_LOAD_STATEMENTS = 21
 
 #: Round trips the six tab badges cost. One ``UNION ALL`` over the same windowed
 #: Selects the fetch fan-out runs, whatever the registry's size (#1532). Was 15.

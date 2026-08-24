@@ -230,9 +230,72 @@ describe("the last two archetype seams of #1706", () => {
     expect(markup).toContain(i18n.t("forms:editPraxis.composer.proofHelper"));
   });
 
-  it.each(SLUGS)("%s left-rules the task slip in its accent", (slug) => {
-    const markup = render(slug === "na" ? null : slug);
-    expect(markup).toMatch(/border-left:2px solid var\(--[a-z-]+\)/);
+  // na is not in this list since #2520: its slip's 2px left ink bar came off
+  // with the masthead band, so the sheet's own spectrum frame is the only rule
+  // around the page's chrome. The seven dressed skins keep theirs — the design
+  // took the bar off the UNAFFILIATED kit, not out of the shared contract.
+  it.each(SLUGS.filter((slug) => slug !== "na"))(
+    "%s left-rules the task slip in its accent",
+    (slug) => {
+      const markup = render(slug);
+      expect(markup).toMatch(/border-left:2px solid var\(--[a-z-]+\)/);
+    },
+  );
+});
+
+/**
+ * THE na COMPOSER IS THE SPECTRUM SHEET (#2520, epic #2496).
+ *
+ * The design canvas gives the na kit the spectrum treatment so that Albescent's
+ * delta can be MOTION alone. On this page na was carrying the louder half of
+ * that already: a full-bleed rainbow band across the masthead which `.ep-edge`
+ * WALKS for every player, unaffiliated ones included — so the society's
+ * travelling sheet edge (#2505) was not a delta at all, it was a second moving
+ * rainbow on the same page.
+ *
+ * So the strip comes off, the masthead's own 3px rule goes with it, the slip's
+ * 2px left ink bar goes, and the sheet wears the kit's 3px spectrum frame — the
+ * one the task card, the praxis card and (since earlier in this issue) the seal
+ * all wear. Stilled, Albescent's edge is now a hairline just inside a spectrum
+ * border rather than a second band.
+ *
+ * The seam is the rendered markup of `DefaultEditPraxis` at both stages: the
+ * composer, and the waiting surface it hands `DEFAULT_COMPOSER_DRESS` to — the
+ * masthead is carried ON the dress, so dropping it in one place and not the
+ * other is exactly the drift the dress exists to prevent.
+ */
+describe("na's composer sheet wears the spectrum, and no band (#2520)", () => {
+  const SHEET = [
+    "border:3px solid transparent",
+    "background-image:var(--faction-default-card-sheet),var(--faction-default-rainbow)",
+    "background-origin:border-box",
+  ];
+  /** A background LIST renders with a space after each comma; close it up. */
+  const stages = () => ({
+    composing: render(null).replace(/\s*([:;,])\s*/g, "$1"),
+    waiting: render(null, "desktop", { phase: "waiting" }).replace(
+      /\s*([:;,])\s*/g,
+      "$1",
+    ),
+  });
+
+  it("draws no masthead band at either stage", () => {
+    for (const [stage, markup] of Object.entries(stages())) {
+      // The band's paint was the LOOP cut, which nothing else on this page
+      // names, and `.ep-edge` is the class that walked it.
+      expect(markup, stage).not.toContain("--faction-default-rainbow-loop");
+      expect(markup, stage).not.toContain("ep-edge");
+    }
+  });
+
+  it("frames the sheet in the kit's own 3px spectrum instead", () => {
+    for (const [stage, markup] of Object.entries(stages())) {
+      for (const declaration of SHEET) expect(markup, stage).toContain(declaration);
+    }
+  });
+
+  it("takes the ink bar off the task slip", () => {
+    expect(render(null)).not.toMatch(/border-left:2px solid var\(--[a-z-]+\)/);
   });
 });
 

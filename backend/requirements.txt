@@ -15,3 +15,8 @@ pytest
 pytest-asyncio
 pytest-cov
 pytest-timeout
+
+# The linter (#2427). Pinned exactly: the shrink-only allowlist in
+# tests/unit/ruff_allowlist.py is a count of what THIS version reports, so an
+# unpinned upgrade would move the number without anyone touching the code.
+ruff==0.16.4

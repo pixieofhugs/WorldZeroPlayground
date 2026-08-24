@@ -13,18 +13,32 @@
  * - **Faction points are the sum of a faction's members' scores.** That is the
  *   definition, not an approximation of one, so there is no endpoint to add and
  *   no `FactionOut` field to grow (it is `{slug, status}` and stays that way).
- * - **The seven lanes are `FACTION_RAINBOW_ORDER`, not the slugs present in the
- *   data.** A faction whose members all sit at zero still races, and a faction
- *   the roster page happens not to contain does not silently vanish. It also
- *   keeps Albescent out of the race, which a data-driven lane list could not
- *   promise (ADR-0027 — the slug is absent from `/factions` pre-reveal).
- * - **`na` gets no lane.** Unaffiliated is a state, not a faction (ADR-0030 /
- *   ADR-0039), so its points are not in the race and not in the share
- *   denominator. The design draws an eighth "Albescent" lane for them; that is
- *   a deliberate deviation, ruled in #1855.
+ * - **The lanes are a fixed list, not the slugs present in the data.** A
+ *   faction whose members all sit at zero still races, and a faction the roster
+ *   page happens not to contain does not silently vanish.
+ * - **There are EIGHT lanes now, and the eighth is Albescent (#2409).** This
+ *   docstring used to say the fixed list was what "keeps Albescent out of the
+ *   race, which a data-driven lane list could not promise (ADR-0027)", and
+ *   #1855 ruled the design's eighth lane a deliberate deviation to be dropped.
+ *   **ADR-0082 reverses both.** Albescent races like every other society and
+ *   reads `[REDACTED]` to a viewer who has not been revealed to it — a blank
+ *   lane that yields the word on selection. The fixed list is still the right
+ *   shape and now does the opposite job: it guarantees the lane is THERE even
+ *   when the loaded page contains no Albescent member, so its absence from a
+ *   roster page cannot be read as the society not existing.
+ * - **`na` STILL gets no lane, and that is unchanged.** Unaffiliated is a
+ *   state, not a faction (ADR-0030 / ADR-0039), so its points are not in the
+ *   race and not in the share denominator. The two exclusions were never the
+ *   same exclusion, which is why only one of them moved.
+ * - **The share denominator moved with the lane, and that is accepted.**
+ *   Albescent's points are in the pot now, so every other faction's percentage
+ *   changed. It leaks the society's SIZE while its name stays hidden; the owner
+ *   ruled the lane shows as the others do and a second redaction over the
+ *   number is explicitly not wanted (#2409).
  */
 import type { CharacterOut } from '../../api/auth'
 import {
+  ALBESCENT_FACTION_SLUG,
   FACTION_RAINBOW_ORDER,
   UNAFFILIATED_FACTION_SLUG,
   isFactionHiddenFromChoosers,
@@ -83,10 +97,14 @@ export function slugKey(slug: string | null | undefined): string {
  *     A REVEALED viewer gets the ordinary `/factions/albescent`, which
  *     `AlbescentGate` hands the real faction page.
  *
- * The race lanes can be neither by construction (`factionStandings` keys off
- * `FACTION_RAINBOW_ORDER`, which holds neither slug), and they still route
- * through here on purpose: the mask must not depend on the lane list staying
- * that way.
+ * ONE OF THOSE TWO IS NOW A RACE LANE. This used to read "the race lanes can be
+ * neither by construction (`factionStandings` keys off `FACTION_RAINBOW_ORDER`,
+ * which holds neither slug), and they still route through here on purpose: the
+ * mask must not depend on the lane list staying that way." The lane list did
+ * not stay that way — #2409 gave Albescent the eighth lane — and routing
+ * through here anyway is what makes that a one-line change instead of a leak.
+ * An unrevealed viewer's lane prints `[REDACTED]` and carries no href; a
+ * revealed one gets the ordinary link.
  */
 export function factionHref(slug: string | null | undefined): string | null {
   const key = slugKey(slug)
@@ -119,8 +137,26 @@ export interface FactionStanding {
   barPercent: number
 }
 
+/**
+ * The lanes of the race, in order: the rainbow, then Albescent (#2409).
+ *
+ * Appended HERE rather than added to `FACTION_RAINBOW_ORDER`, and the
+ * difference is the whole reason this constant exists. That array is the colour
+ * SPECTRUM — it feeds the mobile directory's stripe bar, the backdrop and the
+ * filter facet, and it distributes gradient stops across whatever is in it.
+ * Albescent owns no hue (`factionCssVar('albescent')` resolves to the neutral
+ * default, #783) so it has no slot in a spectrum, and putting it there would
+ * hand three unrelated surfaces an eighth stripe none of them asked for.
+ *
+ * What it has is a place in the RACE, which is about points and not colour.
+ */
+const RACE_LANES: readonly string[] = [
+  ...FACTION_RAINBOW_ORDER,
+  ALBESCENT_FACTION_SLUG,
+]
+
 export function factionStandings(ranked: RankedPlayer[]): FactionStanding[] {
-  const points = new Map<string, number>(FACTION_RAINBOW_ORDER.map((slug) => [slug, 0]))
+  const points = new Map<string, number>(RACE_LANES.map((slug) => [slug, 0]))
   for (const { character, points: earned } of ranked) {
     const slug = slugKey(character.faction_slug)
     const running = points.get(slug)

@@ -45,7 +45,7 @@ describe("the ephemeris grid token", () => {
 
 describe("the hero borrows the token back", () => {
   const html = renderToStaticMarkup(
-    <EphemeristsFactionHero name="The Ephemerists" members={4} tasks={9} praxes={2} />,
+    <EphemeristsFactionHero slug="ephemerists" name="The Ephemerists" members={4} tasks={9} praxes={2} />,
   );
 
   it("draws its ruled ground from the token, not a hand-typed gradient pair", () => {

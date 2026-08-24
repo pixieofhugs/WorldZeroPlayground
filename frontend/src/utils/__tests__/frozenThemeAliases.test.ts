@@ -96,6 +96,13 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-coven-card-border",
   "--faction-default-aurora",
   "--faction-default-card-border",
+  // The na SHEET (#2497). It composes from `--faction-default-card-bg`, which
+  // the dark block rebinds, so it flips on its own — the same ruling as the
+  // spectrum cuts above, and the reason it is declared once rather than twice.
+  // Its two siblings, `-sheet-blend` and `-sheet-clip`, are literals with no
+  // referent at all and so are not of this shape; the triple stays matched
+  // because `defaultSheetToken.test.ts` measures its arity directly.
+  "--faction-default-card-sheet",
   "--faction-default-eyebrow-rainbow",
   "--faction-default-rainbow",
   "--faction-default-rainbow-conic",

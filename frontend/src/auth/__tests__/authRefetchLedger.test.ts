@@ -66,6 +66,12 @@ const LEDGER: LedgerEntry[] = [
     why: 'POST /auth/dev-login sets the cookie and returns nothing — /auth/me is the only way to learn who that is.',
   },
   {
+    file: 'pages/onboarding/ReturningCard.tsx',
+    calls: 1,
+    verdict: 'identity-changed',
+    why: 'POST /auth/returning-player mints a brand-new account and sets the cookie; the body is an acknowledgement, so /auth/me is the only way to learn who that is (#2162).',
+  },
+  {
     file: 'pages/characterPaths/useCreateCharacter.ts',
     calls: 1,
     verdict: 'identity-changed',
@@ -144,10 +150,14 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
 
   it('totals the count this sweep reports', () => {
     // 16 before #1349, in 12 files; 14 in 10 after it; 8 in 5 once #1383 had
-    // the six `response-in-hand` sites consume the response instead.
+    // the six `response-in-hand` sites consume the response instead. 9 in 6
+    // since #2162 — a sign-in that mints an account and answers with an
+    // acknowledgement, which is the dev-login entry's situation exactly and
+    // NOT the response-in-hand class: no CurrentUser is being discarded here,
+    // because the server never built one.
     const total = [...measured.values()].reduce((sum, calls) => sum + calls, 0)
-    expect(total).toBe(8)
-    expect(measured.size).toBe(5)
+    expect(total).toBe(9)
+    expect(measured.size).toBe(6)
   })
 
   it('leaves only identity reloads', () => {

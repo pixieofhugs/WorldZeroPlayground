@@ -555,7 +555,7 @@ export default function SingularityTaskDetail({
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={primaryButton}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryButton}>
             {prompt}
             {t(signupCtaKey(task.signup_reason))}
             <Cursor />

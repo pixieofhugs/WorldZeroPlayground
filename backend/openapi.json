@@ -1598,6 +1598,11 @@
             "title": "Account Id",
             "type": "integer"
           },
+          "albescent_level_required": {
+            "default": 0,
+            "title": "Albescent Level Required",
+            "type": "integer"
+          },
           "albescent_revealed": {
             "default": false,
             "title": "Albescent Revealed",
@@ -1692,6 +1697,7 @@
           "can_start_as_albescent",
           "albescent_revealed",
           "second_character_level_required",
+          "albescent_level_required",
           "era_name",
           "can_propose_task",
           "can_propose_metatask",
@@ -5354,6 +5360,21 @@
         "title": "RelationshipTypeEnum",
         "type": "string"
       },
+      "ReturningPlayerOut": {
+        "description": "What the consent gate is allowed to know (``GET /auth/returning-player``).\n\nOne field, and the reason there is only one is the reason this model exists\nat all. The caller has authenticated as *nobody* — they hold a signed,\nten-minute session cookie stamped by an OAuth handshake they just completed,\nand nothing else. Anything added here is a fact about an account that no\nlonger exists, disclosed on that basis.\n\nA **date, not a timestamp**: the gate's sentence is *\"you deleted your World\nZero account on 3 March\"*, and the hour and minute would be a finer signal\nbought for nothing the sentence needs. The tombstone's ``created_at`` is\ntruncated in ``services.auth.ReturningPlayerConsentRequired``, so the\nprecision is dropped before it ever reaches a response model.",
+        "properties": {
+          "deleted_on": {
+            "format": "date",
+            "title": "Deleted On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted_on"
+        ],
+        "title": "ReturningPlayerOut",
+        "type": "object"
+      },
       "SidebarOut": {
         "description": "Everything the rail's three data panels draw, in one response.\n\nOne field per panel, and nothing else. Identity is deliberately absent: the\ncharacter card reads ``user.character`` from ``/auth/me``, which ~20 call\nsites already refetch, and fattening that payload would make every one of\nthem heavier (#1349). This carries only what the panels need.\n\nRequests are a NUMBER, not a list (#1456). The rail listed them until\n#1423; under ADR-0070 the Requests queue on ``/updates`` is the only\nsurface a request can be answered on, so all that is left here is the\nbadge on the collapsed handle, the mobile bell and the mobile FieldDesk —\nthree consumers of one integer. Shipping up to a hundred hydrated feed\nitems on a page-load path to produce it was the whole of the cost.\n\nThe count is the same one ``counts.requests`` reports, so the badge and\nthe queue's card list cannot disagree — see\n:func:`services.activity_feed.get_sidebar_feed`.",
         "properties": {
@@ -5457,6 +5478,20 @@
           "active_praxes"
         ],
         "title": "SidebarOut",
+        "type": "object"
+      },
+      "StartFreshOut": {
+        "description": "Acknowledgement for ``POST /auth/returning-player``.\n\nSame posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,\nand the body exists so the generated client has a declared shape rather than\nan untyped object. The caller learns who it now is from ``/auth/me``, which\nis the one place that answers that question.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "StartFreshOut",
         "type": "object"
       },
       "SuspendAction": {
@@ -5981,7 +6016,7 @@
         "type": "object"
       },
       "VoteChangedOnMineItem": {
-        "description": "A voter went back and re-rated the viewer's praxis (#1712).\n\nSame payload as ``VoteOnMineItem`` — ``value``/``points_earned`` are the\nnumbers that stand *now* — and deliberately no \"changed from\" fields: no\nprior value is stored. The two are distinct types rather than one type with\na flag because the item KEY has to differ, so archiving the original cannot\nsilence the change.",
+        "description": "A voter went back and re-rated the viewer's praxis (#1712).\n\nSame payload as ``VoteOnMineItem`` — ``value`` is the vote that stands\n*now* — and deliberately no \"changed from\" fields: no prior value is\nstored, so the row can print what the vote is worth but never the size of\nthe change. The two are distinct types rather than one type with\na flag because the item KEY has to differ, so archiving the original cannot\nsilence the change.",
         "properties": {
           "actor_avatar_url": {
             "anyOf": [
@@ -6141,19 +6176,8 @@
       },
       "VoteOnMinePayload": {
         "additionalProperties": false,
-        "description": "Someone voted on the viewer's praxis.\n\n``points_earned`` is the praxis's **whole current score** — the same number\n``PraxisOut.score`` publishes, same type, off the same scoring path\n(ADR-0014/0053). It is what the author sees when they click the row through,\nwhich is the promise #2199 was filed about: the row used to print\n``value × task_point_value``, a product where the score is a sum, and\nannounced 120 points against a praxis worth 34.\n\nOptional because it is filled in a **second pass**: scoring is async and\nbatched, so the per-row mapper that builds this payload cannot reach it (see\n``services.activity_feed._score_vote_items``). A praxis that cannot be scored\nleaves it ``None`` and the row prints no number — never an invented one.",
+        "description": "Someone voted on the viewer's praxis.\n\n``value`` is the whole story the row needs: the \"+N pts\" it prints is the\nstars this voter gave, which is **exactly** what their vote added to the\npraxis (#2402). ``points_from_votes`` is a plain ``sum(Vote.value)`` and\n``Contribution`` adds it *after* the faction and duel multipliers, so a\nsingle vote's contribution depends on nothing else — not the other votes,\nthe author's faction, the task's points, a metatask or a duel.\n\nSo this is a delta, not a total, and there is no ``points_earned`` here.\n#2199 put the praxis's whole score on this payload, filled by a second\nscoring pass, because the per-vote number then in use was *invented*\n(``value × task_point_value``, a product where the score is a sum, which\nannounced 120 points against a praxis worth 34). The delta is not a\nrestated formula though — it is the raw input the sum is over — so it\ncannot diverge from the scoring path the way that arithmetic did, and the\npass that read the total is gone.",
         "properties": {
-          "points_earned": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Points Earned"
-          },
           "praxis_id": {
             "title": "Praxis Id",
             "type": "integer"
@@ -6187,8 +6211,7 @@
           "value",
           "praxis_id",
           "praxis_title",
-          "task_point_value",
-          "points_earned"
+          "task_point_value"
         ],
         "title": "VoteOnMinePayload",
         "type": "object"
@@ -8138,6 +8161,48 @@
         ]
       }
     },
+    "/auth/returning-player": {
+      "get": {
+        "description": "What the consent gate says (#2162): a date, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
+        "operationId": "returning_player_gate_auth_returning_player_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturningPlayerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Returning Player Gate",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "The one button: yes, start fresh (#2162).\n\nExplicitly **not** an offer of any old data, and there is none to offer —\n``delete_account`` blanked it and there is no undo (ADR-0081). All this does\nis finish the sign-in the gate interrupted, as a stranger.\n\nThe tombstone goes FIRST, and that ordering is what does the work: with it\ncleared, ``create_or_get_account`` finds no reason to pause and falls\nthrough to the ordinary stranger path — the same mint, the same email\nbranch, the same rules. There is no second creation path here and no\n\"consent given\" flag threaded through the service to be got wrong.\n\n``email_verified=True`` is a fact this server established, not a claim the\ncaller made: the sign-in that parked this session got past\n``create_or_get_account``'s verified-email gate before it ever reached the\ntombstone (ADR-0075, and ``test_returning_player_gate`` pins the ordering),\nand the parked address rode here inside a cookie signed with ``SECRET_KEY``.",
+        "operationId": "confirm_returning_player_auth_returning_player_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartFreshOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Confirm Returning Player",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/characters": {
       "get": {
         "description": "List all active characters. Optionally filter by name or faction.\n\n``exclude_active_task_id`` hides players already active on that task (invite\nsearch pre-filter, #320).\n\n``exclude_own_account`` hides every life on the caller's own account — the\naccount-level identity rule of ADR-0041, which the duel-opponent picker needs\nand used to re-derive client-side off a second request (#1385). Opt-in, so\nthe default path ignores the viewer entirely.\n\n**From an anonymous caller the flag is a silent no-op**, not a 401 or a 422:\nthere is no viewer to exclude, the combination is meaningless rather than\nmalformed, and rejecting would make a deliberately public route\nconditionally authenticated. That is never a security hole — the exclusion is\npicker convenience, and ``services.duel`` independently enforces the rule at\nboth challenge and accept (``_characters_share_account``).",
@@ -9087,26 +9152,8 @@
     },
     "/factions": {
       "get": {
-        "description": "Return all non-hidden factions.\n\nAlbescent is a secret society (ADR-0027, #390): it is omitted unless the\ncurrent account has been revealed to it. Optional auth — anonymous callers\nstay anonymous and never see Albescent.",
+        "description": "Return all non-hidden factions — Albescent included, for everyone.\n\n**This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is\nstill a secret society, but secrecy is now expressed as REDACTION at the\nrender rather than as omission at the wire: the eighth row ships to every\ncaller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``\nfor a viewer ``/auth/me`` has not revealed. Hiding a row taught an\nunrevealed player nothing; a row they can see and cannot read is the locked\ndoor with no keyhole the mechanic is actually about.\n\nThe optional-auth dependency went with the filter. It existed to answer one\nquestion — \"is this viewer revealed?\" — and this handler no longer asks it,\nso resolving an account here would be a read nothing consumes. The predicate\nitself is untouched and still governs the surfaces that DO ask\n(``services.progression``, ``faction_slugs``, ``services.current_user``);\nwhat changed is that the faction directory stopped being one of them.\n\nWhat this handler is NOT is a redaction point. ``FactionOut`` is\n``{slug, status}`` and carries no prose, so serving the row leaks the slug\nand nothing else — the same slug the wire has always carried on every\nAlbescent-authored task and praxis. Whether ``/factions`` should one day\nserve a *redacted row* rather than the real one, so the tease survives a\nreader of the network tab, is the follow-on ADR-0082 names and does not\nsettle.",
         "operationId": "list_factions_factions_get",
-        "parameters": [
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -9121,23 +9168,8 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "List Factions",
         "tags": [
           "factions"
@@ -9146,7 +9178,7 @@
     },
     "/factions/choose": {
       "post": {
-        "description": "Choose or defect to a new faction.\n\nWorks for the initial faction join and later defections.\nPlayers cannot rejoin factions they have left, except UA Masters and Albescent.\n\nAnswers the refreshed `CurrentUser`, not the faction row (#1383). Membership\ndresses the whole site off `/auth/me` — the faction slug, the level-jump\nallowance, the capability flags and the sticky `albescent_revealed` reveal\nmove together — so all four callers threw the `{slug}` away and re-asked\n`/auth/me` for the object this handler is already positioned to build.",
+        "description": "Choose or defect to a new faction.\n\nWorks for the initial faction join and later defections.\nPlayers cannot rejoin factions they have left, except Albescent.\n\nAnswers the refreshed `CurrentUser`, not the faction row (#1383). Membership\ndresses the whole site off `/auth/me` — the faction slug, the level-jump\nallowance, the capability flags and the sticky `albescent_revealed` reveal\nmove together — so all four callers threw the `{slug}` away and re-asked\n`/auth/me` for the object this handler is already positioned to build.",
         "operationId": "choose_faction_factions_choose_post",
         "parameters": [
           {
@@ -9211,7 +9243,7 @@
     },
     "/factions/status": {
       "get": {
-        "description": "Return faction page data: current faction, per-faction status, and letters.\n\nAlbescent (ADR-0027, #390) is omitted from ``all_factions`` unless this\naccount has been revealed to the secret society.\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
+        "description": "Return faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` carries Albescent for every caller since #2409 — the same\nmove ``list_factions`` makes, and it has to be the same move or the two\npayloads the directory joins would disagree about how many cards there are.\nThe status this row reports is the ordinary invite-gated one, so an\nunrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every\nstring redacts. Reveal governs the word; ``defect_to_faction``'s eligibility\nguard still governs the door (ADR-0082).\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
         "operationId": "get_faction_status_factions_status_get",
         "parameters": [
           {
@@ -9339,7 +9371,7 @@
     },
     "/leaderboard": {
       "get": {
-        "description": "Top characters by current era score, optionally filtered by faction.",
+        "description": "Top characters by current era score, optionally filtered by faction.\n\nAuth is **optional** and always was in effect — this is a public board and\nanonymous callers must keep getting an answer. The account is read for one\nthing: a caller revealed to Albescent may ask for that roster directly\nrather than getting the Unaffiliated fold (#2422).",
         "operationId": "get_leaderboard_leaderboard_get",
         "parameters": [
           {
@@ -9377,6 +9409,22 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
           }
         ],
         "responses": {
@@ -9405,9 +9453,62 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Leaderboard",
         "tags": [
           "leaderboard"
+        ]
+      }
+    },
+    "/me/account": {
+      "delete": {
+        "description": "End this account: tombstone every row, unlink its media (ADR-0081, #2160).\n\nIrreversible, and takes no body — the confirmation is the client's\n(#2161). The route is deliberately unable to delete anyone else's: the\naccount comes from the JWT, never from a path parameter.\n\nNo grace period and no scheduled follow-up; see ``services.account_deletion``.\nThe JWT the caller still holds is inert the moment this returns —\n``get_current_account`` refuses any account that is not ``active`` — so\nsigning out is ``POST /auth/logout`` like any other sign-out, and the cookie\nflags stay stated in exactly one place.",
+        "operationId": "delete_my_account_me_account_delete",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete My Account",
+        "tags": [
+          "me"
         ]
       }
     },
@@ -11087,7 +11188,7 @@
     },
     "/praxes/{praxis_id}/metatasks/{task_id}": {
       "delete": {
-        "description": "Detach a previously applied metatask from a praxis.",
+        "description": "Detach a previously applied metatask from a praxis.\n\nAnswers with the re-scored praxis, like its apply sibling (#2464). Peeling a\nseal off changes ``score`` and ``metatask_points``, and ``remove_metatask``\nhas already recomputed both — a bare 204 left the composer's score stamp\nprinting the higher total until a reload.",
         "operationId": "remove_metatask_route_praxes__praxis_id__metatasks__task_id__delete",
         "parameters": [
           {
@@ -11126,7 +11227,14 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PraxisOut"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {

@@ -63,7 +63,7 @@
     "FACTION_REJOIN_FORBIDDEN": "Cannot rejoin a faction you have left.",
     "FACTION_INVITATION_REQUIRED": "You don't hold an invitation for that faction.",
     "FACTION_ALBESCENT_NOT_ELIGIBLE": "The order has not extended its hand to you.",
-    "FACTION_ALBESCENT_NOT_AT_CREATION": "Albescent is joined in the field, not chosen at creation.",
+    "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY": "Available only for New Game+.",
 
     "CHARACTER_NAME_REQUIRED": "A chosen name is required.",
     "CHARACTER_DEPARTED_NOT_RESTORABLE": "This life was ended by its player and cannot be restored.",
@@ -91,6 +91,9 @@
     "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB).",
     "OAUTH_EMAIL_UNVERIFIED": "We can't sign you in: that account has no verified email address. Verify your email where you signed in, then try again.",
     "OAUTH_FAILED": "That sign-in didn't go through. Pick a way in and try again.",
-    "OAUTH_STATE_EXPIRED": "That sign-in took too long, so we let it lapse. Pick a way in and you'll go straight through."
+    "OAUTH_STATE_EXPIRED": "That sign-in took too long, so we let it lapse. Pick a way in and you'll go straight through.",
+    "ACCOUNT_SUSPENDED": "That account is suspended, so we can't sign you in. Get in touch if you think that's wrong.",
+    "ACCOUNT_DELETED": "That account was deleted and can't be signed into.",
+    "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one."
   }
 }

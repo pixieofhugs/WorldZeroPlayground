@@ -131,6 +131,10 @@ export default function ConfirmDialog({
     >
       <div
         ref={panelRef}
+        // Named for the nightly (#2453): `request.kind` says which confirm this
+        // is without reading its title, which is per-faction catalog copy.
+        data-testid="confirm-dialog"
+        data-confirm-kind={request.kind}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -202,6 +206,7 @@ export default function ConfirmDialog({
           </button>
           <button
             type="button"
+            data-testid="confirm-accept"
             onClick={onConfirm}
             className="font-body"
             style={{

@@ -7,6 +7,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionSpectrumSheet } from "../../utils/factions";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
 /**
@@ -100,12 +101,16 @@ export default function DefaultTaskCard({
           // The spectrum IS the border: a transparent 3px frame with the
           // rainbow painted into the border box behind it, and the sheet
           // painted into the padding box on top.
+          //
+          // The composition was five hand-written lines here until #2499 gave
+          // the praxis card the same border and moved both onto
+          // `factionSpectrumSheet()`. Only the GEOMETRY is this card's — the 3px
+          // frame and the 14px corner; the ramp has to be appended to all three
+          // of the sheet's lists and saying that twice is the way to get the
+          // arity wrong on one of them. See the helper's note.
           border: "3px solid transparent",
           borderRadius: 14,
-          backgroundImage:
-            "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)), var(--faction-default-rainbow)",
-          backgroundOrigin: "border-box",
-          backgroundClip: "padding-box, border-box",
+          ...factionSpectrumSheet(),
           boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
           color: "var(--faction-default-card-text)",
           fontFamily: MONO,
@@ -249,11 +254,11 @@ export default function DefaultTaskCard({
             >
               <span
                 aria-hidden="true"
+                className="spectrum-rule"
                 style={{
                   width: 7,
                   height: 7,
                   borderRadius: 2,
-                  background: "var(--faction-default-rainbow)",
                   display: "inline-block",
                   flex: "none",
                 }}
@@ -283,9 +288,9 @@ export default function DefaultTaskCard({
             <div
               aria-hidden="true"
               data-cta-rule="default"
+              className="spectrum-rule"
               style={{
                 height: 1,
-                background: "var(--faction-default-rainbow)",
                 opacity: "var(--faction-default-cta-rule-opacity, 0.6)",
                 margin: "0 0 var(--space-lg)",
               }}

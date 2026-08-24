@@ -109,12 +109,11 @@
     "headingFirstLife": "Nothing in the drawer yet.",
     "loading": "Pulling your lives from the drawer…",
     "stepInto": "Step into {{name}}",
-    "footer": "A life is a pair of shoes. Lace up an old one, or cut a new pair from whole cloth.",
-    "footerFirstLife": "A life is a pair of shoes. Cut your first pair from whole cloth.",
-    "footerNoNewSelf": "A life is a pair of shoes. Lace up whichever pair the day calls for.",
+    "footer": "Lace up an old one, or cut a new pair from whole cloth.",
+    "footerFirstLife": "Cut your first pair from whole cloth.",
+    "footerNoNewSelf": "Lace up whichever pair the day calls for.",
     "beginNewSelfTitle": "Begin a new self",
     "beginNewSelf": "Begin a new self",
-    "slotOpen": "✓ slot open — start a new life",
     "home": {
       "title": "FieldDesk",
       "switcher": {
@@ -245,6 +244,7 @@
       "region": "Filters",
       "show": "Filters",
       "hide": "Hide filters",
+      "updating": "Updating…",
       "filteringBy": "Filtering by",
       "clearAll": "Clear all",
       "clearAllFilters": "Clear all filters",

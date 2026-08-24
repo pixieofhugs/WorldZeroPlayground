@@ -531,6 +531,23 @@ to flag). Edit/delete is **carried-character-only**: you manage only the life yo
 _Avoid_: acting as "the first/oldest character" (the pre-ADR-0025 bug); an account-wide edit
 path (rejected — lives stay independent); renaming "life" to "sock puppet" in code/UI.
 
+**Tombstone** *(`AccountStatus.deleted`; ADR-0081)*:
+A **deleted account whose rows survive with every identifying field blanked**, so that
+scores and vote budgets that depended on it stay correct. Email becomes a released
+`deleted-<id>@deleted.invalid` placeholder (the real address goes back into circulation, so
+the same human may sign up fresh); every life is `banned` + `departed_at` with a neutral
+name and no bio, tagline, location or avatar; praxis and comment bodies are emptied to a
+removed-marker. What is genuinely **destroyed** is only what carries no arithmetic: the
+`OAuthProvider` rows (traded for a salted SHA-256 digest kept 90 days for the
+returning-player gate), the CRDT drafts behind the blanked praxes, and the media files on
+disk. **Vote rows and praxis rows stay as skeletons** — that is the entire point: `Vote.
+praxis_id` is `ON DELETE CASCADE` and `votes_spent_this_era` is a stored counter, so a hard
+delete would destroy *other people's* votes and leave those players charged for them.
+**Not `suspended`** (a moderator's reversible hold on an intact account) and not an erasure.
+_Avoid_: "soft delete" (that names `Character.departed_at`, one life ending); "anonymised"
+(a tombstone is not readable-but-nameless — the content is gone too); promising a recovery
+window (there is none — no grace period, no job runner).
+
 **Unaffiliated** *(`na`)*:
 A character belonging to **no faction** — the **universal starting state** for every new
 character. (The old "everyone starts in UA" rule is retired: ADR-0019. UA is now an

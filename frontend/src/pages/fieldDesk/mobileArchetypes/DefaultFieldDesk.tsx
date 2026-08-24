@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -98,7 +98,20 @@ const secondaryActionStyle: CSSProperties = {
   border: '1px solid var(--color-border-strong)',
 }
 
-export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
+export default function DefaultFieldDesk({
+  state,
+  identityOrnament,
+}: {
+  state: FieldDeskHomeState
+  /**
+   * One inert node, mounted inside the IDENTITY CARD (#2519, epic #2496). The
+   * epic's named slot — `AlbescentProfileBody` uses the same word for the same
+   * job — and it exists because a dresser's spectrum edge has to clip to this
+   * card's own rounded box, which a span wrapped around the whole page cannot
+   * do. na hands nothing and renders no ornament markup at all.
+   */
+  identityOrnament?: ReactNode
+}) {
   const { t } = useTranslation('common')
   const { character, eraName, levelTrack, activeTasks, pendingRow, offersACharacterChoice } =
     state
@@ -127,9 +140,25 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           padding: 'var(--space-lg)',
         }}
       >
+        {identityOrnament}
+
         {/* The signature hairline — the hairline, the avatar ring and the level
-            track are one mark at three scales (#1553). */}
+            track are one mark at three scales (#1553).
+
+            The RAMP is `.spectrum-rule` since #2505, the eighteenth mount of
+            #2497's linear cut and the same one-word move those seventeen made:
+            the class carries `--faction-default-rainbow` and nothing else, so
+            the paint is byte-identical and the geometry stays inline where it
+            belongs. It is here rather than in #2497 because that issue converted
+            the ten `Default*` files Albescent already wore, and this was not one
+            of them until now. The class is the dresser seam #2497's own
+            docblock names, and what it carries now is a `display: none`: under
+            `.alb-desk` this bar comes OFF, because the identity card grows a
+            travelling spectrum edge of its own and one carrier per object is
+            the design canvas's rule (#2519). For na it is unchanged, and it is
+            still the mark #1553 drew. */}
         <span
+          className="spectrum-rule"
           style={{
             position: 'absolute',
             top: 0,
@@ -137,7 +166,6 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             right: 0,
             height: 3,
             opacity: 0.9,
-            background: 'var(--faction-default-rainbow)',
           }}
         />
 

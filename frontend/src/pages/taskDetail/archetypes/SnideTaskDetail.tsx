@@ -461,7 +461,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <div>
           <LevelJumpBanner state={state} />
-          <button onClick={handleSignup} style={plateButton(false)}>
+          <button data-testid="task-signup-cta" onClick={handleSignup} style={plateButton(false)}>
             <XMark size={17} />
             <span style={plateLabel}>{t(signupCtaKey(task.signup_reason))}</span>
             <XMark size={17} />

@@ -86,7 +86,16 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
       ) : isEmpty ? (
         <PraxisFeedEmpty kind={emptyState} onClearAll={clearAllFilters} />
       ) : (
-        <div className="flex flex-wrap gap-4 items-start">
+        /* Stale rows dim and stop taking taps until the read lands (#2431).
+           Unlike the desktop page, "Load more" is a CHILD of this wrap
+           container rather than a sibling — re-parenting it would take it out
+           of the flex flow it is laid out by — so it dims with the rows. That
+           is the right behaviour here anyway: growing the window mid-flight
+           only starts a second read over the first. */
+        <div
+          className="flex flex-wrap gap-4 items-start"
+          data-stale={loading && items.length > 0 ? 'true' : undefined}
+        >
           {items.map((p) => (
             <PraxisCard key={`praxis-${p.id}`} praxis={p} />
           ))}

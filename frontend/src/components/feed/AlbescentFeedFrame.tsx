@@ -50,11 +50,40 @@ import type { FeedFrameProps } from './feedFrameProps'
  * stay clickable — the archive interaction lives in `FeedItemSlot` and is
  * untouched by anything in this file.
  *
- * index.css owns both classes, both theme halves and the reduced-motion guard; a
- * component may not inject a stylesheet (#911). It declares no new colour value:
- * the wash reads `--faction-default-aurora` and the travelling hairline reads
- * `--faction-default-rainbow-loop`, both na's own spectrum. Stilled, the card is
- * a static wash and a static edge.
+ * ### The two spans go THROUGH the chassis, not beside it (#1942)
+ *
+ * They were siblings of the card until #1646's ruling — the drift keeps the
+ * chrome and stops at user media — reached this surface. It could not be
+ * honoured from outside. `.sidebar-card` declares `backdrop-filter`, and a
+ * computed `backdrop-filter` other than `none` makes an element a stacking
+ * context: the card paints ATOMICALLY, so no `z-index` on the actor's photograph
+ * inside it can rise above a wash mounted outside it. That filter is not
+ * removable either — index.css says so at its own site, because #1148's
+ * `position: fixed` companion modals need the card as their containing block.
+ *
+ * So the ornament is handed down as `children` and mounts INSIDE the card, where
+ * the lift resolves. Nothing else about the mount changes: the chassis appends
+ * whatever it is given after its band and body, so the span still paints last
+ * over everything but the photo, and `alb-feed-edge` still covers the card's
+ * border box — see the `inset: -1px` in index.css, which is the one compensation
+ * the new containing block costs. The card is still `DefaultFeedFrame` byte for
+ * byte with the class and the span removed.
+ *
+ * THE WASH IS NO LONGER A SPAN AT ALL (#2499, epic #2496 ruling 2).
+ * `.alb-feed-aurora` read `--faction-default-aurora` — the COMPOSER's ground
+ * token — and had to contradict its blend mode to do it, because that token says
+ * `normal` for a ground painted behind copy and this was an overlay painted on
+ * top of it. The prism sweep is a ground again: `.alb-prism` on this wrapper sets
+ * `--faction-default-card-sheet`, and `DefaultFeedFrame` already composes it
+ * through `factionSheet(slug)`, so the light lands behind every word with no
+ * blend-mode argument anywhere.
+ *
+ * index.css owns both classes, both theme halves, the reduced-motion gate and the
+ * reduced-motion REST FRAME; a component may not inject a stylesheet (#911). It
+ * declares no new colour value: the ground is the shared prism and the travelling
+ * hairline reads `--faction-default-rainbow-loop`, both na's own spectrum.
+ * Stilled, the card is a static prism ground and a static edge, and that ground
+ * deepens for the reader who asked for no motion.
  *
  * ### Two things this file deliberately does not do
  *
@@ -72,12 +101,13 @@ import type { FeedFrameProps } from './feedFrameProps'
  * responsive half lives in the chassis this forwards to whole, and the light is
  * the same light at both widths.
  */
-export default function AlbescentFeedFrame(props: FeedFrameProps) {
+export default function AlbescentFeedFrame({ children, ...frame }: FeedFrameProps) {
   return (
-    <div className="alb-feed">
-      <DefaultFeedFrame slug="albescent" {...props} />
-      <span aria-hidden="true" className="alb-feed-aurora" />
-      <span aria-hidden="true" className="alb-feed-edge" />
+    <div className="alb-feed alb-prism">
+      <DefaultFeedFrame slug="albescent" {...frame}>
+        {children}
+        <span aria-hidden="true" className="alb-feed-edge" />
+      </DefaultFeedFrame>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
@@ -75,12 +76,7 @@ export default function EphemeristsFactionHero({
   members,
   tasks,
   praxes,
-}: {
-  name: string;
-  members: number;
-  tasks: number;
-  praxes: number;
-}) {
+}: FactionHeroProps) {
   // The faction labels its own counts — page passes raw numbers only.
   /* THE CAPTIONS TRAVEL, THE COUNTS DO NOT (#2148). `gloss` names the catalog
      entry each caption is cast through; the figure beside it stays a Western

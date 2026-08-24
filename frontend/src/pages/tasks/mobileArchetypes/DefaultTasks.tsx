@@ -93,6 +93,12 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
           <div
             className={`flex flex-col gap-3${isMetatask ? '' : ' items-center'}`}
             data-testid="mobile-tasks-results"
+            /* Stale rows dim and stop taking taps until the read lands
+               (#2431). "Load more" is a CHILD of this column rather than a
+               sibling, as it is on the desktop page — it is laid out by this
+               flex flow, so it dims with the rows rather than being
+               re-parented out of it. */
+            data-stale={loading && tasks.length > 0 ? 'true' : undefined}
           >
             {isMetatask ? (
               <MetataskSeal metatasks={tasks} />
