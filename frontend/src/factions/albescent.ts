@@ -25,9 +25,15 @@
  * deliberately not in this issue. Until it exists, the empty manifest is the
  * correct and complete statement of Albescent's appearance.
  *
- * Anything added here must be a flourish LAYERED OVER Default's structure
- * reading `--faction-default-*`. A surface that repaints Albescent in its own
- * colours puts it back in the spectrum and un-hides it.
+ * Anything added here must read `--faction-default-*`. A surface that repaints
+ * Albescent in its own colours puts it back in the spectrum and un-hides it, and
+ * that is the edge — livery, not novelty. Every row below but one is also a
+ * flourish LAYERED OVER Default's structure, which is the usual way of staying
+ * on the safe side of it. `sigil` (#2529) is the exception and stays inside the
+ * rule: the labyrinth is a shape of its own, painted with na's spectrum and
+ * nothing else. It is registered rather than special-cased in its dispatcher
+ * because a mark reached outside `surfaceMap()` is a mark a refactor of that
+ * surface drops — which already happened once.
  */
 import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
@@ -62,6 +68,11 @@ const AlbescentEditPraxis = lazyArchetype(() => import('../pages/editPraxis/arch
 const AlbescentFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/AlbescentFieldDesk'))
 // #2502 — the avatar unfreeze, lazy for the same reason as every wrapper above.
 const AlbescentAvatar = lazyArchetype(() => import('../components/avatar/AlbescentAvatar'))
+// #2529 — the mark. Named out of the DISPATCHER, exactly as `ua` and
+// `singularity` name theirs: the three sigil adapters are defined inside
+// `FactionSigil.tsx`, and `lazyArchetype` is what makes reading one from here
+// safe (the thunk note in `./manifest.ts`).
+const AlbescentSigilAdapter = lazyArchetype(() => import('../components/sigil/FactionSigil').then((m) => ({ default: m.AlbescentSigilAdapter })))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -210,6 +221,30 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * Albescent.
    */
   avatar: () => AlbescentAvatar,
+
+  /**
+   * THE MARK (#2529) — and the one row here that is not a wrapper over an na
+   * surface. It is a MIGRATION, not a new surface: the labyrinth has rendered
+   * for this slug since Sigil Studies v2, but it reached the screen through a
+   * slug spread into the map at `FactionSigil`'s call site, so it was the one
+   * dispatched surface `surfaceMap()` could not see. Registering it changes no
+   * pixel; it makes the registry the whole answer.
+   *
+   * WHY IT DOES NOT BREAK THE MODULE'S CONTRACT above. That contract's edge is
+   * LIVERY — "a surface that repaints Albescent in its own colours puts it back
+   * in the spectrum and un-hides it". The labyrinth carries no hue of its own:
+   * it is an alpha stencil under `public/`, painted with
+   * `--faction-default-rainbow-conic`, the exact spectrum an unaffiliated player
+   * wears. So it is a SHAPE and never a livery, which is the property the owner
+   * ruled on when reinstating it and the property this row inherits.
+   *
+   * IT ADDS NO MOTION, and ADR-0083 §3 is why that has to be said out loud.
+   * `alb-moves` is a class each wrapper writes on itself, not something derived
+   * from manifest membership, and nothing here wears it — the mark is still
+   * "never part of the wrapper" (ADR-0083 §1). One more row in the registry is
+   * not one more surface that moves.
+   */
+  sigil: () => AlbescentSigilAdapter,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as
