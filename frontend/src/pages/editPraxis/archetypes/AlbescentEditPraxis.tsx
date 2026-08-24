@@ -2,11 +2,10 @@
  * Albescent — the COMPOSER's tell (#2505, epic #2496). The seventh surface to
  * unfreeze, built to the rule the six before it followed: this is not a skin. It
  * renders {@link DefaultEditPraxis} whole — the same sheet, the same layout, the
- * same neutral `editPraxis.composer.*` copy an unaffiliated player writes into —
- * and hands it one inert ornament layer. Strip the span and the two composers
- * are byte-identical.
+ * same neutral `editPraxis.composer.*` copy an unaffiliated player writes into.
+ * Strip the wrapper class and the two composers are byte-identical.
  *
- * ## Why it is one span and not a wash
+ * ## Why there is no wash
  *
  * The design canvas draws a bloom behind the live textarea and flags it as the
  * one place the ground may need dialling back. Measured on the REAL composited
@@ -22,8 +21,8 @@
  *   contrast this surface does not have.
  *
  * A composer is where people read their own words while typing. Legibility beats
- * the tell, so the tell moved to the sheet's EDGE, which is decorative chrome
- * beside no type at all and owes no ratio. (The text you are typing was never at
+ * the tell, so the tell is the sheet's EDGE, which is decorative chrome beside
+ * no type at all and owes no ratio. (The text you are typing was never at
  * risk either way: `--faction-default-composer-field` is opaque, so the wash
  * does not reach inside the textarea. It is the labels ON the sheet that pay.)
  *
@@ -32,35 +31,49 @@
  *
  * ## The mount
  *
- * The ORNAMENT arrives through the `ornament` slot and not as a layer in the
- * wrapper below, because the light has to clip to the sheet — the epic's
- * pattern names exactly this case, and `ComposerSheet`'s `overflow: hidden` is
- * what enforces #1028's "no composer ornament reaches the viewport". A layer
- * hung outside `DefaultEditPraxis` would paint the page. The wrapper div is a
- * CASCADE HANDLE and paints nothing at all; it is the same pair
- * `AlbescentFieldDesk` uses, and every other Albescent surface has one.
+ * There is nothing mounted. The wrapper div is a CASCADE HANDLE and paints
+ * nothing at all; it is the same pair `AlbescentFieldDesk` uses, and it is what
+ * the manifest dispatches (ADR-0083 §1).
  *
- * ## One carrier, not two (#2519)
+ * ## One carrier, and it is na's own (#2553)
  *
- * `.alb-composer-edge` shipped in #2505 declaring NOTHING of its own, so it took
- * the shared list's defaults — a 1px ring at 0.6 — and it took them BESIDE the
- * mark the design canvas removes. The board draws the composer's spectrum in the
- * sheet's edge alone: *"the masthead's own 3px spectrum rule goes with it — the
- * border carries the spectrum now."* So the ring is a 3px carrier at full
- * strength, in the block `.alb-task-edge` owns, and the wrapper class below is
- * what lets index.css take na's masthead band off this sheet
- * (`.alb-composer .ep-edge { display: none }`). One spectrum mark on the
- * composer, where there were two and the added one was the fainter.
+ * `.alb-composer-edge` — a 3px masked ring in `DefaultEditPraxis`'s `ornament`
+ * slot — used to hang here. It came off. Two issues put a 3px na spectrum frame
+ * on this one sheet without knowing about each other:
  *
- * The band is na's own ornament and na keeps it: strip `alb-composer` and the
- * span, and the two composers are byte-identical.
+ *   #2520 gave na's sheet a `3px solid transparent` border with the ramp painted
+ *   into the border box (`sheetStyle` in `DefaultEditPraxis`), the same
+ *   `border-box` idiom the task card, the praxis card and the seal wear.
  *
- * What the ring still takes from the shared list is geometry — the mask, the
- * 300% loop-cut tile, and `border-radius: inherit`, which reads the composer
- * sheet's own 10px corner straight off `ComposerSheet`. The travel is
- * `alb-edge-travel` in motion.ornament.css — a pre-painted child slid by
- * `transform`, never a walked gradient parameter (the epic's technique ruling).
- * Eight mounts share both rules; no keyframe is minted here.
+ *   #2505 added this ring, and #2519 widened it to 3px at full strength on the
+ *   premise that it replaced na's MASTHEAD band. That band had already gone with
+ *   #2520; the ring was doubling the sheet's new frame instead.
+ *
+ * So the composer wore two 3px spectrum frames, one just inside the other, which
+ * is the doubling ADR-0083 §3b exists to stop. The owner's ruling on #2553 is
+ * that na's sheet frame is the survivor, so the composer and the task card read
+ * as the same object.
+ *
+ * WHY THE RING COULD NOT SIMPLY BE MOVED ONTO na's FRAME. On the task card the
+ * ring hangs off a wrapper OUTSIDE the card, so `inset: 0` lands on the card's
+ * border box and the ring covers na's border exactly — one frame, travelling.
+ * Here the ornament has to be inside the sheet (#1028: `ComposerSheet`'s
+ * `overflow: hidden` is what stops a composer ornament reaching the viewport),
+ * and that same `overflow` clips every descendant to the PADDING box. A ring at
+ * `inset: -3px` is clipped away entirely; at `inset: 0` it is a second frame.
+ * The border belongs to the sheet element itself, so no descendant can travel on
+ * it.
+ *
+ * ponytail: the composer's carrier is therefore STATIC, where the task card's
+ * travels. That is consistent with ADR-0083 §3a — a padded ramp holding content
+ * is a FRAME and frames stay still, and the ADR names this exact clip as one of
+ * the three reasons — but it does leave this surface's delta as the ground and
+ * the marks inside it rather than a moving edge. The upgrade path is a `frame`
+ * slot on `ComposerSheet` rendering the ring as a SIBLING of the sheet inside
+ * the `maxWidth` column: that box's padding box is the sheet's border box, so
+ * `inset: 0` would cover na's frame the way it does on the task card, still
+ * clipped to the column and never to the viewport. That is a change to na's
+ * shared composer anatomy and belongs to its own issue.
  *
  * ONE MARK THE BOARD REMOVES IS STILL HERE, deliberately: the task slip's 2px
  * left ink rule. It is not a spectrum carrier, it is na's own dress
@@ -68,14 +81,13 @@
  * with no class to reach), and the board takes it off na's composer as well as
  * Albescent's. That makes it #2520's half of this pass, not this file's.
  *
- * Stilled — reduced motion, or the deferred sheet not yet delivered — there is
- * no travelling child and the ring is a static na spectrum hairline just inside
- * the sheet's own border. Nothing here carries meaning through motion alone
- * (#911: a component may not inject a stylesheet; #1003: an inline `animation:`
- * would bypass the guard).
+ * Stilled — reduced motion, or the deferred sheet not yet delivered — the sheet
+ * is exactly what it is at rest: na's static 3px spectrum frame. Nothing here
+ * carries meaning through motion alone (#911: a component may not inject a
+ * stylesheet; #1003: an inline `animation:` would bypass the guard).
  *
  * Nothing is repainted in Albescent's own colours and no word is added, because
- * either would put the society back in the spectrum and un-hide it (ADR-0048,
+ * either would put the society back in the spectrum and un-hide it (ADR-0083 §1,
  * ADR-0027, WORLD_ZERO_STYLE §3).
  *
  * One responsive component, both widths (ADR-0065 §2) — there is no
@@ -87,10 +99,7 @@ import { type EditPraxisState } from "../useEditPraxis";
 export default function AlbescentEditPraxis({ state }: { state: EditPraxisState }) {
   return (
     <div className="alb-composer">
-      <DefaultEditPraxis
-        state={state}
-        ornament={<span aria-hidden="true" className="alb-composer-edge" />}
-      />
+      <DefaultEditPraxis state={state} />
     </div>
   );
 }

@@ -5926,13 +5926,24 @@
  * that had to say so. `.alb-composer-edge` (#2505) and `.alb-plate-edge`
  * (#2504) joined and stated nothing of their own, so each shipped as a 1px ring
  * at 0.6 on a surface the design canvas draws carrying a 3px border at full
- * strength. Both now restate the carrier's two values in the block further down
- * that `.alb-task-edge` has always owned, together with `.alb-desk-edge`, the
- * ninth mount (#2519). What they still take from here is the geometry: the
- * mask, the loop-cut ramp, the 300% tile, and `border-radius: inherit`, which
- * reads each mount's own corner — the composer sheet's 10px off
- * `ComposerSheet`'s inline style, the plate's `--faction-default-card-radius`,
- * the desk card's `--radius-xl`. */
+ * strength. `.alb-plate-edge` now restates the carrier's two values in the
+ * block further down that `.alb-task-edge` has always owned, together with
+ * `.alb-desk-edge`, the ninth mount (#2519). What it still takes from here is
+ * the geometry: the mask, the loop-cut ramp, the 300% tile, and
+ * `border-radius: inherit`, which reads each mount's own corner — the plate's
+ * `--faction-default-card-radius`, the desk card's `--radius-xl`.
+ *
+ * `.alb-composer-edge` LEFT BOTH LISTS AT #2553, and widening it here was not
+ * what broke it. The composer sheet already carried a 3px na spectrum frame —
+ * #2520 gave it a `3px solid transparent` border with the ramp painted into the
+ * border box — so this ring was the SECOND 3px frame on that sheet, sitting one
+ * frame inside the first, and #2519 only made the pair symmetrical. It could
+ * not be moved onto na's frame either: the ornament must live INSIDE the sheet
+ * (#1028's `overflow: hidden` is what stops a composer ornament reaching the
+ * viewport), and that clip resolves at the PADDING box, so no descendant can
+ * reach the border a covering ring would need. na's frame is the carrier and it
+ * stands still — ADR-0083 §3a's frame rule, with this exact clip named as one
+ * of its three reasons. */
 .alb-task-edge,
 .alb-praxis-card-edge,
 .alb-detail-edge,
@@ -5940,7 +5951,6 @@
 .alb-feed-edge,
 .alb-profile-edge,
 .alb-plate-edge,
-.alb-composer-edge,
 .alb-desk-edge,
 .spectrum-frame::before {
   position: absolute;
@@ -6674,8 +6684,12 @@
      `.alb-task-edge`         the task card's, since #1038
      `.alb-praxis-card-edge`  the praxis card's twin of it, since #2499
      `.alb-plate-edge`        the faction page's five plates (#2504 → #2519)
-     `.alb-composer-edge`     the edit-praxis sheet (#2505 → #2519)
      `.alb-desk-edge`         the mobile field desk's identity card (ditto)
+
+   FOUR, NOT FIVE, SINCE #2553. `.alb-composer-edge` was in this list; the
+   edit-praxis sheet's carrier is na's own 3px border (#2520) and the ring was a
+   second frame just inside it. The shared masked-ring block above records why
+   it could not be moved onto na's frame instead.
 
    A MASKED RING RATHER THAN THE BOARD'S REAL BORDER, on all five, and the
    choice is per-surface reasoning that lands in the same place five times.
@@ -6683,10 +6697,11 @@
    does not clip to `border-radius`, so the mask idiom is what draws a rounded
    3px frame at all — and three more things decide it here:
 
-     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px, the
-       composer sheet's and the desk card's are inline in `Default*`. Growing
-       any of them to a 3px transparent border is an edit to na's own geometry,
-       which is #2520's half of this pass and not this issue's.
+     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px and
+       the desk card's is inline in `DefaultFieldDesk`. Growing either to a 3px
+       transparent border is an edit to na's own geometry, which is #2520's half
+       of this pass and not this issue's. (On the composer sheet #2520 DID grow
+       it, and that is what made the ring there a duplicate — #2553.)
      • A REAL BORDER HERE WOULD BREAK #2499's GUARANTEE. Painting the ramp into
        a border box means writing `background-image` on a DESCENDANT of the
        `.alb-*` wrapper, and `__tests__/albescentPrismSheet.test.ts` forbids
@@ -6703,7 +6718,6 @@
    (`alb-edge-travel`, motion.ornament.css); no keyframe is minted here. */
 .alb-plate-edge,
 .alb-desk-edge,
-.alb-composer-edge,
 .alb-task-edge,
 .alb-praxis-card-edge {
   padding: 3px;
@@ -8982,11 +8996,10 @@
   opacity: 1;
 }
 
-/* ── THE DOUBLED CARRIERS COME OFF (#2519, epic #2496) ──
-   The other half of the rule the block above states, and it is one rule because
-   the design canvas states it once: *"one carrier per object — whatever bar,
-   strip or hairline was doing that job comes off."* Two na marks were doing it,
-   on two surfaces that have now grown edges of their own, so both go.
+/* ── THE DOUBLED CARRIER COMES OFF (#2519, epic #2496) ──
+   The other half of the rule the block above states: *"one carrier per object —
+   whatever bar, strip or hairline was doing that job comes off."* One na mark is
+   doing it, on a surface that has now grown an edge of its own, so it goes.
 
      `.alb-desk .spectrum-rule`  the mobile field desk's 3px identity hairline
        — #1553's "one mark at three scales", across the top of the identity
@@ -8994,11 +9007,14 @@
        of the identity card; under the tell that bar doubles the edge, so it
        comes off and the plate's own travelling border does the work."*
 
-     `.alb-composer .ep-edge`  the edit-praxis sheet's masthead band, drawn by
-       `ComposerMasthead` and worn by the composer and by the waiting surface
-       after it (#1189), so both stages lose it together — right, they are the
-       same sheet. The board: *"the masthead's own 3px spectrum rule goes with
-       it; the border carries the spectrum now."*
+   `.alb-composer .ep-edge` STOOD HERE AND HID NOTHING (#2553). It was written
+   for the edit-praxis sheet's masthead band, drawn by `ComposerMasthead` — but
+   #2520 had already taken the masthead out of `DEFAULT_COMPOSER_DRESS`
+   altogether and made na's spectrum the sheet's own 3px border, so na renders
+   no `.ep-edge` on this page for anyone (`composerRule.test.tsx` asserts that
+   from na's side). The mark the composer's ring was actually doubling was that
+   new border, which is why the RING is what came off in #2553 and this rule
+   went with it as dead weight.
 
    WHAT #2505 DID INSTEAD, and why it is not the same thing. On the desk it
    classed the bar, re-cut it to the loop tile and set it TRAVELLING — which
@@ -9010,24 +9026,17 @@
    on `.alb-desk-edge` (the loop ramp, the 300% tile and the `overflow: hidden`
    track come from the shared ring), and the composer carries one mark.
 
-   THE BOARD COUNTS THREE MARKS ON THE COMPOSER AND THIS REPO HAS TWO, which is
-   a fixture difference and not a missing deletion: the canvas dresses a live
-   mount from outside and its DOM held a 2px top strip AND `.ep-edge`, where this
-   repo draws both from the one `ComposerMasthead` element.
-
-   `display: none` RATHER THAN AN UNMOUNT, because both marks are na's and the
-   `Default*` components draw them for every unaffiliated player. Two classes
-   beat one from anywhere in the sheet, so neither needs an `!important` or a
-   structural selector; strip the wrapper class and the na surface is back, byte
-   for byte. `display` is also the one property that can do this from OUTSIDE: a
+   `display: none` RATHER THAN AN UNMOUNT, because the mark is na's and
+   `DefaultFieldDesk` draws it for every unaffiliated player. Two classes beat
+   one from anywhere in the card, so it needs no `!important` and no structural
+   selector; strip the wrapper class and the na surface is back, byte for byte. `display` is also the one property that can do this from OUTSIDE: a
    background written on a descendant of an `.alb-*` wrapper is what
    `__tests__/albescentPrismSheet.test.ts` forbids, and with the desk rule
    reduced to this the sheet no longer paints any descendant at all.
 
    The desktop `/field-desk` page has no faction dispatch and this does not give
    it one (ruling 5). */
-.alb-desk .spectrum-rule,
-.alb-composer .ep-edge {
+.alb-desk .spectrum-rule {
   display: none;
 }
 
