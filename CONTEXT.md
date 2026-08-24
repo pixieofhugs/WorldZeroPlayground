@@ -33,14 +33,34 @@ Permanent Marker), is **stale** — the wrong identity, not a neutral one. Named
 _Avoid_: reading "faction-agnostic" as "no identity" — the identity is Unaffiliated.
 
 **Albescent**:
-A first-class faction — own slug, members, roster, invitation flow and level-8 unlock —
-whose *look* is deliberately the Unaffiliated one with extra frills: quiet tells (a slow
+A first-class faction — own slug, members, roster, invite-letter flow and level-8 unlock —
+whose *look* is deliberately the Unaffiliated one with extra ornament: quiet tells (a slow
 rainbow drift, a morphing vote blob) layered over the Default kit's structure, so a member
 reads as unaffiliated at a glance and reveals itself only to someone already looking
-(ADR-0027 / ADR-0048). Where a design exists, Albescent wears it; where none does yet, it
-falls through to Default like any undressed faction. Its faction page stays hidden until an
-account has been revealed to the society.
+(ADR-0083). Where a design exists, Albescent wears it; where none does yet, it
+falls through to Default like any undressed faction. Its **faction page is redacted, not
+hidden**: a non-member sees that Albescent exists and is told nothing about it (ADR-0082,
+which supersedes ADR-0027's hiding posture).
 _Avoid_: "Albescent is na", "Albescent is an alias" — below the skin it is its own faction.
+_Avoid also — plain words for ordinary things (owner ruling 2026-08-23)_: Albescent's
+surfaces are the same surfaces every faction has, and they take the same names. Say
+**Albescent**, not "the society". Say an account is **unlocked**, not "revealed to the
+society". Its page is the **faction page**, in a **locked** or **unlocked** state — not "the
+sealed page", "the sealed placeholder" or "the reveal". Say **invite letter**, not "the
+letter" or "the prospectus". Identifiers are exempt and are not renamed by this rule:
+`--albescent-reveal-*`, `.alb-prism`, the `invitation_letter` table and
+`AlbescentSecretPlaceholder` keep their names until something else moves them.
+
+**Invite letter** *(every faction; `invitation_letter` table)*:
+The letter a faction sends a character asking them to join it — one shared component
+(`InvitationLetterPopup`) plus a per-faction voice, and a feed card
+(`FeedCardInvitationLetter`) that announces one has arrived. Albescent's is the same object
+under a separate component (`AlbescentInvitation`) and a separate key family
+(`albescent.letter.*` where the other seven use `<slug>.invitation.*`), which is a naming
+accident rather than a second concept.
+_Avoid_: "the letter", "the prospectus", "the invitation" as a bare noun. It is an **invite
+letter**, for all nine, and the words in prose do not follow whichever key family a given
+faction happens to use.
 
 **Dispatcher**:
 The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that turns a
