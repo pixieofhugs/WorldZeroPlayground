@@ -245,10 +245,7 @@ export default function InvitationLetterPopup({
             return (
               <li key={idx} style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
                 {/* eslint-disable-next-line local/no-raw-style-values, local/no-faction-hue-as-ink -- ornament: a four-pointed-star dingbat used as a list bullet, not type. `aria-hidden` because the perk beside it carries the whole meaning, which is also why 1.4.3 does not reach it (#2108). The hue marks the ONE row that states a real mechanic; the flavour rows take a text tier. */}
-                <span
-                  aria-hidden="true"
-                  style={{ color: mechanic ? accent : FAINT, fontSize: 12, lineHeight: 1.4, flex: 'none' }}
-                >
+                <span aria-hidden="true" style={{ color: mechanic ? accent : FAINT, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
                   &#x2726;
                 </span>
                 <span>
