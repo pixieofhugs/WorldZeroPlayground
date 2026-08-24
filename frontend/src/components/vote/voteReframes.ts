@@ -12,96 +12,66 @@ export interface VoteReframe {
   tiers: ReframeTier[]
 }
 
+/** The five rungs, as literal values so `votes:<slug>.tier<N>` typechecks. */
+const RUNGS = [1, 2, 3, 4, 5] as const
+
 /**
- * Per-faction tier vocabulary (structure only; the words live in the copy
- * catalog at locales/en/votes.json and visual tokens stay in each archetype).
- * Labels are resolved through i18n at module load — the catalog is bundled and
- * initialized synchronously, and the app is single-locale (ADR-0032).
+ * The factions with a vote voice, and how each one numbers its discs. The WORDS
+ * are not here: they live in the copy catalog at locales/en/votes.json, under
+ * `<slug>.tier1` … `<slug>.tier5` in ladder order (#2586), and the visual tokens
+ * stay in each archetype. Faction vote vocabulary is ADR-0061's sanctioned
+ * carve-out from the one-voice rule, and #1864 kept the star ladder inside it.
+ *
+ * The per-faction notes below are the ladders' history — read them before
+ * moving a slug in or out of this list.
  */
-export const VOTE_REFRAMES: Record<string, VoteReframe> = {
+const LADDERS = {
   // The metals ladder (#1207): the vote is a transmutation, lead → platinum,
   // and the discs carry I–V. The archive vocabulary this replaces
   // (apocryphal → canonical) is gone from the catalog rather than left behind
-  // as keys holding words they no longer say. Faction vote vocabulary is
-  // ADR-0061's sanctioned carve-out.
-  ephemerists: {
-    numeral: 'roman',
-    tiers: [
-      { value: 1, label: i18n.t('votes:ephemerists.lead') },
-      { value: 2, label: i18n.t('votes:ephemerists.copper') },
-      { value: 3, label: i18n.t('votes:ephemerists.silver') },
-      { value: 4, label: i18n.t('votes:ephemerists.gold') },
-      { value: 5, label: i18n.t('votes:ephemerists.platinum') },
-    ],
-  },
-  everymen: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:everymen.fair') },
-      { value: 2, label: i18n.t('votes:everymen.solid') },
-      { value: 3, label: i18n.t('votes:everymen.good') },
-      { value: 4, label: i18n.t('votes:everymen.excellent') },
-      { value: 5, label: i18n.t('votes:everymen.legendary') },
-    ],
-  },
+  // as keys holding words they no longer say.
+  ephemerists: { numeral: 'roman' },
+  everymen: {},
   // The two ladders below were inverted between these slugs by #821 and are put
   // back by #838. Coven is the cozy-casual voice (moon phases, "how'd this
   // land?"); WOW is the archaic one (balloon verdict, "Cast thy Verdict").
   // ADR-0050 — go by metaphor, not label.
-  coven: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:coven.sweet') },
-      { value: 2, label: i18n.t('votes:coven.lovely') },
-      { value: 3, label: i18n.t('votes:coven.wonderful') },
-      { value: 4, label: i18n.t('votes:coven.magical') },
-      { value: 5, label: i18n.t('votes:coven.iconic') },
-    ],
-  },
-  wow: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:wow.a-start') },
-      { value: 2, label: i18n.t('votes:wow.quite-solid') },
-      { value: 3, label: i18n.t('votes:wow.jolly-good') },
-      { value: 4, label: i18n.t('votes:wow.splendid') },
-      { value: 5, label: i18n.t('votes:wow.legendary') },
-    ],
-  },
-  snide: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:snide.meh') },
-      { value: 2, label: i18n.t('votes:snide.not-bad') },
-      { value: 3, label: i18n.t('votes:snide.rad') },
-      { value: 4, label: i18n.t('votes:snide.sick') },
-      { value: 5, label: i18n.t('votes:snide.anarchy') },
-    ],
-  },
-  singularity: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:singularity.noise') },
-      { value: 2, label: i18n.t('votes:singularity.weak') },
-      { value: 3, label: i18n.t('votes:singularity.signal') },
-      { value: 4, label: i18n.t('votes:singularity.clear') },
-      { value: 5, label: i18n.t('votes:singularity.verified') },
-    ],
-  },
-  ua: {
-    // The growing-mandala vote widget (#821): each rank is a "reading" of the
-    // filed work as the mandala blooms fuller/warmer — faint → radiant. These
-    // words are the mandala's per-rank captions AND UA's app-wide vote
-    // vocabulary (anything labelling a value reads them via reframeLabel).
-    tiers: [
-      { value: 1, label: i18n.t('votes:ua.faint') },
-      { value: 2, label: i18n.t('votes:ua.forming') },
-      { value: 3, label: i18n.t('votes:ua.true') },
-      { value: 4, label: i18n.t('votes:ua.alive') },
-      { value: 5, label: i18n.t('votes:ua.radiant') },
-    ],
-  },
+  coven: {},
+  wow: {},
+  snide: {},
+  singularity: {},
+  // The growing-mandala vote widget (#821): each rank is a "reading" of the
+  // filed work as the mandala blooms fuller/warmer — faint → radiant. These
+  // words are the mandala's per-rank captions AND UA's app-wide vote
+  // vocabulary (anything labelling a value reads them via reframeLabel).
+  ua: {},
   // Albescent has no vote voice (#783). It had the "bear witness" vocabulary
   // (#232), Unseeing → Inscribed — and that was the loudest tell left: a task
   // filed under Albescent labelled its vote tiers in the society's own words
   // for every voter, revealed or not. It now falls through to the plain arabic
-  // numerals that `na` and unknown slugs get.
-}
+  // numerals that `na` and unknown slugs get, which is why it is absent here
+  // rather than present and empty.
+} as const satisfies Record<string, { numeral?: 'roman' }>
+
+/**
+ * Per-faction tier vocabulary (structure only). Labels are resolved through
+ * i18n at module load — the catalog is bundled and initialized synchronously,
+ * and the app is single-locale (ADR-0032).
+ *
+ * `Object.keys` is re-typed rather than `Object.entries`-destructured because
+ * the slug has to stay a literal for `votes:<slug>.tier<N>` to be a real key:
+ * that template is typechecked against the catalog, so a slug with no ladder
+ * fails the build here instead of throwing at first render.
+ */
+export const VOTE_REFRAMES: Record<string, VoteReframe> = Object.fromEntries(
+  (Object.keys(LADDERS) as (keyof typeof LADDERS)[]).map((slug) => [
+    slug,
+    {
+      ...LADDERS[slug],
+      tiers: RUNGS.map((value) => ({ value, label: i18n.t(`votes:${slug}.tier${value}`) })),
+    },
+  ]),
+)
 
 /**
  * Label a vote value in a task faction's vocabulary. Falls back to the arabic

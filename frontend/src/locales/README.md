@@ -34,13 +34,13 @@ locales/
 
 ## How a key works
 
-Code asks for a key like `votes:ua.masterwork` — that is: file `votes.json`,
-then follow the nesting `ua` → `masterwork`. The value is what renders.
+Code asks for a key like `votes:ua.tier5` — that is: file `votes.json`,
+then follow the nesting `ua` → `tier5`. The value is what renders.
 
 ```json
 {
   "ua": {
-    "masterwork": "masterwork"
+    "tier5": "radiant"
   }
 }
 ```
@@ -52,9 +52,11 @@ why the key survives a rewording: `charLimit.reached` stays `charLimit.reached`
 whether the copy reads "limit reached" or "no more words."
 
 - camelCase per segment, nested by feature: `charLimit.approaching`
-- kebab-case is allowed where the label itself is multi-word data
-  (`a-start`, `not-bad`)
-- Never name a key after its English text (`clickHere`, `noMoreWords` — no)
+- Number a set of rungs rather than naming them: the vote ladder is
+  `tier1` … `tier5`, so every faction's word for the same rung lines up
+- Never name a key after its English text (`clickHere`, `noMoreWords` — no).
+  The vote ladder was the last holdout: `votes:snide.rad` held "rad" and
+  `votes:ua.radiant` held "radiant", which is why #2586 renumbered them
 
 ## Placeholders
 
@@ -74,8 +76,8 @@ faction, same key shape in each branch:
 
 ```json
 {
-  "ephemerists": { "silver": "silver" },
-  "snide": { "rad": "rad" }
+  "ephemerists": { "tier3": "silver" },
+  "snide": { "tier3": "rad" }
 }
 ```
 
