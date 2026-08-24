@@ -30,12 +30,6 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 const ROW_SIGIL = 14
 
 // Static style objects, hoisted to module scope (#586) — no closure deps.
-const pageTitleStyle: CSSProperties = {
-  fontSize: 'var(--text-heading)',
-  lineHeight: 1,
-  color: 'var(--color-text-primary)',
-  margin: 0,
-}
 /**
  * Characters / Edit as real controls (#1553). They were bare ~11px caps with no
  * box — a sub-20px hit target on a phone, which is the accessibility half of
@@ -119,16 +113,6 @@ export default function DefaultFieldDesk({
 
   return (
     <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-      {/* App-bar row: kicker + FieldDesk title */}
-      <header>
-        <div className="label-heading">
-          {t('nav.home')}
-        </div>
-        <h1 className="font-display italic" style={pageTitleStyle}>
-          {t('fieldDesk.home.title')}
-        </h1>
-      </header>
-
       {/* ── Identity block ── */}
       <section
         style={{
@@ -222,13 +206,23 @@ export default function DefaultFieldDesk({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="font-display italic block truncate content-title"
-              style={{ lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="font-display italic block truncate content-title"
+                style={{ lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div
               className="truncate"
               style={{

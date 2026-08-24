@@ -171,23 +171,8 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
               h1 below already reads the shared `fieldDesk.home.title` — so
               #1911's collapse leaves nothing to put here: the shared string
               would have restated the heading four lines down. */}
-          <span style={{ ...kicker, marginLeft: 'auto', color: CREAM }}>{t('nav.home')}</span>
         </div>
         <div style={{ height: 4, background: GOLD }} />
-        <h1
-          style={{
-            fontFamily: ACCENT_FONT,
-            fontSize: 'var(--text-heading)',
-            lineHeight: 0.95,
-            letterSpacing: '0.02em',
-            color: CREAM,
-            textShadow: `2px 2px 0 ${INK}`,
-            margin: 0,
-            padding: 'var(--space-lg)',
-          }}
-        >
-          {t('fieldDesk.home.title')}
-        </h1>
       </header>
 
       {/* ── The worker on the roll ── */}
@@ -244,13 +229,23 @@ export default function EverymenFieldDesk({ state }: { state: FieldDeskHomeState
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.95, color: PAPER_TEXT, textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.95, color: PAPER_TEXT, textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>

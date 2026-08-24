@@ -6806,11 +6806,19 @@
 .alb-detail-foil,
 .alb-detail-edge {
   position: absolute;
-  /* Default's own py-8 band — the sheet starts here and ends there. */
-  top: var(--space-2xl);
-  right: 0;
-  bottom: var(--space-2xl);
-  left: 0;
+  /* Mounted INSIDE the sheet through `DefaultTaskDetail`'s `sheetOverlay`
+     (#2549), so the containing block IS the box these trace and the inset is
+     zero rather than a guess at where the page band begins. It was
+     `--space-2xl` top and bottom, which held only while the sheet's top edge
+     and `.py-8`'s padding were the same line; #2102 put the shared Breadcrumb
+     between them and the ring's corner drifted 29px up onto the trail.
+
+     Negative by exactly the sheet's 1px border: an absolutely positioned child
+     is inset from its containing block's PADDING box, and the spectrum edge is
+     meant to land ON Default's hairline so the effect reads as that border
+     coming alive. `inset: 0` would sit it one pixel inside and leave the
+     hairline showing through. */
+  inset: -1px;
   z-index: 2;
   pointer-events: none;
   border-radius: 18px;
