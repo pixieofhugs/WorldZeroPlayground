@@ -10,9 +10,16 @@
  * 38x4 drag handle, all unconditional — so on a desktop it drew a full-width
  * phone sheet with a drag handle across the bottom of the window.
  *
- * The pill goes; the `EDIT` pill beside it stays, because it leads somewhere the
- * home page does not. Both halves are asserted: a deletion test that only says
- * "gone" passes just as well on a card that lost its whole action row.
+ * The pill goes; the `EDIT` pill beside it stays. Both halves are asserted: a
+ * deletion test that only says "gone" passes just as well on a card that lost
+ * its whole action row.
+ *
+ * WHY `EDIT` STAYS changed under this test in #2552, though the assertion did
+ * not. It used to be "it leads somewhere the home page does not"; the home
+ * page's roster cards each carry the same door now. What keeps this one is that
+ * those cards sit behind `rosterOffersAChoice` — one life and a shut gate, the
+ * commonest state there is, draws no roster — so the rail is the door that is
+ * always there. Removing it is still a separate call, and still nobody's here.
  *
  * The roster is stubbed OPEN (`can_create_additional_character`), which is the
  * state the pill used to render in — otherwise the absence proves nothing.
@@ -69,7 +76,7 @@ function render(): string {
 }
 
 describe("the rail's character card holds one door, not two (#2354)", () => {
-  it('keeps the EDIT pill, which leads where the home page cannot', () => {
+  it('keeps the EDIT pill — the one door a gated-away roster cannot take away', () => {
     expect(i18n.t('common:sidebar.characterCard.edit'), 'guard: key resolves').toBe('Edit')
     const html = render()
     expect(html).toContain('href="/characters/42/edit"')
