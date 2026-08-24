@@ -89,10 +89,9 @@
  * described them — and since no other faction claimed them either, the four
  * slots were retired outright; those pages render their `Default*` skin.
  *
- * Override-only, like every manifest: WOW still falls through to the `Default*`
- * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
- * fully dressed. `wowRendersDefault.test.tsx` pins exactly which surfaces are
- * claimed and asserts the rest still fall back.
+ * Override-only, like every manifest — WOW simply overrides all of it now: it
+ * claims every key in `SURFACE_KEYS`, and `surfaceDispatch.test.ts` holds it
+ * there by deriving the bar from what the reference factions skin.
  *
  * Entries are thunks (`() => Component`) so they are read at render time, never
  * during module evaluation — see the cycle note in `./manifest.ts`.
