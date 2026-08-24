@@ -171,19 +171,39 @@ describe("the na mounts wear the class, not the declaration (#2497)", () => {
 describe("the seal wears the spectrum as a border, not a bar (#2520)", () => {
   const markup = () =>
     renderToStaticMarkup(
-      <DefaultSeal
-        metatask={{
-          id: 1,
-          title: "A small kindness",
-          condition: "Do it twice",
-          bonus_points: 3,
-          metatask_faction_slug: "na",
-        } as never}
-      />,
+      <MemoryRouter>
+        <DefaultSeal
+          metatask={{
+            id: 1,
+            title: "A small kindness",
+            condition: "Do it twice",
+            point_value: 3,
+            metatask_faction_slug: "na",
+          } as never}
+        />
+      </MemoryRouter>,
     ).replace(/\s*([:;,])\s*/g, "$1");
 
-  it("draws no accent strip at all", () => {
-    expect(markup()).not.toContain("spectrum-rule");
+  /**
+   * ONE STRIP, AND IT IS THE BAND'S RULE (#2562 amends this half of #2520).
+   *
+   * #2520 took a 3px bar off the seal's top EDGE and put the ramp in the border
+   * box, and that half stands below. What came back is a different object: the
+   * owner ruled that all nine seals wear a masthead, and the one `na` and
+   * Albescent mount is a small-caps name ruled off with the spectrum — the
+   * hairline is structure under a label rather than a decorative strip pinned
+   * over the sheet. It is `SpectrumBand`'s, in `cardMasthead/factionBands.tsx`,
+   * so it is drawn once for both skins and `alb-moves` can still turn it.
+   *
+   * Exactly one, which is the assertion that keeps the retired bar retired: a
+   * skin that re-pinned its own strip would make two.
+   */
+  it("draws exactly one strip, and it is the band's rule", () => {
+    const html = markup();
+    expect(html.split("spectrum-rule").length - 1).toBe(1);
+    // After the band's anchor closes: the rule is what the masthead is ruled
+    // off WITH, not a bar laid over the sticker.
+    expect(html.indexOf("spectrum-rule")).toBeGreaterThan(html.indexOf("</a>"));
   });
 
   it("paints the ramp into a transparent 3px frame", () => {

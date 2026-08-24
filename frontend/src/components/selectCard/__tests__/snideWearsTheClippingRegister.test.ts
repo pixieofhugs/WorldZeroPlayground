@@ -44,7 +44,10 @@ const TILE = "../SnideSelectCard.tsx";
  */
 function registerSource(): string {
   const bands = code("../../cardMasthead/factionBands.tsx");
-  const at = bands.indexOf("function SnideBand()");
+  // The signature grew one optional prop in #2562 (the metatask seal's band
+  // reads "<FACTION> METATASK"), so the probe is the name and the open paren
+  // rather than an empty argument list.
+  const at = bands.indexOf("function SnideBand(");
   expect(at, "no `SnideBand` in cardMasthead/factionBands.tsx").toBeGreaterThan(-1);
   return [
     code("../../taskCard/SnideTaskCard.tsx"),

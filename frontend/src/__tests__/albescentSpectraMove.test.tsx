@@ -50,6 +50,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
 import '../i18n'
@@ -83,7 +84,9 @@ const WEARS_THE_MARKER: Record<string, string> = {
   '../pages/characterProfile/archetypes/AlbescentProfileBody.tsx': 'profile',
   // the five plates' hairlines
   '../pages/factionDetail/archetypes/AlbescentFactionBody.tsx': 'faction body',
-  // the pale sheet's one strip — classed here, since the seal is Albescent's own
+  // the pale sheet's one strip — declared in `cardMasthead/factionBands.tsx`
+  // since #2562 (`SpectrumBand`), so this row asserts the MARKER, which is still
+  // this file's: the rule is a descendant of the seal root that carries it
   '../components/metataskSeal/skins/AlbescentSeal.tsx': 'metatask seal',
 }
 
@@ -172,8 +175,16 @@ describe('the census: every Albescent surface with a classed spectrum wears the 
 type Mount = readonly ['ornament' | 'frame', string]
 
 const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
-  '../components/metataskSeal/skins/AlbescentSeal.tsx': [
-    ['ornament', "the pale sheet's spectrum strip"],
+  // The metatask seal's strip lives HERE since #2562: the owner ruled that all
+  // nine seals wear a masthead, and the one `na` and `albescent` mount is
+  // `SpectrumBand` — a small-caps name ruled off with this hairline. So the
+  // mount moved out of `AlbescentSeal.tsx` and into the band both skins draw.
+  // The marker did not move: `alb-moves` is still on the Albescent seal's root
+  // and the rule is its descendant, so `.alb-moves .spectrum-rule:empty` reaches
+  // it there and does NOT reach the identical rule on the na seal — which is
+  // exactly the distinction the class exists to make.
+  '../components/cardMasthead/factionBands.tsx': [
+    ['ornament', "the seal band's spectrum rule"],
   ],
   '../components/praxisCard/desktop/DefaultPraxisCard.tsx': [
     ['ornament', 'the vote divider'],
@@ -392,7 +403,15 @@ describe('the seal, whose only spectrum was unclassed', () => {
   } as unknown as TaskOut
 
   it('wears the marker over a classed strip', () => {
-    const html = renderToStaticMarkup(<AlbescentSeal metatask={METATASK} />)
+    // The router is the seal's masthead band, an anchor since #2562 — and the
+    // band is also where the strip is drawn now, which is the point of
+    // rendering rather than scanning here: the marker and the rule have to meet
+    // in the OUTPUT, whichever file each is declared in.
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <AlbescentSeal metatask={METATASK} />
+      </MemoryRouter>,
+    )
     expect(html).toContain('alb-moves')
     expect(html).toContain('spectrum-rule')
     // The ramp is the class's now — an inline copy would be a second declaration

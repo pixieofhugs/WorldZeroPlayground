@@ -1,4 +1,22 @@
 import type { CSSProperties, ReactNode } from "react";
+/**
+ * THE BANDS BRING THEIR OWN FACES (#2079, #2562).
+ *
+ * Every band below letters a wordmark in a faction face — Caveat, MedievalSharp,
+ * Anton, Share Tech Mono, Poiret One, Cinzel — and those 62 `@font-face` rules
+ * live in `fonts.faction.css`, off the critical path behind this module. Until
+ * #2562 that was somebody else's problem: the only mounts were per-faction card
+ * archetypes, which `factions/lazyArchetype.tsx` already fetches the sheet for.
+ * The metatask seal's `DefaultSeal` is STATIC — it is the fallback every mount of
+ * `MetataskSeal` loads — so a band now reaches load roots that no archetype does
+ * (`pages/Tasks.tsx` is the one that caught it).
+ *
+ * Declared HERE rather than at that page, because the faces are this module's:
+ * fix it where they all route through, and the next caller is correct by
+ * construction. Failing to is silent — `font-display: swap` paints the fallback
+ * and nothing throws. `utils/__tests__/factionFaceSplit.test.ts` is the guard.
+ */
+import "../../factionFaces";
 import CardMasthead from "./CardMasthead";
 import SingularityLamps from "../factionMarks/SingularityLamps";
 import { UA_DISPLAY } from "../factionMarks/uaAtoms";
