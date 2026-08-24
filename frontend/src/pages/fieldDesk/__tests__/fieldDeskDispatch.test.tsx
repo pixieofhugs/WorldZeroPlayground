@@ -76,6 +76,8 @@ function character(faction_slug: string): CharacterOut {
 function currentUser(faction_slug: string, canCreateAdditional = false): CurrentUser {
   return {
     account_id: 1,
+    email: 'wz_pilgrim@example.com',
+    provider: 'google',
     character: character(faction_slug),
     is_admin: false,
     // #1560: the desktop roster is only drawn when it has a choice to offer, so

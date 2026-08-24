@@ -340,13 +340,26 @@
     "eyebrow": "{{faction}} · {{name}}",
     "lead": "Changes save the moment you make them.",
     "account": {
-      "eyebrow": "Signed in as",
+      "eyebrow": "Account",
+      "lead": "One account, one email, and however many lives you carry.",
       "viewProfile": "View profile",
-      "noCharacter": "No character yet"
+      "noCharacter": "No character yet",
+      "email": "Email address",
+      "emailHelp": "Where World Zero writes to you. It comes from your sign-in, so it changes there rather than here.",
+      "provider": "Signed in with",
+      "providerHelp": "World Zero never sees a password — your provider vouches for you each time.",
+      "providers": {
+        "google": "Google",
+        "discord": "Discord",
+        "dev": "Developer sign-in",
+        "demo": "Demo account"
+      }
     },
     "characters": {
       "label": "Characters",
-      "hint": "Switch or edit your lives"
+      "hint": "Switch or edit your lives",
+      "manage": "Manage",
+      "create": "Create one"
     },
     "appearance": {
       "eyebrow": "Appearance",
@@ -357,6 +370,7 @@
       "animationsSystemNote": "Your device is set to reduce motion.",
       "animationsSystemName": "Animations — off, because your device is set to reduce motion"
     },
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signOutHelp": "Ends this session on this device."
   }
 }

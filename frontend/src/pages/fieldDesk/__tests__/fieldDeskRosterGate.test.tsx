@@ -81,6 +81,8 @@ function life(overrides: Partial<CharacterOut> = {}): CharacterOut {
 function currentUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
   return {
     account_id: 1,
+    email: 'wz_pilgrim@example.com',
+    provider: 'google',
     character: life(),
     is_admin: false,
     can_create_additional_character: false,

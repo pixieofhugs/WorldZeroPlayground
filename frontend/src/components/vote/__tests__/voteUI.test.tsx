@@ -35,6 +35,8 @@ import VoteUI from '../VoteUI'
 function currentUser(): CurrentUser {
   return {
     account_id: 1,
+    email: 'wz_pilgrim@example.com',
+    provider: 'google',
     character: {
       id: 9,
       username: 'ada',

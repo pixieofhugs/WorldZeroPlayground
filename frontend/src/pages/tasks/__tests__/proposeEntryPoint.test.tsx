@@ -34,6 +34,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 
 const VIEWER: CurrentUser = {
   account_id: 1,
+  email: 'wz_pilgrim@example.com',
+  provider: 'google',
   character: null,
   is_admin: false,
   can_create_additional_character: false,

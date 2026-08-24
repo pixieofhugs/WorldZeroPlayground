@@ -35,6 +35,8 @@ const TASK = aTask({
 
 const VIEWER: CurrentUser = {
   account_id: 1,
+  email: 'wz_pilgrim@example.com',
+  provider: 'google',
   // Carries a character: the eligibility rail is gated on a LIFE, not on a
   // session (#1972), and the browse's signed-in cases are all played by a
   // player. An account between characters is `metataskFilterGate`'s viewer.
