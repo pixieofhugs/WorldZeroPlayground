@@ -586,29 +586,50 @@ export function PraxisStats({
  * resolves to its alt text — that IS its text — and fetches nothing. `hr` and
  * the GFM task-list checkbox have no text, so they leave nothing behind.
  */
-const FLATTENED: Components = (() => {
-  const block = ({ children }: { children?: ReactNode }) => <>{children} </>;
-  const inline = ({ children }: { children?: ReactNode }) => <>{children}</>;
-  const map: Components = {
-    br: () => <> </>,
-    hr: () => null,
-    input: () => null,
-    img: ({ alt }) => <>{alt}</>,
-  };
-  for (const tag of [
-    "p", "h1", "h2", "h3", "h4", "h5", "h6",
-    "blockquote", "li", "pre", "tr", "th", "td",
-  ] as const) {
-    map[tag] = block;
-  }
-  for (const tag of [
-    "a", "em", "strong", "del", "code",
-    "ul", "ol", "table", "thead", "tbody", "tfoot",
-  ] as const) {
-    map[tag] = inline;
-  }
-  return map;
-})();
+/** A block: its text, then a space, so two blocks never read as one word. */
+const Block = ({ children }: { children?: ReactNode }) => <>{children} </>;
+/** An inline wrapper: its text and nothing else. */
+const Inline = ({ children }: { children?: ReactNode }) => <>{children}</>;
+
+/*
+ * Written out one tag at a time on purpose. A loop over the tag list assigning
+ * into `Components` makes TypeScript widen across every key of
+ * `JSX.IntrinsicElements` at once and it gives up: `TS2590: Expression produces
+ * a union type that is too complex to represent`. The literal is longer and
+ * completely boring, which is the trade to take here — and a tag the parser can
+ * emit that is missing from this list simply renders as itself, which the tests
+ * catch rather than the types.
+ */
+const FLATTENED: Components = {
+  p: Block,
+  h1: Block,
+  h2: Block,
+  h3: Block,
+  h4: Block,
+  h5: Block,
+  h6: Block,
+  blockquote: Block,
+  li: Block,
+  pre: Block,
+  tr: Block,
+  th: Block,
+  td: Block,
+  a: Inline,
+  em: Inline,
+  strong: Inline,
+  del: Inline,
+  code: Inline,
+  ul: Inline,
+  ol: Inline,
+  table: Inline,
+  thead: Inline,
+  tbody: Inline,
+  tfoot: Inline,
+  br: () => <> </>,
+  hr: () => null,
+  input: () => null,
+  img: ({ alt }) => <>{alt}</>,
+};
 
 /** Slot: a 1–2 line body-text excerpt, clamped. Renders nothing without body. */
 export function PraxisExcerpt({
