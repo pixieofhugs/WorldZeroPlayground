@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { factionName } from '../utils/factions'
+import AccountSection from './settings/sections/AccountSection'
 import AppearanceSection from './settings/sections/AppearanceSection'
 import CookiesSection from './settings/sections/CookiesSection'
 
@@ -57,6 +58,7 @@ interface SettingsSection {
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   { key: 'appearance', labelKey: 'settings.appearance.eyebrow', Component: AppearanceSection },
   { key: 'cookies', labelKey: 'settings.cookies.eyebrow', Component: CookiesSection },
+  { key: 'account', labelKey: 'settings.account.eyebrow', Component: AccountSection },
 ]
 
 /** The design's `sec-<key>`; one derivation, used by the anchor and the rail. */

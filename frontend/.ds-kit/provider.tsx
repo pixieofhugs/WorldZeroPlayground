@@ -30,6 +30,8 @@ import type { CurrentUser } from "../src/api/auth";
 
 const MOCK_USER: CurrentUser = {
   account_id: 1,
+  email: "wayfarer@example.com",
+  provider: "google",
   character: {
     id: 1,
     username: "wayfarer",

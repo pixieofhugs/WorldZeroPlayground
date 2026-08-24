@@ -158,6 +158,10 @@ export function characterFor(
 // mid-level character can. Faction fan-outs can clone this via makeCharacter.
 export const mockUser: CurrentUser = {
   account_id: 1,
+  // Per-ACCOUNT, and only ever the caller's own (#2155) — the Settings Account
+  // card is the one surface that prints either.
+  email: 'wz_pilgrim@example.com',
+  provider: 'google',
   character: makeCharacter(),
   is_admin: false,
   can_create_additional_character: true,

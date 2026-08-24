@@ -2586,6 +2586,11 @@ export interface components {
             can_start_as_albescent: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
+             * Email
+             * @default
+             */
+            email: string;
+            /**
              * Era Name
              * @default
              */
@@ -2605,6 +2610,11 @@ export interface components {
              * @default 0
              */
             level_jump_reach: number;
+            /**
+             * Provider
+             * @default
+             */
+            provider: string;
             /**
              * Second Character Level Required
              * @default 0

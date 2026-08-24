@@ -64,6 +64,8 @@ const PRAXIS = aPraxis({
 function viewer(): CurrentUser {
   return {
     account_id: 1,
+    email: 'wz_pilgrim@example.com',
+    provider: 'google',
     character: {
       id: 3,
       username: "ada",

@@ -126,9 +126,15 @@ public response.** Public responses key on `character_id` / `username`.
   — do include them. These ride behind `Depends(require_admin)` and are
   the only blessed exception.
 - `/auth/me` response (`schemas/auth.py::CurrentUser`) — includes
-  `account_id`. This is **acknowledged and narrow**: the endpoint is
-  auth-only and the frontend needs an opaque account handle. The rest of
-  the API key on character.
+  `account_id`, and since #2155 `email` and `provider` as well. This is
+  **acknowledged and narrow**: the endpoint is auth-only and answers about
+  the caller alone, so none of the three is a fact about a third party.
+  `email` is there because the Settings Account card has to show a player
+  which address they signed up with; `provider` is display-only (ADR-0075's
+  linking flow does not exist). The rest of the API keys on character.
+  `tests/integration/test_auth_me_account_fields.py` ratchets the set of
+  schemas allowed to carry an `email` at all, so widening this exception —
+  including by making `CurrentUser` a base class — fails CI.
 
 Anti-self-voting is the other half of the identity boundary: enforced at the
 **account** level, not the character level. `Vote.voter_account_id` is

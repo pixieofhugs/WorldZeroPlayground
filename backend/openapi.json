@@ -1658,6 +1658,11 @@
               }
             ]
           },
+          "email": {
+            "default": "",
+            "title": "Email",
+            "type": "string"
+          },
           "era_name": {
             "default": "",
             "title": "Era Name",
@@ -1678,6 +1683,11 @@
             "title": "Level Jump Reach",
             "type": "integer"
           },
+          "provider": {
+            "default": "",
+            "title": "Provider",
+            "type": "string"
+          },
           "second_character_level_required": {
             "default": 0,
             "title": "Second Character Level Required",
@@ -1691,6 +1701,8 @@
         },
         "required": [
           "account_id",
+          "email",
+          "provider",
           "character",
           "is_admin",
           "can_create_additional_character",

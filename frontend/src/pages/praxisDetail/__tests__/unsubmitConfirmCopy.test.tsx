@@ -152,6 +152,8 @@ function user(): CurrentUser {
   }
   return {
     account_id: 1,
+    email: 'wz_pilgrim@example.com',
+    provider: 'google',
     character,
     is_admin: false,
     can_create_additional_character: false,

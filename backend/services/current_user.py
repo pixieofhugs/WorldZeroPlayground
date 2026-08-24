@@ -13,11 +13,12 @@ and the two eligibility flags share one level query.
 """
 from dataclasses import asdict
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account
+from models.account import Account, OAuthProvider
 from schemas.auth import CurrentUser
 from services.albescent_reveal import is_albescent_revealed
 from services.character import (
@@ -61,6 +62,19 @@ async def build_current_user(
 
     is_admin = await account_has_admin_role(account.id, session)
 
+    # The one round trip #2155 adds, and it reads a single column rather than
+    # the `oauth_providers` relationship — which is `lazy="raise"` anyway, so
+    # there is no accidental load to inherit. `LIMIT 1` because an account holds
+    # exactly one identity: there is no link-a-second-provider flow (ADR-0075),
+    # and if one ever lands, "the provider you signed in with" is a session
+    # fact this payload could not answer from the account row regardless.
+    provider = await session.scalar(
+        select(OAuthProvider.provider)
+        .where(OAuthProvider.account_id == account.id)
+        .order_by(OAuthProvider.id)
+        .limit(1)
+    )
+
     eligibility = (
         await load_account_eligibility(account.id, era_row.id, session, era)
         if era_row is not None
@@ -77,6 +91,10 @@ async def build_current_user(
 
     return CurrentUser(
         account_id=account.id,
+        email=account.email,
+        # "" rather than None: a demo/seeded account can carry no OAuth row, and
+        # the card's provider line is simply absent then — see `AccountSection`.
+        provider=provider or "",
         character=char_out,
         is_admin=is_admin,
         can_create_additional_character=eligibility.can_create_additional_character,
