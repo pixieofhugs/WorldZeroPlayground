@@ -143,11 +143,36 @@ function markup(slug: string, Body: Body): string {
   );
 }
 
-/** The champion label each kit uses: its own, or na's shared one. */
+/**
+ * The champion label each kit uses: its own, or na's shared one.
+ *
+ * Spelled out rather than built as `factions:${slug}.spotlight.label`. The copy
+ * keys are typed as a literal union, so a template literal widens past it and
+ * `typecheck:design-sync` refuses it (TS2345) — the app typecheck and the
+ * preview-kit typecheck both read this file. Listing them also means a faction
+ * whose label key is renamed fails here by name instead of resolving to a raw
+ * key string that `toContain` would happily match against itself.
+ */
+const CHAMPION_LABEL = {
+  na: "factions:detail.spotlightLabel",
+  albescent: "factions:detail.spotlightLabel",
+  coven: "factions:coven.spotlight.label",
+  ephemerists: "factions:ephemerists.spotlight.label",
+  everymen: "factions:everymen.spotlight.label",
+  singularity: "factions:singularity.spotlight.label",
+  snide: "factions:snide.spotlight.label",
+  ua: "factions:ua.spotlight.label",
+  wow: "factions:wow.spotlight.label",
+} as const;
+
 function championLabel(slug: string): string {
-  return slug === "na" || slug === "albescent"
-    ? i18n.t("factions:detail.spotlightLabel")
-    : i18n.t(`factions:${slug}.spotlight.label`);
+  const key = CHAMPION_LABEL[slug as keyof typeof CHAMPION_LABEL];
+  expect(key, `a champion-label key is listed for ${slug}`).toBeTruthy();
+  const label = i18n.t(key);
+  // A missing key makes i18next echo the key back, which would make every
+  // `toContain` below pass against itself.
+  expect(label, `${key} resolves to real copy`).not.toBe(key);
+  return label;
 }
 
 function membersHeading(): string {
