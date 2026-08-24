@@ -92,24 +92,6 @@ const TRACK_FILL = `linear-gradient(90deg, ${signal(85)}, ${PHOSPHOR})`
  *  set at 13px, and the mark holds the same line. */
 const ROW_SIGIL = 13
 
-/** Blinking terminal cursor block. */
-function Cursor() {
-  return (
-    <span
-      aria-hidden
-      className="sg-cursor"
-      style={{
-        display: 'inline-block',
-        width: 6,
-        height: 11,
-        marginLeft: 'var(--space-xs)',
-        verticalAlign: 'middle',
-        background: PHOSPHOR,
-      }}
-    />
-  )
-}
-
 /** Void readout panel with a signal-blue hairline and corner brackets. */
 function Panel({ children }: { children: ReactNode }) {
   return (
@@ -143,12 +125,6 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
     >
       {/* Prompt masthead */}
       <header>
-        <div style={kicker}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.04em', margin: 'var(--space-xs) 0 0' }}>
-          {'> '}
-          {t('fieldDesk.home.title')}
-          <Cursor />
-        </h1>
         <div style={{ height: 1, marginTop: 'var(--space-md)', background: `linear-gradient(90deg, ${BORDER_HARD}, transparent)` }} />
       </header>
 
@@ -199,13 +175,23 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: PHOSPHOR, letterSpacing: '0.03em', textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: PHOSPHOR, letterSpacing: '0.03em', textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(60) }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>
