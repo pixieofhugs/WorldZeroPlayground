@@ -1667,7 +1667,8 @@ function offClassName(skinClassName: string | undefined, off: boolean): string |
 
 /* -------------------------------------------------------------------------- */
 /* PublishButton — renders nothing once published (with one duel exception,     */
-/* below) and is disabled while saving / submitting / switching mode. The       */
+/* below) and is disabled while saving / submitting / switching mode, and while  */
+/* the praxis has no title (#2484 — see `publishNeedsTitle` above). The          */
 /* archetype arranges it inside its bespoke file bar and supplies faction-voiced */
 /* labels via skin. (The old Save Draft button was removed in #297 — autosave    */
 /* persists title/body and media uploads on pick, so no manual draft-save        */
@@ -1846,9 +1847,19 @@ const SECONDARY_SIGNAL_STYLE: CSSProperties = {
  *  - **Withdraw proposal** — for the member who has read the draft and has no
  *    edit to make. Any member, not just the proposer (ADR-0013).
  *
- * **Hidden, never disabled.** Propose and Approve are mutually exclusive by
- * construction — a window is open or it is not — and Withdraw has nothing to
- * withdraw while the crew is drafting.
+ * **Hidden, never disabled — for MUTUAL EXCLUSION.** Propose and Approve cannot
+ * both apply — a window is open or it is not — and Withdraw has nothing to
+ * withdraw while the crew is drafting. A signal that does not apply is not
+ * drawn, and that is what this rule is about.
+ *
+ * A PRECONDITION is the other thing, and #2484 rules it disabled: Propose and
+ * Approve are dead until the praxis has a title. Hiding was not available —
+ * untitled is the state a crew signup mints, so hiding would leave the ordinary
+ * collab composer with no primary action at all, which is worse than the dead
+ * end it replaces. The reason is drawn beside the control (see
+ * `publishNeedsTitle`), which is what makes a disabled control honest. This is a
+ * deliberate exception to `frontend/CLAUDE.md`'s "hide unusable controls", not a
+ * drift back from it — do not "fix" it in a sweep.
  *
  * The WORDS are shared across all nine factions (ADR-0079's exception to
  * ADR-0065): they are a mechanical fact a player must read correctly in order
