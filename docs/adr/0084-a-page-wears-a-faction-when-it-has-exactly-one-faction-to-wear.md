@@ -11,7 +11,7 @@ surface), ADR-0083 (the ornament vocabulary that rides the same dispatch seam),
 `docs/kit-structure.md` (the *surface*-level companion to this *page*-level
 rule), #2532 (this decision), #2539 (the `Settings` ruling), #2153 (the Settings
 epic whose shell clause that ruling upholds), #2537 (`EditCharacter`), #2538
-(`ProposeTask`), #2529 (the one live bypass of the seam in §2), #2530 (`na` gets
+(`ProposeTask`), #2529 (the last bypass of the seam in §2, now closed), #2530 (`na` gets
 a real manifest — the same seam, the other question)
 
 ## Context
@@ -104,17 +104,25 @@ map literal is a faction the manifest cannot see, cannot count, and cannot
 retire; every census, every exhaustiveness test and every surface count still
 passes while one identity is wired in beside them.
 
-**This invariant does not hold at the time of writing, and that is recorded here
+**This invariant had exactly one exception until #2529, and it is recorded here
 rather than asserted away.** `frontend/src/components/sigil/FactionSigil.tsx`
-resolves as `pickVariant({ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }, slug, DefaultSigilAdapter)`
-— the `albescent` key is injected ahead of the spread — and `factionSigilRing`
-branches on the same slug beside it. The file argues its own case (a bespoke
-emblem is not "Default plus a flourish", so it is not a manifest row) and is
-deliberately written so the manifest wins the day Albescent declares a `sigil`.
-Whether that argument survives is **#2529's** question, not this record's. What
-belongs here is that it is the *one* known bypass, that it is a component rather
-than a page, and that anyone citing §2 as a clean invariant should check #2529's
-state first.
+resolved as `pickVariant({ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }, slug, DefaultSigilAdapter)`
+— the `albescent` key injected ahead of the spread — so Albescent's labyrinth
+reached the screen without ever appearing in its manifest. It was the *one*
+known bypass in the tree, and a component rather than a page.
+
+**#2529 closed it** (PR #2572): `albescent.ts` declares `sigil` like every other
+faction/surface pair, the call site reads `surfaceMap('sigil')` clean, and a repo
+rule in `surfaceDispatch.test.ts` now fails any dispatcher that spreads a surface
+map. So §2 is a clean invariant as of this record, and it is guarded rather than
+merely asserted.
+
+The reason the bypass survived as long as it did is worth keeping: the file
+argued that a bespoke emblem is not "Default plus a flourish" and therefore not a
+manifest row. What settled it was that the labyrinth is an alpha stencil painted
+with `--faction-default-rainbow-conic` — na's own spectrum — so registering it
+repaints nothing. **"Is it livery or is it geometry"** is the question that
+distinguishes the two, not how elaborate the drawing looks.
 
 ### 3. A list page's items dress themselves; the page chrome stays neutral
 
@@ -262,9 +270,9 @@ become one.
 get dressed (#2537, #2538) — the rule says they qualify, and qualifying is not a
 ruling. In particular, whether `EditCharacter`'s standing #434 rationale is
 promoted to an exception under §6 or overridden is #2537's to answer, and §5
-says why it cannot be left to a docblock. Whether `FactionSigil`'s injected slug
-survives (#2529). Whether `na` gains a real manifest (#2530), which changes the
-*mechanism* under §2 without touching which pages use it.
+says why it cannot be left to a docblock. Whether `na` gains a real manifest
+(#2530), which changes the *mechanism* under §2 without touching which pages use
+it. (`FactionSigil`'s injected slug is no longer open — #2529 closed it; see §2.)
 
 **The known sharp edge** is §5's exception. It is the one entry here that a
 future reader can mistake for an oversight, and the only guard against that is
