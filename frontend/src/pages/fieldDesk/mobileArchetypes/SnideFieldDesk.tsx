@@ -10,7 +10,7 @@ import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
-import { Ransom, WALL } from '../../../components/factionMarks/snideAtoms'
+import { WALL } from '../../../components/factionMarks/snideAtoms'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
@@ -208,17 +208,6 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
     >
       {/* Masthead — the ransom cut over an acid rule */}
       <header>
-        <div style={{ ...kicker, color: NOTE_MUTED }}>{t('nav.home')}</div>
-        {/* THE WORDMARK IS CUT, NOT SET (#2287). It was a plain bold condensed
-            sans, which is the "boring" the report named. The ransom cut is the
-            face this kit already pastes a player's name up in on the comment
-            slip, mounted from the one drawing in `snideAtoms` rather than
-            transcribed a second time. Every letter brings its own opaque scrap,
-            so the mark needs no ink of its own on either ground, and the
-            heading's accessible name is still the whole word. */}
-        <h1 style={{ margin: 'var(--space-xs) 0 0' }}>
-          <Ransom text={t('fieldDesk.home.title')} size="var(--text-display)" />
-        </h1>
         <div style={{ height: 2, marginTop: 'var(--space-sm)', background: ACCENT_WALL }} />
       </header>
 
@@ -256,13 +245,23 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: COND, fontSize: 'var(--text-title)', letterSpacing: '0.03em', lineHeight: 1, color: NOTE_INK, textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: COND, fontSize: 'var(--text-title)', letterSpacing: '0.03em', lineHeight: 1, color: NOTE_INK, textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: TYPE, fontSize: 'var(--text-md)', letterSpacing: '0.12em', textTransform: 'uppercase', color: NOTE_MUTED }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>

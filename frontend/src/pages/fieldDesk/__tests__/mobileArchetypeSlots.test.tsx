@@ -382,3 +382,55 @@ describe("the WOW crest carries the mobile home's heading (#1817)", () => {
     expect(heads[0], 'and it names the carried life').toContain('Mollusk')
   })
 })
+
+/**
+ * THE PAGE HEADS ITSELF WITH THE CARRIED LIFE (#2580).
+ *
+ * Every mobile skin opened with an app-bar row nobody needed: a `HOME` kicker
+ * naming the page you were already standing on — the bottom nav already marks
+ * that tab — over a `FieldDesk` title naming it again. The owner asked for both
+ * to go.
+ *
+ * Deleting the title element is not the whole job, and this is the guard that
+ * says so. Each skin had exactly ONE `<h1>` and it was that title, so a plain
+ * deletion would leave seven pages with no level-1 heading at all — which is
+ * precisely the defect #1794 was filed and fixed for on the desktop FieldDesk.
+ * The resolution follows the ruling already in `pages/FieldDesk.tsx`: with the
+ * roster hidden the page is not asking whose shoes, its subject is the life
+ * being carried, so the heading names it. No new string — the name is data
+ * already on the page.
+ *
+ * `WowFieldDesk` is the precedent rather than an exception. Its crest has drawn
+ * the carried life as an unconditional `<h1>` since #1817 and has never had the
+ * eyebrow, so it must pass this unchanged.
+ *
+ * A visually-hidden `<h1>` carrying "FieldDesk" was considered and rejected: it
+ * keeps a dead word alive in the accessibility tree only, which is worse than
+ * naming the subject the page is actually about.
+ */
+describe('mobile FieldDesk home — the carried life is the h1 (#2580)', () => {
+  const HOME_KICKER = 'Home'
+  const PAGE_TITLE = 'FieldDesk'
+
+  for (const [slug, Skin] of Object.entries(archetypes)) {
+    it(`${slug} heads the page with the character, exactly once`, () => {
+      const { html } = render(<Skin state={baseState()} />)
+
+      const h1s = html.match(/<h1[\s>]/g) ?? []
+      expect(h1s.length, `${slug} draws exactly one <h1>`).toBe(1)
+
+      const open = html.indexOf('<h1')
+      const inner = html.slice(open, html.indexOf('</h1>', open))
+      expect(inner, `${slug}'s h1 names the carried life`).toContain(
+        CHARACTER.display_name,
+      )
+      expect(inner, `${slug}'s h1 is not the page's own name`).not.toContain(PAGE_TITLE)
+    })
+
+    it(`${slug} draws neither the kicker nor the page title`, () => {
+      const { text } = render(<Skin state={baseState()} />)
+      expect(text, `${slug} dropped the HOME kicker`).not.toContain(HOME_KICKER)
+      expect(text, `${slug} dropped the FieldDesk title`).not.toContain(PAGE_TITLE)
+    })
+  }
+})
