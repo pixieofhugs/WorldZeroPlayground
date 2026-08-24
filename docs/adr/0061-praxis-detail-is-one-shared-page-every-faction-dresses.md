@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-28
+
 **Relates to:** #1085 (epic), #1087 (ADR-0062, the sibling behaviour change)
 **Extends:** ADR-0057 (task detail pages carry no faction voice) — same doctrine,
 a second surface

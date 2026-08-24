@@ -1,6 +1,7 @@
 # The activity feed stays a read-time projection, not a stored event log
 
-/ status: accepted
+**Status:** Accepted
+**Date:** 2026-06-26
 
 ## Context
 

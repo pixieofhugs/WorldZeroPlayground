@@ -1,7 +1,8 @@
 # ADR-0054 — One theme-aware Task Crown (the flur is one mark)
 
-**Status:** Accepted (amended 2026-07-29 by [ADR-0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) — the ring's theme behaviour only)
+**Status:** Amended by ADR-0066
 **Date:** 2026-07-24
+
 **Amends:** [ADR-0028](0028-task-crown-replaces-faction-distinction-laurel.md) — the per-card recolour of the crown's inner disc + glyph
 **Relates to:** #826
 

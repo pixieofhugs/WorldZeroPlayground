@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-15
+
 **Relates to:** #461 (this decision), ADR-0031 (backend emits keys; the frontend
 catalog resolves them), ADR-0032 (react-i18next copy catalog), ADR-0030
 (default faction behaviour), #440 (the copy-catalog foundation this rides on)

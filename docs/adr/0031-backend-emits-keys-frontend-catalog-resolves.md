@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-13
+
 **Relates to:** #451 (this decision), #440 (the react-i18next copy-catalog foundation this rides on), ADR-0010 (the superseded homegrown copy catalog)
 
 ## Context

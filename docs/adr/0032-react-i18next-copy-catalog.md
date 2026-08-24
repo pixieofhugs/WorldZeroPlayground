@@ -1,5 +1,8 @@
 # UI copy lives in react-i18next JSON catalogs
 
+**Status:** Accepted
+**Date:** 2026-07-13
+
 > Supersedes ADR-0010 (ui-copy-catalog).
 
 All user-facing frontend copy moves out of JSX into JSON resource files under

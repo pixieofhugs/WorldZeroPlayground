@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-28
+
 **Relates to:** #1085 (epic), #1126 (this ADR's issue), #1088 (comments moved
 into the archetype), #1090 (the duel rail replaced by the aside card)
 **Depends on:** ADR-0059 (submitting a collab or duel part holds the

@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-20
+
 **Relates to:** ADR-0011 (a duel is two linked praxes, cold symmetric challenge),
 #292 (single task-level gate via `meets_task_level`), #811 (faction level-jump
 allowance), #815 (this issue).

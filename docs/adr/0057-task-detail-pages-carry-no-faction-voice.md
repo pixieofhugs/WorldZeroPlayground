@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-27
+
 **Relates to:** #1028 (epic: faction task details v2), #1029
 **Tension with:** ADR-0016 (per-faction surfaces share one data contract; archetypes own
 only presentation) — which drew the line at *data* and left copy to the archetype. This

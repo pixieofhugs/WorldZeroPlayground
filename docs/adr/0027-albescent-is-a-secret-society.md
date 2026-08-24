@@ -1,7 +1,11 @@
 # Albescent is a secret society, revealed by a sticky per-account flag
 
-**Status:** Accepted, **partly superseded 2026-08-23 by
-[ADR-0082](0082-albescent-is-redacted-not-hidden.md)** — the **hiding posture** below is
+**Status:** Amended by ADR-0080, ADR-0082
+**Date:** 2026-07-03
+
+## Amendment
+
+**Partly superseded 2026-08-23 by [ADR-0082](0082-albescent-is-redacted-not-hidden.md)** — the **hiding posture** below is
 reversed. The faction-listing surfaces no longer conceal Albescent's existence; the row is
 served to everyone and its strings render as `[REDACTED]`. Concretely, the four bullets under
 "Hidden until reveal" and the first bullet under "Consequences" no longer describe the code.

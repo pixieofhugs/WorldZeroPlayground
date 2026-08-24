@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-23
+
 **Relates to:** ADR-0030 (the Factions grid is a directory, not a join surface —
 the second, independent reason that page is undressed), ADR-0035 (the split the
 collapses below narrow), ADR-0046 (the manifest is override-only; an undeclared

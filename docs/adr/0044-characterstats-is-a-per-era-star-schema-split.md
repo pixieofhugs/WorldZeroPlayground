@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-17
+
 **Relates to:** ADR-0042 (era-as-ruleset), ADR-0043 (vote budget on read), `models/character_stats.py`
 
 > Harvested from the retired `SPEC-data-models.md` during the 2026-07-17 docs

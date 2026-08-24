@@ -1,6 +1,7 @@
 # ADR-0016: Per-faction surfaces share one data contract; archetypes own only presentation
 
-Status: Accepted (2026-06-24)
+**Status:** Accepted
+**Date:** 2026-06-24
 
 ## Context
 

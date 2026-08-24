@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-23
+
 **Supersedes:** [ADR-0027](0027-albescent-is-a-secret-society.md) — its **hiding posture** only.
 The faction-listing surfaces stop concealing Albescent's existence and start withholding its
 words. Everything else in ADR-0027 stands: Albescent is a distinct faction, its members and

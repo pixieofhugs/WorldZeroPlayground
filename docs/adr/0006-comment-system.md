@@ -1,5 +1,8 @@
 # Comments are an actor-scoped, two-mode surface on praxis and tasks
 
+**Status:** Amended by ADR-0061, ADR-0064
+**Date:** 2026-06-25
+
 Comments are in scope for Era 1 (vault design doc, "Open Design Questions"). This records
 the data model, moderation, faction-resolution, and dispatch wiring. Design/lore (each
 faction's comment *voice* and ornament) is canon in the vault (ADR-0001); this ADR owns the

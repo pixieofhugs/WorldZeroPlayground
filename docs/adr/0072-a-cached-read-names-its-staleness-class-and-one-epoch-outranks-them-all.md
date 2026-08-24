@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-02
+
 **Relates to:** ADR-0027 (Albescent is a secret society), ADR-0042 (era as
 ruleset), ADR-0070 (an unanswered obligation lives in the queue, never in the
 stream), #1283 (`/game-config` reads no database), #1284 (the shared read-once

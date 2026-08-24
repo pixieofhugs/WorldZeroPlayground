@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-29
+
 **Relates to:** #1179 (epic), #1180 (this ADR's issue)
 **Extends:** ADR-0061 (praxis detail is one shared page every faction dresses)
 and ADR-0057 (task detail pages carry no faction voice) — the same doctrine,

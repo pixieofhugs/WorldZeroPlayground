@@ -1,5 +1,8 @@
 # Unaffiliated characters score full until a level-3 grace cliff
 
+**Status:** Reversed
+**Date:** 2026-06-25
+
 > **⚠ Status (2026-07-17 audit): NOT BUILT / SUPERSEDED.** The grace-cliff penalty
 > was never implemented — `unaffiliated_task_modifier` and
 > `unaffiliated_penalty_level` exist nowhere in the backend, and

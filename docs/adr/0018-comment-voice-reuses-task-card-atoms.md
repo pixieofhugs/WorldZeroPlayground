@@ -1,5 +1,8 @@
 # Each faction's comment voice reuses its task-card atoms at full fidelity
 
+**Status:** Amended by ADR-0026
+**Date:** 2026-06-25
+
 ADR-0006 wired the comment system and explicitly deferred each faction's comment *voice*
 ("vault design work, not specified here"). The design is now delivered (standalone
 `Faction Comment Boxes` mocks). This ADR records the voice decisions so the build has a spec;

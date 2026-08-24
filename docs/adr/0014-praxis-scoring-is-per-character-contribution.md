@@ -1,5 +1,8 @@
 # ADR-0014: Praxis scoring is per-character Contribution; the card shows Merit
 
+**Status:** Amended by ADR-0053
+**Date:** 2026-06-24
+
 > **Superseded in part — the *Merit (the card number)* section only.** The half
 > of this ADR the title's second clause names is retired;
 > [ADR-0047](0047-praxis-card-shows-computed-total-not-merit.md) moved the card
@@ -19,8 +22,6 @@
 > The argument below is preserved as written, including the Merit section that
 > ADR-0047 and ADR-0053 had to answer.
 
-Status: Accepted (2026-06-24); the *Merit (the card number)* section superseded by
-ADR-0047 (2026-07-19) and retired by ADR-0053 (2026-07-21).
 
 ## Context
 

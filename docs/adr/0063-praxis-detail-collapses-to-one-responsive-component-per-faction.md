@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-28
+
 **Relates to:** #1085 (epic), #1125 (this ADR's issue), #1088 (the collapse + the
 Unaffiliated rebuild), #1089 (the retirement)
 **Parallel to:** ADR-0056 (task cards), ADR-0058 (task detail) — the same

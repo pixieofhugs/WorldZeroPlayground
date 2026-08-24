@@ -2,6 +2,7 @@
 
 **Status:** Amended by ADR-0083
 **Date:** 2026-07-19
+
 **Amends:** **ADR-0046** (Albescent is frozen: new surfaces fall through to NA)
 **Relates to:** ADR-0027 (Albescent is a secret society), ADR-0039 (the NA/default
 identity is the rainbow), ADR-0047 (the praxis-card score stamp).
