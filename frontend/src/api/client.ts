@@ -18,6 +18,7 @@ import createClient, {
 } from 'openapi-fetch'
 
 import { ApiError, ApiNetworkError } from './apiError'
+import { dropCachesAfterWrite } from '../hooks/cachedResource'
 import type { paths } from './generated/schema'
 import { returnToLandingIfSessionExpired } from './sessionRedirect'
 
@@ -98,6 +99,7 @@ type SettledResult = { data?: unknown; error?: unknown; response: Response }
  */
 function throwOnFailure<Method extends HttpMethod>(
   call: (url: never, init?: never) => Promise<SettledResult>,
+  mutates = false,
 ): ThrowingMethod<Method> {
   return (async (url: never, init?: never) => {
     let settled: SettledResult
@@ -111,12 +113,24 @@ function throwOnFailure<Method extends HttpMethod>(
     if (!settled.response.ok) {
       throw new ApiError(settled.response, settled.error)
     }
+    // A WRITE INVALIDATES THE CACHED LISTS (#2432, ADR-0072). Signing up for a
+    // task, publishing a praxis and archiving one all move a row in the task
+    // browse or the praxis feed, and a five-minute stale read of your own
+    // action reads as a bug rather than as a cache.
+    //
+    // Here rather than in each mutating api function because every one of them
+    // already passes through this seam, so a route added later cannot forget
+    // it. Only a SUCCEEDING write drops — a rejected one threw above and
+    // changed nothing. It over-invalidates on purpose: a vote does not change
+    // which tasks exist, and one extra refetch is cheaper than an enumeration
+    // that rots.
+    if (mutates) dropCachesAfterWrite()
     return { data: settled.data, response: settled.response }
   }) as ThrowingMethod<Method>
 }
 
 export const apiGet = throwOnFailure<'get'>(client.GET)
-export const apiPost = throwOnFailure<'post'>(client.POST)
-export const apiPut = throwOnFailure<'put'>(client.PUT)
-export const apiPatch = throwOnFailure<'patch'>(client.PATCH)
-export const apiDelete = throwOnFailure<'delete'>(client.DELETE)
+export const apiPost = throwOnFailure<'post'>(client.POST, true)
+export const apiPut = throwOnFailure<'put'>(client.PUT, true)
+export const apiPatch = throwOnFailure<'patch'>(client.PATCH, true)
+export const apiDelete = throwOnFailure<'delete'>(client.DELETE, true)
