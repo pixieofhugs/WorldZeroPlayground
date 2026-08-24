@@ -124,9 +124,10 @@ describe("task-detail content-slot invariant", () => {
     });
 
     // #2598. `tasks:detail.points.total` used to be stored as "POINT"/"POINTS",
-    // pre-shouted, and NOT ONE of the nine skins uppercased it in CSS — so the
-    // caps in the catalog value were the only thing shouting on all nine pages,
-    // and an editor could not tell whether they were the design or the copy.
+    // pre-shouted, while only five of the nine skins uppercased it in CSS — so
+    // on the other four the caps in the catalog value were the only thing
+    // shouting, and on all nine an editor could not tell whether they were the
+    // design or the copy.
     //
     // The catalog holds "Point"/"Points" now and the shout moved to the element.
     // Five skins already carried the transform (Everymen's `label`, the
