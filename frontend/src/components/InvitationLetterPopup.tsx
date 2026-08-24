@@ -16,12 +16,6 @@ function tKey(t: TFunction<'factions'>, key: string): string {
   return resolve(key)
 }
 
-/** The shared label for a terms row that carries none of its own, or `''`. */
-function sharedTermLabel(t: TFunction<'factions'>, index: number): string {
-  const key = SHARED_TERM_LABELS[index]
-  return key ? tKey(t, key) : ''
-}
-
 function tArr<T>(t: TFunction<'factions'>, key: string): T[] {
   const resolve = t as unknown as (k: string, o: { returnObjects: true }) => unknown
   const value = resolve(key, { returnObjects: true })
@@ -39,9 +33,13 @@ function tArr<T>(t: TFunction<'factions'>, key: string): T[] {
  * follow-up, mirroring the profile-skin epic (#459 default -> #460 per-faction).
  *
  * Copy lives in frontend/src/locales/en/factions.json under
- * `<slug>.invitation.{kicker,headline,pitch,terms[],perks[],cta.{join,joined}}`
+ * `<slug>.invitation.{headline,pitch,perks[].{name,desc},cta.join}`
  * (writer-editable). a11y matches LevelUpPopup: Escape closes, primary action
  * autofocuses, no focus trap. No literal hex — CSS vars only (CLAUDE.md).
+ *
+ * #2298 cut the kicker, the prospectus overline and the terms slip, and refilled
+ * the slip's box with the perks — so the letter is masthead, headline, pitch,
+ * ONE box, CTA. The perks gained a `name` above their `desc`.
  */
 
 const PAPER = 'var(--color-bg-page)'
@@ -52,28 +50,21 @@ const FONT_DISPLAY = 'var(--font-display)'
 const FONT_BODY = 'var(--font-body)'
 const FONT_MONO = "'Courier Prime', monospace"
 
-interface Term {
-  /** Absent on the rows whose label is shared — see {@link SHARED_TERM_LABELS}. */
-  label?: string
-  value: string
+/** One perk: the label-cased name, and the line that says what it gets you. */
+interface Perk {
+  name: string
+  desc: string
 }
 
 /**
- * The terms slip's row labels, by position, where the label is the SAME for
- * every faction (#1911).
+ * Which perk states the faction's real backend mechanic (#1874/#2298).
  *
- * Row 0 is the toll, and each house names it in its own voice — "dues", "cover
- * charge", "oath of fealty", "handshake". Rows 1 and 2 named the same two
- * things fourteen different ways, so the audit collapsed them; the rows now
- * carry a `value` only and take their label from here. Positional because the
- * slip is a positional array — a row's own `label` still wins where it has one,
- * which is what keeps row 0 (and any row a later letter adds) unaffected.
+ * ponytail: positional. Every letter is written as flavour → mechanic →
+ * flavour, and the catalog carries no flag saying which is which. If a faction
+ * ever needs its mechanic somewhere else in the list, the upgrade is a
+ * `"mechanic": true` field on the perk object, read here instead of the index.
  */
-const SHARED_TERM_LABELS: readonly (string | null)[] = [
-  null,
-  'invitation.skillsLabel',
-  'invitation.outputLabel',
-]
+const MECHANIC_INDEX = 1
 
 export interface InvitationLetterPopupProps {
   factionSlug: string
@@ -106,8 +97,7 @@ export default function InvitationLetterPopup({
   const name = factionName(factionSlug)
 
   const base = `${factionSlug}.invitation`
-  const termsList = tArr<Term>(t, `${base}.terms`)
-  const perksList = tArr<string>(t, `${base}.perks`)
+  const perksList = tArr<Perk>(t, `${base}.perks`)
 
   // The prospectus ENLIST commits the join in place (#493). Joining is one-way
   // (ADR-0019), so ENLIST arms a confirm step before actually joining.
@@ -173,7 +163,10 @@ export default function InvitationLetterPopup({
         fontFamily: FONT_BODY,
       }}
     >
-      {/* masthead: sigil dot + faction name + prospectus overline */}
+      {/* masthead: sigil dot + faction name. The `a prospectus` overline that
+          sat at the right end left with the kicker (#2298) — both were
+          connecting chrome naming the surface the reader is already looking
+          at. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         <span
           aria-hidden
@@ -197,37 +190,7 @@ export default function InvitationLetterPopup({
         >
           {name}
         </span>
-        <span
-          style={{
-            marginLeft: 'auto',
-            fontFamily: FONT_MONO,
-            fontSize: 'var(--text-md)',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: FAINT,
-          }}
-        >
-          {t('invitation.prospectus')}
-        </span>
       </div>
-
-      {/* kicker */}
-      <p
-        style={{
-          fontFamily: FONT_MONO,
-          fontSize: 'var(--text-md)',
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          // The kicker is 11px type on the prospectus paper, so it takes a text
-          // tier (#2108). The hue keeps the ENLIST fill, the border and the
-          // perk bullet below — the roles it was measured for. As an ink here
-          // it ran 2.19:1 (Ephemerists) to 4.46:1 (UA) in light.
-          color: FAINT,
-          margin: '0 0 var(--space-sm)',
-        }}
-      >
-        {tKey(t, `${base}.kicker`)}
-      </p>
 
       {/* headline */}
       <h2
@@ -257,97 +220,70 @@ export default function InvitationLetterPopup({
         {tKey(t, `${base}.pitch`)}
       </p>
 
-      {/* terms slip */}
-      {termsList.length > 0 && (
-        <div
+      {/* Perks, in the box the terms slip used to occupy (#2298) — same border,
+          radius, padding and faction tint, and deliberately NO heading: the
+          change is removing connecting chrome, not trading one piece for
+          another. Each perk stacks its name over its description behind the
+          `✦` the loose list below this already used, so a long name cannot
+          crush the description into a column. */}
+      {perksList.length > 0 && (
+        <ul
           style={{
+            listStyle: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-md)',
             border: `1px solid ${border}`,
             borderRadius: 8,
             padding: 'var(--space-md) var(--space-lg)',
-            marginBottom: 'var(--space-lg)',
+            margin: '0 0 var(--space-xl)',
             background: factionCssVar(factionSlug, 'light'),
           }}
         >
-          <div
-            style={{
-              fontFamily: FONT_MONO,
-              fontSize: 'var(--text-md)',
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: FAINT,
-              marginBottom: 'var(--space-sm)',
-            }}
-          >
-            {t('invitation.termsHeading')}
-          </div>
-          {termsList.map((term, idx) => (
-            <div
-              key={idx}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 'var(--space-md)',
-                padding: 'var(--space-xs) 0',
-                borderTop: idx === 0 ? 'none' : `1px dashed ${border}`,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FONT_MONO,
-                  fontSize: 'var(--text-md)',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: FAINT,
-                }}
-              >
-                {term.label ?? sharedTermLabel(t, idx)}
-              </span>
-              <span
-                style={{
-                  fontFamily: FONT_DISPLAY,
-                  fontStyle: 'italic',
-                  fontSize: 'var(--text-content)',
-                  color: INK,
-                  textAlign: 'right',
-                }}
-              >
-                {term.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* perks */}
-      {perksList.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: '0 0 var(--space-xl)', padding: 0 }}>
-          {perksList.map((perk, idx) => (
-            <li
-              key={idx}
-              style={{
-                display: 'flex',
-                gap: 'var(--space-md)',
-                alignItems: 'flex-start',
-                marginBottom: 'var(--space-sm)',
-              }}
-            >
-              {/* eslint-disable-next-line local/no-raw-style-values, local/no-faction-hue-as-ink -- ornament: a four-pointed-star dingbat used as a list bullet, not type. `aria-hidden` because the perk beside it carries the whole meaning, which is also why 1.4.3 does not reach it (#2108). */}
-              <span aria-hidden="true" style={{ color: accent, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
-                &#x2726;
-              </span>
-              <span
-                style={{
-                  fontFamily: FONT_DISPLAY,
-                  fontStyle: 'italic',
-                  fontSize: 'var(--text-content)',
-                  lineHeight: 1.4,
-                  color: INK,
-                }}
-              >
-                {perk}
-              </span>
-            </li>
-          ))}
+          {perksList.map((perk, idx) => {
+            const mechanic = idx === MECHANIC_INDEX
+            return (
+              <li key={idx} style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+                {/* eslint-disable-next-line local/no-raw-style-values, local/no-faction-hue-as-ink -- ornament: a four-pointed-star dingbat used as a list bullet, not type. `aria-hidden` because the perk beside it carries the whole meaning, which is also why 1.4.3 does not reach it (#2108). The hue marks the ONE row that states a real mechanic; the flavour rows take a text tier. */}
+                <span aria-hidden="true" style={{ color: mechanic ? accent : FAINT, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
+                  &#x2726;
+                </span>
+                <span>
+                  {/* The slip's old label treatment: mono, uppercase, tracked.
+                      The mechanic's name takes the primary ink and the two
+                      flavour names the tertiary, so the true perk reads first.
+                      The faction hue stays on the bullet, the box rule and the
+                      ENLIST fill — it is a FILL, not an ink (#1932/#2108), and
+                      as 11px type here it ran 2.19:1 to 4.46:1 in light. */}
+                  <span
+                    style={{
+                      display: 'block',
+                      fontFamily: FONT_MONO,
+                      fontSize: 'var(--text-md)',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      lineHeight: 1.4,
+                      color: mechanic ? INK : FAINT,
+                    }}
+                  >
+                    {perk.name}
+                  </span>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontFamily: FONT_DISPLAY,
+                      fontStyle: 'italic',
+                      fontSize: 'var(--text-content)',
+                      lineHeight: 1.4,
+                      color: INK,
+                    }}
+                  >
+                    {perk.desc}
+                  </span>
+                </span>
+              </li>
+            )
+          })}
         </ul>
       )}
 
