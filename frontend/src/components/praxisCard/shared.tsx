@@ -1,6 +1,8 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import Markdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { CharacterOut } from "../../api/auth";
 import { UNSCORED_MODERATION_STATUSES, type PraxisCardOut } from "../../api/praxis";
 import { factionCssVar } from "../../utils/factions";
@@ -558,6 +560,56 @@ export function PraxisStats({
   );
 }
 
+/**
+ * Every node the parser can emit, resolved to plain inline text (#2578).
+ *
+ * The card printed `body_text` straight into the clamp, so a body written in
+ * markdown arrived as its SOURCE — `## ****I be this is invalid****` is the
+ * report. Meanwhile every praxis DETAIL page renders the same field through
+ * `MarkdownPreview`, so one body read two ways depending on the surface.
+ *
+ * Owner ruling: rendering it AS markdown is not the fix either. A `##` would
+ * become a heading and a list a `<ul>`, inside a two-line clamp, inside a card
+ * that is itself a link — and a nested `<a>` is invalid HTML rather than merely
+ * untidy. So the real parser runs and its output is flattened.
+ *
+ * WHY THE PARSER AND NOT A REGEX. A hand-rolled stripper is a second markdown
+ * implementation, and it would disagree with remark on exactly the input that
+ * produced this report: `****…****` is malformed emphasis, and two parsers
+ * resolve malformed emphasis differently. Going through remark makes the card's
+ * reading of a body identical to the detail page's BY CONSTRUCTION rather than
+ * by maintenance. That property is the whole point; it is not available at any
+ * level of care from a regex.
+ *
+ * Blocks emit a trailing space so `## Title` followed by a paragraph does not
+ * read `TitleBody`. Anchors keep their words and drop their href. An image
+ * resolves to its alt text — that IS its text — and fetches nothing. `hr` and
+ * the GFM task-list checkbox have no text, so they leave nothing behind.
+ */
+const FLATTENED: Components = (() => {
+  const block = ({ children }: { children?: ReactNode }) => <>{children} </>;
+  const inline = ({ children }: { children?: ReactNode }) => <>{children}</>;
+  const map: Components = {
+    br: () => <> </>,
+    hr: () => null,
+    input: () => null,
+    img: ({ alt }) => <>{alt}</>,
+  };
+  for (const tag of [
+    "p", "h1", "h2", "h3", "h4", "h5", "h6",
+    "blockquote", "li", "pre", "tr", "th", "td",
+  ] as const) {
+    map[tag] = block;
+  }
+  for (const tag of [
+    "a", "em", "strong", "del", "code",
+    "ul", "ol", "table", "thead", "tbody", "tfoot",
+  ] as const) {
+    map[tag] = inline;
+  }
+  return map;
+})();
+
 /** Slot: a 1–2 line body-text excerpt, clamped. Renders nothing without body. */
 export function PraxisExcerpt({
   praxis,
@@ -584,7 +636,9 @@ export function PraxisExcerpt({
         ...style,
       }}
     >
-      {praxis.body_text}
+      <Markdown remarkPlugins={[remarkGfm]} components={FLATTENED}>
+        {praxis.body_text}
+      </Markdown>
     </p>
   );
 }
