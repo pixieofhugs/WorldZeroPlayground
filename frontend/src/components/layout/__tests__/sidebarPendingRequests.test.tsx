@@ -71,7 +71,13 @@ describe('the rail and its pending requests', () => {
     // compares against the key string itself — which the page never contains,
     // so the guard would pass without looking at anything. `actions.accept` and
     // `actions.decline` below survive and have other readers, so those stay
-    // catalog-driven.
+    // catalog-driven. That claim was FALSE when written (#2598): the two keys
+    // had no reader but this file, and a key whose only reader asserts its
+    // ABSENCE is dead. It is true now — the four feed cards that each kept a
+    // private copy of these two words read the shared block instead:
+    // `FeedCardCollabInvite` (both), `FeedCardDuelChallenge` (decline),
+    // `FeedCardInvitationLetter` (accept). `actions.submit` had no such
+    // successor and was deleted.
     expect(html, 'panel heading').not.toContain('Pending Requests')
     expect(html, 'PendingRequestRow kicker').not.toContain('Collab Invite')
     expect(html, 'PendingRequestRow kicker').not.toContain('Duel Challenge')

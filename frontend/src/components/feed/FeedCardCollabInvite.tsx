@@ -266,7 +266,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              {i18n.t("feed:collabInvite.accept")}
+              {i18n.t("common:actions.accept")}
             </button>
             <button
               onClick={handleDecline}
@@ -280,7 +280,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              {i18n.t("feed:collabInvite.decline")}
+              {i18n.t("common:actions.decline")}
             </button>
             {error && (
               <span className="label-caption" style={{ color: "var(--color-danger)" }}>

@@ -229,7 +229,6 @@
   "actions": {
     "accept": "Accept",
     "decline": "Decline",
-    "submit": "Submit",
     "proposeTask": "Propose a Task",
     "showMore": "+{{count}} more",
     "showFewer": "Show fewer"

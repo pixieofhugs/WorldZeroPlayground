@@ -123,8 +123,6 @@
   "collabInvite": {
     "sentence": "<1>{{name}}</1> invited you to collaborate",
     "taskMeta": "{{points}} pts · lvl {{level}}",
-    "accept": "Accept",
-    "decline": "Decline",
     "accepted": "Accepted — view collaboration",
     "declined": "Declined",
     "bankFull": {
@@ -139,7 +137,6 @@
     "sentence": "<1>{{name}}</1> has challenged you to a duel",
     "taskMeta": "{{points}} pts · winner takes the points",
     "accept": "Accept Duel",
-    "decline": "Decline",
     "withdraw": "Withdraw",
     "withdrawn": "Withdrawn — the duel was called off",
     "withdrawError": "Could not withdraw the challenge. Try again.",
@@ -165,7 +162,6 @@
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
     "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
     "viewFactions": "View Factions →",
-    "accept": "Accept",
     "notNow": "Not now",
     "accepted": "Joined {{faction}}",
     "setAside": "Set aside — the invitation still stands",
