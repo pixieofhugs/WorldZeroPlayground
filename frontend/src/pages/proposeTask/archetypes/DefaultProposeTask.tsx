@@ -302,7 +302,19 @@ export default function DefaultProposeTask({
                   set in the faction's own display face and identified by its
                   placeholder — so the label key it used to render is now what
                   it ANNOUNCES: a placeholder disappears on the first keystroke
-                  (§7). Same for the description and notes below. */}
+                  (§7). Same for the description and notes below.
+
+                  #2598 asked for `fields.name.placeholder` to be DELETED, on
+                  the premise that it merely echoed a visible label. It did not:
+                  per the paragraph above the placeholder IS the only on-screen
+                  identification this field has, so deleting it would leave a
+                  sighted user an unlabelled box. What was actually wrong is
+                  that one field's wording lived in two keys that had already
+                  drifted apart in case ("Task name" / "Task Name"). The second
+                  key is gone and both uses read the label — one concept, one
+                  key, and the screen reader stops hearing two spellings.
+                  Whether these fields should get a visible label back is a
+                  design question, and it is on the issue. */}
               <div style={{ marginBottom: "var(--space-lg)" }}>
                 <input
                   type="text"
@@ -312,7 +324,7 @@ export default function DefaultProposeTask({
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={submitting}
                   aria-label={t("proposeTask.fields.name.label")}
-                  placeholder={t("proposeTask.fields.name.placeholder")}
+                  placeholder={t("proposeTask.fields.name.label")}
                   style={taskNameInputStyle(factionSlug, Boolean(title))}
                 />
                 <span
@@ -482,7 +494,7 @@ export default function DefaultProposeTask({
                   disabled={submitting}
                   maxLength={2000}
                   aria-label={t("proposeTask.fields.notes.label")}
-                  placeholder={t("proposeTask.fields.notes.placeholder")}
+                  placeholder={t("proposeTask.fields.notes.label")}
                   className="content-text"
                   style={notesTextareaStyle}
                   onFocus={(e) => {
