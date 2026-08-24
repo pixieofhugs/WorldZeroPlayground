@@ -273,12 +273,25 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
  * SITE is. A skin that repoints its quiet tier has to stay legible at this site
  * too, and no row named for a brief or a caption says so.
  */
+/**
+ * THE `ground` HERE IS THE FLAT SHEET, AND FIVE OF THE `quiet` ROWS MOVED (#2485).
+ *
+ * Five composers wash an ornament layer under the whole content column, so the
+ * roster's chips and byline do not sit on the token named beside them — they sit
+ * on the composite. Every one of those five was handing in a rung that clears
+ * flat and misses washed, and the rungs below are the corrected ones. The
+ * COMPOSITED measurement is not restated here on purpose: it lives in
+ * `pages/editPraxis/archetypes/__tests__/composerGround.test.ts`, because this
+ * registry is asserted BOTH ways and #1179's note two blocks up records two red
+ * `main`s from growing it. What this table still owns is the FLAT pairing and
+ * the source-parity check below it.
+ */
 const COLLAB_SKINS = [
   {
     key: "ua",
     source: "pages/editPraxis/archetypes/UaEditPraxis.tsx",
     ground: "--faction-ua-card-bg",
-    quiet: "--faction-ua-card-muted",
+    quiet: "--faction-ua-card-body",
   },
   {
     key: "wow",
@@ -290,13 +303,13 @@ const COLLAB_SKINS = [
     key: "default",
     source: "pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     ground: "--faction-default-card-bg",
-    quiet: "--faction-default-card-muted",
+    quiet: "--faction-default-composer-faint",
   },
   {
     key: "everymen",
     source: "pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
     ground: "--everymen-paper",
-    quiet: "--everymen-muted",
+    quiet: "--everymen-quiet",
   },
   {
     key: "ephemerists",
@@ -308,13 +321,13 @@ const COLLAB_SKINS = [
     key: "coven",
     source: "pages/editPraxis/archetypes/CovenEditPraxis.tsx",
     ground: "--faction-coven-ward-card",
-    quiet: "--faction-coven-slip-soft",
+    quiet: "--faction-coven-slip-label",
   },
   {
     key: "singularity",
     source: "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
     ground: "--faction-singularity-term-bg",
-    quiet: "--faction-singularity-term-dim",
+    quiet: "--faction-singularity-term-ink",
   },
   {
     key: "snide",
