@@ -83,7 +83,7 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  */
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
   return (
-    <div className="alb-praxis alb-prism">
+    <div className="alb-praxis alb-moves alb-prism">
       <DefaultPraxisDetail
         state={state}
         ornament={

@@ -64,7 +64,7 @@ export function AlbescentPraxisCard(props: ArchetypeProps) {
   const groundIsBusy = useGroundIsBusy();
   return (
     <div
-      className={groundIsBusy ? "alb-praxis-card" : "alb-praxis-card alb-prism"}
+      className={groundIsBusy ? "alb-praxis-card alb-moves" : "alb-praxis-card alb-moves alb-prism"}
       style={{ ...frameBase, borderRadius: "var(--faction-default-card-radius)", /* inherits the Default sheet */ position: "relative", overflow: "hidden" }}
     >
       <DefaultPraxisCard {...props} />

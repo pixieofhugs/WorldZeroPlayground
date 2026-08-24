@@ -202,7 +202,7 @@ function render(
 function undress(html: string): string {
   return html
     .replace(/<span[^>]*class="alb-praxis-[a-z]+"[^>]*><\/span>/g, "")
-    .replace(/^<div class="alb-praxis alb-prism">/, "")
+    .replace(/^<div class="alb-praxis alb-moves alb-prism">/, "")
     .replace(/<\/div>$/, "");
 }
 
@@ -287,13 +287,17 @@ describe("Albescent praxis detail — where the light sits", () => {
       [...new Set(html.match(/alb-[\w-]+/g))].sort(),
       "wrapper + prism + two layers + the dispatched stamp, nothing else",
     ).toEqual([
+      "alb-moves",
       "alb-praxis",
       "alb-praxis-edge",
       "alb-praxis-ring",
       "alb-prism",
       "alb-stamp",
     ]);
-    expect(html.match(/alb-/g)?.length, "each of the five drawn once").toBe(5);
+    // `alb-moves` is drawn TWICE — once on this wrapper and once on the score
+    // stamp the sidebar dispatches, which is its own manifest row (#2501) and
+    // carries its own marker.
+    expect(html.match(/alb-/g)?.length, "the six drawn once each, the marker twice").toBe(7);
     expect(html, "the report card is mounted bare").toContain("sidebar-card");
   });
 

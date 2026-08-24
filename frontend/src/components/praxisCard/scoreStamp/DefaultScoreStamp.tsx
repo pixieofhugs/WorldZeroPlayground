@@ -223,7 +223,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           this line, so it always parts something from something.
 
           `position: relative` is the mount Albescent's travelling child needs.
-          `.alb-stamp .spectrum-rule::before` is absolutely positioned, so
+          `.alb-moves .spectrum-rule:empty::before` is absolutely positioned, so
           without a containing block here it would resolve against the plate and
           paint the ramp straight over the working out. That the class reaches
           both this rule and the band above is the point of #2520: the two stamps
