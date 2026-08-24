@@ -799,18 +799,19 @@
      serif the design never names here (#839). */
   --faction-default-card-font: var(--font-accent);
   /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
-     ring; the reached dots fill with --faction-default-rainbow. The two caption
-     colours are the widget's warm on/off text — flipped in dark below, so the
-     widget never branches on a `dark` boolean. The widget's third piece, the
-     per-dot glow cast, is --spectrum-glow-1…5 further down; it carries its own
-     derivation at its declarations rather than a summary here (#1214). */
+     ring; the reached dots fill with --faction-default-rainbow. The widget's
+     other piece, the per-dot glow cast, is --spectrum-glow-1…5 further down; it
+     carries its own derivation at its declarations rather than a summary here
+     (#1214).
+
+     THE CAPTION INKS ARE GONE, and this note is what is left of them. `-vote-on`
+     / `-vote-off` were the widget's warm on/off text and flipped in dark; #2166
+     struck the text row under the dots on all nine skins, and #2535 collected
+     the four petals that outlived their reader here and on Coven. The tier is
+     named by the dots filling to it. Do not mint them back for a caption that
+     was removed on purpose; the contrast history (#1675 walked `-vote-off` from
+     3.23:1 to 4.68:1) is in those issues, not in this file. */
   --faction-default-dot-ring: #d6cfbf;
-  --faction-default-vote-on: #c2541f;
-  /* #a8895a until #1675, which measured it at 3.23:1 carrying "cast a vote" —
-     the widget's own call to action, 15px, not an inactive control and so owed
-     the full 4.5. Same tan, walked down to 4.68:1 on the card's #fffdf9. The
-     dark twin below already clears on its own ground and is unchanged. */
-  --faction-default-vote-off: #886f49;
   /* The unaffiliated PLAIN CREAM SHEET (#842). The design's card is a quiet
      sheet, and the rainbow appears in exactly four places on it — the eyebrow
      text-clip, the score-box rule, the total, and one 2px divider. The
@@ -1083,7 +1084,10 @@
   --faction-snide-ink: #14110b; /* photocopier black */
   --faction-snide-paper: #f4f1e8; /* warm xerox paper */
   --faction-snide-pink: #ff2d8b; /* hot zine pink */
-  --faction-snide-pink-deep: #be185d;
+  /* `--faction-snide-pink-deep` stood here and held #be185d, which is the value
+     `--faction-snide-slip-pink-ink` carries a few blocks down with a measured
+     ratio attached to it. Nothing ever read the bare name; #2535 took it. Pink
+     that is TEXT reads the slip token. */
   /* `--faction-snide-tape` stood here. It and the always-dark `--snide-tape`
      below held the SAME rgba, which is exactly the drift #1708 took with them.
      Tape is SPECIFIED for this faction — a first-class token in both design
@@ -1409,26 +1413,13 @@
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
-  /* The punched sprocket hole — the row of five wells the faction card wears
-     above and below its body, tape running through a reader. It is ORNAMENT,
-     not a rung of the `--faction-singularity-card-*` contract: nothing else
-     paints it, and the drawing (a 6×4 well, blue-bordered) is the whole of its
-     meaning. Named here rather than beside `-card-bg` for exactly that reason —
-     `-card-*` is a two-theme contract whose halves are both near-black, and a
-     later editor re-cutting it must not have to wonder whether the hole is one
-     of its tiers.
-
-     A LIFT, not a shade of the ground: #050f08 is the chassis and this is two
-     stops above it, so the well reads as a recess catching phosphor rather than
-     as a hole cut clean through. §6: Singularity's older ornament families
-     (`-stamp-*`, `-vote-*`, `-phosphor-dim`) are theme-INVARIANT, and this joins
-     them — one value serves both cascades, and there is deliberately no
-     [data-theme="dark"] half to "complete".
-
-     Value carried across unchanged from the inline `rgba(10,26,14)` this
-     replaces (#1912). Nothing repaints; see that issue for why the literal was
-     painting all along. */
-  --faction-singularity-punch-hole: #0a1a0e;
+  /* `--faction-singularity-punch-hole` stood here, the fill of the five wells
+     the praxis card wore above and below its body — tape running through a
+     reader. #1912 minted it to get an inline `rgba(10,26,14)` out of the
+     component; the redraw then took the sprocket strips off the card entirely,
+     as an invention the design had no counterpart for, and the token outlived
+     the drawing by that much. #2535 took it. The rawColourRule test still
+     carries the literal as its example, which is the only place it is wanted. */
 
   /* Dim sage phosphor (#723) — the SECOND green. `card-text` and `card-accent`
      are the same bright #4ade80, so a Singularity surface had one weight of
@@ -1460,7 +1451,9 @@
      this group, deliberately. */
   --faction-singularity-terminal-ink: #d7ffe6; /* pale mint — titles + body */
   --faction-singularity-frame: rgba(74, 222, 128, 0.35);
-  --faction-singularity-rule: rgba(74, 222, 128, 0.2);
+  /* The dimmer `-rule` twin of the frame (the same green at 0.2) stood here and
+     was read by nothing — the slab draws one hairline and it is `-frame`.
+     #2535. */
   --faction-singularity-bracket: #60a5fa; /* cyan corner brackets */
   --faction-singularity-scan: rgba(96, 165, 250, 0.16); /* scanline sweep peak */
   /* The standing raster is NOT here. One drawing per faction (#2394): the whole
@@ -1855,8 +1848,8 @@
   --faction-coven-moon-cheek: rgba(236, 95, 153, 0.45);
   --faction-coven-moon-star: #f0d36e;
   --faction-coven-moon-dust: #b98fd6;
-  --faction-coven-vote-on: #d63f86;
-  --faction-coven-vote-off: #a76389;
+  /* The `-vote-on` / `-vote-off` caption inks stood here until #2535: #2166
+     struck the text row under the phases, and nothing has read them since. */
 
   /* ── Coven — the DAY plate (#2020) ──
      The line above ("night plate; same in both themes") was a decision, and
@@ -1876,9 +1869,10 @@
      parallel; `-plate-shadow` and `-glow` are the two the moon spells inline as
      raw rgba, and this file is where a new surface's colours go.
 
-     WHAT IS MEASURED, AND ON WHAT. Nothing on this plate is text — the caption
-     lives below it on the card and keeps `--faction-coven-vote-*`. What the
-     plate owes is 1.4.11: the rating buttons' REACHED state has to be readable
+     WHAT IS MEASURED, AND ON WHAT. Nothing on this plate is text. The caption
+     that lived below it on the card, and the `--faction-coven-vote-*` pair it
+     read, are both gone — struck in #2166, tokens collected in #2535 — so this
+     plate is now the whole of what the widget draws. What it owes is 1.4.11: the rating buttons' REACHED state has to be readable
      as more than a hue swap. So the LIT inks are held to 3:1 and the unlit ones
      deliberately are not, which is exactly the shape the shipped moon already
      has (its gold reads 9.82:1 on the night plate and its unlit ring 1.28:1).
@@ -2214,31 +2208,28 @@
 }
 
 :root {
-  /* WOW — THE CREST (#897). The seal is STRUCK METAL, so this whole family is
-     THEME-INVARIANT and declared once: the kit draws the identical coin on its
-     light decree card and on its dark one, and a gold-and-cream medal reads on
-     either ground the way a real seal on a real page does. Compare the balloon
-     ramp above, invariant for the same reason. Only the AVATAR chrome that
-     frames it (below) flips.
+  /* WOW — WHAT IS LEFT OF THE CREST (#897, cut back by #2535).
+     The gilt coin this family painted is RETIRED: #1989 replaced it with the
+     googly crown, one plum path drawn off --faction-wow-plum-surface, because
+     the coin was magnificent at 132px and a gold smudge at 15. Twelve names
+     went on describing its horn, mane, noodle-sword, pupil, cheek, motto band
+     and two disc stops for months afterwards — a palette for a drawing nothing
+     could reach. They shipped in a render-blocking sheet the whole time, which
+     is the cost this cut is against (#2469).
 
-     Deliberately NOT reusing --faction-wow-card-bg for the cream field: that
-     token IS the page ground and inverts to #1b1508 in dark, which would punch
-     a hole through the middle of the coin. */
-  --faction-wow-crest-disc-lit: #f0d882; /* radial-gradient highlight at 42%/34% */
-  --faction-wow-crest-disc-deep: #9a7b15; /* the coin's shadowed lower-right */
-  --faction-wow-crest-rim: #6e5410; /* outer edge, sword hilt, inner hairline */
+     Three survive because the AVATAR still uses them, and they keep the family
+     name so the ring below reads as one thing: the beaded rope in its gradient,
+     and the cream field plus its plum hairline as the badge WowAvatar mounts.
+     If the avatar ever stops drawing them, this block goes with it.
+
+     Still STRUCK METAL, so these are THEME-INVARIANT and declared once: the
+     same badge reads on the light decree card and the dark one. Deliberately
+     NOT reusing --faction-wow-card-bg for the cream field — that token IS the
+     page ground and inverts to #1b1508 in dark, which would punch a hole
+     through the middle of the badge. */
   --faction-wow-crest-rope: #7a5e12; /* the beaded rope ring, dashed */
-  --faction-wow-crest-band: #b08d22; /* the motto band, laid at 0.55 alpha */
-  --faction-wow-crest-ink: #3a2c06; /* motto lettering + unicorn silhouette */
-  --faction-wow-crest-field: #fbf4e0; /* the inner cream field the beast sits on */
+  --faction-wow-crest-field: #fbf4e0; /* the cream field the badge sits on */
   --faction-wow-crest-field-rim: #7a4a9e; /* the plum hairline round that field */
-  --faction-wow-crest-noodle: #ebd98a; /* the floppy sword's pale blade */
-  --faction-wow-crest-noodle-line: #b79427; /* its shading pass, 0.6 alpha */
-  --faction-wow-crest-mane: #8a5aae; /* plum mane curls + the plum sparkle */
-  --faction-wow-crest-cheek: #b76bc9; /* the rosy plum cheek, 0.5 alpha */
-  --faction-wow-crest-horn: #f1e4b4; /* the spiral horn */
-  --faction-wow-crest-pupil: #241a05; /* the googly eye's pupil */
-  --faction-wow-crest-shine: #ffffff; /* pupil catchlight + the horn glint */
 
   /* WOW — THE AVATAR (#897): crest in a gilt rope ring, plum inner rim, rank
      pill riding the hem. The ring is composed from tokens rather than the kit's
@@ -3371,10 +3362,10 @@
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
-  /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity). */
+  /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity).
+     The caption pair that was overridden here left in #2535; see the light
+     half. */
   --faction-default-dot-ring: rgba(240, 230, 208, 0.3);
-  --faction-default-vote-on: #e07a3a;
-  --faction-default-vote-off: #b0925f;
   /* The cream sheet, lights out (#842) — the design's own dark card, not an
      inversion: the hairline becomes a white scrim and the stamp plate lifts off
      the sheet rather than sinking into it. Both narrow rainbows still swap their
@@ -3489,9 +3480,9 @@
      chrome, the balloon plate and the caption inks are overridden here. */
 
   /* The night half of Coven's retired `-sticker-*` / `-stamp-*` families was
-     deleted with the light half in #1661. */
-  --faction-coven-vote-on: #f472b6;
-  --faction-coven-vote-off: #c78aa6;
+     deleted with the light half in #1661, and the `-vote-on` / `-vote-off`
+     caption pair overridden here followed in #2535 — #2166 had already struck
+     the row that read it. */
 
   /* ══ Coven — the candlelit spell slip (dark, #1023) ══
      Read off the design's own dark half, not derived by inverting the light
