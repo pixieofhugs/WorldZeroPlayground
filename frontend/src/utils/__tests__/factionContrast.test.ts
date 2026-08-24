@@ -1994,6 +1994,58 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // accent` in CARD_PAIRS has measured on that exact ground since #848. A
   // second `what` for one measurement measures nothing; the guard that the ink
   // stays in scope is the reader allowlist below.
+
+  // ── THE METATASK SEALS, ONE ANATOMY (#2562) ──────────────────────────────
+  //
+  // Nine seals gained a painted band and the faction's own points mark, and
+  // both moves changed what stands on what. Two grounds per seal are new:
+  //
+  //   THE BAND, under the `×` peel control. The control used to sit on the
+  //   sticker's own sheet and now sits on the faction's band, so each row below
+  //   measures the ink its band already letters against that ground. This is
+  //   where the trap was: WOW's `-gilt-mid` wordmark ink is 3.47:1 on the plum —
+  //   fine for a 24px display face and UNDER AA for a 14px control glyph — so
+  //   the `×` takes `-on-plum` at 5.16:1 instead. A control is text.
+  //
+  //   THE STICKER'S SHEET, under the mark. The marks were drawn for task cards
+  //   and score stamps, so their inks are re-measured here in both cascades,
+  //   which is #2042's pairing rule arriving on a fourth surface.
+  //
+  // FOUR MARKS NEED NO ROW AND THAT IS NOT AN OMISSION. Singularity's readout
+  // brings its own ground (`-term-readout`, measured above) and the Ephemerists'
+  // rose brings `-plate-disc`; S.N.I.D.E.'s pen circle lands on
+  // `--faction-snide-card-bg`, which is the task detail's slab and is already
+  // measured, ink for ink, in `pointsMarkUnification.test.tsx`; and na's ring
+  // stands on `--faction-default-card-bg`, which CARD_PAIRS has always held.
+  //
+  // TWO ORNAMENT READINGS ARE RECORDED HERE RATHER THAN GATED, the `✦`
+  // precedent above: UA's ensō ring is 2.93:1 on the parchment's darkest stop in
+  // light — the same token at the same reading `UaScoreStamp` already strikes —
+  // and the Everymen cog's own silhouette is 4.49:1 light / 2.93:1 dark on the
+  // seal's paper, which is the reading the band DIRECTLY ABOVE IT has shipped
+  // since #2029, because the cog is filled in that same mast red. Both are
+  // `aria-hidden` devices whose figure is the content, and both figures clear AA
+  // in both cascades below.
+  //
+  // UA'S SHEET CANNOT BE NAMED. `--faction-ua-card-parchment` resolves to a
+  // `linear-gradient`, so the rows take its DARKEST stop, `--faction-ua-panel` —
+  // measuring the lightest is the mistake wave A caught on Coven.
+  { what: "metatask seal, coven band peel control", surface: "--faction-coven-slip-sigil-ground", text: "--faction-coven-slip-deep" },
+  { what: "metatask seal, ua band peel control", surface: "--faction-ua-hair", text: "--faction-ua-card-text" },
+  { what: "metatask seal, wow band peel control", surface: "--faction-wow-plum-surface", text: "--faction-wow-on-plum" },
+  { what: "metatask seal, coven cauldron figure", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-deep" },
+  { what: "metatask seal, coven cauldron caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-soft" },
+  { what: "metatask seal, everymen cog figure", surface: "--faction-everymen-bill-mast", text: "--faction-everymen-bill-mast-ink" },
+  { what: "metatask seal, ua ensō figure", surface: "--faction-ua-panel", text: "--faction-ua-card-total" },
+  { what: "metatask seal, ua ensō caption", surface: "--faction-ua-panel", text: "--faction-ua-card-points" },
+  { what: "metatask seal, wow figure", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-stamp-total" },
+  { what: "metatask seal, wow caption", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-accent" },
+  // The Albescent seal is the one sheet no cascade repoints: a pure-white
+  // reveal surface by day, the na card's own stock by night. Its ring is the na
+  // drawing lettered in reveal tokens, so both inks are measured on it — the
+  // caption at 4.64:1 in light is the tight one.
+  { what: "metatask seal, albescent ring figure", surface: "--albescent-reveal-surface", text: "--albescent-reveal-text" },
+  { what: "metatask seal, albescent ring caption", surface: "--albescent-reveal-surface", text: "--albescent-reveal-text-muted" },
 ];
 
 /**
