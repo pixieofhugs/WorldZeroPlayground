@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 # `MismatchingStateError` is not re-exported by `starlette_client`, which
@@ -14,9 +15,21 @@ from db import get_db
 from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
 from models.account import Account, AuthProvider
-from schemas.auth import CurrentUser, DevLoginOut, LogoutOut
+from schemas.auth import (
+    CurrentUser,
+    DevLoginOut,
+    LogoutOut,
+    ReturningPlayerOut,
+    StartFreshOut,
+)
 from schemas.character import CharacterCreate
-from services.auth import create_jwt, create_or_get_account, get_current_account
+from services.account_deletion import resolve_account_tombstone
+from services.auth import (
+    ReturningPlayerConsentRequired,
+    create_jwt,
+    create_or_get_account,
+    get_current_account,
+)
 from services.character import create_character, resolve_active_character
 from services.current_user import build_current_user
 from services.era import get_current_era_row, get_or_create_stats
@@ -66,18 +79,19 @@ _OAUTH.register(
 _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 
 
-def _signed_in_redirect(account_id: int) -> Response:
-    """Turn a resolved Account into a session: JWT cookie, then home.
+def _set_session_cookie(response: Response, account_id: int) -> None:
+    """Put the JWT on `response`. The one place the session cookie's flags live.
 
     Extracted when the second provider arrived (#1772) so the cookie flags are
-    stated once. Every kwarg below is a security decision with a reason recorded
-    against it, and a third provider handler that copies the block is a third
-    place for one of them to be quietly dropped — the failure mode being a
-    session cookie that ships without `Secure`, which nothing in the test suite
-    would notice. Not shared with `dev_login`: that seam deliberately sets
-    different flags and returns a body rather than a redirect.
+    stated once, and split from the redirect in #2162 when a second *shape* of
+    successful sign-in appeared — the returning player's confirm answers with a
+    JSON body, not a 302, and must not become a second copy of this block. Every
+    kwarg below is a security decision with a reason recorded against it, and
+    any handler that copies them is another place for one to be quietly dropped
+    — the failure mode being a session cookie that ships without `Secure`, which
+    nothing in the test suite would notice. Not shared with `dev_login`: that
+    seam deliberately sets different flags.
     """
-    response = Response(status_code=302, headers={"location": settings.FRONTEND_URL})
     response.set_cookie(
         key="access_token",
         value=create_jwt(account_id),
@@ -90,6 +104,12 @@ def _signed_in_redirect(account_id: int) -> Response:
         # no value, and "" is not None — Starlette would emit a bare `Domain=`.
         domain=settings.COOKIE_DOMAIN or None,
     )
+
+
+def _signed_in_redirect(account_id: int) -> Response:
+    """Turn a resolved Account into a session: JWT cookie, then home."""
+    response = Response(status_code=302, headers={"location": settings.FRONTEND_URL})
+    _set_session_cookie(response, account_id)
     return response
 
 
@@ -176,6 +196,69 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
     )
 
 
+#: The frontend route that renders the consent gate (#2162) — a path over
+#: there, not a route in here. Under `/start` because it *is* the onboarding
+#: arc, entered by someone who has walked it before: confirming leads straight
+#: into the rest of it.
+_RETURNING_PLAYER_PATH = "/start/again"
+
+#: Where an interrupted sign-in waits for its answer, in `request.session`.
+#:
+#: THE STARLETTE SESSION, and not a cookie of our own. It already exists (Authlib
+#: needs it for the OAuth `state`), it is already signed with `SECRET_KEY`, it
+#: already carries the flags `main.py` argues for one by one, and its
+#: server-enforced `max_age=600` is exactly the window a consent gate wants —
+#: ten minutes, then the question lapses and the player starts again. A
+#: purpose-built token would have been a second set of cookie flags to get
+#: right and a second expiry to keep honest.
+#:
+#: `main.py` used to justify that ten minutes with "nothing in `backend/` reads
+#: `request.session` except authlib". This is the second reader, and it wants
+#: the same number for its own reasons — see the note there.
+_PENDING_SIGNUP_KEY = "pending_returning_signup"
+
+
+def _returning_player_redirect(
+    request: Request, pending: ReturningPlayerConsentRequired
+) -> Response:
+    """Park the interrupted sign-in and send the browser to the gate (#2162).
+
+    **No session cookie.** That is the whole shape of this: the player is asked
+    before they are signed in, because the question is whether they want to be.
+    The identity rides in the signed session rather than the URL — a deletion
+    date and a provider id in a query string would be written to browser
+    history, and to any referrer the gate page happens to emit.
+    """
+    request.session[_PENDING_SIGNUP_KEY] = {
+        "provider": str(pending.provider),
+        "provider_user_id": pending.provider_user_id,
+        "email": pending.email,
+        "deleted_on": pending.deleted_on.isoformat(),
+    }
+    return Response(
+        status_code=302,
+        headers={"location": f"{settings.FRONTEND_URL}{_RETURNING_PLAYER_PATH}"},
+    )
+
+
+def _pending_signup(request: Request) -> dict:
+    """The interrupted sign-in this request is answering for, or a 404.
+
+    Both gate routes start here, and both refuse the same way: a gate with
+    nothing behind it is not a failed sign-in, it is *no* sign-in — reached by
+    typing the URL, or by coming back to the tab after the ten minutes lapsed.
+    The frontend's move either way is to send them to `/start` to begin one.
+    """
+    pending = request.session.get(_PENDING_SIGNUP_KEY)
+    if not isinstance(pending, dict):
+        raise_coded(
+            404,
+            ErrorCode.returning_player_consent_expired,
+            "That sign-in is no longer waiting on an answer.",
+        )
+    return pending
+
+
 # The two OAuth legs answer with a redirect, not JSON, so they carry
 # `response_class=RedirectResponse` and a 302 instead of a `response_model`
 # (#1400). A model here would be a lie the generated client believes: without
@@ -227,6 +310,10 @@ async def auth_google_callback(
             email_verified=user_info.get("email_verified") is True,
             session=session,
         )
+    except ReturningPlayerConsentRequired as pending:
+        # NOT a failure, so not the arm below: the sign-in is paused for one
+        # question rather than refused (#2162).
+        return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
         return _sign_in_failed_redirect(exc)
 
@@ -315,10 +402,77 @@ async def auth_discord_callback(
             email_verified=user_info.get("verified") is True,
             session=session,
         )
+    except ReturningPlayerConsentRequired as pending:
+        # NOT a failure, so not the arm below: the sign-in is paused for one
+        # question rather than refused (#2162).
+        return _returning_player_redirect(request, pending)
     except (HTTPException, OAuthError) as exc:
         return _sign_in_failed_redirect(exc)
 
     return _signed_in_redirect(account.id)
+
+
+@router.get("/returning-player", response_model=ReturningPlayerOut)
+async def returning_player_gate(request: Request) -> ReturningPlayerOut:
+    """What the consent gate says (#2162): a date, and nothing else.
+
+    Read from the parked sign-in rather than the tombstone, so this route makes
+    no lookup keyed on anything the caller supplied — there is nothing to
+    supply. The identity is in the signed session or the gate does not exist.
+    """
+    return ReturningPlayerOut(
+        deleted_on=date.fromisoformat(_pending_signup(request)["deleted_on"])
+    )
+
+
+@router.post("/returning-player", response_model=StartFreshOut)
+async def confirm_returning_player(
+    request: Request,
+    response: Response,
+    session: AsyncSession = Depends(get_db),
+) -> StartFreshOut:
+    """The one button: yes, start fresh (#2162).
+
+    Explicitly **not** an offer of any old data, and there is none to offer —
+    ``delete_account`` blanked it and there is no undo (ADR-0081). All this does
+    is finish the sign-in the gate interrupted, as a stranger.
+
+    The tombstone goes FIRST, and that ordering is what does the work: with it
+    cleared, ``create_or_get_account`` finds no reason to pause and falls
+    through to the ordinary stranger path — the same mint, the same email
+    branch, the same rules. There is no second creation path here and no
+    "consent given" flag threaded through the service to be got wrong.
+
+    ``email_verified=True`` is a fact this server established, not a claim the
+    caller made: the sign-in that parked this session got past
+    ``create_or_get_account``'s verified-email gate before it ever reached the
+    tombstone (ADR-0075, and ``test_returning_player_gate`` pins the ordering),
+    and the parked address rode here inside a cookie signed with ``SECRET_KEY``.
+    """
+    pending = _pending_signup(request)
+    provider = AuthProvider(pending["provider"])
+    provider_user_id = pending["provider_user_id"]
+
+    # Consent given, so the digest has done the only job it was kept for. Not
+    # left to expire on its own: it is a thing we store about a person, and the
+    # ninety days are a ceiling, not a target.
+    tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
+    if tombstone is not None:
+        await session.delete(tombstone)
+        await session.flush()
+
+    account = await create_or_get_account(
+        provider=provider,
+        provider_user_id=provider_user_id,
+        email=pending["email"],
+        email_verified=True,
+        session=session,
+    )
+
+    # The question has been answered; a second POST is an ordinary 404.
+    del request.session[_PENDING_SIGNUP_KEY]
+    _set_session_cookie(response, account.id)
+    return StartFreshOut(message="Welcome back. This is a new account.")
 
 
 @router.get("/me", response_model=CurrentUser)

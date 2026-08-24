@@ -83,7 +83,10 @@ function DesktopTasks({ state }: { state: TasksState }) {
             /* Metatasks are informational — the issuing faction's seal look
                (#928), stacked read-only; no sign-up CTA (they're applied to a
                praxis via the picker). */
-            <div style={{ maxWidth: 640 }}>
+            <div
+              style={{ maxWidth: 640 }}
+              data-stale={loading && tasks.length > 0 ? 'true' : undefined}
+            >
               <MetataskSeal metatasks={tasks} />
             </div>
           ) : (
@@ -94,7 +97,16 @@ function DesktopTasks({ state }: { state: TasksState }) {
                chain that carries it down to each skin's frame — the display and
                the wrap live there too, because an inline `display` here would
                beat every rule in that chain. */
-            <div className="task-card-row" style={{ gap: 'var(--space-lg)' }}>
+            <div
+              className="task-card-row"
+              style={{ gap: 'var(--space-lg)' }}
+              /* These are the PREVIOUS filter's cards until the read lands, so
+                 they dim and stop taking clicks (#2431). Only when there is
+                 something to go stale — an empty list takes the loading branch
+                 above. "Load more" is a SIBLING of this row and stays one, so
+                 it is outside the dimming. */
+              data-stale={loading && tasks.length > 0 ? 'true' : undefined}
+            >
               {/* `onSignup` is offered to any signed-in viewer. Whether the slot
                   it produces is a claim or a statement of why not is the CARD's
                   call, off `task.signup_reason` (#1976) — gating it on

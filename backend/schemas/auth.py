@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from schemas.base import WireModel
@@ -24,6 +25,13 @@ class CurrentUser(WireModel):
     # FieldDesk "locked dossier" gate copy reads these (#270/#274): the level an
     # existing life must reach to unlock a second life, and the live era's name.
     second_character_level_required: int = 0
+    # The Albescent CEILING (#2399), not a floor: a life AT this level may no
+    # longer take Albescent ("Available only for New Game+"). The standing letter
+    # needs it to say which of the account's lives it can still be answered by,
+    # and the server is the authority — this is the same era-value-on-the-wire
+    # idiom as `second_character_level_required` above, so the number is never
+    # duplicated as a frontend literal.
+    albescent_level_required: int = 0
     era_name: str = ""
     can_propose_task: bool = False
     can_propose_metatask: bool = False
@@ -56,6 +64,37 @@ class LogoutOut(WireModel):
     The work of logging out is the ``Set-Cookie`` header that clears the JWT,
     not the body; this exists so the body is a declared shape in the schema
     rather than an untyped object the generated client cannot check.
+    """
+
+    message: str
+
+
+class ReturningPlayerOut(WireModel):
+    """What the consent gate is allowed to know (``GET /auth/returning-player``).
+
+    One field, and the reason there is only one is the reason this model exists
+    at all. The caller has authenticated as *nobody* — they hold a signed,
+    ten-minute session cookie stamped by an OAuth handshake they just completed,
+    and nothing else. Anything added here is a fact about an account that no
+    longer exists, disclosed on that basis.
+
+    A **date, not a timestamp**: the gate's sentence is *"you deleted your World
+    Zero account on 3 March"*, and the hour and minute would be a finer signal
+    bought for nothing the sentence needs. The tombstone's ``created_at`` is
+    truncated in ``services.auth.ReturningPlayerConsentRequired``, so the
+    precision is dropped before it ever reaches a response model.
+    """
+
+    deleted_on: date
+
+
+class StartFreshOut(WireModel):
+    """Acknowledgement for ``POST /auth/returning-player``.
+
+    Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
+    and the body exists so the generated client has a declared shape rather than
+    an untyped object. The caller learns who it now is from ``/auth/me``, which
+    is the one place that answers that question.
     """
 
     message: str

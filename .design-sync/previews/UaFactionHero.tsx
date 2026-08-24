@@ -8,6 +8,7 @@ import { UaFactionHero } from 'worldzero-frontend'
 export function GiltSalon() {
   return (
     <UaFactionHero
+      slug="ua"
       name="UA"
       members={214}
       tasks={38}

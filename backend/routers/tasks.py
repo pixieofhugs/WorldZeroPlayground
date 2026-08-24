@@ -101,6 +101,7 @@ async def list_tasks(
         limit=limit,
         offset=offset,
         viewer=viewer,
+        viewer_account=account,
         skip_level_check=is_admin,
         is_admin=is_admin,
     )

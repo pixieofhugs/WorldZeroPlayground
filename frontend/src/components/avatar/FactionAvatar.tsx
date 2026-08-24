@@ -59,11 +59,71 @@ export const AVATAR_ROOT = {
   flexShrink: 0,
 } as const
 
-function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
+/**
+ * `.user-media` on the DISC, and only when there is a photograph (#2457).
+ *
+ * `.user-media` marks what is the PLAYER's rather than the site's, so an
+ * Albescent surface can hold its drift off it (#1646). Inert on the other eight
+ * skins and on every surface but four — only the `.alb-*` wrappers scope a rule
+ * to it. It reached this file because the three photographs #2457 found still
+ * under the wash — both praxis-card bylines and the comment composer's avatar —
+ * are all this one component, at 28px and at `sm`.
+ *
+ * THE HOOK RIDES THE WHOLE DISC, NOT THE `<img>`, and that is the one place this
+ * departs from #1941/#1942/#2456. Those hooked bare photographs; this one is not
+ * alone in its box. The membership sigil is an absolutely positioned sibling
+ * clipped to the photo's lower-right, and at the byline's 28px the face's own
+ * edge runs almost exactly through the badge's centre — about half the badge
+ * lies over the picture, which is why the badge is drawn with a ring to read as
+ * a cut-out against it.
+ *
+ * So `photo > wash > badge` is UNSATISFIABLE, not merely awkward: the badge
+ * already paints above the photo (positioned, later sibling), this issue puts
+ * the photo above the wash, and the two together force the badge above the wash.
+ * Lifting the bare `<img>` would honour #1646's furniture list to the letter and
+ * slice the sigil in half on every faction avatar under an Albescent wash. So
+ * the sigil welded onto a photograph rides up with it; what is given away is a
+ * 15% multiply over a 12-14px disc.
+ *
+ * CONDITIONAL, WHICH IS WHAT KEEPS #1646 INTACT. A monogram disc — its generated
+ * initial, its spectrum ring, its sigil — is the site's own furniture from edge
+ * to edge and carries no hook at all, so the wash still crosses it whole. The
+ * hook appears only where the disc IS a player's photograph, exactly as the feed
+ * gates its anchor on `avatarUrl` (#2456). `undefined` rather than `''` so a
+ * face-less avatar's markup is byte-identical to what it was.
+ */
+export function userMediaHook(character: CharacterOut): string | undefined {
+  return character.avatar_url ? 'user-media' : undefined
+}
+
+/**
+ * The na disc, and — since #2502 — the one seam a dresser may reach into it by.
+ *
+ * `ornament` mounts BETWEEN the ring and the sigil badge, which is the only
+ * position that works and the reason this is a slot rather than a sibling span
+ * in a wrapper. The badge is an absolutely positioned LATER sibling clipped to
+ * the disc's lower-right, and at every size its centre falls just inside the
+ * disc's edge — so an overlay mounted outside this component paints above the
+ * badge and draws a spectrum arc straight across it, undoing the cut-out its
+ * own ring-shadow exists to make. Earlier in the DOM it would paint above the
+ * ring it dresses and beneath the badge that occludes it, exactly as the static
+ * ring does today. `z-index: -1` is not the alternative: the ring span is
+ * in-flow and opaque, so a negative layer is invisible rather than merely low.
+ *
+ * The prop is deliberately NOT on {@link FactionAvatarProps}. That interface is
+ * the manifest's contract for all nine skins, and this is one component's
+ * internal seam — the same shape `DefaultProfileBody`'s `identityOrnament`
+ * takes.
+ */
+export function DefaultAvatar({
+  character,
+  size = 'md',
+  ornament,
+}: FactionAvatarProps & { ornament?: ReactNode }) {
   const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
-    <span style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
+    <span className={userMediaHook(character)} style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
       {/*
         Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
         ramp: this is a disc, and a left-to-right ramp smears the spectrum across
@@ -107,6 +167,7 @@ function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
           </span>
         )}
       </span>
+      {ornament}
       {/* seven-segment sigil corner mark */}
       <span
         style={{
@@ -203,8 +264,11 @@ export function BadgedAvatar({
   const isSmall = dim <= 24
   const badge = Math.max(12, Math.round(dim * 0.5))
   return (
-    // Same root, same reason — see AVATAR_ROOT (#2232).
-    <span style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
+    // Same root, same reason — see AVATAR_ROOT (#2232), and the same hook on it
+    // for the same reason again — see userMediaHook (#2457). This is the root
+    // all eight faction skins wear; `WowAvatar` wraps it in a plate of its own,
+    // and that plate is chrome, so the lift stops at the disc inside it.
+    <span className={userMediaHook(character)} style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
       <FactionCircle
         character={character}
         dim={dim}

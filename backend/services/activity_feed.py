@@ -48,7 +48,6 @@ from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteSt
 from services.block_service import blocked_counterpart_ids
 from services.meta_task import character_sees_metatasks
 from services.praxis import praxis_visibility_condition
-from services.praxis_out import author_contributions_for
 from models.character_stats import CharacterStats
 from models.task import Task, TaskStatus, TaskType
 from models.taunt_message import TauntMessage
@@ -419,89 +418,15 @@ def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
                 praxis_id=row.praxis_id,
                 praxis_title=row.praxis_title,
                 task_point_value=row.task_point_value,
-                # points_earned is deliberately absent here — see
-                # `_score_vote_items`, which fills it from the scoring path once
-                # per page. This mapper is sync and per-row; it has no honest way
-                # to reach a total, and the arithmetic it used to invent
-                # (`value * task_point_value`) was #2199.
+                # The row prints `value` and nothing else (#2402). One vote's
+                # contribution to the praxis total IS its star value —
+                # `points_from_votes` is a plain `sum(Vote.value)` that
+                # `Contribution` adds AFTER the multipliers — so this mapper
+                # needs no total, no second pass and no arithmetic of its own.
             ),
         )
 
     return build
-
-
-VOTE_ITEM_TYPES: frozenset[str] = frozenset(
-    {FEED_ITEM_TYPE_VOTE_ON_MINE, FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE}
-)
-
-
-async def _score_vote_items(
-    items: list[ActivityFeedItemDC],
-    session: AsyncSession,
-) -> list[ActivityFeedItemDC]:
-    """Fill every vote row's ``points_earned`` with the praxis's real score (#2199).
-
-    The number a vote notification prints is the number the author finds when
-    they follow it, so it is not computed here — it is *read* from the one
-    scoring path, :func:`services.praxis_out.author_contributions_for`, which is
-    what the praxis card and the praxis detail page already publish as ``score``
-    (ADR-0014/0053). Restating "base + stars" at this seam would agree with that
-    path today and diverge the moment a metatask, a Coven collab modifier or a
-    duel outcome joins the sum — which is the class of bug this replaced.
-
-    Why a second pass rather than a column on the vote query: the total needs a
-    vote tally, the author's faction and level, metatask points, the duel
-    outcome and the stamped habit bonus. That is a batched async gather, and a
-    ``FeedSource``'s ``to_item`` is sync and sees one row. So the mapper builds
-    the payload without the number and this fills it, once, for the whole page.
-
-    The cost is real and is paid ONLY when the page carries a vote row: the
-    praxis fetch plus ``author_contributions_for``'s own bulk queries, every one
-    of them flat in the number of vote rows. ``test_activity_feed_query_count``
-    pins the total so it cannot regrow quietly.
-
-    ponytail: four of those statements are ``Praxis``'s ``selectin`` loaders
-    (``task``, ``created_by``, ``members``, and members' characters) firing for
-    relationships nothing on this path reads. The obvious ``.options(lazyload(
-    "*"))`` is NOT taken: it would put relationship-less ``Praxis`` instances in
-    the session's identity map, and ``/me/sidebar`` builds praxis cards off the
-    same session and the same rows — a card reaching ``praxis.task`` on one of
-    them raises ``MissingGreenlet``. The upgrade path is a scoring entry point
-    that takes praxis IDs instead of ORM instances, which would drop the fetch
-    and its tail together and serve ``services.era`` and ``character_stats``
-    equally well.
-
-    A praxis with no contribution (its author gone, or unscoreable) keeps
-    ``points_earned=None`` and the row renders without a figure. The one thing
-    this must never do is guess.
-    """
-    praxis_ids = {
-        item.payload.praxis_id for item in items if item.type in VOTE_ITEM_TYPES
-    }
-    if not praxis_ids:
-        return items
-
-    praxes_result = await session.execute(
-        select(Praxis).where(Praxis.id.in_(praxis_ids))
-    )
-    contributions = await author_contributions_for(
-        list(praxes_result.scalars()), session
-    )
-
-    def scored(item: ActivityFeedItemDC) -> ActivityFeedItemDC:
-        if item.type not in VOTE_ITEM_TYPES:
-            return item
-        contribution = contributions.get(item.payload.praxis_id)
-        if contribution is None:
-            return item
-        return replace(
-            item,
-            payload=item.payload.model_copy(
-                update={"points_earned": contribution.total}
-            ),
-        )
-
-    return [scored(item) for item in items]
 
 
 def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext], Select]:
@@ -1696,15 +1621,16 @@ async def _fetch_sources(
 
     Order is irrelevant: the caller sorts the merged list by timestamp.
 
-    The one post-pass is :func:`_score_vote_items` (#2199), here rather than in
-    either entry point because both the Updates page and the rail's activity
-    panel route through this function — a fix at one caller would leave the
-    other printing the old number.
+    There is no post-pass. #2199 added one — a praxis fetch plus the whole
+    scoring path — purely to stamp a total onto vote rows, and #2402 took the
+    total off the row: what a vote notification prints is that voter's own star
+    value, which the vote query already selects. Thirteen statements per page
+    carrying a vote row went with it.
     """
     items: list[ActivityFeedItemDC] = []
     for source in sources:
         items.extend(await _run_source_fetch(source, ctx, archive_view, session))
-    return await _score_vote_items(items, session)
+    return items
 
 
 async def _count_sources(

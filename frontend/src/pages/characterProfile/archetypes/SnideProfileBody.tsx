@@ -83,9 +83,10 @@ const dress: ProfileDress = {
     // ornament (#1609): the flyposter's flat offset shadow — the print
     // metaphor, not elevation, so neither cast rung fits. Same drawing as the
     // faction hero's and the ransom seal's. The ink is now
-    // `--color-print-offset`; the 55% is this mark's own strength, the hardest
-    // impression on the page.
-    boxShadow: '8px 10px 0 color-mix(in srgb, var(--color-print-offset) 55%, transparent)',
+    // `--color-print-offset`. This was the hardest impression on the page at
+    // 55%; #2302 collapsed the nine strengths onto one, so it prints at 40%
+    // like every other register.
+    boxShadow: '8px 10px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
     // The torn acid strip along the top is dropped (#1630), and the 3xl top
     // inset that was reserving room for it goes with it — a band sized for an
     // absent ornament is #1138's shape (hiding the mark does not hide the SPACE
@@ -101,7 +102,7 @@ const dress: ProfileDress = {
     <div
       style={{
         transform: 'rotate(-1.5deg)',
-        filter: 'drop-shadow(6px 8px 0 color-mix(in srgb, var(--color-print-offset) 50%, transparent))',
+        filter: 'drop-shadow(6px 8px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent))',
       }}
     >
       {card}
@@ -134,8 +135,9 @@ const dress: ProfileDress = {
     // 2px optical trim is not a spacing decision the scale needs to express.
     padding: 'var(--space-xs) var(--space-md) var(--space-sm)',
     transform: 'rotate(-0.7deg)',
-    // ornament (#1609): same flat offset print register, one stop tighter.
-    boxShadow: '4px 4px 0 color-mix(in srgb, var(--color-print-offset) 45%, transparent)',
+    // ornament (#1609): same flat offset print register at a tighter 4/4px
+    // offset. Strength is the uniform 40% (#2302; this chip printed at 45%).
+    boxShadow: '4px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)',
     letterSpacing: '-0.01em',
     textTransform: 'uppercase',
   },

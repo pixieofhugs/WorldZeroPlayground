@@ -643,3 +643,178 @@ converter-owned extras**, same 64 hand-uploaded handoffs.
 the PR, every time** — round two caught a `VoteSummary` → `VoteError` rename that would have
 shipped a component that no longer existed. The re-sync itself is cheap when nothing changed
 (the driver skips capture for unchanged components); it is the not-checking that is expensive.
+
+---
+
+## [2026-08-22] Fourth round in five days — 264 → 278, and the scan that had been
+## lying since 2026-08-02
+
+Ran from a fresh worktree at `origin/main` 9e17fc66. 96 commits of drift since the
+08-18 round. Map health clean for the fifth round running (0 dead paths, 0
+case-renames) — but the *unmapped* side was not.
+
+### The dir-scoped scan is blind to whole directories — this is the standing bug
+Every previous round found new components by walking **the directories the map already
+covers**. That silently cannot see a component in a directory nothing is mapped from.
+This round's wider walk (all of `src/components` + `src/pages`, minus route-level
+`pages/*.tsx` and `pages/admin`) found 14, and two of them were **long-standing
+gaps, not new work**:
+
+- `PendingRowPill` (`src/pages/fieldDesk/`) — landed **2026-08-02**, missed by three syncs.
+- `MobileStickyBar` (`src/pages/factionDetail/`) — landed **2026-08-16**, missed by two.
+
+Neither directory had a single mapped entry, so both were invisible. `components/nav/`
+was the same story for `Breadcrumb` (#2102, 08-18). **Walk the whole tree every round**
+— `.design-sync/.cache/newdirs.mjs` (regenerate it; it is gitignored) does exactly this
+and prints unmapped hits split by known-vs-unknown directory.
+
+The other 12: the eight `selectCard/*SelectCard` faction skins (#2324/#2329 et al split
+the per-faction tiles out of `FactionSelectCard`, which stayed as the dispatcher),
+`CardCtaControl` (#2359), `EphemerisNet` (#2144), `EphemeristsGloss` (#2148).
+
+### `TheArray` is mapped nowhere on purpose
+`src/components/TheArray.tsx` (#1869, Singularity's console perk) has a default export
+and passes every "is this a component" filter — and `return null` is its whole render.
+Its output is `console.log`. There is nothing for a design agent to build with and no
+preview can ever show it. **Deliberately excluded**; do not "fix" this next round.
+
+### `grep -c "@font-face"` LIES — it counted 64 of 83
+`gen-kit-css.mjs` appends the faction sheet verbatim (62 rules, one per line) but the
+Tailwind-compiled shell block is **minified onto a single line** carrying ~20
+`@font-face` rules. `grep -c` counts matching LINES, so the standing "should be 83"
+check reads 64 and looks like 19 dropped families. Nothing was wrong.
+**Use `grep -o "@font-face" … | wc -l`.** Verified this round: 83 rules, 21 families,
+46 woff2, 2 mask assets inlined — all as the 08-17 note describes.
+
+### The type scale is INVERTED, and it cost a render cycle
+    --text-xs 8px   --text-sm 9px    --text-base 10px  --text-md 11px
+    --text-lg 12px  --text-xl 14px   --text-title 24px --text-heading 32px
+    --text-display 42px  --text-content 18px
+`--text-xl` (14px) is **smaller** than `--text-content` (18px), and `--text-sm` is 9px,
+not 14. A caption under 18px body copy wants `--text-xl`. Reaching for `--text-sm`
+because it "sounds like a caption" ships 9px type.
+
+### Token names that do NOT exist (all four were invented and all four compiled)
+CSS variables fail silently — an unknown `var()` just yields nothing, so a preview using
+a wrong name renders unstyled and *looks* like a component bug. These bit this round:
+
+| wrote | actual |
+|---|---|
+| `--color-accent` | `--color-accent-primary` |
+| `--color-accent-ink` | `--color-text-on-accent` |
+| `--color-bg` | `--color-bg-page` |
+| `--color-text` | `--color-text-primary` |
+| `--faction-<slug>-card-ink` | `--faction-<slug>-card-text` |
+| `--faction-ephemerists\|coven-card-frame` | `…-card-border` (only `ua` has `-frame`) |
+
+**Grep every `--token` in a preview against `ds-bundle/_ds_bundle.css` before grading.**
+One line does it:
+`grep -ho -- "--[a-z0-9-]*" previews/*.tsx | sort -u | while read t; do grep -q -- "$t:" ds-bundle/_ds_bundle.css || echo "MISSING $t"; done`
+
+### Two components whose contract is not what the prop names suggest
+- **`EphemeristsGloss.ordinal` picks the CLOCK, not the cast.** `clockFor(ordinal)` sets
+  the animation timing; the visible frame starts at 0 (the plain-English reading) and
+  advances only in `onAnimationIteration`. **A static capture always catches English** —
+  there is no prop that pins cuneiform/Arabic/Japanese. A preview that "sweeps the script
+  axis" by varying `ordinal` renders four identical cells. The rotation is real in a live
+  browser and is covered by `ephemeristsScriptTurn.test.tsx`.
+- **`EphemerisNet` is `position:absolute; inset:0; z-index:-1`.** It needs a host that is
+  a stacking context (`isolation:isolate` or positioned + z-index) **with its own fill**,
+  or it sits below the fill and paints nothing. Its preview mounts every cell on a real
+  plate; an unmounted cell is a blank card, not a broken component. `opacity` is required
+  — the three ruled weights are 0.17 page ground / 0.10 card or plate / 0.17 task brief.
+
+### TWO POPUP CARDS HAD BEEN SHIPPING A 48-PIXEL SLIVER — for how long, nobody knows
+The canary picked `LevelUpPopup` this round and its review sheet was a bare `CONTINUE`
+strip. Not a regression — a long-standing preview defect that no check catches:
+
+- `.render-check.json` said `bad:false`, `thin:false`, `blank:false`. Its `texts` field
+  held the **entire modal** ("LVL2 Level Reached Ranger Now Unlocked … Continue"), so
+  every text-based heuristic passed. Only `maxHeight: 48` gave it away.
+- Cause: the modal's root is `position: fixed`, which escapes an element screenshot. Its
+  preview leaned on `cardMode:single` + `viewport` alone — and **`viewport` does not
+  contain a fixed overlay**, exactly as the 2026-07-30 note says in the sentence
+  "do not try to solve it with `viewport`". The backdrops and duel confirms carry a
+  containment wrapper; these two never got one.
+- `InvitationLetterPopup` had the identical defect (also `maxHeight: 48`). Both now use
+  the standing `.popup-scope > div { position: absolute !important; inset: 0 !important }`
+  recipe inside a sized, positioned box, and both render their full letter — the
+  invitation retinting across ua/snide/ephemerists/wow is visible for the first time.
+- Viewports were too short once the bodies actually rendered, so `LevelUpPopup` went
+  `460x600 → 460x800` and `InvitationLetterPopup` `460x600 → 520x920`.
+
+**Sweep for this every round — it is one line and no other check finds it:**
+`node -e "require('./ds-bundle/.render-check.json').filter(e=>e.maxHeight<120).forEach(e=>console.log(e.name,e.maxHeight))"`
+then check each hit's preview for a containment wrapper. `FactionsDirectoryView`
+(maxH 117) was inspected this round and is genuinely short — not an escapee.
+
+### Main moved 2 commits mid-run, again (fourth round in a row this has happened)
+#2456 (Albescent drift stops at user media — touches the feed and task detail) and #2454
+landed between the first driver run and the upload, and #2456 carried **+86 lines of
+`index.css`**. Merged and re-ran the whole chain rather than shipping a stale bundle.
+The merge was a clean fast-forward (stash → merge → stash pop). **Re-check `origin/main`
+immediately before `finalize_plan`, every single time.**
+
+### conventions.md — validated, zero drift
+All 18 semantic tokens, 7 Tailwind classes and 30 named components verify against this
+build. The only "failures" a naive validator reports are `--faction-albescent-*`, which
+the header itself correctly says do not exist (albescent resolves to the neutral
+`default` palette, #783) — **do not "fix" that by adding albescent to a token sweep.**
+
+*Proposed addition, not applied* (the header belongs to its authors): a two-line note on
+the inverted `--text-*` scale. The design agent gets the header and nothing else, and
+`--text-sm` = 9px is the single most likely way for it to ship type at a third the
+intended size.
+
+### Known render warns — still exactly 19, and two DROPPED
+Unchanged set from 08-18. Two long-standing warns are **gone** and that is an
+improvement, not a miscount: `AlbescentSigil` no longer reports `paints nothing` (the
+labyrinth mask inlining took), and `FeedArchiveButton` is no longer under the 5 KB blank
+threshold. Current 19: 3 blank-threshold (`MediaArt`, `SingularityLamps`,
+`SidebarHandle`), the sigil/floor-card `[RENDER_THIN]` set (`CovenSigil`,
+`EphemeristsSigil`, `EverymenSigil`, `SnideSigil`, `Lotus`, `CovenCauldron`,
+`DefaultPointsRing`, `PointsRoundel`, `ChipRow`, `AlbescentFeedFrame`, `CovenFeedFrame`,
+`FeedChassisBand`, `FeedUndoStrip`), `CommentThread` variants-identical,
+`[TOKENS_MISSING]` (34 `--tw-*`), `[FONT_MISSING]` (the 4 system families).
+**Grep `^! \[` and read the whole list** — a pattern guess misses `[GRID_OVERFLOW]`.
+
+### One warn WAS new, and it was mine
+A `[GRID_OVERFLOW]` fired on `EphemeristsGloss` (`ClocksAtRest`) — an authored cell of
+mine that put three glosses in one wide row. Rather than take the `cardMode:column`
+remedy, the cell was **deleted**: its three variants are identical *by definition* (the
+ordinal is a clock, not a cast), so it was a `variantsIdentical` smell as well as an
+overflow, and the preview's header comment already carries the knowledge it existed to
+convey. A comment in the file says so, to stop a future round re-adding it.
+
+### A cosmetic issue worth a look, not filed
+`EphemeristsSelectCard`'s header overlaps: the "EXHIBIT C · NO SINGLE HERE" eyebrow and
+the transit notation block collide at the right edge at the tile's fixed 360×300. Visible
+in `_screenshots/review/selectcard__EphemeristsSelectCard.png`. Component-owned layout at
+its natural size, not a preview or sync defect.
+
+## Re-sync risks (2026-08-22)
+- **The unmapped-component scan must walk the whole tree**, not the mapped dirs. Two
+  components hid for three weeks. This is the highest-value check in the whole round.
+- **`TheArray` will keep showing up** in any PascalCase sweep. It is excluded on purpose.
+- The eight `*SelectCard` skins and `FactionSelectCard` are a dispatcher + leaves family
+  now — if another faction tile is split out, it is a silent gap exactly like these were.
+- `FactionSelectCard.tsx`'s own preview docstring says the retired `gestalt` slug resolves
+  to **Wow**; the component's map says `gestalt: "coven"`. The comment is stale (harmless,
+  the cell renders whatever the map says). Fix on any round that touches that preview.
+- Preview grading this round: all 14 new components authored and graded from individual
+  review sheets (54 cells, all `good`), plus `EphemeristsMasthead` re-graded and all 5
+  canary `[SPOT_CHECK]` picks confirmed against their sheets with no divergence.
+
+### Upload record (2026-08-22)
+Atomic path. Scoped writes, justified by the three standing premises (remote was a
+verified 0-missing mirror; the fetched anchor matched the diffed one BYTE-FOR-BYTE
+immediately before `finalize_plan`; `upload.components` is sourceHashes-based): bundle +
+`_ds_bundle.css` + `styles.css` + README + 2 vendor + 47 fonts, the 64 leading component
+dirs, the 90 changed dirs, and all 157 previews = 616 component files + 157 previews +
+55 shared, in 8 `write_files` calls. Deletes 25 -> **23 deleted, 2 not-found**; the 5
+`_preview/*.css` paths the diff listed returned 0 (this build emits only `_preview/*.js`).
+Sentinel fenced at both ends, anchor absolutely last. Post-upload `list_files`:
+**0 missing**, 1388 remote entries vs 1324 local, and the 64 extras are the same
+hand-uploaded handoffs as ever (`mobile-system/`, `templates/`, `screenshots/`,
+`design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json` and
+`_adherence.oxlintrc.json`. Leave those alone.

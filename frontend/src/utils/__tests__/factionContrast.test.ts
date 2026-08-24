@@ -65,12 +65,20 @@ const CARD_KEYS = [
 ] as const;
 
 /**
- * Factions whose primary is a solid fill that carries text. `default` (na) is
- * absent on purpose: ADR-0039 says the unaffiliated fill is a *gradient*, not
- * a hue, and its neutral `--faction-default` hex is canvas/SVG only — it is
- * never a text backdrop. That is why #649 counts 14 pairs (7 x 2), not 16.
+ * Factions whose primary is a solid fill that carries text.
+ *
+ * `default` (na) was absent here until #2297, on the reading that ADR-0039
+ * makes the unaffiliated fill a *gradient* rather than a hue, so the neutral
+ * `--faction-default` hex was canvas/SVG only and never a text backdrop. It is
+ * one now: the praxis composer's remote-collaborator label paints the remote's
+ * SOLID hue and prints their name on it, and a `na`/Albescent co-author resolves
+ * to `--faction-default` there like everywhere else. So `--faction-default-on-fill`
+ * exists and is measured, and #649 counts 16 pairs (8 x 2) rather than 14.
+ *
+ * The rail well below still excludes `default`, for the different reason stated
+ * there — an unaffiliated viewer declares no locals at all.
  */
-const FILL_KEYS = CARD_KEYS.filter((key) => key !== "default");
+const FILL_KEYS = CARD_KEYS;
 
 type Pair = {
   /** Human label — this is what a failure message has to make actionable. */
@@ -127,8 +135,9 @@ const CARD_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
 
 /**
  * #649 — text on each faction's solid fill. The global `--color-text-on-accent`
- * (#ffffff) failed AA on 7 of these 14 pairs, so each faction now owns a
+ * (#ffffff) failed AA on 7 of the original 14 pairs, so each faction now owns a
  * per-theme `--faction-{key}-on-fill` (white or ink); this measures that token.
+ * `default` is the 8th key since #2297 — see FILL_KEYS.
  */
 const FILL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
   what: `${key} fill, on-fill`,
@@ -600,6 +609,14 @@ const SNIDE_WALL_INKS = [
   ["composer ink", "--faction-snide-composer-ink"],
   ["composer prose", "--faction-snide-composer-muted"],
   ["composer faint ink", "--faction-snide-composer-faint"],
+  // BARE, and that is the point of the row (#2349). The generator below already
+  // measures this ink UNDER the danger veil, because the composer's error
+  // BANNER carries one. Character creation spends the same ink with nothing
+  // beneath it — the portrait picker's error line, and a character counter that
+  // has hit its cap — and a reading through a veil does not vouch for the
+  // reading without one, the same way `-wall-credit` and `-wall-alarm` needed
+  // bare rows when the faction page started printing them unveiled.
+  ["composer alarm, bare", "--faction-snide-composer-alarm"],
 ] as const;
 
 const SNIDE_WALL_PAIRS: Pair[] = [
@@ -2017,7 +2034,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
  */
 const RAIL_WELL_ALPHA = 0.1;
 
-const RAIL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
+const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default").map((key) => ({
   what: `${key} rail ink on the rail well`,
   surface: `--faction-${key}-card-bg`,
   veil: { token: `--faction-${key}-card-text`, alpha: RAIL_WELL_ALPHA },

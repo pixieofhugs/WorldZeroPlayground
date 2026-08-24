@@ -16,11 +16,14 @@
  * event fires. The ornament layers' inertness is asserted as `aria-hidden` here;
  * their `pointer-events: none` is index.css's and cannot be read without a DOM.
  */
+import { Children } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'
 import i18n from '../../i18n'
+import AlbescentFeedFrame from '../feed/AlbescentFeedFrame'
 import FeedCardRouter from '../feed/FeedCardRouter'
 import { feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { surfaceMap } from '../../factions'
@@ -61,7 +64,7 @@ const FAT_PAYLOAD = {
   task_title: 'Reforest the verge',
   task_point_value: 40,
   task_level_required: 2,
-  points_earned: 12,
+  value: 4,
   praxis_title: 'A returned proof',
   praxis_type: 'collab',
   from_character_id: 4,
@@ -115,9 +118,10 @@ describe('every type this chassis carries', () => {
     // with.
     for (const type of CHASSIS_TYPES) {
       const html = render(item(type))
-      expect(html, `${type} is dressed`).toContain('class="alb-feed"')
+      // `alb-prism` joined `alb-feed` at #2499: the wash stopped being a span
+      // and became a layer of the card's own background, reached by the class.
+      expect(html, `${type} is dressed`).toContain('class="alb-feed alb-prism"')
       expect(html, `${type} keeps its kicker`).toContain(feedKicker(type))
-      expect(html, `${type} carries the wash`).toContain('class="alb-feed-aurora"')
       expect(html, `${type} carries the edge`).toContain('class="alb-feed-edge"')
     }
   })
@@ -147,7 +151,7 @@ describe('every type this chassis carries', () => {
     // It is state, not an event, and the backend 400s on it. The chassis still
     // draws — a card with no dismiss control is not a card with no chrome.
     const html = render(item('awaiting_submission'))
-    expect(html).toContain('class="alb-feed"')
+    expect(html).toContain('class="alb-feed alb-prism"')
     expect(html).not.toContain(ARCHIVE_LABEL)
     expect(html).not.toContain(RESTORE_LABEL)
     expect(html).not.toContain('disabled')
@@ -157,12 +161,12 @@ describe('every type this chassis carries', () => {
     // Epic decision 9 held for this skin too: the handlers did not move, so
     // accepting a duel or a collab from inside this card still works.
     const duel = render(item('duel_challenge'))
-    expect(duel).toContain('class="alb-feed"')
+    expect(duel).toContain('class="alb-feed alb-prism"')
     expect(duel).toContain(i18n.t('feed:duelChallenge.accept'))
     expect(duel).toContain(i18n.t('feed:duelChallenge.decline'))
 
     const collab = render(item('collab_invite'))
-    expect(collab).toContain('class="alb-feed"')
+    expect(collab).toContain('class="alb-feed alb-prism"')
     expect(collab).toContain(i18n.t('feed:collabInvite.accept'))
     expect(collab).toContain(i18n.t('feed:collabInvite.decline'))
   })
@@ -192,10 +196,100 @@ describe('the society stays hidden', () => {
     }
   })
 
-  it('hides both ornament layers from assistive tech', () => {
+  it('hides the ornament layer from assistive tech', () => {
+    // One span since #2499. The ground needs no hiding at all — a background
+    // layer is not in the accessibility tree to begin with, which is one more
+    // thing the move off an overlay buys.
     const html = render(item('friend_completion'))
-    expect(html).toContain('aria-hidden="true" class="alb-feed-aurora"')
     expect(html).toContain('aria-hidden="true" class="alb-feed-edge"')
+    expect(html, 'the retired wash is not back as a span').not.toContain('alb-feed-aurora')
+  })
+})
+
+/**
+ * The drift stops at user media here too (#1646's ruling, reaching this surface
+ * on #1942).
+ *
+ * ## The seam, and why it is the ELEMENT TREE rather than the HTML
+ *
+ * The wash used to be a SIBLING of the card. It could not stay one:
+ * `.sidebar-card` declares `backdrop-filter`, and a computed `backdrop-filter`
+ * other than `none` makes an element a stacking context — so the card paints
+ * atomically and no `z-index` on the actor's photograph inside it can rise above
+ * a layer mounted outside it. The filter is not removable either; index.css says
+ * so at its own site, because #1148's `position: fixed` companion modals need
+ * the card as their containing block. So the ornaments are handed DOWN as
+ * `children`.
+ *
+ * That relocation is a claim about STRUCTURE, and `renderToStaticMarkup` flattens
+ * structure into a string where "inside the card" and "after the card" look
+ * nearly alike. So it is asserted on the React element the component returns,
+ * before rendering — which is exactly the claim, with nothing inferred.
+ *
+ * WHAT NO TEST HERE CAN PROVE: that a photo comes out untinted. No DOM, no
+ * layout, no compositing. That is visual QA and it is outstanding on the PR.
+ */
+describe('the drift stops at user media (#1942)', () => {
+  // One ornament since #2499; the wash is the card's own background now.
+  const ORNAMENTS = ['alb-feed-edge']
+
+  function ornamentMount() {
+    const tree = AlbescentFeedFrame({
+      kicker: 'kick',
+      time: '2h ago',
+      tag: null,
+      archive: null,
+      children: <p>body</p>,
+    }) as ReactElement<{ children: ReactElement<{ children: ReactNode }> }>
+    const chassis = tree.props.children
+    return {
+      wrapper: Children.toArray(tree.props.children),
+      chassisChildren: Children.toArray(chassis.props.children),
+    }
+  }
+
+  it('hands the ornament to the chassis instead of mounting it beside it', () => {
+    const { wrapper, chassisChildren } = ornamentMount()
+    // `.alb-feed` holds ONE child now — the chassis. An ornament left out here
+    // is an ornament outside the card's stacking context, i.e. inert.
+    expect(wrapper).toHaveLength(1)
+    const classes = chassisChildren.map((child) =>
+      (child as ReactElement<{ className?: string }>)?.props?.className,
+    )
+    for (const ornament of ORNAMENTS) {
+      expect(classes, `${ornament} goes through the chassis`).toContain(ornament)
+    }
+  })
+
+  it('still puts it last, so the ring traces the body it is handed', () => {
+    // The relocation must not turn into "the ornament moved behind the content".
+    // #1646 rejected that for the WASH, when Default's sheet was opaque and the
+    // tell would have vanished; #2497 made the sheet a token and #2499 took the
+    // option, so it is the ring — which traces a border and has to paint over
+    // it — that the ordering is now about.
+    const { chassisChildren } = ornamentMount()
+    const last = chassisChildren.slice(-1).map((child) =>
+      (child as ReactElement<{ className?: string }>).props.className,
+    )
+    expect(last).toEqual(ORNAMENTS)
+  })
+
+  it('hooks the actor photograph and the anchor that would cap it', () => {
+    // Two hooks, one photo: the anchor is `#1893`'s lift, which is a stacking
+    // context of its own, so the class has to land on it as well as on the
+    // `<img>` (the anchor is absent when the row names no target).
+    const withPhoto = { ...item('friend_completion'), actor_avatar_url: 'avatars/ada.png' }
+    const html = render(withPhoto)
+    expect(html, 'the anchor carries the scope').toContain('feed-avatar-link user-media')
+    expect(html, 'and so does the photo').toMatch(/class="user-media"[^>]*src=/)
+  })
+
+  it('leaves the monogram disc in the wash — it is the site\'s furniture', () => {
+    // The whole of #1646's distinction. A generated initial on a faction fill is
+    // drawn BY the site; only the player's own photograph comes out.
+    const html = render(item('friend_completion'))
+    expect(html, 'no avatar url, so no photo').not.toContain('user-media')
+    expect(html, 'and the anchor keeps its plain lift').toContain('class="feed-avatar-link"')
   })
 })
 

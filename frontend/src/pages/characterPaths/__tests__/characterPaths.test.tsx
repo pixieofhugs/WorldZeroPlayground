@@ -9,16 +9,31 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
 import { buildCreatePayload, canSubmitName, type CreateCharacterState } from '../useCreateCharacter'
 import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
-import DefaultCreateCharacter from '../mobileArchetypes/DefaultCreateCharacter'
+import DefaultCreateCharacter from '../archetypes/DefaultCreateCharacter'
 import DefaultEditCharacter from '../mobileArchetypes/DefaultEditCharacter'
 import { CharacterSwitcherRows } from '../../../components/CharacterSwitcherSheet'
 import type { CharacterOut } from '../../../api/auth'
+
+/**
+ * `DefaultCreateCharacter` is ONE responsive archetype since #2346 — the phone
+ * column that used to be `mobileArchetypes/DefaultCreateCharacter` is a branch
+ * inside it now. Un-mocked, `useFormFactor` answers 'desktop' under
+ * `renderToStaticMarkup` (no matchMedia), so the phone assertions below have to
+ * pin the factor or they would silently measure the desktop column instead.
+ * `DefaultEditCharacter` is untouched by this and reads no form factor.
+ */
+const factor = vi.hoisted(() => ({ value: 'desktop' as 'mobile' | 'desktop' }))
+
+vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../hooks/useFormFactor')>()),
+  useFormFactor: () => factor.value,
+}))
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -192,6 +207,9 @@ describe('canSubmitName — the shared submit gate', () => {
 })
 
 describe('DefaultCreateCharacter mobile skin', () => {
+  beforeEach(() => { factor.value = 'mobile' })
+  afterEach(() => { factor.value = 'desktop' })
+
   it('renders the name field and a sticky Create action', () => {
     const { html, text } = render(<DefaultCreateCharacter state={createState({})} />)
     expect(html, 'name input').toContain('value="Molly"')

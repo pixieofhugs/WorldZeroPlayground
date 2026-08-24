@@ -21,7 +21,7 @@
  */
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
-import { factionCssVar, factionFill } from '../../utils/factions'
+import { factionFill, factionSheet } from '../../utils/factions'
 import FeedChassisBand from './FeedChassisBand'
 import type { FeedFrameProps } from './feedFrameProps'
 
@@ -53,7 +53,7 @@ function DefaultFeedFrame({ slug, kicker, time, tag, archive, children }: FeedFr
       style={{
         padding: 0,
         position: 'relative',
-        background: factionCssVar(slug, 'card-bg'),
+        ...factionSheet(slug),
       }}
     >
       {/* THE LEFT EDGE IS A FILLED ELEMENT, NOT A BORDER (#1148) — the same

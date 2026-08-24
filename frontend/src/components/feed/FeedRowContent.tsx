@@ -99,10 +99,19 @@ export default function FeedRowContent({
             in dark (#1252). A chassis may still repoint it — the disc fades to
             53% of the hue over the CHASSIS ground, so its lower half is not the
             hue's question alone. */}
+        {/* THE HOOK RIDES BOTH THE PHOTO AND ITS ANCHOR (#1942). `.user-media`
+            marks what is the PLAYER's rather than the site's, so an Albescent
+            card can hold its drift off it — and it has to land twice, because
+            the anchor is a stacking context of its own (see `MaybeLink`): on the
+            anchor it clears the wash, on the `<img>` it covers the actorless-href
+            case where there is no anchor at all. Only a photograph gets it. The
+            monogram disc and the unaffiliated rainbow ring below are the site's
+            furniture and keep the wash, which is the whole of #1646's ruling. */}
         {row.actor && (
-          <MaybeLink href={row.actorHref}>
+          <MaybeLink href={row.actorHref} className={avatarUrl ? 'user-media' : undefined}>
             {avatarUrl ? (
               <img
+                className="user-media"
                 src={mediaUrl(avatarUrl)}
                 alt=""
                 style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 'var(--space-xs)' }}
@@ -321,8 +330,23 @@ function QuotedHeadline({
  * actor is the body's target, the actor's NAME carries the overlay and this
  * points at the same place, so lifting it costs nothing and keeps the disc
  * individually clickable either way.
+ *
+ * THE LIFT IS `.feed-avatar-link`, NOT THE INLINE {@link FEED_BODY_LIFTED}
+ * (#1942), and it computes to exactly the same three declarations. The reason is
+ * the ceiling, not the value: an integer `z-index` on a positioned element makes
+ * it a stacking context, so everything inside this anchor is capped at its 1 —
+ * and `.alb-feed-aurora` sits at 1 too, later in the DOM, so a photo in here
+ * could not be lifted clear of the Albescent wash by any number. An INLINE
+ * z-index cannot be overridden by a selector; a class can, and
+ * `.alb-feed .user-media` raises this anchor to 3 on the one card that needs it.
+ * The stretched-overlay contract is untouched: 1 still beats the overlay's
+ * `z-index: auto` everywhere else.
  */
-function MaybeLink({ href, children }: { href: string | null; children: React.ReactNode }) {
+function MaybeLink({ href, className, children }: { href: string | null; className?: string; children: React.ReactNode }) {
   if (!href) return <>{children}</>
-  return <Link to={href} style={{ flexShrink: 0, ...FEED_BODY_LIFTED }}>{children}</Link>
+  return (
+    <Link to={href} className={className ? `feed-avatar-link ${className}` : 'feed-avatar-link'}>
+      {children}
+    </Link>
+  )
 }

@@ -19,6 +19,7 @@ from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from schemas.auth import CurrentUser
+from services.albescent_reveal import is_albescent_revealed
 from services.character import (
     AccountEligibility,
     build_character_out,
@@ -80,8 +81,18 @@ async def build_current_user(
         is_admin=is_admin,
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,
-        albescent_revealed=account.albescent_revealed,
+        # Through the seam, not off the column (#2400): an admin is *shown* the
+        # order without having earned it, and this is the field the whole
+        # frontend dresses off — the faction page gate, and the mask that
+        # decides whether the word "Albescent" is ever printed. Nothing writes
+        # the column, so the reveal goes when the role does.
+        #
+        # Seeing, not joining: `can_start_as_albescent` above is the join gate
+        # and never consults `is_admin`, so the two flags on this payload stay
+        # the two separate answers they are.
+        albescent_revealed=is_albescent_revealed(account, is_admin=is_admin),
         second_character_level_required=era.second_character_level_required,
+        albescent_level_required=era.albescent_level_required,
         era_name=era.name,
         **asdict(capabilities),
     )

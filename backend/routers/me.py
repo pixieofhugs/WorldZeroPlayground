@@ -16,6 +16,7 @@ from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
 from schemas.auth import CurrentUser
 from schemas.character import ActiveCharacterIn, CharacterOut
 from schemas.sidebar import SidebarOut
+from services.account_deletion import delete_account
 from services.activity_feed import get_sidebar_feed
 from services.auth import get_current_account
 from services.character import (
@@ -51,6 +52,26 @@ async def switch_active_character(
     """Carry a different owned, active life; return the refreshed current user."""
     await set_active_character(account, data.character_id, session)
     return await build_current_user(account, session)
+
+
+@router.delete("/account", status_code=204)
+async def delete_my_account(
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db),
+):
+    """End this account: tombstone every row, unlink its media (ADR-0081, #2160).
+
+    Irreversible, and takes no body — the confirmation is the client's
+    (#2161). The route is deliberately unable to delete anyone else's: the
+    account comes from the JWT, never from a path parameter.
+
+    No grace period and no scheduled follow-up; see ``services.account_deletion``.
+    The JWT the caller still holds is inert the moment this returns —
+    ``get_current_account`` refuses any account that is not ``active`` — so
+    signing out is ``POST /auth/logout`` like any other sign-out, and the cookie
+    flags stay stated in exactly one place.
+    """
+    await delete_account(account.id, session)
 
 
 @router.get("/invited-factions", response_model=list[str])

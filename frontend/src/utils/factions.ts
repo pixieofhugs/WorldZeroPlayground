@@ -116,6 +116,11 @@ function resolveCssKey(slug: string | null | undefined): string {
  *   'card-notice' — cautionary / not-yet-done ink ON the card sheet (#694)
  *   'card-alarm'  — destructive ink ON the card sheet (#1449)
  *   'card-credit' — points-earned ink ON the card sheet (#694)
+ *   'card-sheet' / 'card-sheet-blend' / 'card-sheet-clip'
+ *                 — the sheet's background LAYER LIST, its per-layer blend and
+ *                   its per-layer clip (#2497). A matched triple, only the
+ *                   `default` family declares it, and {@link factionSheet} is
+ *                   the one thing that should be reading these three names.
  *
  * Exactly one of those is a SURFACE. `card-bg` is the sheet; `light` is a tint
  * wash; everything else is ink meant for `color:`. Reaching for `card-muted` as
@@ -283,6 +288,87 @@ export function factionFill(
     };
   }
   return { background: `var(--faction-${key})` };
+}
+
+/**
+ * A card SHEET — the ground a `Default*` surface paints itself on (#2497).
+ *
+ * Spread it where `background: factionCssVar(slug, 'card-bg')` used to sit. The
+ * rendered result for `na` is byte-identical to that one line; what it buys is a
+ * seam. Albescent's kit (#2496) is "the na component plus ornament, never a
+ * skin", so its prism sweep (#2499) arrives by overriding three custom
+ * properties under its own wrapper class — no component learns anything, and no
+ * selector surgery reaches into eight files.
+ *
+ * FOUR PROPERTIES, NOT ONE, and each earns its place:
+ *   `background-color`      the ground the sheet's layers blend AGAINST. A
+ *                           `multiply` or `screen` with nothing beneath it is a
+ *                           no-op, so this is what makes the prism composite.
+ *   `background-image`      the sheet itself — a LIST, one layer for na and up to
+ *                           five for Albescent's dark bloom.
+ *   `background-blend-mode` per layer, or CSS cycles one value across five.
+ *   `background-clip`       ditto — and the trailing `border-box` is deliberate,
+ *                           see below.
+ *
+ * WHY THE TRAILING `border-box`. Per CSS Backgrounds 3 the background COLOUR is
+ * clipped by the bottom-most layer's clip value, i.e. the last one written. The
+ * sheet's own layers stop at the padding box (`--…-sheet-clip`) so a wash never
+ * bleeds under the frame; the colour keeps running to the border box, which is
+ * what the dark card needs — `--faction-default-card-line` is
+ * `rgba(255,255,255,0.14)` at night and the sheet shows THROUGH that hairline.
+ * Drop the `border-box` and every dark card's edge changes colour.
+ *
+ * A THEMED SLUG IS SAFE AND DELIBERATELY UNCHANGED. Only the `default` family
+ * declares the triple, so `--faction-ua-card-sheet` is undefined, all three
+ * declarations are invalid at computed-value time, and each falls to its initial
+ * (`none` / `normal` / `border-box`) — which is exactly what `background:
+ * var(--faction-ua-card-bg)` rendered before. A faction that later wants a sheet
+ * of its own declares three names and gets it with no call site edited.
+ *
+ * The two cards that wear the SPECTRUM BORDER do not call this — they call
+ * {@link factionSpectrumSheet} below, which is this composition with one more
+ * layer appended to all three lists.
+ */
+export function factionSheet(slug?: string | null): CSSProperties {
+  return {
+    backgroundColor: factionCssVar(slug, "card-bg"),
+    backgroundImage: factionCssVar(slug, "card-sheet"),
+    backgroundBlendMode: factionCssVar(slug, "card-sheet-blend"),
+    backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
+  };
+}
+
+/**
+ * The sheet with the na SPECTRUM PAINTED INTO ITS BORDER BOX (#2499, epic #2496).
+ *
+ * THE SPECTRUM IS THE BORDER. A gradient cannot be a `border-color`, so the ramp
+ * is a background layer under the sheet, the element wears a TRANSPARENT border,
+ * and `background-origin: border-box` is what makes the ramp start out at the
+ * frame rather than at the padding box. Every caller states the border WIDTH and
+ * the corner itself: those are the card's geometry, not the sheet's.
+ *
+ * WHY IT IS A HELPER AND NOT FIVE LINES TWICE. Both card archetypes now wear the
+ * idiom, and the one way to get it wrong is silent: a background list is a list
+ * in three properties at once, and CSS CYCLES the short ones rather than padding
+ * them. Append the ramp to the image list only and Albescent's dark prism — five
+ * radials plus the ground ramp — hands its sixth layer the FIRST blend mode
+ * again. It renders; it is simply wrong, in one cascade, on one faction. Saying
+ * the append once is what makes the arity right by construction, which is the
+ * same argument `--faction-default-card-sheet`'s own note in index.css makes.
+ *
+ * `--faction-default-rainbow` rather than the loop cut: this ramp does not tile
+ * and does not travel, so it wants the seven-stop spectrum, not the seamless
+ * one. The Albescent surfaces put a TRAVELLING ring on top of it (`.alb-task-edge`
+ * and `.alb-praxis-card-edge`), and that ring carries the loop cut itself.
+ */
+export function factionSpectrumSheet(slug?: string | null): CSSProperties {
+  return {
+    backgroundColor: factionCssVar(slug, "card-bg"),
+    backgroundImage: `${factionCssVar(slug, "card-sheet")}, var(--faction-default-rainbow)`,
+    backgroundBlendMode: `${factionCssVar(slug, "card-sheet-blend")}, normal`,
+    backgroundOrigin: "border-box",
+    backgroundClip: `${factionCssVar(slug, "card-sheet-clip")}, border-box`,
+  };
 }
 
 /**

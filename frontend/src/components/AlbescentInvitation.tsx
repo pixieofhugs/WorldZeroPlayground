@@ -30,15 +30,65 @@ import '../factionFaces'
 
 const ALBESCENT_SLUG = 'albescent'
 
-/** Active, non-Albescent lives — the only ones the order will take. */
-export function eligibleLives(lives: CharacterOut[]): CharacterOut[] {
+/**
+ * The ceiling, defensively read (#2399).
+ *
+ * `albescent_level_required` defaults to 0 on the wire for an unseeded era, and
+ * a literal 0 here would bar *every* life — printing "New Game+" at a whole
+ * roster. A non-positive bar therefore means "no ceiling known" rather than
+ * "the ceiling is zero". This can only ever be over-permissive in the UI: the
+ * server enforces the real ceiling at the door regardless, so the worst case is
+ * a life offered a join it is then refused, not a rule quietly skipped.
+ */
+function ceiling(albescentLevelRequired: number): number {
+  return albescentLevelRequired > 0 ? albescentLevelRequired : Infinity
+}
+
+/** Lives the order will consider at all: active, and not already of the Order. */
+function answerable(lives: CharacterOut[]): CharacterOut[] {
   return lives.filter(
     (life) => life.status === 'active' && life.faction_slug !== ALBESCENT_SLUG,
   )
 }
 
-// Albescent vellum tokens (index.css). Albescent is always-light by design —
-// these vars are identical in both themes, so the letter never flips dark.
+/**
+ * Lives that may actually accept — answerable, and still below the ceiling.
+ *
+ * #2399 added the level half. Albescent is a New Game+ faction: the life that
+ * earned the order the door is exactly the life that may not walk through it,
+ * so a life AT `albescentLevelRequired` is excluded here and listed by
+ * {@link barredLives} instead. This is the only MAXIMUM level test in the
+ * frontend — every other one is a floor.
+ */
+export function eligibleLives(
+  lives: CharacterOut[],
+  albescentLevelRequired: number,
+): CharacterOut[] {
+  const bar = ceiling(albescentLevelRequired)
+  return answerable(lives).filter((life) => life.level < bar)
+}
+
+/**
+ * Answerable lives the ceiling has closed the door on (#2399).
+ *
+ * Shown, not hidden. A player whose only high-level life is the one that earned
+ * the unlock would otherwise see a letter with nothing in it and no reason
+ * given; these rows carry "Available only for New Game+" so the refusal is
+ * legible before it is attempted.
+ */
+export function barredLives(
+  lives: CharacterOut[],
+  albescentLevelRequired: number,
+): CharacterOut[] {
+  const bar = ceiling(albescentLevelRequired)
+  return answerable(lives).filter((life) => life.level >= bar)
+}
+
+// Albescent vellum tokens (index.css). THE LETTER FLIPS (#2301): this comment
+// used to say the vars were identical in both themes and the letter never went
+// dark. Since #2301 the reveal block has a `[data-theme="dark"]` half whose
+// values are the na card's own — nothing below changes, because every colour
+// here was already a token and the cascade does the rest.
 const BG = 'var(--albescent-reveal-surface)'
 const INK = 'var(--albescent-reveal-text)'
 const ACCENT = 'var(--albescent-reveal-ink)'
@@ -57,14 +107,15 @@ const MONO = "'Courier Prime', monospace"
 // its own copy of a value the family owns.
 const HAIRLINE = 'var(--albescent-reveal-border)'
 const HAIRLINE_FAINT = 'var(--albescent-reveal-border-faint)'
-// A DECIDED KEEP, and this one really has no rung: 0.07 sits between the two
-// declared alphas and nothing else in the reveal block or outside it draws at
-// it. Minting a third rung for one reader would cost the one blocking
-// stylesheet bytes (§6, #2019) to name a value with a single site. Albescent is
-// always-light by design — these tokens are declared once with no dark half —
-// so a frozen black here is not a dark-mode defect. If #2301 gives the reveal a
-// dark half, this is the line that will not follow, and the two above will.
-const RULE = 'rgba(0,0,0,0.07)'
+// `RULE` — a third hairline, frozen at rgba(0,0,0,0.07) — stood here. The note
+// on it was right about its own terms and right about what would end it: "a
+// frozen black here is not a dark-mode defect … if #2301 gives the reveal a
+// dark half, this is the line that will not follow". #2301 did, so it would
+// have been a black rule on a near-black sheet at 1.02:1 — drawn, and invisible.
+// It did not need the third rung it was refused, either: the canvas draws the
+// letter's `border-top` and its `border-bottom` at the SAME strength after dark,
+// so the terms slip's top rule is `HAIRLINE_FAINT` now like the term rows below
+// it. By day that is 1.17:1 → 1.13:1 at one site.
 
 // i18n key stems under factions:albescent.letter — resolved at render.
 //
@@ -98,19 +149,26 @@ export interface AlbescentInvitationProps {
 
 export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvitationProps) {
   const { t } = useTranslation('factions')
-  const { applyUser } = useAuth()
+  const { user, applyUser } = useAuth()
   // Dynamic term/perk keys are data-driven; resolve them through a plain
   // string view of `t` (the typed union can't see the interpolated key).
   const tDynamic = t as unknown as (key: string) => string
-  const choices = eligibleLives(lives)
+  // The ceiling is the server's number, never a literal here (#2399) — same
+  // idiom as `second_character_level_required` on the locked-dossier copy.
+  const albescentLevelRequired = user?.albescent_level_required ?? 0
+  const choices = eligibleLives(lives, albescentLevelRequired)
+  const barred = barredLives(lives, albescentLevelRequired)
   const [selectedId, setSelectedId] = useState<number | null>(choices[0]?.id ?? null)
   const [joined, setJoined] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const hasAlbescentLife = lives.some((life) => life.faction_slug === ALBESCENT_SLUG)
-  // Invitation already answered before this visit, or nobody fit to answer it.
-  if (!joined && (hasAlbescentLife || choices.length === 0)) return null
+  // Invitation already answered before this visit, or nobody to say anything to.
+  // A roster of only barred lives still gets the letter (#2399): it is the one
+  // surface that can explain why the door is shut, and going silent there reads
+  // as a bug rather than a rule.
+  if (!joined && (hasAlbescentLife || choices.length + barred.length === 0)) return null
 
   const handleAccept = async () => {
     const picked = choices.find((life) => life.id === selectedId) ?? null
@@ -175,7 +233,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       </div>
 
       {/* terms slip */}
-      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${RULE}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
+      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
         <div style={{
           ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
@@ -233,9 +291,24 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                   </button>
                 )
               })}
+              {/* Lives the ceiling has closed the door on (#2399). A <div>, not
+                  a <button>: there is nothing to press, and an aria-disabled
+                  control would still take focus to say "no". The refusal is
+                  printed on the row instead of being discovered by trying. */}
+              {barred.map((life) => (
+                <div key={life.id} style={{ ...lifeChip, cursor: 'default', opacity: 0.55 }}>
+                  <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
+                  <span style={{ ...monoCaps, fontSize: 'var(--text-md)', letterSpacing: '0.08em', marginTop: 'var(--space-xs)' }}>
+                    {t('albescent.letter.lifeMeta', { username: life.username, faction: factionName(life.faction_slug) })}
+                  </span>
+                  <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT, marginTop: 'var(--space-xs)' }}>
+                    {t('albescent.letter.newGamePlus')}
+                  </span>
+                </div>
+              ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button type="button" onClick={() => void handleAccept()} disabled={submitting} style={acceptButton}>
+              <button type="button" onClick={() => void handleAccept()} disabled={submitting || selectedId === null} style={acceptButton}>
                 {submitting ? t('albescent.letter.cta.busy') : t('albescent.letter.cta.join')}
               </button>
               <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>{t('albescent.letter.reassurance')}</span>

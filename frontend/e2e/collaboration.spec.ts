@@ -197,27 +197,26 @@ test.describe('collaboration lifecycle', () => {
  * clicked button. Only account scaffolding (dev-login) and the task lookup
  * (GET /tasks) stay on the API; there are no real buttons for those.
  *
- * The seed's only level-0 task is Snide-faction ("FLIP THE SYSTEM"), so the
- * composer, task page, and cast button render the SNIDE archetype. The labels
- * below are that faction's voiced copy; the invite-search box, the feed Accept
- * button, and the detail-page unsubmit control are shared (faction-invariant)
- * strings from the `forms`/`feed`/`praxis` catalogs.
+ * NO FACTION COPY, AND NO COPY AT ALL WHERE A SLOT WILL DO (#2453). This block
+ * used to quote three Snide-voiced strings — /PULL THIS JOB/i, /THE GANG/i and
+ * a cast label — on the reasoning that the seed's only level-0 task is
+ * Snide-faction. Two of those strings are in no catalog anywhere in this repo
+ * and have not been for weeks, and `pickOpenTask` never guaranteed the faction
+ * in the first place: it returns whichever level-0 task the API lists first, so
+ * a seed edit silently re-skins every control this spec presses. The `Collab`
+ * mode chip is the one label kept, because every archetype builds its chips from
+ * the SAME shared key (`editPraxis.composer.modeCollab`) — exactly as
+ * duel.helpers.ts presses `Duel` — and `src/__tests__/e2eAnchors.test.ts` fails
+ * the PR-blocking suite if either word moves.
  *
  * The four red steps (C1–C4) are `test.fail()` — the button is missing or
  * wrong today, and the named fix issue flips each one green (deletes its
  * `test.fail()`). See #953 for the full action → button investigation.
  * ========================================================================== */
 
-// Snide (the level-0 task's faction) control labels.
-const SNIDE_SIGNUP = /PULL THIS JOB/i //   task page: create the draft
-const SNIDE_COLLAB_MODE = /THE GANG/i //   ModePicker: the collab option
-// PublishButton: cast + cast-final. NOT in the faction's voice — #1812 deleted
-// the eight collab override blocks, so the submit control reads the shared
-// `editPraxis.collab.castAction` / `castFinalAction` on every faction. The
-// alternation covers both, since which one the crew's last member sees depends
-// on the consensus gate. Neither branch is the bare "Submit" of the solo
-// composer, so it stays specific without anchoring.
-const SNIDE_CAST = /Submit my part|this one publishes it/i
+// The collab option on the ModePicker. Shared across all eight archetypes; see
+// the block comment above for why this one stays a label.
+const COLLAB_MODE = 'Collab'
 
 /** First `count` distinct-titled tasks any high-level character may attempt. */
 async function pickTasks(
@@ -251,22 +250,28 @@ test.describe('collaboration UI (clicked buttons)', () => {
     const bob = await login(browser, `ub-${RUN}-${s}`, `UB${s}-${RUN}`, 0)
     const task = await pickOpenTask(alice)
     try {
-      // 1. Alice signs up on the task → lands on the (solo) composer.
+      // 1. Alice signs up on the task → lands on the (solo) composer. By slot:
+      //    all eight task-detail archetypes render one sign-up control, and
+      //    since #1497 they all read the SAME shared label out of `signupCta.ts`
+      //    — so the faction-voiced string this line used to quote had not
+      //    existed anywhere in the app for weeks (#2453).
       const aPage = await alice.ctx.newPage()
       await aPage.goto(`/tasks/${task.id}`)
-      await aPage.getByRole('button', { name: SNIDE_SIGNUP }).click()
+      await aPage.getByTestId('task-signup-cta').click()
       await aPage.waitForURL(/\/praxis\/\d+\/edit/)
       const praxisId = Number(aPage.url().match(/\/praxis\/(\d+)\/edit/)![1])
 
       // 2. Flip solo → collab through the ModePicker.
-      await aPage.getByRole('button', { name: SNIDE_COLLAB_MODE }).click()
+      await aPage.getByRole('button', { name: COLLAB_MODE, exact: true }).click()
 
-      // 3. Invite Bob through the InviteSearch box (shared aria-label), picking
-      //    his result from the live search dropdown.
-      const search = aPage.getByRole('textbox', { name: 'search players to invite' })
-      await search.fill(bob.name)
+      // 3. Invite Bob. The search box is a DISCLOSURE since #1417 — it sits
+      //    behind the `+ invite` chip rather than holding a permanent row of the
+      //    composer — which is what hung this test for thirty seconds and then
+      //    took the whole serial file down with it. Open the chip, then search.
+      await aPage.getByTestId('composer-invite-open').click()
+      await aPage.getByTestId('composer-invite-search').fill(bob.name)
       await aPage.getByRole('listbox').getByRole('button', { name: bob.name }).click()
-      // The pending-invite pill confirms the invite landed.
+      // The roster's pending-invite row confirms the invite landed.
       await expect(aPage.getByText(bob.name)).toBeVisible()
 
       // 4. Bob accepts on the collab feed card (Requests tab of Updates). The
@@ -276,24 +281,63 @@ test.describe('collaboration UI (clicked buttons)', () => {
       await bPage.getByRole('main').getByRole('button', { name: 'Accept' }).click()
       await bPage.waitForURL(/\/praxis\/\d+\/edit/)
 
-      // 5. Both edit the body, then cast through the footer PublishButton.
-      //    Alice reloads so her roster reflects Bob's membership (her cast label
-      //    depends on the live member count) before she casts.
-      await aPage.goto(`/praxis/${praxisId}/edit`)
-      // The body is a CodeMirror editor bound to the praxis room since #1742,
-      // not a textarea. Playwright fills a contenteditable, and auto-waits for
-      // it to become editable -- which is the room finishing its first sync.
-      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
-      await aPage.getByRole('button', { name: SNIDE_CAST }).click()
-
-      await bPage.goto(`/praxis/${praxisId}/edit`)
+      // 5. Both write their part. BOTH BEFORE EITHER PROPOSES: since ADR-0079
+      //    (#1811) the first keystroke after a proposal goes live cancels it, so
+      //    editing between the propose and the approve would loop this step for
+      //    ever. The old "cast, cast" pair predates that redesign entirely.
+      //    The body is a CodeMirror editor bound to the praxis room since #1742,
+      //    not a textarea. Playwright fills a contenteditable, and auto-waits for
+      //    it to become editable -- which is the room finishing its first sync.
       await bPage.locator('.cm-content').first().fill('Bob weaves his part')
-      await bPage.getByRole('button', { name: SNIDE_CAST }).click()
+      await aPage.goto(`/praxis/${praxisId}/edit`)
+      // Title first, and typed rather than posted: `handleSignup` creates the
+      // praxis with a task id and a type and NOTHING else, and `publish()`
+      // refuses an untitled praxis client-side (`errors.titleRequired`) — after
+      // the propose confirm has already been dismissed, so the refusal was
+      // invisible and Alice's proposal simply never existed (#2453).
+      await aPage.getByTestId('praxis-title').fill(`Collab ${RUN}-${s}`)
+      await aPage.locator('.cm-content').first().fill('Alice weaves her part')
 
-      // The last cast seals consensus → the closing beat renders for Bob.
-      await expect(bPage.getByText(/out there/i)).toBeVisible()
+      // Let the room's debounced flush land BEFORE proposing. The document is
+      // written to the record on a trailing-edge debounce
+      // (`praxis_room._FLUSH_DEBOUNCE_SECONDS`, 2s) and that same flush is what
+      // fires `on_room_edit` — so a propose issued within the window is
+      // cancelled two seconds later by the player's own last keystroke, and Bob
+      // arrives to find no proposal to approve. `body_text` reaching the record
+      // is the flush; there is no other observable for it.
+      await expect
+        .poll(
+          async () => {
+            const res = await alice.ctx.request.get(`${API}/praxes/${praxisId}`)
+            return (await res.json()).body_text as string
+          },
+          { timeout: 15_000, message: 'the praxis room never flushed to the record' },
+        )
+        .toContain('Alice weaves her part')
 
-      // 6. The published praxis renders on its detail page (creator byline in
+      // 6. Alice proposes publishing. `data-collab-signal` says which of the two
+      //    acts the one primary slot performs — the labels ("Propose publishing"
+      //    / "Approve — this one publishes it") are catalog copy and the whole
+      //    vocabulary was replaced once already by #1811.
+      const aPrimary = aPage.getByTestId('composer-primary')
+      await expect(aPrimary).toHaveAttribute('data-collab-signal', 'propose')
+      await aPrimary.click()
+      // Propose is the one of the three that asks first: it starts a clock on
+      // everybody else (composerConfirms.proposePublishConfirm).
+      const confirm = aPage.getByTestId('confirm-dialog')
+      await expect(confirm).toHaveAttribute('data-confirm-kind', 'proposePublish')
+      await confirm.getByTestId('confirm-accept').click()
+
+      // 7. Bob is the last approval outstanding, so his press publishes.
+      await bPage.goto(`/praxis/${praxisId}/edit`)
+      const bPrimary = bPage.getByTestId('composer-primary')
+      await expect(bPrimary).toHaveAttribute('data-collab-signal', 'approve')
+      await bPrimary.click()
+
+      // The last approval seals consensus → the closing beat renders for Bob.
+      await expect(bPage.getByTestId('collab-success')).toBeVisible()
+
+      // 8. The published praxis renders on its detail page (creator byline in
       //    main — mirrors the green API-driven lifecycle assertion above).
       const view = await alice.ctx.newPage()
       await view.goto(`/praxis/${praxisId}`)
@@ -351,6 +395,15 @@ test.describe('collaboration UI (clicked buttons)', () => {
       const page = await seed.bob.ctx.newPage()
       await page.goto(`/praxis/${seed.praxisId}`)
       // The unsubmit control must NOT be offered to a member who never cast.
+      //
+      // KNOWN VACUOUS, DELIBERATELY LEFT (#2453 → #1795). `exact: true` against
+      // the bare word cannot match: the control reads `praxis.owner.unsubmit`,
+      // "unsubmit to edit". So this line has been green by matching nothing —
+      // the #2452 shape. It is not re-anchored here because this test has never
+      // once executed (the file's head failed before it), so tightening it now
+      // would be predicting its result rather than reading it, and a newly-red
+      // C3 would suppress C4 and both presence tests all over again. #2453's job
+      // is to make these eight RUN; triaging what they then say is #1795's.
       await expect(
         page.getByRole('button', { name: 'unsubmit', exact: true }),
       ).toHaveCount(0)

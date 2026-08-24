@@ -516,6 +516,10 @@ export function SealActions({
       </button>
       <button
         type="button"
+        // The sheet's commit, whether it seals or forfeits (#2453). Its label is
+        // `duelSeal.confirm` / `duelForfeit.action` — catalog copy, and the seal
+        // half of it moved in #1928.
+        data-testid="duel-seal-confirm"
         autoFocus
         disabled={busy}
         onClick={onConfirm}
