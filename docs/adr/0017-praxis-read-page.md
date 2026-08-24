@@ -151,6 +151,13 @@ solo-vs-collab, `body_text`, `media_items`, `moderation_status`, `is_withdrawn`,
 
 ### 7. Albescent is a first-class identity on the read surface (grilling 2026-06-25)
 
+> **Amended by ADR-0083 §8.** The **always-light** clause below is retired: the
+> Albescent reveal register has a dark half, and a dark-mode reader gets a dark
+> letter. Its other half is already dead — the `--faction-albescent-card-*`
+> tokens prescribed here were deleted by #783, and Albescent renders as
+> unaffiliated everywhere. Singularity's always-dark is untouched; the amendment
+> is about the vellum, not about theme-invariant surfaces as a class.
+
 The bundle ships a bespoke **always-light vellum** albescent read page, contradicting the
 global `albescent → ua` alias (`FACTION_ALIASES`). Decision: albescent gets its own
 read-page archetype **now** —

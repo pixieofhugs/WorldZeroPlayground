@@ -1,8 +1,11 @@
 # ADR-0048 — Albescent unfreezes one surface at a time, as designs land
 
-**Status:** Accepted
+**Status:** Accepted, amended
 **Date:** 2026-07-19
 **Amends:** **ADR-0046** (Albescent is frozen: new surfaces fall through to NA)
+**Amended by:** **ADR-0083** (Albescent is one ornament vocabulary over na) —
+the premise below stands unchanged, but the *per-surface mode* is closed: there
+is now one design, and a surface adopts it rather than commissioning its own.
 **Relates to:** ADR-0027 (Albescent is a secret society), ADR-0039 (the NA/default
 identity is the rainbow), ADR-0047 (the praxis-card score stamp).
 
