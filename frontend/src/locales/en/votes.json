@@ -1,59 +1,59 @@
 {
   "ephemerists": {
-    "lead": "lead",
-    "copper": "copper",
-    "silver": "silver",
-    "gold": "gold",
-    "platinum": "platinum"
+    "tier1": "lead",
+    "tier2": "copper",
+    "tier3": "silver",
+    "tier4": "gold",
+    "tier5": "platinum"
   },
   "everymen": {
-    "fair": "fair",
-    "solid": "solid",
-    "good": "good",
-    "excellent": "excellent",
-    "legendary": "legendary"
+    "tier1": "fair",
+    "tier2": "solid",
+    "tier3": "good",
+    "tier4": "excellent",
+    "tier5": "legendary"
   },
   "coven": {
-    "sweet": "sweet",
-    "lovely": "lovely",
-    "wonderful": "wonderful",
-    "magical": "magical",
-    "iconic": "iconic"
+    "tier1": "sweet",
+    "tier2": "lovely",
+    "tier3": "wonderful",
+    "tier4": "magical",
+    "tier5": "iconic"
   },
   "wow": {
-    "a-start": "a start",
-    "quite-solid": "quite solid",
-    "jolly-good": "jolly good",
-    "splendid": "splendid!",
-    "legendary": "legendary!"
+    "tier1": "a start",
+    "tier2": "quite solid",
+    "tier3": "jolly good",
+    "tier4": "splendid!",
+    "tier5": "legendary!"
   },
   "snide": {
-    "meh": "meh",
-    "not-bad": "not bad",
-    "rad": "rad",
-    "sick": "sick",
-    "anarchy": "ANARCHY"
+    "tier1": "meh",
+    "tier2": "not bad",
+    "tier3": "rad",
+    "tier4": "sick",
+    "tier5": "ANARCHY"
   },
   "singularity": {
-    "noise": "NOISE",
-    "weak": "WEAK",
-    "signal": "SIGNAL",
-    "clear": "CLEAR",
-    "verified": "VERIFIED"
+    "tier1": "NOISE",
+    "tier2": "WEAK",
+    "tier3": "SIGNAL",
+    "tier4": "CLEAR",
+    "tier5": "VERIFIED"
   },
   "ua": {
-    "faint": "faint",
-    "forming": "forming",
-    "true": "true",
-    "alive": "alive",
-    "radiant": "radiant"
+    "tier1": "faint",
+    "tier2": "forming",
+    "tier3": "true",
+    "tier4": "alive",
+    "tier5": "radiant"
   },
-  "unaffiliated": {
-    "so-so": "so-so",
-    "decent": "decent",
-    "good": "good",
-    "great": "great",
-    "brilliant": "brilliant"
+  "na": {
+    "tier1": "so-so",
+    "tier2": "decent",
+    "tier3": "good",
+    "tier4": "great",
+    "tier5": "brilliant"
   },
   "chrome": {
     "loginGate": "Log in to vote",

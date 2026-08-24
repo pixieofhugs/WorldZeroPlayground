@@ -83,6 +83,52 @@ describe('en copy catalog shape', () => {
   })
 })
 
+/* ========================================================================== *
+ * #2586 — A VOTE-TIER KEY IS A RUNG NUMBER, NOT THE WORD ON THE RUNG.
+ *
+ * THE SEAM IS THE CATALOG'S KEY NAMES. `locales/README.md` states the rule this
+ * pins: "Never name a key after its English text." The vote ladder broke it on
+ * all eight slugs — `votes:snide.rad` held "rad", `votes:ua.radiant` held
+ * "radiant" — so rewording one rung meant renaming its key, and renaming a key
+ * means editing the catalog, the resolver and the tests to change one word. It
+ * also made the copy export 38 rows with a single faction column filled each,
+ * because a key named `radiant` cannot line up with a key named `rad`.
+ *
+ * Numbered, the rungs line up: five rows, eight columns, one row per rung.
+ *
+ * The WORDS are not this test's business and did not change — ADR-0061 makes
+ * per-faction vote vocabulary a sanctioned carve-out and #1864 kept the star
+ * ladder in faction voice. `voteLadders.test.tsx` is what pins the words, at
+ * the rendered widget; this file pins only the shape of the keys holding them.
+ * ========================================================================== */
+describe('vote-tier keys are numbered rungs (#2586)', () => {
+  /** Every ladder block in votes.json — the file's per-slug branches, minus the
+   *  shared `chrome` block, which is widget furniture and not a ladder. */
+  const LADDERS = Object.entries(votes).filter(([slug]) => slug !== 'chrome')
+  const RUNGS = ['tier1', 'tier2', 'tier3', 'tier4', 'tier5']
+
+  it('finds every ladder, so the sweep cannot pass by scanning nothing', () => {
+    expect(LADDERS.map(([slug]) => slug).sort()).toEqual(
+      [...FACTION_SLUGS, 'na'].slice().sort()
+    )
+  })
+
+  it('names each rung by its position, so no key repeats its own value', () => {
+    for (const [slug, ladder] of LADDERS) {
+      // Key ORDER is the ladder order the resolver reads back, so this pins
+      // both the naming and the sequence.
+      expect(Object.keys(ladder), slug).toEqual(RUNGS)
+    }
+  })
+
+  it('spells the unaffiliated ladder `na`, like every other catalog', () => {
+    // votes.json was the last file spelling this slug out in full (#2586); its
+    // one reader is DefaultVote, and every other catalog says `na`.
+    expect(votes).not.toHaveProperty('unaffiliated')
+    expect(Object.keys(votes.na)).toEqual(RUNGS)
+  })
+})
+
 // #1865: every faction body computes the spotlight as the highest ALL-TIME
 // score — there is no time window in the frontend or the backend. Four labels
 // used to name one anyway ("of the week", "of the Fortnight"), so a player who
@@ -623,26 +669,31 @@ describe('findDuplicateJsonKeys scanner', () => {
 
 describe('i18next runtime', () => {
   it('resolves a nested key', () => {
-    expect(i18n.t('votes:ephemerists.silver')).toBe('silver')
+    expect(i18n.t('votes:ephemerists.tier3')).toBe('silver')
   })
 
   it('interpolates a {{var}}', () => {
     expect(i18n.t('forms:charLimit.reached', { max: 200 })).toBe('200-character limit reached')
   })
 
-  it('resolves kebab-case keys for multi-word labels', () => {
-    expect(i18n.t('votes:wow.a-start')).toBe('a start')
-    expect(i18n.t('votes:snide.not-bad')).toBe('not bad')
+  // Was 'resolves kebab-case keys for multi-word labels', reading `wow.a-start`
+  // and `snide.not-bad`. #2586 numbered the rungs, and those were the catalog's
+  // last kebab-case keys — a key spelling out a two-word label is exactly the
+  // naming the README forbids. The half worth keeping is the other one: that a
+  // multi-word VALUE comes back whole, spaces and all.
+  it('resolves a multi-word label whole', () => {
+    expect(i18n.t('votes:wow.tier1')).toBe('a start')
+    expect(i18n.t('votes:snide.tier2')).toBe('not bad')
   })
 
   it('resolves preserved-case values for all-caps labels', () => {
-    expect(i18n.t('votes:singularity.verified')).toBe('VERIFIED')
-    expect(i18n.t('votes:snide.anarchy')).toBe('ANARCHY')
+    expect(i18n.t('votes:singularity.tier5')).toBe('VERIFIED')
+    expect(i18n.t('votes:snide.tier5')).toBe('ANARCHY')
   })
 
   it('resolves the growing-mandala reading values for UA labels', () => {
-    expect(i18n.t('votes:ua.radiant')).toBe('radiant')
-    expect(i18n.t('votes:ua.faint')).toBe('faint')
+    expect(i18n.t('votes:ua.tier5')).toBe('radiant')
+    expect(i18n.t('votes:ua.tier1')).toBe('faint')
   })
 
   it('throws on a missing key outside production', () => {
