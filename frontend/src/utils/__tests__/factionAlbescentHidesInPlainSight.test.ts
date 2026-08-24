@@ -20,12 +20,16 @@ import { afterEach, describe, expect, it } from "vitest";
 import "../../i18n";
 import {
   FACTION_RAINBOW_ORDER,
+  REDACTED,
   factionCssVar,
+  factionDescription,
   factionFill,
   factionName,
   getAllFactions,
   isFactionHiddenFromChoosers,
+  isFactionRedacted,
   isKnownFaction,
+  redactableText,
   setAlbescentRevealed,
   sortFactionsByRainbowOrder,
   type FactionFillShape,
@@ -146,9 +150,10 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
 });
 
 /**
- * The name mask (#1891). The look was already indistinguishable — everything
- * above proves it — but the WORD leaked through every surface that labels a
- * thing with its faction.
+ * The name gate (#1891), now a REDACTION (#2409, ADR-0082).
+ *
+ * The look was already indistinguishable — everything above proves it — but the
+ * WORD leaked through every surface that labels a thing with its faction.
  *
  * `factionName` is deliberately impure: it reads a module-level flag that
  * `AuthContext` sets, which is what makes ~35 call sites and every page written
@@ -156,8 +161,17 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
  * flag is global mutable state, it outlives the case that set it, and a leaked
  * `true` would make a later assertion pass for the wrong reason. Hence the
  * unconditional reset.
+ *
+ * WHAT #2409 ADDED, AND WHAT IT POINTEDLY DID NOT. #2409 first shipped as a
+ * global rename: `factionName` answered `[REDACTED]`, so every label site
+ * inverted at once. The owner ruled that back (ADR-0082 §2). `factionName` and
+ * `factionDescription` are therefore UNCHANGED from #1891 — the mask holds
+ * wherever a name labels a thing already on screen — and the redaction is an
+ * OPT-IN seam that exactly two surfaces reach for. Both halves are asserted
+ * below, in the same block, on purpose: they are one ruling and the failure
+ * mode is a future change quietly collapsing them back into each other.
  */
-describe("Albescent's NAME is masked until the viewer is revealed (#1891)", () => {
+describe("Albescent's name is masked, and two surfaces redact instead (#2409)", () => {
   // Not `beforeEach`: this must also undo a `true` left by the LAST case in the
   // block, which no `beforeEach` here would reach.
   afterEach(() => setAlbescentRevealed(false));
@@ -177,12 +191,56 @@ describe("Albescent's NAME is masked until the viewer is revealed (#1891)", () =
     expect(factionName("albescent")).not.toBe("-");
   });
 
+  it("keeps the LABEL masked while the two surfaces redact — the boundary", () => {
+    // THE CASE THIS BLOCK EXISTS FOR (ADR-0082 §2). The two halves are one
+    // ruling, and a future change that "fixes the inconsistency" in either
+    // direction breaks exactly here rather than silently on a byline nobody
+    // rendered in a test.
+    setAlbescentRevealed(false);
+
+    // A LABEL — a praxis byline, a task card, a seal, the switcher, an
+    // aria-label. All ~35 of them route through this one call, and it must
+    // still say the masked word, never the mark.
+    expect(factionName("albescent")).toBe(factionName("na"));
+    expect(factionName("albescent")).not.toBe(REDACTED);
+    // Same for the description: the only page that draws it sits behind
+    // `AlbescentGate`, which no unrevealed account reaches.
+    expect(factionDescription("albescent")).not.toBe(REDACTED);
+
+    // A SURFACE THAT IS ABOUT THE SOCIETY — the `/factions` select tile and the
+    // leaderboard's eighth lane. They ask, and get the mark.
+    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
+    expect(isFactionRedacted("albescent")).toBe(true);
+  });
+
+  it("redacts every Albescent-scoped key, not just the name", () => {
+    setAlbescentRevealed(false);
+    // The generalisation #2409 asks for. The select tile draws seven slots off
+    // `feed:factionSelect.albescent.*`; one gate has to cover all of them or
+    // each is a place a future slot can be forgotten.
+    for (const key of [
+      "feed:factionSelect.albescent.eyebrow",
+      "feed:factionSelect.albescent.name",
+      "feed:factionSelect.albescent.blurb",
+      "feed:factionSelect.albescent.status.locked",
+      "feed:factionSelect.albescent.cta",
+    ]) {
+      expect(redactableText(key), key).toBe(REDACTED);
+    }
+    // A neighbouring faction's identical slot must be untouched — otherwise the
+    // regex is matching the shape of the key rather than the society.
+    expect(redactableText("feed:factionSelect.coven.cta")).not.toBe(REDACTED);
+  });
+
   it("says its own name once the viewer is revealed", () => {
     setAlbescentRevealed(true);
     expect(factionName("albescent")).not.toBe(factionName("na"));
-    // Guards the mask from passing vacuously: if the catalog entry vanished,
+    // Guards the gate from passing vacuously: if the catalog entry vanished,
     // the unrevealed assertions would go green for the wrong reason.
     expect(factionName("albescent")).toContain("Albescent");
+    expect(redactableText("feed:factionSelect.albescent.cta")).not.toBe(
+      REDACTED,
+    );
   });
 
   it("defaults to hidden, so first paint and logged-out are the secret state", () => {
@@ -190,6 +248,22 @@ describe("Albescent's NAME is masked until the viewer is revealed (#1891)", () =
     // state before `/auth/me` answers must fail CLOSED: a name withheld for one
     // extra frame costs nothing, a name leaked once cannot be taken back.
     expect(factionName("albescent")).toBe(factionName("na"));
+    expect(isFactionRedacted("albescent")).toBe(true);
+    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
+  });
+
+  it("paints and disables off the SAME answer the words redact on", () => {
+    // #2409's comment thread: the card un-redacts and unlocks in the same
+    // moment. A surface that asked a second question here could show a readable
+    // card with a dead button.
+    setAlbescentRevealed(false);
+    expect(isFactionRedacted("albescent")).toBe(true);
+    expect(isFactionRedacted("na")).toBe(false);
+    expect(isFactionRedacted("ua")).toBe(false);
+    expect(isFactionRedacted(null)).toBe(false);
+
+    setAlbescentRevealed(true);
+    expect(isFactionRedacted("albescent")).toBe(false);
   });
 
   it("touches no other slug in either state", () => {

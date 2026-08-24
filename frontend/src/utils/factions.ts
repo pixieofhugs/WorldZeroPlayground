@@ -29,7 +29,10 @@ import { hasOwnKey } from "./hasOwnKey";
 // Resolve through a plain-string view of t — the catalog still owns the words;
 // only the compile-time key check is relaxed for these dynamic lookups. Same
 // pattern as utils/taunts.ts.
-const tString = i18n.t as unknown as (key: string) => string;
+const tString = i18n.t as unknown as (
+  key: string,
+  options?: Record<string, unknown>,
+) => string;
 
 /**
  * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
@@ -453,6 +456,75 @@ export function isFactionHiddenFromChoosers(
 }
 
 /**
+ * What an Albescent-scoped string reads as before the reveal (#2409, ADR-0082).
+ *
+ * Not in the i18n catalogue, deliberately. It is not copy — it is the ABSENCE
+ * of copy, the same mark in every locale, and a translator handed a
+ * `redaction.label` key would eventually localise it and give each language its
+ * own tell.
+ */
+export const REDACTED = "[REDACTED]";
+
+/**
+ * Catalogue keys that belong to Albescent, in any namespace.
+ *
+ * The generalisation #2409 asks for: the gate used to know exactly one key
+ * (`factions:names.albescent`) and now knows a NAMESPACE —
+ * `factions:names.albescent`, `factions:descriptions.albescent` and the
+ * `feed:factionSelect.albescent.*` slots the select tile draws. Matching the
+ * SEGMENT rather than the substring is what keeps a future
+ * `factions:albescentRumour` from being swept in by accident.
+ */
+const ALBESCENT_SCOPED_KEY = /(?:^|[.:])albescent(?:[.:]|$)/;
+
+/**
+ * Whether this viewer reads Albescent's strings as `[REDACTED]`.
+ *
+ * Exported so a surface can also PAINT the redaction (the `.redacted` class in
+ * index.css) and disable the control it sits beside. Both must key off this one
+ * answer: #2409 rules that the card un-redacts and unlocks in the same moment,
+ * so there is never a readable card with a dead button or a redacted card with
+ * a live one.
+ *
+ * Same impurity, same reason, as `factionName` — see its docblock.
+ */
+export function isFactionRedacted(slug: string | null | undefined): boolean {
+  return slug === ALBESCENT_FACTION_SLUG && !albescentRevealed;
+}
+
+/**
+ * Read a catalogue string through the redaction gate (#2409, ADR-0082).
+ *
+ * OPT-IN, AND THAT IS THE WHOLE BOUNDARY. A surface that wants the redaction
+ * ASKS for it by calling this; every other reader of the catalogue — including
+ * `factionName` and `factionDescription` — goes on saying "Unaffiliated" as
+ * #1891 ruled. Exactly two surfaces ask: the Albescent select tile and the
+ * leaderboard's eighth lane. See `factionName`'s docblock for why the split.
+ *
+ * Deliberately NOT a registry, a context or a config. Two call sites do not
+ * need a lookup table, and a table is the thing that would quietly grow back
+ * into the global rename this was narrowed away from.
+ *
+ * THE REDACTION IS A RENDERING RULE OVER THE ORDINARY CATALOGUE, never a second
+ * set of strings. Albescent's copy is authored exactly as every other faction's
+ * is, and this function decides whether the viewer gets to read it — so the
+ * moment an account is revealed the real words are already in place, with
+ * nothing to swap in and nothing that can be authored in one catalogue and
+ * forgotten in the other.
+ *
+ * Any Albescent-scoped key redacts; every other key is a plain `t()`. That
+ * keeps a tile which draws a mixed set of slots from having to know which of
+ * them belong to the society.
+ */
+export function redactableText(
+  key: string,
+  options?: Record<string, unknown>,
+): string {
+  if (!albescentRevealed && ALBESCENT_SCOPED_KEY.test(key)) return REDACTED;
+  return tString(key, options);
+}
+
+/**
  * Get a faction's display name by slug from the factions.json catalog
  * (`names.<slug>`). A null / unrecognized slug falls back to the "Unaffiliated"
  * copy under `names.na`. The backend emits only slugs now — never name prose.
@@ -462,11 +534,11 @@ export function isFactionHiddenFromChoosers(
  * for two viewers.
  *
  * Albescent is a secret society: a player who was never invited must not
- * encounter the word, or learn the order exists. The name was leaking through
- * every surface that labels a thing with its faction — praxis bylines, task
- * cards, metatask seals, the character switcher, a sidebar `aria-label` — about
- * thirty-five call sites, each of which would have needed its own gate, and
- * each of which is a place a future page can forget.
+ * encounter the word. The name was leaking through every surface that labels a
+ * thing with its faction — praxis bylines, task cards, metatask seals, the
+ * character switcher, a sidebar `aria-label` — about thirty-five call sites,
+ * each of which would have needed its own gate, and each of which is a place a
+ * future page can forget.
  *
  * Putting the gate HERE is what makes a page written next month secret by
  * construction rather than by review. It is also the only version that covers
@@ -477,10 +549,25 @@ export function isFactionHiddenFromChoosers(
  * than to a blank or a dash — `default` / `na` / Unaffiliated is already one
  * identity here, and a blank advertises the omission.
  *
- * Not a security boundary. The wire still carries the slug, and the server is
- * what withholds Albescent from `/factions` and from the level ladder. This
- * stops the app from SAYING the name; it does not pretend to stop a reader of
- * the network tab.
+ * ── THIS IS *NOT* WHERE THE REDACTION LIVES, AND THE SPLIT IS DELIBERATE ────
+ *
+ * #2409 asked whether the mask should become `[REDACTED]` everywhere. The
+ * owner ruled it should not, and the ruling restores the sentence directly
+ * above: where a name LABELS a thing already on screen, "Unaffiliated" is
+ * right. A byline, a task card, a seal and a switcher row are labels, so this
+ * function is unchanged by ADR-0082.
+ *
+ * The two surfaces that are ABOUT the society — the `/factions` select tile
+ * and the leaderboard's eighth lane — redact instead, by calling
+ * `redactableText` / `isFactionRedacted` themselves. Redaction is a mechanic
+ * on those two surfaces, not a global rename of the word.
+ *
+ * If that reads as an inconsistency, it is a ruled one: ADR-0082 §2 records
+ * which surfaces do which and why, before you "fix" it here.
+ *
+ * Not a security boundary. The wire carries the slug, and since ADR-0082 it
+ * also carries the `/factions` row. This stops the app from SAYING the name; it
+ * does not pretend to stop a reader of the network tab.
  */
 export function factionName(slug: string | null | undefined): string {
   const key =
@@ -497,6 +584,11 @@ export function factionName(slug: string | null | undefined): string {
  * Get a faction's description by slug from the factions.json catalog
  * (`descriptions.<slug>`). An unrecognized slug falls back to the shared
  * "No description yet." copy (`detail.descriptionEmpty`).
+ *
+ * A plain catalogue read, and it stays one: the only page that draws an
+ * Albescent description is the faction detail behind `AlbescentGate`, which a
+ * revealed account is the only one to reach. See `factionName` for the
+ * label-versus-mechanic boundary ADR-0082 §2 draws.
  */
 export function factionDescription(slug: string | null | undefined): string {
   const key = slug ?? "";

@@ -228,6 +228,44 @@ export function scanPageForContrast(): Finding[] {
     return false;
   }
 
+  /**
+   * A REDACTION MARK (#2409, ADR-0082). The third exemption, and the only one
+   * of the three where the 1:1 pairing is the intended output rather than a
+   * bug or a WCAG carve-out.
+   *
+   * TWO SURFACES, NOT THE WHOLE SITE. Only the `/factions` Albescent select
+   * tile and the leaderboard's eighth lane redact; every ordinary label still
+   * says "Unaffiliated" and is scanned normally (ADR-0082 §2). So this
+   * exemption should stay rare — if it starts skipping large parts of a page,
+   * the redaction has spread beyond its ruling and THAT is the bug to file.
+   *
+   * On those two surfaces Albescent's strings render as `[REDACTED]` painted in
+   * their own ground's colour for a viewer who has not been revealed to the
+   * society, so the line reads as blank until it is selected. That is a
+   * deliberate 1.00:1 and it can never be "fixed" — which is exactly why it is
+   * exempted HERE and not added to `contrastBaseline.ts`. That list is debt
+   * awaiting a child issue and only ever shrinks; an entry that is never going
+   * to be deleted would rot it.
+   *
+   * NOT `aria-hidden`, which is the exemption it superficially resembles. A
+   * screen reader announces "REDACTED" plainly and that is the ruling: the
+   * secret is equally discoverable to a screen-reader user and to a sighted one
+   * who drags a cursor across the line. Hiding it from assistive tech would
+   * hand sighted players a tease and blind players nothing, and would also let
+   * this scanner pass for the wrong reason.
+   *
+   * Walked up the tree for the same reason `inertControl` is: the `.redacted`
+   * span and the text node under measurement are rarely the same element.
+   */
+  function redactionMark(element: Element): boolean {
+    let node: Element | null = element;
+    while (node) {
+      if (node.getAttribute("data-redacted") === "true") return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
   function ownText(element: Element): string {
     let text = "";
     for (const child of Array.from(element.childNodes)) {
@@ -327,6 +365,7 @@ export function scanPageForContrast(): Finding[] {
     if (!text) continue;
     if (ariaHidden(element)) continue;
     if (inertControl(element)) continue;
+    if (redactionMark(element)) continue;
 
     const box = element.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) continue;

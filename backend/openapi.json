@@ -9152,26 +9152,8 @@
     },
     "/factions": {
       "get": {
-        "description": "Return all non-hidden factions.\n\nAlbescent is a secret society (ADR-0027, #390): it is omitted unless the\ncurrent account has been revealed to it. Optional auth — anonymous callers\nstay anonymous and never see Albescent.",
+        "description": "Return all non-hidden factions — Albescent included, for everyone.\n\n**This listing is no longer reveal-gated (#2409, ADR-0082.)** Albescent is\nstill a secret society, but secrecy is now expressed as REDACTION at the\nrender rather than as omission at the wire: the eighth row ships to every\ncaller and ``utils/factions.ts`` resolves its every string to ``[REDACTED]``\nfor a viewer ``/auth/me`` has not revealed. Hiding a row taught an\nunrevealed player nothing; a row they can see and cannot read is the locked\ndoor with no keyhole the mechanic is actually about.\n\nThe optional-auth dependency went with the filter. It existed to answer one\nquestion — \"is this viewer revealed?\" — and this handler no longer asks it,\nso resolving an account here would be a read nothing consumes. The predicate\nitself is untouched and still governs the surfaces that DO ask\n(``services.progression``, ``faction_slugs``, ``services.current_user``);\nwhat changed is that the faction directory stopped being one of them.\n\nWhat this handler is NOT is a redaction point. ``FactionOut`` is\n``{slug, status}`` and carries no prose, so serving the row leaks the slug\nand nothing else — the same slug the wire has always carried on every\nAlbescent-authored task and praxis. Whether ``/factions`` should one day\nserve a *redacted row* rather than the real one, so the tease survives a\nreader of the network tab, is the follow-on ADR-0082 names and does not\nsettle.",
         "operationId": "list_factions_factions_get",
-        "parameters": [
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -9186,23 +9168,8 @@
               }
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "List Factions",
         "tags": [
           "factions"
@@ -9276,7 +9243,7 @@
     },
     "/factions/status": {
       "get": {
-        "description": "Return faction page data: current faction, per-faction status, and letters.\n\nAlbescent (ADR-0027, #390) is omitted from ``all_factions`` unless this\naccount has been revealed to the secret society.\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
+        "description": "Return faction page data: current faction, per-faction status, and letters.\n\n``all_factions`` carries Albescent for every caller since #2409 — the same\nmove ``list_factions`` makes, and it has to be the same move or the two\npayloads the directory joins would disagree about how many cards there are.\nThe status this row reports is the ordinary invite-gated one, so an\nunrevealed viewer reads ``not_invited`` and draws a LOCKED tile whose every\nstring redacts. Reveal governs the word; ``defect_to_faction``'s eligibility\nguard still governs the door (ADR-0082).\n\n``invitations`` is not filtered the same way, and does not need to be:\n``_NON_INVITE_FACTION_SLUGS`` (services/character_stats.py) means no\nAlbescent letter is ever delivered, so there is nothing here to leak. This\narray replaces ``GET /factions/invitations`` (#1384), which re-ran the same\n``InvitationLetter`` select against the same character and era row that\n``get_invitation_status`` already runs — and whose only caller paired the\ntwo requests anyway.",
         "operationId": "get_faction_status_factions_status_get",
         "parameters": [
           {

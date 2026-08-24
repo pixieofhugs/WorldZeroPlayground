@@ -111,7 +111,8 @@ describe("FactionProfileBody dispatch", () => {
     // #1626 narrowed it by ONE register, and only that one. The credential
     // footer's faction label became a sigil, and `FactionSigil` now resolves
     // albescent to its own cross-hair — which draws in `--albescent-reveal-*`,
-    // the always-light REVEAL register #783 deliberately kept alive (it is what
+    // the REVEAL register #783 deliberately kept alive (always-light until
+    // #2301 gave it a dark half; it is what
     // the invitation letter, the faction-select tile and the metatask seal are
     // drawn in). The deleted THEME block `--faction-albescent-*` is what "no
     // trace" was written about, and it is still absolutely forbidden here, as is
