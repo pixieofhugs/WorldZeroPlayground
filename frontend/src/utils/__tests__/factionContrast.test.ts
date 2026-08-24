@@ -1903,8 +1903,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--everymen-paper-accent" },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
-  // which `default` already covers. What remains is the always-light palette
-  // private to the reveal surfaces (invitation letter, secret placeholder). It
+  // which `default` already covers. What remains is the palette private to the
+  // reveal surfaces (invitation letter, secret placeholder) — always-light until
+  // #2301 gave it a dark half, which is why BOTH_THEMES matters here now. It
   // still carries body text, and it is where #594's 2.78:1 muted ink shipped, so
   // it stays measured. The whole palette is one hue at varying alpha over the
   // sheet, which makes compositing the entire question.

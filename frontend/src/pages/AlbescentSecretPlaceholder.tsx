@@ -1,8 +1,10 @@
 /**
  * Albescent "sealed" placeholder (#394). What an outsider sees at
  * `/factions/albescent` — deliberately NOT a 404, an in-world dead end.
- * Styled in the Albescent "Register" idiom (ADR-0017 / #231): vellum stock,
- * Cormorant Garamond italic, quiet mono label, faint fleur-de-lis glyph.
+ * Styled in the Albescent "Register" idiom, which arrived with #231 and
+ * ADR-0017 — now marked **Superseded by ADR-0061**, so cite ADR-0083 for
+ * Albescent's vocabulary today: vellum stock, Cormorant Garamond italic,
+ * quiet mono label, faint fleur-de-lis glyph.
  *
  * IT FOLLOWS THE FLIP (#2301, epic #2496 ruling 7), and it does so with no edit
  * below. This docstring used to end "Albescent surfaces never dim in dark mode —
@@ -12,15 +14,19 @@
  * mixed down from `INK`, so the sheet, the rules and the glyph all invert
  * through the cascade with nothing branching on a `dark` boolean.
  *
- * ⚠ ADR-0017's ruling 7 still says Albescent's surfaces are "always-light
+ * ADR-0017's ruling 7 used to say Albescent's surfaces are "always-light
  * (identical values in both the light and dark cascades, exactly as
- * singularity's are always-dark)". That clause is now contradicted here and
- * NEEDS AN AMENDMENT the owner has not yet made — flagged on #2301 rather than
- * rewritten in passing. (Its other half is already dead: the
- * `--faction-albescent-card-*` tokens it prescribes were deleted by #783, so
- * Albescent has rendered as unaffiliated everywhere since.) Singularity's
- * always-dark is untouched and stays — this ruling is about the vellum, not
- * about retiring theme-invariant surfaces as a class.
+ * singularity's are always-dark)". THAT CLAUSE IS DEAD AND SO IS THE RECORD
+ * CARRYING IT: the owner retired ADR-0017 outright, and it now reads
+ * "**Superseded by ADR-0061**" with an ## Amendment section naming what
+ * replaced each of its decisions; ADR-0083 §8 is what retires ruling 7 in
+ * particular. NOTHING IS OWED HERE ANY MORE — this comment used to say the
+ * amendment was the owner's to make and flag it on #2301. It has been made.
+ * (Ruling 7's other half was already dead: the `--faction-albescent-card-*`
+ * tokens it prescribes were deleted by #783, so Albescent has rendered as
+ * unaffiliated everywhere since.) Singularity's always-dark is untouched and
+ * stays — this was about the vellum, not about retiring theme-invariant
+ * surfaces as a class.
  */
 import { useTranslation } from 'react-i18next'
 // Cormorant Garamond ships in the lazily-fetched faction sheet (#2079), and this

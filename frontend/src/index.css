@@ -7151,7 +7151,9 @@
      gone. `selectCard/__tests__/snideWearsTheClippingRegister.test.ts` pins it. */
   /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
 
-     IT FLIPS (#2301, epic #2496 ruling 7). This block used to say "always-light,
+     IT FLIPS (#2301, epic #2496 ruling 7, and now ADR-0083 §8, which also
+     amends ADR-0017 ruling 7 — the last place the retired clause was still
+     written down as current). This block used to say "always-light,
      the same mechanism Singularity uses to stay always-dark", and the note under
      it recorded that #1661 deleted the dark half. That instruction is SUPERSEDED
      by owner ruling: a dark-mode reader gets a dark letter. Singularity stays

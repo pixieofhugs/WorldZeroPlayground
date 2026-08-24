@@ -1,5 +1,8 @@
 /**
- * Shared behavior module for praxis-detail archetypes (ADR-0017 §2).
+ * Shared behavior module for praxis-detail archetypes: ADR-0002's content-slot
+ * invariant, re-cut for this surface by ADR-0061 (the layout is the contract)
+ * and ADR-0064 (the page owns its chrome). ADR-0017 §2 set this module up and
+ * is now marked **Superseded by ADR-0061** — do not cite it as live authority.
  *
  * These slots are faction-agnostic and must be rendered identically by
  * every archetype. They are extracted here so no archetype re-implements
