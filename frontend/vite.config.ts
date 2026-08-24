@@ -56,40 +56,5 @@ export default defineConfig({
     // first file to run pays for the whole graph — which overran the default
     // 10s hook timeout and failed three unrelated suites at collection.
     hookTimeout: 60_000,
-    server: {
-      deps: {
-        /**
-         * Transform react-router through Vite instead of letting Node's own
-         * loader import it (#2449).
-         *
-         * Vitest externalises `node_modules`, so an externalised dep is loaded
-         * by Node, not Vite. react-router 6 had no `exports` map, so that load
-         * resolved plain CJS (`dist/main.js`) and Node's ESM machinery was
-         * never involved. react-router 7 ships an `exports` map whose `node`
-         * condition lists `module-sync`, which points at `.mjs` — so the same
-         * `require` became a `require(esm)`, running Node's
-         * `internal/modules/esm/module_job`.
-         *
-         * On the Node 20 CI pins that path is racy under parallel workers:
-         * `this.module` comes back undefined and it dies on
-         * `this.module.getStatus()`, taking the whole suite down at collection
-         * — including suites that never import a router. It is a bad enough
-         * race to be COUNT-UNSTABLE: two runs of the identical commit failed
-         * 57 and then 54 of 422. It does not reproduce on Node 24, whose
-         * `require(esm)` is mature, which is why this is invisible locally.
-         *
-         * Inlining hands every dep to Vite's transform pipeline, so Node's ESM
-         * loader never sees them and the race cannot occur on any Node.
-         *
-         * ponytail: `true` rather than a react-router-shaped list because
-         * narrowing it to /^react-router/ did NOT fix CI — the race is in the
-         * loader, not in one package, so the whole externalised set has to stop
-         * going through it. The ceiling is transform cost. The upgrade path is
-         * to delete this block once CI runs Node 22+, where the deprecated
-         * Node 20 loader this works around is gone.
-         */
-        inline: true,
-      },
-    },
   },
 })
