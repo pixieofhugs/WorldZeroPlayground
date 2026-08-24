@@ -38,7 +38,7 @@ import {
   parseColor,
   relativeLuminance,
   type Rgba,
-} from '../src/utils/contrast';
+} from './contrast';
 import type { Finding } from './contrastScan';
 
 export type BaselineEntry = {
@@ -63,14 +63,19 @@ export function baselineKey(theme: string, text: string, background: string, req
 }
 
 /**
- * THE LIST. 185 entries, machine-produced by the sweep itself
+ * THE LIST. Machine-produced by the sweep itself
  * (`CONTRAST_BASELINE_OUT=<path> bash frontend/e2e/run-e2e.sh contrast.spec.ts`),
- * never hand-typed — 185 hand-copied ratios would be wrong within a week,
- * which is this issue's whole thesis.
+ * never hand-typed — hand-copied ratios would be wrong within a week, which is
+ * this issue's whole thesis.
  *
- *   - 7 entries owned by #649 (white `--color-text-on-accent` on a faction
- *     fill). That issue's acceptance, measured as rendered.
- *   - the rest await triage into children off #651.
+ * NO COUNT IS WRITTEN HERE, deliberately (#1780). This header once claimed 269
+ * entries while the object held 241, and nothing could notice. A count is
+ * `Object.keys(RENDERED_BASELINE).length`, and the only honest place to say it
+ * is code that derives it.
+ *
+ * Entries owned by #649 (white `--color-text-on-accent` on a faction fill) are
+ * that issue's acceptance, measured as rendered; the rest await triage into
+ * children off #651. Which is which is the `issue` field, not a tally.
  */
 export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
   "dark | rgb(111, 174, 0) on rgb(244, 241, 232) @3": { ratio: 2.41, issue: 651, where: 'snide/dark/desktop div > div > div > div' },
@@ -290,7 +295,7 @@ export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
  * `src/utils/__tests__/contrastTriage.test.ts` for exactly that reason.
  *
  * PURE, AND NODE-SIDE, ON PURPOSE (#1762, #1780). The scanner runs inside
- * `page.evaluate`, which nothing typechecks and no PR exercises. So the
+ * `page.evaluate`, which no PR ever exercises. So the
  * scanner reports facts — the fill's CSS, the background-color under it, the
  * translucent stack over it — and every DECISION lives here, in milliseconds,
  * with no browser.
@@ -354,7 +359,7 @@ function stopsOf(layer: string): Rgba[] | null {
 
 /**
  * Source-over where the BACKDROP may itself be translucent — `compositeOver`
- * in `src/utils/contrast.ts` assumes an opaque ground and hard-codes `a: 1`,
+ * in `./contrast` assumes an opaque ground and hard-codes `a: 1`,
  * which is right for its callers and wrong halfway up a stack of fills.
  */
 function sourceOver(fore: Rgba, back: Rgba): Rgba {

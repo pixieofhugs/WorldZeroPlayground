@@ -22,11 +22,12 @@ import { BAND, BAND_INK, BRASS, CAPS, DISC, GOLD, PLATE } from "../factionMarks/
  * pair went to 1.00:1 — an invisible initial with every check still green,
  * because both ends are real tokens. The disc's ink budget is the band's.
  */
-export default function EphemeristsAvatar({ character, size }: FactionAvatarProps) {
+export default function EphemeristsAvatar({ character, size, badge }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
+      badge={badge}
       circle={{
         borderColor: BRASS,
         bg: DISC,

@@ -1,12 +1,18 @@
 /**
  * The in-page half of the rendered contrast sweep (#651).
  *
- * This module is serialized into the browser by `contrast.spec.ts` — it may
- * not import anything (Playwright's `page.evaluate` ships the function source,
- * not its module graph), so the WCAG math it needs is inlined inside
- * `scanPageForContrast`. `src/utils/contrast.ts` remains the source of truth
- * for the node-side math; the duplication here is a constraint of the evaluate
+ * This module is serialized into the browser by `e2e/contrast.spec.ts` — it
+ * may not import anything (Playwright's `page.evaluate` ships the function
+ * source, not its module graph), so the WCAG math it needs is inlined inside
+ * `scanPageForContrast`. `./contrast` remains the source of truth for the
+ * node-side math; the duplication here is a constraint of the evaluate
  * boundary, not a second opinion.
+ *
+ * IT LIVES UNDER `src` (#1780), not under `e2e`, because it imports nothing —
+ * least of all `@playwright/test`. That import is the line between a module
+ * and a spec, and everything on this side of it is reached by `tsc --noEmit`
+ * and by vitest at PR time rather than by a browser at 3am. Nothing in the
+ * shipped bundle imports this file; only the spec and the tests do.
  */
 
 /** One measured text node. `background: null` means "could not resolve to a solid". */
@@ -102,8 +108,9 @@ export type Finding = {
  * and a real test suite, so it is NOT in this file. `resolveFillBand` in
  * `contrastBaseline.ts` does it node-side, from `backdropCss` / `backdropBase`
  * / `backdropOverlay` below. This module gained three reported facts and no
- * new judgement — deliberately, because nothing typechecks the inside of a
- * `page.evaluate` payload (#1780) and no PR runs it.
+ * new judgement — deliberately, because no PR ever RUNS the inside of a
+ * `page.evaluate` payload (#1780). It is typechecked, and since the move it is
+ * lint-covered too, but only the nightly browser executes it.
  */
 export function scanPageForContrast(): Finding[] {
   type Rgba = { r: number; g: number; b: number; a: number };

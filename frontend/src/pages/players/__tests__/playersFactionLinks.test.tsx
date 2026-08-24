@@ -42,7 +42,13 @@ vi.mock('../../../hooks/useTheme', () => ({
 
 import DesktopPlayers from '../DesktopPlayers'
 import MobilePlayers from '../MobilePlayers'
-import { NO_RELATIONSHIPS, factionHref, rankPlayers, type PlayersViewProps } from '../playersData'
+import {
+  NO_RELATIONSHIPS,
+  PODIUM_SIZE,
+  factionHref,
+  rankPlayers,
+  type PlayersViewProps,
+} from '../playersData'
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -133,13 +139,52 @@ describe('the faction race', () => {
   })
 })
 
+/**
+ * #2245 MOVED THIS LINK. The faction used to be a WORD under the player's name;
+ * the owner ruled it a column of its own carrying "a larger more clickable
+ * sigil, size similar with the level diamond", linked to the faction page. The
+ * seam is the same one — which element is an `<a href>` — but three things move
+ * with it, and each is a way to get this wrong:
+ *
+ *   - the word goes, so the link's accessible name has to become EXPLICIT. Every
+ *     faction mark is `aria-hidden` (each sigil says so in its own file), so a
+ *     bare anchor around one names nothing at all. That reverses ruling 2 of
+ *     #2245 for this one mount, on the issue's own reasoning: an unlabelled link
+ *     is a worse trade than the duplication being removed.
+ *   - the badge welded to the profile picture goes with it — the ruling is a
+ *     column "as opposed to putting it on top of their profile pic".
+ *   - `factionHref` can still withhold a link, and then the mark must not be a
+ *     focusable control that goes nowhere.
+ */
 describe('a roster row', () => {
-  it("links the faction line under a player's name to that faction", () => {
-    const html = render(<DesktopPlayers {...props([player({ id: 77, faction_slug: 'snide', score: 10 })])} />)
+  const roster = (slug: string) =>
+    render(<DesktopPlayers {...props([player({ id: 77, faction_slug: slug, score: 10 })])} />)
+
+  it("links the faction sigil in the row's own column to that faction", () => {
+    const html = roster('snide')
     expect(hrefs(html)).toContain('/factions/snide')
     // And the row still goes to the player: the two live in one row without
     // nesting, which is what the stretched overlay buys (#1893).
     expect(hrefs(html)).toContain('/characters/77')
+  })
+
+  it('names that link, because the word it replaced is gone', () => {
+    expect(roster('snide')).toContain(`aria-label="${factionName('snide')}"`)
+  })
+
+  it('prints the faction word once on the page — the race lane, not the row', () => {
+    // Two before #2245: the lane and the row. The lane is exempt (ADR-0082 §2 —
+    // that surface is ABOUT the society); the row was the duplicate.
+    const text = roster('snide').replace(/<[^>]*>/g, '')
+    expect(text.split(factionName('snide')).length - 1).toBe(1)
+  })
+
+  it('takes the membership badge off the roster avatar, leaving it to the podium', () => {
+    // `right:-3px;bottom:-3px` is the clip BOTH avatar roots share — the na ring
+    // in `DefaultAvatar`, the eight registered skins in `BadgedAvatar` — so this
+    // counts badged discs without naming a skin. The only ones left on the page
+    // are the podium's, where the mark is not duplicated by a column.
+    expect(roster('snide').split('right:-3px;bottom:-3px').length - 1).toBe(PODIUM_SIZE)
   })
 
   it('nests no anchor inside another', () => {
@@ -157,11 +202,13 @@ describe('a roster row', () => {
   })
 
   it('does not link an unaffiliated player — there is no page for a non-faction', () => {
-    const html = render(<DesktopPlayers {...props([player({ id: 78, faction_slug: 'na', score: 10 })])} />)
+    const html = roster('na')
     expect(hrefs(html)).not.toContain('/factions/na')
-    // The word is still printed; only the link is withheld.
-    expect(html).toContain(factionName('na'))
-    expect(hrefs(html)).toContain('/characters/78')
+    // The mark is still drawn and still named — as a labelled image, not as a
+    // focusable control that goes nowhere. The accessible name sits where the
+    // visible word used to, so nothing about membership is lost on this row.
+    expect(html).toContain(`aria-label="${factionName('na')}"`)
+    expect(hrefs(html)).toContain('/characters/77')
   })
 })
 
@@ -177,7 +224,10 @@ describe('Albescent is not linked to a viewer who has not been revealed to it', 
     // Belt and braces: the word must not appear anywhere in the markup either,
     // href or not. This is #1926's guarantee, restated where a link could undo it.
     expect(html).not.toContain(ALBESCENT_FACTION_SLUG)
-    // The row still renders, still names the player, still reads "Unaffiliated".
+    // The row still renders, still names the player, and still says
+    // "Unaffiliated" — on the sigil's own label since #2245, which is exactly
+    // what the visible word said before it. The labyrinth is drawn either way:
+    // the owner accepted a stranger meeting an unfamiliar SHAPE, never a name.
     expect(html).toContain('Ash')
     expect(html).toContain(factionName('na'))
   })

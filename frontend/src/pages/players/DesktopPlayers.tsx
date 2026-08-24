@@ -28,7 +28,19 @@ import {
 /** Row geometry, straight from the design. Ornament dimensions, not spacing. */
 const PODIUM_COLUMNS = '1.12fr 1fr 1fr'
 const RACE_COLUMNS = '26px 26px 1fr 1fr 108px'
-const ROSTER_COLUMNS = '56px 1fr 84px 90px'
+/**
+ * Rank · Player · Faction · Lvl · Pts. The faction column is #2245's — it was
+ * a word inside the player column until the owner ruled it a column of its own
+ * — and it takes the LEVEL column's width so the two marks it stands beside,
+ * the sigil and the gem, are centred on the same rhythm.
+ */
+const ROSTER_COLUMNS = '56px 1fr 84px 84px 90px'
+/**
+ * The roster's faction mark, at the level gem's own size — the ruling asks for
+ * "a larger more clickable sigil, size similar with the level diamond", and the
+ * gem in this row is 34.
+ */
+const ROSTER_SIGIL = 34
 const RACE_STAGGER_MS = 90
 /** Decorative marks. Expressions, so they are not user-facing copy. */
 const ELLIPSIS_GLYPH = '⋮'
@@ -168,6 +180,9 @@ export default function DesktopPlayers({
                 >
                   <span className="label-heading">{t('leaderboard.roster.colRank')}</span>
                   <span className="label-heading">{t('leaderboard.roster.colPlayer')}</span>
+                  <span className="label-heading" style={{ textAlign: 'center' }}>
+                    {t('leaderboard.roster.colFaction')}
+                  </span>
                   <span className="label-heading" style={{ textAlign: 'center' }}>
                     {t('leaderboard.roster.colLevel')}
                   </span>
@@ -460,10 +475,63 @@ function FactionLaneName({ slug }: { slug: string }) {
 }
 
 /**
+ * The roster's faction COLUMN (#2245), and the row's second link.
+ *
+ * Owner ruling: "Have a column for faction as opposed to putting it on top of
+ * their profile pic (you can use a larger more clickable sigil, size similar
+ * with the level diamond) and link that sigil to the faction page." So three
+ * things happen at once, and none of them survives on its own:
+ *
+ *   - the mark moves off the profile picture. `FactionAvatar` takes
+ *     `badge={false}` in the row above for exactly this mount; every other
+ *     avatar on the page, the podium's included, still wears its badge.
+ *   - the WORD goes from the name stack. That is #2245's ruling 1: the sigil
+ *     carries membership, and the word beside it was the restatement. The race
+ *     lanes keep theirs — a lane is a surface ABOUT the society, where naming
+ *     it is the content (ADR-0082 §2).
+ *   - the mark inherits the word's LINK (#1953). Deleting the word would
+ *     otherwise delete the only route from a roster row to a faction page.
+ *
+ * THE LABEL IS THE PART THAT IS EASY TO DROP. #2245's ruling 2 keeps every
+ * faction glyph `aria-hidden`, and each of the nine sigils says so in its own
+ * file — on the reasoning that the faction is spelled out in text beside it.
+ * Here it is not, so the anchor has to carry the name itself or the roster
+ * hands a screen reader a link that announces nothing. `factionName()` supplies
+ * it, which keeps the Albescent mask intact (#1926): an unrevealed viewer is
+ * told "Unaffiliated", exactly what the visible word told them before.
+ *
+ * LIFTED ABOVE THE ROW'S OVERLAY, for the reason the word was — see `RosterRow`
+ * below. The anchor fills its cell rather than hugging the 34px mark, which is
+ * the "more clickable" half of the ruling; the row-wide target stays the
+ * player's.
+ *
+ * AND IT IS ONLY A LINK WHEN `factionHref` SAYS SO. Unaffiliated has no page,
+ * and an unrevealed viewer must not be handed `/factions/albescent`. Unlinked,
+ * it is a labelled image — not a focusable control that goes nowhere.
+ */
+function RosterFaction({ slug }: { slug: string | null | undefined }) {
+  const href = factionHref(slug)
+  const label = factionName(slug)
+  const mark = <FactionSigil slug={slug} size={ROSTER_SIGIL} />
+  if (href === null) {
+    return (
+      <span role="img" aria-label={label} className="flex justify-center">
+        {mark}
+      </span>
+    )
+  }
+  return (
+    <Link to={href} aria-label={label} className="flex justify-center" style={{ position: 'relative', zIndex: 1 }}>
+      {mark}
+    </Link>
+  )
+}
+
+/**
  * One roster row. The whole row still navigates to the player — the design
- * draws no link at all and that is a bug — but the faction line under the name
- * now opens that faction's page (#1953), and those two facts cannot both be
- * anchors nested one inside the other.
+ * draws no link at all and that is a bug — but the faction sigil in its own
+ * column now opens that faction's page (#1953, moved there by #2245), and those
+ * two facts cannot both be anchors nested one inside the other.
  *
  * So the row takes the shape #1893 settled for feed cards: the row's ROOT is a
  * plain positioned `<div>`, ONE anchor inside it (the player's name) carries a
@@ -473,15 +541,13 @@ function FactionLaneName({ slug }: { slug: string }) {
  * hit-tests — above it. The name anchor itself must NOT be positioned, or the
  * overlay collapses to the name's own box.
  *
- * The faction name is the lifted link, and it is only a link at all when
- * `factionHref` says so: unaffiliated has no page, and an unrevealed viewer must
- * not be handed `/factions/albescent` behind a word `factionName` has already
- * masked to "Unaffiliated" (#1926).
+ * `RosterFaction` above is the lifted link. It was the faction WORD under the
+ * player's name until #2245 gave the faction a column; the gymnastics are
+ * unchanged, only what is lifted moved.
  */
 function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
-  const href = factionHref(character.faction_slug)
 
   return (
     <div
@@ -518,54 +584,33 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       </span>
 
       <div className="flex items-center min-w-0" style={{ gap: 'var(--space-md)' }}>
+        {/* No membership badge on this one disc: the faction column beside it
+            draws the same mark at twice the size and links it (#2245). */}
         <span style={{ flex: 'none', lineHeight: 0 }}>
-          <FactionAvatar character={character} size={34} />
+          <FactionAvatar character={character} size={34} badge={false} />
         </span>
-        <span className="flex flex-col min-w-0" style={{ gap: 'var(--space-xs)' }}>
-          {/* The row's one anchor. NOT positioned — the overlay it carries has
-              to cover the row's root, not this name. */}
-          <Link
-            to={`/characters/${character.id}`}
-            className="font-display truncate"
-            style={{ fontSize: 'var(--text-content)', color: 'inherit', textDecoration: 'none' }}
-          >
-            {character.display_name}
-            {isMe && (
-              <>
-                {' '}
-                <span className="label-heading">{t('leaderboard.roster.you')}</span>
-              </>
-            )}
-            <span aria-hidden style={{ position: 'absolute', inset: 0 }} />
-          </Link>
-          {/* The faction's NAME, in the label tier's own ink (#1932). It used
-              to be printed in the faction hue, which is 2.09:1 for WOW on the
-              frost this row wears when it is yours. Nothing is lost: the word
-              is the identity, and the avatar's ring and the gem's outline
-              beside it are still hue-coded.
-
-              It links to that faction's page (#1953) — lifted above the row's
-              overlay so the click reaches it — unless `factionHref` withholds
-              one, in which case the word stays exactly what it was. */}
-          {href === null ? (
-            <span className="label-heading truncate">
-              {factionName(character.faction_slug)}
-            </span>
-          ) : (
-            <Link
-              to={href}
-              className="label-heading truncate"
-              // No inline `color`: `.label-heading` owns `--label-ink` and an
-              // inline declaration outranks the class, which is the #1932
-              // regression. Tailwind's preflight `a { color: inherit }` is an
-              // element selector and loses to the class, so the ink is right.
-              style={{ position: 'relative', zIndex: 1 }}
-            >
-              {factionName(character.faction_slug)}
-            </Link>
+        {/* The row's one anchor. NOT positioned — the overlay it carries has to
+            cover the row's root, not this name. It was a stacked pair until
+            #2245 took the faction word out from under it, so the column that
+            stacked them is gone with it; `min-w-0` moves onto the name, which
+            is what `truncate` needs from a flex item. */}
+        <Link
+          to={`/characters/${character.id}`}
+          className="font-display truncate min-w-0"
+          style={{ fontSize: 'var(--text-content)', color: 'inherit', textDecoration: 'none' }}
+        >
+          {character.display_name}
+          {isMe && (
+            <>
+              {' '}
+              <span className="label-heading">{t('leaderboard.roster.you')}</span>
+            </>
           )}
-        </span>
+          <span aria-hidden style={{ position: 'absolute', inset: 0 }} />
+        </Link>
       </div>
+
+      <RosterFaction slug={character.faction_slug} />
 
       <span className="flex justify-center">
         <LevelGem level={character.level} factionSlug={character.faction_slug} size={34} />

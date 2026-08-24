@@ -24,7 +24,8 @@ import { listPraxes, type PraxisCardOut } from '../../api/praxis'
 import type { FactionOut } from '../../api/factions'
 import { useAuth } from '../../auth/AuthContext'
 import { useFactions } from '../../hooks/useFactions'
-import { usePagedResource } from '../../hooks/usePagedResource'
+import { usePagedResource, viewerCacheKey } from '../../hooks/usePagedResource'
+import { AMBIENT_TTL_MS, createKeyedResourceCache } from '../../hooks/cachedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
 import {
@@ -48,6 +49,18 @@ import {
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
+
+/**
+ * The feed's first page, per filter combination, for five minutes (#2432) —
+ * **Class B** (ADR-0072), alongside the task browse.
+ *
+ * Keyed on the viewer as well as the filters: `voted` is answered against the
+ * caller's own votes, so a key without the viewer would show one player's
+ * "already voted" set to another after a sign-in. Emptied by an era rollover
+ * and by any write — voting is a write, so a card's counts cannot age behind
+ * your own tap.
+ */
+const PRAXIS_PAGE_CACHE = createKeyedResourceCache<PraxisCardOut[]>(AMBIENT_TTL_MS)
 
 export type { PraxisFeedFilters, VotedFilter, SortOrder, EraScope } from './feedFilterParams'
 
@@ -103,7 +116,7 @@ export interface PraxesFeedState {
 export function usePraxes(): PraxesFeedState {
   // App-wide cached, one request per page load across all five consumers (#1284).
   const factions: FactionOut[] = useFactions() ?? []
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [query, setQueryState] = useSearchQueryParam()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -132,6 +145,14 @@ export function usePraxes(): PraxesFeedState {
       }),
     [taskId, factionKey, filters.voted, filters.sort, filters.eraScope, trimmedQuery],
     PAGE_LIMIT,
+    // Nothing is HELD until the viewer is known. Unlike the task browse this
+    // feed does not wait for `/auth/me` before reading (#644's cold-paint
+    // budget), and the cookie rides along regardless — so a cold read is
+    // already viewer-relative while `user` still says anonymous, and filing it
+    // under `anon` would be a lie. Skipping the write costs one page.
+    authLoading
+      ? undefined
+      : { cache: PRAXIS_PAGE_CACHE, viewer: viewerCacheKey(user) },
   )
 
   // Every filter/search change resets the window so "load more" can't strand a
