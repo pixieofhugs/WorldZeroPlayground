@@ -34,6 +34,13 @@
  * on it — the "one carrier per object" #2519 spent a PR establishing. `:empty`
  * is the difference between the two objects, stated once.
  *
+ * That paragraph used to be prose here and prose in index.css, guarded by
+ * nothing: the census below the wrappers asserts the marker per FILE, which is
+ * blind to whether any given mount still matches `:empty` (#2543). The second
+ * census — "the census, per mount" — is the same sentence with every mount
+ * named and classified, so a hairline that grows a child fails by name instead
+ * of quietly standing still.
+ *
  * ## Harness
  *
  * The stylesheet read as source text, plus `renderToStaticMarkup` — no DOM and
