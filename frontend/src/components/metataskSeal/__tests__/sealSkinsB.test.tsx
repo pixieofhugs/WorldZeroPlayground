@@ -9,6 +9,7 @@
  * via the tuned DefaultSeal, which is what the last case asserts.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 
 import MetataskSeal from "../MetataskSeal";
@@ -45,8 +46,13 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   };
 }
 
+/**
+ * Every seal mounts `CardMasthead` since #2562 and that band is a `<Link>`, so a
+ * seal rendered outside a router throws. Every mount in the app is already
+ * inside one; this is the harness catching up with the anatomy.
+ */
 function markup(element: React.ReactElement): string {
-  return renderToStaticMarkup(element);
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 }
 
 const SKIN_SLUGS = ["coven", "ua", "albescent", "wow"];
@@ -54,7 +60,8 @@ const SKIN_SLUGS = ["coven", "ua", "albescent", "wow"];
 describe("seal skins B content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
     const task = metatask(slug);
-    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
+    const figure = i18n.t("praxis:detail.seal.bonusFigure", { points: task.point_value });
+    const unit = i18n.t("praxis:card.stamp.points", { count: task.point_value });
     const label = i18n.t("praxis:detail.seal.label", {
       faction: factionName(slug),
     });
@@ -64,9 +71,12 @@ describe("seal skins B content-slot invariant", () => {
       expect(html).toContain(task.title);
     });
 
-    it(`${slug} renders the bonus (+point_value PTS)`, () => {
+    it(`${slug} renders the bonus as a figure over its caption`, () => {
+      // Two nodes since #2562 — the score stamp's anatomy, which is what split
+      // `detail.seal.bonus` into a figure key and the shared points caption.
       const html = markup(<MetataskSeal metatasks={[task]} />);
-      expect(html).toContain(bonus);
+      expect(html).toContain(figure);
+      expect(html).toContain(unit);
     });
 
     it(`${slug} renders the issuing-faction label`, () => {
@@ -111,7 +121,10 @@ describe("seal skins B — na renders via the tuned DefaultSeal", () => {
     const html = markup(<MetataskSeal metatasks={[task]} />);
     expect(html).toContain(task.title);
     expect(html).toContain(
-      i18n.t("praxis:detail.seal.bonus", { points: task.point_value }),
+      i18n.t("praxis:detail.seal.bonusFigure", { points: task.point_value }),
+    );
+    expect(html).toContain(
+      i18n.t("praxis:card.stamp.points", { count: task.point_value }),
     );
     expect(html).toContain(
       i18n.t("praxis:detail.seal.label", { faction: factionName("na") }),

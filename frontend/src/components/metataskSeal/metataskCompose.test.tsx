@@ -5,6 +5,8 @@
  * editPraxis suites use.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import "../../i18n";
 import i18n from "../../i18n";
@@ -46,6 +48,14 @@ function metatask(
   };
 }
 
+/**
+ * Every seal mounts `CardMasthead` since #2562 and that band is a `<Link>`, so
+ * both the stack and the picker (which dresses its rows with read-only seals)
+ * need a router. Every mount in the composer is already inside one.
+ */
+const render = (node: ReactElement) =>
+  renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
+
 const noop = () => {};
 const asyncNoop = async () => {};
 
@@ -74,7 +84,7 @@ describe("MetataskSealStack", () => {
   const removeLabel = i18n.t("detail.seal.remove", { ns: "praxis" });
 
   it("shows the '+ Add a metatask' slot for an eligible, empty praxis", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskSealStack
         state={mkState({ canSealMetatask: true, appliedMetataskList: [] })}
       />,
@@ -86,7 +96,7 @@ describe("MetataskSealStack", () => {
     // `na` falls through to the neutral DefaultSeal, which renders the title as
     // plain text; the faction skins stylise it, so assert on the neutral one.
     const applied = metatask(9, "na", "Cite a source", 50);
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskSealStack
         state={mkState({
           canSealMetatask: false,
@@ -103,7 +113,7 @@ describe("MetataskSealStack", () => {
 
   it("shows the × peel control on applied seals when the viewer can seal", () => {
     const applied = metatask(9, "snide", "Cite a source", 50);
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskSealStack
         state={mkState({
           canSealMetatask: true,
@@ -122,7 +132,7 @@ describe("MetataskPicker", () => {
   ];
 
   it("renders the neutral header, both eligible rows, and the All filter", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskPicker
         state={mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
@@ -134,7 +144,7 @@ describe("MetataskPicker", () => {
   });
 
   it("marks an already-sealed row as Sealed", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskPicker
         state={mkState({
           metatasks: rows,
@@ -150,7 +160,7 @@ describe("MetataskPicker", () => {
   // the archetype's banner at the foot of the sheet BEHIND this overlay, so
   // Attach looked inert. The refusal has to print inside the picker itself.
   it("prints a refused attach inside the sheet", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskPicker
         state={mkState({
           metatasks: rows,
@@ -164,7 +174,7 @@ describe("MetataskPicker", () => {
   });
 
   it("draws no banner when nothing has been refused", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskPicker
         state={mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
@@ -175,7 +185,7 @@ describe("MetataskPicker", () => {
 
 describe("MetataskRemoveConfirm", () => {
   it("renders nothing when there is no removal target", () => {
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskRemoveConfirm state={mkState({ metataskRemovalTarget: null })} />,
     );
     expect(html).toBe("");
@@ -183,7 +193,7 @@ describe("MetataskRemoveConfirm", () => {
 
   it("asks to peel off the targeted metatask", () => {
     const target = metatask(7, "coven", "Bless the work", 60);
-    const html = renderToStaticMarkup(
+    const html = render(
       <MetataskRemoveConfirm
         state={mkState({ metataskRemovalTarget: target })}
       />,
