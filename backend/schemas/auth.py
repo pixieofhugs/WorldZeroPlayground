@@ -15,8 +15,16 @@ class CurrentUser(WireModel):
     # Settings Account card prints the address the player signed up with, and
     # /auth/me is authenticated and answers with the caller's own only. The rule
     # is unchanged for everything else: the only other schemas carrying an email
-    # are admin-guarded or a request body, and nothing inherits or reuses this
-    # model. `tests/integration/test_auth_me_account_fields.py` ratchets that
+    # are admin-guarded or a request body.
+    #
+    # THIS MODEL ANSWERS THREE ROUTES, NOT ONE, and all three are self-scoped:
+    # `GET /auth/me`, `POST /factions/choose` and `POST /me/active-character`
+    # each resolve their account through `Depends(get_current_account)` and take
+    # no account or character id from the caller, so none of them can be aimed
+    # at somebody else's row. The exception rests on that property — not on
+    # `/auth/me` being the only reader — so a FOURTH route returning
+    # `CurrentUser` has to be checked for it before it ships.
+    # `tests/integration/test_auth_me_account_fields.py` ratchets the carrier
     # list, so a future inheritance cannot widen it quietly.
     email: str = ""
     # Which identity this account signs in through — an ``AuthProvider`` value
