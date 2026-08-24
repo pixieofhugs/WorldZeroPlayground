@@ -40,7 +40,7 @@ way so parallel slots line up across factions.
 > *"We are erring on the side of taking out faction-specific flavour with the
 > attitude 'we can put it back in intentionally'."*
 
-Surfaces that keep voice: faction select picker, invitation letter (including
+Surfaces that keep voice: faction select picker, invite letter (including
 Albescent's), join panel, faction hero, taunts, vote star ladder, faction name +
 description, and the spotlight label. Everything else settles.
 
