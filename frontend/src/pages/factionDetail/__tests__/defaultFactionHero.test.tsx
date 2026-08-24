@@ -180,10 +180,16 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
   });
 
   it("the two card plates keep the plate's own hairline", () => {
-    // What they carry INSTEAD of the edge, and it is na's own: every plate draws
-    // `.spectrum-rule` beside its kicker, and none of them lost it.
+    // What they carry INSTEAD of the edge, and it is na's own.
+    //
+    // THE COUNT WAS 5 AND IS NOW 2 (#2576), which is the first time it has
+    // matched this test's own name. Five meant every plate drew the hairline --
+    // including the three that also mount the 3px `.alb-plate-edge` ring, so
+    // those three carried two structural rainbows at once. ADR-0083 3b: one
+    // carrier per object, and the thinner one yields. Two is the two card
+    // plates, which mount no ring and therefore keep it.
     const html = page(FALL_THROUGH, [aCharacter({ id: 1, username: "topdog" })]);
-    expect(html.split("faction-plate-rule").length - 1).toBe(5);
+    expect(html.split("faction-plate-rule").length - 1).toBe(2);
   });
 });
 

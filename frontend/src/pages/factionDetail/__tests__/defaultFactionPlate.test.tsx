@@ -84,7 +84,13 @@ describe("the Default faction body draws real plates (#2497)", () => {
     expect((html.match(/faction-plate-kicker/g) ?? []).length).toBe(4);
     // The hairline is the shared spectrum ramp, not a rule of its own — that is
     // what lets Albescent move it with the cards' bands (#2500).
-    expect((html.match(/spectrum-rule faction-plate-rule/g) ?? []).length).toBe(4);
+    //
+    // TWO, not four (#2576). `DEFAULT_SLUG` is "albescent" despite its name, so
+    // this fixture's four plates are two TEXT plates (About, Members — Champion
+    // is absent on an empty roster) and two CARD plates. The text pair mount the
+    // 3px `.alb-plate-edge` ring, and a plate may carry one structural rainbow,
+    // not two, so the hairline yields there and stays on the card pair.
+    expect((html.match(/spectrum-rule faction-plate-rule/g) ?? []).length).toBe(2);
   });
 
   it("keeps the plate OUTSIDE the disclosure, so a fold hides the gallery alone", () => {
