@@ -256,3 +256,83 @@ describe("D. the champion is the highest ALL-TIME score, everywhere", () => {
     });
   }
 });
+
+describe("E. one carrier per plate (#2576, ADR-0083 3b)", () => {
+  /**
+   * The three text-holding plates each mounted TWO spectrum carriers at once:
+   * `plateOrnament` — Albescent's 3px `.alb-plate-edge` ring around the whole
+   * plate — and `PLATE_RULE`, na's 2px/0.55 hairline under the heading. Nothing
+   * suppressed the hairline, so both painted: two rainbows on one object, the
+   * same doubling #2527 took off the field desk, #2559 off the score stamp and
+   * #2553 off the composer. This was the fourth site and the last the sweep
+   * found.
+   *
+   * ASSERTED BY NAME, not by counting. The issue asks for it explicitly, and the
+   * reason is that a census which counts spectrum rules per page lets a NEW plate
+   * be wrong twice and still total correctly. So each case below names a plate
+   * by its own heading and says which carrier that plate is allowed to hold.
+   *
+   * `PLATE_RULE` is NOT deleted: it is correct for the seven factions that hand
+   * no ornament, where it is the only spectrum on the plate. It yields to the
+   * thicker carrier and to nothing else.
+   */
+
+  /** The open tag of the `.faction-plate` section that holds `heading`. */
+  function plateOf(html: string, heading: string): string {
+    const at = html.indexOf(heading);
+    expect(at, `a plate carries ${JSON.stringify(heading)}`).toBeGreaterThan(-1);
+    const open = html.lastIndexOf('<section class="faction-plate"', at);
+    expect(open, `${JSON.stringify(heading)} sits inside a .faction-plate`).toBeGreaterThan(-1);
+    const close = html.indexOf("</section>", at);
+    return html.slice(open, close);
+  }
+
+  /** na hands no ornament, so every plate keeps the hairline it always had. */
+  it("na keeps its hairline on all five plates", () => {
+    const html = markup("na", DefaultFactionBody as Body);
+    for (const heading of [
+      i18n.t("factions:detail.aboutHeading"),
+      i18n.t("factions:detail.spotlightLabel"),
+      membersHeading(),
+      i18n.t("factions:detail.default.tasksHeading", { total: 0 }),
+      i18n.t("factions:detail.default.recentHeading"),
+    ]) {
+      const plate = plateOf(html, heading);
+      expect(plate, `na's ${heading} plate draws the hairline`).toContain("faction-plate-rule");
+      expect(plate, `na's ${heading} plate mounts no 3px carrier`).not.toContain("alb-plate-edge");
+    }
+  });
+
+  /**
+   * Albescent's three TEXT plates take the ring and give up the hairline; its two
+   * CARD plates never had a ring (the cards carry their own edges) so they keep
+   * the hairline. Both halves matter: dropping the rule everywhere would strip
+   * the card plates of their only spectrum.
+   */
+  it("albescent's text plates carry the ring alone", () => {
+    const html = markup("albescent", AlbescentFactionBody as Body);
+    for (const heading of [
+      i18n.t("factions:detail.aboutHeading"),
+      i18n.t("factions:detail.spotlightLabel"),
+      membersHeading(),
+    ]) {
+      const plate = plateOf(html, heading);
+      expect(plate, `${heading} mounts the 3px carrier`).toContain("alb-plate-edge");
+      expect(plate, `${heading} draws no second, thinner rainbow`).not.toContain(
+        "faction-plate-rule",
+      );
+    }
+  });
+
+  it("albescent's card plates keep the hairline, having no ring", () => {
+    const html = markup("albescent", AlbescentFactionBody as Body);
+    for (const heading of [
+      i18n.t("factions:detail.default.tasksHeading", { total: 0 }),
+      i18n.t("factions:detail.default.recentHeading"),
+    ]) {
+      const plate = plateOf(html, heading);
+      expect(plate, `${heading} mounts no ring`).not.toContain("alb-plate-edge");
+      expect(plate, `${heading} keeps its hairline`).toContain("faction-plate-rule");
+    }
+  });
+});
