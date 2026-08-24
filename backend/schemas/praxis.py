@@ -104,12 +104,16 @@ class PraxisInviteOut(WireModel):
     model_config = {"from_attributes": True}
 
 
+# ``task_level_required``, ``submitted_at`` and ``created_by_faction_slug``
+# below were added for the praxis read page by ADR-0017 §6. That ADR is now
+# marked **Superseded by ADR-0061** — history, not live authority. The fields
+# shipped; this schema is their record.
 class PraxisOut(WireModel):
     id: int
     task_id: int
     task_title: str             # populated by build_praxis_out
     task_point_value: int       # populated by build_praxis_out
-    task_level_required: int = 0  # populated by build_praxis_out; ADR-0017 §6
+    task_level_required: int = 0  # populated by build_praxis_out
     task_faction_slug: Optional[str] = None  # populated by build_praxis_out; drives per-faction vote UI
     type: PraxisType
     status: PraxisStatus
@@ -118,7 +122,7 @@ class PraxisOut(WireModel):
     moderation_status: ModerationStatus
     admin_note: Optional[str]
     flagged_at: Optional[datetime]
-    submitted_at: Optional[datetime] = None  # set on in_progress→submitted; ADR-0017 §6
+    submitted_at: Optional[datetime] = None  # set on in_progress→submitted
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
     created_by_id: int
     created_by_display_name: str  # populated by build_praxis_out
@@ -127,7 +131,7 @@ class PraxisOut(WireModel):
     # the byline degrades to each archetype's own monogram, not a placeholder
     # image. Same field, same meaning as ``PraxisCardOut.created_by_avatar_url``.
     created_by_avatar_url: str = ""  # populated by build_praxis_out
-    created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline; ADR-0017 §6
+    created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline
     created_at: datetime
     updated_at: datetime
     members: List[PraxisMemberOut]
