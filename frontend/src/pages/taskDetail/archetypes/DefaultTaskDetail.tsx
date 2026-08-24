@@ -93,14 +93,36 @@ function initialsOf(name: string): string {
  * so the two readouts can never disagree about what a task is worth. Absent, na
  * renders exactly as before; that is why it is optional and why the default
  * {@link scoreBody} stays the only implementation in this file.
+ *
+ * ### `sheetOverlay` — ornament that has to trace the SHEET (#2549)
+ *
+ * The second seam, and it exists for a positioning reason rather than an
+ * arrangement one. A wrapper can only mount its layers as siblings of this
+ * whole component, which puts them in `.py-8`'s box — and that box holds the
+ * shared `Breadcrumb` (#2102) as well as the sheet. Albescent's spectrum ring
+ * was inset by `--space-2xl` on the assumption that the page band and the sheet
+ * began at the same line; once the breadcrumb went in above the sheet they no
+ * longer did, and the ring's top corner landed across the trail.
+ *
+ * So a layer that must trace the sheet has to be a CHILD of the sheet, and only
+ * this file can put it there. Rendered first, before any content: the layers are
+ * absolutely positioned and carry their own `z-index`, so document order among
+ * them does not decide what paints over what — being first simply keeps them out
+ * of the content flow and makes the containment assertable.
+ *
+ * Ornament only. Nothing in this slot may take focus or carry copy; the caller
+ * marks it `aria-hidden`.
  */
 export default function DefaultTaskDetail({
   state,
   worthSlot,
+  sheetOverlay,
 }: {
   state: TaskDetailState;
   /** Replaces the base/`×mult`/total readout with the caller's arrangement. */
   worthSlot?: ReactNode;
+  /** Absolutely-positioned ornament mounted INSIDE the sheet, so it traces it. */
+  sheetOverlay?: ReactNode;
 }) {
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
@@ -852,6 +874,10 @@ export default function DefaultTaskDetail({
           boxSizing: "border-box",
         }}
       >
+        {/* Ornament that has to trace THIS box — see `sheetOverlay` in the
+            docstring. First child, and inert for every skin that passes none. */}
+        {sheetOverlay}
+
         <div
           style={{
             display: "flex",
