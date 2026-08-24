@@ -72,6 +72,11 @@ import type { TaskDetailState } from "../../../../pages/taskDetail/useTaskDetail
 import { aTask } from "../../../../test/fixtures";
 
 const TASK = aTask({ description: "Leave something small where a stranger finds it." });
+/** The same task, owned by S.N.I.D.E. — see `snideDetail` for why the slug matters. */
+const SNIDE_TASK = aTask({
+  description: "Leave something small where a stranger finds it.",
+  primary_faction_slug: "snide",
+});
 
 /** A scored praxis with live working, so every surface draws its full stamp. */
 const PRAXIS = {
@@ -107,11 +112,24 @@ function stamp(Stamp: ComponentType<ScoreStampProps>): string {
  * wide on purpose: this page draws the widest figure the loop has to hold, which
  * is the argument for the shared 1.18× growth landing here rather than the
  * argument against it.
+ *
+ * IT NEEDS A S.N.I.D.E. TASK, and that stopped being optional in #2554. The task
+ * this harness used to pass was `aTask()`, whose `primary_faction_slug` defaults
+ * to `na` — harmless while the page hand-drew its own loop, and decisive now the
+ * mark is DISPATCHED: `TaskWorthStamp` resolves the stamp from
+ * `task.primary_faction_slug`, so an `na` task rendered na's points ring inside
+ * the S.N.I.D.E. archetype and the loop went missing.
+ *
+ * That pairing cannot happen in the app. `TaskDetail.tsx` picks the archetype
+ * from `state.task.primary_faction_slug` — the same field the adapter reads — so
+ * the page and its stamp always agree about whose mark this is. The harness was
+ * constructing a task detail that no route can produce; naming the slug is what
+ * makes it render what a real S.N.I.D.E. task renders.
  */
 function snideDetail(): string {
   const state: TaskDetailState = {
     loading: false,
-    task: TASK,
+    task: SNIDE_TASK,
     fetchError: null,
     submissions: [],
     comments: null,
@@ -298,27 +316,43 @@ describe("each mount overrides what its ground demands (#2042)", () => {
     expect(sheet).not.toContain("var(--faction-default-card-bg)");
   });
 
-  it("S.N.I.D.E.'s task detail passes the SLAB's inks, not the wall's", () => {
-    // A different ground again from the stamp's, and the trap is sharper here:
-    // `-note-ink` is the SAME HEX as `-card-bg` in light, so a dropped prop paints
-    // the total in the ground colour. Measured below.
+  /**
+   * S.N.I.D.E.'s task detail, ONE case where there were two (#2554).
+   *
+   * The pair replaced here asserted the page's own overrides — a cream figure in
+   * `-card-text`, an acid caption in `-card-accent`, a 128px loop and a
+   * `--text-display` figure. Every one of those was the SECOND, different mark
+   * this page invented beside the faction's registered stamp, and removing it is
+   * what #2554 is. Restating those values against the stamp's would have pinned
+   * the old drawing's numbers onto the new drawing and called it a pass.
+   *
+   * So the claim gets stronger instead of looser: the mark on the task detail is
+   * BYTE-IDENTICAL to the mark on the praxis card, because it is now literally
+   * the same component reached through the same dispatcher. A fork of any kind —
+   * a re-inlined loop, a size prop threaded back in, one ink quietly re-pointed —
+   * fails this, where a list of expected declarations would only fail the ones
+   * somebody remembered to list.
+   *
+   * WHAT THIS DOES NOT SETTLE, and #2645 carries: the mark got SMALLER (96 from
+   * 128) on the page that draws the widest figure the loop ever holds, and its
+   * figure moved from cream to acid on the detail slab. Both follow from the
+   * mount and neither has been looked at in a browser.
+   */
+  it("S.N.I.D.E.'s task detail draws the praxis card's mark, byte for byte", () => {
+    // The FIGURE differs and must: a task detail totals `modifiedPoints` (1080
+    // here) where the praxis fixture banked 22. Everything that is the drawing
+    // rather than the datum is compared, so the number is masked out and nothing
+    // else is.
+    const drawing = (markup: string) => markup.replace(/>\d+</g, ">#<");
     const mark = penCircle(snideDetail());
-    expect(mark, "the cream figure").toContain("color:var(--faction-snide-card-text)");
-    expect(mark, "the acid caption").toContain("color:var(--faction-snide-card-accent)");
+    expect(drawing(mark), "the same drawing, not a look-alike").toBe(
+      drawing(penCircle(stamp(SnideScoreStamp))),
+    );
+    // The wall's inks still may not reach a slab: `-note-ink` is the SAME HEX as
+    // `-card-bg` in light (1.05:1) and `-note-pink-ink` is 3.27:1. Kept from the
+    // pair above, because the mount changed which inks arrive and not this rule.
     expect(mark).not.toContain("--faction-snide-note-ink");
     expect(mark).not.toContain("--faction-snide-note-pink-ink");
-  });
-
-  it("S.N.I.D.E.'s task detail draws the SHARED loop, growth and all", () => {
-    const mark = penCircle(snideDetail());
-    // The 1.18× growth (#2035) lives on the SVG alone and is the one thing the
-    // hand-drawn third copy lacked, so it is what tells the two drawings apart.
-    // Deliberate: this page shows `modifiedPoints` at `--text-display`, the widest
-    // figure the loop carries anywhere, so the growth belongs here most.
-    expect(mark, "the shared loop's growth").toContain("scale(1.18)");
-    // The size branch survives the mount rather than flattening to the cards' 96.
-    expect(mark, "the desktop loop").toContain("width:128px");
-    expect(mark, "the page's headline figure").toContain("font-size:var(--text-display)");
   });
 
   it("Singularity needs no ink override — the well carries its own ground", () => {
