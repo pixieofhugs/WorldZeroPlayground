@@ -37,7 +37,11 @@ vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => harness.formFactor,
 }))
 
-vi.mock('../../../auth/AuthContext', () => ({
+// Partial, not wholesale: `CookiesSection` imports the real `SESSION_HINT_KEY`
+// out of this module to disclose it (#2156), and a bare factory would blank
+// every other export the tree reaches for.
+vi.mock('../../../auth/AuthContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../auth/AuthContext')>()),
   useAuth: () => ({ user: harness.user }),
 }))
 
