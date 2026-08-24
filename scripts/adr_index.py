@@ -1,0 +1,192 @@
+"""Generate `docs/adr/README.md` — the index of Architecture Decision Records.
+
+The ADR directory is the registry. This script reads it and writes the table; the
+table is never hand-edited, because a hand-written index rots exactly the way the
+missing `Status` lines it replaces did (#2536).
+
+Run from anywhere:
+
+    python scripts/adr_index.py
+
+`backend/tests/test_adr_index.py` regenerates in memory and diffs against the
+committed file, so a record added or restatused without re-running this fails CI.
+
+## The header contract
+
+Every `docs/adr/NNNN-*.md` opens with exactly this, and nothing between the lines:
+
+    # <title>
+                                    <- blank
+    **Status:** <status>
+    **Date:** YYYY-MM-DD
+
+`<status>` is one of exactly four forms:
+
+    Accepted                     still in force
+    Reversed                     no longer in force, and no ADR replaced it
+    Superseded by ADR-NNNN       wholly replaced by another record
+    Amended by ADR-NNNN          still in force, with a named clause replaced
+
+The two referring forms accept a comma-separated list, because a record can be
+narrowed by several (ADR-0035 was superseded one surface at a time by seven).
+Prose about *which* clause moved belongs in the body under an `## Amendment`
+heading, never in the status value — that is what keeps the value parseable.
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+ADR_DIR = Path(__file__).resolve().parents[1] / "docs" / "adr"
+INDEX_PATH = ADR_DIR / "README.md"
+
+#: Matches the four-line opening block. Anchored at the start of the file so the
+#: status cannot drift down the page and out of a reader's first screenful.
+_HEADER = re.compile(
+    r"\A# (?P<title>.+)\n"
+    r"\n"
+    r"\*\*Status:\*\* (?P<status>.+)\n"
+    r"\*\*Date:\*\* (?P<date>\d{4}-\d{2}-\d{2})\n"
+)
+
+_STATUS = re.compile(
+    r"\A(?:"
+    r"Accepted"
+    r"|Reversed"
+    r"|(?P<verb>Superseded|Amended) by (?P<refs>ADR-\d{4}(?:, ADR-\d{4})*)"
+    r")\Z"
+)
+
+#: `# ADR-0007 — Praxis editing is…` — the number is its own column in the table,
+#: so strip the prefix rather than printing it twice.
+_TITLE_PREFIX = re.compile(r"\AADR-\d{4}\s*[—:-]\s*")
+
+_NUMBERED = "[0-9]" * 4 + "-*.md"
+
+STATUS_VOCABULARY = ("Accepted", "Reversed", "Superseded by", "Amended by")
+
+
+class AdrFormatError(ValueError):
+    """An ADR's opening block does not match the header contract."""
+
+
+@dataclass(frozen=True)
+class Adr:
+    number: str
+    filename: str
+    title: str
+    status: str
+    date: str
+
+    @property
+    def verb(self) -> str:
+        """`Accepted`, `Reversed`, `Superseded` or `Amended` — the bare word."""
+        match = _STATUS.match(self.status)
+        assert match is not None, self.status  # guaranteed by parse()
+        return match.group("verb") or self.status
+
+    @property
+    def refs(self) -> list[str]:
+        """The ADR numbers this record's status points at, e.g. `["0077"]`."""
+        match = _STATUS.match(self.status)
+        assert match is not None, self.status
+        raw = match.group("refs")
+        return re.findall(r"\d{4}", raw) if raw else []
+
+    @property
+    def is_live(self) -> bool:
+        """True when the record still states a rule. Amended records still do."""
+        return self.verb in ("Accepted", "Amended")
+
+
+def parse(path: Path) -> Adr:
+    """Read one ADR file into an `Adr`, or raise `AdrFormatError`."""
+    header = _HEADER.match(path.read_text(encoding="utf-8"))
+    if header is None:
+        raise AdrFormatError(
+            f"{path.name}: the first four lines must be `# <title>`, a blank line, "
+            f"`**Status:** …` and `**Date:** YYYY-MM-DD`. See scripts/adr_index.py."
+        )
+
+    status = header.group("status").strip()
+    if not _STATUS.match(status):
+        raise AdrFormatError(
+            f"{path.name}: status {status!r} is not one of "
+            f"{' | '.join(STATUS_VOCABULARY)}. Prose about which clause moved "
+            f"belongs in the body under `## Amendment`, not in the status value."
+        )
+
+    return Adr(
+        number=path.name[:4],
+        filename=path.name,
+        title=_TITLE_PREFIX.sub("", header.group("title").strip()),
+        status=status,
+        date=header.group("date"),
+    )
+
+
+def load(adr_dir: Path = ADR_DIR) -> list[Adr]:
+    """Every numbered ADR, in number order."""
+    return [parse(path) for path in sorted(adr_dir.glob(_NUMBERED))]
+
+
+def _cell(text: str) -> str:
+    """Markdown table cells cannot carry a raw pipe."""
+    return text.replace("|", "\\|")
+
+
+def render(adrs: list[Adr], by_number: dict[str, Adr] | None = None) -> str:
+    """The full text of `docs/adr/README.md`."""
+    index = by_number if by_number is not None else {a.number: a for a in adrs}
+    live = sum(1 for a in adrs if a.is_live)
+
+    lines = [
+        "# Architecture Decision Records",
+        "",
+        "<!-- Generated by scripts/adr_index.py. Do not edit by hand: run the",
+        "     script instead. backend/tests/test_adr_index.py fails if this file",
+        "     is out of step with docs/adr/. -->",
+        "",
+        f"{len(adrs)} records, of which **{live} still state a rule**.",
+        "",
+        "| Status | Meaning |",
+        "|---|---|",
+        "| **Accepted** | Still in force. |",
+        "| **Amended** | Still in force, with a named clause replaced by a later "
+        "record. The body's `## Amendment` says which clause. |",
+        "| **Superseded** | Wholly replaced by a later record. Kept as history — "
+        "do not build from it. |",
+        "| **Reversed** | No longer in force, and no record replaced it. |",
+        "",
+        "| # | Title | Status | Superseded / amended by |",
+        "|---|---|---|---|",
+    ]
+
+    for adr in adrs:
+        refs = ", ".join(
+            f"[ADR-{n}]({index[n].filename})" if n in index else f"ADR-{n} (missing)"
+            for n in adr.refs
+        )
+        lines.append(
+            f"| [{adr.number}]({adr.filename}) "
+            f"| {_cell(adr.title)} "
+            f"| {adr.verb} "
+            f"| {refs or '—'} |"
+        )
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def main() -> int:
+    adrs = load()
+    INDEX_PATH.write_text(render(adrs), encoding="utf-8")
+    print(f"wrote {INDEX_PATH} — {len(adrs)} records")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
