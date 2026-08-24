@@ -83,7 +83,14 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
   return slug === "albescent" ? "var(--faction-default-stop-6)" : undefined;
 }
 
-function DefaultSigilAdapter({ size }: SigilVariantProps) {
+/**
+ * The na ring — a `Default*` archetype co-located with its dispatcher, which
+ * `manifest.ts` names as the normal shape for three surfaces already. Exported
+ * so a test can resolve the surface the way this component does (`pickVariant`
+ * over `surfaceMap('sigil')`, with the na fallback named) rather than
+ * re-deriving the fallback and proving its own copy instead.
+ */
+export function DefaultSigilAdapter({ size }: SigilVariantProps) {
   // The default ring has no color prop — it draws
   // --faction-default-rainbow-conic.
   return <DefaultSigil size={size} />;

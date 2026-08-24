@@ -7,7 +7,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
-import FactionSigil from "../FactionSigil";
+import FactionSigil, { DefaultSigilAdapter } from "../FactionSigil";
+import { pickVariant } from "../../../utils/factionDispatch";
+import { surfaceMap } from "../../../factions";
 import UaMandala from "../../factionMarks/UaMandala";
 
 describe("FactionSigil dispatcher (#659)", () => {
@@ -180,6 +182,88 @@ describe("Albescent's labyrinth (Sigil Studies v2)", () => {
       expect(html, `${size}px`).toContain(`width:${size}px`);
       expect(html, `${size}px`).toContain(`height:${size}px`);
     }
+  });
+});
+
+/**
+ * THE MANIFEST IS THE WHOLE MAP (#2529).
+ *
+ * The seam is `pickVariant(surfaceMap('sigil'), slug)` — the map on its own,
+ * with nothing added at the call site. `FactionSigil` used to spread
+ * `{ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }`, so the
+ * labyrinth reached the screen without ever appearing in `ALBESCENT_MANIFEST`:
+ * a bypass `SURFACE_KEYS_ARE_EXHAUSTIVE` cannot see, because it is not a new
+ * surface key but a slug injected into an existing map.
+ *
+ * Two things go red here if it comes back, and both matter:
+ *
+ *   1. the census lie — `surfaceMap('sigil')` must ANSWER for albescent rather
+ *      than report a hole the dispatcher quietly patches;
+ *   2. the deletion hazard — the mark must render the SAME through the map
+ *      alone as through the dispatcher. `Sidebar.tsx` records that a refactor
+ *      already dropped this mark once with nothing going red.
+ *
+ * Byte-identity is asserted rather than "contains the asset" on purpose: #2529
+ * is a migration, not a redesign, so a pixel that moves means the move was
+ * wrong. Every size the app mounts is walked because the comparison is over
+ * inline style, where the size is the only thing that varies.
+ */
+describe("every sigil the dispatcher draws comes out of the manifest (#2529)", () => {
+  // Every game slug, plus the two fall-through cases. `na` is a state rather
+  // than a faction and deliberately has no manifest, so it must resolve exactly
+  // the way an unknown slug does.
+  const SLUGS = [
+    "coven",
+    "snide",
+    "ephemerists",
+    "singularity",
+    "everymen",
+    "ua",
+    "wow",
+    "albescent",
+    "na",
+    "not_a_faction",
+    null,
+  ] as const;
+
+  // The mounts in the tree, plus the 64px step the avatar's ring gates on.
+  const SIZES = [15, 18, 22, 26, 34, 40, 42, 44, 64, 84];
+
+  it.each(SLUGS.map((slug) => [String(slug), slug] as const))(
+    "%s renders identically through surfaceMap('sigil') alone",
+    (_label, slug) => {
+      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      for (const size of SIZES) {
+        expect(
+          renderToStaticMarkup(<FactionSigil slug={slug} size={size} />),
+          `${slug} at ${size}px`,
+        ).toBe(renderToStaticMarkup(<Variant size={size} />));
+      }
+    },
+  );
+
+  it("keeps the caller's paint on the same path", () => {
+    // The sidebar's neutral rows hand the mark a position-sampled window of the
+    // ramp, so `color` has to survive the map lookup as well as the size does.
+    const sampled = "var(--faction-default-rainbow) 40% 0 / 600% 100%";
+    for (const slug of SLUGS) {
+      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      expect(
+        renderToStaticMarkup(<FactionSigil slug={slug} color={sampled} />),
+        String(slug),
+      ).toBe(renderToStaticMarkup(<Variant color={sampled} />));
+    }
+  });
+
+  it("answers for albescent out of the map, not out of the call site", () => {
+    // The census assertion. Without it the two above stay green if someone
+    // re-adds the spread AND the manifest row — a slower version of the same
+    // bug, since the call site would win again.
+    const map = surfaceMap("sigil");
+    expect(map["albescent"]).toBeDefined();
+    expect(renderToStaticMarkup(<FactionSigil slug="albescent" size={40} />)).toContain(
+      "/factionMarks/labyrinth.svg",
+    );
   });
 });
 
