@@ -24,6 +24,8 @@ import { describe, it, expect } from 'vitest'
 import '../../i18n'
 import i18n from '../../i18n'
 import AlbescentFeedFrame from '../feed/AlbescentFeedFrame'
+import AlbescentComment from '../comments/voices/AlbescentComment'
+import { resolvedArchetype } from '../../factions/lazyArchetype'
 import FeedCardRouter from '../feed/FeedCardRouter'
 import { feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { surfaceMap } from '../../factions'
@@ -302,8 +304,19 @@ describe('epic decision 13, both halves', () => {
     // `albescent ≡ na + drift` (ADR-0048): the comment voice does not need to
     // differ, because the card is sufficiently distinct on its own once the light
     // is on it. Owner's call at grill, and the title of the issue that built
-    // this. An AlbescentComment appearing here would be the drift ADR-0027 is
-    // about — a per-faction WORD is as identifying as a per-faction hue.
-    expect(surfaceMap('comment')['albescent']).toBeUndefined()
+    // this. A comment voice OF ITS OWN would be the drift ADR-0027 is about — a
+    // per-faction WORD is as identifying as a per-faction hue.
+    //
+    // THIS USED TO READ `toBeUndefined()`, AND THE RULING DID NOT CHANGE — the
+    // way it is recorded did. #2531 filled the manifest's four remaining holes,
+    // because an absent row says "na draws no mark to re-cut here" and "nobody
+    // got to it" at the same time and the audit found readers taking the second.
+    // `AlbescentComment` is a PASS-THROUGH: it renders `DefaultComment` and its
+    // markup is byte-identical in both modes, which is decision 13 stated in the
+    // one place that answers "does Albescent dress this?" rather than by
+    // silence. The byte-identity is asserted once, in
+    // `src/__tests__/albescentWrapperKinds.test.tsx`; what belongs here is that
+    // the row is that wrapper and not a voice.
+    expect(resolvedArchetype(surfaceMap('comment')['albescent'])).toBe(AlbescentComment)
   })
 })

@@ -97,6 +97,24 @@ function dispatch(slug: string | null): string {
 
 const SEAL_SLUGS = Object.keys(surfaceMap('duelSeal'))
 
+/**
+ * The registered SKINS — every row but `albescent`, and the exclusion is the
+ * point rather than a carve-out.
+ *
+ * #2531 registered `duelSeal` for Albescent as a PASS-THROUGH: the row renders
+ * `DefaultDuelSealConfirm` and is byte-identical to it, because this dialog is
+ * the one na surface with no spectrum on it to re-cut, it is skinned by the
+ * TASK's faction (so a non-member is looking at it), and its forfeit mode is the
+ * one duel beat that cannot be undone. It exists so the manifest stops answering
+ * "does Albescent dress this?" by silence.
+ *
+ * So the two assertions below that mean "no skin quietly fell through to the
+ * Default" cannot include it — for Albescent, BEING the Default is the design,
+ * and the assertion that holds it there is the byte-identity one further down,
+ * which is strictly stronger than the distinctness these two ask of a skin.
+ */
+const SKIN_SLUGS = SEAL_SLUGS.filter((slug) => slug !== 'albescent')
+
 beforeEach(() => {
   mocks.formFactor = 'desktop'
 })
@@ -107,8 +125,10 @@ describe('the duel seal is one responsive component per faction', () => {
   })
 
   it('registers a seal for every faction that had one', () => {
+    // Seven skins, plus `albescent` — which is not an eighth skin but the
+    // pass-through row #2531 added; see SKIN_SLUGS above.
     expect(SEAL_SLUGS.sort()).toEqual(
-      ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow'].sort(),
+      ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow', 'albescent'].sort(),
     )
   })
 
@@ -118,7 +138,7 @@ describe('the duel seal is one responsive component per faction', () => {
     expect(dispatch(slug)).toBe(renderToStaticMarkup(<Skin {...PROPS} />))
   })
 
-  it.each(SEAL_SLUGS)('%s keeps its own dress on a phone, not the Default', (slug) => {
+  it.each(SKIN_SLUGS)('%s keeps its own dress on a phone, not the Default', (slug) => {
     mocks.formFactor = 'mobile'
     expect(dispatch(slug)).not.toBe(renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />))
   })
@@ -128,8 +148,19 @@ describe('the duel seal is one responsive component per faction', () => {
   // the suite would notice.
   it.each(['desktop', 'mobile'] as const)('renders eight distinct sheets on %s', (formFactor) => {
     mocks.formFactor = formFactor
-    const sheets = [renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />), ...SEAL_SLUGS.map(dispatch)]
+    const sheets = [renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />), ...SKIN_SLUGS.map(dispatch)]
     expect(new Set(sheets).size).toBe(sheets.length)
+  })
+
+  /**
+   * The ninth row, asserted from the other side (#2531). A pass-through is held
+   * to EQUALITY where a skin is held to difference — "a pass-through that shifts
+   * a pixel is a bug" — so an Albescent duel seal that ever grew a dress of its
+   * own fails here rather than quietly appearing in front of a non-member.
+   */
+  it.each(['desktop', 'mobile'] as const)('albescent is the Default sheet on %s, by design', (formFactor) => {
+    mocks.formFactor = formFactor
+    expect(dispatch('albescent')).toBe(renderToStaticMarkup(<DefaultDuelSealConfirm {...PROPS} />))
   })
 
   // The unaffiliated seal is the Default one, on both form factors.
