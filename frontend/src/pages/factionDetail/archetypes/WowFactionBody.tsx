@@ -114,6 +114,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   const name = factionName(faction.slug);
   const roll = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const champion = roll[0];
+  /* The roll below the champion card. `slice(1)` rather than a filter on id: the
+     card is `roll[0]`, so position is the definition here and an id comparison
+     would be a second way of saying the same thing. */
+  const rest = roll.slice(1);
 
   return (
     // `.wz-faction-grid` is the shared main+rail seam all six other bodies use.
@@ -137,28 +141,6 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         <Charter slug={faction.slug} />
-
-        {/* ── the muster roll ── */}
-        <section>
-          <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
-          {roll.length === 0 ? (
-            <Quiet>{t("detail.membersEmpty")}</Quiet>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-              {roll.slice(0, ROLL_LIMIT).map((member, index) => (
-                <MemberRow
-                  key={member.id}
-                  rank={index + 1}
-                  member={member}
-                  champion={member.id === champion?.id}
-                />
-              ))}
-              {/* The champion IS the whole roll — say so rather than leaving one
-                  lonely row reading as a truncated list. */}
-              {roll.length === 1 && <Quiet>{t("detail.membersEmptyWithSpotlight")}</Quiet>}
-            </div>
-          )}
-        </section>
 
         {/* ── quests awaiting a champion ── */}
         <section>
@@ -210,8 +192,50 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
         </section>
       </div>
 
-      {/* ── RIGHT RAIL — standing / enlist / gate ── */}
-      <JoinBlock name={name} membership={membership} />
+      {/* ── RIGHT RAIL ── join, then Champion, then the roll (#2548).
+           This rail held ONLY the enlist block. Every other body puts the
+           Champion card and the Members roll here too, and WOW instead drew its
+           muster roll in the MAIN column between the Charter and the quests and
+           named no champion at all -- the top scorer was simply row 1, flagged by
+           a boolean. The document-order consequence was that Members rendered
+           BEFORE Tasks on this page and after both galleries on every other one.
+
+           Nothing is reskinned: the champion is `MemberRow` in its marked state,
+           WOW's own drawing, under WOW's own `SectionHead`. Every ornament stays
+           -- parchment, the wavy gold/plum rules, the bunting, the balloons. ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+        <JoinBlock name={name} membership={membership} />
+
+        {/* ⑥ CHAMPION — `wow.spotlight.label` is the key `MemberRow` already
+            reads for its pill, so no string is minted. Ranked on
+            `all_time_score` like every sibling: the two agree inside an era and
+            only that one survives a reset, so the card does not blank itself on
+            day one. */}
+        {champion && (
+          <section>
+            <SectionHead>{t("wow.spotlight.label")}</SectionHead>
+            <MemberRow rank={1} member={champion} champion />
+          </section>
+        )}
+
+        {/* ⑥ MEMBERS — the champion is drawn above, so the roll drops them, which
+            is what `membersEmptyWithSpotlight` has always been for. With a real
+            champion card over it that line finally means what it says. */}
+        <section>
+          <SectionHead>{t("detail.default.membersHeading", { total: members.length })}</SectionHead>
+          {rest.length === 0 ? (
+            <Quiet>
+              {champion ? t("detail.membersEmptyWithSpotlight") : t("detail.membersEmpty")}
+            </Quiet>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+              {rest.slice(0, ROLL_LIMIT).map((member, index) => (
+                <MemberRow key={member.id} rank={index + 2} member={member} champion={false} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -348,7 +372,12 @@ function MemberRow({
         minHeight: 46,
         display: "flex",
         alignItems: "center",
-        gap: "var(--space-lg)",
+        /* Wraps since #2548 moved the roll into the 322px rail. The row was laid
+           out for the main column, where rank + name + pill + stat fit on one
+           line; in the rail they do not, and a nowrap name beside a nowrap stat
+           would overflow the plate rather than reflow inside it. */
+        flexWrap: "wrap",
+        gap: "var(--space-sm) var(--space-lg)",
         padding: "var(--space-sm) var(--space-lg)",
         background: PLATE,
         border: `1px solid ${HAIR}`,
