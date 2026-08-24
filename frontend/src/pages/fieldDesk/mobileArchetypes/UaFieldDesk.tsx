@@ -126,21 +126,6 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
         />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
           <UaSigil width={34} height={34} />
-          <div style={{ minWidth: 0 }}>
-            <div style={smallCaps}>{t('nav.home')}</div>
-            <h1
-              style={{
-                fontFamily: DISPLAY,
-                fontWeight: 600,
-                fontSize: 'var(--text-heading)',
-                lineHeight: 1.05,
-                color: INK,
-                margin: 'var(--space-xs) 0 0',
-              }}
-            >
-              {t('fieldDesk.home.title')}
-            </h1>
-          </div>
         </div>
       </header>
 
@@ -191,13 +176,23 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-title)', lineHeight: 1, color: INK, textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'var(--text-title)', lineHeight: 1, color: INK, textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div className="truncate" style={{ ...smallCaps, marginTop: 'var(--space-xs)' }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>

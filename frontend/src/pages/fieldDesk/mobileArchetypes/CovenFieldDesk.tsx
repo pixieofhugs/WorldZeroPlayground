@@ -196,20 +196,6 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
           positioned, so the content sits above it explicitly (#911). */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
         <header>
-          <div style={CAPTION}>{t('nav.home')}</div>
-          <h1
-            style={{
-              fontFamily: HAND,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the desk's own hand, not typeset copy.
-              fontSize: 34,
-              fontWeight: 700,
-              lineHeight: 0.9,
-              color: INK,
-              margin: 'var(--space-xs) 0 0',
-            }}
-          >
-            {t('fieldDesk.home.title')}
-          </h1>
           <Braid style={{ marginTop: 'var(--space-sm)' }} />
         </header>
 
@@ -273,13 +259,23 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <Link
-                to={`/characters/${character.id}`}
-                className="block truncate"
-                style={{ fontFamily: HAND, fontSize: 'var(--text-heading)', lineHeight: 0.95, color: INK, textDecoration: 'none' }}
-              >
-                {character.display_name}
-              </Link>
+              {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                  a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                  bottom nav already marks as current. Both are gone, and rather than
+                  leave the page with no level-1 heading (#1794's defect) the heading
+                  names the page's real subject: the life being carried. Same ruling
+                  the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                  data already here. The masthead band itself STAYS -- only the two
+                  text elements went, so every kit keeps its own mark. */}
+              <h1 className="m-0">
+                <Link
+                  to={`/characters/${character.id}`}
+                  className="block truncate"
+                  style={{ fontFamily: HAND, fontSize: 'var(--text-heading)', lineHeight: 0.95, color: INK, textDecoration: 'none' }}
+                >
+                  {character.display_name}
+                </Link>
+              </h1>
               <div className="truncate" style={{ ...CAPTION, marginTop: 'var(--space-xs)' }}>
                 {t('sidebar.characterCard.level', { level: character.level })}
               </div>

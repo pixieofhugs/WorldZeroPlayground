@@ -3207,7 +3207,7 @@ describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
     expect(
       source,
       "the wall is drawn once, in `factionMarks/snideAtoms`, because five surfaces wear it.",
-    ).toMatch(/import \{ Ransom, WALL \} from ["'][^"']*factionMarks\/snideAtoms["']/);
+    ).toMatch(/import \{ WALL \} from ["'][^"']*factionMarks\/snideAtoms["']/);
     expect(wallPanelMarkup(source).length, "the panel mounts something").toBeGreaterThan(0);
     expect(source, "`WallPanel` grounds on the imported recipe").toMatch(/background: WALL,/);
     for (const layer of [
@@ -3223,11 +3223,26 @@ describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
     }
   });
 
-  it("the masthead and the comment byline are cut from ONE drawing", () => {
+  /**
+   * #2580 SUPERSEDED THIS TEST'S FIRST HALF, and the reason is a deletion rather
+   * than a redraw. #2287 pinned the FIELDDESK masthead as the per-letter ransom
+   * cut — the repair for a report that the skin read "boring". On 2026-08-23 the
+   * owner cut the masthead's copy itself: the `HOME` kicker and the `FieldDesk`
+   * title both name a page the bottom nav already marks as current, and the
+   * page's `<h1>` is now the carried life. There is no title left to cut, so the
+   * desk no longer mounts `Ransom` at all.
+   *
+   * What #2287 was actually protecting is untouched and still asserted below:
+   * the per-letter cut is drawn ONCE, in `snideAtoms`, and the comment voice
+   * consumes it rather than transcribing a fourth scrap table. The desk simply
+   * stopped being one of its consumers. Snide's acid rule, the flyposted `WALL`
+   * ground and every ink pairing this describe block measures are all unchanged.
+   */
+  it("the comment byline is cut from the ONE shared drawing", () => {
     expect(
       deskSource(),
-      "the FIELDDESK masthead is the ransom cut, mounted — not a bold condensed sans, which is what was reported.",
-    ).toMatch(/<Ransom text=\{t\('fieldDesk\.home\.title'\)\}/);
+      "the masthead's title is gone (#2580), so the desk must not mount the cut for it any more.",
+    ).not.toMatch(/<Ransom text=\{t\('fieldDesk\.home\.title'\)\}/);
     const voice = stripComments(sourceOf(VOICE));
     expect(voice, `${VOICE} mounts the shared cut`).toMatch(
       /import \{ Ransom \} from ["'][^"']*factionMarks\/snideAtoms["']/,

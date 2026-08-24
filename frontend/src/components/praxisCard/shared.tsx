@@ -1,6 +1,8 @@
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import Markdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { CharacterOut } from "../../api/auth";
 import { UNSCORED_MODERATION_STATUSES, type PraxisCardOut } from "../../api/praxis";
 import { factionCssVar } from "../../utils/factions";
@@ -558,6 +560,77 @@ export function PraxisStats({
   );
 }
 
+/**
+ * Every node the parser can emit, resolved to plain inline text (#2578).
+ *
+ * The card printed `body_text` straight into the clamp, so a body written in
+ * markdown arrived as its SOURCE — `## ****I be this is invalid****` is the
+ * report. Meanwhile every praxis DETAIL page renders the same field through
+ * `MarkdownPreview`, so one body read two ways depending on the surface.
+ *
+ * Owner ruling: rendering it AS markdown is not the fix either. A `##` would
+ * become a heading and a list a `<ul>`, inside a two-line clamp, inside a card
+ * that is itself a link — and a nested `<a>` is invalid HTML rather than merely
+ * untidy. So the real parser runs and its output is flattened.
+ *
+ * WHY THE PARSER AND NOT A REGEX. A hand-rolled stripper is a second markdown
+ * implementation, and it would disagree with remark on exactly the input that
+ * produced this report: `****…****` is malformed emphasis, and two parsers
+ * resolve malformed emphasis differently. Going through remark makes the card's
+ * reading of a body identical to the detail page's BY CONSTRUCTION rather than
+ * by maintenance. That property is the whole point; it is not available at any
+ * level of care from a regex.
+ *
+ * Blocks emit a trailing space so `## Title` followed by a paragraph does not
+ * read `TitleBody`. Anchors keep their words and drop their href. An image
+ * resolves to its alt text — that IS its text — and fetches nothing. `hr` and
+ * the GFM task-list checkbox have no text, so they leave nothing behind.
+ */
+/** A block: its text, then a space, so two blocks never read as one word. */
+const Block = ({ children }: { children?: ReactNode }) => <>{children} </>;
+/** An inline wrapper: its text and nothing else. */
+const Inline = ({ children }: { children?: ReactNode }) => <>{children}</>;
+
+/*
+ * Written out one tag at a time on purpose. A loop over the tag list assigning
+ * into `Components` makes TypeScript widen across every key of
+ * `JSX.IntrinsicElements` at once and it gives up: `TS2590: Expression produces
+ * a union type that is too complex to represent`. The literal is longer and
+ * completely boring, which is the trade to take here — and a tag the parser can
+ * emit that is missing from this list simply renders as itself, which the tests
+ * catch rather than the types.
+ */
+const FLATTENED: Components = {
+  p: Block,
+  h1: Block,
+  h2: Block,
+  h3: Block,
+  h4: Block,
+  h5: Block,
+  h6: Block,
+  blockquote: Block,
+  li: Block,
+  pre: Block,
+  tr: Block,
+  th: Block,
+  td: Block,
+  a: Inline,
+  em: Inline,
+  strong: Inline,
+  del: Inline,
+  code: Inline,
+  ul: Inline,
+  ol: Inline,
+  table: Inline,
+  thead: Inline,
+  tbody: Inline,
+  tfoot: Inline,
+  br: () => <> </>,
+  hr: () => null,
+  input: () => null,
+  img: ({ alt }) => <>{alt}</>,
+};
+
 /** Slot: a 1–2 line body-text excerpt, clamped. Renders nothing without body. */
 export function PraxisExcerpt({
   praxis,
@@ -584,7 +657,9 @@ export function PraxisExcerpt({
         ...style,
       }}
     >
-      {praxis.body_text}
+      <Markdown remarkPlugins={[remarkGfm]} components={FLATTENED}>
+        {praxis.body_text}
+      </Markdown>
     </p>
   );
 }

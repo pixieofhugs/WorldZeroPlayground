@@ -11,7 +11,6 @@ import FactionSigil from '../../../components/sigil/FactionSigil'
 import {
   BRASS,
   BRASS_LIGHT,
-  CAPTION,
   DECO,
   INK,
   INNER,
@@ -122,11 +121,7 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           <EphemeristsSigil size={13} color={BRASS} />
-          <span style={{ ...kicker, color: CAPTION }}>{t('nav.home')}</span>
         </div>
-        <h1 style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1.05, letterSpacing: '0.04em', color: INK, margin: 'var(--space-xs) 0 0' }}>
-          {t('fieldDesk.home.title')}
-        </h1>
         {/* A rune band closed the running head until #2210 retired the old
             glyph vocabulary kit-wide. The desk mounts no masthead, so nothing
             takes its place — the column's own `--space-lg` gap parts the head
@@ -187,13 +182,23 @@ export default function EphemeristsFieldDesk({ state }: { state: FieldDeskHomeSt
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="block truncate"
-              style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1, letterSpacing: '0.03em', color: INK, textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            {/* THE PAGE'S <h1> (#2580). The app-bar row above used to carry it --
+                a `HOME` kicker over a `FieldDesk` title, both naming the page the
+                bottom nav already marks as current. Both are gone, and rather than
+                leave the page with no level-1 heading (#1794's defect) the heading
+                names the page's real subject: the life being carried. Same ruling
+                the desktop FieldDesk took on 2026-08-15; no new string, the name is
+                data already here. The masthead band itself STAYS -- only the two
+                text elements went, so every kit keeps its own mark. */}
+            <h1 className="m-0">
+              <Link
+                to={`/characters/${character.id}`}
+                className="block truncate"
+                style={{ fontFamily: DECO, fontSize: 'var(--text-title)', lineHeight: 1, letterSpacing: '0.03em', color: INK, textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+            </h1>
             <div className="truncate" style={{ marginTop: 'var(--space-xs)', ...trackMetaStyle }}>
               {t('sidebar.characterCard.level', { level: character.level })}
             </div>
