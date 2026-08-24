@@ -76,13 +76,19 @@ const SLUGS = [
  *
  * The pattern is matched against `ns:dotted.key` with `{F}` standing for any
  * slug. Some families' per-faction key sat under a per-faction SECTION name
- * (`coven.manifesto.empty`, `snide.dispatch.gateBody`, `ua.registry.…`), which
- * is why several patterns name the section alternatives rather than a fixed
- * path — a literal grep returns zero for those, which is how the audit
- * undercounted them.
+ * (`coven.manifesto.empty`, `ephemerists.plate.…`), which is why `ABOUT`
+ * still names the section alternatives rather than a fixed path — a literal
+ * grep returns zero for those, which is how the 2026-08-16 audit undercounted
+ * them.
+ *
+ * The join panel used to need the same treatment: a
+ * `(join|roll|road|dispatch|registry|access)` alternation, one arm per faction,
+ * whose only job was to paper over seven names for one block. #2299 gave all
+ * seven the literal `join`, so the alternation is retired rather than widened
+ * — retiring it is the whole point. WIDENING IT BACK would re-admit the
+ * per-faction parent name this repo just paid to remove.
  */
 const ABOUT = '(about|manifesto|charter|practice|apparatus|manifest)'
-const JOIN = '(join|roll|road|dispatch|registry|access)'
 const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // --- common.json: the phone FieldDesk masthead -------------------------
   //
@@ -101,12 +107,12 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   { banned: `factions:{F}\\.${ABOUT}\\.heading`, shared: 'factions:detail.aboutHeading', wording: 'About' },
   { banned: `factions:{F}\\.invitation\\.terms\\.1\\.label`, shared: 'factions:invitation.skillsLabel', wording: 'Required skills' },
   { banned: `factions:{F}\\.invitation\\.terms\\.2\\.label`, shared: 'factions:invitation.outputLabel', wording: 'Expected output' },
-  { banned: `factions:{F}\\.${JOIN}\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
+  { banned: `factions:{F}\\.join\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
   // The interpolation moved off the end of the sentence (#2368): "…to
   // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
   // that already carries one, and rendered "S.N.I.D.E..". The imperative is
   // still here, it just lands last. `catalog.test.ts` holds the general guard.
-  { banned: `factions:{F}\\.${JOIN}\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
+  { banned: `factions:{F}\\.join\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'An invitation to {{faction}} is earned. Keep completing tasks.' },
   { banned: `factions:{F}\\.mobile\\.eyebrow`, shared: 'factions:detail.eyebrow', wording: 'Faction' },
   { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No praxis submitted yet.' },
   { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent praxis' },
@@ -305,5 +311,76 @@ describe('every i18n key literal in the source tree resolves (#1911)', () => {
       }
     }
     expect(missing).toEqual([])
+  })
+})
+
+/* -------------------------------------------------------------------------- *
+ * #2299 / #2585 — the join panel is one key path and one slot set.
+ * -------------------------------------------------------------------------- */
+
+/**
+ * Seven factions render the same block ③, and each used to file it under its own
+ * parent name with its own ragged slot set: 71 strings, 14 possible slots,
+ * nobody holding all 14. The raggedness was invisible until you lined the seven
+ * up, which is what this suite does.
+ *
+ * BOTH HALVES ARE LOAD-BEARING and neither catches the other's bug. A wrong
+ * PATH is caught by `tsc` — the key union is generated from this catalog — but
+ * a slot QUIETLY DROPPED from one faction is not: the panel renders one line
+ * short, and every other test still passes. A slot quietly ADDED to one faction
+ * is the same failure in the other direction, and is exactly how the 14
+ * accumulated in the first place.
+ */
+const JOIN_FACTIONS = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow']
+const JOIN_SLOTS = [
+  'eligibleBody',
+  'eligibleTitle',
+  'gateTitle',
+  'heading',
+  'joinButton',
+  'joining',
+  'memberStanding',
+  'memberTitle',
+]
+
+describe('the join panel is one key path and one slot set (#2299)', () => {
+  const leaves = catalogLeaves()
+
+  for (const slug of JOIN_FACTIONS) {
+    it(`${slug} fills the eight slots under ${slug}.join, and only those`, () => {
+      const prefix = `factions:${slug}.join.`
+      const slots = leaves
+        .map(([id]) => id)
+        .filter((id) => id.startsWith(prefix))
+        .map((id) => id.slice(prefix.length))
+        .sort()
+      expect(slots).toEqual(JOIN_SLOTS)
+    })
+  }
+
+  it('no faction keeps a per-faction parent name for the block', () => {
+    // The five retired names. `wow` and `coven` were already `join`.
+    const retired = new RegExp(
+      `^factions:(${JOIN_FACTIONS.join('|')})\.(access|dispatch|registry|road|roll)\.`,
+    )
+    expect(leaves.map(([id]) => id).filter((id) => retired.test(id))).toEqual([])
+  })
+
+  it('no faction keeps its own confirm, kicker, overline or letterhead', () => {
+    // Rulings (a)-(d) plus §1. Each of these was one or two factions doing
+    // alone what the other five or six did not do at all — connecting chrome,
+    // or a voiced copy of a string `detail.join.*` already shares.
+    // `detail.join.*` is the SHARED block, not a faction branch — it is where
+    // the confirm pair lives and must keep living, so the sweep is pinned to
+    // the seven slugs rather than to any `*.join.` parent.
+    const cut = new RegExp(
+      `^factions:(${JOIN_FACTIONS.join('|')})` +
+        `\.join\.(confirm|confirmSwitch|eligibleKicker|gateKicker|reLabel|letterhead)$`,
+    )
+    expect(leaves.map(([id]) => id).filter((id) => cut.test(id))).toEqual([])
+    // The shared confirm pair UA now reads is the one the other six already did.
+    expect(i18n.t('factions:detail.join.confirm', { faction: 'Cozy Coven' })).toBe(
+      'Join Cozy Coven?',
+    )
   })
 })

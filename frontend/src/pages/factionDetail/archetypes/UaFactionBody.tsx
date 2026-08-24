@@ -325,7 +325,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
         {/* ③ THE REGISTRY — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...SHEET, padding: "var(--space-xl)" }}>
-            <RuledLabel>{t("ua.registry.heading")}</RuledLabel>
+            <RuledLabel>{t("ua.join.heading")}</RuledLabel>
 
             {membership.state === "member" && (
               <div>
@@ -338,7 +338,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     color: "var(--faction-ua-card-text)",
                   }}
                 >
-                  {t("ua.registry.memberTitle")}
+                  {t("ua.join.memberTitle")}
                 </div>
                 <div
                   style={{
@@ -347,7 +347,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     marginTop: "var(--space-md)",
                   }}
                 >
-                  <Trans t={t} i18nKey="ua.registry.memberStanding">
+                  <Trans t={t} i18nKey="ua.join.memberStanding">
                     Standing ·{" "}
                     <span style={{ color: "var(--faction-ua-card-accent)" }}>
                       practising
@@ -359,7 +359,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
             {membership.state === "eligible" && !confirming && (
               <div>
-                <div style={UA_EYEBROW}>{t("ua.registry.eligibleKicker")}</div>
                 <div
                   className="content-title"
                   style={{
@@ -370,19 +369,19 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     margin: "var(--space-xs) 0 var(--space-md)",
                   }}
                 >
-                  {t("ua.registry.eligibleTitle")}
+                  {t("ua.join.eligibleTitle")}
                 </div>
                 <p
                   className="content-text"
                   style={{ ...prose, marginBottom: "var(--space-lg)" }}
                 >
-                  {t("ua.registry.eligibleBody")}
+                  {t("ua.join.eligibleBody")}
                 </p>
                 <button
                   onClick={() => setConfirming(true)}
                   style={{ ...SOLID_ACTION, width: "100%", cursor: "pointer" }}
                 >
-                  {t("ua.registry.joinButton")}
+                  {t("ua.join.joinButton")}
                 </button>
               </div>
             )}
@@ -399,11 +398,11 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 >
                   {membership.currentFactionSlug &&
                   membership.currentFactionSlug !== "na"
-                    ? t("ua.registry.confirmSwitch", {
+                    ? t("detail.join.confirmSwitch", {
                         faction: factionName(faction.slug),
                         current: factionName(membership.currentFactionSlug),
                       })
-                    : t("ua.registry.confirm", {
+                    : t("detail.join.confirm", {
                         faction: factionName(faction.slug),
                       })}
                 </p>
@@ -430,7 +429,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     }}
                   >
                     {membership.joining
-                      ? t("ua.registry.joining")
+                      ? t("ua.join.joining")
                       : t("mobile.confirm")}
                   </button>
                   <button
@@ -453,7 +452,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
             {membership.state === "gate" && (
               <div>
-                <div style={UA_EYEBROW}>{t("ua.registry.gateKicker")}</div>
                 <div
                   className="content-title"
                   style={{
@@ -464,7 +462,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     margin: "var(--space-xs) 0 var(--space-md)",
                   }}
                 >
-                  {t("ua.registry.gateTitle")}
+                  {t("ua.join.gateTitle")}
                 </div>
                 <p className="content-text" style={prose}>
                   {t("mobile.gateHint", {

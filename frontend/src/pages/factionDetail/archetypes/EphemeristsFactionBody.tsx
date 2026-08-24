@@ -291,7 +291,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         {membership.state !== "none" && (
           <div style={{ ...CARD, padding: 0 }}>
             <div style={{ background: BAND, color: BAND_INK, padding: "var(--space-sm) var(--space-lg)", fontFamily: CAPS, fontWeight: 600, fontSize: "var(--text-lg)", letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: `inset 0 -2px 0 ${BRASS}` }}>
-              {t("ephemerists.road.heading")}
+              {t("ephemerists.join.heading")}
             </div>
             <div style={{ position: "relative", padding: "var(--space-xl)" }}>
               <div style={{ position: "relative", zIndex: 2 }}>
@@ -307,10 +307,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         color: INK,
                       }}
                     >
-                      {t("ephemerists.road.memberTitle")}
+                      {t("ephemerists.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: READING, fontSize: "var(--text-xl)", color: QUIET, margin: "var(--space-md) 0 0" }}>
-                      <Trans t={t} i18nKey="ephemerists.road.memberStanding">
+                      <Trans t={t} i18nKey="ephemerists.join.memberStanding">
                         Standing · <span style={{ fontStyle: "italic", color: BRASS_LIGHT }}>keeper of the road</span>
                       </Trans>
                     </div>
@@ -319,18 +319,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div
-                      style={{
-                        fontFamily: MARGINALIA,
-                        fontStyle: "italic",
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
-                        fontSize: 13,
-                        color: CAPTION,
-                        marginBottom: "var(--space-xs)",
-                      }}
-                    >
-                      {t("ephemerists.road.eligibleKicker")}
-                    </div>
                     <div
                       style={{
                         fontFamily: CAPS,
@@ -342,10 +330,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         marginBottom: "var(--space-md)",
                       }}
                     >
-                      {t("ephemerists.road.eligibleTitle")}
+                      {t("ephemerists.join.eligibleTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
-                      {t("ephemerists.road.eligibleBody")}
+                      {t("ephemerists.join.eligibleBody")}
                     </div>
                     {/* THE ONE PLATE CTA (#2146) — ground, ink and enclosure
                         from `.eph-cta`, because the enclosure changes width
@@ -357,7 +345,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       onClick={() => setConfirming(true)}
                       style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" }}
                     >
-                      {t("ephemerists.road.joinButton")}
+                      {t("ephemerists.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -384,7 +372,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {membership.joining
-                          ? t("ephemerists.road.joining")
+                          ? t("ephemerists.join.joining")
                           : t("mobile.confirm")}
                       </button>
                       <button
@@ -400,20 +388,22 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
                 {(membership.state === "gate" || burned) && (
                   <div>
-                    <div
-                      style={{
-                        fontFamily: MARGINALIA,
-                        fontStyle: "italic",
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
-                        fontSize: 13,
-                        color: CAPTION,
-                        marginBottom: "var(--space-xs)",
-                      }}
-                    >
-                      {burned
-                        ? t("detail.burned.kicker")
-                        : t("ephemerists.road.gateKicker")}
-                    </div>
+                    {/* #2299 cut the faction's own gate kicker; the shared
+                        burned notice keeps its own overline. */}
+                    {burned && (
+                      <div
+                        style={{
+                          fontFamily: MARGINALIA,
+                          fontStyle: "italic",
+                          // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
+                          fontSize: 13,
+                          color: CAPTION,
+                          marginBottom: "var(--space-xs)",
+                        }}
+                      >
+                        {t("detail.burned.kicker")}
+                      </div>
+                    )}
                     <div
                       style={{
                         fontFamily: CAPS,
@@ -427,7 +417,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     >
                       {burned
                         ? t("detail.burned.title", { faction: factionName(faction.slug) })
-                        : t("ephemerists.road.gateTitle")}
+                        : t("ephemerists.join.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.65, color: INK }}>
                       {burned
