@@ -27,7 +27,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
-import "../../../../i18n";
+import i18n from "../../../../i18n";
 import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 import type { EditPraxisState } from "../../useEditPraxis";
@@ -99,6 +99,8 @@ interface Scenario {
   iApproved?: boolean;
   /** I have ticked "my part is finished". */
   iAmDone?: boolean;
+  /** The composer's title box. Empty is the entry state a signup mints (#2484). */
+  title?: string;
   markDone?: (isDone: boolean) => Promise<void>;
   propose?: () => Promise<void>;
   publish?: () => Promise<void>;
@@ -149,7 +151,7 @@ function state(scenario: Scenario = {}): EditPraxisState {
     task: task(slug),
     error: "",
     setError: () => {},
-    title: praxis.title,
+    title: scenario.title ?? praxis.title,
     setTitle: () => {},
     body: "## What I did\n\nCaught the papers.",
     setBody: () => {},
@@ -378,5 +380,73 @@ describe("what each signal does", () => {
     expect(labels).not.toContain(collabCopy(null, "approveFinalAction"));
     expect(labels).toContain(collabCopy(null, "withdrawAction"));
     expect(labels).toContain(collabCopy(null, "doneAction"));
+  });
+});
+
+/**
+ * The title precondition, on the one signal of the three that publishes (#2484).
+ *
+ * This is where "hidden, never disabled" bends, and deliberately. That rule is
+ * about Propose / Approve / Withdraw being mutually exclusive *by construction*
+ * — a window is open or it is not — and not about preconditions. Hiding is not
+ * available here anyway: a collab composer with no primary at all is worse than
+ * the dead end this replaces, and a crew signup is exactly where an untitled
+ * praxis comes from (`handleSignup` posts a task id and a type, nothing else).
+ */
+describe("the crew's primary waits for a title (#2484)", () => {
+  function signal(scenario: Scenario, words: string): TestButton {
+    const button = signals(scenario).find((child) => label(child) === words);
+    expect(button, `a button labelled "${words}" renders`).toBeTruthy();
+    return button!;
+  }
+
+  it("disables Propose while the write-up is unnamed", () => {
+    const button = signal({ title: "" }, collabCopy(null, "proposeAction"));
+    expect(button.props.disabled).toBe(true);
+    expect(button.props.className).toContain("control-off");
+  });
+
+  it("disables Approve too — it is the same endpoint by another name", () => {
+    const button = signal(
+      { title: "  ", proposalLive: true },
+      collabCopy(null, "approveFinalAction"),
+    );
+    expect(button.props.disabled).toBe(true);
+  });
+
+  it("enables it again once the crew names the praxis", () => {
+    const button = signal({}, collabCopy(null, "proposeAction"));
+    expect(button.props.disabled).toBe(false);
+    expect(button.props.className ?? "").not.toContain("control-off");
+  });
+
+  // Neither of the other two publishes, so neither goes dead. Done is a social
+  // toggle; Withdraw takes a proposal back.
+  it("leaves Done live on an untitled draft", () => {
+    expect(signal({ title: "" }, collabCopy(null, "doneAction")).props.disabled).toBe(
+      false,
+    );
+  });
+
+  it("leaves Withdraw live on an untitled draft", () => {
+    const button = signal(
+      { title: "", proposalLive: true },
+      collabCopy(null, "withdrawAction"),
+    );
+    expect(button.props.disabled).toBe(false);
+  });
+
+  it("says why, beside the control it disables", () => {
+    const markup = renderSkin({ title: "" });
+    expect(markup).toContain(
+      i18n.t("forms:editPraxis.composer.publishNeedsTitle"),
+    );
+    expect(markup).toContain('role="status"');
+  });
+
+  it("says nothing at all once there is a title", () => {
+    expect(renderSkin({})).not.toContain(
+      i18n.t("forms:editPraxis.composer.publishNeedsTitle"),
+    );
   });
 });

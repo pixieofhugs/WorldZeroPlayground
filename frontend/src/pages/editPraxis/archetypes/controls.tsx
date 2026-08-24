@@ -1587,8 +1587,88 @@ export function ModePicker<O extends { key: PraxisType }>({
 }
 
 /* -------------------------------------------------------------------------- */
+/* The title precondition, shared by the composer's two primaries (#2484).      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A praxis cannot be published without a title, and the composer only ever said
+ * so after the fact. `publish()` dismisses the seal dialog on its first line and
+ * refuses on its second (#718), so the refusal rendered in `ErrorBanner` at the
+ * foot of a long sheet — announced, but off-screen from where the player just
+ * pressed. Owner ruling on #2484: remove the dead end rather than report it
+ * better. The primary is dead while there is nothing to publish, so the seal
+ * sheet is never reachable in a state that must be refused.
+ *
+ * The hook is deliberately untouched. `setDuelSealOpen(false)`-then-validate
+ * stays exactly as #718 wrote it — its reasoning is not reversed, the branch it
+ * was written for simply stops being reachable — and the server's own
+ * `title.trim()` refusal stays too. This is an affordance, not a validation
+ * move, and it is derived here rather than added to `EditPraxisState` because
+ * `state.title` is already on it and nothing else needs to know.
+ *
+ * Untitled is the NORMAL entry state, not a slip: `handleSignup` posts a task id
+ * and a type, and `accept_duel` mints the opponent's side with no title at all.
+ * So for a duel or a collab this is a required step added to the main path,
+ * which is why the reason is drawn (below) rather than implied — a dead control
+ * with no explanation is worse than the silent failure it replaces.
+ */
+function publishNeedsTitle(state: EditPraxisState): boolean {
+  return !state.title.trim();
+}
+
+/**
+ * A fixed id, not `useId`. Both primaries are invoked as plain functions by
+ * their tests — the harness has no DOM and runs no effects — so neither may take
+ * a hook. One id is enough for the same reason one `data-testid` is: exactly one
+ * composer primary is on screen at a time.
+ */
+const PUBLISH_NEEDS_TITLE_ID = "composer-publish-needs-title";
+
+/**
+ * The reason, drawn beside the control it disables and pointed at from it.
+ *
+ * `role="status"` because the line appears and disappears as the title box is
+ * filled and cleared, and a disabled button is out of the tab order — so
+ * `aria-describedby` alone would reach only a reader browsing the page, never
+ * one tabbing through it.
+ *
+ * `width: 100%` gives it its own line in the footer's wrapping row and in
+ * `CollabSignals`' signal row, and costs nothing in the column seven skins lay
+ * their band out in. Same move `HoldoutPublishNotice` makes with `flex 1 1 100%`.
+ * The ink is `label-caption`'s and only the class's (#1819): an inline `color`
+ * beats `--label-ink`, and three of the nine sheets are near-black.
+ */
+function PublishNeedsTitleNotice() {
+  return (
+    <p
+      id={PUBLISH_NEEDS_TITLE_ID}
+      role="status"
+      className="label-caption"
+      style={{ width: "100%", margin: 0 }}
+    >
+      {i18n.t("forms:editPraxis.composer.publishNeedsTitle")}
+    </p>
+  );
+}
+
+/**
+ * The house disabled dress (#2486/#2573), reached by adding the class and
+ * nothing else — no opacity, no second token family.
+ *
+ * Only while the TITLE gate is what holds the control. The busy and
+ * mode-switching disables predate this and dress themselves (several skins set
+ * `cursor: wait` on the submitting button); folding them in would repaint a
+ * state this issue was not asked about.
+ */
+function offClassName(skinClassName: string | undefined, off: boolean): string | undefined {
+  if (!off) return skinClassName;
+  return skinClassName ? `${skinClassName} control-off` : "control-off";
+}
+
+/* -------------------------------------------------------------------------- */
 /* PublishButton — renders nothing once published (with one duel exception,     */
-/* below) and is disabled while saving / submitting / switching mode. The       */
+/* below) and is disabled while saving / submitting / switching mode, and while  */
+/* the praxis has no title (#2484 — see `publishNeedsTitle` above). The          */
 /* archetype arranges it inside its bespoke file bar and supplies faction-voiced */
 /* labels via skin. (The old Save Draft button was removed in #297 — autosave    */
 /* persists title/body and media uploads on pick, so no manual draft-save        */
@@ -1687,7 +1767,15 @@ export function PublishButton({
     : sealsADuel
       ? async () => state.requestDuelSeal()
       : state.publish;
-  return (
+  // Every branch of this button but ONE publishes: the solo cast calls
+  // `publish()` outright, and the duel's `requestDuelSeal()` opens the sheet
+  // whose confirm is that same `publish()` — so the gate belongs on both, or the
+  // seal sheet stays reachable from an untitled composer. `duelPullBack` is the
+  // exception and stays live: reopening a side that is already cast has nothing
+  // to do with the title, and it is the moderated composer's only way back into
+  // the text a moderator just asked the author to fix (#1177).
+  const needsTitle = !duelPullBack && publishNeedsTitle(state);
+  const button = (
     <button
       type="button"
       // The composer's one primary action, whatever it currently says (#2453).
@@ -1696,15 +1784,28 @@ export function PublishButton({
       // spec presses the SLOT. `CollabSignals` carries the same id for the same
       // reason; between them exactly one is on screen at a time.
       data-testid="composer-primary"
+      // The notice below is this control's description while there is one, so
+      // the reason is reachable without hunting the sheet for a caption.
+      aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
       onClick={() => void onClick()}
-      disabled={state.submitting || state.switchingMode !== null}
-      className={skin.className}
+      disabled={needsTitle || state.submitting || state.switchingMode !== null}
+      className={offClassName(skin.className, needsTitle)}
       style={skin.style}
     >
       {skin.ornament}
       {state.submitting ? skin.busyLabel : idleLabel}
       {skin.trailingOrnament}
     </button>
+  );
+  // The bare button when there is nothing to explain, so a titled composer's
+  // footer is byte-identical to what every archetype already lays out (and the
+  // hookless test seam keeps reading `onClick` straight off the return).
+  if (!needsTitle) return button;
+  return (
+    <>
+      <PublishNeedsTitleNotice />
+      {button}
+    </>
   );
 }
 
@@ -1746,9 +1847,19 @@ const SECONDARY_SIGNAL_STYLE: CSSProperties = {
  *  - **Withdraw proposal** — for the member who has read the draft and has no
  *    edit to make. Any member, not just the proposer (ADR-0013).
  *
- * **Hidden, never disabled.** Propose and Approve are mutually exclusive by
- * construction — a window is open or it is not — and Withdraw has nothing to
- * withdraw while the crew is drafting.
+ * **Hidden, never disabled — for MUTUAL EXCLUSION.** Propose and Approve cannot
+ * both apply — a window is open or it is not — and Withdraw has nothing to
+ * withdraw while the crew is drafting. A signal that does not apply is not
+ * drawn, and that is what this rule is about.
+ *
+ * A PRECONDITION is the other thing, and #2484 rules it disabled: Propose and
+ * Approve are dead until the praxis has a title. Hiding was not available —
+ * untitled is the state a crew signup mints, so hiding would leave the ordinary
+ * collab composer with no primary action at all, which is worse than the dead
+ * end it replaces. The reason is drawn beside the control (see
+ * `publishNeedsTitle`), which is what makes a disabled control honest. This is a
+ * deliberate exception to `frontend/CLAUDE.md`'s "hide unusable controls", not a
+ * drift back from it — do not "fix" it in a sweep.
  *
  * The WORDS are shared across all nine factions (ADR-0079's exception to
  * ADR-0065): they are a mechanical fact a player must read correctly in order
@@ -1778,6 +1889,12 @@ export function CollabSignals({
   const primaryLabel = proposalLive
     ? collabCopy(slug, finalApproval ? "approveFinalAction" : "approveAction")
     : collabCopy(slug, "proposeAction");
+  // The publishing one of the three, and only that one (#2484). Propose asks
+  // first and then calls `publish()`; Approve calls it outright — one endpoint
+  // the server tells apart by state — so both need a title to send. **Done** is
+  // a social toggle and **Withdraw proposal** takes one back; neither publishes,
+  // and neither goes dead because the write-up has not been named yet.
+  const needsTitle = publishNeedsTitle(state);
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
@@ -1800,13 +1917,21 @@ export function CollabSignals({
           // only by wording, and wording is what the nightly must stop reading.
           data-testid="composer-primary"
           data-collab-signal={proposalLive ? "approve" : "propose"}
-          title={collabCopy(
-            slug,
-            proposalLive ? "approveDescription" : "proposeDescription",
-          )}
+          // What pressing it would do, until there is a reason it cannot be
+          // pressed — a description of a live act on a dead control is worse
+          // than none.
+          title={
+            needsTitle
+              ? i18n.t("forms:editPraxis.composer.publishNeedsTitle")
+              : collabCopy(
+                  slug,
+                  proposalLive ? "approveDescription" : "proposeDescription",
+                )
+          }
+          aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
           onClick={() => void (proposalLive ? state.publish() : state.propose())}
-          disabled={busy}
-          className={skin.className}
+          disabled={needsTitle || busy}
+          className={offClassName(skin.className, needsTitle)}
           style={skin.style}
         >
           {skin.ornament}
@@ -1826,6 +1951,10 @@ export function CollabSignals({
           {collabCopy(slug, "withdrawAction")}
         </button>
       )}
+      {/* Under the row rather than over it: two of these three signals are still
+          live, so the line explains the one that is not instead of heading the
+          group. It only exists while the button it describes does. */}
+      {needsTitle && (!proposalLive || !gate.iCast) && <PublishNeedsTitleNotice />}
     </div>
   );
 }
