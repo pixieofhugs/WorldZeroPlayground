@@ -333,7 +333,7 @@ describe("each mount overrides what its ground demands (#2042)", () => {
    * fails this, where a list of expected declarations would only fail the ones
    * somebody remembered to list.
    *
-   * WHAT THIS DOES NOT SETTLE, and #2645 carries: the mark got SMALLER (96 from
+   * WHAT THIS DOES NOT SETTLE, and #2638 carries: the mark got SMALLER (96 from
    * 128) on the page that draws the widest figure the loop ever holds, and its
    * figure moved from cream to acid on the detail slab. Both follow from the
    * mount and neither has been looked at in a browser.
