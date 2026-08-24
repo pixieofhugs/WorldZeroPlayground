@@ -323,7 +323,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
   )
 }
 
-// --- letter styles (Albescent vellum tokens; always-light by design) ---------
+// --- letter styles (Albescent vellum tokens; they FLIP since #2301) ----------
 
 const letter: CSSProperties = {
   position: 'relative',

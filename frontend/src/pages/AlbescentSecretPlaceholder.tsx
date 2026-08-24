@@ -12,11 +12,10 @@
  * mixed down from `INK`, so the sheet, the rules and the glyph all invert
  * through the cascade with nothing branching on a `dark` boolean.
  *
- * ⚠ ADR-0017's ruling 7 still says Albescent's surfaces are "always-light
+ * ADR-0017's ruling 7 used to say Albescent's surfaces are "always-light
  * (identical values in both the light and dark cascades, exactly as
- * singularity's are always-dark)". That clause is now contradicted here and
- * NEEDS AN AMENDMENT the owner has not yet made — flagged on #2301 rather than
- * rewritten in passing. (Its other half is already dead: the
+ * singularity's are always-dark)". That clause is RETIRED: ADR-0083 §8 makes
+ * the amendment #2301 could only flag. (Its other half was already dead: the
  * `--faction-albescent-card-*` tokens it prescribes were deleted by #783, so
  * Albescent has rendered as unaffiliated everywhere since.) Singularity's
  * always-dark is untouched and stays — this ruling is about the vellum, not
