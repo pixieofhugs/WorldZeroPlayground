@@ -6041,7 +6041,9 @@
    a place for one of them to be forgotten silently. The marker rides on the
    wrapper each Albescent archetype already draws — the manifest row IS the
    claim, so a surface that stops being dispatched stops moving by construction.
-   `__tests__/albescentSpectraMove.test.tsx` holds the census.
+   `__tests__/albescentSpectraMove.test.tsx` holds the census — twice over since
+   #2543: once per surface for the marker, and once per MOUNT for the
+   ornament/frame split below, which is the half `:empty` actually reads.
 
    `:empty` SEPARATES TWO DIFFERENT OBJECTS WEARING ONE CLASS, and it is the one
    decision in this block. Most `.spectrum-rule` mounts are ORNAMENT — an
