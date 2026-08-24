@@ -49,6 +49,8 @@ const INDEX = stripComments(read("../index.css"));
 const MOTION = stripComments(read("../motion.ornament.css"));
 
 const SHEET = "--faction-default-card-sheet";
+/** The dark cascade's attribute selector, spelled once (#2550). */
+const DARK = '[data-theme="dark"]';
 const BLEND = `${SHEET}-blend`;
 const CLIP = `${SHEET}-clip`;
 
@@ -241,6 +243,91 @@ describe("the rest frame is paint, and it is deeper (epic ruling 6)", () => {
     for (const rest of [lightRest, darkRest]) {
       expect(rest.gates).toEqual(["@media (prefers-reduced-motion: reduce)"]);
     }
+  });
+});
+
+/**
+ * ONE ALBESCENT GROUND, AND IT IS THE CARDS' (#2550).
+ *
+ * The faction hero and the faction body carried a SECOND prism — #2504's own
+ * fainter cut of the same idea: five blooms at 0.06 against `.alb-prism`'s five
+ * at 0.16, a different geometry, different centres, a different light ramp, and
+ * nothing at all in light on the body. Side by side with a task card they did
+ * not read as the same faction, which is the same report #2499 answered for the
+ * two cards, and the same answer: not a re-tune, one drawing.
+ *
+ * EPIC #2496 RULING 9 IS REVERSED BY THIS, deliberately. Ruling 9 made the
+ * hero/body light-dark asymmetry — hero alone by day, hero and body by night —
+ * a looks decision, and index.css said so directly above `.alb-prism`. The
+ * owner's ruling on #2550 supersedes it: Albescent backgrounds are the task and
+ * praxis cards', everywhere.
+ *
+ * The seam is the stylesheet as source text, and the claim is exhaustive rather
+ * than per-class: NO Albescent selector may declare the card sheet except the
+ * prism's own four rules. A second ground added at a sixth mount fails here even
+ * though nobody thought to name it in a test.
+ */
+describe("one Albescent ground, declared once (#2550)", () => {
+  it("no `.alb-` rule declares the card sheet except the prism's four", () => {
+    const declaring = ALL.filter(
+      (rule) => rule.body.includes(SHEET) && rule.prelude.includes(".alb-"),
+    );
+    // Every one of them IS a prism rule. `.alb-faction-hero` and
+    // `.alb-faction-body` are in that list by joining the prism's selectors, not
+    // by copying its values — there is one declaration of this ground and it
+    // cannot drift again.
+    expect(
+      declaring
+        .filter((rule) => !rule.prelude.includes(".alb-prism"))
+        .map((rule) => rule.prelude),
+      "a second Albescent ground is declared beside the prism",
+    ).toEqual([]);
+    expect(declaring).toHaveLength(4);
+  });
+
+  it("the faction hero and body read the prism in BOTH cascades", () => {
+    // Light too. `.alb-faction-body` declared nothing at all in light before
+    // this, so by daylight the faction page's body was na's chrome exactly —
+    // the half of the divergence a dark-mode screenshot cannot show.
+    for (const selector of [".alb-faction-hero", ".alb-faction-body"]) {
+      const rules = ALL.filter(
+        (rule) => rule.body.includes(SHEET) && rule.prelude.includes(selector),
+      );
+      expect(rules, `${selector} does not read the prism`).toHaveLength(4);
+      const dark = rules.filter((rule) => rule.prelude.includes(DARK));
+      expect(dark, `${selector} has no dark ground`).toHaveLength(2);
+      // …and the rest frame reaches it too, in both cascades. That is the
+      // reader who asked for no motion, and epic ruling 6 owes them the deeper
+      // composite rather than the base one.
+      expect(
+        rules.filter((rule) => rule.gates.length > 0),
+        `${selector} has no reduced-motion rest frame`,
+      ).toHaveLength(2);
+    }
+  });
+
+  it("declares neither of the two superseded rules", () => {
+    // #2504's fainter cut, by the tells that belong to it alone: the 46%/120%
+    // radial geometry, and its five bloom stops. Bare `0.06` would be far too
+    // wide a net — it is a common alpha in this sheet and matches ten unrelated
+    // tokens — so the hue is asserted with it.
+    expect(INDEX, "the faction page's own radial geometry is back").not.toContain(
+      "radial-gradient(46% 120%",
+    );
+    for (const bloom of [
+      "rgba(230, 185, 79, 0.06)",
+      "rgba(74, 222, 128, 0.06)",
+      "rgba(58, 160, 164, 0.06)",
+      "rgba(96, 165, 250, 0.06)",
+      "rgba(244, 114, 182, 0.06)",
+    ]) {
+      expect(INDEX, `the faction page's ${bloom} bloom is back`).not.toContain(bloom);
+    }
+    // And its light ramp, whose first stop is opaque white where the prism's is
+    // `transparent 10%` — the half of the divergence that only showed by day.
+    expect(INDEX, "the faction page's own light ramp is back").not.toContain(
+      "linear-gradient(114deg, #ffffff 0%",
+    );
   });
 });
 

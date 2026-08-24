@@ -1208,39 +1208,3 @@ export function AdminOverlay({
     </>
   );
 }
-
-// ─── Albescent ────────────────────────────────────────────────────────────────
-
-/**
- * The Albescent SPARKS (#842, ADR-0048) — three faint gold ✦ scattered over the
- * sheet, the other half of the secret-society tell.
- *
- * The design pairs `.alb-rainbow`'s slow drift with `.alb-spark`; #821 shipped
- * only the drift, so the card shimmered but never caught the light. Each spark
- * carries its own position, size and delay so the three never pulse together,
- * and all of them sit BEHIND the card content (`z-index: 0`, pointer-events
- * none). Reduced motion parks them at a steady low opacity rather than freezing
- * the keyframes — frozen at 0% they would be invisible, which is not "stilled".
- *
- * Shared by the desktop and mobile Albescent cards: both wrap the exact
- * unaffiliated card and layer the same tell over it. A repaint in Albescent's
- * own colours would put it back in the spectrum and un-hide it (#783).
- */
-export function AlbescentSparks() {
-  return (
-    <>
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ✦ glyph used as a drawn spark, sized as illustration (§4a) */}
-      <span aria-hidden className="alb-spark" style={{ top: 118, left: 24, fontSize: 13, animationDelay: "0s" }}>
-        ✦
-      </span>
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ✦ glyph used as a drawn spark, sized as illustration (§4a) */}
-      <span aria-hidden className="alb-spark" style={{ top: 176, right: 36, fontSize: 9, animationDelay: "1.5s" }}>
-        ✦
-      </span>
-      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ✦ glyph used as a drawn spark, sized as illustration (§4a) */}
-      <span aria-hidden className="alb-spark" style={{ bottom: 104, left: 64, fontSize: 15, animationDelay: "2.8s" }}>
-        ✦
-      </span>
-    </>
-  );
-}

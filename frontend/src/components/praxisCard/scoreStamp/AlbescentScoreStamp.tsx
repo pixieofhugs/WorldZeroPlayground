@@ -20,12 +20,20 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * Nothing is repainted. A `--faction-albescent-*` hue would put the society back
  * in the spectrum and un-hide it (ADR-0027, WORLD_ZERO_STYLE §3), so the delta is
- * MOTION only: the two na spectra this object already carries start to move. The
- * stamp's own docstring names them — the 2px band across its top edge, and the
- * points ring's annulus — and since #2497 each carries a shared class
- * (`.spectrum-rule`, `.spectrum-dial`), so the cascade reaches both. THAT IS WHY
- * THIS WRAPPER HOLDS NO ORNAMENT SPAN: there is nothing to add, only two things
- * already drawn here to set moving.
+ * MOTION only: the na spectra this object already carries start to move.
+ *
+ * WHAT MOVES IS THE POINTS RING, and — when the praxis has a working out — the
+ * one rule over it. Since #2497 each carries a shared class (`.spectrum-dial`,
+ * `.spectrum-rule`), so the cascade reaches them with no markup here. THAT IS
+ * WHY THIS WRAPPER HOLDS NO ORNAMENT SPAN: there is nothing to add, only what na
+ * already draws to set moving.
+ *
+ * THIS USED TO SAY "the two na spectra", counting a 2px band across the stamp's
+ * top edge. #2559 removed that band: #2042 had already made the disc a spectrum
+ * RING, so the band was the second structural rainbow on one object, which
+ * ADR-0083 §3b forbids. The ring is this object's ONE carrier, and it is always
+ * drawn — a base-only praxis prints no working and so no rule (ADR-0076), and on
+ * that stamp the turning annulus is the whole tell.
  *
  * ## Why the class is not the design canvas's answer
  *

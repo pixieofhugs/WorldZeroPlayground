@@ -555,6 +555,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
               <button
                 type="submit"
                 disabled={!canSubmit}
+                className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     /* Design band: 15 / 400 / 0.22em in the label face, which
@@ -571,7 +572,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                     background: BAR,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}

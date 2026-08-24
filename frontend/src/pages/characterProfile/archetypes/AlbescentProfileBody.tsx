@@ -26,7 +26,8 @@
  * (#911), and an inline `animation:` would bypass the guard (#1003). Stilled,
  * the layer paints nothing at all: the frame it dresses is Default's own and is
  * still there, which is why this one can freeze rather than park at a resting
- * opacity the way `.alb-spark` has to.
+ * opacity. (`.alb-spark` was the contrast here until #2555 took the twinkle out
+ * of the kit; Coven's `.cvn-profile-spark` is the surviving mark that parks.)
  *
  * Both form factors, one row: the ornament mounts inside the identity band in
  * each of `DefaultProfileBody`'s two branches, so the phone stack drifts too.

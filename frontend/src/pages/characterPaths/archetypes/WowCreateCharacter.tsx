@@ -96,15 +96,15 @@
  * second file would be a second name for one measurement, which is the split
  * `__tests__/createCharacterContrast.test.ts` records in as many words.
  *
- * ONE NUMBER IS DELIBERATELY NOT IN THAT TABLE. The cast dims to `opacity: 0.5`
- * until there is a name to submit, which folds the band AND its label over the
- * sheet: 3.14:1 in light, 1.81:1 in dark. That is an inactive user-interface
- * component, which WCAG 1.4.3 exempts by name, and it is the shipped pattern on
- * both sibling archetypes (`DefaultCreateCharacter`'s phone bar and
- * `EphemeristsCreateCharacter`'s cast). Forking WOW's answer would make one
- * skin the odd one out on a page whose dim state is shared; it is written down
- * here so the next reader does not have to re-derive it, and flagged in the PR
- * as a cross-archetype question rather than settled in this file.
+ * THE ONE NUMBER THAT WAS NOT IN THAT TABLE IS NOT THIS SKIN'S ANY MORE (#2486,
+ * ruled). The cast used to dim to `opacity: 0.5` until there was a name to
+ * submit, which folded the band AND its label over the sheet: 3.14:1 in light,
+ * 1.81:1 in dark. This file was right that forking WOW's answer would make one
+ * skin the odd one out, and the cross-archetype question it flagged came back
+ * ruled — the disabled state is the state character creation OPENS in, so it is
+ * measured rather than exempted. It is `.control-off` now, in `index.css`, for
+ * all ten sites; the pair it lands on is measured in
+ * `__tests__/disabledControlContrast.test.ts`. Nothing about it is WOW's.
  *
  * ## Presentation only
  *
@@ -514,6 +514,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
               <button
                 type="submit"
                 disabled={!canSubmit}
+                className="control-off"
                 style={{
                   ...composerBandStyle(sizes, {
                     /* The band is the one control WOW letters in its DISPLAY
@@ -527,7 +528,6 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
                     background: GOLD,
                   }),
                   cursor: submitting ? 'wait' : 'pointer',
-                  opacity: canSubmit ? 1 : 0.5,
                 }}
               >
                 {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}

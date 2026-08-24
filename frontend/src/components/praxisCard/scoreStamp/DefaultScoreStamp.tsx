@@ -14,8 +14,8 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * skin IS the unaffiliated one, so "restyle the default stamp" and "build the
  * design's score rail" are the same object: a total mark carrying the total
  * over a `POINTS` caption, then the working out as `LABEL … value` rows, then
- * ONE 2px spectrum rule, then the votes tally. A 2px spectrum bar is pinned
- * across the top edge.
+ * ONE 2px spectrum rule, then the votes tally. A 2px spectrum bar was pinned
+ * across the top edge until #2559 took it off — see the note at its old mount.
  *
  * THE GREY LINES ARE GONE (#2520, epic #2496). `Score-Stamp.dc.html` gives the
  * na stamp the spectrum treatment so that Albescent's delta can be MOTION alone
@@ -132,21 +132,14 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         padding: "var(--space-md)",
       }}
     >
-      {/* The spectrum bar across the top edge — the na tell, and the rainbow's
-          one structural appearance on this object (the total below is the
-          other, clipped to type). */}
-      <span
-        aria-hidden
-        className="spectrum-rule"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 2,
-          borderRadius: "10px 10px 0 0",
-        }}
-      />
+      {/* A 2px `spectrum-rule` band was pinned across this top edge until #2559.
+          It called itself "the rainbow's one structural appearance on this
+          object", and that stopped being true inside its own epic: #2042 made
+          the disc below {@link DefaultPointsRing}, a spectrum RING, so the plate
+          carried a structural spectrum twice. ADR-0083 §3b — one carrier per
+          object, and whatever bar or hairline was doing that job comes off. The
+          ring is the carrier; the rule over the working (below) is furniture
+          inside the working out, not a second mark on the plate. */}
 
       {crowned && (
         <TaskCrown
@@ -167,8 +160,9 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           the card's total look. {@link DefaultPointsRing} is the one drawing now.
 
           THE RAINBOW IS STRUCTURAL ON THIS OBJECT, never clipped to type: the
-          2px bar across the top edge, the ring's annulus, and — since #2520 —
-          the one rule over the working. What goes is the four-stop
+          ring's annulus, and — since #2520 — the one rule over the working. (The
+          2px bar across the top edge was the third until #2559; this mount is
+          why it went.) What goes is the four-stop
           `-total-rainbow` fill on the figure and the gold caption under it — the
           ring letters its unit in `-card-muted`, which measures 6.15:1 light and
           4.82:1 dark on this plate against the gold's 5.00:1 / 8.23:1. Both clear
@@ -226,9 +220,11 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           `.alb-moves .spectrum-rule:empty::before` is absolutely positioned, so
           without a containing block here it would resolve against the plate and
           paint the ramp straight over the working out. That the class reaches
-          both this rule and the band above is the point of #2520: the two stamps
-          are one stamp, and the society's delta is that these SAME spectra move
-          (index.css owns the resting paint, motion.ornament.css the travel). */}
+          this rule is the point of #2520: the two stamps are one stamp, and the
+          society's delta is that na's OWN spectra move (index.css owns the
+          resting paint, motion.ornament.css the travel). The class reached the
+          top-edge band too until #2559 removed it; the ring's `.spectrum-dial`
+          is the other mount the marker still dresses. */}
       {hasWorking && (
         <span
           aria-hidden

@@ -197,7 +197,11 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
       {/* Sticky Save bar */}
       <div style={stickyBar}>
-        <button type="submit" disabled={!canSubmit} style={{ ...primaryBtn, opacity: canSubmit ? 1 : 0.5 }}>
+        {/* Same gate, same treatment as the create bar (#2486): Save is
+            disabled until something has changed, so this too is how the page
+            opens. The delete button below stays as it is — `disabled={deleting}`
+            is a transient busy state, not a state a reader arrives in. */}
+        <button type="submit" disabled={!canSubmit} className="control-off" style={primaryBtn}>
           {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
         </button>
       </div>
