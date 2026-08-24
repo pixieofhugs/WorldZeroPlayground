@@ -319,3 +319,43 @@ describe("the drift stops at user media on this page too (#1942)", () => {
     expect(html).toContain("alb-detail-foil");
   });
 });
+
+describe("Albescent task detail — the overlay traces the sheet (#2549)", () => {
+  /**
+   * The two light layers used to be siblings of `DefaultTaskDetail`, positioned
+   * off `.alb-detail` and inset by `--space-2xl` top and bottom on the stated
+   * assumption that the inset "lands exactly on `DefaultTaskDetail`'s sheet,
+   * whose own `py-8` band that is". #2102 broke that by inserting the shared
+   * `Breadcrumb` INSIDE the band, above the sheet: the bottoms still agreed
+   * exactly, but the top floated free by the breadcrumb's own box, so the ring's
+   * rounded corner landed across the trail.
+   *
+   * The fix is structural rather than arithmetic — the layers are now the
+   * sheet's own first children, so `inset` is measured from the very box they
+   * are supposed to trace and cannot drift again when something else is added
+   * to that band. A guard on the pixel count would have passed just as happily
+   * with a magic offset.
+   *
+   * Read as ORDER, which is what makes it a containment claim: the layers must
+   * now precede the sheet's content. As siblings mounted after the whole column
+   * they came after all of it, so this assertion is the one that separates the
+   * two arrangements.
+   */
+  it("mounts both light layers as the sheet's first children, before its content", () => {
+    const { html } = render(<AlbescentTaskDetail state={baseState()} />);
+    const sheetOpen = html.indexOf('class="task-detail-sheet"');
+    expect(sheetOpen, "the shared sheet rendered").toBeGreaterThan(-1);
+
+    // Content the sheet certainly holds, drawn after the overlay slot. The
+    // brief, not the title: `Breadcrumb` prints the title too, and it sits
+    // ABOVE the sheet, so the title's first occurrence is outside it.
+    const content = html.indexOf(BRIEF);
+    expect(content, "the sheet's content rendered").toBeGreaterThan(sheetOpen);
+
+    for (const layer of ["alb-detail-foil", "alb-detail-edge"]) {
+      const at = html.indexOf(layer);
+      expect(at, `${layer} rendered`).toBeGreaterThan(sheetOpen);
+      expect(at, `${layer} precedes the sheet content`).toBeLessThan(content);
+    }
+  });
+});

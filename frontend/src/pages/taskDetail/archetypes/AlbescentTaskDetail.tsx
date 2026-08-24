@@ -167,11 +167,27 @@ export default function AlbescentTaskDetail({
     </div>
   );
 
-  return (
-    <div className="alb-detail alb-moves alb-prism">
-      <DefaultTaskDetail state={state} worthSlot={worth} />
+  /* THE LIGHT GOES INSIDE THE SHEET (#2549). These two were siblings of
+     `DefaultTaskDetail`, positioned off `.alb-detail` and inset by
+     `--space-2xl` top and bottom because that inset used to land on the sheet:
+     the band's padding and the sheet's top edge were the same line. #2102 put
+     the shared `Breadcrumb` in that band, above the sheet, and the two lines
+     parted — the bottoms still agreed exactly, the top floated free by the
+     breadcrumb's own box, and the ring's rounded corner crossed the trail.
+
+     Passing them through `sheetOverlay` makes the sheet their containing block,
+     so they trace the box they dress instead of a band that happens to start
+     where it used to. Nothing here needs to know the breadcrumb exists. */
+  const light = (
+    <>
       <span aria-hidden="true" className="alb-detail-foil" />
       <span aria-hidden="true" className="alb-detail-edge" />
+    </>
+  );
+
+  return (
+    <div className="alb-detail alb-moves alb-prism">
+      <DefaultTaskDetail state={state} worthSlot={worth} sheetOverlay={light} />
     </div>
   );
 }
