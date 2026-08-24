@@ -303,6 +303,8 @@ export default function DefaultTaskDetail({
             fontSize: "var(--text-lg)",
             letterSpacing: "0.06em",
             color: "var(--faction-default-gold)",
+            // The shout is CSS, not copy (#2598) — see WowTaskDetail's note.
+            textTransform: "uppercase",
           }}
         >
           {t("detail.points.total", { count: modifiedPoints })}

@@ -158,6 +158,10 @@ export default function AlbescentTaskDetail({
             style={{
               marginTop: "var(--space-xs)",
               color: "var(--faction-default-gold)",
+              // The shout is CSS, not copy (#2598) — see WowTaskDetail's note.
+              // Inline rather than left to the class: `.label-caption` sets
+              // `text-transform: none` explicitly, so this has to override it.
+              textTransform: "uppercase",
             }}
           >
             {t("detail.points.total", { count: modifiedPoints })}

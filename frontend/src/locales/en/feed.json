@@ -109,9 +109,10 @@
       "awaitingSubmission": "Waiting on your submission",
       "mentionedYou": "mentioned you in a comment"
     },
-    "points": "{{points}} pts",
+    "points_one": "{{points}} point",
+    "points_other": "{{points}} points",
     "pointsEarned": "+{{points}} pts",
-    "level": "lvl {{level}}",
+    "level": "Level {{level}}",
     "quotedHeadline": "“{{headline}}”"
   },
   "dateDivider": {

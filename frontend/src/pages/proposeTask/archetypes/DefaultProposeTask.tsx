@@ -575,6 +575,10 @@ export default function DefaultProposeTask({
                     <span className="label-caption">
                       {t("proposeTask.preview.points", {
                         points: pointValue || "?",
+                        // `pointValue` is the raw input string. An empty or
+                        // unparseable one draws "?" and takes the PLURAL —
+                        // "? points" reads, "? point" does not (#2598).
+                        count: Number(pointValue) || 0,
                       })}
                     </span>
                   )}

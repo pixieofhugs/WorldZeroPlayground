@@ -214,13 +214,19 @@ describe("WOW composer — copy is neutral, and the old block is GONE (ADR-0065 
     // `titleLabel` is an aria-label too since #2179 — but on the `<input>`
     // itself, so a static render still sees it. This asserts the wording is the
     // neutral catalog's; that it is no longer DRAWN is composerRule.test.tsx's.
+    // No `pointsUnit` either, and it was never really here (#2598). Its value
+    // was the three letters "pts", which occur incidentally in almost any
+    // markup, so `toContain` passed without the composer ever drawing the key —
+    // a VACUOUS assertion. #1828 had already replaced every archetype's
+    // composer-only points mark with the shared `ScoreStamp`, which speaks
+    // `praxis:card.stamp.*`. Lengthening the value to "Points" is what made the
+    // absence visible. The key has no reader left; deleting it is on the issue.
     for (const key of [
       "taskLabel",
       "titleLabel",
       "modeLabel",
       "proofLabel",
       "submit",
-      "pointsUnit",
     ] as const) {
       expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}`));
     }

@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import type { ReactElement } from 'react'
-import '../../../i18n'
+import i18n from '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 import { PraxisByline, PraxisStats, PraxisVoteFooter } from '../shared'
@@ -258,7 +258,7 @@ describe("the meta line does not restate the stamp (#1833, widened by #2114)", (
     // are stripped, which is what tells it apart from the band's `12 pts` now
     // that a whole score prints without a decimal (#1866).
     expect(html, 'the stamp still carries the figure').toContain('12points')
-    expect(html, 'and the meta line does not repeat it').not.toContain('12 pts')
+    expect(html, 'and the meta line does not repeat it').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
     // The line keeps its other three segments and their separators.
     expect(html).toContain('L2')
     expect(html).toContain('solo')
@@ -274,7 +274,7 @@ describe("the meta line does not restate the stamp (#1833, widened by #2114)", (
     // points readout left and suppressing it would leave the card silent.
     const html = body({ score: 12, points_from_votes: 0, moderation_status: 'failed' })
     expect(html, 'no total was banked').not.toContain('12points')
-    expect(html, 'so what the task is worth stays').toContain('12 pts')
+    expect(html, 'so what the task is worth stays').toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
   })
 })
 

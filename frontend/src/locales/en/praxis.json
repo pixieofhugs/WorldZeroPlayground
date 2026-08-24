@@ -37,7 +37,8 @@
   },
   "card": {
     "level": "L{{level}}",
-    "points": "{{points}} pts",
+    "points_one": "{{points}} point",
+    "points_other": "{{points}} points",
     "solo": "solo",
     "crew": "+{{count}} crew",
     "votedBy": "voted by {{name}}",
@@ -84,7 +85,8 @@
     "taskRef": {
       "label": "Completing task",
       "level": "Level {{level}}",
-      "points": "{{points}} pts"
+      "points_one": "{{points}} point",
+      "points_other": "{{points}} points"
     },
     "filed": "Submitted {{date}}",
     "vote": {

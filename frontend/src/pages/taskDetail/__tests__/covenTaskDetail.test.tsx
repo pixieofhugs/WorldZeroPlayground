@@ -28,7 +28,22 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import CovenTaskDetail from "../archetypes/CovenTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
+import i18n from "../../../i18n";
 import { aTask } from '../../../test/fixtures'
+
+/**
+ * The worth panel's unit word, read from the catalog rather than typed.
+ *
+ * It used to be the literal "POINTS". #2598 moved the shout out of the catalog
+ * value and into CSS — the catalog holds "Point"/"Points" and each of the nine
+ * skins uppercases the element that draws it — so a STATIC render now reads the
+ * catalog's case, while a browser still paints caps. Same move, and the same
+ * reason, as `everymenBillOrnament.test.tsx`'s struck seal.
+ *
+ * 18 is `modifiedPoints` in every state below, so this is the plural.
+ */
+const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+
 
 const TASK = aTask({
   id: 305,
@@ -271,7 +286,7 @@ describe("Coven task detail — the contract", () => {
   it("shows no action cell at all when the viewer has no move to make", () => {
     const { text } = render(<CovenTaskDetail state={baseState({ canSignUp: false })} />);
     // The worth cell survives — it is a fact about the task, not a control.
-    expect(text).toContain("POINTS");
+    expect(text).toContain(POINTS_UNIT);
     expect(text).not.toContain("Sign up");
     expect(text).not.toContain("Continue editing");
   });

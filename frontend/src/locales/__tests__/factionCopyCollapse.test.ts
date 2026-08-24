@@ -157,7 +157,10 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // a player reads it.
   { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis submitted yet.' },
   { banned: `common:profile\\.{F}\\.praxisEyebrow`, shared: 'common:profile.praxisEyebrow', wording: 'Submitted by {{name}}' },
-  { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'lvl' },
+  // #2598 took the shared wording long: "lvl" -> "Level". The collapse this row
+  // guards is unchanged — what it pins is that the seven `ringLabel` keys are
+  // still gone and the one survivor still says what the owner ruled it says.
+  { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'Level' },
 
   // --- votes.json: the vote widget chrome -------------------------------
   { banned: `votes:chrome\\.{F}\\.rateAria`, shared: 'votes:chrome.rateAria', wording: 'Rate {{value}} — {{label}}' },

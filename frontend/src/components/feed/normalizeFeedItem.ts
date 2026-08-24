@@ -187,7 +187,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: null,
         actions: [],
@@ -205,7 +205,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
         actions: [],
@@ -224,7 +224,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: null,
         // "File yours" — a plain navigation to the shared editor, which every
@@ -268,7 +268,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
         // "File it" is a navigation to the editor. "Drop out" is `leavePraxis`
@@ -304,7 +304,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: null,
         // "Answer" — the nudge's whole point, a navigation into your own
@@ -453,7 +453,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points:
           p.task_point_value != null
-            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
         actions: [],

@@ -80,7 +80,8 @@
     "tasks": "Tasks"
   },
   "taskMeta": {
-    "points": "{{points}} pts",
+    "points_one": "{{points}} point",
+    "points_other": "{{points}} points",
     "duel": "duel",
     "collab": "collab"
   },
@@ -289,7 +290,7 @@
       "statusUnsaved": "Not saved yet",
       "statusSubmitted": "Submitted",
       "taskLabel": "The task",
-      "pointsUnit": "pts",
+      "pointsUnit": "Points",
       "levelLabel": "Level {{level}}",
       "titleLabel": "Title (required)",
       "titlePlaceholder": "Title",
@@ -342,11 +343,11 @@
       },
       "basePoints": {
         "label": "Base points",
-        "placeholder": "pts"
+        "placeholder": "Points"
       },
       "bonusPoints": {
         "label": "Bonus points",
-        "placeholder": "pts",
+        "placeholder": "Points",
         "hint": "Flat bonus added to score"
       },
       "minimumLevel": {
@@ -363,8 +364,9 @@
       "metaHeading": "Metatask preview — {{faction}}",
       "taskHeading": "Task preview — {{faction}} · Pending",
       "bonusPoints": "+{{points}} bonus pts",
-      "points": "{{points}} pts",
-      "level": "lvl {{level}}",
+      "points_one": "{{points}} point",
+      "points_other": "{{points}} points",
+      "level": "Level {{level}}",
       "pending": "Pending review"
     },
     "errors": {

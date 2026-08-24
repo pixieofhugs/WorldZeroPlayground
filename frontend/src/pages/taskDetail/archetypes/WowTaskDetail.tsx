@@ -393,6 +393,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             fontSize: "var(--text-md)",
             color: PLUM,
             marginTop: "var(--space-xs)",
+            // The shout is CSS, not copy (#2598). The catalog used to hold
+            // "POINTS" pre-shouted, which left the next editor unable to tell
+            // whether the caps were the design or the copy. `QUIET` carries no
+            // transform of its own, so this is the sheet's, and the rendering
+            // is unchanged.
+            textTransform: "uppercase",
           }}
         >
           {t("detail.points.total", { count: modifiedPoints })}

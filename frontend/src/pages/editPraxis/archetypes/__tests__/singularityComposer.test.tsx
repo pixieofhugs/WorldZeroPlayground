@@ -161,7 +161,13 @@ describe("Singularity composer — structure", () => {
       // names the editor through an aria-label a static render cannot see.
       i18n.t("forms:editPraxis.composer.proofLabel"),
       i18n.t("forms:editPraxis.composer.submit"),
-      i18n.t("forms:editPraxis.composer.pointsUnit"),
+      // No `pointsUnit`, and it was never really here (#2598). Its value was
+      // the three letters "pts", which occur incidentally in almost any markup,
+      // so this passed without the composer ever drawing the key — a VACUOUS
+      // assertion. #1828 had already replaced every archetype's composer-only
+      // points mark with the shared `ScoreStamp`, which speaks
+      // `praxis:card.stamp.*`. Lengthening the value to "Points" is what made
+      // the absence visible. The key has no reader; deleting it is on the issue.
     ]) {
       expect(html, phrase).toContain(phrase);
     }

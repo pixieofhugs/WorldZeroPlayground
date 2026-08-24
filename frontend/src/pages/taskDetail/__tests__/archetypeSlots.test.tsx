@@ -31,6 +31,18 @@ import { describe, it, expect } from "vitest";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from '../../../test/fixtures'
+import i18n from "../../../i18n";
+
+/**
+ * The tag that DIRECTLY encloses the first occurrence of `text`, opening angle
+ * bracket to closing one — so an assertion can ask what dress the element
+ * carries, not merely whether the words are somewhere on the page.
+ */
+function enclosingTag(html: string, text: string): string {
+  const at = html.indexOf(`>${text}<`);
+  expect(at, `"${text}" is not rendered as an element's whole content`).toBeGreaterThan(-1);
+  return html.slice(html.lastIndexOf("<", at), at + 1);
+}
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -109,6 +121,29 @@ describe("task-detail content-slot invariant", () => {
       expect(html, "all-tasks breadcrumb slot").toContain('href="/tasks"');
       // Praxis gallery: every archetype heads it with the shared count copy.
       expect(text, "praxis-gallery slot").toContain("completed praxis");
+    });
+
+    // #2598. `tasks:detail.points.total` used to be stored as "POINT"/"POINTS",
+    // pre-shouted, and NOT ONE of the nine skins uppercased it in CSS — so the
+    // caps in the catalog value were the only thing shouting on all nine pages,
+    // and an editor could not tell whether they were the design or the copy.
+    //
+    // The catalog holds "Point"/"Points" now and the shout moved to the element.
+    // Five skins already carried the transform (Everymen's `label`, the
+    // Ephemerists' `SMALL_CAPS`, UA's `UA_EYEBROW`, Coven's `CAPTION`,
+    // Singularity's `LABEL`); four gained it (Wow, Default, S.N.I.D.E. via
+    // `PenCircle`'s opt-in, Albescent over `.label-caption`'s explicit
+    // `text-transform: none`). Rendering is unchanged in a browser.
+    //
+    // This is the half a catalog check cannot do: downcasing the value is only
+    // safe while the element still shouts, and losing the transform is silent.
+    it(`${slug} shouts the points unit in CSS, not in the catalog`, () => {
+      const unit = i18n.t("tasks:detail.points.total", { count: 4242 });
+      expect(unit, "the catalog holds sentence case").toBe("Points");
+      const { html } = render(<Archetype state={baseState({})} />);
+      expect(enclosingTag(html, unit), `${slug} lost the shout`).toContain(
+        "text-transform:uppercase",
+      );
     });
 
     it(`${slug} renders the signup CTA when canSignUp`, () => {

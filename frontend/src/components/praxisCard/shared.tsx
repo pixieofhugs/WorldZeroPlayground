@@ -544,7 +544,7 @@ export function PraxisStats({
         <>
           <span aria-hidden>·</span>
           <span style={{ fontWeight: 700 }}>
-            {t("card.points", { points: praxis.task_point_value })}
+            {t("card.points", { points: praxis.task_point_value, count: praxis.task_point_value })}
           </span>
         </>
       )}
