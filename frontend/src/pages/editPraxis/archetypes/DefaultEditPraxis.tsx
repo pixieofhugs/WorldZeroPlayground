@@ -167,6 +167,26 @@ const SHEET = "var(--faction-default-card-bg)";
 const ALARM = "var(--faction-default-card-alarm)";
 const FIELD = "var(--faction-default-composer-field)";
 const INK = "var(--faction-default-card-text)";
+/* THE TIER SPLIT ON THIS SHEET IS BY GROUND, NOT BY LOUDNESS (#2485).
+ *
+ * `ground` below washes the seven-stop aurora under the whole content column,
+ * so nothing drawn straight on the sheet sits on the token it was measured
+ * against. On that composite BOTH quiet rungs were under AA — `-card-muted`
+ * 4.30 light / 3.27 dark, `-composer-faint` 3.45 / 2.88 — and #2485 lifted the
+ * composer's own token (its only consumer is this file) to 4.72 / 4.71 rather
+ * than move `-card-muted`, which is the na CARD's prose ink with a dozen
+ * readers of its own.
+ *
+ * The consequence is worth stating out loud, because the names now read
+ * backwards: FAINT is the LOUDER of the two. It is the ink for the WASHED
+ * SHEET; `MUTED` is the ink for the opaque `--faction-default-composer-field`
+ * laid on top of it, where it reads 6.05 / 5.23 and is right. If you are
+ * choosing between them, ask what is behind the type, not how quiet it should
+ * sound.
+ *
+ * Nothing INSIDE the textarea was ever at risk — the field is opaque, so a
+ * player's own words never met the wash. It is the labels, the hints and the
+ * quiet buttons around it that paid. */
 const MUTED = "var(--faction-default-card-muted)";
 const FAINT = "var(--faction-default-composer-faint)";
 const BORDER = "var(--faction-default-border)";
@@ -189,7 +209,7 @@ const RING = "var(--faction-default-rainbow-conic)";
  * --font-body is the site's Courier Prime. */
 const TITLE_FACE = "var(--font-display)";
 
-const labelStyle = { color: MUTED };
+const labelStyle = { color: FAINT };
 const panelStyle = {
   background: FIELD,
   border: `1px solid ${BORDER}`,
@@ -276,6 +296,9 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   slip,
   panelStyle,
   headingStyle: { fontFamily: TITLE_FACE, color: INK },
+  /* The waiting surface draws this inside `panelStyle`, i.e. on the opaque
+     field — the one ground in this dress the aurora never reaches — so prose
+     keeps the card's own rung (6.05 / 5.23). */
   bodyStyle: { color: MUTED },
   quietStyle: { color: FAINT },
   primaryStyle,
@@ -439,9 +462,12 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
                 /* na's sheet IS `--faction-default-card-bg`, so the roster's
                  * card-family fallbacks are already measured on it (#2269's
                  * ruling) and only the corner and the quiet tier are handed in.
-                 * `MUTED` is that fallback stated out loud, which is what the
-                 * `+ invite` chip needs to stop reading the TASK's faction. */
-                collab: { radius: 10, quiet: MUTED },
+                 * `FAINT` and not `MUTED` since #2485: the dashed `+ invite` chip
+                 * is drawn on TRANSPARENT, so its ground is the aurora-washed
+                 * sheet rather than the flat token the card family was measured
+                 * against. Handing it in is still what stops the chip reading the
+                 * TASK's faction. */
+                collab: { radius: 10, quiet: FAINT },
               }}
             />
           </ComposerSection>
@@ -593,7 +619,10 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
                     padding: "var(--space-2xl) var(--space-lg)",
                     textAlign: "center",
                     whiteSpace: "pre-line",
-                    color: MUTED,
+                    /* The drop ground is TRANSLUCENT — the comment above says so
+                     * — which puts this label on the aurora, not on the field.
+                     * FAINT is the sheet's rung (#2485). */
+                    color: FAINT,
                   }),
                   helperText: t("editPraxis.composer.proofHelper"),
                   helperStyle: {

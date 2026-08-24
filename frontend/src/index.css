@@ -953,12 +953,28 @@
               the sheet and is the tighter of the two (4.61:1, against 4.79:1 on
               the sheet). It stays a tier under -card-muted (6.05 / 5.23), so
               the three tiers still read as three.
+
+              WALKED AGAIN BY #2485, AND THE LADDER INVERTED ON THE SHEET. Both
+              readings above are FLAT, and flat is not what this ink lands on:
+              `DefaultEditPraxis` washes the seven-stop --faction-default-aurora
+              under the whole content column, and on that composite the shipped
+              #747067 / #888696 read 3.45:1 light and 2.88:1 dark. So did
+              -card-muted, at 4.30 / 3.27 — the ENTIRE quiet ladder was under AA
+              on the ground it is drawn on, which is why this is a lift and not a
+              swap: -card-muted is the na CARD's prose ink with a dozen consumers
+              and cannot move, and there is no rung between it and -card-text.
+              Lifted to clear the worst aurora stop in both halves (4.72 / 4.71),
+              which puts it ABOVE -card-muted rather than below it — deliberately.
+              On the washed sheet the tier is chosen by GROUND, not by loudness:
+              this is the ink for the sheet, -card-muted is the ink for the opaque
+              -composer-field laid on top of it, and the composer says so at both
+              call sites. Measured in composerGround.test.ts, both directions.
      `hair`   the section RULE. Half the weight of --faction-default-border,
               which is a card EDGE: a divider inside the sheet is quieter than
               the sheet's own outline, and collapsing the two flattens the
               composer's whole vertical rhythm. */
   --faction-default-composer-field: #fffdf9;
-  --faction-default-composer-faint: #747067;
+  --faction-default-composer-faint: #5f5b53; /* lifted by #2485 — see above */
   --faction-default-composer-hair: rgba(0, 0, 0, 0.06);
 }
 
@@ -3364,8 +3380,22 @@
   --faction-default-card-muted: #9b9080;
   /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity).
      The caption pair that was overridden here left in #2535; see the light
-     half. */
-  --faction-default-dot-ring: rgba(240, 230, 208, 0.3);
+     half.
+
+     0.3 -> 0.6 (#2524). An unreached petal is what tells you the control HAS a
+     fifth position, so WCAG 1.4.11 governs it at 3:1 and not 4.5 — and at 0.3
+     the cream read 2.42:1 on this card, 2.39 on the Albescent prism, i.e. the
+     vote row read as an empty line. LIFTED RATHER THAN FORKED, with the consumer
+     list in hand: all three readers are boundaries and none is text — the fill on
+     `AlbescentVote`'s clipped blob, and the `inset 0 0 0 1.5px` ring on
+     `DefaultVote` and `DefaultPraxisDetail`. A 1.5px hairline is a THINNER target
+     than a 44px blob and wants at least what the blob wants, so a fork would have
+     had to give the two rings the higher number anyway; one value, 5.73:1 on this
+     card / 5.97 on the prism, is the design board's own patch. 0.45 (3.81 / 3.87)
+     clears too and was rejected for the hairlines' sake. Light is a different
+     shape of problem and is NOT touched here: it is opaque `#d6cfbf` and reads
+     1.53:1 on the light card, which no alpha change reaches. */
+  --faction-default-dot-ring: rgba(240, 230, 208, 0.6);
   /* The cream sheet, lights out (#842) — the design's own dark card, not an
      inversion: the hairline becomes a white scrim and the stamp plate lifts off
      the sheet rather than sinking into it. Both narrow rainbows still swap their
@@ -3400,7 +3430,7 @@
      default-stamp-bg already makes one block up — and both hairlines become
      white scrims. */
   --faction-default-composer-field: #1f1e2b;
-  --faction-default-composer-faint: #888696; /* walked up by #1232 — see :root */
+  --faction-default-composer-faint: #b0aebe; /* #1232, then #2485 — see :root */
   --faction-default-composer-hair: rgba(255, 255, 255, 0.06);
   /* The aurora needs no dark hue list either — the `:root` wash reads the seven
      stops, so it arrives on the brightened spectrum by itself. What still flips

@@ -79,8 +79,16 @@
  * Every pairing this skin introduces was measured on the ground it actually
  * lands on, in both halves (§3, "contrast is a pairing"). The tightest are
  * `dim` on the chrome bar (4.52 light / 5.35 dark), `dim` on the readout well
- * (4.57 / 5.10) and `blue-bright` on that same well (4.68 / 9.50). Everything
- * clears 4.5:1; nothing needed walking.
+ * (4.57 / 5.10) and `blue-bright` on that same well (4.68 / 9.50).
+ *
+ * THOSE ARE FLAT READINGS AND THEY ARE NOT THE WHOLE STORY (#2485). This
+ * paragraph used to end "everything clears 4.5:1; nothing needed walking", which
+ * was true of the TOKENS and not of the GROUND: the sheet mounts a standing
+ * raster and a travelling scan band under the whole content column, and on that
+ * composite `dim` reads 4.12 / 4.20. The three numbers above still stand — the
+ * chrome bar and the readout well are opaque paint the ground never reaches —
+ * but a pairing on the CHASSIS has two more layers under it, and the tier note
+ * on {@link MUTED} is where that split is written down.
  *
  * ## Motion — three classes, no inline `animation:`
  *
@@ -191,7 +199,23 @@ const PANEL = "var(--faction-singularity-term-panel)";
 const INK = "var(--faction-singularity-term-ink)";
 /** The design's `accent`: titles, the status mark, the lit lamp. */
 const ACCENT = "var(--faction-singularity-term-bright)";
-/** The design's `muted`: labels, captions, the leaving end of the footer. */
+/**
+ * The design's `muted` — AND A PANEL INK ONLY (#2485, #2353).
+ *
+ * `-term-dim` clears AA on the flat chassis (5.03 / 5.80, which is what
+ * `factionContrast.test.ts` measures) and MISSES it on the chassis this sheet
+ * actually draws: `ComposerGround` lays the standing raster over it and the
+ * travelling `.sg-scan` band under every region in turn, and on that stack the
+ * caption tier reads 4.12 / 4.20. This file's own docblock used to claim
+ * "everything clears 4.5:1" on the strength of the flat reading.
+ *
+ * So the tier is split by GROUND, not by loudness: anything drawn straight on
+ * the chassis takes {@link INK}, which clears the band with room, and `MUTED`
+ * stays for the surfaces the ground cannot reach — the raised `-term-panel`
+ * (slip, fields, the toolbar, an unpicked mode) and the opaque window bar.
+ * `SingularityCreateCharacter` made exactly this split on the same two layers
+ * (#2353) and `singularityCreateCharacterGround.test.ts` records the refusal.
+ */
 const MUTED = "var(--faction-singularity-term-dim)";
 const BLUE = "var(--faction-singularity-term-blue)";
 const BORDER = "var(--faction-singularity-term-border)";
@@ -397,8 +421,8 @@ export default function SingularityEditPraxis({ state }: Props) {
     rule: () => hairRule,
     mark: statusMark,
     statusStyle: { fontFamily: FACE, color: ACCENT },
-    metaStyle: { fontFamily: FACE, color: MUTED },
-    labelStyle: { fontFamily: FACE, color: MUTED },
+    metaStyle: { fontFamily: FACE, color: INK },
+    labelStyle: { fontFamily: FACE, color: INK },
     slip,
     panelStyle: {
       background: PANEL,
@@ -407,9 +431,9 @@ export default function SingularityEditPraxis({ state }: Props) {
     },
     headingStyle: { fontFamily: FACE, color: ACCENT, textShadow: HALO_GREEN },
     bodyStyle: { fontFamily: FACE, color: INK },
-    quietStyle: { fontFamily: FACE, color: MUTED },
+    quietStyle: { fontFamily: FACE, color: INK },
     primaryStyle,
-    quietButtonStyle: { fontFamily: FACE, color: MUTED },
+    quietButtonStyle: { fontFamily: FACE, color: INK },
   };
 
   /* Your part is in, so the composer is not a composer any more (ADR-0059).
@@ -470,7 +494,7 @@ export default function SingularityEditPraxis({ state }: Props) {
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
             rule={false}
-            labelStyle={{ fontFamily: FACE, color: MUTED }}
+            labelStyle={{ fontFamily: FACE, color: INK }}
           >
             <ModePicker
               state={state}
@@ -521,7 +545,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 : undefined
             }
             rule={false}
-            labelStyle={{ fontFamily: FACE, color: MUTED }}
+            labelStyle={{ fontFamily: FACE, color: INK }}
           >
             <InviteSearch
               state={state}
@@ -533,12 +557,14 @@ export default function SingularityEditPraxis({ state }: Props) {
                 dropdownBg: CHASSIS,
                 dropdownBorder: `1px solid ${BORDER}`,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
-                leaveStyle: { fontFamily: FACE, color: MUTED },
+                leaveStyle: { fontFamily: FACE, color: INK },
                 /* The terminal's own 2px corner, the one `fieldBox` takes.
-                 * `MUTED` is `-term-dim`, the chassis's caption ink — not
-                 * `-card-muted`, which is the blue brand chrome measured
-                 * against the card and not against this panel. */
-                collab: { radius: RADIUS, quiet: MUTED },
+                 * `INK` and not `MUTED`: the roster's leave link and the dashed
+                 * `+ invite` chip are both drawn on TRANSPARENT, i.e. straight on
+                 * the chassis under the raster and the band, which is the one
+                 * ground `-term-dim` misses (#2485). Not `-card-muted` either —
+                 * that is the blue brand chrome, measured against the card. */
+                collab: { radius: RADIUS, quiet: INK },
               }}
             />
           </ComposerSection>
@@ -548,7 +574,7 @@ export default function SingularityEditPraxis({ state }: Props) {
           <ComposerSection
             label={t("editPraxis.composer.metatasksLabel")}
             rule={false}
-            labelStyle={{ fontFamily: FACE, color: MUTED }}
+            labelStyle={{ fontFamily: FACE, color: INK }}
           >
             <MetataskSealStack state={state} />
           </ComposerSection>
@@ -560,12 +586,12 @@ export default function SingularityEditPraxis({ state }: Props) {
             keeps its accessible name from `bodyContentAttributes`. */}
         <ComposerSection
           rule={false}
-          labelStyle={{ fontFamily: FACE, color: MUTED }}
+          labelStyle={{ fontFamily: FACE, color: INK }}
           meta={
             <span style={composerMetaCluster}>
               <span
                 style={termLabel({
-                  color: MUTED,
+                  color: INK,
                   letterSpacing: "0.06em",
                 })}
               >
@@ -586,7 +612,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                       borderRadius: RADIUS,
                       border: `1px solid ${active ? BORDER : "transparent"}`,
                       background: active ? PANEL : "transparent",
-                      color: active ? ACCENT : MUTED,
+                      color: active ? ACCENT : INK,
                     }),
                 }}
               />
@@ -646,7 +672,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
           rule={false}
-          labelStyle={{ fontFamily: FACE, color: MUTED }}
+          labelStyle={{ fontFamily: FACE, color: INK }}
         >
           <div
             style={{
@@ -706,7 +732,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                   helperStyle: {
                     fontFamily: FACE,
                     fontSize: "var(--text-content)",
-                    color: MUTED,
+                    color: INK,
                     maxWidth: 260,
                     lineHeight: 1.5,
                     marginTop: "var(--space-sm)",
@@ -735,7 +761,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             <>
               <SaveDraftButton
                 state={state}
-                skin={{ style: termLabel({ color: MUTED }) }}
+                skin={{ style: termLabel({ color: INK }) }}
               />
               <DropButton
                 state={state}
@@ -744,7 +770,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                     background: "transparent",
                     border: "none",
                     padding: 0,
-                    color: MUTED,
+                    color: INK,
                     textDecoration: "underline",
                     cursor: "pointer",
                   }),
