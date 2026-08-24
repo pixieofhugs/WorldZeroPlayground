@@ -151,6 +151,10 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-wow-vote-on",
   "--filter-thumb",
   "--filter-thumb-edge",
+  // The two-state switch's OFF thumb (#2154), minted beside its ON twin above
+  // and of exactly the same shape — a color-mix() off `--color-text-primary`,
+  // which the dark block rebinds, so it flips on its own.
+  "--filter-thumb-off",
   "--filter-well",
   "--label-ink",
   "--link-ink",
