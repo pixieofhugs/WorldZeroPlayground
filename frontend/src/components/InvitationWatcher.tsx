@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import InvitationLetterPopup from './InvitationLetterPopup'
 
-const STORAGE_PREFIX = 'wz:seenInvites:'
+export const SEEN_INVITES_KEY_PREFIX = 'wz:seenInvites:'
 
 export function seenInvitesKey(characterId: number): string {
-  return `${STORAGE_PREFIX}${characterId}`
+  return `${SEEN_INVITES_KEY_PREFIX}${characterId}`
 }
 
 export interface InviteDiff {

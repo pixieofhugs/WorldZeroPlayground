@@ -357,6 +357,57 @@
       "animationsSystemNote": "Your device is set to reduce motion.",
       "animationsSystemName": "Animations — off, because your device is set to reduce motion"
     },
+    "cookies": {
+      "eyebrow": "Cookies and local storage",
+      "lead": "This card is the whole policy — there is no separate cookie page. Everything World Zero puts on your device is listed here. None of the switches below is a control: they state what is already true.",
+      "essential": {
+        "title": "Essential — required",
+        "help": "One sign-in cookie, plus the choices your browser remembers for you.",
+        "note": "Always on. The site cannot sign you in or hold a preference without these.",
+        "switchName": "Essential storage — always on, because the site cannot sign you in without it"
+      },
+      "analytics": {
+        "title": "Analytics — never used",
+        "help": "Counts of who visits and which pages get used.",
+        "note": "Off, and there is nothing behind it: World Zero runs no analytics, no tracking pixels and no third-party scripts.",
+        "switchName": "Analytics — off, because World Zero collects none"
+      },
+      "marketing": {
+        "title": "Marketing — never used",
+        "help": "Advertising, ad networks and cross-site tracking.",
+        "note": "Off, and there is nothing behind it: World Zero sells nothing and runs no ads.",
+        "switchName": "Marketing — off, because World Zero collects none"
+      },
+      "show": "Show all {{total}} entries",
+      "hide": "Hide all {{total}} entries",
+      "suffix": {
+        "account": "[:account id]",
+        "character": "[character id]"
+      },
+      "where": {
+        "cookie": "Cookie, {{days}} days",
+        "browser": "This browser, until you clear it",
+        "tab": "This tab, until you close it"
+      },
+      "entries": {
+        "session": "Keeps you signed in.",
+        "theme": "Whether you chose the light or the dark palette.",
+        "motion": "Whether you asked for animations to stop.",
+        "sessionHint": "A yes-or-no note that you were signed in last visit, so the likely page can start loading sooner. Never used to decide what you are shown.",
+        "adminMode": "Whether a moderator left the admin view switched on.",
+        "sidebarCollapsed": "Whether the side rail is folded away.",
+        "sidebarPanels": "The order of the side rail's panels and which are folded. One entry for each account signed in on this browser.",
+        "factionSections": "Which galleries on a faction page you left folded. One entry for each account signed in on this browser.",
+        "seenInvites": "Which invitation letters a character has already been shown, so none is announced twice. One entry for each of your characters.",
+        "lastSeenLevel": "The last level a character was congratulated on, so the celebration does not repeat. One entry for each of your characters.",
+        "onboardingHandoff": "A mark that this tab left for Google or Discord partway through signing up, so you come back where you were."
+      },
+      "deletion": {
+        "title": "If you delete your account",
+        "body": "Your praxis photos are removed from the disk and your saved composer drafts are emptied. Your name, email, words and pictures are blanked. The votes you cast stay where they are, so nobody else's score moves.",
+        "hash": "One thing is kept: which provider you signed in with, and a one-way hash of the ID that provider gave us. The hash cannot be turned back into the ID. It exists so that if you come back we can tell you what happened to your old account, and it is deleted the next time that sign-in returns, once it is more than about ninety days old. Nothing sweeps for one that never returns, so a hash you never come back to can outlive that."
+      }
+    },
     "signOut": "Sign out"
   }
 }

@@ -3,10 +3,10 @@ import { useAuth } from '../auth/AuthContext'
 import { useGameConfig } from '../hooks/useGameConfig'
 import LevelUpPopup from './LevelUpPopup'
 
-const STORAGE_PREFIX = 'wz:lastSeenLevel:'
+export const LAST_SEEN_LEVEL_KEY_PREFIX = 'wz:lastSeenLevel:'
 
 export function lastSeenLevelKey(characterId: number): string {
-  return `${STORAGE_PREFIX}${characterId}`
+  return `${LAST_SEEN_LEVEL_KEY_PREFIX}${characterId}`
 }
 
 export interface LevelDiff {

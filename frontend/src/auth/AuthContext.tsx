@@ -45,7 +45,7 @@ export const AuthContext = createContext<AuthState>({
   signOut: async () => {},
 })
 
-const SESSION_HINT_KEY = 'wz_session_hint'
+export const SESSION_HINT_KEY = 'wz_session_hint'
 
 /**
  * Whether the last answer from `/auth/me` on this browser was a session.
