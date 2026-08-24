@@ -100,6 +100,13 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
  * Cut 2 is a knockout, and it names its own pair rather than reusing
  * paper/ink — those two SWAP under the dark cascade, and a knockout that swaps
  * with its ground is an invisible word.
+ *
+ * NO CUT SETS A WEIGHT (#2487). The three families the four cuts draw from —
+ * Anton, Archivo Black, Special Elite — ship at 400 and nothing else, so a
+ * weight declaration on any of them is either a no-op or a bold the browser has
+ * to draw itself. The headline's own `fontWeight: 400`
+ * went with them: Tailwind's preflight resets headings to `font-weight: inherit`
+ * and nothing above these cards sets one, so it was saying what already held.
  */
 const CUTS: CSSProperties[] = [
   { fontFamily: IMPACT, color: INK, textTransform: "uppercase", transform: "rotate(-1deg)" },
@@ -281,7 +288,6 @@ export default function SnideTaskCard({
             <h2
               style={{
                 fontSize: size.titleSize,
-                fontWeight: 400,
                 lineHeight: 1.35,
                 margin: "0 0 var(--space-md)",
               }}

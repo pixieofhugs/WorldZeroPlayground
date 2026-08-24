@@ -745,9 +745,28 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
   const faces = loadedFaces();
   const familyNames = new Set(faces.map((face) => face.family));
 
+  /**
+   * The file with every comment blanked out, character for character.
+   *
+   * Prose about a weight is not a declaration of one, and this check reads a
+   * file's whole text rather than only the scopes that pin a family — so the
+   * paragraph in `SnideEditPraxis` explaining why it sets no `fontWeight: 700`
+   * flagged itself the moment it was written. Blanking to spaces rather than
+   * deleting keeps every index and line number exactly where it was, and takes
+   * braces inside comments out of `enclosingScope`'s counting for free.
+   */
+  const readSource = (file: string): string =>
+    inlineConstants(
+      file,
+      readFileSync(file, "utf-8").replace(
+        /(["'`])(?:\\.|(?!\1)[^\\])*\1|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+        (match) => (match.startsWith("/") ? match.replace(/[^\n]/g, " ") : match),
+      ),
+    );
+
   /** The families a composer's `pageStyle` puts on everything below it. */
   function pageFamilies(file: string): string[] {
-    const source = inlineConstants(file, readFileSync(file, "utf-8"));
+    const source = readSource(file);
     const anchor = source.indexOf("pageStyle:");
     if (anchor === -1) return [];
     const offset = source.slice(anchor).search(/font-?[fF]amily\s*[:=]/);
@@ -769,12 +788,21 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
       // `DefaultEditPraxis` in a class and declares no `pageStyle`, so there is
       // no face of its own to inherit and nothing here to check. Every other
       // one must resolve, or this guard is silently checking nothing.
-      const declaresPageStyle = readFileSync(file, "utf-8").includes("pageStyle:");
+      const declaresPageStyle = readSource(file).includes("pageStyle:");
       expect(pageFamilies(file).length > 0, `${name}: pageStyle anchor moved`).toBe(
         declaresPageStyle,
       );
     }
     expect(pageFamilies(join(COMPOSER_DIR, "SnideEditPraxis.tsx"))).toEqual(["special elite"]);
+  });
+
+  it("reads a comment about a weight as prose, not as a declaration", () => {
+    const file = join(COMPOSER_DIR, "SnideEditPraxis.tsx");
+    // That file's note explains, in so many words, the declaration it no longer
+    // makes. A guard that cannot tell the explanation from the thing explained
+    // reports its own documentation, so this is the live instance.
+    expect(readFileSync(file, "utf-8")).toMatch(/fontWeight: 700/);
+    expect(readSource(file)).not.toMatch(/font-?[wW]eight/);
   });
 
   it("knows a faked bold from a substituted one", () => {
@@ -787,7 +815,7 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
     const faked: string[] = [];
     for (const name of composers) {
       const file = join(COMPOSER_DIR, name);
-      const source = inlineConstants(file, readFileSync(file, "utf-8"));
+      const source = readSource(file);
       const page = pageFamilies(file);
       const available = faces
         .filter((face) => page.includes(face.family) && !face.italic)

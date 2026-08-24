@@ -168,6 +168,16 @@ const ACID = "var(--faction-snide-acid)";
 const PRESS_INK = "var(--faction-snide-ink)";
 const PRESS_PAPER = "var(--faction-snide-paper)";
 
+/* NEITHER FACE HAS A SECOND CUT, SO NOTHING HERE SETS A WEIGHT (#2487). Anton
+ * and Special Elite both ship at 400 and only 400. `pageStyle` puts Special
+ * Elite on the whole surface, so a `fontWeight: 700` anywhere below — the status
+ * word, the active mode chip, the media tile's close button, which is where all
+ * three sat — was never a heavier cut: the browser had none to reach for and
+ * smeared the one it had. On a typewriter face that reads as a bad photocopy of
+ * the type rather than emphasis, which is exactly the register this dress is
+ * trying NOT to be an accident of. Emphasis comes off what the faces do support
+ * — the acid ground, the ink tier, tracking, case, size. `fontsLoaded.test.ts`
+ * holds the line. */
 const TITLE_FACE = "var(--faction-snide-font-impact)"; /* Anton */
 const BODY_FACE = "var(--faction-snide-font-type)"; /* Special Elite */
 
@@ -369,7 +379,7 @@ export default function SnideEditPraxis({ state }: Props) {
     masthead,
     rule: () => censorStripe,
     mark: statusMark,
-    statusStyle: { color: INK, fontWeight: 700, letterSpacing: "0.2em" },
+    statusStyle: { color: INK, letterSpacing: "0.2em" },
     metaStyle: { color: FAINT },
     labelStyle: { color: MUTED },
     slip,
@@ -463,7 +473,6 @@ export default function SnideEditPraxis({ state }: Props) {
                       background: active ? ACID : FIELD,
                       color: active ? PRESS_INK : MUTED,
                       border: `1px solid ${active ? ACID : RULE}`,
-                      fontWeight: active ? 700 : 400,
                     })}
                   >
                     {option.label}
@@ -808,7 +817,6 @@ function MediaTile({ children, caption, onRemove }: MediaTileProps) {
           border: "none",
           color: PRESS_INK,
           fontSize: "var(--text-md)",
-          fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,
           padding: 0,

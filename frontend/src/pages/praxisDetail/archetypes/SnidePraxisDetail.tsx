@@ -504,7 +504,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       <h1
         style={{
           fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-          fontWeight: 400,
           lineHeight: 1.3,
           margin: "0 0 var(--space-md)",
         }}
