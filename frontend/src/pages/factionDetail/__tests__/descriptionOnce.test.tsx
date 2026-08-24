@@ -27,7 +27,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Initialize the i18n catalog so faction copy keys resolve to English text.
 import '../../../i18n'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
-import { factionDescription, setAlbescentRevealed } from '../../../utils/factions'
+import { factionDescription } from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
   state: undefined as unknown as FactionDetailState,
@@ -156,25 +156,11 @@ describe('a faction page says its description exactly once (#2137)', () => {
   }
 
   it(`${WITHOUT_HERO} keeps its one copy in the no-hero chrome`, () => {
-    // REVEALED, and it has to be. `App`'s `AlbescentGate` hands the real
-    // `/factions/albescent` page only to an account `/auth/me` reports as
-    // revealed; everyone else gets `AlbescentSecretPlaceholder`. So an
-    // unrevealed viewer of THIS component does not exist in the app, and since
-    // #2409 `factionDescription` would answer `[REDACTED]` for one — a
-    // ten-character string that trips the floor below and would have this case
-    // counting the redaction mark rather than the blurb.
-    setAlbescentRevealed(true)
-    try {
-      const blurb = firstParagraph(WITHOUT_HERO)
-      expect(
-        blurb.length,
-        'albescent has a catalog blurb to count',
-      ).toBeGreaterThanOrEqual(BLURB_FLOOR)
-      expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(expected(WITHOUT_HERO))
-    } finally {
-      // Module-level flag: it outlives the case that set it, so a leaked `true`
-      // makes a later file's assertion pass for the wrong reason.
-      setAlbescentRevealed(false)
-    }
+    const blurb = firstParagraph(WITHOUT_HERO)
+    expect(
+      blurb.length,
+      'albescent has a catalog blurb to count',
+    ).toBeGreaterThanOrEqual(BLURB_FLOOR)
+    expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(expected(WITHOUT_HERO))
   })
 })

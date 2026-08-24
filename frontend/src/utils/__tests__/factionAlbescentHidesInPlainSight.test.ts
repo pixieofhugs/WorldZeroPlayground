@@ -162,37 +162,55 @@ describe("Albescent is indistinguishable from unaffiliated", () => {
  * `true` would make a later assertion pass for the wrong reason. Hence the
  * unconditional reset.
  *
- * WHAT #2409 INVERTED, AND WHY THE ASSERTIONS BELOW READ BACKWARDS FROM #1891.
- * This block used to assert `factionName("albescent") === factionName("na")` —
- * the society disguised as the unaffiliated state — and the case beneath it
- * asserted the answer was "a NAME, not a blank", because *"a blank advertises
- * the omission"*. Advertising the omission is now the feature. Albescent is
- * present everywhere the other factions are and every string reads
- * `[REDACTED]`, so the two slugs must now DIFFER for an unrevealed viewer, and
- * that is the one sentence of #1891 this reverses. Its ruling 1 is untouched
- * and the block above still pins it: every colour, fill and theme answer is
- * still `na`'s.
+ * WHAT #2409 ADDED, AND WHAT IT POINTEDLY DID NOT. #2409 first shipped as a
+ * global rename: `factionName` answered `[REDACTED]`, so every label site
+ * inverted at once. The owner ruled that back (ADR-0082 §2). `factionName` and
+ * `factionDescription` are therefore UNCHANGED from #1891 — the mask holds
+ * wherever a name labels a thing already on screen — and the redaction is an
+ * OPT-IN seam that exactly two surfaces reach for. Both halves are asserted
+ * below, in the same block, on purpose: they are one ruling and the failure
+ * mode is a future change quietly collapsing them back into each other.
  */
-describe("Albescent's strings redact until the viewer is revealed (#2409)", () => {
+describe("Albescent's name is masked, and two surfaces redact instead (#2409)", () => {
   // Not `beforeEach`: this must also undo a `true` left by the LAST case in the
   // block, which no `beforeEach` here would reach.
   afterEach(() => setAlbescentRevealed(false));
 
-  it("reads as [REDACTED] to a viewer who was never invited", () => {
+  it("reads as Unaffiliated to a viewer who was never invited", () => {
     setAlbescentRevealed(false);
-    expect(factionName("albescent")).toBe(REDACTED);
-    // The inversion, stated as its own line: the disguise is gone. A viewer who
-    // sees "Unaffiliated" here is reading a mask #2409 deleted.
-    expect(factionName("albescent")).not.toBe(factionName("na"));
+    // Equality against `na` rather than the literal, for the reason the whole
+    // file compares slugs: pinning the copy lets the two drift apart.
+    expect(factionName("albescent")).toBe(factionName("na"));
   });
 
-  it("redacts the description on the same gate, PLACEHOLDER or not", () => {
+  it("is a NAME, not a blank — a blank advertises the omission", () => {
     setAlbescentRevealed(false);
-    // `descriptions.albescent` is the owner's PLACEHOLDER today. The point of
-    // redacting the CATALOGUE rather than authoring a redacted one is that this
-    // assertion does not change when the real blurb is written.
-    expect(factionDescription("albescent")).toBe(REDACTED);
-    expect(factionDescription("ua")).not.toBe(REDACTED);
+    // A dash or an empty string where every other card carries a name tells the
+    // viewer something is being withheld, which is the opposite of secret.
+    expect(factionName("albescent").trim().length).toBeGreaterThan(0);
+    expect(factionName("albescent")).not.toBe("-");
+  });
+
+  it("keeps the LABEL masked while the two surfaces redact — the boundary", () => {
+    // THE CASE THIS BLOCK EXISTS FOR (ADR-0082 §2). The two halves are one
+    // ruling, and a future change that "fixes the inconsistency" in either
+    // direction breaks exactly here rather than silently on a byline nobody
+    // rendered in a test.
+    setAlbescentRevealed(false);
+
+    // A LABEL — a praxis byline, a task card, a seal, the switcher, an
+    // aria-label. All ~35 of them route through this one call, and it must
+    // still say the masked word, never the mark.
+    expect(factionName("albescent")).toBe(factionName("na"));
+    expect(factionName("albescent")).not.toBe(REDACTED);
+    // Same for the description: the only page that draws it sits behind
+    // `AlbescentGate`, which no unrevealed account reaches.
+    expect(factionDescription("albescent")).not.toBe(REDACTED);
+
+    // A SURFACE THAT IS ABOUT THE SOCIETY — the `/factions` select tile and the
+    // leaderboard's eighth lane. They ask, and get the mark.
+    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
+    expect(isFactionRedacted("albescent")).toBe(true);
   });
 
   it("redacts every Albescent-scoped key, not just the name", () => {
@@ -229,8 +247,9 @@ describe("Albescent's strings redact until the viewer is revealed (#2409)", () =
     // No setter call at all — this is the module's own starting value. Every
     // state before `/auth/me` answers must fail CLOSED: a name withheld for one
     // extra frame costs nothing, a name leaked once cannot be taken back.
-    expect(factionName("albescent")).toBe(REDACTED);
+    expect(factionName("albescent")).toBe(factionName("na"));
     expect(isFactionRedacted("albescent")).toBe(true);
+    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
   });
 
   it("paints and disables off the SAME answer the words redact on", () => {
