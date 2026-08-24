@@ -291,7 +291,7 @@ describe("both Albescent surfaces emit the hook the rule scopes on (#1646)", () 
 
   it("praxis detail mounts the gallery inside .alb-praxis", () => {
     const html = render(<AlbescentPraxisDetail state={detailState()} />);
-    expect(html, "the detail's Albescent scope").toContain('class="alb-praxis alb-prism"');
+    expect(html, "the detail's Albescent scope").toContain('class="alb-praxis alb-moves alb-prism"');
     expect(html, "the media region").toContain("user-media");
     expect(html, "the ornaments still mount").toContain("alb-praxis-ring");
   });
