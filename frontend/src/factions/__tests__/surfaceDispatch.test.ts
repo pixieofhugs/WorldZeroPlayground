@@ -19,8 +19,27 @@
  * markup — a mis-wire surfaces there, not as a bare identity check here.
  */
 import { describe, it, expect } from 'vitest'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
 import { surfaceMap, SURFACE_KEYS } from '..'
 import type { FactionSurface } from '..'
+
+/** Every non-test source module under `src`, as [path relative to src, text]. */
+function walkSource(root: string): Array<[string, string]> {
+  const files = (dir: string): string[] =>
+    readdirSync(dir).flatMap((entry) => {
+      const full = join(dir, entry)
+      return statSync(full).isDirectory() ? files(full) : [full]
+    })
+  return files(root)
+    .filter(
+      (path) =>
+        /\.tsx?$/.test(path) &&
+        !/\.test\.tsx?$/.test(path) &&
+        !path.includes(`${sep}__tests__${sep}`),
+    )
+    .map((path) => [relative(root, path), readFileSync(path, 'utf8')])
+}
 
 // The table asserts each surface's registry CONTENTS: a bespoke slug has an
 // entry, a non-bespoke faction does not (and so falls through to the surface
@@ -197,5 +216,58 @@ describe('Coven is bespoke on every core surface, never the Default', () => {
 describe('WOW is bespoke on every core surface, never the Default', () => {
   it.each(REQUIRED)('wow skins %s', (surface) => {
     expect(surfaceMap(surface)['wow']).toBeDefined()
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* No dispatcher may add a slug the manifest does not have (#2529)            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Everything above derives its bar from `surfaceMap()`, which is exactly why
+ * nothing above could see #2529: `FactionSigil` dispatched on
+ * `{ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }`, so the one
+ * surface reached outside the map was the one surface this file had no opinion
+ * about. `SURFACE_KEYS_ARE_EXHAUSTIVE` could not see it either — that guard
+ * catches a new surface KEY, and this was a slug injected at a call site.
+ *
+ * THE RULE IS "NEVER SPREAD IT", and the narrowness is the point. A map can
+ * only gain a sibling key by being opened up, so a spread is the whole surface
+ * area of the bypass — `{ x: A, ...surfaceMap(k) }` and
+ * `{ ...surfaceMap(k), x: A }` are both spreads and both caught, in either
+ * order and however the object is formatted. A dispatcher that hands the map
+ * straight to `pickVariant`, or parks it in a local first the way
+ * `FactionSelectCard` does, never trips this.
+ *
+ * A source scan, like `archetypeReachability`'s two: the thing being asserted is
+ * a property of what people WRITE at a call site, and a graph walk cannot see it
+ * — by the time `pickVariant` has an object, the injected key is
+ * indistinguishable from a registered one.
+ */
+const CALL_SITES = walkSource(join(process.cwd(), 'src'))
+const READS_SURFACE_MAP = CALL_SITES.filter(([, text]) => text.includes('surfaceMap('))
+
+describe('every dispatcher reads surfaceMap() whole (#2529)', () => {
+  it('has dispatchers to check at all', () => {
+    // Guards the guard: a walk that matched nothing would be vacuously green
+    // forever, which is the failure mode this whole block exists to end.
+    expect(READS_SURFACE_MAP.length).toBeGreaterThan(10)
+  })
+
+  it('never spreads a surface map, so nothing can be added beside it', () => {
+    const offenders = READS_SURFACE_MAP.filter(([, text]) =>
+      /\.\.\.\s*surfaceMap\s*\(/.test(text),
+    ).map(([path]) => path)
+
+    expect(
+      offenders,
+      `A dispatcher spreads surfaceMap() into an object literal.\n` +
+        `That is how a slug reaches the screen without a manifest row (#2529):\n\n` +
+        `    pickVariant({ albescent: Adapter, ...surfaceMap('sigil') }, slug, Default)\n\n` +
+        `Register the component in factions/<slug>.ts instead and pass the map\n` +
+        `whole. A surface reached outside surfaceMap() is invisible to every\n` +
+        `assertion in this file and gets dropped by the next refactor of its\n` +
+        `dispatcher.`,
+    ).toEqual([])
   })
 })
