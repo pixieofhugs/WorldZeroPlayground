@@ -111,7 +111,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         borderRadius: 8, // terminal slab
         position: "relative",
         overflow: "hidden",
-        background: "var(--sg-praxis-card-paper, var(--faction-singularity-card-bg))",
+        background: "var(--sg-praxis-card-paper)",
         border: "1px solid var(--faction-singularity-frame)",
         boxShadow: "0 4px 18px var(--color-cast-shadow)",
         /* THE STANDING RASTER — ornament geometry, raw by §4a, and the ONE
@@ -152,16 +152,16 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint="var(--sg-praxis-card-accent, var(--faction-singularity-card-accent))"
+          tint="var(--sg-praxis-card-accent)"
           muted="var(--faction-singularity-phosphor-dim)"
-          paper="var(--sg-praxis-card-paper, var(--faction-singularity-card-bg))"
+          paper="var(--sg-praxis-card-paper)"
           showCrown={showCrown}
           // A terminal has one face by definition, so Singularity answers both
           // questions with Share Tech Mono — via its own card token, not the
           // raw family (#888).
           fonts={{
-            display: "var(--sg-praxis-card-face, var(--faction-singularity-card-font))",
-            body: "var(--sg-praxis-card-face, var(--faction-singularity-card-font))",
+            display: "var(--sg-praxis-card-face)",
+            body: "var(--sg-praxis-card-face)",
           }}
           titleStyle={{
             fontFamily: "var(--font-faction-terminal)",

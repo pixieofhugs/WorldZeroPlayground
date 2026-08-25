@@ -101,7 +101,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * grid.
  */
 
-const MONO = "var(--sg-select-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-select-face)"; /* Share Tech Mono */
 
 const CHASSIS = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";

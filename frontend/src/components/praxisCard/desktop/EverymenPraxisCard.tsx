@@ -41,7 +41,7 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /** The sheet, named once: it is both the frame's ground and the value
  *  `PraxisBody` needs to knock its own boxes back out of. */
-const PAPER = "var(--ev-praxis-paper, var(--faction-everymen-card-bg))";
+const PAPER = "var(--ev-praxis-paper)";
 
 /** The red margin rule down the sheet. Static (#586). */
 const everymenMarginRule: CSSProperties = {
@@ -67,7 +67,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         position: "relative",
         fontFamily: "var(--font-faction-typewriter)",
-        color: "var(--ev-praxis-ink, var(--faction-everymen-card-text))",
+        color: "var(--ev-praxis-ink)",
         transition: "background 150ms, color 150ms",
       }}
     >
@@ -99,15 +99,15 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint="var(--ev-praxis-accent, var(--faction-everymen-card-accent))"
-          muted="var(--ev-praxis-quiet, var(--faction-everymen-card-muted))"
+          tint="var(--ev-praxis-accent)"
+          muted="var(--ev-praxis-quiet)"
           paper={PAPER}
           showCrown={showCrown}
           // Bebas Neue is Everymen's declared card font and, until #888, reached
           // task and faction cards but never a praxis card. The broadsheet's own
           // Special Elite stays on the reading matter.
           fonts={{
-            display: "var(--ev-praxis-face, var(--faction-everymen-card-font))",
+            display: "var(--ev-praxis-face)",
             body: "var(--font-faction-typewriter)",
           }}
         />

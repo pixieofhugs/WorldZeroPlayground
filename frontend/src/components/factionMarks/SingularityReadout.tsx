@@ -37,7 +37,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * the `[data-theme="dark"]` cascade flips is the phosphor, never a ternary here.
  */
 
-const MONO = "var(--sg-readout-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-readout-face)"; /* Share Tech Mono */
 
 export interface SingularityReadoutProps {
   /**

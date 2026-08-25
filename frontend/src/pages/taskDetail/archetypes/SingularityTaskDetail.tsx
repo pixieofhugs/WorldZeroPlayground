@@ -73,7 +73,7 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * no keyframe was added.
  */
 
-const MONO = "var(--sg-task-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-task-detail-face)"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";

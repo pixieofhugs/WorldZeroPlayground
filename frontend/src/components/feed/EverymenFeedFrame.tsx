@@ -162,7 +162,7 @@ export default function EverymenFeedFrame({
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              fontFamily: 'var(--ev-feed-face, var(--faction-everymen-card-font))',
+              fontFamily: 'var(--ev-feed-face)',
               fontSize: mobile ? 'var(--text-lg)' : 'var(--text-xl)',
               letterSpacing: mobile ? '0.12em' : '0.18em',
               textTransform: 'uppercase',

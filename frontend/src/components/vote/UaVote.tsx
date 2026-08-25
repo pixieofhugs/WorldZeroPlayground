@@ -293,7 +293,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
           mandala blooms fuller and warmer as the rank climbs, which is the same
           reading in the widget's own vocabulary. */}
 
-      <VoteError error={error} color="var(--leaf-vote-accent, var(--faction-ua-card-accent))" />
+      <VoteError error={error} color="var(--leaf-vote-accent)" />
     </div>
   )
 }

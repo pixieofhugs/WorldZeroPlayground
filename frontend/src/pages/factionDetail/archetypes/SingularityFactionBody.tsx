@@ -37,11 +37,11 @@ import type { FactionDetailState } from "../useFactionDetail";
 // resolves identically whether or not the declaring element is above it.
 // `-border-hard` and `-amber` are not roles and stay local: decision 07 leaves
 // a surface's genuine extras to the surface.
-const VOID = "var(--sg-body-paper, var(--faction-singularity-card-bg))"; // terminal black
-const PHOSPHOR = "var(--sg-body-accent, var(--faction-singularity-card-accent))"; // green
-const SIGNAL = "var(--sg-body-quiet, var(--faction-singularity-card-muted))"; // blue
+const VOID = "var(--sg-body-paper)"; // terminal black
+const PHOSPHOR = "var(--sg-body-accent)"; // green
+const SIGNAL = "var(--sg-body-quiet)"; // blue
 const BORDER_HARD = "var(--faction-singularity-border-hard)"; // blue brand
-const SIGNAL_FILL = "var(--sg-body-fill, var(--faction-singularity))"; // blue brand fill
+const SIGNAL_FILL = "var(--sg-body-fill)"; // blue brand fill
 // The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
 // palette's first stop until #1220 (ADR-0066) pointed it at na's
 // --faction-default-gold, and #1766 gave it the --faction-singularity-* token

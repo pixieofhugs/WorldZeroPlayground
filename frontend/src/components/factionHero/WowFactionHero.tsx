@@ -88,7 +88,7 @@ export default function WowFactionHero({
           <div
             className="label-heading"
             style={{
-              fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
+              fontFamily: "var(--wow-hero-face)",
               color: "var(--faction-wow-accent-deep)",
             }}
           >
@@ -97,10 +97,10 @@ export default function WowFactionHero({
 
           <h1
             style={{
-              fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
+              fontFamily: "var(--wow-hero-face)",
               fontSize: "var(--text-heading)",
               lineHeight: 1.05,
-              color: "var(--wow-hero-ink, var(--faction-wow-card-text))",
+              color: "var(--wow-hero-ink)",
               margin: "var(--space-sm) 0 var(--space-xs)",
               // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
               // banner is full-width and centred, and "Warriors of Whimsy" sets
@@ -115,7 +115,7 @@ export default function WowFactionHero({
             style={{
               fontFamily: "var(--faction-wow-body-font)",
               fontStyle: "italic",
-              color: "var(--wow-hero-accent, var(--faction-wow-card-accent))",
+              color: "var(--wow-hero-accent)",
               margin: "0 0 var(--space-lg)",
             }}
           >
@@ -148,7 +148,7 @@ export default function WowFactionHero({
                   <div
                     className="content-title"
                     style={{
-                      fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
+                      fontFamily: "var(--wow-hero-face)",
                       lineHeight: 1,
                       color: "var(--faction-wow-figure)",
                     }}

@@ -178,13 +178,13 @@ interface Props {
  * ink are this surface's extras, each one measured against a ground the core
  * vocabulary does not name (decision 07).
  */
-const MED = "var(--wow-edit-praxis-face, var(--faction-wow-card-font))";
+const MED = "var(--wow-edit-praxis-face)";
 /** Lora — body AND label on this surface, per the design's type row. */
 const LORA = "var(--faction-wow-body-font)";
 
 /* ── The chronicle palette. Every one a shipped --faction-wow-* token. ── */
 /** The sheet: cream parchment by day, the deep ground by night. */
-const SHEET = "var(--wow-edit-praxis-paper, var(--faction-wow-card-bg))";
+const SHEET = "var(--wow-edit-praxis-paper)";
 /* The error banner's ink (#1231). The banner sits straight on the sheet, and
  * the neutral `--color-danger` under its own veil misses AA there in light
  * (4.08:1 on this ground); this is #1449's alarm rung, already measured
@@ -193,9 +193,9 @@ const ALARM = "var(--faction-wow-card-alarm)";
 /** The inset parchment plate every editable field is set on. */
 const FIELD = "var(--faction-wow-chronicle-panel)";
 /** Body ink. 14:1 on both grounds. */
-const INK = "var(--wow-edit-praxis-ink, var(--faction-wow-card-text))";
+const INK = "var(--wow-edit-praxis-ink)";
 /** Quiet ink — CREAM ONLY. See the pairing note in the header. */
-const MUTED = "var(--wow-edit-praxis-quiet, var(--faction-wow-card-muted))";
+const MUTED = "var(--wow-edit-praxis-quiet)";
 /**
  * The same quiet register on the PLATE. `--faction-wow-card-muted` is measured
  * against the cream card and is 4.24:1 on the inset parchment — which is why
@@ -208,7 +208,7 @@ const PANEL_QUIET = "var(--faction-wow-chronicle-quiet)";
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK — the one member of this palette that flips with the theme. */
-const PLUM = "var(--wow-edit-praxis-accent, var(--faction-wow-card-accent))";
+const PLUM = "var(--wow-edit-praxis-accent)";
 /** Plum as a SURFACE. Theme-invariant, with its own AA ink below. */
 const PLUM_FILL = "var(--faction-wow-plum-surface)";
 const ON_PLUM = "var(--faction-wow-on-plum)";

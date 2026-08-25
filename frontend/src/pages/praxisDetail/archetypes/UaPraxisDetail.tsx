@@ -258,7 +258,7 @@ function LeafDisc({
         fontWeight: 700,
         fontSize: "var(--text-lg)",
         background: "var(--faction-ua-panel)",
-        color: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
+        color: "var(--leaf-praxis-detail-ink)",
         boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
       }}
     >
@@ -295,12 +295,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
   /** A quiet sheet laid on the leaf — the page's one container. */
   const sheet: CSSProperties = {
-    background: "var(--leaf-praxis-detail-paper, var(--faction-ua-card-bg))",
+    background: "var(--leaf-praxis-detail-paper)",
     border: "1px solid var(--faction-ua-rule)",
     borderRadius: 6,
     boxSizing: "border-box",
     boxShadow: `0 14px 36px -30px ${uaShade(52)}`,
-    color: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
+    color: "var(--leaf-praxis-detail-ink)",
   };
 
   /** The same sheet with the rail's padding already on it. */
@@ -350,7 +350,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   const sectionHead = (label: ReactNode, trailing?: ReactNode) =>
     head("var(--faction-ua-page-text)", label, trailing);
   const panelHead = (label: ReactNode, trailing?: ReactNode) =>
-    head("var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))", label, trailing);
+    head("var(--leaf-praxis-detail-ink)", label, trailing);
 
   // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
   // vellum leaf so its accent could be measured on the faction's own ground,
@@ -450,7 +450,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
               fontFamily: UA_TEXT,
               fontSize: "var(--text-xl)",
               lineHeight: 1.5,
-              color: "var(--leaf-praxis-detail-quiet, var(--faction-ua-card-muted))",
+              color: "var(--leaf-praxis-detail-quiet)",
             }}
           >
             {t("detail.filed", {
@@ -554,9 +554,9 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       style={panel}
       heading={panelHead(t("duelCrossLink.label"))}
       ink={{
-        name: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
-        total: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
-        muted: "var(--leaf-praxis-detail-quiet, var(--faction-ua-card-muted))",
+        name: "var(--leaf-praxis-detail-ink)",
+        total: "var(--leaf-praxis-detail-ink)",
+        muted: "var(--leaf-praxis-detail-quiet)",
         line: "var(--faction-ua-rule)",
         plate: "var(--faction-ua-panel)",
       }}
@@ -589,7 +589,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           fontStyle: "italic",
           lineHeight: 1.6,
           margin: "0 0 var(--space-md)",
-          color: "var(--leaf-praxis-detail-quiet, var(--faction-ua-card-muted))",
+          color: "var(--leaf-praxis-detail-quiet)",
         }}
       >
         {t("detail.vote.prompt")}
@@ -642,7 +642,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                color: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
+                color: "var(--leaf-praxis-detail-ink)",
                 textDecoration: "none",
               }}
             >
@@ -676,7 +676,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 width: 20,
                 textAlign: "right",
                 fontSize: "var(--text-content)",
-                color: "var(--leaf-praxis-detail-ink, var(--faction-ua-card-text))",
+                color: "var(--leaf-praxis-detail-ink)",
               }}
             >
               {voter.value}

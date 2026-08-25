@@ -48,7 +48,7 @@ const PLATE = "var(--faction-snide-ink)";
  * because the disc is frozen on `PLATE` and BOTH of its ends were measured
  * there: 6.93:1 by day, 15.55:1 by night.
  */
-const CHROME = "var(--snd-hero-fill, var(--faction-snide))";
+const CHROME = "var(--snd-hero-fill)";
 /** The stock the disc gave up, kept as the raster that reads on it. Invariant. */
 const STOCK = "var(--faction-snide-paper)";
 
@@ -442,7 +442,7 @@ export default function SnideFactionHero({
                   // The CARD's tier is the right one HERE and only here on this
                   // hero: the chit is a slab, not the wall. 12.96:1 light /
                   // 11.85:1 dark on the plate.
-                  color: "var(--snd-hero-quiet, var(--faction-snide-card-muted))",
+                  color: "var(--snd-hero-quiet)",
                 }}
               >
                 {s.label}

@@ -39,7 +39,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         // writ resolve exactly as they did.
         ...factionRoleVars('wow', 'wow-seal'),
         background: 'var(--faction-wow-chronicle-bg)',
-        color: 'var(--wow-seal-ink, var(--faction-wow-card-text))',
+        color: 'var(--wow-seal-ink)',
         border: '2px solid var(--faction-wow-chronicle-border)',
         borderRadius: 6,
         overflow: 'hidden',
@@ -56,7 +56,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         style={{
           height: 5,
           background:
-            'repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 10px, var(--wow-seal-accent, var(--faction-wow-card-accent)) 10px 20px)',
+            'repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 10px, var(--wow-seal-accent) 10px 20px)',
         }}
       />
 
@@ -88,7 +88,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
               zIndex: 2,
               background: 'transparent',
               border: 'none',
-              color: 'var(--wow-seal-accent, var(--faction-wow-card-accent))',
+              color: 'var(--wow-seal-accent)',
               fontSize: 'var(--text-xl)',
               cursor: 'pointer',
             }}
@@ -102,11 +102,11 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         <span
           className="block"
           style={{
-            fontFamily: 'var(--wow-seal-face, var(--faction-wow-card-font))',
+            fontFamily: 'var(--wow-seal-face)',
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.14em',
-            color: 'var(--wow-seal-accent, var(--faction-wow-card-accent))',
+            color: 'var(--wow-seal-accent)',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -120,7 +120,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
             fontStyle: 'italic',
             fontSize: 'var(--text-content)',
             lineHeight: 1.3,
-            color: 'var(--wow-seal-ink, var(--faction-wow-card-text))',
+            color: 'var(--wow-seal-ink)',
           }}
         >
           {metatask.title}
@@ -129,7 +129,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         <span
           className="block"
           style={{
-            fontFamily: 'var(--wow-seal-face, var(--faction-wow-card-font))',
+            fontFamily: 'var(--wow-seal-face)',
             fontSize: 'var(--text-title)',
             letterSpacing: '0.03em',
             color: 'var(--faction-wow-stamp-total)',

@@ -141,7 +141,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           // identity belongs. A two-line excerpt set in it is unreadable, so the
           // body stays on the slab's Special Elite.
           fonts={{
-            display: "var(--snd-pcard-face, var(--faction-snide-card-font))",
+            display: "var(--snd-pcard-face)",
             body: "var(--faction-snide-font-type)",
           }}
           titleStyle={{

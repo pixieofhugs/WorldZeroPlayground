@@ -49,7 +49,7 @@ const labelStyle: CSSProperties = {
   fontSize: 10.5,
   letterSpacing: "0.16em",
   textTransform: "uppercase",
-  color: "var(--leaf-score-stamp-quiet, var(--faction-ua-card-muted))",
+  color: "var(--leaf-score-stamp-quiet)",
 };
 
 const workingStyle: CSSProperties = {
@@ -57,7 +57,7 @@ const workingStyle: CSSProperties = {
   fontStyle: "italic",
   // eslint-disable-next-line local/no-raw-style-values -- ornament: the working written under the plate's rule.
   fontSize: 12,
-  color: "var(--leaf-score-stamp-quiet, var(--faction-ua-card-muted))",
+  color: "var(--leaf-score-stamp-quiet)",
 };
 
 /** The vermilion chip that carries the multiplier. */
@@ -66,7 +66,7 @@ function MultChip({ children }: { children: ReactNode }) {
     <span
       style={{
         marginLeft: "auto",
-        fontFamily: "var(--leaf-score-stamp-face, var(--faction-ua-card-font))",
+        fontFamily: "var(--leaf-score-stamp-face)",
         fontWeight: 600,
         // eslint-disable-next-line local/no-raw-style-values -- ornament: chip lettering, sized to the pill.
         fontSize: 13,
@@ -149,12 +149,12 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               <span style={labelStyle}>{t("card.stamp.base")}</span>
               <span
                 style={{
-                  fontFamily: "var(--leaf-score-stamp-face, var(--faction-ua-card-font))",
+                  fontFamily: "var(--leaf-score-stamp-face)",
                   fontWeight: 600,
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
                   fontSize: 25,
                   lineHeight: 0.8,
-                  color: "var(--leaf-score-stamp-ink, var(--faction-ua-card-text))",
+                  color: "var(--leaf-score-stamp-ink)",
                 }}
               >
                 {base}
@@ -174,7 +174,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             <div
               style={{
                 ...workingStyle,
-                color: "var(--leaf-score-stamp-accent, var(--faction-ua-card-accent))",
+                color: "var(--leaf-score-stamp-accent)",
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
                 marginTop: 3,
               }}
@@ -207,12 +207,12 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               <span style={workingStyle}>{t("card.stamp.subtotal")}</span>
               <span
                 style={{
-                  fontFamily: "var(--leaf-score-stamp-face, var(--faction-ua-card-font))",
+                  fontFamily: "var(--leaf-score-stamp-face)",
                   fontWeight: 600,
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: the subtotal figure, a step under base.
                   fontSize: 20,
                   lineHeight: 0.9,
-                  color: "var(--leaf-score-stamp-ink, var(--faction-ua-card-text))",
+                  color: "var(--leaf-score-stamp-ink)",
                 }}
               >
                 {base + meta}
@@ -249,7 +249,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             <div
               style={{
                 ...workingStyle,
-                color: "var(--leaf-score-stamp-accent, var(--faction-ua-card-accent))",
+                color: "var(--leaf-score-stamp-accent)",
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
                 marginTop: 3,
               }}

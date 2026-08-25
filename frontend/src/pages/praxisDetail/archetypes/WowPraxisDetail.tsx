@@ -137,22 +137,22 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * grounds, the gold, the inset and the hairline are this surface's own extras,
  * which decision 07 leaves to the surface.
  */
-const MED = 'var(--wow-praxis-page-face, var(--faction-wow-card-font))' /* MedievalSharp */
+const MED = 'var(--wow-praxis-page-face)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 /** The scribe's marginal hand. A SURFACE face (§4), not Coven's card font. */
 const HAND = 'var(--font-faction-script)' /* Caveat */
 
-const INK = 'var(--wow-praxis-page-ink, var(--faction-wow-card-text))'
+const INK = 'var(--wow-praxis-page-ink)'
 /** Metadata ink. 4.52:1 inside a cream plate — NOT legible enough on the field. */
-const MUTED = 'var(--wow-praxis-page-quiet, var(--faction-wow-card-muted))'
+const MUTED = 'var(--wow-praxis-page-quiet)'
 /** Label ink, the one measured on BOTH grounds: 5.32:1 on the cream plate and
  *  5.06:1 on the darker parchment field this page lays its headers straight on. */
 const LABEL = 'var(--faction-wow-accent-deep)'
 /** Plum as INK — this one flips with the theme. 5.11:1 on the field. */
-const PLUM = 'var(--wow-praxis-page-accent, var(--faction-wow-card-accent))'
+const PLUM = 'var(--wow-praxis-page-accent)'
 /** Frame + rule gold. Theme-invariant, and never an ink: 2.24:1 on the cream. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
-const CARD = 'var(--wow-praxis-page-paper, var(--faction-wow-card-bg))'
+const CARD = 'var(--wow-praxis-page-paper)'
 const INSET = 'var(--faction-wow-detail-inset)'
 const HAIR = 'var(--faction-wow-chronicle-rule)'
 
