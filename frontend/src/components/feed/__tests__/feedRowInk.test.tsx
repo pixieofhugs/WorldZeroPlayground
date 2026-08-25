@@ -131,9 +131,10 @@ const CASES = [
  * (#2674). A chassis migrated onto `utils/factionRoles.ts` asks its faction for
  * a ROLE and carries today's token as the fallback, so the ink this row
  * measures has not moved; only its spelling has. The gate on that claim is
- * `factions/__tests__/wowRoleMap.test.ts`, which asserts every fallback IS the
- * token the site named before — without it, folding here would be lenient
- * rather than sound. Naming each surface's prefix in this nine-faction table
+ * `utils/__tests__/factionRoleMigration.test.ts`, which re-derives every
+ * fallback from the resolver and fails if one drifts — without it, folding here
+ * would be lenient rather than sound. (`factions/__tests__/wowRoleMap.test.ts`
+ * is a different guard: the rootless kit modules and the carve-outs.) Naming each surface's prefix in this nine-faction table
  * would instead make it a file every faction lane has to edit.
  */
 const foldRoleReads = (html: string) =>

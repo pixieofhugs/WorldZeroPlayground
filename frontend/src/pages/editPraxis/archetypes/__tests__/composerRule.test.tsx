@@ -241,7 +241,8 @@ describe("the last two archetype seams of #1706", () => {
       // asks its faction for the `accent` ROLE and carries today's token as the
       // fallback (#2674), so the rule reads `var(--<prefix>-accent, var(--…))`.
       // What this asserts is unchanged — a token, never a literal — and the
-      // fallback itself is gated per faction (`factions/__tests__/*RoleMap`).
+      // fallback itself is gated per surface, by
+      // `utils/__tests__/factionRoleMigration.test.ts`.
       expect(markup).toMatch(/border-left:2px solid var\(--[a-z-]+[,)]/);
     },
   );
