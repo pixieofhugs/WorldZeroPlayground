@@ -27,6 +27,7 @@
  * only a click sets. The option list they render is what `factionFacet` and
  * `FilterOption` say it is, and that is what these tests pin.
  */
+import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 
@@ -47,6 +48,8 @@ import {
   type SegmentBox,
 } from '../filterState'
 import type { FactionOut } from '../../../../api/factions'
+import type { FactionSigilProps } from '../../../sigil/FactionSigil'
+import { isKnownFaction } from '../../../../utils/factions'
 // The catalog itself, not a hardcoded string: the assertion has to fail if the
 // key is missing, not merely if the words drift.
 import common from '../../../../locales/en/common.json'
@@ -356,6 +359,40 @@ describe('factionFacet — the faction axis as one configuration of the widget',
     for (const place of ['row', 'trigger', 'chip'] as const) {
       expect(facet.renderOrnament?.('ua', place)).toBeTruthy()
     }
+  })
+
+  /**
+   * #2528. This facet is the only sigil mount in the tree that passes a `color`,
+   * and the ink it passes is `factionCssVar(slug)` — the faction's one solid hue.
+   * That is the point for the seven themed slugs: the mark has to read as that
+   * faction at the trigger's 13px, and #2635 is what made UA's actually land.
+   *
+   * `na` and `albescent` both map to CSS_KEY `default`, and `--faction-default`
+   * is a flat grey — so a solid handed to either paints over the spectrum they
+   * own (ADR-0039 for na, #783 for the labyrinth's deliberate absence of livery).
+   * The guard is on the SEAM, i.e. the element this facet builds, because that is
+   * where the decision is taken; what each mark does with a `color` it is given
+   * is the mark's own business and has already drifted once per adapter.
+   */
+  it('hands a solid ink only to a slug that owns one (#2528)', () => {
+    const facet = factionFacet(VISIBLE, [], () => {})
+    const inkFor = (slug: string) =>
+      (facet.renderOrnament?.(slug, 'trigger') as ReactElement<FactionSigilProps>)
+        .props.color
+
+    // The seven themed marks keep their hue, at every size.
+    expect(inkFor('ua')).toBe('var(--faction-ua)')
+    expect(inkFor('singularity')).toBe('var(--faction-singularity)')
+
+    // The two that own a spectrum get NO ink, and fall through to it.
+    for (const slug of ['na', 'albescent']) {
+      expect(isKnownFaction(slug)).toBe(false)
+      expect(inkFor(slug)).toBeUndefined()
+    }
+
+    // And the rule is the predicate, not a two-name denylist: an unregistered
+    // slug resolves to `default` too, so it must not be inked grey either.
+    expect(inkFor('not-a-faction')).toBeUndefined()
   })
 })
 
