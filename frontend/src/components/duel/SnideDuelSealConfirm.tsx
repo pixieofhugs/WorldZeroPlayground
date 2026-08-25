@@ -41,6 +41,7 @@
  */
 import type { CSSProperties } from 'react'
 import { factionCssVar } from '../../utils/factions'
+import { factionRoleVars } from '../../utils/factionRoles'
 import {
   duelSides,
   RaceRoster,
@@ -56,7 +57,7 @@ const INK = 'var(--faction-snide-ink)'
 const ACID = 'var(--faction-snide-acid)'
 const PINK = 'var(--faction-snide-pink)'
 const PAPER = 'var(--faction-snide-paper)'
-const MUTED = 'var(--faction-snide-card-muted)'
+const MUTED = 'var(--snd-duel-quiet, var(--faction-snide-card-muted))'
 /**
  * The sheet-measured "sealed / positive" ink (#694). `--color-success` is the
  * shared slots' default and reads **2.07:1** on this photocopier ink in the
@@ -141,6 +142,11 @@ export default function SnideDuelSealConfirm({
       label={copy.heading}
       scrim={SCRIM}
       ground={{
+        /* `ground` IS this surface's root style — `DuelSealSheet` spreads it on
+           the phone sheet and on the desktop card, both of which contain every
+           child — so the role map is declared here rather than on a wrapper
+           this component does not own (#2676). */
+        ...factionRoleVars('snide', 'snd-duel'),
         ...HALFTONE,
         borderLeft: `7px solid ${accent}`,
         color: PAPER,

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -114,10 +115,10 @@ const PINK_INK = "var(--faction-snide-note-pink-ink)";
  * The SLAB — every sheet pasted on the wall, black in BOTH themes, with the ink
  * family it was measured against. Acid carries type only here.
  */
-const PLATE = "var(--faction-snide-card-bg)";
-const PLATE_TEXT = "var(--faction-snide-card-text)";
-const PLATE_MUTED = "var(--faction-snide-card-muted)";
-const PLATE_ACCENT = "var(--faction-snide-card-accent)";
+const PLATE = "var(--snd-task-paper, var(--faction-snide-card-bg))";
+const PLATE_TEXT = "var(--snd-task-ink, var(--faction-snide-card-text))";
+const PLATE_MUTED = "var(--snd-task-quiet, var(--faction-snide-card-muted))";
+const PLATE_ACCENT = "var(--snd-task-accent, var(--faction-snide-card-accent))";
 /** The pink that is a DRAWN LINE — pen circle, strike-out cross. Invariant. */
 const PINK = "var(--faction-snide-pink)";
 /** Photocopier black that does NOT flip: borders and shadows printed on acid. */
@@ -529,7 +530,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             // cream, which on the slab prints black-on-black in light. Newsprint
             // grey is the slab's own quiet pigment and is light in both themes.
             backgroundImage:
-              "radial-gradient(var(--faction-snide-card-muted) 22%, transparent 23%), radial-gradient(var(--faction-snide-card-muted) 22%, transparent 23%)",
+              `radial-gradient(${PLATE_MUTED} 22%, transparent 23%), radial-gradient(${PLATE_MUTED} 22%, transparent 23%)`,
             backgroundSize: "6px 6px, 6px 6px",
             backgroundPosition: "0 0, 3px 3px",
           }}
@@ -906,7 +907,15 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
+    <div
+      className="py-8"
+      style={{
+        ...factionRoleVars("snide", "snd-task"),
+        position: "relative",
+        fontFamily: TYPE,
+        color: INK,
+      }}
+    >
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
