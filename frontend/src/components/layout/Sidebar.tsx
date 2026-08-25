@@ -108,7 +108,7 @@ function sampledSpectrum(index: number): string {
  * faction-owned and canonical, and a surface with genuine extra needs declares
  * its extras itself, composed out of roles rather than added to them.
  *
- * ONE KEY OVERRIDES FIVE OF THE ROLES, AND IT IS NOT A FORK (#2631, ADR-0085).
+ * ONE KEY OVERRIDES SIX OF THE ROLES, AND IT IS NOT A FORK (#2631, ADR-0085).
  * `-card-*` is the right family for seven skins because a faction's card sheet
  * is the stock its chrome is made of. S.N.I.D.E. is the one where it is not:
  * its sheet is the photocopier SLAB pasted on a wall (#2066), pinned near-black

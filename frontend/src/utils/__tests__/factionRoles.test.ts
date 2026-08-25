@@ -7,9 +7,11 @@ import { getAllFactions } from "../factions";
 import {
   FACTION_GROUNDS,
   FACTION_ROLES,
+  factionRoleProperty,
   factionRoleVar,
   factionRoleVars,
   type FactionRole,
+  type GroundOverride,
 } from "../factionRoles";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
 
@@ -136,13 +138,21 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
     ["quiet", "var(--faction-snide-note-muted)"],
     ["line", "var(--faction-snide-note-wall-edge)"],
     ["fill", "var(--faction-snide-wall-credit)"],
+    // The pair, not a sixth independent choice — see the block below.
+    ["onFill", "var(--faction-snide-wall)"],
   ];
 
-  it("moves exactly the five roles the wall re-grounds", () => {
+  it("moves exactly the six roles the wall re-grounds", () => {
     const chrome = factionRoleVars("snide", "rail", "chrome");
     const sheet = factionRoleVars("snide", "rail", "sheet");
+    // `factionRoleProperty`, not `--rail-${role}`. Spelled the second way this
+    // loop was blind to `onFill` — the one role whose property name is not its
+    // key — so `undefined !== undefined` held for it and the count read five
+    // while the pair was broken (#2659 review).
     const moved = FACTION_ROLES.filter(
-      (role) => chrome[`--rail-${role}` as never] !== sheet[`--rail-${role}` as never],
+      (role) =>
+        chrome[factionRoleProperty("rail", role) as never] !==
+        sheet[factionRoleProperty("rail", role) as never],
     );
     expect(new Set(moved)).toEqual(new Set(MOVED.map(([role]) => role)));
   });
@@ -150,7 +160,7 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
   it("resolves each moved role onto the wall family", () => {
     const chrome = factionRoleVars("snide", "rail", "chrome");
     for (const [role, token] of MOVED) {
-      expect(chrome).toHaveProperty(`--rail-${role === "onFill" ? "on-fill" : role}`, token);
+      expect(chrome).toHaveProperty(factionRoleProperty("rail", role), token);
     }
     // The slab is pinned near-black in BOTH cascades. Reaching it on this
     // ground is the defect ADR-0085 fixed, not a value to preserve.
@@ -163,6 +173,56 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
       "--rail-face": "var(--faction-snide-card-font)",
     });
   });
+});
+
+/**
+ * THE ONE INVARIANT THE VOCABULARY ITSELF MAKES (#2659 review).
+ *
+ * `onFill` is in the core BECAUSE `fill` can be overridden per ground — a fill
+ * whose paired ink cannot move with it is a contrast bug with no name to fix it
+ * at. Then the first and only override in the repo did exactly that: S.N.I.D.E.
+ * chrome moved `fill` to `-wall-credit` (#14532d by day) and left `onFill`
+ * inheriting `--faction-snide-on-fill` (#14110b, and NOT redefined in the dark
+ * cascade). That pair is 2.07:1 in light — under AA, and under 1.4.11's 3:1
+ * even for a mark that carries no text.
+ *
+ * Nothing reads `--rail-on-fill` today, which is exactly why it had to be
+ * caught here: this is the vocabulary nine faction lanes get written against,
+ * and the first lane to paint on a faction fill in chrome would inherit a
+ * broken pair, for the one faction with an override, in the theme people check
+ * second.
+ *
+ * The structural half is gated below and made unrepresentable by
+ * {@link GroundOverride}. The measurement half — every (slug × ground) pair
+ * read against `index.css` — is #2661, which turns the hand-curated contrast
+ * list into a loop over this resolver.
+ */
+describe("a ground cannot move `fill` and leave its paired ink behind", () => {
+  // Compile-time half: the union forbids the shape rather than the review
+  // catching it a second time.
+  it("does not typecheck a fill-only override", () => {
+    // @ts-expect-error — `fill` without `onFill` is not a representable ground
+    const fillAlone: GroundOverride = { fill: "wall-credit" };
+    const pair: GroundOverride = { fill: "wall-credit", onFill: "wall" };
+    expect(fillAlone).toBeTruthy();
+    expect(pair).toBeTruthy();
+  });
+
+  // Runtime half: an `as` cast can still get past the union, and this reads the
+  // resolver's own answer rather than the table it is built from.
+  for (const ground of FACTION_GROUNDS) {
+    for (const slug of SLUGS) {
+      it(`${slug} · ${ground}`, () => {
+        const here = factionRoleVars(slug, "rail", ground);
+        const sheet = factionRoleVars(slug, "rail", "sheet");
+        if (here["--rail-fill" as never] === sheet["--rail-fill" as never]) return;
+        expect(
+          here["--rail-on-fill" as never],
+          `${slug} moves \`fill\` on \`${ground}\` but keeps the sheet's \`onFill\` — an unmeasured pair`,
+        ).not.toBe(sheet["--rail-on-fill" as never]);
+      });
+    }
+  }
 });
 
 describe("a viewer with no faction is pixel-identical by construction", () => {

@@ -68,7 +68,9 @@ import { hasOwnKey } from "./hasOwnKey";
  *              core precisely BECAUSE `fill` can be overridden per ground: a
  *              fill whose paired ink cannot move with it is a contrast bug with
  *              no name to fix it at, and #2661's contrast loop needs the pair
- *              nameable.
+ *              nameable. That claim is not left to prose — see
+ *              {@link GroundOverride}, which makes a fill-only override
+ *              unrepresentable.
  *  - `radius`  and
  *  - `face`    the typeface. Neither has a cascade to be wrong in, which is why
  *              S.N.I.D.E.'s ground override deliberately leaves both alone.
@@ -133,6 +135,29 @@ const SHEET_ROLES: FactionRoleMap = {
 };
 
 /**
+ * What ONE ground override may say, and the one thing it may not.
+ *
+ * `fill` and `onFill` move TOGETHER or not at all. The union is the invariant
+ * {@link FACTION_ROLES} already claims for `onFill` — that it is in the core
+ * *because* `fill` can be overridden per ground — spelled somewhere a compiler
+ * can hold it, so the next override cannot repeat silently what the first one
+ * did (#2659 review): S.N.I.D.E. chrome moved `fill` to `-wall-credit` and left
+ * `onFill` on the sheet's `--faction-snide-on-fill`, a pair reading 2.07:1 in
+ * light. Nothing rendered it — which is the point. A vocabulary nine lanes are
+ * written against must not hand the first lane to paint on a faction fill a
+ * broken pair.
+ *
+ * The reverse is allowed: a ground may re-measure `onFill` against a fill it
+ * leaves alone. Only the ink going missing is forbidden.
+ *
+ * This is the STRUCTURE half. Whether the named pair actually clears AA is a
+ * measurement, and #2661 — the contrast gate becoming a loop over this resolver
+ * rather than a hand-curated pair list — is where that half lands.
+ */
+export type GroundOverride = Partial<Omit<FactionRoleMap, "fill" | "onFill">> &
+  ({ fill: string | null; onFill: string } | { fill?: never; onFill?: string });
+
+/**
  * Where a faction says "on THAT ground, read a different family of mine".
  *
  * ONE ENTRY, AND IT IS EVIDENCE-BACKED (#2631, ADR-0085).
@@ -149,12 +174,27 @@ const SHEET_ROLES: FactionRoleMap = {
  * light wall, under 1.4.11's 3:1 for a drawn mark. `-wall-credit` is the
  * wall-end rung of the same hue (#2177), 6.28:1 by day and 9.22:1 by night.
  *
+ * AND `onFill` MOVES WITH IT, WHICH IS NOT SYMMETRY EITHER — IT IS THE PAIR
+ * (#2659 review). The sheet's `--faction-snide-on-fill` is #14110b in BOTH
+ * cascades, because the hue it is measured against (#6fae00 / #b6ff2e) is light
+ * in both. `-wall-credit` is the opposite: #14532d by day, #4ade80 by night. So
+ * the near-black ink that reads 6.93:1 on the hue reads 2.07:1 on this fill —
+ * under AA, and under 1.4.11's 3:1 for a bare mark.
+ *
+ * The ink that answers is the wall itself: `--faction-snide-wall`, which flips
+ * exactly opposite to `-wall-credit` and is already this ground's `paper`. On
+ * this ground the fill is a rung of the wall's own ramp, so its paired ink is
+ * the stock knocked back out. NO TOKEN IS MINTED AND NONE IS REPOINTED, and
+ * the pairing is not a new measurement: `factionContrast.test.ts` already gates
+ * `-wall-credit` as a BARE ink on `-wall` and `-wall-deep` in both cascades
+ * (`SNIDE_WALL_INKS`, "the marker scrawl, bare" — the faction page's own
+ * scrawl, #2343). A ratio is symmetric, so that row IS this pair: 7.71:1 light,
+ * 11.36:1 dark. Adding a second row would be a second name for one measurement,
+ * which that file spends a paragraph warning against.
+ *
  * `radius` and `face` stay on the card family on purpose.
  */
-const GROUND_OVERRIDES: Record<
-  FactionGround,
-  Record<string, Partial<FactionRoleMap>>
-> = {
+const GROUND_OVERRIDES: Record<FactionGround, Record<string, GroundOverride>> = {
   sheet: {},
   chrome: {
     snide: {
@@ -163,6 +203,7 @@ const GROUND_OVERRIDES: Record<
       quiet: "note-muted",
       line: "note-wall-edge",
       fill: "wall-credit",
+      onFill: "wall",
     },
   },
 };
