@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -14,6 +14,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -171,7 +172,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -188,6 +188,31 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     lineHeight: 1.7,
     color: "var(--faction-ua-card-body)",
     margin: 0,
+  };
+
+  /**
+   * The trio's paint (#2651). Every value below was already on these three
+   * buttons — the solid fill for both affirmatives, the eyebrow for the cancel
+   * — and `flex`, the busy opacity and the busy cursor came off them, because
+   * the shared control owns the pending state now. Built here rather than at
+   * module scope because it reads `prose`, which is.
+   */
+  const joinSkin: JoinControlSkin = {
+    openStyle: { ...SOLID_ACTION, width: "100%", cursor: "pointer" },
+    confirmStyle: SOLID_ACTION,
+    cancelStyle: {
+      ...UA_EYEBROW,
+      background: "transparent",
+      border: "1px solid var(--faction-ua-rule)",
+      borderRadius: "var(--radius-sm)",
+      padding: "var(--space-md) var(--space-lg)",
+    },
+    proseStyle: {
+      ...prose,
+      color: "var(--faction-ua-card-text)",
+      marginBottom: "var(--space-lg)",
+    },
+    errorStyle: { ...prose, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
   };
 
   return (
@@ -357,97 +382,36 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               </div>
             )}
 
-            {membership.state === "eligible" && !confirming && (
-              <div>
-                <div
-                  className="content-title"
-                  style={{
-                    fontFamily: UA_DISPLAY,
-                    fontWeight: 600,
-                    lineHeight: 1.05,
-                    color: "var(--faction-ua-card-text)",
-                    margin: "var(--space-xs) 0 var(--space-md)",
-                  }}
-                >
-                  {t("ua.join.eligibleTitle")}
-                </div>
-                <p
-                  className="content-text"
-                  style={{ ...prose, marginBottom: "var(--space-lg)" }}
-                >
-                  {t("ua.join.eligibleBody")}
-                </p>
-                <button
-                  onClick={() => setConfirming(true)}
-                  style={{ ...SOLID_ACTION, width: "100%", cursor: "pointer" }}
-                >
-                  {t("ua.join.joinButton")}
-                </button>
-              </div>
-            )}
-
-            {membership.state === "eligible" && confirming && (
-              <div>
-                <p
-                  className="content-text"
-                  style={{
-                    ...prose,
-                    color: "var(--faction-ua-card-text)",
-                    marginBottom: "var(--space-lg)",
-                  }}
-                >
-                  {membership.currentFactionSlug &&
-                  membership.currentFactionSlug !== "na"
-                    ? t("detail.join.confirmSwitch", {
-                        faction: factionName(faction.slug),
-                        current: factionName(membership.currentFactionSlug),
-                      })
-                    : t("detail.join.confirm", {
-                        faction: factionName(faction.slug),
-                      })}
-                </p>
-                {membership.joinError && (
-                  <p
-                    className="content-text"
-                    style={{
-                      ...prose,
-                      color: "var(--color-danger)",
-                      marginBottom: "var(--space-sm)",
-                    }}
-                  >
-                    {membership.joinError}
-                  </p>
-                )}
-                <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                  <button
-                    onClick={() => void membership.join()}
-                    disabled={membership.joining}
-                    style={{
-                      ...SOLID_ACTION,
-                      flex: 1,
-                      cursor: membership.joining ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {membership.joining
-                      ? t("ua.join.joining")
-                      : t("mobile.confirm")}
-                  </button>
-                  <button
-                    onClick={() => setConfirming(false)}
-                    disabled={membership.joining}
-                    style={{
-                      ...UA_EYEBROW,
-                      background: "transparent",
-                      border: "1px solid var(--faction-ua-rule)",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "var(--space-md) var(--space-lg)",
-                      cursor: membership.joining ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {t("detail.join.cancel")}
-                  </button>
-                </div>
-              </div>
+            {membership.state === "eligible" && (
+              <JoinControl
+                membership={membership}
+                name={factionName(faction.slug)}
+                skin={joinSkin}
+                openLabel={t("ua.join.joinButton")}
+                joiningLabel={t("ua.join.joining")}
+                intro={
+                  <>
+                    <div
+                      className="content-title"
+                      style={{
+                        fontFamily: UA_DISPLAY,
+                        fontWeight: 600,
+                        lineHeight: 1.05,
+                        color: "var(--faction-ua-card-text)",
+                        margin: "var(--space-xs) 0 var(--space-md)",
+                      }}
+                    >
+                      {t("ua.join.eligibleTitle")}
+                    </div>
+                    <p
+                      className="content-text"
+                      style={{ ...prose, marginBottom: "var(--space-lg)" }}
+                    >
+                      {t("ua.join.eligibleBody")}
+                    </p>
+                  </>
+                }
+              />
             )}
 
             {membership.state === "gate" && (

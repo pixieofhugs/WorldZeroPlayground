@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -30,6 +30,7 @@ import {
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -173,7 +174,6 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -317,73 +317,34 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                   </div>
                 )}
 
-                {membership.state === "eligible" && !confirming && (
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: CAPS,
-                        fontWeight: 700,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel codex display title.
-                        fontSize: 23,
-                        lineHeight: 1.02,
-                        color: INK,
-                        marginBottom: "var(--space-md)",
-                      }}
-                    >
-                      {t("ephemerists.join.eligibleTitle")}
-                    </div>
-                    <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
-                      {t("ephemerists.join.eligibleBody")}
-                    </div>
-                    {/* THE ONE PLATE CTA (#2146) — ground, ink and enclosure
-                        from `.eph-cta`, because the enclosure changes width
-                        between the cascades and no inline style has a cascade.
-                        This surface is not one of the three the issue names; it
-                        draws the identical button, which is what decides it. */}
-                    <button
-                      className="eph-cta"
-                      onClick={() => setConfirming(true)}
-                      style={{ width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" }}
-                    >
-                      {t("ephemerists.join.joinButton")}
-                    </button>
-                  </div>
-                )}
-
-                {membership.state === "eligible" && confirming && (
-                  <div>
-                    <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
-                      {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na"
-                        ? t("detail.join.confirmSwitch", {
-                            faction: factionName(faction.slug),
-                            current: factionName(membership.currentFactionSlug),
-                          })
-                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
-                    </div>
-                    {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: READING, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
-                    )}
-                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                      <button
-                        className="eph-cta"
-                        onClick={() => void membership.join()}
-                        disabled={membership.joining}
-                        style={{ flex: 1, ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)", cursor: membership.joining ? "not-allowed" : "pointer" }}
-                      >
-                        {membership.joining
-                          ? t("ephemerists.join.joining")
-                          : t("mobile.confirm")}
-                      </button>
-                      <button
-                        onClick={() => setConfirming(false)}
-                        disabled={membership.joining}
-                        style={{ fontFamily: MARGINALIA, fontStyle: "italic", fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: QUIET, background: "transparent", border: `1px solid ${LINE}`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
-                      >
-                        {t("detail.join.cancel")}
-                      </button>
-                    </div>
-                  </div>
+                {membership.state === "eligible" && (
+                  <JoinControl
+                    membership={membership}
+                    name={factionName(faction.slug)}
+                    skin={JOIN_SKIN}
+                    openLabel={t("ephemerists.join.joinButton")}
+                    joiningLabel={t("ephemerists.join.joining")}
+                    intro={
+                      <>
+                        <div
+                          style={{
+                            fontFamily: CAPS,
+                            fontWeight: 700,
+                            // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel codex display title.
+                            fontSize: 23,
+                            lineHeight: 1.02,
+                            color: INK,
+                            marginBottom: "var(--space-md)",
+                          }}
+                        >
+                          {t("ephemerists.join.eligibleTitle")}
+                        </div>
+                        <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
+                          {t("ephemerists.join.eligibleBody")}
+                        </div>
+                      </>
+                    }
+                  />
                 )}
 
                 {(membership.state === "gate" || burned) && (
@@ -532,3 +493,21 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
     </div>
   );
 }
+
+/**
+ * The trio's paint (#2651).
+ *
+ * THE ONE PLATE CTA (#2146) — ground, ink and enclosure from `.eph-cta`, because
+ * the enclosure changes width between the cascades and no inline style has a
+ * cascade. That class dressed the open verb and the affirmative and never the
+ * cancel, which is exactly what the skin's single `className` slot reaches: the
+ * two affirmatives. The cancel stays a marginal note in the margin's own hand.
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  className: "eph-cta",
+  openStyle: { width: "100%", ...SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.14em", padding: "var(--space-md)", cursor: "pointer" },
+  confirmStyle: { ...SMALL_CAPS, fontSize: "var(--text-lg)", letterSpacing: "0.12em", padding: "var(--space-md)" },
+  cancelStyle: { fontFamily: MARGINALIA, fontStyle: "italic", fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: QUIET, background: "transparent", border: `1px solid ${LINE}`, padding: "var(--space-md) var(--space-lg)" },
+  proseStyle: { fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" },
+  errorStyle: { fontFamily: READING, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
+};
