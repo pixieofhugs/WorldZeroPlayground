@@ -3,6 +3,7 @@ import { TaskCrown } from "../../factionMarks/TaskCrown";
 import DefaultPointsRing from "../../factionMarks/DefaultPointsRing";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -70,8 +71,10 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * one thing not carried over: at the ~232px it needs, the stamp starves the
  * praxis card's title column, so the same pieces stack in one column instead.
  *
- * Colours are only `--faction-default-*` tokens, so the whole stamp flips
- * through the `[data-theme="dark"]` cascade with no `dark ?` branch.
+ * Colours are roles (#2672) — `--na-score-stamp-ink` / `-quiet` / `-face`, spread
+ * on the plate and each falling back to the `--faction-default-*` token it read
+ * before — so the whole stamp still flips through the `[data-theme="dark"]`
+ * cascade with no `dark ?` branch.
  */
 
 /**
@@ -120,6 +123,14 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
   return (
     <div
       style={{
+        // The role map (#2672). Only the three CORE roles this plate reads move
+        // here. `--faction-default-stamp-bg` and `-card-line` stay named: the
+        // stamp has a ground of its own, and its hairline is `-card-line`, not
+        // the `line` role's `-card-border`. Decision 07 — a surface's extras are
+        // the surface's business, and repointing either would be a repaint.
+        // Pinned to na for the reason the other Default archetypes are: the
+        // plate's ground is `--faction-default-stamp-bg`, which takes no slug.
+        ...factionRoleVars("na", "na-score-stamp"),
         position: "relative",
         boxSizing: "border-box",
         width: "100%",
@@ -127,7 +138,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         border: "1px solid var(--faction-default-card-line)",
         borderRadius: 10,
         background: "var(--faction-default-stamp-bg)",
-        color: "var(--faction-default-card-text)",
+        color: "var(--na-score-stamp-ink, var(--faction-default-card-text))",
         boxShadow: "0 2px 6px var(--color-cast-shadow-soft)",
         padding: "var(--space-md)",
       }}
@@ -257,7 +268,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
               fontSize: "var(--text-base)",
               textTransform: "uppercase",
               letterSpacing: "0.16em",
-              color: "var(--faction-default-card-muted)",
+              color: "var(--na-score-stamp-quiet, var(--faction-default-card-muted))",
               whiteSpace: "nowrap",
             }}
           >
@@ -266,7 +277,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
           <span
             style={{
               marginLeft: "auto",
-              fontFamily: "var(--faction-default-card-font)",
+              fontFamily: "var(--na-score-stamp-face, var(--faction-default-card-font))",
               fontSize: "var(--text-lg)",
               whiteSpace: "nowrap",
             }}
@@ -292,7 +303,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             fontFamily: "var(--font-body)",
             fontSize: "var(--text-base)",
             letterSpacing: "0.06em",
-            color: "var(--faction-default-card-muted)",
+            color: "var(--na-score-stamp-quiet, var(--faction-default-card-muted))",
           }}
         >
           {votes !== null && <div>{t("card.stamp.fromVotes", { votes })}</div>}

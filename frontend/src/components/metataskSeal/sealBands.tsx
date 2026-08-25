@@ -1,4 +1,5 @@
 import CardMasthead from "../cardMasthead/CardMasthead";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { factionName } from "../../utils/factions";
 
 /**
@@ -44,7 +45,15 @@ import { factionName } from "../../utils/factions";
  */
 
 /** na's card face — `var(--font-accent)`, the register both seals letter in. */
-const NA_FACE = "var(--faction-default-card-font)";
+const NA_FACE = "var(--na-band-face, var(--faction-default-card-font))";
+/**
+ * The same face on the Albescent band, under that band's OWN prefix (#2672).
+ * Spelled out rather than interpolated from a `prefix` argument: a role
+ * property built by interpolation is invisible to `factionTokensDeclared` and
+ * to the migration gate, which is the "looks tokenized, is not" failure class
+ * both exist for. Two bands are two surfaces, so two names.
+ */
+const ALB_FACE = "var(--alb-band-face, var(--faction-default-card-font))";
 
 /**
  * The ramp's cut, matching the na plate's hairline and the task detail's section
@@ -66,8 +75,12 @@ function DefaultBand() {
     <CardMasthead
       slug="na"
       style={{
-        background: "var(--faction-default-card-bg)",
-        color: "var(--faction-default-card-text)",
+        // The role map (#2672), off this band's OWN slug — which is the literal
+        // above, so it is `{}` and no paint moves. The two bands differ by rule,
+        // never by colour ("NO NEW PAINT", above), so both resolve na's family.
+        ...factionRoleVars("na", "na-band"),
+        background: "var(--na-band-paper, var(--faction-default-card-bg))",
+        color: "var(--na-band-ink, var(--faction-default-card-text))",
       }}
     >
       <span
@@ -99,13 +112,17 @@ function AlbescentBand() {
       <CardMasthead
         slug="albescent"
         style={{
-          background: "var(--faction-default-card-bg)",
-          color: "var(--faction-default-card-text)",
+          // `resolveCssKey` sends `albescent` to `default` and `isKnownFaction`
+          // is false for it, so this is `{}` too — the society stays out of the
+          // spectrum (ADR-0048, #783) without this file naming it.
+          ...factionRoleVars("albescent", "alb-band"),
+          background: "var(--alb-band-paper, var(--faction-default-card-bg))",
+          color: "var(--alb-band-ink, var(--faction-default-card-text))",
         }}
       >
         <span
           style={{
-            fontFamily: NA_FACE,
+            fontFamily: ALB_FACE,
             fontSize: "var(--text-title)",
             letterSpacing: "0.06em",
             lineHeight: 1,

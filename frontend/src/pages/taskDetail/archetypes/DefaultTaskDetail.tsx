@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionFill, factionName, factionSheet } from "../../../utils/factions";
+import {
+  factionFill,
+  factionName,
+  factionSheet,
+} from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -167,8 +172,8 @@ export default function DefaultTaskDetail({
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const sheet: CSSProperties = {
-    background: "var(--faction-default-card-bg)",
-    color: "var(--faction-default-card-text)",
+    background: "var(--na-task-detail-paper, var(--faction-default-card-bg))",
+    color: "var(--na-task-detail-ink, var(--faction-default-card-text))",
   };
   const innerBox: CSSProperties = {
     background: "var(--color-bg-page)",
@@ -755,7 +760,7 @@ export default function DefaultTaskDetail({
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "var(--faction-default-card-accent)",
+                color: "var(--na-task-detail-accent, var(--faction-default-card-accent))",
               }}
             >
               {showAllPraxis
@@ -784,6 +789,17 @@ export default function DefaultTaskDetail({
         // `.alb-detail .task-detail-sheet` rule for the whole reasoning.
         className="task-detail-sheet"
         style={{
+          // The role map (#2672) on THE SHEET, not on the `.py-8` box above it:
+          // that box also holds the shared, faction-neutral `Breadcrumb`
+          // (#2102), and a prefix declared over shared furniture is the
+          // `--kit-*` namespace the law declines, one level down. Everything
+          // that reads `--na-task-detail-*` is this element (its own `color`)
+          // or inside it — the hoisted `sheet` const on the action panel, and
+          // the gallery's view-all control.
+          //
+          // Pinned to na: the surface is `factionSheet()`, which takes no slug,
+          // and an ink may not leave a ground that cannot follow (#2361, #2669).
+          ...factionRoleVars("na", "na-task-detail"),
           position: "relative",
           maxWidth: 1200,
           margin: "0 auto",
@@ -800,7 +816,7 @@ export default function DefaultTaskDetail({
           // surface and padding), but the stated reason was false; do not cite
           // it as precedent for "a class with no CSS".
           ...factionSheet(),
-          color: "var(--faction-default-card-text)",
+          color: "var(--na-task-detail-ink, var(--faction-default-card-text))",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,
           padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
