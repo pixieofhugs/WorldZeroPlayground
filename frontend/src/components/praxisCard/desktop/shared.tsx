@@ -223,6 +223,26 @@ export function PraxisBody({
           justifyContent: "space-between",
           alignItems: "flex-start",
           gap: "var(--space-md)",
+          /*
+           * THE HOST STATES THE GAP UNDER THE STAMP (#2655, law 09).
+           *
+           * `gap` above is the row's HORIZONTAL lead — text column to stamp —
+           * and says nothing about what follows the row. `MetataskSeal` is the
+           * row's immediate next sibling and declares margin 0 on purpose (it
+           * travels too: the composer and the detail rails mount it), so a
+           * sealed praxis put its seals hard against the bottom edge of the
+           * stamp on all nine cards. No stamp may answer that with a margin of
+           * its own — it renders the same box wherever it is mounted — so the
+           * declaration belongs here, once, on the box that carries it.
+           *
+           * IT COLLAPSES, AND THAT IS WHY IT IS `margin-bottom` AND NOT PADDING.
+           * The card frames are block containers (no archetype lays this body
+           * out as a flex column — checked), so this adjoins `PraxisStats`'s own
+           * `margin-top: var(--space-sm)` below and the pair collapse to one
+           * rung. An unsealed card is therefore unmoved, which is what a frozen
+           * surface's named exemption is allowed to cost: nothing.
+           */
+          marginBottom: "var(--space-sm)",
         }}
       >
         {/*
