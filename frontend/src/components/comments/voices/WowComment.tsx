@@ -15,6 +15,17 @@ import {
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 
 /**
+ * WHY THIS FILE STILL EXISTS (#2650, epic #2649), and it is the most useful of
+ * the five answers because it is not about ornament at all.
+ *
+ * The crest in the margin is 44px, not the shared `sm`. `FactionAvatar`'s
+ * `size` prop is `'sm' | 'md' | number` — a JAVASCRIPT NUMBER — and no custom
+ * property can cross a prop. So the one thing keeping WOW's comment a component
+ * is a shared component's own interface: a seam that takes a number where every
+ * other slot on this sheet takes a `var()`. (The ribbon crown, the 3px section
+ * rule at 0.75 and the rule struck at the composer's head are all chrome and
+ * would have been three tokens.)
+ *
  * Warriors of Whimsy — COUNSEL IN THE PROCLAMATION (comment voice v2, #1204).
  *
  * A knight speaks on the same instrument the Court proclaims on: the comment

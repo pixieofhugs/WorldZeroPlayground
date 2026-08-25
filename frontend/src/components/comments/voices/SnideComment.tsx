@@ -17,6 +17,12 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { Ransom } from '../../factionMarks/snideAtoms'
 
 /**
+ * WHY THIS FILE STILL EXISTS (#2650, epic #2649). It DRAWS: {@link Ransom} cuts
+ * the author's name letter by letter out of five scraps — one DOM node per
+ * character, chosen per letter — so the byline is a drawing of a string rather
+ * than a string in a face. The halftone raster and the half-degree tilt WOULD
+ * have been tokens; the ransom cut is what keeps the file.
+ *
  * S.N.I.D.E. comment voice — THE INTERCEPTED SLIP (ADR-0018, redressed for
  * epic #1192 / #1198 against `Snide Comment + Update Cards.dc.html`).
  *

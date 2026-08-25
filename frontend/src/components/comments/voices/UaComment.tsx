@@ -17,6 +17,12 @@ import {
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 
 /**
+ * WHY THIS FILE STILL EXISTS (#2650, epic #2649). It DRAWS: the composer sets
+ * an ensō in the avatar's place (`UaSigil`, a mounted SVG), and the note's own
+ * avatar sits INSIDE the dashed frame rather than in the margin beside it. The
+ * first is a component a `var()` cannot name; the second is a different DOM,
+ * not a different colour. Everything else here is chrome and would have gone.
+ *
  * UA comment — THE MARGINAL NOTE (kit §14, #851; redressed by #1201).
  *
  * SUPERSEDES ADR-0026's gilt salon. A UA comment is a note written in the margin

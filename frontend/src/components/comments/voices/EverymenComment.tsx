@@ -1,4 +1,11 @@
 /**
+ * WHY THIS FILE STILL EXISTS (#2650, epic #2649). It MOVES A SLOT: the author
+ * identity and the timestamp leave the body and go into a red byline band above
+ * it, and the composer carries that band too — where every other voice draws no
+ * header on the composer at all. That is a different tree, not a different
+ * paint, and no token relocates a child. The double frame, the panel and the
+ * masthead ink would all have been tokens.
+ *
  * THE EVERYMEN COMMENT — the same dispatch slip as the faction's feed chassis,
  * at comment scale (ADR-0006 / ADR-0018; epic #1192, dress issue #1200).
  *

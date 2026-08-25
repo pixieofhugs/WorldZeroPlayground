@@ -15,6 +15,15 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { useAuth } from '../../../auth/AuthContext'
 
 /**
+ * WHY THIS FILE STILL EXISTS (#2650, epic #2649). It DRAWS and it ADDS CONTENT:
+ * four corner brackets, a blinking caret, a `>` prompt before the byline and
+ * before the body, the process handle `0x…` derived from the comment id, and
+ * the author printed as `username` rather than `display_name`. Only the raster
+ * and the chassis were chrome. It is also the one voice that REPOINTS shared
+ * tokens (`--color-text-tertiary`, `--color-danger`, `--color-success`) around
+ * three subtrees, because it is dark in both themes — a repoint is a scope, and
+ * a token set has no way to say "for the controls inside this element".
+ *
  * Singularity comment voice — THE SESSION TRANSCRIPT (ADR-0006 / ADR-0018;
  * epic #1192 / #1202, design project 19d52c65,
  * `Singularity Comment + Update Cards.dc.html`).
