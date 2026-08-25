@@ -2053,18 +2053,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // measured with those kits above; `the seven card masthead bands stand on
   // their own ground` at the foot of this file is the guard that keeps it so.
   {
-    // ONE ROW COVERS BOTH THEMES because the ground is FROZEN, exactly as
-    // `everymen bill masthead` above is: `--faction-ua-mast` is UA's day hue
-    // declared once, so light and dark resolve to the same #c24a18 and the
-    // 4.59:1 already written beside `--faction-ua-on-fill` is the whole reading.
-    // It is a deliberate DROP from the `-card-text` at 10.35:1 the band used to
-    // take on the hairline: the ink still clears AA at --text-title, and the
-    // band's job is to be UA's colour rather than to be its quietest surface.
-    // The MARK takes the same ink — the ensō's own `--faction-ua-glow` is
-    // 1.30:1 on this ground, which is what `markColor` exists for.
+    // ONE ROW COVERS BOTH THEMES because BOTH tokens are frozen, exactly as
+    // `everymen bill masthead` above is: ground and ink are each declared once,
+    // so light and dark resolve to the same #fcf7ef on #c24a18 at 4.59:1.
+    //
+    // THE INK IS `-mast-ink` AND NOT `--faction-ua-on-fill`, which is what #2635
+    // specified. `-on-fill` is the ink for the FILL and the fill flips, so it
+    // flips too — #201a14 by night, which on a frozen orange is 3.52:1 and under
+    // the floor. This row is what caught that; a frozen ground needs a frozen
+    // ink, which is why `--faction-everymen-bill-mast-ink` exists beside its own
+    // frozen red.
+    //
+    // 4.59:1 is a deliberate DROP from the `-card-text` at 10.35:1 the band took
+    // on the hairline: it clears AA at --text-title, and the band's job is to be
+    // UA's colour rather than its quietest surface. The MARK takes the same ink
+    // — the ensō's own `--faction-ua-glow` is 1.30:1 here, which is what
+    // `markColor` exists for.
     what: "ua card masthead band, wordmark",
     surface: "--faction-ua-mast",
-    text: "--faction-ua-on-fill",
+    text: "--faction-ua-mast-ink",
   },
   {
     // Coven's pair FLIPS, unlike UA's: only the day band was borrowed paint, so
@@ -4406,7 +4413,7 @@ describe("the seven card masthead bands stand on their own ground (#2635)", () =
     // Everymen and WOW have passed it since their bands were built; these two
     // are the pair #2635 added.
     for (const [band, ink] of [
-      ["UaBand", "--faction-ua-on-fill"],
+      ["UaBand", "--faction-ua-mast-ink"],
       ["CovenBand", "--faction-coven-mast-ink"],
     ] as const) {
       expect(

@@ -1699,12 +1699,28 @@
      itself, not the selector, that keeps a later dark block from un-freezing it,
      and the freeze is that nobody writes one.
 
-     THE INK IS `--faction-ua-on-fill` (#fcf7ef, 4.59:1) — already minted,
-     already measured, and because the ground no longer flips that one reading
-     covers both themes. `factionContrast.test.ts` records it. The band's old
-     `-card-text` at 10.35:1 is a contrast DROP taken deliberately: 4.59:1 clears
-     AA at `--text-title`, and the band's job is to be UA's colour. */
+     THE INK IS FROZEN TOO, AND IT HAD TO BE MINTED. #2635 specified
+     `--faction-ua-on-fill` on the reading that its 4.59:1 against #c24a18 is
+     "already measured" and that a frozen ground needs no dark half. The first
+     half is true and the second is not: `-on-fill` is the ink for the FILL, and
+     the fill flips, so the token flips with it — #fcf7ef by day, #201a14 by
+     night (it is measured against the dark spine's #e8703a, where a warm white
+     is 2.89:1). Pointed at a frozen orange it would print near-black at 3.52:1
+     in dark, which is under AA and is not the warm-white type the ruling asks
+     for in both themes.
+
+     So the ink is minted frozen beside the ground, which is
+     `--faction-everymen-bill-mast-ink` exactly — the same sibling the ground
+     mirrors, and the reason WOW's band takes the theme-invariant
+     `--faction-wow-gilt-mid` rather than an ink that flips. One value, one
+     measurement, 4.59:1, both cascades. `factionContrast.test.ts` records it.
+
+     IT IS A CONTRAST DROP, TAKEN DELIBERATELY. The band took
+     `--faction-ua-card-text` at 10.35:1 on the hairline. 4.59:1 clears AA at
+     `--text-title`, and the band's job is to be UA's colour rather than to be
+     its quietest surface. */
   --faction-ua-mast: #c24a18;
+  --faction-ua-mast-ink: #fcf7ef;
 }
 
 :root {

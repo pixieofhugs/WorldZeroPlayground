@@ -22,10 +22,23 @@ export interface FactionSigilProps {
 
 export type SigilVariantProps = { size?: number; color?: string };
 
-export function UaSigilAdapter({ size }: SigilVariantProps) {
+export function UaSigilAdapter({ size, color }: SigilVariantProps) {
   const dim = size ?? 22;
-  // The ensō draws --faction-ua-glow internally; it has no color prop.
-  return <UaSigil width={dim} height={dim} />;
+  /* THE INK IS FORWARDED (#2635). This dropped `color` on the floor under a
+     comment saying "the ensō draws --faction-ua-glow internally; it has no color
+     prop" — which stopped being true at #908, when the two-arc approximation
+     became the vendored mask and `UaSigil` grew a `color` that DEFAULTS to that
+     glow. So the prop type-checked, the mark ignored it, and no guard could see
+     it: `factionSigil.test.tsx`'s paint test compares the dispatcher against the
+     adapter, and both dropped it identically.
+
+     #2635 is where it stopped being harmless: UA's masthead band is the
+     faction's own orange now, `--faction-ua-glow` is 1.30:1 on it, and
+     `CardMasthead`'s `markColor` — the prop that exists for exactly this — was
+     reaching nothing. Undefined still falls through to the glow, so every mount
+     that passes no ink is unmoved; the filter facet's `factionCssVar('ua')` now
+     lands, which is what that call site was already asking for. */
+  return <UaSigil width={dim} height={dim} color={color} />;
 }
 
 export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
