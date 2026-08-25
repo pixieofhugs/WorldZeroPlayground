@@ -163,6 +163,56 @@ async def test_seeded_duel_sides_have_non_unit_multipliers(
 
 
 @pytest.mark.asyncio
+async def test_seeded_duel_sides_keep_their_metatask_at_both_outcomes(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+):
+    """#2633: a metatask is flat, so a x0.0 duel loss cannot delete it.
+
+    Scored through the production path, both sides, at the two modifiers that
+    bracket the rule — Snide's duel_loss_modifier (0.0, the only one in the game
+    that can zero a base) and the winner's duel_win_modifier. This is the fixture
+    the issue asks for: without the metatask on the duel pair, the old formula
+    and ADR-0086's produce identical numbers everywhere in dev.
+    """
+    await _board(db_session, character)
+    players = await get_or_create_players(db_session)
+    await seed_score_fixtures(db_session, players, CURRENT_ERA)
+
+    loser = await _character(db_session, DUEL_LOSER_USERNAME)
+    winner = await _character(db_session, DUEL_WINNER_USERNAME)
+    loser_praxis = await _praxis(db_session, DUEL_LOSER_TITLE)
+    winner_praxis = await _praxis(db_session, DUEL_WINNER_TITLE)
+
+    loser_side = (
+        await compute_contributions([loser_praxis], loser, CURRENT_ERA, db_session)
+    )[loser_praxis.id]
+    winner_side = (
+        await compute_contributions([winner_praxis], winner, CURRENT_ERA, db_session)
+    )[winner_praxis.id]
+
+    assert loser_side.metatask_points > 0
+    assert winner_side.metatask_points > 0
+    # The losing side's base is annihilated; the metatask and the votes are not.
+    assert loser_side.duel_multiplier == 0.0
+    assert loser_side.total == (
+        loser_side.metatask_points
+        + loser_side.points_from_votes
+        + loser_side.habit_bonus_points
+    )
+    # The winning side multiplies the base ALONE — the metatask is not doubled.
+    assert winner_side.total == (
+        winner_side.base_points
+        * winner_side.faction_multiplier
+        * winner_side.duel_multiplier
+        + winner_side.metatask_points
+        + winner_side.points_from_votes
+        + winner_side.habit_bonus_points
+    )
+
+
+@pytest.mark.asyncio
 async def test_seeded_collab_carries_the_own_faction_collab_modifier(
     db_session: AsyncSession,
     era: Era,

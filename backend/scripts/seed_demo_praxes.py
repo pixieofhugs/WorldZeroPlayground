@@ -13,6 +13,7 @@ with `scripts/seed_demo_praxes.py --remove`.
 import argparse
 import asyncio
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -118,6 +119,9 @@ METATASK_OPEN_PRAXIS_TITLE = TITLE_MARKER + "Open: apply a metatask to me"
 # has never rendered. The winner takes their own faction's duel_win_modifier.
 # Both sides share one task so the faction multiplier is identical on each and
 # the duel modifier is the only thing that differs.
+# Both sides also carry the demo metatask (#2633): x0.0 on the base is the only
+# place a flat metatask and a multiplied one produce different numbers, so this
+# pair is what makes ADR-0086 visible in dev instead of arithmetically silent.
 DUEL_TASK_FACTION_SLUG = "snide"
 DUEL_LOSER_USERNAME = "demo_riot"        # snide — challenger, loses -> x0.0
 DUEL_WINNER_USERNAME = "demo_sol"        # everymen — opponent, wins -> x1.5
@@ -265,15 +269,19 @@ async def get_or_create_metatask(session, created_by: Character) -> Task:
 
 async def seed_metatask_fixture(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
-) -> None:
-    """A metatask, a submitted praxis carrying it, and an open praxis to apply it to."""
+) -> Task:
+    """A metatask, a submitted praxis carrying it, and an open praxis to apply it to.
+
+    Returns the metatask ``Task`` so the duel fixture can hang it on both sides
+    (#2633) — the metatask row is only interesting beside a non-1.0 multiplier.
+    """
     owner = await get_or_create_metatask_owner(session, era)
     metatask = await get_or_create_metatask(session, owner)
 
     task = await _pick_task(session, METATASK_FACTION_SLUG)
     if task is None:
         print(f"  ! metatask: no {METATASK_FACTION_SLUG} task on the board — skipped")
-        return
+        return metatask
 
     if await _praxis_exists(session, METATASK_PRAXIS_TITLE):
         print("  = metatask praxis already present — skipped")
@@ -327,10 +335,19 @@ async def seed_metatask_fixture(
         ))
         print(f"  + in-progress praxis for the apply flow by {owner.display_name}")
     await session.flush()
+    return metatask
 
 
-async def seed_duel_fixture(session, players: dict[str, Character]) -> None:
-    """One settled duel with unequal tallies, so both duel modifiers render."""
+async def seed_duel_fixture(
+    session, players: dict[str, Character], metatask: Optional[Task] = None
+) -> None:
+    """One settled duel with unequal tallies, so both duel modifiers render.
+
+    ``metatask`` is attached to BOTH sides (#2633). Under ADR-0086 a metatask is
+    flat, so the losing Snide side at x0.0 must still score the metatask's points
+    while its base goes to zero — the one arrangement where the old formula and
+    the new one render differently. Without it a regression is invisible in dev.
+    """
     if await _praxis_exists(session, DUEL_LOSER_TITLE):
         print("  = duel pair already present — skipped")
         return
@@ -366,6 +383,8 @@ async def seed_duel_fixture(session, players: dict[str, Character]) -> None:
         session.add(PraxisMember(
             praxis_id=praxis.id, character_id=author.id, has_submitted=True
         ))
+        if metatask is not None:
+            session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         sides[title] = praxis
 
     for title, stars in ((DUEL_LOSER_TITLE, DUEL_LOSER_STARS),
@@ -467,8 +486,8 @@ async def seed_score_fixtures(
     session, players: dict[str, Character], era: EraConfig = CURRENT_ERA
 ) -> None:
     """Everything #891 asks for: a metatask in use and every non-1.0 multiplier."""
-    await seed_metatask_fixture(session, players, era)
-    await seed_duel_fixture(session, players)
+    metatask = await seed_metatask_fixture(session, players, era)
+    await seed_duel_fixture(session, players, metatask)
     await seed_collab_fixture(session, players)
 
 
@@ -489,6 +508,10 @@ def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
     print(
         f"  multiplier row: '{DUEL_LOSER_TITLE}' (losing Snide side) and "
         f"'{DUEL_WINNER_TITLE}'"
+    )
+    print(
+        f"  flat metatask : both duel sides carry '{METATASK_TITLE}' "
+        f"(+{METATASK_POINTS}); the losing side scores it at x0.0 base (ADR-0086)"
     )
     collab_modifier = era.factions[COLLAB_TASK_FACTION_SLUG].collab_own_modifier
     print(
