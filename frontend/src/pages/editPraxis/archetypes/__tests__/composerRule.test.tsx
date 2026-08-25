@@ -185,6 +185,23 @@ const ORNAMENT: Record<string, string> = {
 };
 
 const SLUGS = Object.keys(ORNAMENT);
+
+/**
+ * The task slip's 2px ink bar, painted from a token — bare, or through one role
+ * read that falls back to a token.
+ *
+ * A skin migrated onto `utils/factionRoles.ts` (#2659, lanes #2673/#2674) asks
+ * its faction for the `accent` ROLE and carries today's token as the fallback,
+ * so UA's slip emits
+ * `border-left:2px solid var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))`.
+ * What this asserts is unchanged — a token, never a literal. The wrapper is
+ * allowed exactly one level deep, so a slip that draws no bar at all still
+ * fails, which is what both readers below ask; and the fallback itself is gated
+ * per surface by `utils/__tests__/factionRoleMigration.test.ts`, which
+ * re-derives it from the resolver.
+ */
+const SLIP_LEFT_RULE =
+  /border-left:2px solid var\((?:--[\w-]+,\s*var\()?--[a-z-]+\)\)?/;
 const WIDTHS = ["desktop", "mobile"] as const;
 const AT_BOTH = SLUGS.flatMap((slug) => WIDTHS.map((w) => [slug, w] as const));
 
@@ -237,13 +254,7 @@ describe("the last two archetype seams of #1706", () => {
     "%s left-rules the task slip in its accent",
     (slug) => {
       const markup = render(slug);
-      // `[,)]` rather than `)`: a skin migrated onto `utils/factionRoles.ts`
-      // asks its faction for the `accent` ROLE and carries today's token as the
-      // fallback (#2674), so the rule reads `var(--<prefix>-accent, var(--…))`.
-      // What this asserts is unchanged — a token, never a literal — and the
-      // fallback itself is gated per surface, by
-      // `utils/__tests__/factionRoleMigration.test.ts`.
-      expect(markup).toMatch(/border-left:2px solid var\(--[a-z-]+[,)]/);
+      expect(markup).toMatch(SLIP_LEFT_RULE);
     },
   );
 });
@@ -300,7 +311,7 @@ describe("na's composer sheet wears the spectrum, and no band (#2520)", () => {
   });
 
   it("takes the ink bar off the task slip", () => {
-    expect(render(null)).not.toMatch(/border-left:2px solid var\(--[a-z-]+\)/);
+    expect(render(null)).not.toMatch(SLIP_LEFT_RULE);
   });
 });
 

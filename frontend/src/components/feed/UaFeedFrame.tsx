@@ -2,6 +2,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UaInkColumn } from '../factionMarks/uaAtoms'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionRoleVars } from '../../utils/factionRoles'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -61,7 +62,9 @@ import type { FeedFrameProps } from './feedFrameProps'
  * this card already sets on its band — clears both halves (5.18:1 light,
  * 6.58:1 dark). A repoint, not a new token.
  */
-const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--faction-ua-card-accent)' } }
+const ROW_SKIN: FeedRowSkin = {
+  ink: { actor: 'var(--leaf-feed-frame-accent, var(--faction-ua-card-accent))' },
+}
 
 export default function UaFeedFrame({
   kicker,
@@ -74,10 +77,14 @@ export default function UaFeedFrame({
   return (
     <div
       style={{
+        /* The nine roles under this surface's prefix (#2659/#2673). ROW_SKIN
+           above is module-level but travels by context to `children`, which
+           render inside this root, so the cascade reaches it. */
+        ...factionRoleVars('ua', 'leaf-feed-frame'),
         position: 'relative',
         overflow: 'hidden',
         background: 'var(--faction-ua-parchment)',
-        color: 'var(--faction-ua-card-text)',
+        color: 'var(--leaf-feed-frame-ink, var(--faction-ua-card-text))',
         border: '1px solid var(--faction-ua-rule)',
         borderRadius: 'var(--radius-md)',
         padding: `var(--space-lg) ${gutter}`,
@@ -100,7 +107,7 @@ export default function UaFeedFrame({
           flexWrap: 'wrap',
           gap: 'var(--space-sm)',
           minWidth: 0,
-          color: 'var(--faction-ua-card-muted)',
+          color: 'var(--leaf-feed-frame-quiet, var(--faction-ua-card-muted))',
           borderBottom: '1px solid var(--faction-ua-hair)',
           paddingBottom: 'var(--space-xs)',
           marginBottom: 'var(--space-sm)',
@@ -120,7 +127,7 @@ export default function UaFeedFrame({
             fontWeight: 600,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: 'var(--faction-ua-card-accent)',
+            color: 'var(--leaf-feed-frame-accent, var(--faction-ua-card-accent))',
             minWidth: 0,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -136,7 +143,7 @@ export default function UaFeedFrame({
             style={{
               ...UA_EYEBROW,
               color: 'var(--faction-ua-on-accent)',
-              background: 'var(--faction-ua-card-accent)',
+              background: 'var(--leaf-feed-frame-accent, var(--faction-ua-card-accent))',
               borderRadius: 999,
               padding: '0 var(--space-sm)',
               whiteSpace: 'nowrap',

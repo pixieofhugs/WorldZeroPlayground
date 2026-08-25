@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { UaBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 /**
  * UA seal — a wax-lotus note pressed into the host praxis, "a note on
@@ -26,11 +27,13 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
     <div
       className="relative"
       style={{
+        /* The nine roles under this surface's prefix (#2659/#2673). */
+        ...factionRoleVars('ua', 'leaf-metatask-seal'),
         background: 'var(--faction-ua-card-parchment)',
-        color: 'var(--faction-ua-card-text)',
+        color: 'var(--leaf-metatask-seal-ink, var(--faction-ua-card-text))',
         border: '1px solid var(--faction-ua-card-frame)',
         borderRadius: 3,
-        fontFamily: 'var(--faction-ua-card-font)',
+        fontFamily: 'var(--leaf-metatask-seal-face, var(--faction-ua-card-font))',
         overflow: 'hidden',
       }}
     >
@@ -64,7 +67,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
               zIndex: 2,
               background: 'transparent',
               border: 'none',
-              color: 'var(--faction-ua-card-accent)',
+              color: 'var(--leaf-metatask-seal-accent, var(--faction-ua-card-accent))',
               fontSize: 'var(--text-xl)',
               cursor: 'pointer',
             }}
@@ -78,11 +81,11 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
         <span
           className="block"
           style={{
-            fontFamily: 'var(--faction-ua-card-font)',
+            fontFamily: 'var(--leaf-metatask-seal-face, var(--faction-ua-card-font))',
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
-            color: 'var(--faction-ua-card-accent)',
+            color: 'var(--leaf-metatask-seal-accent, var(--faction-ua-card-accent))',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -94,7 +97,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
           style={{
             fontFamily: 'var(--faction-ua-body-font)',
             fontSize: 'var(--text-content)',
-            color: 'var(--faction-ua-card-text)',
+            color: 'var(--leaf-metatask-seal-ink, var(--faction-ua-card-text))',
           }}
         >
           {metatask.title}
@@ -103,7 +106,7 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
         <span
           className="block"
           style={{
-            fontFamily: 'var(--faction-ua-card-font)',
+            fontFamily: 'var(--leaf-metatask-seal-face, var(--faction-ua-card-font))',
             fontSize: 'var(--text-title)',
             fontWeight: 600,
             letterSpacing: '0.02em',

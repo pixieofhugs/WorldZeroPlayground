@@ -1,6 +1,21 @@
 import type { CSSProperties } from "react";
 
 import { UaSigil } from "../sigil/UaSigil";
+import { factionRoleVar } from "../../utils/factionRoles";
+
+/*
+ * THE ROLE, NOT THE TOKEN (#2659/#2673) — and the SINGULAR resolver throughout
+ * this module, deliberately.
+ *
+ * These atoms have no root of their own: they are constants and fragments
+ * mounted INSIDE a dozen different surfaces, each of which picks its own
+ * prefix. An atom cannot read `var(--task-card-ink, …)` without hard-wiring one
+ * surface's namespace into every other one's — the leak the law's "the prefix
+ * belongs to the surface" rule exists to prevent. `factionRoleVar` needs no
+ * prefix: it returns the same `var(--faction-ua-*)` string each of these
+ * already held, so not one value moves. What changes is that an atom asks for
+ * `face` rather than naming UA's token for it.
+ */
 
 /**
  * UA shared presentation atoms — the pieces every UA desktop surface repeats
@@ -17,9 +32,12 @@ import { UaSigil } from "../sigil/UaSigil";
  */
 
 /** Headline cut — Cormorant Garamond. Titles, numerals, names. Never italic. */
-export const UA_DISPLAY = "var(--faction-ua-card-font)";
+export const UA_DISPLAY = factionRoleVar("ua", "face");
 /** Text cut — EB Garamond. Body copy, labels, metadata. */
 export const UA_TEXT = "var(--faction-ua-body-font)";
+
+/** The practice's hue, as a FILL. A hue is never an ink. */
+const UA_FILL = factionRoleVar("ua", "fill");
 
 /**
  * The eyebrow — small, uppercase, widely tracked, quiet.
@@ -33,7 +51,7 @@ export const UA_EYEBROW: CSSProperties = {
   fontSize: "var(--text-md)",
   letterSpacing: "0.22em",
   textTransform: "uppercase",
-  color: "var(--faction-ua-card-muted)",
+  color: factionRoleVar("ua", "quiet"),
 };
 
 /**
@@ -44,7 +62,7 @@ export const UA_EYEBROW: CSSProperties = {
  * `--faction-ua-card-text` inverts with the theme for free.
  */
 export function uaShade(percent: number): string {
-  return `color-mix(in srgb, var(--faction-ua-card-text) ${percent}%, transparent)`;
+  return `color-mix(in srgb, ${factionRoleVar("ua", "ink")} ${percent}%, transparent)`;
 }
 
 /**
@@ -113,7 +131,7 @@ export function UaEnsoScore({
   value,
   unit,
   ringColor,
-  valueColor = "var(--faction-ua-card-text)",
+  valueColor = factionRoleVar("ua", "ink"),
   unitColor,
   valueSize = "var(--text-heading)",
   valueWeight = 600,
@@ -217,7 +235,7 @@ export function UaInkColumn({ style }: { style?: CSSProperties }) {
         position: "absolute",
         width: 2,
         background:
-          "linear-gradient(180deg, transparent, var(--faction-ua) 12%, var(--faction-ua) 88%, transparent)",
+          `linear-gradient(180deg, transparent, ${UA_FILL} 12%, ${UA_FILL} 88%, transparent)`,
         opacity: 0.34,
         pointerEvents: "none",
         ...style,

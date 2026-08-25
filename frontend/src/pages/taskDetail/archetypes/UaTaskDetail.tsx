@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/sigil/UaSigil";
 import {
@@ -181,7 +182,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const innerBox: CSSProperties = {
-    background: "var(--faction-ua-card-bg)",
+    background: "var(--leaf-task-detail-paper, var(--faction-ua-card-bg))",
     border: "1px solid var(--faction-ua-rule)",
     borderRadius: 5,
     padding: desktop ? "var(--space-lg)" : "var(--space-md)",
@@ -201,8 +202,8 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     fontWeight: 600,
     fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
     letterSpacing: "0.02em",
-    color: "var(--faction-ua-on-fill)",
-    background: "var(--faction-ua)",
+    color: "var(--leaf-task-detail-on-fill, var(--faction-ua-on-fill))",
+    background: "var(--leaf-task-detail-fill, var(--faction-ua))",
     border: "1.5px solid var(--faction-ua-card-frame)",
     borderRadius: 5,
     padding: desktop
@@ -214,7 +215,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     fontFamily: UA_TEXT,
     fontSize: "var(--text-xl)",
     lineHeight: 1.6,
-    color: "var(--faction-ua-card-muted)",
+    color: "var(--leaf-task-detail-quiet, var(--faction-ua-card-muted))",
   };
 
   /**
@@ -246,7 +247,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         flexWrap: "wrap",
       }}
     >
-      <span style={{ ...UA_EYEBROW, color: "var(--faction-ua-card-text)" }}>
+      <span style={{ ...UA_EYEBROW, color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))" }}>
         {label}
       </span>
       {rule(0.7)}
@@ -280,7 +281,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             {!levelJumpSignup && (
               <>
                 {" · "}
-                <span style={{ color: "var(--faction-ua-card-accent)" }}>
+                <span style={{ color: "var(--leaf-task-detail-accent, var(--faction-ua-card-accent))" }}>
                   {t("detail.signup.levelMet", { level: task.level_required })}
                 </span>
               </>
@@ -355,7 +356,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                 borderBottom: "1px solid var(--faction-ua-rule)",
                 cursor: "pointer",
                 padding: 0,
-                color: "var(--faction-ua-card-muted)",
+                color: "var(--leaf-task-detail-quiet, var(--faction-ua-card-muted))",
               }}
             >
               {t("detail.inProgress.drop")}
@@ -379,7 +380,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         borderRadius: 7,
         padding: "var(--space-xs)",
         boxSizing: "border-box",
-        color: "var(--faction-ua-card-text)",
+        color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
         boxShadow: `0 16px 44px -30px ${uaShade(52)}`,
       }}
     >
@@ -469,7 +470,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           letterSpacing: "-0.015em",
           margin: 0,
           marginBottom: "var(--space-md)",
-          color: "var(--faction-ua-card-text)",
+          color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
           overflowWrap: "anywhere",
         }}
       >
@@ -550,7 +551,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                   fontWeight: 700,
                   fontSize: "var(--text-lg)",
                   background: "var(--faction-ua-panel)",
-                  color: "var(--faction-ua-card-text)",
+                  color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
                   boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
                 }}
               >
@@ -561,7 +562,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               style={{
                 fontFamily: UA_TEXT,
                 fontSize: "var(--text-xl)",
-                color: "var(--faction-ua-card-text)",
+                color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
                 borderBottom: "1px solid var(--faction-ua-rule)",
               }}
             >
@@ -595,7 +596,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               fontWeight: 700,
               fontSize: size.level,
               lineHeight: 0.9,
-              color: "var(--faction-ua-card-text)",
+              color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
             }}
           >
             {task.level_required}
@@ -620,7 +621,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               fontWeight: 700,
               fontSize: size.count,
               lineHeight: 0.9,
-              color: "var(--faction-ua-card-text)",
+              color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))",
             }}
           >
             {inProgressCount}
@@ -676,7 +677,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           flexWrap: "wrap",
         }}
       >
-        <span style={{ ...UA_EYEBROW, color: "var(--faction-ua-card-text)" }}>
+        <span style={{ ...UA_EYEBROW, color: "var(--leaf-task-detail-ink, var(--faction-ua-card-text))" }}>
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
         {rule(0.7)}
@@ -704,10 +705,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                     border: "none",
                     borderRadius: 4,
                     padding: "var(--space-xs) var(--space-sm)",
-                    background: on ? "var(--faction-ua)" : "transparent",
+                    background: on ? "var(--leaf-task-detail-fill, var(--faction-ua))" : "transparent",
                     color: on
-                      ? "var(--faction-ua-on-fill)"
-                      : "var(--faction-ua-card-muted)",
+                      ? "var(--leaf-task-detail-on-fill, var(--faction-ua-on-fill))"
+                      : "var(--leaf-task-detail-quiet, var(--faction-ua-card-muted))",
                   }}
                 >
                   {sort === "score"
@@ -725,7 +726,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           className="content-text"
           style={{
             fontFamily: UA_TEXT,
-            color: "var(--faction-ua-card-muted)",
+            color: "var(--leaf-task-detail-quiet, var(--faction-ua-card-muted))",
             margin: 0,
           }}
         >
@@ -754,7 +755,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "var(--faction-ua-card-accent)",
+                color: "var(--leaf-task-detail-accent, var(--faction-ua-card-accent))",
               }}
             >
               {showAllPraxis
@@ -788,6 +789,13 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           and the site background shows around it. */}
       <div
         style={{
+          /* The nine roles under this surface's prefix (#2659/#2673).
+             DECLARED ON THE COLUMN, NOT ON THE WRAPPER ABOVE IT: that wrapper
+             also parents the shared neutral `Breadcrumb`, and a surface's
+             namespace has no business reaching site chrome. Everything this
+             file paints — including the four style objects built above — is
+             inside this column. */
+          ...factionRoleVars("ua", "leaf-task-detail"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

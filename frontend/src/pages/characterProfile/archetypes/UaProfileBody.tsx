@@ -20,11 +20,21 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
 import Lotus from '../../../components/factionMarks/Lotus'
 import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/factionMarks/uaAtoms'
+import { factionRoleVar } from '../../../utils/factionRoles'
 
-const INK = 'var(--faction-ua-card-text)'
-const MUTED = 'var(--faction-ua-card-muted)'
-const ACCENT = 'var(--faction-ua-card-accent)'
-const SURFACE = 'var(--faction-ua-card-bg)'
+/*
+ * THE ROLE, NOT THE TOKEN (#2659/#2673) â€” and the SINGULAR resolver, because
+ * this file owns no element. `dress` is a config object handed to
+ * `ProfileSkin`, which renders the page; there is no root here to spread
+ * `factionRoleVars` onto, and a prefix nothing declares is a read that always
+ * falls through. `factionRoleVar` returns the same `var(--faction-ua-*)` string
+ * these constants already held, so not one value moves â€” what changes is that
+ * the surface asks for `ink` rather than naming UA's token for it.
+ */
+const INK = factionRoleVar('ua', 'ink')
+const MUTED = factionRoleVar('ua', 'quiet')
+const ACCENT = factionRoleVar('ua', 'accent')
+const SURFACE = factionRoleVar('ua', 'paper')
 const PANEL = 'var(--faction-ua-panel)'
 const RULE = 'var(--faction-ua-rule)'
 const HAIR = 'var(--faction-ua-hair)'
@@ -110,7 +120,7 @@ const dress: ProfileDress = {
         lineHeight: 0,
       }}
     >
-      <Lotus size={340} color="var(--faction-ua)" opacity={0.1} />
+      <Lotus size={340} color={factionRoleVar('ua', 'fill')} opacity={0.1} />
     </div>
   ),
   credentialFrame: (card) => (

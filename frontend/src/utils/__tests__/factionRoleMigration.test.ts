@@ -629,7 +629,136 @@ const ROOTS_PER_FILE = new Map<string, number>([
  * Every migrated surface, both lanes. A lane appends its own table above and
  * adds it here; the assertions below never learn a lane's name.
  */
-const MIGRATED: Surface[] = [...SURFACES, ...LANE_02];
+
+/**
+ * Lane 03 - UA (#2673). Sixteen surfaces, all `sheet`.
+ *
+ * The prefix stem is `leaf`, NOT `ua`: `--ua-*` is UA's RETIRED legacy family
+ * and `__tests__/uaDesktopSkin.test.tsx` asserts `not.toMatch(/var\(--ua-[a-z]/)`
+ * across eight surfaces. Widening that guard to exempt role suffixes would have
+ * traded a live check for a naming convenience. Generalises: the slug is not
+ * always available as a prefix stem.
+ */
+const LANE_03: Surface[] = [
+  {
+    file: "components/taskCard/UaTaskCard.tsx",
+    slug: "ua",
+    prefix: "leaf-task-card",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/praxisCard/desktop/UaPraxisCard.tsx",
+    slug: "ua",
+    prefix: "leaf-praxis-card",
+    ground: "sheet",
+    sites: 8,
+  },
+  {
+    file: "components/praxisCard/scoreStamp/UaScoreStamp.tsx",
+    slug: "ua",
+    prefix: "leaf-score-stamp",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    file: "components/selectCard/UaSelectCard.tsx",
+    slug: "ua",
+    prefix: "leaf-faction-select-card",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/feed/UaFeedFrame.tsx",
+    slug: "ua",
+    prefix: "leaf-feed-frame",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/comments/voices/UaComment.tsx",
+    slug: "ua",
+    prefix: "leaf-comment",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    file: "components/metataskSeal/skins/UaSeal.tsx",
+    slug: "ua",
+    prefix: "leaf-metatask-seal",
+    ground: "sheet",
+    sites: 7,
+  },
+  {
+    file: "components/duel/UaDuelSealConfirm.tsx",
+    slug: "ua",
+    prefix: "leaf-duel-seal",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/factionHero/UaFactionHero.tsx",
+    slug: "ua",
+    prefix: "leaf-faction-hero",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/vote/UaVote.tsx",
+    slug: "ua",
+    prefix: "leaf-vote",
+    ground: "sheet",
+    // One read - the error line. The map is all-or-nothing by design; the
+    // alternative is the vote control staying the one surface that names its
+    // faction inline.
+    sites: 1,
+  },
+  {
+    file: "pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
+    slug: "ua",
+    prefix: "leaf-mobile-field-desk",
+    ground: "sheet",
+    // Seven module constants; the forty-odd call sites below them are untouched.
+    sites: 7,
+  },
+  {
+    file: "pages/characterPaths/archetypes/UaCreateCharacter.tsx",
+    slug: "ua",
+    prefix: "leaf-create-character",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/editPraxis/archetypes/UaEditPraxis.tsx",
+    slug: "ua",
+    prefix: "leaf-edit-praxis",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/praxisDetail/archetypes/UaPraxisDetail.tsx",
+    slug: "ua",
+    prefix: "leaf-praxis-detail",
+    ground: "sheet",
+    sites: 11,
+  },
+  {
+    file: "pages/taskDetail/archetypes/UaTaskDetail.tsx",
+    slug: "ua",
+    prefix: "leaf-task-detail",
+    ground: "sheet",
+    sites: 19,
+  },
+  {
+    file: "pages/factionDetail/archetypes/UaFactionBody.tsx",
+    slug: "ua",
+    prefix: "leaf-faction-body",
+    ground: "sheet",
+    sites: 19,
+  },
+];
+
+const MIGRATED: Surface[] = [...SURFACES, ...LANE_02, ...LANE_03];
 
 /**
  * A slug's TOKEN FAMILY, resolved rather than assumed.

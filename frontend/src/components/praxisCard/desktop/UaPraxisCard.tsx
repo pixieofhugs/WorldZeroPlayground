@@ -1,6 +1,7 @@
 import { Lotus } from "../../factionMarks";
 import { UaBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -34,14 +35,18 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
     <div
       style={{
         ...frameBase,
+        // The nine roles under this surface's prefix (#2659/#2673) — the same
+        // key the manifest calls this surface, kebab-cased, so the namespace
+        // is the one `--praxis-card-basis` already sits in.
+        ...factionRoleVars("ua", "leaf-praxis-card"),
         position: "relative",
         overflow: "hidden",
         // The ensō salon sheet's shape, said once (#2361/#2403).
-        borderRadius: "var(--faction-ua-card-radius)",
+        borderRadius: "var(--leaf-praxis-card-radius, var(--faction-ua-card-radius))",
         background: "var(--faction-ua-card-parchment)",
         border: "2px solid var(--faction-ua-card-frame)",
         boxShadow:
-          "0 14px 40px -22px color-mix(in srgb, var(--faction-ua-card-text) 50%, transparent)",
+          "0 14px 40px -22px color-mix(in srgb, var(--leaf-praxis-card-ink, var(--faction-ua-card-text)) 50%, transparent)",
         /* NO PADDING ON THE FRAME since #2185: the band is full-bleed, and an
            inset frame would have floated it off three edges. The sheet's inset
            moved to the body box below, which is the only thing that ever wanted
@@ -49,7 +54,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
            resolves against the PADDING box, which dropping padding leaves where
            it was. */
         fontFamily: "var(--faction-ua-body-font)",
-        color: "var(--faction-ua-card-text)",
+        color: "var(--leaf-praxis-card-ink, var(--faction-ua-card-text))",
       }}
     >
       {/*
@@ -84,11 +89,11 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint="var(--faction-ua-card-accent)"
-          muted="var(--faction-ua-card-muted)"
-          paper="var(--faction-ua-card-bg)"
+          tint="var(--leaf-praxis-card-accent, var(--faction-ua-card-accent))"
+          muted="var(--leaf-praxis-card-quiet, var(--faction-ua-card-muted))"
+          paper="var(--leaf-praxis-card-paper, var(--faction-ua-card-bg))"
           titleStyle={{
-            fontFamily: "var(--faction-ua-card-font)",
+            fontFamily: "var(--leaf-praxis-card-face, var(--faction-ua-card-font))",
             fontWeight: 600,
             letterSpacing: "-0.01em",
           }}
@@ -96,7 +101,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           // Cormorant engraves, EB Garamond reads — the same pair the UA mobile
           // card already carried (#888).
           fonts={{
-            display: "var(--faction-ua-card-font)",
+            display: "var(--leaf-praxis-card-face, var(--faction-ua-card-font))",
             body: "var(--faction-ua-body-font)",
           }}
           /*

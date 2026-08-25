@@ -96,6 +96,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CSSProperties, ReactNode } from "react";
 import { mediaUrl } from "../../../utils/media";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
@@ -144,14 +145,14 @@ interface Props {
 
 /* The practice's inks, named for the ROLE each plays in the design's skin row.
  * Every one carries both themes in `index.css`. */
-const SHEET = "var(--faction-ua-card-bg)"; /* the sun-bleached sheet */
+const SHEET = "var(--leaf-edit-praxis-paper, var(--faction-ua-card-bg))"; /* the sun-bleached sheet */
 /* The error banner's ink (#1231). The banner sits straight on the sheet, and
  * the neutral `--color-danger` under its own veil misses AA there in light
  * (3.71:1 on this ground); this is #1449's alarm rung, already measured
  * on paper. The veil and the edge stay neutral — ADR-0061. */
 const ALARM = "var(--faction-ua-card-alarm)";
 const FIELD = "var(--faction-ua-panel)"; /* inset panel — fields, wells */
-const INK = "var(--faction-ua-card-text)";
+const INK = "var(--leaf-edit-praxis-ink, var(--faction-ua-card-text))";
 const BODY = "var(--faction-ua-card-body)";
 /* THE QUIET TIER IS `-card-body`, NOT `-card-muted` (#2485). The sheet is
  * washed — `ComposerGround` lays the lotus and the ensō over it at
@@ -164,11 +165,11 @@ const BODY = "var(--faction-ua-card-body)";
  * measurement. `-card-muted` stays right on every UNWASHED UA surface — the
  * task card, the praxis detail, the feed frame — which is why the token is
  * untouched and only this sheet moves. */
-const ACCENT = "var(--faction-ua-card-accent)"; /* the design's accentDeep */
+const ACCENT = "var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))"; /* the design's accentDeep */
 const RULE = "var(--faction-ua-rule)"; /* the neutral hairline */
 const HAIR = "var(--faction-ua-hair)"; /* the faintest divider, below -rule */
-const FILL = "var(--faction-ua)";
-const ON_FILL = "var(--faction-ua-on-fill)";
+const FILL = "var(--leaf-edit-praxis-fill, var(--faction-ua))";
+const ON_FILL = "var(--leaf-edit-praxis-on-fill, var(--faction-ua-on-fill))";
 
 /** Geometry the design pins: radius 7, a 2px border. Ornament, not spacing. */
 const RADIUS = 7;
@@ -285,7 +286,10 @@ export default function UaEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: ACCENT,
     alarm: ALARM,
-    pageStyle: { fontFamily: UA_TEXT, color: INK },
+    /* The nine roles under this surface's prefix (#2659/#2673). `pageStyle`
+       lands on `ComposerPage`'s own root div, which is the whole composer, so
+       the module constants above resolve inside it. */
+    pageStyle: { ...factionRoleVars("ua", "leaf-edit-praxis"), fontFamily: UA_TEXT, color: INK },
     sheetStyle,
     ground: groundLayer,
     rule: () => rule,

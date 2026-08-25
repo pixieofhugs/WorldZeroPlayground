@@ -7,6 +7,7 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { Lotus } from "../factionMarks";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/uaAtoms";
@@ -153,6 +154,12 @@ export default function UaTaskCard({
     >
       <article
         style={{
+          // The nine roles, under this surface's own prefix (#2659/#2673). The
+          // paint below reads `var(--leaf-task-card-ink, <today's token>)`, so the
+          // card names its faction once, here, instead of at every site — and
+          // every fallback is the value that already shipped, which is why this
+          // is provably a no-op on a frozen surface.
+          ...factionRoleVars("ua", "leaf-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
@@ -160,8 +167,8 @@ export default function UaTaskCard({
           background: "var(--faction-ua-card-parchment)",
           border: "2px solid var(--faction-ua-card-frame)",
           // The salon sheet's shape, said once (#2361/#2403).
-          borderRadius: "var(--faction-ua-card-radius)",
-          color: "var(--faction-ua-card-text)",
+          borderRadius: "var(--leaf-task-card-radius, var(--faction-ua-card-radius))",
+          color: "var(--leaf-task-card-ink, var(--faction-ua-card-text))",
           fontFamily: UA_TEXT,
         }}
       >
@@ -263,7 +270,7 @@ export default function UaTaskCard({
                 size={size.enso}
                 value={basePoints}
                 unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
-                valueColor="var(--faction-ua-card-accent)"
+                valueColor="var(--leaf-task-card-accent, var(--faction-ua-card-accent))"
               />
             </div>
 
@@ -287,7 +294,7 @@ export default function UaTaskCard({
                 style={{
                   fontFamily: UA_TEXT,
                   lineHeight: 1.5,
-                  color: "var(--faction-ua-card-muted)",
+                  color: "var(--leaf-task-card-quiet, var(--faction-ua-card-muted))",
                   margin: "0 0 var(--space-md)",
                 }}
               >
@@ -306,7 +313,7 @@ export default function UaTaskCard({
                     fontFamily: UA_TEXT,
                     fontStyle: "italic",
                     fontSize: "var(--text-xl)",
-                    color: "var(--faction-ua-card-muted)",
+                    color: "var(--leaf-task-card-quiet, var(--faction-ua-card-muted))",
                   }}
                 >
                   {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}

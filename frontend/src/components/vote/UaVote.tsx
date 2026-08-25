@@ -4,6 +4,7 @@ import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteError } from './VoteShell'
 import { VOTE_REFRAMES } from './voteReframes'
+import { factionRoleVars } from '../../utils/factionRoles'
 
 /**
  * UA (University of Asthmatics) vote UI (#821) — THE GROWING MANDALA. The 1-5
@@ -198,7 +199,13 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
   const active = hovered || selected
 
   return (
-    <div>
+    <div
+      /* The nine roles under this surface's prefix (#2659/#2673). One read
+         today - the error line - but the map is all-or-nothing by design, and
+         the alternative is this surface staying the one that names its faction
+         inline. Values unchanged: vote is one of the frozen four. */
+      style={factionRoleVars('ua', 'leaf-vote')}
+    >
       <div
         onMouseLeave={() => setHovered(0)}
         style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start', gap: 'var(--space-md)' }}
@@ -286,7 +293,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
           mandala blooms fuller and warmer as the rank climbs, which is the same
           reading in the widget's own vocabulary. */}
 
-      <VoteError error={error} color="var(--faction-ua-card-accent)" />
+      <VoteError error={error} color="var(--leaf-vote-accent, var(--faction-ua-card-accent))" />
     </div>
   )
 }
