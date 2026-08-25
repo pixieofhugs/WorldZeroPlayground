@@ -2404,7 +2404,7 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // as this entry predicted. The surfaces that used to paint that pair now read
   // --faction-ua-card-muted, which clears AA on every UA surface.)
 
-  // ══ Found by the role loop on landing — awaiting triage into children (#2661) ══
+  // ══ Found by the role loop on landing — filed as #2668 (the hairline) and #2669 ══
   //
   // NOT "NEW WORK", WHICH IS WHAT THE RULE ABOVE FORBIDS. Every ratio here was
   // already on screen and had been for months; what is new is that anything at
@@ -2419,7 +2419,7 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   //       ever been measured: `-card-border` was a value in the §3 contract
   //       that no row of this file pointed a ratio at.
   //
-  //       TRIAGE OWES THESE A DISTINCTION THIS FILE CANNOT MAKE. On a card that
+  //       FILED AS #2668, WHICH OWES A DISTINCTION THIS FILE CANNOT MAKE. On a card that
   //       brings its own stock, the edge is not the only thing separating the
   //       card from the page and 1.4.11 may not bite; on a ground that is NOT a
   //       card — a panel on a page of the same paper — the hairline IS the
@@ -2428,19 +2428,19 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   //       express; the page side is a rendered pairing and belongs to
   //       `e2e/contrast.spec.ts`. `snide/chrome` is the one below that is
   //       unambiguously load-bearing: it is the rail, standing on the wall.
-  "light | singularity/sheet line on paper": { ratio: 2.3, issue: 2661 },
-  "light | wow/sheet line on paper": { ratio: 2.24, issue: 2661 },
-  "light | coven/sheet line on paper": { ratio: 1.64, issue: 2661 },
-  "light | na/sheet line on paper": { ratio: 1.33, issue: 2661 },
-  "dark | everymen/sheet line on paper": { ratio: 1.38, issue: 2661 },
-  "dark | singularity/sheet line on paper": { ratio: 2.3, issue: 2661 },
-  "dark | coven/sheet line on paper": { ratio: 2.08, issue: 2661 },
-  "dark | na/sheet line on paper": { ratio: 1.54, issue: 2661 },
+  "light | singularity/sheet line on paper": { ratio: 2.3, issue: 2668 },
+  "light | wow/sheet line on paper": { ratio: 2.24, issue: 2668 },
+  "light | coven/sheet line on paper": { ratio: 1.64, issue: 2668 },
+  "light | na/sheet line on paper": { ratio: 1.33, issue: 2668 },
+  "dark | everymen/sheet line on paper": { ratio: 1.38, issue: 2668 },
+  "dark | singularity/sheet line on paper": { ratio: 2.3, issue: 2668 },
+  "dark | coven/sheet line on paper": { ratio: 2.08, issue: 2668 },
+  "dark | na/sheet line on paper": { ratio: 1.54, issue: 2668 },
   //       The rail's own edge on the wall it stands on, in the cascade the wall
   //       goes black in. `-note-wall-edge` is `rgba(182,255,46,0.35)` and the
   //       alpha is the whole of it: composited it lands at 2.77:1, and measured
   //       un-composited it would read clear — which is #594's mistake exactly.
-  "dark | snide/chrome line on paper": { ratio: 2.77, issue: 2661 },
+  "dark | snide/chrome line on paper": { ratio: 2.77, issue: 2668 },
   //
   //   (b) THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT.
   //       S.N.I.D.E.'s `chrome` map (#2631/#2659) moves six roles onto the wall
@@ -2452,12 +2452,12 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   //       the type — a role left behind when its ground moved — and it is the
   //       first thing this loop found that a human review had not.
   //
-  //       It is also almost certainly SATISFIABLE rather than a colour nobody
+  //       Filed as #2669. It is almost certainly SATISFIABLE rather than a colour nobody
   //       has: #2173 already ruled that `--faction-snide-acid` never touches
   //       paper, and `-wall-credit` (6.28:1 light / 9.22:1 dark) is the rung of
   //       the same hue the fill already moved to. Choosing it is a design call
   //       with an owner, so it is filed rather than taken here.
-  "light | snide/chrome accent on paper": { ratio: 1.03, issue: 2661 },
+  "light | snide/chrome accent on paper": { ratio: 1.03, issue: 2669 },
 };
 
 function key(theme: Theme, pair: Pair): string {
