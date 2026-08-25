@@ -8,6 +8,7 @@ import {
   type FactionGround,
   type FactionRole,
 } from "../factionRoles";
+import { resolveRoleReads } from "../../test/sourceScan";
 
 /**
  * Guard for the silently-unloaded font family (#839).
@@ -797,7 +798,11 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
 
   /** The families a composer's `pageStyle` puts on everything below it. */
   function pageFamilies(file: string): string[] {
-    const source = readSource(file);
+    // A composer that asks for the `face` ROLE writes `var(--x-face)`, which is
+    // no token any stylesheet declares — the map supplies it at render. Fold the
+    // role reads first so the reference below is a real token again, resolved
+    // through `factionRoleVar` rather than restated here (#2689).
+    const source = resolveRoleReads(readSource(file));
     const anchor = source.indexOf("pageStyle:");
     if (anchor === -1) return [];
     const offset = source.slice(anchor).search(/font-?[fF]amily\s*[:=]/);

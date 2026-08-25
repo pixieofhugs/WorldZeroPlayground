@@ -67,6 +67,7 @@ import { describe, it, expect } from "vitest";
 
 import { FACTION_ROLES, factionRoleVar } from "../../../utils/factionRoles";
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -220,9 +221,9 @@ answer — not by widening this test.`,
   });
 
   it("sets the call in the decree's own face and size", () => {
-    const source = code(TILE);
+    const source = resolveRoleReads(code(TILE));
     expect(source, "MedievalSharp, asked for as the `face` ROLE (#2674)").toContain(
-      'fontFamily: "var(--wow-select-card-face, var(--faction-wow-card-font))", fontSize: "var(--text-content)"',
+      'fontFamily: "var(--faction-wow-card-font)", fontSize: "var(--text-content)"',
     );
     expect(
       source,

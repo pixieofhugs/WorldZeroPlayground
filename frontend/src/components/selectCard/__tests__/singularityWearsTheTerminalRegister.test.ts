@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
 import { stripComments } from "../../../utils/__tests__/cssVars";
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -105,7 +106,9 @@ same question, not by widening this test.`,
     // directly and the unread global alias was retired. Here
     // `--faction-singularity-card-font` IS an alias to `--font-faction-terminal`,
     // so the family token keeps a reader and only the tile moves.
-    const source = code(TILE);
+    // The tile asks for the `face` ROLE; `resolveRoleReads` folds that back to
+    // the token the map names, so this still pins the alias and not a spelling.
+    const source = resolveRoleReads(code(TILE));
     expect(source, "--font-faction-terminal is the raw family").not.toContain("--font-faction-terminal");
     expect(source).toContain("--faction-singularity-card-font");
   });

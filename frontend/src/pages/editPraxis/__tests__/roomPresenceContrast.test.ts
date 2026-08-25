@@ -41,6 +41,7 @@ import {
 import { readThemes, resolveVar, type Theme } from "../../../utils/__tests__/cssVars";
 import { paintedAwareness, type AwarenessLike } from "../roomPresence";
 import { BODY_EDITOR_BASE_THEME } from "../archetypes/bodyEditorTheme";
+import { resolveRoleReads } from "../../../test/sourceScan";
 
 const THEMES = readThemes(
   readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
@@ -295,7 +296,12 @@ describe("the ground manifest above still matches the skins (#2267)", () => {
   // module that dresses that skin's body field.
   for (const ground of COMPOSER_GROUNDS) {
     it(`${ground.key} still dresses its body field with ${ground.ground}`, () => {
-      const source = readFileSync(fileURLToPath(new URL(ground.source, import.meta.url)), "utf8");
+      // The ink is the `ink` ROLE on a migrated composer, so the token is
+      // computed rather than written. `resolveRoleReads` folds it back, which
+      // keeps this pinned to the token and not to how it is spelled.
+      const source = resolveRoleReads(
+        readFileSync(fileURLToPath(new URL(ground.source, import.meta.url)), "utf8"),
+      );
       expect(source).toContain(ground.ground);
       expect(source).toContain(ground.ink);
     });

@@ -48,6 +48,7 @@ import EphemeristsPraxisCard from "../praxisCard/desktop/EphemeristsPraxisCard";
 import UaTaskCard from "../taskCard/UaTaskCard";
 import WowTaskCard from "../taskCard/WowTaskCard";
 import WowFeedFrame from "../feed/WowFeedFrame";
+import { resolveRoleReads } from "../../test/sourceScan";
 
 // `useTheme()` throws outside a `ThemeProvider` by design (#701) and the score
 // stamps reach for it. Nothing here depends on which half it gets.
@@ -99,18 +100,13 @@ const render = (node: ReactElement) =>
 const frameStyle = (html: string): string => {
   const match = /style="([^"]*border-radius[^"]*)"/.exec(html);
   expect(match, "nothing in this card declares a border-radius").not.toBeNull();
-  // Fold a ROLE READ back to its fallback (#2649's faction lanes, #2674 here).
-  // A migrated frame asks its faction for the `radius` role and carries today's
-  // token as the fallback — `var(--wow-feed-radius,
-  // var(--faction-wow-card-radius))` — which is the same value under a new
-  // spelling. Folding it keeps every row below pinned to its exact token
-  // instead of each lane restating its prefix in this cross-faction table; that
-  // the fallback IS the resolver's token is gated in
-  // `utils/__tests__/factionRoleMigration.test.ts`.
-  return (match as RegExpExecArray)[1].replace(
-    /var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g,
-    "$1",
-  );
+  // Fold a ROLE READ down to the token the map names (#2649's faction lanes,
+  // #2674 here). A migrated frame asks its faction for the `radius` role, so the
+  // attribute reads `border-radius:var(--leaf-task-card-radius)` and carries the
+  // map's declaration alongside it. `resolveRoleReads` resolves the one from the
+  // other, which keeps every row below pinned to its exact token instead of each
+  // lane restating its prefix in this cross-faction table.
+  return resolveRoleReads((match as RegExpExecArray)[1]);
 };
 
 const CASES = [
@@ -138,27 +134,19 @@ const CASES = [
 ] as const;
 
 /**
- * The frame's radius read from `token` — bare, or through one role read that
- * falls back to it.
+ * The frame's radius read from `token`, after any role read has been resolved.
  *
  * A #2659 lane moves a surface onto `factionRoleVars`, so the card emits
- * `border-radius:var(--leaf-task-card-radius, var(--faction-ua-card-radius))`. Same
- * computed value; the wrapper is allowed exactly one level deep and must fall
- * back to THIS token, so a card that copies the number still fails.
+ * `border-radius:var(--leaf-task-card-radius)` and the map supplies the token.
+ * `frameStyle` has already folded that, so a card that copies the NUMBER still
+ * fails — which is the whole point of #2403.
  */
-const radiusRead = (token: string) =>
-  new RegExp(
-    "border-radius:var\\(" +
-      token +
-      "\\)|border-radius:var\\(--[\\w-]+,\\s*var\\(" +
-      token +
-      "\\)\\)",
-  );
+const radiusRead = (token: string) => `border-radius:var(${token})`;
 
 describe("the frame radius is the token, not a copy of it (#2403)", () => {
   for (const { name, key, node } of CASES) {
     it(`${name} reads --faction-${key}-card-radius`, () => {
-      expect(frameStyle(render(node()))).toMatch(radiusRead(`--faction-${key}-card-radius`));
+      expect(frameStyle(render(node()))).toContain(radiusRead(`--faction-${key}-card-radius`));
     });
   }
 

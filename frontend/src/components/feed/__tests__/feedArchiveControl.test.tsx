@@ -46,6 +46,7 @@ import type { FeedFrameProps } from '../feedFrameProps'
 import { AA_LARGE, compositeOver, contrastRatio, formatRatio, parseColor, type Rgba } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import '../../../i18n'
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'))
 
@@ -212,8 +213,7 @@ describe('the shared dismiss control', () => {
  * a shared, nine-faction row edited by every faction lane for a value nobody
  * changed.
  */
-const foldRoleReads = (html: string) =>
-  html.replace(/var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g, '$1')
+const foldRoleReads = resolveRoleReads
 
 describe.each(Object.entries(CASES))('%s: the band it is placed on', (name, { ink, ground, Frame }) => {
   if (Frame) {

@@ -50,6 +50,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -187,7 +188,9 @@ answer — not by widening this test.`,
         `the bill's poster face is no longer Bebas in ${theme}`,
       ).toBe('"Bebas Neue", Impact, sans-serif');
     }
-    const source = code(TILE);
+    // The tile asks for the `face` ROLE; `resolveRoleReads` folds that back to
+    // the token the map names, so this still pins the family and not a spelling.
+    const source = resolveRoleReads(code(TILE));
     expect(source, "the card names the faction's ROLE token").toContain("--faction-everymen-card-font");
     expect(source, "--font-faction-poster is retired, not merely unused here").not.toContain(
       'var(--font-faction-poster)',
