@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import { FACTION_ROLES, factionRoleProperty } from "../factionRoles";
 import { readThemes, stripComments } from "./cssVars";
 
 /**
@@ -78,13 +79,39 @@ const sources = collectSourceFiles(SRC_DIR).map((path) => ({
   text: stripComments(readFileSync(path, "utf-8")),
 }));
 
+/**
+ * A surface's prefix as handed to `factionRoleVars` (#2659).
+ *
+ * That resolver declares its properties by INTERPOLATION —
+ * `--${prefix}-${role}` — so the two harvesters above cannot see them, and
+ * every `var(--rail-ink, …)` in the rail became an orphan the moment the
+ * literals moved out of `Sidebar.tsx`. It is the same blind spot the
+ * `REFERENCE` note describes from the other side.
+ *
+ * WIDENING THE HARVESTER WOULD HAVE TRADED THE BLIND SPOT, NOT CLOSED IT.
+ * "Anything ending in a role name is declared" exempts `--rial-ink` as happily
+ * as `--rail-ink`, and a silent typo is the entire failure class this file
+ * exists for. So the cross-product below is exact: the prefixes actually passed
+ * to the resolver, times the roles it always emits, spelled by the resolver's
+ * own {@link factionRoleProperty}. An unpassed prefix is still an orphan, and a
+ * role the vocabulary does not have is still an orphan.
+ */
+const ROLE_VARS_PREFIX = /factionRoleVars\(\s*[^,)]+,\s*["'`]([\w-]+)["'`]/g;
+
+const rolePrefixes = new Set(
+  sources.flatMap(({ text }) => matchAll(text, ROLE_VARS_PREFIX)),
+);
+
 /** Every custom property declared anywhere in the frontend source tree. */
-const declared = new Set(
-  sources.flatMap(({ text }) => [
+const declared = new Set([
+  ...sources.flatMap(({ text }) => [
     ...matchAll(text, DECLARED_IN_CSS),
     ...matchAll(text, DECLARED_IN_STYLE_OBJECT),
   ]),
-);
+  ...[...rolePrefixes].flatMap((prefix) =>
+    FACTION_ROLES.map((role) => factionRoleProperty(prefix, role)),
+  ),
+]);
 
 /** Every statically-resolvable `var()` name, with the files that reference it. */
 const referenced = new Map<string, string[]>();
@@ -118,6 +145,11 @@ describe("CSS custom properties are declared before use (#806, #879)", () => {
     expect(declared.has("--eph-display")).toBe(true);
     // An interpolated name must never be harvested as a literal.
     expect(referenced.has("--faction-")).toBe(false);
+    // …and the one interpolated family that IS reconstructed rather than
+    // skipped (#2659) is reconstructed from a prefix a real surface passes.
+    expect(rolePrefixes).toContain("rail");
+    expect(declared.has("--rail-ink")).toBe(true);
+    expect(declared.has("--rial-ink")).toBe(false);
   });
 
   it("has no var(--…) reference pointing at an undeclared custom property", () => {
