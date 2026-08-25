@@ -1681,6 +1681,30 @@
     var(--faction-ua-card-bg) 46%,
     var(--faction-ua-panel)
   );
+
+  /* ── THE CARD MASTHEAD BAND (#2635) — UA's day hue, FROZEN ──
+     The band grounded on `--faction-ua-hair` until #2635, which is by that
+     token's own comment "the faintest divider, below -rule": a hairline lent to
+     a band because it was the nearest thing to hand. The owner's ruling is that
+     UA's band is ORANGE, in both cascades.
+
+     IT IS A LITERAL AND NOT `var(--faction-ua)`, for the reason
+     `--faction-everymen-bill-mast` and `--faction-wow-plum-surface` are
+     literals: the spine hue FLIPS (#c24a18 -> #e8703a), so `var(--faction-ua)`
+     is not "orange in both modes", it is two oranges. Declared ONCE, here, with
+     no dark half — a card printed at night is the same card.
+
+     Theme-scoped rather than bare `:root` so a nested `[data-theme]` wrapper
+     cannot inherit an already-substituted value (#1839); it is the freeze
+     itself, not the selector, that keeps a later dark block from un-freezing it,
+     and the freeze is that nobody writes one.
+
+     THE INK IS `--faction-ua-on-fill` (#fcf7ef, 4.59:1) — already minted,
+     already measured, and because the ground no longer flips that one reading
+     covers both themes. `factionContrast.test.ts` records it. The band's old
+     `-card-text` at 10.35:1 is a contrast DROP taken deliberately: 4.59:1 clears
+     AA at `--text-title`, and the band's job is to be UA's colour. */
+  --faction-ua-mast: #c24a18;
 }
 
 :root {
@@ -2004,6 +2028,40 @@
   --faction-coven-slip-cta-ink: #ffffff;
   --faction-coven-slip-glow: rgba(236, 79, 146, 0.3);
   --faction-coven-slip-shadow: 0 14px 32px -14px rgba(236, 79, 146, 0.45);
+
+  /* ── THE CARD MASTHEAD BAND (#2635) — a pink band under white by day ──
+     The band grounded on `--faction-coven-slip-sigil-ground` until #2635, which
+     is the disc that backs the SIGIL on the slip: `#ffffff` by day, so the band
+     read as a bare white strip across the top of a pink card. The owner's ruling
+     is that the day band takes a faction pink with white type.
+
+     THE VALUES ARE THE CTA'S, RESTATED RATHER THAN ALIASED. `-slip-cta-from` /
+     `-cta-ink` is Coven's existing, already-measured white-on-pink pairing, and
+     the polarity note beside `--faction-coven-ward-cta-*` below already calls it
+     "a dark band under white by day". Pointing this token AT `-slip-cta-from`
+     would drag the CTA's dark half — bright magenta under near-black ink — into
+     the one cascade the ruling says is already right, so the day value is
+     transcribed and the night value is authored on its own.
+
+     FLAT, NOT THE CTA'S GRADIENT. Two reasons, and both are about what the token
+     has to answer for: `-cta-from` is the LIGHTER of the CTA's two stops, so
+     white on it is the worst case the gradient contains and a flat band cannot
+     be better or worse than a measurement of it; and a gradient parses as null
+     in `utils/contrast.ts`, which is why `--faction-coven-slip-sigil-ground`
+     beside it is a scalar too. A ramp is also the CTA's affordance — every other
+     faction's band is a flat printed field.
+
+     NOT `--faction-coven` (#ec5f99): white on the spine hue is 3.15:1, large
+     text only, which is why the faction's own `-on-fill` is near-black.
+
+     THE NIGHT BAND DOES NOT MOVE. `#1a0713` is `-slip-sigil-ground`'s dark value
+     and `#fbcfe4` is `-slip-ink`'s — the ground the band already had and the ink
+     it already inherited from the card, written out here so the band stops
+     borrowing and starts owning. The MARK takes `-mast-ink` too (see
+     `cardMasthead/factionBands.tsx`), which is the one thing that does change at
+     night: the witch hat was the spine hue and is now the wordmark's own ink. */
+  --faction-coven-mast: #d13a80;
+  --faction-coven-mast-ink: #ffffff;
 
   /* ── The score stamp's arched Points plate (#2019) ──
      The plate is a vertical ramp from the ward's paper down to a pink foot.
@@ -3548,6 +3606,13 @@
   --faction-coven-slip-cta-ink: #14110b;
   --faction-coven-slip-glow: rgba(244, 114, 182, 0.42);
   --faction-coven-slip-shadow: 0 16px 38px -14px rgba(0, 0, 0, 0.7);
+  /* The masthead band, UNMOVED (#2635). These are `-slip-sigil-ground`'s and
+     `-slip-ink`'s own night values — the ground the band already stood on and
+     the ink it already inherited from the card body — so the night band is what
+     shipped, under a name that belongs to it. The owner ruled the dark band
+     fine; only the day half was borrowed paint. */
+  --faction-coven-mast: #1a0713;
+  --faction-coven-mast-ink: #fbcfe4;
   /* The night plate (#2019). The foot is the same 34% of `-mid` into the ward
      paper the light ramp mixes, taken on the dark stops (#5e2a46 into #2a0f1e).
      The three row inks lift on their own hue lines; the gold needs no lift at
