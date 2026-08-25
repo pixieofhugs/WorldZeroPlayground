@@ -1,0 +1,32 @@
+# The edge proxy: the only thing on the box with a public port.
+#
+# Lives on the server at /srv/worldzero/edge/docker-compose.yml, alongside the
+# Caddyfile. Deployed by hand — CI never touches it, so a broken app deploy can
+# never take TLS down with it.
+#
+#   docker compose -p edge up -d
+#   docker compose -p edge exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: edge-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and ACME account keys. Losing this volume means
+      # re-issuing every certificate, and Let's Encrypt rate-limits that.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  edge:
+    external: true

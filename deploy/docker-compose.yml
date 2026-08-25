@@ -1,0 +1,63 @@
+# The app stack, one copy per environment.
+#
+# Lives on the server at /srv/worldzero/{dev,prod}/docker-compose.yml — CI scp's
+# this file over on every deploy. The `.env` sitting next to it holds every
+# secret and every per-environment value; CI never reads or writes that file, so
+# no application secret ever passes through GitHub.
+#
+# Both environments run this same file. They are isolated by compose project
+# name: separate containers, separate volumes, separate databases. The backend's
+# single-instance advisory lock (render.yaml's old comment, ADR-0073) is taken
+# per-database, so two environments never contend for it — but never scale
+# `backend` past 1 within one environment.
+
+services:
+  db:
+    image: postgres:15
+    container_name: ${COMPOSE_PROJECT_NAME}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: worldzero
+      POSTGRES_USER: worldzero
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worldzero -d worldzero"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No `ports:` here, deliberately. Docker writes its own iptables rules ahead
+    # of ufw, so a published port is on the public internet whatever the
+    # firewall claims. Postgres is reachable from the app containers only.
+
+  backend:
+    image: ${DOCKERHUB_USERNAME:?}/worldzero-backend:${TAG:?}
+    container_name: ${COMPOSE_PROJECT_NAME}-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: [.env]
+    environment:
+      # Composed here rather than in .env so the password is written once.
+      DATABASE_URL: postgresql+asyncpg://worldzero:${POSTGRES_PASSWORD}@db:5432/worldzero
+    volumes:
+      - media:/app/media
+    networks: [default, edge]
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME:?}/worldzero-frontend:${TAG:?}
+    container_name: ${COMPOSE_PROJECT_NAME}-frontend
+    restart: unless-stopped
+    networks: [default, edge]
+
+volumes:
+  postgres_data:
+  media:
+
+networks:
+  # Shared with the Caddy stack, which is how it reaches these containers by
+  # name. Created once by hand: `docker network create edge`.
+  edge:
+    external: true

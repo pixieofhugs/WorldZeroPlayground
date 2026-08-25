@@ -1,0 +1,30 @@
+# Edge proxy. Certificates are issued and renewed automatically over HTTP-01,
+# which needs nothing but port 80 open and DNS already pointing here.
+#
+# Container names come from deploy/docker-compose.yml's `container_name`, which
+# is ${COMPOSE_PROJECT_NAME}-{backend,frontend}.
+
+{
+	email pixieofhugs@gmail.com
+}
+
+worldzero.org, www.worldzero.org {
+	reverse_proxy worldzero-prod-frontend:80
+}
+
+api.worldzero.org {
+	# reverse_proxy upgrades WebSockets transparently, which is what the praxis
+	# room needs (ADR-0073). Caddy has no default request-body limit, so media
+	# uploads pass through unconfigured.
+	reverse_proxy worldzero-prod-backend:8000
+}
+
+dev.worldzero.org {
+	header X-Robots-Tag noindex
+	reverse_proxy worldzero-dev-frontend:80
+}
+
+api.dev.worldzero.org {
+	header X-Robots-Tag noindex
+	reverse_proxy worldzero-dev-backend:8000
+}
