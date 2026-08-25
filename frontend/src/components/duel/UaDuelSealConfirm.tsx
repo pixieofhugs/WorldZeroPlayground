@@ -67,6 +67,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill } from '../../utils/factions'
+import { factionRoleVars } from '../../utils/factionRoles'
 import { UaSigil } from '../sigil/UaSigil'
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from '../factionMarks/uaAtoms'
 import {
@@ -80,11 +81,11 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
-const SHEET = 'var(--faction-ua-card-bg)'
+const SHEET = 'var(--duel-seal-paper, var(--faction-ua-card-bg))'
 const PANEL = 'var(--faction-ua-panel)'
 const LIFT = 'var(--faction-ua-lift)'
-const INK = 'var(--faction-ua-card-text)'
-const MUTED = 'var(--faction-ua-card-muted)'
+const INK = 'var(--duel-seal-ink, var(--faction-ua-card-text))'
+const MUTED = 'var(--duel-seal-quiet, var(--faction-ua-card-muted))'
 const RULE = 'var(--faction-ua-rule)'
 const HAIR = 'var(--faction-ua-hair)'
 const NOTICE = 'var(--faction-ua-card-notice)'
@@ -116,6 +117,10 @@ export default function UaDuelSealConfirm({
     <DuelSealSheet
       label={copy.heading}
       ground={{
+        /* The nine roles under this surface's prefix (#2659/#2673). `ground` is
+           the sheet's outermost element, so the three constants above and the
+           `theme` handed to the shared slots all resolve inside it. */
+        ...factionRoleVars('ua', 'duel-seal'),
         position: 'relative',
         background: SHEET,
         color: INK,

@@ -88,6 +88,7 @@ import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -119,9 +120,9 @@ const SLUG = 'ua'
 
 /* The practice's inks, named for the ROLE each plays — the same constants, the
  * same tokens, as `UaEditPraxis` names. Every one carries both themes. */
-const SHEET = 'var(--faction-ua-card-bg)' /* the sun-bleached sheet */
+const SHEET = 'var(--create-character-paper, var(--faction-ua-card-bg))' /* the sun-bleached sheet */
 const FIELD = 'var(--faction-ua-panel)' /* inset panel — fields, wells */
-const INK = 'var(--faction-ua-card-text)'
+const INK = 'var(--create-character-ink, var(--faction-ua-card-text))'
 /* THE QUIET TIER IS `-card-body`, NOT `-card-muted`, AND THAT IS MEASURED (#2348).
  *
  * `UaEditPraxis` sets its labels, counters and exits in `--faction-ua-card-muted`
@@ -138,11 +139,11 @@ const INK = 'var(--faction-ua-card-text)'
  * available because `--faction-ua-panel` is opaque and sits above the wash —
  * but nothing on this page needs it, so the constant is not declared. */
 const BODY = 'var(--faction-ua-card-body)'
-const ACCENT = 'var(--faction-ua-card-accent)' /* the design's accentDeep */
+const ACCENT = 'var(--create-character-accent, var(--faction-ua-card-accent))' /* the design's accentDeep */
 const RULE = 'var(--faction-ua-rule)' /* the neutral hairline */
 const HAIR = 'var(--faction-ua-hair)' /* the faintest divider, below -rule */
-const FILL = 'var(--faction-ua)'
-const ON_FILL = 'var(--faction-ua-on-fill)'
+const FILL = 'var(--create-character-fill, var(--faction-ua))'
+const ON_FILL = 'var(--create-character-on-fill, var(--faction-ua-on-fill))'
 const ALARM = 'var(--faction-ua-card-alarm)'
 
 /** Geometry the kit pins: radius 7, a 2px border. Ornament, not spacing. */
@@ -262,7 +263,17 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: UA_TEXT, color: INK }}>
+    <ComposerPage
+      sizes={sizes}
+      style={{
+        /* The nine roles under this surface's prefix (#2659/#2673).
+           `ComposerPage` puts this style on its own root div, which is the
+           whole page, so the module constants above resolve inside it. */
+        ...factionRoleVars('ua', 'create-character'),
+        fontFamily: UA_TEXT,
+        color: INK,
+      }}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field, and what gives the browser's own required-field

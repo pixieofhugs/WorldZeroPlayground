@@ -1,5 +1,6 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
 import { UaSigil } from "../sigil/UaSigil";
+import { factionRoleVar } from "../../utils/factionRoles";
 
 /**
  * UA avatar — the portrait ringed in the practice's own orange, with the ensō
@@ -21,10 +22,17 @@ export default function UaAvatar({ character, size, badge }: FactionAvatarProps)
       size={size}
       badge={badge}
       circle={{
-        borderColor: "var(--faction-ua)",
+        /*
+         * THE ROLE, NOT THE TOKEN (#2659/#2673) â€” the SINGULAR resolver,
+         * because this file owns no element. The three values below are props
+         * handed to `BadgedAvatar`, which draws the disc; there is no root here
+         * to spread a prefix onto. Each call returns the same
+         * `var(--faction-ua-*)` string that was written here, so nothing moves.
+         */
+        borderColor: factionRoleVar("ua", "fill"),
         bg: "var(--faction-ua-panel)",
-        textColor: "var(--faction-ua-card-text)",
-        fontFamily: "var(--faction-ua-card-font)",
+        textColor: factionRoleVar("ua", "ink"),
+        fontFamily: factionRoleVar("ua", "face"),
       }}
       badgeBg="var(--faction-ua-lift)"
       badgeRing="var(--faction-ua-border)"
