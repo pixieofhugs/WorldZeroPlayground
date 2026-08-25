@@ -69,14 +69,14 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * ink is `-card-text` at 13:1 — uses the parchment plate.
  */
 
-const MED = 'var(--wow-comment-face, var(--faction-wow-card-font))' /* MedievalSharp */
+const MED = 'var(--wow-comment-face)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 /* `--faction-wow-stamp-total` inked the composer's ✦ prompt line; #1911 took
    the line, and the token has no other slot on this card. */
-const INK = 'var(--wow-comment-ink, var(--faction-wow-card-text))'
-const MUTED = 'var(--wow-comment-quiet, var(--faction-wow-card-muted))'
-const PLUM = 'var(--wow-comment-accent, var(--faction-wow-card-accent))'
+const INK = 'var(--wow-comment-ink)'
+const MUTED = 'var(--wow-comment-quiet)'
+const PLUM = 'var(--wow-comment-accent)'
 const RIBBON = 'var(--faction-wow-quest-ribbon)'
 
 /**
@@ -136,7 +136,7 @@ function Sheet({
           // the @mention listbox, an absolutely positioned child, and a
           // clipping ancestor cuts it off. The crown below rounds its own ends
           // instead, which is all the clip was ever doing.
-          background: 'var(--wow-comment-paper, var(--faction-wow-card-bg))',
+          background: 'var(--wow-comment-paper)',
           color: INK,
           border: `2px solid ${GOLD}`,
           boxShadow: 'var(--faction-wow-quest-shadow)',

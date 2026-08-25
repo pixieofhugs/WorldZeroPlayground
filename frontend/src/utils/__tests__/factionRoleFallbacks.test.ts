@@ -16,10 +16,10 @@ import {
  * THE STANDING RULE FOR "a faction supplies a MAP, not values" (#2659, #2689).
  *
  * A surface spreads `factionRoleVars('ua', 'task-card')` on its root and reads
- * `var(--task-card-ink, var(--faction-ua-card-text))` below it. Two things must
- * agree for that to be the refactor it claims to be, and this file is where they
- * are held — derived from source, with no table of surfaces to keep current. A
- * surface that appears tomorrow is covered the moment it declares a map.
+ * `var(--task-card-ink)` below it. Whether that read may carry a fallback, and
+ * what the fallback must be if it does, is what this file holds — derived from
+ * source, with no table of surfaces to keep current. A surface that appears
+ * tomorrow is covered the moment it declares a map.
  *
  * WHY THERE IS NO TABLE ANY MORE. There was one: `factionRoleMigration.test.ts`,
  * 74 rows and 344 hand-counted sites, which replaced an earlier derived gate in
@@ -31,22 +31,28 @@ import {
  * had to remember to add one. A gate nobody remembers to extend is not covering
  * the surface it appears to cover, and every lane paid the bookkeeping anyway.
  *
- * THE TWO CLAUSES:
+ * THE THREE CLAUSES, and a file's slug decides which it gets:
  *
- *  1. REQUIRE. Every role read carries a fallback. For `na`, for Albescent, for
- *     a slug the server invents tomorrow, `factionRoleVars` returns `{}` — not
- *     one property is declared — so a bare read renders nothing at all. Pixel
- *     identity for the unaffiliated viewer is a property of the SHAPE, and this
- *     is where the shape is held.
+ *  1. BAN. A file whose map is declared with a literal slug naming an IDENTIFIED
+ *     faction may carry no fallback. `factionRoleVars` always emits there, so
+ *     the property always reaches the read and a fallback is unreachable code —
+ *     it cannot drift, because nothing renders it, and it cannot be verified,
+ *     because nothing renders it.
  *
- *  2. PIN, where that fallback names a faction token. Then it must be the token
+ *  2. REQUIRE. A file whose slug is literal `na`, literal `albescent`, or not a
+ *     literal at all must carry a fallback at every read. For those
+ *     `factionRoleVars` returns `{}` — not one property is declared — so a bare
+ *     read renders nothing at all. Pixel identity for the unaffiliated viewer is
+ *     a property of the SHAPE, and this is where the shape is held.
+ *
+ *  3. PIN, where that fallback names a faction token. Then it must be the token
  *     the role map resolves to. When it is, the read is provably a no-op: the
  *     declared value and the fallback are the same string, so it renders the
  *     same whether the custom property reaches it or not. When it is not,
  *     something has repainted a surface while calling it a refactor — the
  *     failure mode #2649 names by name.
  *
- * WHY CLAUSE 2 IS NARROWED TO FACTION TOKENS. A fallback may legitimately name a
+ * WHY CLAUSE 3 IS NARROWED TO FACTION TOKENS. A fallback may legitimately name a
  * NEUTRAL tier instead, and for `quiet` that is the documented design: it is
  * per-SITE, so `--x-quiet` unset reads `--color-text-secondary` at a heading and
  * `--color-text-tertiary` at a timestamp, and three neutral tiers survive a
@@ -175,6 +181,8 @@ interface Surface {
   ground: FactionGround;
   /** Whether the slug was written out — a dynamic one has no single answer. */
   literal: boolean;
+  /** Whether `factionRoleVars` always emits here: clause 1 vs clauses 2-3. */
+  identified: boolean;
   text: string;
   reads: RoleRead[];
 }
@@ -197,6 +205,7 @@ function harvest(): Surface[] {
       // A dynamic slug reaches its fallback only when the viewer is
       // unaffiliated, so that is the value to expect there.
       const answersFor = literal ? slug : UNAFFILIATED;
+      const identified = literal && isKnownFaction(slug);
       const byProperty = new Map<string, { role: FactionRole; expected: string }>();
       for (const role of FACTION_ROLES) {
         byProperty.set(factionRoleProperty(prefix, role), {
@@ -228,6 +237,7 @@ function harvest(): Surface[] {
         slug,
         ground: ground as FactionGround,
         literal,
+        identified,
         text,
         reads,
       });
@@ -237,9 +247,13 @@ function harvest(): Surface[] {
 }
 
 const SURFACES = harvest();
-const READS = SURFACES.flatMap((surface) =>
-  surface.reads.map((read) => ({ ...read, slug: surface.slug })),
-);
+const readsOf = (surfaces: Surface[]) =>
+  surfaces.flatMap((surface) =>
+    surface.reads.map((read) => ({ ...read, slug: surface.slug })),
+  );
+const READS = readsOf(SURFACES);
+const BANNED = readsOf(SURFACES.filter((surface) => surface.identified));
+const REQUIRED = readsOf(SURFACES.filter((surface) => !surface.identified));
 
 describe("a surface reads the role map, and the map answers (#2659, #2689)", () => {
   it("harvests surfaces of both kinds", () => {
@@ -249,6 +263,9 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
     expect(SURFACES.filter((surface) => surface.literal).length).toBeGreaterThan(0);
     expect(SURFACES.filter((surface) => !surface.literal).length).toBeGreaterThan(0);
     expect(READS.length).toBeGreaterThan(0);
+    // Both clauses must have a subject, or one of them is silently untested.
+    expect(BANNED.length).toBeGreaterThan(0);
+    expect(REQUIRED.length).toBeGreaterThan(0);
     // Every literal slug must resolve, or `expected` is quietly the neutral
     // family for a faction that has its own.
     for (const surface of SURFACES) {
@@ -260,7 +277,16 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
     }
   });
 
-  it.each(READS)("$file reads $property with a token behind it", ({ property, fallback }) => {
+  it.each(BANNED)("$file reads $property bare — $slug always declares it", ({ property, fallback }) => {
+    expect(
+      fallback,
+      `${property} carries a fallback that can never be reached: ` +
+        `factionRoleVars always emits for an identified faction, so the property ` +
+        `always wins. Drop the fallback.`,
+    ).toBeNull();
+  });
+
+  it.each(REQUIRED)("$file reads $property with a token behind it", ({ property, fallback }) => {
     expect(
       fallback,
       `${property} must carry today's token as a fallback — ` +
@@ -268,7 +294,7 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
     ).not.toBeNull();
   });
 
-  it.each(READS.filter((read) => read.fallback?.includes("--faction-")))(
+  it.each(REQUIRED.filter((read) => read.fallback?.includes("--faction-")))(
     "$file resolves $property to the $slug token the map names",
     ({ fallback, expected }) => {
       expect(fallback).toBe(expected);

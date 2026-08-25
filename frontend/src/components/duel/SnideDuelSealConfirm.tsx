@@ -57,7 +57,7 @@ const INK = 'var(--faction-snide-ink)'
 const ACID = 'var(--faction-snide-acid)'
 const PINK = 'var(--faction-snide-pink)'
 const PAPER = 'var(--faction-snide-paper)'
-const MUTED = 'var(--snd-duel-quiet, var(--faction-snide-card-muted))'
+const MUTED = 'var(--snd-duel-quiet)'
 /**
  * The sheet-measured "sealed / positive" ink (#694). `--color-success` is the
  * shared slots' default and reads **2.07:1** on this photocopier ink in the

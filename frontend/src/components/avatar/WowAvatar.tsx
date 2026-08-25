@@ -112,8 +112,8 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
           circle={{
             borderColor: "var(--faction-wow-crest-field-rim)",
             bg: "var(--faction-wow-avatar-field)",
-            textColor: "var(--wow-avatar-ink, var(--faction-wow-card-text))",
-            fontFamily: "var(--wow-avatar-face, var(--faction-wow-card-font))",
+            textColor: "var(--wow-avatar-ink)",
+            fontFamily: "var(--wow-avatar-face)",
           }}
           badgeBg="var(--faction-wow-crest-field)"
           badgeRing="var(--faction-wow-chronicle-gold)"
@@ -130,7 +130,7 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
             bottom: -Math.round(dim * 0.034),
             left: "50%",
             transform: "translateX(-50%)",
-            fontFamily: "var(--wow-avatar-face, var(--faction-wow-card-font))",
+            fontFamily: "var(--wow-avatar-face)",
             fontSize: pillFont,
             letterSpacing: "0.04em",
             lineHeight: 1.2,

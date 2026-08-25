@@ -120,9 +120,9 @@ const SLUG = 'ua'
 
 /* The practice's inks, named for the ROLE each plays — the same constants, the
  * same tokens, as `UaEditPraxis` names. Every one carries both themes. */
-const SHEET = 'var(--leaf-create-character-paper, var(--faction-ua-card-bg))' /* the sun-bleached sheet */
+const SHEET = 'var(--leaf-create-character-paper)' /* the sun-bleached sheet */
 const FIELD = 'var(--faction-ua-panel)' /* inset panel — fields, wells */
-const INK = 'var(--leaf-create-character-ink, var(--faction-ua-card-text))'
+const INK = 'var(--leaf-create-character-ink)'
 /* THE QUIET TIER IS `-card-body`, NOT `-card-muted`, AND THAT IS MEASURED (#2348).
  *
  * `UaEditPraxis` sets its labels, counters and exits in `--faction-ua-card-muted`
@@ -139,11 +139,11 @@ const INK = 'var(--leaf-create-character-ink, var(--faction-ua-card-text))'
  * available because `--faction-ua-panel` is opaque and sits above the wash —
  * but nothing on this page needs it, so the constant is not declared. */
 const BODY = 'var(--faction-ua-card-body)'
-const ACCENT = 'var(--leaf-create-character-accent, var(--faction-ua-card-accent))' /* the design's accentDeep */
+const ACCENT = 'var(--leaf-create-character-accent)' /* the design's accentDeep */
 const RULE = 'var(--faction-ua-rule)' /* the neutral hairline */
 const HAIR = 'var(--faction-ua-hair)' /* the faintest divider, below -rule */
-const FILL = 'var(--leaf-create-character-fill, var(--faction-ua))'
-const ON_FILL = 'var(--leaf-create-character-on-fill, var(--faction-ua-on-fill))'
+const FILL = 'var(--leaf-create-character-fill)'
+const ON_FILL = 'var(--leaf-create-character-on-fill)'
 const ALARM = 'var(--faction-ua-card-alarm)'
 
 /** Geometry the kit pins: radius 7, a 2px border. Ornament, not spacing. */

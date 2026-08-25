@@ -76,7 +76,7 @@ import { factionRoleVars } from '../../../utils/factionRoles'
  * `#0a1f12` and is now the chassis's own `-term-panel`.
  */
 
-const MONO = 'var(--sg-voice-face, var(--faction-singularity-card-font))' /* Share Tech Mono */
+const MONO = 'var(--sg-voice-face)' /* Share Tech Mono */
 
 const BG = 'var(--faction-singularity-term-bg)'
 const PANEL = 'var(--faction-singularity-term-panel)' /* the field, inset on the chassis */

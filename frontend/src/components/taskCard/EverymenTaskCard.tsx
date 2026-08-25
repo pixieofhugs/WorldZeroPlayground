@@ -50,7 +50,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * `[data-theme="dark"]` cascade, never a ternary.
  */
 
-const POSTER = "var(--ev-task-face, var(--faction-everymen-card-font))"; /* Bebas Neue */
+const POSTER = "var(--ev-task-face)"; /* Bebas Neue */
 const TYPED = "var(--font-body)"; /* Courier Prime */
 
 /**

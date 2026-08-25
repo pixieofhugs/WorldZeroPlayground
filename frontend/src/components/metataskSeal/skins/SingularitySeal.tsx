@@ -35,14 +35,14 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
       className="relative"
       style={{
         ...factionRoleVars('singularity', 'sg-seal'),
-        background: 'var(--sg-seal-paper, var(--faction-singularity-card-bg))',
-        color: 'var(--sg-seal-ink, var(--faction-singularity-card-text))',
+        background: 'var(--sg-seal-paper)',
+        color: 'var(--sg-seal-ink)',
         border: '1px solid var(--faction-singularity-border-hard)',
         borderRadius: 4,
         // The band is full-bleed and the frame is rounded, so the chrome bar's
         // square corners have to be clipped to the window's.
         overflow: 'hidden',
-        fontFamily: 'var(--sg-seal-face, var(--faction-singularity-card-font))',
+        fontFamily: 'var(--sg-seal-face)',
       }}
     >
       <SingularityBand />
@@ -62,8 +62,8 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
               top: 'var(--space-sm)',
               right: 'var(--space-sm)',
               background: 'transparent',
-              border: '1px solid var(--sg-seal-accent, var(--faction-singularity-card-accent))',
-              color: 'var(--sg-seal-accent, var(--faction-singularity-card-accent))',
+              border: '1px solid var(--sg-seal-accent)',
+              color: 'var(--sg-seal-accent)',
               fontSize: 'var(--text-md)',
               lineHeight: 1,
               padding: '0 var(--space-xs)',
@@ -83,7 +83,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
-            color: 'var(--sg-seal-quiet, var(--faction-singularity-card-muted))',
+            color: 'var(--sg-seal-quiet)',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -106,7 +106,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
           className="font-body block"
           style={{
             fontSize: 'var(--text-title)',
-            color: 'var(--sg-seal-accent, var(--faction-singularity-card-accent))',
+            color: 'var(--sg-seal-accent)',
             marginTop: 'var(--space-xs)',
           }}
         >

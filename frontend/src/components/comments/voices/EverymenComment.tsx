@@ -79,7 +79,7 @@ const DATELINE = {
 
 /** The author's name, set as the slip's byline: the poster face, on the band. */
 const BYLINE = {
-  fontFamily: 'var(--ev-voice-face, var(--faction-everymen-card-font))',
+  fontFamily: 'var(--ev-voice-face)',
   // Content tier, not the label tier the kind label on the feed card uses: a
   // person's name is identity, and Bebas is narrow enough that 18px reads about
   // as large as 14 of a normal face.

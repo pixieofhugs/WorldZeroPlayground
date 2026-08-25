@@ -167,8 +167,8 @@ export default function UaTaskCard({
           background: "var(--faction-ua-card-parchment)",
           border: "2px solid var(--faction-ua-card-frame)",
           // The salon sheet's shape, said once (#2361/#2403).
-          borderRadius: "var(--leaf-task-card-radius, var(--faction-ua-card-radius))",
-          color: "var(--leaf-task-card-ink, var(--faction-ua-card-text))",
+          borderRadius: "var(--leaf-task-card-radius)",
+          color: "var(--leaf-task-card-ink)",
           fontFamily: UA_TEXT,
         }}
       >
@@ -270,7 +270,7 @@ export default function UaTaskCard({
                 size={size.enso}
                 value={basePoints}
                 unit={i18n.t("feed:taskCard.pointsUnit", { count: basePoints })}
-                valueColor="var(--leaf-task-card-accent, var(--faction-ua-card-accent))"
+                valueColor="var(--leaf-task-card-accent)"
               />
             </div>
 
@@ -294,7 +294,7 @@ export default function UaTaskCard({
                 style={{
                   fontFamily: UA_TEXT,
                   lineHeight: 1.5,
-                  color: "var(--leaf-task-card-quiet, var(--faction-ua-card-muted))",
+                  color: "var(--leaf-task-card-quiet)",
                   margin: "0 0 var(--space-md)",
                 }}
               >
@@ -313,7 +313,7 @@ export default function UaTaskCard({
                     fontFamily: UA_TEXT,
                     fontStyle: "italic",
                     fontSize: "var(--text-xl)",
-                    color: "var(--leaf-task-card-quiet, var(--faction-ua-card-muted))",
+                    color: "var(--leaf-task-card-quiet)",
                   }}
                 >
                   {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}

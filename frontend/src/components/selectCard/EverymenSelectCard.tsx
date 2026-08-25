@@ -147,7 +147,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * the grid.
  */
 
-const POSTER = "var(--ev-select-face, var(--faction-everymen-card-font))"; /* Bebas Neue */
+const POSTER = "var(--ev-select-face)"; /* Bebas Neue */
 const TYPED = "var(--font-body)"; /* Courier Prime */
 
 /** The sheet's ink — the paper's own text colour, which FLIPS with the paper. */

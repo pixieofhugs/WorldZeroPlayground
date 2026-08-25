@@ -65,14 +65,14 @@ function note(active: boolean): CSSProperties {
     padding: 'var(--space-lg) var(--space-lg)',
     borderRadius: 'var(--radius-sm)',
     border: active
-      ? '1px solid var(--leaf-comment-fill, var(--faction-ua))'
+      ? '1px solid var(--leaf-comment-fill)'
       : '1px solid var(--faction-ua-rule)',
-    borderLeft: '2px dashed var(--leaf-comment-fill, var(--faction-ua))',
+    borderLeft: '2px dashed var(--leaf-comment-fill)',
     // The practice's paper stock, both modes: a note and the pad it is written
     // on are the same sheet. Composed from the surface primitives, so it dims
     // with the faction and needs no ternary.
     background: 'var(--faction-ua-parchment)',
-    color: 'var(--leaf-comment-ink, var(--faction-ua-card-text))',
+    color: 'var(--leaf-comment-ink)',
   }
 }
 
@@ -105,10 +105,10 @@ export default function UaComment(props: CommentProps) {
             onChange={onChange}
             onSubmit={onSubmit}
             submitting={submitting}
-            accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
+            accent="var(--leaf-comment-accent)"
             onAccent="var(--faction-ua-on-accent)"
             bg="var(--faction-ua-panel)"
-            text="var(--leaf-comment-ink, var(--faction-ua-card-text))"
+            text="var(--leaf-comment-ink)"
             // The shared string in the practice's own label voice — an OVERRIDE
             // of ComposerControls' neutral caption, not a new hint (#1195).
             hint={<span style={meta()}>{t('comments.mentionHint')}</span>}
@@ -147,7 +147,7 @@ export default function UaComment(props: CommentProps) {
               fontFamily: UA_DISPLAY,
               fontWeight: 600,
               fontSize: 'var(--text-content)',
-              color: 'var(--leaf-comment-ink, var(--faction-ua-card-text))',
+              color: 'var(--leaf-comment-ink)',
               textDecoration: 'none',
             }}
           >
@@ -171,16 +171,16 @@ export default function UaComment(props: CommentProps) {
           {owner.editing ? (
             <CommentEditor
               owner={owner}
-              accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
+              accent="var(--leaf-comment-accent)"
               onAccent="var(--faction-ua-on-accent)"
               bg="var(--faction-ua-panel)"
-              text="var(--leaf-comment-ink, var(--faction-ua-card-text))"
+              text="var(--leaf-comment-ink)"
             />
           ) : (
             <MentionText
               body={comment.body_text}
               mentions={comment.mentions}
-              accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
+              accent="var(--leaf-comment-accent)"
             />
           )}
         </div>

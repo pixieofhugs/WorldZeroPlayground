@@ -164,7 +164,7 @@ const ALARM = 'var(--faction-singularity-card-alarm)'
    one face. Reached through the faction's own accessor rather than through
    --font-faction-terminal directly, which is what §4 asks for when the face IS
    the faction's. */
-const FACE = 'var(--sg-path-face, var(--faction-singularity-card-font))'
+const FACE = 'var(--sg-path-face)'
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2

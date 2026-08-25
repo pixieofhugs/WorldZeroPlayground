@@ -84,7 +84,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
           <span
             className="font-body block"
             style={{
-              fontFamily: 'var(--ev-seal-face, var(--faction-everymen-card-font))',
+              fontFamily: 'var(--ev-seal-face)',
               fontSize: 'var(--text-content)',
               letterSpacing: '0.01em',
             }}
@@ -108,7 +108,7 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
             textAlign: 'center',
             transform: 'rotate(-8deg)',
             mixBlendMode: 'multiply',
-            fontFamily: 'var(--ev-seal-face, var(--faction-everymen-card-font))',
+            fontFamily: 'var(--ev-seal-face)',
             fontSize: 'var(--text-lg)',
             lineHeight: 1.05,
             padding: 'var(--space-xs)',

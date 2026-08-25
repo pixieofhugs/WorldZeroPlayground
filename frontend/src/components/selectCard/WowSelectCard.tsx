@@ -127,7 +127,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
       // would cause.
       ...factionRoleVars("wow", "wow-select-card"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--wow-select-card-paper, var(--faction-wow-card-bg))", color: "var(--wow-select-card-ink, var(--faction-wow-card-text))", fontFamily: "var(--faction-wow-body-font)",
+      background: "var(--wow-select-card-paper)", color: "var(--wow-select-card-ink)", fontFamily: "var(--faction-wow-body-font)",
       border: "2px solid var(--faction-wow-chronicle-gold)", borderRadius: "var(--radius-xl)",
       boxShadow: chosen
         ? "0 0 0 3px var(--faction-wow-chronicle-gold), var(--faction-wow-quest-shadow)"
@@ -138,7 +138,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         <div style={{
           position: "absolute", zIndex: 2, top: 14, right: -32, transform: "rotate(38deg)",
           background: "var(--faction-wow-plum-surface)", color: "var(--faction-wow-on-plum)",
-          fontFamily: "var(--wow-select-card-face, var(--faction-wow-card-font))", letterSpacing: "0.1em",
+          fontFamily: "var(--wow-select-card-face)", letterSpacing: "0.1em",
           // eslint-disable-next-line local/no-raw-style-values -- ornament: the CHOSEN sash is a drawn banner; its lettering is struck to the ribbon, and its inset IS the ribbon's width (rounding reflows the sash off the corner).
           fontSize: 11, padding: "3px 36px",
           boxShadow: "0 2px 5px var(--faction-wow-stamp-shadow)",
@@ -157,16 +157,16 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
           {/* above the 56px motto floor, so the seal keeps its Pig-Latin band */}
           <WowSigil size={88} />
         </div>
-        <div style={{ fontFamily: "var(--wow-select-card-face, var(--faction-wow-card-font))", fontSize: "var(--text-title)", lineHeight: 1.1, color: "var(--wow-select-card-ink, var(--faction-wow-card-text))" }}>
+        <div style={{ fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-title)", lineHeight: 1.1, color: "var(--wow-select-card-ink)" }}>
           {i18n.t("feed:factionSelect.wow.name")}
         </div>
-        <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent, var(--faction-wow-card-accent))", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
+        <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent)", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
           {i18n.t("feed:factionSelect.wow.tagline")}
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "var(--space-xs)" }}>
           {tags.map((tag) => (
             <span key={tag} style={{
-              fontSize: "var(--text-md)", color: "var(--wow-select-card-accent, var(--faction-wow-card-accent))",
+              fontSize: "var(--text-md)", color: "var(--wow-select-card-accent)",
               background: "var(--faction-wow-chronicle-panel)", border: "1px solid var(--faction-wow-chronicle-gold)",
               borderRadius: 20, padding: "var(--space-xs) var(--space-md)",
             }}>{tag}</span>
@@ -174,12 +174,12 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         </div>
       </div>
       <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet, var(--faction-wow-card-muted))", marginBottom: "var(--space-md)" }}>
+        <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · {i18n.t("feed:factionSelect.wow.members", { count: members })}</>}
         </div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer",
-          fontFamily: "var(--wow-select-card-face, var(--faction-wow-card-font))", fontSize: "var(--text-content)", letterSpacing: "0.04em",
+          fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-content)", letterSpacing: "0.04em",
           color: "var(--faction-wow-on-plum)",
           background: "var(--faction-wow-plum-surface)",
           border: "2px solid var(--faction-wow-plum-surface)", borderRadius: "var(--radius-md)",

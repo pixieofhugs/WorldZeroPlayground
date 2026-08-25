@@ -74,21 +74,21 @@ import type { FactionDetailState } from "../useFactionDetail";
  * label ink, the plum fill and its ink, the gold, the gilt, the plate, the
  * hairline and the lift are this surface's own extras (decision 07).
  */
-const MED = "var(--wow-faction-page-face, var(--faction-wow-card-font))"; /* MedievalSharp */
+const MED = "var(--wow-faction-page-face)"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-const INK = "var(--wow-faction-page-ink, var(--faction-wow-card-text))";
-const MUTED = "var(--wow-faction-page-quiet, var(--faction-wow-card-muted))";
+const INK = "var(--wow-faction-page-ink)";
+const MUTED = "var(--wow-faction-page-quiet)";
 /** Label ink. Olive-gold, the one measured to clear AA on the parchment field. */
 const LABEL = "var(--faction-wow-accent-deep)";
-const PLUM = "var(--wow-faction-page-accent, var(--faction-wow-card-accent))";
+const PLUM = "var(--wow-faction-page-accent)";
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const ON_PLUM = "var(--faction-wow-on-plum)";
 /** Frame + rule gold. Never an ink: 2.24:1 on the cream (§3). */
 const GOLD = "var(--faction-wow-chronicle-gold)";
 /** The burnt gold reserved for figures. */
 const GILT = "var(--faction-wow-stamp-total)";
-const CARD = "var(--wow-faction-page-paper, var(--faction-wow-card-bg))";
+const CARD = "var(--wow-faction-page-paper)";
 const PLATE = "var(--faction-wow-plate)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 const BORDER = "var(--faction-wow-chronicle-border)";

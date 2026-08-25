@@ -98,7 +98,7 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
       ...factionRoleVars("ua", "leaf-faction-select-card"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--faction-ua-parchment)",
-      color: "var(--leaf-faction-select-card-ink, var(--faction-ua-card-text))", fontFamily: UA_TEXT,
+      color: "var(--leaf-faction-select-card-ink)", fontFamily: UA_TEXT,
       border: "2px solid var(--faction-ua-card-frame)", borderRadius: "var(--radius-md)",
       boxShadow: "0 12px 34px -20px var(--color-cast-shadow)",
       display: "flex", flexDirection: "column",
@@ -106,7 +106,7 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
       {/* crest band — the mark over the pattern, on the leaf masthead's paint */}
       <div style={{
         position: "relative", height: 132, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "var(--faction-ua-hair)", borderBottom: "1px solid var(--leaf-faction-select-card-accent, var(--faction-ua-card-accent))", overflow: "hidden",
+        background: "var(--faction-ua-hair)", borderBottom: "1px solid var(--leaf-faction-select-card-accent)", overflow: "hidden",
       }}>
         <UaMandala
           size={300}
@@ -125,12 +125,12 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
             0.24em all-caps, so it takes the display cut here rather than the
             kicker treatment it inherited. */}
         <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
-        <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet, var(--faction-ua-card-muted))" }}>
+        <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--leaf-faction-select-card-quiet)" }}>
           {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
-        <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet, var(--faction-ua-card-muted))", marginBottom: "var(--space-md)" }}>
+        <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · <span>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
         <button onClick={onVisit} style={{
@@ -140,7 +140,7 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
           fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-content)", letterSpacing: "0.02em",
           padding: "var(--space-md)", transition: "background 140ms",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--leaf-faction-select-card-accent, var(--faction-ua-card-accent))"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--leaf-faction-select-card-accent)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "var(--faction-ua-card-chip-bg)"; }}
         >{i18n.t("feed:factionSelect.ua.cta")}</button>
       </div>
