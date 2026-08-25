@@ -188,7 +188,7 @@ describe("Albescent's labyrinth (Sigil Studies v2)", () => {
 /**
  * THE MANIFEST IS THE WHOLE MAP (#2529).
  *
- * The seam is `pickVariant(surfaceMap('sigil'), slug)` — the map on its own,
+ * The seam is `resolveVariant(surfaceMap('sigil'), slug)` — the map on its own,
  * with nothing added at the call site. `FactionSigil` used to spread
  * `{ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }`, so the
  * labyrinth reached the screen without ever appearing in `ALBESCENT_MANIFEST`:

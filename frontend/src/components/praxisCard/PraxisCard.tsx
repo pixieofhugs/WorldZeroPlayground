@@ -11,7 +11,7 @@ import { usePraxisCard } from "./usePraxisCard";
  * from the shared structural slots in `./praxisCard/shared` via `PraxisBody`
  * (an archetype may rearrange the slots). Admin moderation + the optimistic
  * local praxis come from usePraxisCard; the frame is selected by task faction
- * via pickVariant.
+ * via resolveVariant.
  */
 export type { ArchetypeProps } from "./desktop/shared";
 

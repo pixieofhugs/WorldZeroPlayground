@@ -3,8 +3,8 @@
  *
  * One table for every surface that ships bespoke faction skins: which slugs
  * resolve to a bespoke component, and which fall through to the surface Default.
- * This replaces ~20 per-faction *Dispatch.test files that each re-proved
- * pickVariant's fall-through (now unit-tested in
+ * This replaces ~20 per-faction *Dispatch.test files that each re-proved the
+ * unknown-slug fall-through (now unit-tested in
  * utils/__tests__/factionDispatch.test.ts) while collectively MISSING factions —
  * e.g. coven and snide ship bespoke taskDetail skins but had no dispatch test
  * at all.
@@ -43,8 +43,8 @@ function walkSource(root: string): Array<[string, string]> {
 
 // The table asserts each surface's registry CONTENTS: a bespoke slug has an
 // entry, a non-bespoke faction does not (and so falls through to the surface
-// Default). pickVariant's fallback/alias/null resolution is not re-tested here —
-// it is unit-tested in utils/__tests__/factionDispatch.test.ts.
+// Default). `resolveSlug`'s null / unknown / alias resolution is not re-tested
+// here — it is unit-tested in utils/__tests__/factionDispatch.test.ts.
 
 // Every game faction slug, bespoke or not — the pool each surface partitions
 // into bespoke vs defaulted.
@@ -193,7 +193,7 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
 /*                                                                            */
 /* Coven and WOW are distinct factions that must never fall back on each      */
 /* other aesthetically, and a faction missing a custom experience is a design */
-/* bug. Any fallback goes to the generic Default (N/A) — pickVariant has no    */
+/* bug. Any fall-through goes to the generic Default (N/A) — dispatch has no  */
 /* cross-faction path at all — so this enforces the second half: both must be  */
 /* bespoke on every surface the core factions are.                            */
 /* -------------------------------------------------------------------------- */

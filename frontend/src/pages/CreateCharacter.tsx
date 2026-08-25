@@ -17,7 +17,7 @@
  *
  * `''` (born unaffiliated) and any unregistered slug resolve to
  * `DefaultCreateCharacter`, the `na` kit — never UA and never the viewer's own
- * faction. `pickVariant` has no cross-faction path at all, which is the guard
+ * faction. Dispatch has no cross-faction path at all, which is the guard
  * `FactionSelectCard` did not have when its `UaSelectCard` fallback "dressed
  * every unaffiliated and unknown slug in UA's costume" (#796, the third instance
  * of #418/#636).

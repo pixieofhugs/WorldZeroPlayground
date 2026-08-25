@@ -6,21 +6,22 @@
  * visually, weeks later. NOW each *faction* owns one manifest declaring only the
  * surfaces it overrides, and the dispatchers read from it.
  *
- * The manifest is OVERRIDE-ONLY. Every field is optional; an undeclared surface
- * resolves to that surface's own `Default*` archetype via `pickVariant`. This
- * was already `pickVariant`'s behaviour — the manifest just makes it the
- * documented contract. A faction that declares nothing renders correctly
- * everywhere, including on surfaces that do not exist yet. Partial registration
- * is the normal case, not a degraded one.
+ * The manifest is OVERRIDE-ONLY, WITH ONE EXCEPTION. Every field is optional; an
+ * undeclared surface resolves to na's row for that surface, and a faction that
+ * declares nothing renders correctly everywhere, including on surfaces that do
+ * not exist yet.
  *
- * `Default*` NAMES AN ARCHETYPE, NOT NECESSARILY A FILE. Three surfaces carry
- * their na rendering inside the dispatcher instead of in a skin module:
- * `avatar` (`DefaultAvatar`, in `FactionAvatar.tsx`), `feedFrame`
- * (`DefaultFeedFrame`, in `FactionFeedFrame.tsx`) and `backdrop` (which falls
- * back to the site's own `WatercolorBackground`). Counting skin files therefore
- * UNDERCOUNTS those three by one each — every slug is still served. Read an
- * absent `Default*.tsx` as "co-located with its dispatcher", never as a hole in
- * the na kit.
+ * The exception is `./default.ts`, which IS na's row and must claim all twenty.
+ * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
+ * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
+ * rather than falling further back.
+ *
+ * PARTIAL REGISTRATION WAS "THE NORMAL CASE" AND IS NOT ANY MORE, which is what
+ * #2530 was for. All 160 (surface × faction) slots are filled, so `Default*` had
+ * stopped being a fallback and become simply na's skin — reached, alone among
+ * the nine, by `pickVariant`'s third argument at ~20 hand-written call sites
+ * instead of by the registry. The contract above is unchanged for the other
+ * eight; what changed is that the ninth is now stated in the same place.
  *
  * Adding a faction: one new module here, one line in `./index.ts`. Adding a
  * SURFACE: one field here, one entry in `SURFACE_KEYS`, and the dispatcher calls

@@ -96,7 +96,11 @@ function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterSt
 function archetypeFor(slug: string) {
   // Unwrapped: every archetype is code-split, so the map hands back
   // `lazyArchetype`'s wrapper and an identity comparison needs the module.
-  return resolvedArchetype(resolveVariant(surfaceMap('createCharacter'), slug))
+  const Archetype = resolvedArchetype(resolveVariant(surfaceMap('createCharacter'), slug))
+  // Only undefined if the chunk never landed, which `preloadArchetypes.ts`
+  // rules out — throwing says that, where rendering `undefined` would not.
+  if (!Archetype) throw new Error(`no createCharacter archetype resolved for "${slug}"`)
+  return Archetype
 }
 
 describe('the calling being picked chooses the archetype', () => {

@@ -109,7 +109,7 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
 /**
  * The na ring — a `Default*` archetype co-located with its dispatcher, which
  * `manifest.ts` names as the normal shape for three surfaces already. Exported
- * so a test can resolve the surface the way this component does (`pickVariant`
+ * so a test can resolve the surface the way this component does (`resolveVariant`
  * over `surfaceMap('sigil')`, with the na fallback named) rather than
  * re-deriving the fallback and proving its own copy instead.
  */

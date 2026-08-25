@@ -4,7 +4,7 @@
  * Adding a faction is: write `./<slug>.ts`, add one line to
  * {@link FACTION_MANIFESTS}. No dispatcher is touched, and every surface the
  * faction does not declare falls through to that surface's `Default*` archetype.
- * `factionManifest.test.tsx` proves this end to end with a fake faction.
+ * `addAFaction.test.tsx` proves this end to end with a fake faction.
  *
  * WHY `surfaceMap()` IS LAZY (do not "simplify" this into a module-level const)
  * ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   DEFAULT_MANIFEST,
 ]
 
-/** A slug-keyed map of one surface, in the shape `pickVariant` consumes. */
+/** A slug-keyed map of one surface, in the shape `resolveVariant` consumes. */
 export type SurfaceMap<K extends FactionSurface> = Record<
   string,
   ReturnType<NonNullable<FactionManifest[K]>>
@@ -103,7 +103,7 @@ export function buildSurfaceMap<K extends FactionSurface>(
 }
 
 /**
- * The slug→component map for one surface, ready to hand to `pickVariant`.
+ * The slug→component map for one surface, ready to hand to `resolveVariant`.
  * Memoised: the manifest list is static, and dispatchers call this on every
  * render (a feed renders one card per item).
  *
