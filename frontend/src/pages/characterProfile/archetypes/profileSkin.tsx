@@ -10,10 +10,13 @@
  * kit (tokens, fonts, copy, chrome slots) and delegates here.
  *
  * No hardcoded hex: kits reference the repo's `--faction-<slug>-*` CSS vars.
- * A faction whose identity is pinned to one theme (snide and singularity are
- * always-dark) scopes `dataTheme` to the skin container and NEVER mutates the
- * global [data-theme]. UA used to pin itself light; it dims with the app now
- * (#848, #851) and sets no `dataTheme` at all.
+ * A faction whose identity is pinned to one theme scopes `dataTheme` to the skin
+ * container and NEVER mutates the global [data-theme]. EXACTLY ONE KIT DOES:
+ * Singularity, whose ground is #050f08 in both cascades because a terminal is
+ * black. S.N.I.D.E. read as the second until #2631 — it was never always-dark
+ * after #1023 and #2065, and pinning it froze the two families that DO flip
+ * (ADR-0085). UA used to pin itself light; it dims with the app now (#848,
+ * #851) and sets no `dataTheme` at all.
  *
  * RESPONSIVE (#1319). Until the form-factor collapse this renderer only ever
  * saw a laptop: `CharacterProfile` branched on `useFormFactor()` and sent every
