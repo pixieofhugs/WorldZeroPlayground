@@ -415,9 +415,19 @@ export default function SingularityEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: ACCENT,
     alarm: ALARM,
-    // The composer sheet and the waiting surface both paint their outer div
-    // from `pageStyle`, which makes it this dress's one declaring element
-    // (#2675) -- every slot below is read inside it.
+    // `pageStyle` IS THE ROOT OF BOTH STAGES -- the composer page here and the
+    // shared waiting surface this same dress is handed to -- so it is the one
+    // slot that reaches everything this archetype draws (#2675). The same call
+    // `EverymenEditPraxis` made in lane 06, for the same reason.
+    //
+    // IT SPANS THE BREADCRUMB, WHICH IS DELIBERATE AND COSTS NOTHING. That
+    // block is neutral shared site chrome standing on the page's own ground
+    // (#2102) -- the docblock above says so in writing -- and it reads
+    // `--color-*`, never `--sg-*`, so a custom property declared over it paints
+    // not one pixel of it. Declaring on the sheet instead would leave every
+    // read on the waiting stage resolving through its fallback, and reaching
+    // that stage any other way means a new prop, which is tree work rather than
+    // a paint lane's.
     pageStyle: { ...factionRoleVars("singularity", "sg-compose"), fontFamily: FACE, color: INK },
     sheetStyle,
     masthead,

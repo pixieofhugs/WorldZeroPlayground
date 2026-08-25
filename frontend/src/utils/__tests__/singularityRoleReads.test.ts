@@ -10,10 +10,12 @@ import { stripComments } from "./cssVars";
  * LANE 05's TWO SURFACES THAT ARE BELOW THE MERGE GATE'S REACH (#2675), and the
  * census that proves there are only two.
  *
- * `factionRoleMigration.test.ts` is the gate: it re-derives every fallback from
- * the resolver for each surface that spreads a prefix. Fifteen of this lane's
- * seventeen files are registered there. The other two CANNOT be, and the reason
- * is worth writing down because the next lane will meet it:
+ * `factionRoleMigration.test.ts` is THE fallback-equality gate — it re-derives
+ * every fallback from the resolver for each surface that spreads a prefix, and
+ * several folded guards elsewhere now cite it by name. Fifteen of this lane's
+ * seventeen files are registered in its table; nothing here duplicates that
+ * comparison. The other two CANNOT be registered, and the reason is worth
+ * writing down because every remaining lane will meet it:
  *
  *  - `SingularityAvatar` renders no element of its own. Its four colours are
  *    discrete PROPS of `BadgedAvatar`, which owns the disc.
@@ -58,7 +60,21 @@ const LANE_FILES = [
   "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
 ];
 
-/** The two the gate cannot hold, named so a third one has to be argued for. */
+/**
+ * ROOTLESS TAKES `factionRoleVar`, AND NEVER A PREFIX — the rule lane 04 pinned
+ * for WOW (#2679) and this file pins for Singularity, so five lanes do not each
+ * answer it differently.
+ *
+ * A module that renders no root of its own has nowhere to put a prefix. Giving
+ * it one declares a namespace BETWEEN the vocabulary and every host that mounts
+ * it — which is the shared `--kit-*` namespace `WORLD_ZERO_STYLE.md:1179`
+ * declines — and handing a host's prefix down is a component prop, i.e. TREE
+ * work, which a paint lane may not do. So: root → `factionRoleVars(slug,
+ * prefix)`; rootless → `factionRoleVar(slug, role)` and no prefix at all.
+ *
+ * Named here rather than counted, so a third one has to be ARGUED for instead
+ * of quietly appearing.
+ */
 const NO_ELEMENT = [
   "components/avatar/SingularityAvatar.tsx",
   "pages/characterProfile/archetypes/SingularityProfileBody.tsx",

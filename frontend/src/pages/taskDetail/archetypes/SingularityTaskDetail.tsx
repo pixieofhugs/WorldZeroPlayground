@@ -788,13 +788,19 @@ export default function SingularityTaskDetail({
   );
 
   return (
-    <div className="py-8" style={factionRoleVars("singularity", "sg-task-detail")}>
+    <div className="py-8">
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
 
       <div
         style={{
+          /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
+             than on the `py-8` wrapper above (#2675). That wrapper also holds
+             the breadcrumb, which is neutral shared site chrome measured on the
+             site's own ground (#2102) — a faction's namespace has no business
+             spanning it. */
+          ...factionRoleVars("singularity", "sg-task-detail"),
           position: "relative",
           overflow: "hidden",
           maxWidth: 1200,
