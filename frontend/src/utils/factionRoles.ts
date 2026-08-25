@@ -153,13 +153,18 @@ const SHEET_ROLES: FactionRoleMap = {
  * This is the STRUCTURE half, and it is only half. #2661 landed the other one:
  * `factionContrast.test.ts` now loops over this resolver rather than a
  * hand-curated pair list, so a ground override's `onFill`/`fill` pair is
- * MEASURED and not merely present. It found the sibling this type cannot
- * express, on this very entry — the chrome ground moves `paper` to the wall
- * and leaves `accent` on `-card-accent`, which is the acid measured for the
- * near-black slab and reads 1.03:1 on the light wall. The type can force a
- * fill's ink to travel with it because they are one pair; it cannot know that
- * every OTHER ink must be re-measured when `paper` moves, which is a ratio and
- * so belongs to the loop.
+ * MEASURED and not merely present.
+ *
+ * MOVING `paper` RE-OPENS EVERY INK ON IT — THE RULE THIS TYPE CANNOT HOLD.
+ * The loop found the sibling on this very entry: the chrome ground moved
+ * `paper` to the wall and left `accent` on `-card-accent`, the acid measured
+ * for the near-black slab, reading 1.03:1 on the light wall (#2669, fixed
+ * below). So an override that names `paper` is re-measuring `ink`, `quiet`,
+ * `line` and `accent` whether it repoints them or not — inheriting one is a
+ * claim about a ratio, not a default. The type can force a fill's ink to travel
+ * with it because they are ONE PAIR and that is expressible; it cannot express
+ * "legible on", which is a number. Do not try to build it here — that is the
+ * contrast loop's job, and it is already doing it.
  */
 export type GroundOverride = Partial<Omit<FactionRoleMap, "fill" | "onFill">> &
   ({ fill: string | null; onFill: string } | { fill?: never; onFill?: string });
@@ -199,6 +204,23 @@ export type GroundOverride = Partial<Omit<FactionRoleMap, "fill" | "onFill">> &
  * 11.36:1 dark. Adding a second row would be a second name for one measurement,
  * which that file spends a paragraph warning against.
  *
+ * AND `accent` MOVES FOR THE THIRD TIME FOR THE SAME REASON: THE PAPER MOVED
+ * (#2669). It was the one ink this entry left on the card family, and the card
+ * family's accent is `--faction-snide-card-accent` — the acid, #b6ff2e, pinned
+ * invariant in both cascades because the slab it was measured on is near-black
+ * in both. On the wall that flips it reads 1.03:1 by day: invisible, and the
+ * first thing #2661's loop caught that a human review had not. #2173 had
+ * already ruled the acid never touches paper, which points the same way.
+ *
+ * It lands on `-wall-credit`, the rung of this hue the fill already moved to on
+ * this ground — no token minted, none repointed, and not a new measurement:
+ * `SNIDE_WALL_INKS` already gates it as a BARE ink on `-wall` (#2343, "the
+ * marker scrawl, bare"). 7.71:1 by day, 11.36:1 by night, against `accent`'s
+ * 4.5 text floor. It reads as an accent and not merely as a pass: the role is
+ * "decorative / meta ink — not `ink` at a lower alpha", and this is a hue of
+ * its own next to the neutral `-note-ink` / `-note-muted` tiers, the same
+ * marker the faction page scrawls its credits in.
+ *
  * `radius` and `face` stay on the card family on purpose.
  */
 const GROUND_OVERRIDES: Record<FactionGround, Record<string, GroundOverride>> = {
@@ -209,6 +231,7 @@ const GROUND_OVERRIDES: Record<FactionGround, Record<string, GroundOverride>> = 
       ink: "note-ink",
       quiet: "note-muted",
       line: "note-wall-edge",
+      accent: "wall-credit",
       fill: "wall-credit",
       onFill: "wall",
     },

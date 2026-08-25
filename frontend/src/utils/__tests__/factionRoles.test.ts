@@ -140,12 +140,17 @@ describe("a faction overrides for a ground its card sheet cannot serve (#2631, A
     ["ink", "var(--faction-snide-note-ink)"],
     ["quiet", "var(--faction-snide-note-muted)"],
     ["line", "var(--faction-snide-note-wall-edge)"],
+    // The acid was measured for the near-black slab and reads 1.03:1 on the
+    // light wall (#2669). `-wall-credit` is the rung of the hue `fill` already
+    // took here — 7.71:1 / 11.36:1, gated bare on this ground by
+    // `SNIDE_WALL_INKS` since #2343.
+    ["accent", "var(--faction-snide-wall-credit)"],
     ["fill", "var(--faction-snide-wall-credit)"],
-    // The pair, not a sixth independent choice — see the block below.
+    // The pair, not a seventh independent choice — see the block below.
     ["onFill", "var(--faction-snide-wall)"],
   ];
 
-  it("moves exactly the six roles the wall re-grounds", () => {
+  it("moves exactly the seven roles the wall re-grounds", () => {
     const chrome = factionRoleVars("snide", "rail", "chrome");
     const sheet = factionRoleVars("snide", "rail", "sheet");
     // `factionRoleProperty`, not `--rail-${role}`. Spelled the second way this
