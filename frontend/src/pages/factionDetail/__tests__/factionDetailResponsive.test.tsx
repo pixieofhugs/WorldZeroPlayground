@@ -89,7 +89,7 @@ const OWN_VOICE: Record<string, readonly string[]> = {
 /**
  * Each faction's own Join verb. `albescent` is the fall-through to
  * `DefaultFactionBody`, whose join block is the one lifted out of the retired
- * `DefaultFactionPage` — it keeps that skin's `mobile.join` key. The other
+ * `DefaultFactionPage` — it keeps that skin's generic interpolated verb, moved to `detail.join.joinButton` by #2651. The other
  * seven are `<slug>.join.joinButton` since #2299 gave them one key path.
  */
 const JOIN_BUTTON: Record<string, string> = {
@@ -100,7 +100,7 @@ const JOIN_BUTTON: Record<string, string> = {
   snide: 'snide.join.joinButton',
   ua: 'ua.join.joinButton',
   wow: 'wow.join.joinButton',
-  albescent: 'mobile.join',
+  albescent: 'detail.join.joinButton',
 }
 
 /** The factions that dress this surface, plus the one that still falls through. */

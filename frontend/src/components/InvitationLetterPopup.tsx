@@ -324,7 +324,7 @@ export default function InvitationLetterPopup({
               disabled={joining}
               style={{ ...enlistStyle, cursor: joining ? 'not-allowed' : 'pointer' }}
             >
-              {t('mobile.confirm')}
+              {t('detail.join.confirmAction')}
             </button>
             <button
               type="button"

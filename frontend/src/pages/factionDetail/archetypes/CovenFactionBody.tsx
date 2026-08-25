@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -30,6 +30,7 @@ import {
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -129,7 +130,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -302,105 +302,46 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 </div>
               )}
 
-              {membership.state === "eligible" && !confirming && (
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontFamily: HAND,
-                      // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
-                      fontSize: 26,
-                      fontWeight: 700,
-                      color: INK,
-                      lineHeight: 1,
-                      marginBottom: "var(--space-sm)",
-                    }}
-                  >
-                    {t("coven.join.eligibleTitle")}
-                  </div>
-                  <div className="content-text" style={{ ...PROSE, marginBottom: "var(--space-lg)" }}>
-                    {t("coven.join.eligibleBody")}
-                  </div>
-                  <button
-                    onClick={() => setConfirming(true)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "var(--space-sm)",
-                      width: "100%",
-                      fontFamily: CHROME,
-                      fontSize: "var(--text-lg)",
-                      fontWeight: 700,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: CTA_INK,
-                      background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
-                      border: `1.5px solid ${CTA_TO}`,
-                      borderRadius: 12,
-                      padding: "var(--space-md)",
-                      boxShadow: `0 8px 18px -8px ${GLOW}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Spark size={12} color={CTA_INK} />
-                    {t("coven.join.joinButton")}
-                  </button>
-                </div>
-              )}
-
-              {membership.state === "eligible" && confirming && (
-                <div>
-                  <div className="content-text" style={{ fontFamily: READING, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
-                    {membership.currentFactionSlug &&
-                    membership.currentFactionSlug !== "na"
-                      ? t("detail.join.confirmSwitch", {
-                          faction: factionName(faction.slug),
-                          current: factionName(membership.currentFactionSlug),
-                        })
-                      : t("detail.join.confirm", { faction: factionName(faction.slug) })}
-                  </div>
-                  {membership.joinError && (
-                    <div className="content-text" style={{ fontFamily: READING, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
-                  )}
-                  <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                    <button
-                      onClick={() => void membership.join()}
-                      disabled={membership.joining}
-                      style={{
-                        flex: 1,
-                        fontFamily: CHROME,
-                        fontSize: "var(--text-md)",
-                        fontWeight: 700,
-                        letterSpacing: "0.12em",
-                        textTransform: "uppercase",
-                        color: CTA_INK,
-                        background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
-                        border: `1.5px solid ${CTA_TO}`,
-                        borderRadius: 12,
-                        padding: "var(--space-md)",
-                        cursor: membership.joining ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      {membership.joining
-                        ? t("coven.join.joining")
-                        : t("mobile.confirm")}
-                    </button>
-                    <button
-                      onClick={() => setConfirming(false)}
-                      disabled={membership.joining}
-                      style={{
-                        ...CAPTION,
-                        background: "transparent",
-                        border: `1.5px solid ${BORDER}`,
-                        borderRadius: 12,
-                        padding: "var(--space-md) var(--space-lg)",
-                        cursor: membership.joining ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      {t("detail.join.cancel")}
-                    </button>
-                  </div>
-                </div>
+              {membership.state === "eligible" && (
+                <JoinControl
+                  membership={membership}
+                  name={factionName(faction.slug)}
+                  skin={JOIN_SKIN}
+                  // The spark rides IN the label rather than in a slot of its
+                  // own: the label is a node, and one faction's glyph is not a
+                  // reason for every other kit to carry an unused prop (#2651).
+                  openLabel={
+                    <>
+                      <Spark size={12} color={CTA_INK} />
+                      {t("coven.join.joinButton")}
+                    </>
+                  }
+                  joiningLabel={t("coven.join.joining")}
+                  intro={
+                    // The pitch is centred and the question is not — the two
+                    // states parted here before the extraction, so the
+                    // alignment travels with the pitch rather than wrapping
+                    // both.
+                    <div style={{ textAlign: "center" }}>
+                      <div
+                        style={{
+                          fontFamily: HAND,
+                          // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — the coven's own hand, not typeset copy.
+                          fontSize: 26,
+                          fontWeight: 700,
+                          color: INK,
+                          lineHeight: 1,
+                          marginBottom: "var(--space-sm)",
+                        }}
+                      >
+                        {t("coven.join.eligibleTitle")}
+                      </div>
+                      <div className="content-text" style={{ ...PROSE, marginBottom: "var(--space-lg)" }}>
+                        {t("coven.join.eligibleBody")}
+                      </div>
+                    </div>
+                  }
+                />
               )}
 
               {(membership.state === "gate" || burned) && (
@@ -542,3 +483,58 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
     </div>
   );
 }
+
+/**
+ * The trio's paint (#2651) — the slip's gradient CTA for both affirmatives and
+ * the caption register for the cancel, which is what these three buttons already
+ * wore. The open pill keeps its glow and its centring flex, because it carries a
+ * glyph; the confirm never had either. `flex`, the busy opacity and the busy
+ * cursor came off all three: the shared control owns the pending state now.
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  openStyle: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "var(--space-sm)",
+    width: "100%",
+    fontFamily: CHROME,
+    fontSize: "var(--text-lg)",
+    fontWeight: 700,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: CTA_INK,
+    background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
+    border: `1.5px solid ${CTA_TO}`,
+    borderRadius: 12,
+    padding: "var(--space-md)",
+    boxShadow: `0 8px 18px -8px ${GLOW}`,
+    cursor: "pointer",
+  },
+  confirmStyle: {
+    fontFamily: CHROME,
+    fontSize: "var(--text-md)",
+    fontWeight: 700,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: CTA_INK,
+    background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`,
+    border: `1.5px solid ${CTA_TO}`,
+    borderRadius: 12,
+    padding: "var(--space-md)",
+  },
+  cancelStyle: {
+    ...CAPTION,
+    background: "transparent",
+    border: `1.5px solid ${BORDER}`,
+    borderRadius: 12,
+    padding: "var(--space-md) var(--space-lg)",
+  },
+  proseStyle: {
+    fontFamily: READING,
+    lineHeight: 1.6,
+    color: INK,
+    marginBottom: "var(--space-lg)",
+  },
+  errorStyle: { fontFamily: READING, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
+};

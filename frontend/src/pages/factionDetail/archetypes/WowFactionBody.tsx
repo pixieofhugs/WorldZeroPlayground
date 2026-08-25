@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ import { WowSigil } from "../../../components/sigil/WowSigil";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { computeFactionMultiplier } from "../../../utils/points";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -79,8 +80,6 @@ const PLATE = "var(--faction-wow-plate)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 const BORDER = "var(--faction-wow-chronicle-border)";
 const SHADOW = "0 18px 40px -20px var(--faction-wow-chronicle-shadow)";
-
-const NA_SLUG = "na";
 
 /** Members shown on the roll before it stops. The rest are on the players page. */
 const ROLL_LIMIT = 8;
@@ -454,12 +453,8 @@ function JoinBlock({
   membership: FactionDetailState["membership"];
 }) {
   const { t } = useTranslation("factions");
-  const [confirming, setConfirming] = useState(false);
 
   if (membership.state === "none") return null;
-
-  const currentSlug = membership.currentFactionSlug;
-  const switching = currentSlug && currentSlug !== NA_SLUG;
 
   return (
     <aside
@@ -509,86 +504,40 @@ function JoinBlock({
           </>
         )}
 
-        {membership.state === "eligible" && !confirming && (
-          <>
-            <div
-              style={{
-                fontFamily: MED,
-                fontSize: "var(--text-title)",
-                lineHeight: 1.15,
-                color: INK,
-                margin: "var(--space-xs) 0 var(--space-sm)",
-              }}
-            >
-              {t("wow.join.eligibleTitle")}
-            </div>
-            <p
-              className="content-text"
-              style={{
-                fontFamily: LORA,
-                fontStyle: "italic",
-                color: MUTED,
-                margin: "0 0 var(--space-lg)",
-              }}
-            >
-              {t("wow.join.eligibleBody")}
-            </p>
-            <button type="button" onClick={() => setConfirming(true)} style={GILT_BUTTON}>
-              {t("wow.join.joinButton")}
-            </button>
-          </>
-        )}
-
-        {membership.state === "eligible" && confirming && (
-          <>
-            <p
-              className="content-text"
-              style={{
-                fontFamily: LORA,
-                lineHeight: 1.6,
-                color: INK,
-                margin: "0 0 var(--space-md)",
-              }}
-            >
-              {switching
-                ? t("detail.join.confirmSwitch", {
-                    faction: name,
-                    current: factionName(currentSlug),
-                  })
-                : t("detail.join.confirm", { faction: name })}
-            </p>
-            {membership.joinError && (
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: LORA,
-                  color: "var(--color-danger)",
-                  margin: "0 0 var(--space-md)",
-                }}
-              >
-                {membership.joinError}
-              </p>
-            )}
-            {/* [Cancel] … [Confirm] — the global footer order (#646). */}
-            <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-              <button
-                type="button"
-                onClick={() => setConfirming(false)}
-                disabled={membership.joining}
-                style={GHOST_BUTTON}
-              >
-                {t("detail.join.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={() => void membership.join()}
-                disabled={membership.joining}
-                style={{ ...GILT_BUTTON, flex: 1, opacity: membership.joining ? 0.6 : 1 }}
-              >
-                {membership.joining ? t("wow.join.joining") : t("mobile.confirm")}
-              </button>
-            </div>
-          </>
+        {membership.state === "eligible" && (
+          <JoinControl
+            membership={membership}
+            name={name}
+            skin={JOIN_SKIN}
+            openLabel={t("wow.join.joinButton")}
+            joiningLabel={t("wow.join.joining")}
+            intro={
+              <>
+                <div
+                  style={{
+                    fontFamily: MED,
+                    fontSize: "var(--text-title)",
+                    lineHeight: 1.15,
+                    color: INK,
+                    margin: "var(--space-xs) 0 var(--space-sm)",
+                  }}
+                >
+                  {t("wow.join.eligibleTitle")}
+                </div>
+                <p
+                  className="content-text"
+                  style={{
+                    fontFamily: LORA,
+                    fontStyle: "italic",
+                    color: MUTED,
+                    margin: "0 0 var(--space-lg)",
+                  }}
+                >
+                  {t("wow.join.eligibleBody")}
+                </p>
+              </>
+            }
+          />
         )}
 
         {/* The gate and the burn must stay distinguishable: "keep questing" is
@@ -668,4 +617,28 @@ const GHOST_BUTTON: CSSProperties = {
   borderRadius: 999,
   padding: "var(--space-sm) var(--space-lg)",
   cursor: "pointer",
+};
+
+/**
+ * THE ONE KIT ALREADY IN #646 ORDER, and the only one that had named its two
+ * buttons. The skin is those same two constants handed to `JoinControl` — the
+ * gilt pill for both affirmatives, the ghost for the cancel — so nothing on this
+ * page moves except that the pair is now written somewhere the other eight can
+ * read it (#2651).
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  openStyle: GILT_BUTTON,
+  confirmStyle: GILT_BUTTON,
+  cancelStyle: GHOST_BUTTON,
+  proseStyle: {
+    fontFamily: LORA,
+    lineHeight: 1.6,
+    color: INK,
+    margin: "0 0 var(--space-md)",
+  },
+  errorStyle: {
+    fontFamily: LORA,
+    color: "var(--color-danger)",
+    margin: "0 0 var(--space-md)",
+  },
 };

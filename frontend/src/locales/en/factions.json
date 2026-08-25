@@ -44,6 +44,9 @@
     "join": {
       "confirmSwitch": "Join {{faction}}? You won't be able to rejoin {{current}} after leaving.",
       "confirm": "Join {{faction}}?",
+      "confirmAction": "Confirm",
+      "joinButton": "Join {{faction}}",
+      "joining": "Joining…",
       "cancel": "Cancel"
     },
     "burned": {
@@ -361,9 +364,6 @@
     "unaffiliatedBody": "Every path is open. Each faction watches its own work — do enough of it, and an invitation finds you.",
     "topMembers": "Top members",
     "recentPraxis": "Recent praxis",
-    "join": "Join {{faction}}",
-    "joining": "Joining…",
-    "confirm": "Confirm",
     "memberBadge": "You're a member",
     "gateHint": "An invitation to {{faction}} is earned. Keep completing tasks.",
     "burnedHint": "You left {{faction}}, and it can't take you back until the next era begins."

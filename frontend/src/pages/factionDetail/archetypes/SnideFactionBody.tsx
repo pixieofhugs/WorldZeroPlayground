@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -8,6 +8,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -312,7 +313,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -499,116 +499,36 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   </div>
                 )}
 
-                {membership.state === "eligible" && !confirming && (
-                  <div>
-                    <div
-                      style={{
-                        ...ACID_PLATE,
-                        display: "inline-block",
-                        fontFamily: IMPACT,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type.
-                        fontSize: 24,
-                        lineHeight: 0.9,
-                        padding: "var(--space-xs) var(--space-sm)",
-                        textTransform: "uppercase",
-                        marginBottom: "var(--space-sm)",
-                      }}
-                    >
-                      {t("snide.join.eligibleTitle")}
-                    </div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: NOTE_MUTED, marginBottom: "var(--space-lg)" }}>
-                      {t("snide.join.eligibleBody")}
-                    </div>
-                    <button
-                      onClick={() => setConfirming(true)}
-                      style={{
-                        width: "100%",
-                        background: PINK,
-                        // #1609: white on `--faction-snide-pink` measures
-                        // 3.50:1 — below AA. The ink that clears it is already
-                        // declared and already measured: 5.38:1.
-                        color: "var(--faction-snide-on-accent)",
-                        fontFamily: BLACK,
-                        fontSize: "var(--text-xl)",
-                        padding: "var(--space-md)",
-                        border: "none",
-                        transform: "rotate(-1deg)",
-                        // The CTA's offset register (#1609) — not lift.
-                        boxShadow: "3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {t("snide.join.joinButton")}
-                    </button>
-                  </div>
-                )}
-
-                {membership.state === "eligible" && confirming && (
-                  <div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: NOTE_MUTED, marginBottom: "var(--space-lg)" }}>
-                      {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na"
-                        ? t("detail.join.confirmSwitch", {
-                            faction: factionName(faction.slug),
-                            current: factionName(membership.currentFactionSlug),
-                          })
-                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
-                    </div>
-                    {/* The wall's alarm ink, not the global `--color-danger`
-                        (#2343). That token is measured on `--color-bg-page` and
-                        reads 4.08:1 on this wall — it read 3.93:1 on the ink
-                        panel before it, so this is a pre-existing AA miss the
-                        ground move surfaced rather than caused. The faction's
-                        own composer error banner already prints a `-*-alarm`;
-                        `-wall-alarm` is that rung for this ground, at 6.68:1
-                        light / 7.41:1 dark. */}
-                    {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: MONO, color: WALL_ALARM, marginBottom: "var(--space-sm)" }}>
-                        {membership.joinError}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                      <button
-                        onClick={() => void membership.join()}
-                        disabled={membership.joining}
-                        style={{
-                          flex: 1,
-                          background: PINK,
-                          // #1609: white on `--faction-snide-pink` is 3.50:1,
-                          // below AA; `-on-accent` is the measured 5.38:1 ink.
-                          color: "var(--faction-snide-on-accent)",
-                          fontFamily: BLACK,
-                          fontSize: "var(--text-xl)",
-                          padding: "var(--space-md)",
-                          border: "none",
-                          cursor: membership.joining ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {membership.joining
-                          ? t("snide.join.joining")
-                          : t("mobile.confirm")}
-                      </button>
-                      <button
-                        onClick={() => setConfirming(false)}
-                        disabled={membership.joining}
-                        style={{
-                          fontFamily: COND,
-                          fontSize: "var(--text-xl)",
-                          letterSpacing: "0.12em",
-                          textTransform: "uppercase",
-                          color: NOTE_MUTED,
-                          background: "transparent",
-                          // The dash keeps its 45%; only the ink under it moved,
-                          // onto the tier that flips with this button's ground.
-                          border: `2px dashed color-mix(in srgb, ${NOTE_MUTED} 45%, transparent)`,
-                          padding: "var(--space-md) var(--space-lg)",
-                          cursor: membership.joining ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {t("detail.join.cancel")}
-                      </button>
-                    </div>
-                  </div>
+                {membership.state === "eligible" && (
+                  <JoinControl
+                    membership={membership}
+                    name={factionName(faction.slug)}
+                    skin={JOIN_SKIN}
+                    openLabel={t("snide.join.joinButton")}
+                    joiningLabel={t("snide.join.joining")}
+                    intro={
+                      <>
+                        <div
+                          style={{
+                            ...ACID_PLATE,
+                            display: "inline-block",
+                            fontFamily: IMPACT,
+                            // eslint-disable-next-line local/no-raw-style-values -- ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type.
+                            fontSize: 24,
+                            lineHeight: 0.9,
+                            padding: "var(--space-xs) var(--space-sm)",
+                            textTransform: "uppercase",
+                            marginBottom: "var(--space-sm)",
+                          }}
+                        >
+                          {t("snide.join.eligibleTitle")}
+                        </div>
+                        <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: NOTE_MUTED, marginBottom: "var(--space-lg)" }}>
+                          {t("snide.join.eligibleBody")}
+                        </div>
+                      </>
+                    }
+                  />
                 )}
 
                 {(membership.state === "gate" || burned) && (
@@ -783,3 +703,55 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
     </div>
   );
 }
+
+/**
+ * The trio's paint (#2651) — the pink slab for both affirmatives, the dashed
+ * condensed rule-box for the cancel. Every value stood on one of these three
+ * buttons already; the tilt and the offset shadow stay on the OPEN verb alone,
+ * which is where the wall put them.
+ *
+ * #1609: white on `--faction-snide-pink` measures 3.50:1 — below AA. The ink
+ * that clears it is already declared and already measured: `-on-accent`, 5.38:1.
+ * Both affirmatives read it, which is what having one skin is for.
+ *
+ * The ERROR line is the wall's alarm ink, not the global `--color-danger`
+ * (#2343). That token is measured on `--color-bg-page` and reads 4.08:1 on this
+ * wall; `-wall-alarm` is the rung for this ground, at 6.68:1 light / 7.41:1 dark.
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  openStyle: {
+    width: "100%",
+    background: PINK,
+    color: "var(--faction-snide-on-accent)",
+    fontFamily: BLACK,
+    fontSize: "var(--text-xl)",
+    padding: "var(--space-md)",
+    border: "none",
+    transform: "rotate(-1deg)",
+    // The CTA's offset register (#1609) — not lift.
+    boxShadow: "3px 4px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)",
+    cursor: "pointer",
+  },
+  confirmStyle: {
+    background: PINK,
+    color: "var(--faction-snide-on-accent)",
+    fontFamily: BLACK,
+    fontSize: "var(--text-xl)",
+    padding: "var(--space-md)",
+    border: "none",
+  },
+  cancelStyle: {
+    fontFamily: COND,
+    fontSize: "var(--text-xl)",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: NOTE_MUTED,
+    background: "transparent",
+    // The dash keeps its 45%; only the ink under it moved, onto the tier that
+    // flips with this button's ground.
+    border: `2px dashed color-mix(in srgb, ${NOTE_MUTED} 45%, transparent)`,
+    padding: "var(--space-md) var(--space-lg)",
+  },
+  proseStyle: { fontFamily: TYPE, lineHeight: 1.6, color: NOTE_MUTED, marginBottom: "var(--space-lg)" },
+  errorStyle: { fontFamily: MONO, color: WALL_ALARM, marginBottom: "var(--space-sm)" },
+};
