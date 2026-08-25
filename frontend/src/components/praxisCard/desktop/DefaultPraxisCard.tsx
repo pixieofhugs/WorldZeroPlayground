@@ -1,5 +1,6 @@
 import { AdminOverlay } from "../shared";
 import { factionSpectrumSheet } from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -25,8 +26,10 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * unaffiliated face. It had been resolving to Lora through the shared
  * `font-display` class — the site wordmark's serif, not this card's.
  *
- * All colour via `--faction-default-*`, so the sheet flips through the
- * `[data-theme="dark"]` cascade with no `dark ?` branch.
+ * All colour through the ROLE MAP (#2672) — `--praxis-card-*`, spread on the
+ * root and read with today's `--faction-default-*` token as the fallback — so
+ * the sheet flips through the `[data-theme="dark"]` cascade with no `dark ?`
+ * branch.
  *
  * THE SPECTRUM IS THE BORDER (#2499, epic #2496; owner ruling 2026-08-23). This
  * card wore a 1px cream hairline (`--faction-default-card-line`) while
@@ -51,12 +54,18 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
   return (
     <div
       style={{
+        // The role map (#2672): declared once here, read as
+        // `var(--praxis-card-…, <today's token>)` everywhere below — including
+        // the four `PraxisBody` props, which are strings resolved inside this
+        // subtree. `{}` for every slug without a theme, so na and Albescent
+        // are byte-identical.
+        ...factionRoleVars(praxis.task_faction_slug, "praxis-card"),
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet
         border: "3px solid transparent",
         ...factionSpectrumSheet(),
-        color: "var(--faction-default-card-text)",
+        color: "var(--praxis-card-ink, var(--faction-default-card-text))",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
       }}
@@ -64,21 +73,21 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
-        tint="var(--faction-default-card-accent)"
-        muted="var(--faction-default-card-muted)"
-        paper="var(--faction-default-card-bg)"
+        tint="var(--praxis-card-accent, var(--faction-default-card-accent))"
+        muted="var(--praxis-card-quiet, var(--faction-default-card-muted))"
+        paper="var(--praxis-card-paper, var(--faction-default-card-bg))"
         showCrown={showCrown}
         // Bebas Neue carries the sheet's identity; Courier Prime reads the
         // proof. The quiet sheet keeps the house body face on purpose (#888).
         fonts={{
-          display: "var(--faction-default-card-font)",
+          display: "var(--praxis-card-face, var(--faction-default-card-font))",
           body: "var(--font-body)",
         }}
         titleStyle={{
-          fontFamily: "var(--faction-default-card-font)",
+          fontFamily: "var(--praxis-card-face, var(--faction-default-card-font))",
           letterSpacing: "0.02em",
           lineHeight: 1,
-          color: "var(--faction-default-card-text)",
+          color: "var(--praxis-card-ink, var(--faction-default-card-text))",
         }}
         voteRule={
           <div

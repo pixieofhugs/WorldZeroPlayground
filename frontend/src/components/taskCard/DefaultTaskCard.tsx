@@ -8,6 +8,7 @@ import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionSpectrumSheet } from "../../utils/factions";
+import { factionRoleVars } from "../../utils/factionRoles";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
 /**
@@ -27,7 +28,9 @@ import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
  * a different card. There is no mobile twin: ADR-0056 was accepted and the
  * `mobileTaskCard` surface retired, so this file serves both form factors.
  *
- * All colour via `--faction-default-*` tokens — no hardcoded hex (CLAUDE.md);
+ * All colour through the ROLE MAP (#2672) — `--task-card-paper` / `-ink` /
+ * `-quiet` / `-accent`, spread on the `<article>` and each read with today's
+ * `--faction-default-*` token as its fallback. No hardcoded hex (CLAUDE.md);
  * light/dark flips through the `[data-theme="dark"]` cascade, never a ternary.
  */
 
@@ -73,7 +76,7 @@ const CAPTION: CSSProperties = {
   fontFamily: MONO,
   letterSpacing: "0.2em",
   textTransform: "uppercase",
-  color: "var(--faction-default-card-muted)",
+  color: "var(--task-card-quiet, var(--faction-default-card-muted))",
 };
 
 export default function DefaultTaskCard({
@@ -95,6 +98,12 @@ export default function DefaultTaskCard({
     >
       <article
         style={{
+          // THE SHEET NAMES ROLES, NOT A FACTION (#2672). Nine custom
+          // properties declared once here; every `var(--task-card-…, <today's
+          // token>)` below reads one. For `na` — and for `albescent`, and for
+          // any slug without a theme — this is `{}`, so the card is byte-for-
+          // byte what shipped. See `utils/factionRoles.ts`.
+          ...factionRoleVars(task.primary_faction_slug, "task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
@@ -112,7 +121,7 @@ export default function DefaultTaskCard({
           borderRadius: 14,
           ...factionSpectrumSheet(),
           boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
-          color: "var(--faction-default-card-text)",
+          color: "var(--task-card-ink, var(--faction-default-card-text))",
           fontFamily: MONO,
           padding: size.pad,
         }}
@@ -202,8 +211,8 @@ export default function DefaultTaskCard({
                     lineHeight: 1,
                     borderRadius: 5,
                     padding: "var(--space-xs) var(--space-sm)",
-                    background: "var(--faction-default-card-text)",
-                    color: "var(--faction-default-card-bg)",
+                    background: "var(--task-card-ink, var(--faction-default-card-text))",
+                    color: "var(--task-card-paper, var(--faction-default-card-bg))",
                   }}
                 >
                   {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
@@ -235,7 +244,7 @@ export default function DefaultTaskCard({
               style={{
                 fontFamily: MONO,
                 lineHeight: 1.55,
-                color: "var(--faction-default-card-muted)",
+                color: "var(--task-card-quiet, var(--faction-default-card-muted))",
                 margin: "0 0 var(--space-lg)",
               }}
             >
@@ -268,7 +277,7 @@ export default function DefaultTaskCard({
                   fontFamily: MONO,
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.04em",
-                  color: "var(--faction-default-card-muted)",
+                  color: "var(--task-card-quiet, var(--faction-default-card-muted))",
                 }}
               >
                 {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
@@ -309,10 +318,10 @@ export default function DefaultTaskCard({
                   textTransform: "uppercase",
                   padding: "var(--space-md) var(--space-2xl)",
                   borderRadius: 11,
-                  color: "var(--faction-default-card-text)",
+                  color: "var(--task-card-ink, var(--faction-default-card-text))",
                   background: "transparent",
                   border:
-                    "1px solid color-mix(in srgb, var(--faction-default-card-accent) 35%, transparent)",
+                    "1px solid color-mix(in srgb, var(--task-card-accent, var(--faction-default-card-accent)) 35%, transparent)",
                 }}
               >
                 {cta.label}
