@@ -28,6 +28,8 @@
  */
 import type { CSSProperties } from 'react'
 
+import { factionRoleVar } from '../../utils/factionRoles'
+
 /* -------------------------------------------------------------------------- */
 /* Tokens                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -43,10 +45,22 @@ export const RIBBON = 'var(--faction-wow-duel-ribbon)'
 /** The modal wash behind the seal. */
 export const SCRIM = 'var(--faction-wow-duel-scrim)'
 
-/** The chronicle's own inks, reused so the lists read as the same faction. */
-export const INK = 'var(--faction-wow-card-text)'
-export const MUTED = 'var(--faction-wow-card-muted)'
-export const PLUM = 'var(--faction-wow-card-accent)'
+/**
+ * The chronicle's own inks, reused so the lists read as the same faction.
+ *
+ * THE ROLES, ASKED FOR DIRECTLY, BECAUSE THIS MODULE HAS NO ROOT (#2674). Lane
+ * 04's surfaces spread `factionRoleVars(slug, '<their own prefix>')` on a root
+ * and read `var(--<prefix>-ink, …)` below it. This file is the tourney
+ * vocabulary, mounted under `WowDuelSealConfirm` and its two form factors —
+ * consumers outside this lane — so there is no one root here to declare a
+ * prefix on, and a prefix shared between the vocabulary and every host would BE
+ * the `--kit-*` namespace the law declines. `factionRoleVar` answers one role
+ * with no all-or-nothing seam to protect, and returns the identical strings
+ * these constants held before.
+ */
+export const INK = factionRoleVar('wow', 'ink')
+export const MUTED = factionRoleVar('wow', 'quiet')
+export const PLUM = factionRoleVar('wow', 'accent')
 export const EYEBROW_INK = 'var(--faction-wow-accent-deep)'
 export const PANEL = 'var(--faction-wow-chronicle-panel)'
 /**
@@ -74,7 +88,7 @@ export const ON_RIBBON = 'var(--faction-wow-stamp-chip-text)'
  */
 export const NOTICE = 'var(--faction-wow-card-notice)'
 
-export const DISPLAY_FONT = 'var(--faction-wow-card-font)' // MedievalSharp
+export const DISPLAY_FONT = factionRoleVar('wow', 'face') // MedievalSharp
 export const BODY_FONT = 'var(--faction-wow-body-font)' // Lora
 
 /**
