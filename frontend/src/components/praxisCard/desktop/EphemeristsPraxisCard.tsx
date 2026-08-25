@@ -148,22 +148,34 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           `overflow` fix — the frame clips at the card's border box and the
           crown never reaches it. Nothing else in the leaf meets the band.
 
-          SO THE ZERO IS LOAD-BEARING (#2360). This was the only praxis card in
+          THE ZERO WAS LOAD-BEARING UNTIL #2655. This was the only praxis card in
           the kit opening with no top pad — every other frame gives its title
-          `--space-xl` or `--space-lg` — and the owner's report is that the
-          entry reads cramped against the cavetto. The repair may NOT be a top
-          rung here: the crown's `-13` is measured off the STAMP's box, the
-          stamp's box sits at this element's content top, and 24px of padding
-          would drop the crown clear of the 12px cornice and into the padding —
-          undoing #2240 and #2122 on a card that still screenshots correctly,
-          because the crown only draws on a crowned praxis. The air goes on the
-          TITLE instead (`titleStyle` below), which is a flex SIBLING of the
-          stamp's column and so cannot displace it. */}
+          `--space-xl` or `--space-lg` — and the owner's report on #2360 was that
+          the entry read cramped against the cavetto. #2360 ruled that the repair
+          could not be a top rung HERE, because the crown's `-13` is measured off
+          the STAMP's box, the stamp's box sits at this element's content top,
+          and *24px* of padding drops the crown clear of the ~12px cornice and
+          into the padding — undoing #2240 and #2122. So the air went on the
+          TITLE, a flex SIBLING of the stamp's column that cannot displace it.
+
+          THAT PUT A PIECE'S OWN DRAWING IN CHARGE OF ITS HOST'S PADDING, which
+          is law 09 read backwards (#2655): a travelling piece owns no outer
+          spacing, and a per-faction margin standing in for a gap the frame
+          declined to state is the same defect wearing a different box. The
+          frame states its opening rung like its eight fellows now. It is
+          `--space-sm`, not `--space-xl`, and the difference is the whole
+          argument: 8px against a 13px overhang still breaks the crown 5px into
+          the cornice, so #2360's own stated reason survives intact and #2240 and
+          #2122 hold. The title lands where it already did — 8px here plus
+          `--space-lg` on `titleStyle` is the same 24px — so the ONLY thing that
+          moves is the stamp's box, which is this issue's named exemption. (The
+          admin badge is absolutely positioned against this leaf and rides the
+          8px down with it; it is a steward affordance, not chrome.) */}
       <div
         style={{
           position: "relative",
           zIndex: 4,
-          padding: "0 var(--space-xl) var(--space-lg)",
+          padding: "var(--space-sm) var(--space-xl) var(--space-lg)",
         }}
       >
         <AdminOverlay {...adminProps} />
@@ -182,17 +194,19 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           paper={PLATE}
           showCrown={showCrown}
           // THE ENTRY OPENS A RUNG BELOW THE CAVETTO (#2360). `--space-xl` is
-          // the rung five of its eight fellows already give their title, and it
-          // rides on the title rather than on the leaf for the reason the leaf's
-          // comment gives: the seal keeps hanging off the cornice, the entry
-          // starts under it. A praxis with no score renders no stamp at all, so
-          // this is also the whole of the air on an unscored card.
+          // the rung five of its eight fellows already give their title, and the
+          // title still lands on it — but only `--space-lg` of it is stated
+          // here now, because #2655 moved the other `--space-sm` onto the LEAF
+          // where the gap belongs (see its comment). The sum is unchanged and
+          // deliberately so: this is a spacing repair for the stamp, not for the
+          // entry. A praxis with no score renders no stamp at all, and the leaf's
+          // rung covers that case too.
           titleStyle={{
             fontFamily: DECO,
             fontWeight: 400,
             letterSpacing: "0.02em",
             color: INK,
-            marginTop: "var(--space-xl)",
+            marginTop: "var(--space-lg)",
           }}
           // Poiret One for the display line, Spectral for the reading matter.
           fonts={{ display: DECO, body: READING }}
