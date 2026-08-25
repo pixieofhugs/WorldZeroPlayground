@@ -187,13 +187,18 @@ const ORNAMENT: Record<string, string> = {
 const SLUGS = Object.keys(ORNAMENT);
 
 /**
- * The task slip's 2px ink bar, painted from a token - bare, or through one role
+ * The task slip's 2px ink bar, painted from a token — bare, or through one role
  * read that falls back to a token.
  *
- * A #2659 lane puts a composer on `factionRoleVars`, so UA's slip emits
+ * A skin migrated onto `utils/factionRoles.ts` (#2659, lanes #2673/#2674) asks
+ * its faction for the `accent` ROLE and carries today's token as the fallback,
+ * so UA's slip emits
  * `border-left:2px solid var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))`.
- * Same computed value; the wrapper is allowed exactly one level deep, so a slip
- * that draws no bar at all still fails, which is what both readers below ask.
+ * What this asserts is unchanged — a token, never a literal. The wrapper is
+ * allowed exactly one level deep, so a slip that draws no bar at all still
+ * fails, which is what both readers below ask; and the fallback itself is gated
+ * per surface by `utils/__tests__/factionRoleMigration.test.ts`, which
+ * re-derives it from the resolver.
  */
 const SLIP_LEFT_RULE =
   /border-left:2px solid var\((?:--[\w-]+,\s*var\()?--[a-z-]+\)\)?/;

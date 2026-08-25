@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { WowSigil } from "../sigil/WowSigil";
 import { AVATAR_ROOT, BadgedAvatar, avatarDim, type FactionAvatarProps } from "./FactionAvatar";
 
@@ -78,7 +79,18 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
   const pillFont = Math.max(RANK_PILL_MIN_FONT_PX, Math.round(dim * 0.102));
 
   return (
-    <span style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
+    <span
+      style={{
+        // THE ROLE MAP (#2674). Declared on the plate's own root, because the
+        // two reads below are handed to `BadgedAvatar` as PROPS — a shared,
+        // faction-blind component that must keep taking a plain string. A
+        // custom property crosses that boundary where a prefix could not.
+        ...factionRoleVars("wow", "wow-avatar"),
+        ...AVATAR_ROOT,
+        width: dim,
+        height: dim,
+      }}
+    >
       <span
         style={{
           display: "flex",
@@ -100,8 +112,8 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
           circle={{
             borderColor: "var(--faction-wow-crest-field-rim)",
             bg: "var(--faction-wow-avatar-field)",
-            textColor: "var(--faction-wow-card-text)",
-            fontFamily: "var(--faction-wow-card-font)",
+            textColor: "var(--wow-avatar-ink, var(--faction-wow-card-text))",
+            fontFamily: "var(--wow-avatar-face, var(--faction-wow-card-font))",
           }}
           badgeBg="var(--faction-wow-crest-field)"
           badgeRing="var(--faction-wow-chronicle-gold)"
@@ -118,7 +130,7 @@ export default function WowAvatar({ character, size, badge }: FactionAvatarProps
             bottom: -Math.round(dim * 0.034),
             left: "50%",
             transform: "translateX(-50%)",
-            fontFamily: "var(--faction-wow-card-font)",
+            fontFamily: "var(--wow-avatar-face, var(--faction-wow-card-font))",
             fontSize: pillFont,
             letterSpacing: "0.04em",
             lineHeight: 1.2,

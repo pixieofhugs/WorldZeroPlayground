@@ -89,7 +89,9 @@ describe('the comment wears the proclamation chrome', () => {
     expect(html).toContain('height:6px')
     expect(html).toContain('border-radius:9px')
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
-    expect(html).toContain('background:var(--faction-wow-card-bg)')
+    // The sheet asks the faction for its `paper` ROLE (#2674) and carries
+    // today's token as the fallback, so the cream is the cream it always was.
+    expect(html).toContain('background:var(--wow-comment-paper, var(--faction-wow-card-bg))')
   })
 
   it('letters the name in MedievalSharp and the quiet register in Lora italic', () => {

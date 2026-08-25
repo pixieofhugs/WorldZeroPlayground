@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { factionRoleVar } from "../../utils/factionRoles";
+
 /**
  * Warriors of Whimsy — THE SHARED ORNAMENT VOCABULARY (#1121).
  *
@@ -38,8 +40,20 @@ import type { CSSProperties, ReactNode } from "react";
 
 /** Frame + rule gold. Theme-invariant, and never an ink: 2.24:1 on the cream. */
 const GOLD = "var(--faction-wow-chronicle-gold)";
-/** Plum as INK — this one DOES flip with the theme. */
-const PLUM = "var(--faction-wow-card-accent)";
+/**
+ * Plum as INK — this one DOES flip with the theme.
+ *
+ * A ROLE, ASKED FOR DIRECTLY, BECAUSE THIS MODULE HAS NO ROOT (#2674). The
+ * surfaces in lane 04 spread `factionRoleVars(slug, '<their own prefix>')` and
+ * read `var(--<prefix>-accent, …)` below it. This file is shared vocabulary
+ * mounted under six different roots — including `WowTaskDetail`'s and
+ * `WowCreateCharacter`'s — so it has no prefix of its own to declare, and one
+ * prefix shared between the ornament and its six hosts would BE the `--kit-*`
+ * namespace the law declines. `factionRoleVar` is the resolver's answer for a
+ * single role with no all-or-nothing seam to protect; it returns the identical
+ * string this constant held before.
+ */
+const PLUM = factionRoleVar("wow", "accent");
 /**
  * Plum as ORNAMENT (#1830).
  *

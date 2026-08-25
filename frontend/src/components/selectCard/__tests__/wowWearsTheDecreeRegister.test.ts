@@ -65,6 +65,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
+import { FACTION_ROLES, factionRoleVar } from "../../../utils/factionRoles";
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
 
 const read = (relative: string): string =>
@@ -114,13 +115,32 @@ function propsBehind(
   return found;
 }
 
+/**
+ * Rider 2's one genuine case: `utils/factionRoles` DOES hand a file paint, and
+ * a text scan cannot see it (#2674).
+ *
+ * `factionRoleVars('wow', <prefix>)` declares WOW's nine core roles on a root
+ * by INTERPOLATION, so `--faction-wow-card-bg` never appears in the source as a
+ * name. Resolving it is exact rather than approximate, which is what keeps this
+ * sweep the transitive answer: the resolver can emit this faction's nine core
+ * roles and nothing else — not another family, not another faction — so a tile
+ * that adopts it cannot smuggle an off-register name in behind it.
+ */
+const ROLE_MAP_PROPS = FACTION_ROLES.map((role) =>
+  factionRoleVar("wow", role).replace(/^var\(|\)$/g, ""),
+);
+
 /** Faction paint. House tokens — spacing, the type ramp, radii — are everyone's. */
 const isFactionPaint = (prop: string): boolean =>
   prop.startsWith("--faction-") || prop.startsWith("--font-faction-");
 
 function tokensPainting(relative: string): Set<string> {
+  const source = code(relative);
   const props = new Set<string>();
-  for (const [, prop] of code(relative).matchAll(/(--[a-z0-9-]+)/g)) props.add(prop);
+  for (const [, prop] of source.matchAll(/(--[a-z0-9-]+)/g)) props.add(prop);
+  if (/factionRoleVars\(\s*["']wow["']/.test(source)) {
+    for (const prop of ROLE_MAP_PROPS) props.add(prop);
+  }
   return new Set([...props].filter(isFactionPaint));
 }
 
@@ -185,6 +205,9 @@ answer — not by widening this test.`,
     const imports = [...code(TILE).matchAll(/^import .*?from "([^"]+)";$/gm)].map((m) => m[1]);
     expect(imports.sort(), "a new import here needs `propsBehind` resolving it, the way #2325 resolves `covenSlip`").toEqual([
       "../../i18n",
+      // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
+      // one declares by interpolation to every scan (#2674).
+      "../../utils/factionRoles",
       "../sigil/WowSigil",
       "./FactionSelectCard",
     ]);
@@ -198,8 +221,8 @@ answer — not by widening this test.`,
 
   it("sets the call in the decree's own face and size", () => {
     const source = code(TILE);
-    expect(source, "MedievalSharp, from `--faction-wow-card-font`").toContain(
-      'fontFamily: "var(--faction-wow-card-font)", fontSize: "var(--text-content)"',
+    expect(source, "MedievalSharp, asked for as the `face` ROLE (#2674)").toContain(
+      'fontFamily: "var(--wow-select-card-face, var(--faction-wow-card-font))", fontSize: "var(--text-content)"',
     );
     expect(
       source,

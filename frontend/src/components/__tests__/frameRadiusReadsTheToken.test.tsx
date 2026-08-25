@@ -99,7 +99,18 @@ const render = (node: ReactElement) =>
 const frameStyle = (html: string): string => {
   const match = /style="([^"]*border-radius[^"]*)"/.exec(html);
   expect(match, "nothing in this card declares a border-radius").not.toBeNull();
-  return (match as RegExpExecArray)[1];
+  // Fold a ROLE READ back to its fallback (#2649's faction lanes, #2674 here).
+  // A migrated frame asks its faction for the `radius` role and carries today's
+  // token as the fallback — `var(--wow-feed-radius,
+  // var(--faction-wow-card-radius))` — which is the same value under a new
+  // spelling. Folding it keeps every row below pinned to its exact token
+  // instead of each lane restating its prefix in this cross-faction table; that
+  // the fallback IS the resolver's token is gated in
+  // `utils/__tests__/factionRoleMigration.test.ts`.
+  return (match as RegExpExecArray)[1].replace(
+    /var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g,
+    "$1",
+  );
 };
 
 const CASES = [

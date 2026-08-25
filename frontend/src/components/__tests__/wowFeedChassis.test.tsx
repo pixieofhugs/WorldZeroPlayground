@@ -105,7 +105,11 @@ describe('the four chrome slots (the contract every frame owes)', () => {
   it('tints the archive by INHERITANCE — the head is plum, the ✕ paints in currentColor', () => {
     // Rule 3 of the seam: the control arrives finished and is tinted by setting
     // `color` on what it sits in, never by rebuilding it.
-    expect(frame()).toContain('color:var(--faction-wow-card-accent)')
+    // The head's plum is the `accent` ROLE now (#2674), carrying today's
+    // token as its fallback — the same value, asked for by role.
+    expect(frame()).toContain(
+      'color:var(--wow-feed-accent, var(--faction-wow-card-accent))',
+    )
   })
 })
 
@@ -146,9 +150,13 @@ describe('the proclamation chrome', () => {
     // asks that the frame reads it — restating the pixel is the thing the token
     // exists to stop.
     const html = frame()
-    expect(html).toContain('border-radius:var(--faction-wow-card-radius)')
+    expect(html).toContain(
+      'border-radius:var(--wow-feed-radius, var(--faction-wow-card-radius))',
+    )
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
-    expect(html).toContain('background:var(--faction-wow-card-bg)')
+    expect(html).toContain(
+      'background:var(--wow-feed-paper, var(--faction-wow-card-bg))',
+    )
   })
 
   it('never lays the muted date ink on the parchment plate (#1221)', () => {

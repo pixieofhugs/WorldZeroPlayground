@@ -73,6 +73,16 @@ const CARVED_OUT = [
   "utils/factions.ts",
 ];
 
+/**
+ * A read of one of UA's nine core roles, spelt as the token.
+ *
+ * The lookahead is what keeps `--faction-ua-body-font`, `-panel`, `-border` and
+ * the rest of UA's non-core family out: they are decision 07's business, not a
+ * lane's, and the bare `--faction-ua` fill IS core.
+ */
+const CORE_TOKEN =
+  /--faction-ua(?:-card-(?:bg|text|muted|border|accent|radius|font)|-on-fill)?(?![a-z0-9-])/g;
+
 describe("UA's role map — the rules a diff cannot state (#2673)", () => {
   it.each(ROOTLESS)("%s takes the singular resolver and declares no prefix", (file) => {
     const text = source(file);
@@ -84,6 +94,14 @@ describe("UA's role map — the rules a diff cannot state (#2673)", () => {
       text.includes("factionRoleVar("),
       `${file} is a UA painting module and names no role at all — either it stopped painting, or it went back to naming tokens directly.`,
     ).toBe(true);
+  });
+
+  it.each(ROOTLESS)("%s names no core-role token directly", (file) => {
+    // These files declare no prefix, so there is no fallback arm to exempt:
+    // every core-role name left in one is a straggler. This is the half
+    // `factionRoleMigration`'s straggler check does for the sixteen surfaces
+    // and cannot do here, because it only walks files in its own table.
+    expect(source(file).match(CORE_TOKEN) ?? []).toEqual([]);
   });
 
   it.each(CARVED_OUT)("%s is carved out of every lane and still names tokens", (file) => {

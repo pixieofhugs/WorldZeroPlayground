@@ -5,6 +5,7 @@ import { CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
@@ -82,12 +83,24 @@ import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
  * tokens and the fourth became `--faction-wow-quest-blade`.
  */
 
-const MED = "var(--faction-wow-card-font)"; /* MedievalSharp */
+/**
+ * THE FOUR CORE ROLES ARE ASKED FOR BY NAME (#2674). The `<article>` below
+ * spreads `factionRoleVars('wow', 'wow-task-card')`, so these four are declared
+ * on the decree's own sheet and read nowhere else — the prefix belongs to this
+ * SURFACE, not to the app, because a shared namespace on a page wrapper would
+ * repaint every descendant including a card of another faction.
+ *
+ * Every read carries today's token as its fallback, so a decree renders
+ * byte-identically whether or not the vars are declared. That is what keeps
+ * `WowBand` — the shared cross-faction masthead, carved out of every lane —
+ * unaffected while it sits inside this root.
+ */
+const MED = "var(--wow-task-card-face, var(--faction-wow-card-font))"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-const INK = "var(--faction-wow-card-text)";
-const MUTED = "var(--faction-wow-card-muted)";
-const PLUM = "var(--faction-wow-card-accent)";
+const INK = "var(--wow-task-card-ink, var(--faction-wow-card-text))";
+const MUTED = "var(--wow-task-card-quiet, var(--faction-wow-card-muted))";
+const PLUM = "var(--wow-task-card-accent, var(--faction-wow-card-accent))";
 const GOLD = "var(--faction-wow-chronicle-gold)";
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const GILT = "var(--faction-wow-stamp-total)";
@@ -180,14 +193,15 @@ export default function WowTaskCard({
     >
       <article
         style={{
+          ...factionRoleVars("wow", "wow-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
           width: "100%",
-          background: "var(--faction-wow-card-bg)",
+          background: "var(--wow-task-card-paper, var(--faction-wow-card-bg))",
           border: `2px solid ${GOLD}`,
           // The decree's shape, said once (#2361/#2403).
-          borderRadius: "var(--faction-wow-card-radius)",
+          borderRadius: "var(--wow-task-card-radius, var(--faction-wow-card-radius))",
           boxShadow: "var(--faction-wow-quest-shadow)",
           color: INK,
         }}

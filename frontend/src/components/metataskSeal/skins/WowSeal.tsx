@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { WowBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
@@ -32,8 +33,13 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
     <div
       className="relative"
       style={{
+        // THE ROLE MAP (#2674), on the writ's own root. `WowBand` inside it is
+        // the shared cross-faction masthead, carved out of every lane; every
+        // read below carries today's token as its fallback, so the band and the
+        // writ resolve exactly as they did.
+        ...factionRoleVars('wow', 'wow-seal'),
         background: 'var(--faction-wow-chronicle-bg)',
-        color: 'var(--faction-wow-card-text)',
+        color: 'var(--wow-seal-ink, var(--faction-wow-card-text))',
         border: '2px solid var(--faction-wow-chronicle-border)',
         borderRadius: 6,
         overflow: 'hidden',
@@ -50,7 +56,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         style={{
           height: 5,
           background:
-            'repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 10px, var(--faction-wow-card-accent) 10px 20px)',
+            'repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 10px, var(--wow-seal-accent, var(--faction-wow-card-accent)) 10px 20px)',
         }}
       />
 
@@ -82,7 +88,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
               zIndex: 2,
               background: 'transparent',
               border: 'none',
-              color: 'var(--faction-wow-card-accent)',
+              color: 'var(--wow-seal-accent, var(--faction-wow-card-accent))',
               fontSize: 'var(--text-xl)',
               cursor: 'pointer',
             }}
@@ -96,11 +102,11 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         <span
           className="block"
           style={{
-            fontFamily: 'var(--faction-wow-card-font)',
+            fontFamily: 'var(--wow-seal-face, var(--faction-wow-card-font))',
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.14em',
-            color: 'var(--faction-wow-card-accent)',
+            color: 'var(--wow-seal-accent, var(--faction-wow-card-accent))',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -114,7 +120,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
             fontStyle: 'italic',
             fontSize: 'var(--text-content)',
             lineHeight: 1.3,
-            color: 'var(--faction-wow-card-text)',
+            color: 'var(--wow-seal-ink, var(--faction-wow-card-text))',
           }}
         >
           {metatask.title}
@@ -123,7 +129,7 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         <span
           className="block"
           style={{
-            fontFamily: 'var(--faction-wow-card-font)',
+            fontFamily: 'var(--wow-seal-face, var(--faction-wow-card-font))',
             fontSize: 'var(--text-title)',
             letterSpacing: '0.03em',
             color: 'var(--faction-wow-stamp-total)',
