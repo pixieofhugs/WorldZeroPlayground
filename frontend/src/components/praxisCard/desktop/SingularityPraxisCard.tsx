@@ -3,6 +3,7 @@ import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { SingularityBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
@@ -99,10 +100,18 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
     <div
       style={{
         ...frameBase,
+        /* THE SLAB DECLARES THE NINE ROLES AND READS FIVE (#2675). The prefix
+           belongs to this card and not to the app: `PraxisBody` below is a
+           SHARED renderer another faction's card mounts too, so a page-wide
+           `--kit-*` name would be exactly the leak the law forbids. Every read
+           carries today's token as its fallback, so the computed value is
+           byte-identical — this card is one of the four the migration freezes
+           and it owes a zero-row diff. */
+        ...factionRoleVars("singularity", "sg-praxis-card"),
         borderRadius: 8, // terminal slab
         position: "relative",
         overflow: "hidden",
-        background: "var(--faction-singularity-card-bg)",
+        background: "var(--sg-praxis-card-paper, var(--faction-singularity-card-bg))",
         border: "1px solid var(--faction-singularity-frame)",
         boxShadow: "0 4px 18px var(--color-cast-shadow)",
         /* THE STANDING RASTER — ornament geometry, raw by §4a, and the ONE
@@ -143,16 +152,16 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint="var(--faction-singularity-card-accent)"
+          tint="var(--sg-praxis-card-accent, var(--faction-singularity-card-accent))"
           muted="var(--faction-singularity-phosphor-dim)"
-          paper="var(--faction-singularity-card-bg)"
+          paper="var(--sg-praxis-card-paper, var(--faction-singularity-card-bg))"
           showCrown={showCrown}
           // A terminal has one face by definition, so Singularity answers both
           // questions with Share Tech Mono — via its own card token, not the
           // raw family (#888).
           fonts={{
-            display: "var(--faction-singularity-card-font)",
-            body: "var(--faction-singularity-card-font)",
+            display: "var(--sg-praxis-card-face, var(--faction-singularity-card-font))",
+            body: "var(--sg-praxis-card-face, var(--faction-singularity-card-font))",
           }}
           titleStyle={{
             fontFamily: "var(--font-faction-terminal)",

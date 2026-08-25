@@ -49,7 +49,7 @@
  * left alone: the 24px heading in `--color-danger` at 4.03 (a 3:1 floor) and the
  * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
-import { factionCssVar } from '../../utils/factions'
+import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
 import {
   duelSides,
   RaceRoster,
@@ -61,11 +61,20 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
-const GROUND = 'var(--faction-singularity-card-bg)'
-const PHOSPHOR = 'var(--faction-singularity-card-accent)'
+/**
+ * Four ROLES under this sheet's own prefix (#2675). The element they are
+ * declared on is the one `DuelSealSheet` paints from the `ground` prop — the
+ * container every child here mounts inside, on both the phone sheet and the
+ * desktop card — so a read below resolves against it, and against today's token
+ * anywhere else. `-phosphor-dim`, `-card-notice` and `-card-credit` are not
+ * roles: the two functional inks are a component's STATE rather than a ground,
+ * which is why the vocabulary deliberately stops at nine.
+ */
+const GROUND = 'var(--sg-duel-paper, var(--faction-singularity-card-bg))'
+const PHOSPHOR = 'var(--sg-duel-accent, var(--faction-singularity-card-accent))'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
-const BRAND_BLUE = 'var(--faction-singularity-card-muted)'
-const TERMINAL = 'var(--faction-singularity-card-font)'
+const BRAND_BLUE = 'var(--sg-duel-quiet, var(--faction-singularity-card-muted))'
+const TERMINAL = 'var(--sg-duel-face, var(--faction-singularity-card-font))'
 /**
  * The two sheet-measured functional inks (#694). This chassis is near-black in
  * BOTH themes while `--color-success` / `--color-danger` flip with the viewer,
@@ -146,7 +155,7 @@ export default function SingularityDuelSealConfirm({
   // Opponent tokens, same rule as the Default dialog and the rail: on a terminal
   // the foreign duelist's colour is the one variable that isn't phosphor, which
   // is precisely why it gets the left edge and the cast glow.
-  const accent = factionCssVar(foe.faction_slug, 'card-accent')
+  const accent = factionRoleVar(foe.faction_slug, 'accent')
   // `credit` is the #1168 seam: the shared slots' default `--color-success` is
   // 1.99:1 on the green glass in light. `alarm` is deliberately NOT passed —
   // `--color-danger` measures 3.75:1 there and the zero figure is 24px bold, so
@@ -165,6 +174,7 @@ export default function SingularityDuelSealConfirm({
       // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
+        ...factionRoleVars('singularity', 'sg-duel'),
         ...TERMINAL_GROUND,
         // The opponent still owns the edge that faces them — a spine on the
         // card, full-height when the terminal IS the screen.

@@ -136,8 +136,12 @@ function namedFamilies(source: string): string[] {
     // uppercase, nowrap and italic.
     .map((declaration) => declaration.split(/,\s*[A-Za-z-]+\s*:/)[0])
     // `factionCssVar("coven", "card-font")` builds a var() reference; its two
-    // quoted arguments are a slug and a suffix, not families.
-    .map((declaration) => declaration.replace(/factionCssVar\([^)]*\)/g, ""));
+    // quoted arguments are a slug and a suffix, not families. `factionRoleVar`
+    // is the same shape one level up (#2659) — `(slug, "face")` — and lane 05
+    // put it in a `fontFamily:`, where the ROLE NAME read as a missing family.
+    .map((declaration) =>
+      declaration.replace(/faction(?:CssVar|RoleVar)\([^)]*\)/g, ""),
+    );
   return declarations.flatMap((declaration) =>
     [...declaration.matchAll(/["']([A-Za-z][A-Za-z0-9 ]+)["']/g)].map((match) =>
       match[1].trim().toLowerCase(),

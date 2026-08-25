@@ -13,6 +13,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { useAuth } from '../../../auth/AuthContext'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 /**
  * Singularity comment voice — THE SESSION TRANSCRIPT (ADR-0006 / ADR-0018;
@@ -75,7 +76,7 @@ import { useAuth } from '../../../auth/AuthContext'
  * `#0a1f12` and is now the chassis's own `-term-panel`.
  */
 
-const MONO = 'var(--faction-singularity-card-font)' /* Share Tech Mono */
+const MONO = 'var(--sg-voice-face, var(--faction-singularity-card-font))' /* Share Tech Mono */
 
 const BG = 'var(--faction-singularity-term-bg)'
 const PANEL = 'var(--faction-singularity-term-panel)' /* the field, inset on the chassis */
@@ -151,6 +152,10 @@ function Pane({
       <div
         {...containerProps}
         style={{
+          // The pane is where the nine roles land (#2675): every mark this
+          // voice draws is a child of it, in both the composer branch and the
+          // transcript one.
+          ...factionRoleVars('singularity', 'sg-voice'),
           position: 'relative',
           flex: 1,
           minWidth: 0,

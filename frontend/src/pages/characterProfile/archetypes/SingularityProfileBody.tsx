@@ -15,10 +15,18 @@ import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './profileSkin'
+import { factionRoleVar } from '../../../utils/factionRoles'
 
-const VOID = 'var(--faction-singularity-card-bg)' // terminal black
-const PHOSPHOR = 'var(--faction-singularity-card-accent)' // green
-const SIGNAL = 'var(--faction-singularity-card-muted)' // blue chrome
+/**
+ * Three ROLES and no prefix (#2675). This file is a DRESS, not a surface: every
+ * value below travels into `ProfileSkin`, which owns the page root and the
+ * `data-theme` on it, so there is no element here to declare `--profile-*` on
+ * and a read of one would resolve nowhere. `factionRoleVar` is the law's answer
+ * for that — the same string, asked for by role.
+ */
+const VOID = factionRoleVar('singularity', 'paper') // terminal black
+const PHOSPHOR = factionRoleVar('singularity', 'accent') // green
+const SIGNAL = factionRoleVar('singularity', 'quiet') // blue chrome
 const BORDER = 'var(--faction-singularity-border-hard)'
 const FONT = 'var(--font-faction-terminal)' // Share Tech Mono
 
@@ -88,7 +96,7 @@ function heading(title: string, eyebrow: string): ReactNode {
 const dress: ProfileDress = {
   slug: 'singularity',
   dataTheme: 'dark',
-  pageBackground: 'var(--faction-singularity-card-bg)',
+  pageBackground: VOID,
   pageOverlay: PHOSPHOR_GROUND,
   ink: PHOSPHOR,
   muted: signal(70),
@@ -126,7 +134,7 @@ const dress: ProfileDress = {
     gap: 'var(--space-lg)',
     maxWidth: 440,
   },
-  barFill: 'linear-gradient(90deg, var(--faction-singularity-border-hard), var(--faction-singularity-card-accent))',
+  barFill: `linear-gradient(90deg, var(--faction-singularity-border-hard), ${PHOSPHOR})`,
   barTrack: signal(25),
   sectionHeading: heading,
   emptyStateStyle: {

@@ -329,6 +329,155 @@ const SURFACES: Surface[] = [
     ground: "sheet",
     sites: 4,
   },
+
+  /* -- Lane 05 (#2675): Singularity, 15 surfaces ---------------------------
+   *
+   * 48 own-slug core-role sites over 17 files. Two of the seventeen are absent
+   * here on purpose: `avatar/SingularityAvatar` and
+   * `characterProfile/archetypes/SingularityProfileBody` render NO ROOT at all
+   * -- the avatar hands `BadgedAvatar` four discrete colour props and the
+   * profile body is a dress `ProfileSkin` paints its own page root from -- so
+   * neither has anywhere to declare a prefix, and both take `factionRoleVar`.
+   * That is lane 04's rule (#2679) and their guard is
+   * `utils/__tests__/singularityRoleReads.test.ts`, which also sweeps all
+   * seventeen for a token named directly.
+   *
+   * Eight of the 48 sites are in those two files and one more is a direct read
+   * in the feed chassis, so 37 prefixed role reads is the whole of the rest.
+   * Two sites collapsed rather than moved -- the profile dress named `-card-bg`
+   * and `-card-accent` a second time beside consts already holding exactly
+   * those strings -- which is the shape of a deletion, not of a repaint.
+   *
+   * EVERY ONE IS `sheet`. Singularity declares no ground override, and the only
+   * arguable surface is the mobile field desk: a whole phone screen, and the
+   * nearest thing this kit has to app furniture. `chrome` is the rail's ground,
+   * so the choice is a claim about what the surface IS rather than about what it
+   * renders -- a field desk is a page of one faction's own content, not the
+   * app's chrome wearing a faction. Raised in the PR rather than assumed. */
+
+  {
+    file: "components/metataskSeal/skins/SingularitySeal.tsx",
+    slug: "singularity",
+    prefix: "sg-seal",
+    ground: "sheet",
+    sites: 7,
+  },
+  {
+    file: "components/factionHero/SingularityFactionHero.tsx",
+    slug: "singularity",
+    prefix: "sg-hero",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/praxisCard/desktop/SingularityPraxisCard.tsx",
+    slug: "singularity",
+    prefix: "sg-praxis-card",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/factionDetail/archetypes/SingularityFactionBody.tsx",
+    slug: "singularity",
+    prefix: "sg-body",
+    ground: "sheet",
+    sites: 4,
+  },
+  {
+    // Declared through `DuelSealSheet`'s `ground` prop, which that shared
+    // block already spreads onto a root it owns -- the container every
+    // child mounts inside, on the phone sheet and the desktop card alike.
+    file: "components/duel/SingularityDuelSealConfirm.tsx",
+    slug: "singularity",
+    prefix: "sg-duel",
+    ground: "sheet",
+    sites: 4,
+  },
+  {
+    file: "pages/fieldDesk/mobileArchetypes/SingularityFieldDesk.tsx",
+    slug: "singularity",
+    prefix: "sg-desk",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/taskCard/SingularityTaskCard.tsx",
+    slug: "singularity",
+    prefix: "sg-task-card",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    // A kit module mounted by two hosts, one of them OUTSIDE the lane (the
+    // score stamp, one of the frozen four). It renders a root of its own, so
+    // the prefix is declared and read entirely within this file and no host
+    // sees it -- which is what separates it from WOW's three rootless
+    // vocabulary modules (#2679), which take `factionRoleVar` instead.
+    file: "components/factionMarks/SingularityReadout.tsx",
+    slug: "singularity",
+    prefix: "sg-readout",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    // On the session slab, NOT on the `py-8` wrapper above it: that wrapper
+    // also holds the breadcrumb, which is neutral shared site chrome on the
+    // site's own ground (#2102).
+    file: "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
+    slug: "singularity",
+    prefix: "sg-praxis-detail",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    file: "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
+    slug: "singularity",
+    prefix: "sg-task-detail",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    file: "components/selectCard/SingularitySelectCard.tsx",
+    slug: "singularity",
+    prefix: "sg-select",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    file: "components/comments/voices/SingularityComment.tsx",
+    slug: "singularity",
+    prefix: "sg-voice",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    // Two core reads, one of them prefixed. The actor's ink travels through
+    // `FeedRowSkinContext` into the shared body, where `feedRowInk.test.tsx`
+    // asserts the rendered `color:var(--faction-{slug}-...)` for all nine
+    // chassis off ONE table; a var() wrapper there would make every lane edit
+    // one contended row, so it stays a bare `factionRoleVar`.
+    file: "components/feed/SingularityFeedFrame.tsx",
+    slug: "singularity",
+    prefix: "sg-feed",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    file: "pages/characterPaths/archetypes/SingularityCreateCharacter.tsx",
+    slug: "singularity",
+    prefix: "sg-path",
+    ground: "sheet",
+    sites: 1,
+  },
+  {
+    // `pageStyle`, the root of BOTH stages -- the composer page and the shared
+    // waiting surface -- as `EverymenEditPraxis` already had it.
+    file: "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
+    slug: "singularity",
+    prefix: "sg-compose",
+    ground: "sheet",
+    sites: 1,
+  },
 ];
 
 /**
@@ -365,7 +514,7 @@ function roleReads(source: string, prefix: string): [FactionRole, string][] {
   });
 }
 
-describe("every migrated site keeps the value it shipped with", () => {
+describe("a faction lane — every migrated site keeps the value it shipped with", () => {
   it.each(SURFACES)(
     "$file declares $prefix once, on the $ground ground",
     ({ file, slug, prefix, ground }) => {

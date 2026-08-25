@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName } from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -26,9 +27,15 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
  * via {@link FieldDeskHomeState}.
  */
 
-const VOID = 'var(--faction-singularity-card-bg)'
-const PHOSPHOR = 'var(--faction-singularity-card-accent)'
-const SIGNAL = 'var(--faction-singularity-card-muted)'
+// Three ROLES (#2675), declared as `--sg-desk-*` on the void container below
+// and read here behind today's tokens. The desk is the one surface in this kit
+// that is arguably app furniture rather than a sheet, but it takes the `sheet`
+// ground all the same: `chrome` is the rail's, and this faction supplies no
+// override on either — see the PR, where the question is raised rather than
+// assumed.
+const VOID = 'var(--sg-desk-paper, var(--faction-singularity-card-bg))'
+const PHOSPHOR = 'var(--sg-desk-accent, var(--faction-singularity-card-accent))'
+const SIGNAL = 'var(--sg-desk-quiet, var(--faction-singularity-card-muted))'
 const BORDER_HARD = 'var(--faction-singularity-border-hard)'
 // The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
 // palette's first stop until #1220 (ADR-0066) pointed it at na's
@@ -121,7 +128,7 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
     <div
       data-skin="singularity"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
+      style={{ ...factionRoleVars('singularity', 'sg-desk'), display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
     >
       {/* Prompt masthead */}
       <header>
