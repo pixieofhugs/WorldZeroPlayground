@@ -48,8 +48,16 @@ function walkSource(root: string): Array<[string, string]> {
 
 // Every game faction slug, bespoke or not — the pool each surface partitions
 // into bespoke vs defaulted.
+//
+// `na` IS NOT IN IT, AND ITS ABSENCE IS THE #2530 RECORD. It used to be here and
+// to sit on the defaulted side of nine rows, which was the truthful reading
+// while `Default*` was reached by `pickVariant`'s third argument rather than by
+// a manifest. na has all twenty rows now (`factions/default.ts`), so "leaves na
+// to the surface Default" would be asking na's row not to exist. What the row
+// meant is asserted where it is now true — `defaultManifest.test.tsx` pins each
+// of the twenty to the component this dispatcher used to name by hand.
 const ALL_SLUGS = [
-  'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent', 'na',
+  'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent',
 ]
 
 // The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
@@ -94,7 +102,8 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // its `taskDetail` and `praxisDetail` rows. ADR-0065 §4's "Albescent registers
 // nothing on this surface" was true while the two kits were pixel-identical and
 // stopped being true at #2404, which ruled that Albescent's borders move. `na`
-// is still absent, and permanently: it IS `DefaultEditPraxis`.
+// is absent from the ROW and present in the manifest since #2530: the row lists
+// what DRESSES the composer, and na's registration IS `DefaultEditPraxis`.
 //
 // THE `mobileFieldDesk` ROW takes `albescent` for the same reason (#2505, epic
 // #2496 ruling 5) and on the same terms — `AlbescentFieldDesk` renders
@@ -129,7 +138,9 @@ const BESPOKE: Record<string, string[]> = {
   // out in parallel behind the chassis, which is exactly the shape the note
   // above warns about. Append your slug; do not restate the list.
   //
-  // `na` is absent and permanently: it IS `DefaultCreateCharacter`.
+  // `na` is absent from this row and always will be: the row lists what
+  // RESKINS the page, and na's manifest registration (#2530) is
+  // `DefaultCreateCharacter` — the page it reskins away from.
   //
   // `albescent` WAS absent too, and the reason moved twice. It was once
   // "albescent can never be picked at creation" — #2399 re-cut that gate and it
@@ -251,6 +262,32 @@ describe('albescent registers every surface (#2531)', () => {
         `mark, a pass-through where it does not — so an ABSENT row is not "renders\n` +
         `the Default", it is a reader left to guess which of those two was meant.\n` +
         `Add the row, with one line of docblock saying which kind it is (#2531).`,
+    ).toBeDefined()
+  })
+})
+
+/**
+ * `na` REGISTERS EVERY KEY TOO, and for a different reason from Albescent's.
+ *
+ * Albescent must claim every surface so the map stops answering "does Albescent
+ * dress this?" by silence. na must claim every surface because there is nothing
+ * behind it: since #2530 a dispatcher resolves `map[resolveSlug(map, slug)]` and
+ * names no `Default*` of its own, so a missing na row is not "falls back", it is
+ * a surface that renders NOTHING for an unaffiliated player — and for every
+ * unknown slug besides.
+ *
+ * The component each row resolves to is pinned in
+ * `factions/__tests__/defaultManifest.test.tsx`; this is only the presence half,
+ * stated here so a new surface raises the bar for na in the same file it raises
+ * it for everyone else.
+ */
+describe('na registers every surface (#2530)', () => {
+  it.each(SURFACE_KEYS)('claims %s', (surface) => {
+    expect(
+      surfaceMap(surface)['na'],
+      `na has no \`${surface}\` row in factions/default.ts.\n` +
+        `Nothing is behind it: the dispatcher no longer names a Default of its\n` +
+        `own, so this surface renders nothing for an unaffiliated player.`,
     ).toBeDefined()
   })
 })

@@ -31,6 +31,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { resolveVariant } from '../../../utils/factionDispatch'
+import { resolvedArchetype } from '../../../factions/lazyArchetype'
+import { UNAFFILIATED_FACTION_SLUG } from '../../../utils/factions'
 import { surfaceMap } from '../../../factions'
 import type { CreateCharacterState } from '../useCreateCharacter'
 
@@ -53,8 +55,14 @@ const DefaultCreateCharacter = (await import('../archetypes/DefaultCreateCharact
  * parallel, which is the shared-registry shape those six PRs already have to
  * dodge once. Reading the map instead means the rows below cover each new
  * archetype the moment it registers, with nothing to append.
+ *
+ * `na` is excluded because since #2530 it is a ROW rather than the
+ * fallback behind the row — and every assertion below about "the Default"
+ * is about the component that row points at.
  */
-const REGISTERED = Object.keys(surfaceMap('createCharacter'))
+const REGISTERED = Object.keys(surfaceMap('createCharacter')).filter(
+  (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
+)
 
 function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterState {
   return {
@@ -86,7 +94,9 @@ function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterSt
 }
 
 function archetypeFor(slug: string) {
-  return resolveVariant(surfaceMap('createCharacter'), slug)
+  // Unwrapped: every archetype is code-split, so the map hands back
+  // `lazyArchetype`'s wrapper and an identity comparison needs the module.
+  return resolvedArchetype(resolveVariant(surfaceMap('createCharacter'), slug))
 }
 
 describe('the calling being picked chooses the archetype', () => {
