@@ -2044,6 +2044,46 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--faction-ua-card-bg",
     text: "--faction-ua-card-points",
   },
+
+  // THE TWO BANDS THAT STOPPED BORROWING (#2635). Both grounded on a token
+  // belonging to something else — UA on `--faction-ua-hair` ("the faintest
+  // divider", by its own comment), Coven on `--faction-coven-slip-sigil-ground`
+  // (the white disc behind the sigil) — and both now own a ground named for the
+  // band. The five other bands stand on materials their kits draw and are
+  // measured with those kits above; `the seven card masthead bands stand on
+  // their own ground` at the foot of this file is the guard that keeps it so.
+  {
+    // ONE ROW COVERS BOTH THEMES because BOTH tokens are frozen, exactly as
+    // `everymen bill masthead` above is: ground and ink are each declared once,
+    // so light and dark resolve to the same #fcf7ef on #c24a18 at 4.59:1.
+    //
+    // THE INK IS `-mast-ink` AND NOT `--faction-ua-on-fill`, which is what #2635
+    // specified. `-on-fill` is the ink for the FILL and the fill flips, so it
+    // flips too — #201a14 by night, which on a frozen orange is 3.52:1 and under
+    // the floor. This row is what caught that; a frozen ground needs a frozen
+    // ink, which is why `--faction-everymen-bill-mast-ink` exists beside its own
+    // frozen red.
+    //
+    // 4.59:1 is a deliberate DROP from the `-card-text` at 10.35:1 the band took
+    // on the hairline: it clears AA at --text-title, and the band's job is to be
+    // UA's colour rather than its quietest surface. The MARK takes the same ink
+    // — the ensō's own `--faction-ua-glow` is 1.30:1 here, which is what
+    // `markColor` exists for.
+    what: "ua card masthead band, wordmark",
+    surface: "--faction-ua-mast",
+    text: "--faction-ua-mast-ink",
+  },
+  {
+    // Coven's pair FLIPS, unlike UA's: only the day band was borrowed paint, so
+    // the night half is `-slip-sigil-ground`'s and `-slip-ink`'s own dark values
+    // under a name that belongs to the band. The day value is the CTA's
+    // `-cta-from` / `-cta-ink` transcribed rather than aliased — index.css says
+    // why at the token — so this row and `coven slip CTA band top` measure the
+    // same two hexes on purpose, at the names each surface actually names.
+    what: "coven card masthead band, wordmark",
+    surface: "--faction-coven-mast",
+    text: "--faction-coven-mast-ink",
+  },
 ];
 
 /**
@@ -4212,13 +4252,15 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
  * for a graphical object. Same number, different rule -- the same distinction
  * S.N.I.D.E.'s level-track block up the file draws.
  *
- * WHY IT NEEDS ONE AT ALL. Everywhere else on the card kit the mark stands on
- * `CovenBand`'s white `--faction-coven-slip-sigil-ground`, where the sigil's own
- * `--faction-coven` default is 3.15:1 and index.css says so at the token. The
- * faction-DIRECTORY tile has no band, so it is the first surface to lay a drawn
- * Coven mark straight on the four-stop ramp -- and `--faction-coven` is 2.11:1
- * there, which is why the tile takes `--faction-coven-slip-deep`, the module's
- * declared ornament ink, rather than borrowing the band's.
+ * WHY IT NEEDS ONE AT ALL. The card kit's own mark does not need a floor of its
+ * own: `CovenBand` hands the hat an explicit `markColor` since #2635, so on that
+ * band the mark is the wordmark's ink and is measured with it. (It used to
+ * stand on the band's borrowed white `--faction-coven-slip-sigil-ground`, at the
+ * 3.15:1 index.css still records beside `--faction-coven-on-fill`.) The
+ * faction-DIRECTORY tile has no band and hands the mark nothing, so it is the
+ * one surface that lays a drawn Coven mark straight on the four-stop ramp --
+ * and `--faction-coven` is 2.11:1 there, which is why the tile takes
+ * `--faction-coven-slip-deep`, the module's declared ornament ink.
  *
  * `-slip-mid` is the ramp's WORST stop for this in BOTH cascades: the darkest by
  * day (the whole reason the slip block up the file measures on it) and the
@@ -4273,4 +4315,113 @@ describe("the Everymen bill's drawn rule clears the graphical floor", () => {
       ).toBeGreaterThanOrEqual(AA_LARGE);
     });
   }
+});
+
+/**
+ * THE SEVEN CARD MASTHEAD BANDS STAND ON THEIR OWN GROUND (#2635).
+ *
+ * NOT A `PAIRS` ROW, because the defect is not a ratio. Both bands this issue
+ * moved were *legible*: UA's warm hairline under the leaf's body ink measured
+ * 10.35:1 and Coven's white strip under the slip ink measured better still.
+ * What was wrong is that neither ground was a colour anybody chose for a band.
+ * `--faction-ua-hair` is, by its own declaration's comment, "the faintest
+ * divider, below -rule"; `--faction-coven-slip-sigil-ground` is the disc that
+ * backs the SIGIL. Each was the nearest token to hand when the band was drawn,
+ * and a contrast sweep passes every one of those forever.
+ *
+ * SO THE GUARD IS ON THE NAME. A band's ground must be a token that belongs to
+ * the band (`-mast`, `-note-bar`) or to a material the faction's kit actually
+ * draws elsewhere — a plate's disc, a terminal's chrome, a plum banner. The
+ * table below is the decision record for all seven; a band that changes ground
+ * has to come back here and say which material it moved onto, which is the one
+ * step the failure mode skips.
+ *
+ * IT IS ALSO WHY THE OTHER FIVE DID NOT MOVE. Reading "the ground is not the
+ * faction's hue" as the bug would have flattened seven kits into one and turned
+ * S.N.I.D.E.'s note bar acid green. Five of these are right, and the table says
+ * why each is right rather than leaving that to a reader's memory.
+ */
+describe("the seven card masthead bands stand on their own ground (#2635)", () => {
+  /** Band function → the token it grounds on, and what that token IS. */
+  const BAND_GROUNDS = [
+    { band: "CovenBand", ground: "--faction-coven-mast", role: "the band's own, minted by #2635" },
+    { band: "EphemeristsBand", ground: "--faction-ephemerists-plate-disc", role: "the medallion's disc, a material the plate draws" },
+    { band: "EverymenBand", ground: "--faction-everymen-bill-mast", role: "the band's own, a frozen red" },
+    { band: "SingularityBand", ground: "--faction-singularity-term-chrome", role: "the terminal's window chrome" },
+    { band: "SnideBand", ground: "--faction-snide-note-bar", role: "the clipping's printed bar" },
+    { band: "UaBand", ground: "--faction-ua-mast", role: "the band's own, minted by #2635" },
+    { band: "WowBand", ground: "--faction-wow-plum-surface", role: "the plum the decree's CTA already stands on" },
+  ] as const;
+
+  /**
+   * The bands as declared, comments stripped — that file's header names the two
+   * retired grounds on purpose, and a guard a comment can trip is a guard the
+   * next person deletes rather than satisfies.
+   */
+  const BANDS = stripComments(sourceOf("components/cardMasthead/factionBands.tsx")).replace(
+    /^\s*\/\/.*$/gm,
+    "",
+  );
+
+  /** One band's body: `function XBand() {` up to the `\n}` that closes it. */
+  function bandBody(name: string): string {
+    const at = BANDS.indexOf(`function ${name}()`);
+    expect(at, `no \`${name}\` in components/cardMasthead/factionBands.tsx`).toBeGreaterThan(-1);
+    return BANDS.slice(at, BANDS.indexOf("\n}", at));
+  }
+
+  const groundOf = (name: string): string | null =>
+    bandBody(name).match(/background: "var\((--[a-z0-9-]+)\)"/)?.[1] ?? null;
+
+  it("declares every band the file paints", () => {
+    // The census half. Without it an EIGHTH band could arrive on a borrowed
+    // token and every row below would still pass, because none of them would be
+    // looking at it.
+    const declared = [...BANDS.matchAll(/function (\w+Band)\(\)/g)].map((match) => match[1]);
+    expect(
+      [...declared].sort(),
+      "a new band owes this table a row saying which material it stands on (#2635)",
+    ).toEqual(BAND_GROUNDS.map((row) => row.band).slice().sort());
+  });
+
+  for (const { band, ground, role } of BAND_GROUNDS) {
+    it(`${band} grounds on ${ground} — ${role}`, () => {
+      expect(
+        groundOf(band),
+        `${band}'s ground moved. A band stands on a token named for the band or for a material the kit draws; if the move is deliberate, edit the row above and say which material it is now.`,
+      ).toBe(ground);
+    });
+  }
+
+  it("no band borrows a hairline or the sigil's disc", () => {
+    // The generic half, stated in the shape a reader recognises: the next band
+    // reaching for whatever token is nearest to hand. A divider and the ground
+    // behind a mark are the two that were actually taken, so they are named
+    // rather than described.
+    const borrowed = BAND_GROUNDS.map((row) => [row.band, groundOf(row.band)] as const).filter(
+      ([, ground]) => ground !== null && /-hair$|-sigil-ground$/.test(ground),
+    );
+    expect(
+      borrowed,
+      "a hairline is a divider and a sigil ground is what sits behind a mark; neither is a band (#2635)",
+    ).toEqual([]);
+  });
+
+  it("the two bands on a faction fill hand the mark an ink it can be seen in", () => {
+    // UA's ensō defaults to `--faction-ua-glow` (1.30:1 on the new orange) and
+    // Coven's hat to `--faction-coven` (3.15:1 on white, far less on the new
+    // pink) — a faction's own mark disappears on a ground of the faction's own
+    // hue, which is exactly what `CardMasthead`'s `markColor` exists for.
+    // Everymen and WOW have passed it since their bands were built; these two
+    // are the pair #2635 added.
+    for (const [band, ink] of [
+      ["UaBand", "--faction-ua-mast-ink"],
+      ["CovenBand", "--faction-coven-mast-ink"],
+    ] as const) {
+      expect(
+        bandBody(band),
+        `${band} paints a faction fill, so its mark needs \`markColor\` — the sigil's own default is the ground's own hue`,
+      ).toContain(`markColor="var(${ink})"`);
+    }
+  });
 });
