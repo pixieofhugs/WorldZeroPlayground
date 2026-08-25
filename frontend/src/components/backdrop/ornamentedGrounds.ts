@@ -40,7 +40,7 @@
  * | coven | `.coven-backdrop`: flat ward-page + four drifting blooms | WASH |
  * | ua | `UaBackdrop`: flat mesa sand + mandala/ensō at 6–7% | WASH |
  * | albescent | `AlbescentBackdrop`: `WatercolorBackground`, byte-identical (#2531) | WASH |
- * | na, anything else | `WatercolorBackground` via the dispatcher's fallback | wash |
+ * | na, anything else | `WatercolorBackground`, na's own `backdrop` row (#2530) | wash |
  *
  * `albescent` has a component of its own as of #2531 and is still the na
  * watercolour — the registration is a PASS-THROUGH, so the row above changes

@@ -15,7 +15,8 @@
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
-import FactionFeedFrame, { DefaultFeedFrame } from "../feed/FactionFeedFrame";
+import FactionFeedFrame from "../feed/FactionFeedFrame";
+import DefaultFeedFrame from "../feed/DefaultFeedFrame";
 
 const CARD = <span>card-body</span>;
 

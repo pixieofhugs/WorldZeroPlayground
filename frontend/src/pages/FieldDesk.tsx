@@ -11,7 +11,7 @@ import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import { mediaUrl } from '../utils/media'
-import { pickVariant } from '../utils/factionDispatch'
+import { resolveVariant } from '../utils/factionDispatch'
 import { computeFactionMultiplier, formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
 import { surfaceMap } from '../factions'
@@ -21,7 +21,6 @@ import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
-import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
 
 /**
  * FieldDesk — the authenticated account home (#274). Rendered at `/` when authed
@@ -152,7 +151,7 @@ export default function FieldDesk() {
 
   // Phone + a carried life → the mobile-native home skin for that faction.
   if (formFactor === 'mobile' && homeState) {
-    const Skin = pickVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug, DefaultFieldDesk)
+    const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
     return <Skin state={homeState} />
   }
 

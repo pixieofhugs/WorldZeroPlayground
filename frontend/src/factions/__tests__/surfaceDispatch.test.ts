@@ -3,8 +3,8 @@
  *
  * One table for every surface that ships bespoke faction skins: which slugs
  * resolve to a bespoke component, and which fall through to the surface Default.
- * This replaces ~20 per-faction *Dispatch.test files that each re-proved
- * pickVariant's fall-through (now unit-tested in
+ * This replaces ~20 per-faction *Dispatch.test files that each re-proved the
+ * unknown-slug fall-through (now unit-tested in
  * utils/__tests__/factionDispatch.test.ts) while collectively MISSING factions —
  * e.g. coven and snide ship bespoke taskDetail skins but had no dispatch test
  * at all.
@@ -43,13 +43,21 @@ function walkSource(root: string): Array<[string, string]> {
 
 // The table asserts each surface's registry CONTENTS: a bespoke slug has an
 // entry, a non-bespoke faction does not (and so falls through to the surface
-// Default). pickVariant's fallback/alias/null resolution is not re-tested here —
-// it is unit-tested in utils/__tests__/factionDispatch.test.ts.
+// Default). `resolveSlug`'s null / unknown / alias resolution is not re-tested
+// here — it is unit-tested in utils/__tests__/factionDispatch.test.ts.
 
 // Every game faction slug, bespoke or not — the pool each surface partitions
 // into bespoke vs defaulted.
+//
+// `na` IS NOT IN IT, AND ITS ABSENCE IS THE #2530 RECORD. It used to be here and
+// to sit on the defaulted side of nine rows, which was the truthful reading
+// while `Default*` was reached by `pickVariant`'s third argument rather than by
+// a manifest. na has all twenty rows now (`factions/default.ts`), so "leaves na
+// to the surface Default" would be asking na's row not to exist. What the row
+// meant is asserted where it is now true — `defaultManifest.test.tsx` pins each
+// of the twenty to the component this dispatcher used to name by hand.
 const ALL_SLUGS = [
-  'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent', 'na',
+  'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent',
 ]
 
 // The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
@@ -94,7 +102,8 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // its `taskDetail` and `praxisDetail` rows. ADR-0065 §4's "Albescent registers
 // nothing on this surface" was true while the two kits were pixel-identical and
 // stopped being true at #2404, which ruled that Albescent's borders move. `na`
-// is still absent, and permanently: it IS `DefaultEditPraxis`.
+// is absent from the ROW and present in the manifest since #2530: the row lists
+// what DRESSES the composer, and na's registration IS `DefaultEditPraxis`.
 //
 // THE `mobileFieldDesk` ROW takes `albescent` for the same reason (#2505, epic
 // #2496 ruling 5) and on the same terms — `AlbescentFieldDesk` renders
@@ -129,7 +138,9 @@ const BESPOKE: Record<string, string[]> = {
   // out in parallel behind the chassis, which is exactly the shape the note
   // above warns about. Append your slug; do not restate the list.
   //
-  // `na` is absent and permanently: it IS `DefaultCreateCharacter`.
+  // `na` is absent from this row and always will be: the row lists what
+  // RESKINS the page, and na's manifest registration (#2530) is
+  // `DefaultCreateCharacter` — the page it reskins away from.
   //
   // `albescent` WAS absent too, and the reason moved twice. It was once
   // "albescent can never be picked at creation" — #2399 re-cut that gate and it
@@ -182,7 +193,7 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
 /*                                                                            */
 /* Coven and WOW are distinct factions that must never fall back on each      */
 /* other aesthetically, and a faction missing a custom experience is a design */
-/* bug. Any fallback goes to the generic Default (N/A) — pickVariant has no    */
+/* bug. Any fall-through goes to the generic Default (N/A) — dispatch has no  */
 /* cross-faction path at all — so this enforces the second half: both must be  */
 /* bespoke on every surface the core factions are.                            */
 /* -------------------------------------------------------------------------- */
@@ -255,6 +266,32 @@ describe('albescent registers every surface (#2531)', () => {
   })
 })
 
+/**
+ * `na` REGISTERS EVERY KEY TOO, and for a different reason from Albescent's.
+ *
+ * Albescent must claim every surface so the map stops answering "does Albescent
+ * dress this?" by silence. na must claim every surface because there is nothing
+ * behind it: since #2530 a dispatcher resolves `map[resolveSlug(map, slug)]` and
+ * names no `Default*` of its own, so a missing na row is not "falls back", it is
+ * a surface that renders NOTHING for an unaffiliated player — and for every
+ * unknown slug besides.
+ *
+ * The component each row resolves to is pinned in
+ * `factions/__tests__/defaultManifest.test.tsx`; this is only the presence half,
+ * stated here so a new surface raises the bar for na in the same file it raises
+ * it for everyone else.
+ */
+describe('na registers every surface (#2530)', () => {
+  it.each(SURFACE_KEYS)('claims %s', (surface) => {
+    expect(
+      surfaceMap(surface)['na'],
+      `na has no \`${surface}\` row in factions/default.ts.\n` +
+        `Nothing is behind it: the dispatcher no longer names a Default of its\n` +
+        `own, so this surface renders nothing for an unaffiliated player.`,
+    ).toBeDefined()
+  })
+})
+
 describe('Coven is bespoke on every core surface, never the Default', () => {
   it.each(REQUIRED)('coven skins %s', (surface) => {
     expect(surfaceMap(surface)['coven']).toBeDefined()
@@ -311,7 +348,7 @@ describe('every dispatcher reads surfaceMap() whole (#2529)', () => {
       offenders,
       `A dispatcher spreads surfaceMap() into an object literal.\n` +
         `That is how a slug reaches the screen without a manifest row (#2529):\n\n` +
-        `    pickVariant({ albescent: Adapter, ...surfaceMap('sigil') }, slug, Default)\n\n` +
+        `    resolveVariant({ albescent: Adapter, ...surfaceMap('sigil') }, slug)\n\n` +
         `Register the component in factions/<slug>.ts instead and pass the map\n` +
         `whole. A surface reached outside surfaceMap() is invisible to every\n` +
         `assertion in this file and gets dropped by the next refactor of its\n` +

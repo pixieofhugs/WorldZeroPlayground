@@ -19,7 +19,7 @@
  * its neighbour's page.
  */
 import { describe, it, expect } from "vitest";
-import { pickVariant } from "../../../utils/factionDispatch";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
@@ -29,7 +29,7 @@ describe("task-detail UA dispatch", () => {
   it("a UA task resolves to the bespoke UA archetype", () => {
     expect(
       resolvedArchetype(
-        pickVariant(surfaceMap("taskDetail"), "ua", DefaultTaskDetail),
+        resolveVariant(surfaceMap("taskDetail"), "ua"),
       ),
     ).toBe(UaTaskDetail);
   });
@@ -38,7 +38,7 @@ describe("task-detail UA dispatch", () => {
     for (const slug of ["__unregistered__", "na", null]) {
       expect(
         resolvedArchetype(
-          pickVariant(surfaceMap("taskDetail"), slug, DefaultTaskDetail),
+          resolveVariant(surfaceMap("taskDetail"), slug),
         ),
       ).toBe(DefaultTaskDetail);
     }

@@ -56,7 +56,7 @@
 import type { } from 'react'
 import type { DuelDetailOut } from '../../api/duel'
 import { factionCssVar } from '../../utils/factions'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import DuelSealSheet from './DuelSealSheet'
 import {
@@ -182,6 +182,6 @@ export default function DuelSealConfirm({
   taskFactionSlug,
   ...props
 }: DuelSealConfirmProps & { taskFactionSlug: string | null | undefined }) {
-  const Skin = pickVariant(surfaceMap('duelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
+  const Skin = resolveVariant(surfaceMap('duelSeal'), taskFactionSlug)
   return <Skin {...props} />
 }

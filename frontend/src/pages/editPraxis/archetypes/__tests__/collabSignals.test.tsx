@@ -32,11 +32,10 @@ import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { surfaceMap } from "../../../../factions";
-import { pickVariant } from "../../../../utils/factionDispatch";
+import { resolveVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 import { CollabSignals, type PublishButtonSkin } from "../controls";
-import DefaultEditPraxis from "../DefaultEditPraxis";
 
 const ME = 1;
 const THEM = 2;
@@ -233,7 +232,7 @@ function state(scenario: Scenario = {}): EditPraxisState {
 function renderSkin(scenario: Scenario): string {
   const slug = scenario.slug ?? null;
   const Archetype = resolvedArchetype(
-    pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+    resolveVariant(surfaceMap("editPraxis"), slug),
   )!;
   return renderToStaticMarkup(
     <MemoryRouter>

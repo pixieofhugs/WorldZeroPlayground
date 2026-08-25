@@ -1,5 +1,5 @@
 import type { } from "react";
-import { pickVariant } from "../../utils/factionDispatch";
+import { resolveVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
 import AlbescentSigil from "./AlbescentSigil";
@@ -109,7 +109,7 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
 /**
  * The na ring — a `Default*` archetype co-located with its dispatcher, which
  * `manifest.ts` names as the normal shape for three surfaces already. Exported
- * so a test can resolve the surface the way this component does (`pickVariant`
+ * so a test can resolve the surface the way this component does (`resolveVariant`
  * over `surfaceMap('sigil')`, with the na fallback named) rather than
  * re-deriving the fallback and proving its own copy instead.
  */
@@ -120,6 +120,6 @@ export function DefaultSigilAdapter({ size }: SigilVariantProps) {
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+  const Variant = resolveVariant(surfaceMap("sigil"), slug);
   return <Variant size={size} color={color} />;
 }

@@ -1,5 +1,5 @@
 import type { } from 'react'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { useAuth } from '../../auth/AuthContext'
 import type { CurrentUser } from '../../api/auth'
@@ -60,7 +60,7 @@ export default function VoteUI({
   if (!voteRegionVisible(user, viewerCanVote)) {
     return null
   }
-  const Variant = pickVariant(surfaceMap('vote'), factionSlug, DefaultVote)
+  const Variant = resolveVariant(surfaceMap('vote'), factionSlug)
   // The slug is published to the shared chrome as well as dispatched on: the
   // logged-out gate speaks in the task faction's eyebrow voice (#855) and is
   // returned from inside each widget, which takes no slug prop.

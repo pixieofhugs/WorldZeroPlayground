@@ -30,7 +30,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import { pickVariant } from '../../../utils/factionDispatch'
+import { resolveVariant } from '../../../utils/factionDispatch'
 import { surfaceMap } from '../../../factions'
 import type { CreateCharacterState } from '../useCreateCharacter'
 
@@ -41,9 +41,8 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
   useFormFactor: () => factor.value,
 }))
 
-const DefaultCreateCharacter = (await import('../archetypes/DefaultCreateCharacter')).default
-
-/** Every registered skin, plus `''` — born unaffiliated, the `na` kit. */
+/** Every registered skin — `na` among them since #2530 — plus `''`, which
+ *  resolves to na's the same way an unregistered slug does. */
 const ARCHETYPES = [...Object.keys(surfaceMap('createCharacter')), '']
 
 function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterState {
@@ -77,7 +76,7 @@ function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterSt
 
 function renderSkin(slug: string, width: 'desktop' | 'mobile'): string {
   factor.value = width
-  const Archetype = pickVariant(surfaceMap('createCharacter'), slug, DefaultCreateCharacter)
+  const Archetype = resolveVariant(surfaceMap('createCharacter'), slug)
   try {
     return renderToStaticMarkup(
       <MemoryRouter>

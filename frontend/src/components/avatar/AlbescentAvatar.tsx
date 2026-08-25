@@ -1,4 +1,5 @@
-import { avatarDim, DefaultAvatar } from './FactionAvatar'
+import DefaultAvatar from './DefaultAvatar'
+import { avatarDim } from './FactionAvatar'
 import type { FactionAvatarProps } from './FactionAvatar'
 
 /**

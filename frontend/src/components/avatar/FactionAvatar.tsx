@@ -1,22 +1,20 @@
 import type { ReactNode } from 'react'
 import type { CharacterOut } from '../../api/auth'
 import { mediaUrl } from '../../utils/media'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { factionCssVar, isKnownFaction } from '../../utils/factions'
-import DefaultSigil from '../sigil/DefaultSigil'
 
 /**
  * Per-faction avatar + membership-badge dispatcher (Tier-3 surface). Keyed by
- * the character's MEMBER faction (character.faction_slug). The default below is
- * the UNAFFILIATED / no-faction (`na`) skin (#418): the portrait/monogram inside
- * a thin spectrum ring, tagged with the spectrum sigil — every path still open.
- * All colours via --faction-default-* tokens; flips light/dark.
+ * the character's MEMBER faction (character.faction_slug).
  *
- * THERE IS NO `DefaultAvatar.tsx`, AND THAT IS NOT A GAP. `DefaultAvatar` is
- * defined in this file rather than registered as a skin, so a listing of the
- * avatar skins shows only the factions that override it. The na kit is complete;
- * it just lives here.
+ * THERE IS NO DEFAULT NAMED HERE ANY MORE (#2530). `DefaultAvatar` used to be
+ * defined in this file and passed as `pickVariant`'s fallback — the one avatar
+ * skin reached by a different mechanism from the other eight. It is
+ * `./DefaultAvatar.tsx` now and `factions/default.ts` registers it under `na`,
+ * so this dispatcher resolves all NINE slugs the same way and an unregistered
+ * slug lands on na's row rather than on an argument spelled out here.
  */
 export interface FactionAvatarProps {
   character: CharacterOut
@@ -111,103 +109,6 @@ export const AVATAR_ROOT = {
  */
 export function userMediaHook(character: CharacterOut): string | undefined {
   return character.avatar_url ? 'user-media' : undefined
-}
-
-/**
- * The na disc, and — since #2502 — the one seam a dresser may reach into it by.
- *
- * `ornament` mounts BETWEEN the ring and the sigil badge, which is the only
- * position that works and the reason this is a slot rather than a sibling span
- * in a wrapper. The badge is an absolutely positioned LATER sibling clipped to
- * the disc's lower-right, and at every size its centre falls just inside the
- * disc's edge — so an overlay mounted outside this component paints above the
- * badge and draws a spectrum arc straight across it, undoing the cut-out its
- * own ring-shadow exists to make. Earlier in the DOM it would paint above the
- * ring it dresses and beneath the badge that occludes it, exactly as the static
- * ring does today. `z-index: -1` is not the alternative: the ring span is
- * in-flow and opaque, so a negative layer is invisible rather than merely low.
- *
- * The prop is deliberately NOT on {@link FactionAvatarProps}. That interface is
- * the manifest's contract for all nine skins, and this is one component's
- * internal seam — the same shape `DefaultProfileBody`'s `identityOrnament`
- * takes.
- */
-export function DefaultAvatar({
-  character,
-  size = 'md',
-  badge: showBadge = true,
-  ornament,
-}: FactionAvatarProps & { ornament?: ReactNode }) {
-  const dim = avatarDim(size)
-  const badge = Math.max(12, Math.round(dim * 0.44))
-  return (
-    <span className={userMediaHook(character)} style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
-      {/*
-        Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
-        ramp: this is a disc, and a left-to-right ramp smears the spectrum across
-        it instead of sweeping it round. It read the linear ramp until #1127,
-        which was the one na circle in the app not taking a conic (the sigil, the
-        sidebar ring, the switcher and every profile ring all did).
-      */}
-      <span
-        style={{
-          display: 'block',
-          width: dim,
-          height: dim,
-          borderRadius: '50%',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the spectrum ring's drawn stroke width, not spacing; a rung doubles the ring.
-          padding: 2,
-          boxSizing: 'border-box',
-          background: 'var(--faction-default-rainbow-conic)',
-        }}
-      >
-        {character.avatar_url ? (
-          <img
-            src={mediaUrl(character.avatar_url)}
-            alt={character.username}
-            className="rounded-full object-cover"
-            style={{ width: '100%', height: '100%', display: 'block' }}
-          />
-        ) : (
-          <span
-            className="rounded-full flex items-center justify-center italic"
-            style={{
-              width: '100%',
-              height: '100%',
-              background: 'var(--faction-default-card-bg)',
-              color: 'var(--faction-default-card-text)',
-              fontFamily: 'var(--faction-default-card-font)',
-              fontSize: Math.round(dim * 0.44),
-              lineHeight: 1,
-            }}
-          >
-            {character.username[0]?.toUpperCase()}
-          </span>
-        )}
-      </span>
-      {ornament}
-      {/* seven-segment sigil corner mark */}
-      {showBadge && (
-        <span
-          style={{
-            position: 'absolute',
-            right: -3,
-            bottom: -3,
-            width: badge,
-            height: badge,
-            borderRadius: '50%',
-            background: 'var(--faction-default-card-bg)',
-            boxShadow: '0 0 0 1.5px var(--faction-default-card-bg)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <DefaultSigil size={badge - 3} />
-        </span>
-      )}
-    </span>
-  )
 }
 
 /**
@@ -328,7 +229,7 @@ export function BadgedAvatar({
 }
 
 export default function FactionAvatar({ character, size, glow = false, badge }: FactionAvatarProps) {
-  const Variant = pickVariant(surfaceMap('avatar'), character.faction_slug, DefaultAvatar)
+  const Variant = resolveVariant(surfaceMap('avatar'), character.faction_slug)
   const avatar = <Variant character={character} size={size} badge={badge} />
   if (!glow) return avatar
 

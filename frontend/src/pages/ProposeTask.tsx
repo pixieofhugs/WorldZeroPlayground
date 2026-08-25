@@ -14,7 +14,7 @@ import PageTitle from "../components/ui/PageTitle";
 import DefaultProposeTask from "./proposeTask/archetypes/DefaultProposeTask";
 
 // ponytail: no faction has a bespoke proposal form yet — everyone renders
-// DefaultProposeTask. Add a pickVariant dispatch here when one does.
+// DefaultProposeTask. Add a resolveVariant dispatch here when one does.
 export default function ProposeTask() {
   const { t } = useTranslation("tasks");
   const state = useProposeTask();

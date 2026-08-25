@@ -26,9 +26,8 @@ import type { ReactNode } from 'react'
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
 import type { TaskOut } from '../../api/tasks'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
-import DefaultProfileBody from './archetypes/DefaultProfileBody'
 
 /**
  * The identity panel's progression read-out, mapped by `CharacterProfile` from
@@ -82,10 +81,9 @@ export interface ProfileBodyProps {
 }
 
 export default function FactionProfileBody(props: ProfileBodyProps) {
-  const Body = pickVariant(
+  const Body = resolveVariant(
     surfaceMap('profileBody'),
     props.character.faction_slug,
-    DefaultProfileBody,
   )
   return <Body {...props} />
 }

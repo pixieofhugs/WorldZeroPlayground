@@ -13,16 +13,17 @@
  *
  * The `na` path is live, not hypothetical: `CharacterProfile` puts
  * `character.faction_slug` on the context unfiltered, and an unaffiliated
- * character's slug IS `"na"` (ADR-0030; `na` is deliberately absent from the
- * manifest list, from `GET /factions` and from `FACTION_RAINBOW_ORDER` —
- * surfaces supply it as a sentinel). So the fallback branch runs on every
- * unaffiliated player's profile.
+ * character's slug IS `"na"` (ADR-0030; it is absent from `GET /factions` and
+ * from `FACTION_RAINBOW_ORDER` — surfaces supply it as a sentinel — and since
+ * #2530 it IS in the manifest list, where its `backdrop` row is the watercolour
+ * this file asserts). So that branch runs on every unaffiliated player's
+ * profile.
  *
- * WHY BOTH HALVES ARE HERE. A fallback test alone cannot tell "falls back
- * correctly" from "always falls back" — neuter the dispatch to
- * `pickVariant(map, null, WatercolorBackground)` and a fallback-only file stays
- * green while every faction loses its ground. So every registered slug is
- * pinned to its OWN backdrop, byte for byte, in the same file.
+ * WHY BOTH HALVES ARE HERE. Testing the na answer alone cannot tell "resolves
+ * correctly" from "always resolves to na" — neuter the dispatch to
+ * `surfaceMap('backdrop').na` and an na-only file stays green while every
+ * faction loses its ground. So every registered slug is pinned to its OWN
+ * backdrop, byte for byte, in the same file.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ComponentType } from 'react'

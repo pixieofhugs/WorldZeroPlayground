@@ -160,9 +160,11 @@ export function preloadArchetype(component: AnyArchetype): void {
  * "this slug is wired to this component" rather than being softened into a
  * looser markup check.
  *
- * A plain component passes straight through, which is what the fall-through
- * cases need: `pickVariant(map, 'na', Default)` returns the undeferred
- * `Default`, and that must still compare equal to `Default`.
+ * A plain component passes straight through, which is what a test that names a
+ * `Default*` module directly needs. Note it no longer covers the na dispatch
+ * itself: since #2530 `na` is a manifest row like the other eight, so
+ * `resolveVariant(map, 'na')` hands back a DEFERRED wrapper and an identity
+ * comparison must be unwrapped here first.
  */
 export function resolvedArchetype<P>(component: ComponentType<P>): ComponentType<P> | undefined {
   const deferred = component as Partial<LazyArchetype<ComponentType<P>>>

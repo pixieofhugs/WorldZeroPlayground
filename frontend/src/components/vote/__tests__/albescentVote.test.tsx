@@ -32,7 +32,7 @@ vi.mock('../../../api/votes', () => ({
 import AlbescentVote from '../AlbescentVote'
 import DefaultVote from '../DefaultVote'
 import { surfaceMap } from '../../../factions'
-import { pickVariant } from '../../../utils/factionDispatch'
+import { resolveVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 
 function currentUser(): CurrentUser {
@@ -87,7 +87,7 @@ describe('albescent claims the vote surface', () => {
     const map = surfaceMap('vote')
     expect(map['albescent']).toBeDefined()
     const Resolved = resolvedArchetype(
-      pickVariant(map as Record<string, typeof AlbescentVote>, 'albescent', DefaultVote),
+      resolveVariant(map as Record<string, typeof AlbescentVote>, 'albescent'),
     )
     expect(Resolved).toBe(AlbescentVote)
     expect(Resolved).not.toBe(DefaultVote)

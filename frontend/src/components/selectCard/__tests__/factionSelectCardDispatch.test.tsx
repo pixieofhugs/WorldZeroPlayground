@@ -18,7 +18,7 @@ import FactionSelectCard from "../FactionSelectCard";
 import UaSelectCard from "../UaSelectCard";
 import DefaultSelectCard from "../DefaultSelectCard";
 import { surfaceMap } from "../../../factions";
-import { pickVariant } from "../../../utils/factionDispatch";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import i18n from "../../../i18n";
@@ -36,15 +36,16 @@ describe("FactionSelectCard fallback", () => {
     expect(viaDispatcher).not.toBe(markup(<UaSelectCard {...REST} />));
   });
 
-  it("wires the fallback itself to DefaultSelectCard", () => {
+  it("wires the na row itself to DefaultSelectCard", () => {
     // The markup check above would also pass if some future map row happened to
-    // render identical HTML; this pins the component identity. `na` has no
-    // manifest on purpose, so `pickVariant` reaching the fallback IS the na
-    // registration.
+    // render identical HTML; this pins the component identity. `na` HAS a
+    // manifest since #2530 — the registration used to be `pickVariant`'s third
+    // argument at this dispatcher, which is exactly the second mechanism that
+    // issue removed — so the row must exist AND point at DefaultSelectCard.
     const cards = surfaceMap("factionSelectCard");
-    expect(cards[UNAFFILIATED_FACTION_SLUG]).toBeUndefined();
+    expect(cards[UNAFFILIATED_FACTION_SLUG]).toBeDefined();
     expect(
-      resolvedArchetype(pickVariant(cards, UNAFFILIATED_FACTION_SLUG, DefaultSelectCard)),
+      resolvedArchetype(resolveVariant(cards, UNAFFILIATED_FACTION_SLUG)),
     ).toBe(DefaultSelectCard);
   });
 
@@ -98,7 +99,11 @@ describe("FactionSelectCard registered tiles are unchanged", () => {
 
   it("renders every registered faction in its own costume", () => {
     const fallback = markup(<DefaultSelectCard {...REST} />);
-    for (const slug of Object.keys(surfaceMap("factionSelectCard"))) {
+    // na excluded: its row IS the fallback (#2530), asserted above.
+    const bespoke = Object.keys(surfaceMap("factionSelectCard")).filter(
+      (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
+    );
+    for (const slug of bespoke) {
       expect(
         markup(<FactionSelectCard faction={slug} {...REST} />),
         `${slug} keeps its own tile`,

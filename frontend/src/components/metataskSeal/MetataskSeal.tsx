@@ -2,8 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { TaskOut } from '../../api/tasks'
 import { surfaceMap } from '../../factions'
-import { pickVariant } from '../../utils/factionDispatch'
-import DefaultSeal from './skins/DefaultSeal'
+import { resolveVariant } from '../../utils/factionDispatch'
 
 export interface MetataskSealProps {
   /**
@@ -46,10 +45,9 @@ export default function MetataskSeal({
   return (
     <div className="flex flex-col" style={{ gap: 'var(--space-sm)' }}>
       {metatasks.map((metatask) => {
-        const Skin = pickVariant(
+        const Skin = resolveVariant(
           surfaceMap('metataskSeal'),
           metatask.metatask_faction_slug,
-          DefaultSeal,
         )
         return (
           <Skin
