@@ -461,7 +461,13 @@ describe("the composer's shared seams (#1828)", () => {
       // …edged in the SHEET's frame, which is the half both hand-rolled bleeds
       // missed: S.N.I.D.E. drew `border: none` and the Everymen drew the rule in
       // the panels' ink.
-      expect(markup).toMatch(/border-top:1\.5px solid var\(--[a-z-]+\)/);
+      // A bare token, or a role read that falls back to one: a #2659 lane puts
+      // a composer on `factionRoleVars`, so UA's band edge emits
+      // `var(--edit-praxis-accent, var(--faction-ua-card-accent))`. Same value,
+      // and `border: none` still fails.
+      expect(markup).toMatch(
+        /border-top:1\.5px solid var\((?:--[\w-]+,\s*var\()?--[a-z-]+\)\)?/,
+      );
     },
   );
 

@@ -74,7 +74,12 @@ interface Surface {
 }
 
 /**
- * Lane 06's contact sheet, in the one place a machine can read it.
+ * EVERY LANE'S CONTACT SHEET, in the one place a machine can read it.
+ *
+ * A lane appends its own block here rather than opening a second table: the
+ * "a prefix may not be shared" check below is only true ACROSS lanes if one
+ * array holds all of them, and two half-tables would each be green while
+ * disagreeing with each other.
  *
  * S.N.I.D.E. owns the repo's only ground override (`chrome.snide`), so its
  * ground is a real choice here rather than a formality. Every surface below is
@@ -195,6 +200,151 @@ const SURFACES: Surface[] = [
     ground: "sheet",
     sites: 1,
   },
+
+  /*
+   * LANE 03 - UA (#2673). Sixteen surfaces with a root of their own.
+   *
+   * THE PREFIX IS DERIVED, NOT INVENTED: it is the surface's own key in
+   * `factions/manifest.ts::SURFACE_KEYS`, kebab-cased. That makes the sixteen
+   * names reviewable against a list that already exists rather than sixteen
+   * judgement calls, and it makes "no two surfaces share a prefix" true by
+   * construction - the keys are unique, and a surface never nests inside
+   * itself. One exception, and it is forced: a key beginning with the `faction`
+   * qualifier drops it, because `--faction-*` is the token FAMILIES' namespace
+   * and a surface must not squat in it (`factionSelectCard` -> `select-card`,
+   * `factionHero` -> `hero`, `factionBody` -> `detail-body`, which also says
+   * which page's body it is). `uaWearsTheLeafRegister` proved the point by
+   * failing on sight when the first spelling was tried.
+   *
+   * Every one is `sheet`. UA declares no ground override, and none of these is
+   * app furniture - the rail is, and it is not in this lane.
+   *
+   * Three more UA files moved onto the vocabulary and are deliberately NOT rows
+   * here, because they own no element to declare a prefix on:
+   * `characterProfile/archetypes/UaProfileBody.tsx` (a dress object handed to
+   * `ProfileSkin`), `avatar/UaAvatar.tsx` (props handed to `BadgedAvatar`) and
+   * `factionMarks/uaAtoms.tsx` (constants mounted inside a dozen different
+   * surfaces, each with its own prefix - an atom that read one surface's prefix
+   * would hard-wire that namespace into the other eleven). They take the
+   * SINGULAR `factionRoleVar`, which needs no prefix and returns the same
+   * `var()` reference each site already held.
+   */
+  {
+    file: "components/taskCard/UaTaskCard.tsx",
+    slug: "ua",
+    prefix: "task-card",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/praxisCard/desktop/UaPraxisCard.tsx",
+    slug: "ua",
+    prefix: "praxis-card",
+    ground: "sheet",
+    sites: 8,
+  },
+  {
+    file: "components/praxisCard/scoreStamp/UaScoreStamp.tsx",
+    slug: "ua",
+    prefix: "score-stamp",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    file: "components/selectCard/UaSelectCard.tsx",
+    slug: "ua",
+    prefix: "select-card",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/feed/UaFeedFrame.tsx",
+    slug: "ua",
+    prefix: "feed-frame",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/comments/voices/UaComment.tsx",
+    slug: "ua",
+    prefix: "comment",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    file: "components/metataskSeal/skins/UaSeal.tsx",
+    slug: "ua",
+    prefix: "metatask-seal",
+    ground: "sheet",
+    sites: 7,
+  },
+  {
+    file: "components/duel/UaDuelSealConfirm.tsx",
+    slug: "ua",
+    prefix: "duel-seal",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/factionHero/UaFactionHero.tsx",
+    slug: "ua",
+    prefix: "hero",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/vote/UaVote.tsx",
+    slug: "ua",
+    prefix: "vote",
+    ground: "sheet",
+    // One read - the error line. The map is all-or-nothing by design; the
+    // alternative is the vote control staying the one surface that names its
+    // faction inline.
+    sites: 1,
+  },
+  {
+    file: "pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
+    slug: "ua",
+    prefix: "mobile-field-desk",
+    ground: "sheet",
+    // Seven module constants; the forty-odd call sites below them are untouched.
+    sites: 7,
+  },
+  {
+    file: "pages/characterPaths/archetypes/UaCreateCharacter.tsx",
+    slug: "ua",
+    prefix: "create-character",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/editPraxis/archetypes/UaEditPraxis.tsx",
+    slug: "ua",
+    prefix: "edit-praxis",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/praxisDetail/archetypes/UaPraxisDetail.tsx",
+    slug: "ua",
+    prefix: "praxis-detail",
+    ground: "sheet",
+    sites: 11,
+  },
+  {
+    file: "pages/taskDetail/archetypes/UaTaskDetail.tsx",
+    slug: "ua",
+    prefix: "task-detail",
+    ground: "sheet",
+    sites: 19,
+  },
+  {
+    file: "pages/factionDetail/archetypes/UaFactionBody.tsx",
+    slug: "ua",
+    prefix: "detail-body",
+    ground: "sheet",
+    sites: 19,
+  },
 ];
 
 /**
@@ -231,7 +381,7 @@ function roleReads(source: string, prefix: string): [FactionRole, string][] {
   });
 }
 
-describe("lane 06 — every migrated site keeps the value it shipped with", () => {
+describe("every migrated site keeps the value it shipped with", () => {
   it.each(SURFACES)(
     "$file declares $prefix once, on the $ground ground",
     ({ file, slug, prefix, ground }) => {

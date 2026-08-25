@@ -3,6 +3,12 @@ import { dirname, join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import {
+  factionRoleVar,
+  type FactionGround,
+  type FactionRole,
+} from "../factionRoles";
+
 /**
  * Guard for the silently-unloaded font family (#839).
  *
@@ -136,8 +142,13 @@ function namedFamilies(source: string): string[] {
     // uppercase, nowrap and italic.
     .map((declaration) => declaration.split(/,\s*[A-Za-z-]+\s*:/)[0])
     // `factionCssVar("coven", "card-font")` builds a var() reference; its two
-    // quoted arguments are a slug and a suffix, not families.
-    .map((declaration) => declaration.replace(/factionCssVar\([^)]*\)/g, ""));
+    // quoted arguments are a slug and a suffix, not families. `factionRoleVar`
+    // (#2659) is the same shape one level up - a slug and a ROLE - and reads
+    // `factionRoleVar("ua", "face")`, whose two arguments would otherwise be
+    // harvested as families called `ua` and `face`.
+    .map((declaration) =>
+      declaration.replace(/faction(?:CssVar|RoleVar)\([^)]*\)/g, ""),
+    );
   return declarations.flatMap((declaration) =>
     [...declaration.matchAll(/["']([A-Za-z][A-Za-z0-9 ]+)["']/g)].map((match) =>
       match[1].trim().toLowerCase(),
@@ -371,6 +382,24 @@ function stringConstants(file: string, depth = 0): Map<string, string> {
     /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(["'`])((?:(?!\2).)*)\2/g,
   )) {
     bindings.set(match[1], match[3]);
+  }
+  // A ROLE READ is a string constant whose value is not written in the source:
+  // `const UA_DISPLAY = factionRoleVar("ua", "face")` (#2659). Resolve it
+  // through the resolver itself rather than restating the role map here - a
+  // second table is the drift that module exists to delete. Without this the
+  // scope inlining loses the family behind every UA display cut, and the weight
+  // guard demands the removal of a face eleven surfaces render in.
+  for (const match of source.matchAll(
+    /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*factionRoleVar\(\s*["'`]([\w-]+)["'`]\s*,\s*["'`](\w+)["'`]\s*(?:,\s*["'`](\w+)["'`]\s*)?\)/g,
+  )) {
+    bindings.set(
+      match[1],
+      factionRoleVar(
+        match[2],
+        match[3] as FactionRole,
+        (match[4] ?? "sheet") as FactionGround,
+      ),
+    );
   }
   for (const match of source.matchAll(/import\s*\{([^}]+)\}\s*from\s*["'](\.[^"']+)["']/g)) {
     const names = match[1]
