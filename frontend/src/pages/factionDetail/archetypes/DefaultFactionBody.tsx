@@ -7,7 +7,7 @@ import { factionCssVar, factionName, factionDescription } from "../../../utils/f
 import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
-import { JoinControl, type JoinControlSkin } from "../JoinControl";
+import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";

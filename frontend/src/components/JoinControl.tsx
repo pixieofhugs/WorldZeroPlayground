@@ -1,9 +1,32 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { factionName } from "../../utils/factions";
-import type { Membership } from "./useFactionDetail";
+import { factionName } from "../utils/factions";
 
 const NA_SLUG = "na";
+
+/**
+ * What the control needs from its host in order to run a join.
+ *
+ * It lives HERE, and the control now lives under `components/`, because of
+ * #2656: the trio's second host is `InvitationLetterPopup`, which is not a
+ * faction page and not an archetype. A shared control parked under `pages/` —
+ * reaching back into that page's hook for its own prop contract — is a
+ * dependency pointing the wrong way the moment anything outside that page
+ * mounts it.
+ *
+ * The faction page's `Membership` extends this and adds `state`, which the trio
+ * never reads: the host decides whether a join block is drawn at all, and by
+ * the time this renders that question is already answered. The popup builds one
+ * of these inline from `useAuth` and its own POST.
+ */
+export interface JoinTarget {
+  /** The faction the viewer would LEAVE by joining; nullish or "na" reads as unaffiliated. */
+  currentFactionSlug: string | null | undefined;
+  /** Run the join. The host owns the call and its failure; this control only reports. */
+  join: () => Promise<void>;
+  joining: boolean;
+  joinError: string | null;
+}
 
 /**
  * The paint every kit hands the join trio (#2651).
@@ -77,8 +100,9 @@ export function JoinControl({
   openLabel,
   joiningLabel,
   intro,
+  autoFocus = false,
 }: {
-  membership: Membership;
+  membership: JoinTarget;
   /** The mounted faction's display name, for the confirm sentence. */
   name: string;
   skin: JoinControlSkin;
@@ -95,6 +119,14 @@ export function JoinControl({
    * only — the confirm step replaces the pitch with the question.
    */
   intro?: ReactNode;
+  /**
+   * For a MODAL host only (#2656). `InvitationLetterPopup`'s confirm step is
+   * taller than its pitch and both steps live in one scrolling scrim, so
+   * focusing the freshly-mounted affirmative is what scrolls it into view on a
+   * short viewport (#2130). Off by default: the eight faction bodies draw this
+   * pair inline on a long page, where grabbing focus would yank the page down.
+   */
+  autoFocus?: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
 
@@ -105,6 +137,7 @@ export function JoinControl({
         <button
           type="button"
           data-join="open"
+          autoFocus={autoFocus}
           className={skin.className}
           onClick={() => setConfirming(true)}
           style={skin.openStyle}
@@ -122,6 +155,7 @@ export function JoinControl({
       skin={skin}
       joiningLabel={joiningLabel}
       onCancel={() => setConfirming(false)}
+      autoFocus={autoFocus}
     />
   );
 }
@@ -146,12 +180,15 @@ export function JoinConfirm({
   skin,
   joiningLabel,
   onCancel,
+  autoFocus = false,
 }: {
-  membership: Membership;
+  membership: JoinTarget;
   name: string;
   skin: JoinControlSkin;
   joiningLabel: ReactNode;
   onCancel: () => void;
+  /** See {@link JoinControl}. The AFFIRMATIVE takes it, never the cancel. */
+  autoFocus?: boolean;
 }) {
   const { t } = useTranslation("factions");
   const current = membership.currentFactionSlug;
@@ -184,6 +221,7 @@ export function JoinConfirm({
         <button
           type="button"
           data-join="confirm"
+          autoFocus={autoFocus}
           className={skin.className}
           onClick={() => void membership.join()}
           disabled={busy}

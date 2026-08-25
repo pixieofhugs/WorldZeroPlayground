@@ -29,6 +29,8 @@
  * the fix is at the chassis, so it has to hold for a faction nobody reported.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'
 import { AuthContext } from '../../auth/AuthContext'
@@ -85,5 +87,33 @@ describe.each(['coven', 'snide'])('invitation prospectus on a short viewport (%s
 
   it('autofocuses the primary action so the browser scrolls it into view', () => {
     expect(render(slug)).toMatch(/<button[^>]*autofocus/i)
+  })
+})
+
+/**
+ * The rendered assertion above only ever reaches the OPEN step, and the step
+ * that actually overflows is the confirm one. That was true before #2656 and it
+ * stayed true after: the confirm markup moved into `JoinConfirm`, so the popup
+ * no longer writes the `autoFocus` this file's whole premise rests on — it
+ * PASSES one, and a moved-out contract nothing checks is a contract that dies
+ * quietly at the next edit.
+ *
+ * So the claim is split, and both halves are checked:
+ *   - the popup asks for it — here, off the source, because this harness fires
+ *     no click and cannot reach the step;
+ *   - the control puts it on the AFFIRMATIVE and not on cancel — in
+ *     `joinControlOrder.test.tsx`, which can render `JoinConfirm` directly.
+ */
+describe('the confirm step keeps the autofocus that scrolls it into view', () => {
+  const source = readFileSync(
+    fileURLToPath(new URL('../InvitationLetterPopup.tsx', import.meta.url)),
+    'utf8',
+  )
+
+  it('hands the shared confirm step an autoFocus', () => {
+    const at = source.indexOf('<JoinConfirm')
+    expect(at, 'the popup mounts JoinConfirm').toBeGreaterThan(-1)
+    const mount = source.slice(at, source.indexOf('/>', at))
+    expect(mount, 'and asks it to take focus').toContain('autoFocus')
   })
 })
