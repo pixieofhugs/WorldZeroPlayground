@@ -131,7 +131,7 @@ const CASES = [
  * falls back to it.
  *
  * A #2659 lane moves a chassis onto `factionRoleVars`, so UA's actor ink is
- * emitted as `color:var(--feed-frame-accent, var(--faction-ua-card-accent))`.
+ * emitted as `color:var(--leaf-feed-frame-accent, var(--faction-ua-card-accent))`.
  * Same computed value, different bytes. The wrapper is allowed exactly one
  * level deep and must fall back to THIS token, so a repoint still fails.
  */

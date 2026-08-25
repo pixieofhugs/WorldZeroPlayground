@@ -131,7 +131,7 @@ const CASES = [
  * falls back to it.
  *
  * A #2659 lane moves a surface onto `factionRoleVars`, so the card emits
- * `border-radius:var(--task-card-radius, var(--faction-ua-card-radius))`. Same
+ * `border-radius:var(--leaf-task-card-radius, var(--faction-ua-card-radius))`. Same
  * computed value; the wrapper is allowed exactly one level deep and must fall
  * back to THIS token, so a card that copies the number still fails.
  */

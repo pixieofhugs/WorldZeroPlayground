@@ -81,11 +81,11 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
-const SHEET = 'var(--duel-seal-paper, var(--faction-ua-card-bg))'
+const SHEET = 'var(--leaf-duel-seal-paper, var(--faction-ua-card-bg))'
 const PANEL = 'var(--faction-ua-panel)'
 const LIFT = 'var(--faction-ua-lift)'
-const INK = 'var(--duel-seal-ink, var(--faction-ua-card-text))'
-const MUTED = 'var(--duel-seal-quiet, var(--faction-ua-card-muted))'
+const INK = 'var(--leaf-duel-seal-ink, var(--faction-ua-card-text))'
+const MUTED = 'var(--leaf-duel-seal-quiet, var(--faction-ua-card-muted))'
 const RULE = 'var(--faction-ua-rule)'
 const HAIR = 'var(--faction-ua-hair)'
 const NOTICE = 'var(--faction-ua-card-notice)'
@@ -120,7 +120,7 @@ export default function UaDuelSealConfirm({
         /* The nine roles under this surface's prefix (#2659/#2673). `ground` is
            the sheet's outermost element, so the three constants above and the
            `theme` handed to the shared slots all resolve inside it. */
-        ...factionRoleVars('ua', 'duel-seal'),
+        ...factionRoleVars('ua', 'leaf-duel-seal'),
         position: 'relative',
         background: SHEET,
         color: INK,

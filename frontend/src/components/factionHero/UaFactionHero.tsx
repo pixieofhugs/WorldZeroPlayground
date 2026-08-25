@@ -34,19 +34,17 @@ export default function UaFactionHero({
   ];
 
   return (
-    <header
-      style={{
-        /* The nine roles under this surface's prefix (#2659/#2673). */
-        ...factionRoleVars("ua", "hero"),
-        marginBottom: "var(--space-2xl)",
-      }}
-    >
+    <header style={{ marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
+          /* The nine roles under this surface's prefix (#2659/#2673), on the
+             PLATE rather than on the `<header>`: the header is a margin, and a
+             surface's namespace should start where the surface does. */
+          ...factionRoleVars("ua", "leaf-faction-hero"),
           border: "1px solid var(--faction-ua-rule)",
           borderRadius: "var(--radius-lg)",
           overflow: "hidden",
-          background: "var(--hero-paper, var(--faction-ua-card-bg))",
+          background: "var(--leaf-faction-hero-paper, var(--faction-ua-card-bg))",
         }}
       >
         {/* ── the plate ── */}
@@ -90,7 +88,7 @@ export default function UaFactionHero({
                   fontSize: "var(--text-display)",
                   lineHeight: 1.02,
                   letterSpacing: "-0.01em",
-                  color: "var(--hero-ink, var(--faction-ua-card-text))",
+                  color: "var(--leaf-faction-hero-ink, var(--faction-ua-card-text))",
                   margin: "var(--space-xs) 0 var(--space-sm)",
                   // No overflow-wrap: a wordmark never breaks mid-word (#2000).
                   // #2332 renamed the faction from "UA" to "Unwavering
@@ -130,7 +128,7 @@ export default function UaFactionHero({
                   fontWeight: 600,
                   fontSize: "var(--text-title)",
                   lineHeight: 1,
-                  color: "var(--hero-ink, var(--faction-ua-card-text))",
+                  color: "var(--leaf-faction-hero-ink, var(--faction-ua-card-text))",
                 }}
               >
                 {stat.value}

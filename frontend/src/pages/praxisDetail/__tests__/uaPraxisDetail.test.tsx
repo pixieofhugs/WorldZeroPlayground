@@ -413,7 +413,7 @@ describe("UA praxis detail — the dress", () => {
     const { html } = render(state());
     // Either the bare token or one role read that falls back to it: #2673 put
     // this page on `factionRoleVars`, so the plate emits
-    // `background:var(--praxis-detail-paper, var(--faction-ua-card-bg))`. Same
+    // `background:var(--leaf-praxis-detail-paper, var(--faction-ua-card-bg))`. Same
     // computed value, and a repoint to `-lift` or `-panel` still fails.
     expect(html, "the rail plates are the sheet").toMatch(
       /background:var\(--faction-ua-card-bg\)|background:var\(--[\w-]+,\s*var\(--faction-ua-card-bg\)\)/,

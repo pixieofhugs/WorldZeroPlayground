@@ -35,15 +35,15 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 
 const PAGE = 'var(--faction-ua-page)'
 const PAGE_TEXT = 'var(--faction-ua-page-text)'
-const SHEET = 'var(--mobile-field-desk-paper, var(--faction-ua-card-bg))'
+const SHEET = 'var(--leaf-mobile-field-desk-paper, var(--faction-ua-card-bg))'
 const PANEL = 'var(--faction-ua-panel)'
-const INK = 'var(--mobile-field-desk-ink, var(--faction-ua-card-text))'
-const MUTED = 'var(--mobile-field-desk-quiet, var(--faction-ua-card-muted))'
-const ACCENT = 'var(--mobile-field-desk-accent, var(--faction-ua-card-accent))'
+const INK = 'var(--leaf-mobile-field-desk-ink, var(--faction-ua-card-text))'
+const MUTED = 'var(--leaf-mobile-field-desk-quiet, var(--faction-ua-card-muted))'
+const ACCENT = 'var(--leaf-mobile-field-desk-accent, var(--faction-ua-card-accent))'
 const RULE = 'var(--faction-ua-rule)'
-const FILL = 'var(--mobile-field-desk-fill, var(--faction-ua))'
-const ON_FILL = 'var(--mobile-field-desk-on-fill, var(--faction-ua-on-fill))'
-const DISPLAY = 'var(--mobile-field-desk-face, var(--faction-ua-card-font))'
+const FILL = 'var(--leaf-mobile-field-desk-fill, var(--faction-ua))'
+const ON_FILL = 'var(--leaf-mobile-field-desk-on-fill, var(--faction-ua-on-fill))'
+const DISPLAY = 'var(--leaf-mobile-field-desk-face, var(--faction-ua-card-font))'
 const SERIF = 'var(--faction-ua-body-font)'
 
 /** The label voice: EB Garamond, tracked small caps. */
@@ -114,7 +114,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
            module constants above read them; all of them are mounted inside this
            root, which is the whole screen. `sheet` and not `chrome`: this is a
            page the faction dresses, not the app's own furniture. */
-        ...factionRoleVars('ua', 'mobile-field-desk'),
+        ...factionRoleVars('ua', 'leaf-mobile-field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',

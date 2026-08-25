@@ -204,7 +204,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
          today - the error line - but the map is all-or-nothing by design, and
          the alternative is this surface staying the one that names its faction
          inline. Values unchanged: vote is one of the frozen four. */
-      style={factionRoleVars('ua', 'vote')}
+      style={factionRoleVars('ua', 'leaf-vote')}
     >
       <div
         onMouseLeave={() => setHovered(0)}
@@ -293,7 +293,7 @@ export default function UaVote({ praxisId, currentValue }: VoteUIProps) {
           mandala blooms fuller and warmer as the rank climbs, which is the same
           reading in the widget's own vocabulary. */}
 
-      <VoteError error={error} color="var(--vote-accent, var(--faction-ua-card-accent))" />
+      <VoteError error={error} color="var(--leaf-vote-accent, var(--faction-ua-card-accent))" />
     </div>
   )
 }

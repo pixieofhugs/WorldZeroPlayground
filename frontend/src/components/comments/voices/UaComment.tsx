@@ -58,21 +58,21 @@ function note(active: boolean): CSSProperties {
        builds the note's ROOT style, and a custom property declared on an
        element is visible to that element's own declarations, so the reads
        below resolve against it. */
-    ...factionRoleVars('ua', 'comment'),
+    ...factionRoleVars('ua', 'leaf-comment'),
     display: 'flex',
     gap: 'var(--space-lg)',
     alignItems: 'flex-start',
     padding: 'var(--space-lg) var(--space-lg)',
     borderRadius: 'var(--radius-sm)',
     border: active
-      ? '1px solid var(--comment-fill, var(--faction-ua))'
+      ? '1px solid var(--leaf-comment-fill, var(--faction-ua))'
       : '1px solid var(--faction-ua-rule)',
-    borderLeft: '2px dashed var(--comment-fill, var(--faction-ua))',
+    borderLeft: '2px dashed var(--leaf-comment-fill, var(--faction-ua))',
     // The practice's paper stock, both modes: a note and the pad it is written
     // on are the same sheet. Composed from the surface primitives, so it dims
     // with the faction and needs no ternary.
     background: 'var(--faction-ua-parchment)',
-    color: 'var(--comment-ink, var(--faction-ua-card-text))',
+    color: 'var(--leaf-comment-ink, var(--faction-ua-card-text))',
   }
 }
 
@@ -105,10 +105,10 @@ export default function UaComment(props: CommentProps) {
             onChange={onChange}
             onSubmit={onSubmit}
             submitting={submitting}
-            accent="var(--comment-accent, var(--faction-ua-card-accent))"
+            accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
             onAccent="var(--faction-ua-on-accent)"
             bg="var(--faction-ua-panel)"
-            text="var(--comment-ink, var(--faction-ua-card-text))"
+            text="var(--leaf-comment-ink, var(--faction-ua-card-text))"
             // The shared string in the practice's own label voice — an OVERRIDE
             // of ComposerControls' neutral caption, not a new hint (#1195).
             hint={<span style={meta()}>{t('comments.mentionHint')}</span>}
@@ -147,7 +147,7 @@ export default function UaComment(props: CommentProps) {
               fontFamily: UA_DISPLAY,
               fontWeight: 600,
               fontSize: 'var(--text-content)',
-              color: 'var(--comment-ink, var(--faction-ua-card-text))',
+              color: 'var(--leaf-comment-ink, var(--faction-ua-card-text))',
               textDecoration: 'none',
             }}
           >
@@ -171,16 +171,16 @@ export default function UaComment(props: CommentProps) {
           {owner.editing ? (
             <CommentEditor
               owner={owner}
-              accent="var(--comment-accent, var(--faction-ua-card-accent))"
+              accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
               onAccent="var(--faction-ua-on-accent)"
               bg="var(--faction-ua-panel)"
-              text="var(--comment-ink, var(--faction-ua-card-text))"
+              text="var(--leaf-comment-ink, var(--faction-ua-card-text))"
             />
           ) : (
             <MentionText
               body={comment.body_text}
               mentions={comment.mentions}
-              accent="var(--comment-accent, var(--faction-ua-card-accent))"
+              accent="var(--leaf-comment-accent, var(--faction-ua-card-accent))"
             />
           )}
         </div>

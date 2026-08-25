@@ -191,7 +191,7 @@ const SLUGS = Object.keys(ORNAMENT);
  * read that falls back to a token.
  *
  * A #2659 lane puts a composer on `factionRoleVars`, so UA's slip emits
- * `border-left:2px solid var(--edit-praxis-accent, var(--faction-ua-card-accent))`.
+ * `border-left:2px solid var(--leaf-edit-praxis-accent, var(--faction-ua-card-accent))`.
  * Same computed value; the wrapper is allowed exactly one level deep, so a slip
  * that draws no bar at all still fails, which is what both readers below ask.
  */

@@ -204,17 +204,24 @@ const SURFACES: Surface[] = [
   /*
    * LANE 03 - UA (#2673). Sixteen surfaces with a root of their own.
    *
-   * THE PREFIX IS DERIVED, NOT INVENTED: it is the surface's own key in
-   * `factions/manifest.ts::SURFACE_KEYS`, kebab-cased. That makes the sixteen
-   * names reviewable against a list that already exists rather than sixteen
-   * judgement calls, and it makes "no two surfaces share a prefix" true by
-   * construction - the keys are unique, and a surface never nests inside
-   * itself. One exception, and it is forced: a key beginning with the `faction`
-   * qualifier drops it, because `--faction-*` is the token FAMILIES' namespace
-   * and a surface must not squat in it (`factionSelectCard` -> `select-card`,
-   * `factionHero` -> `hero`, `factionBody` -> `detail-body`, which also says
-   * which page's body it is). `uaWearsTheLeafRegister` proved the point by
-   * failing on sight when the first spelling was tried.
+   * THE PREFIX IS DERIVED, NOT INVENTED: a faction stem, then the surface's own
+   * key in `factions/manifest.ts::SURFACE_KEYS`, kebab-cased. The stem is what
+   * keeps five lanes from each claiming `--task-card-paper` for a different
+   * task card; the key half makes the sixteen names reviewable against a list
+   * that already exists rather than being sixteen judgement calls, and makes
+   * "no two surfaces share a prefix" true by construction, since the keys are
+   * unique and a surface never nests inside itself.
+   *
+   * THE STEM IS `leaf`, NOT THE SLUG, AND THAT IS FORCED. `--ua-*` is UA's
+   * RETIRED legacy family: `__tests__/uaDesktopSkin.test.tsx` renders eight
+   * surfaces and asserts `not.toMatch(/var\(--ua-[a-z]/)` on each, so
+   * `--ua-task-card-ink` fails a guard that exists to catch exactly the
+   * spelling it wears. Widening that guard to exempt role suffixes would trade
+   * a live check for a naming convenience. `leaf` is the noun this repo already
+   * uses for UA's kit — the vellum leaf, the leaf's band, the leaf's register,
+   * the "ua leaf darkest stop" rows in `factionContrast` — so it names UA and
+   * nothing else, and it is free in both the `--faction-*` and `--ua-*`
+   * namespaces.
    *
    * Every one is `sheet`. UA declares no ground override, and none of these is
    * app furniture - the rail is, and it is not in this lane.
@@ -232,70 +239,70 @@ const SURFACES: Surface[] = [
   {
     file: "components/taskCard/UaTaskCard.tsx",
     slug: "ua",
-    prefix: "task-card",
+    prefix: "leaf-task-card",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "components/praxisCard/desktop/UaPraxisCard.tsx",
     slug: "ua",
-    prefix: "praxis-card",
+    prefix: "leaf-praxis-card",
     ground: "sheet",
     sites: 8,
   },
   {
     file: "components/praxisCard/scoreStamp/UaScoreStamp.tsx",
     slug: "ua",
-    prefix: "score-stamp",
+    prefix: "leaf-score-stamp",
     ground: "sheet",
     sites: 9,
   },
   {
     file: "components/selectCard/UaSelectCard.tsx",
     slug: "ua",
-    prefix: "select-card",
+    prefix: "leaf-faction-select-card",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "components/feed/UaFeedFrame.tsx",
     slug: "ua",
-    prefix: "feed-frame",
+    prefix: "leaf-feed-frame",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "components/comments/voices/UaComment.tsx",
     slug: "ua",
-    prefix: "comment",
+    prefix: "leaf-comment",
     ground: "sheet",
     sites: 9,
   },
   {
     file: "components/metataskSeal/skins/UaSeal.tsx",
     slug: "ua",
-    prefix: "metatask-seal",
+    prefix: "leaf-metatask-seal",
     ground: "sheet",
     sites: 7,
   },
   {
     file: "components/duel/UaDuelSealConfirm.tsx",
     slug: "ua",
-    prefix: "duel-seal",
+    prefix: "leaf-duel-seal",
     ground: "sheet",
     sites: 3,
   },
   {
     file: "components/factionHero/UaFactionHero.tsx",
     slug: "ua",
-    prefix: "hero",
+    prefix: "leaf-faction-hero",
     ground: "sheet",
     sites: 3,
   },
   {
     file: "components/vote/UaVote.tsx",
     slug: "ua",
-    prefix: "vote",
+    prefix: "leaf-vote",
     ground: "sheet",
     // One read - the error line. The map is all-or-nothing by design; the
     // alternative is the vote control staying the one surface that names its
@@ -305,7 +312,7 @@ const SURFACES: Surface[] = [
   {
     file: "pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx",
     slug: "ua",
-    prefix: "mobile-field-desk",
+    prefix: "leaf-mobile-field-desk",
     ground: "sheet",
     // Seven module constants; the forty-odd call sites below them are untouched.
     sites: 7,
@@ -313,35 +320,35 @@ const SURFACES: Surface[] = [
   {
     file: "pages/characterPaths/archetypes/UaCreateCharacter.tsx",
     slug: "ua",
-    prefix: "create-character",
+    prefix: "leaf-create-character",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "pages/editPraxis/archetypes/UaEditPraxis.tsx",
     slug: "ua",
-    prefix: "edit-praxis",
+    prefix: "leaf-edit-praxis",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "pages/praxisDetail/archetypes/UaPraxisDetail.tsx",
     slug: "ua",
-    prefix: "praxis-detail",
+    prefix: "leaf-praxis-detail",
     ground: "sheet",
     sites: 11,
   },
   {
     file: "pages/taskDetail/archetypes/UaTaskDetail.tsx",
     slug: "ua",
-    prefix: "task-detail",
+    prefix: "leaf-task-detail",
     ground: "sheet",
     sites: 19,
   },
   {
     file: "pages/factionDetail/archetypes/UaFactionBody.tsx",
     slug: "ua",
-    prefix: "detail-body",
+    prefix: "leaf-faction-body",
     ground: "sheet",
     sites: 19,
   },

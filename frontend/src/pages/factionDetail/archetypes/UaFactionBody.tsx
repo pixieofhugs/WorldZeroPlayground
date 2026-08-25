@@ -40,8 +40,8 @@ import type { FactionDetailState } from "../useFactionDetail";
 const SHEET: CSSProperties = {
   position: "relative",
   overflow: "hidden",
-  background: "var(--detail-body-paper, var(--faction-ua-card-bg))",
-  color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+  background: "var(--leaf-faction-body-paper, var(--faction-ua-card-bg))",
+  color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
   border: "1px solid var(--faction-ua-rule)",
   borderRadius: "var(--radius-md)",
 };
@@ -51,8 +51,8 @@ const SOLID_ACTION: CSSProperties = {
   fontSize: "var(--text-xl)",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
-  color: "var(--detail-body-on-fill, var(--faction-ua-on-fill))",
-  background: "var(--detail-body-fill, var(--faction-ua))",
+  color: "var(--leaf-faction-body-on-fill, var(--faction-ua-on-fill))",
+  background: "var(--leaf-faction-body-fill, var(--faction-ua))",
   border: "none",
   borderRadius: "var(--radius-sm)",
   padding: "var(--space-md)",
@@ -92,7 +92,7 @@ function SectionHeading({ children }: { children: ReactNode }) {
           fontSize: "var(--text-heading)",
           lineHeight: 1.05,
           letterSpacing: "-0.01em",
-          color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+          color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
           margin: "var(--space-xs) 0 0",
         }}
       >
@@ -144,7 +144,7 @@ function Medallion({
         borderRadius: "50%",
         background: "var(--faction-ua-panel)",
         border: `${spotlight ? 2 : 1}px solid ${
-          spotlight ? "var(--detail-body-fill, var(--faction-ua))" : "var(--faction-ua-rule)"
+          spotlight ? "var(--leaf-faction-body-fill, var(--faction-ua))" : "var(--faction-ua-rule)"
         }`,
         display: "flex",
         alignItems: "center",
@@ -152,7 +152,7 @@ function Medallion({
         fontFamily: UA_DISPLAY,
         fontWeight: 600,
         fontSize: size * 0.42,
-        color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+        color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
       }}
     >
       {avatarUrl ? <img alt="" aria-hidden="true" src={mediaUrl(avatarUrl)} style={PORTRAIT} /> : initial(name)}
@@ -211,7 +211,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     },
     proseStyle: {
       ...prose,
-      color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+      color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
       marginBottom: "var(--space-lg)",
     },
     errorStyle: { ...prose, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
@@ -220,11 +220,10 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
   return (
     <div
       className="wz-faction-grid"
-      /* The nine roles under this surface's prefix (#2659/#2673). `detail-body`
-         and not `faction-body`: `--faction-*` is the token families' namespace,
-         and a surface must not squat in it. The two module-scope style objects
-         and the join skin built above all mount inside this grid. */
-      style={factionRoleVars("ua", "detail-body")}
+      /* The nine roles under this surface's prefix (#2659/#2673). The two
+         module-scope style objects and the join skin built above all mount
+         inside this grid, so the cascade reaches every read in the file. */
+      style={factionRoleVars("ua", "leaf-faction-body")}
     >
       {/* ── MAIN COLUMN ── */}
       <div
@@ -253,7 +252,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             ) : (
               <p
                 className="content-text"
-                style={{ ...prose, color: "var(--detail-body-quiet, var(--faction-ua-card-muted))" }}
+                style={{ ...prose, color: "var(--leaf-faction-body-quiet, var(--faction-ua-card-muted))" }}
               >
                 {t("detail.descriptionEmpty")}
               </p>
@@ -273,7 +272,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             {tasks.length === 0 ? (
               <p
                 className="content-text"
-                style={{ ...prose, color: "var(--detail-body-quiet, var(--faction-ua-card-muted))" }}
+                style={{ ...prose, color: "var(--leaf-faction-body-quiet, var(--faction-ua-card-muted))" }}
               >
                 {t("detail.default.tasksEmpty")}
               </p>
@@ -306,7 +305,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             {recentPraxis.length === 0 ? (
               <p
                 className="content-text"
-                style={{ ...prose, color: "var(--detail-body-quiet, var(--faction-ua-card-muted))" }}
+                style={{ ...prose, color: "var(--leaf-faction-body-quiet, var(--faction-ua-card-muted))" }}
               >
                 {t("detail.default.recentEmpty")}
               </p>
@@ -369,7 +368,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     fontFamily: UA_DISPLAY,
                     fontWeight: 600,
                     lineHeight: 1.05,
-                    color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+                    color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
                   }}
                 >
                   {t("ua.join.memberTitle")}
@@ -387,7 +386,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       bodies that split the separator out as `{" "}`, and it
                       rendered a bare "Standing ·" with no standing. */}
                   <Trans t={t} i18nKey="ua.join.memberStanding">
-                    Standing · <span style={{ color: "var(--detail-body-accent, var(--faction-ua-card-accent))" }}>practising</span>
+                    Standing · <span style={{ color: "var(--leaf-faction-body-accent, var(--faction-ua-card-accent))" }}>practising</span>
                   </Trans>
                 </div>
               </div>
@@ -408,7 +407,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                         fontFamily: UA_DISPLAY,
                         fontWeight: 600,
                         lineHeight: 1.05,
-                        color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+                        color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
                         margin: "var(--space-xs) 0 var(--space-md)",
                       }}
                     >
@@ -448,7 +447,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     fontFamily: UA_DISPLAY,
                     fontWeight: 600,
                     lineHeight: 1.05,
-                    color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+                    color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
                     margin: "var(--space-xs) 0 var(--space-md)",
                   }}
                 >
@@ -486,7 +485,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 style={{
                   ...SHEET,
                   background:
-                    "linear-gradient(160deg, var(--faction-ua-lift), var(--detail-body-paper, var(--faction-ua-card-bg)) 60%)",
+                    "linear-gradient(160deg, var(--faction-ua-lift), var(--leaf-faction-body-paper, var(--faction-ua-card-bg)) 60%)",
                   padding: "var(--space-xl) var(--space-lg)",
                   textAlign: "center",
                 }}
@@ -509,7 +508,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     fontFamily: UA_DISPLAY,
                     fontWeight: 600,
                     lineHeight: 1.05,
-                    color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+                    color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
                   }}
                 >
                   {spot.display_name}
@@ -532,7 +531,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             {register.length === 0 ? (
               <p
                 className="content-text"
-                style={{ ...prose, color: "var(--detail-body-quiet, var(--faction-ua-card-muted))" }}
+                style={{ ...prose, color: "var(--leaf-faction-body-quiet, var(--faction-ua-card-muted))" }}
               >
                 {spot
                   ? t("detail.membersEmptyWithSpotlight")
@@ -559,7 +558,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       style={{
                         fontFamily: UA_DISPLAY,
                         fontWeight: 600,
-                        color: "var(--detail-body-ink, var(--faction-ua-card-text))",
+                        color: "var(--leaf-faction-body-ink, var(--faction-ua-card-text))",
                         lineHeight: 1.15,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
