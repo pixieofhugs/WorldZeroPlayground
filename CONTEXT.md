@@ -74,6 +74,42 @@ rename `analog→everymen`, `gestalt→wow`, `journeymen→ephemerists` **has la
 `singularity`, `ua`, `albescent`, `na`) — **no legacy slugs remain**.
 _Avoid_: faction id, key (CSS uses a separate hyphenated "css key").
 
+**CSS key**:
+The hyphenated family name a slug resolves to for paint — the `<key>` in
+`--faction-<key>-*`. `CSS_KEY` in `utils/factions.ts` is the table, and it is not the
+identity map: **`albescent` and `na` both resolve to `default`**, which is why
+`isKnownFaction` is false for both (it tests the mapped *value*, not key presence). So a
+slug names who a character is and a css key names which colour family paints them, and
+those are two questions.
+_Avoid_: key on its own, faction key, colour key.
+
+**Role**:
+One of the nine names a surface reads paint by — `paper`, `ink`, `quiet`, `line`,
+`accent`, `fill`, `onFill`, `radius`, `face`. A surface reads a role, never a token: it
+spreads the map on its root under its own prefix and reads `var(--<prefix>-<role>)` below.
+The list is owned by `utils/factionRoles.ts` and is deliberately short — the count is the
+design, and it is held there rather than restated here.
+_Avoid_: token, slot (a **content slot** is data, a role is paint), variable.
+
+**Role map**:
+The table pointing each role at a token `index.css` already declares — one per faction,
+per ground. **A faction supplies a map, not values**: no role introduces a colour, so a
+family has no second table to drift from and no hex without a dark half. Reached through
+`factionRoleVars` (the whole vocabulary, spread on a root) or `factionRoleVar` (one role,
+for a surface composing something local out of it).
+_Avoid_: theme, palette, register (a **register** is a family's set of tokens; the map
+points at them).
+
+**Ground**:
+Which surface a role is being read *on* — `sheet` (a surface a faction dresses) or
+`chrome` (the app's own furniture, which a faction tints). One override exists,
+S.N.I.D.E. on `chrome`. The distinction is a judgement call made per surface rather than
+a property of the faction, which is why it needs a word: a page a faction dresses is not
+the app's own furniture, and an unaffiliated viewer should see the app on `chrome` rather
+than the neutral faction family.
+_Avoid_: surface (a **surface** is the UI region; a ground is which of two ways it reads
+the map), context, mode.
+
 **Legacy slug** *(retired — ADR-0004; historical term only)*:
 A slug once kept after a rebrand to dodge DB/plumbing churn: `analog` shown as "Everymen",
 `gestalt` as "Warriors of Whimsy", `journeymen` as "The Ephemerists". This trick was the
