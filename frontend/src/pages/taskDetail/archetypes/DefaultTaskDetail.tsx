@@ -7,13 +7,14 @@ import { factionFill, factionName, factionSheet } from "../../../utils/factions"
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -68,7 +69,9 @@ function initialsOf(name: string): string {
  *   is correct (ADR-0055), and the factor comes raw off the state contract,
  *   never reconstructed as `modifiedPoints / basePoints`. The `base` row it sits
  *   in shares that one gate and goes with it, so a neutral task shows the total
- *   alone rather than the same number twice — see {@link showWorthBreakdown}.
+ *   alone rather than the same number twice. Since #2554 that selection is
+ *   `scoreBreakdown`'s, made inside {@link TaskWorthStamp} off the same raw
+ *   factor — the panel no longer owns a second copy of the rule.
  *
  * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
  * the size set and drops the two-column split. The separate mobile skin this
@@ -137,19 +140,14 @@ export default function DefaultTaskDetail({
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -160,10 +158,13 @@ export default function DefaultTaskDetail({
   // Null on a metatask carrying the generic sentinel — the issuer line below the
   // title is that page's one faction statement (#2282). See `headerFactionName`.
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
   const authorName = task.created_by_display_name ?? "";
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const sheet: CSSProperties = {
     background: "var(--faction-default-card-bg)",
@@ -228,101 +229,31 @@ export default function DefaultTaskDetail({
     </div>
   );
 
-  // ── Score readout: base + the ×mult badge (both usually absent), and the
-  //    total. The breakdown row and its hairline go together — with nothing
-  //    above it the rule would divide the total from nothing (#1704).
-  const scoreBody = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-      {showBreakdown && (
-        <>
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-            <span className="label-caption">{t("detail.points.base")}</span>
-            <span
-              style={{
-                fontFamily: "var(--font-accent)",
-                fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
-                lineHeight: 0.8,
-                color: "var(--faction-default-card-text)",
-              }}
-            >
-              {basePoints}
-            </span>
-            <span
-              className="spectrum-rule"
-              style={{
-                marginLeft: "auto",
-                display: "block",
-                padding: "var(--space-xs)",
-                borderRadius: 7,
-              }}
-            >
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "var(--font-accent)",
-                  fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
-                  lineHeight: 0.95,
-                  letterSpacing: "0.02em",
-                  color: "var(--faction-default-card-text)",
-                  background: "var(--color-bg-page)",
-                  borderRadius: 5,
-                  padding: "var(--space-xs) var(--space-sm)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {t("detail.points.multiplier", {
-                  multiplier: factionMultiplier.toFixed(2),
-                })}
-              </span>
-            </span>
-          </div>
-          <div aria-hidden className="spectrum-rule" style={{ height: 1 }} />
-        </>
-      )}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-xs)",
-          lineHeight: 1,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-accent)",
-            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
-            lineHeight: 1.02,
-            color: "var(--faction-default-card-text)",
-          }}
-        >
-          {modifiedPoints}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-accent)",
-            fontSize: "var(--text-lg)",
-            letterSpacing: "0.06em",
-            color: "var(--faction-default-gold)",
-            // The shout is CSS, not copy (#2598) — see WowTaskDetail's note.
-            textTransform: "uppercase",
-          }}
-        >
-          {t("detail.points.total", { count: modifiedPoints })}
-        </span>
-      </div>
-    </div>
-  );
+  /* THE SCORE READOUT IS THE FACTION'S OWN STAMP NOW (#2554).
+
+     ~80 lines of base row, spectrum-ruled ×mult chip and rainbow total stood
+     here — na's SECOND drawing of a score, beside the one
+     `DefaultScoreStamp` already draws on every praxis card. The stamp is a
+     registered surface (ADR-0049) and size-agnostic by contract, so the panel
+     mounts it and the row policy, the ×1.0 gate and the total's format all
+     come from the one place that owns them.
+
+     `worthSlot` still wins where a caller passes one: Albescent's prism ring is
+     the recorded exception and this seam is how it stays one. */
+  const scoreBody = <TaskWorthStamp state={state} />;
 
   // ── The one action slot: sign up / continue / edit. Nothing renders when the
   //    viewer has no move to make — an unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryButton}>
-            {t(signupCtaKey(task.signup_reason))}
-          </button>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still na's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryButton}>
+            {cta.label}
+          </CardCtaControl>
           <div
             className="font-body"
             style={{

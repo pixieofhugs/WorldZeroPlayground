@@ -138,13 +138,33 @@ describe("task-detail content-slot invariant", () => {
     //
     // This is the half a catalog check cannot do: downcasing the value is only
     // safe while the element still shouts, and losing the transform is silent.
-    it(`${slug} shouts the points unit in CSS, not in the catalog`, () => {
-      const unit = i18n.t("tasks:detail.points.total", { count: 4242 });
-      expect(unit, "the catalog holds sentence case").toBe("Points");
+    // #2554 moved this rule's SUBJECT. Eight archetypes draw the faction's own
+    // `ScoreStamp` now, which letters its unit off `praxis:card.stamp.points`
+    // and dresses it per skin — Coven capitalises the word, the Ephemerists set
+    // it in small caps — so "every task-detail skin uppercases it" stopped
+    // being true of anything. What survives here is the negative: no archetype
+    // but Albescent may print the page's own key, i.e. none of them has grown a
+    // second hand-drawn readout back. Albescent's own shout is asserted below,
+    // outside the loop, because it is the only skin the rule still has.
+    it(`${slug} draws no second worth readout of its own`, () => {
       const { html } = render(<Archetype state={baseState({})} />);
-      expect(enclosingTag(html, unit), `${slug} lost the shout`).toContain(
-        "text-transform:uppercase",
-      );
+      const pageUnit = i18n.t("tasks:detail.points.total", { count: 4242 });
+      if (slug === "albescent") {
+        expect(html, "the prism ring keeps the page's key").toContain(pageUnit);
+        // …and #2598's rule still holds where its subject survives: the catalog
+        // is sentence case and the element does the shouting.
+        expect(pageUnit, "the catalog holds sentence case").toBe("Points");
+        expect(enclosingTag(html, pageUnit), "the ring lost the shout").toContain(
+          "text-transform:uppercase",
+        );
+        return;
+      }
+      expect(html, `${slug} re-grew a hand-drawn unit`).not.toContain(pageUnit);
+      // The stamp is still drawing the worth — the figure is the anchor rather
+      // than a unit word, because the unit is the STAMP's and each faction
+      // words it for itself (S.N.I.D.E. strikes `pts`; Wow and Singularity
+      // letter no unit at all beside their total).
+      expect(html, `${slug} lost the worth cell`).toContain("4242");
     });
 
     it(`${slug} renders the signup CTA when canSignUp`, () => {

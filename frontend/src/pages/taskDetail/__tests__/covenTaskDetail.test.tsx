@@ -42,7 +42,14 @@ import { aTask } from '../../../test/fixtures'
  *
  * 18 is `modifiedPoints` in every state below, so this is the plural.
  */
-const POINTS_UNIT = i18n.t("tasks:detail.points.total", { count: 18 });
+/**
+ * THE KEY MOVED IN #2554. The panel's worth cell is `CovenScoreStamp` now,
+ * not a second readout this page draws, so the unit is the stamp's shared
+ * `praxis:card.stamp.points` rather than `tasks:detail.points.total` — which
+ * Albescent alone still prints. Reading the catalog rather than typing the
+ * word is what made that a one-line change here.
+ */
+const POINTS_UNIT = i18n.t("praxis:card.stamp.points", { count: 18 });
 
 
 const TASK = aTask({
@@ -111,7 +118,10 @@ describe("Coven task detail — the dress", () => {
     expect(html, "the ward wash is gone from this column").not.toContain("coven-candle-backdrop");
     expect(html, "braided thread rules").toContain("cvn-braid");
     expect(html, "turning pentagram watermark").toContain("cvn-wheel");
-    expect(html, "the ward's breathing aura").toContain("cvn-candle");
+    // `.cvn-candle` — the ward's breathing aura — left with the ward in
+    // #2554: the worth cell is `CovenScoreStamp` (the arched plate and the
+    // cauldron) and this page draws no pentagram of its own. The class is
+    // still live on `CovenPraxisDetail`, so index.css keeps it.
   });
 
   it("speaks in the faction's four faces, all via tokens", () => {
@@ -148,74 +158,15 @@ describe("Coven task detail — the dress", () => {
   });
 });
 
-describe("Coven task detail — the ward's geometry (#2237)", () => {
-  /**
-   * The seam is the EMITTED SVG: the ward's pentagram and the pink ring it is
-   * inscribed in, both read straight out of the markup and measured against each
-   * other. Layout is unreachable in this harness, but "is this vertex inside that
-   * circle" is arithmetic on two attributes, so it is the part of "the star
-   * escapes the circle" a test can actually hold.
-   *
-   * It escaped because the path was typed by hand — vertices at radius 34.0 to
-   * 34.9 inside a ring of 33, poking out at all five tips. Re-nudging those
-   * numbers is what this guards: the star's radius must stay DERIVED from the
-   * ring's, or the next hand-tuned `d` walks straight back out.
-   */
+/* THE WARD'S GEOMETRY SUITE LEFT WITH THE WARD (#2554).
 
-  /** The `<svg>` chunk holding the ward — the one that draws the pink ring. */
-  function wardSvg(html: string): string {
-    const svg = html.split("<svg").find((chunk) => /cx="50" cy="50" r="[\d.]+"/.test(chunk));
-    expect(svg, "the ward's svg is in the markup").toBeTruthy();
-    return svg as string;
-  }
-
-  /** The pentagram is the only five-vertex ABSOLUTE path here — the twinkles are
-   * relative (`l`) and the numeral is text. */
-  function starVertices(svg: string): [number, number][] {
-    const star = svg.match(/d="(M[\d.]+ [\d.]+(?: L[\d.]+ [\d.]+){4} Z)"/);
-    expect(star, "the pentagram is drawn").toBeTruthy();
-    const vertices = [...star![1].matchAll(/([\d.]+) ([\d.]+)/g)].map(
-      ([, x, y]) => [Number(x), Number(y)] as [number, number],
-    );
-    expect(vertices, "five points").toHaveLength(5);
-    return vertices;
-  }
-
-  it("inscribes the pentagram inside the ring — every tip, stroke included", () => {
-    const svg = wardSvg(render(<CovenTaskDetail state={baseState()} />).html);
-
-    const ring = svg.match(/cx="50" cy="50" r="([\d.]+)"[^>]*?stroke-width="([\d.]+)"/);
-    expect(ring, "the ring carries a radius and a stroke").toBeTruthy();
-    const ringR = Number(ring![1]);
-    const ringStroke = Number(ring![2]);
-
-    const starStroke = Number(
-      svg.match(/d="M[\d.]+ [\d.]+(?: L[\d.]+ [\d.]+){4} Z"[\s\S]*?stroke-width="([\d.]+)"/)![1],
-    );
-
-    // A round join puts a tip's outer edge at radius + strokeWidth / 2; the
-    // ring's inner face sits at its radius - strokeWidth / 2. Inside is inside
-    // of both, which is the whole sum.
-    const ceiling = ringR - ringStroke / 2 - starStroke / 2;
-    const radii = starVertices(svg).map(([x, y]) => Math.hypot(x - 50, y - 50));
-    for (const radius of radii) {
-      expect(radius, `a tip at radius ${radius} stays inside the ring`).toBeLessThanOrEqual(
-        ceiling + 0.01,
-      );
-    }
-    // ...and it is still a pentacle rather than a shrunken dot: the tips reach.
-    expect(Math.min(...radii), "the tips still touch the ring").toBeGreaterThan(ceiling - 0.5);
-  });
-
-  it("centres the star on the ring, not below it", () => {
-    const vertices = starVertices(wardSvg(render(<CovenTaskDetail state={baseState()} />).html));
-    // A regular pentagram's vertices average to its own centre. The old path
-    // averaged to y = 50.64 — a hand-nudge that dropped the whole figure.
-    const mean = (values: number[]) => values.reduce((a, b) => a + b, 0) / values.length;
-    expect(mean(vertices.map(([x]) => x))).toBeCloseTo(50, 1);
-    expect(mean(vertices.map(([, y]) => y))).toBeCloseTo(50, 1);
-  });
-});
+   It measured a pentagram against the pink ring it was inscribed in, both
+   emitted by a `Ward` component this file owned — #2237's fix was that the
+   star's radius must be DERIVED from the ring's rather than hand-typed. The
+   worth cell is `CovenScoreStamp` now, which draws the arched plate and
+   `CovenCauldron` and no ward at all, so there is no drawing left here for
+   the rule to hold. Nothing about #2237 is relaxed: its subject was deleted.
+   `covenScoreStamp.test.tsx` guards the mark that replaced it. */
 
 describe("Coven task detail — the copy", () => {
   it("uses the shared neutral headings, not Coven's retired detail voice", () => {
@@ -269,7 +220,7 @@ describe("Coven task detail — the contract", () => {
     );
     expect(text).toContain("×1.50");
     expect(text, "base still legible").toContain("120");
-    expect(text, "the ward carries the total").toContain("180");
+    expect(text, "the cauldron carries the total").toContain("180");
   });
 
   it("renders the in-progress population as a header count", () => {

@@ -189,8 +189,15 @@ describe("Albescent task detail — Default plus the light", () => {
   });
 
   it("strips to Default: the wrapper adds no copy of its own", () => {
+    // CASE-INSENSITIVE since #2554. Default's worth cell is
+    // `DefaultScoreStamp`, which letters `praxis:card.stamp.points`
+    // lower-case; Albescent's ring still prints `tasks:detail.points.total`
+    // through the `worthSlot` seam, which is sentence case. Both catalogs
+    // say the same word, and a wrapper that added a word of its OWN would
+    // still be caught — case is the one difference this comparison may not
+    // treat as vocabulary.
     const words = (markup: string) =>
-      new Set(markup.match(/[A-Za-z]{3,}/g) ?? []);
+      new Set((markup.match(/[A-Za-z]{3,}/g) ?? []).map((w) => w.toLowerCase()));
     const wrapped = words(render(<AlbescentTaskDetail state={baseState()} />).text);
     const plain = words(render(<DefaultTaskDetail state={baseState()} />).text);
     // The prism ring is an ARRANGEMENT of the same numbers, so the vocabulary is

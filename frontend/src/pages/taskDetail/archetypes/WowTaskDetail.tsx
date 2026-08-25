@@ -8,13 +8,14 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -94,7 +95,6 @@ const GOLD = "var(--faction-wow-chronicle-gold)";
 /** The burnt gold reserved for the total. 4.80:1 on the plaque. */
 const GILT = "var(--faction-wow-stamp-total)";
 const CARD = "var(--faction-wow-card-bg)";
-const PANEL = "var(--faction-wow-chronicle-panel)";
 const INSET = "var(--faction-wow-detail-inset)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 
@@ -243,19 +243,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -265,10 +260,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const framed: CSSProperties = {
     background: CARD,
@@ -312,100 +310,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The worth: base, the (usually absent) ×mult chip, and the struck plaque ──
-  const worth = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "var(--space-md)",
-      }}
-    >
-      {showBreakdown && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.points.base")}</span>
-          <span style={{ fontFamily: MED, fontSize: size.base, lineHeight: 1, color: INK }}>
-            {basePoints}
-          </span>
-          <span
-            style={{
-              fontFamily: MED,
-              fontSize: "var(--text-lg)",
-              lineHeight: 1.3,
-              color: ON_PLUM,
-              background: PLUM_SURFACE,
-              border: `1.5px solid ${PLUM_EDGE}`,
-              borderRadius: 5,
-              padding: "var(--space-xs) var(--space-sm)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
-          </span>
-        </div>
-      )}
+  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
 
-      {/* The plaque, struck two degrees off true. */}
-      <div
-        style={{
-          position: "relative",
-          transform: "rotate(-2deg)",
-          background: PANEL,
-          border: `2px solid ${GOLD}`,
-          borderRadius: 6,
-          boxShadow: "2px 3px 0 var(--faction-wow-stamp-shadow)",
-          padding: "var(--space-md) var(--space-lg)",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "center",
-            gap: "var(--space-xs)",
-          }}
-        >
-          <span
-            style={{ fontFamily: MED, fontSize: size.plaqueTotal, lineHeight: 0.8, color: GILT }}
-          >
-            {modifiedPoints}
-          </span>
-          {/* The ✦ is a dingbat, not text (§4) — the only reason it may be
-              painted in the gold, at 2.00:1 on the panel. */}
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the faction glyph, sized to the numeral it trails. */}
-          <span aria-hidden="true" style={{ fontFamily: MED, fontSize: 15, color: GOLD }}>
-            ✦
-          </span>
-        </div>
-        <div
-          style={{
-            ...QUIET,
-            fontSize: "var(--text-md)",
-            color: PLUM,
-            marginTop: "var(--space-xs)",
-            // The shout is CSS, not copy (#2598). The catalog used to hold
-            // "POINTS" pre-shouted, which left the next editor unable to tell
-            // whether the caps were the design or the copy. `QUIET` carries no
-            // transform of its own, so this is the sheet's, and the rendering
-            // is unchanged.
-            textTransform: "uppercase",
-          }}
-        >
-          {t("detail.points.total", { count: modifiedPoints })}
-        </div>
-      </div>
-    </div>
-  );
+     A base row, a ×mult chip and a struck plaque stood here — a SECOND drawing of a score, beside
+     the one this faction's registered `scoreStamp` surface (ADR-0049) already
+     draws on every praxis card. The stamp is size-agnostic by contract, so the
+     panel mounts it and the row policy, the ×1.0 gate and the total's format
+     all come from the one place that owns them. */
+  const worth = <TaskWorthStamp state={state} />;
 
   const ctaStyle = (ghost: boolean): CSSProperties => ({
     display: "flex",
@@ -448,13 +360,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   //    an unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={ctaStyle(false)}>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={ctaStyle(false)}>
             <Star size={13} color={ON_PLUM} />
-            {t(signupCtaKey(task.signup_reason))}
-          </button>
+            {cta.label}
+          </CardCtaControl>
           <div style={{ ...quietNote, textAlign: "center", marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
             {!levelJumpSignup && (

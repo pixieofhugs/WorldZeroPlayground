@@ -8,13 +8,14 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -139,37 +140,6 @@ const CAPTION: CSSProperties = {
   color: LABEL,
 };
 
-/** A four-point star, centred on (x, y) with arm length r. */
-function starPath(x: number, y: number, r: number): string {
-  const long = r * 2.6;
-  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
-}
-
-/**
- * A five-point star, points up, drawn on the circle of radius `r` about
- * (cx, cy) — every vertex lands ON that circle by construction.
- */
-function pentagramPath(cx: number, cy: number, r: number): string {
-  const vertex = (i: number) => {
-    const angle = ((-90 + i * 144) * Math.PI) / 180;
-    return `${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy + r * Math.sin(angle)).toFixed(2)}`;
-  };
-  return `M${[0, 1, 2, 3, 4].map(vertex).join(" L")} Z`;
-}
-
-/* ── The ward's two concentric drawings, in its own 0 0 100 100 box. ────────
- * The pentagram's radius is DERIVED from the ring's, never typed: its tips land
- * on the ring's inner face, so the two strokes kiss and neither crosses. A typed
- * radius is exactly how the star got outside the circle (#2237) — it was on 34.9
- * against a ring of 33, which reads as a mistake at both ward sizes and at every
- * zoom. Round joins put a tip's outer edge at radius + strokeWidth / 2, so that
- * is the whole of the sum.
- */
-const RING_R = 33;
-const RING_STROKE = 1.8;
-const STAR_STROKE = 1;
-const WARD_STAR = pentagramPath(50, 50, RING_R - RING_STROKE / 2 - STAR_STROKE / 2);
-
 /** Initials fallback for an author with no uploaded avatar. */
 function initialsOf(name: string): string {
   return name
@@ -210,107 +180,6 @@ function SigilMark({ size }: { size: number }) {
   );
 }
 
-/**
- * The ward: the total held inside a glowing pentagram. The aura's flicker and
- * its reduced-motion guard belong to `.cvn-candle` in index.css.
- */
-function Ward({
-  size,
-  points,
-  numeralSize,
-  label,
-}: {
-  size: number;
-  points: number;
-  numeralSize: string;
-  label: string;
-}) {
-  const twinkles: [number, number, number][] = [
-    [50, 3, 3.2],
-    [90, 26, 2.3],
-    [12, 74, 2.6],
-    [86, 80, 1.8],
-    [14, 22, 1.6],
-  ];
-  return (
-    <div
-      style={{
-        position: "relative",
-        flex: "0 0 auto",
-        width: size,
-        height: size,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <span
-        aria-hidden
-        className="cvn-candle"
-        style={{
-          position: "absolute",
-          inset: "-8%",
-          borderRadius: "50%",
-          background: "var(--faction-coven-slip-sigil-halo)",
-        }}
-      />
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: "17%",
-          borderRadius: "50%",
-          background: "var(--faction-coven-slip-sigil-core)",
-        }}
-      />
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 100 100"
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-      >
-        <path
-          d={WARD_STAR}
-          fill="none"
-          stroke={GOLD}
-          strokeWidth={STAR_STROKE}
-          strokeLinejoin="round"
-          opacity="0.55"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r={RING_R}
-          fill="none"
-          stroke={PINK}
-          strokeWidth={RING_STROKE}
-          opacity="0.9"
-        />
-        {twinkles.map(([x, y, r]) => (
-          <path key={`${x}-${y}`} d={starPath(x, y, r)} fill={GOLD} opacity="0.9" />
-        ))}
-      </svg>
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          lineHeight: 0.85,
-        }}
-      >
-        <span style={{ fontFamily: READING, fontWeight: 600, fontSize: numeralSize, color: DEEP }}>
-          {points}
-        </span>
-        {/* Ornament: the unit caption engraved inside the drawn ward, sized to
-            the disc rather than to the label ramp (WORLD_ZERO_STYLE §4a). */}
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the ward. */}
-        <span style={{ ...CAPTION, fontSize: 8, marginTop: "var(--space-xs)" }}>{label}</span>
-      </div>
-    </div>
-  );
-}
 
 export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
@@ -327,19 +196,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -349,10 +213,13 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-md)" };
   const innerBox: CSSProperties = {
@@ -424,69 +291,27 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     </div>
   );
 
-  // ── The worth: base, the (usually absent) ×mult badge, the ward ──
-  const worth = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "var(--space-md)",
-      }}
-    >
-      {showBreakdown && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={eyebrow}>{t("detail.points.base")}</span>
-          <span style={{ fontFamily: READING, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1, color: INK }}>
-            {basePoints}
-          </span>
-          <span
-            style={{
-              fontFamily: CHROME,
-              fontWeight: 700,
-              fontSize: "var(--text-md)",
-              lineHeight: 1.2,
-              color: "var(--faction-coven-slip-cta-ink)",
-              background:
-                "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
-              border: "1.5px solid var(--faction-coven-slip-cta-to)",
-              borderRadius: 20,
-              padding: "var(--space-xs) var(--space-sm)",
-              boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
-          </span>
-        </div>
-      )}
-      <Ward
-        size={size.ward}
-        points={modifiedPoints}
-        numeralSize={size.wardSize}
-        label={t("detail.points.total", { count: modifiedPoints })}
-      />
-    </div>
-  );
+  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
+
+     A base row, a gradient ×mult lozenge and the candlelit `Ward` stood here — a SECOND drawing of a score, beside
+     the one this faction's registered `scoreStamp` surface (ADR-0049) already
+     draws on every praxis card. The stamp is size-agnostic by contract, so the
+     panel mounts it and the row policy, the ×1.0 gate and the total's format
+     all come from the one place that owns them. */
+  const worth = <TaskWorthStamp state={state} />;
 
   // ── The one action slot: sign up / continue / edit. Nothing renders when the
   //    viewer has no move to make — an unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={pinkButton}>
-            {t(signupCtaKey(task.signup_reason))}
-          </button>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={pinkButton}>
+            {cta.label}
+          </CardCtaControl>
           <div
             style={{
               fontFamily: READING,

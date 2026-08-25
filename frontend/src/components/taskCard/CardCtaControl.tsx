@@ -31,16 +31,25 @@ import type { TaskCardSignupCta } from "./signupAffordance";
  * `DefaultTaskCard`'s note on why the full-card target stops short of the CTA.
  * That is what keeps this valid HTML in the link branch as well as the button
  * one.
+ *
+ * `testId` exists because the TASK DETAIL page mounts this too (#2554), and its
+ * slot has carried `data-testid="task-signup-cta"` since before the component
+ * did — `e2e/collaboration.spec.ts` clicks it by that handle. It rides the
+ * element rather than a wrapper for the same reason the handle exists: the
+ * element is what gets clicked, and in the `href` branch it is an `<a>`. Cards
+ * pass nothing and render nothing extra.
  */
 export function CardCtaControl({
   cta,
   className,
   style,
+  testId,
   children,
 }: {
   cta: TaskCardSignupCta;
   className?: string;
   style?: CSSProperties;
+  testId?: string;
   children: ReactNode;
 }) {
   if (cta.href) {
@@ -48,6 +57,7 @@ export function CardCtaControl({
       <Link
         to={cta.href}
         className={className}
+        data-testid={testId}
         style={{ textDecoration: "none", ...style }}
       >
         {children}
@@ -58,6 +68,7 @@ export function CardCtaControl({
     <button
       type="button"
       className={className}
+      data-testid={testId}
       onClick={cta.onPress}
       aria-disabled={cta.denied || undefined}
       style={style}

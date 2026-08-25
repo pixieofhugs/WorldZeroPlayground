@@ -8,13 +8,14 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
+  detailSignupCta,
   ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
-  showWorthBreakdown,
   TaskDetailComments,
+  TaskWorthStamp,
 } from "./shared";
-import { signupCtaKey } from "../signupCta";
+import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -42,9 +43,6 @@ const RED = "var(--everymen-red)";
 /** Red as INK — the only red that clears AA on the panel in both themes. */
 const ACCENT = "var(--faction-everymen-sheet-accent)";
 const OLIVE = "var(--everymen-olive)";
-const GOLD = "var(--everymen-gold)";
-/** Gold walked down until the modifier badge's figures clear the paper. */
-const MULT_INK = "var(--faction-everymen-bill-mult-ink)";
 /** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
 const MAST = "var(--faction-everymen-bill-mast)";
 const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
@@ -121,19 +119,14 @@ export default function EverymenTaskDetail({
     mySubmission,
     isInProgress,
     inProgressPraxisId,
-    canSignUp,
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    basePoints,
-    factionMultiplier,
-    modifiedPoints,
     inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
     signupError,
-    handleSignup,
     handleDrop,
   } = state;
 
@@ -143,10 +136,13 @@ export default function EverymenTaskDetail({
   const isMetatask = task.task_type === "metatask";
   // Null on a metatask carrying the generic sentinel (#2282, headerFactionName).
   const eyebrowFaction = headerFactionName(task);
-  const showBreakdown = showWorthBreakdown(factionMultiplier);
+  // The cards' own resolver, narrowed to this page's policy (#2554). It is the
+  // slot's whole existence test now — `canSignUp` alone could not see the one
+  // refusal that is a door.
+  const cta = detailSignupCta(state);
   const authorName = task.created_by_display_name ?? "";
   const hasAction =
-    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
+    !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   // ── Shared dress ──
   /** Bebas, tracked out and struck in caps — every label on the sheet. */
@@ -454,128 +450,27 @@ export default function EverymenTaskDetail({
     </div>
   );
 
-  // ── The wage box: base, the (usually absent) ×mult badge, the stamped total ──
-  const wageBox = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-sm)",
-      }}
-    >
-      {/* The docket line and its perforation go together (#1704): with no
-          modifier to itemise it only restated the stamped total below. */}
-      {showBreakdown && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-sm)",
-            }}
-          >
-            <span className="label-caption" style={{ color: MUTED }}>
-              {t("detail.points.base")}
-            </span>
-            <span
-              style={{
-                fontFamily: BEBAS,
-                fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
-                lineHeight: 0.8,
-                color: INK,
-              }}
-            >
-              {basePoints}
-            </span>
-            <span
-              style={{
-                marginLeft: "auto",
-                ...label,
-                fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
-                letterSpacing: "0.04em",
-                color: MULT_INK,
-                border: `2px solid ${GOLD}`,
-                borderRadius: 2,
-                padding: "var(--space-xs) var(--space-sm)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("detail.points.multiplier", {
-                multiplier: factionMultiplier.toFixed(2),
-              })}
-            </span>
-          </div>
-          {dashRule()}
-        </>
-      )}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-md)",
-        }}
-      >
-        {/* The rubber stamp: the figure struck through a double-ringed roundel,
-            landed slightly off-square the way a hand stamp does. */}
-        <div
-          style={{
-            position: "relative",
-            flex: "0 0 auto",
-            width: desktop ? 74 : 64,
-            height: desktop ? 74 : 64,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: "rotate(-4deg)",
-          }}
-        >
-          <span
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              border: `2px solid ${RED}`,
-              boxShadow: `inset 0 0 0 3px ${PANEL}, inset 0 0 0 4px ${RED}`,
-            }}
-          />
-          <span
-            style={{
-              fontFamily: BEBAS,
-              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
-              lineHeight: 0.8,
-              color: ACCENT,
-            }}
-          >
-            {modifiedPoints}
-          </span>
-          <span
-            style={{
-              ...label,
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.22em",
-              color: ACCENT,
-              marginTop: "var(--space-xs)",
-            }}
-          >
-            {t("detail.points.total", { count: modifiedPoints })}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
+  /* THE WORTH READOUT IS THE FACTION'S OWN SCORE STAMP NOW (#2554).
+
+     A docket line, a ×mult box, a perforation and a hand-drawn rubber-stamp roundel stood here — a SECOND drawing of a score, beside
+     the one this faction's registered `scoreStamp` surface (ADR-0049) already
+     draws on every praxis card. The stamp is size-agnostic by contract, so the
+     panel mounts it and the row policy, the ×1.0 gate and the total's format
+     all come from the one place that owns them. */
+  const wageBox = <TaskWorthStamp state={state} />;
 
   // ── The one action slot. Nothing renders when the viewer has no move to make:
   //    an unusable control is worse than none.
   const actionBody = (
     <>
-      {canSignUp && (
+      {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          <button data-testid="task-signup-cta" onClick={handleSignup} style={primaryBar}>
-            {t(signupCtaKey(task.signup_reason))}
-          </button>
+          {/* The CARDS' control, mounted (#2554) — element and affordance from
+              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
+          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryBar}>
+            {cta.label}
+          </CardCtaControl>
           <div
             style={{
               fontFamily: COURIER,
