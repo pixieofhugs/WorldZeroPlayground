@@ -49,7 +49,7 @@ import '../../../i18n'
 import { FACTION_MANIFESTS } from '../../../factions'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
 import type { CharacterOut } from '../../../api/auth'
-import { JoinConfirm, type JoinControlSkin } from '../JoinControl'
+import { JoinConfirm, type JoinControlSkin } from '../../../components/JoinControl'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',

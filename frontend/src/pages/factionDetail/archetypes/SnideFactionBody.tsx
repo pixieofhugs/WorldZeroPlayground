@@ -8,7 +8,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
-import { JoinControl, type JoinControlSkin } from "../JoinControl";
+import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
