@@ -82,7 +82,7 @@ artifact. It is deliberately not on the PR-blocking path.
 The PR-blocking suite is `.github/workflows/test.yml`, and it is **three jobs**, all
 three of them required checks on `main`:
 
-- `test` — a Postgres service, `alembic upgrade head`, then `pytest --cov --cov-fail-under=80`
+- `test` — a Postgres service, `alembic upgrade head`, then `pytest --cov --cov-fail-under=92`
 - `frontend` — lint, `tsc --noEmit`, the `/design-sync` typecheck, vitest, `vite build`,
   and the initial-load byte budget
 - `api-schema` — regenerate `backend/openapi.json` and the generated TS types, then
@@ -90,7 +90,7 @@ three of them required checks on `main`:
 
 That workflow is the authoritative config (don't mirror its YAML here) — this list names
 the jobs because agents need to know how many gates exist, not what is inside them. Read
-the workflow for the steps. The coverage floor is 80% and should rise over time.
+the workflow for the steps. The coverage floor is 92% and should rise over time.
 
 Note `npm test` alone is only vitest, i.e. one of `frontend`'s six steps; it is not the
 frontend gate.
