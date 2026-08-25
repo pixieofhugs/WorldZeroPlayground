@@ -1,6 +1,7 @@
 import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SingularitySigil } from "../sigil/SingularitySigil";
+import { factionRoleVar } from "../../utils/factionRoles";
 
 /**
  * Singularity — the faction-DIRECTORY tile (#2326, a child of #2321).
@@ -100,7 +101,7 @@ import { SingularitySigil } from "../sigil/SingularitySigil";
  * grid.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
 
 const CHASSIS = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";

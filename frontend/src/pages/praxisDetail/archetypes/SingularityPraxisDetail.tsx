@@ -25,6 +25,7 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVar } from "../../../utils/factionRoles";
 
 /**
  * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
@@ -109,7 +110,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * steward bar into the costume.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";

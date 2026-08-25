@@ -19,6 +19,7 @@ import {
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVar } from "../../../utils/factionRoles";
 
 /**
  * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
@@ -72,7 +73,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * no keyframe was added.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";

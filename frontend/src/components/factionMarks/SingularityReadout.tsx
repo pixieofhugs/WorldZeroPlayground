@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { factionRoleVar } from "../../utils/factionRoles";
 
 /**
  * The lit well — Singularity's points mark (#2042, ADR-0049).
@@ -36,7 +37,7 @@ import type { CSSProperties } from "react";
  * the `[data-theme="dark"]` cascade flips is the phosphor, never a ternary here.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
 
 export interface SingularityReadoutProps {
   /**
