@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../../utils/factions'
+import { EphemeristsBand } from '../../cardMasthead/factionBands'
 import {
   BAND,
-  BAND_INK,
   BRASS,
   BRASS_LIGHT,
   DECO,
@@ -13,7 +12,6 @@ import {
   PLATE,
   READING,
   RULE,
-  SMALL_CAPS,
   WingedDiscSign,
 } from '../../factionMarks/ephemeristsPlate'
 import type { SealSkinProps } from '../types'
@@ -45,6 +43,20 @@ import type { SealSkinProps } from '../types'
  *
  * The three-field contract (issuer / condition / bonus) and the peel control are
  * unchanged: this is dress.
+ *
+ * THE ISSUER'S TAB IS THE SHARED BAND NOW (#2648). This skin was the one seal
+ * already drawing a FILLED heading — `background: BAND, color: BAND_INK` on a
+ * small-caps tab riding the top edge — so the precedent for a strip here is its
+ * own. `EphemeristsBand` is the same plate vocabulary said once for three kits:
+ * the medallion's disc under the band's measured gold, brass-edged. The tab's
+ * negative-offset perch goes with it, which is the one piece of the design this
+ * mount loses.
+ *
+ * THE WINGED DISC MOVED WITH THE PADDING. It centres on 50% of whatever box
+ * holds it, so leaving it on the root would have hung it half-way down a taller
+ * seal, below the line of copy it flanks. It is the BODY it belongs to, so it is
+ * positioned against the body's own box now — same inset, same overlap of the
+ * left edge, same gutter reserved by `paddingLeft`.
  */
 
 /** The indigo disc, and the gutter it overlaps into. Ornament geometry (§4a). */
@@ -53,7 +65,6 @@ const DISC_INSET = 10
 
 export default function EphemeristsSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
-  const faction = factionName(metatask.metatask_faction_slug)
 
   return (
     <div
@@ -65,8 +76,6 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
         outline: `1px solid ${BRASS_LIGHT}`,
         outlineOffset: 2,
         boxSizing: 'border-box',
-        padding: 'var(--space-md) var(--space-lg)',
-        paddingLeft: DISC_SIZE + DISC_INSET + 10,
         fontFamily: READING,
         // The plate's own dotted tooth. The dot takes the hairline token rather
         // than the design's fixed `rgba(42,29,18,0.03)`, which is invisible on
@@ -75,102 +84,93 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
         backgroundSize: '6px 6px',
       }}
     >
-      {/* The winged sun disc, overlapping the slip's left edge. */}
-      <span
-        aria-hidden
+      <EphemeristsBand />
+
+      <div
+        className="relative"
         style={{
-          position: 'absolute',
-          left: DISC_INSET,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 4,
-          width: DISC_SIZE,
-          height: DISC_SIZE,
-          borderRadius: '50%',
-          background: BAND,
-          // ornament (#1609): the disc casts onto PLATE, and
-          // `--faction-ephemerists-plate-bg` is declared once with no dark
-          // override — near-black in BOTH cascades. `--color-cast-shadow`
-          // exists to deepen 0.25 -> 0.7 when the ground behind flips; here
-          // nothing flips, so the token would darken a shadow whose ground
-          // never moved (§3, #1792). Stays raw; see the legacy list.
-          boxShadow: '0 2px 7px rgba(20, 12, 6, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          padding: 'var(--space-md) var(--space-lg)',
+          paddingLeft: DISC_SIZE + DISC_INSET + 10,
         }}
       >
-        <WingedDiscSign size={24} color={GOLD} />
-      </span>
-
-      {/* The issuer's tab, riding the top edge. */}
-      <span
-        className="block"
-        style={{
-          position: 'absolute',
-          top: -9,
-          left: DISC_SIZE + DISC_INSET + 8,
-          ...SMALL_CAPS,
-          fontWeight: 600,
-          fontSize: 'var(--text-md)',
-          color: BAND_INK,
-          background: BAND,
-          padding: '0 var(--space-sm)',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
-
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute leading-none"
-          style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            background: 'transparent',
-            border: 'none',
-            color: OCHRE,
-            fontSize: 'var(--text-xl)',
-            fontFamily: DECO,
-            cursor: 'pointer',
-          }}
-        >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
-
-      <span
-        className="flex items-center"
-        style={{ gap: 'var(--space-md)', justifyContent: 'space-between' }}
-      >
+        {/* The winged sun disc, overlapping the slip's left edge. */}
         <span
-          className="block"
+          aria-hidden
           style={{
-            fontStyle: 'italic',
-            fontSize: 'var(--text-content)',
-            lineHeight: 1.25,
-            color: INK,
+            position: 'absolute',
+            left: DISC_INSET,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 4,
+            width: DISC_SIZE,
+            height: DISC_SIZE,
+            borderRadius: '50%',
+            background: BAND,
+            // ornament (#1609): the disc casts onto PLATE, and
+            // `--faction-ephemerists-plate-bg` is declared once with no dark
+            // override — near-black in BOTH cascades. `--color-cast-shadow`
+            // exists to deepen 0.25 -> 0.7 when the ground behind flips; here
+            // nothing flips, so the token would darken a shadow whose ground
+            // never moved (§3, #1792). Stays raw; see the legacy list.
+            boxShadow: '0 2px 7px rgba(20, 12, 6, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {metatask.title}
+          <WingedDiscSign size={24} color={GOLD} />
         </span>
+
+        {removable && (
+          <button
+            type="button"
+            onClick={() => onRemove?.(metatask.id)}
+            aria-label={t('detail.seal.remove')}
+            className="absolute leading-none"
+            style={{
+              top: 'var(--space-sm)',
+              right: 'var(--space-sm)',
+              background: 'transparent',
+              border: 'none',
+              color: OCHRE,
+              fontSize: 'var(--text-xl)',
+              fontFamily: DECO,
+              cursor: 'pointer',
+            }}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
+
         <span
-          className="block"
-          style={{
-            fontFamily: DECO,
-            fontSize: 'var(--text-title)',
-            lineHeight: 0.8,
-            color: OCHRE,
-            whiteSpace: 'nowrap',
-          }}
+          className="flex items-center"
+          style={{ gap: 'var(--space-md)', justifyContent: 'space-between' }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          <span
+            className="block"
+            style={{
+              fontStyle: 'italic',
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.25,
+              color: INK,
+            }}
+          >
+            {metatask.title}
+          </span>
+          <span
+            className="block"
+            style={{
+              fontFamily: DECO,
+              fontSize: 'var(--text-title)',
+              lineHeight: 0.8,
+              color: OCHRE,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('detail.seal.bonus', { points: metatask.point_value })}
+          </span>
         </span>
-      </span>
+      </div>
     </div>
   )
 }
