@@ -4933,8 +4933,27 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
     return source.slice(at, source.indexOf("\n}", at));
   }
 
+  /**
+   * The token a band's declaration actually paints with.
+   *
+   * A declaration is written one of two ways now. Straight — `var(--x)` — or as
+   * a ROLE read carrying today's token as its fallback,
+   * `var(--band-paper, var(--x))` (#2672, the na/Default lane). The material is
+   * `--x` in both: the prefix is declared by `factionRoleVars`, which returns
+   * `{}` for `na` and for `albescent`, so the fallback is what answers. Taking
+   * the INNERMOST name reads both shapes and keeps this census asking the
+   * question it was written to ask — which material does this band stand on —
+   * rather than which syntax it was typed in.
+   */
+  const paintedBy = (declaration: string, body: string): string | null => {
+    const value = body.match(new RegExp(`${declaration}: "([^"]+)"`))?.[1];
+    if (value === undefined) return null;
+    const names = [...value.matchAll(/(--[a-z0-9-]+)/g)].map((match) => match[1]);
+    return names.at(-1) ?? null;
+  };
+
   const groundOf = (name: string): string | null =>
-    bandBody(name).match(/background: "var\((--[a-z0-9-]+)\)"/)?.[1] ?? null;
+    paintedBy("background", bandBody(name));
 
   for (const file of [CARD_BANDS, SEAL_BANDS]) {
     it(`declares every band ${file} paints`, () => {
@@ -5013,9 +5032,9 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
     for (const band of ["AlbescentBand", "DefaultBand"] as const) {
       const body = bandBody(band);
       expect(
-        body,
+        paintedBy("color", body),
         `${band} letters in the na card's ink, which is what its ground is measured against`,
-      ).toContain('color: "var(--faction-default-card-text)"');
+      ).toBe("--faction-default-card-text");
       expect(
         body,
         `${band}'s mark is spectrum-filled and carries no hue — an ink here would flatten it`,
