@@ -138,6 +138,7 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 const SLUG = 'everymen'
 
@@ -169,7 +170,7 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 /** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
-const BEBAS = 'var(--faction-everymen-card-font)' /* Bebas Neue */
+const BEBAS = 'var(--ev-path-face, var(--faction-everymen-card-font))' /* Bebas Neue */
 const COURIER = 'var(--font-body)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
@@ -320,7 +321,10 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: COURIER, color: INK }}>
+    <ComposerPage
+      sizes={sizes}
+      style={{ ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}

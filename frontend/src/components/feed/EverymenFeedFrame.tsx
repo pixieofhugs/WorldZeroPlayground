@@ -59,6 +59,7 @@
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
+import { factionRoleVars } from '../../utils/factionRoles'
 
 const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--everymen-paper-accent)' } }
 
@@ -74,6 +75,7 @@ export default function EverymenFeedFrame({
   return (
     <article
       style={{
+        ...factionRoleVars('everymen', 'ev-feed'),
         position: 'relative',
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',
@@ -160,7 +162,7 @@ export default function EverymenFeedFrame({
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              fontFamily: 'var(--faction-everymen-card-font)',
+              fontFamily: 'var(--ev-feed-face, var(--faction-everymen-card-font))',
               fontSize: mobile ? 'var(--text-lg)' : 'var(--text-xl)',
               letterSpacing: mobile ? '0.12em' : '0.18em',
               textTransform: 'uppercase',

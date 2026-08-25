@@ -123,6 +123,7 @@ import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 interface Props {
   state: EditPraxisState;
@@ -174,7 +175,7 @@ const BAR_INK = "var(--faction-everymen-bill-cta-ink)";
 const PAPER_DEEP = "var(--everymen-paper-deep)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
-const BEBAS = "var(--faction-everymen-card-font)"; /* Bebas Neue */
+const BEBAS = "var(--ev-compose-face, var(--faction-everymen-card-font))"; /* Bebas Neue */
 const COURIER = "var(--font-body)"; /* Courier Prime */
 
 /** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). The
@@ -353,7 +354,14 @@ export default function EverymenEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: ACCENT,
     alarm: ALARM,
-    pageStyle: { fontFamily: COURIER, color: INK },
+    // `pageStyle` is the root of BOTH stages — the composer page here and the
+    // shared waiting surface the dress is handed to — so declaring the role map
+    // in it reaches everything this archetype draws (#2676).
+    pageStyle: {
+      ...factionRoleVars("everymen", "ev-compose"),
+      fontFamily: COURIER,
+      color: INK,
+    },
     sheetStyle,
     masthead,
     ground,

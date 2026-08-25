@@ -141,7 +141,10 @@ const SURFACES: Surface[] = [
     slug: "everymen",
     prefix: "ev-praxis",
     ground: "sheet",
-    sites: 6,
+    // 6 token reads removed, 5 written: `card-bg` was named twice — as the
+    // frame's own ground and again as `PraxisBody`'s `paper` — and both are now
+    // the one `PAPER` const.
+    sites: 5,
   },
   {
     file: "components/metataskSeal/skins/EverymenSeal.tsx",

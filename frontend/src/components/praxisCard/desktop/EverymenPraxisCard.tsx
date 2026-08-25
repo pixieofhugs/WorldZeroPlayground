@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { factionCssVar } from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { EverymenBand } from "../../cardMasthead/factionBands";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
@@ -39,6 +39,10 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * single left-edge line and it stays.
  */
 
+/** The sheet, named once: it is both the frame's ground and the value
+ *  `PraxisBody` needs to knock its own boxes back out of. */
+const PAPER = "var(--ev-praxis-paper, var(--faction-everymen-card-bg))";
+
 /** The red margin rule down the sheet. Static (#586). */
 const everymenMarginRule: CSSProperties = {
   position: "absolute",
@@ -55,14 +59,15 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
     <div
       style={{
         ...frameBase,
+        ...factionRoleVars("everymen", "ev-praxis"),
         borderRadius: 2, // broadsheet — near-square
         overflow: "hidden",
-        background: factionCssVar("everymen", "card-bg"),
+        background: PAPER,
         border: "1px solid var(--everymen-frame)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         position: "relative",
         fontFamily: "var(--font-faction-typewriter)",
-        color: factionCssVar("everymen", "card-text"),
+        color: "var(--ev-praxis-ink, var(--faction-everymen-card-text))",
         transition: "background 150ms, color 150ms",
       }}
     >
@@ -94,15 +99,15 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint={factionCssVar("everymen", "card-accent")}
-          muted={factionCssVar("everymen", "card-muted")}
-          paper={factionCssVar("everymen", "card-bg")}
+          tint="var(--ev-praxis-accent, var(--faction-everymen-card-accent))"
+          muted="var(--ev-praxis-quiet, var(--faction-everymen-card-muted))"
+          paper={PAPER}
           showCrown={showCrown}
           // Bebas Neue is Everymen's declared card font and, until #888, reached
           // task and faction cards but never a praxis card. The broadsheet's own
           // Special Elite stays on the reading matter.
           fonts={{
-            display: "var(--faction-everymen-card-font)",
+            display: "var(--ev-praxis-face, var(--faction-everymen-card-font))",
             body: "var(--font-faction-typewriter)",
           }}
         />
