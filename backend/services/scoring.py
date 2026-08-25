@@ -204,18 +204,27 @@ def compute_praxis_score(
 ) -> float:
     """Score for a single praxis or collaboration member.
 
-    Formula: (task_point_value + meta_task_points) × faction_multiplier × duel_multiplier
-             + total_stars + habit_bonus
+    Formula: task_point_value × faction_multiplier × duel_multiplier
+             + meta_task_points + total_stars + habit_bonus
+
+    Exactly one term multiplies: the **base** points of the task. Everything
+    else a character earned by doing a specific extra thing is flat.
 
     - Base points are awarded on publication.
     - Each star from community votes adds flat after all multipliers.
     - meta_task_points: flat bonus from an attached meta task (0 if none).
+      **Outside the parentheses since ADR-0086** (owner ruling, #2633): it used
+      to ride both multipliers, so a +10 metatask paid +20 on a Snide duel win
+      and +0 on a Snide duel loss — the same metatask erased by a duel outcome
+      it has nothing to do with. The multipliers judge the task; the metatask is
+      a separate thing the player did.
     - duel_multiplier: 1.0 for solo/collab; outcome-based for duels.
     - habit_bonus: the #1617 faction habit ability, stamped at seal time onto
-      ``PraxisMember.habit_bonus_points``. **Flat, outside the parentheses**
-      (owner ruling): habit and faction alignment are different incentives, and
-      folding it inside would make the same ability worth 50% more under an era
-      with a 1.2 own-faction modifier than under Era 1's 1.0.
+      ``PraxisMember.habit_bonus_points``. Flat for the same reason (owner
+      ruling): habit and faction alignment are different incentives, and folding
+      it inside would make the same ability worth 50% more under an era with a
+      1.2 own-faction modifier than under Era 1's 1.0. ADR-0086 is that argument
+      applied to the one term it had not yet reached.
 
     Evaluated in ``Decimal`` and returned as ``float`` (#1578). The multipliers
     are decimal literals in the era config, so binary multiplication grew a tail
@@ -228,9 +237,10 @@ def compute_praxis_score(
     reader, to fix a defect that only bites at the banking step.
     """
     return float(
-        exact(task_point_value + meta_task_points)
+        exact(task_point_value)
         * exact(faction_multiplier)
         * exact(duel_multiplier)
+        + exact(meta_task_points)
         + exact(total_stars)
         + exact(habit_bonus)
     )

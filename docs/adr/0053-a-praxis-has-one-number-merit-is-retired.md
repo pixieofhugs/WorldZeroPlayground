@@ -1,6 +1,6 @@
 # ADR-0053 — A praxis has one number; Merit is retired
 
-**Status:** Accepted
+**Status:** Amended by ADR-0086
 **Date:** 2026-07-21
 
 **Supersedes:** **ADR-0047** (the praxis card shows the computed total, not Merit)
@@ -151,3 +151,24 @@ same `PraxisMetaTask` rows for every praxis type, so they cannot desync. The
 author-level gate still zeroes points for an under-level author while the seal
 stays attached — `metatask_points: 0` beside a non-null seal is a legitimate
 `+0` state, unchanged here.
+
+## Amendment (2026-08-24, #2633): the metatask leaves the parentheses
+
+[ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) rules that only
+the base multiplies. The payload invariant stated in *Decision* becomes:
+
+    score = task_point_value × display_multiplier
+            + metatask_points + points_from_votes + habit_bonus_points
+
+Everything this ADR actually decided stands: a praxis has exactly one number,
+resolved for its author, for every praxis type, and the payload carries the terms
+behind it so no surface re-derives the arithmetic. What changes is which side of
+the `+` `metatask_points` sits on.
+
+The #882 amendment above is the clause that moves. Its second bullet reads "a
+Snide loss at ×0.0 zeroes the metatask along with the base — intended: the
+metatask is part of the submission the duel judged." **That is reversed.** A duel
+is decided on `points_from_votes`, which was always outside the parentheses, so
+the multiplier never priced the thing the duel judged; it priced the task. The
+first bullet — a collab banks its metatask like any solo praxis — is unaffected,
+and so is the scored-set / seal-set agreement the paragraph above establishes.
