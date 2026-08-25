@@ -48,8 +48,9 @@ surfaces are the same surfaces every faction has, and they take the same names. 
 society". Its page is the **faction page**, in a **locked** or **unlocked** state — not "the
 sealed page", "the sealed placeholder" or "the reveal". Say **invite letter**, not "the
 letter" or "the prospectus". Identifiers are exempt and are not renamed by this rule:
-`--albescent-reveal-*`, `.alb-prism`, the `invitation_letter` table and
-`AlbescentSecretPlaceholder` keep their names until something else moves them.
+`.alb-prism`, the `invitation_letter` table and `AlbescentSecretPlaceholder` keep
+their names until something else moves them. (`--albescent-reveal-*` was listed
+here too and is gone: #2632 deleted the register, not the exemption.)
 
 **Invite letter** *(every faction; `invitation_letter` table)*:
 The letter a faction sends a character asking them to join it — one shared component

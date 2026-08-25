@@ -9,8 +9,10 @@ always-light vellum clause is retired below.
 **Relates to:** ADR-0027 (Albescent is a secret society — the cut voice is
 untouched), ADR-0039 (the na/default identity is the rainbow), ADR-0046 (the
 freeze ADR-0048 reversed), ADR-0066 (one rainbow; the brand palette retired into
-the na spectrum), #2401 (the five undesigned decisions this answers), #2496 (the
-epic and its rulings), #2506 (this decision)
+the na spectrum), ADR-0082 (the redaction the collapsed tile still carries),
+#2401 (the five undesigned decisions this answers), #2496 (the epic and its
+rulings), #2506 (this decision), #2632 (§8 amended: the reveal register is
+deleted and #1891 ruling 1 with it)
 
 ## Context
 
@@ -276,27 +278,57 @@ question by construction: it covers the disc's own spectrum band and never the
 picture, so a photo disc and a monogram disc are the same amount of Albescent
 without anything branching on whether a player uploaded a photograph.
 
-### 8. The reveal register flips, and ADR-0017 ruling 7 is amended
+### 8. There is no reveal register — the reveal surfaces take the na sheet
+
+*Amended 2026-08-24 (#2632). This section originally read "the reveal register
+flips, and ADR-0017 ruling 7 is amended": it retired ADR-0017's always-light
+clause, gave the vellum a dark half aliased to the na card, and closed by ruling
+that the register **stays**, reached only by the surfaces that are the reveal.
+The first half stands. The last clause is reversed below, and the amendment
+supersedes it in place rather than by a new record.*
 
 ADR-0017 ruling 7 prescribed an **always-light** Albescent register — identical
 values in both cascades, the mechanism singularity uses to stay always-dark. That
-clause is **retired**: a dark-mode reader gets a dark letter.
-
-Its other half was already dead — the `--faction-albescent-card-*` tokens it
-prescribes were deleted, and Albescent has rendered as unaffiliated everywhere
-since. **Singularity's always-dark is untouched**; this amends a ruling about the
+clause is **retired**: a dark-mode reader gets a dark letter. Its other half was
+already dead — the `--faction-albescent-card-*` tokens it prescribes were
+deleted, and Albescent has rendered as unaffiliated everywhere since.
+**Singularity's always-dark is untouched**; this amends a ruling about the
 vellum, not about theme-invariant surfaces as a class.
 
-The dark half **mints no colour of its own**, and that is the point: every night
-value is the na card's own pair, or a mix of it. That is this vocabulary's
-pattern rather than an exception to it — an Albescent surface is the na surface
-with light over it, so after dark the letter's stock and ink are simply the na
-card's stock and ink. Nothing to keep in sync, and the society still owns no hue
-anyone could point at.
+**And there is no longer a vellum to rule about.** Owner ruling on #2632: *the
+white aesthetic is purged from the codebase, and Albescent commits entirely to
+the new setup.* The four surfaces that were the reveal — the directory tile, the
+invitation letter, the metatask seal and the sealed placeholder — take
+`--faction-default-card-*` like every other Albescent surface. **The society's
+delta is the prism and the motion, not a colour of its own.** The private
+register is deleted, and a token census in
+`__tests__/albescentPrismSheet.test.ts` keeps its name out of `index.css`.
 
-What is **unchanged**: the reveal register is reached only by the surfaces that
-*are* the reveal. Point an ordinary card, feed row or profile at
-`--albescent-reveal-*` and the society is no longer hidden.
+**Why the register could not simply be re-tinted in place.** All four wrote their
+ground as a `background` in the **style attribute**, so no wrapper class could
+reach them: §2's whole mechanism is that a dresser overrides
+`--faction-default-card-sheet` and the `Default*` surface reads it, and an inline
+declaration outranks every stylesheet. They were not missing a class; they were
+drinking from a different tap. In light that made the letter a pure-white island
+on a cream page — the one part of the kit that never adopted the prism.
+
+**The deletion was smaller than it looked, because only the light half was ever
+authored.** The dark half this section minted aliased the na card outright, so
+after dark those four surfaces already *were* na; what went is one cascade.
+
+**The tile pays a price and it is charged deliberately.** Collapsing
+`AlbescentSelectCard` to a wrapper over `DefaultSelectCard` **deletes #1891
+ruling 1** ("the tile keeps its face throughout"). What survives is the
+redaction, unchanged and still on one predicate (ADR-0082), and the **conditional
+ground**: a redacted tile keeps a flat sheet, because `[REDACTED]` is painted in
+its own ground's colour and a bloom makes that 1:1 pairing only approximately
+true. **The prism arrives with the reveal** — epic #2496 ruling 8, and the same
+call is why the sealed placeholder, which *is* the un-revealed view, stays flat.
+
+**Prism or flat is decided per surface by one question: does the surface read
+`factionSheet()`?** The letter does and wears `.alb-prism`; the seal deliberately
+does not, because a sticker on an Albescent host would inherit that host's ground
+and composite the bloom twice.
 
 ## Consequences
 
@@ -317,8 +349,10 @@ surface lands*: there is now one design, and a surface adopts it rather than
 commissioning its own.
 
 **What this does not change.** ADR-0027's cut voice: no surface names itself as
-Albescent, and the reveal surfaces stay the only readership of the reveal
-register. `factionCssVar('albescent')` still resolves to `--faction-default-*`.
+Albescent. (This sentence used to continue "…and the reveal surfaces stay the
+only readership of the reveal register"; §8's amendment deleted the register, and
+the cut voice is untouched by that.) `factionCssVar('albescent')` still resolves
+to `--faction-default-*`.
 The manifest stays override-only, so an undeclared surface still falls through to
 na — which remains the correct and complete statement of Albescent's appearance
 everywhere the vocabulary has not been applied.
