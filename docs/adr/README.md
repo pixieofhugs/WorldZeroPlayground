@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-84 records, of which **77 still state a rule**.
+86 records, of which **79 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -28,7 +28,7 @@
 | [0011](0011-duel-is-two-linked-praxes.md) | A duel is two linked praxes, not one shared praxis | Amended | [ADR-0052](0052-duels-resolve-at-era-close.md) |
 | [0012](0012-collab-lazy-consensus-submission.md) | Collaborations publish by lazy consensus, not unanimous submission | Accepted | — |
 | [0013](0013-collaborations-are-co-owned.md) | Collaborations are co-owned by all members | Accepted | — |
-| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md) |
+| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Accepted | — |
 | [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Accepted | — |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) |
@@ -67,7 +67,7 @@
 | [0050](0050-wow-and-coven-visual-identity.md) | WOW and Coven visual identity, and why the design artifacts are mislabelled | Accepted | — |
 | [0051](0051-duel-acceptance-bypasses-the-task-level-gate.md) | Duel acceptance bypasses the task-level gate | Accepted | — |
 | [0052](0052-duels-resolve-at-era-close.md) | Duels resolve at era close | Accepted | — |
-| [0053](0053-a-praxis-has-one-number-merit-is-retired.md) | A praxis has one number; Merit is retired | Accepted | — |
+| [0053](0053-a-praxis-has-one-number-merit-is-retired.md) | A praxis has one number; Merit is retired | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0054](0054-one-theme-aware-task-crown.md) | One theme-aware Task Crown (the flur is one mark) | Amended | [ADR-0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) |
 | [0055](0055-task-cards-show-base-points-and-a-live-multiplier-badge.md) | Task cards show base points + a live multiplier badge | Accepted | — |
 | [0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md) | Task cards collapse to one responsive component per faction | Accepted | — |
@@ -99,3 +99,5 @@
 | [0082](0082-albescent-is-redacted-not-hidden.md) | Albescent is redacted, not hidden | Accepted | — |
 | [0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) | Albescent is one ornament vocabulary over na, not a skin per surface | Accepted | — |
 | [0084](0084-a-page-wears-a-faction-when-it-has-exactly-one-faction-to-wear.md) | A page wears a faction when it has exactly one faction to wear | Accepted | — |
+| [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
+| [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |

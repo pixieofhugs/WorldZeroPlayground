@@ -104,16 +104,56 @@ function sampledSpectrum(index: number): string {
  * tokens for one consumer; and `--rail-spectrum` is a ramp of the faction's
  * spine hue, standing where the unaffiliated ramp stands. If the archetype
  * conversation happens, both become the archetype's business.
+ *
+ * ONE KEY OVERRIDES FOUR OF THE COLOUR LOCALS, AND IT IS NOT A FORK (#2631,
+ * ADR-0085). `-card-*` is the right family for seven skins because a faction's
+ * card sheet is the stock its chrome is made of. S.N.I.D.E. is the one where it
+ * is not: its sheet is the photocopier SLAB pasted on a wall (#2066), pinned
+ * near-black in BOTH cascades, so the rail was a black column beside a page the
+ * same faction paints in flipping xerox stock. See {@link SNIDE_WALL_FACE}. The
+ * other seven keys return byte-identical values, and an unaffiliated viewer
+ * still declares nothing at all — the acceptance criterion above is untouched.
  */
+
+/**
+ * The four colour locals S.N.I.D.E. takes off the wall instead of the slab, and
+ * the fifth that has to move with them (#2631).
+ *
+ * Every token here already existed and is already measured: `-note-ink` and
+ * `-note-muted` are the tiers three other S.N.I.D.E. surfaces read on this same
+ * wall, and `-note-wall-edge` is the hairline the task card and the field desk's
+ * credential panel already draw — the load-bearing one, because a wall-grounded
+ * panel on a wall-grounded page has nothing else separating it (#2065).
+ *
+ * THE SPECTRUM MOVES BECAUSE A MEASUREMENT FORCED IT. `--faction-snide` is
+ * #6fae00 by day, and the level track is a DRAWN mark owing 1.4.11's 3:1 against
+ * the groove it fills: on the slab that was never in question, on the light wall
+ * it is 1.87:1. `-wall-credit` is the wall-end rung of the same hue (#2177), the
+ * one the faction page already spends on its marker scrawl for exactly this
+ * reason — 6.28:1 by day, 9.22:1 by night, on the well over the wall. No token
+ * is minted; this is a second NAME for a hue that already has two rungs.
+ *
+ * `--rail-radius` and `--rail-face` deliberately stay on the card family. A
+ * radius and a typeface have no cascade to be wrong in.
+ */
+const SNIDE_WALL_FACE = {
+  paper: 'wall',
+  ink: 'note-ink',
+  quiet: 'note-muted',
+  line: 'note-wall-edge',
+  spine: 'wall-credit',
+} as const
+
 function railFaceVars(slug: string | null | undefined): CSSProperties {
   if (!isKnownFaction(slug)) return {}
-  const hue = factionCssVar(slug)
-  const ink = factionCssVar(slug, 'card-text')
+  const wall = slug === 'snide' ? SNIDE_WALL_FACE : null
+  const hue = wall ? factionCssVar(slug, wall.spine) : factionCssVar(slug)
+  const ink = factionCssVar(slug, wall ? wall.ink : 'card-text')
   return {
-    '--rail-paper': factionCssVar(slug, 'card-bg'),
+    '--rail-paper': factionCssVar(slug, wall ? wall.paper : 'card-bg'),
     '--rail-ink': ink,
-    '--rail-quiet': factionCssVar(slug, 'card-muted'),
-    '--rail-line': factionCssVar(slug, 'card-border'),
+    '--rail-quiet': factionCssVar(slug, wall ? wall.quiet : 'card-muted'),
+    '--rail-line': factionCssVar(slug, wall ? wall.line : 'card-border'),
     '--rail-radius': factionCssVar(slug, 'card-radius'),
     '--rail-face': factionCssVar(slug, 'card-font'),
     // 10% of the sheet's own ink: a well on the cream reads as a light warm
