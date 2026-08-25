@@ -1,5 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { WowSigil } from "../sigil/WowSigil";
 
 /**
@@ -37,6 +38,10 @@ export default function WowFactionHero({
     <header style={{ marginBottom: "var(--space-2xl)" }}>
       <div
         style={{
+          // THE ROLE MAP (#2674), on the banner plate. It goes on the PLATE and
+          // not on the <header> above it: the header is only a margin, and a
+          // prefix belongs to the surface that reads it.
+          ...factionRoleVars("wow", "wow-hero"),
           position: "relative",
           overflow: "hidden",
           borderRadius: "var(--radius-xl)",
@@ -83,7 +88,7 @@ export default function WowFactionHero({
           <div
             className="label-heading"
             style={{
-              fontFamily: "var(--faction-wow-card-font)",
+              fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
               color: "var(--faction-wow-accent-deep)",
             }}
           >
@@ -92,10 +97,10 @@ export default function WowFactionHero({
 
           <h1
             style={{
-              fontFamily: "var(--faction-wow-card-font)",
+              fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
               fontSize: "var(--text-heading)",
               lineHeight: 1.05,
-              color: "var(--faction-wow-card-text)",
+              color: "var(--wow-hero-ink, var(--faction-wow-card-text))",
               margin: "var(--space-sm) 0 var(--space-xs)",
               // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
               // banner is full-width and centred, and "Warriors of Whimsy" sets
@@ -110,7 +115,7 @@ export default function WowFactionHero({
             style={{
               fontFamily: "var(--faction-wow-body-font)",
               fontStyle: "italic",
-              color: "var(--faction-wow-card-accent)",
+              color: "var(--wow-hero-accent, var(--faction-wow-card-accent))",
               margin: "0 0 var(--space-lg)",
             }}
           >
@@ -143,7 +148,7 @@ export default function WowFactionHero({
                   <div
                     className="content-title"
                     style={{
-                      fontFamily: "var(--faction-wow-card-font)",
+                      fontFamily: "var(--wow-hero-face, var(--faction-wow-card-font))",
                       lineHeight: 1,
                       color: "var(--faction-wow-figure)",
                     }}
