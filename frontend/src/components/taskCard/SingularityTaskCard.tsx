@@ -11,6 +11,7 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import SingularityProcessLight from "../factionMarks/SingularityProcessLight";
 import SingularityReadout from "../factionMarks/SingularityReadout";
+import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
  * Singularity — THE TERMINAL SESSION (task card v2, #1023).
@@ -49,7 +50,7 @@ import SingularityReadout from "../factionMarks/SingularityReadout";
  * new keyframe was needed.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = "var(--sg-task-card-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 /**
  * The face that idles beside the sign-up key (#2036) — three lines of
@@ -130,6 +131,7 @@ export default function SingularityTaskCard({
     >
       <article
         style={{
+          ...factionRoleVars("singularity", "sg-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",

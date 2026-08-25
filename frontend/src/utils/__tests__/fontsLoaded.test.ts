@@ -143,9 +143,11 @@ function namedFamilies(source: string): string[] {
     .map((declaration) => declaration.split(/,\s*[A-Za-z-]+\s*:/)[0])
     // `factionCssVar("coven", "card-font")` builds a var() reference; its two
     // quoted arguments are a slug and a suffix, not families. `factionRoleVar`
-    // (#2659) is the same shape one level up - a slug and a ROLE - and reads
-    // `factionRoleVar("ua", "face")`, whose two arguments would otherwise be
-    // harvested as families called `ua` and `face`.
+    // is the same shape one level up (#2659) — a slug and a ROLE. Two lanes hit
+    // it independently: #2680 put `factionRoleVar(slug, "face")` straight into a
+    // `fontFamily:`, where the role name read as a missing family, and #2673
+    // bound `UA_DISPLAY` to `factionRoleVar("ua", "face")`, whose two arguments
+    // would be harvested as families called `ua` and `face`.
     .map((declaration) =>
       declaration.replace(/faction(?:CssVar|RoleVar)\([^)]*\)/g, ""),
     );

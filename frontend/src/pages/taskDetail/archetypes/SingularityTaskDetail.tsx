@@ -19,6 +19,7 @@ import {
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
@@ -72,7 +73,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * no keyframe was added.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = "var(--sg-task-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -794,6 +795,12 @@ export default function SingularityTaskDetail({
 
       <div
         style={{
+          /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
+             than on the `py-8` wrapper above (#2675). That wrapper also holds
+             the breadcrumb, which is neutral shared site chrome measured on the
+             site's own ground (#2102) — a faction's namespace has no business
+             spanning it. */
+          ...factionRoleVars("singularity", "sg-task-detail"),
           position: "relative",
           overflow: "hidden",
           maxWidth: 1200,

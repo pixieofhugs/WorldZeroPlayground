@@ -25,6 +25,7 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
@@ -109,7 +110,7 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * steward bar into the costume.
  */
 
-const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
+const MONO = "var(--sg-praxis-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -710,6 +711,12 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
       <div
         style={{
+          /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
+             than on the `py-8` wrapper above (#2675). That wrapper also holds
+             the breadcrumb, which is neutral shared site chrome measured on the
+             site's own ground (#2102) — a faction's namespace has no business
+             spanning it. */
+          ...factionRoleVars("singularity", "sg-praxis-detail"),
           position: "relative",
           overflow: "hidden",
           maxWidth: 1200,
