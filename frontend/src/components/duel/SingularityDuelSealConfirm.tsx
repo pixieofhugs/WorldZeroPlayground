@@ -50,6 +50,7 @@
  * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
 import { factionCssVar } from '../../utils/factions'
+import { factionRoleVars } from '../../utils/factionRoles'
 import {
   duelSides,
   RaceRoster,
@@ -61,11 +62,20 @@ import {
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
 
-const GROUND = 'var(--faction-singularity-card-bg)'
-const PHOSPHOR = 'var(--faction-singularity-card-accent)'
+/**
+ * Four ROLES under this sheet's own prefix (#2675). The element they are
+ * declared on is the one `DuelSealSheet` paints from the `ground` prop — the
+ * container every child here mounts inside, on both the phone sheet and the
+ * desktop card — so a read below resolves against it, and against today's token
+ * anywhere else. `-phosphor-dim`, `-card-notice` and `-card-credit` are not
+ * roles: the two functional inks are a component's STATE rather than a ground,
+ * which is why the vocabulary deliberately stops at nine.
+ */
+const GROUND = 'var(--duel-seal-paper, var(--faction-singularity-card-bg))'
+const PHOSPHOR = 'var(--duel-seal-accent, var(--faction-singularity-card-accent))'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
-const BRAND_BLUE = 'var(--faction-singularity-card-muted)'
-const TERMINAL = 'var(--faction-singularity-card-font)'
+const BRAND_BLUE = 'var(--duel-seal-quiet, var(--faction-singularity-card-muted))'
+const TERMINAL = 'var(--duel-seal-face, var(--faction-singularity-card-font))'
 /**
  * The two sheet-measured functional inks (#694). This chassis is near-black in
  * BOTH themes while `--color-success` / `--color-danger` flip with the viewer,
@@ -165,6 +175,7 @@ export default function SingularityDuelSealConfirm({
       // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
+        ...factionRoleVars('singularity', 'duel-seal'),
         ...TERMINAL_GROUND,
         // The opponent still owns the edge that faces them — a spine on the
         // card, full-height when the terminal IS the screen.

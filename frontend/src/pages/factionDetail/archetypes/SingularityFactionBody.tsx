@@ -32,16 +32,16 @@ import type { FactionDetailState } from "../useFactionDetail";
  */
 
 // Token shorthands. Four of them are ROLES now (#2675) — paper, accent, quiet
-// and the bare hue as `fill` — declared as `--faction-body-*` on this body's
+// and the bare hue as `fill` — declared as `--detail-body-*` on this body's
 // own grid root and read here with today's token as the fallback, so a value
 // resolves identically whether or not the declaring element is above it.
 // `-border-hard` and `-amber` are not roles and stay local: decision 07 leaves
 // a surface's genuine extras to the surface.
-const VOID = "var(--faction-body-paper, var(--faction-singularity-card-bg))"; // terminal black
-const PHOSPHOR = "var(--faction-body-accent, var(--faction-singularity-card-accent))"; // green
-const SIGNAL = "var(--faction-body-quiet, var(--faction-singularity-card-muted))"; // blue
+const VOID = "var(--detail-body-paper, var(--faction-singularity-card-bg))"; // terminal black
+const PHOSPHOR = "var(--detail-body-accent, var(--faction-singularity-card-accent))"; // green
+const SIGNAL = "var(--detail-body-quiet, var(--faction-singularity-card-muted))"; // blue
 const BORDER_HARD = "var(--faction-singularity-border-hard)"; // blue brand
-const SIGNAL_FILL = "var(--faction-body-fill, var(--faction-singularity))"; // blue brand fill
+const SIGNAL_FILL = "var(--detail-body-fill, var(--faction-singularity))"; // blue brand fill
 // The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
 // palette's first stop until #1220 (ADR-0066) pointed it at na's
 // --faction-default-gold, and #1766 gave it the --faction-singularity-* token
@@ -207,7 +207,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
        body's own — the two columns below mount TaskCard and PraxisCard, which
        dispatch on each row's own faction, so a name any card might also read
        would repaint a card belonging to somebody else. */
-    <div className="wz-faction-grid" style={factionRoleVars("singularity", "faction-body")}>
+    <div className="wz-faction-grid" style={factionRoleVars("singularity", "detail-body")}>
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② MANIFEST */}

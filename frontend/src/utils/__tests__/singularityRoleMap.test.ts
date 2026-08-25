@@ -90,7 +90,14 @@ const CORE_READ = new RegExp(
   "g",
 );
 
-/** A surface reading a role. `--faction-…` is a token, never a role read. */
+/**
+ * A surface reading a role. `--faction-…` is a TOKEN and never a role read,
+ * which also settles what a prefix may be called: the faction-detail body's
+ * first name here was `faction-body`, and `--faction-body-paper` is
+ * indistinguishable — to this regex and to a reader — from a token of a faction
+ * keyed `body`. It is `detail-body`. A surface prefix does not shadow the
+ * namespace the map resolves INTO.
+ */
 const ROLE_READ = new RegExp(
   String.raw`var\(\s*--(?!faction-)([\w-]+?)-(${PROPERTIES})\s*,`,
   "g",

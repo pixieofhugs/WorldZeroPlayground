@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { factionName } from '../../utils/factions'
+import { factionRoleVar } from '../../utils/factionRoles'
 import SingularityLamps from '../factionMarks/SingularityLamps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
@@ -86,7 +87,7 @@ import type { FeedFrameProps } from './feedFrameProps'
  * Singularity token that already shipped with the v2 task card.
  */
 
-const MONO = 'var(--faction-singularity-card-font)' /* Share Tech Mono */
+const MONO = factionRoleVar('singularity', 'face') /* Share Tech Mono */
 
 const BG = 'var(--faction-singularity-term-bg)' /* the chassis */
 const CHROME = 'var(--faction-singularity-term-chrome)' /* the window bar */
@@ -141,7 +142,7 @@ const ON_CHASSIS_INK = {
  * phosphor this whole chassis speaks in clears it twice over (10.88:1 light,
  * 11.18:1 dark).
  */
-const ROW_SKIN = { ink: { actor: 'var(--faction-singularity-card-accent)' } } satisfies FeedRowSkin
+const ROW_SKIN = { ink: { actor: factionRoleVar('singularity', 'accent') } } satisfies FeedRowSkin
 
 /** Terminal label voice — every small mark on the chrome speaks in it. */
 const LABEL: CSSProperties = {
