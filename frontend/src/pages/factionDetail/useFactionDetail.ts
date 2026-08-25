@@ -26,6 +26,7 @@ import { useTaskSignup } from "../../hooks/useTaskSignup";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { extractError } from "../../utils/errors";
 import { useFactionBackdrop } from "../../components/backdrop/BackdropContext";
+import type { JoinTarget } from "../../components/JoinControl";
 import type { FactionConfigOut } from "../../api/gameConfig";
 
 /**
@@ -84,13 +85,17 @@ export function resolveMembershipState(
   return "gate";
 }
 
-export interface Membership {
+/**
+ * This page's viewer relationship: the four fields the shared join trio reads
+ * ({@link JoinTarget}) plus the one it does not, which decides whether a join
+ * block is drawn at all.
+ *
+ * The four moved to `components/JoinControl` in #2656 rather than being copied:
+ * the popup is a second host for the same control, and a contract owned by one
+ * page's hook is not one a second host can honestly implement.
+ */
+export interface Membership extends JoinTarget {
   state: MembershipState;
-  /** Display name of the faction the viewer would leave by joining (for the confirm copy); null if unaffiliated. */
-  currentFactionSlug: string | null | undefined;
-  join: () => Promise<void>;
-  joining: boolean;
-  joinError: string | null;
 }
 
 export interface FactionDetailState {
