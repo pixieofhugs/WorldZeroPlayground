@@ -4,8 +4,11 @@ A praxis has exactly ONE number: ``score``, the computed total, resolved for
 the praxis AUTHOR. The payload also carries the terms behind it so the frontend
 score stamp can render the arithmetic without re-deriving it:
 
-    score = (task_point_value + metatask_points) × display_multiplier
-            + points_from_votes
+    score = task_point_value × display_multiplier
+            + metatask_points + points_from_votes + habit_bonus_points
+
+Only the base multiplies (ADR-0086, #2633). Every term a player earned by doing
+a specific extra thing — the metatask, the votes, the habit bonus — is flat.
 
 That invariant holds for EVERY praxis type with no carve-out — a collab praxis
 has exactly one author, hence one faction and one multiplier. ADR-0053
@@ -70,10 +73,13 @@ def _era_with_modifiers(slug: str, **overrides):
 
 
 def assert_invariant(payload) -> None:
-    """score = (base + meta) × mult + votes — for every praxis type (ADR-0053)."""
+    """score = base × mult + meta + votes + habit — every type (ADR-0053/0086)."""
     expected = (
-        payload.task_point_value + payload.metatask_points
-    ) * payload.display_multiplier + payload.points_from_votes
+        payload.task_point_value * payload.display_multiplier
+        + payload.metatask_points
+        + payload.points_from_votes
+        + payload.habit_bonus_points
+    )
     assert payload.score == pytest.approx(expected)
 
 
@@ -655,8 +661,8 @@ async def test_collab_earns_metatask_points(
     """A collab praxis carrying a metatask now scores the bonus (#882).
 
     Before #882 the scoring pass filtered metatask points to solo-non-duel ids,
-    so a sealed collab read ``metatask_points: 0``. The bonus now rides the
-    (base + meta) × faction + votes formula like any other praxis.
+    so a sealed collab read ``metatask_points: 0``. The bonus is now a flat term
+    of ``base × faction + meta + votes`` like on any other praxis.
     """
     author = await _make_character(
         db_session, era, faction_slug="ua", username="collabmeta", email="cm@x.com"
@@ -674,7 +680,7 @@ async def test_collab_earns_metatask_points(
     card = await _load_card(db_session, praxis.id)
 
     assert card.metatask_points == 5
-    # (10 + 5) × 1.0 + 0 = 15.0 — was 10.0 (meta filtered out) before #882.
+    # 10 × 1.0 + 5 + 0 = 15.0 — was 10.0 (meta filtered out) before #882.
     assert card.score == pytest.approx(15.0)
     assert_invariant(card)
 
@@ -683,11 +689,12 @@ async def test_collab_earns_metatask_points(
 async def test_duel_side_earns_metatask_points(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    """A duel-side praxis carrying a metatask scores the bonus, times the outcome.
+    """A duel-side praxis carrying a metatask scores the bonus, flat.
 
-    The metatask rides both multipliers: the winning UA side's ×1.5 duel
-    modifier multiplies (base + meta). Before #882 duel sides were filtered out
-    of the metatask pass and read ``metatask_points: 0``.
+    The winning UA side's ×1.5 duel modifier multiplies the BASE and nothing
+    else (ADR-0086): a win does not pay a premium on a metatask either. Before
+    #882 duel sides were filtered out of the metatask pass entirely and read
+    ``metatask_points: 0``.
     """
     challenger = await _make_character(
         db_session, era, faction_slug="ua", username="dmetawin", email="dmw@x.com"
@@ -715,20 +722,23 @@ async def test_duel_side_earns_metatask_points(
 
     assert winner_card.metatask_points == 5
     assert winner_card.display_multiplier == pytest.approx(1.5)
-    # (10 + 5) × 1.5 + 5 = 27.5.
-    assert winner_card.score == pytest.approx(27.5)
+    # 10 × 1.5 + 5 + 5 = 25.0. Under the old formula this was 27.5 — the ×1.5
+    # was paying a 2.5-point premium on a bonus the duel did not judge.
+    assert winner_card.score == pytest.approx(25.0)
     assert_invariant(winner_card)
 
 
 @pytest.mark.asyncio
-async def test_snide_duel_loss_zeroes_the_metatask(
+async def test_snide_duel_loss_keeps_the_metatask(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    """A losing Snide side's ×0.0 wipes the metatask along with the base (#882).
+    """A losing Snide side's ×0.0 wipes the BASE and leaves the metatask (#2633).
 
-    The metatask is part of the submission the duel judged, so the loss forfeits
-    it. Votes still survive the wipeout. ``metatask_points`` still reports the
-    level-met bonus (5); the ×0.0 multiplier zeroes it inside the score.
+    This test used to assert the opposite, and asserting it is what made the
+    defect visible: ×0.0 is the only multiplier in the game that can delete a
+    term outright, and it was deleting points a metatask earned for work the
+    duel never judged. ADR-0086 moved the metatask out to join the votes, which
+    always survived the wipeout.
     """
     await _ensure_faction(db_session, "snide")
     challenger = await _make_character(
@@ -756,8 +766,8 @@ async def test_snide_duel_loss_zeroes_the_metatask(
 
     assert loser_card.metatask_points == 5
     assert loser_card.display_multiplier == pytest.approx(0.0)
-    # (10 + 5) × 0.0 + 2 = 2.0 — the metatask is forfeit with the base.
-    assert loser_card.score == pytest.approx(2.0)
+    # 10 × 0.0 + 5 + 2 = 7.0 — the base is forfeit, the metatask is not.
+    assert loser_card.score == pytest.approx(7.0)
     assert_invariant(loser_card)
 
 
