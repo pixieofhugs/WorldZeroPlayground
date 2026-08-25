@@ -5,6 +5,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -75,17 +76,30 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * forbids. Nothing about how they render changed.
  */
 
-const MED = "var(--faction-wow-card-font)"; /* MedievalSharp */
+/**
+ * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The parchment field below
+ * (`.wow-detail-field`) spreads `factionRoleVars('wow', 'wow-task-page')`, and
+ * the prefix is declared THERE rather than on the outer wrapper: the wrapper
+ * also holds `Breadcrumb`, which is neutral site chrome above the surface
+ * (#2102) and has no business inheriting a faction's roles.
+ *
+ * Every read carries today's token as its fallback. The nine names that are NOT
+ * roles below — the olive label ink, the plum fill and its edge, the gilt, the
+ * inset, the hairline — stay exactly as they are: decision 07 leaves a surface's
+ * extras to the surface, and several of them exist precisely because they were
+ * measured against a ground the core map does not describe.
+ */
+const MED = "var(--wow-task-page-face, var(--faction-wow-card-font))"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-const INK = "var(--faction-wow-card-text)";
-const MUTED = "var(--faction-wow-card-muted)";
+const INK = "var(--wow-task-page-ink, var(--faction-wow-card-text))";
+const MUTED = "var(--wow-task-page-quiet, var(--faction-wow-card-muted))";
 /** Label ink. Olive-gold, the one measured to clear AA on BOTH grounds — the
  *  cream card (5.32:1) and, unlike `--faction-wow-card-muted` (4.20:1), the
  *  darker parchment field this page lays its headers straight onto. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK/ornament — flips with the theme. */
-const PLUM = "var(--faction-wow-card-accent)";
+const PLUM = "var(--wow-task-page-accent, var(--faction-wow-card-accent))";
 /** Plum as a FILL — theme-invariant, 5.16:1 under `--faction-wow-on-plum`. */
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const PLUM_EDGE = "var(--faction-wow-plum-edge)";
@@ -94,7 +108,7 @@ const ON_PLUM = "var(--faction-wow-on-plum)";
 const GOLD = "var(--faction-wow-chronicle-gold)";
 /** The burnt gold reserved for the total. 4.80:1 on the plaque. */
 const GILT = "var(--faction-wow-stamp-total)";
-const CARD = "var(--faction-wow-card-bg)";
+const CARD = "var(--wow-task-page-paper, var(--faction-wow-card-bg))";
 const INSET = "var(--faction-wow-detail-inset)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 
@@ -796,6 +810,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       <div
         className="wow-detail-field"
         style={{
+          ...factionRoleVars("wow", "wow-task-page"),
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,

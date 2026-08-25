@@ -11,6 +11,7 @@ import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wow
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import {
   bylineFaces,
@@ -125,22 +126,33 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * heading suppressed so one list carries one heading (#1029).
  */
 
-const MED = 'var(--faction-wow-card-font)' /* MedievalSharp */
+/**
+ * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The parchment field below
+ * (`.wow-detail-field`) spreads `factionRoleVars('wow', 'wow-praxis-page')`,
+ * and the prefix is declared THERE rather than on the outer wrapper, which also
+ * holds the neutral shared `Breadcrumb` above the surface (#2102).
+ *
+ * Every read carries today's token as its fallback. The names below that are
+ * NOT roles stay put: the scribe's hand, the olive label ink measured on BOTH
+ * grounds, the gold, the inset and the hairline are this surface's own extras,
+ * which decision 07 leaves to the surface.
+ */
+const MED = 'var(--wow-praxis-page-face, var(--faction-wow-card-font))' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 /** The scribe's marginal hand. A SURFACE face (§4), not Coven's card font. */
 const HAND = 'var(--font-faction-script)' /* Caveat */
 
-const INK = 'var(--faction-wow-card-text)'
+const INK = 'var(--wow-praxis-page-ink, var(--faction-wow-card-text))'
 /** Metadata ink. 4.52:1 inside a cream plate — NOT legible enough on the field. */
-const MUTED = 'var(--faction-wow-card-muted)'
+const MUTED = 'var(--wow-praxis-page-quiet, var(--faction-wow-card-muted))'
 /** Label ink, the one measured on BOTH grounds: 5.32:1 on the cream plate and
  *  5.06:1 on the darker parchment field this page lays its headers straight on. */
 const LABEL = 'var(--faction-wow-accent-deep)'
 /** Plum as INK — this one flips with the theme. 5.11:1 on the field. */
-const PLUM = 'var(--faction-wow-card-accent)'
+const PLUM = 'var(--wow-praxis-page-accent, var(--faction-wow-card-accent))'
 /** Frame + rule gold. Theme-invariant, and never an ink: 2.24:1 on the cream. */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
-const CARD = 'var(--faction-wow-card-bg)'
+const CARD = 'var(--wow-praxis-page-paper, var(--faction-wow-card-bg))'
 const INSET = 'var(--faction-wow-detail-inset)'
 const HAIR = 'var(--faction-wow-chronicle-rule)'
 
@@ -731,6 +743,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       <div
         className="wow-detail-field"
         style={{
+          ...factionRoleVars('wow', 'wow-praxis-page'),
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,
