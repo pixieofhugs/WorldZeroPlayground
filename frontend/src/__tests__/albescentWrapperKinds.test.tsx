@@ -84,7 +84,7 @@ vi.mock('../hooks/useGameConfig', () => ({ useGameConfig: () => CONFIG }))
 // repo does it.
 const WatercolorBackground = (await import('../components/layout/WatercolorBackground')).default
 const AlbescentBackdrop = (await import('../components/backdrop/AlbescentBackdrop')).default
-const { DefaultComment } = await import('../components/comments/CommentThread')
+const { default: DefaultComment } = await import('../components/comments/Comment')
 const AlbescentComment = (await import('../components/comments/voices/AlbescentComment')).default
 const { DefaultDuelSealConfirm } = await import('../components/duel/DuelSealConfirm')
 const AlbescentDuelSealConfirm = (

@@ -54,7 +54,7 @@ import type { CharacterOut } from "../../../api/auth";
 import type { MediaItemOut, PraxisCardOut } from "../../../api/praxis";
 import type { PraxisDetailState } from "../../../pages/praxisDetail/usePraxisDetail";
 import FactionAvatar from "../../avatar/FactionAvatar";
-import { DefaultComment } from "../../comments/CommentThread";
+import DefaultComment from "../../comments/Comment";
 import AlbescentPraxisCard from "../desktop/AlbescentPraxisCard";
 import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
 import AlbescentPraxisDetail from "../../../pages/praxisDetail/archetypes/AlbescentPraxisDetail";

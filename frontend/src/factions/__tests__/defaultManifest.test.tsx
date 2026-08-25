@@ -41,7 +41,7 @@ import DefaultScoreStamp from '../../components/praxisCard/scoreStamp/DefaultSco
 import DefaultSeal from '../../components/metataskSeal/skins/DefaultSeal'
 import DefaultVote from '../../components/vote/DefaultVote'
 import { DefaultSigilAdapter } from '../../components/sigil/FactionSigil'
-import { DefaultComment } from '../../components/comments/CommentThread'
+import DefaultComment from '../../components/comments/Comment'
 import { DefaultDuelSealConfirm } from '../../components/duel/DuelSealConfirm'
 import DefaultTaskDetail from '../../pages/taskDetail/archetypes/DefaultTaskDetail'
 import DefaultPraxisDetail from '../../pages/praxisDetail/archetypes/DefaultPraxisDetail'

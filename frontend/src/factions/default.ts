@@ -51,7 +51,7 @@ import { lazyArchetype } from './lazyArchetype'
 
 const DefaultAvatar = lazyArchetype(() => import('../components/avatar/DefaultAvatar'))
 const DefaultBackdrop = lazyArchetype(() => import('../components/layout/WatercolorBackground'))
-const DefaultComment = lazyArchetype(() => import('../components/comments/CommentThread').then((m) => ({ default: m.DefaultComment })))
+const DefaultComment = lazyArchetype(() => import('../components/comments/Comment'))
 const DefaultCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/DefaultCreateCharacter'))
 const DefaultDuelSealConfirm = lazyArchetype(() => import('../components/duel/DuelSealConfirm').then((m) => ({ default: m.DefaultDuelSealConfirm })))
 const DefaultEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/DefaultEditPraxis'))

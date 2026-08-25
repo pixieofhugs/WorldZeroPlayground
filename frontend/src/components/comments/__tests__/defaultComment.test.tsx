@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'
-import { DefaultComment } from '../CommentThread'
+import DefaultComment from '../Comment'
 
 const COMMENT: CommentOut = {
   id: 7,

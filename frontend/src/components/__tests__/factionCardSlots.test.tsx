@@ -18,7 +18,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import DefaultPraxisCard from "../praxisCard/desktop/DefaultPraxisCard";
-import { DefaultComment } from "../comments/CommentThread";
+import DefaultComment from "../comments/Comment";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import type { PraxisCardOut, PraxisMemberOut, MediaItemOut } from "../../api/praxis";

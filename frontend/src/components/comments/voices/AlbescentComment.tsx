@@ -40,9 +40,9 @@
  * strip — and na is byte-identical, which is the invariant all four of #2531's
  * registrations keep.
  */
-import { DefaultComment } from '../CommentThread'
+import SharedComment from '../Comment'
 import type { CommentProps } from '../shared'
 
 export default function AlbescentComment(props: CommentProps) {
-  return <DefaultComment {...props} />
+  return <SharedComment {...props} />
 }
