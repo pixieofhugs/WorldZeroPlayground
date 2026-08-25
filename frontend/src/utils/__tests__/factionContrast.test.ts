@@ -41,7 +41,18 @@ import {
   parseColor,
   relativeLuminance,
 } from "../contrast";
-import { factionRoleVar } from "../factionRoles";
+import {
+  ALBESCENT_FACTION_SLUG,
+  FACTION_RAINBOW_ORDER,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../factions";
+import {
+  FACTION_GROUNDS,
+  FACTION_ROLES,
+  factionRoleVar,
+  type FactionGround,
+  type FactionRole,
+} from "../factionRoles";
 import { readStripped, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
@@ -108,6 +119,16 @@ type Pair = {
   veil?: Veil | Veil[];
   /** AA floor. Defaults to 4.5; set AA_LARGE only where the role is large display type. */
   floor?: number;
+  /**
+   * The other lawful reason a pairing owes 3:1 rather than 4.5:1 — it is NOT
+   * TEXT (#2661). 1.4.11 asks 3:1 of a graphical object, which is numerically
+   * `AA_LARGE` and a different rule from 1.4.3's large-type allowance; the
+   * value is the rule, spelled out, so the guard below can tell a stated reason
+   * from a laundered floor. Two blocks at the bottom of this file made the same
+   * distinction by living outside `PAIRS` entirely; the role loop cannot, so it
+   * says so in the row.
+   */
+  nonText?: string;
 };
 
 /**
@@ -127,24 +148,118 @@ type Pair = {
  */
 type Veil = string | { token: string; alpha: number };
 
-const CARD_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
-  { what: `${key} card body text`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-text` },
-  { what: `${key} card muted text`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-muted` },
-  // "metadata / decorative accent" (§3) — metadata is text, so it owes 4.5:1.
-  { what: `${key} card accent`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-accent` },
-]);
+/**
+ * THE CROSS-PRODUCT (#2661) — roles x factions x grounds x themes.
+ *
+ * WHAT THIS REPLACES AND WHY. `CARD_PAIRS` and `FILL_PAIRS` stood here: two
+ * hand-written generators over `CARD_KEYS`, measuring the three card inks and
+ * the on-fill ink. They were right about every pair they named and blind to
+ * every pair nobody thought to name, which is the defect. A token family added
+ * next month is unmeasured while this file stays green, because a curated list
+ * only covers what a human remembered to add to it — and "the contrast gate
+ * covers it" has been asserted in this repo and been false.
+ *
+ * SO THE MANIFEST IS NOT AUTHORED, IT IS ENUMERATED. `factionRoles.ts` (#2659)
+ * made the space finite: nine roles, nine slugs, two grounds, two cascades.
+ * Every row below is READ OUT OF THE RESOLVER — `factionRoleVar(slug, role,
+ * ground)` — not typed against a `--faction-{key}-` template. A ground override
+ * that repoints a role moves this gate with it, on the same commit, with no
+ * second edit; that is the whole point, and it is why the rows are generated
+ * from the same function the surfaces call rather than from a parallel table.
+ *
+ * WHICH ROLES ARE MEASURED. Five of the nine are inks, two are grounds, and two
+ * are not colours at all — `radius` and `face` have no cascade to be wrong in.
+ * The split is asserted below (`measures every colour role the vocabulary has`)
+ * rather than left as prose, so a tenth role cannot join the vocabulary and
+ * quietly skip this file.
+ *
+ * WHY THE ROWS ARE DEDUPED. 9 slugs x 2 grounds x 5 pairings is 90 tuples, and
+ * they resolve onto far fewer distinct token pairs: seven factions declare no
+ * ground override at all, so their chrome answer IS their sheet answer, and
+ * `na` and `albescent` both resolve to the `default` family (CSS_KEY,
+ * ADR-0039 / #783). A ratio is symmetric and a token pair has exactly one of
+ * them, so a second row is a second NAME for one measurement — the
+ * debt-inflation this file warns against under BASELINE. The collapse is on the
+ * RESOLVED PAIR, never on a structural guess about which grounds differ, and
+ * the tuple count is asserted below so the loop cannot be narrowed into
+ * passing.
+ */
+const ROLE_SLUGS: string[] = [
+  ...FACTION_RAINBOW_ORDER,
+  // Last, so the `default` family is labelled by the state most of the app is
+  // in rather than by the society that is hiding inside it.
+  UNAFFILIATED_FACTION_SLUG,
+  ALBESCENT_FACTION_SLUG,
+];
+
+/** The two roles that ARE a surface, and the two that are not a colour at all. */
+const ROLE_GROUNDS: FactionRole[] = ["paper", "fill"];
+const ROLE_NOT_COLOUR: FactionRole[] = ["radius", "face"];
+
+type RolePairing = {
+  text: FactionRole;
+  on: FactionRole;
+  floor: number;
+  /** The rule that picks the floor — a floor with no stated rule is an escape hatch. */
+  why: string;
+};
 
 /**
- * #649 — text on each faction's solid fill. The global `--color-text-on-accent`
- * (#ffffff) failed AA on 7 of the original 14 pairs, so each faction now owns a
- * per-theme `--faction-{key}-on-fill` (white or ink); this measures that token.
- * `default` is the 8th key since #2297 — see FILL_KEYS.
+ * The colour-on-colour questions a role map can be asked, and the WCAG rule
+ * each one answers to.
+ *
+ * `line` IS THE NEW ONE. No curated row has ever measured a faction's hairline
+ * against its own sheet, in either cascade — the card border was a value in the
+ * §3 contract that nothing pointed a ratio at. It takes 1.4.11's 3:1 for a
+ * non-text graphical object rather than a text floor: a rule that separates
+ * carries no words. It is load-bearing on any ground that is not a card,
+ * because a panel on a page of the same stock has nothing else dividing it
+ * (#2065).
+ *
+ * `accent` keeps the 4.5 the deleted `card accent` row gave it, and keeps that
+ * row's reasoning verbatim: §3 calls the role "metadata / decorative accent",
+ * and metadata is text.
  */
-const FILL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
-  what: `${key} fill, on-fill`,
-  surface: `--faction-${key}`,
-  text: `--faction-${key}-on-fill`,
-}));
+const ROLE_PAIRINGS: RolePairing[] = [
+  { text: "ink", on: "paper", floor: AA_NORMAL, why: "primary type — 1.4.3 AA" },
+  { text: "quiet", on: "paper", floor: AA_NORMAL, why: "secondary type is still text — 1.4.3 AA" },
+  { text: "accent", on: "paper", floor: AA_NORMAL, why: "§3 metadata / decorative accent, and metadata is text" },
+  { text: "line", on: "paper", floor: AA_LARGE, why: "a hairline is a graphical object — 1.4.11's 3:1" },
+  { text: "onFill", on: "fill", floor: AA_NORMAL, why: "#649's paired ink, which carries words on the fill" },
+];
+
+/** `var(--faction-ua-card-bg)` -> `--faction-ua-card-bg`. */
+function roleToken(slug: string, role: FactionRole, ground: FactionGround): string {
+  const reference = factionRoleVar(slug, role, ground);
+  const match = /^var\((--[\w-]+)\)$/.exec(reference);
+  if (match === null) {
+    throw new Error(`factionRoleVar(${slug}, ${role}, ${ground}) is not a bare var(): ${reference}`);
+  }
+  return match[1];
+}
+
+/** Every question the vocabulary can be asked, before the duplicates collapse. */
+const ROLE_TUPLES = FACTION_GROUNDS.flatMap((ground) =>
+  ROLE_SLUGS.flatMap((slug) => ROLE_PAIRINGS.map((pairing) => ({ slug, ground, pairing }))),
+);
+
+const ROLE_PAIRS: Pair[] = (() => {
+  const rows = new Map<string, Pair>();
+  for (const { slug, ground, pairing } of ROLE_TUPLES) {
+    const surface = roleToken(slug, pairing.on, ground);
+    const text = roleToken(slug, pairing.text, ground);
+    const id = `${surface} | ${text} | ${pairing.floor}`;
+    if (rows.has(id)) continue;
+    rows.set(id, {
+      what: `${slug}/${ground} ${pairing.text} on ${pairing.on}`,
+      surface,
+      text,
+      floor: pairing.floor,
+      nonText: pairing.floor === AA_LARGE ? pairing.why : undefined,
+    });
+  }
+  return [...rows.values()];
+})();
 
 /**
  * #924 — text on each comment voice's COMPOSER ACCENT. The submit button is
@@ -2190,9 +2305,8 @@ const SEAL_CAPTION_PAIRS: Pair[] = [
 ];
 
 const PAIRS: Pair[] = [
-  ...CARD_PAIRS,
+  ...ROLE_PAIRS,
   ...SEAL_CAPTION_PAIRS,
-  ...FILL_PAIRS,
   ...ACCENT_PAIRS,
   ...ROSTER_PAIRS,
   ...COLLAB_PAIRS,
@@ -2228,9 +2342,13 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // Card accents used as metadata text (§3: "metadata / decorative accent").
   // #848 fixed both `ua card accent` entries: the sun-bleached repaint gave UA
   // a metadata sienna that is not the fill hue (5.18:1 light, 6.58:1 dark).
-  "light | everymen card accent": { ratio: 4.49, issue: 651 },
-  "light | coven card accent": { ratio: 2.81, issue: 651 },
-  "dark | everymen card accent": { ratio: 4.16, issue: 651 },
+  // (Renamed by #2661, not re-measured. These three rows were `{key} card
+  // accent` while a hand-written generator produced them; they are now
+  // `{slug}/{ground} accent on paper` because the same pairing is read out of
+  // the role resolver. Same tokens, same ratios, same owner.)
+  "light | everymen/sheet accent on paper": { ratio: 4.49, issue: 651 },
+  "light | coven/sheet accent on paper": { ratio: 2.81, issue: 651 },
+  "dark | everymen/sheet accent on paper": { ratio: 4.16, issue: 651 },
   // (`dark | ephemerists card accent` stood here at 3.72:1 from the sweep until
   // #1627 moved the card contract off the codex's rubric vermilion onto the
   // plate's brass highlight — 11.98:1, in both cascades. The entry below is the
@@ -2242,6 +2360,61 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // themes and were listed here until #853 deleted the legacy family, exactly
   // as this entry predicted. The surfaces that used to paint that pair now read
   // --faction-ua-card-muted, which clears AA on every UA surface.)
+
+  // ══ Found by the role loop on landing — awaiting triage into children (#2661) ══
+  //
+  // NOT "NEW WORK", WHICH IS WHAT THE RULE ABOVE FORBIDS. Every ratio here was
+  // already on screen and had been for months; what is new is that anything at
+  // all measures it. This is the same situation the ratchet was created for and
+  // the same treatment #651 gave: enumerate the debt so the guard can land
+  // green and block the NEXT one. Each line is issue-worthy on its own and none
+  // of them was fixed here — repointing a colour to go green is the failure
+  // mode this loop exists to make impossible, not a shortcut it may take.
+  //
+  //   (a) THE HAIRLINE, `line` on `paper`, at 1.4.11's 3:1 for a non-text mark.
+  //       Nine of the eighteen (slug x cascade) readings fail and NOT ONE had
+  //       ever been measured: `-card-border` was a value in the §3 contract
+  //       that no row of this file pointed a ratio at.
+  //
+  //       TRIAGE OWES THESE A DISTINCTION THIS FILE CANNOT MAKE. On a card that
+  //       brings its own stock, the edge is not the only thing separating the
+  //       card from the page and 1.4.11 may not bite; on a ground that is NOT a
+  //       card — a panel on a page of the same paper — the hairline IS the
+  //       boundary and 3:1 is the floor (#2065). The loop measures the ink
+  //       against the faction's own `paper`, which is the side a role map can
+  //       express; the page side is a rendered pairing and belongs to
+  //       `e2e/contrast.spec.ts`. `snide/chrome` is the one below that is
+  //       unambiguously load-bearing: it is the rail, standing on the wall.
+  "light | singularity/sheet line on paper": { ratio: 2.3, issue: 2661 },
+  "light | wow/sheet line on paper": { ratio: 2.24, issue: 2661 },
+  "light | coven/sheet line on paper": { ratio: 1.64, issue: 2661 },
+  "light | na/sheet line on paper": { ratio: 1.33, issue: 2661 },
+  "dark | everymen/sheet line on paper": { ratio: 1.38, issue: 2661 },
+  "dark | singularity/sheet line on paper": { ratio: 2.3, issue: 2661 },
+  "dark | coven/sheet line on paper": { ratio: 2.08, issue: 2661 },
+  "dark | na/sheet line on paper": { ratio: 1.54, issue: 2661 },
+  //       The rail's own edge on the wall it stands on, in the cascade the wall
+  //       goes black in. `-note-wall-edge` is `rgba(182,255,46,0.35)` and the
+  //       alpha is the whole of it: composited it lands at 2.77:1, and measured
+  //       un-composited it would read clear — which is #594's mistake exactly.
+  "dark | snide/chrome line on paper": { ratio: 2.77, issue: 2661 },
+  //
+  //   (b) THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT.
+  //       S.N.I.D.E.'s `chrome` map (#2631/#2659) moves six roles onto the wall
+  //       family and leaves `accent` inheriting the sheet's
+  //       `--faction-snide-card-accent` — the acid, measured for the near-black
+  //       photocopier SLAB. The wall flips; in light it is #efece3, and the
+  //       acid reads 1.03:1 on it. That is the same shape as the `onFill` pair
+  //       #2659's review caught by eye and #2663 then made unrepresentable in
+  //       the type — a role left behind when its ground moved — and it is the
+  //       first thing this loop found that a human review had not.
+  //
+  //       It is also almost certainly SATISFIABLE rather than a colour nobody
+  //       has: #2173 already ruled that `--faction-snide-acid` never touches
+  //       paper, and `-wall-credit` (6.28:1 light / 9.22:1 dark) is the rung of
+  //       the same hue the fill already moved to. Choosing it is a design call
+  //       with an owner, so it is filed rather than taken here.
+  "light | snide/chrome accent on paper": { ratio: 1.03, issue: 2661 },
 };
 
 function key(theme: Theme, pair: Pair): string {
@@ -2348,11 +2521,66 @@ describe("faction token contrast (WCAG AA)", () => {
     expect(stale, "BASELINE names a pair the manifest no longer measures").toEqual([]);
   });
 
-  it("uses the WCAG large-text floor only where a role is large display type", () => {
+  it("uses the 3:1 floor only for large display type or a stated non-text mark", () => {
     // Guard against the floor becoming an escape hatch: 3:1 is a real WCAG
-    // allowance, not a way to launder a failing token.
+    // allowance, not a way to launder a failing token. There are exactly two
+    // lawful reasons for it — 1.4.3's large-type allowance, which the label
+    // says, and 1.4.11's graphical-object floor, which `nonText` says in words
+    // (#2661). Anything else is a token being let off.
     const large = PAIRS.filter((pair) => pair.floor === AA_LARGE);
-    expect(large.every((pair) => pair.what.includes("display"))).toBe(true);
+    const unexplained = large.filter(
+      (pair) => !pair.what.includes("display") && !pair.nonText,
+    );
+    expect(unexplained.map((pair) => pair.what)).toEqual([]);
+  });
+
+  /**
+   * THE LOOP IS A CROSS-PRODUCT, AND AN EMPTY ONE PASSES VACUOUSLY (#2661).
+   *
+   * The failure this whole change exists to delete is "the gate covers it" said
+   * of a gate that does not. So the shape of the enumeration is asserted, not
+   * described: nine slugs, two grounds, five colour-on-colour pairings, both
+   * cascades. Narrowing any of those to make a red row go away fails here
+   * first.
+   */
+  describe("the enumeration is the whole finite space (#2661)", () => {
+    it("walks nine slugs, two grounds and both cascades", () => {
+      expect(ROLE_SLUGS).toHaveLength(9);
+      expect(ROLE_SLUGS).toEqual(expect.arrayContaining([UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG]));
+      expect(FACTION_GROUNDS.length).toBe(2);
+      expect(BOTH_THEMES).toHaveLength(2);
+      expect(ROLE_TUPLES).toHaveLength(
+        ROLE_SLUGS.length * FACTION_GROUNDS.length * ROLE_PAIRINGS.length,
+      );
+    });
+
+    it("measures every colour role the vocabulary has", () => {
+      // A tenth role cannot join `FACTION_ROLES` and quietly skip this file:
+      // it is measured as an ink, declared a surface, or declared not a colour
+      // — and the third answer has to be typed out by a human.
+      const accounted = new Set<FactionRole>([
+        ...ROLE_PAIRINGS.map((pairing) => pairing.text),
+        ...ROLE_GROUNDS,
+        ...ROLE_NOT_COLOUR,
+      ]);
+      expect(
+        FACTION_ROLES.filter((role) => !accounted.has(role)),
+        "a role in the vocabulary is neither measured, nor a ground, nor declared non-colour",
+      ).toEqual([]);
+      // And a ground role is only ever a `on:`, never an `text:`.
+      expect(ROLE_PAIRINGS.filter((pairing) => ROLE_NOT_COLOUR.includes(pairing.on))).toEqual([]);
+    });
+
+    it("collapses only exact duplicates of one token pair", () => {
+      const ids = ROLE_PAIRS.map((pair) => `${pair.surface} | ${pair.text} | ${pair.floor}`);
+      expect(new Set(ids).size).toBe(ids.length);
+      // Every tuple the loop enumerated resolved onto one of the rows it kept.
+      const kept = new Set(ids);
+      for (const { slug, ground, pairing } of ROLE_TUPLES) {
+        const id = `${roleToken(slug, pairing.on, ground)} | ${roleToken(slug, pairing.text, ground)} | ${pairing.floor}`;
+        expect(kept.has(id), `${slug}/${ground} ${pairing.text} on ${pairing.on} was enumerated and then dropped`).toBe(true);
+      }
+    });
   });
 });
 
