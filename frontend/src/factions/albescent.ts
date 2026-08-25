@@ -310,10 +310,12 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
   /**
    * The seal skin (#930). A seal is a FOREIGN sticker that keeps its ISSUER's
    * voice on someone else's praxis — so an Albescent-issued metatask is a reveal
-   * moment, not a host surface Albescent has to hide on. It reads the
-   * `--albescent-reveal-*` tokens (the same reveal register as the invitation
-   * letter and the select tile, and which FLIPS since #2301), never a `--faction-albescent-*` theme, so the
-   * society shows its pale face only where it is doing the sealing.
+   * moment, not a host surface Albescent has to hide on. Its stock and inks are
+   * the na card's since #2632 — the vellum register it used to read, along with
+   * the invitation letter, the select tile and the sealed placeholder, is
+   * deleted — so what marks the sealing is the strip that MOVES, never a stock
+   * of its own. It stays FLAT rather than taking `.alb-prism`: a sticker on an
+   * Albescent host would inherit that host's ground and paint the bloom twice.
    */
   metataskSeal: () => AlbescentSeal,
 

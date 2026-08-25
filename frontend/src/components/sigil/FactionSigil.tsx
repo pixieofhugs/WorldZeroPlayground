@@ -42,9 +42,9 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
  * ruling on Sigil Studies v2).
  *
  * #1891's objection was to the mark it deleted, not to the existence of one: a
- * surveyor's cross-hair, inked on the `--albescent-reveal-*` register (which was
- * always-light then and flips since #2301), was a distinct emblem in a distinct PALETTE worn by an otherwise-
- * hidden faction. The labyrinth answers that half — it carries no hue of its
+ * surveyor's cross-hair, inked on the vellum reveal register (always-light then,
+ * and deleted outright by #2632), was a distinct emblem in a distinct PALETTE
+ * worn by an otherwise-hidden faction. The labyrinth answers that half — it carries no hue of its
  * own, it is filled with the unaffiliated conic, so what a stranger meets is a
  * shape and never a livery. The owner has accepted the remaining consequence
  * knowingly: an unrevealed viewer sees a mark they do not recognise on the

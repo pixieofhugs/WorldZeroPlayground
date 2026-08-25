@@ -16,12 +16,12 @@ import { ALBESCENT_FACTION_SLUG, isFactionRedacted } from "../../utils/factions"
  *
  * It was 140 lines of bespoke markup — a pure-white vellum sheet, a Cormorant
  * italic name at 40px, a 44px hairline, an inner rule 12px inside the frame, a
- * ghosted letter-framing — all of it painted from `--albescent-reveal-*`, the
- * last hand-authored register in the repo. In light that made the tile a white
- * island on a cream page, and it was the one part of the Albescent kit the
- * prism could never reach: the ground was written `background:
- * var(--albescent-reveal-surface)` INLINE, and no wrapper class can outrank a
- * style attribute. It was not missing a class; it was drinking from another tap.
+ * ghosted letter-framing — all of it painted from the vellum reveal register,
+ * the last hand-authored register in the repo. In light that made the tile a
+ * white island on a cream page, and it was the one part of the Albescent kit the
+ * prism could never reach: the ground was written as a `background` in the STYLE
+ * ATTRIBUTE, which no class can outrank. It was not missing a class; it was
+ * drinking from a different tap.
  *
  * Owner ruling (#2632): the white aesthetic is purged and Albescent commits
  * entirely to the prism. **This deletes #1891 ruling 1** — *"the tile keeps its

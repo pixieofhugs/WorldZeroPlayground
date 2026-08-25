@@ -90,6 +90,12 @@ const WEARS_THE_MARKER: Record<string, string> = {
   // one a stylesheet could not reach; #2531 classed it and this wrapper is what
   // reaches it. The desktop branch draws no na spectrum at all.
   '../pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx': 'character creation',
+  // The directory tile's one hairline. It moved sides in #2632: the tile used to
+  // be bespoke vellum markup with no classed spectrum on it at all, and the
+  // collapse onto `DefaultSelectCard` handed it na's rule — which the same pass
+  // classed, for exactly the reason the style guide gives for asking first,
+  // "unreachable or merely unclassed".
+  '../components/selectCard/AlbescentSelectCard.tsx': 'select card',
 }
 
 /**
@@ -104,7 +110,6 @@ const NO_CLASSED_SPECTRUM: Record<string, string> = {
   '../components/factionHero/DefaultFactionHero.tsx': 'faction hero',
   '../components/avatar/FactionAvatar.tsx': 'avatar',
   '../components/vote/AlbescentVote.tsx': 'vote',
-  '../components/selectCard/AlbescentSelectCard.tsx': 'select card',
   // The three PASS-THROUGH rows #2531 added. Each is listed against the na
   // component it wraps, because that is where the answer lives: no classed
   // spectrum there means no still spectrum for a marker to reach, which is the
@@ -197,6 +202,9 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
   ],
   '../components/praxisCard/scoreStamp/DefaultScoreStamp.tsx': [
     ['ornament', 'the rule over the working out'],
+  ],
+  '../components/selectCard/DefaultSelectCard.tsx': [
+    ['ornament', "the tile's one hairline, under the faction name"],
   ],
   '../components/taskCard/DefaultTaskCard.tsx': [
     ['ornament', 'the in-progress chip'],

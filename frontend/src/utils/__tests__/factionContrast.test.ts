@@ -1915,41 +1915,22 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // uses for `-sheet-accent`, one stock further down.
   { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--everymen-paper-accent" },
 
-  // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
-  // which `default` already covers. What remains is the palette private to the
-  // reveal surfaces (invitation letter, secret placeholder) — always-light until
-  // #2301 gave it a dark half, which is why BOTH_THEMES matters here now. It
-  // still carries body text, and it is where #594's 2.78:1 muted ink shipped, so
-  // it stays measured. The whole palette is one hue at varying alpha over the
-  // sheet, which makes compositing the entire question.
+  // ALBESCENT HAS NO ROWS HERE ANY MORE, AND THAT IS THE POINT (#2632). Its
+  // FACTION tokens went with #783; three rows for the private vellum register —
+  // the invitation letter's and the sealed placeholder's sheet, ink and muted
+  // tier — stood here until the owner ruled the white aesthetic purged. All four
+  // reveal surfaces read `--faction-default-card-*` now, which `default` already
+  // measures in both themes, so re-declaring them would be the same pairing
+  // asserted twice under a second name. `__tests__/albescentPrismSheet.test.ts`
+  // holds the other half: the register's name appears nowhere in `index.css`.
   //
-  // THE THREE ROWS BELOW ARE THE WHOLE REGISTER, AND #2523 IS WHY THAT SENTENCE
-  // NOW HAS TO BE TRUE RATHER THAN NEARLY TRUE. The secret placeholder's eyebrow
-  // — `— no such account —`, the line that makes the page a dead end instead of
-  // a 404 — was painted `color-mix(… --albescent-reveal-text 30%, transparent)`
-  // inline: a FOURTH tier on a register that names three, at 1.92:1 in light,
-  // sitting beside a "muted" row that was green the entire time. A value-level
-  // sweep cannot reach a per-site mix, so no row here could ever have caught it.
-  // It now reads `-text-muted`, so this block covers it — and the half of the
-  // guard that keeps it covered is `pages/__tests__/albescentSealedInk.test.tsx`,
-  // which reads what that component EMITS and forbids a fifth tier being
-  // invented the same way. Neither file subsumes the other: these rows measure
-  // tokens nothing need render, that one measures ink no token need name.
-  {
-    what: "albescent reveal sheet, ink",
-    surface: "--albescent-reveal-surface",
-    text: "--albescent-reveal-ink",
-  },
-  {
-    what: "albescent reveal sheet, muted",
-    surface: "--albescent-reveal-surface",
-    text: "--albescent-reveal-text-muted",
-  },
-  {
-    what: "albescent reveal sheet, text",
-    surface: "--albescent-reveal-surface",
-    text: "--albescent-reveal-text",
-  },
+  // What #2523 found is NOT retired with the rows and has moved with the tokens:
+  // the placeholder's eyebrow — `— no such account —`, the line that makes the
+  // page a dead end instead of a 404 — was an inline `color-mix()` at 1.92:1, a
+  // tier the register did not name, sitting beside a "muted" row that was green
+  // the entire time. A value-level sweep cannot reach a per-site mix, so no row
+  // here could ever have caught it. `pages/__tests__/albescentSealedInk.test.tsx`
+  // is what does, by reading what the component EMITS.
 
   // ── Three accents used as TEXT on grounds that are not their fill (#1766) ──
   //

@@ -46,7 +46,7 @@ import FactionSigil from "../sigil/FactionSigil";
  * ── IT IS ALBESCENT'S TILE TOO NOW, AND IT DOES NOT KNOW THAT (#2632) ───────
  *
  * The `/factions` tile was the last of four surfaces painted from the
- * hand-authored `--albescent-reveal-*` vellum register, and the owner's ruling
+ * hand-authored vellum register, and the owner's ruling
  * purged it: `AlbescentSelectCard` collapsed to a wrapper over this component,
  * which deletes #1891 ruling 1 ("the tile keeps its face throughout") on
  * purpose. Three things had to become reachable for that to be true, and each

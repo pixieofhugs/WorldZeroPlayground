@@ -138,8 +138,6 @@ describe("Albescent's labyrinth (Sigil Studies v2)", () => {
     // wears — so a
     // stranger meets a shape and never a livery.
     const html = renderToStaticMarkup(<FactionSigil slug="albescent" />);
-    expect(html).not.toContain("var(--albescent-reveal-text)");
-    expect(html).not.toContain("var(--albescent-reveal-ink)");
     expect(html).not.toMatch(/var\(--faction-albescent/);
     expect(html).not.toContain("#");
   });

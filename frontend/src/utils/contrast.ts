@@ -157,9 +157,9 @@ function clamp(value: number, low: number, high: number): number {
  * Composite a (possibly translucent) color over an opaque backdrop —
  * standard source-over alpha blending.
  *
- * This is not a nicety: several faction inks ARE alpha
- * (`--albescent-reveal-ink: rgba(28, 28, 26, 0.72)`), and measuring them
- * un-composited is what let #594's 2.78:1 muted ink ship.
+ * This is not a nicety: several faction inks ARE alpha — a quiet tier is
+ * routinely its sheet's ink at 60–75% — and measuring one un-composited is what
+ * let #594's 2.78:1 muted ink ship.
  */
 export function compositeOver(fore: Rgba, back: Rgba): Rgba {
   return {
