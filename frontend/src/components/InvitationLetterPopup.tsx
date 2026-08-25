@@ -79,11 +79,13 @@ export default function InvitationLetterPopup({
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
   const currentSlug = user?.character?.faction_slug
-  // The letter's OWN state, and the only one left here: the open step draws a
-  // second control the trio knows nothing about (see the CTA row below), so the
-  // host has to know which step it is on. Everything past this point — the
-  // switch sentence, the error slot, the pair and its #646 order — is
-  // `JoinConfirm`'s (#2656).
+  // `confirming` stays with the LETTER because its open step draws a second
+  // control the trio knows nothing about (see the CTA row below), so the host
+  // is the only thing that can know which step it is on. `joining` /
+  // `joinError` stay because the host owns the POST — together with the current
+  // slug they are the `JoinTarget` handed down. What LEFT is the confirm step
+  // itself: the switch sentence, the error slot, the pair and its #646 order
+  // are `JoinConfirm`'s now (#2656).
   const [confirming, setConfirming] = useState(false)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
