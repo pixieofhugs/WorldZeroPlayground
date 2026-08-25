@@ -49,8 +49,7 @@
  * left alone: the 24px heading in `--color-danger` at 4.03 (a 3:1 floor) and the
  * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
-import { factionCssVar } from '../../utils/factions'
-import { factionRoleVars } from '../../utils/factionRoles'
+import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
 import {
   duelSides,
   RaceRoster,
@@ -156,7 +155,7 @@ export default function SingularityDuelSealConfirm({
   // Opponent tokens, same rule as the Default dialog and the rail: on a terminal
   // the foreign duelist's colour is the one variable that isn't phosphor, which
   // is precisely why it gets the left edge and the cast glow.
-  const accent = factionCssVar(foe.faction_slug, 'card-accent')
+  const accent = factionRoleVar(foe.faction_slug, 'accent')
   // `credit` is the #1168 seam: the shared slots' default `--color-success` is
   // 1.99:1 on the green glass in light. `alarm` is deliberately NOT passed —
   // `--color-danger` measures 3.75:1 there and the zero figure is 24px bold, so

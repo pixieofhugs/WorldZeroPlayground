@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { factionName } from '../../utils/factions'
-import { factionRoleVars } from '../../utils/factionRoles'
+import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
 import SingularityLamps from '../factionMarks/SingularityLamps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import type { FeedFrameProps } from './feedFrameProps'
@@ -142,7 +142,16 @@ const ON_CHASSIS_INK = {
  * phosphor this whole chassis speaks in clears it twice over (10.88:1 light,
  * 11.18:1 dark).
  */
-const ROW_SKIN = { ink: { actor: 'var(--feed-frame-accent, var(--faction-singularity-card-accent))' } } satisfies FeedRowSkin
+/*
+ * THE ACCENT IS ASKED FOR DIRECTLY, NOT THROUGH THE PREFIX (#2675). This value
+ * does not land on an element of this chassis: it travels through
+ * `FeedRowSkinContext` into the shared body, and `feedRowInk.test.tsx` asserts
+ * the rendered `color:var(--faction-{slug}-…)` for all nine chassis from ONE
+ * parameterized table. A `var(--x, …)` wrapper changes that string, and every
+ * faction lane would have to edit one shared, contended row to keep it green.
+ * `factionRoleVar` returns the identical token and asks for it by role.
+ */
+const ROW_SKIN = { ink: { actor: factionRoleVar('singularity', 'accent') } } satisfies FeedRowSkin
 
 /** Terminal label voice — every small mark on the chrome speaks in it. */
 const LABEL: CSSProperties = {

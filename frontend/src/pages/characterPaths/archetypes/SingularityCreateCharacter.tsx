@@ -107,14 +107,14 @@
 import { useId, useRef, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName } from '../../../utils/factions'
+import { factionName } from '../../../utils/factions'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import PortraitPicker from '../PortraitPicker'
-import { factionRoleVars } from '../../../utils/factionRoles'
+import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -537,7 +537,11 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                       <FactionSigil slug={slug} size={PICKER_SIGIL} />
                       <span
                         style={{
-                          fontFamily: factionCssVar(slug, 'card-font'),
+                          // The PICKED faction's own face, by role (#2675).
+                          // A dynamic slug, so this is the map's other half:
+                          // the prefix above is Singularity's ground and this
+                          // asks a different faction for one value of its own.
+                          fontFamily: factionRoleVar(slug, 'face'),
                           fontSize: 'var(--text-content)',
                           color: selected ? CTA_INK : INK,
                         }}
