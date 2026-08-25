@@ -4,6 +4,7 @@ import DefaultPointsRing from "../../factionMarks/DefaultPointsRing";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import { factionRoleVars } from "../../../utils/factionRoles";
+import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -128,7 +129,9 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         // stamp has a ground of its own, and its hairline is `-card-line`, not
         // the `line` role's `-card-border`. Decision 07 — a surface's extras are
         // the surface's business, and repointing either would be a repaint.
-        ...factionRoleVars(praxis.task_faction_slug, "score-stamp"),
+        // Pinned to na for the reason the other Default archetypes are: the
+        // plate's ground is `--faction-default-stamp-bg`, which takes no slug.
+        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "score-stamp"),
         position: "relative",
         boxSizing: "border-box",
         width: "100%",

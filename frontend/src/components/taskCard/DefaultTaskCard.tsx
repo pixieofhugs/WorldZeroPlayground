@@ -7,7 +7,10 @@ import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
-import { factionSpectrumSheet } from "../../utils/factions";
+import {
+  factionSpectrumSheet,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
 
@@ -98,12 +101,20 @@ export default function DefaultTaskCard({
     >
       <article
         style={{
-          // THE SHEET NAMES ROLES, NOT A FACTION (#2672). Nine custom
-          // properties declared once here; every `var(--task-card-…, <today's
-          // token>)` below reads one. For `na` — and for `albescent`, and for
-          // any slug without a theme — this is `{}`, so the card is byte-for-
-          // byte what shipped. See `utils/factionRoles.ts`.
-          ...factionRoleVars(task.primary_faction_slug, "task-card"),
+          // THE SHEET NAMES ROLES, NOT A FACTION (#2672). Every
+          // `var(--task-card-…, <today's token>)` below reads one of these.
+          //
+          // PINNED TO na, NOT TAKEN FROM `task.primary_faction_slug`. This
+          // archetype's GROUND is `factionSpectrumSheet()` — na's spectrum,
+          // which takes no slug and cannot follow one — and an ink may not
+          // leave a ground that stays put (#2361; the 1.03:1 #2669 found is
+          // that mistake made once already). A fallback dressing an
+          // unregistered slug in a borrowed livery is #418 / #636 besides.
+          // So this is `{}` and the card is byte-for-byte what shipped; what
+          // the prefix buys is a name a host can dress THIS surface by,
+          // instead of overriding `--faction-default-card-text` and repainting
+          // every na descendant. See `utils/factionRoles.ts`.
+          ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",

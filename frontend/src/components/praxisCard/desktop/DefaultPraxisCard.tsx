@@ -1,5 +1,8 @@
 import { AdminOverlay } from "../shared";
-import { factionSpectrumSheet } from "../../../utils/factions";
+import {
+  factionSpectrumSheet,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
@@ -57,9 +60,14 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         // The role map (#2672): declared once here, read as
         // `var(--praxis-card-…, <today's token>)` everywhere below — including
         // the four `PraxisBody` props, which are strings resolved inside this
-        // subtree. `{}` for every slug without a theme, so na and Albescent
-        // are byte-identical.
-        ...factionRoleVars(praxis.task_faction_slug, "praxis-card"),
+        // subtree.
+        //
+        // PINNED, not read off `praxis.task_faction_slug`: the ground is
+        // `factionSpectrumSheet()`, na's and slug-blind, and an ink may not
+        // leave a ground that cannot follow it (#2361, #2669). So this is `{}`
+        // and the sheet is byte-identical; the prefix exists so a host can
+        // dress this surface by name.
+        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "praxis-card"),
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet
