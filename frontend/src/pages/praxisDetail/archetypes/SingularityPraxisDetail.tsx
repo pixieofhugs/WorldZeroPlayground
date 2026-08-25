@@ -110,7 +110,7 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * steward bar into the costume.
  */
 
-const MONO = "var(--praxis-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-praxis-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -700,7 +700,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   );
 
   return (
-    <div className="py-8" style={factionRoleVars("singularity", "praxis-detail")}>
+    <div className="py-8" style={factionRoleVars("singularity", "sg-praxis-detail")}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail at every width - see components/nav/Breadcrumb. */}
       <Breadcrumb

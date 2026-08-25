@@ -87,7 +87,7 @@ import type { FeedFrameProps } from './feedFrameProps'
  * Singularity token that already shipped with the v2 task card.
  */
 
-const MONO = 'var(--feed-frame-face, var(--faction-singularity-card-font))' /* Share Tech Mono */
+const MONO = 'var(--sg-feed-face, var(--faction-singularity-card-font))' /* Share Tech Mono */
 
 const BG = 'var(--faction-singularity-term-bg)' /* the chassis */
 const CHROME = 'var(--faction-singularity-term-chrome)' /* the window bar */
@@ -190,7 +190,7 @@ export default function SingularityFeedFrame({
   return (
     <article
       style={{
-        ...factionRoleVars('singularity', 'feed-frame'),
+        ...factionRoleVars('singularity', 'sg-feed'),
         position: 'relative',
         overflow: 'hidden',
         boxSizing: 'border-box',

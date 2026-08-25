@@ -22,15 +22,15 @@ import { factionRoleVars } from "../../utils/factionRoles";
 
 // Token shorthands. The five core ones are ROLES now (#2675) — the faction
 // supplies the map, this surface picks the prefix, and the masthead below
-// declares `--hero-*` on itself with `factionRoleVars`. Each read carries
+// declares `--sg-hero-*` on itself with `factionRoleVars`. Each read carries
 // today's token as its fallback, so a mount outside that element (there is
 // none) resolves to the byte-identical value it always did. `-border` and
 // `-border-hard` are not roles and stay exactly as they are: decision 07 keeps
 // a surface's genuine extras local to the surface.
-const VOID = "var(--hero-paper, var(--faction-singularity-card-bg))"; // terminal black
-const PHOSPHOR = "var(--hero-accent, var(--faction-singularity-card-accent))"; // green
-const PHOSPHOR_TEXT = "var(--hero-ink, var(--faction-singularity-card-text))"; // green
-const SIGNAL = "var(--hero-quiet, var(--faction-singularity-card-muted))"; // blue
+const VOID = "var(--sg-hero-paper, var(--faction-singularity-card-bg))"; // terminal black
+const PHOSPHOR = "var(--sg-hero-accent, var(--faction-singularity-card-accent))"; // green
+const PHOSPHOR_TEXT = "var(--sg-hero-ink, var(--faction-singularity-card-text))"; // green
+const SIGNAL = "var(--sg-hero-quiet, var(--faction-singularity-card-muted))"; // blue
 const BORDER = "var(--faction-singularity-border)";
 const BORDER_HARD = "var(--faction-singularity-border-hard)";
 const FONT = "var(--font-faction-terminal)";
@@ -40,7 +40,7 @@ const phosphor = (pct: number): string =>
   `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`;
 const signal = (pct: number): string =>
   `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`;
-const signalFill = "var(--hero-fill, var(--faction-singularity))"; // blue brand fill
+const signalFill = "var(--sg-hero-fill, var(--faction-singularity))"; // blue brand fill
 
 export default function SingularityFactionHero({
   name,
@@ -70,7 +70,7 @@ export default function SingularityFactionHero({
   return (
     <header
       style={{
-        ...factionRoleVars("singularity", "hero"),
+        ...factionRoleVars("singularity", "sg-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",

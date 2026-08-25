@@ -233,7 +233,7 @@ const SHADOW = "var(--faction-singularity-term-shadow)";
  * one face. Reached through the faction's own accessor rather than through
  * --font-faction-terminal directly, which is what §4 asks for when the face IS
  * the faction's (as against a face a single surface borrows). */
-const FACE = "var(--composer-face, var(--faction-singularity-card-font))";
+const FACE = "var(--sg-compose-face, var(--faction-singularity-card-font))";
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2;
@@ -418,7 +418,7 @@ export default function SingularityEditPraxis({ state }: Props) {
     // The composer sheet and the waiting surface both paint their outer div
     // from `pageStyle`, which makes it this dress's one declaring element
     // (#2675) -- every slot below is read inside it.
-    pageStyle: { ...factionRoleVars("singularity", "composer"), fontFamily: FACE, color: INK },
+    pageStyle: { ...factionRoleVars("singularity", "sg-compose"), fontFamily: FACE, color: INK },
     sheetStyle,
     masthead,
     ground,

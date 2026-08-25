@@ -73,7 +73,7 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * no keyframe was added.
  */
 
-const MONO = "var(--task-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-task-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -788,7 +788,7 @@ export default function SingularityTaskDetail({
   );
 
   return (
-    <div className="py-8" style={factionRoleVars("singularity", "task-detail")}>
+    <div className="py-8" style={factionRoleVars("singularity", "sg-task-detail")}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

@@ -21,7 +21,7 @@ import type { SealSkinProps } from '../types'
  * root, the upper one would have sat inside the window frame rather than inside
  * the window.
  *
- * THE PREFIX IS `--seal-*`, AND IT IS THIS SURFACE'S OWN (#2675). The nine roles
+ * THE PREFIX IS `--sg-seal-*`, AND IT IS THIS SURFACE'S OWN (#2675). The nine roles
  * are declared on the window frame below and read beneath it; a name scoped to
  * one element cannot repaint a card of another faction the way a shared
  * `--kit-*` would. The `-bracket` cyan and `-border-hard` are NOT roles — a
@@ -34,15 +34,15 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
     <div
       className="relative"
       style={{
-        ...factionRoleVars('singularity', 'seal'),
-        background: 'var(--seal-paper, var(--faction-singularity-card-bg))',
-        color: 'var(--seal-ink, var(--faction-singularity-card-text))',
+        ...factionRoleVars('singularity', 'sg-seal'),
+        background: 'var(--sg-seal-paper, var(--faction-singularity-card-bg))',
+        color: 'var(--sg-seal-ink, var(--faction-singularity-card-text))',
         border: '1px solid var(--faction-singularity-border-hard)',
         borderRadius: 4,
         // The band is full-bleed and the frame is rounded, so the chrome bar's
         // square corners have to be clipped to the window's.
         overflow: 'hidden',
-        fontFamily: 'var(--seal-face, var(--faction-singularity-card-font))',
+        fontFamily: 'var(--sg-seal-face, var(--faction-singularity-card-font))',
       }}
     >
       <SingularityBand />
@@ -62,8 +62,8 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
               top: 'var(--space-sm)',
               right: 'var(--space-sm)',
               background: 'transparent',
-              border: '1px solid var(--seal-accent, var(--faction-singularity-card-accent))',
-              color: 'var(--seal-accent, var(--faction-singularity-card-accent))',
+              border: '1px solid var(--sg-seal-accent, var(--faction-singularity-card-accent))',
+              color: 'var(--sg-seal-accent, var(--faction-singularity-card-accent))',
               fontSize: 'var(--text-md)',
               lineHeight: 1,
               padding: '0 var(--space-xs)',
@@ -83,7 +83,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
-            color: 'var(--seal-quiet, var(--faction-singularity-card-muted))',
+            color: 'var(--sg-seal-quiet, var(--faction-singularity-card-muted))',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -106,7 +106,7 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
           className="font-body block"
           style={{
             fontSize: 'var(--text-title)',
-            color: 'var(--seal-accent, var(--faction-singularity-card-accent))',
+            color: 'var(--sg-seal-accent, var(--faction-singularity-card-accent))',
             marginTop: 'var(--space-xs)',
           }}
         >

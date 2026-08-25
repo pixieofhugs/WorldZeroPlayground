@@ -101,7 +101,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * grid.
  */
 
-const MONO = "var(--select-card-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-select-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const CHASSIS = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
@@ -115,7 +115,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
   const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
   return (
     <div style={{
-      ...factionRoleVars("singularity", "select-card"),
+      ...factionRoleVars("singularity", "sg-select"),
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: CHASSIS, color: BRIGHT, fontFamily: MONO,
       border: "1px solid var(--faction-singularity-term-border)",

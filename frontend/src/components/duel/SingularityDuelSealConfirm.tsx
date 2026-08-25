@@ -70,11 +70,11 @@ import DuelSealSheet from './DuelSealSheet'
  * roles: the two functional inks are a component's STATE rather than a ground,
  * which is why the vocabulary deliberately stops at nine.
  */
-const GROUND = 'var(--duel-seal-paper, var(--faction-singularity-card-bg))'
-const PHOSPHOR = 'var(--duel-seal-accent, var(--faction-singularity-card-accent))'
+const GROUND = 'var(--sg-duel-paper, var(--faction-singularity-card-bg))'
+const PHOSPHOR = 'var(--sg-duel-accent, var(--faction-singularity-card-accent))'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
-const BRAND_BLUE = 'var(--duel-seal-quiet, var(--faction-singularity-card-muted))'
-const TERMINAL = 'var(--duel-seal-face, var(--faction-singularity-card-font))'
+const BRAND_BLUE = 'var(--sg-duel-quiet, var(--faction-singularity-card-muted))'
+const TERMINAL = 'var(--sg-duel-face, var(--faction-singularity-card-font))'
 /**
  * The two sheet-measured functional inks (#694). This chassis is near-black in
  * BOTH themes while `--color-success` / `--color-danger` flip with the viewer,
@@ -174,7 +174,7 @@ export default function SingularityDuelSealConfirm({
       // so a light-mode page must not show through around it.
       scrim={SCRIM}
       ground={{
-        ...factionRoleVars('singularity', 'duel-seal'),
+        ...factionRoleVars('singularity', 'sg-duel'),
         ...TERMINAL_GROUND,
         // The opponent still owns the edge that faces them — a spine on the
         // card, full-height when the terminal IS the screen.

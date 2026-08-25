@@ -50,7 +50,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * new keyframe was needed.
  */
 
-const MONO = "var(--task-card-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
+const MONO = "var(--sg-task-card-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 /**
  * The face that idles beside the sign-up key (#2036) — three lines of
@@ -131,7 +131,7 @@ export default function SingularityTaskCard({
     >
       <article
         style={{
-          ...factionRoleVars("singularity", "task-card"),
+          ...factionRoleVars("singularity", "sg-task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
