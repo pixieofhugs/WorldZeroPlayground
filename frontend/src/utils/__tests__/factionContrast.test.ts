@@ -4510,49 +4510,87 @@ describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
  * faction's hue" as the bug would have flattened seven kits into one and turned
  * S.N.I.D.E.'s note bar acid green. Five of these are right, and the table says
  * why each is right rather than leaving that to a reader's memory.
+ *
+ * NINE BANDS NOW, IN TWO FILES (#2648). `factionBands.tsx` still holds SEVEN and
+ * its rule is unchanged — no card kit may fly a band for na or Albescent
+ * (ADR-0048). The eighth and ninth live in `metataskSeal/sealBands.tsx`, mounted
+ * by the metatask seal and by nothing else, on the owner's ruling that a seal's
+ * own copy has always named its issuer in plain sight so a band discloses
+ * nothing new. THEY ARE IN THIS CENSUS ANYWAY, because the failure this block
+ * exists to catch is a band standing on a token nobody chose for it — and that
+ * failure does not care which file the band is declared in. The census below is
+ * per FILE, so the seven cannot silently become eight.
  */
-describe("the seven card masthead bands stand on their own ground (#2635)", () => {
-  /** Band function → the token it grounds on, and what that token IS. */
+describe("the nine masthead bands stand on their own ground (#2635, #2648)", () => {
+  const CARD_BANDS = "components/cardMasthead/factionBands.tsx";
+  const SEAL_BANDS = "components/metataskSeal/sealBands.tsx";
+
+  /** Band function → the file it lives in, the token it grounds on, and what that token IS. */
   const BAND_GROUNDS = [
-    { band: "CovenBand", ground: "--faction-coven-mast", role: "the band's own, minted by #2635" },
-    { band: "EphemeristsBand", ground: "--faction-ephemerists-plate-disc", role: "the medallion's disc, a material the plate draws" },
-    { band: "EverymenBand", ground: "--faction-everymen-bill-mast", role: "the band's own, a frozen red" },
-    { band: "SingularityBand", ground: "--faction-singularity-term-chrome", role: "the terminal's window chrome" },
-    { band: "SnideBand", ground: "--faction-snide-note-bar", role: "the clipping's printed bar" },
-    { band: "UaBand", ground: "--faction-ua-mast", role: "the band's own, minted by #2635" },
-    { band: "WowBand", ground: "--faction-wow-plum-surface", role: "the plum the decree's CTA already stands on" },
+    { band: "CovenBand", file: CARD_BANDS, ground: "--faction-coven-mast", role: "the band's own, minted by #2635" },
+    { band: "EphemeristsBand", file: CARD_BANDS, ground: "--faction-ephemerists-plate-disc", role: "the medallion's disc, a material the plate draws" },
+    { band: "EverymenBand", file: CARD_BANDS, ground: "--faction-everymen-bill-mast", role: "the band's own, a frozen red" },
+    { band: "SingularityBand", file: CARD_BANDS, ground: "--faction-singularity-term-chrome", role: "the terminal's window chrome" },
+    { band: "SnideBand", file: CARD_BANDS, ground: "--faction-snide-note-bar", role: "the clipping's printed bar" },
+    { band: "UaBand", file: CARD_BANDS, ground: "--faction-ua-mast", role: "the band's own, minted by #2635" },
+    { band: "WowBand", file: CARD_BANDS, ground: "--faction-wow-plum-surface", role: "the plum the decree's CTA already stands on" },
+    // The two seal-only bands (#2648). Both stand on the na CARD'S OWN STOCK,
+    // which is the material both seals are already made of — `DefaultSeal` and
+    // `AlbescentSeal` paint it on their roots — so neither band authors a
+    // colour and neither borrows one. `--faction-default-card-bg` under
+    // `--faction-default-card-text` is measured by `CARD_PAIRS` above, in both
+    // cascades, and has been since the na kit existed.
+    { band: "AlbescentBand", file: SEAL_BANDS, ground: "--faction-default-card-bg", role: "the na card's stock — Albescent IS the unaffiliated sheet plus a drift (ADR-0048)" },
+    { band: "DefaultBand", file: SEAL_BANDS, ground: "--faction-default-card-bg", role: "the na card's stock, which is the na kit's one material" },
   ] as const;
 
   /**
-   * The bands as declared, comments stripped — that file's header names the two
-   * retired grounds on purpose, and a guard a comment can trip is a guard the
-   * next person deletes rather than satisfies.
+   * The bands as declared, comments stripped — `factionBands.tsx`'s header names
+   * the two retired grounds on purpose, and a guard a comment can trip is a
+   * guard the next person deletes rather than satisfies.
    */
-  const BANDS = stripComments(sourceOf("components/cardMasthead/factionBands.tsx")).replace(
-    /^\s*\/\/.*$/gm,
-    "",
+  const SOURCES = new Map(
+    [CARD_BANDS, SEAL_BANDS].map((file) => [
+      file,
+      stripComments(sourceOf(file)).replace(/^\s*\/\/.*$/gm, ""),
+    ]),
   );
+
+  const fileOf = (name: string) =>
+    BAND_GROUNDS.find((row) => row.band === name)?.file ?? CARD_BANDS;
 
   /** One band's body: `function XBand() {` up to the `\n}` that closes it. */
   function bandBody(name: string): string {
-    const at = BANDS.indexOf(`function ${name}()`);
-    expect(at, `no \`${name}\` in components/cardMasthead/factionBands.tsx`).toBeGreaterThan(-1);
-    return BANDS.slice(at, BANDS.indexOf("\n}", at));
+    const file = fileOf(name);
+    const source = SOURCES.get(file)!;
+    const at = source.indexOf(`function ${name}()`);
+    expect(at, `no \`${name}\` in ${file}`).toBeGreaterThan(-1);
+    return source.slice(at, source.indexOf("\n}", at));
   }
 
   const groundOf = (name: string): string | null =>
     bandBody(name).match(/background: "var\((--[a-z0-9-]+)\)"/)?.[1] ?? null;
 
-  it("declares every band the file paints", () => {
-    // The census half. Without it an EIGHTH band could arrive on a borrowed
-    // token and every row below would still pass, because none of them would be
-    // looking at it.
-    const declared = [...BANDS.matchAll(/function (\w+Band)\(\)/g)].map((match) => match[1]);
-    expect(
-      [...declared].sort(),
-      "a new band owes this table a row saying which material it stands on (#2635)",
-    ).toEqual(BAND_GROUNDS.map((row) => row.band).slice().sort());
-  });
+  for (const file of [CARD_BANDS, SEAL_BANDS]) {
+    it(`declares every band ${file} paints`, () => {
+      // The census half. Without it a TENTH band could arrive on a borrowed
+      // token and every row below would still pass, because none of them would
+      // be looking at it. Per file, so the card kits' seven cannot quietly
+      // become eight by way of the seal's exception.
+      const declared = [...SOURCES.get(file)!.matchAll(/function (\w+Band)\(\)/g)].map(
+        (match) => match[1],
+      );
+      expect(
+        [...declared].sort(),
+        "a new band owes this table a row saying which material it stands on (#2635)",
+      ).toEqual(
+        BAND_GROUNDS.filter((row) => row.file === file)
+          .map((row) => row.band)
+          .slice()
+          .sort(),
+      );
+    });
+  }
 
   for (const { band, ground, role } of BAND_GROUNDS) {
     it(`${band} grounds on ${ground} — ${role}`, () => {
@@ -4592,6 +4630,31 @@ describe("the seven card masthead bands stand on their own ground (#2635)", () =
         bandBody(band),
         `${band} paints a faction fill, so its mark needs \`markColor\` — the sigil's own default is the ground's own hue`,
       ).toContain(`markColor="var(${ink})"`);
+    }
+  });
+
+  it("the two seal-only bands letter in the na card's ink and hand the mark nothing", () => {
+    // The ink half of the census for #2648's two bands, by name. Both letter in
+    // `--faction-default-card-text` on `--faction-default-card-bg` — the na
+    // card's own pairing, measured by `CARD_PAIRS` in both cascades — so
+    // neither introduces a reading this file has not already taken.
+    //
+    // AND NEITHER PASSES `markColor`, which is the deliberate answer rather than
+    // an omission: `DefaultSigil`'s ring and `AlbescentSigil`'s labyrinth are
+    // both filled from `--faction-default-rainbow-conic` and carry no hue of
+    // their own (#783), so there is no faction colour here to disappear into a
+    // ground of the same faction colour. A `markColor` on either would be
+    // painting a spectrum mark one flat colour.
+    for (const band of ["AlbescentBand", "DefaultBand"] as const) {
+      const body = bandBody(band);
+      expect(
+        body,
+        `${band} letters in the na card's ink, which is what its ground is measured against`,
+      ).toContain('color: "var(--faction-default-card-text)"');
+      expect(
+        body,
+        `${band}'s mark is spectrum-filled and carries no hue — an ink here would flatten it`,
+      ).not.toContain("markColor");
     }
   });
 });
