@@ -1,5 +1,6 @@
 /**
- * THE FOUR WRAPPERS #2531 ADDED, EACH HELD TO THE KIND IT CLAIMS.
+ * ALBESCENT'S WRAPPERS, EACH HELD TO THE KIND IT CLAIMS — the four #2531 added,
+ * and the directory tile #2632 turned into a fifth.
  *
  * ## The seam
  *
@@ -22,16 +23,20 @@
  * Byte-identity is a strong claim on purpose. It fails on a stray wrapper
  * element, a re-ordered prop, a class added "while we are here" — every quiet way
  * a wrapper that was supposed to be inert starts dressing something. Three of
- * the four are held to it.
+ * the five are held to it.
  *
- * ## Why the fourth is asserted from both ends
+ * ## Why the two re-cuts are asserted from both ends
  *
- * `strip the class and na is byte-identical` is the invariant on ALL FOUR — it
+ * `strip the class and na is byte-identical` is the invariant on ALL FIVE — it
  * is what keeps Albescent's dress off unaffiliated players. For the three
- * pass-throughs there is no class to strip and identity is the whole test. For
- * the re-cut, identity must hold with the wrapper removed and must FAIL with it
- * in place, so both halves are asserted: the delta is exactly one class on one
- * div, and that class reaches a mount na draws.
+ * pass-throughs there is no class to strip and identity is the whole test. For a
+ * re-cut, identity must hold with the wrapper removed and must FAIL with it in
+ * place, so both halves are asserted: the delta is the wrapper's classes and
+ * nothing else, and those classes reach mounts na draws.
+ *
+ * The tile adds a third question the other four do not raise. Its ground is
+ * CONDITIONAL — `.alb-prism` arrives with the reveal (epic #2496 ruling 8) — so
+ * "does it dress?" has two right answers on one surface and both are pinned.
  *
  * ## Harness
  *
@@ -42,7 +47,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 import '../i18n'
 import type { CommentOut } from '../api/comments'
@@ -91,6 +96,9 @@ const DefaultCreateCharacter = (
 const AlbescentCreateCharacter = (
   await import('../pages/characterPaths/archetypes/AlbescentCreateCharacter')
 ).default
+const DefaultSelectCard = (await import('../components/selectCard/DefaultSelectCard')).default
+const AlbescentSelectCard = (await import('../components/selectCard/AlbescentSelectCard')).default
+const { setAlbescentRevealed } = await import('../utils/factions')
 
 /* ── Fixtures ───────────────────────────────────────────────────────────── */
 
@@ -388,5 +396,86 @@ describe('createCharacter — RE-CUT: the phone photo ring turns', () => {
     expect(html, 'no reveal register on a page a stranger reaches').not.toContain(
       '--albescent-reveal-',
     )
+  })
+})
+
+/* ── The second re-cut, and the one that used to be a whole skin ─────────── */
+
+/**
+ * THE DIRECTORY TILE — RE-CUT: the vellum is gone and the ground blooms (#2632).
+ *
+ * This one arrived by DELETION rather than by registration. The tile was 140
+ * lines of bespoke markup painted from a private vellum register, and the owner
+ * ruled that register purged; what is left is the shape every other Albescent
+ * row already has. So it owes the same two assertions as `createCharacter` —
+ * strip the wrapper and no anatomy is forked, and keep it and something moves —
+ * plus one that is this surface's own: the ground is CONDITIONAL, because
+ * `[REDACTED]` is painted in its own ground's colour and a bloom makes that 1:1
+ * pairing only approximately true (epic #2496 ruling 8).
+ *
+ * The identity half is asserted against `DefaultSelectCard` given the SAME slug,
+ * which is the honest comparison: the tile is the na tile saying Albescent's
+ * words and wearing Albescent's mark, and both of those come out of the na
+ * component's own seams rather than out of the wrapper.
+ */
+describe('selectCard — RE-CUT: the tile is na, dressed', () => {
+  const tile = (Card: typeof DefaultSelectCard, props = {}) =>
+    renderToStaticMarkup(<Card state="locked" members={3} {...props} />)
+
+  /** Undo the wrapper: drop the one classed div the archetype adds. */
+  const stripWrapper = (html: string) =>
+    html.replace(/^<div class="[^"]*" style="[^"]*">/, '').replace(/<\/div>$/, '')
+
+  afterEach(() => setAlbescentRevealed(false))
+
+  it('forks no anatomy — strip the wrapper and it is the na tile', () => {
+    setAlbescentRevealed(true)
+    expect(stripWrapper(tile(AlbescentSelectCard))).toBe(
+      tile(DefaultSelectCard, { slug: 'albescent' }),
+    )
+  })
+
+  it('changes something — a re-cut that shifts nothing did not do its job', () => {
+    setAlbescentRevealed(true)
+    expect(tile(AlbescentSelectCard)).not.toBe(tile(DefaultSelectCard, { slug: 'albescent' }))
+  })
+
+  it('the dresser and the mounts land in one tree, so both deltas can bite', () => {
+    setAlbescentRevealed(true)
+    const html = tile(AlbescentSelectCard)
+    // `.alb-prism` repaints `--faction-default-card-sheet`; `.alb-moves
+    // .spectrum-rule:empty` walks the hairline. Both ends have to be present for
+    // either selector to match anything.
+    expect(html).toContain('alb-prism')
+    expect(html).toContain('--faction-default-card-sheet')
+    expect(html).toContain('alb-moves')
+    expect(html).toContain('spectrum-rule')
+  })
+
+  it('withholds the ground while redacted, and never the motion', () => {
+    setAlbescentRevealed(false)
+    const html = tile(AlbescentSelectCard)
+    expect(html, 'a redacted tile keeps a FLAT ground').not.toContain('alb-prism')
+    expect(html, 'motion reveals nothing a redaction hides').toContain('alb-moves')
+  })
+
+  it('adds no colour and no register of its own', () => {
+    setAlbescentRevealed(true)
+    const html = tile(AlbescentSelectCard)
+    expect(html).not.toContain('--faction-albescent-')
+    expect(html).not.toContain('--albescent-reveal-')
+  })
+
+  /**
+   * The other end of the collapse: `DefaultSelectCard` grew a `slug` prop and
+   * two dressable mounts, and an unaffiliated player must not be able to tell.
+   * The na tile still says na's words, wears na's ring and redacts nothing.
+   */
+  it('leaves the unaffiliated tile alone', () => {
+    const html = tile(DefaultSelectCard)
+    expect(html).toContain('Unaffiliated')
+    expect(html).not.toContain('redacted')
+    expect(html).not.toContain('disabled')
+    expect(html).not.toContain('labyrinth')
   })
 })
