@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../../utils/factions'
+import { WowBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -14,10 +14,19 @@ import type { SealSkinProps } from '../types'
  * heraldic voice — MedievalSharp illuminates the decree, Lora reads the
  * condition. Deliberately NOT coven's cozy pink (#927 donor-slug note): the gold
  * frame and plum ink keep it unmistakably WOW and clearly not the coven sticker.
+ *
+ * THE DECREE IS BANNERED NOW (#2648). The MedievalSharp eyebrow that named the
+ * court, and the hairline that separated it from the writ, are both gone;
+ * `WowBand` — the theme-invariant plum lettered in gilt, the same banner the
+ * task card and the praxis card fly — says it instead.
+ *
+ * THE RUNNING HEAD HANGS FROM THE BANNER rather than sitting above it. The woven
+ * gold/plum stripe is the chronicle's rule, and the band closes on a 2px gilt
+ * line the task card already hangs its bunting from; the same order here keeps
+ * the seal reading as a small page of the same chronicle.
  */
 export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
-  const faction = factionName(metatask.metatask_faction_slug)
 
   return (
     <div
@@ -33,6 +42,8 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         transition: 'background 150ms, color 150ms',
       }}
     >
+      <WowBand />
+
       {/* the chronicle running head — a woven gold/plum stripe, no text */}
       <div
         aria-hidden="true"
@@ -79,27 +90,6 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
             <span aria-hidden="true">×</span>
           </button>
         )}
-
-        <span
-          className="label-heading block"
-          style={{
-            fontFamily: 'var(--faction-wow-card-font)',
-            letterSpacing: '0.14em',
-            color: 'var(--faction-wow-card-accent)',
-          }}
-        >
-          {t('detail.seal.label', { faction })}
-        </span>
-
-        <span
-          aria-hidden="true"
-          className="block"
-          style={{
-            height: 1,
-            background: 'var(--faction-wow-rule)',
-            margin: 'var(--space-xs) 0 var(--space-sm)',
-          }}
-        />
 
         <span
           className="block"
