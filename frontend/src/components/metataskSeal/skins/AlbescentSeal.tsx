@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName } from '../../../utils/factions'
+import { AlbescentBand } from '../sealBands'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -37,16 +37,26 @@ import type { SealSkinProps } from '../types'
  * `.spectrum-rule` now — the class #2497 minted for exactly these seventeen
  * inline ramps, and which carries that same token and nothing else, so the
  * resting sheet is the one that shipped yesterday — and the root wears
- * `alb-moves`, the marker every other Albescent wrapper carries. The `opacity`
- * stays at the call site with the height and the radius: those are this mount's
- * geometry, not the ramp.
+ * `alb-moves`, the marker every other Albescent wrapper carries.
+ *
+ * THE STRIP IS THE BAND'S RULE NOW (#2648). It has not changed material or
+ * moved off this root — it is still the one `.spectrum-rule` mount this surface
+ * has, still empty, still travelling under the marker below — it has only moved
+ * up under the wordmark and gone flush, which is what a masthead's rule is.
+ * `AlbescentBand` holds it beside the band it rules.
+ *
+ * AND THE BAND IS THE ONE SANCTIONED EXCEPTION TO ADR-0048's BANDLESS RULE
+ * (owner ruling 2026-08-25). `sealBands.tsx` carries the reasoning and the test
+ * for a third mount; the short form is that this seal's own copy has always
+ * printed the society's name, so the band discloses nothing new — which is not
+ * true of the Albescent task card or praxis card, and neither of them may grow
+ * one.
  *
  * A seal is a reveal moment, so this is the one place the tell may be looked at
  * directly rather than noticed sideways.
  */
 export default function AlbescentSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
-  const faction = factionName(metatask.metatask_faction_slug)
 
   return (
     <div
@@ -56,75 +66,76 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
         color: 'var(--faction-default-card-text)',
         border: '1px solid var(--faction-default-card-line)',
         borderRadius: 4,
-        padding: 'var(--space-md) var(--space-lg)',
         boxShadow: '0 2px 18px var(--color-cast-shadow-soft), 0 1px 3px var(--color-cast-shadow-soft)',
         fontFamily: 'var(--font-faction-serif)',
         overflow: 'hidden',
       }}
     >
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute font-body leading-none"
+      <AlbescentBand />
+
+      {/* The body's own box — the band is full-bleed, so the padding that was on
+          the root came down here, and the peel control is positioned against
+          this rather than landing on the band's link. */}
+      <div className="relative" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+        {removable && (
+          <button
+            type="button"
+            onClick={() => onRemove?.(metatask.id)}
+            aria-label={t('detail.seal.remove')}
+            className="absolute font-body leading-none"
+            style={{
+              top: 'var(--space-sm)',
+              right: 'var(--space-sm)',
+              zIndex: 2,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--faction-default-card-muted)',
+              fontSize: 'var(--text-xl)',
+              cursor: 'pointer',
+            }}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
+
+        {/* The sheet's quiet eyebrow register, around the NOUN alone. The
+            society's name is the band's; this is what the object is. */}
+        <span
+          className="font-body block"
           style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            zIndex: 2,
-            background: 'transparent',
-            border: 'none',
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
             color: 'var(--faction-default-card-muted)',
-            fontSize: 'var(--text-xl)',
-            cursor: 'pointer',
+            marginBottom: 'var(--space-xs)',
           }}
         >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
+          {t('detail.seal.kind')}
+        </span>
 
-      <span
-        className="label-heading block"
-        style={{ color: 'var(--faction-default-card-muted)' }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
+        <span
+          className="block"
+          style={{
+            fontSize: 'var(--text-content)',
+            color: 'var(--faction-default-card-text)',
+          }}
+        >
+          {metatask.title}
+        </span>
 
-      {/* the soft spectrum strip — the one colour on the sheet, kept pale, and
-          travelling under `alb-moves` above (#2500) */}
-      <span
-        aria-hidden="true"
-        className="block spectrum-rule"
-        style={{
-          height: 2,
-          borderRadius: 2,
-          opacity: 0.35,
-          margin: 'var(--space-xs) 0 var(--space-sm)',
-        }}
-      />
-
-      <span
-        className="block"
-        style={{
-          fontSize: 'var(--text-content)',
-          color: 'var(--faction-default-card-text)',
-        }}
-      >
-        {metatask.title}
-      </span>
-
-      <span
-        className="block"
-        style={{
-          fontSize: 'var(--text-title)',
-          fontWeight: 600,
-          letterSpacing: '0.02em',
-          color: 'var(--faction-default-card-accent)',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {t('detail.seal.bonus', { points: metatask.point_value })}
-      </span>
+        <span
+          className="block"
+          style={{
+            fontSize: 'var(--text-title)',
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+            color: 'var(--faction-default-card-accent)',
+            marginTop: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.bonus', { points: metatask.point_value })}
+        </span>
+      </div>
     </div>
   )
 }

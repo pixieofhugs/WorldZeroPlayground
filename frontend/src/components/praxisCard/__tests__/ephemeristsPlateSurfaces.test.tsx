@@ -25,6 +25,7 @@ import type { TaskOut } from '../../../api/tasks'
 import EphemeristsPraxisCard from '../desktop/EphemeristsPraxisCard'
 import { GLYPHS } from '../../factionMarks/ephemeristsPlate'
 import MetataskSeal from '../../metataskSeal/MetataskSeal'
+import { factionName } from '../../../utils/factions'
 
 /** The retired illuminated-codex family. None of it may reach a plate surface. */
 const CODEX = /--eph-[a-z]/
@@ -504,7 +505,10 @@ describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', ()
 
   it('keeps the three-field contract: issuer, condition, bonus', () => {
     const body = text(html())
-    expect(body).toContain(i18n.t('praxis:detail.seal.label', { faction: 'The Ephemerists' }))
+    // The issuer is the shared band's wordmark since #2648, so it is the
+    // faction's NAME rather than "<faction> Metatask" — the eyebrow that
+    // carried the second word came off with the other eight.
+    expect(body).toContain(factionName('ephemerists'))
     expect(body).toContain('Logged as a dawn field-observation')
     expect(body).toContain(i18n.t('praxis:detail.seal.bonus', { points: 35 }))
   })

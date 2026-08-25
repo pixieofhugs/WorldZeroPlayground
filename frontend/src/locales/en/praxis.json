@@ -157,7 +157,7 @@
       "heading": "Metatasks"
     },
     "seal": {
-      "label": "{{faction}} Metatask",
+      "kind": "Metatask",
       "bonus": "+{{points}} PTS",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"

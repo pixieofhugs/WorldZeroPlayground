@@ -34,6 +34,7 @@
  * back inline — is what keeps every other suite's assertions working.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../i18n'
 import type { EditPraxisState } from '../../pages/editPraxis/useEditPraxis'
@@ -131,7 +132,14 @@ const FILE = new File([], 'shot.png', { type: 'image/png' })
 const OVERLAYS: [name: string, render: () => string][] = [
   [
     'MetataskPicker',
-    () => renderToStaticMarkup(<MetataskPicker state={mkState({})} />),
+    // The router arrived with #2648: each picker row previews a seal, and a
+    // seal mounts a `factionBands` band, which is a `<Link>`.
+    () =>
+      renderToStaticMarkup(
+        <MemoryRouter>
+          <MetataskPicker state={mkState({})} />
+        </MemoryRouter>,
+      ),
   ],
   [
     'MetataskRemoveConfirm',
@@ -194,7 +202,11 @@ describe('MetataskPicker on a phone', () => {
     // the bar's own `env(safe-area-inset-bottom)` no longer protects Attach.
     // The panel has to hold that gap itself or the confirm row sits under the
     // home indicator on every notched phone.
-    const html = renderToStaticMarkup(<MetataskPicker state={mkState({})} />)
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <MetataskPicker state={mkState({})} />
+      </MemoryRouter>,
+    )
     expect(html).toContain('env(safe-area-inset-bottom)')
   })
 })

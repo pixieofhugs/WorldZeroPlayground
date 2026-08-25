@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionName, factionSpectrumSheet } from '../../../utils/factions'
+import { factionSpectrumSheet } from '../../../utils/factions'
+import { DefaultBand } from '../sealBands'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -19,11 +20,22 @@ import type { SealSkinProps } from '../types'
  * the bar and paint the spectrum into the border box itself". That is the idiom
  * `DefaultTaskCard` and `DefaultPraxisCard` already wear, so the na kit reads as
  * one material — which is the precondition for "Albescent = na + motion" being
- * true rather than aspirational.
+ * true rather than aspirational. It is also why `DefaultBand` above the body
+ * carries no ramp of its own: the frame is already this seal's spectrum.
+ *
+ * THE ISSUER IS THE SHARED BAND NOW (#2648). The uppercase eyebrow that named
+ * the faction is gone; `DefaultBand` says it in the shape the card kits say it
+ * in. The body's padding moved off the root onto an inner box, because the band
+ * is full-bleed — the same move the two padded praxis frames had to make when
+ * they mounted one (`CardMasthead`'s docblock).
+ *
+ * A metatask whose issuing faction has no skin still falls through here, and
+ * gets the na band with it. ponytail: the manifest is saturated at nine of nine,
+ * so that path is theoretical; the day a tenth faction ships without a seal, it
+ * wants its own band rather than na's name over its condition.
  */
 export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinProps) {
   const { t } = useTranslation('praxis')
-  const faction = factionName(metatask.metatask_faction_slug)
 
   return (
     <div
@@ -38,60 +50,73 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         ...factionSpectrumSheet(),
         color: 'var(--faction-default-card-text)',
         borderRadius: 12,
-        padding: 'var(--space-md) var(--space-lg)',
         overflow: 'hidden',
       }}
     >
-      {removable && (
-        <button
-          type="button"
-          onClick={() => onRemove?.(metatask.id)}
-          aria-label={t('detail.seal.remove')}
-          className="absolute font-body leading-none"
+      <DefaultBand />
+
+      {/* The body's own box. The peel control is positioned against THIS rather
+          than the root, so it sits beside the condition instead of landing on
+          the band — which is a link, and the two must not share a hit target. */}
+      <div className="relative" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+        {removable && (
+          <button
+            type="button"
+            onClick={() => onRemove?.(metatask.id)}
+            aria-label={t('detail.seal.remove')}
+            className="absolute font-body leading-none"
+            style={{
+              top: 'var(--space-sm)',
+              right: 'var(--space-sm)',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--faction-default-card-muted)',
+              fontSize: 'var(--text-xl)',
+              cursor: 'pointer',
+            }}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
+
+        {/* The na sheet's eyebrow register, around the NOUN alone — the band
+            above spells the faction, so this spells the object. */}
+        <span
+          className="font-body block"
           style={{
-            top: 'var(--space-sm)',
-            right: 'var(--space-sm)',
-            background: 'transparent',
-            border: 'none',
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
             color: 'var(--faction-default-card-muted)',
-            fontSize: 'var(--text-xl)',
-            cursor: 'pointer',
+            marginBottom: 'var(--space-xs)',
           }}
         >
-          <span aria-hidden="true">×</span>
-        </button>
-      )}
+          {t('detail.seal.kind')}
+        </span>
 
-      <span
-        className="label-heading block"
-        style={{ color: 'var(--faction-default-card-muted)' }}
-      >
-        {t('detail.seal.label', { faction })}
-      </span>
+        <span
+          className="font-body block"
+          style={{
+            fontSize: 'var(--text-content)',
+            color: 'var(--faction-default-card-text)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
+          }}
+        >
+          {metatask.title}
+        </span>
 
-      <span
-        className="font-body block"
-        style={{
-          fontSize: 'var(--text-content)',
-          color: 'var(--faction-default-card-text)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.03em',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {metatask.title}
-      </span>
-
-      <span
-        className="font-display block"
-        style={{
-          fontSize: 'var(--text-title)',
-          color: 'var(--faction-default-card-accent)',
-          marginTop: 'var(--space-xs)',
-        }}
-      >
-        {t('detail.seal.bonus', { points: metatask.point_value })}
-      </span>
+        <span
+          className="font-display block"
+          style={{
+            fontSize: 'var(--text-title)',
+            color: 'var(--faction-default-card-accent)',
+            marginTop: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.bonus', { points: metatask.point_value })}
+        </span>
+      </div>
     </div>
   )
 }

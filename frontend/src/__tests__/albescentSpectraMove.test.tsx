@@ -50,6 +50,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 
 import '../i18n'
@@ -194,8 +195,13 @@ describe('the census: every Albescent surface with a classed spectrum wears the 
 type Mount = readonly ['ornament' | 'frame', string]
 
 const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
-  '../components/metataskSeal/skins/AlbescentSeal.tsx': [
-    ['ornament', "the pale sheet's spectrum strip"],
+  // The seal's one strip. It moved OUT of `AlbescentSeal.tsx` and into
+  // `AlbescentBand` with #2648, which changes nothing the selector reads:
+  // `.alb-moves .spectrum-rule:empty` is a DESCENDANT rule, the marker is still
+  // on the seal's root, and the strip is still the band's flush, childless rule.
+  // `DefaultBand` beside it draws no ramp — the na seal's spectrum is its frame.
+  '../components/metataskSeal/sealBands.tsx': [
+    ['ornament', "the Albescent band's rule"],
   ],
   '../components/praxisCard/desktop/DefaultPraxisCard.tsx': [
     ['ornament', 'the vote divider'],
@@ -418,7 +424,16 @@ describe('the seal, whose only spectrum was unclassed', () => {
   } as unknown as TaskOut
 
   it('wears the marker over a classed strip', () => {
-    const html = renderToStaticMarkup(<AlbescentSeal metatask={METATASK} />)
+    // The strip is `AlbescentBand`'s rule since #2648 and the marker is still
+    // the seal root's, which is the pairing that matters: the selector is
+    // `.alb-moves .spectrum-rule:empty`, a descendant, so it does not care which
+    // file declares the mount. The `MemoryRouter` is what the band's `<Link>`
+    // needs.
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <AlbescentSeal metatask={METATASK} />
+      </MemoryRouter>,
+    )
     expect(html).toContain('alb-moves')
     expect(html).toContain('spectrum-rule')
     // The ramp is the class's now — an inline copy would be a second declaration

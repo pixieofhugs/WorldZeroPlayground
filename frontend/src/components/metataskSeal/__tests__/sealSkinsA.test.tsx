@@ -7,6 +7,7 @@
  * exactly like every other skin.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 
 import MetataskSeal from "../MetataskSeal";
@@ -42,8 +43,12 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   };
 }
 
+/**
+ * The `MemoryRouter` is not decoration: every seal mounts a `factionBands` band
+ * now (#2648) and the band is a `<Link>`, so a seal outside a router throws.
+ */
 function markup(element: React.ReactElement): string {
-  return renderToStaticMarkup(element);
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 }
 
 const SKIN_SLUGS = ["snide", "singularity", "everymen", "ephemerists"];
@@ -77,9 +82,6 @@ describe("seal skins A content-slot invariant", () => {
 
     it(`${slug} wires removable + onRemove to the metatask id`, () => {
       const onRemove = vi.fn();
-      renderToStaticMarkup(
-        <MetataskSeal metatasks={[task]} removable onRemove={onRemove} />,
-      );
       // Static markup can't fire click handlers, but it must render the ×
       // control when removable so there's something to click.
       const html = markup(

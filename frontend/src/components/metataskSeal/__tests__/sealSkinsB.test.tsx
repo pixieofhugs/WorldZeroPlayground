@@ -9,6 +9,7 @@
  * via the tuned DefaultSeal, which is what the last case asserts.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 
 import MetataskSeal from "../MetataskSeal";
@@ -45,8 +46,12 @@ function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   };
 }
 
+/**
+ * The `MemoryRouter` is not decoration: every seal mounts a `factionBands` band
+ * now (#2648) and the band is a `<Link>`, so a seal outside a router throws.
+ */
 function markup(element: React.ReactElement): string {
-  return renderToStaticMarkup(element);
+  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
 }
 
 const SKIN_SLUGS = ["coven", "ua", "albescent", "wow"];
@@ -55,10 +60,6 @@ describe("seal skins B content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
     const task = metatask(slug);
     const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
-    const label = i18n.t("praxis:detail.seal.label", {
-      faction: factionName(slug),
-    });
-
     it(`${slug} renders the condition (title)`, () => {
       const html = markup(<MetataskSeal metatasks={[task]} />);
       expect(html).toContain(task.title);
@@ -69,9 +70,15 @@ describe("seal skins B content-slot invariant", () => {
       expect(html).toContain(bonus);
     });
 
-    it(`${slug} renders the issuing-faction label`, () => {
+    it(`${slug} names its issuing faction on the shared band`, () => {
+      // #2648 replaced nine hand-lettered eyebrows with `factionBands`, so the
+      // contract's first field is the band's wordmark now.
+      // `sealMasthead.test.tsx` holds the band's dispatch, its link and the
+      // absence of a nested anchor; this row keeps the ISSUER asserted from
+      // beside the other two fields, which is what this file is for.
       const html = markup(<MetataskSeal metatasks={[task]} />);
-      expect(html).toContain(label);
+      expect(html).toContain(factionName(slug));
+      expect(html).toContain(`data-card-masthead="${slug}"`);
     });
 
     it(`${slug} renders its own skin, not the Default fallthrough`, () => {
@@ -106,15 +113,14 @@ describe("seal skins B — na renders via the tuned DefaultSeal", () => {
     expect(html).toContain(fallback);
   });
 
-  it("still shows the label, condition and bonus for na", () => {
+  it("still shows the issuer, condition and bonus for na", () => {
     const task = metatask("na");
     const html = markup(<MetataskSeal metatasks={[task]} />);
     expect(html).toContain(task.title);
     expect(html).toContain(
       i18n.t("praxis:detail.seal.bonus", { points: task.point_value }),
     );
-    expect(html).toContain(
-      i18n.t("praxis:detail.seal.label", { faction: factionName("na") }),
-    );
+    expect(html).toContain(factionName("na"));
+    expect(html).toContain('data-card-masthead="na"');
   });
 });

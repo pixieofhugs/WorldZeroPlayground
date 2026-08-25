@@ -99,8 +99,15 @@ describe('per-word and per-letter treatments keep their spaces in the text', () 
 
   it('SnideSeal: the clipped condition reads as a sentence', () => {
     // Per-word "cut from a magazine" chips, previously a `flex flex-wrap` row
-    // spaced with `gap`.
-    expect(text(<MetataskSeal metatasks={[metatask()]} />)).toContain(CONDITION)
+    // spaced with `gap`. The router arrived with #2648 — the seal mounts a
+    // `factionBands` band now, and a band is a `<Link>`.
+    expect(
+      text(
+        <MemoryRouter>
+          <MetataskSeal metatasks={[metatask()]} />
+        </MemoryRouter>,
+      ),
+    ).toContain(CONDITION)
   })
 
   it('SnideComment: the ransom byline reads as a name', () => {
