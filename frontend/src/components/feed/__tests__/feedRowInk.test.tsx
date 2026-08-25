@@ -38,6 +38,7 @@ import { normalizeFeedItem } from '../normalizeFeedItem'
 import { AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import '../../../i18n'
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'))
 
@@ -137,8 +138,7 @@ const CASES = [
  * is a different guard: the rootless kit modules and the carve-outs.) Naming each surface's prefix in this nine-faction table
  * would instead make it a file every faction lane has to edit.
  */
-const foldRoleReads = (html: string) =>
-  html.replace(/var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g, '$1')
+const foldRoleReads = resolveRoleReads
 
 describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground, veil }) => {
   it('reaches the actor name inside children it did not mount', () => {

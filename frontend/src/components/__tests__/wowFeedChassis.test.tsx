@@ -20,6 +20,7 @@ import FactionFeedFrame from '../feed/FactionFeedFrame'
 import FeedCardRouter from '../feed/FeedCardRouter'
 import { feedKicker } from '../feed/feedItemLabels'
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import { resolveRoleReads } from "../../test/sourceScan";
 
 /** The chassis, exercised through the dispatcher the way the feed reaches it. */
 function frame(tag: string | null = null): string {
@@ -107,8 +108,8 @@ describe('the four chrome slots (the contract every frame owes)', () => {
     // `color` on what it sits in, never by rebuilding it.
     // The head's plum is the `accent` ROLE now (#2674), carrying today's
     // token as its fallback — the same value, asked for by role.
-    expect(frame()).toContain(
-      'color:var(--wow-feed-accent, var(--faction-wow-card-accent))',
+    expect(resolveRoleReads(frame())).toContain(
+      'color:var(--faction-wow-card-accent)',
     )
   })
 })
@@ -150,12 +151,12 @@ describe('the proclamation chrome', () => {
     // asks that the frame reads it — restating the pixel is the thing the token
     // exists to stop.
     const html = frame()
-    expect(html).toContain(
-      'border-radius:var(--wow-feed-radius, var(--faction-wow-card-radius))',
+    expect(resolveRoleReads(html)).toContain(
+      'border-radius:var(--faction-wow-card-radius)',
     )
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
-    expect(html).toContain(
-      'background:var(--wow-feed-paper, var(--faction-wow-card-bg))',
+    expect(resolveRoleReads(html)).toContain(
+      'background:var(--faction-wow-card-bg)',
     )
   })
 

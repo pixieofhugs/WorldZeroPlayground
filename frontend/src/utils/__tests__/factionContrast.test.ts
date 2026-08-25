@@ -94,7 +94,7 @@ import {
   type FactionGround,
   type FactionRole,
 } from "../factionRoles";
-import { readStripped, sourceFiles, toRelative } from "../../test/sourceScan";
+import { readStripped, resolveRoleReads, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
@@ -2479,9 +2479,21 @@ function ruleBody(selector: string): string {
   return CSS_TEXT.slice(at, CSS_TEXT.indexOf("}", at));
 }
 
-/** A component's source, for the same reason `ruleBody` exists. */
+/**
+ * A component's source, for the same reason `ruleBody` exists — with every role
+ * read folded down to the token the map names.
+ *
+ * The guards below hunt tokens in SOURCE rather than in `index.css`, and since
+ * #2659 a migrated surface no longer writes the token: it asks for a role and
+ * the map answers. Folding here rather than at each call site is what stopped
+ * this file needing a `roleRead()` regex wrapper around every hunted token —
+ * and it removes the failure mode that wrapper was written for, where a guard
+ * silently stops resolving and reports a file CLEANER than it is.
+ */
 function sourceOf(relative: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../${relative}`, import.meta.url)), "utf8");
+  return resolveRoleReads(
+    readFileSync(fileURLToPath(new URL(`../../${relative}`, import.meta.url)), "utf8"),
+  );
 }
 
 /**
