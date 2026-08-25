@@ -3,6 +3,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { SingularitySigil } from "../sigil/SingularitySigil";
+import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The
@@ -19,11 +20,17 @@ import { SingularitySigil } from "../sigil/SingularitySigil";
  * voice. Motto + boot lines are faction constants (not backend fields).
  */
 
-// Token shorthands — every color resolves to a --faction-singularity-* var.
-const VOID = "var(--faction-singularity-card-bg)"; // terminal black
-const PHOSPHOR = "var(--faction-singularity-card-accent)"; // green
-const PHOSPHOR_TEXT = "var(--faction-singularity-card-text)"; // green
-const SIGNAL = "var(--faction-singularity-card-muted)"; // blue
+// Token shorthands. The five core ones are ROLES now (#2675) — the faction
+// supplies the map, this surface picks the prefix, and the masthead below
+// declares `--hero-*` on itself with `factionRoleVars`. Each read carries
+// today's token as its fallback, so a mount outside that element (there is
+// none) resolves to the byte-identical value it always did. `-border` and
+// `-border-hard` are not roles and stay exactly as they are: decision 07 keeps
+// a surface's genuine extras local to the surface.
+const VOID = "var(--hero-paper, var(--faction-singularity-card-bg))"; // terminal black
+const PHOSPHOR = "var(--hero-accent, var(--faction-singularity-card-accent))"; // green
+const PHOSPHOR_TEXT = "var(--hero-ink, var(--faction-singularity-card-text))"; // green
+const SIGNAL = "var(--hero-quiet, var(--faction-singularity-card-muted))"; // blue
 const BORDER = "var(--faction-singularity-border)";
 const BORDER_HARD = "var(--faction-singularity-border-hard)";
 const FONT = "var(--font-faction-terminal)";
@@ -33,7 +40,7 @@ const phosphor = (pct: number): string =>
   `color-mix(in srgb, ${PHOSPHOR} ${pct}%, transparent)`;
 const signal = (pct: number): string =>
   `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`;
-const signalFill = "var(--faction-singularity)"; // blue brand fill
+const signalFill = "var(--hero-fill, var(--faction-singularity))"; // blue brand fill
 
 export default function SingularityFactionHero({
   name,
@@ -63,6 +70,7 @@ export default function SingularityFactionHero({
   return (
     <header
       style={{
+        ...factionRoleVars("singularity", "hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-2xl)",
