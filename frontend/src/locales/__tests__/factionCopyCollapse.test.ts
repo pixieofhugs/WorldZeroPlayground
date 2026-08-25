@@ -112,7 +112,7 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // now police a key on neither side of the collapse. A rule guarding a family
   // that no longer exists is dead weight, and it cannot fail: retired, not
   // rewritten. `catalog.test.ts` is where the slip's absence is pinned.
-  { banned: `factions:{F}\\.join\\.confirmButton`, shared: 'factions:mobile.confirm', wording: 'Confirm' },
+  { banned: `factions:{F}\\.join\\.confirmButton`, shared: 'factions:detail.join.confirmAction', wording: 'Confirm' },
   // The interpolation moved off the end of the sentence (#2368): "…to
   // {{faction}}." appended a full stop to "S.N.I.D.E.", the one faction name
   // that already carries one, and rendered "S.N.I.D.E..". The imperative is

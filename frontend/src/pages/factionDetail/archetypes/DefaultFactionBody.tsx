@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -7,11 +7,10 @@ import { factionCssVar, factionName, factionDescription } from "../../../utils/f
 import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
-
-const NA_SLUG = "na";
 
 /**
  * The plate's hairline — the na spectrum, running out from the kicker to the
@@ -143,7 +142,6 @@ export default function DefaultFactionBody({
     onSignup,
     membership,
   } = state;
-  const [confirming, setConfirming] = useState(false);
   const phone = useFormFactor() === "mobile";
   const sections = useFactionSections();
 
@@ -172,9 +170,6 @@ export default function DefaultFactionBody({
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 
-  const currentSlug = membership.currentFactionSlug;
-  const switching = currentSlug && currentSlug !== NA_SLUG;
-
   /**
    * The primary verb. Rendered ONCE — inline under the standing line on a
    * laptop, pinned above the tab bar on a phone (#495 / #1566). Only an
@@ -182,52 +177,24 @@ export default function DefaultFactionBody({
    * hidden rather than disabled.
    */
   const joinAction = membership.state === "eligible" && (
-    <>
-      {membership.joinError && (
-        // The phone skin this came from wrote `text-red-600`, and its legacy
-        // exemption died with the file. The token says the same thing and is
-        // what every other body's join error already uses (#1853).
-        <p className="font-body content-text" style={{ color: "var(--color-danger)" }}>
-          {membership.joinError}
-        </p>
-      )}
-      {!confirming ? (
-        <button type="button" onClick={() => setConfirming(true)} style={joinButtonStyle(faction.slug)}>
-          {t("mobile.join", { faction: name })}
-        </button>
-      ) : (
-        <>
-          {/* No `color:` — `body` is `text-ink`, i.e. --color-text-primary, so
-              this prose INHERITS exactly what it used to restate. The inline
-              copy was the defect (#1819): a faction frame that repoints ink on
-              its own root cannot reach past it, and this archetype is the
-              fall-through every unbespoke faction lands on. */}
-          <p className="font-body content-text">
-            {switching
-              ? t("detail.join.confirmSwitch", { faction: name, current: factionName(currentSlug) })
-              : t("detail.join.confirm", { faction: name })}
-          </p>
-          <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-            <button
-              type="button"
-              onClick={() => void membership.join()}
-              disabled={membership.joining}
-              style={{ ...joinButtonStyle(faction.slug), flex: 1, opacity: membership.joining ? 0.6 : 1 }}
-            >
-              {membership.joining ? t("mobile.joining") : t("mobile.confirm")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              disabled={membership.joining}
-              style={CANCEL_BUTTON_STYLE}
-            >
-              {t("detail.join.cancel")}
-            </button>
-          </div>
-        </>
-      )}
-    </>
+    <JoinControl
+      membership={membership}
+      name={name}
+      skin={joinSkin(faction.slug)}
+      // NOT a `<slug>.join.*` family like the other seven, and this is the
+      // written reason #2651 asked for. This body is the fall-through for every
+      // faction WITHOUT a kit — `albescent` today, a tenth faction the day it
+      // registers — so a per-slug family here would have to be minted for a slug
+      // that has no voice, and Albescent's would be a tell (ADR-0027, #2409: it
+      // is [REDACTED], not loud). "Join {{faction}}" interpolates the name and
+      // is correct for all of them, which is exactly why it was written that
+      // way. What DID move is the namespace: these were `mobile.join` /
+      // `mobile.joining`, keys that stopped being phone-only when #1314 lifted
+      // this block onto the shared body, and they now sit with the rest of the
+      // trio's shared copy under `detail.join.*`.
+      openLabel={t("detail.join.joinButton", { faction: name })}
+      joiningLabel={t("detail.join.joining")}
+    />
   );
 
   return (
@@ -542,3 +509,27 @@ const CANCEL_BUTTON_STYLE: CSSProperties = {
   padding: "var(--space-md) var(--space-lg)",
   cursor: "pointer",
 };
+
+/**
+ * The trio's paint (#2651). Two of the three slots are the constants that were
+ * already here — `joinButtonStyle` for both affirmatives and
+ * `CANCEL_BUTTON_STYLE` for the quiet half — which is why this body was the
+ * model for the extraction's paint half.
+ *
+ * The prose and the error carried `font-body` as a Tailwind utility and now
+ * carry `var(--font-body)` inline, because the shared control puts
+ * `content-text` on the line and the skin supplies the rest. The two resolve to
+ * the same face: the utility is `"Courier Prime", monospace` and the token is
+ * that plus the `"Courier New"` fallback, so the inline form is the wider of the
+ * two. The prose still sets NO colour — a faction frame that repoints ink on its
+ * own root has to be able to reach it (#1819).
+ */
+function joinSkin(slug: string): JoinControlSkin {
+  return {
+    openStyle: joinButtonStyle(slug),
+    confirmStyle: joinButtonStyle(slug),
+    cancelStyle: CANCEL_BUTTON_STYLE,
+    proseStyle: { fontFamily: "var(--font-body)" },
+    errorStyle: { fontFamily: "var(--font-body)", color: "var(--color-danger)" },
+  };
+}

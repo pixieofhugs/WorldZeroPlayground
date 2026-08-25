@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -8,6 +8,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -230,7 +231,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -382,88 +382,33 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   </div>
                 )}
 
-                {membership.state === "eligible" && !confirming && (
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: BEBAS,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas poster headline set tight (lineHeight 0.9).
-                        fontSize: 32,
-                        lineHeight: 0.9,
-                        color: PAPER_TEXT,
-                        marginBottom: "var(--space-sm)",
-                      }}
-                    >
-                      {t("everymen.join.eligibleTitle")}
-                    </div>
-                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: PAPER_TEXT, marginBottom: "var(--space-lg)" }}>
-                      {t("everymen.join.eligibleBody")}
-                    </div>
-                    <button
-                      onClick={() => setConfirming(true)}
-                      style={{
-                        width: "100%",
-                        fontFamily: BEBAS,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
-                        fontSize: 18,
-                        letterSpacing: "0.12em",
-                        color: CREAM,
-                        background: RED,
-                        border: "none",
-                        padding: "var(--space-md)",
-                        boxShadow: `3px 4px 0 ${INK}`,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {t("everymen.join.joinButton")}
-                    </button>
-                  </div>
-                )}
-
-                {membership.state === "eligible" && confirming && (
-                  <div>
-                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: PAPER_TEXT, marginBottom: "var(--space-lg)" }}>
-                      {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na"
-                        ? t("detail.join.confirmSwitch", {
-                            faction: factionName(faction.slug),
-                            current: factionName(membership.currentFactionSlug),
-                          })
-                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
-                    </div>
-                    {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: MONO, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
-                    )}
-                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                      <button
-                        onClick={() => void membership.join()}
-                        disabled={membership.joining}
-                        style={{
-                          flex: 1,
-                          fontFamily: BEBAS,
-                          // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
-                          fontSize: 16,
-                          letterSpacing: "0.1em",
-                          color: CREAM,
-                          background: RED,
-                          border: "none",
-                          padding: "var(--space-md)",
-                          cursor: membership.joining ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {membership.joining
-                          ? t("everymen.join.joining")
-                          : t("mobile.confirm")}
-                      </button>
-                      <button
-                        onClick={() => setConfirming(false)}
-                        disabled={membership.joining}
-                        style={{ fontFamily: MONO, fontSize: "var(--text-md)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${PAPER_TEXT} 30%, transparent)`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
-                      >
-                        {t("detail.join.cancel")}
-                      </button>
-                    </div>
-                  </div>
+                {membership.state === "eligible" && (
+                  <JoinControl
+                    membership={membership}
+                    name={factionName(faction.slug)}
+                    skin={JOIN_SKIN}
+                    openLabel={t("everymen.join.joinButton")}
+                    joiningLabel={t("everymen.join.joining")}
+                    intro={
+                      <>
+                        <div
+                          style={{
+                            fontFamily: BEBAS,
+                            // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas poster headline set tight (lineHeight 0.9).
+                            fontSize: 32,
+                            lineHeight: 0.9,
+                            color: PAPER_TEXT,
+                            marginBottom: "var(--space-sm)",
+                          }}
+                        >
+                          {t("everymen.join.eligibleTitle")}
+                        </div>
+                        <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: PAPER_TEXT, marginBottom: "var(--space-lg)" }}>
+                          {t("everymen.join.eligibleBody")}
+                        </div>
+                      </>
+                    }
+                  />
                 )}
 
                 {(membership.state === "gate" || burned) && (
@@ -600,3 +545,38 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
     </div>
   );
 }
+
+/**
+ * The trio's paint (#2651) — the red poster block for both affirmatives, the
+ * mono rule-box for the cancel, all values lifted off the three buttons as they
+ * stood. The offset shadow stays on the OPEN verb alone, which is where it was:
+ * a pressed slab beside a hairline outline is the poster's own hierarchy.
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  openStyle: {
+    width: "100%",
+    fontFamily: BEBAS,
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
+    fontSize: 18,
+    letterSpacing: "0.12em",
+    color: CREAM,
+    background: RED,
+    border: "none",
+    padding: "var(--space-md)",
+    boxShadow: `3px 4px 0 ${INK}`,
+    cursor: "pointer",
+  },
+  confirmStyle: {
+    fontFamily: BEBAS,
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
+    fontSize: 16,
+    letterSpacing: "0.1em",
+    color: CREAM,
+    background: RED,
+    border: "none",
+    padding: "var(--space-md)",
+  },
+  cancelStyle: { fontFamily: MONO, fontSize: "var(--text-md)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${PAPER_TEXT} 30%, transparent)`, padding: "var(--space-md) var(--space-lg)" },
+  proseStyle: { fontFamily: MONO, lineHeight: 1.6, color: PAPER_TEXT, marginBottom: "var(--space-lg)" },
+  errorStyle: { fontFamily: MONO, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
+};
