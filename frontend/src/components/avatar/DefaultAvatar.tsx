@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { mediaUrl } from '../../utils/media'
-import { UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
 import { factionRoleVars } from '../../utils/factionRoles'
 import DefaultSigil from '../sigil/DefaultSigil'
 import { AVATAR_ROOT, avatarDim, userMediaHook } from './FactionAvatar'
@@ -59,7 +58,7 @@ export default function DefaultAvatar({
         // an ink may not leave a ground that cannot follow (#2361, #2669). `{}`
         // today; what the prefix buys is a name a dresser can reach — the same
         // motive as the `ornament` slot below.
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'avatar'),
+        ...factionRoleVars("na", 'avatar'),
         ...AVATAR_ROOT,
         width: dim,
         height: dim,

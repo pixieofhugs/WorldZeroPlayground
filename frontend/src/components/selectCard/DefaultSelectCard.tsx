@@ -115,7 +115,7 @@ export default function DefaultSelectCard({
         // contrast loop caught on #2669). What the prefix buys is a NAME a host
         // can dress this one surface by, instead of overriding
         // `--faction-default-card-text` and repainting every na descendant.
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "select-card"),
+        ...factionRoleVars("na", "select-card"),
         width: "100%",
         maxWidth: 360,
         minHeight: 300,

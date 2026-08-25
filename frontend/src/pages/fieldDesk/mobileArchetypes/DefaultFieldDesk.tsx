@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import {
   factionCssVar,
   factionName,
-  UNAFFILIATED_FACTION_SLUG,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
@@ -124,7 +123,7 @@ export default function DefaultFieldDesk({
         // The role map (#2672), pinned to na: this desk stands on the app's own
         // `--color-bg-*` chrome, which takes no slug, and an ink may not leave a
         // ground that cannot follow it (#2361, #2669).
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'field-desk'),
+        ...factionRoleVars("na", 'field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',

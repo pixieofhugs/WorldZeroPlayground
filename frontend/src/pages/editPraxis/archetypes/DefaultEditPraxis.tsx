@@ -92,7 +92,6 @@ import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import {
   factionSpectrumSheet,
-  UNAFFILIATED_FACTION_SLUG,
 } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { type PraxisType } from "../../../api/praxis";
@@ -294,7 +293,7 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
      cannot follow (#2361, #2669). `{}` today; the prefix is the name a dresser
      reaches this surface by. */
   pageStyle: {
-    ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "edit-praxis"),
+    ...factionRoleVars("na", "edit-praxis"),
     fontFamily: TITLE_FACE,
     color: INK,
   },

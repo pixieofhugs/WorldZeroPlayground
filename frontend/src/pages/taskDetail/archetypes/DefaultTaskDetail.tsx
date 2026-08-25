@@ -7,7 +7,6 @@ import {
   factionFill,
   factionName,
   factionSheet,
-  UNAFFILIATED_FACTION_SLUG,
 } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
@@ -782,7 +781,7 @@ export default function DefaultTaskDetail({
         // `innerBox` literals hoisted above this render still resolve under it.
         // Pinned to na: the surface is `factionSheet()`, which takes no slug,
         // and an ink may not leave a ground that cannot follow (#2361, #2669).
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "task-detail"),
+        ...factionRoleVars("na", "task-detail"),
         position: "relative",
       }}
     >

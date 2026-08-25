@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionSpectrumSheet, UNAFFILIATED_FACTION_SLUG } from '../../../utils/factions'
+import { factionSpectrumSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { DefaultBand } from '../sealBands'
 import type { SealSkinProps } from '../types'
@@ -45,7 +45,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         // The role map (#2672), pinned to na: the frame below is
         // `factionSpectrumSheet()`, which takes no slug, so the inks standing on
         // it may not take one either (#2361, #2669).
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'seal'),
+        ...factionRoleVars('na', 'seal'),
         // The 3px spectrum frame, not a 3px bar across the top edge (#2520).
         // Only the geometry is stated here; the composition — the ramp appended
         // to all THREE of the sheet's lists — belongs to the helper, because a

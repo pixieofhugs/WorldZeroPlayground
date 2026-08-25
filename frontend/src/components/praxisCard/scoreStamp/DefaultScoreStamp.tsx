@@ -4,7 +4,6 @@ import DefaultPointsRing from "../../factionMarks/DefaultPointsRing";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
 import { factionRoleVars } from "../../../utils/factionRoles";
-import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -131,7 +130,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         // the surface's business, and repointing either would be a repaint.
         // Pinned to na for the reason the other Default archetypes are: the
         // plate's ground is `--faction-default-stamp-bg`, which takes no slug.
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "score-stamp"),
+        ...factionRoleVars("na", "score-stamp"),
         position: "relative",
         boxSizing: "border-box",
         width: "100%",

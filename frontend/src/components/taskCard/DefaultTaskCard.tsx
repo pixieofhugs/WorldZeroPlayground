@@ -9,7 +9,6 @@ import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import {
   factionSpectrumSheet,
-  UNAFFILIATED_FACTION_SLUG,
 } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
 import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
@@ -114,7 +113,7 @@ export default function DefaultTaskCard({
           // the prefix buys is a name a host can dress THIS surface by,
           // instead of overriding `--faction-default-card-text` and repainting
           // every na descendant. See `utils/factionRoles.ts`.
-          ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "task-card"),
+          ...factionRoleVars("na", "task-card"),
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",

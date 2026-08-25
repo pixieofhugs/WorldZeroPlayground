@@ -4936,21 +4936,19 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
   /**
    * The token a band's declaration actually paints with.
    *
-   * A declaration is written one of two ways now. Straight — `var(--x)` — or as
-   * a ROLE read carrying today's token as its fallback,
-   * `var(--band-paper, var(--x))` (#2672, the na/Default lane). The material is
-   * `--x` in both: the prefix is declared by `factionRoleVars`, which returns
-   * `{}` for `na` and for `albescent`, so the fallback is what answers. Taking
-   * the INNERMOST name reads both shapes and keeps this census asking the
-   * question it was written to ask — which material does this band stand on —
-   * rather than which syntax it was typed in.
+   * A declaration is written one of two ways now: straight, `var(--x)`, or as a
+   * ROLE read carrying today's token as its fallback — see {@link ROLE_READ},
+   * which is the fragment this reuses rather than spelling a second one. The
+   * material is `--x` either way, and reading the fallback keeps this census
+   * asking the question it was written to ask (which material does this band
+   * stand on) instead of which syntax it was typed in.
    */
-  const paintedBy = (declaration: string, body: string): string | null => {
-    const value = body.match(new RegExp(`${declaration}: "([^"]+)"`))?.[1];
-    if (value === undefined) return null;
-    const names = [...value.matchAll(/(--[a-z0-9-]+)/g)].map((match) => match[1]);
-    return names.at(-1) ?? null;
-  };
+  const paintedBy = (declaration: string, body: string): string | null =>
+    body.match(
+      new RegExp(
+        String.raw`${declaration}: "${ROLE_READ}var\((--[a-z0-9-]+)\)${ROLE_READ_END}"`,
+      ),
+    )?.[1] ?? null;
 
   const groundOf = (name: string): string | null =>
     paintedBy("background", bandBody(name));

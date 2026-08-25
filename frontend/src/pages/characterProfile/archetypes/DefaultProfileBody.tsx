@@ -45,7 +45,6 @@ import {
   factionFill,
   factionSheet,
   isKnownFaction,
-  UNAFFILIATED_FACTION_SLUG,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
@@ -68,7 +67,7 @@ type Segment = 'praxis' | 'tasks'
  * (#2361, #2669). `{}` today; what the prefix buys is a name a dresser can
  * reach this one surface by — `identityOrnament` is the same motive.
  */
-const ROLES = factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'profile-body')
+const ROLES = factionRoleVars("na", 'profile-body')
 
 const EYEBROW: CSSProperties = {
   fontFamily: 'var(--font-body)',

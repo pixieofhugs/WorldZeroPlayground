@@ -1,7 +1,6 @@
 import { AdminOverlay } from "../shared";
 import {
   factionSpectrumSheet,
-  UNAFFILIATED_FACTION_SLUG,
 } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -67,7 +66,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         // leave a ground that cannot follow it (#2361, #2669). So this is `{}`
         // and the sheet is byte-identical; the prefix exists so a host can
         // dress this surface by name.
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "praxis-card"),
+        ...factionRoleVars("na", "praxis-card"),
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet

@@ -106,7 +106,7 @@ import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
-import { factionSheet, UNAFFILIATED_FACTION_SLUG } from '../../../utils/factions'
+import { factionSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import {
@@ -640,7 +640,7 @@ export default function DefaultPraxisDetail({
         // it wherever the page mounts them. Pinned to na: the surface is
         // `factionSheet()`, which takes no slug, and an ink may not leave a
         // ground that cannot follow (#2361, #2669).
-        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'praxis-detail'),
+        ...factionRoleVars("na", 'praxis-detail'),
         position: 'relative',
       }}
     >
