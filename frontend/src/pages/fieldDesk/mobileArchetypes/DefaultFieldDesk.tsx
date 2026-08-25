@@ -123,7 +123,7 @@ export default function DefaultFieldDesk({
         // The role map (#2672), pinned to na: this desk stands on the app's own
         // `--color-bg-*` chrome, which takes no slug, and an ink may not leave a
         // ground that cannot follow it (#2361, #2669).
-        ...factionRoleVars("na", 'field-desk'),
+        ...factionRoleVars("na", 'na-field-desk'),
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-lg)',
@@ -340,7 +340,7 @@ export default function DefaultFieldDesk({
           <Link
             to="/tasks"
             className="label-caption"
-            style={{ color: 'var(--field-desk-quiet, var(--faction-default-card-muted))', textDecoration: 'none' }}
+            style={{ color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))', textDecoration: 'none' }}
           >
             {t('fieldDesk.home.viewAll')}
           </Link>
@@ -393,7 +393,7 @@ export default function DefaultFieldDesk({
                 <span
                   className="shrink-0 label-caption"
                   style={{
-                    color: 'var(--field-desk-quiet, var(--faction-default-card-muted))',
+                    color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))',
                     padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,

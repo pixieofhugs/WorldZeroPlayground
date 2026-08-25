@@ -45,7 +45,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         // The role map (#2672), pinned to na: the frame below is
         // `factionSpectrumSheet()`, which takes no slug, so the inks standing on
         // it may not take one either (#2361, #2669).
-        ...factionRoleVars('na', 'seal'),
+        ...factionRoleVars('na', 'na-seal'),
         // The 3px spectrum frame, not a 3px bar across the top edge (#2520).
         // Only the geometry is stated here; the composition — the ramp appended
         // to all THREE of the sheet's lists — belongs to the helper, because a
@@ -53,7 +53,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         // the short ones rather than padding them.
         border: '3px solid transparent',
         ...factionSpectrumSheet(),
-        color: 'var(--seal-ink, var(--faction-default-card-text))',
+        color: 'var(--na-seal-ink, var(--faction-default-card-text))',
         borderRadius: 12,
         overflow: 'hidden',
       }}
@@ -75,7 +75,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
               right: 'var(--space-sm)',
               background: 'transparent',
               border: 'none',
-              color: 'var(--seal-quiet, var(--faction-default-card-muted))',
+              color: 'var(--na-seal-quiet, var(--faction-default-card-muted))',
               fontSize: 'var(--text-xl)',
               cursor: 'pointer',
             }}
@@ -92,7 +92,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
-            color: 'var(--seal-quiet, var(--faction-default-card-muted))',
+            color: 'var(--na-seal-quiet, var(--faction-default-card-muted))',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -103,7 +103,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           className="font-body block"
           style={{
             fontSize: 'var(--text-content)',
-            color: 'var(--seal-ink, var(--faction-default-card-text))',
+            color: 'var(--na-seal-ink, var(--faction-default-card-text))',
             textTransform: 'uppercase',
             letterSpacing: '0.03em',
           }}
@@ -115,7 +115,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           className="font-display block"
           style={{
             fontSize: 'var(--text-title)',
-            color: 'var(--seal-accent, var(--faction-default-card-accent))',
+            color: 'var(--na-seal-accent, var(--faction-default-card-accent))',
             marginTop: 'var(--space-xs)',
           }}
         >

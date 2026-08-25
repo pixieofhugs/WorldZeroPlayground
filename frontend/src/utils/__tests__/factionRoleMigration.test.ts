@@ -506,14 +506,14 @@ const LANE_02: Surface[] = [
   {
     file: "components/taskCard/DefaultTaskCard.tsx",
     slug: "na",
-    prefix: "task-card",
+    prefix: "na-task-card",
     ground: "sheet",
     sites: 8,
   },
   {
     file: "components/praxisCard/desktop/DefaultPraxisCard.tsx",
     slug: "na",
-    prefix: "praxis-card",
+    prefix: "na-praxis-card",
     ground: "sheet",
     // Four of the seven are `PraxisBody` PROPS - `tint` / `muted` / `paper` /
     // `fonts.display` - plain strings resolved inside this root's subtree, so a
@@ -523,7 +523,7 @@ const LANE_02: Surface[] = [
   {
     file: "components/praxisCard/scoreStamp/DefaultScoreStamp.tsx",
     slug: "na",
-    prefix: "score-stamp",
+    prefix: "na-score-stamp",
     ground: "sheet",
     // Three roles, four reads. `--faction-default-stamp-bg` and `-card-line`
     // are deliberately NOT migrated: the stamp has a ground of its own, and its
@@ -533,35 +533,35 @@ const LANE_02: Surface[] = [
   {
     file: "components/selectCard/DefaultSelectCard.tsx",
     slug: "na",
-    prefix: "select-card",
+    prefix: "na-select-card",
     ground: "sheet",
     sites: 7,
   },
   {
     file: "components/avatar/DefaultAvatar.tsx",
     slug: "na",
-    prefix: "avatar",
+    prefix: "na-avatar",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "components/metataskSeal/skins/DefaultSeal.tsx",
     slug: "na",
-    prefix: "seal",
+    prefix: "na-seal",
     ground: "sheet",
     sites: 5,
   },
   {
     file: "pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
     slug: "na",
-    prefix: "task-detail",
+    prefix: "na-task-detail",
     ground: "sheet",
     sites: 4,
   },
   {
     file: "pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx",
     slug: "na",
-    prefix: "praxis-detail",
+    prefix: "na-praxis-detail",
     ground: "sheet",
     // The spread is on the outermost `.py-8` box rather than on the sheet, so
     // the module-scope helpers above the component - the byline avatar, the
@@ -571,7 +571,7 @@ const LANE_02: Surface[] = [
   {
     file: "pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     slug: "na",
-    prefix: "edit-praxis",
+    prefix: "na-edit-praxis",
     ground: "sheet",
     // Three consts, three reads. The spread rides `dress.pageStyle`, the one
     // style BOTH stages mount - the composer page and `PraxisWaitingSurface`.
@@ -580,7 +580,7 @@ const LANE_02: Surface[] = [
   {
     file: "pages/characterProfile/archetypes/DefaultProfileBody.tsx",
     slug: "na",
-    prefix: "profile-body",
+    prefix: "na-profile-body",
     ground: "sheet",
     // Hoisted to a module const, because this file has TWO roots - the desktop
     // column and the `mobile-profile` one - and a prefix declared on one would
@@ -590,14 +590,14 @@ const LANE_02: Surface[] = [
   {
     file: "pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     slug: "na",
-    prefix: "field-desk",
+    prefix: "na-field-desk",
     ground: "sheet",
     sites: 2,
   },
   {
     file: "components/metataskSeal/sealBands.tsx",
     slug: "na",
-    prefix: "band",
+    prefix: "na-band",
     ground: "sheet",
     sites: 3,
   },

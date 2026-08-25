@@ -77,7 +77,7 @@ import FactionSigil from "../sigil/FactionSigil";
 
 const MONO = "var(--font-body)";
 /** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
-const DISPLAY = "var(--select-card-face, var(--faction-default-card-font))";
+const DISPLAY = "var(--na-select-card-face, var(--faction-default-card-font))";
 
 export interface DefaultSelectCardProps
   extends Omit<FactionSelectCardProps, "faction"> {
@@ -115,7 +115,7 @@ export default function DefaultSelectCard({
         // contrast loop caught on #2669). What the prefix buys is a NAME a host
         // can dress this one surface by, instead of overriding
         // `--faction-default-card-text` and repainting every na descendant.
-        ...factionRoleVars("na", "select-card"),
+        ...factionRoleVars("na", "na-select-card"),
         width: "100%",
         maxWidth: 360,
         minHeight: 300,
@@ -133,7 +133,7 @@ export default function DefaultSelectCard({
         border: "2px solid transparent",
         ...factionSpectrumSheet(),
         borderRadius: 14,
-        color: "var(--select-card-ink, var(--faction-default-card-text))",
+        color: "var(--na-select-card-ink, var(--faction-default-card-text))",
         fontFamily: MONO,
         boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
       }}
@@ -147,7 +147,7 @@ export default function DefaultSelectCard({
           <FactionSigil slug={slug} size={40} />
           <div
             className="label-heading"
-            style={{ letterSpacing: "0.2em", color: "var(--select-card-quiet, var(--faction-default-card-muted))" }}
+            style={{ letterSpacing: "0.2em", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}
           >
             {say("eyebrow")}
           </div>
@@ -184,7 +184,7 @@ export default function DefaultSelectCard({
 
         <p
           className="content-text"
-          style={{ margin: 0, lineHeight: 1.55, color: "var(--select-card-quiet, var(--faction-default-card-muted))" }}
+          style={{ margin: 0, lineHeight: 1.55, color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}
         >
           {say("blurb")}
         </p>
@@ -194,7 +194,7 @@ export default function DefaultSelectCard({
         <div
           style={{
             fontSize: "var(--text-content)",
-            color: "var(--select-card-quiet, var(--faction-default-card-muted))",
+            color: "var(--na-select-card-quiet, var(--faction-default-card-muted))",
             marginBottom: "var(--space-md)",
           }}
         >
@@ -217,12 +217,12 @@ export default function DefaultSelectCard({
             textTransform: "uppercase",
             padding: "var(--space-md)",
             borderRadius: 11,
-            color: "var(--select-card-ink, var(--faction-default-card-text))",
+            color: "var(--na-select-card-ink, var(--faction-default-card-text))",
             background: "transparent",
             // A scalar context, so it stays neutral on purpose (ADR-0039) — the
             // same hairline the Default task card's CTA carries.
             border:
-              "1px solid color-mix(in srgb, var(--select-card-accent, var(--faction-default-card-accent)) 35%, transparent)",
+              "1px solid color-mix(in srgb, var(--na-select-card-accent, var(--faction-default-card-accent)) 35%, transparent)",
           }}
         >
           {say("cta")}

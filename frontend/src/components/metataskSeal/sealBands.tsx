@@ -45,7 +45,7 @@ import { factionName } from "../../utils/factions";
  */
 
 /** na's card face — `var(--font-accent)`, the register both seals letter in. */
-const NA_FACE = "var(--band-face, var(--faction-default-card-font))";
+const NA_FACE = "var(--na-band-face, var(--faction-default-card-font))";
 /**
  * The same face on the Albescent band, under that band's OWN prefix (#2672).
  * Spelled out rather than interpolated from a `prefix` argument: a role
@@ -78,9 +78,9 @@ function DefaultBand() {
         // The role map (#2672), off this band's OWN slug — which is the literal
         // above, so it is `{}` and no paint moves. The two bands differ by rule,
         // never by colour ("NO NEW PAINT", above), so both resolve na's family.
-        ...factionRoleVars("na", "band"),
-        background: "var(--band-paper, var(--faction-default-card-bg))",
-        color: "var(--band-ink, var(--faction-default-card-text))",
+        ...factionRoleVars("na", "na-band"),
+        background: "var(--na-band-paper, var(--faction-default-card-bg))",
+        color: "var(--na-band-ink, var(--faction-default-card-text))",
       }}
     >
       <span

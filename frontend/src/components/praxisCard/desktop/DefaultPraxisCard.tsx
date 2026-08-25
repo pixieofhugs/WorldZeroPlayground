@@ -28,7 +28,7 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  * unaffiliated face. It had been resolving to Lora through the shared
  * `font-display` class — the site wordmark's serif, not this card's.
  *
- * All colour through the ROLE MAP (#2672) — `--praxis-card-*`, spread on the
+ * All colour through the ROLE MAP (#2672) — `--na-praxis-card-*`, spread on the
  * root and read with today's `--faction-default-*` token as the fallback — so
  * the sheet flips through the `[data-theme="dark"]` cascade with no `dark ?`
  * branch.
@@ -57,7 +57,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
     <div
       style={{
         // The role map (#2672): declared once here, read as
-        // `var(--praxis-card-…, <today's token>)` everywhere below — including
+        // `var(--na-praxis-card-…, <today's token>)` everywhere below — including
         // the four `PraxisBody` props, which are strings resolved inside this
         // subtree.
         //
@@ -66,13 +66,13 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         // leave a ground that cannot follow it (#2361, #2669). So this is `{}`
         // and the sheet is byte-identical; the prefix exists so a host can
         // dress this surface by name.
-        ...factionRoleVars("na", "praxis-card"),
+        ...factionRoleVars("na", "na-praxis-card"),
         ...frameBase,
         position: "relative",
         borderRadius: 10, // plain cream sheet
         border: "3px solid transparent",
         ...factionSpectrumSheet(),
-        color: "var(--praxis-card-ink, var(--faction-default-card-text))",
+        color: "var(--na-praxis-card-ink, var(--faction-default-card-text))",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
       }}
@@ -80,21 +80,21 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
-        tint="var(--praxis-card-accent, var(--faction-default-card-accent))"
-        muted="var(--praxis-card-quiet, var(--faction-default-card-muted))"
-        paper="var(--praxis-card-paper, var(--faction-default-card-bg))"
+        tint="var(--na-praxis-card-accent, var(--faction-default-card-accent))"
+        muted="var(--na-praxis-card-quiet, var(--faction-default-card-muted))"
+        paper="var(--na-praxis-card-paper, var(--faction-default-card-bg))"
         showCrown={showCrown}
         // Bebas Neue carries the sheet's identity; Courier Prime reads the
         // proof. The quiet sheet keeps the house body face on purpose (#888).
         fonts={{
-          display: "var(--praxis-card-face, var(--faction-default-card-font))",
+          display: "var(--na-praxis-card-face, var(--faction-default-card-font))",
           body: "var(--font-body)",
         }}
         titleStyle={{
-          fontFamily: "var(--praxis-card-face, var(--faction-default-card-font))",
+          fontFamily: "var(--na-praxis-card-face, var(--faction-default-card-font))",
           letterSpacing: "0.02em",
           lineHeight: 1,
-          color: "var(--praxis-card-ink, var(--faction-default-card-text))",
+          color: "var(--na-praxis-card-ink, var(--faction-default-card-text))",
         }}
         voteRule={
           <div

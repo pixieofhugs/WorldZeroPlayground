@@ -11,7 +11,7 @@ import type { FactionAvatarProps } from './FactionAvatar'
  *
  * The UNAFFILIATED / no-faction skin (#418): the portrait or monogram inside a
  * thin spectrum ring, tagged with the spectrum sigil — every path still open.
- * All colour through the ROLE MAP (#2672) — `--avatar-paper` / `-ink` /
+ * All colour through the ROLE MAP (#2672) — `--na-avatar-paper` / `-ink` /
  * `-face`, each falling back to the `--faction-default-*` token it read
  * before; flips light/dark.
  *
@@ -58,7 +58,7 @@ export default function DefaultAvatar({
         // an ink may not leave a ground that cannot follow (#2361, #2669). `{}`
         // today; what the prefix buys is a name a dresser can reach — the same
         // motive as the `ornament` slot below.
-        ...factionRoleVars("na", 'avatar'),
+        ...factionRoleVars("na", 'na-avatar'),
         ...AVATAR_ROOT,
         width: dim,
         height: dim,
@@ -96,9 +96,9 @@ export default function DefaultAvatar({
             style={{
               width: '100%',
               height: '100%',
-              background: 'var(--avatar-paper, var(--faction-default-card-bg))',
-              color: 'var(--avatar-ink, var(--faction-default-card-text))',
-              fontFamily: 'var(--avatar-face, var(--faction-default-card-font))',
+              background: 'var(--na-avatar-paper, var(--faction-default-card-bg))',
+              color: 'var(--na-avatar-ink, var(--faction-default-card-text))',
+              fontFamily: 'var(--na-avatar-face, var(--faction-default-card-font))',
               fontSize: Math.round(dim * 0.44),
               lineHeight: 1,
             }}
@@ -118,8 +118,8 @@ export default function DefaultAvatar({
             width: badge,
             height: badge,
             borderRadius: '50%',
-            background: 'var(--avatar-paper, var(--faction-default-card-bg))',
-            boxShadow: '0 0 0 1.5px var(--avatar-paper, var(--faction-default-card-bg))',
+            background: 'var(--na-avatar-paper, var(--faction-default-card-bg))',
+            boxShadow: '0 0 0 1.5px var(--na-avatar-paper, var(--faction-default-card-bg))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

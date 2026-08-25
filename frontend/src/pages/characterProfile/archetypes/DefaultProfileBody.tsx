@@ -67,7 +67,7 @@ type Segment = 'praxis' | 'tasks'
  * (#2361, #2669). `{}` today; what the prefix buys is a name a dresser can
  * reach this one surface by — `identityOrnament` is the same motive.
  */
-const ROLES = factionRoleVars("na", 'profile-body')
+const ROLES = factionRoleVars("na", 'na-profile-body')
 
 const EYEBROW: CSSProperties = {
   fontFamily: 'var(--font-body)',
@@ -411,7 +411,7 @@ function DesktopProfile({
               style={{
                 fontFamily: 'var(--font-display)',
                 fontStyle: 'italic',
-                color: 'var(--profile-body-ink, var(--faction-default-card-text))',
+                color: 'var(--na-profile-body-ink, var(--faction-default-card-text))',
               }}
             />
 
@@ -707,7 +707,7 @@ function MobileProfile({
                 textAlign: 'center',
                 margin: '0 auto',
                 color: isUnaffiliated
-                  ? 'var(--profile-body-ink, var(--faction-default-card-text))'
+                  ? 'var(--na-profile-body-ink, var(--faction-default-card-text))'
                   : 'var(--color-text-primary)',
               }}
             />
