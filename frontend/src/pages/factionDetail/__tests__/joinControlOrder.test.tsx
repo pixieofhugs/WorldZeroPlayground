@@ -156,7 +156,21 @@ describe('the join pair keeps #646 order on every faction', () => {
     expect(busy, 'the pending state is visible, not just disabled').toContain('opacity:0.6')
   })
 
-  for (const { slug } of FACTION_MANIFESTS) {
+  /**
+   * Every faction with a PAGE. Read off the manifest so a tenth kit is covered
+   * the day it registers, minus `na`: it has had a manifest since #2530, but
+   * unaffiliated is a state rather than a faction (`isKnownFaction('na')` is
+   * false, ADR-0039) and there is no na faction page to visit — `factionHero.na`
+   * has no copy at all, so this harness cannot render one. na's SKIN is still
+   * covered here, because `albescent` is the wrapper that mounts it.
+   */
+  const SLUGS = FACTION_MANIFESTS.map(({ slug }) => slug).filter((slug) => slug !== 'na')
+
+  it('walks eight faction pages', () => {
+    expect(SLUGS).toHaveLength(FACTION_MANIFESTS.length - 1)
+  })
+
+  for (const slug of SLUGS) {
     for (const formFactor of ['desktop', 'mobile'] as const) {
       it(`${slug} draws its join through the shared control at ${formFactor}`, () => {
         const html = page(slug, formFactor)
