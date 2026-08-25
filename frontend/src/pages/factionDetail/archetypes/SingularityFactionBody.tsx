@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
@@ -8,6 +8,7 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
+import { JoinControl, type JoinControlSkin } from "../JoinControl";
 import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -175,7 +176,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
     membership,
   } = state;
   const sections = useFactionSections();
-  const [confirming, setConfirming] = useState(false);
 
   if (!faction) return null;
 
@@ -359,101 +359,34 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   </div>
                 )}
 
-                {membership.state === "eligible" && !confirming && (
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: FONT,
-                        // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal display title.
-                        fontSize: 22,
-                        lineHeight: 1.05,
-                        color: PHOSPHOR,
-                        letterSpacing: "0.03em",
-                        marginBottom: "var(--space-md)",
-                      }}
-                    >
-                      {t("singularity.join.eligibleTitle")}
-                    </div>
-                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: "var(--space-lg)" }}>
-                      {t("singularity.join.eligibleBody")}
-                    </div>
-                    <button
-                      onClick={() => setConfirming(true)}
-                      style={{
-                        width: "100%",
-                        fontFamily: FONT,
-                        fontSize: "var(--text-md)",
-                        letterSpacing: "0.14em",
-                        textTransform: "uppercase",
-                        color: VOID,
-                        background: PHOSPHOR,
-                        border: "none",
-                        padding: "var(--space-md)",
-                        boxShadow: `0 0 16px ${phosphor(35)}`,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {t("singularity.join.joinButton")}
-                    </button>
-                  </div>
-                )}
-
-                {membership.state === "eligible" && confirming && (
-                  <div>
-                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(72), marginBottom: "var(--space-lg)" }}>
-                      {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na"
-                        ? t("detail.join.confirmSwitch", {
-                            faction: factionName(faction.slug),
-                            current: factionName(membership.currentFactionSlug),
-                          })
-                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
-                    </div>
-                    {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: FONT, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>
-                        {membership.joinError}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                      <button
-                        onClick={() => void membership.join()}
-                        disabled={membership.joining}
-                        style={{
-                          flex: 1,
-                          fontFamily: FONT,
-                          fontSize: "var(--text-base)",
-                          letterSpacing: "0.12em",
-                          textTransform: "uppercase",
-                          color: VOID,
-                          background: PHOSPHOR,
-                          border: "none",
-                          padding: "var(--space-md)",
-                          cursor: membership.joining ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {membership.joining
-                          ? t("singularity.join.joining")
-                          : t("mobile.confirm")}
-                      </button>
-                      <button
-                        onClick={() => setConfirming(false)}
-                        disabled={membership.joining}
-                        style={{
-                          fontFamily: FONT,
-                          fontSize: "var(--text-md)",
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
-                          color: signal(60),
-                          background: "transparent",
-                          border: `1px solid ${signal(40)}`,
-                          padding: "var(--space-md) var(--space-lg)",
-                          cursor: membership.joining ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {t("detail.join.cancel")}
-                      </button>
-                    </div>
-                  </div>
+                {membership.state === "eligible" && (
+                  <JoinControl
+                    membership={membership}
+                    name={factionName(faction.slug)}
+                    skin={JOIN_SKIN}
+                    openLabel={t("singularity.join.joinButton")}
+                    joiningLabel={t("singularity.join.joining")}
+                    intro={
+                      <>
+                        <div
+                          style={{
+                            fontFamily: FONT,
+                            // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal display title.
+                            fontSize: 22,
+                            lineHeight: 1.05,
+                            color: PHOSPHOR,
+                            letterSpacing: "0.03em",
+                            marginBottom: "var(--space-md)",
+                          }}
+                        >
+                          {t("singularity.join.eligibleTitle")}
+                        </div>
+                        <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: "var(--space-lg)" }}>
+                          {t("singularity.join.eligibleBody")}
+                        </div>
+                      </>
+                    }
+                  />
                 )}
 
                 {(membership.state === "gate" || burned) && (
@@ -581,3 +514,46 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
     </div>
   );
 }
+
+/**
+ * The trio's paint (#2651) — phosphor-on-void for both affirmatives, a signal
+ * hairline for the cancel, exactly as the three buttons stood. The glow stays on
+ * the OPEN verb alone, where it was: the array announces itself once.
+ */
+const JOIN_SKIN: JoinControlSkin = {
+  openStyle: {
+    width: "100%",
+    fontFamily: FONT,
+    fontSize: "var(--text-md)",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: VOID,
+    background: PHOSPHOR,
+    border: "none",
+    padding: "var(--space-md)",
+    boxShadow: `0 0 16px ${phosphor(35)}`,
+    cursor: "pointer",
+  },
+  confirmStyle: {
+    fontFamily: FONT,
+    fontSize: "var(--text-base)",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: VOID,
+    background: PHOSPHOR,
+    border: "none",
+    padding: "var(--space-md)",
+  },
+  cancelStyle: {
+    fontFamily: FONT,
+    fontSize: "var(--text-md)",
+    letterSpacing: "0.16em",
+    textTransform: "uppercase",
+    color: signal(60),
+    background: "transparent",
+    border: `1px solid ${signal(40)}`,
+    padding: "var(--space-md) var(--space-lg)",
+  },
+  proseStyle: { fontFamily: FONT, lineHeight: 1.7, color: phosphor(72), marginBottom: "var(--space-lg)" },
+  errorStyle: { fontFamily: FONT, color: "var(--color-danger)", marginBottom: "var(--space-sm)" },
+};

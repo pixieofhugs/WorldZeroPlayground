@@ -503,7 +503,7 @@ describe('the four functional controls say one thing across every faction (#1863
       .filter(([id]) => id.startsWith('factions.json:') && id.endsWith('.confirmButton'))
       .map(([, value]) => value)
     expect(buttons).toEqual([])
-    expect(i18n.t('factions:mobile.confirm')).toBe('Confirm')
+    expect(i18n.t('factions:detail.join.confirmAction')).toBe('Confirm')
   })
 
   it('the task-card signup reads Sign up', () => {

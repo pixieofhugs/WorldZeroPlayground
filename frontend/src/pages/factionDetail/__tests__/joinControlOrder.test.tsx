@@ -29,13 +29,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { FACTION_MANIFESTS } from '../../../factions'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
 import type { CharacterOut } from '../../../api/auth'
-import { aPraxisCard } from '../../../test/fixtures'
 import { JoinConfirm, type JoinControlSkin } from '../JoinControl'
 
 const mocks = vi.hoisted(() => ({
@@ -92,7 +91,11 @@ function page(slug: string, formFactor: 'desktop' | 'mobile'): string {
     fetchError: null,
     members: [MEMBER],
     tasks: [],
-    recentPraxis: [aPraxisCard({ task_faction_slug: slug })],
+    // EMPTY, deliberately: a card in the gallery would drag the faction's
+    // praxis archetype into this render, and several of those read `useTheme`,
+    // which this harness has no provider for. The join area is what is under
+    // test and it does not read the list.
+    recentPraxis: [],
     viewerFactionSlug: null,
     gameFactions: [],
     onSignup: undefined,
