@@ -18,11 +18,30 @@
   ```
   Legal in that output: `Sidebar.tsx` (×2) and `FactionSigil.tsx` pick paint; the
   Albescent reveal predicates in `utils/factions.ts` are centralised behind named
-  functions (ADR-0082); and every `na` comparison is a sentinel check, not a faction
-  branch. Two sites decide a RULE and should not: `useFactionDetail.ts` decides
-  whether a join block is drawn at all (#2660), and `duel/shared.tsx` decides the
-  duel tie rule by slug. `utils/commentTime.ts` switches per-faction English in code
-  rather than in the catalogue.
+  functions (ADR-0082); every `na` comparison is a sentinel check, not a faction
+  branch; and three hits are prose inside comments (`api/auth.ts`,
+  `useTaskDetail.ts`, `useFactionDetail.ts`), which is the law being cited, not
+  broken.
+
+  **The worked counter-example, since removed (#2660).**
+  `resolveMembershipState` in `useFactionDetail.ts` short-circuited
+  `slug === "ua"` to "none", so the UA page drew no join block for anyone. Note
+  what the fix was *not*: no flag was added to `FactionConfig`, because there was
+  never a rule here to configure. The comment justifying the branch asserted a
+  pre-ADR-0019 model that ADR-0030 (Accepted) had already retired, and every
+  authoritative source — the ADR, `_NON_INVITE_FACTION_SLUGS`,
+  `can_join_faction` — said UA was an ordinary invite-joinable faction. So the
+  branch hid a fully built, fully translated join block from real UA invitees the
+  backend had been sending letters to all along. **Read the sources before you
+  encode the branch as config: a slug branch can be stale rather than
+  load-bearing, and then deletion is the whole fix.** The `slug` parameter went
+  with it — a seam that takes no slug cannot grow a slug branch again, which is
+  the cheapest enforcement there is.
+
+  Still deciding a RULE by slug: `duel/shared.tsx` picks the duel tie winner —
+  but so does `backend/services/scoring.py`, so fix both sides or neither.
+  `utils/commentTime.ts` switches per-faction English in code rather than in the
+  catalogue.
 
 The root `CLAUDE.md` holds the routing table and the `Do NOT` list — all of
 which still apply here.
