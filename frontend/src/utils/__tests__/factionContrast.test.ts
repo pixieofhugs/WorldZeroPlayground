@@ -2442,22 +2442,15 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   //       un-composited it would read clear — which is #594's mistake exactly.
   "dark | snide/chrome line on paper": { ratio: 2.77, issue: 2668 },
   //
-  //   (b) THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT.
-  //       S.N.I.D.E.'s `chrome` map (#2631/#2659) moves six roles onto the wall
-  //       family and leaves `accent` inheriting the sheet's
-  //       `--faction-snide-card-accent` — the acid, measured for the near-black
-  //       photocopier SLAB. The wall flips; in light it is #efece3, and the
-  //       acid reads 1.03:1 on it. That is the same shape as the `onFill` pair
-  //       #2659's review caught by eye and #2663 then made unrepresentable in
-  //       the type — a role left behind when its ground moved — and it is the
-  //       first thing this loop found that a human review had not.
-  //
-  //       Filed as #2669. It is almost certainly SATISFIABLE rather than a colour nobody
-  //       has: #2173 already ruled that `--faction-snide-acid` never touches
-  //       paper, and `-wall-credit` (6.28:1 light / 9.22:1 dark) is the rung of
-  //       the same hue the fill already moved to. Choosing it is a design call
-  //       with an owner, so it is filed rather than taken here.
-  "light | snide/chrome accent on paper": { ratio: 1.03, issue: 2669 },
+  //   (b) WAS THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT —
+  //       AND IT IS FIXED, SO ITS LINE IS GONE (#2669). S.N.I.D.E.'s `chrome`
+  //       map moved six roles onto the wall family and left `accent` inheriting
+  //       the sheet's `--faction-snide-card-accent`: the acid, measured for the
+  //       near-black photocopier SLAB, reading 1.03:1 on the light wall. The
+  //       owner took the candidate this loop's own note named — `-wall-credit`,
+  //       the rung of the same hue `fill` already moved to — so the entry was
+  //       DELETED rather than re-measured, which is the only lawful way a line
+  //       leaves this list.
 };
 
 function key(theme: Theme, pair: Pair): string {
