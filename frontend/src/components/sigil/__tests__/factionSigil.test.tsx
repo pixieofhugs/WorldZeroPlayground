@@ -312,3 +312,36 @@ describe("UaMandala primitive (#849)", () => {
     expect(spinning).toContain("--ua-spin-dur");
   });
 });
+
+/**
+ * EVERY ADAPTER THAT CAN TAKE A CALLER'S INK, DOES (#2635).
+ *
+ * `UaSigilAdapter` destructured `{ size }` only, under a comment claiming "the
+ * ensō draws --faction-ua-glow internally; it has no color prop" — and `UaSigil`
+ * has taken one since #908, defaulting to that same glow. So a caller's ink was
+ * accepted by the type, dropped on the floor, and the mark carried on in the
+ * faction's ornament orange. Nothing could see it: the block above compares the
+ * dispatcher against the adapter, and both dropped it identically.
+ *
+ * It surfaced when #2635 painted UA's masthead band in the faction's own hue,
+ * where `--faction-ua-glow` is 1.30:1 — `markColor` is exactly the prop for that
+ * and it reached nothing. The two mounts that pass one (`CardMasthead`'s
+ * `markColor`, the filter facet's `factionCssVar(slug)`) both ask for the same
+ * thing, so the fix is one line at the seam and this is the guard.
+ *
+ * `DefaultSigil` and na's ring are correctly excluded: that mark IS the
+ * unaffiliated conic and has no single colour to override.
+ */
+describe("a sigil adapter never swallows the caller's ink", () => {
+  const INK = "var(--color-text-tertiary)";
+
+  it.each(["ua", "coven", "snide", "ephemerists", "singularity", "everymen", "wow", "albescent"])(
+    "%s paints in the colour it is handed",
+    (slug) => {
+      expect(
+        renderToStaticMarkup(<FactionSigil slug={slug} color={INK} />),
+        `${slug}'s adapter accepts \`color\` and must forward it — a prop that type-checks and does nothing is invisible to every other guard here`,
+      ).toContain(INK);
+    },
+  );
+});
