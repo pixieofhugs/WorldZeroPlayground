@@ -67,6 +67,23 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
           </button>
         )}
 
+        {/* The readout's own comment line. `$` is the prompt the condition is
+            typed at, so the object's name lands as a COMMENT rather than as a
+            second command — the window chrome above already names the faction. */}
+        <span
+          className="font-body block"
+          style={{
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            color: 'var(--faction-singularity-card-muted)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          <span aria-hidden="true">{'// '}</span>
+          {t('detail.seal.kind')}
+        </span>
+
         <span
           className="font-body block"
           style={{

@@ -79,6 +79,21 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           </button>
         )}
 
+        {/* The na sheet's eyebrow register, around the NOUN alone — the band
+            above spells the faction, so this spells the object. */}
+        <span
+          className="font-body block"
+          style={{
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            color: 'var(--faction-default-card-muted)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
+
         <span
           className="font-body block"
           style={{

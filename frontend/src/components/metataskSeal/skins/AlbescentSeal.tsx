@@ -98,6 +98,21 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
           </button>
         )}
 
+        {/* The sheet's quiet eyebrow register, around the NOUN alone. The
+            society's name is the band's; this is what the object is. */}
+        <span
+          className="font-body block"
+          style={{
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            color: 'var(--faction-default-card-muted)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
+
         <span
           className="block"
           style={{

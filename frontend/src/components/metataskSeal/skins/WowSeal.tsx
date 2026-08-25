@@ -91,6 +91,22 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
           </button>
         )}
 
+        {/* The chronicle's running-head hand — the decree face at the 0.14em
+            tracking this kit letters its headings in. */}
+        <span
+          className="block"
+          style={{
+            fontFamily: 'var(--faction-wow-card-font)',
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            color: 'var(--faction-wow-card-accent)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
+
         <span
           className="block"
           style={{

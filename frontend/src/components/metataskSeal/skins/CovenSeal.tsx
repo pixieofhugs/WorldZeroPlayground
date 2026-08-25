@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { CovenBand } from '../../cardMasthead/factionBands'
 import {
   Braid,
+  CAPTION,
   CARD,
   BORDER,
   DEEP,
@@ -111,6 +112,13 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
             <span aria-hidden="true">×</span>
           </button>
         )}
+
+        {/* What the object is. The band above says WHOSE it is; the slip's own
+            small-caps caption voice says what it is, which is the half of the
+            deleted "{{faction}} Metatask" eyebrow a wordmark cannot give back. */}
+        <span className="block" style={{ ...CAPTION, marginBottom: 'var(--space-xs)' }}>
+          {t('detail.seal.kind')}
+        </span>
 
         <span
           className="block"

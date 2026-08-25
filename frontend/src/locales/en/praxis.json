@@ -157,6 +157,7 @@
       "heading": "Metatasks"
     },
     "seal": {
+      "kind": "Metatask",
       "bonus": "+{{points}} PTS",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"

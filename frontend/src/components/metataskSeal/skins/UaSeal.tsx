@@ -73,6 +73,22 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
           </button>
         )}
 
+        {/* The leaf's caption hand — the card face, tracked, in the vermilion
+            the parchment already reserves for a small mark on it. */}
+        <span
+          className="block"
+          style={{
+            fontFamily: 'var(--faction-ua-card-font)',
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            color: 'var(--faction-ua-card-accent)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
+
         <span
           className="block"
           style={{

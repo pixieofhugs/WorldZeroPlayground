@@ -5,6 +5,7 @@ import {
   BAND,
   BRASS,
   BRASS_LIGHT,
+  CAPTION,
   DECO,
   GOLD,
   INK,
@@ -12,6 +13,7 @@ import {
   PLATE,
   READING,
   RULE,
+  SMALL_CAPS,
   WingedDiscSign,
 } from '../../factionMarks/ephemeristsPlate'
 import type { SealSkinProps } from '../types'
@@ -141,6 +143,22 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
             <span aria-hidden="true">×</span>
           </button>
         )}
+
+        {/* The plate's incised small caps, in its measured caption ink. The tab
+            that rode the top edge said WHOSE note this is and the band says that
+            now; this says WHAT it is, which is the other half of the deleted
+            eyebrow and the half no wordmark can carry. */}
+        <span
+          className="block"
+          style={{
+            ...SMALL_CAPS,
+            fontSize: 'var(--text-md)',
+            color: CAPTION,
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
 
         <span
           className="flex items-center"

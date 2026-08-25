@@ -123,6 +123,22 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
           </button>
         )}
 
+        {/* The zine's typewriter caption, in the acid it letters every label
+            in. The band shouts the faction; this says what has been stuck on. */}
+        <span
+          className="block relative"
+          style={{
+            fontFamily: 'var(--faction-snide-font-type)',
+            fontSize: 'var(--text-md)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            color: 'var(--faction-snide-acid)',
+            marginBottom: 'var(--space-xs)',
+          }}
+        >
+          {t('detail.seal.kind')}
+        </span>
+
         <div className="relative" style={{ marginBottom: 'var(--space-sm)' }}>
           <ClippedCondition text={metatask.title} />
         </div>

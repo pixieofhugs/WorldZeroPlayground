@@ -64,6 +64,21 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
         )}
 
         <div className="flex-1" style={{ minWidth: 0 }}>
+          {/* The bill's own eyebrow register, restored around the NOUN alone —
+              the faction's name is the banner's now. */}
+          <span
+            className="font-body block"
+            style={{
+              fontSize: 'var(--text-md)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              color: 'var(--everymen-muted)',
+              marginBottom: 'var(--space-xs)',
+            }}
+          >
+            {t('detail.seal.kind')}
+          </span>
+
           <span
             className="font-body block"
             style={{
