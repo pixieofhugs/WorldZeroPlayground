@@ -5,6 +5,7 @@ import { factionCssVar, factionName } from '../utils/factions'
 import { useAuth } from '../auth/AuthContext'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
+import { JoinConfirm, type JoinControlSkin, type JoinTarget } from './JoinControl'
 
 // The per-faction key path (`<slug>.invitation.*`) is runtime-dynamic, so it
 // isn't one of the compile-time key literals the scoped t() expects. Resolve
@@ -78,7 +79,11 @@ export default function InvitationLetterPopup({
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
   const currentSlug = user?.character?.faction_slug
-  const isSwitch = !!currentSlug && currentSlug !== 'na'
+  // The letter's OWN state, and the only one left here: the open step draws a
+  // second control the trio knows nothing about (see the CTA row below), so the
+  // host has to know which step it is on. Everything past this point — the
+  // switch sentence, the error slot, the pair and its #646 order — is
+  // `JoinConfirm`'s (#2656).
   const [confirming, setConfirming] = useState(false)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
@@ -101,7 +106,7 @@ export default function InvitationLetterPopup({
 
   // The prospectus ENLIST commits the join in place (#493). Joining is one-way
   // (ADR-0019), so ENLIST arms a confirm step before actually joining.
-  async function handleConfirm() {
+  async function join() {
     setJoining(true)
     setJoinError(null)
     try {
@@ -143,6 +148,39 @@ export default function InvitationLetterPopup({
     background: 'transparent',
     color: FAINT,
     cursor: 'pointer',
+  }
+
+  /**
+   * The letter's existing paint, handed to the shared control as a typed skin
+   * (#2656) — the same object literals the buttons above already were. The
+   * letter is not a faction archetype and has no kit; `openStyle` is the ENLIST
+   * the CTA row still draws itself, and the other two are the confirm pair's.
+   */
+  const joinSkin: JoinControlSkin = {
+    openStyle: enlistStyle,
+    confirmStyle: enlistStyle,
+    cancelStyle: dismissStyle,
+    proseStyle: {
+      fontFamily: FONT_BODY,
+      fontSize: 'var(--text-content)',
+      lineHeight: 1.5,
+      color: MUTED,
+      margin: '0 0 var(--space-md)',
+    },
+    errorStyle: {
+      fontFamily: FONT_MONO,
+      fontSize: 'var(--text-content)',
+      color: 'var(--color-danger)',
+      margin: '0 0 var(--space-md)',
+    },
+  }
+
+  /** Five fields on the faction page; the four the trio reads, built here. */
+  const joinTarget: JoinTarget = {
+    currentFactionSlug: currentSlug,
+    join,
+    joining,
+    joinError,
   }
 
   const card = (
@@ -287,14 +325,19 @@ export default function InvitationLetterPopup({
         </ul>
       )}
 
-      {/* CTA row — ENLIST arms a one-way join confirm (#493); dismiss defers. */}
+      {/* CTA row — ENLIST arms a one-way join confirm (#493); dismiss defers.
+          DISMISS IS NOT CANCEL, which is why this row is still the letter's own
+          and only the confirm step is the shared control's: this button closes
+          the letter and leaves the invitation standing, while the cancel one
+          click further in returns to the pitch. Collapsing them would turn
+          "not now" into "never mind" on a letter that survives the dismissal. */}
       {!confirming ? (
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           <button
             type="button"
             autoFocus
             onClick={() => setConfirming(true)}
-            style={enlistStyle}
+            style={joinSkin.openStyle}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
@@ -306,35 +349,17 @@ export default function InvitationLetterPopup({
         </div>
       ) : (
         <div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.5, color: MUTED, margin: '0 0 var(--space-md)' }}>
-            {isSwitch
-              ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug as string) })
-              : t('detail.join.confirm', { faction: name })}
-          </p>
-          {joinError && (
-            <p style={{ fontFamily: FONT_MONO, fontSize: 'var(--text-content)', color: 'var(--color-danger)', margin: '0 0 var(--space-md)' }}>
-              {joinError}
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
-            <button
-              type="button"
-              autoFocus
-              onClick={() => void handleConfirm()}
-              disabled={joining}
-              style={{ ...enlistStyle, cursor: joining ? 'not-allowed' : 'pointer' }}
-            >
-              {t('detail.join.confirmAction')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              disabled={joining}
-              style={dismissStyle}
-            >
-              {t('detail.join.cancel')}
-            </button>
-          </div>
+          {/* `autoFocus` because this step is TALLER than the pitch and both
+              live in the one scrim above: focusing the affirmative is what
+              scrolls it into view on a short viewport (#2130). */}
+          <JoinConfirm
+            membership={joinTarget}
+            name={name}
+            skin={joinSkin}
+            joiningLabel={t('detail.join.joining')}
+            onCancel={() => setConfirming(false)}
+            autoFocus
+          />
         </div>
       )}
     </div>
