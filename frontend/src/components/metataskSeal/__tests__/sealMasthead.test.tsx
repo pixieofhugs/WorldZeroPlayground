@@ -18,6 +18,9 @@
  *      two card kits).
  *   3. no skin draws a faction label of its own any more. Nine hand-drawn
  *      eyebrows is the state this issue deleted; a tenth would be the drift.
+ *   4. every skin still says WHAT THE OBJECT IS. The deleted eyebrow was
+ *      `"{{faction}} Metatask"`, so deleting it took the noun with the name —
+ *      and the band can only give the name back. See the caption block below.
  *
  * SSR-only harness (`renderToStaticMarkup`), and the `MemoryRouter` is not
  * decoration: the band is a `<Link>`, so mounting it drags a router requirement
@@ -31,6 +34,7 @@ import type { ReactElement } from 'react'
 
 import MetataskSeal from '../MetataskSeal'
 import { PraxisBody } from '../../praxisCard/desktop/shared'
+import praxisCopy from '../../../locales/en/praxis.json'
 import { factionName } from '../../../utils/factions'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
@@ -171,6 +175,61 @@ describe('no seal skin draws a faction label of its own (#2648)', () => {
       expect(source, 'the label eyebrow class went with the label').not.toContain(
         'label-heading',
       )
+    })
+  }
+})
+
+/**
+ * EVERY SEAL STILL SAYS WHAT IT IS (owner ruling, 2026-08-25).
+ *
+ * The eyebrow this issue deleted was `praxis:detail.seal.label` —
+ * `"{{faction}} Metatask"` — so a change described as "the faction label" also
+ * deleted the NOUN. The band gives the name back and cannot give back the word:
+ * `CardMasthead` prints a faction's wordmark and nothing else.
+ *
+ * That is a real loss on two of the seal's four hosts. The praxis DETAIL sits
+ * the stack under `detail.metatasks.heading`, and the composer slot says
+ * "+ Add a metatask" — but the praxis CARD and the Tasks-page metatask list
+ * (`pages/Tasks.tsx`, which mounts `MetataskSeal` directly) give the seal no
+ * surrounding heading at all. On a stranger's Ephemerists praxis card, a Coven
+ * band over a condition with no explanatory word reads as "this praxis is
+ * Coven's" — the exact misattribution `SealSkinProps`'s foreign-sticker
+ * contract exists to prevent.
+ *
+ * So the caption is `detail.seal.kind` — THE WORD ALONE, with no `{{faction}}`
+ * to interpolate, because naming the issuer is the band's job now and a seal
+ * that said it twice would be the doubling #2648 removed. This block is the
+ * reason it cannot be deleted quietly a second time: a caption missing from one
+ * skin of nine is precisely what went unnoticed before.
+ */
+describe('every seal captions itself with the word the band cannot say', () => {
+  const KIND = praxisCopy.detail.seal.kind
+
+  it('the key is the noun alone — no faction interpolation', () => {
+    expect(KIND).not.toContain('{{')
+  })
+
+  for (const slug of SLUGS) {
+    it(`${slug}'s seal prints the caption once, and the faction's name once`, () => {
+      const body = text(seal(slug))
+      const captions = body.split(KIND).length - 1
+      expect(captions, `${slug}'s seal prints "${KIND}" ${captions} times`).toBe(1)
+      // The band already spells the issuer. A caption that spelled it again
+      // would be the hand-drawn eyebrow coming back through the noun's door.
+      const name = factionName(slug)
+      expect(body.split(name).length - 1, `${slug}'s seal names its faction twice`).toBe(1)
+    })
+  }
+
+  const skins = readdirSync(SKINS).filter((file) => file.endsWith('.tsx'))
+
+  for (const file of skins) {
+    it(`${file} draws the caption in its own hand`, () => {
+      const source = readFileSync(`${SKINS}/${file}`, 'utf8')
+      expect(
+        source,
+        'each skin letters the caption in its own caption register — a shared tenth treatment is the uniformity the kit exists to refuse',
+      ).toContain('detail.seal.kind')
     })
   }
 })
