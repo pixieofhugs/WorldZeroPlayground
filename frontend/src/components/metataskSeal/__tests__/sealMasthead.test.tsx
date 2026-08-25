@@ -61,10 +61,18 @@ function metatask(slug: string): TaskOut {
     primary_faction_slug: 'na',
     metatask_faction_slug: slug,
     created_at: '2026-01-01T00:00:00Z',
+    in_progress_count: 0,
+    created_by_display_name: '',
+    created_by_avatar_url: '',
+    created_by_faction_slug: null,
+    created_by_level: 0,
+    signup_reason: null,
+    in_progress_praxis_id: null,
     can_sign_up: false,
     allowed_modes: [],
     eligible_for_current_user: false,
-  } as TaskOut
+    start_here: false,
+  }
 }
 
 const render = (node: ReactElement) =>
