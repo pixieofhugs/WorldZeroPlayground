@@ -82,6 +82,30 @@ const NO_ELEMENT = [
 
 const CORE = String.raw`card-bg|card-text|card-muted|card-border|card-accent|on-fill|card-radius|card-font`;
 
+/**
+ * The files carved out of EVERY lane, and what each still owes this faction.
+ *
+ * They dispatch on slug for more than one faction, which is slot ownership — a
+ * column, not a row — and belongs to batches 11+. The check below is the
+ * NON-VACUITY half lane 04 pinned for WOW (#2679): if one of these is newly
+ * empty, a lane has swept a file the five-way parallel build depends on being
+ * disjoint, and every other lane's merge is now sitting on a conflict nobody
+ * declared.
+ *
+ * `FactionSigil` is the FOURTH, and it was not on the issue's list of three: its
+ * per-faction adapters reach the bare hue through `factionCssVar("singularity")`
+ * — the accessor spelling, which is why a literal-only census missed it. Found
+ * by this lane, declined rather than swept, and since added to the carve-out
+ * list for the lanes that remain.
+ * `utils/factions.ts` names no Singularity token at all (it builds every name by
+ * interpolation), so it has nothing to pin and is deliberately absent.
+ */
+const CARVED_OUT: [file: string, owed: RegExp][] = [
+  ["components/vote/VoteShell.tsx", /--faction-singularity-card-/],
+  ["components/cardMasthead/factionBands.tsx", /--faction-singularity-card-font/],
+  ["components/sigil/FactionSigil.tsx", /factionCssVar\(\s*["']singularity["']\s*\)/],
+];
+
 /** `var(--sg-x-role, var(--faction-singularity-…))` — the migrated form. */
 const ROLE_READ = new RegExp(
   String.raw`var\(\s*--[\w-]+\s*,\s*var\(\s*--faction-singularity[\w-]*\s*\)\s*\)`,
@@ -176,5 +200,14 @@ describe("the Singularity kit asks for roles, not for tokens (#2675)", () => {
         `${file} declares no prefix; a role read there would resolve to its fallback forever`,
       ).toEqual([]);
     }
+  });
+
+  it.each(CARVED_OUT)("%s still names this faction directly", (file, owed) => {
+    expect(
+      owed.test(readFileSync(join(SRC_DIR, ...file.split("/")), "utf-8")),
+      `${file} dispatches on slug for MORE than one faction, so its core-role
+reads belong to batches 11+. If this is newly empty, a lane swept a file the
+five-way parallel build depends on being disjoint.`,
+    ).toBe(true);
   });
 });

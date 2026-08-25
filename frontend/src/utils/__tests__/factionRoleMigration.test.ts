@@ -514,7 +514,7 @@ function roleReads(source: string, prefix: string): [FactionRole, string][] {
   });
 }
 
-describe("every migrated site keeps the value it shipped with", () => {
+describe("a faction lane — every migrated site keeps the value it shipped with", () => {
   it.each(SURFACES)(
     "$file declares $prefix once, on the $ground ground",
     ({ file, slug, prefix, ground }) => {
