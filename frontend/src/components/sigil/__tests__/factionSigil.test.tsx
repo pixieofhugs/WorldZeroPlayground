@@ -7,8 +7,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
-import FactionSigil, { DefaultSigilAdapter } from "../FactionSigil";
-import { pickVariant } from "../../../utils/factionDispatch";
+import FactionSigil from "../FactionSigil";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
 import UaMandala from "../../factionMarks/UaMandala";
 
@@ -232,7 +232,7 @@ describe("every sigil the dispatcher draws comes out of the manifest (#2529)", (
   it.each(SLUGS.map((slug) => [String(slug), slug] as const))(
     "%s renders identically through surfaceMap('sigil') alone",
     (_label, slug) => {
-      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      const Variant = resolveVariant(surfaceMap("sigil"), slug);
       for (const size of SIZES) {
         expect(
           renderToStaticMarkup(<FactionSigil slug={slug} size={size} />),
@@ -247,7 +247,7 @@ describe("every sigil the dispatcher draws comes out of the manifest (#2529)", (
     // ramp, so `color` has to survive the map lookup as well as the size does.
     const sampled = "var(--faction-default-rainbow) 40% 0 / 600% 100%";
     for (const slug of SLUGS) {
-      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      const Variant = resolveVariant(surfaceMap("sigil"), slug);
       expect(
         renderToStaticMarkup(<FactionSigil slug={slug} color={sampled} />),
         String(slug),

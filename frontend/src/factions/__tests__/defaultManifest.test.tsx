@@ -22,6 +22,7 @@
  * `archetypeReachability.test.ts` already use for questions the module graph
  * cannot answer.
  */
+import type { ComponentType } from 'react'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -104,8 +105,12 @@ describe('na is a faction in the registry (#2530)', () => {
   it.each(SURFACE_KEYS)(
     'resolves %s to the component the dispatcher used to name',
     (surface) => {
+      // `SurfaceMap<K>` is a union across twenty prop contracts, and
+      // `resolvedArchetype` is generic in one of them — the cast is a widening
+      // for a table that only ever compares identities.
+      const row = surfaceMap(surface)[UNAFFILIATED_FACTION_SLUG] as ComponentType<never>
       expect(
-        resolvedArchetype(surfaceMap(surface)[UNAFFILIATED_FACTION_SLUG]),
+        resolvedArchetype(row),
         `na's \`${surface}\` row resolves to a DIFFERENT component than the one\n` +
           `pickVariant's third argument named before #2530. This migration is\n` +
           `output-neutral: not one pixel may move. Fix the manifest row.`,

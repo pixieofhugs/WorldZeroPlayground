@@ -18,7 +18,7 @@ import FactionSelectCard from "../FactionSelectCard";
 import UaSelectCard from "../UaSelectCard";
 import DefaultSelectCard from "../DefaultSelectCard";
 import { surfaceMap } from "../../../factions";
-import { pickVariant } from "../../../utils/factionDispatch";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions";
 import i18n from "../../../i18n";
@@ -44,7 +44,7 @@ describe("FactionSelectCard fallback", () => {
     const cards = surfaceMap("factionSelectCard");
     expect(cards[UNAFFILIATED_FACTION_SLUG]).toBeUndefined();
     expect(
-      resolvedArchetype(pickVariant(cards, UNAFFILIATED_FACTION_SLUG, DefaultSelectCard)),
+      resolvedArchetype(resolveVariant(cards, UNAFFILIATED_FACTION_SLUG)),
     ).toBe(DefaultSelectCard);
   });
 

@@ -50,9 +50,7 @@ vi.mock('../../hooks/useTheme', () => ({
 }))
 
 import { FACTION_MANIFESTS, surfaceMap } from '../../factions'
-import { pickVariant } from '../../utils/factionDispatch'
-import { DEFAULT_CARD } from '../taskCard/TaskCard'
-import DefaultPraxisCard from '../praxisCard/desktop/DefaultPraxisCard'
+import { resolveVariant } from '../../utils/factionDispatch'
 import type { AdminProps } from '../praxisCard/shared'
 import FeedCardEraAnnouncement from '../feed/FeedCardEraAnnouncement'
 import type { ActivityFeedItem } from '../../api/activityFeed'
@@ -108,7 +106,7 @@ const NO_ADMIN: AdminProps = {
 
 describe.each(SLUGS)('%s task card', (slug) => {
   it('titles itself one level under the page heading', () => {
-    const Card = pickVariant(surfaceMap('taskCard'), slug, DEFAULT_CARD)
+    const Card = resolveVariant(surfaceMap('taskCard'), slug)
     const levels = pageOutline(
       <Card
         task={aTask({ primary_faction_slug: slug })}
@@ -125,7 +123,7 @@ describe.each(SLUGS)('%s task card', (slug) => {
 describe.each(SLUGS)('%s praxis card', (slug) => {
   it('titles itself one level under the page heading', () => {
     const praxis = aPraxisCard({ task_faction_slug: slug })
-    const Card = pickVariant(surfaceMap('praxisCard'), slug, DefaultPraxisCard)
+    const Card = resolveVariant(surfaceMap('praxisCard'), slug)
     const levels = pageOutline(
       <Card praxis={praxis} adminProps={{ ...NO_ADMIN, praxis }} />,
     )

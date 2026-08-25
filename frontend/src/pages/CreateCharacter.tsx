@@ -28,16 +28,14 @@
  * INSIDE `DefaultCreateCharacter` rather than a second file beside it.
  */
 import { useCreateCharacter } from './characterPaths/useCreateCharacter'
-import { pickVariant } from '../utils/factionDispatch'
+import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
-import DefaultCreateCharacter from './characterPaths/archetypes/DefaultCreateCharacter'
 
 export default function CreateCharacter() {
   const state = useCreateCharacter()
-  const Archetype = pickVariant(
+  const Archetype = resolveVariant(
     surfaceMap('createCharacter'),
     state.factionSlug,
-    DefaultCreateCharacter,
   )
   return <Archetype state={state} />
 }

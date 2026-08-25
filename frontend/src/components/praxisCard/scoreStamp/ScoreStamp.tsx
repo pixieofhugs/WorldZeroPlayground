@@ -1,11 +1,10 @@
 import type { ScoredPraxis } from "./scoreBreakdown";
-import { pickVariant } from "../../../utils/factionDispatch";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
 import {
   UNSCORED_MODERATION_STATUSES,
   type ModerationStatus,
 } from "../../../api/praxis";
-import DefaultScoreStamp from "./DefaultScoreStamp";
 
 /**
  * The `scoreStamp` surface dispatcher (ADR-0049).
@@ -94,10 +93,9 @@ export default function ScoreStamp({ praxis, showCrown }: ScoreStampProps) {
    * feed, its banner, and its votes (the #1373 ruling).
    */
   if (UNSCORED_MODERATION_STATUSES.has(praxis.moderation_status)) return null;
-  const Stamp = pickVariant(
+  const Stamp = resolveVariant(
     surfaceMap("scoreStamp"),
     praxis.task_faction_slug,
-    DefaultScoreStamp,
   );
   return <Stamp praxis={praxis} showCrown={showCrown} />;
 }

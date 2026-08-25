@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import { badgeArtFor, UnknownBadgeArt } from "../../components/badges/badgeArt";
 import { reframeLabel } from "../../components/vote/voteReframes";
 import { gateTreatment } from "../../components/vote/VoteShell";
-import { pickVariant } from "../factionDispatch";
+import { pickVariant, resolveSlug, resolveVariant } from "../factionDispatch";
 import { factionCssVar, factionFill, isKnownFaction } from "../factions";
 
 /**
@@ -73,12 +73,16 @@ describe("prototype-chain slugs degrade like any other unknown slug", () => {
     }
   });
 
-  it("pickVariant falls back rather than rendering Object as a component", () => {
+  it("dispatch falls back rather than rendering Object as a component", () => {
     const A = () => null;
-    const Fallback = () => null;
-    const map = { coven: A };
+    const Na = () => null;
+    const map = { coven: A, na: Na };
     for (const slug of PROTOTYPE_KEYS) {
-      expect(pickVariant(map, slug, Fallback), slug).toBe(Fallback);
+      // Both halves of the dispatch API, because #2530 moved the call sites
+      // from one to the other: a `constructor` slug must reach na's row, not
+      // the `Object` function, and must not count as a bespoke registration.
+      expect(resolveSlug(map, slug), slug).toBe("na");
+      expect(resolveVariant(map, slug), slug).toBe(Na);
       expect(pickVariant(map, slug), slug).toBeUndefined();
     }
   });

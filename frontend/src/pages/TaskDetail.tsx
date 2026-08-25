@@ -24,10 +24,9 @@ import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import StartHereMark from "../components/StartHereMark";
 import ConfirmDialog from "../components/confirm/ConfirmDialog";
-import { pickVariant } from "../utils/factionDispatch";
+import { resolveVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useTaskDetail } from "./taskDetail/useTaskDetail";
-import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
 
 
 export default function TaskDetail() {
@@ -64,7 +63,7 @@ export default function TaskDetail() {
     );
 
   const slug = state.task.primary_faction_slug ?? null;
-  const Archetype = pickVariant(surfaceMap('taskDetail'), slug, DefaultTaskDetail);
+  const Archetype = resolveVariant(surfaceMap('taskDetail'), slug);
 
   return (
     <>

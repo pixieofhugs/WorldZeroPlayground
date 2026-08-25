@@ -25,9 +25,8 @@ vi.mock("../../../../hooks/useFormFactor", () => ({
   useFormFactor: () => "desktop",
 }));
 
-import DefaultEditPraxis from "../DefaultEditPraxis";
 import { surfaceMap } from "../../../../factions";
-import { pickVariant } from "../../../../utils/factionDispatch";
+import { resolveVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
 
 const TASK_ID = 7;
@@ -162,7 +161,7 @@ function state(slug: string | null, phase: "composing" | "waiting"): EditPraxisS
 
 function render(slug: string | null, phase: "composing" | "waiting"): string {
   const Archetype = resolvedArchetype(
-    pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+    resolveVariant(surfaceMap("editPraxis"), slug),
   )!;
   return renderToStaticMarkup(
     <MemoryRouter>

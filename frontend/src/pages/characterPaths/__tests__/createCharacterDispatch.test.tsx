@@ -30,7 +30,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
-import { pickVariant } from '../../../utils/factionDispatch'
+import { resolveVariant } from '../../../utils/factionDispatch'
 import { surfaceMap } from '../../../factions'
 import type { CreateCharacterState } from '../useCreateCharacter'
 
@@ -86,7 +86,7 @@ function state(overrides: Partial<CreateCharacterState> = {}): CreateCharacterSt
 }
 
 function archetypeFor(slug: string) {
-  return pickVariant(surfaceMap('createCharacter'), slug, DefaultCreateCharacter)
+  return resolveVariant(surfaceMap('createCharacter'), slug)
 }
 
 describe('the calling being picked chooses the archetype', () => {

@@ -1,5 +1,5 @@
 import type { } from "react";
-import { pickVariant } from "../../utils/factionDispatch";
+import { resolveVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
 import AlbescentSigil from "./AlbescentSigil";
@@ -120,6 +120,6 @@ export function DefaultSigilAdapter({ size }: SigilVariantProps) {
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+  const Variant = resolveVariant(surfaceMap("sigil"), slug);
   return <Variant size={size} color={color} />;
 }

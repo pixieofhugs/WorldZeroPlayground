@@ -3,10 +3,9 @@
 // component directly rather than through `surfaceMap`, so the directory renders
 // every card with no archetype dispatch to ask for the sheet.
 import "../../factionFaces";
-import { pickVariant } from "../../utils/factionDispatch";
+import { resolveVariant } from "../../utils/factionDispatch";
 import { hasOwnKey } from "../../utils/hasOwnKey";
 import { surfaceMap } from "../../factions";
-import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
  * FactionSelectCard — the DISPATCHER for the faction-directory tile, and since
@@ -83,6 +82,6 @@ export default function FactionSelectCard({ faction, ...rest }: FactionSelectCar
   // TaskCard names DefaultTaskCard and MetataskSeal names DefaultSeal.
   // It used to be UaSelectCard, which dressed every unaffiliated and unknown
   // slug in UA's costume (#796, the third instance of #418/#636).
-  const Card = pickVariant(cards, key, DefaultSelectCard);
+  const Card = resolveVariant(cards, key);
   return <Card {...rest} />;
 }

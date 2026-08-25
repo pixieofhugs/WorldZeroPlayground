@@ -29,6 +29,7 @@ import type { FactionManifest, FactionSurface } from './manifest'
 
 import { ALBESCENT_MANIFEST } from './albescent'
 import { COVEN_MANIFEST } from './coven'
+import { DEFAULT_MANIFEST } from './default'
 import { EPHEMERISTS_MANIFEST } from './ephemerists'
 import { EVERYMEN_MANIFEST } from './everymen'
 import { SINGULARITY_MANIFEST } from './singularity'
@@ -41,9 +42,18 @@ export { SURFACE_KEYS } from './manifest'
 
 /**
  * Every faction that ships a manifest, in canonical rainbow order (#352) so any
- * consumer that iterates gets the house order for free. `na` / unaffiliated is a
- * state rather than a faction and deliberately has no manifest: it falls through
- * to the neutral `Default*` skins everywhere (ADR-0039).
+ * consumer that iterates gets the house order for free, with `na` last —
+ * outside the rainbow, the way it is outside `FACTION_RAINBOW_ORDER`.
+ *
+ * `na` HAS A MANIFEST SINCE #2530, and the sentence that used to stand here
+ * ("unaffiliated is a state rather than a faction and deliberately has no
+ * manifest: it falls through to the neutral `Default*` skins everywhere") was
+ * true about the game and false about this file. It is still a state rather than
+ * a faction — `CSS_KEY['na'] === 'default'` and `isKnownFaction('na')` is still
+ * false (ADR-0039, #749) — but "falls through" described a SECOND dispatch
+ * mechanism, `pickVariant`'s third argument, hand-written at ~20 call sites for
+ * this one slug. `./default.ts` is the same twenty components reached the same
+ * way as everyone else's; nothing about what renders changed.
  *
  * `wow` (Warriors of Whimsy) began with no manifest (#784 moved its old pink
  * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gave it its
@@ -64,6 +74,7 @@ export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   SINGULARITY_MANIFEST,
   ALBESCENT_MANIFEST,
   COVEN_MANIFEST,
+  DEFAULT_MANIFEST,
 ]
 
 /** A slug-keyed map of one surface, in the shape `pickVariant` consumes. */

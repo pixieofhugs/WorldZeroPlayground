@@ -10,7 +10,7 @@ import {
 } from '../../api/comments'
 import { useAuth } from '../../auth/AuthContext'
 import FactionAvatar from '../avatar/FactionAvatar'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { factionCssVar, factionFill } from '../../utils/factions'
 import { formatCommentTime } from '../../utils/commentTime'
@@ -265,7 +265,7 @@ function CommentRow({
   onEdited: (updated: CommentOut) => void
   onWithdrawn: (id: number) => void
 }) {
-  const Variant = pickVariant(surfaceMap('comment'), comment.author.faction_slug, DefaultComment)
+  const Variant = resolveVariant(surfaceMap('comment'), comment.author.faction_slug)
   return (
     <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
   )
@@ -280,7 +280,7 @@ function CommentComposer({
 }) {
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const Variant = pickVariant(surfaceMap('comment'), character.faction_slug, DefaultComment)
+  const Variant = resolveVariant(surfaceMap('comment'), character.faction_slug)
   const submit = async () => {
     const body = value.trim()
     if (!body || submitting) return
