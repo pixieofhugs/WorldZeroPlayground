@@ -1,7 +1,11 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName } from '../../../utils/factions'
+import {
+  factionCssVar,
+  factionName,
+} from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import { formatPoints } from '../../../utils/points'
 import { praxisModeLabel } from '../../../utils/praxis'
@@ -112,7 +116,19 @@ export default function DefaultFieldDesk({
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
-    <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+    <div
+      data-skin="default"
+      className="page"
+      style={{
+        // The role map (#2672), pinned to na: this desk stands on the app's own
+        // `--color-bg-*` chrome, which takes no slug, and an ink may not leave a
+        // ground that cannot follow it (#2361, #2669).
+        ...factionRoleVars("na", 'na-field-desk'),
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-lg)',
+      }}
+    >
       {/* ── Identity block ── */}
       <section
         style={{
@@ -324,7 +340,7 @@ export default function DefaultFieldDesk({
           <Link
             to="/tasks"
             className="label-caption"
-            style={{ color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
+            style={{ color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))', textDecoration: 'none' }}
           >
             {t('fieldDesk.home.viewAll')}
           </Link>
@@ -377,7 +393,7 @@ export default function DefaultFieldDesk({
                 <span
                   className="shrink-0 label-caption"
                   style={{
-                    color: 'var(--faction-default-card-muted)',
+                    color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))',
                     padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,

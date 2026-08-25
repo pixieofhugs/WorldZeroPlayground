@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { factionRoleVar } from "../../utils/factionRoles";
 
 /**
  * The spectrum ring — the unaffiliated (`na` ≡ Default) points mark (#2042).
@@ -19,9 +20,19 @@ import type { CSSProperties } from "react";
  * and the gold caption all go, and the rainbow arrives as structure instead — the
  * annulus rather than a fill clipped to four glyphs of type.
  *
+ * A ROOTLESS PIECE TAKES `factionRoleVar`, NOT A PREFIX (#2672, the rule lane
+ * 04 settled). This mark owns no root — it renders inside whatever host mounts
+ * it, and the two hosts sit under two different prefixes — so there is nowhere
+ * to spread `factionRoleVars`, a prefix of its own would be the `--kit-*`
+ * namespace `WORLD_ZERO_STYLE.md:1179` declines, and taking the host's prefix
+ * as a prop would be tree work rather than a paint lane's. Its three core roles
+ * resolve through the map directly, with no fallback arm to keep in step:
+ * `factionRoleVar("na", "ink")` IS `var(--faction-default-card-text)`, computed
+ * rather than transcribed.
+ *
  * THE GROUND IS A PROP, because the mark's disc is the SHEET IT IS MOUNTED ON
  * showing through the annulus rather than a colour of its own. The task card
- * passes nothing and gets `--faction-default-card-bg`; the score stamp passes
+ * passes nothing and gets na's `paper`; the score stamp passes
  * `--faction-default-stamp-bg`, its own plate. That is what makes the pairing
  * travel intact instead of being re-derived per surface — measured on each
  * surface's own ground, in both themes:
@@ -72,7 +83,7 @@ export default function DefaultPointsRing({
   unit,
   size,
   valueSize = "var(--text-heading)",
-  ground = "var(--faction-default-card-bg)",
+  ground = factionRoleVar("na", "paper"),
   style,
 }: DefaultPointsRingProps) {
   return (
@@ -108,7 +119,7 @@ export default function DefaultPointsRing({
             fontFamily: LORA,
             fontWeight: 600,
             fontSize: valueSize,
-            color: "var(--faction-default-card-text)",
+            color: factionRoleVar("na", "ink"),
           }}
         >
           {value}
@@ -119,7 +130,7 @@ export default function DefaultPointsRing({
             fontSize: "var(--text-md)",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "var(--faction-default-card-muted)",
+            color: factionRoleVar("na", "quiet"),
             marginTop: "var(--space-xs)",
           }}
         >

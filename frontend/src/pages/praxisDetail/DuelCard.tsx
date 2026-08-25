@@ -76,6 +76,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../utils/media'
 import { formatPoints } from '../../utils/points'
+import { factionRoleVar } from '../../utils/factionRoles'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
 import type { PraxisDetailState } from './usePraxisDetail'
 
@@ -124,11 +125,28 @@ export interface DuelCardInk {
   plate?: string
 }
 
-/** What the card paints when a skin hands in nothing — the `na` kit, unchanged. */
+/**
+ * What the card paints when a skin hands in nothing — the `na` kit, unchanged.
+ *
+ * A ROOTLESS PIECE TAKES `factionRoleVar`, NOT A PREFIX (#2672, the rule lane
+ * 04 settled). This card renders under nine different hosts and owns no root of
+ * its own, so it has nowhere to spread `factionRoleVars` — and a prefix of its
+ * own would be a namespace standing between the vocabulary and every host,
+ * which IS the `--kit-*` namespace `WORLD_ZERO_STYLE.md:1179` declines. Taking
+ * the host's prefix as a prop would be tree work, not a paint lane's.
+ *
+ * So the three core roles resolve through the map directly. There is no
+ * fallback arm here and nothing to keep in step: `factionRoleVar('na', 'ink')`
+ * IS `var(--faction-default-card-text)`, computed rather than transcribed.
+ *
+ * `line` and `plate` stay named. Neither is a core role — the card's hairline
+ * is `-card-line`, not the `line` role's `-card-border`, and a stamp ground is
+ * not `paper` — so repointing either would be a repaint (decision 07).
+ */
 const DEFAULT_INK: Required<DuelCardInk> = {
-  name: 'var(--faction-default-card-text)',
-  total: 'var(--faction-default-card-text)',
-  muted: 'var(--faction-default-card-muted)',
+  name: factionRoleVar('na', 'ink'),
+  total: factionRoleVar('na', 'ink'),
+  muted: factionRoleVar('na', 'quiet'),
   line: 'var(--faction-default-card-line)',
   plate: 'var(--faction-default-stamp-bg)',
 }

@@ -9,6 +9,7 @@ import {
   type FactionGround,
   type FactionRole,
 } from "../factionRoles";
+import { factionCssVar } from "../factions";
 import { stripComments } from "./cssVars";
 
 /**
@@ -74,12 +75,7 @@ interface Surface {
 }
 
 /**
- * EVERY LANE'S CONTACT SHEET, in the one place a machine can read it.
- *
- * A lane appends its own block here rather than opening a second table: the
- * "a prefix may not be shared" check below is only true ACROSS lanes if one
- * array holds all of them, and two half-tables would each be green while
- * disagreeing with each other.
+ * The lanes' contact sheets, in the one place a machine can read it.
  *
  * S.N.I.D.E. owns the repo's only ground override (`chrome.snide`), so its
  * ground is a real choice here rather than a formality. Every surface below is
@@ -483,42 +479,167 @@ const SURFACES: Surface[] = [
     ground: "sheet",
     sites: 1,
   },
+];
 
-  /*
-   * LANE 03 - UA (#2673). Sixteen surfaces with a root of their own.
-   *
-   * THE PREFIX IS DERIVED, NOT INVENTED: a faction stem, then the surface's own
-   * key in `factions/manifest.ts::SURFACE_KEYS`, kebab-cased. The stem is what
-   * keeps five lanes from each claiming `--task-card-paper` for a different
-   * task card; the key half makes the sixteen names reviewable against a list
-   * that already exists rather than being sixteen judgement calls, and makes
-   * "no two surfaces share a prefix" true by construction, since the keys are
-   * unique and a surface never nests inside itself.
-   *
-   * THE STEM IS `leaf`, NOT THE SLUG, AND THAT IS FORCED. `--ua-*` is UA's
-   * RETIRED legacy family: `__tests__/uaDesktopSkin.test.tsx` renders eight
-   * surfaces and asserts `not.toMatch(/var\(--ua-[a-z]/)` on each, so
-   * `--ua-task-card-ink` fails a guard that exists to catch exactly the
-   * spelling it wears. Widening that guard to exempt role suffixes would trade
-   * a live check for a naming convenience. `leaf` is the noun this repo already
-   * uses for UA's kit — the vellum leaf, the leaf's band, the leaf's register,
-   * the "ua leaf darkest stop" rows in `factionContrast` — so it names UA and
-   * nothing else, and it is free in both the `--faction-*` and `--ua-*`
-   * namespaces.
-   *
-   * Every one is `sheet`. UA declares no ground override, and none of these is
-   * app furniture - the rail is, and it is not in this lane.
-   *
-   * Three more UA files moved onto the vocabulary and are deliberately NOT rows
-   * here, because they own no element to declare a prefix on:
-   * `characterProfile/archetypes/UaProfileBody.tsx` (a dress object handed to
-   * `ProfileSkin`), `avatar/UaAvatar.tsx` (props handed to `BadgedAvatar`) and
-   * `factionMarks/uaAtoms.tsx` (constants mounted inside a dozen different
-   * surfaces, each with its own prefix - an atom that read one surface's prefix
-   * would hard-wire that namespace into the other eleven). They take the
-   * SINGULAR `factionRoleVar`, which needs no prefix and returns the same
-   * `var()` reference each site already held.
-   */
+/**
+ * Lane 02's contact sheet - na/Default (#2672), the widest lane and the one the
+ * other eight override.
+ *
+ * EVERY ROW'S SLUG IS `na`, AND THAT IS THE RULING, NOT A CONVENIENCE. These
+ * archetypes are dispatched for `na`, for `albescent`, and for any slug without
+ * a row of its own - but each of them stands on a ground that takes NO slug:
+ * `factionSpectrumSheet()`, `factionSheet()`, `--faction-default-stamp-bg`,
+ * `.na-backdrop`. "The ground moves with the ink or neither moves" (#2361), and
+ * #2669 is what the other choice costs - an accent left on a wall it no longer
+ * matched, 1.03:1. `DefaultSelectCard`'s docblock says the same from the copy
+ * side: `slug` picks the words and the mark and never a colour, or an
+ * unregistered slug lands in a borrowed livery (#796 / #418 / #636).
+ *
+ * So `factionRoleVars("na", ...)` returns `{}` at every one of these roots, and
+ * pixel identity for this lane is UNCONDITIONAL rather than contingent on the
+ * manifest staying saturated. What the prefix buys is not a live theme, it is a
+ * NAME: a host dresses one surface by it instead of redeclaring
+ * `--faction-default-card-text` and repainting every na descendant in its
+ * subtree, which `SingularityPraxisDetail` does today.
+ */
+const LANE_02: Surface[] = [
+  {
+    file: "components/taskCard/DefaultTaskCard.tsx",
+    slug: "na",
+    prefix: "na-task-card",
+    ground: "sheet",
+    sites: 8,
+  },
+  {
+    file: "components/praxisCard/desktop/DefaultPraxisCard.tsx",
+    slug: "na",
+    prefix: "na-praxis-card",
+    ground: "sheet",
+    // Four of the seven are `PraxisBody` PROPS - `tint` / `muted` / `paper` /
+    // `fonts.display` - plain strings resolved inside this root's subtree, so a
+    // role read reaches them exactly as a token read did.
+    sites: 7,
+  },
+  {
+    file: "components/praxisCard/scoreStamp/DefaultScoreStamp.tsx",
+    slug: "na",
+    prefix: "na-score-stamp",
+    ground: "sheet",
+    // Three roles, four reads. `--faction-default-stamp-bg` and `-card-line`
+    // are deliberately NOT migrated: the stamp has a ground of its own, and its
+    // hairline is `-card-line`, which is not the `line` role's `-card-border`.
+    sites: 4,
+  },
+  {
+    file: "components/selectCard/DefaultSelectCard.tsx",
+    slug: "na",
+    prefix: "na-select-card",
+    ground: "sheet",
+    sites: 7,
+  },
+  {
+    file: "components/avatar/DefaultAvatar.tsx",
+    slug: "na",
+    prefix: "na-avatar",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/metataskSeal/skins/DefaultSeal.tsx",
+    slug: "na",
+    prefix: "na-seal",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
+    slug: "na",
+    prefix: "na-task-detail",
+    ground: "sheet",
+    sites: 4,
+  },
+  {
+    file: "pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx",
+    slug: "na",
+    prefix: "na-praxis-detail",
+    ground: "sheet",
+    // The spread is on the outermost `.py-8` box rather than on the sheet, so
+    // the module-scope helpers above the component - the byline avatar, the
+    // rail panel chrome - resolve wherever the page mounts them.
+    sites: 14,
+  },
+  {
+    file: "pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
+    slug: "na",
+    prefix: "na-edit-praxis",
+    ground: "sheet",
+    // Three consts, three reads. The spread rides `dress.pageStyle`, the one
+    // style BOTH stages mount - the composer page and `PraxisWaitingSurface`.
+    sites: 3,
+  },
+  {
+    file: "pages/characterProfile/archetypes/DefaultProfileBody.tsx",
+    slug: "na",
+    prefix: "na-profile-body",
+    ground: "sheet",
+    // Hoisted to a module const, because this file has TWO roots - the desktop
+    // column and the `mobile-profile` one - and a prefix declared on one would
+    // leave the other reading names nothing set.
+    sites: 2,
+  },
+  {
+    file: "pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
+    slug: "na",
+    prefix: "na-field-desk",
+    ground: "sheet",
+    sites: 2,
+  },
+  {
+    file: "components/metataskSeal/sealBands.tsx",
+    slug: "na",
+    prefix: "na-band",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "components/metataskSeal/sealBands.tsx",
+    slug: "albescent",
+    prefix: "alb-band",
+    ground: "sheet",
+    // The two bands in this file are two SURFACES, so they take two prefixes
+    // rather than sharing one. `resolveCssKey` sends `albescent` to `default`,
+    // so this row's expected fallbacks are byte-identical to the `band` row -
+    // which is the whole of #783 / ADR-0048, and why batch 07 is a control
+    // rather than a lane. `sealBands.tsx` is in lane 02; the five `Albescent*`
+    // files are not.
+    sites: 3,
+  },
+];
+
+/**
+ * How many roots a file spreads on: one, except where a file holds more than
+ * one surface. Recorded rather than inferred, so a second unintended spread
+ * cannot arrive quietly in a file that legitimately has two.
+ */
+const ROOTS_PER_FILE = new Map<string, number>([
+  ["components/metataskSeal/sealBands.tsx", 2],
+]);
+
+/**
+ * Every migrated surface, both lanes. A lane appends its own table above and
+ * adds it here; the assertions below never learn a lane's name.
+ */
+
+/**
+ * Lane 03 - UA (#2673). Sixteen surfaces, all `sheet`.
+ *
+ * The prefix stem is `leaf`, NOT `ua`: `--ua-*` is UA's RETIRED legacy family
+ * and `__tests__/uaDesktopSkin.test.tsx` asserts `not.toMatch(/var\(--ua-[a-z]/)`
+ * across eight surfaces. Widening that guard to exempt role suffixes would have
+ * traded a live check for a naming convenience. Generalises: the slug is not
+ * always available as a prefix stem.
+ */
+const LANE_03: Surface[] = [
   {
     file: "components/taskCard/UaTaskCard.tsx",
     slug: "ua",
@@ -635,9 +756,28 @@ const SURFACES: Surface[] = [
     ground: "sheet",
     sites: 19,
   },
-
-
 ];
+
+const MIGRATED: Surface[] = [...SURFACES, ...LANE_02, ...LANE_03];
+
+/**
+ * A slug's TOKEN FAMILY, resolved rather than assumed.
+ *
+ * The straggler sweep hunts `var(--faction-<family>-…)`, and for six of the
+ * nine slugs the family IS the slug. For `na` and `albescent` it is not:
+ * `resolveCssKey` sends both to `default` (ADR-0039, #783). Spelling the slug
+ * into that pattern would have hunted `--faction-na-card-bg`, a token that has
+ * never existed — so the sweep would have found nothing and reported lane 02's
+ * thirteen surfaces CLEAN whatever they said. A guard that silently narrows is
+ * worse than one that fails, so the family comes out of the resolver.
+ */
+function familyOf(slug: string): string {
+  const match = /^var\(--faction-([\w-]+)\)$/.exec(factionCssVar(slug));
+  if (match === null) {
+    throw new Error(`factionCssVar(${slug}) is not a bare family reference`);
+  }
+  return match[1];
+}
 
 /**
  * `stripComments` is the CSS stripper, so it takes `/* … *​/` and leaves `//`.
@@ -673,9 +813,9 @@ function roleReads(source: string, prefix: string): [FactionRole, string][] {
   });
 }
 
-describe("every migrated site keeps the value it shipped with", () => {
-  it.each(SURFACES)(
-    "$file declares $prefix once, on the $ground ground",
+describe("a faction lane — every migrated site keeps the value it shipped with", () => {
+  it.each(MIGRATED)(
+    "$file declares $prefix on the $ground ground",
     ({ file, slug, prefix, ground }) => {
       const source = readSource(file);
       const declarations = [
@@ -684,14 +824,24 @@ describe("every migrated site keeps the value it shipped with", () => {
         ),
       ];
 
+      // One root per surface, except where a file holds more than one — the
+      // two seal bands. `ROOTS_PER_FILE` records that, so a file with two
+      // surfaces still cannot grow a third spread unnoticed.
+      const roots = ROOTS_PER_FILE.get(file) ?? 1;
       expect(
-        declarations.map((match) => [match[1], match[2], match[3] ?? "sheet"]),
+        declarations.length,
+        `${file} spreads factionRoleVars ${declarations.length} time(s); its surfaces need ${roots}`,
+      ).toBe(roots);
+      expect(
+        declarations
+          .map((match) => [match[1], match[2], match[3] ?? "sheet"])
+          .filter((row) => row[1] === prefix),
         "the root spreads its own prefix, exactly once",
       ).toEqual([[slug, prefix, ground]]);
     },
   );
 
-  it.each(SURFACES)(
+  it.each(MIGRATED)(
     "$file: every $prefix read falls back to the token its role resolves to",
     ({ file, slug, prefix, ground, sites }) => {
       const reads = roleReads(readSource(file), prefix);
@@ -709,29 +859,51 @@ describe("every migrated site keeps the value it shipped with", () => {
   );
 
   it("gives every surface a prefix of its own (#2659 — a prefix may not be shared)", () => {
-    const prefixes = SURFACES.map((surface) => surface.prefix);
+    const prefixes = MIGRATED.map((surface) => surface.prefix);
     expect(new Set(prefixes).size).toBe(prefixes.length);
   });
 
   it("leaves no core-role token named directly in a migrated file", () => {
     const CORE = String.raw`card-bg|card-text|card-muted|card-border|card-accent|on-fill|card-radius|card-font`;
-    const stragglers = SURFACES.flatMap(({ file, slug, prefix }) => {
+    const stragglers = MIGRATED.flatMap(({ file, slug }) => {
       const source = readSource(file);
-      // A bare read is any `--faction-<slug>[-<core suffix>]` NOT sitting in the
-      // fallback arm of one of this surface's own role reads. Blanking the
+      // A bare read is any `--faction-<family>[-<core suffix>]` NOT sitting in
+      // the fallback arm of a role read this FILE writes. Blanking the
       // fallbacks first is what makes "not preceded by" expressible without a
       // lookbehind whose width varies with the role name.
-      const withoutFallbacks = source.replace(
-        new RegExp(String.raw`var\(\s*--${prefix}-[\w-]+\s*,\s*var\(\s*--[\w-]+\s*\)\s*\)`, "g"),
-        "",
+      //
+      // Every prefix the file declares, not just this row's: `sealBands.tsx`
+      // holds two surfaces, and blanking one band's fallbacks left the other's
+      // looking like six bare reads. A file is swept once per surface, so the
+      // sweep has to know about all of them.
+      const withoutFallbacks = MIGRATED.filter(
+        (surface) => surface.file === file,
+      ).reduce(
+        (text, surface) =>
+          text.replace(
+            new RegExp(
+              String.raw`var\(\s*--${surface.prefix}-[\w-]+\s*,\s*var\(\s*--[\w-]+\s*\)\s*\)`,
+              "g",
+            ),
+            "",
+          ),
+        source,
       );
+      // The token half hunts the FAMILY (`default` for na and albescent), the
+      // helper half hunts every SPELLING that reaches it — a source may write
+      // `factionCssVar("na", …)` or `factionCssVar("default", …)` and both
+      // resolve to the same property. #2676 found the helper form uncounted in
+      // its own census; #2672's scope has none of it, and this is what keeps
+      // that true rather than merely observed once.
+      const family = familyOf(slug);
+      const spellings = [...new Set([slug, family])].join("|");
       const bare = [
         ...withoutFallbacks.matchAll(
-          new RegExp(String.raw`var\(\s*--faction-${slug}(?:-(?:${CORE}))?\s*\)`, "g"),
+          new RegExp(String.raw`var\(\s*--faction-${family}(?:-(?:${CORE}))?\s*\)`, "g"),
         ),
         ...withoutFallbacks.matchAll(
           new RegExp(
-            String.raw`factionCssVar\(\s*["'\`]${slug}["'\`]\s*(?:,\s*["'\`](?:${CORE})["'\`]\s*)?\)`,
+            String.raw`factionCssVar\(\s*["'\`](?:${spellings})["'\`]\s*(?:,\s*["'\`](?:${CORE})["'\`]\s*)?\)`,
             "g",
           ),
         ),
