@@ -20,6 +20,7 @@ import {
   factionCssVar,
   factionName,
   isFactionHiddenFromChoosers,
+  isKnownFaction,
   sortFactionsByRainbowOrder,
   UNAFFILIATED_FACTION_SLUG,
 } from '../../../utils/factions'
@@ -98,11 +99,25 @@ export function factionFacet(
     })),
     selected,
     onChange,
+    // A SOLID ONLY FOR A SLUG THAT OWNS ONE (#2528). This facet is the only
+    // sigil mount in the tree that passes a `color`, and it exists so a themed
+    // faction's mark reads as that faction at the trigger's 13px — #2635 is
+    // where that stopped being aspirational for UA. But `na` and `albescent`
+    // both resolve to CSS_KEY `default`, and `--faction-default` is a flat grey:
+    // handing it to them painted over the very spectrum they own — the
+    // unaffiliated rainbow (ADR-0039) and the labyrinth's deliberate lack of any
+    // livery of its own (#783) — so beside seven coloured marks they read as
+    // absent, which is the report. Unthemed means NO ink, and the mark falls
+    // through to its own default like every other mount in the app already does.
+    //
+    // `isKnownFaction` and not a two-name check: it tests the MAPPED value, so
+    // an unregistered slug — a deep-linked `?factions=whatever` — is unthemed by
+    // the same rule rather than inked grey by omission.
     renderOrnament: (slug, place) => (
       <FactionSigil
         slug={slug}
         size={SIGIL_SIZE[place]}
-        color={factionCssVar(slug)}
+        color={isKnownFaction(slug) ? factionCssVar(slug) : undefined}
       />
     ),
   }
