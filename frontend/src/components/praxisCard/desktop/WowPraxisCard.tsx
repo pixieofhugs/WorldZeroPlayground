@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { WowBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
@@ -50,12 +51,20 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
     <div
       style={{
         ...frameBase,
+        // THE ROLE MAP (#2674). `--wow-praxis-card-*` is declared here, on the
+        // chronicle's own sheet, and read nowhere else: the prefix belongs to
+        // this SURFACE, not to the app. Every read below carries today's token
+        // as its fallback, which is what leaves `WowBand` — the shared
+        // cross-faction masthead, carved out of every lane — untouched inside
+        // this root, and the shared `PraxisBody` it hands values to unaware
+        // that anything moved.
+        ...factionRoleVars("wow", "wow-praxis-card"),
         // The chronicle parchment's shape, said once (#2361/#2403).
-        borderRadius: "var(--faction-wow-card-radius)",
+        borderRadius: "var(--wow-praxis-card-radius, var(--faction-wow-card-radius))",
         position: "relative",
         overflow: "hidden",
         background: "var(--faction-wow-chronicle-bg)",
-        color: "var(--faction-wow-card-text)",
+        color: "var(--wow-praxis-card-ink, var(--faction-wow-card-text))",
         border: "2px solid var(--faction-wow-chronicle-border)",
         boxShadow: "0 6px 22px -10px var(--faction-wow-chronicle-shadow)",
         fontFamily: "var(--faction-wow-body-font)",
@@ -76,7 +85,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         style={{
           height: 6,
           background:
-            "repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 11px, var(--faction-wow-card-accent) 11px 22px)",
+            "repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 11px, var(--wow-praxis-card-accent, var(--faction-wow-card-accent)) 11px 22px)",
         }}
       />
       <div style={{ padding: "var(--space-xl)" }}>
@@ -84,17 +93,17 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         <PraxisBody
           praxis={praxis}
           tint="var(--faction-wow-chronicle-gold)"
-          muted="var(--faction-wow-card-muted)"
+          muted="var(--wow-praxis-card-quiet, var(--faction-wow-card-muted))"
           paper="var(--faction-wow-chronicle-bg)"
           titleStyle={{
-            fontFamily: "var(--faction-wow-card-font)",
-            color: "var(--faction-wow-card-text)",
+            fontFamily: "var(--wow-praxis-card-face, var(--faction-wow-card-font))",
+            color: "var(--wow-praxis-card-ink, var(--faction-wow-card-text))",
           }}
           showCrown={showCrown}
           // MedievalSharp illuminates, Lora reads — the chronicle's own pair,
           // matching the WOW mobile card (#888).
           fonts={{
-            display: "var(--faction-wow-card-font)",
+            display: "var(--wow-praxis-card-face, var(--faction-wow-card-font))",
             body: "var(--faction-wow-body-font)",
           }}
           mediaEmptyStyle={{
@@ -102,7 +111,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             borderRadius: 6,
             border: "2px dashed var(--faction-wow-chronicle-gold)",
             background: "transparent",
-            color: "var(--faction-wow-card-muted)",
+            color: "var(--wow-praxis-card-quiet, var(--faction-wow-card-muted))",
             textTransform: "none",
             letterSpacing: "0.06em",
             fontSize: "var(--text-content)",
@@ -116,7 +125,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
                   fontFamily: "var(--faction-wow-body-font)",
                   fontStyle: "italic",
                   fontSize: "var(--text-content)",
-                  color: "var(--faction-wow-card-muted)",
+                  color: "var(--wow-praxis-card-quiet, var(--faction-wow-card-muted))",
                   marginTop: "var(--space-sm)",
                 }}
               >
