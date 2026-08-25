@@ -106,7 +106,8 @@ import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
-import { factionSheet } from '../../../utils/factions'
+import { factionSheet, UNAFFILIATED_FACTION_SLUG } from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import {
   bylineFaces,
@@ -192,9 +193,9 @@ function MemberDisc({
             width: '100%',
             height: '100%',
             borderRadius: '50%',
-            background: 'var(--faction-default-card-bg)',
+            background: 'var(--praxis-detail-paper, var(--faction-default-card-bg))',
             fontSize: 'var(--text-lg)',
-            color: 'var(--faction-default-card-text)',
+            color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
           }}
         >
           {initials(name)}
@@ -267,7 +268,7 @@ export default function DefaultPraxisDetail({
     border: '1px solid var(--faction-default-card-line)',
     borderRadius: 12,
     background: 'var(--faction-default-stamp-bg)',
-    color: 'var(--faction-default-card-text)',
+    color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
     padding: 'var(--space-lg)',
   }
 
@@ -351,11 +352,11 @@ export default function DefaultPraxisDetail({
             linkClassName="font-display italic"
             linkStyle={{
               fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
-              color: 'var(--faction-default-card-text)',
+              color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
               textDecoration: 'none',
             }}
           />
-          <div className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
+          <div className="label-caption" style={{ color: 'var(--praxis-detail-quiet, var(--faction-default-card-muted))' }}>
             {t('detail.filed', {
               date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
             })}
@@ -370,7 +371,7 @@ export default function DefaultPraxisDetail({
           fontSize: desktop ? 'var(--text-display)' : 'var(--text-heading)',
           lineHeight: 1.08,
           margin: '0 0 var(--space-md)',
-          color: 'var(--faction-default-card-text)',
+          color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
           overflowWrap: 'anywhere',
         }}
       >
@@ -392,17 +393,17 @@ export default function DefaultPraxisDetail({
           marginBottom: 'var(--space-xl)',
         }}
       >
-        <span className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ color: 'var(--praxis-detail-quiet, var(--faction-default-card-muted))' }}>
           {t('detail.taskRef.label')}
         </span>
         <Link
           to={`/tasks/${praxis.task_id}`}
           className="font-display italic content-text"
-          style={{ color: 'var(--faction-default-card-text)', textDecoration: 'none' }}
+          style={{ color: 'var(--praxis-detail-ink, var(--faction-default-card-text))', textDecoration: 'none' }}
         >
           {praxis.task_title}
         </Link>
-        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--praxis-detail-quiet, var(--faction-default-card-muted))' }}>
           {taskRefMeta(praxis, t)}
         </span>
       </div>
@@ -464,7 +465,7 @@ export default function DefaultPraxisDetail({
       {sectionHead(t('detail.vote.heading'))}
       <p
         className="font-display italic content-text"
-        style={{ margin: '0 0 var(--space-md)', color: 'var(--faction-default-card-muted)' }}
+        style={{ margin: '0 0 var(--space-md)', color: 'var(--praxis-detail-quiet, var(--faction-default-card-muted))' }}
       >
         {t('detail.vote.prompt')}
       </p>
@@ -501,7 +502,7 @@ export default function DefaultPraxisDetail({
     <section style={panel}>
       {sectionHead(
         t('detail.voters.heading'),
-        <span className="label-caption" style={{ color: 'var(--faction-default-card-muted)' }}>
+        <span className="label-caption" style={{ color: 'var(--praxis-detail-quiet, var(--faction-default-card-muted))' }}>
           {t('detail.voters.count', { count: voters.length })}
         </span>,
       )}
@@ -521,7 +522,7 @@ export default function DefaultPraxisDetail({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 fontSize: 'var(--text-content)',
-                color: 'var(--faction-default-card-text)',
+                color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
                 textDecoration: 'none',
               }}
             >
@@ -597,7 +598,7 @@ export default function DefaultPraxisDetail({
       <MarkdownPreview
         source={praxis.body_text}
         className="font-body markdown-preview content-text"
-        style={{ lineHeight: 1.85, color: 'var(--faction-default-card-text)' }}
+        style={{ lineHeight: 1.85, color: 'var(--praxis-detail-ink, var(--faction-default-card-text))' }}
       />
     </section>
   )
@@ -631,7 +632,18 @@ export default function DefaultPraxisDetail({
   )
 
   return (
-    <div className="py-8" style={{ position: 'relative' }}>
+    <div
+      className="py-8"
+      style={{
+        // The role map (#2672) on the outermost box, so the module-scope helper
+        // components above (the byline avatar, the panel chrome) resolve under
+        // it wherever the page mounts them. Pinned to na: the surface is
+        // `factionSheet()`, which takes no slug, and an ink may not leave a
+        // ground that cannot follow (#2361, #2669).
+        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'praxis-detail'),
+        position: 'relative',
+      }}
+    >
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail at every width - see components/nav/Breadcrumb. */}
       <Breadcrumb
@@ -649,7 +661,7 @@ export default function DefaultPraxisDetail({
           // COLUMN rather than the viewport — the site background must still
           // show around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
           ...factionSheet(),
-          color: 'var(--faction-default-card-text)',
+          color: 'var(--praxis-detail-ink, var(--faction-default-card-text))',
           border: '1px solid var(--faction-default-border)',
           borderRadius: 18,
           padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',

@@ -90,7 +90,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
-import { factionSpectrumSheet } from "../../../utils/factions";
+import {
+  factionSpectrumSheet,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
@@ -159,14 +163,14 @@ interface Props {
  * light/dark through the cascade. Named for the ROLE each plays in the design's
  * skin row rather than for its colour — `ink` is the design's `ink` and its
  * `accent`, which are the same value in both themes. */
-const SHEET = "var(--faction-default-card-bg)";
+const SHEET = "var(--edit-praxis-paper, var(--faction-default-card-bg))";
 /* The error banner's ink (#1231). The banner sits straight on the sheet, and
  * the neutral `--color-danger` under its own veil misses AA there in light
  * (4.41:1 on this ground); this is #1449's alarm rung, already measured
  * on paper. The veil and the edge stay neutral — ADR-0061. */
 const ALARM = "var(--faction-default-card-alarm)";
 const FIELD = "var(--faction-default-composer-field)";
-const INK = "var(--faction-default-card-text)";
+const INK = "var(--edit-praxis-ink, var(--faction-default-card-text))";
 /* THE TIER SPLIT ON THIS SHEET IS BY GROUND, NOT BY LOUDNESS (#2485).
  *
  * `ground` below washes the seven-stop aurora under the whole content column,
@@ -187,7 +191,7 @@ const INK = "var(--faction-default-card-text)";
  * Nothing INSIDE the textarea was ever at risk — the field is opaque, so a
  * player's own words never met the wash. It is the labels, the hints and the
  * quiet buttons around it that paid. */
-const MUTED = "var(--faction-default-card-muted)";
+const MUTED = "var(--edit-praxis-quiet, var(--faction-default-card-muted))";
 const FAINT = "var(--faction-default-composer-faint)";
 const BORDER = "var(--faction-default-border)";
 const HAIR = "var(--faction-default-composer-hair)";
@@ -283,7 +287,17 @@ const slip = {
 export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   accent: INK,
   alarm: ALARM,
-  pageStyle: { fontFamily: TITLE_FACE, color: INK },
+  /* The role map (#2672) rides `pageStyle`, which is the one style BOTH stages
+     mount — the composer page and the waiting surface — so the three consts
+     above resolve on either. Pinned to na: `ground` washes the aurora under
+     everything here and takes no slug, and an ink may not leave a ground that
+     cannot follow (#2361, #2669). `{}` today; the prefix is the name a dresser
+     reaches this surface by. */
+  pageStyle: {
+    ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "edit-praxis"),
+    fontFamily: TITLE_FACE,
+    color: INK,
+  },
   sheetStyle,
   /* No `masthead` since #2520 — the slot is optional, and na's band is the
      sheet's own spectrum frame now. */

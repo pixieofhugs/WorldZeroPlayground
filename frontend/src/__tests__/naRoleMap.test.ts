@@ -35,25 +35,36 @@ import {
  * the Default kit (ADR-0039) — so one expected value per role covers all of
  * them, and it is computed from the resolver rather than transcribed.
  *
- * WHY THE SPREAD IS A NO-OP TODAY, WHICH IS THE SECOND HALF OF THE GATE. Every
- * surface below is a `Default*` archetype reached through the manifest, and the
- * manifest is 180/180 saturated (`factions/defaultManifest.test.tsx`): a slug
- * with a theme has its own row, so a `Default*` archetype is only ever
- * dispatched at `na`, `albescent`, `null` or an unregistered string — and
- * `isKnownFaction` is false for all four, so `factionRoleVars` returns `{}`
- * and every read below falls through to the fallback this file pins. That is
- * why batch 07 (Albescent, the control) must be an empty diff.
+ * WHY THE SPREAD IS A NO-OP, WHICH IS THE SECOND HALF OF THE GATE. Every
+ * surface below spreads `factionRoleVars(UNAFFILIATED_FACTION_SLUG, …)`, not a
+ * subject's slug, and `isKnownFaction('na')` is false — so the resolver returns
+ * `{}`, nothing is declared, and every read IS its fallback. Pixel identity is
+ * therefore unconditional rather than contingent on the manifest staying
+ * 180/180 saturated.
+ *
+ * THE SLUG IS PINNED BECAUSE THE GROUND IS. Each of these archetypes stands on
+ * `factionSpectrumSheet()` / `factionSheet()` / `--faction-default-stamp-bg` /
+ * `.na-backdrop` — grounds that take no slug and cannot follow one. "The ground
+ * moves with the ink or neither moves" (#2361), and #2669 is the price of
+ * getting it wrong: an accent left on a wall it no longer matched, 1.03:1.
+ * `DefaultSelectCard`'s own docblock says the same from the copy side — `slug`
+ * picks the words and the mark and never a colour, or an unregistered slug
+ * lands in a borrowed livery (#796 / #418 / #636). What the prefix buys is not
+ * a live theme; it is a NAME a host can dress one surface by, instead of
+ * redeclaring `--faction-default-card-text` and repainting every na descendant
+ * in its subtree — which `SingularityPraxisDetail` does today.
  *
  * WHAT IS DELIBERATELY NOT IN THE TABLE. A surface that draws na's tokens as
  * the PLATFORM's neutral for every viewer — `EditCharacter` ("themed in the
  * spectrum default skin for EVERYONE, regardless of the character's faction",
- * #434), the onboarding cards, `MetataskPicker`, `CharacterSwitcherSheet`,
- * `StartHereMark`, the desktop `FieldDesk` — has no faction to ask. A prefix
- * there would be a name nothing can ever declare and a read nothing can ever
- * answer. Travelling pieces (`DefaultPointsRing`, `DuelCard`) take their paint
+ * #434), the onboarding cards, `MetataskPicker`, `MetataskSeal`,
+ * `CharacterSwitcherSheet`, `StartHereMark`, the desktop `FieldDesk`,
+ * `proposeTask/factionSurfaces.ts` — is not a faction archetype and has no
+ * lane. Travelling pieces (`DefaultPointsRing`, `DuelCard`) take their paint
  * through props already, which is the same statement from the other side: a
- * piece that moves between hosts cannot name its host's prefix. Those belong
- * to the surface batches (11+), where "who dresses this?" is the question.
+ * piece that moves between hosts cannot name its host's prefix. Both groups
+ * belong to the surface batches (11+), where "who dresses this?" is the
+ * question being asked.
  */
 
 const SRC = join(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -131,10 +142,10 @@ describe("na/Default reads the role map without moving a pixel (#2672)", () => {
       (sum, { code, prefix }) => sum + roleReads(code, prefix).length,
       0,
     );
-    // 12 surfaces, ~85 core-role sites. A table that stopped matching — a file
-    // renamed, a prefix changed — would otherwise pass this whole suite by
-    // scanning nothing.
-    expect(total).toBeGreaterThan(70);
+    // 12 surfaces, 66 core-role sites at the time of writing. A table that
+    // stopped matching — a file renamed, a prefix changed — would otherwise
+    // pass this whole suite by scanning nothing.
+    expect(total).toBeGreaterThan(60);
     for (const { relative, code, prefix } of files) {
       expect(
         { file: relative, reads: roleReads(code, prefix).length > 0 },

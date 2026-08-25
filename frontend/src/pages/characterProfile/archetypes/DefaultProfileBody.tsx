@@ -41,7 +41,13 @@ import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
-import { factionFill, factionSheet, isKnownFaction } from '../../../utils/factions'
+import {
+  factionFill,
+  factionSheet,
+  isKnownFaction,
+  UNAFFILIATED_FACTION_SLUG,
+} from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 // The ② About block and the ① tagline slot are shared with every faction kit —
@@ -51,6 +57,18 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 import { AboutBlock, ProfileNameHeading, TaglineSlot } from './profileSkin'
 
 type Segment = 'praxis' | 'tasks'
+
+/**
+ * The role map (#2672). Hoisted, because this file has TWO roots — the desktop
+ * column and the `mobile-profile` one — and a surface's prefix is declared once
+ * per root or the mobile half reads names nothing set.
+ *
+ * Pinned to na: the ground is `.na-backdrop` plus `factionSheet()`, neither of
+ * which takes a slug, and an ink may not leave a ground that cannot follow it
+ * (#2361, #2669). `{}` today; what the prefix buys is a name a dresser can
+ * reach this one surface by — `identityOrnament` is the same motive.
+ */
+const ROLES = factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'profile-body')
 
 const EYEBROW: CSSProperties = {
   fontFamily: 'var(--font-body)',
@@ -339,7 +357,7 @@ function DesktopProfile({
   )
 
   return (
-    <div className="py-8" style={{ position: 'relative' }}>
+    <div className="py-8" style={{ ...ROLES, position: 'relative' }}>
       {/* Full-page spectrum wash — the na "all paths open" backdrop. The
           `.na-backdrop` rule (raw radial-gradient rgba + a [data-theme="dark"]
           brighten) lives in index.css and is owned by frontend-style; port it
@@ -394,7 +412,7 @@ function DesktopProfile({
               style={{
                 fontFamily: 'var(--font-display)',
                 fontStyle: 'italic',
-                color: 'var(--faction-default-card-text)',
+                color: 'var(--profile-body-ink, var(--faction-default-card-text))',
               }}
             />
 
@@ -631,7 +649,11 @@ function MobileProfile({
   const { pointsIntoLevel, levelSpan } = progressionFigures(progression)
 
   return (
-    <div className="py-4" data-testid="mobile-profile" style={{ position: 'relative' }}>
+    <div
+      className="py-4"
+      data-testid="mobile-profile"
+      style={{ ...ROLES, position: 'relative' }}
+    >
       {/* Full-page spectrum wash — the na "all paths open" backdrop. The
           `.na-backdrop` rule (raw radial-gradient rgba + a [data-theme="dark"]
           brighten) lives in index.css and is owned by frontend-style; port it
@@ -686,7 +708,7 @@ function MobileProfile({
                 textAlign: 'center',
                 margin: '0 auto',
                 color: isUnaffiliated
-                  ? 'var(--faction-default-card-text)'
+                  ? 'var(--profile-body-ink, var(--faction-default-card-text))'
                   : 'var(--color-text-primary)',
               }}
             />
