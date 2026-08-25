@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { factionRoleVar } from "../../utils/factionRoles";
+import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
  * The lit well — Singularity's points mark (#2042, ADR-0049).
@@ -37,7 +37,7 @@ import { factionRoleVar } from "../../utils/factionRoles";
  * the `[data-theme="dark"]` cascade flips is the phosphor, never a ternary here.
  */
 
-const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
+const MONO = "var(--readout-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 export interface SingularityReadoutProps {
   /**
@@ -78,6 +78,7 @@ export default function SingularityReadout({
   return (
     <span
       style={{
+        ...factionRoleVars("singularity", "readout"),
         display: "inline-flex",
         alignItems: "baseline",
         gap: "var(--space-xs)",

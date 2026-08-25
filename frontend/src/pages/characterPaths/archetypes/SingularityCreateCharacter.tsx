@@ -114,7 +114,7 @@ import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import PortraitPicker from '../PortraitPicker'
-import { factionRoleVar } from '../../../utils/factionRoles'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -164,7 +164,7 @@ const ALARM = 'var(--faction-singularity-card-alarm)'
    one face. Reached through the faction's own accessor rather than through
    --font-faction-terminal directly, which is what §4 asks for when the face IS
    the faction's. */
-const FACE = factionRoleVar('singularity', 'face')
+const FACE = 'var(--composer-face, var(--faction-singularity-card-font))'
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2
@@ -335,7 +335,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
   }
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: FACE, color: INK }}>
+    <ComposerPage sizes={sizes} style={{ ...factionRoleVars('singularity', 'composer'), fontFamily: FACE, color: INK }}>
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field, and what gives the browser's own required-field

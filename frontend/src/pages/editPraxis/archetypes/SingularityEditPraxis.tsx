@@ -179,7 +179,7 @@ import SingularityProcessLight from "../../../components/factionMarks/Singularit
 import { MetataskSealStack } from "../../../components/metataskSeal/MetataskSealStack";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
-import { factionRoleVar } from "../../../utils/factionRoles";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 interface Props {
   state: EditPraxisState;
@@ -233,7 +233,7 @@ const SHADOW = "var(--faction-singularity-term-shadow)";
  * one face. Reached through the faction's own accessor rather than through
  * --font-faction-terminal directly, which is what §4 asks for when the face IS
  * the faction's (as against a face a single surface borrows). */
-const FACE = factionRoleVar("singularity", "face");
+const FACE = "var(--composer-face, var(--faction-singularity-card-font))";
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2;
@@ -415,7 +415,10 @@ export default function SingularityEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: ACCENT,
     alarm: ALARM,
-    pageStyle: { fontFamily: FACE, color: INK },
+    // The composer sheet and the waiting surface both paint their outer div
+    // from `pageStyle`, which makes it this dress's one declaring element
+    // (#2675) -- every slot below is read inside it.
+    pageStyle: { ...factionRoleVars("singularity", "composer"), fontFamily: FACE, color: INK },
     sheetStyle,
     masthead,
     ground,

@@ -19,7 +19,7 @@ import {
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
-import { factionRoleVar } from "../../../utils/factionRoles";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
@@ -73,7 +73,7 @@ import { factionRoleVar } from "../../../utils/factionRoles";
  * no keyframe was added.
  */
 
-const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
+const MONO = "var(--task-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -788,7 +788,7 @@ export default function SingularityTaskDetail({
   );
 
   return (
-    <div className="py-8">
+    <div className="py-8" style={factionRoleVars("singularity", "task-detail")}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />

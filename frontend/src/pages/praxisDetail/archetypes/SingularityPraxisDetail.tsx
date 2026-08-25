@@ -25,7 +25,7 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
-import { factionRoleVar } from "../../../utils/factionRoles";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * The Singularity praxis detail (#1122, epic #1085; design project bebdf7c7,
@@ -110,7 +110,7 @@ import { factionRoleVar } from "../../../utils/factionRoles";
  * steward bar into the costume.
  */
 
-const MONO = factionRoleVar("singularity", "face"); /* Share Tech Mono */
+const MONO = "var(--praxis-detail-face, var(--faction-singularity-card-font))"; /* Share Tech Mono */
 
 const BG = "var(--faction-singularity-term-bg)";
 const PANEL = "var(--faction-singularity-term-panel)";
@@ -700,7 +700,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   );
 
   return (
-    <div className="py-8">
+    <div className="py-8" style={factionRoleVars("singularity", "praxis-detail")}>
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail at every width - see components/nav/Breadcrumb. */}
       <Breadcrumb
