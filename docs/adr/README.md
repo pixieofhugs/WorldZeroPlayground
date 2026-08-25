@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-84 records, of which **77 still state a rule**.
+85 records, of which **78 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -99,3 +99,4 @@
 | [0082](0082-albescent-is-redacted-not-hidden.md) | Albescent is redacted, not hidden | Accepted | — |
 | [0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) | Albescent is one ornament vocabulary over na, not a skin per surface | Accepted | — |
 | [0084](0084-a-page-wears-a-faction-when-it-has-exactly-one-faction-to-wear.md) | A page wears a faction when it has exactly one faction to wear | Accepted | — |
+| [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
