@@ -1,7 +1,28 @@
 # Frontend conventions
 - Read `WORLD_ZERO_STYLE.md` before any UI work
 - Color values live only in `index.css` (CSS vars). Never hardcode hex.
-- Faction config: `factions.ts`. Use `factionCssVar()` for styles.
+- Faction config: `factions.ts`.
+- **A surface reads a ROLE, not a token.** Spread `factionRoleVars(slug, prefix)` on the
+  root you own and read `var(--<prefix>-<role>)` below it — nine roles (`paper`, `ink`,
+  `quiet`, `line`, `accent`, `fill`, `onFill`, `radius`, `face`) on one of two grounds
+  (`sheet`, or `chrome` for the app's own furniture). `factionRoles.ts` owns the
+  vocabulary; the terms are in `CONTEXT.md`. The prefix is the SURFACE's, never a shared
+  `--kit-*` namespace: a page wrapper declaring one would repaint every descendant,
+  including a card belonging to a different faction. Name it `<faction>-<surface>`
+  (`ev-task`, `sg-desk`, `leaf-task-detail`, `na-avatar`) and keep it out of
+  `--faction-*`, which is the token families' namespace. The only hard rule is that no
+  two surfaces share a prefix, and the gate below enforces it.
+  - A fallback arm is **banned** where the slug is a literal identified faction —
+    `factionRoleVars` always emits there, so it can never be reached — and **required**
+    where the slug is `na`, `albescent` or a runtime value, because the map returns `{}`
+    and the fallback is the whole paint. `utils/__tests__/factionRoleFallbacks.test.ts`
+    holds both, derived from source: there is no table to add your surface to.
+  - `factionRoleVar()` (singular) for a surface composing something local out of one
+    role; `factionCssVar()` still for a token no role names, and for a runtime slug you
+    cannot spread a map for.
+  - Writing a guard that hunts a token in source or markup? Fold it through
+    `resolveRoleReads()` in `test/sourceScan.ts` first — a migrated surface no longer
+    writes the token, and a guard matching the spelling silently narrows.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
 - Each faction has its own card archetype; don't unify
 - Reuse `.card-meta`, `.card-description` for repeated patterns
