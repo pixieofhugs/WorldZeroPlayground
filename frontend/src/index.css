@@ -5977,16 +5977,27 @@
    card because a data-URI SVG is a SEPARATE DOCUMENT — `var(--…)` inside one
    never resolves, so the only way to keep the two pigments out of the TSX is to
    let index.css own the whole mark, dark override included. */
+/* THE BRAID IS A TOKEN NOW (#2650), and the class is one of its two readers.
+   The comment thread's foot rule is drawn by the shared `Comment` chassis,
+   which owns no class names — it resolves every slot off
+   `--faction-coven-comment-*` — so the mark had to become a value before the
+   Coven voice file could be deleted. `url(…)` is a perfectly good custom
+   property; what a data URI cannot do is resolve a `var()` INSIDE itself,
+   which is why both pigments are still spelled out here rather than composed.
+   Declared as a LITERAL in each cascade, so no alias freezes (#1839). */
+:root {
+  --faction-coven-braid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23c9327a' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4c430' opacity='0.9'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] {
+  --faction-coven-braid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23f9a8d4' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4d472' opacity='0.9'/%3E%3C/svg%3E");
+}
 .cvn-braid {
   display: block;
   height: 12px;
   background-repeat: repeat-x;
   background-position: left center;
   opacity: 0.85;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23c9327a' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4c430' opacity='0.9'/%3E%3C/svg%3E");
-}
-[data-theme="dark"] .cvn-braid {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23f9a8d4' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4d472' opacity='0.9'/%3E%3C/svg%3E");
+  background-image: var(--faction-coven-braid);
 }
 
 /* S.N.I.D.E. — the ransom clipping's CENSOR RULE (#1023): a cut-up strip of
@@ -9436,4 +9447,219 @@
 .sg-control-off {
   --control-off-fill: var(--faction-singularity-term-panel);
   --control-off-ink: var(--faction-singularity-term-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THE COMMENT CHROME SET (#2650, epic #2649)
+
+   One `--faction-<key>-comment-*` set per faction that has no comment VOICE.
+   `components/comments/Comment.tsx` is the whole reader: it paints nothing of
+   its own and resolves every slot off the author's slug, so a faction whose
+   comment is a sheet, an ink and a rule is a block below and no component
+   anywhere. A tenth faction that declares nothing lands on `default` through
+   `resolveCssKey` and renders correctly by construction.
+
+   EVERY VALUE HERE IS A TRANSCRIPTION. The colour slots are aliases onto tokens
+   the faction already ships — the ones its deleted voice file named inline —
+   and the rest is geometry lifted verbatim from that file. Nothing in this
+   block is a new pigment; `commentChrome.test.ts` holds that by refusing a `#`.
+
+   A SLOT WITH NO OPINION TAKES `inherit`, not a neutral. `font-weight: 400`
+   would OVERRIDE what a sheet inherits; `font-weight: inherit` stands aside
+   from it, which is the only way a transcription of "this voice did not set
+   this property" stays pixel-identical.
+
+   Declared on `:root, [data-theme]` because they are aliases (#1839): a nested
+   theme wrapper — `profileSkin.tsx` renders one — must re-substitute them, or
+   a comment inside it freezes at its light value.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme] {
+  /* ── na / Unaffiliated — THE SPECTRUM BUBBLE. Also the fallback every
+        unregistered slug and Albescent's pass-through wrapper resolve to, so
+        this is the one set that may never be incomplete. */
+  --faction-default-comment-sheet: var(--faction-default-card-bg);
+  --faction-default-comment-edge: 1px solid var(--faction-default-border);
+  --faction-default-comment-radius: 10px;
+  --faction-default-comment-shadow: 0 4px 14px -10px var(--color-cast-shadow);
+  --faction-default-comment-ink: inherit;
+  /* The na tell: the spectrum hairline, verbatim `factionFill(slug, 'bar')`. */
+  --faction-default-comment-crown: var(--faction-default-rainbow);
+  --faction-default-comment-crown-h: 3px;
+  --faction-default-comment-pad: var(--space-md) var(--space-lg);
+  --faction-default-comment-panel: transparent;
+  --faction-default-comment-name-face: var(--font-display);
+  --faction-default-comment-name-size: inherit;
+  --faction-default-comment-name-weight: 700;
+  --faction-default-comment-name-style: italic;
+  --faction-default-comment-name-track: inherit;
+  --faction-default-comment-name-ink: var(--faction-default-card-text);
+  --faction-default-comment-label-face: var(--font-body);
+  --faction-default-comment-label-size: var(--text-base);
+  --faction-default-comment-label-weight: inherit;
+  --faction-default-comment-label-track: 0.18em;
+  --faction-default-comment-label-case: uppercase;
+  --faction-default-comment-label-ink: var(--faction-default-card-muted);
+  --faction-default-comment-hint-ink: var(--faction-default-card-muted);
+  --faction-default-comment-edited-face: var(--font-body);
+  --faction-default-comment-edited-size: var(--text-base);
+  --faction-default-comment-edited-weight: inherit;
+  --faction-default-comment-edited-track: 0.18em;
+  --faction-default-comment-edited-case: uppercase;
+  --faction-default-comment-body-face: var(--font-body);
+  --faction-default-comment-body-weight: inherit;
+  --faction-default-comment-body-ink: var(--faction-default-card-text);
+  --faction-default-comment-body-line: 1.55;
+  --faction-default-comment-body-edge: 0;
+  --faction-default-comment-body-inset: 0;
+  --faction-default-comment-mention: var(--faction-default-card-accent);
+  --faction-default-comment-foot-gap: var(--space-md);
+  --faction-default-comment-foot-pad: var(--space-sm);
+  /* A divider INSIDE the sheet is quieter than the sheet's own edge. */
+  --faction-default-comment-rule-edge: 1px solid var(--faction-default-composer-hair);
+  --faction-default-comment-rule-h: 0;
+  --faction-default-comment-rule-img: none;
+  --faction-default-comment-rule-alpha: 1;
+  --faction-default-comment-field: var(--faction-default-composer-field);
+  --faction-default-comment-accent: var(--faction-default-card-accent);
+  --faction-default-comment-on-accent: var(--faction-default-on-accent);
+  --faction-default-comment-composer-face: inherit;
+  --faction-default-comment-composer-weight: inherit;
+  --faction-default-comment-composer-ink: inherit;
+  --faction-default-comment-composer-line: inherit;
+  --faction-default-comment-composer-gap: 0;
+  --faction-default-comment-composer-wrap: inherit;
+
+  /* ── Cozy Coven — THE CANDLELIT SLIP (#1197). Transcribed from the deleted
+        `CovenComment.tsx`: a near-white sheet under a candle-glow edge, the
+        byline hand-set in Grenze Gotisch, the reading copy in Cormorant, and
+        the braided thread ruling the foot off the body. Caveat survives as the
+        one hand-written mark — the `edited-*` slots exist for it. */
+  --faction-coven-comment-sheet: var(--faction-coven-ward-card);
+  --faction-coven-comment-edge: 1.5px solid var(--faction-coven-slip-border);
+  --faction-coven-comment-radius: 14px;
+  --faction-coven-comment-shadow: var(--faction-coven-slip-shadow);
+  --faction-coven-comment-ink: inherit;
+  --faction-coven-comment-crown: linear-gradient(90deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 78%, var(--faction-coven-slip-vio));
+  --faction-coven-comment-crown-h: 4px;
+  --faction-coven-comment-pad: var(--space-md) var(--space-lg);
+  --faction-coven-comment-panel: transparent;
+  --faction-coven-comment-name-face: var(--font-faction-witch);
+  --faction-coven-comment-name-size: var(--text-xl);
+  --faction-coven-comment-name-weight: inherit;
+  --faction-coven-comment-name-style: inherit;
+  --faction-coven-comment-name-track: 0.04em;
+  --faction-coven-comment-name-ink: var(--faction-coven-slip-ink);
+  --faction-coven-comment-label-face: var(--font-faction-rounded);
+  --faction-coven-comment-label-size: var(--text-md);
+  --faction-coven-comment-label-weight: 700;
+  --faction-coven-comment-label-track: 0.16em;
+  --faction-coven-comment-label-case: uppercase;
+  --faction-coven-comment-label-ink: var(--faction-coven-slip-label);
+  --faction-coven-comment-hint-ink: var(--faction-coven-slip-label);
+  /* The hand's one mark on the slip: a pencilled amendment, lowercase in
+     Caveat rather than set in the chrome's small caps. */
+  --faction-coven-comment-edited-face: var(--font-faction-script);
+  --faction-coven-comment-edited-size: var(--text-lg);
+  --faction-coven-comment-edited-weight: inherit;
+  --faction-coven-comment-edited-track: inherit;
+  --faction-coven-comment-edited-case: inherit;
+  --faction-coven-comment-body-face: var(--font-faction-serif);
+  /* 500, not the default 400: index.html loads Cormorant Garamond at 500/600/700
+     only, so an unspecified weight would be synthesised. */
+  --faction-coven-comment-body-weight: 500;
+  --faction-coven-comment-body-ink: var(--faction-coven-slip-ink);
+  --faction-coven-comment-body-line: 1.55;
+  --faction-coven-comment-body-edge: 0;
+  --faction-coven-comment-body-inset: 0;
+  --faction-coven-comment-mention: var(--faction-coven-slip-deep);
+  --faction-coven-comment-foot-gap: var(--space-md);
+  --faction-coven-comment-foot-pad: var(--space-sm);
+  /* The braided thread, not a hairline: the same mark `.cvn-braid` wears. */
+  --faction-coven-comment-rule-edge: 0;
+  --faction-coven-comment-rule-h: 12px;
+  --faction-coven-comment-rule-img: var(--faction-coven-braid);
+  --faction-coven-comment-rule-alpha: 0.85;
+  /* The inset field: a tinted stop of the slip's own gradient, so a textarea
+     reads as pressed into the paper rather than painted on top of it. */
+  --faction-coven-comment-field: var(--faction-coven-slip-from);
+  --faction-coven-comment-accent: var(--faction-coven-slip-cta-from);
+  --faction-coven-comment-on-accent: var(--faction-coven-slip-cta-ink);
+  --faction-coven-comment-composer-face: var(--font-faction-serif);
+  --faction-coven-comment-composer-weight: 500;
+  --faction-coven-comment-composer-ink: var(--faction-coven-slip-ink);
+  --faction-coven-comment-composer-line: inherit;
+  --faction-coven-comment-composer-gap: 0;
+  --faction-coven-comment-composer-wrap: inherit;
+
+  /* ── The Ephemerists — A NOTE FILED ON THE VALLEY PLATE (#1199). Transcribed
+        from the deleted `EphemeristsComment.tsx`: papyrus stock under a gold
+        wash, incised small caps for every label, Spectral for the note, and an
+        ochre margin rule beside the body. No crown — the leaf's own 1px border
+        rules its head, and a hairline struck under it would read as a doubled
+        edge (#2210). */
+  --faction-ephemerists-comment-sheet: var(--faction-ephemerists-plate-bg);
+  --faction-ephemerists-comment-edge: 1px solid var(--faction-ephemerists-plate-line);
+  --faction-ephemerists-comment-radius: 0;
+  --faction-ephemerists-comment-shadow: var(--faction-ephemerists-plate-shadow);
+  --faction-ephemerists-comment-ink: var(--faction-ephemerists-plate-ink);
+  --faction-ephemerists-comment-crown: none;
+  --faction-ephemerists-comment-crown-h: 0;
+  --faction-ephemerists-comment-pad: var(--space-md) var(--space-lg);
+  /* The gold wash rides the padded block: the dark plate takes none at all
+     (`--plate-wash: none`), so there is nothing for a ternary to decide. */
+  --faction-ephemerists-comment-panel: var(--faction-ephemerists-plate-wash);
+  --faction-ephemerists-comment-name-face: var(--font-faction-engraved);
+  --faction-ephemerists-comment-name-size: var(--text-content);
+  --faction-ephemerists-comment-name-weight: 600;
+  --faction-ephemerists-comment-name-style: inherit;
+  --faction-ephemerists-comment-name-track: 0.06em;
+  --faction-ephemerists-comment-name-ink: var(--faction-ephemerists-plate-ink);
+  --faction-ephemerists-comment-label-face: var(--font-faction-engraved);
+  --faction-ephemerists-comment-label-size: var(--text-md);
+  --faction-ephemerists-comment-label-weight: 500;
+  --faction-ephemerists-comment-label-track: 0.24em;
+  --faction-ephemerists-comment-label-case: uppercase;
+  --faction-ephemerists-comment-label-ink: var(--faction-ephemerists-plate-quiet);
+  /* The composer's hint speaks at `-caption`, the row's marks at `-quiet` —
+     the one slot on this plate where the two label inks part company. */
+  --faction-ephemerists-comment-hint-ink: var(--faction-ephemerists-plate-caption);
+  --faction-ephemerists-comment-edited-face: var(--font-faction-engraved);
+  --faction-ephemerists-comment-edited-size: var(--text-md);
+  --faction-ephemerists-comment-edited-weight: 500;
+  --faction-ephemerists-comment-edited-track: 0.24em;
+  --faction-ephemerists-comment-edited-case: uppercase;
+  --faction-ephemerists-comment-body-face: var(--font-faction-spectral);
+  --faction-ephemerists-comment-body-weight: inherit;
+  --faction-ephemerists-comment-body-ink: var(--faction-ephemerists-plate-ink);
+  --faction-ephemerists-comment-body-line: 1.6;
+  /* Marginalia's own mark. It was a stretched flex sibling at `opacity: .55`;
+     as the block's own left edge it composites identically and becomes a
+     token — see `Comment.tsx`'s `Body`. */
+  --faction-ephemerists-comment-body-edge: 1px solid color-mix(in srgb, var(--faction-ephemerists-plate-ochre) 55%, transparent);
+  --faction-ephemerists-comment-body-inset: var(--space-md);
+  /* Resolved @mentions in the brass highlight — the token whose whole job is
+     links and affirmations on this ground. */
+  --faction-ephemerists-comment-mention: var(--faction-ephemerists-plate-brass-light);
+  --faction-ephemerists-comment-foot-gap: var(--space-md);
+  --faction-ephemerists-comment-foot-pad: var(--space-sm);
+  --faction-ephemerists-comment-rule-edge: 1px solid var(--faction-ephemerists-plate-line);
+  --faction-ephemerists-comment-rule-h: 0;
+  --faction-ephemerists-comment-rule-img: none;
+  --faction-ephemerists-comment-rule-alpha: 1;
+  /* The panel cell, not the plate: a field reads as inset into the sheet. */
+  --faction-ephemerists-comment-field: var(--faction-ephemerists-plate-inner);
+  /* NOT `-brass`, which is a rule colour the plate forbids putting text on,
+     and NOT `-band`, which the dark cascade drives to near-black while the CTA
+     lifts to brass. The pair is measured as a pair. */
+  --faction-ephemerists-comment-accent: var(--faction-ephemerists-plate-cta-bg);
+  --faction-ephemerists-comment-on-accent: var(--faction-ephemerists-plate-cta-ink);
+  --faction-ephemerists-comment-composer-face: var(--font-faction-spectral);
+  --faction-ephemerists-comment-composer-weight: inherit;
+  --faction-ephemerists-comment-composer-ink: var(--faction-ephemerists-plate-ink);
+  --faction-ephemerists-comment-composer-line: 1.6;
+  --faction-ephemerists-comment-composer-gap: var(--space-sm);
+  /* #2238: the leaf sets `anywhere` so an unbroken word cannot blow it open,
+     and the shared foot's count is `nowrap` so it cannot be broken by it. */
+  --faction-ephemerists-comment-composer-wrap: anywhere;
 }
