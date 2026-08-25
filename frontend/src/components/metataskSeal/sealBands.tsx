@@ -1,4 +1,5 @@
 import CardMasthead from "../cardMasthead/CardMasthead";
+import { factionRoleVars } from "../../utils/factionRoles";
 import { factionName } from "../../utils/factions";
 
 /**
@@ -44,7 +45,7 @@ import { factionName } from "../../utils/factions";
  */
 
 /** na's card face — `var(--font-accent)`, the register both seals letter in. */
-const NA_FACE = "var(--faction-default-card-font)";
+const NA_FACE = "var(--band-face, var(--faction-default-card-font))";
 
 /**
  * The ramp's cut, matching the na plate's hairline and the task detail's section
@@ -66,8 +67,12 @@ function DefaultBand() {
     <CardMasthead
       slug="na"
       style={{
-        background: "var(--faction-default-card-bg)",
-        color: "var(--faction-default-card-text)",
+        // The role map (#2672), off this band's OWN slug — which is the literal
+        // above, so it is `{}` and no paint moves. The two bands differ by rule,
+        // never by colour ("NO NEW PAINT", above), so both resolve na's family.
+        ...factionRoleVars("na", "band"),
+        background: "var(--band-paper, var(--faction-default-card-bg))",
+        color: "var(--band-ink, var(--faction-default-card-text))",
       }}
     >
       <span
@@ -99,8 +104,12 @@ function AlbescentBand() {
       <CardMasthead
         slug="albescent"
         style={{
-          background: "var(--faction-default-card-bg)",
-          color: "var(--faction-default-card-text)",
+          // `resolveCssKey` sends `albescent` to `default` and `isKnownFaction`
+          // is false for it, so this is `{}` too — the society stays out of the
+          // spectrum (ADR-0048, #783) without this file naming it.
+          ...factionRoleVars("albescent", "band"),
+          background: "var(--band-paper, var(--faction-default-card-bg))",
+          color: "var(--band-ink, var(--faction-default-card-text))",
         }}
       >
         <span

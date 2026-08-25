@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { mediaUrl } from '../../utils/media'
+import { UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
+import { factionRoleVars } from '../../utils/factionRoles'
 import DefaultSigil from '../sigil/DefaultSigil'
 import { AVATAR_ROOT, avatarDim, userMediaHook } from './FactionAvatar'
 import type { FactionAvatarProps } from './FactionAvatar'
@@ -10,7 +12,9 @@ import type { FactionAvatarProps } from './FactionAvatar'
  *
  * The UNAFFILIATED / no-faction skin (#418): the portrait or monogram inside a
  * thin spectrum ring, tagged with the spectrum sigil — every path still open.
- * All colours via `--faction-default-*`; flips light/dark.
+ * All colour through the ROLE MAP (#2672) — `--avatar-paper` / `-ink` /
+ * `-face`, each falling back to the `--faction-default-*` token it read
+ * before; flips light/dark.
  *
  * IT MOVED HERE, IT DID NOT CHANGE. `FactionAvatar.tsx` used to define this and
  * name it as `pickVariant`'s fallback, which is what made `Default*` a second
@@ -47,7 +51,20 @@ export default function DefaultAvatar({
   const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
-    <span className={userMediaHook(character)} style={{ ...AVATAR_ROOT, width: dim, height: dim }}>
+    <span
+      className={userMediaHook(character)}
+      style={{
+        // The role map (#2672), pinned to na like the ring above it: the disc's
+        // ground is `--faction-default-rainbow-conic`, which takes no slug, and
+        // an ink may not leave a ground that cannot follow (#2361, #2669). `{}`
+        // today; what the prefix buys is a name a dresser can reach — the same
+        // motive as the `ornament` slot below.
+        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, 'avatar'),
+        ...AVATAR_ROOT,
+        width: dim,
+        height: dim,
+      }}
+    >
       {/*
         Spectrum ring around the portrait / monogram. CONIC, not the 90deg linear
         ramp: this is a disc, and a left-to-right ramp smears the spectrum across
@@ -80,9 +97,9 @@ export default function DefaultAvatar({
             style={{
               width: '100%',
               height: '100%',
-              background: 'var(--faction-default-card-bg)',
-              color: 'var(--faction-default-card-text)',
-              fontFamily: 'var(--faction-default-card-font)',
+              background: 'var(--avatar-paper, var(--faction-default-card-bg))',
+              color: 'var(--avatar-ink, var(--faction-default-card-text))',
+              fontFamily: 'var(--avatar-face, var(--faction-default-card-font))',
               fontSize: Math.round(dim * 0.44),
               lineHeight: 1,
             }}
@@ -102,8 +119,8 @@ export default function DefaultAvatar({
             width: badge,
             height: badge,
             borderRadius: '50%',
-            background: 'var(--faction-default-card-bg)',
-            boxShadow: '0 0 0 1.5px var(--faction-default-card-bg)',
+            background: 'var(--avatar-paper, var(--faction-default-card-bg))',
+            boxShadow: '0 0 0 1.5px var(--avatar-paper, var(--faction-default-card-bg))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

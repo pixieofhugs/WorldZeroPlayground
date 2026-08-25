@@ -3,7 +3,13 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import { factionFill, factionName, factionSheet } from "../../../utils/factions";
+import {
+  factionFill,
+  factionName,
+  factionSheet,
+  UNAFFILIATED_FACTION_SLUG,
+} from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
 import {
   actionColumnSize,
@@ -167,8 +173,8 @@ export default function DefaultTaskDetail({
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const sheet: CSSProperties = {
-    background: "var(--faction-default-card-bg)",
-    color: "var(--faction-default-card-text)",
+    background: "var(--task-detail-paper, var(--faction-default-card-bg))",
+    color: "var(--task-detail-ink, var(--faction-default-card-text))",
   };
   const innerBox: CSSProperties = {
     background: "var(--color-bg-page)",
@@ -755,7 +761,7 @@ export default function DefaultTaskDetail({
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "var(--faction-default-card-accent)",
+                color: "var(--task-detail-accent, var(--faction-default-card-accent))",
               }}
             >
               {showAllPraxis
@@ -769,7 +775,17 @@ export default function DefaultTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ position: "relative" }}>
+    <div
+      className="py-8"
+      style={{
+        // The role map (#2672) on the page's outermost box, so the `sheet` and
+        // `innerBox` literals hoisted above this render still resolve under it.
+        // Pinned to na: the surface is `factionSheet()`, which takes no slug,
+        // and an ink may not leave a ground that cannot follow (#2361, #2669).
+        ...factionRoleVars(UNAFFILIATED_FACTION_SLUG, "task-detail"),
+        position: "relative",
+      }}
+    >
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail on every page — see components/nav/Breadcrumb. */}
       <Breadcrumb taskId={task.id} taskTitle={task.title} />
@@ -800,7 +816,7 @@ export default function DefaultTaskDetail({
           // surface and padding), but the stated reason was false; do not cite
           // it as precedent for "a class with no CSS".
           ...factionSheet(),
-          color: "var(--faction-default-card-text)",
+          color: "var(--task-detail-ink, var(--faction-default-card-text))",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,
           padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",

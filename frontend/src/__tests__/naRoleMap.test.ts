@@ -72,7 +72,7 @@ const LANE: Record<string, string> = {
   "components/selectCard/DefaultSelectCard.tsx": "select-card",
   "components/avatar/DefaultAvatar.tsx": "avatar",
   "components/metataskSeal/skins/DefaultSeal.tsx": "seal",
-  "components/metataskSeal/sealBands.tsx": "seal-band",
+  "components/metataskSeal/sealBands.tsx": "band",
   "pages/taskDetail/archetypes/DefaultTaskDetail.tsx": "task-detail",
   "pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx": "praxis-detail",
   "pages/editPraxis/archetypes/DefaultEditPraxis.tsx": "edit-praxis",
@@ -83,8 +83,9 @@ const LANE: Record<string, string> = {
 /** The core-role suffixes under `--faction-default-`, and the role each is. */
 const ROLE_OF_SUFFIX = new Map<string, FactionRole>(
   FACTION_ROLES.map((role) => [
-    // `factionRoleProperty('x', role)` is `--x-<suffix>`; take the suffix back.
-    factionRoleProperty("", role).replace(/^--/, ""),
+    // `factionRoleProperty('p', role)` is `--p-<suffix>`; take the suffix back
+    // by length rather than by regex, so the resolver stays the only speller.
+    factionRoleProperty("p", role).slice("--p-".length),
     role,
   ]),
 );
