@@ -139,8 +139,9 @@ class PraxisOut(WireModel):
     media_items: List[MediaItemOut]
     # The one authoritative number for this praxis (ADR-0053, supersedes
     # ADR-0047). Computed for the praxis AUTHOR, for every type incl. collab:
-    #   score = (task_point_value + metatask_points) × display_multiplier
-    #           + points_from_votes + habit_bonus_points
+    #   score = task_point_value × display_multiplier
+    #           + metatask_points + points_from_votes + habit_bonus_points
+    # Only the base multiplies (ADR-0086); every earned extra is flat.
     # "Merit" (base + votes, multipliers ignored) is retired.
     score: float                # populated by build_praxis_out; the computed total
     metatask_points: int = 0    # populated by build_praxis_out
@@ -209,8 +210,9 @@ class PraxisCardOut(WireModel):
     # The computed total — the one number a praxis has (ADR-0053, supersedes
     # ADR-0047). Computed for the praxis AUTHOR (created_by), not the viewer:
     # the card shows the points the praxis banked for whoever made it.
-    #   score = (task_point_value + metatask_points) × display_multiplier
-    #           + points_from_votes + habit_bonus_points
+    #   score = task_point_value × display_multiplier
+    #           + metatask_points + points_from_votes + habit_bonus_points
+    # Only the base multiplies (ADR-0086); every earned extra is flat.
     # ``display_multiplier`` is faction × duel collapsed into one value, for
     # every type including collab (one author → one faction → one multiplier).
     # Base is ``task_point_value`` above; there is no separate ``base_points``.
