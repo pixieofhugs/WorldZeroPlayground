@@ -10,9 +10,12 @@
  *   - "burned" → left this faction this era; `can_join_faction` refuses the
  *                join for the rest of it. "Keep doing tasks" is a lie here.
  *
- * UA is the exception in both directions: graduation-gating resolves it to
- * "none" before any status is consulted (#200/#243), so its page must never
- * grow the notice.
+ * UA used to be carved out of this, on the since-reversed reading that
+ * graduation-gating resolved it to "none" before any status was consulted. The
+ * carve-out was written as a tripwire — "asserted at the render seam anyway so
+ * a future refactor of the mapping cannot quietly light it up" — and #2660 is
+ * that refactor. UA is an ordinary invite-joinable faction (ADR-0030), so it
+ * burns like every other faction and is no longer special-cased here.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -75,13 +78,7 @@ describe('burned viewers are told the era is closed, not to keep tasking', () =>
         ERA_NOTICE,
       )
 
-      if (slug === 'ua') {
-        // Unreachable in the hook; asserted at the render seam anyway so a
-        // future refactor of the mapping cannot quietly light it up.
-        expect(burned, 'UA never burns (#200/#243)').not.toContain(ERA_NOTICE)
-      } else {
-        expect(burned, 'the era notice replaces the gate').toContain(ERA_NOTICE)
-      }
+      expect(burned, 'the era notice replaces the gate').toContain(ERA_NOTICE)
     })
   }
 })
