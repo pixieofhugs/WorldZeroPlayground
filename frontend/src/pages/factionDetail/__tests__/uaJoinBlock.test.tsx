@@ -66,6 +66,13 @@ describe('UA draws a join block like any other faction', () => {
     const out = render('member')
     expect(out).toContain(REGISTRY_HEADING)
     expect(out).toContain('You practise here')
+    // The standing VALUE. `ua.join.memberStanding` interpolates the accent word
+    // as `<1>`, and UA alone split the separator out as `{" "}` — which made
+    // the whitespace node child 1 and the span child 2, so i18next dropped it
+    // and every UA member read a bare "Standing ·". Assert the WHOLE line:
+    // `render()` strips tags and the eyebrow above is "Those practising", so
+    // `toContain('practising')` passes vacuously against this exact defect.
+    expect(out).toContain('Standing · practising')
   })
 
   it('offers an invited viewer the practice', () => {

@@ -373,11 +373,13 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     marginTop: "var(--space-md)",
                   }}
                 >
+                  {/* The element must be the FIRST child after the text, or
+                      the catalog's `<1>` indexes the whitespace node instead
+                      and i18next drops the span: UA was the only one of seven
+                      bodies that split the separator out as `{" "}`, and it
+                      rendered a bare "Standing ·" with no standing. */}
                   <Trans t={t} i18nKey="ua.join.memberStanding">
-                    Standing ·{" "}
-                    <span style={{ color: "var(--faction-ua-card-accent)" }}>
-                      practising
-                    </span>
+                    Standing · <span style={{ color: "var(--faction-ua-card-accent)" }}>practising</span>
                   </Trans>
                 </div>
               </div>
