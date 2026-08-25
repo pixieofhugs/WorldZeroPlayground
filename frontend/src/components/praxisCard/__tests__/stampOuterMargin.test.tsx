@@ -29,11 +29,20 @@
  *    TITLE instead — the piece's own drawing dictating the host's padding,
  *    which is the law read backwards.
  *
- * The other three hosts measured CLEAN and are asserted here so they stay that
- * way: every praxis-detail panel pads `var(--space-lg)` under its centring div
- * and heads it with a `margin-bottom`; every task-detail worth cell is a padded
+ * ### What is NOT asserted here, and why
+ *
+ * The other three hosts measured CLEAN and are deliberately left unasserted:
+ * every praxis-detail panel pads `var(--space-lg)` under its centring div and
+ * heads it with a `margin-bottom`; every task-detail worth cell is a padded
  * `innerBox`; the composer slip wraps with `gap: var(--space-lg)`, which on a
- * wrapped flex row is the row gap too.
+ * wrapped flex row is the row gap too. Each of those is that host's own general
+ * padding rather than a declaration about the stamp, so pinning it here would
+ * freeze three unrelated layouts to catch a defect none of them has.
+ *
+ * The PIECE half of law 09 does cover them: the nine root assertions above hold
+ * wherever a stamp is mounted, so no host can be made flush by the stamp. A host
+ * that later DROPS its own padding is out of this guard's reach, and that is the
+ * known gap — not an oversight.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'

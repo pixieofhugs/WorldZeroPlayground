@@ -169,8 +169,9 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           #2122 hold. The title lands where it already did — 8px here plus
           `--space-lg` on `titleStyle` is the same 24px — so the ONLY thing that
           moves is the stamp's box, which is this issue's named exemption. (The
-          admin badge is absolutely positioned against this leaf and rides the
-          8px down with it; it is a steward affordance, not chrome.) */}
+          admin badge does NOT move: it is `position: absolute; top: 8` against
+          this leaf, and an absolute box resolves against its containing block's
+          PADDING box, which a top rung does not shift.) */}
       <div
         style={{
           position: "relative",
