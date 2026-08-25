@@ -66,6 +66,7 @@ import {
 } from '../../../components/factionMarks/wowMobile'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { factionName } from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
 import { useTranslation } from 'react-i18next'
 import type { ProfileBodyProps } from '../FactionProfileBody'
@@ -80,15 +81,29 @@ import {
 
 type Segment = 'praxis' | 'tasks'
 
-const INK = 'var(--faction-wow-card-text)'
-const MUTED = 'var(--faction-wow-card-muted)'
-const PLUM = 'var(--faction-wow-card-accent)'
+/**
+ * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674), AND THIS FILE OWNS ONLY
+ * ONE OF ITS TWO ROOTS.
+ *
+ * `MobileProfile` below spreads `factionRoleVars('wow', 'wow-profile')` on the
+ * pavilion page it draws. The DESKTOP half has no root here: it hands `dress`
+ * to the shared `ProfileSkin`, which owns the page element all nine factions
+ * mount on, so declaring the prefix for that half means giving `ProfileDress` a
+ * root-vars slot — a component prop, which is TREE work and not a paint lane's
+ * to do (the axis #2650 established). Until then the desktop reads resolve
+ * through their fallbacks, which is byte-for-byte what shipped: the fallback is
+ * per-SITE by design, and an undeclared prefix is the neutral case the law
+ * builds pixel-identity out of.
+ */
+const INK = 'var(--wow-profile-ink, var(--faction-wow-card-text))'
+const MUTED = 'var(--wow-profile-quiet, var(--faction-wow-card-muted))'
+const PLUM = 'var(--wow-profile-accent, var(--faction-wow-card-accent))'
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const FIGURE = 'var(--faction-wow-figure)'
-const SURFACE = 'var(--faction-wow-card-bg)'
+const SURFACE = 'var(--wow-profile-paper, var(--faction-wow-card-bg))'
 const PLATE = 'var(--faction-wow-plate)'
 const PLATE_BORDER = 'var(--faction-wow-plate-border)'
-const DISPLAY = 'var(--faction-wow-card-font)'
+const DISPLAY = 'var(--wow-profile-face, var(--faction-wow-card-font))'
 const BODY = 'var(--faction-wow-body-font)'
 
 function heading(title: string, eyebrow: string): ReactNode {
@@ -307,6 +322,7 @@ function MobileProfile({
       data-skin="wow"
       data-testid="mobile-profile"
       style={{
+        ...factionRoleVars('wow', 'wow-profile'),
         ...wowMobilePage,
         display: 'flex',
         flexDirection: 'column',
