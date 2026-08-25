@@ -59,22 +59,26 @@ export type MembershipState =
  *
  * Exported because this mapping is the whole join-block contract and the hook
  * around it is effect-driven — the seam is unit-testable, the hook is not.
+ *
+ * DELIBERATELY SLUG-BLIND, and it takes no slug so it cannot become otherwise
+ * (#2660). It used to short-circuit `slug === "ua"` to "none" on the grounds
+ * that UA membership was "graduation-gated, not earned by tasking". That was
+ * the pre-ADR-0019 model and it was already dead: ADR-0030 (Accepted) rules
+ * that "UA has no starter privilege. It is an ordinary, invite-joinable
+ * faction", `_NON_INVITE_FACTION_SLUGS` in `services/character_stats.py` is
+ * {na, albescent} and excludes UA, and the backend's `can_join_faction` has
+ * no UA case — so real UA invitation letters were being delivered to a page
+ * that answered "none" and drew nothing. Whether a faction can be joined is a
+ * capability, so it belongs to `FactionConfig`, never to a slug branch here
+ * (see the law in `frontend/CLAUDE.md`).
  */
 export function resolveMembershipState(
   hasCharacter: boolean,
   rawStatus: string | null,
   hasInvite: boolean,
-  slug: string | undefined,
 ): MembershipState {
   if (!hasCharacter) return "none";
   if (rawStatus === "member") return "member";
-  // UA has no chosen-join flow — membership is graduation-gated, not earned by
-  // tasking, and has no join design (#200/#243). So UA never surfaces an
-  // "eligible" Join CTA nor the "keep tasking" gate: a non-member viewer sees
-  // no join block at all ("none"), per the "hide unusable controls"
-  // convention. This precedes every status branch below, so no UA viewer can
-  // reach one.
-  if (slug === "ua") return "none";
   // The burn (#1305) outranks any open letter, exactly as the backend ranks it:
   // `get_faction_status_map` yields "defected" over "invited", and
   // `can_join_faction` refuses the join for the rest of the era. A faction with
@@ -240,7 +244,6 @@ export function useFactionDetail(
     Boolean(characterId),
     rawStatus,
     hasInvite,
-    slug,
   );
 
   const join = useCallback(async () => {

@@ -18,13 +18,13 @@ import { resolveMembershipState } from '../useFactionDetail'
 describe('resolveMembershipState', () => {
   it('maps "defected" to the burned state, not the soft gate', () => {
     expect(
-      resolveMembershipState(true, 'defected', false, 'wow'),
+      resolveMembershipState(true, 'defected', false),
     ).toBe('burned')
   })
 
   it('keeps the burn distinct from never-invited', () => {
     expect(
-      resolveMembershipState(true, 'not_invited', false, 'wow'),
+      resolveMembershipState(true, 'not_invited', false),
     ).toBe('gate')
   })
 
@@ -33,27 +33,36 @@ describe('resolveMembershipState', () => {
     // `can_join_faction` would refuse the join outright — so an open letter
     // must not resurrect the Join CTA.
     expect(
-      resolveMembershipState(true, 'defected', true, 'wow'),
+      resolveMembershipState(true, 'defected', true),
     ).toBe('burned')
   })
 
-  it('never burns UA — graduation-gating wins (#200/#243)', () => {
-    expect(resolveMembershipState(true, 'defected', false, 'ua')).toBe('none')
-    expect(resolveMembershipState(true, 'not_invited', false, 'ua')).toBe('none')
-    // ...but a UA member still reads as a member.
-    expect(resolveMembershipState(true, 'member', false, 'ua')).toBe('member')
+  it('treats UA as an ordinary invite-joinable faction, in every state (#2660)', () => {
+    // ADR-0030 (Accepted): "UA has no starter privilege. It is an ordinary,
+    // invite-joinable faction." A `slug === 'ua'` short-circuit used to return
+    // "none" for every non-member, so `UaFactionBody`'s complete join block —
+    // and its fully written `ua.join.*` copy — was unreachable, while the
+    // backend delivered real UA invitation letters the whole time
+    // (`_NON_INVITE_FACTION_SLUGS` is {na, albescent} and excludes UA).
+    expect(resolveMembershipState(true, 'invited', false)).toBe('eligible')
+    expect(resolveMembershipState(true, 'not_invited', true)).toBe('eligible')
+    expect(resolveMembershipState(true, 'can_return', false)).toBe('eligible')
+    expect(resolveMembershipState(true, 'not_invited', false)).toBe('gate')
+    expect(resolveMembershipState(true, 'defected', false)).toBe('burned')
+    expect(resolveMembershipState(true, 'member', false)).toBe('member')
+    expect(resolveMembershipState(false, 'not_invited', false)).toBe('none')
   })
 
   it('leaves the exempt faction’s return path alone (can_always_rejoin)', () => {
     expect(
-      resolveMembershipState(true, 'can_return', false, 'albescent'),
+      resolveMembershipState(true, 'can_return', false),
     ).toBe('eligible')
   })
 
   it('still resolves the pre-existing states', () => {
-    expect(resolveMembershipState(false, 'not_invited', false, 'wow')).toBe('none')
-    expect(resolveMembershipState(true, 'member', false, 'wow')).toBe('member')
-    expect(resolveMembershipState(true, 'invited', false, 'wow')).toBe('eligible')
-    expect(resolveMembershipState(true, 'not_invited', true, 'wow')).toBe('eligible')
+    expect(resolveMembershipState(false, 'not_invited', false)).toBe('none')
+    expect(resolveMembershipState(true, 'member', false)).toBe('member')
+    expect(resolveMembershipState(true, 'invited', false)).toBe('eligible')
+    expect(resolveMembershipState(true, 'not_invited', true)).toBe('eligible')
   })
 })

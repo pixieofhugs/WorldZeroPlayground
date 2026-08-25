@@ -172,6 +172,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     membership,
   } = state;
   const sections = useFactionSections();
+  const burned = membership.state === "burned";
 
   if (!faction) return null;
 
@@ -414,8 +415,23 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               />
             )}
 
-            {membership.state === "gate" && (
+            {/* The burn (#1305) reuses the gate's chassis — only the words
+                change, and they are the neutral platform wording every other
+                body uses (ADR-0057: the dress is ours, the words are not).
+                UA could reach NEITHER state until #2660: the hook answered
+                "none" for every non-member here, so a burned viewer would have
+                got this panel as a bare "Those practising" rule over nothing.
+                The kicker borrows UA's own eyebrow rather than minting a
+                style. */}
+            {(membership.state === "gate" || burned) && (
               <div>
+                {burned && (
+                  <div
+                    style={{ ...UA_EYEBROW, marginBottom: "var(--space-xs)" }}
+                  >
+                    {t("detail.burned.kicker")}
+                  </div>
+                )}
                 <div
                   className="content-title"
                   style={{
@@ -426,12 +442,20 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     margin: "var(--space-xs) 0 var(--space-md)",
                   }}
                 >
-                  {t("ua.join.gateTitle")}
+                  {burned
+                    ? t("detail.burned.title", {
+                        faction: factionName(faction.slug),
+                      })
+                    : t("ua.join.gateTitle")}
                 </div>
                 <p className="content-text" style={prose}>
-                  {t("mobile.gateHint", {
-                    faction: factionName(faction.slug),
-                  })}
+                  {burned
+                    ? t("detail.burned.body", {
+                        faction: factionName(faction.slug),
+                      })
+                    : t("mobile.gateHint", {
+                        faction: factionName(faction.slug),
+                      })}
                 </p>
               </div>
             )}
