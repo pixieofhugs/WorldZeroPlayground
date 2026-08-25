@@ -38,19 +38,36 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 
+import { factionRoleVar } from "../../utils/factionRoles";
 import { WowSigil } from "../sigil/WowSigil";
 
-export const WOW_INK = "var(--faction-wow-card-text)";
-export const WOW_MUTED = "var(--faction-wow-card-muted)";
+/**
+ * THE FIVE CORE ROLES ARE ASKED FOR DIRECTLY, BECAUSE THIS MODULE HAS NO ROOT
+ * (#2674). Lane 04's surfaces spread `factionRoleVars(slug, '<their own
+ * prefix>')` on a root and read `var(--<prefix>-ink, …)` below it. This file is
+ * shared vocabulary: six mobile skins import these constants and mount them
+ * under six different roots, `WowFieldDesk`'s among them, which is outside this
+ * lane. There is no one root to declare a prefix on, and one prefix shared
+ * between the pavilion and every skin that composes it would BE the `--kit-*`
+ * namespace the law declines. `factionRoleVar` answers one role with no
+ * all-or-nothing seam to protect and returns the identical strings these
+ * constants held before.
+ *
+ * The five that are NOT roles stay exactly as they are: the gilt, the figure
+ * gold, the parchment plate and the chronicle rule are WOW's own vocabulary and
+ * decision 07 leaves a surface's extras to the surface.
+ */
+export const WOW_INK = factionRoleVar("wow", "ink");
+export const WOW_MUTED = factionRoleVar("wow", "quiet");
 /** The header byline's ink — see the measured deviation in index.css. */
 export const WOW_DEEP = "var(--faction-wow-accent-deep)";
-export const WOW_PLUM = "var(--faction-wow-card-accent)";
+export const WOW_PLUM = factionRoleVar("wow", "accent");
 export const WOW_GOLD = "var(--faction-wow-chronicle-gold)";
 export const WOW_FIGURE = "var(--faction-wow-stamp-total)";
-export const WOW_CARD = "var(--faction-wow-card-bg)";
+export const WOW_CARD = factionRoleVar("wow", "paper");
 export const WOW_PLATE = "var(--faction-wow-plate)";
 export const WOW_RULE = "var(--faction-wow-chronicle-rule)";
-export const WOW_DISPLAY = "var(--faction-wow-card-font)"; // MedievalSharp
+export const WOW_DISPLAY = factionRoleVar("wow", "face"); // MedievalSharp
 export const WOW_BODY = "var(--faction-wow-body-font)"; // Lora
 
 /**

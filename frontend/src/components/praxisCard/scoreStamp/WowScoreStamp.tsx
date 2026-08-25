@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { formatPoints } from "../../../utils/points";
 import type { ScoreStampProps } from "./ScoreStamp";
 
@@ -63,13 +64,20 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
     fontFamily: "var(--faction-wow-body-font)",
     fontStyle: "italic" as const,
     fontSize: "var(--text-md)",
-    color: "var(--faction-wow-card-accent)",
+    color: "var(--wow-score-stamp-accent, var(--faction-wow-card-accent))",
     marginTop: "var(--space-xs)",
   };
 
   return (
     <div
       style={{
+        // THE ROLE MAP (#2674). `--wow-score-stamp-*` is declared on the plate
+        // itself and read nowhere else — the prefix belongs to this SURFACE,
+        // not to the app, and the stamp is mounted inside four different hosts
+        // whose own prefixes it must not borrow or leak into. Every read below
+        // carries today's token as its fallback, so not a pixel of the plate
+        // moves.
+        ...factionRoleVars("wow", "wow-score-stamp"),
         position: "relative",
         minWidth: 116,
         boxSizing: "border-box",
@@ -109,18 +117,18 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               fontFamily: "var(--faction-wow-body-font)",
               fontStyle: "italic",
               fontSize: "var(--text-base)",
-              color: "var(--faction-wow-card-muted)",
+              color: "var(--wow-score-stamp-quiet, var(--faction-wow-card-muted))",
             }}
           >
             {t("card.stamp.base")}
           </span>
           <span
             style={{
-              fontFamily: "var(--faction-wow-card-font)",
+              fontFamily: "var(--wow-score-stamp-face, var(--faction-wow-card-font))",
               // eslint-disable-next-line local/no-raw-style-values -- ornament: the chronicle's base numeral, the design's 25 (§4a)
               fontSize: 25,
               lineHeight: 0.8,
-              color: "var(--faction-wow-card-text)",
+              color: "var(--wow-score-stamp-ink, var(--faction-wow-card-text))",
             }}
           >
             {base}
@@ -129,7 +137,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             <span
               style={{
                 marginLeft: "auto",
-                fontFamily: "var(--faction-wow-card-font)",
+                fontFamily: "var(--wow-score-stamp-face, var(--faction-wow-card-font))",
                 fontSize: "var(--text-lg)",
                 color: "var(--faction-wow-stamp-chip-text)",
                 background: "var(--faction-wow-stamp-chip-bg)",
@@ -180,7 +188,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
           style={{
             height: 2,
             background:
-              "linear-gradient(90deg, var(--faction-wow-chronicle-gold), var(--faction-wow-card-accent))",
+              "linear-gradient(90deg, var(--faction-wow-chronicle-gold), var(--wow-score-stamp-accent, var(--faction-wow-card-accent)))",
             opacity: 0.8,
             margin: "var(--space-sm) 0 var(--space-xs)",
           }}
@@ -189,7 +197,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
       <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)" }}>
         <span
           style={{
-            fontFamily: "var(--faction-wow-card-font)",
+            fontFamily: "var(--wow-score-stamp-face, var(--faction-wow-card-font))",
             // eslint-disable-next-line local/no-raw-style-values -- ornament: the bottom-line total, the design's 29 (§4a)
             fontSize: 29,
             lineHeight: 0.8,
@@ -204,7 +212,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         <span
           aria-hidden
           style={{
-            fontFamily: "var(--faction-wow-card-font)",
+            fontFamily: "var(--wow-score-stamp-face, var(--faction-wow-card-font))",
             // eslint-disable-next-line local/no-raw-style-values -- ornament: the ✦ device sized as a glyph, the design's 13 (§4a)
             fontSize: 13,
             color: "var(--faction-wow-chronicle-gold)",

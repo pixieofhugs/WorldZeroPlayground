@@ -4504,7 +4504,15 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
    */
   function tokenOfConst(name: string, sources: string[]): string | null {
     for (const source of sources) {
-      const found = new RegExp(`\\b${name} = "var\\((--[a-z-]+)\\)"`).exec(source);
+      // {@link ROLE_READ}: since #2674 WOW's `MUTED` is
+      // `var(--wow-edit-praxis-quiet, var(--faction-wow-card-muted))`. The
+      // token stays pinned exactly — only the wrapper is optional — so this
+      // widens the SPELLING and not the measurement. It is also the direction
+      // that cannot narrow: an unresolved const returns null here and the
+      // caller's `.toBe(skin.quiet)` goes red, so this guard fails closed.
+      const found = new RegExp(
+        `\\b${name} = ["']${ROLE_READ}var\\((--[a-z-]+)\\)${ROLE_READ_END}["']`,
+      ).exec(source);
       if (found) return found[1];
     }
     return null;

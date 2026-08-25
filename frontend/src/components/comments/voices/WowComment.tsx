@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import {
@@ -68,14 +69,14 @@ import { CommentFlagControl, canFlagComment } from '../FlagControl'
  * ink is `-card-text` at 13:1 — uses the parchment plate.
  */
 
-const MED = 'var(--faction-wow-card-font)' /* MedievalSharp */
+const MED = 'var(--wow-comment-face, var(--faction-wow-card-font))' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 /* `--faction-wow-stamp-total` inked the composer's ✦ prompt line; #1911 took
    the line, and the token has no other slot on this card. */
-const INK = 'var(--faction-wow-card-text)'
-const MUTED = 'var(--faction-wow-card-muted)'
-const PLUM = 'var(--faction-wow-card-accent)'
+const INK = 'var(--wow-comment-ink, var(--faction-wow-card-text))'
+const MUTED = 'var(--wow-comment-quiet, var(--faction-wow-card-muted))'
+const PLUM = 'var(--wow-comment-accent, var(--faction-wow-card-accent))'
 const RIBBON = 'var(--faction-wow-quest-ribbon)'
 
 /**
@@ -122,6 +123,12 @@ function Sheet({
       <div
         {...containerProps}
         style={{
+          // THE ROLE MAP (#2674). Declared on the SHEET, not on the flex row
+          // above it: the crest beside the sheet is a sibling, and a prefix
+          // belongs to the surface that reads it. Every read carries today's
+          // token as its fallback, so the shared `ComposerControls` this hands
+          // strings to is unaware anything moved.
+          ...factionRoleVars('wow', 'wow-comment'),
           flex: 1,
           minWidth: 0,
           borderRadius: SHEET_RADIUS,
@@ -129,7 +136,7 @@ function Sheet({
           // the @mention listbox, an absolutely positioned child, and a
           // clipping ancestor cuts it off. The crown below rounds its own ends
           // instead, which is all the clip was ever doing.
-          background: 'var(--faction-wow-card-bg)',
+          background: 'var(--wow-comment-paper, var(--faction-wow-card-bg))',
           color: INK,
           border: `2px solid ${GOLD}`,
           boxShadow: 'var(--faction-wow-quest-shadow)',

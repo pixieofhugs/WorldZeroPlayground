@@ -118,6 +118,7 @@ import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
+import { factionRoleVars } from '../../../utils/factionRoles'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -146,21 +147,33 @@ import {
 const SLUG = 'wow'
 
 /* ── WOW's two faces (§3) ── */
-/** MedievalSharp — the chronicle's display hand. */
-const MED = 'var(--faction-wow-card-font)'
+/**
+ * MedievalSharp — the chronicle's display hand.
+ *
+ * THE FOUR CORE ROLES ARE ASKED FOR BY NAME (#2674). `ComposerPage` below puts
+ * the style object it is handed straight on its root element, so
+ * `factionRoleVars('wow', 'wow-create')` declares the prefix on the page this
+ * file dresses without a prop being threaded through a shared block — that
+ * would be tree work, and this is paint.
+ *
+ * Every read carries today's token as its fallback. The names below that are
+ * NOT roles stay put: the inset plate, the label olive, the plum FILL and its
+ * ink, the gold and its quiet rung are this surface's own extras (decision 07).
+ */
+const MED = 'var(--wow-create-face, var(--faction-wow-card-font))'
 /** Lora — body AND label on the writ, per that design's type row. */
 const LORA = 'var(--faction-wow-body-font)'
 
 /* ── The chronicle palette. Every one a shipped --faction-wow-* token, and
    every pairing below already measured in `factionContrast.test.ts`. ── */
 /** The sheet: cream parchment by day, the deep ground by night. */
-const SHEET = 'var(--faction-wow-card-bg)'
+const SHEET = 'var(--wow-create-paper, var(--faction-wow-card-bg))'
 /** The inset parchment plate every editable field is set on. */
 const FIELD = 'var(--faction-wow-chronicle-panel)'
 /** Body ink. 14:1 on the cream, and measured on the plate too. */
-const INK = 'var(--faction-wow-card-text)'
+const INK = 'var(--wow-create-ink, var(--faction-wow-card-text))'
 /** Quiet ink — CREAM ONLY (4.77:1 there, 4.25:1 on the plate). */
-const MUTED = 'var(--faction-wow-card-muted)'
+const MUTED = 'var(--wow-create-quiet, var(--faction-wow-card-muted))'
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = 'var(--faction-wow-accent-deep)'
 /** Plum as a SURFACE. Theme-invariant, with its own AA ink beside it. */
@@ -271,7 +284,10 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
   )
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: LORA, color: INK }}>
+    <ComposerPage
+      sizes={sizes}
+      style={{ ...factionRoleVars('wow', 'wow-create'), fontFamily: LORA, color: INK }}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick. The Default skin
           submits through one and so must this: it is what makes Enter commit
           from a text field, and what gives the browser's own required-field

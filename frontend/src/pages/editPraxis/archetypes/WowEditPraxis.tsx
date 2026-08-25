@@ -116,6 +116,7 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
@@ -162,14 +163,28 @@ interface Props {
 }
 
 /* ── WOW's two faces (§3) ── */
-/** MedievalSharp — the chronicle's display hand. */
-const MED = "var(--faction-wow-card-font)";
+/**
+ * MedievalSharp — the chronicle's display hand.
+ *
+ * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). `dress.pageStyle` below
+ * spreads `factionRoleVars('wow', 'wow-edit-praxis')`, and `ComposerPage` puts
+ * that object straight on its root element — so the prefix is declared on the
+ * page this file dresses without a prop being added to a shared block, which
+ * would be tree work rather than paint.
+ *
+ * Every read carries today's token as its fallback. The palette below that is
+ * NOT a role stays exactly where it is: the alarm rung, the inset parchment
+ * plate, the plate's own quiet register, the label olive, the plum FILL and its
+ * ink are this surface's extras, each one measured against a ground the core
+ * vocabulary does not name (decision 07).
+ */
+const MED = "var(--wow-edit-praxis-face, var(--faction-wow-card-font))";
 /** Lora — body AND label on this surface, per the design's type row. */
 const LORA = "var(--faction-wow-body-font)";
 
 /* ── The chronicle palette. Every one a shipped --faction-wow-* token. ── */
 /** The sheet: cream parchment by day, the deep ground by night. */
-const SHEET = "var(--faction-wow-card-bg)";
+const SHEET = "var(--wow-edit-praxis-paper, var(--faction-wow-card-bg))";
 /* The error banner's ink (#1231). The banner sits straight on the sheet, and
  * the neutral `--color-danger` under its own veil misses AA there in light
  * (4.08:1 on this ground); this is #1449's alarm rung, already measured
@@ -178,9 +193,9 @@ const ALARM = "var(--faction-wow-card-alarm)";
 /** The inset parchment plate every editable field is set on. */
 const FIELD = "var(--faction-wow-chronicle-panel)";
 /** Body ink. 14:1 on both grounds. */
-const INK = "var(--faction-wow-card-text)";
+const INK = "var(--wow-edit-praxis-ink, var(--faction-wow-card-text))";
 /** Quiet ink — CREAM ONLY. See the pairing note in the header. */
-const MUTED = "var(--faction-wow-card-muted)";
+const MUTED = "var(--wow-edit-praxis-quiet, var(--faction-wow-card-muted))";
 /**
  * The same quiet register on the PLATE. `--faction-wow-card-muted` is measured
  * against the cream card and is 4.24:1 on the inset parchment — which is why
@@ -193,7 +208,7 @@ const PANEL_QUIET = "var(--faction-wow-chronicle-quiet)";
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = "var(--faction-wow-accent-deep)";
 /** Plum as INK — the one member of this palette that flips with the theme. */
-const PLUM = "var(--faction-wow-card-accent)";
+const PLUM = "var(--wow-edit-praxis-accent, var(--faction-wow-card-accent))";
 /** Plum as a SURFACE. Theme-invariant, with its own AA ink below. */
 const PLUM_FILL = "var(--faction-wow-plum-surface)";
 const ON_PLUM = "var(--faction-wow-on-plum)";
@@ -354,7 +369,11 @@ export default function WowEditPraxis({ state }: Props) {
   const dress: ComposerDress = {
     accent: PLUM,
     alarm: ALARM,
-    pageStyle: { fontFamily: LORA, color: INK },
+    pageStyle: {
+      ...factionRoleVars("wow", "wow-edit-praxis"),
+      fontFamily: LORA,
+      color: INK,
+    },
     sheetStyle,
     masthead,
     ground,

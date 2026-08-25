@@ -74,7 +74,7 @@ interface Surface {
 }
 
 /**
- * Lane 06's contact sheet, in the one place a machine can read it.
+ * The lanes' contact sheets, in the one place a machine can read it.
  *
  * S.N.I.D.E. owns the repo's only ground override (`chrome.snide`), so its
  * ground is a real choice here rather than a formality. Every surface below is
@@ -195,6 +195,140 @@ const SURFACES: Surface[] = [
     ground: "sheet",
     sites: 1,
   },
+
+  /* ── Lane 04 (#2674): Warriors of Whimsy, 15 surfaces ────────────────────
+   *
+   * 97 core-role sites over 18 files. Three of the eighteen are absent here on
+   * purpose: `factionMarks/wowMobile`, `duel/wowLists` and
+   * `factionMarks/wowOrnament` are shared vocabulary with NO ROOT — six mobile
+   * skins and six ornament consumers mount them, several outside this lane — so
+   * they have no prefix to declare and take `factionRoleVar` instead. Their
+   * guard is `factions/__tests__/wowRoleMap.test.ts`, which also pins the three
+   * files carved out of every lane.
+   *
+   * Ten of the 97 sites were in those three modules, so 87 role reads is the
+   * whole of the rest: no site collapsed and none was added.
+   *
+   * EVERY ONE IS `sheet`. WOW declares no ground override at all, and none of
+   * these is app furniture — `chrome` in this repo is the rail. */
+  {
+    file: "components/taskCard/WowTaskCard.tsx",
+    slug: "wow",
+    prefix: "wow-task-card",
+    ground: "sheet",
+    sites: 6,
+  },
+  {
+    file: "components/praxisCard/desktop/WowPraxisCard.tsx",
+    slug: "wow",
+    prefix: "wow-praxis-card",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    // One of the frozen four, and mounted inside four different hosts — which
+    // is exactly why the prefix is the STAMP's rather than borrowed from
+    // whichever surface it lands on.
+    file: "components/praxisCard/scoreStamp/WowScoreStamp.tsx",
+    slug: "wow",
+    prefix: "wow-score-stamp",
+    ground: "sheet",
+    sites: 8,
+  },
+  {
+    file: "components/feed/WowFeedFrame.tsx",
+    slug: "wow",
+    prefix: "wow-feed",
+    ground: "sheet",
+    sites: 6,
+  },
+  {
+    file: "components/selectCard/WowSelectCard.tsx",
+    slug: "wow",
+    prefix: "wow-select-card",
+    ground: "sheet",
+    sites: 9,
+  },
+  {
+    file: "components/metataskSeal/skins/WowSeal.tsx",
+    slug: "wow",
+    prefix: "wow-seal",
+    ground: "sheet",
+    sites: 7,
+  },
+  {
+    file: "components/comments/voices/WowComment.tsx",
+    slug: "wow",
+    prefix: "wow-comment",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "components/factionHero/WowFactionHero.tsx",
+    slug: "wow",
+    prefix: "wow-hero",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    // 3 reads from 3 removals, two of which cross into the shared, faction-blind
+    // `BadgedAvatar` as PROPS — a custom property crosses that boundary where a
+    // prefix could not, which is why the declaration sits on the plate root.
+    file: "components/avatar/WowAvatar.tsx",
+    slug: "wow",
+    prefix: "wow-avatar",
+    ground: "sheet",
+    sites: 3,
+  },
+  {
+    file: "pages/taskDetail/archetypes/WowTaskDetail.tsx",
+    slug: "wow",
+    prefix: "wow-task-page",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/praxisDetail/archetypes/WowPraxisDetail.tsx",
+    slug: "wow",
+    prefix: "wow-praxis-page",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/factionDetail/archetypes/WowFactionBody.tsx",
+    slug: "wow",
+    prefix: "wow-faction-page",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    // The one surface in this lane whose prefix is declared on ONE of its two
+    // roots. The mobile pavilion is this file's own element; the desktop half
+    // hands a dress to the shared `ProfileSkin`, which owns the page element all
+    // nine factions mount on. Giving `ProfileDress` a root-vars slot is a
+    // component prop — tree work, not a paint lane's. Until then the desktop
+    // reads resolve through their fallbacks, which is byte-for-byte what
+    // shipped, and the rows below are what prove it.
+    file: "pages/characterProfile/archetypes/WowProfileBody.tsx",
+    slug: "wow",
+    prefix: "wow-profile",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/editPraxis/archetypes/WowEditPraxis.tsx",
+    slug: "wow",
+    prefix: "wow-edit-praxis",
+    ground: "sheet",
+    sites: 5,
+  },
+  {
+    file: "pages/characterPaths/archetypes/WowCreateCharacter.tsx",
+    slug: "wow",
+    prefix: "wow-create",
+    ground: "sheet",
+    sites: 4,
+  },
 ];
 
 /**
@@ -231,7 +365,7 @@ function roleReads(source: string, prefix: string): [FactionRole, string][] {
   });
 }
 
-describe("lane 06 — every migrated site keeps the value it shipped with", () => {
+describe("every migrated site keeps the value it shipped with", () => {
   it.each(SURFACES)(
     "$file declares $prefix once, on the $ground ground",
     ({ file, slug, prefix, ground }) => {

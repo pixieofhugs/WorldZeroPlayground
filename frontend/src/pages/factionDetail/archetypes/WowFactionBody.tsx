@@ -7,6 +7,7 @@ import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
 import { WowSigil } from "../../../components/sigil/WowSigil";
 import { factionName, factionDescription } from "../../../utils/factions";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import { computeFactionMultiplier } from "../../../utils/points";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
@@ -61,21 +62,33 @@ import type { FactionDetailState } from "../useFactionDetail";
  * contract below are the final ones.
  */
 
-const MED = "var(--faction-wow-card-font)"; /* MedievalSharp */
+/**
+ * THE FIVE CORE ROLES ARE ASKED FOR BY NAME (#2674). The `.wz-faction-grid`
+ * frame below spreads `factionRoleVars('wow', 'wow-faction-page')` beside the
+ * `--label-ink` repoint it already carries — the same seam, one level up: a
+ * custom property set once on the frame rather than a colour written at each
+ * site.
+ *
+ * Every read carries today's token as its fallback, so an unset prefix renders
+ * exactly what shipped. The names below that are NOT roles stay put — the olive
+ * label ink, the plum fill and its ink, the gold, the gilt, the plate, the
+ * hairline and the lift are this surface's own extras (decision 07).
+ */
+const MED = "var(--wow-faction-page-face, var(--faction-wow-card-font))"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-const INK = "var(--faction-wow-card-text)";
-const MUTED = "var(--faction-wow-card-muted)";
+const INK = "var(--wow-faction-page-ink, var(--faction-wow-card-text))";
+const MUTED = "var(--wow-faction-page-quiet, var(--faction-wow-card-muted))";
 /** Label ink. Olive-gold, the one measured to clear AA on the parchment field. */
 const LABEL = "var(--faction-wow-accent-deep)";
-const PLUM = "var(--faction-wow-card-accent)";
+const PLUM = "var(--wow-faction-page-accent, var(--faction-wow-card-accent))";
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const ON_PLUM = "var(--faction-wow-on-plum)";
 /** Frame + rule gold. Never an ink: 2.24:1 on the cream (§3). */
 const GOLD = "var(--faction-wow-chronicle-gold)";
 /** The burnt gold reserved for figures. */
 const GILT = "var(--faction-wow-stamp-total)";
-const CARD = "var(--faction-wow-card-bg)";
+const CARD = "var(--wow-faction-page-paper, var(--faction-wow-card-bg))";
 const PLATE = "var(--faction-wow-plate)";
 const HAIR = "var(--faction-wow-chronicle-rule)";
 const BORDER = "var(--faction-wow-chronicle-border)";
@@ -135,7 +148,12 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
     <div
       className="wz-faction-grid"
       data-skin="wow"
-      style={{ ["--label-ink" as string]: "var(--faction-wow-accent-deep)" } as CSSProperties}
+      style={
+        {
+          ...factionRoleVars("wow", "wow-faction-page"),
+          ["--label-ink" as string]: "var(--faction-wow-accent-deep)",
+        } as CSSProperties
+      }
     >
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>

@@ -199,6 +199,22 @@ describe('the shared dismiss control', () => {
   })
 })
 
+/**
+ * Fold `var(--<surface-prefix>-<role>, <today's token>)` back to the token
+ * (#2674). A chassis migrated onto `utils/factionRoles.ts` asks its faction for
+ * a ROLE and carries today's token as the fallback, so what this row measures —
+ * the value the control's slot resolves to — has not moved; only the spelling
+ * has. `utils/__tests__/factionRoleMigration.test.ts` is the gate that each
+ * fallback is the token the site named before — it re-derives every one from
+ * the resolver — which is what makes folding it away sound rather than lenient.
+ * (`factions/__tests__/wowRoleMap.test.ts` is a different guard: the rootless
+ * kit modules and the carve-outs.) Restating each surface's prefix in this table would make
+ * a shared, nine-faction row edited by every faction lane for a value nobody
+ * changed.
+ */
+const foldRoleReads = (html: string) =>
+  html.replace(/var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g, '$1')
+
 describe.each(Object.entries(CASES))('%s: the band it is placed on', (name, { ink, ground, Frame }) => {
   if (Frame) {
     it('publishes the measured ink to the slot that holds the control', () => {
@@ -209,7 +225,7 @@ describe.each(Object.entries(CASES))('%s: the band it is placed on', (name, { in
           </Frame>
         </MemoryRouter>,
       )
-      expect(html).toContain(`color:var(${ink})`)
+      expect(foldRoleReads(html)).toContain(`color:var(${ink})`)
       expect(html).toContain('<span id="x"')
     })
   }
