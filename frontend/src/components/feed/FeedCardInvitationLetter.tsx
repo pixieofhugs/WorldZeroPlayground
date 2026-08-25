@@ -252,9 +252,14 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               flexWrap: "wrap",
             }}
           >
-            <button type="button" className="feed-action" onClick={() => void join()} disabled={joining} style={acceptStyle}>
-              {i18n.t("feed:invitationLetter.confirm.confirm")}
-            </button>
+            {/* [Cancel] … [Confirm] — the global footer order (#646), the same
+                ruling `JoinConfirm` now carries for the faction pages and the
+                invitation letter. This card cannot mount that control: its
+                confirm step is two paragraphs of its own copy, it has a
+                one-click branch for an unaffiliated holder (epic #1419
+                decision 10) and a terminal "joined" state the trio knows
+                nothing about. So it keeps its own pair, and
+                `joinControlOrder.test.tsx` keeps this order honest (#2656). */}
             <button
               type="button"
               className="feed-action"
@@ -263,6 +268,9 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               style={QUIET}
             >
               {i18n.t("feed:invitationLetter.confirm.cancel")}
+            </button>
+            <button type="button" className="feed-action" onClick={() => void join()} disabled={joining} style={acceptStyle}>
+              {i18n.t("feed:invitationLetter.confirm.confirm")}
             </button>
           </div>
         </div>
