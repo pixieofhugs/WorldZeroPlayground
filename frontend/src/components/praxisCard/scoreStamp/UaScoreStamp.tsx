@@ -4,6 +4,7 @@ import { TaskCrown } from "../../factionMarks/TaskCrown";
 import { UaEnsoScore } from "../../factionMarks/uaAtoms";
 import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import { formatPoints } from "../../../utils/points";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
@@ -48,7 +49,7 @@ const labelStyle: CSSProperties = {
   fontSize: 10.5,
   letterSpacing: "0.16em",
   textTransform: "uppercase",
-  color: "var(--faction-ua-card-muted)",
+  color: "var(--score-stamp-quiet, var(--faction-ua-card-muted))",
 };
 
 const workingStyle: CSSProperties = {
@@ -56,7 +57,7 @@ const workingStyle: CSSProperties = {
   fontStyle: "italic",
   // eslint-disable-next-line local/no-raw-style-values -- ornament: the working written under the plate's rule.
   fontSize: 12,
-  color: "var(--faction-ua-card-muted)",
+  color: "var(--score-stamp-quiet, var(--faction-ua-card-muted))",
 };
 
 /** The vermilion chip that carries the multiplier. */
@@ -65,7 +66,7 @@ function MultChip({ children }: { children: ReactNode }) {
     <span
       style={{
         marginLeft: "auto",
-        fontFamily: "var(--faction-ua-card-font)",
+        fontFamily: "var(--score-stamp-face, var(--faction-ua-card-font))",
         fontWeight: 600,
         // eslint-disable-next-line local/no-raw-style-values -- ornament: chip lettering, sized to the pill.
         fontSize: 13,
@@ -91,6 +92,10 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   return (
     <div
       style={{
+        // The nine roles under this surface's prefix (#2659/#2673). The two
+        // module-level style objects and `MultChip` above are all mounted
+        // inside this root, so the cascade reaches them.
+        ...factionRoleVars("ua", "score-stamp"),
         position: "relative",
         display: "flex",
         flexDirection: "column",
@@ -144,12 +149,12 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               <span style={labelStyle}>{t("card.stamp.base")}</span>
               <span
                 style={{
-                  fontFamily: "var(--faction-ua-card-font)",
+                  fontFamily: "var(--score-stamp-face, var(--faction-ua-card-font))",
                   fontWeight: 600,
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's engraved figure.
                   fontSize: 25,
                   lineHeight: 0.8,
-                  color: "var(--faction-ua-card-text)",
+                  color: "var(--score-stamp-ink, var(--faction-ua-card-text))",
                 }}
               >
                 {base}
@@ -169,7 +174,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             <div
               style={{
                 ...workingStyle,
-                color: "var(--faction-ua-card-accent)",
+                color: "var(--score-stamp-accent, var(--faction-ua-card-accent))",
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
                 marginTop: 3,
               }}
@@ -202,12 +207,12 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               <span style={workingStyle}>{t("card.stamp.subtotal")}</span>
               <span
                 style={{
-                  fontFamily: "var(--faction-ua-card-font)",
+                  fontFamily: "var(--score-stamp-face, var(--faction-ua-card-font))",
                   fontWeight: 600,
                   // eslint-disable-next-line local/no-raw-style-values -- ornament: the subtotal figure, a step under base.
                   fontSize: 20,
                   lineHeight: 0.9,
-                  color: "var(--faction-ua-card-text)",
+                  color: "var(--score-stamp-ink, var(--faction-ua-card-text))",
                 }}
               >
                 {base + meta}
@@ -244,7 +249,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             <div
               style={{
                 ...workingStyle,
-                color: "var(--faction-ua-card-accent)",
+                color: "var(--score-stamp-accent, var(--faction-ua-card-accent))",
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
                 marginTop: 3,
               }}
