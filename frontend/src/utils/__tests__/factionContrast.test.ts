@@ -41,6 +41,7 @@ import {
   parseColor,
   relativeLuminance,
 } from "../contrast";
+import { factionRoleVar } from "../factionRoles";
 import { readStripped, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
 
@@ -4480,21 +4481,20 @@ describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
 
   it("the rail's own ground is the wall too", () => {
     // The sixth surface, and the only one that reaches its ground through a
-    // shared seam: `railFaceVars` hands all eight skins the `-card-*` family.
-    // S.N.I.D.E. overrides four locals INSIDE that function. What the rendered
-    // `<aside>` then declares is measured by the seam's own spec,
+    // shared seam. `SNIDE_WALL_FACE` used to be a literal inside `railFaceVars`
+    // and this assertion used to slice it out of `Sidebar.tsx` as text; #2659
+    // generalised it into the `chrome` ground of `utils/factionRoles.ts`, so
+    // the assertion now ASKS the resolver instead of grepping for it — a
+    // question that survives the next move. What the rendered `<aside>` then
+    // declares is still measured by the seam's own spec,
     // `layout/__tests__/sidebarFactionFace.test.tsx`.
-    const source = stripComments(sourceOf("components/layout/Sidebar.tsx"));
-    const face = source.slice(
-      source.indexOf("const SNIDE_WALL_FACE"),
-      source.indexOf("function railFaceVars"),
+    expect(factionRoleVar("snide", "paper", "chrome"), "the rail's sheet is the wall").toBe(
+      "var(--faction-snide-wall)",
     );
-    expect(face.length, "no `SNIDE_WALL_FACE` in the rail seam").toBeGreaterThan(0);
-    expect(face, "the rail's sheet is the wall").toMatch(/paper: ["']wall["']/);
     expect(
-      face,
+      factionRoleVar("snide", "paper", "sheet"),
       "the other seven skins take `-card-bg`, which is the right stock for a faction whose card sheet IS its chrome. S.N.I.D.E.'s is the slab pasted ON its chrome.",
-    ).not.toMatch(/paper: ["']card-bg["']/);
+    ).toBe("var(--faction-snide-card-bg)");
   });
 
   /**

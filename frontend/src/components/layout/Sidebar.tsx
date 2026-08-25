@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
+import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
 import { mediaUrl } from '../../utils/media'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import type { PraxisCardOut } from '../../api/praxis'
@@ -97,65 +98,39 @@ function sampledSpectrum(index: number): string {
  * Albescent's own hues would put it back in the spectrum and un-hide it". A
  * colour family minted for it here would be that repaint, one surface over.
  *
- * ponytail: two of the eight locals are COMPOSED here rather than read from a
- * token, because no per-faction token says them. `--rail-well` is the sheet's
- * own ink at 10% — a wash that lands light on a light sheet and lifted on a
- * dark one, so one expression serves all eight rather than eight `-well`
- * tokens for one consumer; and `--rail-spectrum` is a ramp of the faction's
- * spine hue, standing where the unaffiliated ramp stands. If the archetype
- * conversation happens, both become the archetype's business.
+ * ponytail: two of the locals are COMPOSED here rather than read from a token,
+ * because no per-faction token says them. `--rail-well` is the sheet's own ink
+ * at 10% — a wash that lands light on a light sheet and lifted on a dark one,
+ * so one expression serves all eight rather than eight `-well` tokens for one
+ * consumer; and `--rail-spectrum` is a ramp of the faction's own hue, standing
+ * where the unaffiliated ramp stands. Both are SURFACE EXTENSIONS in the sense
+ * of #2659's decision 07 and stay local to the rail: the core map is
+ * faction-owned and canonical, and a surface with genuine extra needs declares
+ * its extras itself, composed out of roles rather than added to them.
  *
- * ONE KEY OVERRIDES FOUR OF THE COLOUR LOCALS, AND IT IS NOT A FORK (#2631,
- * ADR-0085). `-card-*` is the right family for seven skins because a faction's
- * card sheet is the stock its chrome is made of. S.N.I.D.E. is the one where it
- * is not: its sheet is the photocopier SLAB pasted on a wall (#2066), pinned
- * near-black in BOTH cascades, so the rail was a black column beside a page the
- * same faction paints in flipping xerox stock. See {@link SNIDE_WALL_FACE}. The
- * other seven keys return byte-identical values, and an unaffiliated viewer
- * still declares nothing at all — the acceptance criterion above is untouched.
+ * ONE KEY OVERRIDES SIX OF THE ROLES, AND IT IS NOT A FORK (#2631, ADR-0085).
+ * `-card-*` is the right family for seven skins because a faction's card sheet
+ * is the stock its chrome is made of. S.N.I.D.E. is the one where it is not:
+ * its sheet is the photocopier SLAB pasted on a wall (#2066), pinned near-black
+ * in BOTH cascades, so the rail was a black column beside a page the same
+ * faction paints in flipping xerox stock. The other seven keys return
+ * byte-identical values, and an unaffiliated viewer still declares nothing at
+ * all — the acceptance criterion above is untouched.
+ *
+ * THE MAP ITSELF NOW LIVES IN `utils/factionRoles.ts` (#2659). It was written
+ * here first, for one surface, and its S.N.I.D.E. entry was the only per-ground
+ * override in the repo; decision 06 of "Nine Kits, One Vocabulary" generalises
+ * exactly that shape, so this function became its first caller rather than a
+ * second mechanism beside it. The rail asks for the `chrome` ground — it is the
+ * app's own furniture wearing a faction, not a content card — and reads seven
+ * of the nine roles it declares.
  */
-
-/**
- * The four colour locals S.N.I.D.E. takes off the wall instead of the slab, and
- * the fifth that has to move with them (#2631).
- *
- * Every token here already existed and is already measured: `-note-ink` and
- * `-note-muted` are the tiers three other S.N.I.D.E. surfaces read on this same
- * wall, and `-note-wall-edge` is the hairline the task card and the field desk's
- * credential panel already draw — the load-bearing one, because a wall-grounded
- * panel on a wall-grounded page has nothing else separating it (#2065).
- *
- * THE SPECTRUM MOVES BECAUSE A MEASUREMENT FORCED IT. `--faction-snide` is
- * #6fae00 by day, and the level track is a DRAWN mark owing 1.4.11's 3:1 against
- * the groove it fills: on the slab that was never in question, on the light wall
- * it is 1.87:1. `-wall-credit` is the wall-end rung of the same hue (#2177), the
- * one the faction page already spends on its marker scrawl for exactly this
- * reason — 6.28:1 by day, 9.22:1 by night, on the well over the wall. No token
- * is minted; this is a second NAME for a hue that already has two rungs.
- *
- * `--rail-radius` and `--rail-face` deliberately stay on the card family. A
- * radius and a typeface have no cascade to be wrong in.
- */
-const SNIDE_WALL_FACE = {
-  paper: 'wall',
-  ink: 'note-ink',
-  quiet: 'note-muted',
-  line: 'note-wall-edge',
-  spine: 'wall-credit',
-} as const
-
 function railFaceVars(slug: string | null | undefined): CSSProperties {
   if (!isKnownFaction(slug)) return {}
-  const wall = slug === 'snide' ? SNIDE_WALL_FACE : null
-  const hue = wall ? factionCssVar(slug, wall.spine) : factionCssVar(slug)
-  const ink = factionCssVar(slug, wall ? wall.ink : 'card-text')
+  const ink = factionRoleVar(slug, 'ink', 'chrome')
+  const hue = factionRoleVar(slug, 'fill', 'chrome')
   return {
-    '--rail-paper': factionCssVar(slug, wall ? wall.paper : 'card-bg'),
-    '--rail-ink': ink,
-    '--rail-quiet': factionCssVar(slug, wall ? wall.quiet : 'card-muted'),
-    '--rail-line': factionCssVar(slug, wall ? wall.line : 'card-border'),
-    '--rail-radius': factionCssVar(slug, 'card-radius'),
-    '--rail-face': factionCssVar(slug, 'card-font'),
+    ...factionRoleVars(slug, 'rail', 'chrome'),
     // 10% of the sheet's own ink: a well on the cream reads as a light warm
     // grey, the same expression on S.N.I.D.E.'s photocopier ink reads as a
     // lifted black. Measured as a VEIL in factionContrast.test.ts, because a
