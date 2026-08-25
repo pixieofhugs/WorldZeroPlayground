@@ -2111,7 +2111,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
  */
 const RAIL_WELL_ALPHA = 0.1;
 
-const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default").map((key) => ({
+// `snide` is absent for the reason `default` is: its rail declares something
+// else. Seven skins take `-card-*` on `-card-bg`; S.N.I.D.E.'s sheet is the SLAB
+// pasted on its chrome rather than the chrome itself, so #2631 moved its rail
+// onto the wall and its inks onto the `-note-*` tiers. The same well, over a
+// different ground — measured in this file's last block, with the level track
+// the generator has no shape for.
+const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default" && key !== "snide").map((key) => ({
   what: `${key} rail ink on the rail well`,
   surface: `--faction-${key}-card-bg`,
   veil: { token: `--faction-${key}-card-text`, alpha: RAIL_WELL_ALPHA },
@@ -4271,6 +4277,189 @@ describe("the Everymen bill's drawn rule clears the graphical floor", () => {
         ratio,
         `the rule is ${formatRatio(ratio)} on the bill (${theme}); a drawn mark owes 1.4.11's 3:1`,
       ).toBeGreaterThanOrEqual(AA_LARGE);
+    });
+  }
+});
+
+/**
+ * S.N.I.D.E. IS NOT AN ALWAYS-DARK FACTION (#2631, ADR-0085).
+ *
+ * The premise six surfaces asserted in their own docstrings — "its
+ * `--faction-snide-*` tokens are identical in both themes" — stopped being true
+ * at #1023 and #2065: `-wall` and `-note-paper` both FLIP. What does not flip is
+ * `-ink` (the press) and the `-card-*` slab, and those are what the six were
+ * painted with. The owner has ruled the same way five times on five of them
+ * (#2227, #2287, #2343, twice on 2026-08-24), which is the tell that this is one
+ * rule nobody wrote down rather than five bugs. ADR-0085 writes it down; this
+ * block is the part of it a reviewer cannot forget to run.
+ *
+ * THE FAILURE MODE IT CATCHES IS THE SEVENTH SURFACE — written next year from a
+ * docstring that still says always-dark. Two seams, because the defect has two
+ * shapes and only one of them is a colour:
+ *
+ *  (a) THE PIN. `dataTheme` freezes every alias inside a skin container to one
+ *      cascade, so no token choice below it can be right. It is swept over the
+ *      WHOLE tree rather than the six files, because the next one will not be in
+ *      them — and because there is exactly one kit for which it is correct.
+ *
+ *  (b) THE GROUND. A page or a panel grounded on the press or on the slab is a
+ *      dark island on a light page. Swept per-file, resolved through each file's
+ *      own aliases, with the sites that legitimately keep them named one by one:
+ *      a mark that brings its OWN stock (a censor plate under acid, a chit, a
+ *      black clipping pasted on the wall) is not a ground, and #2066 / #2173 are
+ *      live rulings this must not undo. A NEW background on either token fails
+ *      here until someone adds it to the inventory, which is the review a
+ *      docstring could not force.
+ *
+ * Every ink these surfaces moved onto is measured above rather than here:
+ * `SNIDE_WALL_PAIRS` already reads `-note-ink`, `-note-muted`, `-note-pink-ink`
+ * and `-wall-credit` on both ends of the wall's ramp, both washed corners and
+ * both themes. Nothing was minted for this. The two readings that generator
+ * cannot reach — the rail's own well, and the level track drawn on it — are the
+ * rows at the bottom of this block.
+ */
+describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
+  /** The only kit in the app whose ground is one colour in both cascades. */
+  const PINNED = "pages/characterProfile/archetypes/SingularityProfileBody.tsx";
+
+  it("exactly one profile kit pins a theme, and it is the terminal", () => {
+    const pinned = sourceFiles()
+      .filter((path) => /dataTheme:\s*['"](?:dark|light)['"]/.test(readStripped(path)))
+      .map(toRelative);
+    expect(
+      pinned,
+      "a `dataTheme` pin freezes every alias inside the container, so a faction whose tokens FLIP cannot be pinned at all — `--faction-singularity-card-bg` is #050f08 in both cascades, and S.N.I.D.E.'s ground has not been invariant since #1023.",
+    ).toEqual([PINNED]);
+  });
+
+  /**
+   * The five component surfaces the ruling names, and every site on each that is
+   * still allowed to paint the press or the slab as a `background`. The value is
+   * the alias as the file spells it, so a rename fails loudly rather than
+   * silently matching nothing — the same guard #2173's block uses up the file.
+   * (The sixth surface is the rail, which reaches its ground through a shared
+   * seam and is checked separately below.)
+   */
+  const SURFACES: { file: string; grounds: string[]; why: string }[] = [
+    {
+      file: "pages/characterProfile/archetypes/SnideProfileBody.tsx",
+      // Two: the censor plate under the acid section heading (#2173), and the
+      // level track's groove, whose fill ramps between two acids that read
+      // 1.03:1 and 2.30:1 on xerox stock. `pageBackground` is the wall, which is
+      // the whole point of the file and is why that knob is swept here too.
+      grounds: ["INK", "INK"],
+      why: "the page, the header, the progression panel, the badge board and the empty states take the wall",
+    },
+    {
+      file: "components/factionHero/SnideFactionHero.tsx",
+      // The wordmark's censor plate, the medallion disc (#2368) and the stat
+      // chits — which ARE slabs, and whose old 34% wash #2343 resolved by giving
+      // them the plate their acid numeral owes.
+      grounds: ["PLATE", "PLATE", "PLATE"],
+      why: "the hero's own `<header>` took the wall in #2343",
+    },
+    {
+      file: "pages/characterPaths/archetypes/SnideCreateCharacter.tsx",
+      grounds: [],
+      why: "the sheet is the shared `WALL` from `factionMarks/snideAtoms`, and the press is only ever an ink here",
+    },
+    {
+      file: "pages/editPraxis/archetypes/SnideEditPraxis.tsx",
+      grounds: [],
+      why: "the composer moved onto the wall in #2177; `PRESS_INK` is the ink acid is paired with",
+    },
+    {
+      file: "pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx",
+      // `RansomCard` and the three cut-out chips stuck to it are the black
+      // clipping pasted ON the wall (#2066); the points figure's plate and the
+      // level track's groove are the plate acid owes (#2287).
+      grounds: ["INK", "INK", "INK", "INK", "PLATE", "PLATE"],
+      why: "the credential panel is `WallPanel`, on the shared `WALL`",
+    },
+  ];
+
+  /**
+   * Every GROUND a file declares that resolves to the press or the slab.
+   *
+   * Four property names, because a ground does not always spell itself
+   * `background`: `pageBackground` and `barTrack` are `ProfileKit` knobs the
+   * shared renderer paints with, and the profile skin reaches ALL of its grounds
+   * through knobs — a sweep for `background:` alone would have read that file as
+   * clean while it was still painting the whole page in press ink.
+   */
+  function pressGrounds(file: string): string[] {
+    const source = stripComments(sourceOf(file));
+    const aliases = new Map(
+      [...source.matchAll(/const ([A-Z_][A-Z_0-9]*) = ["']var\((--faction-snide-[\w-]+)\)["']/g)].map(
+        (match) => [match[1], match[2]] as const,
+      ),
+    );
+    return [...source.matchAll(/(?:background(?:Color)?|pageBackground|barTrack):\s*([^,;\n}]+)/g)]
+      .map((match) => match[1].trim())
+      .filter((value) => {
+        const token = aliases.get(value) ?? value.match(/^var\((--faction-snide-[\w-]+)\)$/)?.[1];
+        return token === "--faction-snide-ink" || token === "--faction-snide-card-bg";
+      });
+  }
+
+  for (const { file, grounds, why } of SURFACES) {
+    it(`${file.split("/").pop()} grounds on the wall, not the press or the slab`, () => {
+      expect(
+        pressGrounds(file).sort(),
+        `${file}: ${why}. \`--faction-snide-ink\` is the PRESS and \`-card-bg\` is the SLAB — both invariant, and a page or a panel painted with either is a dark island on a light page (ADR-0085). A mark that brings its own stock is not a ground; if this is one of those, name it in SURFACES with the ruling that allows it.`,
+      ).toEqual([...grounds].sort());
+    });
+  }
+
+  it("the rail's own ground is the wall too", () => {
+    // The sixth surface, and the only one that reaches its ground through a
+    // shared seam: `railFaceVars` hands all eight skins the `-card-*` family.
+    // S.N.I.D.E. overrides four locals INSIDE that function. What the rendered
+    // `<aside>` then declares is measured by the seam's own spec,
+    // `layout/__tests__/sidebarFactionFace.test.tsx`.
+    const source = stripComments(sourceOf("components/layout/Sidebar.tsx"));
+    const face = source.slice(
+      source.indexOf("const SNIDE_WALL_FACE"),
+      source.indexOf("function railFaceVars"),
+    );
+    expect(face.length, "no `SNIDE_WALL_FACE` in the rail seam").toBeGreaterThan(0);
+    expect(face, "the rail's sheet is the wall").toMatch(/paper: ["']wall["']/);
+    expect(
+      face,
+      "the other seven skins take `-card-bg`, which is the right stock for a faction whose card sheet IS its chrome. S.N.I.D.E.'s is the slab pasted ON its chrome.",
+    ).not.toMatch(/paper: ["']card-bg["']/);
+  });
+
+  /**
+   * The rail's two readings `SNIDE_WALL_PAIRS` cannot reach, because neither
+   * ground is a token: `--rail-well` is the sheet's own ink at 10%, composed in
+   * `railFaceVars`, and the level track is a DRAWN mark on it.
+   *
+   * The track owes 1.4.11's 3:1 rather than a text floor — the same distinction
+   * the field desk's block draws — and it is the one thing on the rail a
+   * measurement forced to move. `--faction-snide` is #6fae00 by day and reads
+   * 1.87:1 on this groove; `-wall-credit`, the wall-end rung of the same hue
+   * (#2177), reads 6.28:1. A second NAME beside a rung, not a repoint.
+   */
+  for (const theme of BOTH_THEMES) {
+    it(`the rail's ink and its level track clear the wall's own well (${theme})`, () => {
+      for (const [ink, floor, role] of [
+        ["--faction-snide-note-ink", AA_NORMAL, "the identity line, as TYPE on the well"],
+        ["--faction-snide-wall-credit", AA_LARGE, "the level track's fill, as a DRAWN mark"],
+      ] as const) {
+        const surface = resolveColor("--faction-snide-wall", theme);
+        const wash = resolveColor("--faction-snide-note-ink", theme);
+        const text = resolveColor(ink, theme);
+        expect(surface.color, `the wall (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        expect(wash.color, `the well's ink (${theme}) resolved to "${wash.raw}"`).not.toBeNull();
+        expect(text.color, `${ink} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+        const ground = compositeOver({ ...wash.color!, a: RAIL_WELL_ALPHA }, surface.color!);
+        const ratio = contrastRatio(text.color!, ground);
+        expect(
+          ratio,
+          `${role}: ${ink} on the rail well (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(floor);
+      }
     });
   }
 });
