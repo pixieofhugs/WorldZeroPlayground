@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MediaGallery from "../../../components/MediaGallery";
+import { factionRoleVars } from "../../../utils/factionRoles";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
@@ -257,7 +258,7 @@ function LeafDisc({
         fontWeight: 700,
         fontSize: "var(--text-lg)",
         background: "var(--faction-ua-panel)",
-        color: "var(--faction-ua-card-text)",
+        color: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
         boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
       }}
     >
@@ -294,12 +295,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
   /** A quiet sheet laid on the leaf — the page's one container. */
   const sheet: CSSProperties = {
-    background: "var(--faction-ua-card-bg)",
+    background: "var(--praxis-detail-paper, var(--faction-ua-card-bg))",
     border: "1px solid var(--faction-ua-rule)",
     borderRadius: 6,
     boxSizing: "border-box",
     boxShadow: `0 14px 36px -30px ${uaShade(52)}`,
-    color: "var(--faction-ua-card-text)",
+    color: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
   };
 
   /** The same sheet with the rail's padding already on it. */
@@ -349,7 +350,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   const sectionHead = (label: ReactNode, trailing?: ReactNode) =>
     head("var(--faction-ua-page-text)", label, trailing);
   const panelHead = (label: ReactNode, trailing?: ReactNode) =>
-    head("var(--faction-ua-card-text)", label, trailing);
+    head("var(--praxis-detail-ink, var(--faction-ua-card-text))", label, trailing);
 
   // Navigation is not this skin's any more (#2102). The trail sat INSIDE the
   // vellum leaf so its accent could be measured on the faction's own ground,
@@ -449,7 +450,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
               fontFamily: UA_TEXT,
               fontSize: "var(--text-xl)",
               lineHeight: 1.5,
-              color: "var(--faction-ua-card-muted)",
+              color: "var(--praxis-detail-quiet, var(--faction-ua-card-muted))",
             }}
           >
             {t("detail.filed", {
@@ -553,9 +554,9 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       style={panel}
       heading={panelHead(t("duelCrossLink.label"))}
       ink={{
-        name: "var(--faction-ua-card-text)",
-        total: "var(--faction-ua-card-text)",
-        muted: "var(--faction-ua-card-muted)",
+        name: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
+        total: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
+        muted: "var(--praxis-detail-quiet, var(--faction-ua-card-muted))",
         line: "var(--faction-ua-rule)",
         plate: "var(--faction-ua-panel)",
       }}
@@ -588,7 +589,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           fontStyle: "italic",
           lineHeight: 1.6,
           margin: "0 0 var(--space-md)",
-          color: "var(--faction-ua-card-muted)",
+          color: "var(--praxis-detail-quiet, var(--faction-ua-card-muted))",
         }}
       >
         {t("detail.vote.prompt")}
@@ -641,7 +642,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                color: "var(--faction-ua-card-text)",
+                color: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
                 textDecoration: "none",
               }}
             >
@@ -675,7 +676,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 width: 20,
                 textAlign: "right",
                 fontSize: "var(--text-content)",
-                color: "var(--faction-ua-card-text)",
+                color: "var(--praxis-detail-ink, var(--faction-ua-card-text))",
               }}
             >
               {voter.value}
@@ -784,7 +785,19 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   );
 
   return (
-    <div className="py-8" style={{ position: "relative" }}>
+    <div
+      className="py-8"
+      style={{
+        /* The nine roles under this surface's prefix (#2659/#2673). The whole
+           page is inside this element, including `AvatarDisc` and the two
+           style objects built above, so every read below resolves against it.
+           A seal or a card belonging to a DIFFERENT faction can nest here and
+           is unaffected: it declares its own surface's prefix, and no two
+           surfaces share one. */
+        ...factionRoleVars("ua", "praxis-detail"),
+        position: "relative",
+      }}
+    >
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail at every width - see components/nav/Breadcrumb. */}
       <Breadcrumb
