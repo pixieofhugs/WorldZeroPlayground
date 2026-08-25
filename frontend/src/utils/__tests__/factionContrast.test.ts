@@ -2145,8 +2145,52 @@ const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default" && key !=
   text: `--faction-${key}-card-text`,
 }));
 
+/**
+ * THE METATASK SEAL'S CAPTION, on nine bodies (#2648, owner ruling 2026-08-25).
+ *
+ * A hand-curated list, not a slug loop, and the reason is the whole point of
+ * this block: five of the nine seals do NOT stand on `--faction-{key}-card-bg`,
+ * so a generated row would measure a ground no seal paints. UA's is the
+ * parchment ramp's darkest stop, Coven's is the ward panel, the Ephemerists'
+ * is the plate, Everymen's is the bill paper, WOW's is the chronicle sheet.
+ *
+ * WHY THE ROWS EXIST AT ALL, given that every ink below was already on screen
+ * in exactly this place before #2648: the eyebrow that carried them was
+ * DELETED and then restored around a different word, and a caption ink is
+ * invisible to this file unless a row names it. The deletion going unnoticed
+ * is the whole reason the caption is being put back — so it gets a census.
+ *
+ * NO NEW COLOUR. Nine inks, nine grounds, every pair already shipped: the
+ * caption re-letters what each skin's own eyebrow was lettered in.
+ */
+const SEAL_CAPTION_PAIRS: Pair[] = [
+  // The two na-stock seals — Albescent's sheet and na's spectrum-framed one
+  // both paint `--faction-default-card-bg` inside the frame (CARD_PAIRS
+  // measures the same pairing as "default card muted text"; this row says
+  // WHICH SITE, so a repaint of the seal cannot hide behind the generic one).
+  { what: "albescent seal caption", surface: "--faction-default-card-bg", text: "--faction-default-card-muted" },
+  { what: "na seal caption", surface: "--faction-default-card-bg", text: "--faction-default-card-muted" },
+  // Coven's slip caption voice on the ward panel — `CAPTION` in covenSlip.tsx.
+  { what: "coven seal caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" },
+  // The plate's incised small caps in its own caption ink. The tab this
+  // replaces was BAND_INK on BAND; the caption sits on the plate instead,
+  // which is a different pairing and so a row of its own.
+  { what: "ephemerists seal caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
+  { what: "everymen seal caption", surface: "--everymen-paper", text: "--everymen-muted" },
+  { what: "singularity seal caption", surface: "--faction-singularity-card-bg", text: "--faction-singularity-card-muted" },
+  // Acid as TYPE, which owes photocopier black — `--faction-snide-card-bg` is
+  // near-black in BOTH cascades (#2173's rule is about PAPER, and the seal's
+  // slab is not paper).
+  { what: "snide seal caption", surface: "--faction-snide-card-bg", text: "--faction-snide-acid" },
+  // The parchment is a gradient `parseColor` cannot read; `--faction-ua-panel`
+  // is its darkest stop, the same call `ua leaf darkest stop` makes.
+  { what: "ua seal caption", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
+  { what: "wow seal caption", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-accent" },
+];
+
 const PAIRS: Pair[] = [
   ...CARD_PAIRS,
+  ...SEAL_CAPTION_PAIRS,
   ...FILL_PAIRS,
   ...ACCENT_PAIRS,
   ...ROSTER_PAIRS,
