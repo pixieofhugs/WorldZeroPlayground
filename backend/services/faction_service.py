@@ -16,8 +16,6 @@ from models.task import Task
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import get_current_era_row, get_or_create_stats
 
-UA_FACTION_SLUG: str = "ua"
-
 # UNAFFILIATED_FACTION_SLUG is imported above from faction_slugs, which owns it
 # (#1559). It used to be re-declared here and again in services/scoring.py.
 
