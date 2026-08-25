@@ -39,6 +39,8 @@ import { stripComments } from "./cssVars";
  * carry the survivors as a named, dated allowlist.
  */
 
+import { COMMENT_CHROME_SLOTS } from "../../components/comments/Comment";
+
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css"];
 
@@ -60,6 +62,11 @@ const DYNAMIC_SUFFIXES = [
   "light",
   "on-accent",
   "on-fill",
+  // #2650 — the shared comment chassis builds `comment-<slot>` for every slot
+  // in its own vocabulary. DERIVED rather than restated, for the same reason
+  // the faction keys below are: a slot added to `COMMENT_CHROME_SLOTS` cannot
+  // land here stale, and a slot deleted there stops whitewashing its token.
+  ...COMMENT_CHROME_SLOTS.map((slot) => `comment-${slot}`),
 ];
 
 /**

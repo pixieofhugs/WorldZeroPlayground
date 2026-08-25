@@ -188,6 +188,64 @@ const ACCENT_PAIRS: Pair[] = [
 }));
 
 /**
+ * #2650 — THE COMMENT CHROME SET, measured as its own family.
+ *
+ * Three factions' comment voices became `--faction-<key>-comment-*` and their
+ * component files were deleted (epic #2649). Every value in that set is an
+ * ALIAS onto a token this file already measures somewhere, so it is tempting to
+ * treat the family as covered by inheritance. It is not, and the difference is
+ * the whole reason these rows exist: **an alias can be REPOINTED.** The day
+ * someone moves `--faction-coven-comment-body-ink` off `-slip-ink`, the rows
+ * above keep measuring `-slip-ink` on the ward card and say nothing about the
+ * comment. These rows follow the slot.
+ *
+ * It matters here more than it would elsewhere. A comment thread is the densest
+ * text surface in the app (UA's brief §5), and it is the one surface whose
+ * chrome no longer has a component to read: the pairing is stated in index.css
+ * and nowhere else, so index.css is where it has to be checked.
+ *
+ * THE GROUND IS `-comment-sheet`, NOT `-comment-panel`, and that is a fact
+ * about today rather than a simplification. `-panel` is the padded block's own
+ * ground and only Ephemerists sets one — `--faction-ephemerists-plate-wash`,
+ * which is `none` in both cascades since the plate stopped washing. A veil
+ * layer would composite nothing. If a faction ever paints a real panel, its ink
+ * rows move onto it and take a `veil`.
+ *
+ * `default`'s MENTION ink is deliberately absent. na paints a resolved @mention
+ * as gradient-clipped spectrum text (`.rainbow-ink`, #970), so `MentionText`
+ * omits `color` entirely and `--faction-default-comment-mention` is passed and
+ * ignored — a row for it would measure an ink nothing renders, which is the
+ * dead shape #1232 deleted from ACCENT_PAIRS.
+ */
+const COMMENT_KEYS = ["default", "coven", "ephemerists"];
+const COMMENT_INKS = ["name-ink", "label-ink", "hint-ink", "body-ink", "mention"];
+
+const COMMENT_PAIRS: Pair[] = [
+  ...COMMENT_KEYS.flatMap((key) =>
+    COMMENT_INKS.filter((ink) => !(key === "default" && ink === "mention")).map((ink) => ({
+      what: `${key} comment sheet, ${ink}`,
+      surface: `--faction-${key}-comment-sheet`,
+      text: `--faction-${key}-comment-${ink}`,
+    })),
+  ),
+  // The composer's inset field is a second ground, and the body ink is what is
+  // typed on it — `ComposerControls` takes `text` from the same slot.
+  ...COMMENT_KEYS.map((key) => ({
+    what: `${key} comment field, body ink`,
+    surface: `--faction-${key}-comment-field`,
+    text: `--faction-${key}-comment-body-ink`,
+  })),
+  // The submit button: the accent as a FILL, its measured ink on top. Named per
+  // slot for the repointing reason above — ACCENT_PAIRS measures the tokens
+  // these alias, which is a different assertion from measuring the slots.
+  ...COMMENT_KEYS.map((key) => ({
+    what: `${key} comment submit, on-accent`,
+    surface: `--faction-${key}-comment-accent`,
+    text: `--faction-${key}-comment-on-accent`,
+  })),
+];
+
+/**
  * #694 — the COLLAB ROSTER's functional inks, on every faction sheet.
  *
  * WHY THIS BLOCK IS DIFFERENT FROM THE ONES BELOW. Everything else in
@@ -2149,6 +2207,7 @@ const PAIRS: Pair[] = [
   ...CARD_PAIRS,
   ...FILL_PAIRS,
   ...ACCENT_PAIRS,
+  ...COMMENT_PAIRS,
   ...ROSTER_PAIRS,
   ...COLLAB_PAIRS,
   ...PRAXIS_CARD_PAIRS,

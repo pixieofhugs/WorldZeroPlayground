@@ -28,8 +28,6 @@ import '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
 import type { CommentProps } from '../shared'
 import DefaultComment from '../Comment'
-import CovenComment from '../voices/CovenComment'
-import EphemeristsComment from '../voices/EphemeristsComment'
 import EverymenComment from '../voices/EverymenComment'
 import SingularityComment from '../voices/SingularityComment'
 import SnideComment from '../voices/SnideComment'
@@ -38,8 +36,11 @@ import WowComment from '../voices/WowComment'
 
 const VOICES: [string, ComponentType<CommentProps>][] = [
   ['na / default', DefaultComment],
-  ['coven', CovenComment],
-  ['ephemerists', EphemeristsComment],
+  // Two slugs with no voice of their own since #2650 — the chassis paints
+  // them off `--faction-<key>-comment-*`, and the listbox has to clear the
+  // sheet on their grounds exactly as it does on a bespoke one.
+  ['coven', DefaultComment],
+  ['ephemerists', DefaultComment],
   ['everymen', EverymenComment],
   ['singularity', SingularityComment],
   ['snide', SnideComment],

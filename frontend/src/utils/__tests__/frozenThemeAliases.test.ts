@@ -159,6 +159,68 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--label-ink",
   "--link-ink",
   "--link-ink-hover",
+
+  /**
+   * THE COMMENT CHROME SET (#2650, epic #2649) — forty-two entries at once, and
+   * the count is the point rather than the noise.
+   *
+   * Three comment voices became `--faction-<key>-comment-*` token sets and
+   * their component files were deleted. Every colour slot in those sets is an
+   * alias onto the token that voice already named inline, which is exactly the
+   * shape this inventory polices, so all forty-two land here in one go. The
+   * ruling on all forty-two is one ruling: they are transcriptions, they are
+   * declared on `:root, [data-theme]` so a nested theme wrapper re-substitutes
+   * them, and the assertion below checks that scope for each.
+   *
+   * WORTH READING BEFORE THE EPIC'S NEXT CHILD. Epic #2649 proposes doing this
+   * to five families and ~26,000 lines. At this rate the inventory grows by
+   * roughly forty names per family per faction migrated — which is a real cost
+   * of the token seam, paid here, in a list a human is supposed to read. If it
+   * stops being readable, the answer is a shape rule ("a `-comment-` slot is an
+   * alias by construction") rather than a longer list; it is not that yet.
+   */
+  "--faction-coven-comment-accent",
+  "--faction-coven-comment-body-ink",
+  "--faction-coven-comment-composer-ink",
+  "--faction-coven-comment-crown",
+  "--faction-coven-comment-edge",
+  "--faction-coven-comment-field",
+  "--faction-coven-comment-hint-ink",
+  "--faction-coven-comment-label-ink",
+  "--faction-coven-comment-mention",
+  "--faction-coven-comment-name-ink",
+  "--faction-coven-comment-on-accent",
+  "--faction-coven-comment-rule-img",
+  "--faction-coven-comment-shadow",
+  "--faction-coven-comment-sheet",
+  "--faction-default-comment-accent",
+  "--faction-default-comment-body-ink",
+  "--faction-default-comment-crown",
+  "--faction-default-comment-edge",
+  "--faction-default-comment-field",
+  "--faction-default-comment-hint-ink",
+  "--faction-default-comment-label-ink",
+  "--faction-default-comment-mention",
+  "--faction-default-comment-name-ink",
+  "--faction-default-comment-on-accent",
+  "--faction-default-comment-rule-edge",
+  "--faction-default-comment-shadow",
+  "--faction-default-comment-sheet",
+  "--faction-ephemerists-comment-accent",
+  "--faction-ephemerists-comment-body-edge",
+  "--faction-ephemerists-comment-body-ink",
+  "--faction-ephemerists-comment-composer-ink",
+  "--faction-ephemerists-comment-edge",
+  "--faction-ephemerists-comment-field",
+  "--faction-ephemerists-comment-hint-ink",
+  "--faction-ephemerists-comment-ink",
+  "--faction-ephemerists-comment-label-ink",
+  "--faction-ephemerists-comment-mention",
+  "--faction-ephemerists-comment-name-ink",
+  "--faction-ephemerists-comment-on-accent",
+  "--faction-ephemerists-comment-rule-edge",
+  "--faction-ephemerists-comment-shadow",
+  "--faction-ephemerists-comment-sheet",
 ];
 
 const REFERENT = /var\(\s*(--[\w-]+)/g;

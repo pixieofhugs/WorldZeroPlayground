@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 
 const EphemeristsAvatar = lazyArchetype(() => import('../components/avatar/EphemeristsAvatar'))
 const EphemeristsBackdrop = lazyArchetype(() => import('../components/backdrop/EphemeristsBackdrop'))
-const EphemeristsComment = lazyArchetype(() => import('../components/comments/voices/EphemeristsComment'))
 const EphemeristsCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EphemeristsCreateCharacter'))
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
@@ -48,7 +47,12 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   avatar: () => EphemeristsAvatar,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
-  comment: () => EphemeristsComment,
+  // NO `comment` ROW (#2650, epic #2649). The Valley-plate leaf was pure
+  // CHROME — papyrus under a gold wash, incised small caps, Spectral, and an
+  // ochre margin rule that is a border rather than a drawing — so it lives in
+  // index.css as `--faction-ephemerists-comment-*` and the shared `Comment`
+  // chassis paints it. The plate's atoms are untouched; every slot is an alias
+  // onto the `-plate-*` token the deleted voice named inline.
   feedFrame: () => EphemeristsFeedFrame,
   vote: () => EphemeristsVote,
   taskDetail: () => EphemeristsTaskDetail,

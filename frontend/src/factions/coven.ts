@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 
 const CovenAvatar = lazyArchetype(() => import('../components/avatar/CovenAvatar'))
 const CovenBackdrop = lazyArchetype(() => import('../components/backdrop/CovenBackdrop'))
-const CovenComment = lazyArchetype(() => import('../components/comments/voices/CovenComment'))
 const CovenCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/CovenCreateCharacter'))
 const CovenDuelSealConfirm = lazyArchetype(() => import('../components/duel/CovenDuelSealConfirm'))
 const CovenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/CovenEditPraxis'))
@@ -44,7 +43,14 @@ export const COVEN_MANIFEST: FactionManifest = {
   avatar: () => CovenAvatar,
   backdrop: () => CovenBackdrop,
   sigil: () => CovenSigil,
-  comment: () => CovenComment,
+  // NO `comment` ROW, AND THE ABSENCE IS THE POINT (#2650, epic #2649). The
+  // candlelit slip turned out to be pure CHROME — a sheet, a candle-glow edge,
+  // four faces and a braided foot rule — so it is a
+  // `--faction-coven-comment-*` block in index.css and no component anywhere.
+  // The shared `Comment` chassis paints it off the author's slug. Deleting a
+  // voice for that reason is not the unification `frontend/CLAUDE.md` forbids:
+  // a faction that DRAWS something on this surface still keeps its file, and
+  // five of the nine do.
   feedFrame: () => CovenFeedFrame,
   vote: () => CovenVote,
   taskDetail: () => CovenTaskDetail,

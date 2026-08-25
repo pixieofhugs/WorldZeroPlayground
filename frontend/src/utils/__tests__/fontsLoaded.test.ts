@@ -495,6 +495,39 @@ function declaredFaces(loadedFamilyNames: Set<string>): Face[] {
       record(families, weights, /font-?[sS]tyle\s*[:=]\s*\{?\s*["']?\s*italic/.test(scope));
     }
 
+    // A TOKEN SET pins a face and a weight by NAME, not by brace scope (#2650).
+    //
+    // The scope is the pin everywhere else, and it stops working the moment a
+    // surface resolves its typography at RUNTIME: the shared `Comment` chassis
+    // builds `var(--faction-<key>-comment-body-face)` out of the author's slug,
+    // so its JSX names no token and index.css names no `font-family` — and
+    // Cormorant Garamond 500, which only the Coven comment ever rendered in,
+    // read as dead the moment that voice became a token set.
+    //
+    // What IS there is a pin TIGHTER than a scope: two custom properties
+    // sharing a prefix, one ending `-face` and one `-weight`. Reading that pair
+    // cannot launder anything, because it names one slot. Reading the enclosing
+    // `:root` block instead would cross-pair every family in it with every
+    // weight in it, which is the fake-bold this guard exists to catch.
+    if (file.endsWith("index.css")) {
+      for (const [name] of tokenValues()) {
+        if (!name.endsWith("-face")) continue;
+        const families = familiesBehindToken(name, loadedFamilyNames);
+        if (families.length === 0) continue;
+        const prefix = name.slice(0, name.length - "-face".length);
+        // No `-weight` sibling, or one that stands aside (`inherit`), means the
+        // slot renders at the inherited default — 400, as everywhere else here.
+        const pinned = tokenValues().get(prefix + "-weight");
+        const weight = pinned === undefined ? null : pinned.match(/\b(\d{3})\b/);
+        const slant = tokenValues().get(prefix + "-style");
+        record(
+          families,
+          [weight === null ? 400 : Number(weight[1])],
+          slant !== undefined && slant.includes("italic"),
+        );
+      }
+    }
+
     // `className="font-display italic font-medium"` sets all three at once.
     for (const match of raw.matchAll(/(?:className\s*=\s*|@apply\s+)["'`]?([^"'`\n;]*)/g)) {
       const classes = match[1];

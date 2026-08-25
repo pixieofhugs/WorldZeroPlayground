@@ -9473,8 +9473,7 @@
    theme wrapper — `profileSkin.tsx` renders one — must re-substitute them, or
    a comment inside it freezes at its light value.
    ───────────────────────────────────────────────────────────────────────────── */
-:root,
-[data-theme] {
+:root, [data-theme] {
   /* ── na / Unaffiliated — THE SPECTRUM BUBBLE. Also the fallback every
         unregistered slug and Albescent's pass-through wrapper resolve to, so
         this is the one set that may never be incomplete. */
