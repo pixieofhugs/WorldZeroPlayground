@@ -54,6 +54,7 @@ import {
   useOwnerReveal,
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 /** The composer's accent: red as a RULE (the field's edge) and a FILL (the
  *  Post button), never as type. Its AA ink is the one #924 measured on it. */
@@ -78,7 +79,7 @@ const DATELINE = {
 
 /** The author's name, set as the slip's byline: the poster face, on the band. */
 const BYLINE = {
-  fontFamily: 'var(--faction-everymen-card-font)',
+  fontFamily: 'var(--ev-voice-face, var(--faction-everymen-card-font))',
   // Content tier, not the label tier the kind label on the feed card uses: a
   // person's name is identity, and Bebas is narrow enough that 18px reads about
   // as large as 14 of a normal face.
@@ -113,7 +114,16 @@ function Slip({
 }) {
   const mobile = useFormFactor() === 'mobile'
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+    <div
+      style={{
+        // `Slip` is the surface root for BOTH modes — the row and the composer
+        // both render through it — so the role map is declared once here.
+        ...factionRoleVars('everymen', 'ev-voice'),
+        display: 'flex',
+        gap: 'var(--space-md)',
+        alignItems: 'flex-start',
+      }}
+    >
       {avatar}
       <div
         {...containerProps}

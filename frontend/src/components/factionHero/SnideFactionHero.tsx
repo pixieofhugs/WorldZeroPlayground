@@ -1,6 +1,7 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
+import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
  * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): faint
@@ -47,7 +48,7 @@ const PLATE = "var(--faction-snide-ink)";
  * because the disc is frozen on `PLATE` and BOTH of its ends were measured
  * there: 6.93:1 by day, 15.55:1 by night.
  */
-const CHROME = "var(--faction-snide)";
+const CHROME = "var(--snd-hero-fill, var(--faction-snide))";
 /** The stock the disc gave up, kept as the raster that reads on it. Invariant. */
 const STOCK = "var(--faction-snide-paper)";
 
@@ -76,6 +77,7 @@ export default function SnideFactionHero({
   return (
     <header
       style={{
+        ...factionRoleVars("snide", "snd-hero"),
         position: "relative",
         overflow: "hidden",
         marginBottom: "var(--space-xl)",
@@ -440,7 +442,7 @@ export default function SnideFactionHero({
                   // The CARD's tier is the right one HERE and only here on this
                   // hero: the chit is a slab, not the wall. 12.96:1 light /
                   // 11.85:1 dark on the plate.
-                  color: "var(--faction-snide-card-muted)",
+                  color: "var(--snd-hero-quiet, var(--faction-snide-card-muted))",
                 }}
               >
                 {s.label}

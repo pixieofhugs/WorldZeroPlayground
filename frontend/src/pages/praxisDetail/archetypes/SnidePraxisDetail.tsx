@@ -141,6 +141,7 @@ import {
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
@@ -168,11 +169,11 @@ const STOCK = "var(--faction-snide-paper)";
  * The SLAB — the page's one ground, black in both themes, with the ink family it
  * was measured against. Everything pasted on the wall is one of these.
  */
-const PLATE = "var(--faction-snide-card-bg)";
-const PLATE_TEXT = "var(--faction-snide-card-text)";
-const PLATE_MUTED = "var(--faction-snide-card-muted)";
+const PLATE = "var(--snd-read-paper, var(--faction-snide-card-bg))";
+const PLATE_TEXT = "var(--snd-read-ink, var(--faction-snide-card-text))";
+const PLATE_MUTED = "var(--snd-read-quiet, var(--faction-snide-card-muted))";
 /** Acid as the plate's INK, which is the one ground that admits it as type. */
-const PLATE_ACCENT = "var(--faction-snide-card-accent)";
+const PLATE_ACCENT = "var(--snd-read-accent, var(--faction-snide-card-accent))";
 /** Acid as a drawn RULE or ring. Same pigment, and never type on paper. */
 const ACID = "var(--faction-snide-acid)";
 
@@ -816,7 +817,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
+    <div
+      className="py-8"
+      style={{
+        ...factionRoleVars("snide", "snd-read"),
+        position: "relative",
+        fontFamily: TYPE,
+        color: INK,
+      }}
+    >
       {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
           same trail at every width - see components/nav/Breadcrumb. */}
       <Breadcrumb

@@ -3,6 +3,7 @@ import { WALL, WALL_PLAIN } from "../../factionMarks/snideAtoms";
 import { useGroundIsBusy } from "../../backdrop/BackdropContext";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
  * S.N.I.D.E. — THE EVIDENCE SLAB (#842), REPOSTED ON THE WALL (#2177).
@@ -100,6 +101,12 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
       className="snd-praxis-frame"
       style={{
         ...frameBase,
+        /* THE ROLE MAP UNDER ITS OWN PREFIX, NOT `--snd-praxis-*` (#2676). That
+           channel is the HOST's — the task-detail row sets it to repoint this
+           card's ground and inks — and declaring it here would overwrite the
+           host from inside the child. `--snd-pcard-*` is this card's own name
+           for the vocabulary, so the two never meet. */
+        ...factionRoleVars("snide", "snd-pcard"),
         // No borderRadius: the evidence slab has hard corners in the prototype.
         position: "relative",
         background: ground(groundIsBusy),
@@ -134,7 +141,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           // identity belongs. A two-line excerpt set in it is unreadable, so the
           // body stays on the slab's Special Elite.
           fonts={{
-            display: "var(--faction-snide-card-font)",
+            display: "var(--snd-pcard-face, var(--faction-snide-card-font))",
             body: "var(--faction-snide-font-type)",
           }}
           titleStyle={{

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { SnideBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 /**
  * S.N.I.D.E. seal — a photocopier-ink ransom note slapped on the host praxis.
@@ -84,8 +85,9 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
     <div
       className="relative"
       style={{
-        background: 'var(--faction-snide-card-bg)',
-        color: 'var(--faction-snide-card-text)',
+        ...factionRoleVars('snide', 'snd-seal'),
+        background: 'var(--snd-seal-paper, var(--faction-snide-card-bg))',
+        color: 'var(--snd-seal-ink, var(--faction-snide-card-text))',
         border: '2px solid var(--faction-snide-pink)',
         borderRadius: 2,
         transform: 'rotate(-1deg)',

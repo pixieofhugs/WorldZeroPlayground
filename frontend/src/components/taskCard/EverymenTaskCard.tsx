@@ -11,6 +11,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
  * Everymen — THE HELP WANTED BILL (task card v2, #1023).
@@ -49,7 +50,7 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * `[data-theme="dark"]` cascade, never a ternary.
  */
 
-const POSTER = "var(--faction-everymen-card-font)"; /* Bebas Neue */
+const POSTER = "var(--ev-task-face, var(--faction-everymen-card-font))"; /* Bebas Neue */
 const TYPED = "var(--font-body)"; /* Courier Prime */
 
 /**
@@ -260,7 +261,12 @@ export default function EverymenTaskCard({
   return (
     <div
       data-form-factor={formFactor}
-      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+      style={{
+        ...factionRoleVars("everymen", "ev-task"),
+        width: size.cardWidth,
+        maxWidth: "100%",
+        boxSizing: "border-box",
+      }}
     >
       <article
         style={{

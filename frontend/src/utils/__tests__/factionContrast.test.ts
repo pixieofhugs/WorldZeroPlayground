@@ -2492,6 +2492,31 @@ function sourceOf(relative: string): string {
 }
 
 /**
+ * A ROLE READ, as a regex fragment wrapping the token a source guard is hunting.
+ *
+ * The faction lanes (#2649) rewrite `var(--faction-snide-card-bg)` into
+ * `var(--snd-desk-paper, var(--faction-snide-card-bg))` — same value, new
+ * spelling — and every guard in this file that reads a token off the SOURCE
+ * rather than out of `index.css` matches on the spelling. Lane 06 broke two of
+ * them, and it broke them the dangerous way round: `pressGrounds` stopped
+ * resolving four of `SnideFieldDesk`'s aliases and reported the file CLEANER
+ * than it is. A guard that silently narrows is worse than one that fails.
+ *
+ * WHY THE FALLBACK IS THE VALUE TO MEASURE. The surfaces these guards read are
+ * all on the `sheet` ground, where the role map points at exactly the token
+ * each site already named — so the declared property and the fallback carry one
+ * value and reading either is the same measurement. That is not an assumption
+ * left in prose: `factionRoleMigration.test.ts` re-derives every fallback in
+ * every migrated file from the resolver and fails if one drifts. A surface that
+ * ever takes `chrome` breaks the equality, which is why that file records each
+ * surface's ground and this comment names the dependency.
+ */
+const ROLE_READ = String.raw`(?:var\(\s*--[\w-]+\s*,\s*)?`;
+
+/** Closes {@link ROLE_READ}. Separate because the token sits between them. */
+const ROLE_READ_END = String.raw`\)?`;
+
+/**
  * `dress.pageStyle` out of `EphemeristsEditPraxis` — THE SECOND EPHEMERISTS
  * ROOT, and the one two separate seams (#1636's links, #1800's labels) have now
  * had to be declared on. One reader, so the third seam does not re-derive the
@@ -4141,7 +4166,9 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
       expect(
         source,
         `${HERO} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
-      ).toMatch(new RegExp(`const ${alias} = ["']var\\(${token}\\)["']`));
+      ).toMatch(
+        new RegExp(`const ${alias} = ["']${ROLE_READ}var\\(${token}\\)${ROLE_READ_END}["']`),
+      );
     }
     return source;
   }
@@ -4151,7 +4178,9 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
     const trimmed = expression.replace(/[`"'${}]/g, "").replace(/[,;]$/, "").trim();
     const alias = ALIASES.find(([name]) => name === trimmed);
     if (alias) return alias[1];
-    const bare = trimmed.match(/^var\((--[a-z-]+)\)$/);
+    // `CHROME` is a role read since #2676, and it also reaches `tokenOf`
+    // directly at the medallion's ink. Both spellings resolve to one token.
+    const bare = trimmed.match(new RegExp(`^${ROLE_READ}var\\((--[a-z-]+)\\)${ROLE_READ_END}$`));
     expect(bare, `${role} paints \`${trimmed}\`, which is neither an alias this guard knows nor a var()`).not.toBeNull();
     return bare![1];
   }
@@ -4729,15 +4758,27 @@ describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
    */
   function pressGrounds(file: string): string[] {
     const source = stripComments(sourceOf(file));
+    // Both readers below tolerate a {@link ROLE_READ} wrapper, and this is the
+    // guard where that MATTERS: lane 06 turned four of `SnideFieldDesk`'s
+    // ground aliases into role reads, and an alias map that cannot see them
+    // does not fail — it reports the file cleaner than it is.
+    const SNIDE_TOKEN = String.raw`var\((--faction-snide-[\w-]+)\)`;
     const aliases = new Map(
-      [...source.matchAll(/const ([A-Z_][A-Z_0-9]*) = ["']var\((--faction-snide-[\w-]+)\)["']/g)].map(
-        (match) => [match[1], match[2]] as const,
-      ),
+      [
+        ...source.matchAll(
+          new RegExp(
+            `const ([A-Z_][A-Z_0-9]*) = ["']${ROLE_READ}${SNIDE_TOKEN}${ROLE_READ_END}["']`,
+            "g",
+          ),
+        ),
+      ].map((match) => [match[1], match[2]] as const),
     );
     return [...source.matchAll(/(?:background(?:Color)?|pageBackground|barTrack):\s*([^,;\n}]+)/g)]
       .map((match) => match[1].trim())
       .filter((value) => {
-        const token = aliases.get(value) ?? value.match(/^var\((--faction-snide-[\w-]+)\)$/)?.[1];
+        const token =
+          aliases.get(value) ??
+          value.match(new RegExp(`^${ROLE_READ}${SNIDE_TOKEN}${ROLE_READ_END}$`))?.[1];
         return token === "--faction-snide-ink" || token === "--faction-snide-card-bg";
       });
   }

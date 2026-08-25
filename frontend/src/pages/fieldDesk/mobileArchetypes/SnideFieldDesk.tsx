@@ -11,6 +11,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
+import { factionRoleVars } from '../../../utils/factionRoles'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
@@ -35,11 +36,11 @@ import { WALL } from '../../../components/factionMarks/snideAtoms'
  *  five-layer {@link WALL} still reads as something pasted ON it. */
 const DESK = 'var(--faction-snide-wall)'
 const WALL_TEXT = 'var(--faction-snide-wall-text)'
-const INK = 'var(--faction-snide-card-bg)'
-const TEXT = 'var(--faction-snide-card-text)'
-const MUTED = 'var(--faction-snide-card-muted)'
-const ACID = 'var(--faction-snide-card-accent)'
-const ACCENT_WALL = 'var(--faction-snide)'
+const INK = 'var(--snd-desk-paper, var(--faction-snide-card-bg))'
+const TEXT = 'var(--snd-desk-ink, var(--faction-snide-card-text))'
+const MUTED = 'var(--snd-desk-quiet, var(--faction-snide-card-muted))'
+const ACID = 'var(--snd-desk-accent, var(--faction-snide-card-accent))'
+const ACCENT_WALL = 'var(--snd-desk-fill, var(--faction-snide))'
 const PINK = 'var(--faction-snide-pink)'
 const LINE = 'var(--faction-snide-border)'
 const COND = 'var(--faction-snide-font-cond)'
@@ -204,7 +205,15 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
     <div
       data-skin="snide"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: TYPE, color: WALL_TEXT, background: DESK }}
+      style={{
+        ...factionRoleVars('snide', 'snd-desk'),
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-lg)',
+        fontFamily: TYPE,
+        color: WALL_TEXT,
+        background: DESK,
+      }}
     >
       {/* Masthead — the ransom cut over an acid rule */}
       <header>
