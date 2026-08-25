@@ -16,14 +16,55 @@
  * `--everymen-ink` for text on `--everymen-paper`) — pairings only exist once
  * rendered, which is what `e2e/contrast.spec.ts` (Part B) is for.
  *
- * THE MANIFEST is the §3 token contract, not a guess: the standard
- * `--faction-{key}-card-*` suffix set, the faction fills under
- * `--color-text-on-accent`, and the archetype-private primitives whose roles
- * index.css states verbatim ("text on gold/parchment elements", "bright text
- * on dark elements", "primary text on vellum").
+ * ONE CLASS OF PAIRING IS THE EXCEPTION, since #2661: a role map DECLARES the
+ * pairing rather than a component discovering it, so `ink` on `paper` and
+ * `onFill` on `fill` are facts about `factionRoles.ts` and not about a render.
+ * Those this file measures for real.
+ *
+ * THE MANIFEST IS HALF ENUMERATED AND HALF AUTHORED, AND THE SPLIT IS THE
+ * POINT (#2661).
+ *
+ *   - THE ENUMERATED HALF is `ROLE_PAIRS`: every colour-on-colour question the
+ *     role vocabulary can be asked, read out of `factionRoleVar` rather than
+ *     typed against a `--faction-{key}-` template. Roles x factions x grounds x
+ *     themes is finite, so it is walked instead of remembered. A ground
+ *     override that repoints a role moves this gate on the same commit.
+ *   - THE AUTHORED HALF is everything after it: archetype-private primitives
+ *     whose roles index.css states verbatim ("text on gold/parchment elements",
+ *     "bright text on dark elements", "primary text on vellum"), and the
+ *     pairings that only exist because a SHARED component paints a state ink on
+ *     eight faction sheets. No vocabulary names those, so a human still does.
+ *
+ * The curated half is where the old failure mode lives: a family added next
+ * month is unmeasured while this file is green, because nobody adds the rows.
+ * That is not fixed, it is CONFINED — read what the loop cannot see, at the
+ * bottom of this docblock, before trusting the green.
  *
  * ALPHA IS COMPOSITED. Several inks are rgba, and measuring them un-composited
- * is exactly what let #594's 2.78:1 muted ink ship green.
+ * is exactly what let #594's 2.78:1 muted ink ship green. It bit again in the
+ * loop's own findings: `--faction-snide-note-wall-edge` is a 35% acid that
+ * reads clear un-composited and 2.77:1 on the wall it edges.
+ *
+ * WHAT THE LOOP STILL CANNOT SEE — so it is not over-trusted the way the
+ * curated list was:
+ *
+ *  1. ANY PAIRING THAT IS NOT ROLE-ON-ROLE. A shared component's state inks on
+ *     a faction sheet, an ink on a ground belonging to a DIFFERENT surface, a
+ *     mark on a page rather than on its own card. Those are still hand-written
+ *     rows below, with the same blind spot they always had.
+ *  2. THE OTHER SIDE OF A HAIRLINE. `line` is measured against the faction's
+ *     own `paper` because that is the side a role map can express. A card edge
+ *     also faces the PAGE, and no role names the page.
+ *  3. ANYTHING COMPOSED FROM A ROLE. `--rail-well` is the sheet's ink at 10%;
+ *     a `color-mix` veil, a ramp, a scrim. The resolver hands out the role and
+ *     the surface builds the value, so the loop sees the ingredient and not the
+ *     dish. Those keep hand-written rows with a `veil`.
+ *  4. WHETHER ANYTHING RENDERS THE PAIR AT ALL. A role can be perfect and the
+ *     component can read a different token — `e2e/contrast.spec.ts` is Part B
+ *     and remains the only guard that sees a computed style.
+ *  5. A TOKEN BLOCK WRITTEN `:root,\n[data-theme] {`. `cssVars.ts` matches
+ *     `:root, [data-theme]` on ONE line, so a block split across two is
+ *     invisible to the resolver and every row reading it would pass vacuously.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -264,12 +305,12 @@ const ROLE_PAIRS: Pair[] = (() => {
 /**
  * #924 — text on each comment voice's COMPOSER ACCENT. The submit button is
  * painted in the accent the voice passes, NOT the fill, so this is a distinct
- * question from FILL_PAIRS: WOW's accent is plum (white legible), its fill is
+ * question from ROLE_PAIRS: WOW's accent is plum (white legible), its fill is
  * gold (ink legible). The surface here is the exact var each voice hands
  * `ComposerControls` as `accent` — most send `card-accent`, but SNIDE sends
  * `--faction-snide-pink` and Singularity sends `--faction-singularity-card-text`,
  * so the surface column cannot be generated from the key. `default` (na) is
- * INCLUDED here where FILL_PAIRS omits it: the na composer paints its button in a
+ * INCLUDED here where ROLE_PAIRS omits it: the na composer paints its button in a
  * solid accent (not the rainbow), so `--faction-default-on-accent` is real text.
  *
  * SEVEN, NOT EIGHT (#1232). `EphemeristsComment` no longer passes an `-on-accent`
@@ -346,10 +387,10 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
   { what: `${key} roster credit ink`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-credit` },
   // A CAST row fills with the faction's own sheet and sets its own ink, so the
   // name and the "· you" byline are `card-text` / `card-muted` on `card-bg` —
-  // pairings CARD_PAIRS has gated since #651. They are deliberately not
+  // pairings ROLE_PAIRS has gated since #651. They are deliberately not
   // repeated here; a second name for one measurement is what the WOW block
   // below warns about. The cast pill is `card-accent` on the same sheet, which
-  // is `{key} card accent` up there — and for everymen / coven / ephemerists
+  // is `{slug}/sheet accent on paper` up there — and for everymen / coven / ephemerists
   // that pair is BASELINE debt owned by #651. #694 does not make it worse (the
   // fill it replaced measured 1.05:1) and does not fix it either.
 ]);
@@ -487,7 +528,7 @@ const COLLAB_PAIRS: Pair[] = [
     // NO `accent as ink` ROW, and this is the same call ROSTER_PAIRS makes
     // above rather than an omission. `accent` is the roster's DONE tier and it
     // is spent as an ink twice — the waiting notice and the nudge control — but
-    // that is `{key} card accent` in CARD_PAIRS, which for everymen and coven is
+    // that is `{slug}/sheet accent on paper` in ROLE_PAIRS, which for everymen and coven is
     // BASELINE debt owned by #651. Measured on the composer grounds it reads
     // 4.49:1 / 4.16:1 (everymen paper, light / dark) and 2.98:1 (coven ward
     // panel, light) — the same three failures at the same three ratios, because
@@ -560,7 +601,7 @@ const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
  * EPHEMERISTS LEFT IN #2141 (owner ruling). Its `-card-bg` now aliases
  * `-plate-bg`, which is the sheet its praxis card paints, so `ephemerists
  * praxis card sheet, muted ink` would resolve the identical (ink, ground) pair
- * as `ephemerists card muted text` in CARD_PAIRS — a second name for one
+ * as `ephemerists/sheet quiet on paper` in ROLE_PAIRS — a second name for one
  * measurement, which is the thing this file keeps warning about. The pairing is
  * still gated; it is gated once.
  */
@@ -657,8 +698,8 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
   }),
   // The BARE-sheet muted reading, for the four sheets `-card-bg` does not stand
   // in for: the `hidden` badge sets the muted ink there (its 5% wash is gone —
-  // see the component). For the other five keys that is `{key} card muted
-  // text`, and a second name for one measurement is what this file keeps
+  // see the component). For the other five keys that is `{slug}/sheet quiet on
+  // paper`, and a second name for one measurement is what this file keeps
   // warning about.
   //
   // A bare NOTICE row used to sit beside it, for `moderateError`. That
@@ -794,9 +835,9 @@ const SNIDE_WALL_PAIRS: Pair[] = [
   // A wall inside a wall stops reading as a thing pasted ON something (#2066's
   // ruling, restated by #2177), so on the detail page the card is a slab and
   // its shared slots resolve the `-card-*` family they were always measured on.
-  // `{key} card body/muted/accent` already pin the three reading inks on that
-  // ground; these are the three functional inks the generator used to cover for
-  // snide before its sheet became the wall.
+  // `{slug}/sheet ink/quiet/accent on paper` already pin the three reading inks
+  // on that ground; these are the three functional inks the generator used to
+  // cover for snide before its sheet became the wall.
   {
     what: "snide detail slab, flagged badge alarm ink under the danger veil",
     surface: "--faction-snide-card-bg",
@@ -918,10 +959,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
 
   // WOW — the cream/gold/plum chronicle (#838, ADR-0050). The faction kit
   // states six contrast pairs; FOUR of them are the §3 card block measured in
-  // both themes, so CARD_PAIRS already gates them and repeating them here would
+  // both themes, so ROLE_PAIRS already gates them and repeating them here would
   // be a second name for one measurement:
-  //   text / card-bg  (both themes) = `wow card body text`
-  //   plum / card-bg  (both themes) = `wow card accent`
+  //   text / card-bg  (both themes) = `wow/sheet ink on paper`
+  //   plum / card-bg  (both themes) = `wow/sheet accent on paper`
   // What is left are the chronicle's own primitives, which no generator reaches.
   //
   // The kit's "on-fill / gold" pair puts ink on the frame gold. Its stated ink
@@ -964,7 +1005,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   //
   // Only three of the kit's pairs name a token that is not already gated above:
   // its "headline / card" and "opp name / card" pairs are `--faction-wow-card-*`
-  // on the cream, which CARD_PAIRS covers in both themes.
+  // on the cream, which ROLE_PAIRS covers in both themes.
   //
   // The opponent's faction accent is deliberately ABSENT from this list. It can
   // be any hue in the palette, and the whole design of these two surfaces is
@@ -1202,7 +1243,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // the mounting surface painted, which for both the praxis card and the praxis
   // detail's vote section is `-plate-bg`. A card ink on the plate: the same
   // (ink, ground) crossing the row above records, one surface over, and likewise
-  // uncovered — it measured 3.75:1 in dark while `ephemerists card accent` was
+  // uncovered — it measured 3.75:1 in dark while `ephemerists/sheet accent on
+  // paper` was
   // green against `-card-bg`, the sheet this gate never sits on.
   { what: "ephemerists vote login gate, card accent on the plate", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-accent" },
   // THE FLAGGED BANNER (#1636), on the praxis detail's page ground. Neutral
@@ -1455,7 +1497,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // functional inks the panel carries; the panel also carries each faction's OWN
   // muted ink, because `StakesTiles` and `RaceRoster` paint `theme.muted` on
   // whatever ground the skin mounts them over. That ink was chosen against the
-  // faction's SHEET, and CARD_PAIRS measures it there — which is why two of them
+  // faction's SHEET, and ROLE_PAIRS measures it there — which is why two of them
   // could sit under AA on the deeper stock with every guard green.
   //
   // What it carries at 18px: the roster's "walking" mark for a side that has not
@@ -1466,7 +1508,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Two factions, not three. WOW's `-card-muted` read 4.24:1 on the chronicle
   // panel and Everymen's `-muted` 4.25:1 on the deep stock, so each grew a
   // `-quiet` sibling for its own panel; the ink itself is untouched and keeps
-  // clearing on the body ground (CARD_PAIRS still measures it there). The
+  // clearing on the body ground (ROLE_PAIRS still measures it there). The
   // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
   // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
   // quiet ink` above already measures — at 6.21 / 5.52 then, and at 5.52 in both
@@ -2088,7 +2130,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Also not a row: UA's member-row rank numeral, item 2 of #1766. It was
   // `--faction-ua-vermil` ("large display type only") at 14px/600, 4.12:1 on the
   // dark sheet, and now takes `--faction-ua-card-accent` — which `ua card
-  // accent` in CARD_PAIRS has measured on that exact ground since #848. A
+  // accent` in ROLE_PAIRS has measured on that exact ground since #848. A
   // second `what` for one measurement measures nothing; the guard that the ink
   // stays in scope is the reader allowlist below.
 
@@ -2196,7 +2238,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
  *
  * THE SENTENCE THAT USED TO FOLLOW WAS WRONG, AND IT IS WHY #1932 SHIPPED.
  * It read: "where the ordinary faction hue is the theme-correct ink and
- * `FILL_PAIRS` / `ACCENT_PAIRS` already gate it." Both halves fail.
+ * `ROLE_PAIRS` / `ACCENT_PAIRS` already gate it." Both halves fail.
  *
  * THEME-CORRECT IS NOT LEGIBLE. `--faction-{key}` flipping with the cascade was
  * the whole of #1792's bug, so a hue that flips reads as the fix — and it is,
@@ -2206,7 +2248,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * failures was LIGHT, which is the tell: a bug that sorts cleanly by cascade is
  * one bug, and this one is "the light hue is a fill".
  *
- * AND NEITHER BLOCK GATES THAT PAIRING. `FILL_PAIRS` measures
+ * AND NEITHER BLOCK GATES THAT PAIRING. `ROLE_PAIRS` measures
  * `--faction-{key}-on-fill` ON the hue — the hue is the GROUND there, which is
  * the same arithmetic seen from the other side and is exactly why
  * `--faction-wow-on-fill`'s declaration already carries the words "white only
@@ -2221,7 +2263,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
  * #2361 — the desktop rail's WELL, the one ground the repoint invented.
  *
  * The rail now takes the viewer's faction, and every ink it carries is a
- * `--faction-{key}-card-*` on `--faction-{key}-card-bg`, which `CARD_PAIRS`
+ * `--faction-{key}-card-*` on `--faction-{key}-card-bg`, which `ROLE_PAIRS`
  * above already measures for all eight keys in both cascades. One ground is not
  * covered there, because it is not a token: `--rail-well`, the recessed fill
  * under the `EDIT` pill and both progress tracks. The rail used to fill those
@@ -2281,7 +2323,7 @@ const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default" && key !=
  */
 const SEAL_CAPTION_PAIRS: Pair[] = [
   // The two na-stock seals — Albescent's sheet and na's spectrum-framed one
-  // both paint `--faction-default-card-bg` inside the frame (CARD_PAIRS
+  // both paint `--faction-default-card-bg` inside the frame (ROLE_PAIRS
   // measures the same pairing as "default card muted text"; this row says
   // WHICH SITE, so a repaint of the seal cannot hide behind the generic one).
   { what: "albescent seal caption", surface: "--faction-default-card-bg", text: "--faction-default-card-muted" },
@@ -2340,7 +2382,7 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
 
   // ── Found by this sweep — awaiting triage into children (#651 audit comment) ──
   // Card accents used as metadata text (§3: "metadata / decorative accent").
-  // #848 fixed both `ua card accent` entries: the sun-bleached repaint gave UA
+  // #848 fixed both `ua/sheet accent on paper` entries: the sun-bleached repaint gave UA
   // a metadata sienna that is not the fill hue (5.18:1 light, 6.58:1 dark).
   // (Renamed by #2661, not re-measured. These three rows were `{key} card
   // accent` while a hand-written generator produced them; they are now
@@ -2349,7 +2391,8 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   "light | everymen/sheet accent on paper": { ratio: 4.49, issue: 651 },
   "light | coven/sheet accent on paper": { ratio: 2.81, issue: 651 },
   "dark | everymen/sheet accent on paper": { ratio: 4.16, issue: 651 },
-  // (`dark | ephemerists card accent` stood here at 3.72:1 from the sweep until
+  // (`dark | ephemerists card accent` — the pre-#2661 spelling — stood here at
+  // 3.72:1 from the sweep until
   // #1627 moved the card contract off the codex's rubric vermilion onto the
   // plate's brass highlight — 11.98:1, in both cascades. The entry below is the
   // SAME vermilion on the same vellum, reached through the archetype-private
@@ -2819,8 +2862,8 @@ describe("the frost is a layer, not a ground (#1413)", () => {
  *
  * And that faction question already has an answer with a name and a row.
  * `--faction-{key}-card-muted` IS the measured quiet ink for this role on that
- * sheet — 4.70:1 at worst, the Ephemerists plate — gated by `{key} card muted
- * text` above and, for the four keys whose sheet is a different token, by
+ * sheet — 4.70:1 at worst, the Ephemerists plate — gated by `{slug}/sheet quiet
+ * on paper` above and, for the four keys whose sheet is a different token, by
  * `{key} praxis card sheet, muted ink`. Adding `{key} label ink on its sheet`
  * beside those would be a second name for one measurement, which is what this
  * file keeps warning about. So the frame points `--label-ink` at its own
@@ -4550,7 +4593,8 @@ describe("the Coven directory tile's mark clears the graphical floor", () => {
  * for a graphical object.
  *
  * WHY IT NEEDS ONE AT ALL. `--everymen-red` on `--everymen-paper` already
- * appears in this file as `everymen card accent`, and it appears there as a
+ * appears in this file as `everymen/sheet accent on paper`, and it appears there
+ * as a
  * KNOWN NEAR-MISS -- 4.49 light / 4.16 dark against a 4.5 text floor, carried in
  * `KNOWN_ISSUES` under #651. Read as an ink that is a defect; read as the dashed
  * rule and the cog it actually is on both the task card and the directory tile,
@@ -4810,7 +4854,7 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
     // which is the material both seals are already made of — `DefaultSeal` and
     // `AlbescentSeal` paint it on their roots — so neither band authors a
     // colour and neither borrows one. `--faction-default-card-bg` under
-    // `--faction-default-card-text` is measured by `CARD_PAIRS` above, in both
+    // `--faction-default-card-text` is measured by `ROLE_PAIRS` above, in both
     // cascades, and has been since the na kit existed.
     { band: "AlbescentBand", file: SEAL_BANDS, ground: "--faction-default-card-bg", role: "the na card's stock — Albescent IS the unaffiliated sheet plus a drift (ADR-0048)" },
     { band: "DefaultBand", file: SEAL_BANDS, ground: "--faction-default-card-bg", role: "the na card's stock, which is the na kit's one material" },
@@ -4908,7 +4952,7 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
   it("the two seal-only bands letter in the na card's ink and hand the mark nothing", () => {
     // The ink half of the census for #2648's two bands, by name. Both letter in
     // `--faction-default-card-text` on `--faction-default-card-bg` — the na
-    // card's own pairing, measured by `CARD_PAIRS` in both cascades — so
+    // card's own pairing, measured by `ROLE_PAIRS` in both cascades — so
     // neither introduces a reading this file has not already taken.
     //
     // AND NEITHER PASSES `markColor`, which is the deliberate answer rather than

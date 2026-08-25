@@ -150,9 +150,16 @@ const SHEET_ROLES: FactionRoleMap = {
  * The reverse is allowed: a ground may re-measure `onFill` against a fill it
  * leaves alone. Only the ink going missing is forbidden.
  *
- * This is the STRUCTURE half. Whether the named pair actually clears AA is a
- * measurement, and #2661 — the contrast gate becoming a loop over this resolver
- * rather than a hand-curated pair list — is where that half lands.
+ * This is the STRUCTURE half, and it is only half. #2661 landed the other one:
+ * `factionContrast.test.ts` now loops over this resolver rather than a
+ * hand-curated pair list, so a ground override's `onFill`/`fill` pair is
+ * MEASURED and not merely present. It found the sibling this type cannot
+ * express, on this very entry — the chrome ground moves `paper` to the wall
+ * and leaves `accent` on `-card-accent`, which is the acid measured for the
+ * near-black slab and reads 1.03:1 on the light wall. The type can force a
+ * fill's ink to travel with it because they are one pair; it cannot know that
+ * every OTHER ink must be re-measured when `paper` moves, which is a ratio and
+ * so belongs to the loop.
  */
 export type GroundOverride = Partial<Omit<FactionRoleMap, "fill" | "onFill">> &
   ({ fill: string | null; onFill: string } | { fill?: never; onFill?: string });

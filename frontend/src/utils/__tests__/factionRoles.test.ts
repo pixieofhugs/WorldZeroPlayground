@@ -35,10 +35,13 @@ import { readThemes, resolveVar, type Theme } from "./cssVars";
  * browser throws away. The loop below is the missing half: it resolves each
  * role for each registered slug against `index.css` in BOTH cascades.
  *
- * It is NOT a contrast check and must not be read as one.
- * `factionContrast.test.ts` scans `index.css` as text against a hand-curated
- * pair list, so any pairing a role map newly creates is unmeasured-but-green.
- * Turning that gate into a loop is a sibling issue in this batch (#2661).
+ * It is NOT a contrast check and must not be read as one. That half is
+ * `factionContrast.test.ts`, which since #2661 loops over THIS resolver —
+ * every (slug x ground x role) triple, both cascades — rather than scanning
+ * `index.css` against a hand-curated pair list. So a role pointed at a token
+ * this file proves is DECLARED is measured over there, and the two guards
+ * answer the two different questions a map can get wrong: does the name
+ * resolve, and is the colour it resolves to legible.
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
