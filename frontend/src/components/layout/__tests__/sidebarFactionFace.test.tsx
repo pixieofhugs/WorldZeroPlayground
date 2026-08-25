@@ -142,11 +142,66 @@ describe('a member sees the rail in their own faction (#2361)', () => {
     expect(asideTag(renderAs('ephemerists'))).toContain('data-rail-face')
   })
 
-  for (const slug of ['ua', 'wow', 'everymen', 'coven', 'snide', 'ephemerists', 'singularity']) {
+  // S.N.I.D.E. is absent, and is the one exception in the whole seam (#2631):
+  // its `-card-bg` is the photocopier slab, pinned near-black in BOTH cascades,
+  // so a rail dressed in it is a black column beside a page that flips. It takes
+  // the wall instead — see the block below.
+  for (const slug of ['ua', 'wow', 'everymen', 'coven', 'ephemerists', 'singularity']) {
     it(`${slug} takes its own sheet, not the na frost`, () => {
       expect(asideTag(renderAs(slug))).toContain(`--rail-paper:var(--faction-${slug}-card-bg)`)
     })
   }
+})
+
+/**
+ * S.N.I.D.E.'S RAIL STANDS ON THE WALL (#2631, ADR-0085).
+ *
+ * The seam hands every skin the `-card-*` family, which is right for seven of
+ * them: a faction's card sheet is the stock that faction's chrome is made of.
+ * S.N.I.D.E. is the one whose card sheet is deliberately NOT its chrome —
+ * `--faction-snide-card-bg` is the photocopier slab pasted ON a wall (#2066),
+ * #14110b by day and #0c0a07 by night, so the rail was a dark island beside a
+ * page the same faction paints in xerox stock. The wall FLIPS, and every ink
+ * named here flips with it.
+ *
+ * THE OVERRIDE IS INSIDE `railFaceVars`, NOT A FORK OF IT. The other seven keys
+ * stay byte-identical and an unaffiliated viewer still declares nothing at all,
+ * which is the block below and this seam's acceptance criterion.
+ */
+describe('the S.N.I.D.E. rail takes the wall, not the slab (#2631)', () => {
+  const WALL_FACE: [string, string][] = [
+    ['--rail-paper', 'var(--faction-snide-wall)'],
+    ['--rail-ink', 'var(--faction-snide-note-ink)'],
+    ['--rail-quiet', 'var(--faction-snide-note-muted)'],
+    ['--rail-line', 'var(--faction-snide-note-wall-edge)'],
+  ]
+
+  it('grounds on the wall and inks with the family that flips with it', () => {
+    const tag = asideTag(renderAs('snide'))
+    for (const [local, token] of WALL_FACE) expect(tag).toContain(`${local}:${token}`)
+    expect(
+      tag,
+      'the slab is pinned near-black in both cascades — that is what made the rail an island.',
+    ).not.toContain('--faction-snide-card-bg')
+  })
+
+  it('keeps the geometry and the face off the card family, which do not flip', () => {
+    // Only the COLOUR moved. A radius and a typeface have no cascade, so the
+    // card family is still the right owner of both and the override is
+    // deliberately narrow.
+    const tag = asideTag(renderAs('snide'))
+    expect(tag).toContain('--rail-radius:var(--faction-snide-card-radius)')
+    expect(tag).toContain('--rail-face:var(--faction-snide-card-font)')
+  })
+
+  it('ramps the level track in the hue rung that reads on the wall', () => {
+    // `--faction-snide` is #6fae00 by day and reads 1.87:1 against the well on
+    // the light wall — under 1.4.11's 3:1 for a drawn mark. `-wall-credit` is
+    // the wall-end rung of the same hue, minted by #2177 and already spent as
+    // the faction page's marker scrawl: 6.28:1 / 9.22:1 on that same groove.
+    const tag = asideTag(renderAs('snide'))
+    expect(tag).toContain('--faction-snide-wall-credit')
+  })
 })
 
 // #2404 ENDED THE "PIXEL-IDENTICAL TO WHAT SHIPPED" HALF OF THIS, on the owner's
