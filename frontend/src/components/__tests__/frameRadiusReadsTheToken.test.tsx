@@ -126,10 +126,28 @@ const CASES = [
   },
 ] as const;
 
+/**
+ * The frame's radius read from `token` — bare, or through one role read that
+ * falls back to it.
+ *
+ * A #2659 lane moves a surface onto `factionRoleVars`, so the card emits
+ * `border-radius:var(--task-card-radius, var(--faction-ua-card-radius))`. Same
+ * computed value; the wrapper is allowed exactly one level deep and must fall
+ * back to THIS token, so a card that copies the number still fails.
+ */
+const radiusRead = (token: string) =>
+  new RegExp(
+    "border-radius:var\\(" +
+      token +
+      "\\)|border-radius:var\\(--[\\w-]+,\\s*var\\(" +
+      token +
+      "\\)\\)",
+  );
+
 describe("the frame radius is the token, not a copy of it (#2403)", () => {
   for (const { name, key, node } of CASES) {
     it(`${name} reads --faction-${key}-card-radius`, () => {
-      expect(frameStyle(render(node()))).toContain(`border-radius:var(--faction-${key}-card-radius)`);
+      expect(frameStyle(render(node()))).toMatch(radiusRead(`--faction-${key}-card-radius`));
     });
   }
 

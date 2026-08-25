@@ -126,6 +126,20 @@ const CASES = [
   },
 ] as const
 
+/**
+ * The actor name painted in `ink` â€” as the bare token, or as a role read that
+ * falls back to it.
+ *
+ * A #2659 lane moves a chassis onto `factionRoleVars`, so UA's actor ink is
+ * emitted as `color:var(--feed-frame-accent, var(--faction-ua-card-accent))`.
+ * Same computed value, different bytes. The wrapper is allowed exactly one
+ * level deep and must fall back to THIS token, so a repoint still fails.
+ */
+const actorInk = (ink: string) =>
+  new RegExp(
+    ['color:var\\(', ink, '\\)|color:var\\(--[\\w-]+,\\s*var\\(', ink, '\\)\\)'].join(''),
+  )
+
 describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground, veil }) => {
   it('reaches the actor name inside children it did not mount', () => {
     const html = renderToStaticMarkup(
@@ -135,7 +149,7 @@ describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Fram
         </Frame>
       </MemoryRouter>,
     )
-    expect(html).toContain(`color:var(${ink})`)
+    expect(html).toMatch(actorInk(ink))
     // The row's default hue is gone from the NAME. It stays on the fills — the
     // headline rule and the monogram disc — which are ADR-0039's, not this seam's.
     expect(html).toContain(`background:var(--faction-${slug})`)
