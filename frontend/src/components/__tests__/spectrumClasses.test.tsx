@@ -169,17 +169,21 @@ describe("the na mounts wear the class, not the declaration (#2497)", () => {
  * prism cannot be handed the wrong blend mode (see the helper's own note).
  */
 describe("the seal wears the spectrum as a border, not a bar (#2520)", () => {
+  // The `MemoryRouter` arrived with #2648: the seal mounts `DefaultBand`, and a
+  // band is a `<Link>`.
   const markup = () =>
     renderToStaticMarkup(
-      <DefaultSeal
-        metatask={{
-          id: 1,
-          title: "A small kindness",
-          condition: "Do it twice",
-          bonus_points: 3,
-          metatask_faction_slug: "na",
-        } as never}
-      />,
+      <MemoryRouter>
+        <DefaultSeal
+          metatask={{
+            id: 1,
+            title: "A small kindness",
+            condition: "Do it twice",
+            bonus_points: 3,
+            metatask_faction_slug: "na",
+          } as never}
+        />
+      </MemoryRouter>,
     ).replace(/\s*([:;,])\s*/g, "$1");
 
   it("draws no accent strip at all", () => {

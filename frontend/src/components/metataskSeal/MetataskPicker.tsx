@@ -221,22 +221,33 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
             const sealed = state.appliedMetatasks.has(mt.id);
             const selected = pending?.id === mt.id;
             return (
-              <button
+              /*
+               * THE ROW IS A WRAPPER WITH THE CONTROL OVER IT, NOT A BUTTON
+               * AROUND THE SEAL (#2648). The row used to be one `<button>` with
+               * the seal as its content, which stopped being legal the moment a
+               * seal mounted `factionBands`: the band is a `<Link>`, and
+               * interactive content inside a button is invalid HTML — and worse
+               * than invalid here, since the link would have navigated out of
+               * the composer instead of choosing the metatask.
+               *
+               * So the hit target became a transparent overlay, a SIBLING of
+               * the seal rather than its parent. Nothing about the control
+               * moved: same `type`, same `disabled`, same handler, same
+               * `aria-pressed`/`aria-label`, and it still covers the whole row.
+               * Its `zIndex` clears the band's own 2 (`CardMasthead`) so a
+               * pointer anywhere on the row still selects.
+               *
+               * ponytail: the ceiling is the KEYBOARD. The band stays tabbable
+               * inside the sheet, so Tab reaches the faction link before the
+               * row's own control. That is valid and labelled, and it is the
+               * passport question #2648 asks — a band that cannot be told "not
+               * here" is a band that cannot enter a control.
+               */
+              <div
                 key={mt.id}
-                type="button"
-                disabled={sealed}
-                onClick={() => setPending(mt)}
-                aria-pressed={selected}
-                aria-label={t("editPraxis.attach.addAria", { title: mt.title })}
-                className="text-left"
+                className="relative text-left"
                 style={{
-                  display: "block",
-                  width: "100%",
-                  padding: 0,
-                  background: "transparent",
-                  border: "none",
                   borderRadius: 12,
-                  cursor: sealed ? "default" : "pointer",
                   opacity: sealed ? 0.55 : 1,
                   outline: selected
                     ? "2px solid var(--faction-default-card-accent)"
@@ -245,6 +256,26 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                 }}
               >
                 <MetataskSeal metatasks={[mt]} />
+                <button
+                  type="button"
+                  disabled={sealed}
+                  onClick={() => setPending(mt)}
+                  aria-pressed={selected}
+                  aria-label={t("editPraxis.attach.addAria", {
+                    title: mt.title,
+                  })}
+                  className="absolute"
+                  style={{
+                    inset: 0,
+                    zIndex: 3,
+                    width: "100%",
+                    padding: 0,
+                    background: "transparent",
+                    border: "none",
+                    borderRadius: 12,
+                    cursor: sealed ? "default" : "pointer",
+                  }}
+                />
                 {sealed && (
                   <span
                     className="label-caption block"
@@ -256,7 +287,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                     {t("editPraxis.attach.alreadyAttached")}
                   </span>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
