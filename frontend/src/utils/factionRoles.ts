@@ -183,9 +183,18 @@ function rolesFor(
     : SHEET_ROLES;
 }
 
-/** `onFill` → `on-fill`. The only role whose name is more than one word. */
-function cssRoleName(role: FactionRole): string {
-  return role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+/**
+ * The custom property a role lands on under a surface's prefix — `('rail',
+ * 'onFill')` → `--rail-on-fill`.
+ *
+ * Exported because {@link factionRoleVars} builds these names by
+ * INTERPOLATION, which makes them invisible to `factionTokensDeclared.test.ts`
+ * — the guard for "looks tokenized, is not". That guard reconstructs the exact
+ * set of names this resolver can emit rather than loosening its regex, and it
+ * has to spell them the same way or it trades one blind spot for another.
+ */
+export function factionRoleProperty(prefix: string, role: FactionRole): string {
+  return `--${prefix}-${role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 }
 
 /**
@@ -240,7 +249,7 @@ export function factionRoleVars(
   const roles = rolesFor(slug, ground);
   const vars: Record<string, string> = {};
   for (const role of FACTION_ROLES) {
-    vars[`--${prefix}-${cssRoleName(role)}`] = factionCssVar(
+    vars[factionRoleProperty(prefix, role)] = factionCssVar(
       slug,
       roles[role] ?? undefined,
     );
