@@ -126,6 +126,19 @@ const CASES = [
   },
 ] as const
 
+/**
+ * Fold `var(--<surface-prefix>-<role>, <today's token>)` back to the token
+ * (#2674). A chassis migrated onto `utils/factionRoles.ts` asks its faction for
+ * a ROLE and carries today's token as the fallback, so the ink this row
+ * measures has not moved; only its spelling has. The gate on that claim is
+ * `factions/__tests__/wowRoleMap.test.ts`, which asserts every fallback IS the
+ * token the site named before — without it, folding here would be lenient
+ * rather than sound. Naming each surface's prefix in this nine-faction table
+ * would instead make it a file every faction lane has to edit.
+ */
+const foldRoleReads = (html: string) =>
+  html.replace(/var\(--[\w-]+,\s*(var\(--[\w-]+\))\)/g, '$1')
+
 describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Frame, ink, ground, veil }) => {
   it('reaches the actor name inside children it did not mount', () => {
     const html = renderToStaticMarkup(
@@ -135,7 +148,7 @@ describe.each(CASES)('$slug feed chassis re-inks the shared body', ({ slug, Fram
         </Frame>
       </MemoryRouter>,
     )
-    expect(html).toContain(`color:var(${ink})`)
+    expect(foldRoleReads(html)).toContain(`color:var(${ink})`)
     // The row's default hue is gone from the NAME. It stays on the fills — the
     // headline rule and the monogram disc — which are ADR-0039's, not this seam's.
     expect(html).toContain(`background:var(--faction-${slug})`)
