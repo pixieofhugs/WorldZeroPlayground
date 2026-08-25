@@ -1,4 +1,4 @@
-import { DefaultFeedFrame } from './FactionFeedFrame'
+import DefaultFeedFrame from './DefaultFeedFrame'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**

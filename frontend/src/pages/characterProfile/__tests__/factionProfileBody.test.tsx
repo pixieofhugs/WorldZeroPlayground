@@ -87,7 +87,14 @@ describe("FactionProfileBody dispatch", () => {
     // profile is exactly where a secret society would give itself away is what
     // makes that the ceiling: motion, never a skin. The assertion directly below
     // is the one that enforces it.
-    expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
+    // `na` is filtered out, not appended: it has a row since #2530
+    // (`factions/default.ts`) and it is the one row that is not a bespoke
+    // skin — it IS `DefaultProfileBody`, which the next assertion pins.
+    expect(
+      Object.keys(surfaceMap("profileBody"))
+        .filter((slug) => slug !== "na")
+        .sort(),
+    ).toEqual(
       ["ephemerists", "everymen", "singularity", "snide", "ua", "coven", "wow", "albescent"].sort(),
     );
   });

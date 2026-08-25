@@ -95,7 +95,11 @@ function dispatch(slug: string | null): string {
   return renderToStaticMarkup(<DuelSealConfirm taskFactionSlug={slug} {...PROPS} />)
 }
 
-const SEAL_SLUGS = Object.keys(surfaceMap('duelSeal'))
+// Every row but na's. Since #2530 na is a registration like any other
+// (`factions/default.ts`) rather than the fallback behind the map, and
+// every assertion below that says "not the Default" is about that row —
+// so including it would ask na's seal to differ from itself.
+const SEAL_SLUGS = Object.keys(surfaceMap('duelSeal')).filter((slug) => slug !== 'na')
 
 /**
  * The registered SKINS — every row but `albescent`, and the exclusion is the

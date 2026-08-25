@@ -7,8 +7,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
-import FactionSigil, { DefaultSigilAdapter } from "../FactionSigil";
-import { pickVariant } from "../../../utils/factionDispatch";
+import FactionSigil from "../FactionSigil";
+import { resolveVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
 import UaMandala from "../../factionMarks/UaMandala";
 
@@ -186,7 +186,7 @@ describe("Albescent's labyrinth (Sigil Studies v2)", () => {
 /**
  * THE MANIFEST IS THE WHOLE MAP (#2529).
  *
- * The seam is `pickVariant(surfaceMap('sigil'), slug)` — the map on its own,
+ * The seam is `resolveVariant(surfaceMap('sigil'), slug)` — the map on its own,
  * with nothing added at the call site. `FactionSigil` used to spread
  * `{ albescent: AlbescentSigilAdapter, ...surfaceMap('sigil') }`, so the
  * labyrinth reached the screen without ever appearing in `ALBESCENT_MANIFEST`:
@@ -230,7 +230,7 @@ describe("every sigil the dispatcher draws comes out of the manifest (#2529)", (
   it.each(SLUGS.map((slug) => [String(slug), slug] as const))(
     "%s renders identically through surfaceMap('sigil') alone",
     (_label, slug) => {
-      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      const Variant = resolveVariant(surfaceMap("sigil"), slug);
       for (const size of SIZES) {
         expect(
           renderToStaticMarkup(<FactionSigil slug={slug} size={size} />),
@@ -245,7 +245,7 @@ describe("every sigil the dispatcher draws comes out of the manifest (#2529)", (
     // ramp, so `color` has to survive the map lookup as well as the size does.
     const sampled = "var(--faction-default-rainbow) 40% 0 / 600% 100%";
     for (const slug of SLUGS) {
-      const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+      const Variant = resolveVariant(surfaceMap("sigil"), slug);
       expect(
         renderToStaticMarkup(<FactionSigil slug={slug} color={sampled} />),
         String(slug),
@@ -309,4 +309,37 @@ describe("UaMandala primitive (#849)", () => {
     expect(spinning).not.toContain("animation:");
     expect(spinning).toContain("--ua-spin-dur");
   });
+});
+
+/**
+ * EVERY ADAPTER THAT CAN TAKE A CALLER'S INK, DOES (#2635).
+ *
+ * `UaSigilAdapter` destructured `{ size }` only, under a comment claiming "the
+ * ensō draws --faction-ua-glow internally; it has no color prop" — and `UaSigil`
+ * has taken one since #908, defaulting to that same glow. So a caller's ink was
+ * accepted by the type, dropped on the floor, and the mark carried on in the
+ * faction's ornament orange. Nothing could see it: the block above compares the
+ * dispatcher against the adapter, and both dropped it identically.
+ *
+ * It surfaced when #2635 painted UA's masthead band in the faction's own hue,
+ * where `--faction-ua-glow` is 1.30:1 — `markColor` is exactly the prop for that
+ * and it reached nothing. The two mounts that pass one (`CardMasthead`'s
+ * `markColor`, the filter facet's `factionCssVar(slug)`) both ask for the same
+ * thing, so the fix is one line at the seam and this is the guard.
+ *
+ * `DefaultSigil` and na's ring are correctly excluded: that mark IS the
+ * unaffiliated conic and has no single colour to override.
+ */
+describe("a sigil adapter never swallows the caller's ink", () => {
+  const INK = "var(--color-text-tertiary)";
+
+  it.each(["ua", "coven", "snide", "ephemerists", "singularity", "everymen", "wow", "albescent"])(
+    "%s paints in the colour it is handed",
+    (slug) => {
+      expect(
+        renderToStaticMarkup(<FactionSigil slug={slug} color={INK} />),
+        `${slug}'s adapter accepts \`color\` and must forward it — a prop that type-checks and does nothing is invisible to every other guard here`,
+      ).toContain(INK);
+    },
+  );
 });

@@ -31,9 +31,8 @@
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
-import { pickVariant } from '../utils/factionDispatch'
+import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
-import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
 
 export default function PraxisDetail() {
   const { t } = useTranslation(['praxis', 'common'])
@@ -63,10 +62,9 @@ export default function PraxisDetail() {
     return <Navigate to={`/praxis/${state.praxis.id}/edit`} replace />
   }
 
-  const Archetype = pickVariant(
+  const Archetype = resolveVariant(
     surfaceMap('praxisDetail'),
     state.praxis.task_faction_slug,
-    DefaultPraxisDetail,
   )
   // NOTHING IS MOUNTED AROUND THE ARCHETYPE ANY MORE. Two pieces of chrome used
   // to sit here and both moved INTO the page layout:

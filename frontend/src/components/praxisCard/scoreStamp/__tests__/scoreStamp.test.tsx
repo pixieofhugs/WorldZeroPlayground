@@ -15,7 +15,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import '../../../../i18n'
 import type { PraxisCardOut, PraxisOut } from '../../../../api/praxis'
 import type { ScoreStampProps } from '../ScoreStamp'
-import { pickVariant } from '../../../../utils/factionDispatch'
+import { resolveVariant } from '../../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
@@ -275,7 +275,7 @@ describe('the stamp leaves an unscored praxis (#1444)', () => {
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
     for (const slug of ['na', null]) {
-      expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp))).toBe(DefaultScoreStamp)
+      expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), slug))).toBe(DefaultScoreStamp)
     }
   })
 
@@ -285,7 +285,7 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
    * this pair replaces it there rather than being added beside it.
    */
   it('gives Albescent its own stamp — the last roster faction to claim one (#2501)', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'albescent', DefaultScoreStamp))).toBe(
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'albescent'))).toBe(
       AlbescentScoreStamp,
     )
   })
@@ -324,17 +324,17 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
   })
 
   it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'snide', DefaultScoreStamp))).toBe(SnideScoreStamp)
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'singularity', DefaultScoreStamp))).toBe(
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'snide'))).toBe(SnideScoreStamp)
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'singularity'))).toBe(
       SingularityScoreStamp,
     )
   })
 
   it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'everymen', DefaultScoreStamp))).toBe(
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'everymen'))).toBe(
       EverymenScoreStamp,
     )
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp))).toBe(
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'ephemerists'))).toBe(
       EphemeristsScoreStamp,
     )
   })
@@ -346,12 +346,12 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
    * each, not merely that both are claimed.
    */
   it('gives WOW the chronicle plate and Coven the sticker, not the reverse (#840)', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp))).toBe(WowScoreStamp)
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp))).toBe(CovenScoreStamp)
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'wow'))).toBe(WowScoreStamp)
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'coven'))).toBe(CovenScoreStamp)
   })
 
   it('gives UA its own stamp — the ensō (#857)', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'ua', DefaultScoreStamp))).toBe(UaScoreStamp)
+    expect(resolvedArchetype(resolveVariant(surfaceMap('scoreStamp'), 'ua'))).toBe(UaScoreStamp)
   })
 })
 
@@ -990,7 +990,7 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     const covenDetail: PraxisOut = { ...detail, task_faction_slug: 'coven' }
     expect(
       resolvedArchetype(
-        pickVariant(surfaceMap('scoreStamp'), covenDetail.task_faction_slug, DefaultScoreStamp),
+        resolveVariant(surfaceMap('scoreStamp'), covenDetail.task_faction_slug),
       ),
     ).toBe(CovenScoreStamp)
   })

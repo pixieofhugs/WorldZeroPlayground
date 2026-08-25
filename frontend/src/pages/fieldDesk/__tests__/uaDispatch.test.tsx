@@ -13,7 +13,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so copy keys resolve to English text.
 import '../../../i18n'
-import { pickVariant } from '../../../utils/factionDispatch'
+import { resolveVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../factions'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
@@ -83,12 +83,12 @@ function render(element: ReactElement): { html: string; text: string } {
 
 describe('mobile FieldDesk-home UA dispatch', () => {
   it('mobile + a UA life resolves to the bespoke UA home skin', () => {
-    expect(resolvedArchetype(pickVariant(surfaceMap('mobileFieldDesk'), 'ua', DefaultFieldDesk))).toBe(UaFieldDesk)
+    expect(resolvedArchetype(resolveVariant(surfaceMap('mobileFieldDesk'), 'ua'))).toBe(UaFieldDesk)
   })
 
   it('mobile + any other slug falls through to the Default home skin', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(resolvedArchetype(pickVariant(surfaceMap('mobileFieldDesk'), slug, DefaultFieldDesk))).toBe(DefaultFieldDesk)
+      expect(resolvedArchetype(resolveVariant(surfaceMap('mobileFieldDesk'), slug))).toBe(DefaultFieldDesk)
     }
   })
 })

@@ -538,13 +538,14 @@ def _resolve_card_scoring(
 
     The invariant the payload upholds, with no exception::
 
-        score = (task_point_value + metatask_points) × display_multiplier
-                + points_from_votes + habit_bonus_points
+        score = task_point_value × display_multiplier
+                + metatask_points + points_from_votes + habit_bonus_points
 
-    ``habit_bonus_points`` (#1617) joins that line rather than hiding inside
-    ``score``: it is flat, it is outside the multiplier, and a term that moves
-    the total without appearing in the breakdown is how a card and a detail page
-    start disagreeing.
+    ``display_multiplier`` reaches the base points and nothing else (ADR-0086).
+    ``metatask_points`` and ``habit_bonus_points`` (#1617) join that line rather
+    than hiding inside ``score``: they are flat, they are outside the
+    multiplier, and a term that moves the total without appearing in the
+    breakdown is how a card and a detail page start disagreeing.
 
     A duel side's multiplier is LIVE and PROVISIONAL — it moves when the
     opponent is voted, and a currently-behind Snide side reads ×0.0 (ADR-0052).

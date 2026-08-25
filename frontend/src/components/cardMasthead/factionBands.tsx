@@ -96,6 +96,32 @@ function TwinkleField() {
  * ruling means by "where a task card wraps the component to paint a backdrop,
  * the praxis card does the same" — it comes with the band rather than being
  * rebuilt beside it.
+ *
+ * THE DAY BAND IS PINK NOW (#2635), AND THE NIGHT BAND HAS NOT MOVED.
+ *
+ * It stood on `--faction-coven-slip-sigil-ground`, which is the white disc that
+ * backs the SIGIL on the slip — borrowed paint, and by day it read as a bare
+ * white strip across the top of a pink card. `--faction-coven-mast` is the
+ * band's own ground: the CTA's `#d13a80` under `#ffffff` by day, Coven's
+ * existing white-on-pink pairing, and the ground plus the ink the band already
+ * had by night. Unlike UA's it FLIPS, because only one of its halves was wrong.
+ *
+ * The values are transcribed from `-slip-cta-*` rather than aliased to it, and
+ * the band is flat where the CTA is a ramp; index.css gives both reasons at the
+ * token. What matters here is the consequence: pointing this band at the CTA
+ * would have dragged that token's bright-magenta dark half into the one cascade
+ * the ruling calls correct.
+ *
+ * THE WORDMARK'S INK IS NOW DECLARED RATHER THAN INHERITED. It used to fall
+ * through from the card root — `--faction-coven-slip-ink` on both kits — which
+ * works only for as long as both roots agree and is invisible when they stop.
+ * `-mast-ink` is the same colour by night and white by day.
+ *
+ * THE MARK TAKES IT TOO. `CovenSigil` draws the hat in `--faction-coven`, which
+ * is 3.15:1 on the old white and far less on the new pink; `markColor` is the
+ * prop for that. This is the one thing that changes at night — the hat was the
+ * spine hue and is now the wordmark's own ink, so band and mark read as one
+ * lettering rather than two pinks.
  */
 function CovenBand() {
   return (
@@ -104,7 +130,7 @@ function CovenBand() {
         position: "relative",
         zIndex: 2,
         height: COVEN_BAND_HEIGHT,
-        background: "var(--faction-coven-slip-sigil-ground)",
+        background: "var(--faction-coven-mast)",
         borderBottom: "1px solid var(--faction-coven-slip-pk)",
         /* The twinkle box is the one wrapper standing between a card's root and
            its band, so while the equal-height row's slack chain ended at
@@ -117,7 +143,11 @@ function CovenBand() {
       }}
     >
       <TwinkleField />
-      <CardMasthead slug="coven" style={{ height: "100%" }}>
+      <CardMasthead
+        slug="coven"
+        markColor="var(--faction-coven-mast-ink)"
+        style={{ height: "100%", color: "var(--faction-coven-mast-ink)" }}
+      >
         {/* The slip's own `feed:taskCard.coven.masthead` held a second copy of
             the faction's name ("the cozy coven") and is gone with #1910. The
             lower case belonged to the hand-lettering rather than to the word, so
@@ -302,22 +332,55 @@ function SnideBand() {
 /* ── UA ────────────────────────────────────────────────────────────────── */
 
 /**
- * The leaf's hairline band.
+ * The leaf's ORANGE band (#2635) — UA's own hue, frozen across both cascades.
  *
- * THE WORDMARK TAKES THE BODY INK, NOT THE ACCENT. The design sets it in
- * `--faction-ua-card-accent` on `--faction-ua-hair`, which measures 4.46:1 in
- * light — under AA for a 24px non-bold face, and the band's whole job is to be
- * read. `-card-text` is 10.35:1 on the same ground (11.45:1 in dark) and is the
- * leaf's own ink; the accent keeps the band's bottom rule, where a hairline owes
- * nothing.
+ * IT USED TO STAND ON `--faction-ua-hair`, and that is the defect the owner
+ * ruled on: a hairline is, by its own declaration's comment, "the faintest
+ * divider, below -rule". It was never a colour anyone chose for a band; it was
+ * the nearest token to hand. Both bands the ruling moved were perfectly legible,
+ * which is why no contrast sweep ever saw them.
+ *
+ * `--faction-ua-mast` is the day hue declared once and never re-declared in
+ * dark, exactly as `--faction-everymen-bill-mast` and `--faction-wow-plum-surface`
+ * are. It has to be a frozen literal rather than `var(--faction-ua)`: the spine
+ * hue flips (#c24a18 -> #e8703a), so the bare name is not "orange in both
+ * modes", it is two oranges and a band that changes colour at night.
+ *
+ * THE WORDMARK TAKES A FROZEN WARM WHITE, AND THAT IS A DELIBERATE DROP. This
+ * docstring used to argue the other way, and it argued it about a different
+ * ground: on the hairline, `-card-accent` was 4.46:1 (under AA for a 24px
+ * non-bold face) and `-card-text` was 10.35:1, so the band took the body ink.
+ * The orange is a fill, and the ink a fill owes is a warm white — 4.59:1, which
+ * clears AA at `--text-title`. Trading 10.35 for the faction's colour is the
+ * ruling.
+ *
+ * IT IS `--faction-ua-mast-ink` AND NOT `--faction-ua-on-fill`. #2635 named the
+ * latter on the reading that its 4.59:1 was already measured and a frozen ground
+ * needed no dark half; the measurement is right and the inference is not.
+ * `-on-fill` is the ink for the FILL, the fill flips, and so does it — #fcf7ef
+ * by day, #201a14 by night, which on a frozen orange prints near-black at
+ * 3.52:1. A frozen ground needs a frozen ink, which is what
+ * `--faction-everymen-bill-mast-ink` is beside its own frozen red and why WOW
+ * letters its banner in the theme-invariant `-gilt-mid` rather than in an ink
+ * that flips. One value, one measurement, both cascades.
+ *
+ * THE MARK TAKES THE SAME INK. `FactionSigil` draws UA's ensō in
+ * `--faction-ua-glow`, which is 1.30:1 on this ground — orange on orange. That
+ * is what `markColor` is for, and Everymen and WOW have passed it since their
+ * bands were built.
+ *
+ * AND THE BOTTOM RULE COMES OFF. It was `1px solid var(--faction-ua-card-accent)`
+ * — an orange hairline on an orange band, drawing nothing. Everymen's and WOW's
+ * bands let their own edge do the work; this one does too now.
  */
 function UaBand() {
   return (
     <CardMasthead
       slug="ua"
+      markColor="var(--faction-ua-mast-ink)"
       style={{
-        background: "var(--faction-ua-hair)",
-        borderBottom: "1px solid var(--faction-ua-card-accent)",
+        background: "var(--faction-ua-mast)",
+        color: "var(--faction-ua-mast-ink)",
       }}
     >
       <span

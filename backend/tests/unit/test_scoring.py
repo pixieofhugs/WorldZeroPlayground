@@ -666,3 +666,77 @@ def test_exact_reads_the_printed_number_not_the_binary_one():
     """Decimal(1.1) is 1.1000000000000000888…; exact(1.1) is 1.1."""
     assert exact(_COVEN_COLLAB_MODIFIER) == Decimal(str(_COVEN_COLLAB_MODIFIER))
     assert exact(35) * exact(_COVEN_COLLAB_MODIFIER) == Decimal("38.5")
+
+
+# ---------------------------------------------------------------------------
+# #2633 / ADR-0086 — a metatask is a FLAT bonus, outside both multipliers
+# ---------------------------------------------------------------------------
+#
+# The formula is ``base × faction × duel + meta + votes + habit``. Every
+# modifier below is read off the era and never restated: an era that changes
+# one should fail here loudly rather than quietly move the rule.
+
+_SNIDE = ERA_1.factions["snide"]
+_COVEN = ERA_1.factions["coven"]
+
+
+def test_metatask_survives_a_snide_duel_loss():
+    """#2633's headline: a ×0.0 duel loss zeroes the base, never the metatask."""
+    assert _SNIDE.duel_loss_modifier == 0.0  # the defect only bites at zero
+    total = compute_praxis_score(
+        task_point_value=40,
+        faction_multiplier=1.0,
+        total_stars=0,
+        meta_task_points=10,
+        duel_multiplier=_SNIDE.duel_loss_modifier,
+    )
+    assert total == 10.0
+
+
+def test_metatask_is_not_doubled_by_a_snide_duel_win():
+    """The other half of the same rule: a win multiplies the base alone."""
+    total = compute_praxis_score(
+        task_point_value=40,
+        faction_multiplier=1.0,
+        total_stars=0,
+        meta_task_points=10,
+        duel_multiplier=_SNIDE.duel_win_modifier,
+    )
+    assert total == 40 * _SNIDE.duel_win_modifier + 10
+
+
+def test_metatask_is_flat_under_a_non_neutral_faction_multiplier():
+    """Coven's own-faction collab ×1.1 — Era 1's only non-duel modifier ≠ 1.0."""
+    assert _COVEN.collab_own_modifier != 1.0
+    total = compute_praxis_score(
+        task_point_value=100,
+        faction_multiplier=_COVEN.collab_own_modifier,
+        total_stars=0,
+        meta_task_points=10,
+    )
+    # 100 × 1.1 + 10 = 120.0, not (100 + 10) × 1.1 = 121.0
+    assert total == 120.0
+
+
+def test_metatask_stays_exact_under_a_decimal_multiplier():
+    """#1578 holds through the move: no binary tail on either side of the plus."""
+    total = compute_praxis_score(
+        task_point_value=35,
+        faction_multiplier=_COVEN.collab_own_modifier,
+        total_stars=0,
+        meta_task_points=3,
+    )
+    assert Decimal(str(total)) == Decimal("41.5")
+
+
+def test_every_flat_term_sits_outside_the_multipliers():
+    """meta, votes and habit are one class of term — none of them multiply."""
+    total = compute_praxis_score(
+        task_point_value=0,
+        faction_multiplier=_SNIDE.duel_loss_modifier,
+        total_stars=4,
+        meta_task_points=10,
+        duel_multiplier=_SNIDE.duel_loss_modifier,
+        habit_bonus=2,
+    )
+    assert total == 16.0

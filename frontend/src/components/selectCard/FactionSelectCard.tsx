@@ -3,10 +3,9 @@
 // component directly rather than through `surfaceMap`, so the directory renders
 // every card with no archetype dispatch to ask for the sheet.
 import "../../factionFaces";
-import { pickVariant } from "../../utils/factionDispatch";
+import { resolveVariant } from "../../utils/factionDispatch";
 import { hasOwnKey } from "../../utils/hasOwnKey";
 import { surfaceMap } from "../../factions";
-import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
  * FactionSelectCard — the DISPATCHER for the faction-directory tile, and since
@@ -68,21 +67,20 @@ const LEGACY_SLUG: Record<string, string> = {
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const cards = surfaceMap("factionSelectCard");
-  // Own-property-only on both tables (#1821). `pickVariant` already refuses a
-  // prototype key, so the rendered card was right either way — but the plain
-  // bracket reads let `key` hold `Object.prototype.toString` under a `string`
-  // annotation on the way there.
+  // Own-property-only on both tables (#1821). `resolveSlug` inside
+  // `resolveVariant` already refuses a prototype key, so the rendered card was
+  // right either way — but the plain bracket reads let `key` hold
+  // `Object.prototype.toString` under a `string` annotation on the way there.
   const key =
     !hasOwnKey(cards, faction) && hasOwnKey(LEGACY_SLUG, faction)
       ? LEGACY_SLUG[faction]
       : faction;
-  // The fallback IS the `na` registration. A manifest is override-only and
-  // `na` deliberately has none (`factions/index.ts`: unaffiliated is a state,
-  // not a faction, and falls through to the `Default*` skins everywhere), so
-  // "register the Default archetype" means naming it here — exactly as
-  // TaskCard names DefaultTaskCard and MetataskSeal names DefaultSeal.
-  // It used to be UaSelectCard, which dressed every unaffiliated and unknown
-  // slug in UA's costume (#796, the third instance of #418/#636).
-  const Card = pickVariant(cards, key, DefaultSelectCard);
+  // An unregistered `key` lands on the `na` row, which is `DefaultSelectCard`
+  // (`factions/default.ts`). That used to be spelled out here as a third
+  // argument, because na had no manifest; #2530 gave it one, so this dispatcher
+  // names no archetype at all. It used to be UaSelectCard, which dressed every
+  // unaffiliated and unknown slug in UA's costume (#796, the third instance of
+  // #418/#636).
+  const Card = resolveVariant(cards, key);
   return <Card {...rest} />;
 }

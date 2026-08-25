@@ -5,10 +5,9 @@ import type { TaskOut } from '../../api/tasks'
 import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
-import DefaultTaskCard from './DefaultTaskCard'
 import StartHereMark from '../StartHereMark'
 import { factionCssVar, factionFill, factionName } from '../../utils/factions'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 
 /**
@@ -52,10 +51,6 @@ export interface CardProps {
 export type TaskCardProps =
   Omit<CardProps, 'multiplier' | 'inProgressCount'>
   & Partial<Pick<CardProps, 'multiplier' | 'inProgressCount'>>
-
-// `na` / unaffiliated + any faction without a bespoke card → the spectrum
-// default skin (#418). No longer borrows UA's costume.
-export const DEFAULT_CARD = DefaultTaskCard
 
 /**
  * Which task this card draws: the moderator's echo of their own last status
@@ -112,7 +107,7 @@ export default function TaskCard({
     setModerated(await updateTaskStatus(task.id, newStatus))
   }
 
-  const Card = pickVariant(surfaceMap('taskCard'), shown.primary_faction_slug, DEFAULT_CARD)
+  const Card = resolveVariant(surfaceMap('taskCard'), shown.primary_faction_slug)
   const isMetatask = shown.task_type === 'metatask'
   return (
     <div style={{ position: 'relative' }}>

@@ -334,7 +334,9 @@ owns "who voted and how much" even on surfaces the UI does not yet show it.
 
 **Contribution** *(atomic scoring unit; `services/praxis_scoring.py`)*:
 The points **one character** earns from **one praxis** —
-`(base + metatasks) × faction_multiplier × duel_multiplier + points_from_votes`. Scoring is
+`base × faction_multiplier × duel_multiplier + metatasks + points_from_votes + habit_bonus`.
+Only the base multiplies (ADR-0086); every term a player earned by doing a specific extra
+thing is flat, so a duel outcome cannot delete a metatask. Scoring is
 per-`(character, praxis)`, *never* "the score of a praxis" (ill-defined the moment two
 factions touch one collab). Computed as a **batch** primitive
 (`compute_contributions(praxes, character, era, session)`; the single-praxis read path is the
@@ -353,7 +355,8 @@ reintroduce it, and do not describe any live surface as showing it.
 
 A praxis now has exactly **one** number: `score`, the computed total, resolved for its
 **author** for every type including collab, with the terms behind it on the same payload:
-`score = (task_point_value + metatask_points) × display_multiplier + points_from_votes`.
+`score = task_point_value × display_multiplier + metatask_points + points_from_votes
++ habit_bonus_points`.
 See **Contribution** for the underlying model, which ADR-0053 did not change.
 
 Merit existed to dodge "a collab has no single multiplier" — but once the scoring subject is
@@ -397,8 +400,10 @@ _Avoid_: treating every string as content text; using `--text-content` inside a 
 **Metatask**:
 A flat-points **add-on to a praxis**, not a doable task — it has no praxis, no votes, no
 lifecycle of its own beyond **propose → approve → retire**. Owned by a faction
-(`faction_slug`); its `point_value` is a flat bonus that stacks additively and rides the same
-multipliers as base points (`(base + metatask_points) × faction × duel + votes`).
+(`faction_slug`); its `point_value` is a flat bonus that stacks additively and rides **no**
+multiplier (`base × faction × duel + metatask_points + votes`, ADR-0086) — it sits beside
+the votes and the habit bonus, so a S.N.I.D.E. duel loss at ×0.0 forfeits the base and keeps
+the metatask.
 **Current shape (canonical today):** a metatask **is a `Task` row** (`task_type=metatask`,
 `metatask_faction_slug`) attached to a praxis via the `PraxisMetaTask` join table. Migration
 0006 *unified* the old standalone `MetaTask`/`BonusType` classes *into* `Task` (they were

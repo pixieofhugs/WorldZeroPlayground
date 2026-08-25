@@ -36,8 +36,11 @@ from services.vote_tally import VoteTally, get_tally, tally_votes
 class Contribution:
     """Points one character earns from one praxis — a frozen breakdown.
 
-    total = (base_points + metatask_points) × faction_multiplier
-            × duel_multiplier + points_from_votes + habit_bonus_points
+    total = base_points × faction_multiplier × duel_multiplier
+            + metatask_points + points_from_votes + habit_bonus_points
+
+    Only ``base_points`` multiplies (ADR-0086). ``metatask_points`` joins the
+    flat terms, so a duel outcome cannot delete points a metatask earned.
 
     ``habit_bonus_points`` (#1617) is read straight off *this character's*
     ``PraxisMember`` row, where ``services.collab_consensus._apply_seal`` stamped
@@ -138,11 +141,11 @@ async def compute_contributions(
         opp_tallies = await tally_votes(list(opponent_praxis_ids), session)
 
     # ── meta task points for EVERY praxis (ADR-0051) ─────────────────────────
-    # All praxis types earn metatask points. The bonus rides both multipliers
-    # inside compute_praxis_score's (base + meta) × faction × duel + votes, so a
-    # collab keeps its metatask and a duel side's metatask is multiplied by the
-    # duel outcome — a Snide loss at ×0.0 zeroes the metatask along with the
-    # base, which is intended (the metatask is part of what the duel judged).
+    # All praxis types earn metatask points. The bonus rides NEITHER multiplier
+    # (ADR-0086, #2633): compute_praxis_score is base × faction × duel + meta +
+    # votes, so a collab keeps its metatask and a duel side keeps it too — a
+    # Snide loss at ×0.0 zeroes the base and leaves the metatask standing. The
+    # duel judged the task, not the extra thing the player did beside it.
     # This reads the same PraxisMetaTask rows as praxis_out.applied_metatasks_for (the seal
     # set): the level gate here can zero the points while the seal stays
     # attached, so metatask_points == 0 beside a non-null seal is legitimate.

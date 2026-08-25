@@ -42,9 +42,8 @@ vi.mock("../../../../hooks/useFormFactor", () => ({
 
 // Imported after the mock so the archetypes pick it up.
 const { surfaceMap } = await import("../../../../factions");
-const { pickVariant } = await import("../../../../utils/factionDispatch");
+const { resolveVariant } = await import("../../../../utils/factionDispatch");
 const { resolvedArchetype } = await import("../../../../factions/lazyArchetype");
-const { default: DefaultEditPraxis } = await import("../DefaultEditPraxis");
 
 const TASK = {
   id: 7,
@@ -141,7 +140,7 @@ function render(
 ): string {
   mocks.formFactor = formFactor;
   const Archetype = resolvedArchetype(
-    pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+    resolveVariant(surfaceMap("editPraxis"), slug),
   )!;
   return renderToStaticMarkup(
     <MemoryRouter>

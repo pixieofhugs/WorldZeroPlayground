@@ -1,6 +1,6 @@
 # ADR-0014: Praxis scoring is per-character Contribution; the card shows Merit
 
-**Status:** Amended by ADR-0053
+**Status:** Amended by ADR-0053, ADR-0086
 **Date:** 2026-06-24
 
 > **Superseded in part — the *Merit (the card number)* section only.** The half
@@ -18,6 +18,14 @@
 > computed by the `compute_contributions` batch primitive over a frozen breakdown
 > dataclass — the vote-tally read-model, and the `stars` → `value` vocabulary are
 > all live. ADR-0053 removed the *second* number, not the per-character one.
+>
+> **Amended again (2026-08-24, #2633): the metatask left the parentheses.**
+> [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) rules that only
+> the base multiplies, so the Contribution formula stated below and in *Decision*
+> is now `base × faction_multiplier × duel_multiplier + metatask_points +
+> points_from_votes + habit_bonus_points`. The Contribution model itself — one
+> `(character, praxis)` pair, one frozen breakdown, one batch primitive — is
+> untouched; what moved is which side of the `+` one term sits on.
 >
 > The argument below is preserved as written, including the Merit section that
 > ADR-0047 and ADR-0053 had to answer.

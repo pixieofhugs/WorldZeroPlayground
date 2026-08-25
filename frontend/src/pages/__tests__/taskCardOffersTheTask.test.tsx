@@ -43,10 +43,9 @@ vi.mock('../../hooks/useFormFactor', () => ({
 import FactionProfileBody, {
   type ProfileBodyProps,
 } from '../characterProfile/FactionProfileBody'
-import DefaultFactionBody from '../factionDetail/archetypes/DefaultFactionBody'
 import type { FactionDetailState } from '../factionDetail/useFactionDetail'
 import { FACTION_MANIFESTS, surfaceMap } from '../../factions'
-import { pickVariant } from '../../utils/factionDispatch'
+import { resolveVariant } from '../../utils/factionDispatch'
 
 const SIGNUP = i18n.t('feed:taskCard.signup')
 const BELOW_LEVEL = i18n.t('tasks:detail.signup.denied.belowLevel', { level: 9 })
@@ -150,7 +149,7 @@ function factionPage(slug: string, tasks: TaskOut[], onSignup?: (id: number) => 
       joinError: null,
     },
   } as unknown as FactionDetailState
-  const Body = pickVariant(surfaceMap('factionBody'), slug, DefaultFactionBody)
+  const Body = resolveVariant(surfaceMap('factionBody'), slug)
   return html(<Body state={state} />)
 }
 

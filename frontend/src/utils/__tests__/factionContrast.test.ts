@@ -2025,6 +2025,46 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--faction-ua-card-bg",
     text: "--faction-ua-card-points",
   },
+
+  // THE TWO BANDS THAT STOPPED BORROWING (#2635). Both grounded on a token
+  // belonging to something else — UA on `--faction-ua-hair` ("the faintest
+  // divider", by its own comment), Coven on `--faction-coven-slip-sigil-ground`
+  // (the white disc behind the sigil) — and both now own a ground named for the
+  // band. The five other bands stand on materials their kits draw and are
+  // measured with those kits above; `the seven card masthead bands stand on
+  // their own ground` at the foot of this file is the guard that keeps it so.
+  {
+    // ONE ROW COVERS BOTH THEMES because BOTH tokens are frozen, exactly as
+    // `everymen bill masthead` above is: ground and ink are each declared once,
+    // so light and dark resolve to the same #fcf7ef on #c24a18 at 4.59:1.
+    //
+    // THE INK IS `-mast-ink` AND NOT `--faction-ua-on-fill`, which is what #2635
+    // specified. `-on-fill` is the ink for the FILL and the fill flips, so it
+    // flips too — #201a14 by night, which on a frozen orange is 3.52:1 and under
+    // the floor. This row is what caught that; a frozen ground needs a frozen
+    // ink, which is why `--faction-everymen-bill-mast-ink` exists beside its own
+    // frozen red.
+    //
+    // 4.59:1 is a deliberate DROP from the `-card-text` at 10.35:1 the band took
+    // on the hairline: it clears AA at --text-title, and the band's job is to be
+    // UA's colour rather than its quietest surface. The MARK takes the same ink
+    // — the ensō's own `--faction-ua-glow` is 1.30:1 here, which is what
+    // `markColor` exists for.
+    what: "ua card masthead band, wordmark",
+    surface: "--faction-ua-mast",
+    text: "--faction-ua-mast-ink",
+  },
+  {
+    // Coven's pair FLIPS, unlike UA's: only the day band was borrowed paint, so
+    // the night half is `-slip-sigil-ground`'s and `-slip-ink`'s own dark values
+    // under a name that belongs to the band. The day value is the CTA's
+    // `-cta-from` / `-cta-ink` transcribed rather than aliased — index.css says
+    // why at the token — so this row and `coven slip CTA band top` measure the
+    // same two hexes on purpose, at the names each surface actually names.
+    what: "coven card masthead band, wordmark",
+    surface: "--faction-coven-mast",
+    text: "--faction-coven-mast-ink",
+  },
 ];
 
 /**
@@ -2092,7 +2132,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
  */
 const RAIL_WELL_ALPHA = 0.1;
 
-const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default").map((key) => ({
+// `snide` is absent for the reason `default` is: its rail declares something
+// else. Seven skins take `-card-*` on `-card-bg`; S.N.I.D.E.'s sheet is the SLAB
+// pasted on its chrome rather than the chrome itself, so #2631 moved its rail
+// onto the wall and its inks onto the `-note-*` tiers. The same well, over a
+// different ground — measured in this file's last block, with the level track
+// the generator has no shape for.
+const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default" && key !== "snide").map((key) => ({
   what: `${key} rail ink on the rail well`,
   surface: `--faction-${key}-card-bg`,
   veil: { token: `--faction-${key}-card-text`, alpha: RAIL_WELL_ALPHA },
@@ -4193,13 +4239,15 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
  * for a graphical object. Same number, different rule -- the same distinction
  * S.N.I.D.E.'s level-track block up the file draws.
  *
- * WHY IT NEEDS ONE AT ALL. Everywhere else on the card kit the mark stands on
- * `CovenBand`'s white `--faction-coven-slip-sigil-ground`, where the sigil's own
- * `--faction-coven` default is 3.15:1 and index.css says so at the token. The
- * faction-DIRECTORY tile has no band, so it is the first surface to lay a drawn
- * Coven mark straight on the four-stop ramp -- and `--faction-coven` is 2.11:1
- * there, which is why the tile takes `--faction-coven-slip-deep`, the module's
- * declared ornament ink, rather than borrowing the band's.
+ * WHY IT NEEDS ONE AT ALL. The card kit's own mark does not need a floor of its
+ * own: `CovenBand` hands the hat an explicit `markColor` since #2635, so on that
+ * band the mark is the wordmark's ink and is measured with it. (It used to
+ * stand on the band's borrowed white `--faction-coven-slip-sigil-ground`, at the
+ * 3.15:1 index.css still records beside `--faction-coven-on-fill`.) The
+ * faction-DIRECTORY tile has no band and hands the mark nothing, so it is the
+ * one surface that lays a drawn Coven mark straight on the four-stop ramp --
+ * and `--faction-coven` is 2.11:1 there, which is why the tile takes
+ * `--faction-coven-slip-deep`, the module's declared ornament ink.
  *
  * `-slip-mid` is the ramp's WORST stop for this in BOTH cascades: the darkest by
  * day (the whole reason the slip block up the file measures on it) and the
@@ -4254,4 +4302,296 @@ describe("the Everymen bill's drawn rule clears the graphical floor", () => {
       ).toBeGreaterThanOrEqual(AA_LARGE);
     });
   }
+});
+
+/**
+ * S.N.I.D.E. IS NOT AN ALWAYS-DARK FACTION (#2631, ADR-0085).
+ *
+ * The premise six surfaces asserted in their own docstrings — "its
+ * `--faction-snide-*` tokens are identical in both themes" — stopped being true
+ * at #1023 and #2065: `-wall` and `-note-paper` both FLIP. What does not flip is
+ * `-ink` (the press) and the `-card-*` slab, and those are what the six were
+ * painted with. The owner has ruled the same way five times on five of them
+ * (#2227, #2287, #2343, twice on 2026-08-24), which is the tell that this is one
+ * rule nobody wrote down rather than five bugs. ADR-0085 writes it down; this
+ * block is the part of it a reviewer cannot forget to run.
+ *
+ * THE FAILURE MODE IT CATCHES IS THE SEVENTH SURFACE — written next year from a
+ * docstring that still says always-dark. Two seams, because the defect has two
+ * shapes and only one of them is a colour:
+ *
+ *  (a) THE PIN. `dataTheme` freezes every alias inside a skin container to one
+ *      cascade, so no token choice below it can be right. It is swept over the
+ *      WHOLE tree rather than the six files, because the next one will not be in
+ *      them — and because there is exactly one kit for which it is correct.
+ *
+ *  (b) THE GROUND. A page or a panel grounded on the press or on the slab is a
+ *      dark island on a light page. Swept per-file, resolved through each file's
+ *      own aliases, with the sites that legitimately keep them named one by one:
+ *      a mark that brings its OWN stock (a censor plate under acid, a chit, a
+ *      black clipping pasted on the wall) is not a ground, and #2066 / #2173 are
+ *      live rulings this must not undo. A NEW background on either token fails
+ *      here until someone adds it to the inventory, which is the review a
+ *      docstring could not force.
+ *
+ * Every ink these surfaces moved onto is measured above rather than here:
+ * `SNIDE_WALL_PAIRS` already reads `-note-ink`, `-note-muted`, `-note-pink-ink`
+ * and `-wall-credit` on both ends of the wall's ramp, both washed corners and
+ * both themes. Nothing was minted for this. The two readings that generator
+ * cannot reach — the rail's own well, and the level track drawn on it — are the
+ * rows at the bottom of this block.
+ */
+describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
+  /** The only kit in the app whose ground is one colour in both cascades. */
+  const PINNED = "pages/characterProfile/archetypes/SingularityProfileBody.tsx";
+
+  it("exactly one profile kit pins a theme, and it is the terminal", () => {
+    const pinned = sourceFiles()
+      .filter((path) => /dataTheme:\s*['"](?:dark|light)['"]/.test(readStripped(path)))
+      .map(toRelative);
+    expect(
+      pinned,
+      "a `dataTheme` pin freezes every alias inside the container, so a faction whose tokens FLIP cannot be pinned at all — `--faction-singularity-card-bg` is #050f08 in both cascades, and S.N.I.D.E.'s ground has not been invariant since #1023.",
+    ).toEqual([PINNED]);
+  });
+
+  /**
+   * The five component surfaces the ruling names, and every site on each that is
+   * still allowed to paint the press or the slab as a `background`. The value is
+   * the alias as the file spells it, so a rename fails loudly rather than
+   * silently matching nothing — the same guard #2173's block uses up the file.
+   * (The sixth surface is the rail, which reaches its ground through a shared
+   * seam and is checked separately below.)
+   */
+  const SURFACES: { file: string; grounds: string[]; why: string }[] = [
+    {
+      file: "pages/characterProfile/archetypes/SnideProfileBody.tsx",
+      // Two: the censor plate under the acid section heading (#2173), and the
+      // level track's groove, whose fill ramps between two acids that read
+      // 1.03:1 and 2.30:1 on xerox stock. `pageBackground` is the wall, which is
+      // the whole point of the file and is why that knob is swept here too.
+      grounds: ["INK", "INK"],
+      why: "the page, the header, the progression panel, the badge board and the empty states take the wall",
+    },
+    {
+      file: "components/factionHero/SnideFactionHero.tsx",
+      // The wordmark's censor plate, the medallion disc (#2368) and the stat
+      // chits — which ARE slabs, and whose old 34% wash #2343 resolved by giving
+      // them the plate their acid numeral owes.
+      grounds: ["PLATE", "PLATE", "PLATE"],
+      why: "the hero's own `<header>` took the wall in #2343",
+    },
+    {
+      file: "pages/characterPaths/archetypes/SnideCreateCharacter.tsx",
+      grounds: [],
+      why: "the sheet is the shared `WALL` from `factionMarks/snideAtoms`, and the press is only ever an ink here",
+    },
+    {
+      file: "pages/editPraxis/archetypes/SnideEditPraxis.tsx",
+      grounds: [],
+      why: "the composer moved onto the wall in #2177; `PRESS_INK` is the ink acid is paired with",
+    },
+    {
+      file: "pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx",
+      // `RansomCard` and the three cut-out chips stuck to it are the black
+      // clipping pasted ON the wall (#2066); the points figure's plate and the
+      // level track's groove are the plate acid owes (#2287).
+      grounds: ["INK", "INK", "INK", "INK", "PLATE", "PLATE"],
+      why: "the credential panel is `WallPanel`, on the shared `WALL`",
+    },
+  ];
+
+  /**
+   * Every GROUND a file declares that resolves to the press or the slab.
+   *
+   * Four property names, because a ground does not always spell itself
+   * `background`: `pageBackground` and `barTrack` are `ProfileKit` knobs the
+   * shared renderer paints with, and the profile skin reaches ALL of its grounds
+   * through knobs — a sweep for `background:` alone would have read that file as
+   * clean while it was still painting the whole page in press ink.
+   */
+  function pressGrounds(file: string): string[] {
+    const source = stripComments(sourceOf(file));
+    const aliases = new Map(
+      [...source.matchAll(/const ([A-Z_][A-Z_0-9]*) = ["']var\((--faction-snide-[\w-]+)\)["']/g)].map(
+        (match) => [match[1], match[2]] as const,
+      ),
+    );
+    return [...source.matchAll(/(?:background(?:Color)?|pageBackground|barTrack):\s*([^,;\n}]+)/g)]
+      .map((match) => match[1].trim())
+      .filter((value) => {
+        const token = aliases.get(value) ?? value.match(/^var\((--faction-snide-[\w-]+)\)$/)?.[1];
+        return token === "--faction-snide-ink" || token === "--faction-snide-card-bg";
+      });
+  }
+
+  for (const { file, grounds, why } of SURFACES) {
+    it(`${file.split("/").pop()} grounds on the wall, not the press or the slab`, () => {
+      expect(
+        pressGrounds(file).sort(),
+        `${file}: ${why}. \`--faction-snide-ink\` is the PRESS and \`-card-bg\` is the SLAB — both invariant, and a page or a panel painted with either is a dark island on a light page (ADR-0085). A mark that brings its own stock is not a ground; if this is one of those, name it in SURFACES with the ruling that allows it.`,
+      ).toEqual([...grounds].sort());
+    });
+  }
+
+  it("the rail's own ground is the wall too", () => {
+    // The sixth surface, and the only one that reaches its ground through a
+    // shared seam: `railFaceVars` hands all eight skins the `-card-*` family.
+    // S.N.I.D.E. overrides four locals INSIDE that function. What the rendered
+    // `<aside>` then declares is measured by the seam's own spec,
+    // `layout/__tests__/sidebarFactionFace.test.tsx`.
+    const source = stripComments(sourceOf("components/layout/Sidebar.tsx"));
+    const face = source.slice(
+      source.indexOf("const SNIDE_WALL_FACE"),
+      source.indexOf("function railFaceVars"),
+    );
+    expect(face.length, "no `SNIDE_WALL_FACE` in the rail seam").toBeGreaterThan(0);
+    expect(face, "the rail's sheet is the wall").toMatch(/paper: ["']wall["']/);
+    expect(
+      face,
+      "the other seven skins take `-card-bg`, which is the right stock for a faction whose card sheet IS its chrome. S.N.I.D.E.'s is the slab pasted ON its chrome.",
+    ).not.toMatch(/paper: ["']card-bg["']/);
+  });
+
+  /**
+   * The rail's two readings `SNIDE_WALL_PAIRS` cannot reach, because neither
+   * ground is a token: `--rail-well` is the sheet's own ink at 10%, composed in
+   * `railFaceVars`, and the level track is a DRAWN mark on it.
+   *
+   * The track owes 1.4.11's 3:1 rather than a text floor — the same distinction
+   * the field desk's block draws — and it is the one thing on the rail a
+   * measurement forced to move. `--faction-snide` is #6fae00 by day and reads
+   * 1.87:1 on this groove; `-wall-credit`, the wall-end rung of the same hue
+   * (#2177), reads 6.28:1. A second NAME beside a rung, not a repoint.
+   */
+  for (const theme of BOTH_THEMES) {
+    it(`the rail's ink and its level track clear the wall's own well (${theme})`, () => {
+      for (const [ink, floor, role] of [
+        ["--faction-snide-note-ink", AA_NORMAL, "the identity line, as TYPE on the well"],
+        ["--faction-snide-wall-credit", AA_LARGE, "the level track's fill, as a DRAWN mark"],
+      ] as const) {
+        const surface = resolveColor("--faction-snide-wall", theme);
+        const wash = resolveColor("--faction-snide-note-ink", theme);
+        const text = resolveColor(ink, theme);
+        expect(surface.color, `the wall (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+        expect(wash.color, `the well's ink (${theme}) resolved to "${wash.raw}"`).not.toBeNull();
+        expect(text.color, `${ink} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+        const ground = compositeOver({ ...wash.color!, a: RAIL_WELL_ALPHA }, surface.color!);
+        const ratio = contrastRatio(text.color!, ground);
+        expect(
+          ratio,
+          `${role}: ${ink} on the rail well (${theme}) is ${formatRatio(ratio)}`,
+        ).toBeGreaterThanOrEqual(floor);
+      }
+    });
+  }
+});
+
+/**
+ * THE SEVEN CARD MASTHEAD BANDS STAND ON THEIR OWN GROUND (#2635).
+ *
+ * NOT A `PAIRS` ROW, because the defect is not a ratio. Both bands this issue
+ * moved were *legible*: UA's warm hairline under the leaf's body ink measured
+ * 10.35:1 and Coven's white strip under the slip ink measured better still.
+ * What was wrong is that neither ground was a colour anybody chose for a band.
+ * `--faction-ua-hair` is, by its own declaration's comment, "the faintest
+ * divider, below -rule"; `--faction-coven-slip-sigil-ground` is the disc that
+ * backs the SIGIL. Each was the nearest token to hand when the band was drawn,
+ * and a contrast sweep passes every one of those forever.
+ *
+ * SO THE GUARD IS ON THE NAME. A band's ground must be a token that belongs to
+ * the band (`-mast`, `-note-bar`) or to a material the faction's kit actually
+ * draws elsewhere — a plate's disc, a terminal's chrome, a plum banner. The
+ * table below is the decision record for all seven; a band that changes ground
+ * has to come back here and say which material it moved onto, which is the one
+ * step the failure mode skips.
+ *
+ * IT IS ALSO WHY THE OTHER FIVE DID NOT MOVE. Reading "the ground is not the
+ * faction's hue" as the bug would have flattened seven kits into one and turned
+ * S.N.I.D.E.'s note bar acid green. Five of these are right, and the table says
+ * why each is right rather than leaving that to a reader's memory.
+ */
+describe("the seven card masthead bands stand on their own ground (#2635)", () => {
+  /** Band function → the token it grounds on, and what that token IS. */
+  const BAND_GROUNDS = [
+    { band: "CovenBand", ground: "--faction-coven-mast", role: "the band's own, minted by #2635" },
+    { band: "EphemeristsBand", ground: "--faction-ephemerists-plate-disc", role: "the medallion's disc, a material the plate draws" },
+    { band: "EverymenBand", ground: "--faction-everymen-bill-mast", role: "the band's own, a frozen red" },
+    { band: "SingularityBand", ground: "--faction-singularity-term-chrome", role: "the terminal's window chrome" },
+    { band: "SnideBand", ground: "--faction-snide-note-bar", role: "the clipping's printed bar" },
+    { band: "UaBand", ground: "--faction-ua-mast", role: "the band's own, minted by #2635" },
+    { band: "WowBand", ground: "--faction-wow-plum-surface", role: "the plum the decree's CTA already stands on" },
+  ] as const;
+
+  /**
+   * The bands as declared, comments stripped — that file's header names the two
+   * retired grounds on purpose, and a guard a comment can trip is a guard the
+   * next person deletes rather than satisfies.
+   */
+  const BANDS = stripComments(sourceOf("components/cardMasthead/factionBands.tsx")).replace(
+    /^\s*\/\/.*$/gm,
+    "",
+  );
+
+  /** One band's body: `function XBand() {` up to the `\n}` that closes it. */
+  function bandBody(name: string): string {
+    const at = BANDS.indexOf(`function ${name}()`);
+    expect(at, `no \`${name}\` in components/cardMasthead/factionBands.tsx`).toBeGreaterThan(-1);
+    return BANDS.slice(at, BANDS.indexOf("\n}", at));
+  }
+
+  const groundOf = (name: string): string | null =>
+    bandBody(name).match(/background: "var\((--[a-z0-9-]+)\)"/)?.[1] ?? null;
+
+  it("declares every band the file paints", () => {
+    // The census half. Without it an EIGHTH band could arrive on a borrowed
+    // token and every row below would still pass, because none of them would be
+    // looking at it.
+    const declared = [...BANDS.matchAll(/function (\w+Band)\(\)/g)].map((match) => match[1]);
+    expect(
+      [...declared].sort(),
+      "a new band owes this table a row saying which material it stands on (#2635)",
+    ).toEqual(BAND_GROUNDS.map((row) => row.band).slice().sort());
+  });
+
+  for (const { band, ground, role } of BAND_GROUNDS) {
+    it(`${band} grounds on ${ground} — ${role}`, () => {
+      expect(
+        groundOf(band),
+        `${band}'s ground moved. A band stands on a token named for the band or for a material the kit draws; if the move is deliberate, edit the row above and say which material it is now.`,
+      ).toBe(ground);
+    });
+  }
+
+  it("no band borrows a hairline or the sigil's disc", () => {
+    // The generic half, stated in the shape a reader recognises: the next band
+    // reaching for whatever token is nearest to hand. A divider and the ground
+    // behind a mark are the two that were actually taken, so they are named
+    // rather than described.
+    const borrowed = BAND_GROUNDS.map((row) => [row.band, groundOf(row.band)] as const).filter(
+      ([, ground]) => ground !== null && /-hair$|-sigil-ground$/.test(ground),
+    );
+    expect(
+      borrowed,
+      "a hairline is a divider and a sigil ground is what sits behind a mark; neither is a band (#2635)",
+    ).toEqual([]);
+  });
+
+  it("the two bands on a faction fill hand the mark an ink it can be seen in", () => {
+    // UA's ensō defaults to `--faction-ua-glow` (1.30:1 on the new orange) and
+    // Coven's hat to `--faction-coven` (3.15:1 on white, far less on the new
+    // pink) — a faction's own mark disappears on a ground of the faction's own
+    // hue, which is exactly what `CardMasthead`'s `markColor` exists for.
+    // Everymen and WOW have passed it since their bands were built; these two
+    // are the pair #2635 added.
+    for (const [band, ink] of [
+      ["UaBand", "--faction-ua-mast-ink"],
+      ["CovenBand", "--faction-coven-mast-ink"],
+    ] as const) {
+      expect(
+        bandBody(band),
+        `${band} paints a faction fill, so its mark needs \`markColor\` — the sigil's own default is the ground's own hue`,
+      ).toContain(`markColor="var(${ink})"`);
+    }
+  });
 });

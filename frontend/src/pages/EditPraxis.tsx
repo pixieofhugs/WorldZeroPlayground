@@ -12,7 +12,7 @@ import ImageEditModal from "../components/imageEdit/ImageEditModal";
 import { CollabSuccess } from "../components/collab/CollabSuccess";
 import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import DuelSealConfirm from "../components/duel/DuelSealConfirm";
-import { pickVariant } from "../utils/factionDispatch";
+import { resolveVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { preloadArchetype } from "../factions/lazyArchetype";
 import {
@@ -20,7 +20,6 @@ import {
 } from "./editPraxis/useEditPraxis";
 import { PraxisRoomProvider } from "./editPraxis/praxisRoom";
 import { isWaitingStage } from "./editPraxis/editPraxisPhase";
-import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import MetataskPicker from "../components/metataskSeal/MetataskPicker";
 import MetataskRemoveConfirm from "../components/metataskSeal/MetataskRemoveConfirm";
 
@@ -40,10 +39,9 @@ export default function EditPraxis() {
     // travelled with the one before it. It cannot change what renders: the
     // dispatch below still reads the task.
     preloadArchetype(
-      pickVariant(
+      resolveVariant(
         surfaceMap("editPraxis"),
         state.praxis?.task_faction_slug,
-        DefaultEditPraxis,
       ),
     );
     return (
@@ -95,7 +93,7 @@ export default function EditPraxis() {
   // phase, because that surface painted none of its own; now every path draws
   // exactly one — the archetype's, at both widths — and this dispatcher draws
   // none. Nothing may draw two and nothing may draw zero (#567, #1181).
-  const Archetype = pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
+  const Archetype = resolveVariant(surfaceMap('editPraxis'), slug);
 
   return (
     <>

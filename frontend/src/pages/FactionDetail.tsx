@@ -1,11 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import { factionName } from "../utils/factions";
-import { pickVariant } from "../utils/factionDispatch";
+import { resolveVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useFactionDetail } from "./factionDetail/useFactionDetail";
-import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
-import DefaultFactionHero from "../components/factionHero/DefaultFactionHero";
 
 /**
  * Faction detail page (`/factions/:slug`). Per-faction surface #13 in
@@ -96,8 +94,8 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   // branch (#2137). It did not simply go: `DefaultFactionBody` grew the About
   // plate the other seven bodies have always drawn, so the description still
   // appears exactly once and now sits where every other faction's does.
-  const Hero = pickVariant(surfaceMap('factionHero'), faction.slug, DefaultFactionHero);
-  const Body = pickVariant(surfaceMap('factionBody'), faction.slug, DefaultFactionBody);
+  const Hero = resolveVariant(surfaceMap('factionHero'), faction.slug);
+  const Body = resolveVariant(surfaceMap('factionBody'), faction.slug);
 
   return (
     <div className="py-8">

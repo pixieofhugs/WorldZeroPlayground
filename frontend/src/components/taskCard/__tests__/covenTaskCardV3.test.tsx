@@ -91,8 +91,12 @@ describe('the score sits in the SHARED cauldron (#2033, ruling on #2019)', () =>
     // with them, so this is a mount change and not a token deletion.
     expect(html).not.toContain('--faction-coven-slip-sigil-halo')
     expect(html).not.toContain('--faction-coven-slip-sigil-core')
-    // The band's ground is a different `-sigil-` token and stays.
-    expect(html).toContain('--faction-coven-slip-sigil-ground')
+    // The band used to be the third `-sigil-` token's one reader on this card
+    // — it grounded on `--faction-coven-slip-sigil-ground`, the WHITE DISC
+    // BEHIND THE MARK, which is borrowed paint and is what #2635 took off it.
+    // So the card names none of the three now; the band has its own ground.
+    expect(html).not.toContain('--faction-coven-slip-sigil-ground')
+    expect(html).toContain('--faction-coven-mast')
   })
 })
 

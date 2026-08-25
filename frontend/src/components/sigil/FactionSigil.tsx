@@ -1,5 +1,5 @@
 import type { } from "react";
-import { pickVariant } from "../../utils/factionDispatch";
+import { resolveVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
 import AlbescentSigil from "./AlbescentSigil";
@@ -22,10 +22,23 @@ export interface FactionSigilProps {
 
 export type SigilVariantProps = { size?: number; color?: string };
 
-export function UaSigilAdapter({ size }: SigilVariantProps) {
+export function UaSigilAdapter({ size, color }: SigilVariantProps) {
   const dim = size ?? 22;
-  // The ensō draws --faction-ua-glow internally; it has no color prop.
-  return <UaSigil width={dim} height={dim} />;
+  /* THE INK IS FORWARDED (#2635). This dropped `color` on the floor under a
+     comment saying "the ensō draws --faction-ua-glow internally; it has no color
+     prop" — which stopped being true at #908, when the two-arc approximation
+     became the vendored mask and `UaSigil` grew a `color` that DEFAULTS to that
+     glow. So the prop type-checked, the mark ignored it, and no guard could see
+     it: `factionSigil.test.tsx`'s paint test compares the dispatcher against the
+     adapter, and both dropped it identically.
+
+     #2635 is where it stopped being harmless: UA's masthead band is the
+     faction's own orange now, `--faction-ua-glow` is 1.30:1 on it, and
+     `CardMasthead`'s `markColor` — the prop that exists for exactly this — was
+     reaching nothing. Undefined still falls through to the glow, so every mount
+     that passes no ink is unmoved; the filter facet's `factionCssVar('ua')` now
+     lands, which is what that call site was already asking for. */
+  return <UaSigil width={dim} height={dim} color={color} />;
 }
 
 export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
@@ -96,7 +109,7 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
 /**
  * The na ring — a `Default*` archetype co-located with its dispatcher, which
  * `manifest.ts` names as the normal shape for three surfaces already. Exported
- * so a test can resolve the surface the way this component does (`pickVariant`
+ * so a test can resolve the surface the way this component does (`resolveVariant`
  * over `surfaceMap('sigil')`, with the na fallback named) rather than
  * re-deriving the fallback and proving its own copy instead.
  */
@@ -107,6 +120,6 @@ export function DefaultSigilAdapter({ size }: SigilVariantProps) {
 }
 
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(surfaceMap("sigil"), slug, DefaultSigilAdapter);
+  const Variant = resolveVariant(surfaceMap("sigil"), slug);
   return <Variant size={size} color={color} />;
 }

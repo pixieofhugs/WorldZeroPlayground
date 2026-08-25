@@ -40,7 +40,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { CharacterOut } from '../../../api/auth'
 import AlbescentAvatar from '../AlbescentAvatar'
-import { DefaultAvatar } from '../FactionAvatar'
+import DefaultAvatar from '../DefaultAvatar'
 import { surfaceMap } from '../../../factions'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 

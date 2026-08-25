@@ -18,7 +18,6 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import DefaultPraxisCard from "../praxisCard/desktop/DefaultPraxisCard";
-import { DEFAULT_CARD } from "../taskCard/TaskCard";
 import { DefaultComment } from "../comments/CommentThread";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
@@ -263,10 +262,9 @@ const TASK = aTask({
   created_by_display_name: "",
 });
 
-const taskArchetypes = {
-  ...surfaceMap('taskCard'),
-  __default__: DEFAULT_CARD,
-};
+// `na` is a row in the map since #2530, so there is no `__default__:` key to
+// add beside it any more — the spectrum card is asserted under its own slug.
+const taskArchetypes = surfaceMap('taskCard');
 
 describe("task-card content-slot invariant", () => {
   for (const [slug, Card] of Object.entries(taskArchetypes)) {

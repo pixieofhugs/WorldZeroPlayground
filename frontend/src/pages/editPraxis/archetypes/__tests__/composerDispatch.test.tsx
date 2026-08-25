@@ -49,7 +49,7 @@ import EditPraxis from "../../../EditPraxis";
 import DefaultEditPraxis from "../DefaultEditPraxis";
 import AlbescentEditPraxis from "../AlbescentEditPraxis";
 import { surfaceMap } from "../../../../factions";
-import { pickVariant } from "../../../../utils/factionDispatch";
+import { resolveVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 
@@ -197,7 +197,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     // `surfaceMap` is typed against SURFACE_KEYS, so the retired key is not even
     // nameable here; this asserts the surviving surface still resolves.
     expect(
-      resolvedArchetype(pickVariant(surfaceMap("editPraxis"), null, DefaultEditPraxis)),
+      resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), null)),
     ).toBe(DefaultEditPraxis);
   });
 
@@ -205,7 +205,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     "falls %s through to DefaultEditPraxis (ADR-0065 §4)",
     (slug) => {
       expect(
-        resolvedArchetype(pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis)),
+        resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), slug)),
       ).toBe(DefaultEditPraxis);
     },
   );
@@ -217,7 +217,7 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
   // assertions below.
   it("albescent resolves to its wrapper, not to the na composer (#2505)", () => {
     expect(
-      resolvedArchetype(pickVariant(surfaceMap("editPraxis"), "albescent", DefaultEditPraxis)),
+      resolvedArchetype(resolveVariant(surfaceMap("editPraxis"), "albescent")),
     ).toBe(AlbescentEditPraxis);
   });
 
@@ -297,7 +297,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
 
   it.each(SLUGS)("%s draws the waiting reading, not its composer", (slug) => {
     const Archetype = resolvedArchetype(
-      pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+      resolveVariant(surfaceMap("editPraxis"), slug),
     )!;
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -330,7 +330,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     "%s wears its own ornament on the waiting surface, not the page's chrome",
     (slug) => {
       const Archetype = resolvedArchetype(
-        pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+        resolveVariant(surfaceMap("editPraxis"), slug),
       )!;
       const markup = renderToStaticMarkup(
         <MemoryRouter>
@@ -348,7 +348,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     // right edge; `ephemeristsGravity.test.tsx` owns the field's geometry, and
     // what is pinned here is that the ruling did not survive beside it.
     const Archetype = resolvedArchetype(
-      pickVariant(surfaceMap("editPraxis"), "ephemerists", DefaultEditPraxis),
+      resolveVariant(surfaceMap("editPraxis"), "ephemerists"),
     )!;
     const markup = renderToStaticMarkup(
       <MemoryRouter>
@@ -380,7 +380,7 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     (width, slug) => {
       mocks.formFactor = width;
       const Archetype = resolvedArchetype(
-        pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+        resolveVariant(surfaceMap("editPraxis"), slug),
       )!;
       const markup = renderToStaticMarkup(
         <MemoryRouter>
@@ -433,7 +433,7 @@ describe("the composer's shared seams (#1828)", () => {
   ) => {
     mocks.formFactor = width;
     const Archetype = resolvedArchetype(
-      pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+      resolveVariant(surfaceMap("editPraxis"), slug),
     )!;
     return renderToStaticMarkup(
       <MemoryRouter>

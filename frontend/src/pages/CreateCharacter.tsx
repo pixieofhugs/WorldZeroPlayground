@@ -17,7 +17,7 @@
  *
  * `''` (born unaffiliated) and any unregistered slug resolve to
  * `DefaultCreateCharacter`, the `na` kit — never UA and never the viewer's own
- * faction. `pickVariant` has no cross-faction path at all, which is the guard
+ * faction. Dispatch has no cross-faction path at all, which is the guard
  * `FactionSelectCard` did not have when its `UaSelectCard` fallback "dressed
  * every unaffiliated and unknown slug in UA's costume" (#796, the third instance
  * of #418/#636).
@@ -28,16 +28,14 @@
  * INSIDE `DefaultCreateCharacter` rather than a second file beside it.
  */
 import { useCreateCharacter } from './characterPaths/useCreateCharacter'
-import { pickVariant } from '../utils/factionDispatch'
+import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
-import DefaultCreateCharacter from './characterPaths/archetypes/DefaultCreateCharacter'
 
 export default function CreateCharacter() {
   const state = useCreateCharacter()
-  const Archetype = pickVariant(
+  const Archetype = resolveVariant(
     surfaceMap('createCharacter'),
     state.factionSlug,
-    DefaultCreateCharacter,
   )
   return <Archetype state={state} />
 }

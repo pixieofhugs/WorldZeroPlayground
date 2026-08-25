@@ -1,9 +1,10 @@
 /**
  * ua — the surfaces this faction overrides (#782).
  *
- * Override-only: any surface absent here renders that surface's `Default*`
- * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
- * touched. Removing one hands the surface back to the default.
+ * Override-only: any surface absent here renders na's row for that surface —
+ * the `Default*` archetype, registered in `./default.ts` since #2530. Adding a
+ * surface is one line; no dispatcher is touched. Removing one hands the surface
+ * back to na.
  *
  * Entries are thunks (`() => Component`) so they are read at render time, never
  * during module evaluation — see the cycle note in `./manifest.ts`.
