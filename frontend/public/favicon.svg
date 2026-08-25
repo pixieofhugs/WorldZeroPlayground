@@ -7,12 +7,16 @@
     under a dark color scheme so the icon always contrasts the tab bar.
 
     EVERY COLOUR IN THIS FILE IS A HAND-COPY OF THE LIGHT (`:root`) BLOCK OF
-    frontend/src/index.css:
+    frontend/src/index.css. Custom properties are named below WITHOUT their
+    leading double hyphen, because XML forbids that pair anywhere inside a
+    comment and a comment is not escapable — putting it back makes this file
+    unparseable and the tab icon blank (#2683). Restore the two hyphens in
+    front of each name when you go looking for it in index.css:
 
-      glyph ramp  --faction-default-stop-1 .. -stop-7  (the na spectrum,
-                  ADR-0039), at the offsets --faction-default-rainbow uses
-      .tile       --color-text-primary   (the light theme's ink)
-      dark .tile  --color-bg-page        (the light theme's paper)
+      glyph ramp  faction-default-stop-1 .. -stop-7  (the na spectrum,
+                  ADR-0039), at the offsets faction-default-rainbow uses
+      .tile       color-text-primary   (the light theme's ink)
+      dark .tile  color-bg-page        (the light theme's paper)
 
     The copy is not laziness and not drift: this file is served from `public/`,
     outside the bundle and outside the cascade. A favicon is a standalone
@@ -22,8 +26,8 @@
     (#1215) behind a comment that merely claimed they were the spectrum.
 
     It tracks the LIGHT stops on BOTH tiles, deliberately. Browser chrome
-    gives us no theme signal -- the `prefers-color-scheme` query below reads
-    the OS scheme, not the site's `[data-theme]` -- and this asset's flip runs
+    gives us no theme signal — the `prefers-color-scheme` query below reads
+    the OS scheme, not the site's `[data-theme]` — and this asset's flip runs
     *opposite* to the site's, since an OS dark scheme swaps in the LIGHT tile.
     Borrowing the `[data-theme="dark"]` stops would therefore lay colours
     brightened for dark grounds onto the pale tile. The dark block is a

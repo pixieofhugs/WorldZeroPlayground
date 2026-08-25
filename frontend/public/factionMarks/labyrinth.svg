@@ -5,15 +5,24 @@
      BAND-TO-GAP RATIO, because the previous cut could not survive a small mount:
      its walls were 16% of the radius with 8% gaps over a 26-90% span, which at
      22px put the gaps at 0.9 device pixels and antialiased them into a solid
-     ring -- i.e. into na DefaultSigil silhouette, the one thing this mark must
+     ring — i.e. into na DefaultSigil silhouette, the one thing this mark must
      not converge on.
      This cut spends more of the radius (15-97%) and splits it 20% wall / 11%
      gap, and widens each entrance from 42 to 54 degrees about its ORIGINAL
-     centre (270 deg outer and inner, 90 deg middle), so nothing moves -- the
+     centre (270 deg outer and inner, 90 deg middle), so nothing moves — the
      openings only get wide enough to read.
      Arcs, not the polyline the 84px clip-path port produced: exact at every
      scale and a tenth of the bytes.
      It is an ALPHA STENCIL. The fill is discarded and the ink comes from a
-     token, the way enso.webp works -- see AlbescentSigil. -->
+     token, the way enso.webp works — see AlbescentSigil.
+
+     KEEP THIS COMMENT XML-LEGAL. It is a mask-image, so a parse error is not a
+     degraded render, it is no ink at all on every surface in both themes (and
+     nothing else in the repo notices — the file still serves 200, the CSS is
+     still valid, the box still measures). A double hyphen anywhere in here is
+     fatal and XML gives you no way to escape one, so write an em dash.
+     backend/tests/test_shipped_svgs_are_well_formed.py (#2683) catches it
+     now — including in this very sentence, which is why it spells the pair
+     out in words. -->
 <path fill="#000" d="M60.5 5.7A40.74 40.74 0 1 1 23.5 5.7L27.32 13.18A32.34 32.34 0 1 0 56.68 13.18ZM29.42 66.7A27.72 27.72 0 1 1 54.58 66.7L50.77 59.21A19.32 19.32 0 1 0 33.23 59.21ZM48.67 28.9A14.7 14.7 0 1 1 35.33 28.9L39.14 36.39A6.3 6.3 0 1 0 44.86 36.39Z"/>
 </svg>

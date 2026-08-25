@@ -114,8 +114,22 @@ export function factionSigilRing(slug: string | null | undefined): string | unde
  * re-deriving the fallback and proving its own copy instead.
  */
 export function DefaultSigilAdapter({ size }: SigilVariantProps) {
-  // The default ring has no color prop — it draws
-  // --faction-default-rainbow-conic.
+  /* NOT FORWARDED, AND THAT IS THE POINT (#2528). The note here used to say
+     "the default ring has no color prop", which stopped being true at #1892 —
+     `DefaultSigil` takes one now, for the sidebar's activity rail, which samples
+     a window of --faction-default-rainbow per row. That is the same stale-comment
+     shape that cost UA its ink at #2635, so it is corrected rather than left to
+     be read as a fact.
+
+     The behaviour is deliberately unchanged. `na` owns the spectrum (ADR-0039)
+     and it must not be repainted a solid; dropping the prop here is what kept
+     the filter facet's `factionCssVar('na')` — a flat --faction-default grey —
+     off the ring while it was still being passed, which is why the report
+     (#2528) named only Albescent's labyrinth, whose adapter DOES forward. With
+     the facet's guard in place nothing hands this a `color` at all, so
+     forwarding would be inert churn that only becomes visible the day someone
+     passes na a grey. The rail reaches `DefaultSigil` directly, not through the
+     dispatcher. */
   return <DefaultSigil size={size} />;
 }
 
