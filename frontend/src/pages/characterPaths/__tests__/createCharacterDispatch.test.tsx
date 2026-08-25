@@ -150,7 +150,7 @@ describe('the calling being picked chooses the archetype', () => {
   })
 
   it('an unknown slug cannot reach Object.prototype (#1821)', () => {
-    // `pickVariant` is own-property-only; a bracket read would hand back the
+    // `resolveSlug` is own-property-only; a bracket read would hand back the
     // `Object` function for React to render.
     expect(archetypeFor('constructor')).toBe(DefaultCreateCharacter)
     expect(archetypeFor('no-such-faction')).toBe(DefaultCreateCharacter)

@@ -348,7 +348,7 @@ describe('every dispatcher reads surfaceMap() whole (#2529)', () => {
       offenders,
       `A dispatcher spreads surfaceMap() into an object literal.\n` +
         `That is how a slug reaches the screen without a manifest row (#2529):\n\n` +
-        `    pickVariant({ albescent: Adapter, ...surfaceMap('sigil') }, slug, Default)\n\n` +
+        `    resolveVariant({ albescent: Adapter, ...surfaceMap('sigil') }, slug)\n\n` +
         `Register the component in factions/<slug>.ts instead and pass the map\n` +
         `whole. A surface reached outside surfaceMap() is invisible to every\n` +
         `assertion in this file and gets dropped by the next refactor of its\n` +
