@@ -132,7 +132,6 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     // reveal register or a faction hue. This is the line #1891's objection
     // was really about.
     expect(albescent, 'the deleted cross-hair').not.toContain('<linearGradient')
-    expect(albescent, 'the reveal register').not.toContain('--albescent-reveal')
     expect(albescent, 'no name in the markup').not.toContain('albescent"')
     // Both draw the conic TWICE — the portrait hoop and the mark itself. That
     // the count no longer tells the two apart is the whole point: what differs

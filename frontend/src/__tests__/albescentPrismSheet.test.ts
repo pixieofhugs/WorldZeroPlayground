@@ -490,3 +490,25 @@ describe("the two cards are the same material (#2499 — the owner's report)", (
     expect(shared?.gates.join(" ")).toContain("prefers-reduced-motion: no-preference");
   });
 });
+
+/**
+ * THE VELLUM REGISTER IS GONE, AND THE CENSUS IS WHAT KEEPS IT GONE (#2632).
+ *
+ * `--albescent-reveal-*` was the last hand-authored register in the kit: a pure
+ * white sheet by day, worn by four surfaces that each wrote `background:
+ * var(--albescent-reveal-surface)` INLINE — which is why no wrapper class could
+ * ever ground them, and why the prism above reached every Albescent surface but
+ * those four. Owner ruling on #2632: the white aesthetic is purged from the
+ * codebase and Albescent commits entirely to the prism.
+ *
+ * The seam is the STYLESHEET, read RAW — comments included, deliberately. A
+ * commented-out declaration is exactly how a deleted register creeps back, and
+ * the claim being made is that the name has no readers and no home rather than
+ * that it is currently switched off. Each surface's own paint is asserted where
+ * that surface renders; this is the token half of the same deletion.
+ */
+describe("the reveal register is deleted (#2632)", () => {
+  it("declares no --albescent-reveal- anywhere, not even in a comment", () => {
+    expect(read("../index.css")).not.toContain("--albescent-reveal-");
+  });
+});

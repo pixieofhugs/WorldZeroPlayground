@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
-import { factionName } from '../utils/factions'
+import { factionName, factionSheet } from '../utils/factions'
 import FactionSigil from './sigil/FactionSigil'
 // The letter is set in Cormorant Garamond, which ships in the lazily-fetched
 // faction sheet (#2079). FieldDesk mounts this without dispatching a faction
@@ -85,39 +85,25 @@ export function barredLives(
   return answerable(lives).filter((life) => life.level >= bar)
 }
 
-// Albescent vellum tokens (index.css). THE LETTER FLIPS (#2301): this comment
-// used to say the vars were identical in both themes and the letter never went
-// dark. Since #2301 the reveal block has a `[data-theme="dark"]` half whose
-// values are the na card's own — nothing below changes, because every colour
-// here was already a token and the cascade does the rest.
-const BG = 'var(--albescent-reveal-surface)'
-const INK = 'var(--albescent-reveal-text)'
-const ACCENT = 'var(--albescent-reveal-ink)'
-const MUTED = 'var(--albescent-reveal-text-muted)'
+// THE LETTER TAKES THE na CARD'S REGISTER (#2632). The vellum block these five
+// constants used to read — the vellum register, a pure-white sheet by day —
+// is deleted: owner ruling, the white aesthetic is purged and Albescent commits
+// entirely to the prism. Three ink tiers, in the vocabulary every na surface
+// already uses, so nothing here is a hue Albescent owns (ADR-0027, ADR-0048).
+const INK = 'var(--faction-default-card-text)'
+const ACCENT = 'var(--faction-default-card-accent)'
+const MUTED = 'var(--faction-default-card-muted)'
 const SERIF = 'var(--font-faction-vellum)'
 const MONO = "'Courier Prime', monospace"
-// Structural hairlines. These read as module constants, which is why the colour
-// arm never saw them (#2139 ②: a value that reaches the style object as an
-// `Identifier` is Gap D wearing paint, and local const-tracking is not worth the
-// rule's complexity). What the old comment here got wrong was the reason it gave
-// for staying raw — "no token exists". Two of the three DO exist and are
-// byte-identical: the reveal block declares `--albescent-reveal-border` at 0.1
-// and `-border-faint` at 0.055, `AlbescentSelectCard` and `AlbescentSeal`
-// already read them, and the letter is one of the two or three components that
-// block was minted for. So this repaints nothing and stops the letter freezing
-// its own copy of a value the family owns.
-const HAIRLINE = 'var(--albescent-reveal-border)'
-const HAIRLINE_FAINT = 'var(--albescent-reveal-border-faint)'
-// `RULE` — a third hairline, frozen at rgba(0,0,0,0.07) — stood here. The note
-// on it was right about its own terms and right about what would end it: "a
-// frozen black here is not a dark-mode defect … if #2301 gives the reveal a
-// dark half, this is the line that will not follow". #2301 did, so it would
-// have been a black rule on a near-black sheet at 1.02:1 — drawn, and invisible.
-// It did not need the third rung it was refused, either: the canvas draws the
-// letter's `border-top` and its `border-bottom` at the SAME strength after dark,
-// so the slip's top rule is `HAIRLINE_FAINT` now like the rows below it — the
-// perk rows since #2298, the term rows before it. By day that is 1.17:1 →
-// 1.13:1 at one site.
+// The stationery's two hairline strengths. `HAIRLINE` is the na card's own line
+// token; `HAIRLINE_FAINT` is that line at just over half strength — ORNAMENT,
+// the same shape `AlbescentSecretPlaceholder`'s `ink()` washes take, and it owes
+// no ratio: it draws the inner frame, the slip's top rule and the perk rows'
+// under-rules, none of which is read. Mixed DOWN FROM THE LINE rather than
+// alpha'd from black, so both strengths flip with the card instead of vanishing
+// into a near-black sheet after dark.
+const HAIRLINE = 'var(--faction-default-card-line)'
+const HAIRLINE_FAINT = 'color-mix(in srgb, var(--faction-default-card-line) 55%, transparent)'
 
 // i18n key stems under factions:albescent.letter — resolved at render.
 //
@@ -195,7 +181,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
   }
 
   return (
-    <section style={letter} aria-label={t('albescent.letter.aria')}>
+    <section className="alb-prism" style={letter} aria-label={t('albescent.letter.aria')}>
       <div style={innerFrame} />
 
       {/* letterhead — the engraved mono-caps below are ornament: they draw the
@@ -313,12 +299,21 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
   )
 }
 
-// --- letter styles (Albescent vellum tokens; they FLIP since #2301) ----------
+// --- letter styles (the na card's register; the whole block flips with it) ---
 
+/**
+ * THE LETTER WEARS THE PRISM (#2632) — the only one of the four reveal surfaces
+ * that does, and the reason is the decision rule: it is the one that reads
+ * `factionSheet()`. The sheet arrives as the `--faction-default-card-sheet`
+ * TRIPLE, so `.alb-prism` on this same element repaints it with the ground the
+ * task and praxis cards already wear (#2550, epic #2496 ruling 9 as reversed).
+ * A custom property set by a class is visible to that element's own inline
+ * `var()`, so the class and the spread belong together on the `<section>`.
+ */
 const letter: CSSProperties = {
   position: 'relative',
   maxWidth: 620,
-  background: BG,
+  ...factionSheet(),
   color: INK,
   border: `1px solid ${HAIRLINE}`,
   boxShadow: '0 2px 24px var(--color-cast-shadow-soft), 0 1px 3px var(--color-cast-shadow-soft)',
@@ -364,7 +359,10 @@ const lifeChip: CSSProperties = {
   textAlign: 'left',
   width: '100%',
   padding: 'var(--space-md) var(--space-2xl) var(--space-md) var(--space-lg)',
-  background: BG,
+  // FLAT, and deliberately not `factionSheet()`. A chip sits INSIDE the letter,
+  // which is `.alb-prism`, so reading the triple here would inherit the sheet
+  // and paint the same bloom a second time inside each row.
+  background: 'var(--faction-default-card-bg)',
   border: `1px solid ${HAIRLINE_FAINT}`,
   cursor: 'pointer',
 }
@@ -373,7 +371,10 @@ const acceptButton: CSSProperties = {
   cursor: 'pointer',
   border: `1px solid ${INK}`,
   background: INK,
-  color: BG,
+  // The inverted pair — the card's ink as the ground, the card's stock as the
+  // ink. A swap does not change a contrast ratio, so this is the na card's own
+  // measured pairing read backwards.
+  color: 'var(--faction-default-card-bg)',
   fontSize: 'var(--text-content)',
   padding: 'var(--space-md) var(--space-2xl)',
 }

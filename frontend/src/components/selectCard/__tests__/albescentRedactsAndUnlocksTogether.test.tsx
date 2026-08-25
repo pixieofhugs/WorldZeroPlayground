@@ -50,15 +50,35 @@ describe("the Albescent tile redacts and locks on one answer (#2409)", () => {
     }
   });
 
-  it("wears the society's own face while unreadable (#1891 ruling 1)", () => {
+  /**
+   * #1891 RULING 1 IS DELETED, DELIBERATELY (owner ruling on #2632). This case
+   * used to read "wears the society's own face while unreadable" and pinned the
+   * vellum sheet and its hairline in the markup. The tile has no face of its own
+   * any more: it is the na tile, and the redaction still takes the whole of it.
+   * The mark is the one thing that survives unchanged — it comes from
+   * `FactionSigil`'s dispatcher and is never part of a wrapper (ADR-0083 §1).
+   */
+  it("keeps na's face and na's mark while unreadable (#2632)", () => {
     setAlbescentRevealed(false);
     const html = card();
-    // Ruling 1 is untouched by #2409: the look stays, only the word goes. If
-    // the redaction ever starts hiding the surface rather than the strings,
-    // this is what says so.
-    expect(html).toContain("--albescent-reveal-surface");
-    expect(html).toContain("--albescent-reveal-border");
+    expect(html, "the vellum register is deleted").not.toContain("--albescent-reveal");
+    expect(html).toContain("--faction-default-card-bg");
     expect(html).toContain("labyrinth");
+  });
+
+  /**
+   * EPIC #2496 RULING 8 — the prism arrives WITH the reveal. A redacted tile
+   * keeps a FLAT ground, because `[REDACTED]` is painted in its own ground's
+   * colour and a bloomed ground makes that 1:1 pairing only approximately true.
+   * One predicate again: the same `redacted` answer that mutes the words and
+   * shuts the door also withholds the ground. `AlbescentTaskCard`'s
+   * `groundIsBusy` is the precedent for a conditional prism.
+   */
+  it("withholds the prism while redacted and grants it with the reveal", () => {
+    setAlbescentRevealed(false);
+    expect(card()).not.toContain("alb-prism");
+    setAlbescentRevealed(true);
+    expect(card()).toContain("alb-prism");
   });
 
   it("marks the tile so the redaction paints and the sweep skips it", () => {

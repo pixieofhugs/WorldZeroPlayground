@@ -108,11 +108,15 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
 
   /**
-   * The single surviving override, and it is a REVEAL surface, not a skin: the
-   * `/factions` tile is only ever shown to an account already revealed to the
-   * society (ADR-0027, #390). See the component for why removing it would make
-   * Albescent MORE conspicuous rather than less — the dispatcher's fallback is
-   * UA's costume, not a neutral card (#796).
+   * The directory tile — a RE-CUTTING wrapper like every other row here (#2632).
+   *
+   * Three claims stood in this comment and none of them survives. It was "the
+   * single surviving override", which the manifest's own 20-of-20 header now
+   * answers. It was "only ever shown to an account already revealed", which
+   * ADR-0082 ended: the row ships to every caller and the tile redacts instead
+   * of hiding. And it was "a REVEAL surface, not a skin", which is what the
+   * white vellum register was doing here — that register is deleted and the tile
+   * is `DefaultSelectCard` plus a conditional ground and a walking hairline.
    */
   factionSelectCard: () => AlbescentSelectCard,
 
@@ -310,10 +314,12 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
   /**
    * The seal skin (#930). A seal is a FOREIGN sticker that keeps its ISSUER's
    * voice on someone else's praxis — so an Albescent-issued metatask is a reveal
-   * moment, not a host surface Albescent has to hide on. It reads the
-   * `--albescent-reveal-*` tokens (the same reveal register as the invitation
-   * letter and the select tile, and which FLIPS since #2301), never a `--faction-albescent-*` theme, so the
-   * society shows its pale face only where it is doing the sealing.
+   * moment, not a host surface Albescent has to hide on. Its stock and inks are
+   * the na card's since #2632 — the vellum register it used to read, along with
+   * the invitation letter, the select tile and the sealed placeholder, is
+   * deleted — so what marks the sealing is the strip that MOVES, never a stock
+   * of its own. It stays FLAT rather than taking `.alb-prism`: a sticker on an
+   * Albescent host would inherit that host's ground and paint the bloom twice.
    */
   metataskSeal: () => AlbescentSeal,
 

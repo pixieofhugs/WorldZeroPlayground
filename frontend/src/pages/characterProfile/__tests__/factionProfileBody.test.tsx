@@ -115,18 +115,14 @@ describe("FactionProfileBody dispatch", () => {
     // And no trace of the deleted token block. This is the assertion that
     // caught CredentialCard still painting from --faction-albescent-card-bg.
     //
-    // #1626 narrowed it by ONE register, and only that one. The credential
-    // footer's faction label became a sigil, and `FactionSigil` now resolves
-    // albescent to its own cross-hair — which draws in `--albescent-reveal-*`,
-    // the REVEAL register #783 deliberately kept alive (always-light until
-    // #2301 gave it a dark half; it is what
-    // the invitation letter, the faction-select tile and the metatask seal are
-    // drawn in). The deleted THEME block `--faction-albescent-*` is what "no
-    // trace" was written about, and it is still absolutely forbidden here, as is
-    // any other albescent-shaped class, attribute or token: the substitution
-    // below permits the reveal register and nothing else.
+    // #1626 narrowed it by ONE register and #2632 UNNARROWED it: the vellum
+    // reveal register that carve-out existed for is deleted outright, so the
+    // substitution it needed goes with it and the claim is the plain one again.
+    // No albescent-shaped class, attribute or token appears in this markup —
+    // neither the deleted THEME block `--faction-albescent-*` that "no trace"
+    // was originally written about, nor anything else.
     const html = renderBody({ faction_slug: "albescent" });
-    expect(html.replace(/--albescent-reveal-[a-z-]+/g, "")).not.toContain("albescent");
+    expect(html).not.toContain("albescent");
   });
 
   // Unaffiliated is the slug `na`, not a missing one (ADR-0030), and since

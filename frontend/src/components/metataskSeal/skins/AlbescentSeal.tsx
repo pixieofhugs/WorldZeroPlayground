@@ -4,18 +4,31 @@ import { factionName } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
- * Albescent seal — the pale correspondence register (#930). A seal is a foreign
- * sticker that keeps its ISSUER's voice, so this is one of the rare moments the
- * secret society shows its face: near-black ink on a near-white sheet, with a
- * single soft spectrum strip as its only colour. It reads the
- * `--albescent-reveal-*` reveal tokens (never a `--faction-albescent-*` theme,
- * which does not exist by design) so it stays restrained and un-tinted.
+ * Albescent seal — a sticker on someone else's card (#930).
  *
- * IT FOLLOWS THE FLIP (#2301) and needs no edit to do it: every colour above is
- * a reveal token, and after dark those resolve to the na card's own stock and
- * ink. So the sticker is a pale sheet by day and an na-dark one by night, on
- * whatever host card it has been stuck to. Its `-border` is what keeps it a
- * distinct object when the host card happens to be na's too (2.74:1).
+ * FLAT na SHEET, NOT THE PRISM, and that is the decision this file owes a line
+ * on (#2632). It does not read `factionSheet()` and must not: a seal is stuck
+ * onto a host card, and on an Albescent host that card is ALREADY `.alb-prism`,
+ * which sets `--faction-default-card-sheet` for its whole subtree. A seal that
+ * read the triple would inherit the host's bloom and paint it a second time
+ * inside itself — one drawing composited twice, which reads as a brighter patch
+ * rather than as a sticker. Flat `--faction-default-card-bg` is what keeps it a
+ * distinct object on a bloomed ground, and its hairline is what keeps it one on
+ * a plain na ground.
+ *
+ * ── IT USED TO BE THE PALE CORRESPONDENCE REGISTER, AND IS NOT (#2632) ──────
+ *
+ * Every colour here came from the deleted vellum register: near-black on white
+ * vellum sheet, one of four surfaces where the secret society showed a face of
+ * its own. Owner ruling — the white aesthetic is purged and Albescent commits
+ * entirely to the prism vocabulary, so the sticker takes the na card's stock,
+ * ink and hairline like every other Albescent surface. Its delta is the strip
+ * that MOVES, not a stock of its own. Nothing is repainted in a hue Albescent
+ * owns, because it owns none (ADR-0027, ADR-0048, #783).
+ *
+ * The three ink tiers are the na card's own, in the vocabulary `DefaultSeal`
+ * already uses on the same object: `-card-text` for the title, `-card-accent`
+ * for the bonus, `-card-muted` for the label and the peel control.
  *
  * ITS ONE COLOUR MOVES (#2500, epic #2496 ruling 3). The strip was the last
  * still spectrum on any Albescent-dispatched surface, and it was still for a
@@ -39,12 +52,12 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
     <div
       className="relative alb-moves"
       style={{
-        background: 'var(--albescent-reveal-surface)',
-        color: 'var(--albescent-reveal-text)',
-        border: '1px solid var(--albescent-reveal-border)',
+        background: 'var(--faction-default-card-bg)',
+        color: 'var(--faction-default-card-text)',
+        border: '1px solid var(--faction-default-card-line)',
         borderRadius: 4,
         padding: 'var(--space-md) var(--space-lg)',
-        boxShadow: 'var(--albescent-reveal-shadow)',
+        boxShadow: '0 2px 18px var(--color-cast-shadow-soft), 0 1px 3px var(--color-cast-shadow-soft)',
         fontFamily: 'var(--font-faction-serif)',
         overflow: 'hidden',
       }}
@@ -61,7 +74,7 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
             zIndex: 2,
             background: 'transparent',
             border: 'none',
-            color: 'var(--albescent-reveal-text-muted)',
+            color: 'var(--faction-default-card-muted)',
             fontSize: 'var(--text-xl)',
             cursor: 'pointer',
           }}
@@ -72,7 +85,7 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
 
       <span
         className="label-heading block"
-        style={{ color: 'var(--albescent-reveal-text-muted)' }}
+        style={{ color: 'var(--faction-default-card-muted)' }}
       >
         {t('detail.seal.label', { faction })}
       </span>
@@ -94,7 +107,7 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
         className="block"
         style={{
           fontSize: 'var(--text-content)',
-          color: 'var(--albescent-reveal-text)',
+          color: 'var(--faction-default-card-text)',
         }}
       >
         {metatask.title}
@@ -106,7 +119,7 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
           fontSize: 'var(--text-title)',
           fontWeight: 600,
           letterSpacing: '0.02em',
-          color: 'var(--albescent-reveal-ink)',
+          color: 'var(--faction-default-card-accent)',
           marginTop: 'var(--space-xs)',
         }}
       >

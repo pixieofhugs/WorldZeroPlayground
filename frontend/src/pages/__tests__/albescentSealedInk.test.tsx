@@ -6,16 +6,20 @@
  * counts as an ink" and not a second copy here.
  *
  * WHY THIS SEAM AND NOT A CONTRAST ROW. `factionContrast.test.ts` measures
- * TOKEN PAIRINGS, and its "albescent reveal sheet, muted" row already pins
- * `--albescent-reveal-text-muted` on `--albescent-reveal-surface` in both
- * themes — 4.64:1 by day, 5.44:1 at night. That row was live the whole time the
- * eyebrow was failing at 1.92:1, because the eyebrow was not painted from a
- * token: it was `color-mix(… --albescent-reveal-text 30%, transparent)`, a
- * FOURTH tier invented inline on a register that names three. No value-level
- * sweep can reach a per-site mix, which is precisely how this surface stayed
- * unmeasured. The missing assertion was never "is the muted tier legible" but
- * "does the text on this page read a tier at all", and that is a question about
- * what the component emits.
+ * TOKEN PAIRINGS, and it already pins `--faction-default-card-muted` on
+ * `--faction-default-card-bg` in both themes. Its equivalent row was live the
+ * whole time the eyebrow was failing at 1.92:1, because the eyebrow was not
+ * painted from a token at all: it was an inline `color-mix()` at 30%, a tier the
+ * register did not name. No value-level sweep can reach a per-site mix, which is
+ * precisely how this surface stayed unmeasured. The missing assertion was never
+ * "is the muted tier legible" but "does the text on this page read a tier at
+ * all", and that is a question about what the component emits.
+ *
+ * THE TIERS ARE na's SINCE #2632. The page's private vellum register is deleted
+ * — owner ruling, the white aesthetic is purged and Albescent takes the na sheet
+ * — so this file measures the same shape against the card family. The page stays
+ * FLAT (no `.alb-prism`): it is the un-revealed view by definition, and the
+ * prism arrives with the reveal.
  *
  * THE FLEUR AND THE RULE ARE ORNAMENT AND ARE MEANT TO STAY WHISPERS
  * (owner ruling on #2523). They are `ink(22)` and `ink(16)` and they owe no
@@ -48,18 +52,18 @@ const textInks = declarations(textMarkup)
   .filter(([property]) => INK_PROPS.has(property))
   .map(([, value]) => value)
 
-/** The three tiers the reveal register names, and the three it measures. */
+/** The three ink tiers the na card names, and the three `factionContrast` measures. */
 const NAMED_TIERS = new Set([
-  'var(--albescent-reveal-text)',
-  'var(--albescent-reveal-text-muted)',
-  'var(--albescent-reveal-ink)',
+  'var(--faction-default-card-text)',
+  'var(--faction-default-card-muted)',
+  'var(--faction-default-card-accent)',
 ])
 
 const wash = (percent: number) =>
-  `color-mix(in srgb, var(--albescent-reveal-text) ${percent}%, transparent)`
+  `color-mix(in srgb, var(--faction-default-card-text) ${percent}%, transparent)`
 
 describe("the sealed page's text ink", () => {
-  it('is a named reveal tier at every site, never a per-site fade', () => {
+  it('is a named card tier at every site, never a per-site fade', () => {
     expect(textInks.length).toBeGreaterThan(0)
     expect(textInks.filter((value) => !NAMED_TIERS.has(value))).toEqual([])
   })
@@ -71,7 +75,7 @@ describe("the sealed page's text ink", () => {
    * copy-anchored guard would have rotted with it.
    */
   it('reaches the muted tier for the eyebrow', () => {
-    expect(textInks).toContain('var(--albescent-reveal-text-muted)')
+    expect(textInks).toContain('var(--faction-default-card-muted)')
   })
 })
 

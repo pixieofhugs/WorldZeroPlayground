@@ -65,7 +65,6 @@ describe("FactionSelectCard fallback", () => {
         `--faction-${slug}-`,
       );
     }
-    expect(html).not.toContain("--albescent-reveal");
   });
 
   it("carries the spectrum rather than degrading to grey (ADR-0039)", () => {
