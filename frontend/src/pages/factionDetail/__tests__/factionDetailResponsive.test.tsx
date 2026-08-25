@@ -261,13 +261,10 @@ describe('faction detail serves one responsive body at both widths', () => {
         const burned = page(slug, formFactor, {
           membership: membership({ state: 'burned' as MembershipState }),
         })
-        if (slug === 'ua') {
-          // UA is graduation-gated: the hook resolves it to "none" before any
-          // status is read (#200/#243), so it must never grow a burned notice.
-          expect(burned.text, 'UA never burns').not.toContain(notice)
-        } else {
-          expect(burned.text, 'the era notice').toContain(notice)
-        }
+        // UA used to be carved out here on the reading that it was
+        // graduation-gated. ADR-0030 says otherwise and #2660 deleted the
+        // branch, so UA burns like the other eight.
+        expect(burned.text, 'the era notice').toContain(notice)
       })
     }
   }

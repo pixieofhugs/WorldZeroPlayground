@@ -5,8 +5,10 @@
  * all Join / Leave / Accept / Decline actions live on that page's membership
  * block. This test pins the half of that split which is still testable here —
  * the detail-page membership block renders the Join CTA for an eligible viewer
- * and hides it for a viewer with no join affordance ("none"), which is exactly
- * the state the hook resolves for UA (graduation-gated, no chosen-join flow).
+ * and hides it for a viewer with no join affordance ("none"). That state used
+ * to be cited here as "what the hook resolves for UA"; #2660 deleted that
+ * branch (UA is ordinary — ADR-0030), so "none" now means only logged-out or
+ * no character, which is what this asserts.
  *
  * THE GRID HALF LOST ITS SUBJECT (#2024). It asserted that a `FactionCard`
  * rendered no `<button>` and was wrapped in a link to the detail page. That
@@ -74,8 +76,8 @@ describe("faction detail page membership CTA", () => {
   });
 
   it("hides the join block when the viewer has no join affordance", () => {
-    // membership.state === "none" is what the hook resolves for logged-out
-    // viewers AND for UA (graduation-gated, no chosen join). The block is gone.
+    // membership.state === "none" is what the hook resolves for a logged-out
+    // viewer or one with no character. The block is gone.
     const markup = html(
       <EverymenFactionBody state={stateWith({ state: "none" })} />,
     );
