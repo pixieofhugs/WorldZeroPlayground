@@ -15,8 +15,8 @@ from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from scripts.backfill_metatask_multiplier import backfill_metatask_multiplier
 from models.task import Task
+from scripts.backfill_metatask_multiplier import backfill_metatask_multiplier
 from scripts.seed_demo_praxes import (
     DUEL_LOSER_TITLE,
     DUEL_LOSER_USERNAME,
