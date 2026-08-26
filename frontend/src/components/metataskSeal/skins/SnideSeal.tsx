@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
 import { SnideBand } from '../../cardMasthead/factionBands'
-import { factionCssVar } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
 
@@ -90,9 +89,9 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
         background: 'var(--snd-seal-paper)',
         color: 'var(--snd-seal-ink)',
         border: '2px solid var(--faction-snide-pink)',
-        // The corner is the TOKEN's, not this file's (#2729) — the picker's
-        // selection ring reads the same one, so the two cannot disagree.
-        borderRadius: factionCssVar('snide', 'card-radius'),
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--snd-seal-radius)',
         transform: 'rotate(-1deg)',
         // ornament (#1609): flat offset print register — ink tokenized, and the
         // strength is now the uniform 40% (#2302; this note printed at 35%). The

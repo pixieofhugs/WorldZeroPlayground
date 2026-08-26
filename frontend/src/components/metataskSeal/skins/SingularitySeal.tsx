@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
 import { factionRoleVars } from '../../../utils/factionRoles'
-import { factionCssVar } from '../../../utils/factions'
 import { SingularityBand } from '../../cardMasthead/factionBands'
 import type { SealSkinProps } from '../types'
 
@@ -39,9 +38,9 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
         background: 'var(--sg-seal-paper)',
         color: 'var(--sg-seal-ink)',
         border: '1px solid var(--faction-singularity-border-hard)',
-        // The corner is the TOKEN's, not this file's (#2729) — the picker's
-        // selection ring reads the same one, so the two cannot disagree.
-        borderRadius: factionCssVar('singularity', 'card-radius'),
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--sg-seal-radius)',
         // The band is full-bleed and the frame is rounded, so the chrome bar's
         // square corners have to be clipped to the window's.
         overflow: 'hidden',

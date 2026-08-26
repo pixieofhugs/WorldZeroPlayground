@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { factionCssVar, factionSpectrumSheet } from '../../../utils/factions'
+import { factionSpectrumSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { DefaultBand } from '../sealBands'
 import type { SealSkinProps } from '../types'
@@ -54,9 +54,9 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         border: '3px solid transparent',
         ...factionSpectrumSheet(),
         color: 'var(--na-seal-ink, var(--faction-default-card-text))',
-        // The corner is the TOKEN's, not this file's (#2729) — the picker's
-        // selection ring reads the same one, so the two cannot disagree.
-        borderRadius: factionCssVar('na', 'card-radius'),
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--na-seal-radius, var(--faction-default-card-radius))',
         overflow: 'hidden',
       }}
     >
