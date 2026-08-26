@@ -818,3 +818,177 @@ Sentinel fenced at both ends, anchor absolutely last. Post-upload `list_files`:
 hand-uploaded handoffs as ever (`mobile-system/`, `templates/`, `screenshots/`,
 `design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json` and
 `_adherence.oxlintrc.json`. Leave those alone.
+
+## [2026-08-25] Fifth round — 278 → 305, and the white card ground the kit had
+## always been shipping
+
+Ran from a worktree at `origin/main` d3f98246. 115 commits of drift since 08-22.
+Map health clean for the sixth round running (0 dead paths, 0 case-renames).
+
+### The whole-tree scan earned its keep again — 25 unmapped, and a whole new directory
+`newdirs.mjs` (regenerate it; gitignored) found **25** components no sync had ever
+seen. Twelve were faction-skin siblings whose families were already mapped
+(`AlbescentBackdrop`, `AlbescentAvatar`, `DefaultAvatar`, `AlbescentComment`,
+`AlbescentDuelSealConfirm`, `AlbescentEditPraxis`, `AlbescentFactionBody`,
+`AlbescentFactionHero`, `DefaultFactionHero`, `AlbescentFieldDesk`,
+`AlbescentScoreStamp`, `DefaultFeedFrame`), five were the `*CreateCharacter` plates
+that #2473's dispatch split out, two were `ReturningCard` / `JoinControl` — and
+**six were a directory nothing had ever been mapped from**: `pages/settings/`
+(`SettingsCard`, `SettingsRow`, `SettingsSwitch`) and `pages/settings/sections/`
+(`AccountSection`, `AppearanceSection`, `CookiesSection`), all from #2153/#2154/#2155.
+Exactly the standing bug the 08-22 round named. **Walk the whole tree every round.**
+
+Three more (`EphemeristsCreateCharacter`, `SnideCreateCharacter`, `WowCreateCharacter`)
+were mapped by their feature PR but never uploaded — the diff caught them as `added`.
+
+`DefaultSettings` was **removed** (#2154 deleted `settings/mobileArchetypes/`); its four
+component files plus two `_preview/*` are this round's deletes.
+
+### THE PREVIEW CARD TEMPLATE PAINTS THE BODY WHITE, AND THIS KIT DEFAULTS TO DARK
+The single highest-value finding of the round, and it had been shipping since the
+first sync. Every generated card carries an inline `body{...;background:#fff}` which
+beats the kit's own `body{background-color:var(--color-bg-page)}` from index.css on
+source order. `DEFAULT_THEME` is `'dark'` (`hooks/useTheme.tsx`), so `[data-theme=dark]`
+hands every component cream ink — and any component that does not paint an opaque
+ground of its own then renders **cream on white**.
+
+The page archetypes are the whole class: `FieldDesk`, `CreateCharacter`, `EditPraxis`,
+`FactionBody` all expect the page ground a layout wrapper gives them in the real app.
+`DefaultFieldDesk` and `DefaultCreateCharacter` had been shipping near-illegible cards
+for rounds and were graded good anyway, because the sheets were read as "that is how
+this card looks". They are not.
+
+**Fixed kit-wide in `frontend/.ds-kit/provider.tsx`** (owner-approved this run): the
+provider repaints `document.body` with `var(--color-bg-page)`, guarded on the
+`preview` flag and on `document` existing. `cfg.provider` wraps preview cards only,
+never a built design, so nothing downstream inherits it. **Do not fork `lib/emit.mjs`
+to fix this** — the template is the app's output contract.
+
+Grade-safety, checked before doing it: `sourceKeyFor` (lib/sync-hashes.mjs) hashes the
+recipe, the global/component config slices, the component src and the owned
+`previews/<Name>.tsx` — **not** the provider file. So a provider edit churns every
+render hash without invalidating one grade. That is why 102 components came back as
+`renderChurned` with grades kept and only a 5-pick canary to confirm.
+
+### `MotionProvider` was missing from the preview provider — one card rendered blank
+`AppearanceSection` came back completely empty. `useMotion()` throws outside
+`MotionProvider` exactly as `useTheme()` does, and #2154 shipped the hook without
+anyone adding it to `.ds-kit/provider.tsx`. Added, nested inside `ThemeProvider`.
+Only one consumer today, but the next one would have failed the same silent way.
+
+### Viewports measured, not guessed
+- The seven **faction** `*CreateCharacter` plates clipped at the inherited `390x760`.
+  Measured content heights: Coven 1218, Ephemerists 1259, Everymen 1185, Wow 1177,
+  Snide 1174, Singularity 1169, Ua 1085. All seven raised to **390x1280**.
+  `AlbescentCreateCharacter` and `DefaultCreateCharacter` measure exactly 760 (they
+  render the shorter na form) and were **left alone** — Default is `unchanged` and
+  touching its override would drag it into the changed partition for nothing.
+- `CookiesSection` clipped mid-card → `cardMode:single`, **820x1200**.
+- `DefaultFactionHero` tripped `[GRID_OVERFLOW] wide` → `cardMode:column`, per the
+  warn's own named remedy.
+
+**A viewport change trips `[CONFIG_STALE]` in `preview-rebuild.mjs`** — the targeted
+loop accepts `cardMode` edits but not viewport ones, and it fails while the capture
+that follows happily runs against the stale build. Run the full `package-build.mjs`
+first when you touch a viewport.
+
+### `EphemeristsGloss` renders blank in the CAPTURE and correctly in the CARD
+Its review sheet showed an empty plate and a readout row with numbers but no labels.
+It is **not** a regression from #2392. Screenshotting the story directly at a ~1200ms
+settle shows all seven glossed words in gold on the Valley plate; the gloss frames
+start hidden and the capture catches a pre-reveal frame. `_screenshots/` never
+uploads and the shipped card is live HTML, so the card a reader opens is correct.
+**Do not "fix" this by forcing the labels visible in the preview** — that would fake
+the one thing the component is about.
+
+Two debugging traps hit while chasing it, both worth not repeating: the preview page
+has **no `#root`** (query `document.body`), and `waitUntil:'domcontentloaded'` returns
+before the bundle executes so every probe reads zero nodes — use `'networkidle'`.
+
+### conventions.md — validated, TWO real drifts (reported, not applied)
+The header belongs to its authors, so these were surfaced rather than edited:
+1. **`DefaultSettings` is named as a shipped mobile-only singleton and no longer
+   exists.** The validator says "(in bundle, no card dir)" — that match is a *code
+   comment* inside `AccountSection.tsx`, not an export. It genuinely does not ship.
+   Its replacement is the chassis: `SettingsCard` / `SettingsRow` / `SettingsSwitch`
+   plus the three sections.
+2. **`DefaultCreateCharacter` is listed among mobile-only singletons**; character
+   creation became faction-dispatched in #2473 and is now **nine** skins.
+
+The seven `--faction-albescent-*` "failures" remain the known false positives — the
+header itself says they do not exist (#783). **Do not add albescent to a token sweep.**
+
+### Known render warns — still exactly 19, plus one that was mine and got fixed
+Unchanged standing set. `[TOKENS_MISSING]` is now **35, not 34**: `--rail-face` joined
+the 34 `--tw-*`. It is legitimate — `factionRoleVars(slug,'rail')` declares it at
+runtime on the rail's root and `[data-rail-face] .font-display` reads it, so it is
+absent from shipped stylesheets by construction. The warn text says as much.
+`DefaultFactionHero`'s `[GRID_OVERFLOW]` was mine and is remedied; the three
+`[RENDER_THIN]`s that fired on `DefaultFeedFrame`/`SettingsCard`/`SettingsRow` in the
+first pass were floor cards from before their previews existed and are gone.
+
+### Grading basis this round
+All 25 authored components plus the 3 never-uploaded plates and the 7 changed
+(`*FactionHero` x 6 + `EphemeristsGloss`) = **35 components, 57 cells, every cell
+graded good** from sheets read after the final build. All 5 canary `[SPOT_CHECK]`
+picks confirmed with no divergence — including `LevelUpPopup`, whose 08-22 48-pixel
+sliver fix still holds. Token sweep over all 25 new previews: **0 missing tokens**.
+
+### `ReturningCard` cannot render populated, and that is structural
+Its card shows the real offline loading line. The dated body comes from
+`GET /auth/returning` on mount, and the harness intercepts nothing —
+`openapi-fetch` captures `globalThis.fetch` at client creation, before any preview
+module body runs (the 08-17 finding, re-confirmed: `client.ts` passes no `fetch`
+option). Same class as `CommentThread`. The contract and the constraint ship in its
+`.d.ts` / `.prompt.md`, and the preview header says so. Not a defect to re-chase.
+
+## Re-sync risks (2026-08-25)
+- **The body-ground fix lives in `provider.tsx` and is preview-only.** If a future
+  round sees cream-on-white cards again, check that `if (preview && ...)` block first
+  — and never move it into `lib/emit.mjs`.
+- **~35 page-archetype cards changed appearance this round without being re-graded**
+  (they are `unchanged`/`renderChurned`, grades carried by sourceKeys). They now
+  render on the app's real ground, which is strictly more correct, but nobody has
+  read those sheets. A future round that wants certainty can
+  `package-capture.mjs --components <picks> --spot-check-components <picks>` over the
+  archetype families.
+- `TheArray` will keep showing up in any PascalCase sweep. Excluded on purpose.
+- The `*CreateCharacter` family is now nine and two of them (Albescent, Default) sit
+  at a different viewport from the other seven **deliberately** — they render the
+  shorter na form. Do not "normalise" the overrides.
+- `pages/settings/` is now a mapped directory, so the next dir-scoped scan would see
+  it; the *next* new directory will still be invisible to anything but the whole-tree
+  walk.
+- `EphemeristsSelectCard`'s header still overlaps at its natural 360x300 (the eyebrow
+  collides with the transit notation). Recorded 08-22, still cosmetic, still unfiled.
+- `LevelUpPopup`'s `SurveyorManyUnlocks` cell clips its CONTINUE button at 460x800 —
+  the body grew. Not in scope this round (component is `unchanged`); raise the
+  viewport on any round that touches it.
+
+### Upload record (2026-08-25)
+Atomic path, FULL writes (not scoped). The scoped-upload shortcut the 08-22 round
+used is **not safe any more, and probably never was**: `sourceHashes` covers only
+`.jsx` / `.d.ts` / `.prompt.md` — **not `.html` and not `_preview/*.js`** — and
+`remote-diff.mjs` marks `upload.components` **"informational"** in its own header
+comment. Both changed for effectively every component this round (provider edit +
+new bundle), so a sourceHashes-scoped upload would have left stale cards remotely.
+Uploaded everything: 1,220 component files + 184 previews + 47 fonts + 2 vendor +
+bundle + `_ds_bundle.css` + `styles.css` + README = **1,457 content files in 15**
+`write_files` calls, sentinel fenced at both ends, anchor absolutely last.
+
+Deletes 6 -> **5 deleted, 1 not-found** (`_preview/DefaultSettings.css`; this build
+emits only `_preview/*.js`, the same not-found the 08-22 round saw).
+
+Post-upload `list_files`: **0 missing**, 1,879 remote entries (dirs included) against
+1,459 uploaded files; `DefaultSettings` confirmed gone. The 64 extras are the same
+hand-uploaded handoffs as ever (`mobile-system/`, `templates/`, `screenshots/`,
+`design_handoff_*`, `uploads/`) plus app-generated `_ds_manifest.json` and
+`_adherence.oxlintrc.json`. Leave those alone.
+
+**`main` moved 5 commits mid-run — fifth round running.** #2683 fixed the labyrinth
+and favicon SVGs (the labyrinth is INLINED as a mask into kit.css, so the bundle was
+stale), #2686 re-cut S.N.I.D.E. chrome contrast 1.03:1 -> 7.71:1, #2528 touched
+`factionRoles.ts`, and the authors edited `conventions.md` themselves (removing the
+`DefaultSettings` line this round had flagged). Merged, regenerated kit.css +
+ds-types + both barrels, re-ran the whole chain. **Re-check `origin/main` immediately
+before `finalize_plan`, every single time** — this is now five for five.

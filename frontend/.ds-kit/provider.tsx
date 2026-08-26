@@ -26,6 +26,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { AuthContext, AuthProvider } from "../src/auth/AuthContext";
 import { ThemeProvider } from "../src/hooks/useTheme";
+import { MotionProvider } from "../src/hooks/useMotion";
 import type { CurrentUser } from "../src/api/auth";
 
 const MOCK_USER: CurrentUser = {
@@ -99,10 +100,29 @@ export function DSProvider({ children }: { children: ReactNode }) {
     typeof window !== "undefined" &&
     Boolean((window as unknown as { __dsPreview?: unknown }).__dsPreview);
   if (preview) softenMissingKeys();
+
+  // THE CARD TEMPLATE PAINTS THE BODY WHITE, AND THIS KIT DEFAULTS TO DARK.
+  // Each generated preview card ships an inline `body{ …; background:#fff }`,
+  // which beats the kit's own `body{ background-color: var(--color-bg-page) }`
+  // (index.css) on source order. DEFAULT_THEME is 'dark', so the
+  // [data-theme=dark] cascade hands every component cream ink — and any
+  // component that does not paint an opaque ground of its own then renders that
+  // ink on white. The page archetypes are the whole class: FieldDesk,
+  // CreateCharacter, EditPraxis, FactionBody all expect the page ground a layout
+  // wrapper gives them in the real app, and had been shipping near-illegible.
+  // Repainting the body puts every card on the ground the app actually gives it.
+  // Preview-only: cfg.provider wraps preview cards, never a built design.
+  if (preview && typeof document !== 'undefined' && document.body) {
+    document.body.style.background = 'var(--color-bg-page)';
+  }
   // ThemeProvider backs useTheme() — NavBar and the shell chrome throw without
   // it. It also owns the [data-theme] cascade the whole kit styles against.
+  // MotionProvider backs useMotion() (#2154), which throws outside it exactly as
+  // useTheme does: AppearanceSection renders blank without this, and any future
+  // consumer of the animations preference would too.
   return (
     <ThemeProvider>
+      <MotionProvider>
       {preview ? (
         <AuthContext.Provider value={PREVIEW_AUTH}>
           <MemoryRouter>{children}</MemoryRouter>
@@ -112,6 +132,7 @@ export function DSProvider({ children }: { children: ReactNode }) {
           <MemoryRouter>{children}</MemoryRouter>
         </AuthProvider>
       )}
+      </MotionProvider>
     </ThemeProvider>
   );
 }

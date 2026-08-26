@@ -10,18 +10,30 @@
     "component": "DSProvider"
   },
   "componentSrcMap": {
+    "AccountSection": "src/pages/settings/sections/AccountSection.tsx",
     "ActivityTicker": "src/components/ActivityTicker.tsx",
+    "AlbescentAvatar": "src/components/avatar/AlbescentAvatar.tsx",
+    "AlbescentBackdrop": "src/components/backdrop/AlbescentBackdrop.tsx",
+    "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
+    "AlbescentCreateCharacter": "src/pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx",
+    "AlbescentDuelSealConfirm": "src/components/duel/AlbescentDuelSealConfirm.tsx",
+    "AlbescentEditPraxis": "src/pages/editPraxis/archetypes/AlbescentEditPraxis.tsx",
+    "AlbescentFactionBody": "src/pages/factionDetail/archetypes/AlbescentFactionBody.tsx",
+    "AlbescentFactionHero": "src/components/factionHero/AlbescentFactionHero.tsx",
     "AlbescentFeedFrame": "src/components/feed/AlbescentFeedFrame.tsx",
+    "AlbescentFieldDesk": "src/pages/fieldDesk/mobileArchetypes/AlbescentFieldDesk.tsx",
     "AlbescentInvitation": "src/components/AlbescentInvitation.tsx",
     "AlbescentPraxisCard": "src/components/praxisCard/desktop/AlbescentPraxisCard.tsx",
     "AlbescentPraxisDetail": "src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx",
     "AlbescentProfileBody": "src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx",
+    "AlbescentScoreStamp": "src/components/praxisCard/scoreStamp/AlbescentScoreStamp.tsx",
     "AlbescentSeal": "src/components/metataskSeal/skins/AlbescentSeal.tsx",
     "AlbescentSelectCard": "src/components/selectCard/AlbescentSelectCard.tsx",
     "AlbescentSigil": "src/components/sigil/AlbescentSigil.tsx",
     "AlbescentTaskCard": "src/components/taskCard/AlbescentTaskCard.tsx",
     "AlbescentTaskDetail": "src/pages/taskDetail/archetypes/AlbescentTaskDetail.tsx",
     "AlbescentVote": "src/components/vote/AlbescentVote.tsx",
+    "AppearanceSection": "src/pages/settings/sections/AppearanceSection.tsx",
     "AuthCard": "src/pages/onboarding/AuthCard.tsx",
     "BackdropProvider": "src/components/backdrop/BackdropContext.tsx",
     "Breadcrumb": "src/components/nav/Breadcrumb.tsx",
@@ -36,10 +48,12 @@
     "CommentFlagControl": "src/components/comments/FlagControl.tsx",
     "CommentThread": "src/components/comments/CommentThread.tsx",
     "ConfirmDialog": "src/components/confirm/ConfirmDialog.tsx",
+    "CookiesSection": "src/pages/settings/sections/CookiesSection.tsx",
     "CovenAvatar": "src/components/avatar/CovenAvatar.tsx",
     "CovenBackdrop": "src/components/backdrop/CovenBackdrop.tsx",
     "CovenCauldron": "src/components/factionMarks/CovenCauldron.tsx",
     "CovenComment": "src/components/comments/voices/CovenComment.tsx",
+    "CovenCreateCharacter": "src/pages/characterPaths/archetypes/CovenCreateCharacter.tsx",
     "CovenDuelSealConfirm": "src/components/duel/CovenDuelSealConfirm.tsx",
     "CovenEditPraxis": "src/pages/editPraxis/archetypes/CovenEditPraxis.tsx",
     "CovenFactionBody": "src/pages/factionDetail/archetypes/CovenFactionBody.tsx",
@@ -57,11 +71,14 @@
     "CovenTaskDetail": "src/pages/taskDetail/archetypes/CovenTaskDetail.tsx",
     "CovenVote": "src/components/vote/CovenVote.tsx",
     "CredentialCard": "src/components/CredentialCard.tsx",
+    "DefaultAvatar": "src/components/avatar/DefaultAvatar.tsx",
     "DefaultCreateCharacter": "src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx",
     "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
+    "DefaultFactionHero": "src/components/factionHero/DefaultFactionHero.tsx",
     "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
+    "DefaultFeedFrame": "src/components/feed/DefaultFeedFrame.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     "DefaultPointsRing": "src/components/factionMarks/DefaultPointsRing.tsx",
     "DefaultPraxisCard": "src/components/praxisCard/desktop/DefaultPraxisCard.tsx",
@@ -108,6 +125,7 @@
     "EverymenAvatar": "src/components/avatar/EverymenAvatar.tsx",
     "EverymenBackdrop": "src/components/backdrop/EverymenBackdrop.tsx",
     "EverymenComment": "src/components/comments/voices/EverymenComment.tsx",
+    "EverymenCreateCharacter": "src/pages/characterPaths/archetypes/EverymenCreateCharacter.tsx",
     "EverymenDuelSealConfirm": "src/components/duel/EverymenDuelSealConfirm.tsx",
     "EverymenEditPraxis": "src/pages/editPraxis/archetypes/EverymenEditPraxis.tsx",
     "EverymenFactionBody": "src/pages/factionDetail/archetypes/EverymenFactionBody.tsx",
@@ -128,9 +146,9 @@
     "FactionBackdrop": "src/components/backdrop/FactionBackdrop.tsx",
     "FactionFeedFrame": "src/components/feed/FactionFeedFrame.tsx",
     "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
-    "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
     "FactionSigil": "src/components/sigil/FactionSigil.tsx",
+    "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
     "FeedArchiveButton": "src/components/feed/FeedArchiveButton.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
     "FeedBankFullModal": "src/components/feed/FeedBankFullModal.tsx",
@@ -153,6 +171,7 @@
     "IntroCard": "src/pages/onboarding/IntroCard.tsx",
     "InvitationLetterPopup": "src/components/InvitationLetterPopup.tsx",
     "InvitationWatcher": "src/components/InvitationWatcher.tsx",
+    "JoinControl": "src/components/JoinControl.tsx",
     "Layout": "src/components/Layout.tsx",
     "LevelGem": "src/components/ui/LevelGem.tsx",
     "LevelUpPopup": "src/components/LevelUpPopup.tsx",
@@ -187,11 +206,15 @@
     "ProposeTaskLink": "src/pages/tasks/ProposeTaskLink.tsx",
     "RelationshipBlockControl": "src/pages/characterProfile/RelationshipBlockControl.tsx",
     "RequestsQueue": "src/pages/updates/RequestsQueue.tsx",
+    "ReturningCard": "src/pages/onboarding/ReturningCard.tsx",
     "RosterAvatar": "src/components/collab/RosterAvatar.tsx",
     "ScoreStamp": "src/components/praxisCard/scoreStamp/ScoreStamp.tsx",
     "ScoreToggle": "src/pages/players/ScoreToggle.tsx",
     "SectionHeading": "src/pages/players/SectionHeading.tsx",
     "SegmentedRail": "src/components/ui/FilterBar/SegmentedRail.tsx",
+    "SettingsCard": "src/pages/settings/SettingsCard.tsx",
+    "SettingsRow": "src/pages/settings/SettingsRow.tsx",
+    "SettingsSwitch": "src/pages/settings/SettingsSwitch.tsx",
     "ShellContent": "src/components/layout/ShellContent.tsx",
     "Sidebar": "src/components/layout/Sidebar.tsx",
     "SidebarColumn": "src/components/layout/SidebarColumn.tsx",
@@ -200,6 +223,7 @@
     "SingularityAvatar": "src/components/avatar/SingularityAvatar.tsx",
     "SingularityBackdrop": "src/components/backdrop/SingularityBackdrop.tsx",
     "SingularityComment": "src/components/comments/voices/SingularityComment.tsx",
+    "SingularityCreateCharacter": "src/pages/characterPaths/archetypes/SingularityCreateCharacter.tsx",
     "SingularityDuelSealConfirm": "src/components/duel/SingularityDuelSealConfirm.tsx",
     "SingularityEditPraxis": "src/pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
     "SingularityFactionBody": "src/pages/factionDetail/archetypes/SingularityFactionBody.tsx",
@@ -248,6 +272,7 @@
     "UaAvatar": "src/components/avatar/UaAvatar.tsx",
     "UaBackdrop": "src/components/backdrop/UaBackdrop.tsx",
     "UaComment": "src/components/comments/voices/UaComment.tsx",
+    "UaCreateCharacter": "src/pages/characterPaths/archetypes/UaCreateCharacter.tsx",
     "UaDuelSealConfirm": "src/components/duel/UaDuelSealConfirm.tsx",
     "UaEditPraxis": "src/pages/editPraxis/archetypes/UaEditPraxis.tsx",
     "UaFactionBody": "src/pages/factionDetail/archetypes/UaFactionBody.tsx",
@@ -295,6 +320,30 @@
     "ActivityTicker": {
       "cardMode": "column"
     },
+    "AlbescentBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "AlbescentCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentDuelSealConfirm": {
+      "cardMode": "single",
+      "viewport": "700x680"
+    },
+    "AlbescentEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentFactionBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
     "AlbescentInvitation": {
       "cardMode": "single",
       "viewport": "460x600"
@@ -314,6 +363,9 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
+    "Breadcrumb": {
+      "cardMode": "column"
+    },
     "CharacterSwitcherSheet": {
       "cardMode": "single",
       "viewport": "560x520"
@@ -329,9 +381,17 @@
       "cardMode": "single",
       "viewport": "560x520"
     },
+    "CookiesSection": {
+      "cardMode": "single",
+      "viewport": "820x1200"
+    },
     "CovenBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
+    },
+    "CovenCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
     },
     "CovenDuelSealConfirm": {
       "cardMode": "single",
@@ -380,6 +440,9 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
+    "DefaultFactionHero": {
+      "cardMode": "column"
+    },
     "DefaultFactionsDirectory": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -423,6 +486,10 @@
       "cardMode": "single",
       "viewport": "480x320"
     },
+    "EphemeristsCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
+    },
     "EphemeristsDuelSealConfirm": {
       "cardMode": "single",
       "viewport": "700x680"
@@ -435,6 +502,10 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
+    "EphemeristsFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
     "EphemeristsPraxisCard": {
       "cardMode": "column"
     },
@@ -446,6 +517,9 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
+    "EphemeristsSeal": {
+      "cardMode": "column"
+    },
     "EphemeristsTaskDetail": {
       "cardMode": "single",
       "viewport": "1200x900"
@@ -453,6 +527,10 @@
     "EverymenBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
+    },
+    "EverymenCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
     },
     "EverymenDuelSealConfirm": {
       "cardMode": "single",
@@ -465,6 +543,10 @@
     "EverymenFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
+    },
+    "EverymenFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
     },
     "EverymenPraxisCard": {
       "cardMode": "column"
@@ -492,6 +574,13 @@
     "FactionsDirectoryView": {
       "cardMode": "single",
       "viewport": "390x760"
+    },
+    "FeedBankFullModal": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "FeedCardCollabInvite": {
+      "cardMode": "column"
     },
     "FeedChassisBand": {
       "cardMode": "column"
@@ -533,15 +622,27 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
+    "MobileStickyBar": {
+      "cardMode": "column"
+    },
     "MobileTabBar": {
       "cardMode": "column"
     },
     "NavBar": {
       "cardMode": "column"
     },
+    "PlayersFilterBar": {
+      "cardMode": "column"
+    },
+    "PraxisFilterBar": {
+      "cardMode": "column"
+    },
     "PraxisWaitingSurface": {
       "cardMode": "single",
       "viewport": "1200x900"
+    },
+    "SegmentedRail": {
+      "cardMode": "column"
     },
     "ShellContent": {
       "cardMode": "column"
@@ -549,9 +650,16 @@
     "Sidebar": {
       "cardMode": "column"
     },
+    "SidebarColumn": {
+      "cardMode": "column"
+    },
     "SingularityBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
+    },
+    "SingularityCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
     },
     "SingularityDuelSealConfirm": {
       "cardMode": "single",
@@ -564,6 +672,10 @@
     "SingularityFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
+    },
+    "SingularityFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
     },
     "SingularityPraxisCard": {
       "cardMode": "column"
@@ -587,6 +699,10 @@
       "cardMode": "single",
       "viewport": "480x320"
     },
+    "SnideCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
+    },
     "SnideDuelSealConfirm": {
       "cardMode": "single",
       "viewport": "700x680"
@@ -598,6 +714,10 @@
     "SnideFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
+    },
+    "SnideFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
     },
     "SnidePraxisCard": {
       "cardMode": "column"
@@ -617,9 +737,16 @@
     "TaskCard": {
       "cardMode": "column"
     },
+    "TaskFilterBar": {
+      "cardMode": "column"
+    },
     "UaBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
+    },
+    "UaCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
     },
     "UaDuelSealConfirm": {
       "cardMode": "single",
@@ -632,6 +759,10 @@
     "UaFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
+    },
+    "UaFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
     },
     "UaPraxisCard": {
       "cardMode": "column"
@@ -648,6 +779,9 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
+    "UpdatesFilterBar": {
+      "cardMode": "column"
+    },
     "WatercolorBackground": {
       "cardMode": "single",
       "viewport": "480x320"
@@ -656,11 +790,19 @@
       "cardMode": "single",
       "viewport": "480x320"
     },
+    "WowCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
+    },
     "WowDuelSealConfirm": {
       "cardMode": "single",
       "viewport": "700x680"
     },
     "WowEditPraxis": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "WowFactionBody": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -675,10 +817,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "WowFactionBody": {
-      "cardMode": "single",
-      "viewport": "1200x900"
-    },
     "WowProfileBody": {
       "cardMode": "single",
       "viewport": "1200x900"
@@ -686,72 +824,6 @@
     "WowTaskDetail": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "FeedBankFullModal": {
-      "cardMode": "single",
-      "viewport": "460x600"
-    },
-    "SidebarColumn": {
-      "cardMode": "column"
-    },
-    "EphemeristsFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "EverymenFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SingularityFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SnideFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "UaFieldDesk": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "PlayersFilterBar": {
-      "cardMode": "column"
-    },
-    "PraxisFilterBar": {
-      "cardMode": "column"
-    },
-    "TaskFilterBar": {
-      "cardMode": "column"
-    },
-    "UpdatesFilterBar": {
-      "cardMode": "column"
-    },
-    "SegmentedRail": {
-      "cardMode": "column"
-    },
-    "FeedCardCollabInvite": {
-      "cardMode": "column"
-    },
-    "EphemeristsSeal": {
-      "cardMode": "column"
-    },
-    "Breadcrumb": {
-      "cardMode": "column"
-    },
-    "MobileStickyBar": {
-      "cardMode": "column"
-    },
-    "EphemeristsCreateCharacter": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "SnideCreateCharacter": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "WowCreateCharacter": {
-      "cardMode": "single",
-      "viewport": "390x760"
     }
   },
   "readmeHeader": ".design-sync/conventions.md",
