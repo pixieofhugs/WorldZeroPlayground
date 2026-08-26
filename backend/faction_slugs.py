@@ -138,3 +138,35 @@ def faction_filter_slugs(
             if member not in out:
                 out.append(member)
     return out
+
+
+def real_faction_slugs(era) -> list[str]:
+    """The slugs of ``era``'s *joinable* factions, in the era's own order.
+
+    "Real" means: not one of the two structural sentinels (ADR-0087). ``na`` is
+    "no faction" — for a character (:data:`UNAFFILIATED_FACTION_SLUG`) and for a
+    task (:data:`CROSS_FACTION_SLUG`) — and ``albescent`` is the secret society,
+    never something a fixture should be skinned as. Every other slug the era
+    lists is a faction a player could actually be in.
+
+    The predicate had spelled itself out twice before it got a home (#2708):
+    ``seed.DUEL_FIXTURE_TASK_FACTION_SLUG`` and
+    ``scripts.seed_demo_praxes.fixture_faction_slugs``, both of which left a note
+    naming this module as its place — beside :func:`faction_filter_slugs`, the
+    leaf every layer may import — the day a third site asked. The integration
+    fixtures are that third site.
+
+    ``era`` is deliberately un-annotated: it is an ``EraConfig``, but importing
+    ``game_config`` here — even under ``TYPE_CHECKING`` — would end this module's
+    standing as the leaf that imports nothing of this project's. Only
+    ``era.factions`` is read.
+
+    A degenerate era with no real faction returns ``[]``. Every caller has its
+    own answer to that — a seeder skips, a test fixture would rather fail loudly
+    — so this does not invent one.
+    """
+    return [
+        slug
+        for slug in era.factions
+        if slug not in (UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG)
+    ]
