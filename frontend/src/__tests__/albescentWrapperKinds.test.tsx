@@ -22,21 +22,29 @@
  *
  * Byte-identity is a strong claim on purpose. It fails on a stray wrapper
  * element, a re-ordered prop, a class added "while we are here" — every quiet way
- * a wrapper that was supposed to be inert starts dressing something. Three of
- * the five are held to it.
+ * a wrapper that was supposed to be inert starts dressing something. TWO of the
+ * five are held to it unconditionally, and the comment leaf is held to it for an
+ * UNREVEALED viewer only: ADR-0088 §3 turned that one from a pass-through into a
+ * re-cut, and #1192 decision 13 and #2531 are reversed with it (#2732).
  *
- * ## Why the two re-cuts are asserted from both ends
+ * ## Why the re-cuts are asserted from both ends
  *
- * `strip the class and na is byte-identical` is the invariant on ALL FIVE — it
- * is what keeps Albescent's dress off unaffiliated players. For the three
- * pass-throughs there is no class to strip and identity is the whole test. For a
- * re-cut, identity must hold with the wrapper removed and must FAIL with it in
- * place, so both halves are asserted: the delta is the wrapper's classes and
- * nothing else, and those classes reach mounts na draws.
+ * `strip the dress and na is byte-identical` is the invariant on ALL FIVE — it
+ * is what keeps Albescent's dress off unaffiliated players. For the two
+ * pass-throughs there is nothing to strip and identity is the whole test. For a
+ * re-cut, identity must hold with the dress removed and must FAIL with it in
+ * place, so both halves are asserted: the delta is the wrapper's own and nothing
+ * else, and it reaches mounts na draws.
  *
- * The tile adds a third question the other four do not raise. Its ground is
- * CONDITIONAL — `.alb-prism` arrives with the reveal (epic #2496 ruling 8) — so
- * "does it dress?" has two right answers on one surface and both are pinned.
+ * The tile and the leaf each add a question the others do not raise, and it is
+ * the same question: the dress is CONDITIONAL. `.alb-prism` arrives with the
+ * reveal (epic #2496 ruling 8) and so does the leaf's ring (ADR-0088 §3), so
+ * "does it dress?" has two right answers on those surfaces and both are pinned.
+ *
+ * The leaf is also the one wrapper whose delta is NOT a class on a wrapper div:
+ * na's cap is inline and computed from the slug, so the re-cut had to go through
+ * a slot on the shared `Sheet`. Its identity half is therefore asserted against
+ * `DefaultComment` unredacted rather than by stripping an element.
  *
  * ## Harness
  *
@@ -211,7 +219,7 @@ function at(width: 'mobile' | 'desktop', markup: () => string): string {
   }
 }
 
-/* ── The three pass-throughs ────────────────────────────────────────────── */
+/* ── The two pass-throughs, and the one that stopped being a third ─────── */
 
 describe('backdrop — PASS-THROUGH: the watercolour, unchanged', () => {
   it('renders the na fallback byte for byte', () => {
@@ -257,8 +265,8 @@ describe('backdrop — PASS-THROUGH: the watercolour, unchanged', () => {
  * change to na's own sheet moves both sides together.
  *
  * Nothing here proves a pixel travelled — `renderToStaticMarkup`, no DOM. The
- * ring's rest state and its drift are CSS, guarded as CSS by
- * `albescentCommentEdge.test.ts`.
+ * ring's rest state, its carrier weight and its drift are CSS, guarded as CSS by
+ * `spectrumRingCollapse.test.ts`, where the other nine mounts already live.
  */
 describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring', () => {
   const row = (Voice: typeof DefaultComment) =>
