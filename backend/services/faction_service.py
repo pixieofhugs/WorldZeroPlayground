@@ -52,7 +52,14 @@ def faction_permits(
 
 
 async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
-    """Slugs of factions that are not ``visible`` — i.e. ``hidden``.
+    """Slugs of ``hidden`` factions — the system rows, and nothing else.
+
+    ``hidden`` **only**, never "not ``visible``" (ADR-0087). Since #2706 there is
+    a third status, and a ``retired`` faction — one a past era listed and the
+    live one does not — must not land here: its tasks stay in the archive. This
+    predicate is the seam that would take them out of it, so widening the
+    comparison back to ``!=`` would empty most of a closed era's task history off
+    the site while the praxes written against those tasks stayed visible.
 
     Listing visibility is a faction-*status* axis, not a per-character permit,
     so it can't route through :func:`faction_permits`; it lives here so all
@@ -68,7 +75,7 @@ async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
     ``visible`` rows directly, so ``na`` remains absent from the registry.
     """
     result = await session.execute(
-        select(Faction.slug).where(Faction.status != FactionStatus.visible)
+        select(Faction.slug).where(Faction.status == FactionStatus.hidden)
     )
     return [row[0] for row in result.all() if row[0] != UNAFFILIATED_FACTION_SLUG]
 

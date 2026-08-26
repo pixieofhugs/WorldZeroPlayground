@@ -50,9 +50,22 @@ from models.task import Task, TaskStatus, TaskType
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
 
 
-async def upsert_era_factions(session, era) -> int:
-    """Give every faction in the era config a `Faction` row, and return how many
-    were added.
+async def upsert_era_factions(session, era) -> tuple[int, int]:
+    """Mirror the live era's faction roster onto the `Faction` table.
+
+    Two-way (ADR-0087, #2706): every slug the era lists gets a row, and every
+    row the era does *not* list is marked `retired`. Returns
+    `(added, retired)`.
+
+    **Nothing is ever deleted.** `character.faction_slug` and
+    `task.primary_faction_slug` are foreign keys onto this table, and a closed
+    era's characters and tasks are the history those columns point at.
+
+    Retiring is also **not** `hidden`. `hidden` is the system-row flag, and its
+    one reader (`services.faction_service.hidden_faction_slugs`) drops that
+    faction's tasks from every listing — so a retired faction flagged `hidden`
+    would take its era's whole task archive off the site. Retirement removes a
+    faction from the registry, not from the record.
 
     The `Faction` table is a thin display mirror of the era config — slug plus
     status, no rules (ADR-0038) — so this is idempotent and safe to run against
@@ -61,19 +74,46 @@ async def upsert_era_factions(session, era) -> int:
     faction_slug` a plain string foreign key, so a new faction needs a row here
     and never an Alembic migration.
     """
+    existing = {
+        row.slug: row
+        for row in (await session.execute(select(Faction))).scalars()
+    }
+
     added = 0
     for slug in era.factions:
-        existing = await session.execute(
-            select(Faction).where(Faction.slug == slug)
+        status = (
+            FactionStatus.hidden
+            if slug in HIDDEN_FACTION_SLUGS
+            else FactionStatus.visible
         )
-        if existing.scalar_one_or_none() is None:
-            status = FactionStatus.hidden if slug in HIDDEN_FACTION_SLUGS else FactionStatus.visible
+        row = existing.get(slug)
+        if row is None:
             # ADR-0038: the row is slug + status only; name/description prose
             # lives in frontend/src/locales/en/factions.json.
             session.add(Faction(slug=slug, status=status))
             added += 1
+        elif row.status is FactionStatus.retired:
+            # A later era listing a retired slug again brings its tile back.
+            row.status = status
+
+    retired = 0
+    for slug, row in existing.items():
+        # A system row is never a roster member, so it never retires: `hidden`
+        # outranks the mirror. Tested both ways — by slug, so a system row the
+        # era stops listing is still safe, and by status, so a row hidden for
+        # some other reason does not have its tasks silently un-hidden here.
+        if (
+            slug in era.factions
+            or slug in HIDDEN_FACTION_SLUGS
+            or row.status is FactionStatus.hidden
+        ):
+            continue
+        if row.status is not FactionStatus.retired:
+            row.status = FactionStatus.retired
+            retired += 1
+
     await session.flush()
-    return added
+    return added, retired
 
 
 # ---------------------------------------------------------------------------
@@ -537,11 +577,15 @@ async def seed(env: str, yes: bool) -> None:
         # ------------------------------------------------------------------
         # Phase 1: Factions (from era config, upsert)
         # ------------------------------------------------------------------
-        faction_count = await upsert_era_factions(session, era)
+        faction_count, retired_count = await upsert_era_factions(session, era)
         if faction_count > 0:
             print(f"  >Factions ({faction_count} new)")
         else:
             print("  >Factions already exist — skipping")
+        if retired_count > 0:
+            # The rollover deploy's one visible sign that the roster shrank
+            # (ADR-0087). Rows are retired, never deleted.
+            print(f"  >Factions ({retired_count} retired — not in {era.config_key})")
 
         # ------------------------------------------------------------------
         # Phase 2: Admin bootstrap (Pixie account + character + era + role)

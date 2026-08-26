@@ -9,7 +9,7 @@ switches all live game mechanics.
 from dataclasses import dataclass, field, replace
 from enum import Enum
 
-from faction_slugs import UNAFFILIATED_FACTION_SLUG
+from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 
 
 class LevelUnlockKind(str, Enum):
@@ -201,6 +201,24 @@ def _inherited_perk_slugs(slugs: frozenset, inheritors: frozenset) -> frozenset:
     return frozenset(slugs) | inheritors
 
 
+#: The two slugs whose roles the game cannot run without, and the role each one
+#: carries — the message an era author who drops one reads (ADR-0087). Every
+#: OTHER faction is the era's to choose, and so is every perk; this is the short
+#: list, not a roster. Albescent's *gate* stays era-tunable
+#: (``albescent_level_required``, the coverage rule): what is fixed here is that
+#: the faction exists and that it is the endgame.
+_STRUCTURAL_FACTION_ROLES: dict[str, str] = {
+    UNAFFILIATED_FACTION_SLUG: (
+        "the neutral faction — the FK target for the born-unaffiliated state "
+        "(ADR-0019/ADR-0030) and for cross-faction tasks"
+    ),
+    ALBESCENT_FACTION_SLUG: (
+        "the endgame faction (ADR-0080); its gate stays era-tunable, its "
+        "existence does not"
+    ),
+}
+
+
 @dataclass(frozen=True)
 class EraConfig:
     name: str
@@ -279,10 +297,15 @@ class EraConfig:
 
     # The faction a character is born into when creation names none (#1559).
     # ADR-0019 makes characters born unaffiliated and ADR-0030 makes `na` the
-    # site-wide answer, so the default below is already right for every era so
-    # far — an era file declares this ONLY when it wants players pre-sorted into
-    # a real faction. That is ADR-0042's shape: the era doc wins where it
-    # speaks, and stays silent about the obvious.
+    # site-wide answer.
+    #
+    # ** PINNED to `na` in every era (ADR-0087). ** #1559 opened this as an
+    # era override — "the era doc wins" — and ADR-0087 amends ADR-0042 for
+    # this field and reset_faction_slug below, and for no others. The field
+    # stays, validated in __post_init__ rather than deleted, because it is the
+    # vocabulary an era author would reach for: a validated field explains the
+    # rule at the point someone tries to break it, a missing field explains
+    # nothing. Reopening the seam is deleting one validation line.
     #
     # Deliberately NOT the era-*reset* faction (reset_faction_slug, below). They
     # hold the same value today and are arguably one knob, but an era may
@@ -298,7 +321,7 @@ class EraConfig:
     # UNAFFILIATED_FACTION_SLUG, which is why the two are easy to mistake for one
     # knob; they are kept apart on purpose. Same constraint as above: whatever an
     # era names must be a slug that era actually configures, since it is an FK
-    # onto a Faction row.
+    # onto a Faction row — and, since ADR-0087, that slug can only be `na`.
     #
     # Read from the era being *opened*: apply_era_reset takes `era: EraConfig =
     # CURRENT_ERA` and scripts/era_reset.py leaves that default in place, the
@@ -360,7 +383,14 @@ class EraConfig:
     collab_invite_bypasses_task_bank: bool = False
 
     def __post_init__(self) -> None:
-        """Resolve ``FactionConfig.inherits_faction_perks`` (#1871).
+        """Enforce ADR-0087's structural clause, then resolve perk inheritance.
+
+        Validation first, and at construction, so a malformed era file fails at
+        IMPORT — before the app boots — rather than at the first character
+        creation, where the symptom would have been a foreign-key violation
+        naming neither the era nor the rule.
+
+        Resolve ``FactionConfig.inherits_faction_perks`` (#1871).
 
         An era file DECLARES factions; this computes the one derived thing about
         them, so that every read site keeps reading ``era.factions[slug].<field>``
@@ -373,6 +403,26 @@ class EraConfig:
         dataclass is still frozen afterwards; ``object.__setattr__`` is the
         documented way to finish initialising one.
         """
+        for slug, role in _STRUCTURAL_FACTION_ROLES.items():
+            if slug not in self.factions:
+                raise ValueError(
+                    f"{self.config_key or 'this era'}: {slug!r} is missing from "
+                    f"era.factions. It is {role} in EVERY era (ADR-0087) — the "
+                    f"rest of the roster is yours to choose, this slug is not."
+                )
+        for field_name in ("starting_faction_slug", "reset_faction_slug"):
+            value = getattr(self, field_name)
+            if value != UNAFFILIATED_FACTION_SLUG:
+                raise ValueError(
+                    f"{self.config_key or 'this era'}: {field_name}="
+                    f"{value!r} is not allowed — both faction slugs are pinned "
+                    f"to {UNAFFILIATED_FACTION_SLUG!r} (ADR-0087, which amends "
+                    f"ADR-0042's 'the era doc wins' for these two fields and no "
+                    f"others). Characters are born unaffiliated and a rollover "
+                    f"returns them there; an era pre-sorting its players is the "
+                    f"seam #1559 opened and ADR-0087 closed."
+                )
+
         inheritors = frozenset(
             slug
             for slug, faction in self.factions.items()

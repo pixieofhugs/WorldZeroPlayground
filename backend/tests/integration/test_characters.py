@@ -1,6 +1,5 @@
 """Integration tests for /characters endpoints."""
 import os
-from dataclasses import replace
 
 import pytest
 from httpx import AsyncClient
@@ -16,8 +15,6 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
-from schemas.character import CharacterCreate
-from services.character import create_character
 
 
 @pytest.mark.asyncio
@@ -1055,28 +1052,21 @@ async def test_faction_slug_db_default_is_unaffiliated(
     assert bare.faction_slug == "na"
 
 
-@pytest.mark.asyncio
-async def test_starting_faction_is_read_from_the_era_not_hardcoded(
-    db_session: AsyncSession, account: Account, era: Era, faction_ua: Faction
-):
-    """An era that overrides ``starting_faction_slug`` actually moves the birth faction.
-
-    Without this the field would be decorative: ``test_create_character`` passes
-    whether the slug comes from ``era.starting_faction_slug`` or from the literal
-    "na" it used to be (#1559), because Era 1's answer is the same either way.
-    Substituting an era that says "ua" is the only assertion that can tell them
-    apart — and it is deliberately *not* an assertion that new characters are UA.
-    """
-    ua_start = replace(CURRENT_ERA, starting_faction_slug="ua")
-
-    result = await create_character(
-        account_id=account.id,
-        data=CharacterCreate(display_name="Era Says UA", username="erasaysua"),
-        session=db_session,
-        era=ua_start,
-    )
-
-    assert result.character.faction_slug == "ua"
+# `test_starting_faction_is_read_from_the_era_not_hardcoded` lived here until
+# ADR-0087 (#2707). It proved the override by substituting an era whose
+# `starting_faction_slug` said "ua", then asserting a character was born UA.
+# ADR-0087 pins that field to `na` in every era, so the era it built now raises
+# at construction and the assertion it made is the one the ruling forbids.
+#
+# It is NOT re-expressible here. Its own docstring named the reason: Era 1's
+# answer is the same whether the slug is read from the era or hardcoded, and
+# substituting a different era was "the only assertion that can tell them
+# apart". With one legal value forever, no runtime test can.
+#
+# The guarantee moved UP, not away: `tests/unit/test_era_config.py` now proves
+# the wrong value is unrepresentable at construction, which is stronger than
+# catching it at birth. If the pin is ever lifted (ADR-0087 says that is one
+# validation line), restore this test from git history alongside it.
 
 
 # --- tagline (#1628) -------------------------------------------------------
