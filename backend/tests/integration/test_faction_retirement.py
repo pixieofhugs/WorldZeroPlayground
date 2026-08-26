@@ -48,11 +48,16 @@ def _era_listed_slug() -> str:
     )
 
 
-async def _add_faction(session: AsyncSession, slug: str, status: FactionStatus) -> Faction:
-    row = Faction(slug=slug, status=status)
-    session.add(row)
+async def _add_faction(
+    session: AsyncSession, slug: str, status: FactionStatus
+) -> None:
+    session.add(Faction(slug=slug, status=status))
     await session.commit()
-    return row
+
+
+async def _faction_count(session: AsyncSession) -> int:
+    result = await session.execute(select(func.count()).select_from(Faction))
+    return result.scalar_one()
 
 
 # ---------------------------------------------------------------------------
@@ -85,12 +90,11 @@ async def test_seed_never_deletes_a_row(
     so the count may only ever grow.
     """
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.visible)
-    before = (await db_session.execute(select(func.count()).select_from(Faction))).scalar_one()
+    before = await _faction_count(db_session)
 
     await upsert_era_factions(db_session, CURRENT_ERA)
 
-    after = (await db_session.execute(select(func.count()).select_from(Faction))).scalar_one()
-    assert after >= before
+    assert await _faction_count(db_session) >= before
     assert await db_session.get(Faction, DROPPED_SLUG) is not None
     assert await db_session.get(Faction, character.faction_slug) is not None
 

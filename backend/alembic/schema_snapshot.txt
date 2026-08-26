@@ -25,7 +25,7 @@
 enum accountstatus = active, suspended, deleted
 enum characterstatus = active, banned
 enum duelstatus = pending, active, settled, declined, resolved
-enum factionstatus = visible, hidden
+enum factionstatus = visible, hidden, retired
 enum mediatype = image, video, audio
 enum moderationstatus = visible, flagged, hidden, failed, deleted
 enum praxisinvitestatus = pending, accepted, declined
