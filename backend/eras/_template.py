@@ -9,9 +9,27 @@ Steps:
   3. Fill in every section marked with TODO
   4. Update backend/game_config.py:
        - Add: from eras.era_N import ERA_N
+       - Add the key to _ERA_ATTRIBUTE_BY_CONFIG_KEY ("era_N": "ERA_N") -- this
+         is the registry every era-aware tool walks, step 7 included
        - Change: CURRENT_ERA = ERA_N
   5. Run: python seed.py --env dev
   6. Run tests: pytest tests/unit/test_era_config.py
+  7. Write this era's rules module (#2709). It is not optional:
+         backend/tests/integration/eras/test_era_N_rules.py
+     `tests/test_era_rules_modules.py` fails while it is missing, and fails
+     again naming every perk this era grants that the module never mentions.
+     Copy the shape from test_era_1_rules.py / test_era_2_rules.py.
+
+**Why step 7 is a step and not a nice-to-have.** Era 2 was authored granting
+four faction perks and not one of them was ever exercised, because nothing in
+the repo knew which tests an era owes. Worse, a rule can lose its *subject* at a
+rollover and its guard then passes vacuously: `test_coven_collab_banks_half_up`
+could not have failed under Era 2, since Coven's 1.1 collab bonus was the only
+fraction in Era 1 for the half-up rounding to round. So the module must name
+**your** era -- pass ERA_N explicitly into every service call. Never read
+CURRENT_ERA there, and do not try to monkeypatch it: `services/era.py` and
+`scripts/era_reset.py` bind it as a default argument at def time, so patching
+the module attribute never reaches them.
 
 Each era defines:
   - Factions: the groups players can join, with their point modifiers
