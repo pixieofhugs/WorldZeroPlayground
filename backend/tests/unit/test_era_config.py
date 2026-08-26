@@ -322,6 +322,39 @@ def test_registry_keys_agree_with_the_configs_they_name():
         assert era_config_for_key(config_key).config_key == config_key
 
 
+def test_resolving_a_past_era_does_not_rebind_the_live_one():
+    """Looking up Era 1 by key must not make Era 1 the live era (#2708).
+
+    ``game_config.__getattr__`` resolved ``ERA_1``, ``ERA_1_FACTIONS`` and
+    ``CURRENT_ERA`` in one branch, so ANY of the three bound all three. Under
+    Era 1 that is invisible — the value it rebinds to is the value already
+    there. The moment a rollover points ``CURRENT_ERA`` at the next era it is a
+    live bug: ``services.activity_feed`` calls ``era_config_for_key`` on a
+    stored row's key to label a *past* era, and that one call would silently put
+    the process back on Era 1's rules for every late reader, while every module
+    that imported ``CURRENT_ERA`` at start-up kept the new era's. A half-flipped
+    process is worse than either era.
+
+    Asserted through a stand-in flip rather than by flipping anything: the
+    module attribute is rebound here, exactly as a rollover edit would, and the
+    lookup must leave it alone.
+    """
+    import game_config
+
+    live = game_config.CURRENT_ERA
+    other = next(
+        era_config_for_key(key)
+        for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY
+        if era_config_for_key(key) is not live
+    )
+    game_config.CURRENT_ERA = other
+    try:
+        era_config_for_key(live.config_key)
+        assert game_config.CURRENT_ERA is other
+    finally:
+        game_config.CURRENT_ERA = live
+
+
 def test_registry_returns_none_for_an_unknown_key():
     """A deleted era file, or a row from a newer version. The caller owns the
     fallback — the era announcement uses the name stored on the row."""

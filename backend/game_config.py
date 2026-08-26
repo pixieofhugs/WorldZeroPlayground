@@ -470,11 +470,21 @@ def __getattr__(name: str):
     keep their module-level dict for authoring; every importer gets the resolved
     one.
     """
-    if name in ("ERA_1", "ERA_1_FACTIONS", "CURRENT_ERA"):
+    if name == "CURRENT_ERA":
+        # The ONE line a rollover moves. Deliberately its own branch: resolving
+        # ERA_1 must not also (re)bind CURRENT_ERA, or the flip is undone by a
+        # side effect. `services.activity_feed` calls `era_config_for_key` on a
+        # stored row's key to label a PAST era, and with the two folded together
+        # the first such call after the flip would rebind CURRENT_ERA to Era 1
+        # for the life of the process — while every module that imported it at
+        # start-up kept the new one. Found rehearsing the flip in #2708.
+        from eras.era_1 import ERA_1 as _era_1
+        globals()["CURRENT_ERA"] = _era_1
+        return _era_1
+    if name in ("ERA_1", "ERA_1_FACTIONS"):
         from eras.era_1 import ERA_1 as _era_1
         globals()["ERA_1"] = _era_1
         globals()["ERA_1_FACTIONS"] = _era_1.factions
-        globals()["CURRENT_ERA"] = _era_1
         return globals()[name]
     if name in ("ERA_2", "ERA_2_FACTIONS"):
         # Era 2 (Metamorphosis) is authored, not activated: CURRENT_ERA stays
