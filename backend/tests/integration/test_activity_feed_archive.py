@@ -18,6 +18,8 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.duel import Duel, DuelStatus
@@ -55,6 +57,15 @@ from services.activity_feed import (
     REQUEST_ITEM_TYPES,
 )
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 ALL_FILTER = "all"
 FRIENDS_FILTER = "friends"
@@ -277,7 +288,7 @@ async def full_feed(
     # unanswered per ADR-0070 and belongs in the queue. The already-joined case
     # gets its own test.
     letter = InvitationLetter(
-        character_id=character.id, faction_slug="ephemerists", era_id=era.id
+        character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
     )
     db_session.add_all(
         [
@@ -1044,7 +1055,7 @@ async def test_a_letter_for_the_faction_you_already_joined_is_not_a_request(
         for item in queue["items"]
         if item["type"] == FEED_ITEM_TYPE_INVITATION_LETTER
     ]
-    assert [item["payload"]["faction_slug"] for item in letters] == ["ephemerists"]
+    assert [item["payload"]["faction_slug"] for item in letters] == [OTHER_FACTION_SLUG]
     assert queue["counts"]["requests"] == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
 
 

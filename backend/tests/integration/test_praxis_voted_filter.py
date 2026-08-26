@@ -24,12 +24,11 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
-from services.praxis import list_praxes, VotedFilter
+from services.praxis import VotedFilter, list_praxes
 from services.praxis_out import build_praxis_card_out
 from services.vote import cast_or_update_vote
 from services.vote_tally import viewer_votes_for
 from tests.integration.factories import DEFAULT_FACTION_SLUG
-
 
 # ---------------------------------------------------------------------------
 # Local fixtures — an account-mate (2nd character on the viewer's account) and a

@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
@@ -27,10 +28,9 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
-from seed import ensure_onboarding_task, ONBOARDING_TASK_TITLE
+from seed import ONBOARDING_TASK_TITLE, ensure_onboarding_task
 from services.era import apply_era_reset
 from services.task import build_task_out_for_viewer
-from sqlalchemy import select
 
 
 @pytest_asyncio.fixture

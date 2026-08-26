@@ -7,15 +7,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis
-from models.task import Task, TaskStatus
+from models.task import Task
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 @pytest.mark.asyncio
@@ -649,14 +658,16 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     )
     db_session.add(
         InvitationLetter(
-            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+            character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
         )
     )
     await db_session.commit()
 
     # Life 1 walks out of UA. #2218 deletes the UA letter on the way.
     resp = await client.post(
-        "/factions/choose", json={"faction_slug": "ephemerists"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": OTHER_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert resp.status_code == 200
 
@@ -742,8 +753,9 @@ async def test_empty_display_name_rejected(
 
 def _make_jpeg_bytes(width: int = 100, height: int = 100) -> bytes:
     """Return a minimal valid JPEG image as bytes."""
-    from PIL import Image
     import io as _io
+
+    from PIL import Image
 
     img = Image.new("RGB", (width, height), color=(128, 64, 32))
     buf = _io.BytesIO()

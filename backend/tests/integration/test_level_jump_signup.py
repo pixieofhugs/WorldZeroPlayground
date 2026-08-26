@@ -16,7 +16,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.praxis import PraxisType
-from models.task import Task, TaskStatus
+from models.task import Task
 from services.praxis import (
     SignupDenialReason,
     create_praxis,

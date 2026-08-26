@@ -14,24 +14,34 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708): "some other faction" is the
+#: whole requirement, and the era owns which one that is.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 @pytest.fixture
-async def faction_ephemerists_row(db_session: AsyncSession) -> Faction:
-    """Seed a non-ua faction so the character.faction_slug FK can point at it."""
+async def other_faction(db_session: AsyncSession, some_faction: Faction) -> Faction:
+    """A faction that is not the fixtures' own, for the FK to point at.
+
+    Seeded by ``some_faction`` since #2708 — every era's slugs get a row, so
+    adding this one again is a duplicate primary key rather than a no-op.
+    """
     result = await db_session.execute(
-        select(Faction).where(Faction.slug == "ephemerists")
+        select(Faction).where(Faction.slug == OTHER_FACTION_SLUG)
     )
-    faction = result.scalar_one_or_none()
-    if faction is None:
-        faction = Faction(slug="ephemerists", status=FactionStatus.visible)
-        db_session.add(faction)
-        await db_session.flush()
-    return faction
+    return result.scalar_one()
 
 
 async def _character_faction(db_session: AsyncSession, character_id: int) -> str:
@@ -47,16 +57,19 @@ async def test_dev_login_faction_places_character(
     db_session: AsyncSession,
     era: Era,
     some_faction: Faction,
-    faction_ephemerists_row: Faction,
+    other_faction: Faction,
 ) -> None:
     """?faction=<slug> puts the character straight into that faction."""
     resp = await client.post(
-        "/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=ephemerists"
+        f"/auth/dev-login?key=contrast&name=Sweep%20Bot&faction={OTHER_FACTION_SLUG}"
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["faction_slug"] == "ephemerists"
-    assert await _character_faction(db_session, body["character_id"]) == "ephemerists"
+    assert body["faction_slug"] == OTHER_FACTION_SLUG
+    assert (
+        await _character_faction(db_session, body["character_id"])
+        == OTHER_FACTION_SLUG
+    )
 
 
 @pytest.mark.asyncio
@@ -65,11 +78,15 @@ async def test_dev_login_faction_is_idempotent_across_calls(
     db_session: AsyncSession,
     era: Era,
     some_faction: Faction,
-    faction_ephemerists_row: Faction,
+    other_faction: Faction,
 ) -> None:
     """The sweep re-logs the same bot per faction — the last call wins."""
-    first = await client.post("/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=ephemerists")
-    second = await client.post("/auth/dev-login?key=contrast&faction=ua")
+    first = await client.post(
+        f"/auth/dev-login?key=contrast&name=Sweep%20Bot&faction={OTHER_FACTION_SLUG}"
+    )
+    second = await client.post(
+        f"/auth/dev-login?key=contrast&faction={DEFAULT_FACTION_SLUG}"
+    )
     assert second.status_code == 200
     assert second.json()["character_id"] == first.json()["character_id"]
     assert (
@@ -85,7 +102,9 @@ async def test_dev_login_rejects_unknown_faction(
     some_faction: Faction,
 ) -> None:
     """A typo'd slug is a 400, not a silent no-op that skins the wrong faction."""
-    resp = await client.post("/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=nosuch")
+    resp = await client.post(
+        "/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=nosuch"
+    )
     assert resp.status_code == 400
     assert "nosuch" in resp.json()["detail"]
 
@@ -97,7 +116,9 @@ async def test_dev_login_faction_without_character_is_rejected(
     some_faction: Faction,
 ) -> None:
     """faction= with no character to place fails loudly rather than doing nothing."""
-    resp = await client.post("/auth/dev-login?key=contrast-nochar&faction=ua")
+    resp = await client.post(
+        f"/auth/dev-login?key=contrast-nochar&faction={DEFAULT_FACTION_SLUG}"
+    )
     assert resp.status_code == 400
 
 
@@ -107,12 +128,17 @@ async def test_dev_login_without_faction_leaves_membership_alone(
     db_session: AsyncSession,
     era: Era,
     some_faction: Faction,
-    faction_ephemerists_row: Faction,
+    other_faction: Faction,
 ) -> None:
     """Omitting faction= must not reset an existing membership."""
-    first = await client.post("/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=ephemerists")
+    first = await client.post(
+        f"/auth/dev-login?key=contrast&name=Sweep%20Bot&faction={OTHER_FACTION_SLUG}"
+    )
     await client.post("/auth/dev-login?key=contrast")
-    assert await _character_faction(db_session, first.json()["character_id"]) == "ephemerists"
+    assert (
+        await _character_faction(db_session, first.json()["character_id"])
+        == OTHER_FACTION_SLUG
+    )
 
 
 @pytest.mark.asyncio
@@ -122,5 +148,7 @@ async def test_dev_login_404s_in_production(
 ) -> None:
     """The guard the whole seam rests on."""
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
-    resp = await client.post("/auth/dev-login?key=contrast&faction=ua")
+    resp = await client.post(
+        f"/auth/dev-login?key=contrast&faction={DEFAULT_FACTION_SLUG}"
+    )
     assert resp.status_code == 404

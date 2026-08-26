@@ -14,7 +14,6 @@ The last test is the load-bearing one: the per-character duel fact must resolve
 in a fixed number of set-based queries, not one per character (ADR-0033's
 amended batch rule — the Constellation roster is a list path).
 """
-from typing import Optional
 
 import pytest
 from sqlalchemy import event
@@ -22,29 +21,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
-from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
-from models.duel import Duel, DuelStatus
+from models.duel import DuelStatus
 from models.era import Era
 from models.faction import Faction
 from models.praxis import (
     ModerationStatus,
-    Praxis,
-    PraxisMember,
-    PraxisStatus,
-    PraxisType,
 )
-from models.task import Task, TaskStatus
-from models.vote import Vote
 from services.badge import build_badge_contexts, list_badges_for_character
 from services.scoring import SNIDE_FACTION_SLUG
 from tests.integration.factories import (
-    cast_vote,
-    make_character,
     make_duel,
-    make_solo_praxis,
-    make_task,
 )
 
 DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}

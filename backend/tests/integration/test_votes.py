@@ -529,7 +529,6 @@ async def test_duel_challenge_issue_and_cancel(
     era: Era,
 ):
     """character2 issues a duel challenge to character; character2 then cancels it."""
-    from models.character_stats import CharacterStats
 
     # character2 already has level 5 from fixture — meets duel level gate
     # Issue challenge
@@ -760,6 +759,7 @@ async def test_vote_budget_increases_when_score_grows(
 ):
     """R.5: Vote budget grows with score since it is computed on-read."""
     from math import floor
+
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA
@@ -800,6 +800,7 @@ async def test_vote_budget_reflects_votes_spent(
 ):
     """R.5: votes_available = base + floor(multiplier * score) - votes_spent_this_era."""
     from math import floor
+
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA

@@ -24,6 +24,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -40,7 +41,11 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG
 # character is nowhere near it, and owned by a faction the invitee is not in.
 TASK_LEVEL_REQUIRED = 6
 TASK_FACTION_SLUG = DEFAULT_FACTION_SLUG
-INVITEE_FACTION_SLUG = "ephemerists"
+INVITEE_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != TASK_FACTION_SLUG
+)
 INVITEE_LEVEL = 1
 
 

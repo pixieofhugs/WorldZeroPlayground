@@ -16,7 +16,6 @@ Usage:
 """
 import os
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
@@ -26,10 +25,10 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
+import models  # noqa: F401 — registers all models on Base.metadata for create_all
 from config import settings
 from db import get_db, get_session_factory
 from main import app
-import models  # noqa: F401 — registers all models on Base.metadata for create_all
 from models.account import Account
 from models.base import Base
 from models.character import Character
@@ -41,6 +40,7 @@ from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
 
 # ---------------------------------------------------------------------------
 # Test database URL — replace DB name so we never touch the dev database
@@ -223,13 +223,14 @@ async def some_faction(db_session: AsyncSession) -> Faction:
     first and the live one last is what produces that — the live era's pass is
     the one that decides.
     """
+    from sqlalchemy import select
+
     from game_config import (
         _ERA_ATTRIBUTE_BY_CONFIG_KEY,
         CURRENT_ERA,
         era_config_for_key,
     )
     from seed import upsert_era_factions
-    from sqlalchemy import select
 
     configs = [era_config_for_key(key) for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY]
     for config in [c for c in configs if c is not None and c is not CURRENT_ERA]:

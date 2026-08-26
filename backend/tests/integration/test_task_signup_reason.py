@@ -21,7 +21,7 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus, TaskType
+from models.task import Task
 from services.praxis import (
     SIGNUP_REASON_MULTI_MEMBERSHIP,
     SignupDenialReason,

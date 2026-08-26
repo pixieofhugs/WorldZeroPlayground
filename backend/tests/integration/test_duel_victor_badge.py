@@ -24,21 +24,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus
-from models.vote import Vote
 from services.badge import build_badge_contexts, list_badges_for_character
 from services.era import apply_era_reset
 from tests.integration.factories import (
-    cast_vote,
-    make_character,
     make_duel,
-    make_solo_praxis,
-    make_task,
 )
 
 DUEL_VICTOR_BADGE = {"key": "duel_victor", "name": "Duel Victor"}

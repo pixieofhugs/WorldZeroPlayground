@@ -23,6 +23,7 @@ import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.era import Era
@@ -32,7 +33,29 @@ from models.task import Task, TaskStatus, TaskType
 from services.era import get_or_create_stats
 from services.praxis import evaluate_signup
 from services.task import list_tasks
-from tests.integration.factories import make_task
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_task
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+#: The faction that may work RETIRED tasks — found by the perk, never named
+#: (#2708). It is era-owned: Era 1 gives it to the Ephemerists,
+#: `_inherited_perk_slugs` mirrors it onto Albescent, and an era may give it to
+#: nobody. Sentinels are dropped because a character cannot join either.
+TASK_VISION_SLUG = next(
+    (
+        slug
+        for slug in sorted(CURRENT_ERA.allow_praxis_on_retired_task_factions)
+        if slug in real_faction_slugs(CURRENT_ERA)
+    ),
+    None,
+)
+
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 # The faction Era 1 grants Double Dipper to. The slug is needed as a real
 # Faction row (FK), but the *ability* is asserted off the config below, never
@@ -206,28 +229,31 @@ async def test_parity_matrix_level_jump_spent(
     assert one_up.id not in eligible
 
 
+@pytest.mark.skipif(
+    TASK_VISION_SLUG is None, reason="no faction in the live era holds Task Vision"
+)
 @pytest.mark.asyncio
-async def test_parity_matrix_ephemerists_retired_task(
+async def test_parity_matrix_task_vision_retired_task(
     db_session: AsyncSession,
     character: Character,
     era: Era,
     some_faction: Faction,
 ):
-    """Ephemerists reach retired rows; a 'ua' character in the same set does not."""
+    """The Task Vision holder reaches retired rows; another faction does not."""
     retired = await _make_task(
         db_session, character, title="retired", status=TaskStatus.retired
     )
     active = await _make_task(db_session, character, title="active")
 
-    ua_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
-    assert retired.id not in ua_eligible
-    assert active.id in ua_eligible
+    ordinary_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
+    assert retired.id not in ordinary_eligible
+    assert active.id in ordinary_eligible
 
-    character.faction_slug = "ephemerists"
+    character.faction_slug = TASK_VISION_SLUG
     await db_session.commit()
 
-    ephemerist_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
-    assert retired.id in ephemerist_eligible
+    task_vision_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
+    assert retired.id in task_vision_eligible
 
 
 @pytest.mark.asyncio
@@ -329,8 +355,8 @@ async def test_parity_matrix_double_dipper(
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character, title="free")
 
-    ua_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
-    assert active_task.id not in ua_eligible
+    ordinary_eligible = await _assert_parity(db_session, character, CURRENT_ERA)
+    assert active_task.id not in ordinary_eligible
 
     character.faction_slug = EVERYMEN_SLUG
     await db_session.commit()

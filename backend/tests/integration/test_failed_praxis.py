@@ -31,11 +31,9 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.roles import AccountRole, Role
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
 from tests.integration.factories import make_admin
-
 
 
 async def _score_of(character_id: int, session: AsyncSession) -> int:

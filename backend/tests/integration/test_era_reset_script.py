@@ -20,11 +20,9 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.roles import AccountRole, Role
 from scripts.era_reset import reset_era
 from services.era import get_closing_era_id, get_current_era_row_safe
 from tests.integration.factories import make_admin
-
 
 
 async def _era_count(session: AsyncSession) -> int:

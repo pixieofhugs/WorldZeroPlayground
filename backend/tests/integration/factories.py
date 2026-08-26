@@ -27,7 +27,13 @@ from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote

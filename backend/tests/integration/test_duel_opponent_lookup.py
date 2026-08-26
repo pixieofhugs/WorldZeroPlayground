@@ -32,7 +32,7 @@ from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus
+from models.task import Task
 from services.praxis_out import build_praxis_card_out, duel_opponents_for
 from tests.integration.factories import make_task
 

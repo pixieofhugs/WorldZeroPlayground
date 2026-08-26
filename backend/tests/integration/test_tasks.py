@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # These tests set and assert a *task's* primary_faction_slug, so they name the
 # cross-faction sentinel, not the unaffiliated-character one (#1559).
-from faction_slugs import CROSS_FACTION_SLUG
+from faction_slugs import CROSS_FACTION_SLUG, real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -21,6 +21,15 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 async def _set_character_level(
@@ -260,7 +269,7 @@ async def test_list_tasks_filter_by_multiple_factions(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ephemerists",
+        primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add_all([unaffiliated_task, ephemerist_task])
     await db_session.commit()
@@ -1480,8 +1489,9 @@ async def test_get_task_can_sign_up_true_for_analog_with_existing_praxis(
     db_session: AsyncSession,
 ):
     """Analog viewer with an existing praxis still sees can_sign_up=True."""
-    from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
+
+    from models.faction import Faction, FactionStatus
 
     existing = await db_session.execute(
         sa_select(Faction).where(Faction.slug == "everymen")
@@ -1628,9 +1638,10 @@ async def test_get_task_can_sign_up_true_everymen_as_collaborator(
     auth_headers2: dict,
 ):
     """Everymen (Double Dipper) member of a collab still sees can_sign_up=True."""
+    from sqlalchemy import select
+
     from models.faction import FactionStatus
     from models.praxis import Praxis, PraxisMember, PraxisType
-    from sqlalchemy import select
 
     result = await db_session.execute(select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
@@ -1686,8 +1697,9 @@ async def test_get_task_allowed_modes_level_1(
     era,
 ):
     """Level-1 viewer sees solo and collab in allowed_modes."""
-    from models.character_stats import CharacterStats
     from sqlalchemy import select as sa_select
+
+    from models.character_stats import CharacterStats
 
     result = await db_session.execute(
         sa_select(CharacterStats).where(
@@ -1742,9 +1754,10 @@ async def test_get_task_metatask_eligibility_under_level(
     era,
 ):
     """Metatask level 5, character level 4, same faction -> eligible_for_current_user=False."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     meta_task = Task(
         title="Metatask Level 5",
@@ -1786,9 +1799,10 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
     era,
 ):
     """Metatask level 5, character level 6, same faction -> eligible_for_current_user=True."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     meta_task = Task(
         title="Metatask Level 5",
@@ -1829,10 +1843,11 @@ async def test_get_task_metatask_eligibility_cross_faction_is_open(
     era,
 ):
     """Metatask level 5, character level 6, different faction -> eligible (metatasks are faction-open)."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.faction import Faction, FactionStatus
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     # Seed the "snide" faction so the FK resolves
     existing = await db_session.execute(

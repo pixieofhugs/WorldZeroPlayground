@@ -15,8 +15,8 @@ from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
-from services.praxis_scoring import Contribution, compute_contributions
 from services.character_stats import recalculate_character_stats
+from services.praxis_scoring import compute_contributions
 
 
 async def _submit(praxis: Praxis, db_session: AsyncSession) -> None:

@@ -15,28 +15,20 @@ from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
 from models.praxis import (
     ModerationStatus,
     Praxis,
-    PraxisMember,
-    PraxisStatus,
-    PraxisType,
 )
-from models.task import Task, TaskStatus
-from models.vote import Vote
 from services.duel_outcome import duel_winner
-from services.scoring import SNIDE_FACTION_SLUG
 from services.era import apply_era_reset
+from services.scoring import SNIDE_FACTION_SLUG
 from tests.integration.factories import (
     cast_vote,
     make_character,
     make_duel,
-    make_solo_praxis,
-    make_task,
 )
 
 #: The other side of a lone-Snide tie: a real faction of the live era that is not
@@ -330,8 +322,8 @@ async def test_era_reset_script_resolves_duels(
     the script opens an era — neither alone proves an operator's rollover
     actually settles the board.
     """
-    from tests.integration.factories import make_admin
     from scripts.era_reset import reset_era
+    from tests.integration.factories import make_admin
 
     await make_admin(db_session, account)
     duel, challenger, _ = await make_duel(

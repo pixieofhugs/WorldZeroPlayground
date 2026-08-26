@@ -47,7 +47,6 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
