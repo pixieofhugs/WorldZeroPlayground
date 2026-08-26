@@ -21,6 +21,8 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
@@ -29,6 +31,29 @@ from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, 
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
+
+#: The faction every fixture below seats its rows in — **whichever faction that
+#: turns out to be** (#2708).
+#:
+#: The live era's first real one: not a sentinel (``na`` is "no faction" for
+#: both a character and a task, and ``compute_faction_multiplier`` reads a
+#: cross-faction task as own-faction, so defaulting here to ``na`` would quietly
+#: change the answer rather than fail), and not Albescent (the secret society,
+#: and the faction that inherits every other faction's perk). Under Era 1 this
+#: resolves to ``ua``, byte-identical to the literal it replaces.
+#:
+#: **A test may know only that it got *some* faction, never which one** (owner,
+#: 2026-08-25). Anything that needs a *number* reads
+#: ``era.factions[character.faction_slug].<modifier>`` off the character it was
+#: handed — never a named slug, and never a hardcoded product. There is no
+#: "ordinary" faction to fall back on: Era 1's UA was a plain vehicle, but every
+#: Era 2 faction carries something, and no Era 2 faction has a baseline *task*
+#: modifier at all.
+#:
+#: A test whose subject IS a particular perk does not belong in this suite —
+#: it finds its holder by the perk, or it lives in that era's rules module
+#: (``tests/integration/eras/``).
+DEFAULT_FACTION_SLUG = real_faction_slugs(CURRENT_ERA)[0]
 
 
 async def make_account(session: AsyncSession, email: str) -> Account:
@@ -62,7 +87,7 @@ async def make_character(
     account: Optional[Account] = None,
     email: Optional[str] = None,
     display_name: Optional[str] = None,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
     level: int = 0,
     score: int = 0,
     all_time_score: int = 0,
@@ -110,13 +135,16 @@ async def make_task(
     level_required: int = 0,
     status: TaskStatus = TaskStatus.active,
     task_type: TaskType = TaskType.standard,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
     commit: bool = False,
 ) -> Task:
     """An active task authored by ``creator``.
 
-    ``ua`` is the default slug because it is the only faction the shared
-    fixtures seed a row for, and most callers do not read the slug at all.
+    The default slug is :data:`DEFAULT_FACTION_SLUG` — the same one
+    :func:`make_character` seats its characters in, so an unadorned task is an
+    OWN-faction task for an unadorned character and
+    ``era.factions[character.faction_slug].own_task_modifier`` is the multiplier
+    a caller derives. Most callers do not read the slug at all.
 
     ``commit`` (with a refresh) for the suites that drive a route in a second
     session and need the row durably visible to it; a flush is enough otherwise.
@@ -189,8 +217,8 @@ async def make_duel(
     opponent_votes: int = 0,
     forfeiter: Optional[str] = None,
     winner_character_id: Optional[int] = None,
-    challenger_faction: str = "ua",
-    opponent_faction: str = "ua",
+    challenger_faction: str = DEFAULT_FACTION_SLUG,
+    opponent_faction: str = DEFAULT_FACTION_SLUG,
     challenger_moderation: ModerationStatus = ModerationStatus.visible,
     opponent_moderation: ModerationStatus = ModerationStatus.visible,
     commit: bool = False,
@@ -207,6 +235,13 @@ async def make_duel(
     Note the duel row names only the OPPONENT character: the challenger is
     whoever authored ``challenger_praxis_id``. Reproduced here rather than
     tidied, because the schema is the schema.
+
+    **Both sides share one task**, and that task takes ``make_task``'s default —
+    :data:`DEFAULT_FACTION_SLUG`, not the literal ``ua`` it used to be (#2708).
+    Sharing it is the point: an identical faction multiplier on each side leaves
+    the duel modifier as the only thing that differs, which is what a duel test
+    is usually about. A caller that overrides only one side's faction is
+    deliberately putting that side on someone else's task.
     """
     challenger = await make_character(
         session, era, username=f"{label}ch", faction_slug=challenger_faction

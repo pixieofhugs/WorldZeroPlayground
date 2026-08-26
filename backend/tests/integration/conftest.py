@@ -40,6 +40,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # ---------------------------------------------------------------------------
 # Test database URL — replace DB name so we never touch the dev database
@@ -185,7 +186,7 @@ async def account2(db_session: AsyncSession) -> Account:
 
 @pytest_asyncio.fixture
 async def era(db_session: AsyncSession, account: Account) -> Era:
-    """Seed the current Era 1 row required for CharacterStats FK."""
+    """Seed the live era's row, required for the CharacterStats FK."""
     from game_config import CURRENT_ERA
     e = Era(
         name=CURRENT_ERA.name,
@@ -199,49 +200,56 @@ async def era(db_session: AsyncSession, account: Account) -> Era:
 
 
 @pytest_asyncio.fixture
-async def faction_ua(db_session: AsyncSession) -> Faction:
-    """Seed the 'ua' and 'na' factions required for FK constraints."""
-    from models.faction import FactionStatus
+async def some_faction(db_session: AsyncSession) -> Faction:
+    """The `Faction` rows every FK in this suite points at, shaped like production.
+
+    Named for what a test may know about it: it got **some** faction, and never
+    which one (#2708). It returns the row for `factories.DEFAULT_FACTION_SLUG`,
+    the slug every factory seats its rows in — but most requesters only list it
+    to make the foreign keys resolve.
+
+    **Every slug ANY era ever configured gets a row**, not just the live era's.
+    `character.faction_slug` and `task.primary_faction_slug` are foreign keys,
+    and a closed era's characters and tasks are the history those columns point
+    at — production keeps those rows too (`retired`, never deleted). Seeding
+    only the live roster is the thing that made the Era 2 rehearsal *worse*:
+    197 failures instead of 35, because ~250 sites seat a character in a slug
+    that then had no row.
+
+    The statuses come from `seed.upsert_era_factions`, the same two-way mirror
+    production runs on every deploy (ADR-0087), rather than from a second rule
+    invented here: the live era's roster is `visible`, a system row is `hidden`,
+    and a slug some *other* era carried is `retired`. Running the non-live eras
+    first and the live one last is what produces that — the live era's pass is
+    the one that decides.
+    """
+    from game_config import (
+        _ERA_ATTRIBUTE_BY_CONFIG_KEY,
+        CURRENT_ERA,
+        era_config_for_key,
+    )
+    from seed import upsert_era_factions
     from sqlalchemy import select
 
-    factions_to_seed = [
-        Faction(slug="ua", status=FactionStatus.visible),
-        Faction(slug="na", status=FactionStatus.hidden),
-    ]
-    for faction in factions_to_seed:
-        result = await db_session.execute(select(Faction).where(Faction.slug == faction.slug))
-        if result.scalar_one_or_none() is None:
-            db_session.add(faction)
+    configs = [era_config_for_key(key) for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY]
+    for config in [c for c in configs if c is not None and c is not CURRENT_ERA]:
+        await upsert_era_factions(db_session, config)
+    await upsert_era_factions(db_session, CURRENT_ERA)
     await db_session.commit()
 
-    result = await db_session.execute(select(Faction).where(Faction.slug == "ua"))
+    result = await db_session.execute(
+        select(Faction).where(Faction.slug == DEFAULT_FACTION_SLUG)
+    )
     return result.scalar_one()
 
 
 @pytest_asyncio.fixture
-async def faction_ephemerists(db_session: AsyncSession) -> Faction:
-    """Seed the 'ephemerists' faction row required by Task Vision carve-out tests."""
-    from models.faction import FactionStatus
-    from sqlalchemy import select
-
-    result = await db_session.execute(select(Faction).where(Faction.slug == "ephemerists"))
-    existing = result.scalar_one_or_none()
-    if existing is None:
-        faction = Faction(slug="ephemerists", status=FactionStatus.visible)
-        db_session.add(faction)
-        await db_session.commit()
-        result = await db_session.execute(select(Faction).where(Faction.slug == "ephemerists"))
-        existing = result.scalar_one()
-    return existing
-
-
-@pytest_asyncio.fixture
-async def character(db_session: AsyncSession, account: Account, era: Era, faction_ua: Faction) -> Character:
+async def character(db_session: AsyncSession, account: Account, era: Era, some_faction: Faction) -> Character:
     ch = Character(
         account_id=account.id,
         username="testcharacter",
         display_name="Test Character",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -262,12 +270,12 @@ async def character(db_session: AsyncSession, account: Account, era: Era, factio
 
 
 @pytest_asyncio.fixture
-async def character2(db_session: AsyncSession, account2: Account, era: Era, faction_ua: Faction) -> Character:
+async def character2(db_session: AsyncSession, account2: Account, era: Era, some_faction: Faction) -> Character:
     ch = Character(
         account_id=account2.id,
         username="othercharacter",
         display_name="Other Character",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -297,12 +305,12 @@ async def account3(db_session: AsyncSession) -> Account:
 
 
 @pytest_asyncio.fixture
-async def character3(db_session: AsyncSession, account3: Account, era: Era, faction_ua: Faction) -> Character:
+async def character3(db_session: AsyncSession, account3: Account, era: Era, some_faction: Faction) -> Character:
     ch = Character(
         account_id=account3.id,
         username="thirdcharacter",
         display_name="Third Character",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -350,7 +358,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
