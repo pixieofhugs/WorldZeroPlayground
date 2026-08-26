@@ -29,7 +29,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import '../../../i18n'
 import type { ActivityFeedItem } from '../../../api/activityFeed'
 import type { CurrentUser } from '../../../api/auth'
-import FactionSigil from '../../sigil/FactionSigil'
+import { markFills, occurrences, sigilPath } from '../../../utils/__tests__/sigilInk'
+import { factionCssVar } from '../../../utils/factions'
 
 const panelsMock = vi.fn()
 vi.mock('../../../hooks/useSidebarPanels', () => ({
@@ -80,18 +81,6 @@ function railFor(contextSlug: string | null): string {
   return renderRail([item({ type: 'foe_taunt', item_key: 'foe_taunt:2', context_faction_slug: contextSlug })])
 }
 
-/** The mark's own geometry, taken from `FactionSigil` rather than transcribed. */
-function sigilPath(slug: string): string {
-  const html = renderToStaticMarkup(<FactionSigil slug={slug} />)
-  const match = html.match(/ d="([^"]+)"/)
-  if (!match) throw new Error(`the ${slug} sigil draws no path to probe`)
-  return match[1]
-}
-
-function occurrences(haystack: string, needle: string): number {
-  return haystack.split(needle).length - 1
-}
-
 beforeEach(() => {
   panelsMock.mockReset()
 })
@@ -118,6 +107,25 @@ describe('an activity row wears its faction', () => {
     ])
     expect(occurrences(html, sigilPath('coven')), 'the context mark is drawn').toBe(1)
     expect(occurrences(html, sigilPath('snide')), 'the actor mark is not').toBe(0)
+  })
+
+  /**
+   * #2723 — AND IN THAT FACTION'S HUE. The rail is neutral chrome, so the kite's
+   * `currentColor` default WAS the page's text ink and the mark came out white
+   * after dark; S.N.I.D.E.'s acid, declared once, has no dark half at all.
+   * `factionCssVar` carries both cascade halves — the reason it is this token
+   * and not `--faction-ephemerists-metal-gold`, which is theme-invariant and
+   * measures 1.69:1 on the neutral page in light.
+   */
+  it("paints the mark in the context faction's own hue", () => {
+    expect(markFills(railFor('ephemerists'), 'ephemerists')).toContain(
+      factionCssVar('ephemerists'),
+    )
+    expect(markFills(railFor('snide'), 'snide')).toContain(factionCssVar('snide'))
+  })
+
+  it('leaves no mark drawing in the page ink', () => {
+    expect(markFills(railFor('ephemerists'), 'ephemerists')).not.toContain('currentColor')
   })
 
   it('retires the 6px dot', () => {
@@ -150,6 +158,14 @@ describe('the rows with no faction still walk the spectrum', () => {
     const rail = railFor('albescent')
     expect(rail, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
     expect(rail, 'not the sampled ring').not.toContain(sampledAt(0))
+    // And not a flat grey either (#2723). This row is NOT in the neutral set,
+    // so it reaches `FactionSigil` — and `factionCssVar('albescent')` resolves
+    // to `--faction-default`, which the adapter WOULD forward onto the mask.
+    // The `isKnownFaction` guard at the mount is what keeps the conic here; it
+    // is the same guard the filter facet needed at #2528.
+    expect(rail, 'the conic it is painted with').toContain(
+      'background:var(--faction-default-rainbow-conic)',
+    )
     // And na is undisturbed by the removal — the whole point of the set.
     expect(railFor('na'), 'na still samples').toContain(sampledAt(0))
     expect(railFor('na')).not.toContain('/factionMarks/labyrinth.svg')
