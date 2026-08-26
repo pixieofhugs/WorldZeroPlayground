@@ -19,6 +19,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.praxis import PraxisStatus
 from models.task import TaskType
@@ -26,6 +27,17 @@ from tests.integration.factories import make_solo_praxis, make_task
 
 BASE_POINTS = 10
 META_POINTS = 100
+
+
+def base_score(author: Character) -> float:
+    """``BASE_POINTS`` as the author actually banks it.
+
+    Only the base multiplies (ADR-0086), by the own-task modifier of whichever
+    faction the fixture handed this author (#2708) — the metatask points are
+    flat on top. Era 1's default resolves this to 1.0; Era 2 has no faction with
+    a baseline task modifier at all.
+    """
+    return BASE_POINTS * CURRENT_ERA.factions[author.faction_slug].own_task_modifier
 
 
 @pytest_asyncio.fixture
@@ -52,7 +64,7 @@ async def sealable(db_session: AsyncSession, character2: Character):
 
 @pytest.mark.asyncio
 async def test_sealing_answers_with_the_new_total(
-    client: AsyncClient, auth_headers2: dict, sealable
+    client: AsyncClient, auth_headers2: dict, sealable, character2: Character
 ):
     praxis, metatask = sealable
 
@@ -65,12 +77,12 @@ async def test_sealing_answers_with_the_new_total(
     assert response.status_code == 201
     body = response.json()
     assert body["metatask_points"] == META_POINTS
-    assert body["score"] == BASE_POINTS + META_POINTS
+    assert body["score"] == pytest.approx(base_score(character2) + META_POINTS)
 
 
 @pytest.mark.asyncio
 async def test_peeling_answers_with_the_total_it_falls_back_to(
-    client: AsyncClient, auth_headers2: dict, sealable
+    client: AsyncClient, auth_headers2: dict, sealable, character2: Character
 ):
     """The regression: DELETE used to answer 204 with no body at all."""
     praxis, metatask = sealable
@@ -88,4 +100,4 @@ async def test_peeling_answers_with_the_total_it_falls_back_to(
     assert response.status_code == 200
     body = response.json()
     assert body["metatask_points"] == 0
-    assert body["score"] == BASE_POINTS
+    assert body["score"] == pytest.approx(base_score(character2))

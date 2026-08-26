@@ -2507,8 +2507,11 @@ async def test_voter_count_and_score_after_vote(
     list_resp = await client.get("/praxes")
     card = next(c for c in list_resp.json() if c["id"] == praxis_id)
 
+    # The base carries the author's own-task modifier; the votes are flat
+    # (ADR-0086). Whichever faction the fixture handed out decides that number.
+    own = CURRENT_ERA.factions[character2.faction_slug].own_task_modifier
     assert card["voter_count"] == 1
-    assert card["score"] == active_task.point_value + 4
+    assert card["score"] == pytest.approx(active_task.point_value * own + 4)
 
 
 # ---------------------------------------------------------------------------
