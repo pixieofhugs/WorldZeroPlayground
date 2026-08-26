@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 768
+RUFF_FINDING_TOTAL = 762
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -186,9 +186,9 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/task.py::E501": 6,
     "services/task.py::I001": 1,
     "services/vote.py::E501": 3,
-    "tests/integration/conftest.py::E501": 9,
+    "tests/integration/conftest.py::E501": 6,
     "tests/integration/conftest.py::F401": 1,
-    "tests/integration/conftest.py::I001": 3,
+    "tests/integration/conftest.py::I001": 2,
     "tests/integration/factories.py::E501": 4,
     "tests/integration/factories.py::I001": 1,
     "tests/integration/test_account_linking.py::I001": 1,
@@ -243,7 +243,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_invitation_delivery.py::E501": 15,
     "tests/integration/test_leaderboard.py::I001": 1,
     "tests/integration/test_level_jump_signup.py::F401": 1,
-    "tests/integration/test_me.py::E501": 6,
+    "tests/integration/test_me.py::E501": 4,
     "tests/integration/test_media_sweep_db.py::E501": 1,
     "tests/integration/test_multi_character.py::E501": 9,
     "tests/integration/test_nudge.py::I001": 1,

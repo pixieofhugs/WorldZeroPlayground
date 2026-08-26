@@ -20,6 +20,8 @@ import pytest
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -36,6 +38,7 @@ from models.praxis import (
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.badge import build_badge_contexts, list_badges_for_character
+from services.scoring import SNIDE_FACTION_SLUG
 from tests.integration.factories import (
     cast_vote,
     make_character,
@@ -45,6 +48,14 @@ from tests.integration.factories import (
 )
 
 DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
+
+#: The other side of a lone-Snide tie: a real faction of the live era that is not
+#: Snide. Derived, never named — the live era's first real faction may itself be
+#: Snide, in which case a fixture default would make this a two-Snide tie and
+#: silently change the rule under test (#2708).
+NOT_SNIDE = next(
+    slug for slug in real_faction_slugs(CURRENT_ERA) if slug != SNIDE_FACTION_SLUG
+)
 
 
 # ---------------------------------------------------------------------------
@@ -65,7 +76,7 @@ async def _badge_keys(
 
 @pytest.mark.asyncio
 async def test_strictly_leading_side_is_a_duelist(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     _, challenger, opponent = await make_duel(
         db_session, era, label="lead", challenger_votes=4, opponent_votes=3, commit=True)
@@ -75,7 +86,7 @@ async def test_strictly_leading_side_is_a_duelist(
 
 @pytest.mark.asyncio
 async def test_a_tie_is_not_a_win(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     _, challenger, opponent = await make_duel(
         db_session, era, label="tie", challenger_votes=3, opponent_votes=3, commit=True)
@@ -85,7 +96,7 @@ async def test_a_tie_is_not_a_win(
 
 @pytest.mark.asyncio
 async def test_snide_wins_the_tie_and_earns_the_badge(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Snide takes ties (#748): the badge must agree with the 2.0× multiplier.
 
@@ -93,26 +104,24 @@ async def test_snide_wins_the_tie_and_earns_the_badge(
     Snide side reads as the duel winner everywhere the tiebreak applies — the
     live multiplier already did this; the badge was the straggler.
     """
-    from models.faction import FactionStatus
-
-    db_session.add(Faction(slug="snide", status=FactionStatus.visible))
-    await db_session.commit()
-
+    # Snide's row (and every other era's) is seeded by ``some_faction``; the
+    # slug is the one ``services.scoring.snide_tie_winner_slug`` keys the
+    # tiebreak on, so naming it here names the rule, not a roster (#2708).
     _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="snidetie",
         challenger_votes=3,
         opponent_votes=3,
-        challenger_faction="snide",
-        opponent_faction="ua", commit=True)
+        challenger_faction=SNIDE_FACTION_SLUG,
+        opponent_faction=NOT_SNIDE, commit=True)
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
 
 @pytest.mark.asyncio
 async def test_an_unvoted_duel_has_no_duelist(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Zero-zero is a tie, not a challenger win."""
     _, challenger, opponent = await make_duel(db_session, era, label="quiet", commit=True)
@@ -122,7 +131,7 @@ async def test_an_unvoted_duel_has_no_duelist(
 
 @pytest.mark.asyncio
 async def test_forfeit_hands_the_badge_to_the_other_side(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The forfeiter loses even while holding the *higher* tally (#824 finding)."""
     _, challenger, opponent = await make_duel(
@@ -138,7 +147,7 @@ async def test_forfeit_hands_the_badge_to_the_other_side(
 
 @pytest.mark.asyncio
 async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The badge survives era close: "won or winning" (owner ruling 2026-07-21)."""
     duel, challenger, opponent = await make_duel(
@@ -158,7 +167,7 @@ async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
 
 @pytest.mark.asyncio
 async def test_resolved_duel_frozen_to_the_opponent_leaves_the_loser_bare(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     duel, challenger, opponent = await make_duel(
         db_session,
@@ -177,7 +186,7 @@ async def test_resolved_duel_frozen_to_the_opponent_leaves_the_loser_bare(
 
 @pytest.mark.asyncio
 async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A tie / no-contest froze `winner_character_id` as NULL — nobody won."""
     duel, challenger, opponent = await make_duel(
@@ -197,7 +206,7 @@ async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
 
 @pytest.mark.asyncio
 async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The frozen field is authoritative — never inferred from the snapshot points.
 
@@ -223,7 +232,7 @@ async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
 
 @pytest.mark.asyncio
 async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Recomputing at all is the bug: the frozen winner trails on live votes.
 
@@ -247,7 +256,7 @@ async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
 
 @pytest.mark.asyncio
 async def test_active_forfeited_duel_still_counts(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     _, challenger, opponent = await make_duel(
         db_session,
@@ -261,7 +270,7 @@ async def test_active_forfeited_duel_still_counts(
 
 @pytest.mark.asyncio
 async def test_failed_side_is_not_a_duelist_even_while_leading(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The badge reads the same rule as the multiplier (#1442).
 
@@ -282,7 +291,7 @@ async def test_failed_side_is_not_a_duelist_even_while_leading(
 
 @pytest.mark.asyncio
 async def test_uninvolved_character_earns_nothing(
-    db_session: AsyncSession, era: Era, character: Character, faction_ua: Faction
+    db_session: AsyncSession, era: Era, character: Character, some_faction: Faction
 ):
     await make_duel(
         db_session, era, label="else", challenger_votes=4, opponent_votes=1, commit=True)
@@ -291,7 +300,7 @@ async def test_uninvolved_character_earns_nothing(
 
 @pytest.mark.asyncio
 async def test_endpoint_surfaces_the_duelist_badge(
-    client, db_session: AsyncSession, era: Era, faction_ua: Faction
+    client, db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     _, challenger, _opponent = await make_duel(
         db_session, era, label="api", challenger_votes=4, opponent_votes=2, commit=True)
@@ -307,7 +316,7 @@ async def test_endpoint_surfaces_the_duelist_badge(
 
 @pytest.mark.asyncio
 async def test_batch_path_is_constant_query_count(
-    db_connection, db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_connection, db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """An 8-character page costs the same number of queries as a 2-character one.
 

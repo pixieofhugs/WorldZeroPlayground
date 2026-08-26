@@ -1,7 +1,8 @@
 """The habit bonus is stamped at seal time and read identically everywhere (#1617).
 
 A faction may grant ``habit_bonus_points`` on any praxis a member seals within
-``era.habit_window_days`` of another praxis of their own. Era 1 gives it to UA.
+``era.habit_window_days`` of another praxis of their own. Which faction holds
+it is the era's business — this module finds the holder by the perk.
 
 **The seam under test is the write**: ``services.collab_consensus._apply_seal``,
 the single writer of ``submitted_at`` / ``era_id`` and now of
@@ -23,19 +24,57 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
 from services.character_stats import recalculate_character_stats
 from services.praxis_out import author_contributions_for
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-UA_HABIT_BONUS = CURRENT_ERA.factions["ua"].habit_bonus_points
+#: The habit bonus is a PERK, so this module finds its holder by the perk rather
+#: than by name (#2708). It used to read ``CURRENT_ERA.factions["ua"]``, which
+#: is a `KeyError` at IMPORT — the whole module dying, not one test failing —
+#: the moment an era drops UA.
+HABIT_BONUS_SLUG = next(
+    (
+        slug
+        for slug in real_faction_slugs(CURRENT_ERA)
+        if CURRENT_ERA.factions[slug].habit_bonus_points > 0
+    ),
+    None,
+)
+#: A faction that was left at the 0 default — the "scores as before" control.
+NO_HABIT_BONUS_SLUG = next(
+    (
+        slug
+        for slug in real_faction_slugs(CURRENT_ERA)
+        if CURRENT_ERA.factions[slug].habit_bonus_points == 0
+    ),
+    None,
+)
+HABIT_BONUS = (
+    CURRENT_ERA.factions[HABIT_BONUS_SLUG].habit_bonus_points
+    if HABIT_BONUS_SLUG
+    else 0
+)
 HABIT_WINDOW_DAYS = CURRENT_ERA.habit_window_days
+
+#: These tests drive the shared ``character`` fixture, which is seated in
+#: ``DEFAULT_FACTION_SLUG``. They therefore only have a subject when the era's
+#: first real faction is the one holding the bonus — true in Era 1, where UA is
+#: both. An era that gives the bonus to someone else (or to nobody, as Era 2
+#: does) has no habit bonus for THIS suite to observe; rewriting it around the
+#: holder belongs with the other per-era rules modules (#2709), not here.
+pytestmark = pytest.mark.skipif(
+    HABIT_BONUS_SLUG is None or HABIT_BONUS_SLUG != DEFAULT_FACTION_SLUG,
+    reason="the live era's first real faction does not hold the habit bonus",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +82,7 @@ HABIT_WINDOW_DAYS = CURRENT_ERA.habit_window_days
 # ---------------------------------------------------------------------------
 
 async def _extra_task(session: AsyncSession, character: Character, title: str) -> Task:
-    """A second active task — a UA character may not hold one task twice (#1359)."""
+    """A second active task — a character may not hold one task twice (#1359)."""
     task = Task(
         title=title,
         description="A test task",
@@ -51,7 +90,7 @@ async def _extra_task(session: AsyncSession, character: Character, title: str) -
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=character.faction_slug,
     )
     session.add(task)
     await session.commit()
@@ -129,7 +168,7 @@ async def test_second_praxis_inside_the_window_carries_the_bonus(
     auth_headers: dict,
 ):
     """Six days apart: the second earns it, the first never could — no predecessor."""
-    assert UA_HABIT_BONUS > 0, "Era 1 gives UA a habit bonus; this test needs one"
+    assert HABIT_BONUS > 0, "this test needs an era whose faction holds the bonus"
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
     assert await _stamp(db_session, first_id, character.id) == 0
 
@@ -137,7 +176,7 @@ async def test_second_praxis_inside_the_window_carries_the_bonus(
     second_task = await _extra_task(db_session, character, "Second Task")
     second_id = await _seal_solo(client, second_task, auth_headers, "Second")
 
-    assert await _stamp(db_session, second_id, character.id) == UA_HABIT_BONUS
+    assert await _stamp(db_session, second_id, character.id) == HABIT_BONUS
 
 
 @pytest.mark.asyncio
@@ -197,26 +236,28 @@ async def test_faction_without_the_ability_scores_as_before(
     db_session: AsyncSession,
     account2: Account,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers2: dict,
     character: Character,
     active_task: Task,
 ):
-    """A faction left at the 0 default earns nothing however habitual it is."""
-    db_session.add(Faction(slug="snide", status=FactionStatus.visible))
-    await db_session.commit()
-    assert CURRENT_ERA.factions["snide"].habit_bonus_points == 0
+    """A faction left at the 0 default earns nothing however habitual it is.
 
-    snide = Character(
+    The control is found by the perk it lacks, not by name (#2708); its row is
+    already seeded by ``some_faction``.
+    """
+    assert NO_HABIT_BONUS_SLUG is not None, "this test needs a faction without it"
+
+    without = Character(
         account_id=account2.id,
-        username="snidecharacter",
-        display_name="Snide Character",
-        faction_slug="snide",
+        username="nobonuscharacter",
+        display_name="No Bonus Character",
+        faction_slug=NO_HABIT_BONUS_SLUG,
     )
-    db_session.add(snide)
+    db_session.add(without)
     await db_session.flush()
     db_session.add(
-        CharacterStats(character_id=snide.id, era_id=era.id, score=0, level=0)
+        CharacterStats(character_id=without.id, era_id=era.id, score=0, level=0)
     )
     await db_session.commit()
 
@@ -225,7 +266,7 @@ async def test_faction_without_the_ability_scores_as_before(
     second_task = await _extra_task(db_session, character, "Second Task")
     second_id = await _seal_solo(client, second_task, auth_headers2, "Second")
 
-    assert await _stamp(db_session, second_id, snide.id) == 0
+    assert await _stamp(db_session, second_id, without.id) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -265,14 +306,14 @@ async def test_feed_and_recalc_agree_on_the_same_praxis(
     await db_session.commit()
     stats = await _stats(db_session, character.id, era.id)
 
-    assert from_feed.habit_bonus_points == UA_HABIT_BONUS
+    assert from_feed.habit_bonus_points == HABIT_BONUS
     # first (10, no bonus) + second (10 + bonus) — the recompute sees both.
     assert stats.score == round(
-        active_task.point_value * 2 + UA_HABIT_BONUS
+        active_task.point_value * 2 + HABIT_BONUS
     )
     # The card's own total for the second praxis carries the same bonus the
     # recompute banked for it.
-    assert from_feed.total == active_task.point_value + UA_HABIT_BONUS
+    assert from_feed.total == active_task.point_value + HABIT_BONUS
 
 
 @pytest.mark.asyncio
@@ -301,7 +342,7 @@ async def test_recomputing_twice_does_not_move_the_total(
     await db_session.refresh(stats)
 
     assert stats.score == once
-    assert once == round(active_task.point_value * 2 + UA_HABIT_BONUS)
+    assert once == round(active_task.point_value * 2 + HABIT_BONUS)
 
 
 @pytest.mark.asyncio
@@ -317,7 +358,7 @@ async def test_the_payload_can_still_explain_its_own_total(
 
     The habit bonus is flat and sits outside ``display_multiplier``, so without a
     field of its own the wire's documented invariant would quietly become false
-    for every UA praxis — a card and a detail page reading the same payload and
+    for every such praxis — a card and a detail page reading the same payload and
     computing different sums is exactly what the one-number rule forbids.
     """
     first_id = await _seal_solo(client, active_task, auth_headers, "First")
@@ -329,7 +370,7 @@ async def test_the_payload_can_still_explain_its_own_total(
     assert detail.status_code == 200, detail.text
     body = detail.json()
 
-    assert body["habit_bonus_points"] == UA_HABIT_BONUS
+    assert body["habit_bonus_points"] == HABIT_BONUS
     assert body["score"] == (
         (body["task_point_value"] + body["metatask_points"])
         * body["display_multiplier"]
@@ -397,5 +438,5 @@ async def test_a_collab_stamps_each_member_against_their_own_history(
     collab = await db_session.get(Praxis, collab_id)
     await db_session.refresh(collab)
     assert collab.status == PraxisStatus.submitted
-    assert await _stamp(db_session, collab_id, character2.id) == UA_HABIT_BONUS
+    assert await _stamp(db_session, collab_id, character2.id) == HABIT_BONUS
     assert await _stamp(db_session, collab_id, character.id) == 0

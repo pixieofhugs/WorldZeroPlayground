@@ -11,6 +11,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -28,6 +29,7 @@ from models.praxis import (
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.duel_outcome import duel_winner
+from services.scoring import SNIDE_FACTION_SLUG
 from services.era import apply_era_reset
 from tests.integration.factories import (
     cast_vote,
@@ -35,6 +37,14 @@ from tests.integration.factories import (
     make_duel,
     make_solo_praxis,
     make_task,
+)
+
+#: The other side of a lone-Snide tie: a real faction of the live era that is not
+#: Snide. Derived, never named — the live era's first real faction may itself be
+#: Snide, in which case a fixture default would make this a two-Snide tie and
+#: silently change the rule under test (#2708).
+NOT_SNIDE = next(
+    slug for slug in real_faction_slugs(CURRENT_ERA) if slug != SNIDE_FACTION_SLUG
 )
 
 
@@ -108,7 +118,7 @@ def test_duel_winner_needs_strictly_greater_points():
 
 @pytest.mark.asyncio
 async def test_era_reset_freezes_a_mix_of_duels(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """One reset resolves clear-leader, forfeit, tie and incomplete duels together."""
     leader_duel, leader_ch, leader_op = await make_duel(
@@ -163,22 +173,20 @@ async def test_era_reset_freezes_a_mix_of_duels(
 
 @pytest.mark.asyncio
 async def test_era_reset_freezes_the_snide_tie_to_snide(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A tied duel with a lone Snide side freezes to Snide, not a NULL winner (#748).
 
     Snide wins ties everywhere the live multiplier applies; the permanent frozen
     record must agree, or `duel_victor` (#823) would lose a win the site showed.
     """
-    from models.faction import FactionStatus
-
-    db_session.add(Faction(slug="snide", status=FactionStatus.visible))
-    await db_session.commit()
-
+    # Snide's row (and every other era's) is seeded by ``some_faction``; the
+    # slug is the one ``services.scoring.snide_tie_winner_slug`` keys the
+    # tiebreak on, so naming it here names the rule, not a roster (#2708).
     duel, challenger, _opponent = await make_duel(
         db_session, era, label="snidefreeze", status=DuelStatus.settled,
         challenger_votes=3, opponent_votes=3,
-        challenger_faction="snide", opponent_faction="ua",
+        challenger_faction=SNIDE_FACTION_SLUG, opponent_faction=NOT_SNIDE,
     )
 
     await _close_the_era(db_session, account)
@@ -192,7 +200,7 @@ async def test_era_reset_freezes_the_snide_tie_to_snide(
 
 @pytest.mark.asyncio
 async def test_era_reset_wins_for_the_opponent_side_too(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """The winner is not biased to the challenger — the opponent can win outright."""
     duel, challenger, opponent = await make_duel(
@@ -210,7 +218,7 @@ async def test_era_reset_wins_for_the_opponent_side_too(
 
 @pytest.mark.asyncio
 async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A praxis a moderator ruled failed cannot win the frozen record (#1442).
 
@@ -238,7 +246,7 @@ async def test_era_reset_will_not_freeze_a_win_for_a_failed_side(
 
 @pytest.mark.asyncio
 async def test_era_reset_freezes_no_winner_when_both_sides_failed(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """Nobody won. A NULL winner, not the higher tally and not the tiebreak."""
     duel, _challenger, _opponent = await make_duel(
@@ -257,7 +265,7 @@ async def test_era_reset_freezes_no_winner_when_both_sides_failed(
 
 @pytest.mark.asyncio
 async def test_era_reset_leaves_pending_and_declined_duels_untouched(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A duel that was never accepted was never a contest — it is not resolved."""
     pending_duel, _, _ = await make_duel(
@@ -281,7 +289,7 @@ async def test_era_reset_leaves_pending_and_declined_duels_untouched(
 
 @pytest.mark.asyncio
 async def test_resolution_is_sticky_across_a_second_era_close(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A resolved duel is terminal: later votes and later resets never move it."""
     duel, challenger, opponent = await make_duel(
@@ -311,7 +319,7 @@ async def test_resolution_is_sticky_across_a_second_era_close(
 @pytest.mark.asyncio
 async def test_era_reset_script_resolves_duels(
     account: Account, character: Character, db_session: AsyncSession,
-    era: Era, faction_ua: Faction,
+    era: Era, some_faction: Faction,
 ):
     """The freeze runs through the real entry point, not just the service.
 
