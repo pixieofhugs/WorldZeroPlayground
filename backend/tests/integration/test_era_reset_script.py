@@ -22,6 +22,7 @@ from models.era import Era
 from models.faction import Faction
 from models.roles import AccountRole, Role
 from scripts.era_reset import reset_era
+from services.era import get_closing_era_id, get_current_era_row_safe
 from tests.integration.factories import make_admin
 
 
@@ -109,3 +110,50 @@ async def test_an_unknown_operator_is_refused(
 
     assert exit_code == 1
     assert await _era_count(db_session) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_rollover_into_a_new_config_key_opens_it_and_closes_the_old(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+):
+    """The rollover CURRENT_ERA exists for: the live row carries the *old* key (#2705).
+
+    Every other test here rolls Era N into Era N — the ``era`` fixture builds its
+    row from ``CURRENT_ERA.config_key``, so the keys always matched and the bug
+    hid. Re-keying the seeded row to the era it succeeded is the same shape as
+    flipping ``CURRENT_ERA`` forward, without re-binding the constant in two
+    modules: what matters is that the live row's key is not the configured one.
+    """
+    await make_admin(db_session, account, commit=False)
+    era.config_key = "era_0_previous"
+    await db_session.commit()
+
+    # No 500 in the deploy window: the live era is the latest row, whatever key
+    # it carries. This is the read every character-stats path makes.
+    live = await get_current_era_row_safe(db_session)
+    assert live is not None and live.id == era.id
+
+    exit_code = await reset_era(db_session, character.username, confirmed=True)
+
+    assert exit_code == 0
+    new_era = (
+        await db_session.execute(select(Era).order_by(Era.id.desc()).limit(1))
+    ).scalar_one()
+    assert new_era.id != era.id
+    assert new_era.config_key == CURRENT_ERA.config_key
+    assert await get_closing_era_id(new_era, db_session) == era.id
+
+    # apply_era_reset ran against the era it opened.
+    stats = (
+        await db_session.execute(
+            select(CharacterStats).where(
+                CharacterStats.character_id == character.id,
+                CharacterStats.era_id == new_era.id,
+            )
+        )
+    ).scalar_one()
+    assert stats.era_id == new_era.id

@@ -22,10 +22,10 @@ from services.vote_tally import get_tally, tally_votes
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:
-    """Return the Era DB row for CURRENT_ERA.
+    """Return the live Era DB row — see :func:`get_current_era_row_safe`.
 
-    Raises 500 if the era has not been seeded yet. Run the initial seed or
-    migration before creating characters.
+    Raises 500 only on a genuinely fresh database (no ``Era`` rows at all). Run
+    the initial seed or migration before creating characters.
     """
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
@@ -37,12 +37,24 @@ async def get_current_era_row(session: AsyncSession) -> Era:
 
 
 async def get_current_era_row_safe(session: AsyncSession) -> Era | None:
-    """Like ``get_current_era_row`` but returns None on missing era instead of raising."""
+    """Like ``get_current_era_row`` but returns None on missing era instead of raising.
+
+    The live era is **the latest ``Era`` row, whatever its ``config_key``** — the
+    same append-only invariant :func:`get_closing_era_id` and
+    :func:`get_next_era_row` read ("rows are only ever appended, one per reset").
+    It used to filter on ``CURRENT_ERA.config_key``, which deadlocked the one
+    lever that switches the game (ADR-0042): pointing ``CURRENT_ERA`` at a new
+    era file left no row carrying that key, so ``scripts/era_reset.py`` refused
+    to run — and creating that row is its job — while every path resolving a
+    character's stats 500ed in the meantime (#2705).
+
+    The cost, taken knowingly: "unseeded" now means *no rows at all* rather than
+    *no row for this key*, so between the deploy and the rollover the app serves
+    the new rules against the old row instead of failing loudly. The loudness
+    lives in ``seed.py``, which runs on every deploy and says so.
+    """
     result = await session.execute(
-        select(Era)
-        .where(Era.config_key == CURRENT_ERA.config_key)
-        .order_by(Era.id.desc())
-        .limit(1)
+        select(Era).order_by(Era.id.desc()).limit(1)
     )
     return result.scalar_one_or_none()
 
