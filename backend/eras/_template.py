@@ -40,12 +40,19 @@ from game_config import (
 # Config owns which factions exist + their mechanics; add matching name/description
 # entries there for every slug below.
 #
-# The one structurally required faction:
-#   "na"       -- answers two questions at once (see backend/faction_slugs.py):
-#                 the sentinel for a task with no faction affiliation, AND the
-#                 unaffiliated state every character is born into (ADR-0019).
-#                 Omit it and both the default birth faction and every
-#                 cross-faction task lose their FK target.
+# The two structurally required factions (ADR-0087). EraConfig.__post_init__
+# raises at IMPORT if either is missing, so an era file that drops one never
+# boots the app:
+#   "na"        -- answers two questions at once (see backend/faction_slugs.py):
+#                  the sentinel for a task with no faction affiliation, AND the
+#                  unaffiliated state every character is born into (ADR-0019).
+#                  Omit it and both the default birth faction and every
+#                  cross-faction task lose their FK target.
+#   "albescent" -- the endgame faction (ADR-0080/ADR-0082). Its GATE is yours to
+#                  tune -- albescent_level_required and the coverage rule are
+#                  ordinary era fields, and Era 2's roster makes the coverage
+#                  half far cheaper than Era 1's. What you may not do is leave
+#                  the era with no endgame.
 #
 # Modifier guide (1.0 = no change, >1.0 = bonus, <1.0 = penalty):
 #   own_task_modifier       -- solo task from your own faction
@@ -82,10 +89,10 @@ from game_config import (
 # read only the first.
 
 ERA_N_FACTIONS = {
-    # --- Required system faction (copy and customize) ---
+    # --- Required factions (copy and customize; BOTH must be present) ---
     #
     # Every OTHER faction is this era's own choice: Era 2 drops "ua" entirely
-    # (#1618) and nothing structural objects.
+    # (#1618) and nothing structural objects. These two are not a choice.
     #
     # "na": FactionConfig(
     #     slug="na",
@@ -93,6 +100,15 @@ ERA_N_FACTIONS = {
     #     own_task_modifier=1.0, other_task_modifier=1.0,
     #     collab_own_modifier=1.0, collab_other_modifier=1.0,
     #     duel_win_modifier=1.0, duel_loss_modifier=1.0,
+    # ),
+    #
+    # "albescent": FactionConfig(
+    #     slug="albescent",
+    #     can_always_rejoin=True,
+    #     own_task_modifier=1.0, other_task_modifier=1.0,
+    #     collab_own_modifier=1.0, collab_other_modifier=1.0,
+    #     duel_win_modifier=1.0, duel_loss_modifier=1.0,
+    #     # inherits_faction_perks=True,  # Era 1 and Era 2 both grant this
     # ),
     #
     # --- TODO: Add your player-selectable factions below ---
@@ -251,22 +267,21 @@ ERA_N = EraConfig(
     albescent_level_required=8,
     invitation_point_threshold=50,   # ADR-0022: points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: completed tasks for that faction
-    # starting_faction_slug — deliberately OMITTED (#1559). Characters are born
-    # unaffiliated (ADR-0019/ADR-0030) and the EraConfig default already says so,
-    # so name this ONLY if your era wants players pre-sorted into a real faction.
-    # Whatever you name must be a key in ERA_N_FACTIONS above: it is an FK onto a
-    # Faction row and seed.py seeds exactly the era's factions.
+    # starting_faction_slug — OMIT IT. Characters are born unaffiliated
+    # (ADR-0019/ADR-0030) and the EraConfig default already says `na`. #1559
+    # made this an era override; ADR-0087 pinned it back, so naming anything
+    # other than `na` now raises when your era file is imported. The field
+    # survives so that failure can explain itself.
 
     reset_score=True,
     reset_level=True,
     reset_faction=True,
     reset_vote_budget=True,
     reset_all_time_score=False,          # Almost always False
-    # reset_faction_slug — deliberately OMITTED (#1580), same shape as
-    # starting_faction_slug above and same FK constraint: name it only if a
-    # rollover into YOUR era should land the previous era's players somewhere
-    # other than `na`. Note it is read from the era being *opened*, so this is
-    # your era's say over the outgoing one's players.
+    # reset_faction_slug — OMIT IT, same as starting_faction_slug above and for
+    # the same reason (#1580 opened it, ADR-0087 pinned it). A rollover returns
+    # the outgoing era's players to `na`; whether it returns them at all is
+    # still yours, via `reset_faction` just above.
 
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
