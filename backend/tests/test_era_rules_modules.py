@@ -59,6 +59,12 @@ _ERA_PERK_FROZENSETS: tuple[str, ...] = (
     "allow_praxis_on_pending_task_factions",
 )
 
+#: Frozenset fields on ``EraConfig`` that are NOT perk axes. Empty today, and
+#: it exists so :func:`test_every_era_frozenset_is_classified` can tell "not a
+#: perk" from "nobody added it to the list yet" — the same distinction
+#: :data:`_UNDEFAULTED_BASELINES` draws for the fields.
+_NON_PERK_FROZENSETS: tuple[str, ...] = ()
+
 #: "Nobody holds this" for the perk axes ``FactionConfig`` declares with no
 #: dataclass default. These are not era rules and must never become a place to
 #: keep one: 1.0 is the multiplicative identity and ``False`` is the absence of
@@ -194,3 +200,26 @@ def test_every_perk_axis_has_a_baseline():
                 f"'{name}' is a perk axis with no dataclass default. Add its "
                 f"'nobody holds it' value to _UNDEFAULTED_BASELINES."
             )
+
+
+def test_every_era_frozenset_is_classified():
+    """A perk added as a frozenset must not slip past the walk.
+
+    ``_ERA_PERK_FROZENSETS`` is hand-kept, and a hand-kept registry that rots
+    silently is the exact failure this module exists to catch — Task Vision is
+    a perk precisely because it is a frozenset rather than a field, and the
+    audit that missed it missed it for that reason. So every frozenset
+    ``EraConfig`` declares has to be named as a perk or named as not one.
+    """
+    for field in dataclasses.fields(EraConfig):
+        if field.type is not frozenset:
+            continue
+        assert (
+            field.name in _ERA_PERK_FROZENSETS
+            or field.name in _NON_PERK_FROZENSETS
+        ), (
+            f"'{field.name}' is a frozenset on EraConfig that no list claims. "
+            f"If some faction holding it is a perk, add it to "
+            f"_ERA_PERK_FROZENSETS so the coverage guard walks it; if it is "
+            f"not a perk, add it to _NON_PERK_FROZENSETS to say so."
+        )
