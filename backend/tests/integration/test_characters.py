@@ -15,6 +15,7 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -250,7 +251,7 @@ async def _seed_scored_character(
         account_id=account.id,
         username=username,
         display_name=username.capitalize(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -304,12 +305,12 @@ async def test_list_characters_filter_by_faction(
     client: AsyncClient, character: Character, character2: Character
 ):
     """Filter by faction slug returns only characters in that faction."""
-    resp = await client.get("/characters", params={"faction": "ua"})
+    resp = await client.get("/characters", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) >= 1
     for entry in data:
-        assert entry["faction_slug"] == "ua"
+        assert entry["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -368,7 +369,7 @@ async def test_list_characters_excludes_own_account(
         account_id=account.id,
         username="altlife",
         display_name="Alt Life",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -572,7 +573,7 @@ async def test_uninvited_faction_rejected_at_creation(
     """A faction the account holds no invitation for is rejected (born-na is the default)."""
     resp = await client.post(
         "/characters",
-        json={"display_name": "Hopeful", "faction_slug": "ua"},
+        json={"display_name": "Hopeful", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 400
@@ -597,16 +598,22 @@ async def test_create_in_invited_faction(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
     stats.level = 4
-    db_session.add(InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id))
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id,
+            faction_slug=DEFAULT_FACTION_SLUG,
+            era_id=era.id,
+        )
+    )
     await db_session.commit()
 
     resp = await client.post(
         "/characters",
-        json={"display_name": "Invited One", "faction_slug": "ua"},
+        json={"display_name": "Invited One", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 201
-    assert resp.json()["faction_slug"] == "ua"
+    assert resp.json()["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -634,7 +641,11 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     )
     stats.level = CURRENT_ERA.second_character_level_required
     db_session.add(
-        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+        InvitationLetter(
+            character_id=character.id,
+            faction_slug=DEFAULT_FACTION_SLUG,
+            era_id=era.id,
+        )
     )
     db_session.add(
         InvitationLetter(
@@ -651,7 +662,9 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
 
     # Direction 1 — the per-character door stays shut for life 1.
     resp = await client.post(
-        "/factions/choose", json={"faction_slug": "ua"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": DEFAULT_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert resp.status_code == 403
     assert resp.json()["detail"]["code"] == ErrorCode.faction_rejoin_forbidden.value
@@ -659,11 +672,11 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     # Direction 2 — UA is still a birth option for a life that never burned it.
     resp = await client.post(
         "/characters",
-        json={"display_name": "Second Life", "faction_slug": "ua"},
+        json={"display_name": "Second Life", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 201, resp.text
-    assert resp.json()["faction_slug"] == "ua"
+    assert resp.json()["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio

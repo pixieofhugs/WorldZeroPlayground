@@ -22,6 +22,7 @@ from models.faction import Faction
 from models.praxis import Praxis
 from models.task import Task
 from services.auth import create_jwt
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 FLAG_LEVEL = CURRENT_ERA.flag_level_required
 
@@ -38,7 +39,7 @@ async def _seed_life(
         account_id=account.id,
         username=username,
         display_name=username.title(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
         status=CharacterStatus.active,
     )
     db_session.add(ch)

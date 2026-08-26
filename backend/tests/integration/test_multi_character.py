@@ -28,6 +28,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.task import Task
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _add_character(
@@ -38,7 +39,7 @@ async def _add_character(
     username: str,
     level: int = 0,
     status: CharacterStatus = CharacterStatus.active,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
 ) -> Character:
     """Seed an extra character (with current-era stats) directly on ``account``.
 

@@ -26,6 +26,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from services.character_stats import recalculate_character_stats
 from services.praxis import leave_praxis
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -222,8 +223,8 @@ async def test_submitted_collab_dropping_to_one_reprices_the_survivor(
         assert submit_resp.status_code == 200
     assert submit_resp.json()["status"] == "submitted"
 
-    tuned_era = _era_with_collab_bonus("ua", 1.5)
-    faction = tuned_era.factions["ua"]
+    tuned_era = _era_with_collab_bonus(DEFAULT_FACTION_SLUG, 1.5)
+    faction = tuned_era.factions[DEFAULT_FACTION_SLUG]
     collab_total = round(active_task.point_value * faction.collab_own_modifier)
     solo_total = round(active_task.point_value * faction.own_task_modifier)
     assert collab_total != solo_total  # the tuning must actually bite

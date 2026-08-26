@@ -37,6 +37,7 @@ from models.praxis import (
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -248,7 +249,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             level_required=0,
             status=TaskStatus.active,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for n in range(12)
     ])

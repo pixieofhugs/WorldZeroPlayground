@@ -19,6 +19,7 @@ from models.praxis import Praxis
 from models.roles import AccountRole, Role
 from models.task import Task
 from services.comment import create_comment
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _set_level(
@@ -62,7 +63,7 @@ async def test_create_and_list_praxis_comment(
     )
     assert resp.status_code == 201, resp.text
     body = resp.json()
-    assert body["author"]["faction_slug"] == "ua"
+    assert body["author"]["faction_slug"] == DEFAULT_FACTION_SLUG
     assert body["author"]["username"] == "othercharacter"
     assert body["is_edited"] is False
 

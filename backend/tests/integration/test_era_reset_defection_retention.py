@@ -19,8 +19,9 @@ from models.faction import Faction
 from models.faction_defection_history import FactionDefectionHistory
 from services.era import apply_era_reset
 from services.faction_service import can_join_faction, get_defection_history
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-DEFECTED_FROM_SLUG: str = "ua"
+DEFECTED_FROM_SLUG: str = DEFAULT_FACTION_SLUG
 
 
 async def _defect(

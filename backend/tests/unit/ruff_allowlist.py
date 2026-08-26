@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 762
+RUFF_FINDING_TOTAL = 748
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -201,7 +201,6 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_admin.py::E501": 4,
     "tests/integration/test_admin.py::F401": 3,
     "tests/integration/test_admin.py::I001": 4,
-    "tests/integration/test_admin_task_import.py::F401": 2,
     "tests/integration/test_albescent_unlock.py::E501": 2,
     "tests/integration/test_auth.py::E501": 2,
     "tests/integration/test_auth.py::I001": 1,
@@ -209,7 +208,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_ban_and_departure.py::E501": 9,
     "tests/integration/test_blocks.py::E501": 1,
     "tests/integration/test_character_stats.py::E501": 4,
-    "tests/integration/test_characters.py::E501": 17,
+    "tests/integration/test_characters.py::E501": 16,
     "tests/integration/test_characters.py::F401": 2,
     "tests/integration/test_characters.py::I001": 1,
     "tests/integration/test_collab_solo_conversion.py::I001": 1,
@@ -249,15 +248,13 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_nudge.py::I001": 1,
     "tests/integration/test_nudge_bulk.py::E501": 1,
     "tests/integration/test_player_facing_error_codes.py::I001": 1,
-    "tests/integration/test_praxes.py::E501": 47,
+    "tests/integration/test_praxes.py::E501": 41,
     "tests/integration/test_praxes.py::F401": 2,
     "tests/integration/test_praxes.py::F811": 2,
     "tests/integration/test_praxes.py::I001": 4,
-    "tests/integration/test_praxis_card_breakdown.py::E501": 1,
     "tests/integration/test_praxis_card_breakdown.py::I001": 1,
     "tests/integration/test_praxis_delete_and_signup_race.py::E501": 3,
     "tests/integration/test_praxis_era_stamp.py::E501": 2,
-    "tests/integration/test_praxis_feed_scope.py::E501": 3,
     "tests/integration/test_praxis_list_query_count.py::E501": 2,
     "tests/integration/test_praxis_media_batch.py::E501": 9,
     "tests/integration/test_praxis_room.py::E501": 17,
@@ -274,7 +271,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_task_list_query_count.py::E501": 2,
     "tests/integration/test_task_signup_reason.py::F401": 2,
     "tests/integration/test_task_start_here.py::I001": 1,
-    "tests/integration/test_task_visibility_gates.py::E501": 3,
+    "tests/integration/test_task_visibility_gates.py::E501": 2,
     "tests/integration/test_task_visibility_gates.py::F401": 2,
     "tests/integration/test_tasks.py::E501": 10,
     "tests/integration/test_tasks.py::I001": 6,

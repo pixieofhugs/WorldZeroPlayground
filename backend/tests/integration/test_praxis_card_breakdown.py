@@ -50,7 +50,7 @@ from services.praxis_out import (
     build_praxis_card_out,
     build_praxis_out,
 )
-from tests.integration.factories import make_task
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_task
 
 
 # ---------------------------------------------------------------------------
@@ -135,9 +135,9 @@ async def _make_character(
     session: AsyncSession,
     era: Era,
     *,
-    faction_slug: str,
     username: str,
     email: str,
+    faction_slug: str = DEFAULT_FACTION_SLUG,
     level: int = 0,
 ) -> Character:
     account = Account(email=email)
@@ -173,7 +173,11 @@ async def _ensure_faction(session: AsyncSession, slug: str) -> None:
 
 
 async def _make_task(
-    session: AsyncSession, creator: Character, *, faction_slug: str, points: int
+    session: AsyncSession,
+    creator: Character,
+    *,
+    points: int,
+    faction_slug: str = DEFAULT_FACTION_SLUG,
 ) -> Task:
     return await make_task(
         session,
@@ -227,7 +231,7 @@ async def _make_metatask(
     session: AsyncSession,
     creator: Character,
     *,
-    issuing_faction_slug: str,
+    issuing_faction_slug: str = DEFAULT_FACTION_SLUG,
     points: int,
     level_required: int = 0,
 ) -> Task:
@@ -291,9 +295,9 @@ async def test_plain_solo_score_is_base_plus_votes_at_one(
 ):
     """Plain solo, everything at ×1.0 — the common Era 1 shape."""
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="uavoter", email="uavoter@x.com"
+        db_session, era, username="uavoter", email="uavoter@x.com"
     )
-    task = await _make_task(db_session, character, faction_slug="ua", points=10)
+    task = await _make_task(db_session, character, points=10)
     praxis = await _make_solo(db_session, task, character)
     await _cast_vote(db_session, praxis, voter, 4)
 
@@ -322,7 +326,7 @@ async def test_solo_with_non_one_faction_multiplier(
         db_session, era, faction_slug="wow", username="wowauthor", email="wow@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="wowvoter", email="wowvoter@x.com"
+        db_session, era, username="wowvoter", email="wowvoter@x.com"
     )
     task = await _make_task(db_session, author, faction_slug="wow", points=10)
     praxis = await _make_solo(db_session, task, author)
@@ -348,7 +352,7 @@ async def test_detail_and_card_agree(
         db_session, era, faction_slug="wow", username="bothauthor", email="both@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="bothvoter", email="bothv@x.com"
+        db_session, era, username="bothvoter", email="bothv@x.com"
     )
     task = await _make_task(db_session, author, faction_slug="wow", points=10)
     praxis = await _make_solo(db_session, task, author)
@@ -386,10 +390,10 @@ async def test_collab_score_is_the_authors_contribution_total(
         db_session, era, faction_slug="wow", username="collabwow", email="cw@x.com"
     )
     member = await _make_character(
-        db_session, era, faction_slug="ua", username="collabua", email="cu@x.com"
+        db_session, era, username="collabua", email="cu@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="collabvoter", email="cv@x.com"
+        db_session, era, username="collabvoter", email="cv@x.com"
     )
     task = await _make_task(db_session, author, faction_slug="wow", points=10)
     praxis = await _make_collab(db_session, task, author, member)
@@ -418,15 +422,15 @@ async def test_duel_winner_and_loser_scores(
     UA: own_task_modifier 1.0, duel_win 1.5, duel_loss 0.5.
     """
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="challenger", email="ch@x.com"
+        db_session, era, username="challenger", email="ch@x.com"
     )
     opponent = await _make_character(
-        db_session, era, faction_slug="ua", username="opponent", email="op@x.com"
+        db_session, era, username="opponent", email="op@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="duelvoter", email="dv@x.com"
+        db_session, era, username="duelvoter", email="dv@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     opponent_praxis = await _make_solo(db_session, task, opponent)
 
@@ -462,15 +466,15 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
     own scoring; this is about the second player.
     """
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="failedside", email="fs@x.com"
+        db_session, era, username="failedside", email="fs@x.com"
     )
     opponent = await _make_character(
-        db_session, era, faction_slug="ua", username="cleanside", email="cs@x.com"
+        db_session, era, username="cleanside", email="cs@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="failvoter", email="fv@x.com"
+        db_session, era, username="failvoter", email="fv@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     opponent_praxis = await _make_solo(db_session, task, opponent)
 
@@ -506,15 +510,15 @@ async def test_snide_duel_loser_scores_at_zero_multiplier(
     """
     await _ensure_faction(db_session, "snide")
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="snidewinner", email="sw@x.com"
+        db_session, era, username="snidewinner", email="sw@x.com"
     )
     loser = await _make_character(
         db_session, era, faction_slug="snide", username="snideloser", email="sl@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="snidevoter", email="sv@x.com"
+        db_session, era, username="snidevoter", email="sv@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     loser_praxis = await _make_solo(db_session, task, loser)
 
@@ -611,7 +615,7 @@ async def test_card_applied_metatasks_is_empty_when_none_applied(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """No metatasks pinned → the card carries an empty stack (seal renders nothing)."""
-    task = await _make_task(db_session, character, faction_slug="ua", points=10)
+    task = await _make_task(db_session, character, points=10)
     praxis = await _make_solo(db_session, task, character)
 
     card = await _load_card(db_session, praxis.id)
@@ -631,9 +635,9 @@ async def test_applied_metatasks_for_batches_the_page_in_one_map(
     """
     await _ensure_faction(db_session, "snide")
     author = await _make_character(
-        db_session, era, faction_slug="ua", username="batchauthor", email="batch@x.com"
+        db_session, era, username="batchauthor", email="batch@x.com"
     )
-    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    task = await _make_task(db_session, author, points=10)
     sealed = await _make_solo(db_session, task, author)
     bare = await _make_solo(db_session, task, author)
     metatask = await _make_metatask(
@@ -665,15 +669,15 @@ async def test_collab_earns_metatask_points(
     of ``base × faction + meta + votes`` like on any other praxis.
     """
     author = await _make_character(
-        db_session, era, faction_slug="ua", username="collabmeta", email="cm@x.com"
+        db_session, era, username="collabmeta", email="cm@x.com"
     )
     member = await _make_character(
-        db_session, era, faction_slug="ua", username="collabmetamem", email="cmm@x.com"
+        db_session, era, username="collabmetamem", email="cmm@x.com"
     )
-    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    task = await _make_task(db_session, author, points=10)
     praxis = await _make_collab(db_session, task, author, member)
     metatask = await _make_metatask(
-        db_session, author, issuing_faction_slug="ua", points=5
+        db_session, author, issuing_faction_slug=DEFAULT_FACTION_SLUG, points=5
     )
     await _apply_metatask(db_session, praxis, metatask)
 
@@ -697,19 +701,19 @@ async def test_duel_side_earns_metatask_points(
     ``metatask_points: 0``.
     """
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="dmetawin", email="dmw@x.com"
+        db_session, era, username="dmetawin", email="dmw@x.com"
     )
     opponent = await _make_character(
-        db_session, era, faction_slug="ua", username="dmetaopp", email="dmo@x.com"
+        db_session, era, username="dmetaopp", email="dmo@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="dmetavoter", email="dmv@x.com"
+        db_session, era, username="dmetavoter", email="dmv@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     opponent_praxis = await _make_solo(db_session, task, opponent)
     metatask = await _make_metatask(
-        db_session, challenger, issuing_faction_slug="ua", points=5
+        db_session, challenger, issuing_faction_slug=DEFAULT_FACTION_SLUG, points=5
     )
     await _apply_metatask(db_session, challenger_praxis, metatask)
 
@@ -742,15 +746,15 @@ async def test_snide_duel_loss_keeps_the_metatask(
     """
     await _ensure_faction(db_session, "snide")
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="smetawin", email="smw@x.com"
+        db_session, era, username="smetawin", email="smw@x.com"
     )
     loser = await _make_character(
         db_session, era, faction_slug="snide", username="smetalose", email="sml@x.com"
     )
     voter = await _make_character(
-        db_session, era, faction_slug="ua", username="smetavoter", email="smv@x.com"
+        db_session, era, username="smetavoter", email="smv@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     loser_praxis = await _make_solo(db_session, task, loser)
     metatask = await _make_metatask(
@@ -782,12 +786,16 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
     ``+0`` seal (unchanged by #882).
     """
     author = await _make_character(
-        db_session, era, faction_slug="ua", username="underlvl", email="ul@x.com", level=0
+        db_session, era, username="underlvl", email="ul@x.com", level=0
     )
-    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    task = await _make_task(db_session, author, points=10)
     praxis = await _make_solo(db_session, task, author)
     metatask = await _make_metatask(
-        db_session, author, issuing_faction_slug="ua", points=5, level_required=7
+        db_session,
+        author,
+        issuing_faction_slug=DEFAULT_FACTION_SLUG,
+        points=5,
+        level_required=7,
     )
     await _apply_metatask(db_session, praxis, metatask)
 
@@ -817,12 +825,12 @@ async def test_duel_side_card_carries_duel_id(
 ):
     """Both sides of a duel carry the duel's id on their card (not None)."""
     challenger = await _make_character(
-        db_session, era, faction_slug="ua", username="dchallenger", email="dch@x.com"
+        db_session, era, username="dchallenger", email="dch@x.com"
     )
     opponent = await _make_character(
-        db_session, era, faction_slug="ua", username="dopponent", email="dop@x.com"
+        db_session, era, username="dopponent", email="dop@x.com"
     )
-    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    task = await _make_task(db_session, challenger, points=10)
     challenger_praxis = await _make_solo(db_session, task, challenger)
     opponent_praxis = await _make_solo(db_session, task, opponent)
     await _make_duel(db_session, task, challenger_praxis, opponent, opponent_praxis)
@@ -842,7 +850,7 @@ async def test_non_duel_solo_card_has_null_duel_id(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """A plain solo praxis (no duel) carries duel_id=None on its card."""
-    task = await _make_task(db_session, character, faction_slug="ua", points=10)
+    task = await _make_task(db_session, character, points=10)
     praxis = await _make_solo(db_session, task, character)
 
     card = await _load_card(db_session, praxis.id)

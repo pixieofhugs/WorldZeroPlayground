@@ -38,6 +38,7 @@ from services.duel import (
 )
 
 from fastapi import HTTPException
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _make_character(
@@ -52,7 +53,7 @@ async def _make_character(
         account_id=account.id,
         username=username,
         display_name=username,
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     session.add(character)
     await session.flush()

@@ -54,6 +54,7 @@ from services.activity_feed import (
     ITEM_KEY_SEPARATOR,
     REQUEST_ITEM_TYPES,
 )
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 ALL_FILTER = "all"
 FRIENDS_FILTER = "friends"
@@ -206,7 +207,7 @@ async def full_feed(
         TauntMessage(
             from_character_id=character3.id,
             to_character_id=character.id,
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
             trigger_type=TauntTriggerType.score_overtake,
         )
     )

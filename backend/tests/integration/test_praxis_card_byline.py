@@ -22,6 +22,7 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.praxis_out import build_praxis_card_out, build_praxis_out
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:
@@ -32,7 +33,7 @@ async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:
         level_required=0,
         status=TaskStatus.active,
         created_by=author.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     session.add(task)
     await session.flush()

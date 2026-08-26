@@ -19,11 +19,12 @@ import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from models.invitation_letter import InvitationLetter
 from models.praxis import (
     ModerationStatus,
@@ -37,9 +38,22 @@ from services.character_stats import recalculate_character_stats
 from services.era import apply_era_reset
 from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-# Read the modifier from the era config rather than hardcoding it (ADR-0042).
-UA_OWN_TASK_MODIFIER: float = CURRENT_ERA.factions["ua"].own_task_modifier
+# Read the modifier from the era config rather than hardcoding it (ADR-0042) —
+# and off the slug the fixtures actually seat these characters in, not a named
+# faction (#2708). Naming one made this module die at IMPORT under an era that
+# does not carry it.
+OWN_TASK_MODIFIER: float = CURRENT_ERA.factions[
+    DEFAULT_FACTION_SLUG
+].own_task_modifier
+
+#: A faction the test characters are NOT in, so an invite to it can be earned.
+OTHER_FACTION_SLUG: str = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 # Deliberately different per-era totals: if the prior era's work were worth the
 # same as this era's, a broken era bound would still produce the right number.
@@ -77,13 +91,11 @@ async def current_era(db_session: AsyncSession, prior_era: Era, account) -> Era:
 
 
 @pytest_asyncio.fixture
-async def faction_wow(db_session: AsyncSession) -> Faction:
-    """A faction the test characters are *not* in, so invites can be earned."""
-    result = await db_session.execute(select(Faction).where(Faction.slug == "wow"))
-    if result.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="wow", status=FactionStatus.visible))
-        await db_session.commit()
-    result = await db_session.execute(select(Faction).where(Faction.slug == "wow"))
+async def other_faction(db_session: AsyncSession, some_faction: Faction) -> Faction:
+    """``OTHER_FACTION_SLUG``'s row — seeded by ``some_faction`` since #2708."""
+    result = await db_session.execute(
+        select(Faction).where(Faction.slug == OTHER_FACTION_SLUG)
+    )
     return result.scalar_one()
 
 
@@ -99,7 +111,7 @@ async def _sealed_praxis(
     title: str,
     points: int,
     sealed_at,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
     task: Task | None = None,
 ) -> Praxis:
     """A submitted solo praxis with its seal time pinned, on its own task."""
@@ -187,15 +199,15 @@ async def test_recalc_sums_only_the_era_whose_row_it_writes(
     await db_session.commit()
 
     current_stats = await _stats(db_session, character, current_era)
-    assert current_stats.score == round(CURRENT_ERA_POINTS * UA_OWN_TASK_MODIFIER)
+    assert current_stats.score == round(CURRENT_ERA_POINTS * OWN_TASK_MODIFIER)
 
     await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
 
     prior_stats = await _stats(db_session, character, prior_era)
-    assert prior_stats.score == round(PRIOR_ERA_POINTS * UA_OWN_TASK_MODIFIER)
+    assert prior_stats.score == round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER)
     current_stats = await _stats(db_session, character, current_era)
-    assert current_stats.score == round(CURRENT_ERA_POINTS * UA_OWN_TASK_MODIFIER)
+    assert current_stats.score == round(CURRENT_ERA_POINTS * OWN_TASK_MODIFIER)
 
 
 @pytest.mark.asyncio
@@ -244,7 +256,7 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
     banked = (await _stats(db_session, character, prior_era)).score
-    assert banked == round(PRIOR_ERA_POINTS * UA_OWN_TASK_MODIFIER)
+    assert banked == round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER)
 
     new_era = Era(
         name=CURRENT_ERA.name,
@@ -286,8 +298,8 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     await db_session.commit()
 
     current_stats = await _stats(db_session, character, current_era)
-    expected = round(PRIOR_ERA_POINTS * UA_OWN_TASK_MODIFIER) + round(
-        CURRENT_ERA_POINTS * UA_OWN_TASK_MODIFIER
+    expected = round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER) + round(
+        CURRENT_ERA_POINTS * OWN_TASK_MODIFIER
     )
     assert current_stats.all_time_score == expected
     assert current_stats.all_time_score > current_stats.score
@@ -381,27 +393,27 @@ async def test_past_era_recalc_delivers_no_invitation(
     prior_era: Era,
     current_era: Era,
     some_faction: Faction,
-    faction_wow: Faction,
+    other_faction: Faction,
 ):
     """Recomputing a closed era must not hand out a faction invite now. The
     control character does the same two tasks in the live era and does get one."""
     first_task = Task(
-        title="WOW task one",
+        title="Other-faction task one",
         description="",
         point_value=PRIOR_ERA_POINTS,
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="wow",
+        primary_faction_slug=OTHER_FACTION_SLUG,
     )
     second_task = Task(
-        title="WOW task two",
+        title="Other-faction task two",
         description="",
         point_value=PRIOR_ERA_POINTS,
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="wow",
+        primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add_all([first_task, second_task])
     await db_session.flush()
@@ -410,7 +422,7 @@ async def test_past_era_recalc_delivers_no_invitation(
         await _sealed_praxis(
             db_session,
             character,
-            title=f"Closed-era wow {index}",
+            title=f"Closed-era other {index}",
             points=PRIOR_ERA_POINTS,
             sealed_at=prior_era.started_at + timedelta(days=1),
             task=task,
@@ -418,7 +430,7 @@ async def test_past_era_recalc_delivers_no_invitation(
         await _sealed_praxis(
             db_session,
             character3,
-            title=f"Live-era wow {index}",
+            title=f"Live-era other {index}",
             points=PRIOR_ERA_POINTS,
             sealed_at=current_era.started_at + timedelta(minutes=1),
             task=task,
@@ -432,5 +444,8 @@ async def test_past_era_recalc_delivers_no_invitation(
         select(InvitationLetter.character_id, InvitationLetter.faction_slug)
     )
     delivered = set(letters.all())
-    assert (character3.id, "wow") in delivered, "control: the thresholds are met"
-    assert (character.id, "wow") not in delivered
+    assert (
+        character3.id,
+        OTHER_FACTION_SLUG,
+    ) in delivered, "control: the thresholds are met"
+    assert (character.id, OTHER_FACTION_SLUG) not in delivered

@@ -15,6 +15,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task
 from services.scoring import compute_votes_available
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -204,7 +205,7 @@ async def _add_second_life(
         account_id=account.id,
         username=username,
         display_name=username.title(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -384,7 +385,7 @@ async def test_unique_constraint_rejects_a_second_vote_from_one_account(
         account_id=character3.account_id,
         username="constraintalt",
         display_name="Constraint Alt",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -716,7 +717,7 @@ async def test_vote_on_duel_side_praxis(
         account_id=account_c.id,
         username="duel_side_voter_c",
         display_name="Duel Voter C",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(voter_c)
     await db_session.flush()
@@ -990,7 +991,7 @@ async def test_non_participant_can_vote_on_duel_side(
         account_id=third.id,
         username="thirdchar",
         display_name="Third Char",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(third_char)
     await db_session.flush()
@@ -1168,7 +1169,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
         account_id=third.id,
         username="duel_detail_voter",
         display_name="DD Voter",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(third_char)
     await db_session.flush()

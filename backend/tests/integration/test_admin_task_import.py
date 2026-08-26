@@ -15,10 +15,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
 from models.character import Character
-from models.faction import Faction, FactionStatus
-from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
-from tests.integration.factories import make_admin
+from services.task_import import FACTION_ALIASES
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
+
+#: One legacy spreadsheet slug, taken from the map that corrects it rather
+#: than typed out again.
+LEGACY_SLUG = "us_masters"
 
 IMPORT_URL = "/admin/tasks/import-csv"
 
@@ -92,7 +95,7 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
 
     csv_text = (
         f"{HEADER}\n"
-        "Sweep The Steps,ua,Sweep them until they shine,2,30\n"
+        f"Sweep The Steps,{DEFAULT_FACTION_SLUG},Sweep them until they shine,2,30\n"
         'Quiet Hour,,"Sit still, say nothing",0,10\n'
     )
 
@@ -111,7 +114,7 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
     assert swept.description == "Sweep them until they shine"
     assert swept.point_value == 30
     assert swept.level_required == 2
-    assert swept.primary_faction_slug == "ua"
+    assert swept.primary_faction_slug == DEFAULT_FACTION_SLUG
     assert swept.status == TaskStatus.active
     assert swept.task_type == TaskType.standard
     assert swept.created_by == character.id
@@ -166,17 +169,23 @@ async def test_legacy_faction_alias_is_corrected_and_reported(
     resp = await client.post(
         IMPORT_URL,
         headers=auth_headers,
-        files=_upload(f"{HEADER}\nOld Slug Task,us_masters,Legacy,1,15\n"),
+        files=_upload(f"{HEADER}\nOld Slug Task,{LEGACY_SLUG},Legacy,1,15\n"),
     )
 
     assert resp.status_code == 201, resp.text
     task = (
         await db_session.execute(select(Task).where(Task.title == "Old Slug Task"))
     ).scalar_one()
-    assert task.primary_faction_slug == "ua"
+    # The alias map is the rule under test, so its own target is the expectation
+    # (#2708). It is a historical spreadsheet correction, not an era roster: the
+    # slug it names may be one a later era has retired, and the row is still
+    # there, which is exactly why the import still lands.
+    assert task.primary_faction_slug == FACTION_ALIASES[LEGACY_SLUG]
 
     warnings = resp.json()["warnings"]
-    assert any("us_masters" in w and "ua" in w for w in warnings)
+    assert any(
+        LEGACY_SLUG in w and FACTION_ALIASES[LEGACY_SLUG] in w for w in warnings
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -477,7 +486,6 @@ async def test_admin_without_an_active_character_is_rejected(
 ):
     """`created_by` is NOT NULL — an admin with no character cannot import."""
     await make_admin(db_session, account)
-    db_session.add(Faction(slug="ua", status=FactionStatus.visible))
     await db_session.commit()
 
     resp = await client.post(

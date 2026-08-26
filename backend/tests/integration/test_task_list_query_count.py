@@ -37,6 +37,7 @@ from services.praxis import (
     evaluate_signup,
     is_task_eligible_for_character,
 )
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 #: Rows on the small page, and on the large one. The gap is the whole test: any
 #: per-row query shows up as a difference between the two counts.
@@ -77,7 +78,7 @@ async def _add_tasks(
             level_required=0,
             status=TaskStatus.active,
             created_by=author.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for index in range(start, start + count)
     ]

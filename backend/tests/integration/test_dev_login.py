@@ -17,6 +17,7 @@ from config import settings
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.fixture
@@ -71,7 +72,10 @@ async def test_dev_login_faction_is_idempotent_across_calls(
     second = await client.post("/auth/dev-login?key=contrast&faction=ua")
     assert second.status_code == 200
     assert second.json()["character_id"] == first.json()["character_id"]
-    assert await _character_faction(db_session, second.json()["character_id"]) == "ua"
+    assert (
+        await _character_faction(db_session, second.json()["character_id"])
+        == DEFAULT_FACTION_SLUG
+    )
 
 
 @pytest.mark.asyncio

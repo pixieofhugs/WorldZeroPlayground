@@ -36,11 +36,16 @@ from models.account import Account
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from services.auth import create_jwt
-from tests.integration.factories import make_character, make_solo_praxis, make_task
+from tests.integration.factories import (
+    DEFAULT_FACTION_SLUG,
+    make_character,
+    make_solo_praxis,
+    make_task,
+)
 
 #: A faction that is neither half of the unaffiliated bucket. ``some_faction``
 #: already seeds its row.
-OTHER_FACTION_SLUG = "ua"
+OTHER_FACTION_SLUG = DEFAULT_FACTION_SLUG
 
 
 @pytest_asyncio.fixture

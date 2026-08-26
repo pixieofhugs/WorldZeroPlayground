@@ -34,11 +34,12 @@ from models.praxis import PraxisType
 from models.task import Task, TaskStatus
 from services.auth import create_jwt
 from services.praxis import create_praxis, invite_to_praxis, respond_to_invite
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # The task the Easter egg is measured against: high enough that a level-1
 # character is nowhere near it, and owned by a faction the invitee is not in.
 TASK_LEVEL_REQUIRED = 6
-TASK_FACTION_SLUG = "ua"
+TASK_FACTION_SLUG = DEFAULT_FACTION_SLUG
 INVITEE_FACTION_SLUG = "ephemerists"
 INVITEE_LEVEL = 1
 

@@ -23,6 +23,7 @@ from models.praxis import Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
 from seed import ONBOARDING_TASK_TITLE, ensure_onboarding_task
 from services.era import apply_era_reset
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _close_era(
@@ -50,7 +51,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             level_required=1,
             status=TaskStatus.active,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
         "pending": Task(
             title="Board Pending",
@@ -59,7 +60,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             level_required=1,
             status=TaskStatus.pending,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
         "metatask": Task(
             title="Board Metatask",
@@ -69,8 +70,8 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             status=TaskStatus.active,
             task_type=TaskType.metatask,
             created_by=character.id,
-            primary_faction_slug="ua",
-            metatask_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
+            metatask_faction_slug=DEFAULT_FACTION_SLUG,
         ),
         "already_retired": Task(
             title="Board Already Retired",
@@ -79,7 +80,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             level_required=1,
             status=TaskStatus.retired,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
     }
     for task in board.values():

@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +62,7 @@ async def test_leaderboard_faction_filter(
     assert resp.status_code == 200
     data = resp.json()
     for char in data:
-        assert char["faction_slug"] == "ua"
+        assert char["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio

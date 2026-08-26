@@ -40,9 +40,10 @@ from seed import (
     ensure_onboarding_task,
     sync_era_tasks,
 )
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
-def _standard_task(title: str, faction_slug: str = "ua") -> TaskDef:
+def _standard_task(title: str, faction_slug: str = DEFAULT_FACTION_SLUG) -> TaskDef:
     return TaskDef(
         title=title,
         description="fixture task",

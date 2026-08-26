@@ -16,7 +16,7 @@ from models.praxis import Praxis
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
 from schemas.task import MAX_TASK_NOTES
-from tests.integration.factories import make_admin
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 
 
@@ -685,14 +685,16 @@ async def test_admin_list_characters_filter_faction(
     """Admin can filter character list by faction slug."""
     await make_admin(db_session, account)
 
-    resp = await client.get("/admin/characters?faction=ua", headers=auth_headers)
+    resp = await client.get(
+        f"/admin/characters?faction={DEFAULT_FACTION_SLUG}", headers=auth_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
     ids = [c["id"] for c in data]
     assert character.id in ids
     assert character2.id in ids
     for c in data:
-        assert c["faction_slug"] == "ua"
+        assert c["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -782,14 +784,14 @@ async def test_admin_edit_task_faction(
 
     resp = await client.patch(
         f"/admin/tasks/{task.id}",
-        json={"primary_faction_slug": "ua"},
+        json={"primary_faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["primary_faction_slug"] == "ua"
+    assert resp.json()["primary_faction_slug"] == DEFAULT_FACTION_SLUG
 
     await db_session.refresh(task)
-    assert task.primary_faction_slug == "ua"
+    assert task.primary_faction_slug == DEFAULT_FACTION_SLUG
 
     # …and back to the cross-faction sentinel, which is a real slug in config.
     back = await client.patch(

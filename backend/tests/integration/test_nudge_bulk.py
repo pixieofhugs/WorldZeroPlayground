@@ -33,6 +33,7 @@ from models.character import Character
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 #: Outstanding members on the small crew and on the large one. The gap is the
 #: whole point of the query-count test.
@@ -94,7 +95,7 @@ async def _join(
         account_id=account.id,
         username=f"crew{index}",
         display_name=f"Crew {index}",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     session.add(character)
     await session.flush()

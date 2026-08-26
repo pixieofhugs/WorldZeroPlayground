@@ -23,6 +23,7 @@ from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.character import ALBESCENT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +182,9 @@ async def test_defecting_to_your_current_faction_is_coded(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
     response = await client.post(
-        "/factions/choose", json={"faction_slug": "ua"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": DEFAULT_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert response.status_code == 422, response.text
     assert response.json()["detail"]["code"] == ErrorCode.faction_already_member.value

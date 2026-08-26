@@ -28,9 +28,15 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.character_stats import recalculate_character_stats
 from services.vote import cast_vote_on_praxis
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
-# Read the modifier from the era config rather than hardcoding it (ADR-0042).
-UA_COLLAB_OWN_MODIFIER: float = CURRENT_ERA.factions["ua"].collab_own_modifier
+# Read the modifier from the era config rather than hardcoding it (ADR-0042) —
+# and off the slug the fixtures actually seat these members in, not a named
+# faction (#2708). Naming one made this module die at IMPORT under an era that
+# does not carry it: a KeyError here takes every test in the file with it.
+COLLAB_OWN_MODIFIER: float = CURRENT_ERA.factions[
+    DEFAULT_FACTION_SLUG
+].collab_own_modifier
 
 # A point value big enough that the pre-vote baseline is comfortably non-zero:
 # if a member's expected delta were 0, a broken fix would pass.
@@ -43,7 +49,7 @@ RE_RATED_VOTE_VALUE: int = 1
 def _expected_member_score(points_from_votes: int) -> int:
     """What every member of the fixture collab is worth. Votes are flat and
     un-split: each member banks the praxis's whole tally (ADR-0014)."""
-    return round(COLLAB_TASK_POINTS * UA_COLLAB_OWN_MODIFIER + points_from_votes)
+    return round(COLLAB_TASK_POINTS * COLLAB_OWN_MODIFIER + points_from_votes)
 
 
 @pytest_asyncio.fixture
@@ -55,7 +61,7 @@ async def collab_task(db_session: AsyncSession, character: Character) -> Task:
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()

@@ -8,6 +8,7 @@ from models.account import Account
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -25,8 +26,8 @@ async def test_list_factions_returns_visible(
     assert resp.status_code == 200
     data = resp.json()
     slugs = [f["slug"] for f in data]
-    # "ua" is visible; seeded in some_faction fixture
-    assert "ua" in slugs
+    # the live era's own factions are visible; seeded by `some_faction`
+    assert DEFAULT_FACTION_SLUG in slugs
     # "na" is hidden; must not appear
     assert "na" not in slugs
 
@@ -102,7 +103,7 @@ async def test_faction_status_carries_invitation_letters(
 
     db_session.add(InvitationLetter(
         character_id=character.id,
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
         era_id=era.id,
     ))
     await db_session.commit()
@@ -114,7 +115,7 @@ async def test_faction_status_carries_invitation_letters(
     resp = await client.get("/factions/status", headers=auth_headers)
     assert resp.status_code == 200
     letters = resp.json()["invitations"]
-    assert [letter["faction_slug"] for letter in letters] == ["ua"]
+    assert [letter["faction_slug"] for letter in letters] == [DEFAULT_FACTION_SLUG]
     assert datetime.fromisoformat(letters[0]["delivered_at"]) == stored.delivered_at
 
 
@@ -223,7 +224,7 @@ async def test_choose_faction_without_invitation_forbidden(
         headers=auth_headers,
     )
     assert resp.status_code == 403
-    assert character.faction_slug == "ua"
+    assert character.faction_slug == DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -307,7 +308,7 @@ async def test_choose_albescent_ineligible_forbidden(
         headers=auth_headers,
     )
     assert resp.status_code == 403
-    assert character.faction_slug == "ua"
+    assert character.faction_slug == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -392,7 +393,7 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     assert resp.status_code == 200
     slugs = [f["slug"] for f in resp.json()]
     assert "albescent" in slugs
-    assert "ua" in slugs
+    assert DEFAULT_FACTION_SLUG in slugs
     # The account is genuinely on the unrevealed side — otherwise this passes
     # for the wrong reason the moment a fixture starts stamping the unlock.
     await db_session.refresh(account)
@@ -422,7 +423,7 @@ async def test_list_factions_serves_albescent_to_an_anonymous_caller(
     assert resp.status_code == 200
     slugs = [f["slug"] for f in resp.json()]
     assert "albescent" in slugs
-    assert "ua" in slugs
+    assert DEFAULT_FACTION_SLUG in slugs
 
 
 @pytest.mark.asyncio

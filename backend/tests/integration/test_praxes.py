@@ -22,6 +22,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _make_metatask(db_session: AsyncSession, character: Character) -> Task:
@@ -34,8 +35,8 @@ async def _make_metatask(db_session: AsyncSession, character: Character) -> Task
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(metatask)
     await db_session.commit()
@@ -231,7 +232,11 @@ async def test_list_praxes_filter_by_faction(
 
     # Filter to UA — only the UA praxis comes back. Read as the author-member so
     # the in_progress praxes are visible (ADR-0024).
-    ua_list = await client.get("/praxes", params={"faction": "ua"}, headers=auth_headers)
+    ua_list = await client.get(
+        "/praxes",
+        params={"faction": DEFAULT_FACTION_SLUG},
+        headers=auth_headers,
+    )
     assert ua_list.status_code == 200
     ua_ids = {item["id"] for item in ua_list.json()}
     assert ua_praxis_id in ua_ids
@@ -280,7 +285,7 @@ async def _submitted_praxis(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -503,7 +508,12 @@ async def test_faction_and_search_combine(
 
     resp = await client.get(
         "/praxes",
-        params={"status": "submitted", "faction": "ua", "q": "beacon", "sort": "newest"},
+        params={
+            "status": "submitted",
+            "faction": DEFAULT_FACTION_SLUG,
+            "q": "beacon",
+            "sort": "newest",
+        },
     )
     assert resp.status_code == 200
     assert match_id in {item["id"] for item in resp.json()}
@@ -621,7 +631,11 @@ async def test_feed_search_by_member_ands_with_other_filters(
     # Same term, matching faction: present.
     resp = await client.get(
         "/praxes",
-        params={"status": "submitted", "q": "othercharacter", "faction": "ua"},
+        params={
+            "status": "submitted",
+            "q": "othercharacter",
+            "faction": DEFAULT_FACTION_SLUG,
+        },
     )
     assert resp.status_code == 200
     assert theirs in {item["id"] for item in resp.json()}
@@ -953,7 +967,7 @@ async def test_create_praxis_bank_cap(
             level_required=0,
             status=TaskStatus.active,
             created_by=character2.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(task)
         tasks.append(task)
@@ -978,7 +992,7 @@ async def test_create_praxis_bank_cap(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(overflow_task)
     await db_session.commit()
@@ -1329,7 +1343,7 @@ async def test_list_praxes_member_id_filters_by_membership(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(second_task)
     await db_session.commit()
@@ -1955,7 +1969,7 @@ async def test_create_praxis_below_required_level_returns_403(
         level_required=5,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(high_task)
     await db_session.commit()
@@ -2315,7 +2329,7 @@ async def test_create_praxis_non_active_task_returns_403(
         level_required=0,
         status=task_status,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -2351,7 +2365,7 @@ async def test_create_praxis_retired_task_allowed_for_ephemerists(
         level_required=0,
         status=TaskStatus.retired,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(retired_task)
     await db_session.commit()
@@ -2538,7 +2552,12 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     acc3 = Account(email="collab-a-owner@example.com")
     db_session.add(acc3)
     await db_session.flush()
-    ch3 = Character(account_id=acc3.id, username="collab_a_owner", display_name="Collab A Owner", faction_slug="ua")
+    ch3 = Character(
+        account_id=acc3.id,
+        username="collab_a_owner",
+        display_name="Collab A Owner",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch3)
     await db_session.flush()
     db_session.add(CharacterStats(character_id=ch3.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
@@ -2547,7 +2566,12 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     acc4 = Account(email="collab-b-owner@example.com")
     db_session.add(acc4)
     await db_session.flush()
-    ch4 = Character(account_id=acc4.id, username="collab_b_owner", display_name="Collab B Owner", faction_slug="ua")
+    ch4 = Character(
+        account_id=acc4.id,
+        username="collab_b_owner",
+        display_name="Collab B Owner",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch4)
     await db_session.flush()
     db_session.add(CharacterStats(character_id=ch4.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
@@ -2684,8 +2708,18 @@ async def test_everymen_can_be_invited_despite_active_collab(
     db_session.add(acc_a)
     db_session.add(acc_b)
     await db_session.flush()
-    ch_a = Character(account_id=acc_a.id, username="evmtest_a", display_name="EV Test A", faction_slug="ua")
-    ch_b = Character(account_id=acc_b.id, username="evmtest_b", display_name="EV Test B", faction_slug="ua")
+    ch_a = Character(
+        account_id=acc_a.id,
+        username="evmtest_a",
+        display_name="EV Test A",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    ch_b = Character(
+        account_id=acc_b.id,
+        username="evmtest_b",
+        display_name="EV Test B",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch_a)
     db_session.add(ch_b)
     await db_session.flush()
@@ -3058,7 +3092,7 @@ async def test_card_out_includes_full_fidelity_fields(
 
     assert card["body_text"] == "the full proof text"
     # character is seeded in the 'ua' faction by the conftest fixture.
-    assert card["created_by_faction_slug"] == "ua"
+    assert card["created_by_faction_slug"] == DEFAULT_FACTION_SLUG
     member_names = [m["character_display_name"] for m in card["members"]]
     assert character.display_name in member_names
     assert card["media_items"] == []

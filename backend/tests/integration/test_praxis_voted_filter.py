@@ -28,6 +28,7 @@ from services.praxis import list_praxes, VotedFilter
 from services.praxis_out import build_praxis_card_out
 from services.vote import cast_or_update_vote
 from services.vote_tally import viewer_votes_for
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ def _make_character(db_session: AsyncSession, era: Era, some_faction: Faction):
             account_id=account.id,
             username=username,
             display_name=display_name,
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(ch)
         await db_session.flush()

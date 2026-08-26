@@ -45,6 +45,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.task import Task, TaskStatus, TaskType
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest_asyncio.fixture
@@ -93,7 +94,7 @@ async def board(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
         task_type=TaskType.standard,
     )
     meta = Task(
