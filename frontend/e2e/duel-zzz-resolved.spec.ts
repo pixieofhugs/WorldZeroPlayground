@@ -5,7 +5,7 @@ import {
   DUEL_LEVEL,
   RUN,
   login,
-  pickUaDuelTask,
+  pickDuelTask,
   createSoloDraft,
   challengeViaUi,
   acceptDuelViaUi,
@@ -91,7 +91,7 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
       const bob = await login(browser, `rb-${RUN}`, `RB-${RUN}`, DUEL_LEVEL)
       try {
         // Reach `settled` through the UI (same flow as the happy path).
-        const task = await pickUaDuelTask(alice)
+        const task = await pickDuelTask(alice)
         const alicePraxisId = await createSoloDraft(alice, task.id, `Duel resolved ${RUN}`)
 
         const alicePage = await alice.ctx.newPage()

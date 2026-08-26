@@ -14,11 +14,22 @@ era is free to answer them the same way (Era 1 does) without them being one
 concept. Collapsing them would hide the day a task's "no faction" and a
 character's "no faction" need different slugs.
 
-What is *not* here: the faction a character is **born into**. That is a rule,
-not a sentinel, so it lives on ``EraConfig.starting_faction_slug`` (defaulted
-to :data:`UNAFFILIATED_FACTION_SLUG`) where an era can override it — ADR-0042,
-the era doc wins. Services read ``era.starting_faction_slug``; they must not
-read the constant below to answer "what faction does a new character get?".
+**Two slugs below are structural, not era-owned** (ADR-0087). ``na`` is the
+neutral faction in every era and ``albescent`` is the endgame faction in every
+era; both must appear in ``era.factions``, and ``EraConfig.__post_init__``
+raises at import if either is missing. Albescent's *gate* is still the era's
+(``albescent_level_required``, the coverage rule) — what is fixed is that the
+faction exists. Every other faction, and every perk, stays era-owned.
+
+What is *not* here: the faction a character is **born into**. That is still a
+rule rather than a sentinel, so it lives on ``EraConfig.starting_faction_slug``
+(and ``reset_faction_slug`` for where a rollover returns them). ADR-0087 pins
+both to :data:`UNAFFILIATED_FACTION_SLUG`, amending ADR-0042's "the era doc
+wins" for those two fields and no others; they are kept as validated fields so
+an era author who tries to move the birth faction gets the ruling read back to
+them. Services still read ``era.starting_faction_slug``; they must not read the
+constant below to answer "what faction does a new character get?" — reopening
+the seam is deleting one validation line, and that is the point.
 """
 
 from collections.abc import Iterable

@@ -26,7 +26,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from sqlalchemy import func, select
 
-from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    CROSS_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+)
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
 from models.account import Account, AuthProvider, OAuthProvider
@@ -314,7 +318,23 @@ DUEL_FIXTURE_TASK_DESCRIPTION = (
     "Take one slow breath in, hold it, and count until you have to let go. "
     "Tell us the number — and what you were thinking about while you waited."
 )
-DUEL_FIXTURE_TASK_FACTION_SLUG = "ua"
+# The first real faction the live era carries — not a literal (#2710). It was
+# `ua`, which Era 2 does not carry, and the guard below then turned that into a
+# no-op: the fixture task was silently never created and the duel e2e specs
+# failed three files away with an error that said nothing about eras. A slug
+# read off the era cannot go absent, so the guard stays as a backstop rather
+# than as the thing that decides whether the suite has a task at all.
+#
+# Sentinels are excluded (ADR-0087, faction_slugs.py): `na` is the cross-faction
+# slug, so an `na` fixture task would be indistinguishable from the onboarding
+# task, and Albescent is the secret society. `scripts/seed_demo_praxes.py`
+# spells the same predicate out for its own three fixtures; the shared home for
+# it is faction_slugs.py, beside faction_filter_slugs, the day a third site asks.
+DUEL_FIXTURE_TASK_FACTION_SLUG = next(
+    slug
+    for slug in CURRENT_ERA.factions
+    if slug not in (UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG)
+)
 DUEL_FIXTURE_TASK_POINT_VALUE = 10
 
 
@@ -328,10 +348,17 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
     number: the fixture's whole point is a task a duelling character can sign up
     for, so the two must move together.
 
-    The faction slug is a literal because it names a *fixture*, not a rule — the
-    e2e suite asks for UA's archetype by name. A future era need not carry that
-    faction, so this no-ops when the row is absent rather than writing a Task
-    whose ``primary_faction_slug`` points at nothing.
+    The faction slug is read off the era, not named (#2710). It used to name UA
+    on the grounds that a fixture is not a rule — but the e2e helper selected on
+    that same literal, so under an era without UA the guard below no-opped, the
+    task was never created and ``duel.helpers.ts`` failed on a missing fixture
+    with no hint that the era was the reason. The helper now selects on the
+    *properties* it needs (a faction-skinned task at or below the duel level),
+    so neither side names a faction and neither can go quietly absent.
+
+    The ``faction is None`` guard stays: it costs one query and it is what keeps
+    a half-seeded database from writing a Task whose ``primary_faction_slug``
+    points at nothing.
     """
     existing = (
         await session.execute(
@@ -454,7 +481,10 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
     # has several early returns that skip its own commit on an already-seeded
     # database, which is exactly the case where this top-up matters.
     if await ensure_duel_fixture_task(session, created_by_id):
-        print("  >Duel e2e fixture task (1 UA task at the duel level)")
+        print(
+            f"  >Duel e2e fixture task (1 {DUEL_FIXTURE_TASK_FACTION_SLUG} task "
+            f"at the duel level)"
+        )
     await session.commit()
 
     # Cross-faction demo players + community-voted praxes (reused, idempotent).
