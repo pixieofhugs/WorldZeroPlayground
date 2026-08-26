@@ -63,6 +63,44 @@ _Avoid_: "the letter", "the prospectus", "the invitation" as a bare noun. It is 
 letter**, for all nine, and the words in prose do not follow whichever key family a given
 faction happens to use.
 
+**Structural slug** vs **roster faction** *(ADR-0087)*:
+The two populations a faction slug can belong to. **Structural** slugs carry a role the game
+cannot run without and are present in **every** era: `na` (the neutral faction — the
+born-unaffiliated state and the cross-faction task marker) and `albescent` (the endgame).
+`EraConfig.__post_init__` requires both, and `starting_faction_slug` / `reset_faction_slug`
+are pinned to `na`. Everything else is **roster** — the era's to choose, along with every
+perk on it. A perk may vanish between eras or move to a different faction; `ua` held the
+habit bonus, `coven` the collab bonus, `ephemerists` Task Vision, and none of the three
+exists in Era 2.
+_Avoid_: "the default faction" for `na` when you mean the structural role — `default` ≡ `na`
+≡ Unaffiliated is the *visual* identity (see **Default archetype**), which is a different
+question from which slugs an era must define.
+_Avoid also_: treating any Era 1 perk assignment as permanent. Ask the era which faction
+holds a perk; never name the faction.
+
+**Retired faction** *(ADR-0087; `FactionStatus.retired`)*:
+A faction that was in some past era and is not in the live one. Its row stays — never
+deleted, because `character.faction_slug` and `task.primary_faction_slug` are FKs onto it —
+but it leaves the faction registry and the join options. **Its task history stays in the
+archive**: retirement removes a faction from the *registry*, not from the *record*.
+Distinct from `hidden`, which means a system row (`na`, `aged_out`) no player may ever act
+on, and which is the only status `hidden_faction_slugs` returns.
+_Avoid_: "deleted", "removed" — a retired faction's members, tasks and praxes all still
+point at it. _Avoid also_: using `hidden` for retirement; that conflation would take Era 1's
+board out of the archive.
+
+**Per-era rules module** *(`backend/tests/eras/test_era_<key>_rules.py`)*:
+The one place an era's own rules are tested, passing that era's `EraConfig` explicitly rather
+than reading `CURRENT_ERA`. Every era in `_ERA_ATTRIBUTE_BY_CONFIG_KEY` must have one, and a
+guard requires the module to name every perk that era grants (walked from `_MAX_PERK_FIELDS`
+/ `_ANY_PERK_FIELDS` / `_DUEL_PERK_FIELDS`). It is what makes "which tests does this era
+need?" answerable — Era 2 was authored in #1618 granting four perks and none was exercised
+until the era went live. Its counterpart is the **era-agnostic** test, which asserts a
+mechanic that holds in every era and therefore may never name a faction: it reads the
+modifier off whichever slug the fixture actually got.
+_Avoid_: pinning a general mechanic to one era's config to make it pass — if it only holds
+for that era, it is that era's rule and belongs in its module.
+
 **Dispatcher**:
 The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that turns a
 faction slug into its archetype, falling back to the default. One dispatcher per surface.

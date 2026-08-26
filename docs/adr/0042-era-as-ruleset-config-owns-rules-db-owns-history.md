@@ -1,12 +1,24 @@
 # ADR-0042 — Era-as-ruleset: `game_config` owns the rules, the DB owns only history
 
-**Status:** Accepted
+**Status:** Amended by ADR-0087
 **Date:** 2026-07-17
 
 **Relates to:** CLAUDE.md "Config architecture", `backend/game_config.py`, `backend/eras/`
 
 > Harvested from the retired `SPEC-architecture.md §4` during the 2026-07-17 docs
 > consolidation.
+
+## Amendment
+
+**Partly amended 2026-08-25 by [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md)** — the "era doc wins" posture below
+still governs every game rule, with **two named exceptions**. `EraConfig.starting_faction_slug`
+and `reset_faction_slug` are no longer era-overridable: both are pinned to `na`, validated in
+`EraConfig.__post_init__`. An era also may no longer omit `na` or `albescent` from its roster —
+those two slugs carry structural roles (neutral, and endgame) that are fixed across eras.
+
+Nothing else here moves. "Config owns the rules, the DB owns history" is reinforced by
+ADR-0087, not weakened: the reason the two fields are pinned is that they were never really
+*rules*, they were the names of structural slugs.
 
 ## Context
 

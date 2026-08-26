@@ -1,7 +1,21 @@
 # Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface
 
-**Status:** Accepted
+**Status:** Amended by ADR-0087
 **Date:** 2026-07-03
+
+## Amendment
+
+**Amended 2026-08-25 by [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md)** — the grid's hidden set is no longer
+`HIDDEN_SLUGS = {na, aged_out}`. A faction the **live era does not list** is `retired` and
+also absent from the directory, so the set is now "the sentinels, plus everything this era
+dropped". Era 2 retires four (`ua`, `coven`, `ephemerists`, `singularity`).
+
+This also retires the first bullet's subject as a standing fact: UA is an ordinary faction
+*in Era 1*. Faction-specific behaviour is per-era (ADR-0087), so UA's ordinariness — like
+Coven's collab bonus and Ephemerists' Task Vision — is an Era 1 statement, not a permanent one.
+
+The rest stands: the grid is a directory, not a join surface, and joining still happens on the
+faction detail page.
 
 Building on [ADR-0019](0019-characters-start-unaffiliated-invite-gated-factions.md)
 (characters are born unaffiliated `na`; faction membership is invite-gated), this

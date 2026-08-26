@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-86 records, of which **79 still state a rule**.
+87 records, of which **80 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -44,7 +44,7 @@
 | [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md) |
 | [0029](0029-faction-permits-is-the-single-faction-rules-seam.md) | `faction_permits` is the single faction-rules seam | Accepted | — |
-| [0030](0030-default-faction-behaviour-ua-is-ordinary-grid-is-a-directory.md) | Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface | Accepted | — |
+| [0030](0030-default-faction-behaviour-ua-is-ordinary-grid-is-a-directory.md) | Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0031](0031-backend-emits-keys-frontend-catalog-resolves.md) | Backend emits copy keys; the frontend catalog resolves them | Accepted | — |
 | [0032](0032-react-i18next-copy-catalog.md) | UI copy lives in react-i18next JSON catalogs | Accepted | — |
 | [0033](0033-player-profile-contract-and-badge-registry.md) | Player profile: one faction-agnostic contract; badges are a code registry evaluated on read | Accepted | — |
@@ -56,7 +56,7 @@
 | [0039](0039-unaffiliated-fill-is-a-gradient-not-a-hue.md) | Unaffiliated's fill is a gradient, not a hue | Accepted | — |
 | [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Accepted | — |
 | [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | — |
-| [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Accepted | — |
+| [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0043](0043-vote-budget-is-recomputed-on-read.md) | Vote budget is recomputed on read; only `votes_spent_this_era` is stored | Accepted | — |
 | [0044](0044-characterstats-is-a-per-era-star-schema-split.md) | `CharacterStats` is a per-era star-schema split off `Character` | Accepted | — |
 | [0045](0045-pragmatic-ddd-posture.md) | Pragmatic DDD: implicit aggregates, anemic models, no repository layer, HTTPException in services | Accepted | — |
@@ -101,3 +101,4 @@
 | [0084](0084-a-page-wears-a-faction-when-it-has-exactly-one-faction-to-wear.md) | A page wears a faction when it has exactly one faction to wear | Accepted | — |
 | [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
 | [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |
+| [0087](0087-structural-faction-slugs-are-not-era-owned.md) | Structural faction slugs are not era-owned; a dropped faction is retired, not deleted | Accepted | — |
