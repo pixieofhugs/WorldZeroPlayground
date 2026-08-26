@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 643
+RUFF_FINDING_TOTAL = 642
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -229,7 +229,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "tests/integration/test_nudge.py::I001": 1,
     "tests/integration/test_nudge_bulk.py::E501": 1,
     "tests/integration/test_player_facing_error_codes.py::I001": 1,
-    "tests/integration/test_praxes.py::E501": 41,
+    "tests/integration/test_praxes.py::E501": 40,
     "tests/integration/test_praxis_card_breakdown.py::I001": 1,
     "tests/integration/test_praxis_delete_and_signup_race.py::E501": 3,
     "tests/integration/test_praxis_era_stamp.py::E501": 2,
