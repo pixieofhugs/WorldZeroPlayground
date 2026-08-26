@@ -32,9 +32,19 @@ import { CommentFlagControl, canFlagComment } from './FlagControl'
  * THE SPECTRUM BUBBLE — the comment voice of the UNAFFILIATED (`na`) identity,
  * and the fallback for any slug with no voice of its own. `default ≡ na ≡
  * Unaffiliated` is one identity (ADR-0039 / 0046 / 0048): this IS the
- * unaffiliated kit, not a generic neutral. Albescent renders through it too and
- * stays that way — `albescent ≡ na + drift` (ADR-0048), its card carries the
- * difference — so nothing here may narrow to `na`.
+ * unaffiliated kit, not a generic neutral. Albescent renders through it too —
+ * `albescent ≡ na + drift` (ADR-0048) — so nothing here may narrow to `na`.
+ *
+ * ALBESCENT NOW RE-CUTS ONE OF THE TWO na TELLS (#2732, ADR-0088 §3), and this
+ * docblock used to say the opposite: "Albescent renders through it too and stays
+ * that way". It does not. A revealed viewer sees the leaf ringed in the shared
+ * travelling spectrum edge and wearing NO cap. The cap cannot be dressed away
+ * from outside — it is `factionFill(slug,'bar')` inline and COMPUTED FROM THE
+ * SLUG, so it has no class and no wrapper reaches it — which is why `Sheet` grew
+ * the `edge` slot below instead of a class. #1192 decision 13 and #2531 are
+ * REVERSED for this surface: their finding stands, their conclusion does not.
+ * `AlbescentComment` owns the reveal gate and the class; nothing here knows the
+ * slug, and an unfilled slot is today's sheet to the byte.
  *
  * The na tells, and only these: a spectrum hairline across the top of every
  * sheet, and gradient-clipped @mentions (#970). Both reached through
@@ -73,11 +83,30 @@ function Sheet({
   avatar,
   children,
   containerProps,
+  edge,
 }: {
   slug: string | null | undefined
   avatar: React.ReactNode
   children: React.ReactNode
   containerProps?: React.ComponentPropsWithoutRef<'div'>
+  /**
+   * THE SUPPRESSION SLOT (#2732, ADR-0088 §3). Fill it and the sheet trades its
+   * top cap for whatever this draws around the whole edge; leave it undefined
+   * — which is na, every unregistered slug, and an unrevealed Albescent viewer
+   * — and the sheet renders exactly the bytes it always did.
+   *
+   * A SLOT RATHER THAN A BOOLEAN so this component never learns a faction's
+   * name. It cannot be a wrapper: the cap is inline and computed from the slug,
+   * so it has no class, and the ring has to be a CHILD of this box to trace it.
+   * That is the change to a shared signature #2531 said a wrapper alone could
+   * not make, and the reason `AlbescentComment` stopped being a pass-through.
+   *
+   * THE CONTRACT ON WHAT GOES IN: an `inset: 0` absolutely-positioned,
+   * `pointer-events: none` overlay. The containing block is provided below and
+   * `border-radius: inherit` resolves to `SHEET_RADIUS` from here, so a mount
+   * needs no corner of its own.
+   */
+  edge?: React.ReactNode
 }) {
   return (
     <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
@@ -90,6 +119,12 @@ function Sheet({
           background: factionCssVar(slug, 'card-bg'),
           border: `1px solid ${factionCssVar(slug, 'border')}`,
           borderRadius: SHEET_RADIUS,
+          // The containing block the `edge` slot's overlay needs, and ONLY when
+          // one is mounted: an unfilled slot must not change one byte of na's
+          // style attribute. Nothing else here depends on it — the composer's
+          // @mention listbox carries its own positioned parent in
+          // `ComposerControls`, so it does not re-anchor either way.
+          ...(edge ? { position: 'relative' as const } : null),
           // NO `overflow: hidden` here (#1255) — the composer this wraps owns
           // the @mention listbox, an absolutely positioned child, and a
           // clipping ancestor cuts it off. The hairline below rounds its own
@@ -102,21 +137,34 @@ function Sheet({
             voice, and then it gets its own solid hue, not a borrowed one. It
             carries the sheet's top corners itself: an element's background is
             clipped by its OWN border-radius, so the stripe stays inside the
-            card's curve with nothing clipping it from above. */}
-        <div
-          style={{
-            height: 3,
-            borderRadius: `${SHEET_RADIUS}px ${SHEET_RADIUS}px 0 0`,
-            ...factionFill(slug, 'bar'),
-          }}
-        />
+            card's curve with nothing clipping it from above.
+
+            IT IS THE CARRIER, so it steps aside for one (#2732). `edge ?? cap`
+            rather than both: the kit's rule is ONE CARRIER PER OBJECT, and a
+            surface that grows a 3px spectrum ring keeps no 3px spectrum bar. */}
+        {edge ?? (
+          <div
+            style={{
+              height: 3,
+              borderRadius: `${SHEET_RADIUS}px ${SHEET_RADIUS}px 0 0`,
+              ...factionFill(slug, 'bar'),
+            }}
+          />
+        )}
         <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>{children}</div>
       </div>
     </div>
   )
 }
 
-export function DefaultComment(props: CommentProps) {
+/**
+ * `edge` is the ONE prop beyond the archetype contract, and it is forwarded
+ * whole to `Sheet` in both modes (#2732). The dispatcher never passes it —
+ * `CommentComponent` is `ComponentType<CommentProps>` and this stays assignable
+ * to it — so only a voice that renders `DefaultComment` by hand can fill it.
+ */
+export function DefaultComment(props: CommentProps & { edge?: React.ReactNode }) {
+  const { edge } = props
   const { t } = useTranslation('praxis')
   const { user } = useAuth()
   const reveal = useOwnerReveal()
@@ -124,7 +172,7 @@ export function DefaultComment(props: CommentProps) {
     const { character, value, onChange, onSubmit, submitting } = props
     const slug = character.faction_slug
     return (
-      <Sheet slug={slug} avatar={<FactionAvatar character={character} size="sm" />}>
+      <Sheet slug={slug} avatar={<FactionAvatar character={character} size="sm" />} edge={edge}>
         {/* `.content-text` rides the wrapper on purpose: the ONE slot inside
             without a size of its own is the textarea (`font: inherit`), and a
             comment draft is content-tier text (§4). Every other slot — count,
@@ -173,6 +221,7 @@ export function DefaultComment(props: CommentProps) {
       slug={slug}
       avatar={<FactionAvatar character={authorToCharacter(comment.author)} size="sm" />}
       containerProps={reveal.containerProps}
+      edge={edge}
     >
       <div
         style={{

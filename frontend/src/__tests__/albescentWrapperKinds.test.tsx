@@ -232,7 +232,35 @@ describe('backdrop — PASS-THROUGH: the watercolour, unchanged', () => {
   })
 })
 
-describe('comment — PASS-THROUGH: na keeps the voice (epic #1192 decision 13)', () => {
+/**
+ * THE COMMENT LEAF — RE-CUT, AND REVEAL-GATED (#2732, ADR-0088 §3).
+ *
+ * This block used to assert the opposite. It held `AlbescentComment` to
+ * byte-identity with `DefaultComment` in both modes, on epic #1192 decision 13
+ * and #2531 — both of which ADR-0088 reverses FOR THIS SURFACE. The finding
+ * those rulings rested on is still true (the cap is `factionFill(slug,'bar')`
+ * inline, so no wrapper class reaches it); what changed is the conclusion drawn
+ * from it. na's `Sheet` grew an `edge` slot, the wrapper fills it, and the cap
+ * steps aside when it does.
+ *
+ * ## The seam
+ *
+ * THREE RENDERS OF THE SAME `Sheet`, which is the whole of this issue:
+ *
+ *   • REVEALED Albescent — no cap, one `.alb-comment-edge` span.
+ *   • UNREVEALED Albescent — today's sheet exactly, cap and all.
+ *   • na — byte-identical to today, whatever the reveal says.
+ *
+ * The third is the one that would go unnoticed: the `edge` slot defaults to
+ * undefined, so a slug that never asks for it renders the same bytes it always
+ * did. It is asserted against `DefaultComment` given the SAME fixture, so a
+ * change to na's own sheet moves both sides together.
+ *
+ * Nothing here proves a pixel travelled — `renderToStaticMarkup`, no DOM. The
+ * ring's rest state and its drift are CSS, guarded as CSS by
+ * `albescentCommentEdge.test.ts`.
+ */
+describe('comment — RE-CUT: the leaf trades na\'s cap for the travelling ring', () => {
   const row = (Voice: typeof DefaultComment) =>
     renderToStaticMarkup(
       <MemoryRouter>
@@ -254,31 +282,71 @@ describe('comment — PASS-THROUGH: na keeps the voice (epic #1192 decision 13)'
       </MemoryRouter>,
     )
 
-  it('row mode is byte-identical to DefaultComment', () => {
-    expect(row(AlbescentComment)).toBe(row(DefaultComment))
-  })
+  /** The na leaf, for the identity half — an unaffiliated author, same shape. */
+  const naRow = () =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultComment
+          mode="row"
+          comment={{ ...COMMENT, author: { ...COMMENT.author, faction_slug: 'na' } }}
+        />
+      </MemoryRouter>,
+    )
 
-  it('composer mode is byte-identical to DefaultComment', () => {
-    expect(composer(AlbescentComment)).toBe(composer(DefaultComment))
-  })
+  afterEach(() => setAlbescentRevealed(false))
+
+  for (const [name, render] of [
+    ['row', row],
+    ['composer', composer],
+  ] as const) {
+    it(`${name} mode: a revealed viewer gets the ring and loses the cap`, () => {
+      setAlbescentRevealed(true)
+      const html = render(AlbescentComment)
+      expect(html, 'the tenth mount of the shared ring').toContain('alb-comment-edge')
+      // The CAP, named exactly — `--faction-default-rainbow-conic` is the
+      // avatar disc two elements up and belongs to a different issue.
+      expect(html, "na's 3px cap is the carrier that comes off").not.toContain(
+        'background:var(--faction-default-rainbow)',
+      )
+      expect(html, 'a re-cut that shifts nothing did not do its job').not.toBe(
+        render(DefaultComment),
+      )
+    })
+
+    it(`${name} mode: an unrevealed viewer sees today's sheet exactly`, () => {
+      setAlbescentRevealed(false)
+      expect(render(AlbescentComment)).toBe(render(DefaultComment))
+    })
+  }
 
   /**
-   * The FINDING, made executable. na's two marks here are both out of a
-   * wrapper's reach: the sheet's hairline is `factionFill(slug, 'bar')`, a ramp
-   * COMPUTED from the slug, so no class can carry it (`spectrumClasses.test.tsx`
-   * names the same hold-out for the rung dots); the @mention ink is
-   * `background-clip: text`, which the epic's pre-painted-`::before` technique
-   * cannot dress at all. If either ever becomes a class, this goes red and the
-   * pass-through should be reconsidered as a re-cut.
+   * THE INVARIANT THE SLOT MUST KEEP. `Sheet` is shared with na and with every
+   * unregistered slug; the prop that suppresses the cap defaults to today's
+   * behaviour, so nobody who does not ask can be moved by it — in EITHER reveal
+   * state, because the reveal is a fact about the viewer and na is not Albescent.
    */
-  it("na's marks here are still unclassed, so there is nothing to re-cut", () => {
-    const html = row(DefaultComment)
-    expect(html, 'the sheet hairline is still inline and per-slug').toContain(
-      '--faction-default-rainbow',
+  for (const revealed of [false, true]) {
+    it(`na's own leaf is untouched with the reveal ${revealed ? 'on' : 'off'}`, () => {
+      setAlbescentRevealed(revealed)
+      const html = naRow()
+      expect(html, 'na keeps its spectrum cap').toContain(
+        'background:var(--faction-default-rainbow)',
+      )
+      expect(html, 'and never wears Albescent chrome').not.toContain('alb-comment-edge')
+    })
+  }
+
+  /**
+   * NOT TOUCHED, and this is the assertion that says so out loud. #2531's second
+   * reason still holds: resolved @mentions are `background-clip: text`, which the
+   * epic's pre-painted-`::before` technique cannot dress at all, and they are a
+   * player's own words. The ring is chrome; the ink is not.
+   */
+  it('leaves the @mention ink alone, revealed or not', () => {
+    setAlbescentRevealed(true)
+    expect(row(AlbescentComment), "the mention ink stays na's clipped spectrum").toContain(
+      'rainbow-ink',
     )
-    expect(html, 'no linear cut class to dress').not.toContain('spectrum-rule')
-    expect(html, 'no conic cut class to dress').not.toContain('spectrum-dial')
-    expect(html, 'the other mark is clipped TEXT').toContain('rainbow-ink')
   })
 })
 
