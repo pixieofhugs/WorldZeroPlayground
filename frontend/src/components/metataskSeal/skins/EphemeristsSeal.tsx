@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { EphemeristsBand } from '../../cardMasthead/factionBands'
+import { factionCssVar } from '../../../utils/factions'
 import {
   BAND,
   BRASS,
@@ -75,6 +76,9 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
         background: PLATE,
         color: INK,
         border: `1px solid ${BRASS}`,
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('ephemerists', 'card-radius'),
         outline: `1px solid ${BRASS_LIGHT}`,
         outlineOffset: 2,
         boxSizing: 'border-box',

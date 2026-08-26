@@ -242,18 +242,27 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                * row's own control. That is valid and labelled, and it is the
                * passport question #2648 asks — a band that cannot be told "not
                * here" is a band that cannot enter a control.
+               *
+               * THE SELECTION RING RIDES THE CONTROL, NOT THIS WRAPPER (#2729),
+               * and its shape and its ink are BOTH the selected card's own,
+               * read off `--faction-<slug>-card-radius` / `-card-accent` — the
+               * same tokens the skin inside reads for its corner. The wrapper
+               * used to carry a hardcoded `borderRadius: 12` and paint the
+               * outline on it, so a 14px arc was drawn 2px outside a 4px
+               * Singularity corner and passed *inside* the card, which is why
+               * round-on-square and hidden-behind-the-card were one defect.
+               *
+               * It rides the control because a parent's outline is painted
+               * UNDER its children: at offset 2 the wrapper's ring landed
+               * beneath Everymen's 3px/4px paper-and-ink shadow rings and
+               * fought Ephemerists' own brass outline for the same two pixels.
+               * The control is `inset: 0` over the same box at `zIndex: 3`, so
+               * nothing in the row can paint over the ring by construction.
                */
               <div
                 key={mt.id}
                 className="relative text-left"
-                style={{
-                  borderRadius: 12,
-                  opacity: sealed ? 0.55 : 1,
-                  outline: selected
-                    ? "2px solid var(--faction-default-card-accent)"
-                    : "none",
-                  outlineOffset: 2,
-                }}
+                style={{ opacity: sealed ? 0.55 : 1 }}
               >
                 <MetataskSeal metatasks={[mt]} />
                 <button
@@ -272,7 +281,24 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
                     padding: 0,
                     background: "transparent",
                     border: "none",
-                    borderRadius: 12,
+                    borderRadius: factionCssVar(
+                      mt.metatask_faction_slug,
+                      "card-radius",
+                    ),
+                    // Only when selected: an unselected row must keep the
+                    // browser's own focus ring, which an `outline-style` of
+                    // `none` in an inline style would suppress. The selected
+                    // row's ring doubles as its focus ring — one ring, and it
+                    // is the one that says what is chosen.
+                    ...(selected
+                      ? {
+                          outline: `2px solid ${factionCssVar(
+                            mt.metatask_faction_slug,
+                            "card-accent",
+                          )}`,
+                          outlineOffset: 2,
+                        }
+                      : null),
                     cursor: sealed ? "default" : "pointer",
                   }}
                 />

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { WowBand } from '../../cardMasthead/factionBands'
+import { factionCssVar } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -41,7 +42,9 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
         background: 'var(--faction-wow-chronicle-bg)',
         color: 'var(--wow-seal-ink)',
         border: '2px solid var(--faction-wow-chronicle-border)',
-        borderRadius: 6,
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('wow', 'card-radius'),
         overflow: 'hidden',
         boxShadow: '0 4px 16px -8px var(--faction-wow-chronicle-shadow)',
         fontFamily: 'var(--faction-wow-body-font)',

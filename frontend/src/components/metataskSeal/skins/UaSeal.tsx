@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { UaBand } from '../../cardMasthead/factionBands'
+import { factionCssVar } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
 
@@ -32,7 +33,9 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
         background: 'var(--faction-ua-card-parchment)',
         color: 'var(--leaf-metatask-seal-ink)',
         border: '1px solid var(--faction-ua-card-frame)',
-        borderRadius: 3,
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('ua', 'card-radius'),
         fontFamily: 'var(--leaf-metatask-seal-face)',
         overflow: 'hidden',
       }}

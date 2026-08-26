@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { EverymenBand } from '../../cardMasthead/factionBands'
+import { factionCssVar } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 import { factionRoleVars } from '../../../utils/factionRoles'
 
@@ -31,6 +32,9 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',
         border: '1.5px solid var(--everymen-ink)',
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('everymen', 'card-radius'),
         boxShadow: '0 0 0 3px var(--everymen-paper), 0 0 0 4px var(--everymen-ink)',
       }}
     >

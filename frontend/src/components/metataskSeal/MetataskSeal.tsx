@@ -66,7 +66,10 @@ export default function MetataskSeal({
           className="font-body"
           style={{
             border: '2px dashed var(--faction-default-border)',
-            borderRadius: 12,
+            // The empty slot belongs to no faction — it is dressed in the na
+            // family throughout — so its corner is that family's too (#2729),
+            // which is the corner the Default seal directly above it draws.
+            borderRadius: 'var(--faction-default-card-radius)',
             background: 'transparent',
             color: 'var(--faction-default-card-muted)',
             fontSize: 'var(--text-md)',
