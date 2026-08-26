@@ -7,6 +7,14 @@ import { factionRoleVar } from "../../utils/factionRoles";
 // explicit that a second copy is the thing to avoid — so WOW reads it across
 // the faction line rather than growing a private one that could be tuned out of
 // step, invisibly, while both still looked random.
+//
+// ponytail: this makes `ephemeristsPlate`'s chunk a dependency of `wowOrnament`'s
+// — ~3.5 KB gzipped, fetched on any WOW surface that wears an ornament. The
+// entry chunk is untouched (`npm run budget` unchanged), so it is off the
+// critical path, which is the ceiling this accepts. The upgrade, when a fourth
+// reader or a byte makes it worth four files: lift `seededRandom` into its own
+// module beside these two and point both kits at it. It is a twelve-line pure
+// function with no imports.
 import { seededRandom } from "./ephemeristsPlate";
 
 /**
