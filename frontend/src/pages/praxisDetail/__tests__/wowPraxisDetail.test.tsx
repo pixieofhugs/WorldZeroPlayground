@@ -353,9 +353,14 @@ describe("WOW praxis detail — the dress", () => {
 
   it("strings the bunting and bobs exactly one bunch of balloons", () => {
     const { html } = render(state());
-    // The bunting pennants alternate gold and plum; the bunch is the page's one
-    // bobbing ornament, and its motion is CLASS-gated, never inline.
-    expect(html, "bunting is drawn").toContain("18px solid var(--faction-wow-card-accent)");
+    // The bunch is the page's one bobbing ornament, and its motion is
+    // CLASS-gated, never inline.
+    //
+    // The bunting is asserted by its handle rather than by a pennant's plum
+    // border: since #2728 the strip measures its container and draws as many
+    // whole flags as fit, so with no DOM here it renders empty. The alternation
+    // and the stagger are pinned at `factionMarks/__tests__/wowBunting.test.tsx`.
+    expect(html, "bunting is strung").toContain("data-wow-bunting");
     expect(html.match(/wow-balloon-bunch/g)?.length, "one bunch, not a soup").toBe(1);
     expect(html, "motion is never inline").not.toContain("animation:");
   });
