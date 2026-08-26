@@ -393,3 +393,17 @@ def test_an_era_that_moves_the_reset_faction_will_not_construct():
     """#1580's half of the same seam."""
     with pytest.raises(ValueError, match="ADR-0087"):
         dataclasses.replace(ERA_1, reset_faction_slug="ua")
+
+
+# `tests/integration/test_era_reset_faction_slug.py` was deleted here (#2707).
+# It was a one-test module whose whole premise was the override the two tests
+# above now forbid: it built `replace(CURRENT_ERA, reset_faction_slug="ua")`
+# and asserted a rollover landed the character in UA. Its module docstring said
+# so outright — "this pins the override: an era that names a different landing
+# faction gets it".
+#
+# The two runtime tests it and `test_characters.py` carried are not re-expressed
+# at their old seams, because with one legal value forever nothing observable
+# separates "reads `era.reset_faction_slug`" from "hardcodes na". Making the
+# wrong value unrepresentable at construction is the stronger guarantee, and it
+# is the four tests above. Restore both from git history if the pin is lifted.
