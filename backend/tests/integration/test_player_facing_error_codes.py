@@ -17,13 +17,25 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode
-from faction_slugs import UNAFFILIATED_FACTION_SLUG
+from faction_slugs import UNAFFILIATED_FACTION_SLUG, real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.character import ALBESCENT_FACTION_SLUG
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to defect to"
+#: is the whole requirement, and naming one collides with the fixture default
+#: the moment an era reorders its roster (the collision answers
+#: ``FACTION_ALREADY_MEMBER``, which is a correct answer to a different question).
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +235,9 @@ async def test_defecting_without_an_invitation_is_coded(
 ):
     """#454: switching in needs that faction's current-era invitation letter."""
     response = await client.post(
-        "/factions/choose", json={"faction_slug": "snide"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": OTHER_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert response.status_code == 403, response.text
     assert (
