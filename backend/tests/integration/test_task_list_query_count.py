@@ -92,7 +92,7 @@ async def browse_page(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ) -> list[Task]:
     """A mixed page: plain rows, one retired row, one above the viewer's level.
 
@@ -173,7 +173,7 @@ async def test_batched_flags_equal_the_per_task_predicates(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Every viewer-relative flag matches the single per-task predicate.

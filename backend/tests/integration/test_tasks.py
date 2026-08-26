@@ -239,7 +239,7 @@ async def test_list_tasks_filter_by_multiple_factions(
     db_session: AsyncSession,
     character: Character,
     active_task: Task,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
 ):
     """Repeated ?faction= returns the union; one slug still narrows to one; an
     absent or empty faction filters nothing at all (#1364)."""
@@ -626,7 +626,7 @@ async def test_list_tasks_includes_unaffiliated_tasks(
 ):
     """Cross-faction (`na`) tasks stay listable even though `na` is a hidden row.
 
-    The `faction_ua` fixture (pulled in via `character`) seeds `na` with
+    The `some_faction` fixture (pulled in via `character`) seeds `na` with
     `FactionStatus.hidden`, mirroring a freshly seeded DB. A genuinely hidden
     faction's task is excluded; the unaffiliated sentinel's task is not —
     unaffiliated is a state, not a deprecated faction (issue #921).
@@ -2359,7 +2359,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """``created_by_faction_slug`` is the author's MEMBER faction.
 
@@ -2391,7 +2391,7 @@ async def test_list_tasks_carries_each_rows_own_author(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """GET /tasks resolves the byline per row, not once for the page."""
     first_author, first_task = await _make_author_with_task(
@@ -2416,7 +2416,7 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
 ):
     """A page of many tasks costs the same number of queries as a page of one.

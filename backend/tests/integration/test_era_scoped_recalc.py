@@ -177,7 +177,7 @@ async def test_recalc_sums_only_the_era_whose_row_it_writes(
     character: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The live-era recalc ignores a prior era's praxis (lower bound), and a
     prior-era recalc ignores this era's (upper bound)."""
@@ -204,7 +204,7 @@ async def test_era_reset_does_not_undo_itself_on_the_next_recalc(
     character: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The reported symptom: a fresh era's zeroed row stays zero until this era
     earns something, no matter how much the character banked last era."""
@@ -229,7 +229,7 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     character: Character,
     account,
     prior_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The reported flow end to end: score, reset through
     :func:`services.era.apply_era_reset`, then run the recalc the admin
@@ -276,7 +276,7 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     character: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Bounding the gather must not delete history: all-time is both eras' scores."""
     await _seed_both_eras(db_session, character, prior_era, current_era)
@@ -305,7 +305,7 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     character2: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Past-era praxes stay votable; the vote moves the historical record and
     the lifetime figure, never the ladder anyone is climbing today."""
@@ -340,7 +340,7 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     character: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Every praxis-scoped recalc asks the same question as the vote path. A
     moderation ruling on closed-era work has to reach the closed era's row —
@@ -380,7 +380,7 @@ async def test_past_era_recalc_delivers_no_invitation(
     character3: Character,
     prior_era: Era,
     current_era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_wow: Faction,
 ):
     """Recomputing a closed era must not hand out a faction invite now. The

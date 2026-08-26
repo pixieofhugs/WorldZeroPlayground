@@ -58,7 +58,7 @@ async def test_era_reset_retains_prior_era_defection_rows(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The closing era's defection rows are still there after the reset."""
     assert CURRENT_ERA.reset_faction is True
@@ -76,7 +76,7 @@ async def test_era_reset_does_not_block_rejoining_in_the_new_era(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A faction defected from last era is joinable again this era.
 
@@ -108,7 +108,7 @@ async def test_era_reset_leaves_other_characters_history_alone(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """No row for any character is dropped — the reset touches this table not at all."""
     await _defect(db_session, character, era)

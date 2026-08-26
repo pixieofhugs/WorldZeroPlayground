@@ -18,14 +18,14 @@ from models.faction import Faction, FactionStatus
 @pytest.mark.asyncio
 async def test_list_factions_returns_visible(
     client: AsyncClient,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """GET /factions returns only visible factions."""
     resp = await client.get("/factions")
     assert resp.status_code == 200
     data = resp.json()
     slugs = [f["slug"] for f in data]
-    # "ua" is visible; seeded in faction_ua fixture
+    # "ua" is visible; seeded in some_faction fixture
     assert "ua" in slugs
     # "na" is hidden; must not appear
     assert "na" not in slugs
@@ -34,7 +34,7 @@ async def test_list_factions_returns_visible(
 @pytest.mark.asyncio
 async def test_list_factions_structure(
     client: AsyncClient,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Each faction in the list has the expected fields.
 
@@ -60,7 +60,7 @@ async def test_faction_status_authenticated(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     era: Era,
 ):
     """GET /factions/status returns current faction and status map."""
@@ -84,7 +84,7 @@ async def test_faction_status_carries_invitation_letters(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     era: Era,
     db_session: AsyncSession,
 ):
@@ -123,7 +123,7 @@ async def test_faction_status_invitations_empty_without_letters(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     era: Era,
 ):
     """Holding no letters, the folded array is present and empty — never absent."""
@@ -174,7 +174,7 @@ async def test_choose_faction_with_invitation_succeeds(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     era: Era,
     db_session: AsyncSession,
 ):
@@ -209,7 +209,7 @@ async def test_choose_faction_without_invitation_forbidden(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     era: Era,
     db_session: AsyncSession,
 ):
@@ -367,7 +367,7 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     client: AsyncClient,
     account: Account,
     auth_headers: dict,
-    faction_ua: Faction,
+    some_faction: Faction,
     db_session: AsyncSession,
 ):
     """The row is served to everyone now — redaction happens at the render (#2409).
@@ -403,7 +403,7 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
 @pytest.mark.asyncio
 async def test_list_factions_serves_albescent_to_an_anonymous_caller(
     client: AsyncClient,
-    faction_ua: Faction,
+    some_faction: Faction,
     db_session: AsyncSession,
 ):
     """No auth at all is still the unrevealed side, and it still gets the row.

@@ -91,7 +91,7 @@ async def test_sibling_cannot_flag_own_accounts_praxis(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Puppet B flagging puppet A's praxis (same account) → 403."""
@@ -115,7 +115,7 @@ async def test_account_flag_uniqueness_and_non_sibling_still_allowed(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -171,7 +171,7 @@ async def test_sibling_cannot_flag_own_accounts_comment(
     character: Character,
     praxis_solo: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Puppet B flagging puppet A's comment (same account) -> 403, comment untouched."""
@@ -201,7 +201,7 @@ async def test_account_comment_flag_uniqueness_and_non_sibling_still_allowed(
     character2: Character,
     praxis_solo: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):

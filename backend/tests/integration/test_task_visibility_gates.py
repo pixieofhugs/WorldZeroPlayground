@@ -128,8 +128,7 @@ async def test_the_flag_and_the_query_agree(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -189,7 +188,7 @@ async def test_an_admin_gets_the_first_look(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -221,7 +220,7 @@ async def test_an_admin_edit_does_not_move_the_go_live_time(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
     db_session: AsyncSession,
@@ -270,7 +269,7 @@ async def test_the_detail_door_answers_what_the_browse_answers(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -320,7 +319,7 @@ async def test_the_detail_door_opens_for_an_admin_immediately(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -348,7 +347,7 @@ async def test_a_proposer_sees_their_own_proposal_the_moment_they_write_it(
     client: AsyncClient,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -386,7 +385,7 @@ async def test_the_carve_out_is_authorship_and_not_a_hole_in_the_window(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers2: dict,
     db_session: AsyncSession,
 ):

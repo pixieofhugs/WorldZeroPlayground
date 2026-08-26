@@ -48,7 +48,7 @@ OTHER_FACTION_SLUG = "ua"
 
 
 @pytest_asyncio.fixture
-async def faction_albescent(db_session: AsyncSession, faction_ua: Faction) -> Faction:
+async def faction_albescent(db_session: AsyncSession, some_faction: Faction) -> Faction:
     """The Albescent ``Faction`` row — ``visible``, exactly as ``seed.py`` makes it.
 
     Secrecy is per-viewer, not a faction status: seeding it hidden would excuse

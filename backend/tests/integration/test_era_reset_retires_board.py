@@ -99,7 +99,7 @@ async def test_era_reset_retires_every_task_but_the_onboarding_one(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The board goes dark; the one task a newcomer needs stays lit."""
     await _seed_board(db_session, character)
@@ -124,7 +124,7 @@ async def test_era_reset_leaves_the_onboarding_task_untouched_on_a_second_rollov
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Re-running the sweep must not fight the seeder (#511)."""
     await ensure_onboarding_task(db_session, character.id)
@@ -143,7 +143,7 @@ async def test_praxis_on_a_retired_task_still_resolves_its_task(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
 ):
     """Retire, not delete: ``praxis.task_id`` is NOT NULL and must stay resolvable."""

@@ -45,7 +45,7 @@ async def test_dev_login_faction_places_character(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_ephemerists_row: Faction,
 ) -> None:
     """?faction=<slug> puts the character straight into that faction."""
@@ -63,7 +63,7 @@ async def test_dev_login_faction_is_idempotent_across_calls(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_ephemerists_row: Faction,
 ) -> None:
     """The sweep re-logs the same bot per faction — the last call wins."""
@@ -78,7 +78,7 @@ async def test_dev_login_faction_is_idempotent_across_calls(
 async def test_dev_login_rejects_unknown_faction(
     client: AsyncClient,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ) -> None:
     """A typo'd slug is a 400, not a silent no-op that skins the wrong faction."""
     resp = await client.post("/auth/dev-login?key=contrast&name=Sweep%20Bot&faction=nosuch")
@@ -90,7 +90,7 @@ async def test_dev_login_rejects_unknown_faction(
 async def test_dev_login_faction_without_character_is_rejected(
     client: AsyncClient,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ) -> None:
     """faction= with no character to place fails loudly rather than doing nothing."""
     resp = await client.post("/auth/dev-login?key=contrast-nochar&faction=ua")
@@ -102,7 +102,7 @@ async def test_dev_login_without_faction_leaves_membership_alone(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_ephemerists_row: Faction,
 ) -> None:
     """Omitting faction= must not reset an existing membership."""

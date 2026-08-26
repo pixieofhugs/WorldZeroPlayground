@@ -149,7 +149,7 @@ async def test_parity_matrix_level_jump_available(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_wow: Faction,
 ):
     """A WOW character at level 6 reaches level 7 — and nothing above it."""
@@ -187,7 +187,7 @@ async def test_parity_matrix_level_jump_spent(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_wow: Faction,
 ):
     """Spending the jump at this level makes the level-7 row ineligible again."""
@@ -211,8 +211,7 @@ async def test_parity_matrix_ephemerists_retired_task(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
 ):
     """Ephemerists reach retired rows; a 'ua' character in the same set does not."""
     retired = await _make_task(
@@ -237,7 +236,7 @@ async def test_parity_matrix_bank_full_returns_nothing(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Gate 6 is a gate on *you*: at the cap the filter returns an empty list.
 
@@ -258,7 +257,7 @@ async def test_active_member_task_is_filtered_out(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Gate 5 — the task you are already working is not one you can sign up for."""
     await _seed_in_progress_praxis(db_session, character, active_task)
@@ -292,7 +291,7 @@ async def test_double_dipper_task_stays_in_browse(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """#1359 — the ability's holder still sees the task; a character without it does not.
@@ -323,7 +322,7 @@ async def test_parity_matrix_double_dipper(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """The predicate and the SQL agree on the fixture they drifted on (#1359)."""
@@ -346,7 +345,7 @@ async def test_anonymous_viewer_gets_nothing(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """`evaluate_signup` refuses anonymous viewers, so the filter returns empty.
 
@@ -387,7 +386,7 @@ async def test_route_all_tasks_shows_a_task_the_viewer_started(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """#2264 — "All tasks" means all tasks, including the ones you are working."""
@@ -407,7 +406,7 @@ async def test_route_eligibility_browse_still_hides_a_started_task(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """#1229 must survive #2264 — the browse's DEFAULT view still hides it.
@@ -430,7 +429,7 @@ async def test_route_faction_task_list_is_the_same_for_every_viewer(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):

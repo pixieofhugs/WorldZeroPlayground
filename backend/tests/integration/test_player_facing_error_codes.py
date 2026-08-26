@@ -435,7 +435,7 @@ async def test_responding_to_a_resolved_challenge_is_coded(
 
 @pytest.mark.asyncio
 async def test_creating_a_character_with_a_blank_name_is_coded(
-    db_session: AsyncSession, account2, era, faction_ua
+    db_session: AsyncSession, account2, era, some_faction
 ):
     """Tested at the service, because the wire now refuses first.
 
@@ -462,7 +462,7 @@ async def test_creating_a_character_with_a_blank_name_is_coded(
 
 @pytest.mark.asyncio
 async def test_creating_a_character_in_albescent_unearned_is_coded(
-    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+    client: AsyncClient, account2, era, some_faction, auth_headers2: dict
 ):
     """#2399 retired ``FACTION_ALBESCENT_NOT_AT_CREATION``.
 
@@ -485,7 +485,7 @@ async def test_creating_a_character_in_albescent_unearned_is_coded(
 
 @pytest.mark.asyncio
 async def test_creating_a_character_in_an_uninvited_faction_is_coded(
-    client: AsyncClient, account2, era, faction_ua, auth_headers2: dict
+    client: AsyncClient, account2, era, some_faction, auth_headers2: dict
 ):
     """The same failure as defecting without a letter, and the same code."""
     response = await client.post(

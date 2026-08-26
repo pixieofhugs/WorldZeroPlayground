@@ -317,7 +317,7 @@ async def four_request_types(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ephemerists,
+    some_faction,
 ) -> int:
     """One UNANSWERED item of each of the four request types, plus an ANSWERED
     twin of each that must not be counted. Returns the expected count (4).

@@ -67,7 +67,7 @@ async def test_moderator_ban_forfeits_every_settled_duel(
     account: Account,
     auth_headers: dict,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """ADR-0011 §Forfeit: banning a side forfeits it and the opponent wins by default.
 
@@ -121,7 +121,7 @@ async def test_moderator_ban_leaves_an_already_forfeited_duel_alone(
     account: Account,
     auth_headers: dict,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Sticky (ADR-0011): the first forfeit is the record and is never overwritten."""
     await make_admin(db_session, account)
@@ -139,7 +139,7 @@ async def test_moderator_ban_leaves_an_already_forfeited_duel_alone(
 async def test_self_deletion_leaves_an_already_forfeited_duel_alone(
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The other half of stickiness — the same guard, reached by the other path."""
     from services.character import soft_delete_character
@@ -287,7 +287,7 @@ async def test_unban_does_not_restore_a_duel_the_ban_forfeited(
     account: Account,
     auth_headers: dict,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Un-banning reverses the status and nothing else — the forfeit is sticky.
 

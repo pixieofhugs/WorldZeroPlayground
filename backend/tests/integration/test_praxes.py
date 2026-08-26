@@ -2337,7 +2337,7 @@ async def test_create_praxis_retired_task_allowed_for_ephemerists(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    faction_ephemerists,
+    some_faction,
     auth_headers: dict,
 ):
     """Ephemerists may create praxes on retired tasks (Task Vision carve-out in Era 1)."""

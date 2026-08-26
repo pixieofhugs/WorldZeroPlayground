@@ -214,7 +214,7 @@ async def test_second_life_is_carried_after_switch(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Switching the active character is reflected by /auth/me (sanity)."""
@@ -239,7 +239,7 @@ async def test_second_life_views_own_profile(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A second life's profile is publicly viewable by id."""
     second = await _add_character(db_session, account, era, username="secondlife", level=5)
@@ -255,7 +255,7 @@ async def test_second_life_signs_up_for_task_as_itself(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
     auth_headers: dict,
 ):
@@ -291,7 +291,7 @@ async def test_second_life_edits_own_profile(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """After switching to the second life, that life can edit its own profile."""
@@ -322,7 +322,7 @@ async def test_second_life_carried_cannot_edit_sibling_first_life(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Carrying the second life must NOT unlock editing a *sibling* life on the
@@ -350,7 +350,7 @@ async def test_second_life_governs_viewer_flags_on_read(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
@@ -400,7 +400,7 @@ async def test_second_life_collaborates_on_praxis(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,

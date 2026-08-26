@@ -232,7 +232,7 @@ async def test_alt_life_re_rates_the_accounts_vote_instead_of_adding_one(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -293,7 +293,7 @@ async def test_alt_re_rating_is_free_and_leaves_both_budgets_alone(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -353,7 +353,7 @@ async def test_unique_constraint_rejects_a_second_vote_from_one_account(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua,
+    some_faction,
     praxis_solo,
     character3: Character,
 ):
@@ -964,7 +964,7 @@ async def test_non_participant_can_vote_on_duel_side(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
 ):
     """A third party who isn't in the duel can still rate a duel side (200)."""
@@ -1133,7 +1133,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):

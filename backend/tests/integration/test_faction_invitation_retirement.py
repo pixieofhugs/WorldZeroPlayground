@@ -90,7 +90,7 @@ def test_premise_the_left_faction_cannot_be_rejoined():
 
 @pytest.mark.asyncio
 async def test_leaving_retires_the_unusable_letter(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     await _walk_out_of(db_session, character, era)
 
@@ -107,7 +107,7 @@ async def test_the_bell_stops_offering_the_rejoin(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """The reported symptom, on the requests tab the bell badge counts."""
@@ -137,7 +137,7 @@ async def test_the_bell_stops_offering_the_rejoin(
 
 @pytest.mark.asyncio
 async def test_a_retired_letter_does_not_come_back_on_the_next_recalc(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     """Deleting the row alone is not a fix: delivery recomputes from era history.
 
@@ -180,7 +180,7 @@ async def test_a_retired_letter_does_not_come_back_on_the_next_recalc(
 
 @pytest.mark.asyncio
 async def test_a_rejoinable_faction_keeps_its_letter(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     """``can_always_rejoin`` is the exception: that invitation still works."""
     await _letter(db_session, character, era, REJOINABLE_SLUG)

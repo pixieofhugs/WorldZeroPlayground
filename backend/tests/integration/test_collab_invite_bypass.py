@@ -98,7 +98,7 @@ def second_inviter_headers(second_inviter: Character) -> dict:
 
 @pytest.fixture
 async def inviter(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """A character who *can* claim the level-6 task — the collab's creator."""
     return await _make_character(
@@ -108,7 +108,7 @@ async def inviter(
 
 @pytest.fixture
 async def second_inviter(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """A second eligible claimant — one character may only hold one praxis per task,
     so a second collab on the same task needs a different creator."""
@@ -119,7 +119,7 @@ async def second_inviter(
 
 @pytest.fixture
 async def invitee(
-    db_session: AsyncSession, era: Era, faction_ephemerists: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """Level 1, wrong faction — could never sign up for the task themselves."""
     return await _make_character(

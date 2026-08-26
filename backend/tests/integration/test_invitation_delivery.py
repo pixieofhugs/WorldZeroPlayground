@@ -64,7 +64,7 @@ async def _seed_faction(db_session: AsyncSession, slug: str) -> None:
 
 @pytest.mark.asyncio
 async def test_two_tasks_and_fifty_points_delivers_letter(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     await _seed_faction(db_session, "snide")
     await _submit(db_session, character, await _task(db_session, character, "snide", 30))
@@ -79,7 +79,7 @@ async def test_two_tasks_and_fifty_points_delivers_letter(
 
 @pytest.mark.asyncio
 async def test_one_task_no_letter(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     # 60 points but only ONE distinct task → task threshold (2) not met.
     await _seed_faction(db_session, "snide")
@@ -96,7 +96,7 @@ async def test_one_task_no_letter(
 
 @pytest.mark.asyncio
 async def test_below_points_threshold_no_letter(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     # 2 distinct tasks but only 40 points (< 50).
     await _seed_faction(db_session, "snide")
@@ -112,7 +112,7 @@ async def test_below_points_threshold_no_letter(
 
 @pytest.mark.asyncio
 async def test_delivery_is_idempotent(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     await _seed_faction(db_session, "snide")
     await _submit(db_session, character, await _task(db_session, character, "snide", 30))
@@ -132,7 +132,7 @@ async def test_delivery_is_idempotent(
 
 @pytest.mark.asyncio
 async def test_faction_scoped_no_bleed(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     await _seed_faction(db_session, "snide")
     await _seed_faction(db_session, "wow")
@@ -152,7 +152,7 @@ async def test_faction_scoped_no_bleed(
 
 @pytest.mark.asyncio
 async def test_own_faction_never_delivers(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     # #1425: the `character` fixture is IN ua. Doing ua tasks — the most ordinary
     # thing a player does — must not invite them to the faction they already hold,
@@ -172,7 +172,7 @@ async def test_own_faction_never_delivers(
 
 @pytest.mark.asyncio
 async def test_leaving_without_a_defection_record_reopens_former_faction_invite(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     # #1425: the guard keys on the faction held at DELIVERY time, not on history.
     # Qualify ua while in ua (no letter), then move to snide — ua's letter is now
@@ -203,7 +203,7 @@ async def test_leaving_without_a_defection_record_reopens_former_faction_invite(
 
 @pytest.mark.asyncio
 async def test_sentinel_faction_never_delivers(
-    db_session, character: Character, era: Era, faction_ua: Faction
+    db_session, character: Character, era: Era, some_faction: Faction
 ):
     # 2 distinct na tasks, 60 pts — na is a sentinel and must never yield a letter.
     await _submit(db_session, character, await _task(db_session, character, "na", 30))

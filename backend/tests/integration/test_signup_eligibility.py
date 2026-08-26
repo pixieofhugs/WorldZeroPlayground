@@ -60,7 +60,7 @@ async def _make_task(
     )
 @pytest.mark.asyncio
 async def test_evaluate_signup_allowed(
-    db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
     result = await evaluate_signup(character, active_task, db_session)
     assert result.allowed is True
@@ -69,7 +69,7 @@ async def test_evaluate_signup_allowed(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_anonymous_not_allowed(
-    db_session: AsyncSession, active_task: Task, era: Era, faction_ua: Faction
+    db_session: AsyncSession, active_task: Task, era: Era, some_faction: Faction
 ):
     result = await evaluate_signup(None, active_task, db_session)
     assert result.allowed is False
@@ -77,7 +77,7 @@ async def test_evaluate_signup_anonymous_not_allowed(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_below_level(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     hard_task = await _make_task(db_session, character, level_required=5)
     result = await evaluate_signup(character, hard_task, db_session)
@@ -87,7 +87,7 @@ async def test_evaluate_signup_below_level(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_task_status_closed(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     retired = await _make_task(db_session, character, status=TaskStatus.retired)
     result = await evaluate_signup(character, retired, db_session)
@@ -97,7 +97,7 @@ async def test_evaluate_signup_task_status_closed(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_metatask_rejected(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     """Metatasks are seals applied to a praxis, never signup targets (#1001).
 
@@ -112,7 +112,7 @@ async def test_evaluate_signup_metatask_rejected(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_already_active_member(
-    db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
     await _seed_in_progress_praxis(db_session, character, active_task)
     result = await evaluate_signup(character, active_task, db_session)
@@ -122,7 +122,7 @@ async def test_evaluate_signup_already_active_member(
 
 @pytest.mark.asyncio
 async def test_evaluate_signup_bank_full(
-    db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
     # One in-progress praxis on active_task; evaluate a DIFFERENT task with cap=1
     # so the bank-cap gate (not active-member) is the one that fires.
@@ -136,7 +136,7 @@ async def test_evaluate_signup_bank_full(
 
 @pytest.mark.asyncio
 async def test_can_submit_flag_false_when_bank_full(
-    db_session: AsyncSession, character: Character, active_task: Task, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
     """Regression: the can_sign_up flag now reflects the bank cap.
 

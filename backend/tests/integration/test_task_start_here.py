@@ -93,7 +93,7 @@ async def test_a_character_who_has_never_completed_it_carries_the_mark(
     character: Character,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     out = await build_task_out_for_viewer(onboarding_task, character, db_session)
 
@@ -106,7 +106,7 @@ async def test_completing_it_puts_the_mark_out(
     character: Character,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     await _complete(db_session, character, onboarding_task, era)
 
@@ -122,7 +122,7 @@ async def test_the_mark_stays_dark_across_an_era_reset(
     character: Character,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The whole reason the rule is not era-scoped (spec § The hand-off)."""
     await _complete(db_session, character, onboarding_task, era)
@@ -139,7 +139,7 @@ async def test_an_in_progress_claim_is_not_a_completion(
     character: Character,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Claiming is not finishing — the flow must not stop applying on a claim."""
     praxis = Praxis(
@@ -166,7 +166,7 @@ async def test_another_character_completion_does_not_put_out_my_mark(
     character2: Character,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Character-level, not account-level (ADR-0041) — a second life starts lit."""
     await _complete(db_session, character2, onboarding_task, era)
@@ -182,7 +182,7 @@ async def test_an_ordinary_task_never_carries_the_mark(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The other half — without this, "never completed" marks the whole board."""
     out = await build_task_out_for_viewer(active_task, character, db_session)
@@ -195,7 +195,7 @@ async def test_an_anonymous_viewer_sees_no_mark(
     db_session: AsyncSession,
     onboarding_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Viewer-relative, so it defaults safe like every other flag on TaskOut."""
     out = await build_task_out_for_viewer(onboarding_task, None, db_session)

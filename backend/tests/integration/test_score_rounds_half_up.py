@@ -110,7 +110,7 @@ async def _seed_coven_collab(
 async def test_coven_collab_banks_half_up(
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     point_value: int,
     expected_score: int,
 ):
@@ -135,7 +135,7 @@ async def test_coven_collab_banks_half_up(
 async def test_coven_collab_contribution_carries_no_binary_error(
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A 100-point Coven collab contributes 110.0 — not 110.00000000000001."""
     from services.praxis_scoring import compute_contributions

@@ -37,7 +37,7 @@ async def test_without_confirmation_nothing_is_written(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The plan prints, the rollover does not happen, and the exit code says so."""
     await make_admin(db_session, account, commit=False)
@@ -55,7 +55,7 @@ async def test_confirmed_run_opens_a_new_era_and_reseeds_stats(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Same rows the deleted route produced: a new Era, stamped with the operator."""
     await make_admin(db_session, account, commit=False)
@@ -87,7 +87,7 @@ async def test_a_non_admin_operator_is_refused(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """``started_by`` is an audit field; the route only ever wrote an admin into it."""
     eras_before = await _era_count(db_session)
@@ -104,7 +104,7 @@ async def test_an_unknown_operator_is_refused(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     exit_code = await reset_era(db_session, "no-such-character", confirmed=True)
 
@@ -118,7 +118,7 @@ async def test_a_rollover_into_a_new_config_key_opens_it_and_closes_the_old(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The rollover CURRENT_ERA exists for: the live row carries the *old* key (#2705).
 

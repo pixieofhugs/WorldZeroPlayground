@@ -37,7 +37,7 @@ from services.vote_tally import viewer_votes_for
 
 
 @pytest.fixture
-def _make_character(db_session: AsyncSession, era: Era, faction_ua: Faction):
+def _make_character(db_session: AsyncSession, era: Era, some_faction: Faction):
     async def _factory(account: Account, username: str, display_name: str) -> Character:
         ch = Character(
             account_id=account.id,

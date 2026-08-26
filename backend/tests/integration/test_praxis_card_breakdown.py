@@ -287,7 +287,7 @@ async def _make_duel(
 
 @pytest.mark.asyncio
 async def test_plain_solo_score_is_base_plus_votes_at_one(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """Plain solo, everything at ×1.0 — the common Era 1 shape."""
     voter = await _make_character(
@@ -309,7 +309,7 @@ async def test_plain_solo_score_is_base_plus_votes_at_one(
 
 @pytest.mark.asyncio
 async def test_solo_with_non_one_faction_multiplier(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Solo with faction_multiplier != 1.0 → score carries the multiplier.
 
@@ -339,7 +339,7 @@ async def test_solo_with_non_one_faction_multiplier(
 
 @pytest.mark.asyncio
 async def test_detail_and_card_agree(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """PraxisOut and PraxisCardOut resolve the same score from the same source."""
     custom_era = _era_with_modifiers("wow", own_task_modifier=1.1)
@@ -371,7 +371,7 @@ async def test_detail_and_card_agree(
 
 @pytest.mark.asyncio
 async def test_collab_score_is_the_authors_contribution_total(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Collab keeps its author's multiplier — no Merit collapse (ADR-0053).
 
@@ -411,7 +411,7 @@ async def test_collab_score_is_the_authors_contribution_total(
 
 @pytest.mark.asyncio
 async def test_duel_winner_and_loser_scores(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Each side carries its own faction×duel multiplier.
 
@@ -451,7 +451,7 @@ async def test_duel_winner_and_loser_scores(
 
 @pytest.mark.asyncio
 async def test_failed_duel_side_hands_the_win_to_the_opponent(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A praxis ruled ``failed`` cannot win, even leading 5–2 on votes (#1442).
 
@@ -496,7 +496,7 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
 
 @pytest.mark.asyncio
 async def test_snide_duel_loser_scores_at_zero_multiplier(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A losing Snide side reads ×0.0 — the whole base is forfeit, votes remain.
 
@@ -537,7 +537,7 @@ async def test_snide_duel_loser_scores_at_zero_multiplier(
 
 @pytest.mark.asyncio
 async def test_fractional_totals_bank_by_rounding_not_truncation(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A contribution set summing to x.9 banks x+1, not x.
 
@@ -575,7 +575,7 @@ async def test_fractional_totals_bank_by_rounding_not_truncation(
 
 @pytest.mark.asyncio
 async def test_card_carries_applied_metatask_rows_for_the_seal(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The card payload carries the pinned metatasks as TaskOut rows.
 
@@ -608,7 +608,7 @@ async def test_card_carries_applied_metatask_rows_for_the_seal(
 
 @pytest.mark.asyncio
 async def test_card_applied_metatasks_is_empty_when_none_applied(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """No metatasks pinned → the card carries an empty stack (seal renders nothing)."""
     task = await _make_task(db_session, character, faction_slug="ua", points=10)
@@ -621,7 +621,7 @@ async def test_card_applied_metatasks_is_empty_when_none_applied(
 
 @pytest.mark.asyncio
 async def test_applied_metatasks_for_batches_the_page_in_one_map(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """The page-wide helper returns a praxis-id → rows map; bare praxes are absent.
 
@@ -656,7 +656,7 @@ async def test_applied_metatasks_for_batches_the_page_in_one_map(
 
 @pytest.mark.asyncio
 async def test_collab_earns_metatask_points(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A collab praxis carrying a metatask now scores the bonus (#882).
 
@@ -687,7 +687,7 @@ async def test_collab_earns_metatask_points(
 
 @pytest.mark.asyncio
 async def test_duel_side_earns_metatask_points(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A duel-side praxis carrying a metatask scores the bonus, flat.
 
@@ -730,7 +730,7 @@ async def test_duel_side_earns_metatask_points(
 
 @pytest.mark.asyncio
 async def test_snide_duel_loss_keeps_the_metatask(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """A losing Snide side's ×0.0 wipes the BASE and leaves the metatask (#2633).
 
@@ -773,7 +773,7 @@ async def test_snide_duel_loss_keeps_the_metatask(
 
 @pytest.mark.asyncio
 async def test_under_level_author_earns_zero_but_keeps_the_seal(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """An author below the metatask's level bar scores +0 but keeps the seal.
 
@@ -813,7 +813,7 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
 
 @pytest.mark.asyncio
 async def test_duel_side_card_carries_duel_id(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Both sides of a duel carry the duel's id on their card (not None)."""
     challenger = await _make_character(
@@ -839,7 +839,7 @@ async def test_duel_side_card_carries_duel_id(
 
 @pytest.mark.asyncio
 async def test_non_duel_solo_card_has_null_duel_id(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """A plain solo praxis (no duel) carries duel_id=None on its card."""
     task = await _make_task(db_session, character, faction_slug="ua", points=10)

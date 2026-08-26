@@ -67,7 +67,7 @@ async def _load_card(session: AsyncSession, praxis_id: int):
 
 @pytest.mark.asyncio
 async def test_card_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     character.avatar_url = "avatars/isolde.png"
     praxis = await _make_solo_praxis(db_session, character)
@@ -80,7 +80,7 @@ async def test_card_carries_the_authors_portrait(
 
 @pytest.mark.asyncio
 async def test_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """No portrait is the ordinary case.
 
@@ -113,7 +113,7 @@ async def _load_detail(session: AsyncSession, praxis_id: int):
 
 @pytest.mark.asyncio
 async def test_detail_payload_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """#2106: the detail byline shows a face, so ``PraxisOut`` carries one.
 
@@ -132,7 +132,7 @@ async def test_detail_payload_carries_the_authors_portrait(
 
 @pytest.mark.asyncio
 async def test_detail_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """Same fallback as the card: "" so the byline draws the monogram."""
     character.avatar_url = ""

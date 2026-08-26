@@ -99,7 +99,7 @@ async def full_feed(
     character3: Character,
     era: Era,
     active_task: Task,
-    faction_ephemerists,
+    some_faction,
 ) -> dict:
     """Seed exactly one feed item of every one of the 16 types for ``character``.
 

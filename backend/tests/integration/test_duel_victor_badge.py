@@ -83,7 +83,7 @@ async def _badge_keys(session: AsyncSession, character: Character) -> list[str]:
 
 @pytest.mark.asyncio
 async def test_frozen_win_in_the_previous_era_earns_the_badge(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """The whole point: a finalized win in the era that just closed."""
     duel, challenger, opponent = await make_duel(
@@ -98,7 +98,7 @@ async def test_frozen_win_in_the_previous_era_earns_the_badge(
 
 @pytest.mark.asyncio
 async def test_forfeit_winner_on_the_lower_frozen_score_still_earns_it(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """Read `winner_character_id`; never infer the winner from the points.
 
@@ -121,7 +121,7 @@ async def test_forfeit_winner_on_the_lower_frozen_score_still_earns_it(
 
 @pytest.mark.asyncio
 async def test_frozen_win_in_the_current_era_does_not_earn_it(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A win stamped with the *live* era is not "last era" — that is `duelist`.
 
@@ -140,7 +140,7 @@ async def test_frozen_win_in_the_current_era_does_not_earn_it(
 
 @pytest.mark.asyncio
 async def test_a_frozen_win_two_eras_ago_has_lapsed(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """"Last era" is a window, not a permanent record — it closes behind you."""
     duel, challenger, opponent = await make_duel(
@@ -155,7 +155,7 @@ async def test_a_frozen_win_two_eras_ago_has_lapsed(
 
 @pytest.mark.asyncio
 async def test_null_frozen_winner_grants_nothing_to_either_side(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """A tie or a no-contest froze NULL — nobody won it (ADR-0052)."""
     duel, challenger, opponent = await make_duel(
@@ -169,7 +169,7 @@ async def test_null_frozen_winner_grants_nothing_to_either_side(
 
 @pytest.mark.asyncio
 async def test_a_live_duel_never_earns_it(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """Leading a *settled* duel is provisional (ADR-0011) — `duelist`, not this."""
     _duel, challenger, opponent = await make_duel(
@@ -182,7 +182,7 @@ async def test_a_live_duel_never_earns_it(
 
 @pytest.mark.asyncio
 async def test_no_era_has_closed_so_nobody_is_a_victor(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     """Today's state: one Era row, so there is no previous era to have won in."""
     duel, challenger, opponent = await make_duel(
@@ -195,7 +195,7 @@ async def test_no_era_has_closed_so_nobody_is_a_victor(
 
 @pytest.mark.asyncio
 async def test_a_frozen_win_with_no_recorded_era_grants_nothing(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """`resolved_era_id` is nullable; an unstamped freeze must not fall through."""
     duel, challenger, opponent = await make_duel(
@@ -210,7 +210,7 @@ async def test_a_frozen_win_with_no_recorded_era_grants_nothing(
 @pytest.mark.asyncio
 async def test_a_character_with_no_duels_earns_nothing(
     db_session: AsyncSession, era: Era, account: Account, character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     duel, challenger, _opponent = await make_duel(
         db_session, era, label="other", challenger_votes=5, opponent_votes=1, commit=True)
@@ -222,7 +222,7 @@ async def test_a_character_with_no_duels_earns_nothing(
 
 @pytest.mark.asyncio
 async def test_endpoint_surfaces_the_duel_victor_badge(
-    client, db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    client, db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     duel, challenger, _opponent = await make_duel(
         db_session, era, label="api", challenger_votes=4, opponent_votes=2, commit=True)
@@ -241,7 +241,7 @@ async def test_endpoint_surfaces_the_duel_victor_badge(
 
 @pytest.mark.asyncio
 async def test_the_real_era_reset_produces_the_badge(
-    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     """The load-bearing test: no hand-stamped fixture anywhere in the chain.
 
@@ -279,7 +279,7 @@ async def test_the_real_era_reset_produces_the_badge(
 @pytest.mark.asyncio
 async def test_last_era_fact_costs_no_extra_query_per_character(
     db_connection, db_session: AsyncSession, era: Era, account: Account,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """ADR-0033's batch rule, extended to the first cross-era fact.
 

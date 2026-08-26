@@ -125,7 +125,7 @@ async def test_baseline_both_members_bank_the_unvoted_collab(
     character3: Character,
     submitted_collab: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Control. Both members score the collab equally before any vote, so a
     later assertion about one of them moving is about the vote, not the seal."""
@@ -143,7 +143,7 @@ async def test_a_vote_on_a_collab_moves_every_member_not_just_the_starter(
     character3: Character,
     submitted_collab: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The reported symptom: your collaborator's praxis gains votes and your own
     score does not move."""
@@ -169,7 +169,7 @@ async def test_a_collab_vote_moves_every_member_all_time_score(
     character3: Character,
     submitted_collab: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """``all_time_score`` is credited forward as a delta (#1345), so a member who
     is never recalculated never accrues and the loss is permanent."""
@@ -191,7 +191,7 @@ async def test_re_rating_a_collab_vote_down_moves_every_member_down(
     character3: Character,
     submitted_collab: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The way down. There is no unvote route — the write surface is POST-only
     (``routers/votes.py``) — so the reverse direction is a *re-rate*, which lands

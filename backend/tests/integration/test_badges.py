@@ -117,7 +117,7 @@ async def test_two_lives_earn_sock_puppeteer_and_sock_puppet(
     account: Account,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     second = await _add_second_character(
         db_session,
@@ -157,7 +157,7 @@ async def test_list_endpoint_populates_badges(
     account: Account,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The list serializer resolves badges too (#655 amends ADR-0033)."""
     second = await _add_second_character(
@@ -182,7 +182,7 @@ async def test_leaderboard_populates_badges(
     account: Account,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """/leaderboard shares the batched serializer, so it carries badges too."""
     await _add_second_character(
@@ -216,7 +216,7 @@ async def test_list_badge_query_count_does_not_scale_with_page_size(
     db_session: AsyncSession,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The badge join is batched: 2 characters and 10 cost the same queries (#655).
 
@@ -248,7 +248,7 @@ async def test_profile_response_never_exposes_account_or_email(
     account: Account,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     await _add_second_character(
         db_session,
