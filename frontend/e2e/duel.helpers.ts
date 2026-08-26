@@ -11,21 +11,29 @@ import { expect, type Browser, type BrowserContext, type Page } from '@playwrigh
  * button (challengeViaUi / acceptDuelViaUi / sealViaUi below), so a missing or
  * unreachable control fails the test instead of passing silently.
  *
- * Why a UA task specifically (pickUaDuelTask): the composer archetype, the seal
+ * Why a faction-skinned task (pickDuelTask): the composer archetype, the seal
  * dialog and the praxis-detail page (which mounts the duel rail) are each
- * dispatched by the TASK's faction, not the player's — so a UA task drives three
- * real archetypes (UaEditPraxis / UaDuelSealConfirm / UaPraxisDetail) instead of
- * the Default fall-through an `na` task would give. A level-2 player (duels need
- * era.duel_level_required = 2) can sign up for UA tasks at level ≤ 2.
+ * dispatched by the TASK's faction, not the player's — so a task belonging to a
+ * real faction drives three real archetypes instead of the Default fall-through
+ * an `na` task would give. A level-2 player (duels need era.duel_level_required
+ * = 2) can sign up for such tasks at level ≤ 2.
  *
- * CORRECTED (#1676) — the old note here claimed a UA task yields the *Default*
+ * CORRECTED (#1676) — an old note here claimed a UA task yields the *Default*
  * seal dialog and rail. It does not: `factions/ua.ts` registers both `duelSeal`
- * and `praxisDetail`. What is actually true, and what makes UA safe to assert
- * against, is that the COPY is faction-invariant — every skin takes the heading
- * and confirm label from the shared `useDuelSealCopy`, and all eight
+ * and `praxisDetail`. What is actually true, and what makes any skin safe to
+ * assert against, is that the COPY is faction-invariant — every skin takes the
+ * heading and confirm label from the shared `useDuelSealCopy`, and all eight
  * praxis-detail archetypes render the same `duelCrossLink` strings. The one
  * faction that does override them is `wow` ("Take the Field", praxis.json
- * `duelSeal.wow`), so this helper must not drift onto a wow task.
+ * `duelSeal.wow`), so this helper must not drift onto a wow task — which is a
+ * property of the copy catalog, and the only faction this file names.
+ *
+ * CORRECTED again (#2710) — this used to select on `primary_faction_slug ===
+ * 'ua'`, matching a literal that `seed.py` also named. Under an era without UA
+ * the seeder's guard fired, the fixture task was never created, and the failure
+ * surfaced here as a missing task with nothing in it about eras. Both sides now
+ * name no faction: the seeder reads the era, and this picks on the properties
+ * the specs actually need.
  *
  * The task itself is dev-seeded — `seed.py::ensure_duel_fixture_task`. Era 1
  * declares no tasks (#1398), so before that this filter matched nothing and the
@@ -64,14 +72,42 @@ export async function login(
   return { ctx, characterId: body.character_id, name }
 }
 
-/** First active UA task the level-2 challenger may attempt (see header for why UA). */
-export async function pickUaDuelTask(player: Player): Promise<{ id: number; title: string }> {
+/**
+ * The cross-faction sentinel: a task belonging to no faction (`faction_slugs.py`).
+ * The only slug this file may rely on existing, because it is the one an era is
+ * structurally required to carry — it is the FK target for cross-faction tasks.
+ * The onboarding task and every collaboration fixture task wear it, and they are
+ * exactly the tasks this helper must skip: they render the Default archetypes.
+ */
+const CROSS_FACTION_SLUG = 'na'
+
+/** The faction that overrides the duel-seal copy this suite asserts on (see header). */
+const SEAL_COPY_OVERRIDING_SLUG = 'wow'
+
+/**
+ * First task the level-2 challenger may attempt that drives a real faction skin.
+ *
+ * Selects on properties, never on a slug (#2710): at or below the duel level, so
+ * the challenger can sign up; belonging to some faction, so the composer, seal
+ * dialog and duel rail dispatch to a real archetype rather than the Default; and
+ * not the one faction that rewrites the seal copy the specs assert on.
+ */
+export async function pickDuelTask(player: Player): Promise<{ id: number; title: string }> {
   const res = await player.ctx.request.get(`${API}/tasks`)
   const tasks = await res.json()
   const task = tasks.find(
-    (t: any) => t.primary_faction_slug === 'ua' && (t.level_required ?? 0) <= DUEL_LEVEL,
+    (t: any) =>
+      (t.level_required ?? 0) <= DUEL_LEVEL &&
+      t.primary_faction_slug &&
+      t.primary_faction_slug !== CROSS_FACTION_SLUG &&
+      t.primary_faction_slug !== SEAL_COPY_OVERRIDING_SLUG,
   )
-  expect(task, 'no UA task at level ≤ 2 in the seeded DB — run backend/seed.py').toBeTruthy()
+  expect(
+    task,
+    `no faction-skinned task at level ≤ ${DUEL_LEVEL} in the seeded DB — run ` +
+      `backend/seed.py, which creates one for whichever faction the live era carries ` +
+      `(seed.py::ensure_duel_fixture_task)`,
+  ).toBeTruthy()
   return { id: task.id, title: task.title }
 }
 

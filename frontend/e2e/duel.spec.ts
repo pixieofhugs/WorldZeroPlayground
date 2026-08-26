@@ -3,7 +3,7 @@ import {
   DUEL_LEVEL,
   RUN,
   login,
-  pickUaDuelTask,
+  pickDuelTask,
   createSoloDraft,
   challengeViaUi,
   acceptDuelViaUi,
@@ -41,12 +41,12 @@ test.describe.configure({ mode: 'serial' })
 // that already duelled on the task can't be signed up again).
 let pairSeq = 0
 
-/** Two level-2 challengers in fresh contexts, on one fresh UA task + Alice's draft. */
+/** Two level-2 challengers in fresh contexts, on one fresh faction task + Alice's draft. */
 async function seedChallenge(browser: Browser) {
   const s = pairSeq++
   const alice = await login(browser, `da-${RUN}-${s}`, `A${s}-${RUN}`, DUEL_LEVEL)
   const bob = await login(browser, `db-${RUN}-${s}`, `B${s}-${RUN}`, DUEL_LEVEL)
-  const task = await pickUaDuelTask(alice)
+  const task = await pickDuelTask(alice)
   const alicePraxisId = await createSoloDraft(alice, task.id, `Duel ${RUN}-${s}`)
   return { alice, bob, task, alicePraxisId }
 }

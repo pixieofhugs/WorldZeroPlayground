@@ -22,7 +22,11 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from faction_slugs import CROSS_FACTION_SLUG
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    CROSS_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+)
 from game_config import CURRENT_ERA, TaskDef
 from models.character import Character
 from models.era import Era
@@ -181,12 +185,30 @@ async def test_seed_creates_no_metatask(
 # ---------------------------------------------------------------------------
 # The duel e2e fixture task (#1676)
 # ---------------------------------------------------------------------------
-# `frontend/e2e/duel.helpers.ts::pickUaDuelTask` asks the API for a UA task at
-# level <= era.duel_level_required and fails the whole duel suite when there is
-# none — which was the case on every nightly, because Era 1 declares no tasks
-# (#1398) and the onboarding task above is cross-faction. These pin the two
+# `frontend/e2e/duel.helpers.ts::pickDuelTask` asks the API for a faction-skinned
+# task at level <= era.duel_level_required and fails the whole duel suite when
+# there is none — which was the case on every nightly, because Era 1 declares no
+# tasks (#1398) and the onboarding task above is cross-faction. These pin the
 # properties that helper selects on, so the fixture and the duel gate cannot
 # drift apart silently.
+#
+# Neither side names a faction any more (#2710). While both did, an era that
+# dropped that faction took the fixture out through the `faction is None` guard
+# and the e2e failure three files away named the missing task, not the era.
+
+
+@pytest.mark.asyncio
+async def test_duel_fixture_slug_is_a_real_faction_of_the_live_era():
+    """The slug is era-read, so it cannot name a faction the era never seeds.
+
+    This is the property that makes the no-op guard a backstop rather than the
+    thing deciding whether the duel suite has a task at all (#2710).
+    """
+    assert DUEL_FIXTURE_TASK_FACTION_SLUG in CURRENT_ERA.factions
+    assert DUEL_FIXTURE_TASK_FACTION_SLUG not in (
+        UNAFFILIATED_FACTION_SLUG,
+        ALBESCENT_FACTION_SLUG,
+    )
 
 
 @pytest.mark.asyncio
@@ -196,7 +218,11 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     character: Character,
     faction_ua: Faction,
 ):
-    """It lands as a UA task the duel gate's level can sign up for, and repeats safely."""
+    """It lands as a faction task the duel gate's level can sign up for, and repeats.
+
+    ``faction_ua`` is requested because Era 1's first real faction is UA and the
+    fixture task needs that row present; the assertions below name no slug.
+    """
     created = await ensure_duel_fixture_task(db_session, character.id)
     assert created is True
 
