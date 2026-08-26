@@ -85,7 +85,20 @@ async def test_game_config_carries_the_array_flag(client: AsyncClient):
     assert served == {
         slug: faction.reads_the_array for slug, faction in CURRENT_ERA.factions.items()
     }
-    assert served["singularity"] is True
+
+    # Non-vacuity. Compared field-for-field against the config above, an era in
+    # which nobody holds the perk would pass just as happily for a serializer
+    # that emitted a constant False. So name the holder by the PERK, never by
+    # slug (#2708) — Era 1's is Singularity, plus Albescent, which inherits it.
+    # What each era *grants* is its own rules module's job (#2709).
+    holders = {
+        slug
+        for slug, faction in CURRENT_ERA.factions.items()
+        if faction.reads_the_array
+    }
+    if not holders:
+        pytest.skip(f"no faction in {CURRENT_ERA.config_key} reads the array")
+    assert {slug for slug, value in served.items() if value} == holders
 
 
 # ---------------------------------------------------------------------------
