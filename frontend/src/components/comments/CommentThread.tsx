@@ -25,7 +25,6 @@ import {
   OwnerControls,
   useOwnerEdit,
   useOwnerReveal,
-  ownerRevealStyle,
 } from './OwnerControls'
 import { CommentFlagControl, canFlagComment } from './FlagControl'
 
@@ -165,10 +164,10 @@ export function DefaultComment(props: CommentProps) {
   // something to show: the author's edit/withdraw or a flag affordance. Hidden
   // while editing, since the inline editor owns Save/Cancel then.
   const showControls = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN comment the foot holds nothing but the gated owner row, so the
-  // rule above it fades with the row — a hairline over empty space is a state
-  // the sheet never draws. A flaggable (someone else's) comment keeps its foot.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
   return (
     <Sheet
       slug={slug}
@@ -245,7 +244,6 @@ export function DefaultComment(props: CommentProps) {
             paddingTop: 'var(--space-sm)',
             // A divider INSIDE the sheet is quieter than the sheet's own edge.
             borderTop: '1px solid var(--faction-default-composer-hair)',
-            ...footGate,
           }}
         >
           <OwnerControls owner={owner} reveal={reveal} />

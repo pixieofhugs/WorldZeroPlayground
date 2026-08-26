@@ -11,7 +11,6 @@ import {
   OwnerControls,
   useOwnerEdit,
   useOwnerReveal,
-  ownerRevealStyle,
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { Ransom } from '../../factionMarks/snideAtoms'
@@ -173,10 +172,10 @@ export default function SnideComment(props: CommentProps) {
   // flag affordance for everyone else. The inline editor owns Save/Cancel while
   // editing, so the foot stands down then.
   const showControls = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN slip the foot holds nothing but the gated owner row, so the
-  // censor rule above it fades with the row — a hairline over empty space is a
-  // state the sheet never draws.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
 
   return (
     <div style={slip(mobile)} {...reveal.containerProps}>
@@ -235,8 +234,7 @@ export default function SnideComment(props: CommentProps) {
                 paddingTop: 'var(--space-sm)',
                 // A censor rule inside the slip, quieter than its cut edge.
                 borderTop: '1px solid var(--faction-snide-slip-rule)',
-                ...footGate,
-              }}
+                  }}
             >
               <OwnerControls owner={owner} reveal={reveal} />
               <CommentFlagControl comment={comment} />
