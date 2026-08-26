@@ -303,6 +303,14 @@
      together (#1023's quest decree does); it defaults to 0s, which is the
      vote widget's existing behaviour unchanged. */
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
+  /* THE RECRUITING BANNER'S BALLOONS HANG STILL (#2727). `BalloonBunch` takes
+     `bob={false}` there, which turns off the bunch's own drift and nothing
+     else — the pupils are inside the drawing and no prop reaches them. A
+     watermark behind a wordmark that moves reads as a rendering fault rather
+     than as a party, so the banner opts out by class. The opt-out lives HERE,
+     beside the rule it cancels: same sheet, so it can never arrive a frame
+     late, and (0,2,0) beats (0,1,0) whatever the order. */
+  .wow-banner-scatter .wow-balloon-eye { animation: none; }
   .wow-balloon-sweep::after {
     content: "";
     position: absolute;

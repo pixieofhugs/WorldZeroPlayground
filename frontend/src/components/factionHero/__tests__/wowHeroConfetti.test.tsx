@@ -37,6 +37,12 @@ import { drawWowConfetti, WOW_CONFETTI_SEED } from "../../factionMarks/wowOrname
 const source = (relative: string) =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
+/** Source with its comments removed. The ban below is on CODE — a docstring
+ *  that names `Math.random` in order to forbid it is the opposite of a
+ *  violation, and a substring check cannot tell the two apart. */
+const code = (relative: string) =>
+  source(relative).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
 const render = () =>
   renderToStaticMarkup(
     <WowFactionHero slug="wow" name="Warriors of Whimsy" members={7} tasks={12} praxes={3} />,
@@ -73,8 +79,10 @@ describe("the scatter is seeded, and the seed is the faction (#2727)", () => {
   });
 
   it("carries no render-time randomness in either module", () => {
-    expect(source("../WowFactionHero.tsx")).not.toContain("Math.random");
-    expect(source("../../factionMarks/wowOrnament.tsx")).not.toContain("Math.random");
+    expect(code("../WowFactionHero.tsx")).not.toContain("Math.random");
+    expect(code("../../factionMarks/wowOrnament.tsx")).not.toContain("Math.random");
+    // The strip is doing something — a check that always passes is not a check.
+    expect(code("../../factionMarks/wowOrnament.tsx")).toContain("seededRandom");
   });
 
   it("is not a lattice", () => {
@@ -91,11 +99,13 @@ describe("the scatter is seeded, and the seed is the faction (#2727)", () => {
   });
 
   it("inks every flake with a token, in both themes", () => {
-    // §3: colour values live in index.css, and the two flake inks alias the
-    // washes this plate already wore — so the dark half arrives through the
-    // cascade rather than through a `dark ? a : b` here.
+    // §3, and §3's own pricing rule (#1609 group 3): the right ornament colour
+    // is the one index.css already owns. The flakes ARE the plate's two washes
+    // — the gilt hatch and the plum court-glow — so both halves of the theme
+    // arrive through the cascade, no literal is minted, and the blocking sheet
+    // does not move.
     for (const flake of drawWowConfetti(WOW_CONFETTI_SEED)) {
-      expect(flake.ink).toMatch(/^var\(--faction-wow-banner-flake-(gold|plum)\)$/);
+      expect(flake.ink).toMatch(/^var\(--faction-wow-(hatch|court-glow)\)$/);
     }
     const inks = new Set(drawWowConfetti(WOW_CONFETTI_SEED).map((flake) => flake.ink));
     expect(inks.size, "gold and plum both appear").toBe(2);

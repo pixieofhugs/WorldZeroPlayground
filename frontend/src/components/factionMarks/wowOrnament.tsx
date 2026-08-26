@@ -2,6 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { CSSProperties, ReactNode } from "react";
 
 import { factionRoleVar } from "../../utils/factionRoles";
+// The house PRNG, and the only one. It lives in the Ephemerists' kit because
+// that is where its second reader appeared (#2146), and its own docstring is
+// explicit that a second copy is the thing to avoid — so WOW reads it across
+// the faction line rather than growing a private one that could be tuned out of
+// step, invisibly, while both still looked random.
+import { seededRandom } from "./ephemeristsPlate";
 
 /**
  * Warriors of Whimsy — THE SHARED ORNAMENT VOCABULARY (#1121).
@@ -355,5 +361,163 @@ export function Bunting({ style }: { style?: CSSProperties }): ReactNode {
         <span key={index} style={pennantStyle(index)} />
       ))}
     </div>
+  );
+}
+
+/**
+ * THE BANNER'S SCATTER — CONFETTI AND STILL BALLOONS, DRAWN ONCE (#2727).
+ *
+ * The recruiting hero used to wash its plate with the same 135° gilt hatch the
+ * page backdrop wears, at its own pitch: `20px 22px` over the wallpaper's
+ * `22px 24px`. Same angle, two pixels apart, one laid over the other — a beat,
+ * and the banner shimmered. THE FIX IS NOT A THIRD PITCH. A repeating grid over
+ * a repeating grid is the whole defect, so the hatch layer is gone and nothing
+ * that repeats on a grid may replace it: the wallpaper reads through the frame,
+ * and the Court throws confetti on top of it.
+ *
+ * THE SCATTER IS SEEDED, AND DRAWN AT MODULE LOAD. `EphemeristsNotationBand`
+ * states the reason and it is the same reason here: a band that redrew itself
+ * every render would twitch whenever anything unrelated moved on the page — a
+ * vote lands, a filter changes, a hover fires — and a screenshot of it would
+ * never reproduce. PER-VISIT randomness was considered and rejected too: a
+ * member meets this banner on every trip to their own faction page, and a
+ * background that differs each time reads as instability rather than as
+ * celebration. One seed, one scatter, WOW's forever. `Math.random` appears
+ * nowhere in this module and `wowHeroConfetti.test` reads the source to say so.
+ *
+ * BOTH INKS ARE ALREADY IN `index.css`, and they are the two washes this plate
+ * used to wear — the gilt hatch and the plum court-glow. §3's pricing rule
+ * (#1609, group 3): the right ornament colour is the one the stylesheet already
+ * owns, because a NEW token costs the sheet that blocks first paint. It also
+ * settles the contrast question without re-measuring anything. The muster's
+ * caption ink was priced at 4.61:1 "where the hatch and the court glow cross
+ * it" (#2248), so a flake at exactly those two strengths cannot put any reader
+ * below a floor that was already paid for — and both flip in the dark cascade,
+ * so no half of this needs a `dark ?` branch.
+ *
+ * NOTHING HERE MOVES. The bunches take `bob={false}`, and the googly pupils
+ * inside them ride `.wow-balloon-eye`, which no prop reaches — so
+ * `motion.ornament.css` stills them by class, in the sheet that owns the
+ * animation it is cancelling. A slowly moving background behind a wordmark
+ * reads as a rendering fault, not as a party.
+ *
+ * NO NEW VOCABULARY was drawn for the balloons: this mounts {@link BalloonBunch},
+ * the Court's device on the task card, the pledge card and the field desk, at
+ * watermark strength. Only the confetti is new, and it is a flake rather than a
+ * device — it takes no props and answers no question a caller could get wrong.
+ */
+export const WOW_CONFETTI_SEED = "wow";
+
+/** Dense enough to read as thrown, sparse enough to stay a watermark. */
+const FLAKE_COUNT = 34;
+
+/** Gold first: the plum is the accent in the throw, not half of it. */
+const FLAKE_INKS = ["var(--faction-wow-hatch)", "var(--faction-wow-court-glow)"];
+
+/** Ornament strength for the bunches, on the `UaMandala` "texture" rung (§6). */
+const BALLOON_WATERMARK = 0.15;
+
+export interface WowFlake {
+  /** Percent across and down the plate, so the throw reflows with the banner. */
+  left: number;
+  top: number;
+  /** Raw px — ornament geometry (§4a), never a spacing rung. */
+  width: number;
+  height: number;
+  /** Degrees. A flake lands at whatever angle it lands at. */
+  tilt: number;
+  /** A disc rather than a rounded rect; the only difference is the radius. */
+  disc: boolean;
+  /** A `var()`, always — see the note above on why these two. */
+  ink: string;
+}
+
+/**
+ * The throw. Exported for its test, which is the only place the SEAM is
+ * checkable: the geometry is percentages and raw pixels in an inline style, and
+ * "the same seed gives the same scatter" is a claim about the function rather
+ * than about any markup.
+ */
+export function drawWowConfetti(seed: string): WowFlake[] {
+  const next = seededRandom(seed);
+  const round = (value: number) => Number(value.toFixed(2));
+  return Array.from({ length: FLAKE_COUNT }, () => {
+    const disc = next() < 0.24;
+    const width = round(4 + next() * 4);
+    return {
+      left: round(next() * 100),
+      top: round(next() * 100),
+      width,
+      // A disc is round; a rect is between 1.4 and 2.2 times as long as it is
+      // wide, which is what keeps a rotated one reading as a paper flake.
+      height: disc ? width : round(width * (1.4 + next() * 0.8)),
+      tilt: round(next() * 180 - 90),
+      disc,
+      ink: FLAKE_INKS[next() < 0.34 ? 1 : 0],
+    };
+  });
+}
+
+/** Drawn once, at module load: the seed is fixed, so the throw is a constant. */
+const CONFETTI = drawWowConfetti(WOW_CONFETTI_SEED);
+
+/**
+ * Where the bunches hang. Hand-placed rather than drawn from the seed, because
+ * position is the one thing here that is a COMPOSITION decision: the plate's
+ * type is centred, so the balloons keep to the margins and a random draw would
+ * eventually put one behind the wordmark.
+ */
+const BALLOON_BUNCHES = [
+  { left: "3%", top: "9%", size: 62, tilt: -9 },
+  { left: "87%", top: "31%", size: 78, tilt: 8 },
+  { left: "13%", top: "57%", size: 44, tilt: 6 },
+];
+
+/**
+ * The banner's ornament layer. Takes no props, and that is the ruling in the
+ * type: there is one scatter and it is WOW's, so there is no seed for a second
+ * mount to pass and no strength for it to disagree about.
+ *
+ * It positions itself, so the mount supplies only a positioned ancestor —
+ * `WowFactionHero`'s wash layer already is one, and already sets
+ * `pointer-events: none` for everything inside it.
+ */
+export function WowBannerScatter(): ReactNode {
+  return (
+    <span
+      className="wow-banner-scatter"
+      aria-hidden="true"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      {CONFETTI.map((flake, index) => (
+        <span
+          key={index}
+          style={{
+            position: "absolute",
+            left: `${flake.left}%`,
+            top: `${flake.top}%`,
+            width: flake.width,
+            height: flake.height,
+            borderRadius: flake.disc ? "50%" : 2,
+            background: flake.ink,
+            transform: `rotate(${flake.tilt}deg)`,
+          }}
+        />
+      ))}
+      {BALLOON_BUNCHES.map((bunch) => (
+        <BalloonBunch
+          key={bunch.left}
+          size={bunch.size}
+          bob={false}
+          style={{
+            position: "absolute",
+            left: bunch.left,
+            top: bunch.top,
+            opacity: BALLOON_WATERMARK,
+            transform: `rotate(${bunch.tilt}deg)`,
+          }}
+        />
+      ))}
+    </span>
   );
 }
