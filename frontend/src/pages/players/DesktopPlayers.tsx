@@ -386,7 +386,24 @@ function RaceRow({
       }}
     >
       <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>{rank}</span>
-      <FactionSigil slug={lane.slug} size={22} />
+      {/* THE MARK IS INKED BY THE LANE (#2723). Passing nothing left each mark
+          on its own component default, and on this neutral page that is a
+          different failure per faction: the Ephemerists kite fell through to
+          `currentColor` and drew in the PAGE's text ink — white after dark,
+          which is the report — while S.N.I.D.E.'s acid and WOW's plum surface
+          are declared once and so carry no dark half at all. The lane's own bar
+          reads `factionCssVar(lane.slug)` twelve lines below; the mark reads it
+          too, so the two are one colour and both cascade halves arrive free.
+          NOT `--faction-{key}-metal-*`: those are theme-invariant by design and
+          the brass measures 1.69:1 here in light. The `isKnownFaction` guard is
+          the filter facet's (#2528) — `na` and `albescent` both map to CSS key
+          `default`, and handing them that flat grey would paint over the two
+          spectra they own. */}
+      <FactionSigil
+        slug={lane.slug}
+        size={22}
+        color={isKnownFaction(lane.slug) ? factionCssVar(lane.slug) : undefined}
+      />
       {/* The lane's name opens its faction page (#1953). A race row is a plain
           div — it links to nothing else — so this is one anchor, not the
           nested-anchor case `RosterRow` below has to work around. `factionHref`
@@ -512,7 +529,18 @@ function FactionLaneName({ slug }: { slug: string }) {
 function RosterFaction({ slug }: { slug: string | null | undefined }) {
   const href = factionHref(slug)
   const label = factionName(slug)
-  const mark = <FactionSigil slug={slug} size={ROSTER_SIGIL} />
+  // Inked by the row's faction, for the reason the race lane above is (#2723):
+  // a mark on this neutral page that takes its component's default takes either
+  // the page's own text ink or a token with one cascade half. Same
+  // `isKnownFaction` guard, and here it is the load-bearing one — the roster is
+  // the surface where `na` and `albescent` actually appear.
+  const mark = (
+    <FactionSigil
+      slug={slug}
+      size={ROSTER_SIGIL}
+      color={isKnownFaction(slug) ? factionCssVar(slug) : undefined}
+    />
+  )
   if (href === null) {
     return (
       <span role="img" aria-label={label} className="flex justify-center">
