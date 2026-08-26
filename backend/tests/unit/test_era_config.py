@@ -1,6 +1,8 @@
 import dataclasses
 
-from faction_slugs import UNAFFILIATED_FACTION_SLUG
+import pytest
+
+from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import (
     CURRENT_ERA,
     ERA_1,
@@ -325,3 +327,69 @@ def test_registry_returns_none_for_an_unknown_key():
     fallback — the era announcement uses the name stored on the row."""
     assert era_config_for_key("era_99") is None
     assert era_config_for_key("") is None
+
+
+# ---------------------------------------------------------------------------
+# Structural faction slugs (ADR-0087 / #2707)
+# ---------------------------------------------------------------------------
+#
+# Seam under test: ``EraConfig.__post_init__`` — the one construction-time gate
+# every era file and every ``dataclasses.replace`` passes through, which is why
+# a malformed era fails at IMPORT rather than at the first character creation
+# (an FK violation naming nothing). ``na`` and ``albescent`` are the two slugs
+# whose roles the game cannot run without; every OTHER faction stays the era's
+# own choice, and Albescent's GATE stays era-tunable.
+
+
+def test_every_registered_era_carries_the_structural_slugs():
+    """Not just Era 1 and Era 2 by name — whatever the registry lists."""
+    for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
+        era = era_config_for_key(config_key)
+        assert UNAFFILIATED_FACTION_SLUG in era.factions, config_key
+        assert ALBESCENT_FACTION_SLUG in era.factions, config_key
+
+
+def test_every_registered_era_pins_the_two_na_fields():
+    """ADR-0087 amends ADR-0042's "the era doc wins" for these two fields only."""
+    for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
+        era = era_config_for_key(config_key)
+        assert era.starting_faction_slug == UNAFFILIATED_FACTION_SLUG, config_key
+        assert era.reset_faction_slug == UNAFFILIATED_FACTION_SLUG, config_key
+
+
+def test_an_era_that_drops_na_will_not_construct():
+    """`na` is the FK target for the born-unaffiliated state and for
+    cross-faction tasks. Dropping it used to be a config an era could write."""
+    without_na = {
+        slug: faction
+        for slug, faction in ERA_1.factions.items()
+        if slug != UNAFFILIATED_FACTION_SLUG
+    }
+    with pytest.raises(ValueError, match="ADR-0087"):
+        dataclasses.replace(ERA_1, factions=without_na)
+
+
+def test_an_era_that_drops_albescent_will_not_construct():
+    """The endgame faction exists in every era. Its GATE is still era-tunable —
+    ``albescent_level_required`` and the coverage rule are ordinary era fields,
+    and nothing here constrains them."""
+    without_albescent = {
+        slug: faction
+        for slug, faction in ERA_1.factions.items()
+        if slug != ALBESCENT_FACTION_SLUG
+    }
+    with pytest.raises(ValueError, match="ADR-0087"):
+        dataclasses.replace(ERA_1, factions=without_albescent)
+
+
+def test_an_era_that_moves_the_starting_faction_will_not_construct():
+    """#1559 opened this seam; ADR-0087 closes it. The field STAYS so the
+    author who tries gets the ruling read back to them."""
+    with pytest.raises(ValueError, match="ADR-0087"):
+        dataclasses.replace(ERA_1, starting_faction_slug="ua")
+
+
+def test_an_era_that_moves_the_reset_faction_will_not_construct():
+    """#1580's half of the same seam."""
+    with pytest.raises(ValueError, match="ADR-0087"):
+        dataclasses.replace(ERA_1, reset_faction_slug="ua")
