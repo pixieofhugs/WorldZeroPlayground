@@ -52,7 +52,23 @@ function sourceFiles(dir: string): string[] {
   return out;
 }
 
-const FILES = sourceFiles(SRC).map((path) => [path, readFileSync(path, "utf8")] as const);
+/**
+ * Source with its comments removed, because a TOMBSTONE has to be able to name
+ * what it buries. `covenSlip` records the retirement where the drawing stood,
+ * which is the repo's own habit (`CovenAvatar` names the `MoonGlyph` it
+ * dropped), and a scan that forbade the name in prose would forbid that note.
+ *
+ * `//` is stripped only at the head of a line, so a `https://` inside a string
+ * is never mistaken for one. Block comments go wholesale. What is left is
+ * imports, exports and JSX — the three places a revival would actually live.
+ */
+function withoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+}
+
+const FILES = sourceFiles(SRC).map(
+  (path) => [path, withoutComments(readFileSync(path, "utf8"))] as const,
+);
 
 function code(relative: string): string {
   return readFileSync(join(SRC, relative), "utf8");
@@ -71,8 +87,8 @@ const MOUNTS: [file: string, size: string][] = [
 describe("Coven's retired pentagram badge (#2726)", () => {
   it("is named in no source file — not exported, not imported, not re-drawn", () => {
     // Whole-tree, because a dir-scoped scan has hidden mounts in this repo
-    // before. `.test.tsx?` is excluded above; prose about the retirement is
-    // allowed to name the thing it retired, which is why this scans code only.
+    // before. Tests are excluded by `sourceFiles`, comments by
+    // `withoutComments` — see that helper for why the second exclusion exists.
     const offenders = FILES.filter(([, source]) => source.includes("SigilMark")).map(([path]) => path);
     expect(offenders, "`SigilMark` survives in these files").toEqual([]);
   });
