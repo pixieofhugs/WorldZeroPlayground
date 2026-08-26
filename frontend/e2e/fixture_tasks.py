@@ -46,8 +46,14 @@ from models.character import Character  # noqa: E402
 from models.task import Task, TaskStatus, TaskType  # noqa: E402
 
 # Six distinct titles at distinct levels, all <= 8 so the level-8 C4 inviter can
-# attempt every one of them. Cross-faction like the onboarding task: the duel
-# fixture picks on ``primary_faction_slug == 'ua'`` and these must not shadow it.
+# attempt every one of them. Cross-faction like the onboarding task, and that is
+# load-bearing: ``duel.helpers.ts::pickDuelTask`` takes the first task at or
+# below the duel level that belongs to *some* faction, so wearing
+# ``CROSS_FACTION_SLUG`` is exactly what keeps these from shadowing the duel
+# fixture task. It used to be safe for a weaker reason — the duel helper matched
+# the literal ``'ua'`` — which broke the moment an era stopped carrying UA
+# (#2710); the sentinel these already wear is structurally required of every
+# era, so the arrangement now holds for a reason that cannot expire.
 FIXTURE_TASKS: tuple[tuple[str, str, int], ...] = (
     ("E2E fixture: Refill Something", "Fixture task for the e2e suite.", 1),
     ("E2E fixture: Walk a New Street", "Fixture task for the e2e suite.", 2),
