@@ -95,12 +95,12 @@ import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
  * `WowBand` — the shared cross-faction masthead, carved out of every lane —
  * unaffected while it sits inside this root.
  */
-const MED = "var(--wow-task-card-face, var(--faction-wow-card-font))"; /* MedievalSharp */
+const MED = "var(--wow-task-card-face)"; /* MedievalSharp */
 const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-const INK = "var(--wow-task-card-ink, var(--faction-wow-card-text))";
-const MUTED = "var(--wow-task-card-quiet, var(--faction-wow-card-muted))";
-const PLUM = "var(--wow-task-card-accent, var(--faction-wow-card-accent))";
+const INK = "var(--wow-task-card-ink)";
+const MUTED = "var(--wow-task-card-quiet)";
+const PLUM = "var(--wow-task-card-accent)";
 const GOLD = "var(--faction-wow-chronicle-gold)";
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const GILT = "var(--faction-wow-stamp-total)";
@@ -198,10 +198,10 @@ export default function WowTaskCard({
           overflow: "hidden",
           boxSizing: "border-box",
           width: "100%",
-          background: "var(--wow-task-card-paper, var(--faction-wow-card-bg))",
+          background: "var(--wow-task-card-paper)",
           border: `2px solid ${GOLD}`,
           // The decree's shape, said once (#2361/#2403).
-          borderRadius: "var(--wow-task-card-radius, var(--faction-wow-card-radius))",
+          borderRadius: "var(--wow-task-card-radius)",
           boxShadow: "var(--faction-wow-quest-shadow)",
           color: INK,
         }}

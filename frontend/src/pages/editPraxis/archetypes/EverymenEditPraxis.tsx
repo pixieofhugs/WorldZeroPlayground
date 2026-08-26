@@ -175,7 +175,7 @@ const BAR_INK = "var(--faction-everymen-bill-cta-ink)";
 const PAPER_DEEP = "var(--everymen-paper-deep)";
 const SHADOW = "var(--faction-everymen-bill-shadow)";
 
-const BEBAS = "var(--ev-compose-face, var(--faction-everymen-card-font))"; /* Bebas Neue */
+const BEBAS = "var(--ev-compose-face)"; /* Bebas Neue */
 const COURIER = "var(--font-body)"; /* Courier Prime */
 
 /** The cogs' period, the design's own 22s. It had drifted to 26 (#1830). The

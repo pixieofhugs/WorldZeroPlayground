@@ -37,6 +37,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut } from "../../../api/duel";
 import type { CurrentUser } from "../../../api/auth";
 import { aMember, aPraxis } from '../../../test/fixtures'
+import { resolveRoleReads } from "../../../test/sourceScan";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -411,12 +412,11 @@ describe("UA praxis detail — the dress", () => {
     // to that same token so the figure reads as an aperture. A plate painted in
     // `-lift` or `-panel` breaks both.
     const { html } = render(state());
-    // Either the bare token or one role read that falls back to it: #2673 put
-    // this page on `factionRoleVars`, so the plate emits
-    // `background:var(--leaf-praxis-detail-paper, var(--faction-ua-card-bg))`. Same
-    // computed value, and a repoint to `-lift` or `-panel` still fails.
-    expect(html, "the rail plates are the sheet").toMatch(
-      /background:var\(--faction-ua-card-bg\)|background:var\(--[\w-]+,\s*var\(--faction-ua-card-bg\)\)/,
+    // #2673 put this page on `factionRoleVars`, so the plate reads the `paper`
+    // ROLE and the map supplies the token. `resolveRoleReads` folds the one into
+    // the other, so a repoint to `-lift` or `-panel` still fails.
+    expect(resolveRoleReads(html), "the rail plates are the sheet").toMatch(
+      /background:var\(--faction-ua-card-bg\)/,
     );
   });
 

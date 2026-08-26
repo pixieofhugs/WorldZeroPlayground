@@ -170,7 +170,7 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 /** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
-const BEBAS = 'var(--ev-path-face, var(--faction-everymen-card-font))' /* Bebas Neue */
+const BEBAS = 'var(--ev-path-face)' /* Bebas Neue */
 const COURIER = 'var(--font-body)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */

@@ -20,6 +20,7 @@ import i18n from '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
 import type { CharacterOut } from '../../../api/auth'
 import WowComment from '../voices/WowComment'
+import { resolveRoleReads } from '../../../test/sourceScan'
 
 const COMMENT: CommentOut = {
   id: 7,
@@ -91,7 +92,7 @@ describe('the comment wears the proclamation chrome', () => {
     expect(html).toContain('2px solid var(--faction-wow-chronicle-gold)')
     // The sheet asks the faction for its `paper` ROLE (#2674) and carries
     // today's token as the fallback, so the cream is the cream it always was.
-    expect(html).toContain('background:var(--wow-comment-paper, var(--faction-wow-card-bg))')
+    expect(resolveRoleReads(html)).toContain('background:var(--faction-wow-card-bg)')
   })
 
   it('letters the name in MedievalSharp and the quiet register in Lora italic', () => {

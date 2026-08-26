@@ -115,10 +115,10 @@ const PINK_INK = "var(--faction-snide-note-pink-ink)";
  * The SLAB — every sheet pasted on the wall, black in BOTH themes, with the ink
  * family it was measured against. Acid carries type only here.
  */
-const PLATE = "var(--snd-task-paper, var(--faction-snide-card-bg))";
-const PLATE_TEXT = "var(--snd-task-ink, var(--faction-snide-card-text))";
-const PLATE_MUTED = "var(--snd-task-quiet, var(--faction-snide-card-muted))";
-const PLATE_ACCENT = "var(--snd-task-accent, var(--faction-snide-card-accent))";
+const PLATE = "var(--snd-task-paper)";
+const PLATE_TEXT = "var(--snd-task-ink)";
+const PLATE_MUTED = "var(--snd-task-quiet)";
+const PLATE_ACCENT = "var(--snd-task-accent)";
 /** The pink that is a DRAWN LINE — pen circle, strike-out cross. Invariant. */
 const PINK = "var(--faction-snide-pink)";
 /** Photocopier black that does NOT flip: borders and shadows printed on acid. */

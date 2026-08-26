@@ -33,9 +33,9 @@ import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 // ground all the same: `chrome` is the rail's, and this faction supplies no
 // override on either — see the PR, where the question is raised rather than
 // assumed.
-const VOID = 'var(--sg-desk-paper, var(--faction-singularity-card-bg))'
-const PHOSPHOR = 'var(--sg-desk-accent, var(--faction-singularity-card-accent))'
-const SIGNAL = 'var(--sg-desk-quiet, var(--faction-singularity-card-muted))'
+const VOID = 'var(--sg-desk-paper)'
+const PHOSPHOR = 'var(--sg-desk-accent)'
+const SIGNAL = 'var(--sg-desk-quiet)'
 const BORDER_HARD = 'var(--faction-singularity-border-hard)'
 // The credits accent: a GOLD SCALAR, not a rainbow. It read the retired brand
 // palette's first stop until #1220 (ADR-0066) pointed it at na's

@@ -160,20 +160,20 @@ const SLUG = 'wow'
  * NOT roles stay put: the inset plate, the label olive, the plum FILL and its
  * ink, the gold and its quiet rung are this surface's own extras (decision 07).
  */
-const MED = 'var(--wow-create-face, var(--faction-wow-card-font))'
+const MED = 'var(--wow-create-face)'
 /** Lora — body AND label on the writ, per that design's type row. */
 const LORA = 'var(--faction-wow-body-font)'
 
 /* ── The chronicle palette. Every one a shipped --faction-wow-* token, and
    every pairing below already measured in `factionContrast.test.ts`. ── */
 /** The sheet: cream parchment by day, the deep ground by night. */
-const SHEET = 'var(--wow-create-paper, var(--faction-wow-card-bg))'
+const SHEET = 'var(--wow-create-paper)'
 /** The inset parchment plate every editable field is set on. */
 const FIELD = 'var(--faction-wow-chronicle-panel)'
 /** Body ink. 14:1 on the cream, and measured on the plate too. */
-const INK = 'var(--wow-create-ink, var(--faction-wow-card-text))'
+const INK = 'var(--wow-create-ink)'
 /** Quiet ink — CREAM ONLY (4.77:1 there, 4.25:1 on the plate). */
-const MUTED = 'var(--wow-create-quiet, var(--faction-wow-card-muted))'
+const MUTED = 'var(--wow-create-quiet)'
 /** The label/eyebrow ink, the one measured on BOTH chronicle grounds. */
 const LABEL = 'var(--faction-wow-accent-deep)'
 /** Plum as a SURFACE. Theme-invariant, with its own AA ink beside it. */

@@ -95,15 +95,15 @@ type Segment = 'praxis' | 'tasks'
  * per-SITE by design, and an undeclared prefix is the neutral case the law
  * builds pixel-identity out of.
  */
-const INK = 'var(--wow-profile-ink, var(--faction-wow-card-text))'
-const MUTED = 'var(--wow-profile-quiet, var(--faction-wow-card-muted))'
-const PLUM = 'var(--wow-profile-accent, var(--faction-wow-card-accent))'
+const INK = 'var(--wow-profile-ink)'
+const MUTED = 'var(--wow-profile-quiet)'
+const PLUM = 'var(--wow-profile-accent)'
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const FIGURE = 'var(--faction-wow-figure)'
-const SURFACE = 'var(--wow-profile-paper, var(--faction-wow-card-bg))'
+const SURFACE = 'var(--wow-profile-paper)'
 const PLATE = 'var(--faction-wow-plate)'
 const PLATE_BORDER = 'var(--faction-wow-plate-border)'
-const DISPLAY = 'var(--wow-profile-face, var(--faction-wow-card-font))'
+const DISPLAY = 'var(--wow-profile-face)'
 const BODY = 'var(--faction-wow-body-font)'
 
 function heading(title: string, eyebrow: string): ReactNode {

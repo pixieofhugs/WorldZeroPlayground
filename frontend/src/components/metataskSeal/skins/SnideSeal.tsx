@@ -86,8 +86,8 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
       className="relative"
       style={{
         ...factionRoleVars('snide', 'snd-seal'),
-        background: 'var(--snd-seal-paper, var(--faction-snide-card-bg))',
-        color: 'var(--snd-seal-ink, var(--faction-snide-card-text))',
+        background: 'var(--snd-seal-paper)',
+        color: 'var(--snd-seal-ink)',
         border: '2px solid var(--faction-snide-pink)',
         borderRadius: 2,
         transform: 'rotate(-1deg)',

@@ -91,11 +91,11 @@ import type { FeedFrameProps } from './feedFrameProps'
  * whether the vars are declared or not — which is also what keeps the shared,
  * faction-blind payload this chassis wraps unaffected.
  */
-const MED = 'var(--wow-feed-face, var(--faction-wow-card-font))' /* MedievalSharp */
+const MED = 'var(--wow-feed-face)' /* MedievalSharp */
 const LORA = 'var(--faction-wow-body-font)' /* Lora */
 const GOLD = 'var(--faction-wow-chronicle-gold)'
 const GILT = 'var(--faction-wow-stamp-total)'
-const PLUM = 'var(--wow-feed-accent, var(--faction-wow-card-accent))'
+const PLUM = 'var(--wow-feed-accent)'
 const RIBBON = 'var(--faction-wow-quest-ribbon)'
 
 /** The barber ribbon's two weights: the 6px crown and the 3px section rule.
@@ -142,10 +142,10 @@ export default function WowFeedFrame({
       style={{
         ...factionRoleVars('wow', 'wow-feed'),
         // The chronicle's shape, said once (#2361/#2403).
-        borderRadius: 'var(--wow-feed-radius, var(--faction-wow-card-radius))',
+        borderRadius: 'var(--wow-feed-radius)',
         overflow: 'hidden',
-        background: 'var(--wow-feed-paper, var(--faction-wow-card-bg))',
-        color: 'var(--wow-feed-ink, var(--faction-wow-card-text))',
+        background: 'var(--wow-feed-paper)',
+        color: 'var(--wow-feed-ink)',
         border: `2px solid ${GOLD}`,
         boxShadow: 'var(--faction-wow-quest-shadow)',
         fontFamily: LORA,
@@ -230,7 +230,7 @@ export default function WowFeedFrame({
               fontStyle: 'italic',
               fontSize: 'var(--text-lg)',
               // The cream-only ink, on the cream sheet it was measured against.
-              color: 'var(--wow-feed-quiet, var(--faction-wow-card-muted))',
+              color: 'var(--wow-feed-quiet)',
               whiteSpace: 'nowrap',
             }}
           >
