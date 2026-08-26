@@ -16,9 +16,11 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from scripts.backfill_metatask_multiplier import backfill_metatask_multiplier
+from models.task import Task
 from scripts.seed_demo_praxes import (
     DUEL_LOSER_TITLE,
     DUEL_LOSER_USERNAME,
+    DUEL_WINNER_USERNAME,
     METATASK_PRAXIS_TITLE,
     get_or_create_players,
     seed_metatask_fixture,
@@ -26,7 +28,7 @@ from scripts.seed_demo_praxes import (
 )
 from services.era import get_or_create_stats
 from services.praxis_scoring import compute_contributions
-from services.scoring import exact, round_half_up
+from services.scoring import compute_faction_multiplier, exact, round_half_up
 from tests.integration.test_seed_score_fixtures import _board, _character, _praxis
 
 
@@ -49,7 +51,24 @@ async def test_backfill_reports_zero_when_every_metatask_sits_at_unit_multiplier
     players = await get_or_create_players(db_session)
     await seed_metatask_fixture(db_session, players, CURRENT_ERA)
     # Premise: the search space is non-empty, so a zero here is a real answer.
-    await _praxis(db_session, METATASK_PRAXIS_TITLE)
+    praxis = await _praxis(db_session, METATASK_PRAXIS_TITLE)
+
+    # The branch under test is "non-empty search space, nothing affected", and
+    # the affected-set predicate is `resolved multiplier != 1.0`. A solo carries
+    # no duel multiplier, so the whole of "resolved" is the faction modifier
+    # below — asked of the same function the script asks. An era that prices no
+    # task at 1.0 (Era 2's own/other split is 1.2/0.8) cannot reach this branch
+    # with a real faction at all, so there is nothing here to assert (#2708).
+    author = await db_session.get(Character, praxis.created_by_id)
+    task = await db_session.get(Task, praxis.task_id)
+    resolved = compute_faction_multiplier(
+        author.faction_slug, task.primary_faction_slug, CURRENT_ERA
+    )
+    if resolved != 1.0:
+        pytest.skip(
+            f"{CURRENT_ERA.config_key} prices this solo at x{resolved}, so no "
+            "metatask in it can sit at a unit multiplier"
+        )
 
     assert await backfill_metatask_multiplier(db_session, apply=False) == 0
 
@@ -71,6 +90,7 @@ async def test_backfill_counts_the_duel_sides_carrying_a_metatask(
     await seed_score_fixtures(db_session, players, CURRENT_ERA)
 
     loser = await _character(db_session, DUEL_LOSER_USERNAME)
+    winner = await _character(db_session, DUEL_WINNER_USERNAME)
     stats = await _stats(db_session, loser.id, era.id)
     stats.score = 4321
     stats.all_time_score = 99
@@ -79,7 +99,11 @@ async def test_backfill_counts_the_duel_sides_carrying_a_metatask(
     assert await backfill_metatask_multiplier(db_session, apply=False) == 0
 
     output = capsys.readouterr().out
-    assert "AFFECTED ROWS: 2 praxis/es" in output
+    # Both sides by name, not a row count: the count is era-dependent, because
+    # in an era with no x1.0 own-task modifier the seeded *solo* metatask joins
+    # the affected set too (#2708). Which duel sides land in it does not move.
+    assert f"({loser.display_name}) era" in output
+    assert f"({winner.display_name}) era" in output
     assert "DRY RUN" in output
     # A dry run is a read. The deliberately wrong row is untouched.
     assert stats.score == 4321
