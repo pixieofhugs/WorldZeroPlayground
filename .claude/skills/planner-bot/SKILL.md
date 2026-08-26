@@ -1,6 +1,6 @@
 ---
 name: planner-bot
-description: Sweeps the whole open issue board into a dispatchable state — closes finished epics, folds duplicates together, researches what looks under-specified, grills what only the owner can decide, and re-asks about stale deferrals. Ends with every open issue carrying `ready-for-agent`, `needs-design`, or a fresh `differed`. Use for "sort out the board", "triage everything", "what's actually left", or a periodic planning pass.
+description: Sweeps the whole open issue board into a dispatchable state — closes finished epics, folds duplicates together, researches what looks under-specified, grills what only the owner can decide, and re-asks about stale deferrals. Ends with every open issue carrying `ready-for-agent`, `needs-design`, or a fresh `deferred`. Use for "sort out the board", "triage everything", "what's actually left", or a periodic planning pass.
 disable-model-invocation: true
 ---
 
@@ -56,7 +56,7 @@ real number was **7** — the five extras were epics wearing `enhancement`.
 ```
 gh issue list --state open --limit 500 --json number,title,labels \
   --jq '.[]|select([.labels[].name]|any(.=="needs-triage" or .=="needs-info" or .=="ready-for-agent"
-        or .=="ready-for-human" or .=="needs-design" or .=="differed" or .=="epic")|not)
+        or .=="ready-for-human" or .=="needs-design" or .=="deferred" or .=="epic")|not)
         |"#\(.number) \(.title)"'
 ```
 
@@ -66,7 +66,7 @@ relevant PRs — a review may have settled it already. When she then rules diffe
 on the PR, because its record is now stale.
 
 **Done when** you can state five numbers: open issues, unlabeled, `needs-triage`,
-`ready-for-agent`, and `differed`. A guess is not a number.
+`ready-for-agent`, and `deferred`. A guess is not a number.
 
 ---
 
@@ -226,21 +226,21 @@ Follow the status vocabulary in #2536; do not rewrite or delete ADR bodies.
 
 ## Step 6 — Re-ask about stale deferrals
 
-`differed` means *later, not now*. Only the stale ones get re-opened for discussion — the
+`deferred` means *later, not now*. Only the stale ones get re-opened for discussion — the
 rest are skipped in silence, not re-litigated.
 
 Age it by **when it was deferred**, not when it was filed:
 
 ```
-for n in $(gh issue list --label differed --state open --limit 100 --json number --jq '.[].number'); do
-  d=$(gh api repos/pixieofhugs/WorldZeroPlayground/issues/$n/events --jq '[.[]|select(.event=="labeled" and .label.name=="differed")|.created_at]|last')
+for n in $(gh issue list --label deferred --state open --limit 100 --json number --jq '.[].number'); do
+  d=$(gh api repos/pixieofhugs/WorldZeroPlayground/issues/$n/events --jq '[.[]|select(.event=="labeled" and .label.name=="deferred")|.created_at]|last')
   echo "$n $d"
 done
 ```
 
 Anything deferred more than **3 months** ago goes to her in one `AskUserQuestion` round —
 title, one line of what it asked for, and whether the codebase has moved under it since.
-Three outcomes: promote it (`differed` off, into Step 4/5), close it, or **re-defer** — and
+Three outcomes: promote it (`deferred` off, into Step 4/5), close it, or **re-defer** — and
 a re-defer means re-applying the label so the clock restarts from today.
 
 **Done when** every deferral is either under 3 months old or has an answer.
@@ -267,7 +267,7 @@ The pass is done when every open issue carries one of:
 - **`ready-for-agent`** — dispatchable, with an agent brief. Durable and behavioural: name
   types, contracts and acceptance criteria; never file paths or line numbers, which rot.
 - **`needs-design`** — the shape needs drawing before it can be built.
-- **`differed`** — deliberately later, deferred within the last 3 months.
+- **`deferred`** — deliberately later, deferred within the last 3 months.
 - **`ready-for-human`** — with Step 7's verdict attached.
 - **`epic`** — a tracking issue. Its state is its children's, not its own, so it wears no other
   state label and the grill skips it. **An epic must never wear `ready-for-agent`**: an epic
@@ -312,7 +312,7 @@ Then say what `/builder-bot` would pick up next. Do not start it.
    and five closed during the pass. `gh pr list --state open` plus `gh issue list --state closed`
    filtered to today shows it. Issues in a live batch are **in flight — label them, do not
    re-litigate them.**
-9. **A `differed` ruling needs its blockers wired**, or "revisit when X lands" is a sentence
+9. **A `deferred` ruling needs its blockers wired**, or "revisit when X lands" is a sentence
    nobody reads again. Post the reason, then `POST .../dependencies/blocked_by` for each one.
 10. **If the user wants work preserved but not done, a branch is not enough.** `/git-reaper`
     sweeps branches. Tag the commit (`git tag -a keep/<name>` + push) — tags survive branch
