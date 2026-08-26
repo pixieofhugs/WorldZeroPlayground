@@ -9,8 +9,13 @@ fixes tried during the investigation were reverted after the grill settled that 
 flip lands **last** — see Outcome at the bottom. Everything below is the evidence,
 recorded as it was found; nothing here is fixed on this branch.
 
-Result of the flip alone: **unit 442/442 green; integration 36 failed, 1061
-passed, plus 3 modules that fail at import.**
+Result of the flip alone: **unit 442/442 green; integration 35 failed, plus 3
+modules that fail at import.**
+
+(An earlier draft said 36. That count included one failure caused by a
+`services/era.py` change made during the investigation and since reverted —
+`test_praxis_feed_scope::test_era_scope_falls_through_when_the_era_is_unseeded`,
+which belongs to F1 rather than to the flip.)
 
 ---
 
@@ -152,7 +157,7 @@ no-ops when the row is absent — so it degrades quietly rather than crashing.
 
 ## F5. The test suite is written against Era 1's roster
 
-All 39 integration failures, by cause:
+All 38 integration failures, by cause:
 
 | # | Cause | Where |
 |---|---|---|
@@ -161,7 +166,7 @@ All 39 integration failures, by cause:
 | 9 | **Scoring assertions** that only hold under Coven's 1.1 collab modifier | `test_score_rounds_half_up::test_coven_collab_banks_half_up` |
 | 7 | **Level-jump fixture errors** | `test_level_jump_signup` |
 | 4 | **Route rejections** (400/422/404/403) — correct behaviour: the faction does not exist | `test_dev_login`, `test_admin_edit_task_faction`, `test_characters` |
-| 1 | Ephemerists' retired-task carve-out | `test_praxes`, `test_task_can_sign_up_filter`, `test_task_visibility_gates` |
+| 3 | Ephemerists' retired-task carve-out | `test_praxes`, `test_task_can_sign_up_filter`, `test_task_visibility_gates` |
 
 The shared fixture is the single biggest lever: `conftest.faction_ua` seeds exactly
 two literal rows (`ua` visible, `na` hidden) and `factories.py` defaults every
@@ -276,3 +281,21 @@ reverted to docs only for that reason.
 - **Structural vs roster** (new, from the owner): `na` is the neutral faction and `albescent`
   the endgame **in every era**; everything else is roster, and any perk may vanish or move
   between eras. A faction not in the live era is retired.
+
+### Two couplings outside the backend suite
+
+- **`CLAUDE.md`'s routing table names `era_1.py` as the live era in three places** (lines 20,
+  21, 31). It is the first thing every agent reads, so a stale pointer misroutes work for
+  everyone. Added to #2711.
+- **The e2e duel fixture fails silently.** `seed.py`'s `DUEL_FIXTURE_TASK_FACTION_SLUG = "ua"`
+  is guarded, so under Era 2 it no-ops and the task is never seeded; `frontend/e2e/duel.helpers.ts`
+  then selects on `primary_faction_slug === 'ua'` and finds nothing. The guard turns a loud
+  backend crash into a misleading e2e failure three files away — the opposite of what F4's
+  "degrades quietly rather than crashing" implied. Added to #2710.
+
+### Checked and clear
+
+The frontend's ~193 tests touching `coven` / `ephemerists` / `singularity` all keep passing:
+it never reads the era config, taking slugs from `GET /factions` at runtime and `CSS_KEY`
+statically. `docs/spec/*` and `WORLD_ZERO_STYLE.md` say "seven / eight / nine factions" in
+several places, but that counts *built archetypes*, not the era roster, and stays true.
