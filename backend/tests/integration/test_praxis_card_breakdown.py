@@ -72,6 +72,17 @@ def _era_with_modifiers(slug: str, **overrides):
     return dataclasses.replace(CURRENT_ERA, factions=factions)
 
 
+def modifiers_of(character: Character, era=CURRENT_ERA):
+    """The live era's faction config for whatever faction this character got.
+
+    A test may know only that it got *some* faction, never which one (#2708).
+    Every number below is read off the character it was handed — Era 1's UA was
+    a plain 1.0/1.5/0.5 vehicle, but no Era 2 faction has a baseline *task*
+    modifier at all, so a hardcoded product cannot survive the rollover.
+    """
+    return era.factions[character.faction_slug]
+
+
 def assert_invariant(payload) -> None:
     """score = base × mult + meta + votes + habit — every type (ADR-0053/0086)."""
     expected = (
@@ -290,10 +301,10 @@ async def _make_duel(
 
 
 @pytest.mark.asyncio
-async def test_plain_solo_score_is_base_plus_votes_at_one(
+async def test_plain_solo_score_is_base_times_own_modifier_plus_votes(
     db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
-    """Plain solo, everything at ×1.0 — the common Era 1 shape."""
+    """Plain solo on your own faction's task: base × own modifier, votes flat."""
     voter = await _make_character(
         db_session, era, username="uavoter", email="uavoter@x.com"
     )
@@ -303,11 +314,13 @@ async def test_plain_solo_score_is_base_plus_votes_at_one(
 
     card = await _load_card(db_session, praxis.id)
 
+    own = modifiers_of(character).own_task_modifier
+
     assert card.task_point_value == 10
     assert card.metatask_points == 0
-    assert card.display_multiplier == pytest.approx(1.0)
+    assert card.display_multiplier == pytest.approx(own)
     assert card.points_from_votes == 4
-    assert card.score == pytest.approx(14.0)
+    assert card.score == pytest.approx(10 * own + 4)
     assert_invariant(card)
 
 
@@ -419,7 +432,8 @@ async def test_duel_winner_and_loser_scores(
 ):
     """Each side carries its own faction×duel multiplier.
 
-    UA: own_task_modifier 1.0, duel_win 1.5, duel_loss 0.5.
+    Both sides sit in the fixture default faction, so the two multipliers differ
+    only in the duel outcome — whatever this era prices a win and a loss at.
     """
     challenger = await _make_character(
         db_session, era, username="challenger", email="ch@x.com"
@@ -442,14 +456,19 @@ async def test_duel_winner_and_loser_scores(
     winner_card = await _load_card(db_session, challenger_praxis.id)
     loser_card = await _load_card(db_session, opponent_praxis.id)
 
-    # Winner: 1.0 × 1.5 = 1.5; score = 10 × 1.5 + 5 = 20.0
-    assert winner_card.display_multiplier == pytest.approx(1.5)
-    assert winner_card.score == pytest.approx(20.0)
+    challenger_cfg = modifiers_of(challenger)
+    opponent_cfg = modifiers_of(opponent)
+    win = challenger_cfg.own_task_modifier * challenger_cfg.duel_win_modifier
+    loss = opponent_cfg.own_task_modifier * opponent_cfg.duel_loss_modifier
+
+    # Winner: own × duel_win; score = 10 × that + 5 votes, flat.
+    assert winner_card.display_multiplier == pytest.approx(win)
+    assert winner_card.score == pytest.approx(10 * win + 5)
     assert_invariant(winner_card)
 
-    # Loser: 1.0 × 0.5 = 0.5; score = 10 × 0.5 + 2 = 7.0
-    assert loser_card.display_multiplier == pytest.approx(0.5)
-    assert loser_card.score == pytest.approx(7.0)
+    # Loser: own × duel_loss; score = 10 × that + 2 votes, flat.
+    assert loser_card.display_multiplier == pytest.approx(loss)
+    assert loser_card.score == pytest.approx(10 * loss + 2)
     assert_invariant(loser_card)
 
 
@@ -488,14 +507,19 @@ async def test_failed_duel_side_hands_the_win_to_the_opponent(
     winner_card = await _load_card(db_session, opponent_praxis.id)
     failed_card = await _load_card(db_session, challenger_praxis.id)
 
-    # Opponent: UA duel_win 1.5 → 10 × 1.5 + 2 = 17.0, off the lower tally.
-    assert winner_card.display_multiplier == pytest.approx(1.5)
-    assert winner_card.score == pytest.approx(17.0)
+    opponent_cfg = modifiers_of(opponent)
+    challenger_cfg = modifiers_of(challenger)
+    win = opponent_cfg.own_task_modifier * opponent_cfg.duel_win_modifier
+    loss = challenger_cfg.own_task_modifier * challenger_cfg.duel_loss_modifier
+
+    # Opponent banks the win modifier off the LOWER tally: 10 × win + 2.
+    assert winner_card.display_multiplier == pytest.approx(win)
+    assert winner_card.score == pytest.approx(10 * win + 2)
     assert_invariant(winner_card)
 
     # The failed side reads the loss multiplier, not a tie: it lost the duel.
     # (Its author banks nothing regardless — #1373 keeps it out of the gather.)
-    assert failed_card.display_multiplier == pytest.approx(0.5)
+    assert failed_card.display_multiplier == pytest.approx(loss)
 
 
 @pytest.mark.asyncio
@@ -695,7 +719,7 @@ async def test_duel_side_earns_metatask_points(
 ):
     """A duel-side praxis carrying a metatask scores the bonus, flat.
 
-    The winning UA side's ×1.5 duel modifier multiplies the BASE and nothing
+    The winning side's duel modifier multiplies the BASE and nothing
     else (ADR-0086): a win does not pay a premium on a metatask either. Before
     #882 duel sides were filtered out of the metatask pass entirely and read
     ``metatask_points: 0``.
@@ -724,11 +748,14 @@ async def test_duel_side_earns_metatask_points(
 
     winner_card = await _load_card(db_session, challenger_praxis.id)
 
+    challenger_cfg = modifiers_of(challenger)
+    win = challenger_cfg.own_task_modifier * challenger_cfg.duel_win_modifier
+
     assert winner_card.metatask_points == 5
-    assert winner_card.display_multiplier == pytest.approx(1.5)
-    # 10 × 1.5 + 5 + 5 = 25.0. Under the old formula this was 27.5 — the ×1.5
-    # was paying a 2.5-point premium on a bonus the duel did not judge.
-    assert winner_card.score == pytest.approx(25.0)
+    assert winner_card.display_multiplier == pytest.approx(win)
+    # 10 × win + 5 metatask + 5 votes. Under the old formula the duel modifier
+    # also reached the metatask, paying a premium on a bonus it did not judge.
+    assert winner_card.score == pytest.approx(10 * win + 5 + 5)
     assert_invariant(winner_card)
 
 
@@ -803,7 +830,7 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
 
     # Points gated to 0 by level, but the seal row stays attached (+0).
     assert card.metatask_points == 0
-    assert card.score == pytest.approx(10.0)
+    assert card.score == pytest.approx(10 * modifiers_of(author).own_task_modifier)
     assert len(card.applied_metatasks) == 1
     assert card.applied_metatasks[0].id == metatask.id
     assert_invariant(card)
