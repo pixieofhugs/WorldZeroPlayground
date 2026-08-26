@@ -57,10 +57,16 @@ async def test_leaderboard_faction_filter(
     era: Era,
     some_faction: Faction,
 ):
-    """GET /leaderboard?faction=ua returns only ua-faction characters."""
-    resp = await client.get("/leaderboard?faction=ua")
+    """GET /leaderboard?faction=<slug> returns only that faction's characters.
+
+    The slug comes off the character, not out of the air: a named one that this
+    era does not have answers 200 with an empty list, and the loop below then
+    asserts nothing at all (#2708). Hence the non-empty check.
+    """
+    resp = await client.get(f"/leaderboard?faction={character.faction_slug}")
     assert resp.status_code == 200
     data = resp.json()
+    assert character.id in {char["id"] for char in data}
     for char in data:
         assert char["faction_slug"] == DEFAULT_FACTION_SLUG
 

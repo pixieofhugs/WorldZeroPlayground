@@ -467,7 +467,10 @@ async def test_route_faction_task_list_is_the_same_for_every_viewer(
     number, and an anonymous visitor must be told it too.
     """
     await _seed_in_progress_praxis(db_session, character, active_task)
-    url = "/tasks?faction=ua&status=active"
+    # The faction the task under test actually belongs to — asking for a named
+    # one returned an empty list under any era that does not have it (#2708),
+    # which is a vacuous pass for an invariant about two readers agreeing.
+    url = f"/tasks?faction={active_task.primary_faction_slug}&status=active"
 
     holder = await _route_task_ids(client, url, auth_headers)
     stranger = await _route_task_ids(client, url, auth_headers2)
