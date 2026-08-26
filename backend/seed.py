@@ -463,6 +463,36 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Deploy-window warning: configured era vs. the era row that is actually live
+# ---------------------------------------------------------------------------
+
+async def stale_era_warning(session, era) -> str | None:
+    """What to tell the operator when the configured era has no Era row yet.
+
+    The seeder does not open an era for an unseen ``config_key`` — the rollover
+    does, because it is what stamps ``Era.started_by``. So a deploy that flips
+    ``CURRENT_ERA`` forward leaves the app running the new rules against the old
+    row, and since #2705 it does that *quietly*: the live era is the latest row
+    whatever its key, which is what keeps the rollover runnable instead of
+    500ing every character-stats read. This is where the noise went. ``start.sh``
+    runs the seeder on every deploy, so it lands in front of the one person who
+    can act on it.
+
+    Returns None when the live row already matches; the caller prints.
+    """
+    live = (
+        await session.execute(select(Era).order_by(Era.id.desc()).limit(1))
+    ).scalar_one_or_none()
+    if live is not None and live.config_key == era.config_key:
+        return None
+    live_key = live.config_key if live is not None else "absent"
+    return (
+        f"\nWARNING: {era.config_key} is configured but the live Era row is "
+        f"{live_key}.\n         Run scripts/era_reset.py to open it."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Main seed function
 # ---------------------------------------------------------------------------
 
@@ -563,6 +593,10 @@ async def seed(env: str, yes: bool) -> None:
         print(f"  pixie account  : pixieofhugs@gmail.com")
         print(f"  pixie character: @pixie (admin)")
         print(f"  era-config tasks: {len(era.tasks)} (Era 1 ships none — #1398)")
+
+        warning = await stale_era_warning(session, era)
+        if warning:
+            print(warning)
 
     await engine.dispose()
 

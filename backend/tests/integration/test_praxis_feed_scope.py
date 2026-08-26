@@ -13,10 +13,11 @@ from datetime import datetime, timedelta
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
@@ -143,15 +144,20 @@ async def test_era_scope_falls_through_when_the_era_is_unseeded(
     character: Character,
     era: Era,
 ):
-    """No Era row for the live config key ⇒ unscoped, not empty."""
+    """No Era rows at all ⇒ unscoped, not empty.
+
+    Since #2705 the live era is the latest ``Era`` row whatever its
+    ``config_key``, so "unseeded" is the empty table — a fresh database — and
+    nothing else. Clear the stats rows first; they FK the era.
+    """
     old = await _make_praxis(
         db_session,
         character,
         title="Ancient",
         submitted_at=era.started_at - timedelta(days=365),
     )
-    # Simulate the unseeded era without breaking the CharacterStats FK.
-    era.config_key = "era_not_seeded"
+    await db_session.execute(delete(CharacterStats))
+    await db_session.execute(delete(Era))
     await db_session.commit()
 
     got = await list_praxes(db_session, status=PraxisStatus.submitted)

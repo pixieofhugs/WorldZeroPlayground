@@ -166,7 +166,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/collab_consensus.py::E501": 3,
     "services/duel.py::E501": 5,
     "services/duel.py::I001": 1,
-    "services/era.py::E501": 2,
+    "services/era.py::E501": 1,
     "services/era.py::I001": 1,
     "services/faction_service.py::F401": 1,
     "services/media.py::E501": 4,
