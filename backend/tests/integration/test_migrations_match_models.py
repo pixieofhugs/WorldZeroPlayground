@@ -56,10 +56,12 @@ upgrade, and check *that* — a real stand-in for a deployed database. Not built
 because it needs the snapshot to carry the revision it was taken at and would
 churn it on every squash.
 
-Runs on its own throwaway database, created and dropped here. It cannot use
-``worldzero_test``: that one is shared (by CI's own ``upgrade head`` step, and by
-parallel agents whose session-scoped ``drop_all`` teardown would pull tables out
-from under a migration mid-run).
+Runs on its own throwaway database, created and dropped here. It cannot use the
+suite's own test database: that one is shared (by CI's own ``upgrade head`` step,
+and by parallel agents whose session-scoped ``drop_all`` teardown would pull
+tables out from under a migration mid-run). The name is derived from
+``TEST_DATABASE_URL`` rather than fixed, so each concurrent runner drops only its
+own.
 """
 from __future__ import annotations
 
@@ -87,10 +89,6 @@ from scripts.dump_schema_snapshot import (
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
-# Named for the issue that introduced it, so a stray copy on a shared Postgres
-# is traceable. Nothing else may point here.
-MIGRATION_TEST_DB = "wz2426_test"
-
 # ``alembic_version.version_num`` is VARCHAR(32). Overflow fails *mid*-upgrade,
 # after the DDL has run, leaving a half-applied migration.
 VERSION_NUM_MAX_LEN = 32
@@ -99,6 +97,12 @@ VERSION_NUM_MAX_LEN = 32
 MAX_DIFF_LINES = 60
 
 _BASE_URL = make_url(os.environ.get("TEST_DATABASE_URL") or settings.DATABASE_URL)
+
+# Derived, never hardcoded: parallel agents each run against their own
+# ``wz<issue>_test`` (see conftest.py's ``_derive_test_db_url``), and this
+# database is DROPped unconditionally below. A fixed name would have two
+# concurrent runners dropping each other's schema mid-upgrade.
+MIGRATION_TEST_DB = f"{_BASE_URL.database}_migr"
 
 
 def _dsn(database: str) -> str:
@@ -159,12 +163,6 @@ def _enum_values_in_models() -> dict[str, set[str]]:
 @pytest_asyncio.fixture
 async def migration_db() -> str:
     """An empty database of our own, dropped again however the test ends."""
-    assert _BASE_URL.database != MIGRATION_TEST_DB, (
-        f"{MIGRATION_TEST_DB!r} is this test's scratch database and gets DROPped "
-        "below — the rest of the suite must not be pointed at it. Set "
-        "TEST_DATABASE_URL to a different database name."
-    )
-
     admin = await asyncpg.connect(_dsn("postgres"))
     try:
         await admin.execute(
