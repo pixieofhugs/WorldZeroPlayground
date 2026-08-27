@@ -184,6 +184,14 @@ export default function NavBar() {
           <NavLink
             to="/settings"
             className="label-caption"
+            /* The e2e suite's proof that a session exists (#2761). Signed-in
+               only, on every route, and outside every page's own gates — so
+               `guest.spec.ts` can assert it instead of the sign-out wording it
+               used to, which #2155 moved off this bar entirely. A slot, not a
+               string: `src/__tests__/e2eAnchors.test.ts` fails if this one is
+               renamed and `__tests__/navSettingsSlot.test.tsx` fails if it
+               escapes the `{user && }` above. */
+            data-testid="nav-settings"
             style={({ isActive }) => ({
               textDecoration: 'none',
               padding: 'var(--space-xs) var(--space-sm)',
