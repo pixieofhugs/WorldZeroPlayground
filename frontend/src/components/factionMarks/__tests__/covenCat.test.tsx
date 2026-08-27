@@ -21,9 +21,14 @@
  *
  * (2) is deliberately not "no inline `<svg className="cvn-wheel">`" — it is the
  * positive form, so a mount drawing some THIRD device under the class fails as
- * loudly as one drawing the pentagram again. `SigilMark`'s badge keeps its own
- * pentagram and is not in scope: it is the faction's mark of identity in a
- * header, not the watermark, and it never turns.
+ * loudly as one drawing the pentagram again.
+ *
+ * SCOPE is the WATERMARK, and always was. When this was written the faction had
+ * a second pentagram — the `SigilMark` badge — which was out of scope here
+ * because it sat in a header as a mark of identity and never turned. That badge
+ * is now retired outright and the hat is the faction's one mark;
+ * `covenBadgeRetired.test.tsx` guards that. This file is still only about the
+ * thing under `.cvn-wheel`.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";

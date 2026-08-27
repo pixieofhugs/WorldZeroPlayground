@@ -27,7 +27,7 @@ import type { CSSProperties } from "react";
  * `components/sigil/EverymenSigil` is TWO COGS IN MESH and it is the identity
  * mark — the hero seal, the avatar badge, the faction card. This is one cog and
  * it is FURNITURE: it flanks a masthead, it strikes a rule, it heads a section.
- * Two devices, two jobs, exactly as Coven keeps `SigilMark` apart from `Spark`,
+ * Two devices, two jobs, exactly as Coven keeps `CovenSigil` apart from `Spark`,
  * and #2119's lesson in `snideAtoms` — a module holding a second copy of a
  * faction's sigil is how surfaces import the wrong mark — is why this module
  * holds no sigil at all. Do not collapse them.

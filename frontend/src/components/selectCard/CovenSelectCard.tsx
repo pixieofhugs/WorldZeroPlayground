@@ -48,16 +48,17 @@ import {
  * tile was never on a forked family the way S.N.I.D.E.'s was (#2322). What it
  * had were four places where it had drifted off the card kit's own decisions:
  *
- *   mark    `covenSlip`'s pentagram `SigilMark` -> {@link CovenSigil}, the
+ *   mark    `covenSlip`'s pentagram badge -> {@link CovenSigil}, the
  *           canonical witch hat. The badge is not merely a second drawing: it
  *           is the drawing the CARD KIT explicitly stood down. `CardMasthead`
  *           records it — "UA's eyebrow ensō and Coven's pentagram badge were
  *           both stood down when their bands were built" — and `CovenTaskCard`
  *           repeats it, "the badge is retired in favour of the kit's own
  *           `CovenSigil` (a card may not draw two faction marks in its
- *           header)". A directory tile is a card. `SigilMark` keeps its four
- *           NON-card mounts (the hero, the faction body, the field desk, the
- *           duel seal) and is untouched there.
+ *           header)". A directory tile is a card. The badge kept four NON-card
+ *           mounts when this tile was built and has since lost those too — it
+ *           is deleted outright (#2726), so this line records where the tile
+ *           came from rather than a split that still exists.
  *
  *   ink of  the badge painted itself. The hat takes {@link DEEP}, the module's
  *   the     ornament ink — the pentagram's own stroke, the braid's strands, the

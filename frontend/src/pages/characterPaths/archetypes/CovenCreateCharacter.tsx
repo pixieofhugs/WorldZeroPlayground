@@ -10,8 +10,9 @@
  * this page's fields.
  *
  * IT DRAWS NO NEW SVG AT ALL. Every mark comes out of
- * `components/factionMarks/covenSlip` — the badge, the braid, the four-point
- * spark, the cat. That module exists because "thirteen private copies of a
+ * `components/factionMarks/covenSlip` — the braid, the four-point spark, the
+ * cat — or, for the faction's own sigil, out of `components/sigil/CovenSigil`
+ * (#2726). Those modules exist because "thirteen private copies of a
  * pentagram badge is how a faction acquires a second identity again" (#1209),
  * and a fourteenth here would be that failure with a new address. Nothing under
  * `pages/editPraxis/` is written to; it is read as the reference the issue names
@@ -109,8 +110,9 @@
  *
  * Light and dark flip entirely through the `[data-theme="dark"]` cascade; there
  * is no `dark ? a : b` anywhere in this file. Motion is reached by CLASS only —
- * `.ep-spin` on the badge and `.cvn-wheel` inside `CovenCat` — so both stay
- * behind the shared `prefers-reduced-motion` guard in `index.css` (#1003).
+ * `.cvn-wheel` inside `CovenCat`, and nothing else — so it stays behind the
+ * shared `prefers-reduced-motion` guard in `index.css` (#1003). The masthead's
+ * `.ep-spin` went with the badge it turned (#2726): see the mark's own note.
  *
  * ## Presentation only
  *
@@ -156,6 +158,7 @@ import {
   CTA_INK,
   CTA_TO,
   CovenCat,
+  DEEP,
   DISPLAY,
   GOLD,
   INK,
@@ -163,9 +166,9 @@ import {
   PAGE,
   PINK,
   SHADOW,
-  SigilMark,
   Spark,
 } from '../../../components/factionMarks/covenSlip'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 
 const SLUG = 'coven'
 
@@ -188,7 +191,7 @@ const FIELD_RADIUS = 10
 const RULE = `1.5px solid ${BORDER}`
 
 /* ── Ornament geometry (WORLD_ZERO_STYLE §4a: not layout spacing) ── */
-/** The turning badge in the masthead — the composer's 30, at the composer's 42s. */
+/** The masthead's faction mark — the composer's 30. */
 const BADGE = 30
 /** The sparks flanking the wordmark. */
 const MAST_SPARK = 11
@@ -298,17 +301,15 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
             exclusion band, and are the kit's own ornament glyph rather than a
             third private copy of `starPath`. */}
         <Spark size={MAST_SPARK} color={GOLD} />
-        {/* The badge turns once every 42 seconds. `.ep-spin` owns the motion and
-            its reduced-motion guard; `--ep-spin-dur` re-times it without a
-            second keyframe. The class goes on a wrapper because `SigilMark`
-            takes no `className` — the drawing stays the kit's, unforked. */}
-        <span
-          aria-hidden
-          className="ep-spin"
-          style={{ display: 'block', flex: '0 0 auto', ['--ep-spin-dur' as string]: '42s' } as CSSProperties}
-        >
-          <SigilMark size={BADGE} />
-        </span>
+        {/* THE SPIN WENT WITH THE BADGE (#2726). This mark turned once every
+            42 seconds on an `.ep-spin` wrapper, and that motion was only ever
+            legible because a pentagram in a ring is RADIALLY SYMMETRIC — the
+            same property #2041 leaned on when it said a pentacle may be cropped
+            and a face may not. A hat has an up. Rotating one reads as broken
+            rather than as a charm turning, so the wrapper is deleted rather
+            than re-pointed. If this masthead later wants motion it wants a
+            different gesture (a sway, a settle), which is a follow-up. */}
+        <CovenSigil size={BADGE} color={DEEP} />
         <span
           style={{
             fontFamily: DISPLAY,

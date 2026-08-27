@@ -6140,6 +6140,7 @@
 .alb-profile-edge,
 .alb-plate-edge,
 .alb-desk-edge,
+.alb-comment-edge,
 .spectrum-frame::before {
   position: absolute;
   inset: 0;
@@ -6913,9 +6914,39 @@
 .alb-plate-edge,
 .alb-desk-edge,
 .alb-task-edge,
-.alb-praxis-card-edge {
+.alb-praxis-card-edge,
+.alb-comment-edge {
   padding: 3px;
   opacity: 1;
+}
+/* Albescent — the COMMENT LEAF's ring, the tenth mount (#2732, ADR-0088 §3).
+   The sheet in `CommentThread` carried na's 3px spectrum CAP across its top and
+   no edge at all; a revealed viewer now gets this instead, and the cap comes off
+   in the same breath. That is the carrier rule above applied literally — one
+   carrier per object — which is why this joins that list rather than the
+   hairline defaults: the leaf's spectrum was already 3px at full strength, so
+   the amount of rainbow on the surface is unchanged and only its GEOMETRY moved,
+   from a bar across the top to a frame round the whole leaf.
+
+   It states nothing else. The corner is the shared `border-radius: inherit`,
+   which reads `SHEET_RADIUS` (10px, inline at the mount) off the sheet the span
+   is a direct child of — no literal, and it follows if that number ever changes.
+
+   THE ONE THING IT DOES SAY. `z-index: 1` is the FAMILY's number, the same one
+   `.alb-task-edge` and `.alb-praxis-card-edge` carry, and it is load-bearing
+   here: the composer this sheet also dresses positions its @mention listbox
+   inside itself. The listbox sits at 30 and stays over the ring; a static body
+   sits under it. Without a number the ring would be beatable by any positioned
+   descendant that declares one.
+
+   REVEAL-GATED IN THE COMPONENT, NOT HERE. `AlbescentComment` mounts this span
+   only past `isFactionRedacted` (ADR-0082), and an unrevealed viewer gets na's
+   cap with no ring — so there is no redacted state for this rule to know about.
+
+   The travel is the shared `alb-edge-travel` in `motion.ornament.css`; no
+   keyframe is minted here, and stopped it reads as a still spectrum edge. */
+.alb-comment-edge {
+  z-index: 1;
 }
 /* The praxis card's twin of it (#2499). Its own rule states only the two things
    the task card's does not: this span hangs off a wrapper whose corner is the
