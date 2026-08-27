@@ -10,7 +10,7 @@
 
 ## 1. The per-faction boundary (Tier 3)
 
-> **§1 is the *contract*** — what a faction *may* own. For the *state* (which factions actually have each surface wired today, and where they fall back to a default), grep the dispatchers in `frontend/src` (`pickVariant` / `Record<slug, …>` maps + `MOBILE_ARCHETYPE_BY_SLUG`) — the code is the source of truth, not a hand-maintained matrix.
+> **§1 is the *contract*** — what a faction *may* own. For the *state* (which factions actually have each surface wired today, and where they fall back to a default), read the manifests in `frontend/src/factions/` — each faction's `<slug>.ts` declares the surfaces it dresses, and `default.ts` is `na`'s. The code is the source of truth, not a hand-maintained matrix.
 
 ### Per-faction — a faction owns its own version of each of these
 
