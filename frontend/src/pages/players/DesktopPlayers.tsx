@@ -42,6 +42,25 @@ const ROSTER_COLUMNS = '56px 1fr 84px 84px 90px'
  */
 const ROSTER_SIGIL = 34
 const RACE_STAGGER_MS = 90
+/**
+ * The rank ring a SPECTRUM slug wears (#2730) — `factionFill`'s `"frame"` shape
+ * cut for a circle. The conic ramp sits on the border box; na's card paper
+ * covers the padding box, because a gradient border over a see-through interior
+ * shows the ramp straight through the middle (#794); and the numeral takes that
+ * paper's own paired ink, the one pairing guaranteed AA on it.
+ *
+ * Stated here rather than in `playersData.ts` — that file is what the page
+ * COMPUTES, and this is dress. `MobilePlayers` restates it beside its own
+ * geometry, as it already restates the wash and the ring it replaces;
+ * `podiumSpectrumLead.test.tsx` asserts every case against BOTH views, which is
+ * the guard that the two do not drift again.
+ */
+const SPECTRUM_RANK_RING: CSSProperties = {
+  border: '2px solid transparent',
+  background:
+    'linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow-conic) border-box',
+  color: 'var(--faction-default-card-text)',
+}
 /** Decorative marks. Expressions, so they are not user-facing copy. */
 const ELLIPSIS_GLYPH = '⋮'
 
@@ -250,10 +269,47 @@ export default function DesktopPlayers({
  * One podium card. The leader's is larger throughout and carries a diagonal
  * faction-tinted wash; the other two step down and have none.
  *
- * The wash is skipped for an unaffiliated leader rather than faked: `na` has no
- * scalar hue to mix (ADR-0039), and `color-mix()` cannot take the spectrum
- * gradient. The rank ring, the avatar and the points numeral already carry the
- * spectrum for that card.
+ * ### The two SPECTRUM slugs are dressed, not skipped (#2730, ADR-0088 §2)
+ *
+ * THIS REVERSES WHAT THIS DOCBLOCK USED TO CLAIM, and the claim is why the bug
+ * survived a year of readers. It said the wash was "skipped for an unaffiliated
+ * leader rather than faked" because `color-mix()` cannot take a gradient — true
+ * — and then that "the rank ring, the avatar and the points numeral already
+ * carry the spectrum for that card". Only the numeral did (`.rainbow-ink`). The
+ * ring read `factionCssVar(slug)`, which for CSS key `default` is the flat grey
+ * `--faction-default`, so the two slugs whose identity IS the spectrum got the
+ * greyest card on the page — and the top player on the live leaderboard is one
+ * of them.
+ *
+ * `known` therefore decides which DRESS, never whether there is one:
+ *
+ *   - a themed faction keeps every byte it had — a 1px hairline in its own hue
+ *     with a 14% bloom, and a `color-mix` wash on the leader.
+ *   - a spectrum slug takes the spectrum in each of those two places. The ring
+ *     is `--faction-default-rainbow-conic` on the border box over an opaque
+ *     `--faction-default-card-bg` interior — `factionFill`'s `"frame"` shape
+ *     exactly, minus its 90deg cut, because this is a CIRCLE and a linear ramp
+ *     bent round one reads as mud (the reason `DefaultSigil` and the avatar's
+ *     own ring both take the conic, #1127). The wash is `.spectrum-wash`, which
+ *     fades the ramp with a mask because nothing inline can.
+ *
+ * `CSS_KEY.albescent` STAYS `"default"` (ADR-0088), so an Albescent leader
+ * reaches all of the above through `na`'s row and this file names no
+ * `--faction-albescent-*` token. What tells the two apart for a revealed viewer
+ * is the labyrinth on the avatar's badge, which `AlbescentAvatar` already draws
+ * behind `isFactionRedacted()` (#2731) — one mark per card, gated once, in the
+ * component that owns the disc. A second labyrinth in this file would be the
+ * restatement #2245 deleted the faction WORD for. An unrevealed viewer's card
+ * is byte-identical to `na`'s; `podiumSpectrumLead.test.tsx` holds both halves.
+ *
+ * THE RING'S INTERIOR IS OPAQUE for a spectrum slug, and that is the one thing
+ * the hairline version did not have to decide. A gradient border needs a fill
+ * on the padding box or the ramp shows straight through the middle behind the
+ * numeral (`factionFill`'s docblock, #794), so the numeral sits on na's card
+ * paper and takes that paper's paired ink rather than the card's — the one
+ * pairing in the palette that is guaranteed AA on it. The rank ring is also the
+ * only mark here that is per-CARD rather than per-leader: cards two and three
+ * carried the same grey and are dressed the same way.
  */
 function PodiumCard({
   row,
@@ -273,11 +329,14 @@ function PodiumCard({
   return (
     <Link
       to={`/characters/${character.id}`}
-      className="flex flex-col"
+      className={lead && !known ? 'flex flex-col spectrum-wash' : 'flex flex-col'}
       style={{
         gap: lead ? 'var(--space-lg)' : 'var(--space-md)',
         padding: 'var(--space-xl)',
         borderLeft: lead ? undefined : '1px solid var(--color-border)',
+        // A themed leader's wash is a `color-mix` of its one hue; a spectrum
+        // leader's is the ramp itself, faded by a mask no inline style can
+        // write — see `.spectrum-wash` in index.css.
         background:
           lead && known
             ? `linear-gradient(170deg, color-mix(in oklab, ${color} 10%, transparent), transparent 68%)`
@@ -291,15 +350,28 @@ function PodiumCard({
             not (#1932). A spine hue is a fill colour — `--faction-wow` is 1.96:1
             on this page and 2.09:1 on the frost, and the lead's 24px does not
             rescue it at the 3:1 large-text floor either. The numeral inherits
-            `--color-text-primary` from the card. */}
+            `--color-text-primary` from the card.
+
+            THE SPECTRUM SLUGS TAKE THE OTHER RING (#2730). `color` is the flat
+            `--faction-default` grey for both of them, and a hairline plus a 14%
+            bloom of it is what made the leaderboard's top card the greyest one
+            on the page. The bloom does not survive the swap — a `box-shadow`
+            spread takes a colour and the ramp is not one — so the ring is 2px
+            where the hairline was 1, which is also the stroke the avatar's own
+            spectrum ring beside it wears. The numeral goes with the interior:
+            see `SPECTRUM_RANK_RING`. */}
         <span
           className="font-display flex items-center justify-center"
           style={{
             width: lead ? 44 : 38,
             height: lead ? 44 : 38,
             borderRadius: '50%',
-            border: `1px solid ${color}`,
-            boxShadow: `0 0 0 ${lead ? 5 : 4}px color-mix(in oklab, ${color} 14%, transparent)`,
+            ...(known
+              ? {
+                  border: `1px solid ${color}`,
+                  boxShadow: `0 0 0 ${lead ? 5 : 4}px color-mix(in oklab, ${color} 14%, transparent)`,
+                }
+              : SPECTRUM_RANK_RING),
             fontSize: lead ? 'var(--text-title)' : 'var(--text-content)',
             flex: 'none',
           }}

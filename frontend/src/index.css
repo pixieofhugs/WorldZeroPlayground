@@ -6220,6 +6220,55 @@
   background-image: var(--faction-default-rainbow-conic);
 }
 
+/* ── `.spectrum-wash` — THE SPECTRUM AS A CARD GROUND (#2730, ADR-0088 §2) ──
+   A third cut of the same ramp, for the one geometry the two above cannot
+   reach: a faint tint laid across a whole card and faded out before it gets to
+   the other side. The players podium's leader card is the mount — a themed
+   leader has always carried `color-mix(in oklab, var(--faction-x) 10%,
+   transparent)` on a 170deg axis, and the two SPECTRUM slugs (`na` and, through
+   CSS key `default`, Albescent) got no wash at all because `color-mix()` takes
+   colours and this identity is a gradient.
+
+   THE FADE IS A MASK, WHICH IS THE WHOLE REASON THIS IS A CLASS. Everything
+   else on that card is an inline style, and an inline style cannot fade a
+   gradient it did not author: `opacity` on the element would take the name and
+   the points down with it, and a page-coloured veil painted over the ramp would
+   be an opaque rectangle that only looks right for as long as the podium has no
+   background of its own. A pseudo-element carries the opacity and the mask, and
+   the card's copy is untouched by both.
+
+   `z-index: -1` WITH `isolation: isolate`, the pair `.snd-detail-sheet::after`
+   uses further up: the card is positioned, so a positioned ::before would
+   otherwise paint over the copy, and the isolation is what keeps -1 inside the
+   card instead of letting it slide behind whatever ancestor gets a background
+   next.
+
+   THE AXIS IS THE MOUNT'S, the fade is not. `--spectrum-wash-axis` defaults to
+   the desktop column's 170deg and the phone's row hands it 90deg, because a row
+   ~72px tall spends a 170deg ramp before it has crossed the avatar. The 68%
+   stop is shared: it is where both of the themed washes had already faded out
+   (the phone's was 62%, and a 6% difference in where a 10% tint reaches zero is
+   not a distinction worth a second knob).
+
+   DECORATIVE at 10%, so no contrast ratio is owed and none is spent — the card
+   is `--color-text-primary` on the page in both cascades either way. The stops
+   flip with the theme on their own, so no dark half is written here. */
+.spectrum-wash {
+  position: relative;
+  isolation: isolate;
+}
+.spectrum-wash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--faction-default-rainbow);
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(var(--spectrum-wash-axis, 170deg), #000, transparent 68%);
+  mask-image: linear-gradient(var(--spectrum-wash-axis, 170deg), #000, transparent 68%);
+}
+
 /* ── `alb-moves` — THE DRESSER THE TWO CLASSES ABOVE WERE MINTED FOR (#2500,
    epic #2496 ruling 3). The block above says it in as many words: "a dresser
    reaches them with `.alb-x .spectrum-rule` … and #2500 is what will animate
