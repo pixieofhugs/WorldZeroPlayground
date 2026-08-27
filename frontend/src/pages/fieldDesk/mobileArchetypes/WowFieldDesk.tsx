@@ -70,6 +70,7 @@ import { formatPoints } from "../../../utils/points";
 import type { FieldDeskHomeState } from "../useFieldDeskHome";
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
+import LevelTrackMeta from "../../../components/LevelTrackMeta";
 
 /** Every tappable row clears the faction's 46px thumb target. */
 const TAP = 46;
@@ -239,30 +240,11 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-sm)",
-                marginTop: "var(--space-sm)",
-              }}
-            >
-              {levelTrack && (
-                <span style={trackMetaStyle}>
-                  {levelTrack.nextLevel === null
-                    ? t("sidebar.characterCard.topLevel")
-                    : t("sidebar.characterCard.toNextLevel", {
-                        points: levelTrack.pointsToNext.toLocaleString(),
-                        level: levelTrack.nextLevel,
-                      })}
-                </span>
-              )}
-              <span style={{ ...trackMetaStyle, marginLeft: "auto" }}>
-                {t("sidebar.characterCard.allTime", {
-                  points: character.all_time_score.toLocaleString(),
-                })}
-              </span>
-            </div>
+            <LevelTrackMeta
+              track={levelTrack}
+              allTimeScore={character.all_time_score}
+              style={trackMetaStyle}
+            />
           </div>
         }
       />

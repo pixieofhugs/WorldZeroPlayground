@@ -21,6 +21,7 @@ import FactionSigil from '../sigil/FactionSigil'
 import DefaultSigil from '../sigil/DefaultSigil'
 import { feedKicker, feedItemTitle } from '../feed/feedItemLabels'
 import { normalizeFeedItem } from '../feed/normalizeFeedItem'
+import LevelTrackMeta from '../LevelTrackMeta'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
@@ -1052,21 +1053,11 @@ export default function Sidebar() {
           </div>
 
           {/* ── Baseline: what is owed, and what has ever been earned ── */}
-          <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
-            {track && (
-              <span style={identityMetaStyle}>
-                {track.nextLevel === null
-                  ? t('sidebar.characterCard.topLevel')
-                  : t('sidebar.characterCard.toNextLevel', {
-                      points: track.pointsToNext.toLocaleString(),
-                      level: track.nextLevel,
-                    })}
-              </span>
-            )}
-            <span style={{ ...identityMetaStyle, marginLeft: 'auto' }}>
-              {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
-            </span>
-          </div>
+          <LevelTrackMeta
+            track={track}
+            allTimeScore={character.all_time_score}
+            style={identityMetaStyle}
+          />
         </section>
       ) : (
         <section className={PANEL_FRAME} style={panelStyle}>

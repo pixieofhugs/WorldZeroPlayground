@@ -136,14 +136,27 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     const html = letter(slug)
     const rows = [...html.matchAll(/<li style="[^"]*">([\s\S]*?)<\/li>/g)].map((m) => m[1])
     expect(rows).toHaveLength(3)
-    // The hue stays on the bullet — it is a FILL, not an ink (#1932/#2108) —
-    // and the name takes a text tier: primary for the mechanic, tertiary for
-    // the flavour, which is what makes one of the three read first.
+    // THE ASSERTION IS ON THE NAME SPAN, NOT THE ROW (#2619). Asserting
+    // `toContain` against the whole `<li>` was vacuous for the name's ink: the
+    // perk DESCRIPTION beneath it also prints `--color-text-primary`, so the row
+    // carried that string whatever the name did, and this test stayed green
+    // across the very repaint it exists to pin. The name is the only span in the
+    // row that is `text-transform:uppercase`.
+    const nameInk = (row: string) =>
+      /<span style="([^"]*text-transform:uppercase[^"]*)"/.exec(row)?.[1] ?? ''
+
+    // #2298 §2, as ruled and now shippable (#2619): the mechanic's name is in
+    // the faction ACCENT and the two flavour names in the tertiary, so one of
+    // the three reads first by colour. The ink is `-accent-ink` and never the
+    // bare hue — `local/no-faction-hue-as-ink` is right that the spine hue is
+    // 2.19:1 to 4.46:1 as type here, and this is the measured token that says
+    // the same thing legibly. The hue itself keeps the BULLET, which is a fill.
     expect(rows[MECHANIC]).toContain(`color:var(--faction-${slug})`)
-    expect(rows[MECHANIC]).toContain('color:var(--color-text-primary)')
+    expect(nameInk(rows[MECHANIC])).toContain(`color:var(--faction-${slug}-accent-ink)`)
+    expect(nameInk(rows[MECHANIC])).not.toContain('color:var(--color-text-primary)')
     for (const idx of [0, 2]) {
       expect(rows[idx]).not.toContain(`color:var(--faction-${slug})`)
-      expect(rows[idx]).toContain('color:var(--color-text-tertiary)')
+      expect(nameInk(rows[idx])).toContain('color:var(--color-text-tertiary)')
     }
   })
 })

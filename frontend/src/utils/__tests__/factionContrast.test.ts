@@ -85,6 +85,7 @@ import {
 import {
   ALBESCENT_FACTION_SLUG,
   FACTION_RAINBOW_ORDER,
+  factionCssVar,
   UNAFFILIATED_FACTION_SLUG,
 } from "../factions";
 import {
@@ -2346,8 +2347,58 @@ const SEAL_CAPTION_PAIRS: Pair[] = [
   { what: "wow seal caption", surface: "--faction-wow-chronicle-bg", text: "--faction-wow-card-accent" },
 ];
 
+/**
+ * THE ACCENT AS INK, ON THE PAGE (#2619) — the family #2298 §2 could not ship
+ * without.
+ *
+ * ONE BLOCK, AND IT IS #2698'S TO RELOCATE. These rows are written in the shape
+ * every hand-written row above takes, so when #2698 retires this manifest to the
+ * rendered sweep they move as a unit rather than needing to be re-derived. This
+ * file is also lane 3 of epic #2533; nothing here restates a row that already
+ * exists.
+ *
+ * READ OUT OF THE RESOLVER, not typed against a `--faction-{key}-` template —
+ * same discipline as `ROLE_PAIRS`. Walking every slug is also the acceptance
+ * check that `factionCssVar(slug, 'accent-ink')` ANSWERS for all nine of them;
+ * `na` and `albescent` both land on the `default` family (CSS_KEY, ADR-0039 /
+ * #783), so the rows dedupe to eight tokens and Albescent is measured by being
+ * indistinguishable rather than by a namespace of its own.
+ *
+ * TWO GROUNDS PER TOKEN, AND THE SECOND ONE IS WHY THE VALUES ARE NOT THE ONES
+ * PROPOSED. The page is the family's stated ground. Its first consumer is the
+ * invitation letter's perk box, which lays `--faction-{key}-light` over that
+ * page — and a tint mixed from the faction's own hue can only pull the ground
+ * toward the ink, so it is always the tighter reading. Measured page-only, four
+ * of the eight fail where they actually render: ua 3.83:1, coven 4.12,
+ * singularity 4.12, na 4.26. The tint rows are what say so, and they are the
+ * rows that hold the values honest — the page rows alone would go green on inks
+ * that are illegible on the one surface that paints them.
+ */
+const ACCENT_INK_PAIRS: Pair[] = (() => {
+  const rows: Pair[] = [];
+  const seen = new Set<string>();
+  for (const slug of ROLE_SLUGS) {
+    const reference = factionCssVar(slug, "accent-ink");
+    const token = reference.slice("var(".length, -1);
+    if (seen.has(token)) continue;
+    seen.add(token);
+    rows.push(
+      { what: `${slug} accent ink, on the page`, surface: "--color-bg-page", text: token },
+      {
+        // The perk box's own tint, over the page — the ground #2298 §2 renders on.
+        what: `${slug} accent ink, on the letter's perk box`,
+        surface: "--color-bg-page",
+        veil: token.replace(/-accent-ink$/, "-light") as Veil,
+        text: token,
+      },
+    );
+  }
+  return rows;
+})();
+
 const PAIRS: Pair[] = [
   ...ROLE_PAIRS,
+  ...ACCENT_INK_PAIRS,
   ...SEAL_CAPTION_PAIRS,
   ...ACCENT_PAIRS,
   ...ROSTER_PAIRS,
