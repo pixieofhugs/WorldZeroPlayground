@@ -1,6 +1,21 @@
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { factionRoleVar } from "../../utils/factionRoles";
+// The house PRNG, and the only one. It lives in the Ephemerists' kit because
+// that is where its second reader appeared (#2146), and its own docstring is
+// explicit that a second copy is the thing to avoid — so WOW reads it across
+// the faction line rather than growing a private one that could be tuned out of
+// step, invisibly, while both still looked random.
+//
+// ponytail: this makes `ephemeristsPlate`'s chunk a dependency of `wowOrnament`'s
+// — ~3.5 KB gzipped, fetched on any WOW surface that wears an ornament. The
+// entry chunk is untouched (`npm run budget` unchanged), so it is off the
+// critical path, which is the ceiling this accepts. The upgrade, when a fourth
+// reader or a byte makes it worth four files: lift `seededRandom` into its own
+// module beside these two and point both kits at it. It is a twelve-line pure
+// function with no imports.
+import { seededRandom } from "./ephemeristsPlate";
 
 /**
  * Warriors of Whimsy — THE SHARED ORNAMENT VOCABULARY (#1121).
@@ -226,38 +241,291 @@ export function BalloonBunch({
   );
 }
 
-/** How many pennants a strip carries. They flex, so this is a density, not a width. */
-const BUNTING_PENNANTS = 30;
+/**
+ * THE PENNANT, AND WHY THE STRIP COUNTS ITSELF (#2728).
+ *
+ * A pennant is a CSS triangle: two transparent 7px side borders under an 18px
+ * top border. So it is 14px wide, and A BORDER CANNOT SHRINK. The strip used to
+ * hang a fixed thirty of them at `flex: 1; min-width: 0` under a comment
+ * claiming "they flex, so this is a density, not a width" — which was false in
+ * both directions. Below ~536px the flex could not shrink past the mitres and
+ * `overflow: hidden` ate the tail (measured on prod: `clientWidth 263 /
+ * scrollWidth 536` at a 593px window — half the strip gone). Above it, the flex
+ * stretched the zero-height CONTENT box instead, and each flag opened out into a
+ * trapezoid with a 33.5px flat top.
+ *
+ * So the count is MEASURED off the container and every pennant is drawn at its
+ * own size — the pattern `EphemeristsNotationBand` already uses (#2143), and
+ * deliberately not a second mechanism. The strip carries as many whole flags as
+ * fit, at one PITCH rather than one count, and nothing is ever clipped.
+ *
+ * All four numbers are raw px because all four are ornament geometry (§4a), and
+ * the GAP is a number rather than `var(--space-xs)` because it is now arithmetic
+ * as well as paint: one constant cannot drift out of step with itself the way a
+ * token in the style and a 4 in the maths could.
+ */
+const PENNANT_WIDTH = 14;
+const PENNANT_GAP = 4;
+const PENNANT_HEIGHT = 18;
+/** Every other flag hangs 2px lower, so the strip reads as string rather than as
+ *  a rule. A TRANSFORM, so it paints below the flag's layout box — which is why
+ *  the well below is 22 and not 18. */
+const PENNANT_STAGGER = 2;
+
+/**
+ * How many whole pennants a strip of this width carries. Exported for its test:
+ * it is measured off a real element, so a harness with no DOM can only check the
+ * arithmetic at the function — and a strip that packs one flag too many looks
+ * entirely plausible and is the bug that was reported.
+ *
+ * An unmeasured strip (width 0, before the layout effect, or under the SSR-only
+ * test harness where effects never run) draws NOTHING rather than a guess:
+ * `EphemeristsNotationBand`'s rule, for its reason — a strip that paints thirty
+ * flags and then snaps to twelve is the twitch the measurement removes. The
+ * layout effect runs before paint, so no reader sees the empty state.
+ */
+export function buntingPennantCount(width: number): number {
+  if (!(width > 0)) return 0;
+  return Math.floor((width + PENNANT_GAP) / (PENNANT_WIDTH + PENNANT_GAP));
+}
+
+/** One flag. Exported for the same reason: with the count measured, the markup a
+ *  Node harness sees is an empty strip, so the alternation and the stagger are
+ *  only checkable here. */
+export function pennantStyle(index: number): CSSProperties {
+  const odd = index % 2 === 1;
+  return {
+    height: 0,
+    borderLeft: `${PENNANT_WIDTH / 2}px solid transparent`,
+    borderRight: `${PENNANT_WIDTH / 2}px solid transparent`,
+    borderTop: `${PENNANT_HEIGHT}px solid ${odd ? PLUM : GOLD}`,
+    transform: `translateY(${odd ? PENNANT_STAGGER : 0}px)`,
+  };
+}
+
+/** The twin of `EphemeristsNotationBand`'s and `SegmentedRail`'s: a layout effect
+ *  measures before the browser paints, so the strip fills in without a frame of
+ *  emptiness, and `useEffect` is the Node-side fallback where there is no layout
+ *  to read. */
+const useMeasureEffect = typeof document === "undefined" ? useEffect : useLayoutEffect;
 
 /** Gold and plum pennants strung across the head of a page. */
 export function Bunting({ style }: { style?: CSSProperties }): ReactNode {
+  const strip = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  const measure = useCallback(() => {
+    const element = strip.current;
+    if (!element) return;
+    // The CONTENT box, not `clientWidth`, which includes whatever padding the
+    // mount added — `WowFactionBody` adds `--space-lg` either side — while the
+    // flags only ever get the content box. Counting off `clientWidth` would
+    // re-open the horizontal clip on the very mount that reported the other one.
+    const box = getComputedStyle(element);
+    setWidth(
+      element.clientWidth - parseFloat(box.paddingLeft) - parseFloat(box.paddingRight),
+    );
+  }, []);
+
+  useMeasureEffect(measure);
+
+  useEffect(() => {
+    const element = strip.current;
+    // Guarded as the band guards its own: the constructor is a browser global
+    // and this module is imported by a Node-side harness.
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [measure]);
+
   return (
     <div
+      ref={strip}
       aria-hidden="true"
+      // The strip's handle in the markup. With the count measured there are no
+      // pennants for a DOM-less test to find, so this is what a surface test
+      // asserts to say "the bunting hangs here, and it is the shared primitive".
+      data-wow-bunting=""
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: "var(--space-xs)",
-        height: 22,
+        gap: PENNANT_GAP,
+        // THE WELL, AND THE SECOND CLIP (#2728). Tailwind preflight makes
+        // everything `border-box`, so a mount passing padding used to shrink the
+        // CONTENT box of a fixed `height: 22` — `WowFactionBody` takes 8px off
+        // the top, which left 14px for an 18px flag (`clientHeight 22 /
+        // scrollHeight 28`). `content-box` keeps the well 22 however a mount
+        // spaces it, and `min-height` lets it only ever grow: a mount can no
+        // longer clip the ornament it is positioning.
+        boxSizing: "content-box",
+        minHeight: PENNANT_HEIGHT + 2 * PENNANT_STAGGER,
         overflow: "hidden",
         opacity: 0.9,
         ...style,
       }}
     >
-      {Array.from({ length: BUNTING_PENNANTS }).map((_, index) => (
+      {Array.from({ length: buntingPennantCount(width) }, (_, index) => (
+        <span key={index} style={pennantStyle(index)} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * THE BANNER'S SCATTER — CONFETTI AND STILL BALLOONS, DRAWN ONCE (#2727).
+ *
+ * The recruiting hero used to wash its plate with the same 135° gilt hatch the
+ * page backdrop wears, at its own pitch: `20px 22px` over the wallpaper's
+ * `22px 24px`. Same angle, two pixels apart, one laid over the other — a beat,
+ * and the banner shimmered. THE FIX IS NOT A THIRD PITCH. A repeating grid over
+ * a repeating grid is the whole defect, so the hatch layer is gone and nothing
+ * that repeats on a grid may replace it: the wallpaper reads through the frame,
+ * and the Court throws confetti on top of it.
+ *
+ * THE SCATTER IS SEEDED, AND DRAWN AT MODULE LOAD. `EphemeristsNotationBand`
+ * states the reason and it is the same reason here: a band that redrew itself
+ * every render would twitch whenever anything unrelated moved on the page — a
+ * vote lands, a filter changes, a hover fires — and a screenshot of it would
+ * never reproduce. PER-VISIT randomness was considered and rejected too: a
+ * member meets this banner on every trip to their own faction page, and a
+ * background that differs each time reads as instability rather than as
+ * celebration. One seed, one scatter, WOW's forever. `Math.random` appears
+ * nowhere in this module and `wowHeroConfetti.test` reads the source to say so.
+ *
+ * BOTH INKS ARE ALREADY IN `index.css`, and they are the two washes this plate
+ * used to wear — the gilt hatch and the plum court-glow. §3's pricing rule
+ * (#1609, group 3): the right ornament colour is the one the stylesheet already
+ * owns, because a NEW token costs the sheet that blocks first paint. It also
+ * settles the contrast question without re-measuring anything. The muster's
+ * caption ink was priced at 4.61:1 "where the hatch and the court glow cross
+ * it" (#2248), so a flake at exactly those two strengths cannot put any reader
+ * below a floor that was already paid for — and both flip in the dark cascade,
+ * so no half of this needs a `dark ?` branch.
+ *
+ * NOTHING HERE MOVES. The bunches take `bob={false}`, and the googly pupils
+ * inside them ride `.wow-balloon-eye`, which no prop reaches — so
+ * `motion.ornament.css` stills them by class, in the sheet that owns the
+ * animation it is cancelling. A slowly moving background behind a wordmark
+ * reads as a rendering fault, not as a party.
+ *
+ * NO NEW VOCABULARY was drawn for the balloons: this mounts {@link BalloonBunch},
+ * the Court's device on the task card, the pledge card and the field desk, at
+ * watermark strength. Only the confetti is new, and it is a flake rather than a
+ * device — it takes no props and answers no question a caller could get wrong.
+ */
+export const WOW_CONFETTI_SEED = "wow";
+
+/** Dense enough to read as thrown, sparse enough to stay a watermark. */
+const FLAKE_COUNT = 34;
+
+/** Gold first: the plum is the accent in the throw, not half of it. */
+const FLAKE_INKS = ["var(--faction-wow-hatch)", "var(--faction-wow-court-glow)"];
+
+/** Ornament strength for the bunches, on the `UaMandala` "texture" rung (§6). */
+const BALLOON_WATERMARK = 0.15;
+
+export interface WowFlake {
+  /** Percent across and down the plate, so the throw reflows with the banner. */
+  left: number;
+  top: number;
+  /** Raw px — ornament geometry (§4a), never a spacing rung. */
+  width: number;
+  height: number;
+  /** Degrees. A flake lands at whatever angle it lands at. */
+  tilt: number;
+  /** A disc rather than a rounded rect; the only difference is the radius. */
+  disc: boolean;
+  /** A `var()`, always — see the note above on why these two. */
+  ink: string;
+}
+
+/**
+ * The throw. Exported for its test, which is the only place the SEAM is
+ * checkable: the geometry is percentages and raw pixels in an inline style, and
+ * "the same seed gives the same scatter" is a claim about the function rather
+ * than about any markup.
+ */
+export function drawWowConfetti(seed: string): WowFlake[] {
+  const next = seededRandom(seed);
+  const round = (value: number) => Number(value.toFixed(2));
+  return Array.from({ length: FLAKE_COUNT }, () => {
+    const disc = next() < 0.24;
+    const width = round(4 + next() * 4);
+    return {
+      left: round(next() * 100),
+      top: round(next() * 100),
+      width,
+      // A disc is round; a rect is between 1.4 and 2.2 times as long as it is
+      // wide, which is what keeps a rotated one reading as a paper flake.
+      height: disc ? width : round(width * (1.4 + next() * 0.8)),
+      tilt: round(next() * 180 - 90),
+      disc,
+      ink: FLAKE_INKS[next() < 0.34 ? 1 : 0],
+    };
+  });
+}
+
+/** Drawn once, at module load: the seed is fixed, so the throw is a constant. */
+const CONFETTI = drawWowConfetti(WOW_CONFETTI_SEED);
+
+/**
+ * Where the bunches hang. Hand-placed rather than drawn from the seed, because
+ * position is the one thing here that is a COMPOSITION decision: the plate's
+ * type is centred, so the balloons keep to the margins and a random draw would
+ * eventually put one behind the wordmark.
+ */
+const BALLOON_BUNCHES = [
+  { left: "3%", top: "9%", size: 62, tilt: -9 },
+  { left: "87%", top: "31%", size: 78, tilt: 8 },
+  { left: "13%", top: "57%", size: 44, tilt: 6 },
+];
+
+/**
+ * The banner's ornament layer. Takes no props, and that is the ruling in the
+ * type: there is one scatter and it is WOW's, so there is no seed for a second
+ * mount to pass and no strength for it to disagree about.
+ *
+ * It positions itself, so the mount supplies only a positioned ancestor —
+ * `WowFactionHero`'s wash layer already is one, and already sets
+ * `pointer-events: none` for everything inside it.
+ */
+export function WowBannerScatter(): ReactNode {
+  return (
+    <span
+      className="wow-banner-scatter"
+      aria-hidden="true"
+      style={{ position: "absolute", inset: 0 }}
+    >
+      {CONFETTI.map((flake, index) => (
         <span
           key={index}
           style={{
-            flex: 1,
-            minWidth: 0,
-            height: 0,
-            borderLeft: "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop: `18px solid ${index % 2 ? PLUM : GOLD}`,
-            transform: `translateY(${index % 2 ? 2 : 0}px)`,
+            position: "absolute",
+            left: `${flake.left}%`,
+            top: `${flake.top}%`,
+            width: flake.width,
+            height: flake.height,
+            borderRadius: flake.disc ? "50%" : 2,
+            background: flake.ink,
+            transform: `rotate(${flake.tilt}deg)`,
           }}
         />
       ))}
-    </div>
+      {BALLOON_BUNCHES.map((bunch) => (
+        <BalloonBunch
+          key={bunch.left}
+          size={bunch.size}
+          bob={false}
+          style={{
+            position: "absolute",
+            left: bunch.left,
+            top: bunch.top,
+            opacity: BALLOON_WATERMARK,
+            transform: `rotate(${bunch.tilt}deg)`,
+          }}
+        />
+      ))}
+    </span>
   );
 }

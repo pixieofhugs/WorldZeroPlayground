@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-87 records, of which **80 still state a rule**.
+88 records, of which **81 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -102,3 +102,4 @@
 | [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
 | [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |
 | [0087](0087-structural-faction-slugs-are-not-era-owned.md) | Structural faction slugs are not era-owned; a dropped faction is retired, not deleted | Accepted | — |
+| [0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md) | Albescent wears its own mark for a revealed viewer | Accepted | — |

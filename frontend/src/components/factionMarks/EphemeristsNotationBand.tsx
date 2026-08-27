@@ -250,11 +250,19 @@ export function EphemeristsNotationBand({ seed, side }: {
         display: "flex",
         alignItems: "baseline",
         justifyContent: "space-between",
-        // The device fills its container at every mount (#2312): *"the runes
-        // should go from one corner of the box to the other"*, and, asked
-        // whether that was one surface or all of them, *"Anywhere there are
-        // runes applies."* A mount inside a padded box bleeds ITSELF — the
-        // praxis card's byline divider does exactly that.
+        // The device fills its container at every mount, and carries no inset
+        // and no bleed of its own — the CONTAINER decides the width.
+        //
+        // #2724 RETIRED #2312's corner-to-corner rule ("the runes should go
+        // from one corner of the box to the other … anywhere there are runes
+        // applies"), under which a mount inside a padded box bled ITSELF back
+        // out to the border box. The rule now: a rune row is the width of the
+        // thing above it, so every `top` / `bottom` / `divider` mount hangs in
+        // its surface's own content column — the task card's CTA block is
+        // padded, the praxis card's divider sits flush in the leaf, the task
+        // page's rows fill the CTA cell and the composer's fills the sheet's
+        // column. `side="band"` is unaffected: it already sat inside the
+        // masthead's padding and was always correct.
         width: "100%",
         overflow: "hidden",
         fontFamily: READING,

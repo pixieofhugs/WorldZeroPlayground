@@ -9,7 +9,6 @@ import { type CommentProps, authorToCharacter, ComposerControls, MentionText } f
 import {
   CommentEditor,
   OwnerControls,
-  ownerRevealStyle,
   useOwnerEdit,
   useOwnerReveal,
 } from '../OwnerControls'
@@ -225,10 +224,10 @@ export default function WowComment(props: CommentProps) {
   // The foot exists only when it holds something: the author's edit/withdraw or
   // a flag affordance. Hidden while editing — the inline editor owns Save/Cancel.
   const showControls = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN comment the foot holds nothing but the gated owner row, so the
-  // rule above it fades with the row. A flaggable (someone else's) comment keeps
-  // its foot always. Same condition as `DefaultComment`, the behaviour spec.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
 
   return (
     <Sheet
@@ -289,7 +288,7 @@ export default function WowComment(props: CommentProps) {
       </div>
 
       {showControls && (
-        <div style={footGate ?? undefined}>
+        <div>
           <RibbonRule style={{ marginTop: 'var(--space-md)' }} />
           <div
             style={{

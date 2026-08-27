@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { CovenBand } from '../../cardMasthead/factionBands'
+import { factionCssVar } from '../../../utils/factions'
 import {
   Braid,
   CAPTION,
@@ -77,7 +78,9 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
         background: CARD,
         color: INK,
         border: `2px solid ${BORDER}`,
-        borderRadius: 14,
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('coven', 'card-radius'),
         boxShadow: SHADOW,
         transform: 'rotate(-0.6deg)',
         overflow: 'hidden',

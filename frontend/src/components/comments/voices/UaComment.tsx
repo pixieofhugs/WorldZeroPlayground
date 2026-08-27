@@ -10,7 +10,6 @@ import { type CommentProps, authorToCharacter, ComposerControls, MentionText } f
 import {
   CommentEditor,
   OwnerControls,
-  ownerRevealStyle,
   useOwnerEdit,
   useOwnerReveal,
 } from '../OwnerControls'
@@ -126,9 +125,10 @@ export default function UaComment(props: CommentProps) {
   // a flag affordance on somebody else's note. Hidden while editing — the inline
   // editor owns Save/Cancel then.
   const showFoot = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN note the foot holds nothing but the gated row, so its hairline
-  // fades with the row: a rule over empty space is a state the sheet never draws.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
   return (
     <div style={note(false)} {...reveal.containerProps}>
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
@@ -196,8 +196,7 @@ export default function UaComment(props: CommentProps) {
               // The faintest divider UA has: a rule inside the note is quieter
               // than the note's own edge.
               borderTop: '1px solid var(--faction-ua-hair)',
-              ...footGate,
-            }}
+              }}
           >
             <OwnerControls owner={owner} reveal={reveal} />
             <CommentFlagControl comment={comment} />

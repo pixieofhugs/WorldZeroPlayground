@@ -534,7 +534,24 @@ function ActiveTasksBody({
                   role="img"
                   aria-label={factionName(praxis.task_faction_slug)}
                 >
-                  <FactionSigil slug={praxis.task_faction_slug} size={ROW_SIGIL} />
+                  {/* Inked by the task's faction (#2723). Passing nothing left
+                      each mark on its own component default, which on this
+                      neutral rail is either the PAGE's text ink (the Ephemerists
+                      kite's `currentColor` — white after dark, the report) or a
+                      token declared once and so blind to the other theme.
+                      `factionCssVar` carries both halves of the cascade. The
+                      `isKnownFaction` guard is the filter facet's (#2528): `na`
+                      and `albescent` map to CSS key `default`, and that flat
+                      grey would paint over the spectra they own. */}
+                  <FactionSigil
+                    slug={praxis.task_faction_slug}
+                    size={ROW_SIGIL}
+                    color={
+                      isKnownFaction(praxis.task_faction_slug)
+                        ? factionCssVar(praxis.task_faction_slug)
+                        : undefined
+                    }
+                  />
                 </span>
               </div>
             </div>
@@ -683,7 +700,22 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     role="img"
                     aria-label={factionName(item.context_faction_slug)}
                   >
-                    <FactionSigil slug={item.context_faction_slug} size={ACTIVITY_SIGIL} />
+                    {/* And in that faction's hue (#2723), for the reason the
+                        in-progress row above is. `isNeutral` has already sent
+                        `na` and a null slug to the sampled ring, but NOT
+                        `albescent` — it draws its labyrinth through this
+                        dispatcher, and its adapter forwards `color` onto the
+                        mask — so the guard is what keeps that mark on its conic
+                        rather than the flat `--faction-default` grey. */}
+                    <FactionSigil
+                      slug={item.context_faction_slug}
+                      size={ACTIVITY_SIGIL}
+                      color={
+                        isKnownFaction(item.context_faction_slug)
+                          ? factionCssVar(item.context_faction_slug)
+                          : undefined
+                      }
+                    />
                   </span>
                 )}
                 <div className="min-w-0">

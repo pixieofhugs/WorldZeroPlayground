@@ -28,12 +28,27 @@
  *
  * ONE INK, WHOLESALE, and the default is still `currentColor`. That is the
  * design's own `<svg fill="currentColor">`; the gold in the study is set by the
- * CELL around it, the way each of this mark's six mounts already sets its own
+ * CELL around it, the way each of this mark's mounts sets its own
  * (`--faction-ephemerists-metal-gold` on the masthead and avatar, a brass on
- * the field desk, the band ink on the feed frame). Keeping the inherited
- * default is also what holds the two mounts that pass nothing — the sidebar
- * activity rail and the players race lanes, both on the NEUTRAL page — off a
- * theme-invariant #dcbb5e that measures 1.69:1 there in light.
+ * the field desk, the band ink on the feed frame).
+ *
+ * THE DEFAULT IS A FALLBACK, NOT A CHOICE ANY MOUNT SHOULD MAKE (#2723). This
+ * note used to argue the opposite — that inheriting the page's ink was what
+ * held the mounts passing nothing off a theme-invariant gold — and it was
+ * wrong in a way worth recording, because the next reader will be tempted to
+ * restore it. `currentColor` on the NEUTRAL chrome is the page's own text
+ * colour, so on the players race lanes, the roster's faction column and both of
+ * the sidebar's sigil rows this kite drew in body ink: near-black in light,
+ * WHITE in dark. It was the only one of the nine marks that did, which is why
+ * the bug was reported against Ephemerists and nobody else; the other eight
+ * default to an ink of their own.
+ *
+ * All four of those mounts pass `factionCssVar('ephemerists')` now — the spine
+ * hue, #c9a24b light / #e6c877 dark, the same token the race lane's own bar
+ * reads. NOT `--faction-ephemerists-metal-gold`: that measurement stands and is
+ * still the reason no neutral surface may reach for it. It is theme-invariant
+ * #dcbb5e and measures 1.69:1 on the page in light. A mount that wants gold
+ * wants a cell that supplies its own ground first.
  */
 
 const SAIL =

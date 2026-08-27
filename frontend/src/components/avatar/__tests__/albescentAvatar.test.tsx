@@ -27,6 +27,20 @@
  * OUTSIDE the photo and mounts inside that hook, so it rides with the lift in
  * both branches. The parity assertions below are half the issue.
  *
+ * THE CORNER MARK IS THE VIEWER'S, NOT THE PLAYER'S (ADR-0088, #2731). The disc
+ * used to be na's byte for byte — same ring, same monogram, same `DefaultSigil`
+ * — and this file asserted that on both branches. ADR-0088 reverses it: a
+ * viewer who has already been let in sees Albescent's labyrinth on the badge,
+ * and an unrevealed viewer sees na's ring exactly as before. So the invariant
+ * is no longer "identical to na" but "identical to na UNTIL the gate opens, and
+ * then different in the corner mark and nowhere else" — the assertion that
+ * catches a leak, and sharper than the one it replaces.
+ *
+ * THE SEAM IS `isFactionRedacted()`, driven here by `setAlbescentRevealed` —
+ * two viewers rendering the same character. Not a prop and not a context: the
+ * module flag `/auth/me` sets, so the gate this file exercises is the one every
+ * mount in the app actually reads.
+ *
  * The harness is `renderToStaticMarkup`: no DOM, so the rotation itself cannot
  * be observed here. What can be — and is — is that the ornament's paint lives in
  * index.css, its animation lives in the deferred motion sheet behind the
@@ -36,12 +50,13 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import type { CharacterOut } from '../../../api/auth'
 import AlbescentAvatar from '../AlbescentAvatar'
 import DefaultAvatar from '../DefaultAvatar'
 import { surfaceMap } from '../../../factions'
+import { setAlbescentRevealed } from '../../../utils/factions'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 
 const read = (path: string): string =>
@@ -50,8 +65,21 @@ const read = (path: string): string =>
 const INDEX = read('../../../index.css')
 const MOTION = read('../../../motion.ornament.css')
 
-/** The one node the wrapper adds. Removing it must leave `DefaultAvatar`. */
+/** The one node the wrapper adds. Removing it must leave the na disc. */
 const ORNAMENT = '<span aria-hidden="true" class="alb-avatar-ring"></span>'
+
+/** The labyrinth's alpha stencil — the whole of what a revealed viewer gains. */
+const LABYRINTH = '/factionMarks/labyrinth.svg'
+
+/** `DefaultSigil`'s stencil: a ring punched with a hole, not a drawing. */
+const NA_RING = 'radial-gradient(circle'
+
+/**
+ * Everything ABOVE the corner mark. The badge is the last child and the only
+ * absolutely positioned node in the disc, so this is the portrait, the ring and
+ * the ornament — the part the gate may not touch.
+ */
+const aboveTheBadge = (html: string): string => html.slice(0, html.indexOf('position:absolute'))
 
 function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
   return {
@@ -133,16 +161,100 @@ describe('a photo disc and a monogram disc are the same amount of Albescent', ()
   })
 })
 
-describe('it is Default plus one span, on both branches', () => {
-  it.each([
-    ['monogram', MONOGRAM],
-    ['photo', PHOTO],
-  ])('strips back to DefaultAvatar byte for byte — %s', (_label, who) => {
-    const alb = renderToStaticMarkup(<AlbescentAvatar character={who} size={64} />)
-    expect(alb).toContain(ORNAMENT)
-    expect(alb.replace(ORNAMENT, '')).toBe(
-      renderToStaticMarkup(<DefaultAvatar character={who} size={64} />),
-    )
+describe('the corner mark is gated on the viewer, not on the player (ADR-0088)', () => {
+  // The module flag defaults to hidden, so every OTHER describe in this file
+  // runs unrevealed and reads na's dress. Put it back after each case here.
+  afterEach(() => setAlbescentRevealed(false))
+
+  const disc = (who: CharacterOut, size: 'sm' | 'md' | number = 'sm'): string =>
+    renderToStaticMarkup(<AlbescentAvatar character={who} size={size} />)
+
+  describe('an UNREVEALED viewer — na, exactly as before', () => {
+    it.each([
+      ['monogram', MONOGRAM],
+      ['photo', PHOTO],
+    ])('is DefaultAvatar byte for byte — %s', (_label, who) => {
+      setAlbescentRevealed(false)
+      expect(disc(who)).toBe(renderToStaticMarkup(<DefaultAvatar character={who} size="sm" />))
+    })
+
+    it('never names the labyrinth, in the markup or in an asset URL', () => {
+      setAlbescentRevealed(false)
+      // The leak the gate exists to prevent: a stranger reading a thread must
+      // not be handed a mark that sorts Albescent members out of the crowd.
+      expect(disc(MONOGRAM)).not.toContain(LABYRINTH)
+      expect(disc(PHOTO)).not.toContain(LABYRINTH)
+      expect(disc(MONOGRAM)).toContain(NA_RING)
+    })
+
+    it('is still Default plus one span at the gate size', () => {
+      setAlbescentRevealed(false)
+      const alb = disc(MONOGRAM, 64)
+      expect(alb).toContain(ORNAMENT)
+      expect(alb.replace(ORNAMENT, '')).toBe(
+        renderToStaticMarkup(<DefaultAvatar character={MONOGRAM} size={64} />),
+      )
+    })
+  })
+
+  describe('a REVEALED viewer — the labyrinth, at every mount', () => {
+    it.each([
+      ['a comment leaf', 'sm' as const],
+      ['a praxis byline', 28],
+      ['a mobile row', 42],
+      ['the roster LEAD', 54],
+      ['past the ring gate', 64],
+    ])('badges %s with the labyrinth', (_label, size) => {
+      setAlbescentRevealed(true)
+      const html = disc(MONOGRAM, size)
+      expect(html).toContain(LABYRINTH)
+      // Not na's ring as well — the mark is replaced, never stacked.
+      expect(html).not.toContain(NA_RING)
+    })
+
+    it('changes the corner mark and nothing else', () => {
+      // The disc, the spectrum ring and the ornament are the same bytes for
+      // both viewers; the delta is confined to the badge. Albescent still has
+      // no hue of its own — the labyrinth is filled from the same conic na's
+      // ring is (ADR-0088 keeps `CSS_KEY.albescent` on `default`).
+      setAlbescentRevealed(false)
+      const hidden = disc(PHOTO, 64)
+      setAlbescentRevealed(true)
+      const shown = disc(PHOTO, 64)
+      expect(shown).not.toBe(hidden)
+      expect(aboveTheBadge(shown)).toBe(aboveTheBadge(hidden))
+      expect(shown).not.toContain('--faction-albescent-')
+    })
+
+    it('draws the same amount of Albescent on a photo as on a monogram', () => {
+      // The parity property #2502 established, restated for the badge: same
+      // player, same surface, one tell.
+      setAlbescentRevealed(true)
+      expect(disc(PHOTO)).toContain(LABYRINTH)
+      expect(disc(MONOGRAM)).toContain(LABYRINTH)
+    })
+
+    it('draws no mark at all where the surface turned the badge off', () => {
+      // The desktop roster gives the faction its own column (#2245) and passes
+      // `badge={false}`. The gate must not smuggle a second mark back onto it.
+      setAlbescentRevealed(true)
+      const html = renderToStaticMarkup(
+        <AlbescentAvatar character={MONOGRAM} size={42} badge={false} />,
+      )
+      expect(html).not.toContain(LABYRINTH)
+      expect(html).not.toContain(NA_RING)
+    })
+
+    it('leaves an unaffiliated player wearing na, whoever is looking', () => {
+      // The gate keys off the CHARACTER's slug through `isFactionRedacted`, so
+      // a revealed viewer must not repaint everyone else's disc.
+      setAlbescentRevealed(true)
+      const na = renderToStaticMarkup(
+        <DefaultAvatar character={character({ faction_slug: 'na' })} size="sm" />,
+      )
+      expect(na).toContain(NA_RING)
+      expect(na).not.toContain(LABYRINTH)
+    })
   })
 
   it('registers the wrapper on the avatar surface', () => {

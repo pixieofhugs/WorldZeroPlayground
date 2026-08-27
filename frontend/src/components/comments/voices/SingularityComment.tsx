@@ -7,7 +7,6 @@ import { type CommentProps, authorToCharacter, ComposerControls, MentionText } f
 import {
   CommentEditor,
   OwnerControls,
-  ownerRevealStyle,
   useOwnerEdit,
   useOwnerReveal,
 } from '../OwnerControls'
@@ -247,10 +246,10 @@ export default function SingularityComment(props: CommentProps) {
   // The foot exists only when it holds something. Hidden while editing — the
   // inline editor owns Save/Cancel then.
   const showFoot = !owner.editing && (owner.isOwner || canFlag)
-  // On your own comment the foot holds nothing but the gated owner row, so the
-  // rule above it fades with the row: a hairline over empty space is a state the
-  // sheet never draws. A flaggable (someone else's) comment keeps its foot.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
 
   return (
     <Pane
@@ -331,7 +330,6 @@ export default function SingularityComment(props: CommentProps) {
             marginTop: 'var(--space-md)',
             paddingTop: 'var(--space-sm)',
             borderTop: `1px dashed ${HAIR}`,
-            ...footGate,
           }}
         >
           {/* Two repoints, deliberately not one — see the docblock. */}

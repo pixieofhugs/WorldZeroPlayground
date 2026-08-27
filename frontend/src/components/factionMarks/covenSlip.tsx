@@ -8,7 +8,7 @@ import { mediaUrl } from "../../utils/media";
  * Coven had no shared kit module: the spell slip's marks lived inside
  * `CovenTaskCard`, `CovenTaskDetail` and `CovenPraxisDetail`, which was fine
  * while three surfaces wore them. The `coven.exe` sweep dresses THIRTEEN more,
- * and thirteen private copies of a pentagram badge is how a faction acquires a
+ * and thirteen private copies of a faction's badge is how a faction acquires a
  * second identity again. So the marks every swept surface needs — and only
  * those — are drawn once here, in the shape `components/duel/wowLists.tsx` and
  * `components/factionMarks/wowMobile.tsx` already established for WOW.
@@ -147,29 +147,17 @@ export function Spark({
   );
 }
 
-/** The coven's pentagram badge — dashed gold ring, pink field, lit centre. */
-export function SigilMark({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 44 44"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <circle cx="22" cy="22" r="19" fill={PINK} opacity="0.18" />
-      <circle cx="22" cy="22" r="15" fill="none" stroke={GOLD} strokeWidth="1" strokeDasharray="2 4" />
-      <path
-        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
-        fill="none"
-        stroke={DEEP}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="22" cy="22" r="3" fill={GOLD} />
-    </svg>
-  );
-}
+/* THE PENTAGRAM BADGE IS GONE FROM THIS MODULE (#2726). `SigilMark` — a pink
+   disc under a dashed gold ring, a five-point star, a lit centre — stood here
+   and had six mounts: the faction hero, the faction body's join band, the task
+   detail header, the duel seal band, the create-character masthead and the
+   mobile field desk's plate. All six now draw `components/sigil/CovenSigil`,
+   the witch hat, which is what `CovenAvatar` badges a member with (#2217) and
+   what the directory tile dispatches to (#2325). A player meets ONE symbol for
+   this faction.
+
+   `PINK`, `GOLD` and `DEEP` stay exported: the badge was one consumer of three
+   inks this module publishes for the whole kit, not their reason to exist. */
 
 /**
  * The turning watermark — A CAT, line-drawn, replacing the pentagram (#2041).

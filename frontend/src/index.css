@@ -6140,6 +6140,7 @@
 .alb-profile-edge,
 .alb-plate-edge,
 .alb-desk-edge,
+.alb-comment-edge,
 .spectrum-frame::before {
   position: absolute;
   inset: 0;
@@ -6913,9 +6914,39 @@
 .alb-plate-edge,
 .alb-desk-edge,
 .alb-task-edge,
-.alb-praxis-card-edge {
+.alb-praxis-card-edge,
+.alb-comment-edge {
   padding: 3px;
   opacity: 1;
+}
+/* Albescent — the COMMENT LEAF's ring, the tenth mount (#2732, ADR-0088 §3).
+   The sheet in `CommentThread` carried na's 3px spectrum CAP across its top and
+   no edge at all; a revealed viewer now gets this instead, and the cap comes off
+   in the same breath. That is the carrier rule above applied literally — one
+   carrier per object — which is why this joins that list rather than the
+   hairline defaults: the leaf's spectrum was already 3px at full strength, so
+   the amount of rainbow on the surface is unchanged and only its GEOMETRY moved,
+   from a bar across the top to a frame round the whole leaf.
+
+   It states nothing else. The corner is the shared `border-radius: inherit`,
+   which reads `SHEET_RADIUS` (10px, inline at the mount) off the sheet the span
+   is a direct child of — no literal, and it follows if that number ever changes.
+
+   THE ONE THING IT DOES SAY. `z-index: 1` is the FAMILY's number, the same one
+   `.alb-task-edge` and `.alb-praxis-card-edge` carry, and it is load-bearing
+   here: the composer this sheet also dresses positions its @mention listbox
+   inside itself. The listbox sits at 30 and stays over the ring; a static body
+   sits under it. Without a number the ring would be beatable by any positioned
+   descendant that declares one.
+
+   REVEAL-GATED IN THE COMPONENT, NOT HERE. `AlbescentComment` mounts this span
+   only past `isFactionRedacted` (ADR-0082), and an unrevealed viewer gets na's
+   cap with no ring — so there is no redacted state for this rule to know about.
+
+   The travel is the shared `alb-edge-travel` in `motion.ornament.css`; no
+   keyframe is minted here, and stopped it reads as a still spectrum edge. */
+.alb-comment-edge {
+  z-index: 1;
 }
 /* The praxis card's twin of it (#2499). Its own rule states only the two things
    the task card's does not: this span hangs off a wrapper whose corner is the
@@ -9436,4 +9467,63 @@
 .sg-control-off {
   --control-off-fill: var(--faction-singularity-term-panel);
   --control-off-ink: var(--faction-singularity-term-dim);
+}
+
+/* ── THE METATASK PICKER'S SELECTION TICK (#2729 follow-up) ──
+   The selection ring takes the selected card's own `-card-accent`, which is the
+   right answer for identity and the wrong one for perception on two of the
+   nine: measured against this sheet's stock (`--faction-default-card-bg`,
+   #fffdf9 light / #1c1b24 dark) the ring reads **1.19:1 for Snide's toxic acid
+   and 1.72:1 for the Singularity's phosphor** in light, against 1.4.11's 3:1
+   for a non-text state indicator. Coven's 3.10:1 only just clears. The ring is
+   the ONLY thing saying which metatask is chosen, so on those skins the answer
+   was "none of them".
+
+   A HEAVIER RING WAS THE OTHER CANDIDATE AND IT DOES NOT WORK. Contrast is a
+   ratio between two colours; widening the stroke does not change it, so a 4px
+   acid ring at 1.19:1 is exactly as invisible as a 2px one and 1.4.11 grants no
+   width exemption. What survives a bad ratio is a mark that is THERE or NOT
+   THERE, and the ring keeps its accent unchanged — this is additive.
+
+   IT CANNOT LOSE ITS GROUND, WHICHEVER CARD IT LANDS ON. The badge is the
+   sheet's neutral pair — `-card-accent` on `-card-bg` — and it carries a 2px
+   rim of the opposite one. Those two are 18.22:1 apart in light and 13.75:1 in
+   dark, and for a pair C apart the WORSE of (fill vs ground, rim vs ground) can
+   only be minimised where the two are equal, i.e. at √C: **4.27:1 light and
+   3.71:1 dark, on any ground whatsoever.** So one of the two edges always
+   clears 3:1 — the dark fill reads on Everymen's paper, the pale rim reads on
+   the Singularity's black chassis — with no per-faction branch and no test of
+   which card is underneath. The glyph sits at 18.22:1 / 13.75:1 on its own
+   fill, always.
+
+   IT RIDES THE CONTROL, for the reason the ring does: a card that draws past
+   its own border box (Everymen's double shadow, Ephemerists' brass outline,
+   Snide's and Coven's rotations) can paint over anything the wrapper draws.
+   Inside the control — `inset: 0`, `zIndex: 3`, the card's own box — nothing in
+   the row is above it.
+
+   TOP-RIGHT IS THE CORNER ALL NINE SKINS ALREADY RESERVE FOR A CONTROL: every
+   seal puts its peel `×` at exactly this offset, and the picker never passes
+   `removable`, so the corner is empty here on all nine. Against the card ROOT
+   it lands in the masthead's right gutter, which `CardMasthead` keeps "empty by
+   design" so the wordmark can centre. Fixed size, not a proportion of the card:
+   the tell has to read the same on the shortest seal as on the tallest.
+
+   Decorative — `aria-pressed` on the control is what a screen reader is told,
+   and the footer names the pending choice in words. */
+.metatask-pick__tick {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: var(--space-lg);
+  height: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  background: var(--faction-default-card-accent);
+  color: var(--faction-default-card-bg);
+  box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
