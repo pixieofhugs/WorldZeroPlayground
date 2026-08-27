@@ -25,7 +25,7 @@
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aCharacter, aCurrentUser, aPraxis, aTask } from "../../../test/fixtures";
+import { aCharacter, aCurrentUser, aMetatask, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 import { collabCopy } from "../../../components/collab/collabCopy";
 
@@ -34,19 +34,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-const METATASK = aTask({
-  id: 501,
-  title: "Composting",
-  point_value: 60,
-  level_required: 0,
-  task_type: "metatask",
-  created_by: 9,
-  metatask_faction_slug: "everymen",
-  created_by_display_name: "",
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-});
+const METATASK = aMetatask({ metatask_faction_slug: "everymen" });
 
 const PRAXIS = aPraxis({
   task_title: "Sweep The Long Corridor",

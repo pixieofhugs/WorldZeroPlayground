@@ -71,6 +71,31 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   ...over,
 })
 
+/**
+ * A metatask — the seal a praxis applies, not a task anyone signs up for.
+ *
+ * Same wire shape as {@link aTask}; the fields that differ are exactly the ones
+ * that follow from `task_type: 'metatask'`, so a suite that only needs "a seal
+ * to hang on a praxis" says `aMetatask({ metatask_faction_slug: 'coven' })` and
+ * nothing else. `metatask_faction_slug` has no default: which faction's seal it
+ * is is the only thing a caller ever means by it.
+ */
+export const aMetatask = (over: Partial<TaskOut> = {}): TaskOut =>
+  aTask({
+    id: 501,
+    title: 'Composting',
+    point_value: 60,
+    level_required: 0,
+    task_type: 'metatask',
+    created_by: 9,
+    created_by_display_name: '',
+    // A metatask is applied to a praxis, never signed up for (#1093).
+    can_sign_up: false,
+    allowed_modes: [],
+    eligible_for_current_user: false,
+    ...over,
+  })
+
 export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut => ({
   id: 101,
   praxis_id: 1,

@@ -31,7 +31,7 @@ import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aPraxis, aTask } from '../../../test/fixtures'
+import { aMetatask, aPraxis } from '../../../test/fixtures'
 import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
 // `markup` tag-strips into `text` — several archetypes split the finding across
@@ -201,19 +201,7 @@ function multiplierState(): PraxisDetailState {
 // faction (here `snide`), not the host archetype's — a UA-hosted page shows a
 // Snide-issued seal. Its condition line is the metatask title, the anchor below.
 
-const SEAL_METATASK = aTask({
-  id: 501,
-  title: "Composting",
-  point_value: 60,
-  level_required: 0,
-  task_type: "metatask",
-  created_by: 9,
-  metatask_faction_slug: "snide",
-  created_by_display_name: "",
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-});
+const SEAL_METATASK = aMetatask({ metatask_faction_slug: "snide" });
 
 /** Same praxis, now carrying one applied metatask seal. */
 function sealedState(): PraxisDetailState {

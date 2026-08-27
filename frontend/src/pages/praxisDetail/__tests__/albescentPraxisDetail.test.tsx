@@ -32,7 +32,7 @@
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis, aTask } from "../../../test/fixtures";
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from "../../../test/fixtures";
 import {
   CO_MEMBER,
   MEMBER,
@@ -55,19 +55,7 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const SEAL = aTask({
-  id: 501,
-  title: "Composting",
-  point_value: 60,
-  level_required: 0,
-  task_type: "metatask",
-  created_by: 9,
-  metatask_faction_slug: "snide",
-  created_by_display_name: "",
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-});
+const SEAL = aMetatask({ metatask_faction_slug: "snide" });
 
 const DUEL = aDuel({
   challenger: aDuelSide({ faction_slug: "albescent", points_from_votes: 18 }),

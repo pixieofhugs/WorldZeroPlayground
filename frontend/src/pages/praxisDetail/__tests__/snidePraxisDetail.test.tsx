@@ -24,7 +24,7 @@ import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut } from "../../../api/duel";
-import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
@@ -156,30 +156,7 @@ describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
         type: "collab",
         members: [MEMBER, CO_MEMBER],
         applied_metatasks: [
-          {
-            id: 501,
-            title: "Composting",
-            description: '',
-            point_value: 60,
-            level_required: 0,
-            status: "active",
-            task_type: "metatask",
-            created_by: 9,
-            primary_faction_slug: 'na',
-            metatask_faction_slug: "snide",
-            created_at: "2026-01-01T00:00:00Z",
-            in_progress_count: 0,
-            created_by_display_name: "",
-            created_by_avatar_url: "",
-            created_by_faction_slug: null,
-            created_by_level: 0,
-            signup_reason: null,
-            in_progress_praxis_id: null,
-            can_sign_up: false,
-            allowed_modes: [],
-            eligible_for_current_user: false,
-            start_here: false,
-          },
+          aMetatask({ metatask_faction_slug: "snide" }),
         ],
       },
     });

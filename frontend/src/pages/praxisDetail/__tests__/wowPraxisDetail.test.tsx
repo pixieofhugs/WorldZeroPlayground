@@ -28,14 +28,7 @@ import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut } from "../../../api/duel";
-import {
-  aCharacter,
-  aCurrentUser,
-  aDuel,
-  aDuelSide,
-  aMember,
-  aPraxis,
-} from "../../../test/fixtures";
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMember, aMetatask, aPraxis } from "../../../test/fixtures";
 import { CO_MEMBER as SHARED_CO_MEMBER, VOTERS, aPraxisDetailState, indexOf, renderPraxisDetail, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
@@ -121,30 +114,7 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
           type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
-            {
-              id: 501,
-              title: "Composting",
-              description: '',
-              point_value: 6,
-              level_required: 0,
-              status: "active",
-              task_type: "metatask",
-              created_by: 9,
-              primary_faction_slug: 'na',
-              metatask_faction_slug: "wow",
-              created_at: "2026-01-01T00:00:00Z",
-              in_progress_count: 0,
-              created_by_display_name: "",
-              created_by_avatar_url: "",
-              created_by_faction_slug: null,
-              created_by_level: 0,
-              signup_reason: null,
-              in_progress_praxis_id: null,
-              can_sign_up: false,
-              allowed_modes: [],
-              eligible_for_current_user: false,
-              start_here: false,
-            },
+            aMetatask({ metatask_faction_slug: "wow" }),
           ],
         },
       }),

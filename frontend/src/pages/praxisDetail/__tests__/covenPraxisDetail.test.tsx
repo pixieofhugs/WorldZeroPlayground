@@ -23,7 +23,7 @@ import { describe, it, expect, vi } from 'vitest'
 import i18n from '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut } from '../../../api/duel'
-import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis, aTask } from '../../../test/fixtures'
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from '../../../test/fixtures'
 import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
 
 
@@ -64,19 +64,7 @@ const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
   })
 
 
-const SEAL_METATASK = aTask({
-  id: 501,
-  title: 'Composting',
-  point_value: 60,
-  level_required: 0,
-  task_type: 'metatask',
-  created_by: 9,
-  metatask_faction_slug: 'coven',
-  created_by_display_name: '',
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-})
+const SEAL_METATASK = aMetatask({ metatask_faction_slug: 'coven' })
 
 const VIEWER = aCurrentUser({ character: aCharacter({ faction_slug: 'coven', level: 4 }) })
 
