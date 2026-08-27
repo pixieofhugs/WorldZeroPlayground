@@ -146,6 +146,44 @@ describe("the task card is the definition's first consumer", () => {
   });
 });
 
+describe("the CTA block is ONE column, rule and runes alike (#2724)", () => {
+  const html = card();
+
+  /** The block that holds the rule — the rule's parent, and the CTA's column. */
+  function column(markup: string): string {
+    const at = markup.indexOf('data-cta-rule="ephemerists"');
+    expect(at, "the brass rule").toBeGreaterThan(-1);
+    const rule = markup.lastIndexOf("<", at);
+    const from = markup.lastIndexOf("<div", rule - 1);
+    return markup.slice(from, markup.indexOf(">", from));
+  }
+
+  it("insets the block by the plate's own `--space-xl`, so everything in it lines up", () => {
+    // #2312 ran the rune rows corner to corner while the rule above them kept a
+    // 20px inset, and the rule read as a short line against them. #2724 retires
+    // that: a rune row is the width of the thing above it, so the CTA block is
+    // the padded box and the rule, the button and both rows fill it.
+    expect(column(html)).toContain("padding:0 var(--space-xl)");
+  });
+
+  it("leaves the rule stating only its clearance, not the inset", () => {
+    // The rule does not MOVE — the inset it used to carry as a side margin is
+    // now the column's padding, and stating it twice would double it.
+    const tag = opened(html, 'data-cta-rule="ephemerists"');
+    expect(tag).toContain("margin:0 0 var(--space-md)");
+  });
+
+  it("hangs both rune rows in that same column, at no inset of their own", () => {
+    for (const side of ["top", "bottom"] as const) {
+      const at = html.indexOf(`data-eph-runes="${side}"`);
+      expect(at, side).toBeGreaterThan(html.indexOf('data-cta-rule="ephemerists"'));
+      // No bleed and no second inset: the row fills the column it was hung in,
+      // which is what makes its edges the rule's edges.
+      expect(opened(html, `data-eph-runes="${side}"`), side).not.toContain("margin");
+    }
+  });
+});
+
 describe("every bordered plate CTA wears it, and the list is the assertion", () => {
   const files: [string, string][] = [];
   const walk = (dir: string) => {
