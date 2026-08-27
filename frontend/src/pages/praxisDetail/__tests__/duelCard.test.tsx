@@ -26,6 +26,7 @@ import '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../../api/duel'
 import { aMember, aPraxis } from '../../../test/fixtures'
+import { aPraxisDetailState } from '../../../test/praxisDetail'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -90,42 +91,11 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
 }
 
 function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [],
     duel: duel(),
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
     ...overrides,
-  }
+  })
 }
 
 function render(

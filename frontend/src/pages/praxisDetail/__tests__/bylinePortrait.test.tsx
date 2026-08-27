@@ -23,18 +23,16 @@
  * framed plate, Singularity's terminal cell. What travels is the RULE, drawn
  * inside each archetype's existing frame.
  */
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
-// Initialize the catalog so shared-chrome copy keys resolve to English.
-import '../../../i18n'
 import { surfaceMap } from '../../../factions'
 import DefaultPraxisDetail from '../archetypes/DefaultPraxisDetail'
 import { bylineFaces } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import { aPraxis, aMember, AUTHOR } from '../../../test/fixtures'
+import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 import { mediaUrl } from '../../../utils/media'
+
 
 /** A two-word name so the monogram is a distinctive pair a substring can find. */
 const NAME = 'Zev Quist'
@@ -43,13 +41,11 @@ const PORTRAIT = 'avatars/zev.png'
 /** A second member, who since #2318 carries a portrait of their own. */
 const CREWMATE = { id: 44, name: 'Ilse Ronan', portrait: 'avatars/ilse.png' }
 
-function render(element: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
-}
+const render = (element: ReactElement): string => markup(element).html
+
 
 function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: aPraxis({
       created_by_display_name: NAME,
       // The author's own member row carries the same portrait the top-level
@@ -65,38 +61,7 @@ function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailS
       ],
       ...over,
     }),
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-  }
+  })
 }
 
 function occurrences(haystack: string, needle: string): number {

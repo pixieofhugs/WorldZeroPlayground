@@ -21,8 +21,6 @@
  *
  * Rendered to static markup; the catalog is initialized so copy keys resolve.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
@@ -34,11 +32,10 @@ import type {
   PraxisStatus,
 } from "../../../api/praxis";
 import type { CharacterOut, CurrentUser } from "../../../api/auth";
+import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
-function text(element: ReactElement): string {
-  const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
-  return html.replace(/<[^>]*>/g, "");
-}
+const text = (element: ReactElement): string => markup(element).text;
+
 
 function member(
   characterId: number,
@@ -153,42 +150,10 @@ function user(characterId: number): CurrentUser {
 /** Minimal PraxisDetailState — only the fields the two slots read matter; the
  *  rest are stubbed with inert defaults. */
 function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: null,
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
     ...overrides,
-  };
+  });
 }
 
 const ADA = () => member(1, "Ada", true);

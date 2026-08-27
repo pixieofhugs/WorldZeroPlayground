@@ -39,6 +39,7 @@ import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { CurrentUser } from "../../../api/auth";
 import { aPraxis } from '../../../test/fixtures'
+import { aPraxisDetailState } from '../../../test/praxisDetail'
 
 const HEADING = "Cast your vote";
 const PROMPT = "How much did this move you?";
@@ -105,41 +106,10 @@ function viewer(): CurrentUser {
 
 /** Detail state for one viewer, carrying the backend's eligibility answer. */
 function state(user: CurrentUser | null, viewerCanVote: boolean): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: { ...PRAXIS, viewer_can_vote: viewerCanVote },
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: false,
-    showAdminBar: false,
     user,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-  };
+  });
 }
 
 function render(element: ReactElement, user: CurrentUser | null): string {

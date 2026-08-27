@@ -24,10 +24,7 @@
  * throwing. We assert the structural anchors each slot leaves behind: the
  * finding text, the "re:" task link, and the author-byline character link.
  */
-import { renderToStaticMarkup } from "react-dom/server";
 import { surfaceMap } from "../../../factions";
-import { MemoryRouter } from "react-router-dom";
-import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import i18n from "../../../i18n";
@@ -35,14 +32,13 @@ import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aPraxis, aTask } from '../../../test/fixtures'
+import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
-function render(element: ReactElement): { html: string; text: string } {
-  const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
-  // Tag-stripped text — several archetypes split the finding across spans
-  // (the Ephemerists' lapis last-word), so the headline only reads contiguously
-  // once the wrapping tags are removed.
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
+// `markup` tag-strips into `text` — several archetypes split the finding across
+// spans (the Ephemerists' lapis last-word), so the headline only reads
+// contiguously once the wrapping tags are removed.
+const render = markup;
+
 
 const PRAXIS = aPraxis({
   task_title: "Mangrove",
@@ -67,41 +63,9 @@ const PRAXIS = aPraxis({
  *  praxis payload (`scoreBreakdown`, ADR-0053); behavior-slot state is left in
  *  its default (anonymous, non-owner) shape. */
 function state(): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-  };
+  });
 }
 
 // Default fallback is a registered renderable too — guard it alongside the map.

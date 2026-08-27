@@ -27,6 +27,7 @@ import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { CurrentUser } from '../../../api/auth'
 import { aMember, aPraxis, aTask } from '../../../test/fixtures'
+import { aPraxisDetailState } from '../../../test/praxisDetail'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -133,45 +134,14 @@ const VIEWER: CurrentUser = {
 } as unknown as CurrentUser
 
 function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
     voters: [
       { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
       { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
     ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
     ...overrides,
-  }
+  })
 }
 
 function render(

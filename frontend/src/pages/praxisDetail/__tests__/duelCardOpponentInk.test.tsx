@@ -51,6 +51,7 @@ import DefaultPraxisDetail from '../archetypes/DefaultPraxisDetail'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import { aPraxis } from '../../../test/fixtures'
+import { aPraxisDetailState } from '../../../test/praxisDetail'
 
 /**
  * Three genuinely different opponents — the same three the retired rail guard
@@ -112,41 +113,10 @@ function duelAgainst(hostSlug: string, rivalSlug: string): DuelDetailOut {
 }
 
 function state(duel: DuelDetailOut): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [],
     duel,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-  }
+  })
 }
 
 // The Default fallback is a registered renderable too — guard it beside the map,
