@@ -35,7 +35,9 @@ import '../i18n'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { FormFactor } from '../hooks/useFormFactor'
 import type { VoterDetail } from '../api/votes'
-import { aMember, aPraxis } from './fixtures'
+import type { PraxisOut } from '../api/praxis'
+import type { CharacterOut, CurrentUser } from '../api/auth'
+import { aCharacter, aCurrentUser, aMember, aPraxis } from './fixtures'
 
 /**
  * Mount anything under the router and hand back both readings of it.
@@ -69,6 +71,38 @@ export const VOTERS: VoterDetail[] = [
   { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
   { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
 ]
+
+/**
+ * The praxis the OWNER-CONTROL suites act on, and the viewer who owns it.
+ *
+ * `ownerEditLink`, `unsubmitConfirmCopy` and `duelForfeitWarning` all render a
+ * part of the page rather than an archetype, and all three need the same
+ * premise: a submitted solo whose single member is the signed-in character.
+ * Character 1 rather than {@link AUTHOR}, because the whole point of these
+ * suites is that ownership is read off the MEMBER row (ADR-0013), so the id
+ * that proves it should not be the fixture's default.
+ *
+ * Scoreless on purpose: none of the three reads a number, and a zero says so.
+ */
+export const anOwner = (over: Partial<CharacterOut> = {}): CurrentUser =>
+  aCurrentUser({ character: aCharacter({ id: 1, ...over }) })
+
+export const anOwnedPraxis = (over: Partial<PraxisOut> = {}): PraxisOut =>
+  aPraxis({
+    task_title: 'Mangrove',
+    task_point_value: 30,
+    task_level_required: 3,
+    title: 'Reforestation',
+    body_text: 'Seedlings.',
+    submitted_at: '2026-01-02T00:00:00Z',
+    created_by_id: 1,
+    updated_at: '2026-01-02T00:00:00Z',
+    members: [aMember({ id: 10, character_id: 1 })],
+    media_items: [],
+    score: 0,
+    points_from_votes: 0,
+    ...over,
+  })
 
 /**
  * The whole `PraxisDetailState` a detail archetype takes, in its neutral shape:

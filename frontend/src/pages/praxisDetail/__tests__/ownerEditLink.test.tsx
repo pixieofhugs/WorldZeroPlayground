@@ -26,15 +26,8 @@ import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut, PraxisMemberOut } from '../../../api/praxis'
 import type { CurrentUser } from '../../../api/auth'
 import type { DuelDetailOut, DuelStatus } from '../../../api/duel'
-import {
-  aCharacter,
-  aCurrentUser,
-  aDuel,
-  aDuelSide,
-  aMember,
-  aPraxis,
-} from '../../../test/fixtures'
-import { aPraxisDetailState, markup as render } from '../../../test/praxisDetail'
+import { aDuel, aDuelSide, aMember } from '../../../test/fixtures'
+import { anOwnedPraxis, anOwner, aPraxisDetailState, markup as render } from '../../../test/praxisDetail'
 
 const EDIT_HREF = 'href="/praxis/1/edit"'
 
@@ -43,22 +36,8 @@ const member = (characterId: number, name: string): PraxisMemberOut =>
 
 // EVERY case here is submitted: ADR-0062 means nothing else reaches the page.
 const praxis = (overrides: Partial<PraxisOut> = {}): PraxisOut =>
-  aPraxis({
-    task_title: 'Mangrove',
-    task_point_value: 30,
-    task_level_required: 3,
-    title: 'Reforestation',
-    body_text: 'Seedlings.',
-    submitted_at: '2026-01-02T00:00:00Z',
-    created_by_id: 1,
-    created_by_faction_slug: 'wow',
-    updated_at: '2026-01-02T00:00:00Z',
-    members: [member(1, 'Ada')],
-    media_items: [],
-    score: 0,
-    points_from_votes: 0,
-    ...overrides,
-  })
+  anOwnedPraxis({ created_by_faction_slug: 'wow', ...overrides })
+
 
 const duel = (status: DuelStatus): DuelDetailOut =>
   aDuel({
@@ -72,8 +51,8 @@ const duel = (status: DuelStatus): DuelDetailOut =>
     }),
   })
 
-const user = (): CurrentUser =>
-  aCurrentUser({ character: aCharacter({ id: 1, faction_slug: 'wow' }) })
+const user = (): CurrentUser => anOwner({ faction_slug: 'wow' })
+
 
 const state = (overrides: Partial<PraxisDetailState>): PraxisDetailState =>
   aPraxisDetailState({ praxis: praxis(), isOwner: true, user: user(), ...overrides })

@@ -28,8 +28,9 @@ import type { PraxisOut } from '../../../api/praxis'
 import type { CurrentUser } from '../../../api/auth'
 import type { DuelDetailOut, DuelStatus } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
-import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMember, aPraxis } from '../../../test/fixtures'
-import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
+import { aDuel, aDuelSide } from '../../../test/fixtures'
+import { anOwnedPraxis, anOwner, aPraxisDetailState, markup } from '../../../test/praxisDetail'
+
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -56,25 +57,9 @@ const { PraxisOwnerActions, PraxisSubmitControls } = await import('../shared')
 
 const text = (element: ReactElement): string => markup(element).text
 
-const MEMBER = aMember({ id: 10, character_id: 1 })
-
 const praxis = (): PraxisOut =>
-  aPraxis({
-    task_title: 'Mangrove',
-    task_point_value: 30,
-    task_level_required: 3,
-    title: 'Reforestation',
-    body_text: 'Seedlings.',
-    submitted_at: '2026-01-02T00:00:00Z',
-    created_by_id: 1,
-    created_by_faction_slug: 'snide',
-    updated_at: '2026-01-02T00:00:00Z',
-    members: [MEMBER],
-    media_items: [],
-    score: 0,
-    points_from_votes: 0,
-    duel_id: 5,
-  })
+  anOwnedPraxis({ created_by_faction_slug: 'snide', duel_id: 5 })
+
 
 const duel = (status: DuelStatus, foeSubmitted: boolean): DuelDetailOut =>
   aDuel({
@@ -90,8 +75,8 @@ const duel = (status: DuelStatus, foeSubmitted: boolean): DuelDetailOut =>
     }),
   })
 
-const user = (): CurrentUser =>
-  aCurrentUser({ character: aCharacter({ id: 1, faction_slug: 'snide' }) })
+const user = (): CurrentUser => anOwner({ faction_slug: 'snide' })
+
 
 const state = (overrides: Partial<PraxisDetailState>): PraxisDetailState =>
   aPraxisDetailState({ praxis: praxis(), isOwner: true, user: user(), ...overrides })
