@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
@@ -28,6 +28,24 @@ const RACE_COLUMNS = '20px 1fr auto'
 const ROSTER_COLUMNS = '26px 1fr 44px auto'
 /** Lanes the race shows before the "N more factions" affordance. */
 const RACE_PREVIEW = 4
+/**
+ * The rank ring a SPECTRUM slug wears (#2730) — `factionFill`'s `"frame"` shape
+ * cut for a circle: the conic ramp on the border box, na's card paper on the
+ * padding box so the ramp does not show through behind the numeral (#794), and
+ * that paper's own paired ink on top of it.
+ *
+ * The desktop card states this too. Not hoisted into `playersData.ts`: that
+ * file is what the page COMPUTES and this is dress, and these two surfaces
+ * already restate each other's ring, wash and bloom because their geometry
+ * differs. `podiumSpectrumLead.test.tsx` runs every case against BOTH views,
+ * which is what stops the pair drifting the way `known` did.
+ */
+const SPECTRUM_RANK_RING: CSSProperties = {
+  border: '2px solid transparent',
+  background:
+    'linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow-conic) border-box',
+  color: 'var(--faction-default-card-text)',
+}
 const ELLIPSIS_GLYPH = '⋮'
 
 /**
@@ -299,7 +317,20 @@ function FactionLaneName({ slug }: { slug: string }) {
   )
 }
 
-/** One podium row: rank ring, avatar, name / level / what they last did, points. */
+/**
+ * One podium row: rank ring, avatar, name / level / what they last did, points.
+ *
+ * THE TWO SPECTRUM SLUGS ARE DRESSED, NOT SKIPPED (#2730, ADR-0088 §2) — the
+ * desktop `PodiumCard`'s docblock carries the reasoning and the reversal it is;
+ * this row is the same two branches at the phone's geometry. `known` picks
+ * WHICH dress, never whether there is one: a themed row keeps its hairline, its
+ * bloom and its `color-mix` wash to the byte, and `na`/Albescent take the conic
+ * ring and `.spectrum-wash` instead of the flat `--faction-default` grey.
+ *
+ * The wash's axis is the ROW's, and it is the one value that does not carry
+ * over: 170deg spends itself on a card three times this tall, so the mount
+ * hands `.spectrum-wash` the 90deg its themed twin already ran at.
+ */
 function PodiumRow({
   row,
   lead,
@@ -318,34 +349,47 @@ function PodiumRow({
   return (
     <Link
       to={`/characters/${character.id}`}
-      className="grid items-center"
+      className={lead && !known ? 'grid items-center spectrum-wash' : 'grid items-center'}
       style={{
         gridTemplateColumns: PODIUM_COLUMNS,
         gap: 'var(--space-md)',
         padding: 'var(--space-md) 0',
         borderBottom: '1px solid var(--color-border)',
-        // The leader's wash is skipped for an unaffiliated player rather than
-        // faked: `na` has no scalar hue to color-mix (ADR-0039).
+        // A themed leader's wash is a `color-mix` of its one hue; a spectrum
+        // leader's is the ramp itself, faded by a mask no inline style can
+        // write (#2730). The axis is this row's — see the docblock.
+        ...(lead && !known ? { '--spectrum-wash-axis': '90deg' } : null),
         background:
           lead && known
             ? `linear-gradient(90deg, color-mix(in oklab, ${color} 9%, transparent), transparent 62%)`
             : undefined,
         color: 'var(--color-text-primary)',
         textDecoration: 'none',
-      }}
+      } as CSSProperties}
     >
       {/* Ring, bloom and wash carry the faction; the numeral inherits
           `--color-text-primary` from the row (#1932). This is the 18px/400
           "1" the nightly measured at 4.46:1 in UA's sienna — 18px regular is
-          NOT WCAG large text, so 4.5:1 is the floor it owes. */}
+          NOT WCAG large text, so 4.5:1 is the floor it owes.
+
+          A SPECTRUM ROW TAKES THE OTHER RING (#2730), and the numeral goes with
+          the interior: a gradient border needs an opaque padding box, so the
+          digit sits on na's card paper and takes that paper's paired ink rather
+          than the row's. The bloom does not survive the swap — a `box-shadow`
+          spread takes a colour and the ramp is not one — so the stroke is 2px
+          where the hairline was 1. */}
       <span
         className="font-display flex items-center justify-center"
         style={{
           width: 32,
           height: 32,
           borderRadius: '50%',
-          border: `1px solid ${color}`,
-          boxShadow: `0 0 0 4px color-mix(in oklab, ${color} 14%, transparent)`,
+          ...(known
+            ? {
+                border: `1px solid ${color}`,
+                boxShadow: `0 0 0 4px color-mix(in oklab, ${color} 14%, transparent)`,
+              }
+            : SPECTRUM_RANK_RING),
           fontSize: 'var(--text-content)',
           flex: 'none',
         }}
