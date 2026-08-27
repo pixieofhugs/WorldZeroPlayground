@@ -54,6 +54,7 @@ const MOCK_USER: CurrentUser = {
   can_create_additional_character: true,
   can_start_as_albescent: false,
   albescent_revealed: false,
+  albescent_glimpsed: false,
   can_propose_task: true,
   can_propose_metatask: false,
   can_apply_metatask: false,

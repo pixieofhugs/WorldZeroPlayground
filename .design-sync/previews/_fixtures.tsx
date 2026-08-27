@@ -167,6 +167,10 @@ export const mockUser: CurrentUser = {
   can_create_additional_character: true,
   can_start_as_albescent: false,
   albescent_revealed: false,
+  // #2770's third state. A UA pilgrim who has not reached the era's glimpse
+  // level, so the kit's viewer sees no Albescent tile and no eighth race lane at
+  // all — the state in front of ADR-0082's `[REDACTED]`, not a variant of it.
+  albescent_glimpsed: false,
   can_propose_task: true,
   can_propose_metatask: false,
   can_apply_metatask: false,
