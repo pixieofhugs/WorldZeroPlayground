@@ -101,7 +101,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
           flat ink; {@link WALL} already washes acid off its top-left corner and
           pink off its bottom-right, so the blob was that ornament drawn twice —
           once tokenised and measured, once not. The tokenised one survives. */}
-      <div style={{ fontFamily: IMPACT, fontSize: "var(--text-content)", letterSpacing: "0.06em", textTransform: "uppercase", color: INK, padding: "var(--space-md) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.snide.banner")}</div>
+      <div style={{ fontFamily: IMPACT, fontSize: "var(--text-content)", letterSpacing: "0.06em", color: INK, padding: "var(--space-md) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.snide.banner")}</div>
       <div style={{
         display: "flex", alignItems: "center", gap: "var(--space-md)",
         background: BAR, color: "var(--faction-snide-note-bar-ink)",
