@@ -161,7 +161,6 @@
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
     "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
     "viewFactions": "View Factions →",
-    "notNow": "Not now",
     "accepted": "Joined {{faction}}",
     "setAside": "Set aside — the invitation still stands",
     "error": "Couldn't answer that invitation.",

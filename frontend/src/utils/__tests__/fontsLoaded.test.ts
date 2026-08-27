@@ -890,3 +890,130 @@ describe("an inherited page face is not asked to fake a bold (#2487)", () => {
     ).toEqual([]);
   });
 });
+
+/**
+ * The PINNED half of the same axis (#2597), and the rule #2487 established:
+ * a face that ships one cut is never asked for a second one.
+ *
+ * #1294 above asks whether a declared weight can be RENDERED, so it is silent on
+ * every `fontWeight: 400` — 400 is the one weight a single-cut family always
+ * has. That is the shape this catches. A weight declaration on such a family can
+ * only ever be a no-op or a synthesis; either way the source asserts a choice the
+ * family cannot offer, and the next reader has to re-derive that it is inert.
+ * #2487 swept three such families off S.N.I.D.E. and the composer directory;
+ * #2597 swept the other six. This is what stops the tenth arriving unswept.
+ *
+ * ONE-CUT IS DERIVED, NEVER LISTED. A family qualifies when the generated sheets
+ * ship exactly one weight for it, counted across both slants — IM Fell English
+ * has no upright face at all, and a hand-written list would have had to remember
+ * that. `scripts/fetch-fonts.mjs` adding a cut retires a family from this check
+ * by itself, which is the only way the two can stay in step.
+ *
+ * A scope that pins BOTH is the evidence bar, exactly as `declaredFaces` sets
+ * it: a weight beside no family is #2487's business and a comment about one is
+ * nobody's, which is why the source is read with its comments blanked.
+ */
+describe("a one-cut family is never asked for a weight (#2597)", () => {
+  const faces = loadedFaces();
+  const familyNames = new Set(faces.map((face) => face.family));
+
+  /** Families the loader ships exactly one weight for, across both slants. */
+  const oneCut = new Set(
+    [...familyNames].filter(
+      (family) =>
+        new Set(faces.filter((face) => face.family === family).map((face) => face.weight)).size ===
+        1,
+    ),
+  );
+
+  /**
+   * The one scope where a `fontWeight: 400` on a one-cut face is load-bearing.
+   *
+   * `PraxisTitle` hands its `<h2>` a `font-semibold` CLASS as well as the skin's
+   * `titleStyle`, so on that element the inline 400 is not restating the default
+   * — it is the only thing suppressing a 600 the class would otherwise impose,
+   * and Poiret One has no 600 to give. Deleting it swaps an inert declaration
+   * for a real fake-bold, which is the trap #2597's ruling names. Every other
+   * skin routing a one-cut face through that same title inherits the class and
+   * carries no such guard: those are reported on the PR, not fixed here, because
+   * the honest fix repaints UA and Coven and wants an owner's call.
+   */
+  const LOAD_BEARING = new Set(["components/praxisCard/desktop/EphemeristsPraxisCard.tsx"]);
+
+  it("derives the one-cut families from the sheets rather than a list", () => {
+    // Sanity check on the derivation: the six #2597 swept, plus #2487's three.
+    for (const family of [
+      "share tech mono",
+      "permanent marker",
+      "poiret one",
+      "spectral",
+      "medievalsharp",
+      "bebas neue",
+      "anton",
+      "archivo black",
+      "special elite",
+    ]) {
+      expect(oneCut.has(family), `${family} is no longer derived as one-cut`).toBe(true);
+    }
+    // And the negative side, or the check passes by matching nothing: these ship
+    // real cuts, and a weight on them is a design decision rather than a defect.
+    for (const family of ["lora", "courier prime", "cinzel", "eb garamond"]) {
+      expect(oneCut.has(family), `${family} was wrongly derived as one-cut`).toBe(false);
+    }
+  });
+
+  it("names no weight in a scope that pins a single-cut family", () => {
+    const asked: string[] = [];
+    for (const file of collectSourceFiles(SRC_DIR)) {
+      if (FONT_SHEETS.includes(file)) continue;
+      const rel = file.slice(SRC_DIR.length + 1).replace(/\\/g, "/");
+      if (LOAD_BEARING.has(rel)) continue;
+      const raw = readFileSync(file, "utf-8").replace(
+        /(["'`])(?:\\.|(?!\1)[^\\])*\1|\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+        (match) => (match.startsWith("/") ? match.replace(/[^\n]/g, " ") : match),
+      );
+      const source = resolveRoleReads(file.endsWith(".css") ? raw : inlineConstants(file, raw));
+
+      for (const match of source.matchAll(/font-?[fF]amily\s*[:=]/g)) {
+        const scope = enclosingScope(source, match.index);
+        if (!/font-?[wW]eight\s*[:=]/.test(scope)) continue;
+        const families = new Set<string>();
+        for (const quoted of scope.matchAll(/["']\s*([A-Za-z][A-Za-z0-9 ]+)\s*["',]/g)) {
+          const family = quoted[1].trim().toLowerCase();
+          if (familyNames.has(family)) families.add(family);
+        }
+        for (const reference of scope.matchAll(/var\((--[a-z0-9-]+)\)/g)) {
+          for (const family of familiesBehindToken(reference[1], familyNames)) families.add(family);
+        }
+        for (const family of families) {
+          if (!oneCut.has(family)) continue;
+          const line = source.slice(0, match.index).split("\n").length;
+          asked.push(`${rel}:${line} — ${family}`);
+        }
+      }
+    }
+
+    expect(
+      [...new Set(asked)].sort(),
+      `These scopes set a weight beside a family that ships exactly one cut, so the
+` +
+        `declaration is either inert or a bold the browser has to smear on itself
+` +
+        `(#2487, #2597). Drop the weight — Tailwind's preflight already resets
+` +
+        `headings and form controls to \`font-weight: inherit\`, so on a bare <h1>
+` +
+        `or <h2> with nothing above it setting one, removing it changes no pixel.
+` +
+        `CHECK THE ANCESTORS FIRST: if anything above the element, or a weight
+` +
+        `UTILITY CLASS on the element itself, declares a weight, the 400 is what
+` +
+        `suppresses it and removing it brings the fake bold straight back — add
+` +
+        `the file to LOAD_BEARING above with the reason instead. Do NOT add the
+` +
+        `cut to the payload; the byte budget is in WARN (#2469).`,
+    ).toEqual([]);
+  });
+});

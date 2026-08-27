@@ -28,10 +28,13 @@ import "../../../i18n"; // real catalogs — a missing key throws rather than pa
 import { surfaceMap } from "../../../factions";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import {
+  SIGNUP_IN_PROGRESS_KEY,
   SIGNUP_REASON_MULTI_MEMBERSHIP,
+  SIGNUP_SUBMITTED_KEY,
   canSignUpForTask,
   signupCtaKey,
 } from "../signupCta";
+import i18n from "../../../i18n";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aPraxisCard, aTask } from '../../../test/fixtures'
 
@@ -119,6 +122,37 @@ describe("signupCtaKey — the label follows the server's reason", () => {
     // A future backend reason must not blank the button.
     expect(signupCtaKey("some_reason_from_a_later_era")).toBe(
       "detail.signup.cta",
+    );
+  });
+});
+
+describe("the two doors out of one denial (#2359, #2643)", () => {
+  it("keys both onto copy this build actually has", () => {
+    // The real catalogs are loaded above, so a key that is not in them resolves
+    // to itself — which is what this catches.
+    expect(i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`)).not.toBe(
+      SIGNUP_IN_PROGRESS_KEY,
+    );
+    expect(i18n.t(`tasks:${SIGNUP_SUBMITTED_KEY}`)).toBe("Read your praxis");
+  });
+
+  it("borrows the task detail's OWN submitted copy rather than a synonym", () => {
+    // The owner ruling (2026-08-24) is that "Read your praxis" is right for both
+    // surfaces. Pointing the card at `detail.submitted.view` — the key the
+    // detail's own submitted block renders — is what makes a future copy edit
+    // land on both at once instead of drifting them apart.
+    expect(SIGNUP_SUBMITTED_KEY).toBe("detail.submitted.view");
+  });
+
+  it("stays out of signupCtaKey — the wire's reason cannot tell them apart", () => {
+    // Neither key is reachable from a `signup_reason`: the server sends
+    // `already_active_member` for a draft and a filed praxis alike. Which door
+    // opens is decided by which praxis id the row carries, in
+    // `components/taskCard/signupAffordance.ts`. If this ever starts returning
+    // one of them, the reason has grown a sixth value and this table needs a
+    // real row rather than a constant.
+    expect(signupCtaKey("already_active_member")).toBe(
+      "detail.signup.denied.alreadyActiveMember",
     );
   });
 });

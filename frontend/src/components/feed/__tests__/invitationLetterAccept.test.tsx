@@ -54,7 +54,9 @@ function render(factionSlug: string | null, onNotNow?: () => void): string {
 
 const VIEW_FACTIONS = i18n.t('feed:invitationLetter.viewFactions')
 const ACCEPT = i18n.t('common:actions.accept')
-const NOT_NOW = i18n.t('feed:invitationLetter.notNow')
+// The letter's own dismiss key, which this card now shares (#2620) — the one
+// string the announcement and the letter it announces have in common.
+const NOT_NOW = i18n.t('factions:invitation.dismiss')
 
 describe('acceptMode — the predicate', () => {
   it('suppresses Accept when the letter names the faction you are already in', () => {

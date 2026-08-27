@@ -100,11 +100,22 @@ const QUIET: CSSProperties = {
  *  - **Not now** is the slot's existing archive write, wearing a label. It is
  *    emphatically **not** "Decline": ADR-0070 says archiving never answers
  *    anything, the letter stays valid, the factions page still joins, and
- *    `InvitationLetter` has no status column to decline into.
+ *    `InvitationLetter` has no status column to decline into. Its label is the
+ *    letter's own `factions:invitation.dismiss`, the one key both surfaces read
+ *    for this act (#2620) — the only string this card and the letter share.
  *
  * The confirm step is the inline two-stage idiom `InvitationLetterPopup` already
  * uses for the same act — prose plus [confirm] [cancel] replacing the button
  * row — not a new dialog component.
+ *
+ * **This card ANNOUNCES the letter; it does not PREVIEW it** (owner ruling on
+ * #2620, 2026-08-26). Everything else it says is its own: it reads no
+ * `factions:<slug>.invitation.*` headline, pitch, perk or CTA, and "View
+ * Factions" sends the player to the factions page rather than opening the
+ * letter. So `feed:invitationLetter.*` and the letter's copy are two
+ * independent vocabularies **by design** — when they drift apart in a copy
+ * sweep, that is not a defect to file, and nothing here should be pointed at
+ * the letter's keys to "align" them.
  */
 export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
   const { faction_slug } = item.payload;
@@ -310,7 +321,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               )}
               {onNotNow && (
                 <button type="button" className="feed-action" data-invitation-not-now onClick={onNotNow} style={QUIET}>
-                  {i18n.t("feed:invitationLetter.notNow")}
+                  {i18n.t("factions:invitation.dismiss")}
                 </button>
               )}
             </>

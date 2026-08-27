@@ -321,7 +321,6 @@ export default function SingularityTaskDetail({
       <h1
         style={{
           fontFamily: MONO,
-          fontWeight: 400,
           fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
           lineHeight: 1.2,
           color: BRIGHT,
