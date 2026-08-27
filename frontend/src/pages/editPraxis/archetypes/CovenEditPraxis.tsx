@@ -429,11 +429,14 @@ export default function CovenEditPraxis({ state }: Props) {
                     other cat in the kit would be a second device wearing the
                     same name.
 
-                    `CovenCat` positions itself absolutely, because its four
-                    other mounts are corner watermarks; here it is a flex item
-                    beside the wordmark, so the mount hands back `static`. Full
-                    strength, not the watermark's 0.09: this one is being read,
-                    not washed under copy. */}
+                    `CovenCat` positions itself absolutely, because every other
+                    mount it has is a corner watermark — including this page's
+                    own, in the ground below. Here it is a flex item beside the
+                    wordmark, so the mount hands back `static`. Full strength,
+                    not the watermark's 0.09: this one is being read, not washed
+                    under copy. Two cats on one surface is one device drawn
+                    twice at two jobs, and they turn in step because they share
+                    the class rather than each holding a duration. */}
                 <CovenCat size={MAST_CAT} style={{ position: "static", flex: "0 0 auto" }} />
                 <span
                   style={{

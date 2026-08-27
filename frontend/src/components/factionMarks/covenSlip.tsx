@@ -185,6 +185,15 @@ export function Spark({
  * and the offsets, because a card, a profile band, a detail sheet and a
  * composer are four different scales.
  *
+ * ONE MOUNT IS NOT A CORNER (#2746). The composer masthead draws this at 30px
+ * as a flex item beside the wordmark, at full strength, in place of the
+ * pentagram disc that turned there — so it passes `position: static` back
+ * through `style` and overrides the `absolute` below. That default is right for
+ * every other mount and stays; a watermark that had to be positioned by each of
+ * its seven corner mounts would be the duplication this module ends. What the
+ * masthead mount does NOT pass is a duration: see `.cvn-wheel` in
+ * `motion.ornament.css` for why the kit turns at one tempo.
+ *
  * The one thing that may leave the frame is a whisker tip: the outermost is at
  * x=97 of a 100-unit box, i.e. 3% in, so a mount with a small negative `right`
  * grazes the cap and nothing else. The head sits at x∈[20,80] and cannot reach
