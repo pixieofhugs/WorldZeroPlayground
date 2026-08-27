@@ -84,7 +84,25 @@ export function useCastTally(praxisId: number): VoteTallyOut | null {
   return useSyncExternalStore(subscribe, read, () => null)
 }
 
-/** Test seam only. */
+/**
+ * Test seam only. Six specs isolate through it — see the ratchet in
+ * `__tests__/testSeamsStayOutOfTheBundle.test.ts` for why it stays (#2697).
+ *
+ * KEPT DELIBERATELY, and the audit that flagged it was measuring the wrong
+ * thing. Deleting this and `__resetPendingCasts` and rebuilding gives a
+ * byte-identical `dist/` — Rollup shakes an export nothing in the application
+ * graph imports, so the seam costs zero shipped bytes. What it would have cost
+ * to remove is six spec files converted to `vi.resetModules()` plus dynamic
+ * re-imports — and three of those reach this map through a DIFFERENT module
+ * that holds its own reference to it (`api/praxis.ts` and `api/duel.ts` call
+ * `clearCastTallies`; `pendingCasts.ts` calls `recordCastTally`). Each would
+ * have to be re-imported in the same breath as this one or it keeps pointing
+ * at the old Map, and the isolation silently becomes a no-op that still passes.
+ * That is a lot of new ways to be quietly wrong in exchange for zero bytes.
+ *
+ * The seam is free only while no application module imports it, which the
+ * ratchet enforces. Do not re-file this without re-running the build diff.
+ */
 export function __resetCastTallies(): void {
   tallies.clear()
   emit()

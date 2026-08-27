@@ -59,9 +59,9 @@ async def can_comment(
     403 from every submit — which is how a production database reached zero
     comments with an admin repeatedly trying to leave one.
 
-    That is the same trap :func:`services.praxis.can_sign_up_for_task` is built
-    to avoid ("one predicate, so the can_sign_up flag can't drift from
-    enforcement"). One predicate here too.
+    That is the same trap :func:`services.praxis.evaluate_signup` is built to
+    avoid: one predicate, so the ``can_sign_up`` flag can't drift from
+    enforcement. One predicate here too.
     """
     if viewer is None:
         return False

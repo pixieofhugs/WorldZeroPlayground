@@ -77,7 +77,8 @@ Python conventions live in `backend/CLAUDE.md`; frontend conventions in
 - Backend: `uvicorn main:app --reload` from `/backend`
 - Frontend: `npm run dev` from `/frontend`
 - DB: `docker-compose up -d`; `alembic upgrade head` after pulling
-- Tests: `pytest --cov=. --cov-fail-under=92` from `/backend`
+- Tests: `pytest --cov=. --cov-fail-under=92` from `/backend` — the gate is
+  `.github/workflows/test.yml`; if that number and this one disagree, it wins
 
 Every backend command above needs `backend/.venv` activated, and the backend
 preview does **not** work from a worktree — worktrees carry no venv. Read

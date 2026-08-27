@@ -206,7 +206,19 @@ export function applyPendingCast(
   return merged
 }
 
-/** Test seam only. */
+/**
+ * Test seam only. One spec isolates through it — see the ratchet in
+ * `__tests__/testSeamsStayOutOfTheBundle.test.ts` for why it stays (#2697).
+ *
+ * KEPT DELIBERATELY, on the same evidence as `__resetCastTallies`: removing
+ * both leaves `dist/` byte-identical, so neither ships. This one also has a
+ * hazard its sibling does not, which is the second reason it stayed. The
+ * `clearTimeout` loop above is the point of the function, and the suggested
+ * replacement — `vi.resetModules()` — drops the module's reference to those
+ * handles WITHOUT cancelling them, so a spec that leaves a cast pending would
+ * fire a timer into a torn-down module. Cancelling the timers is a thing only
+ * code holding this map can do.
+ */
 export function __resetPendingCasts(): void {
   for (const entry of casts.values()) if (entry.timer) clearTimeout(entry.timer)
   casts.clear()

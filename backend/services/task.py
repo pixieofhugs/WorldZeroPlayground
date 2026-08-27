@@ -337,10 +337,12 @@ async def build_task_out_for_viewer(
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats
 
-    # One evaluation, both answers. `can_sign_up` is the verdict
-    # (`can_sign_up_for_task` is this same call with the reason discarded);
-    # `signup_reason` is *why*, so the client can label its call to action off the
-    # server's ruling instead of mirroring the rule locally and drifting (#1497).
+    # One evaluation, both answers. `can_sign_up` is the verdict, with the reason
+    # discarded; `signup_reason` is *why*, so the client can label its call to
+    # action off the server's ruling instead of mirroring the rule locally and
+    # drifting (#1497). This assignment IS the flag — there is no second helper
+    # behind it, and tests/integration/test_signup_eligibility.py pins the bank
+    # cap here rather than one level down (#2696).
     eligibility = await evaluate_signup(viewer, task, session, era, facts=signup_facts)
     base.can_sign_up = eligibility.allowed
     base.signup_reason = await signup_reason(
