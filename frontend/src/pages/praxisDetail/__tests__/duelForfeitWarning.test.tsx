@@ -21,17 +21,16 @@
  * un-relocation: the owner controls render it for a duel praxis and an ordinary
  * one alike, which is still exactly one mount site (the #646 rule).
  */
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
-import type { CharacterOut, CurrentUser } from '../../../api/auth'
-import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../../api/duel'
+import type { CurrentUser } from '../../../api/auth'
+import type { DuelDetailOut, DuelStatus } from '../../../api/duel'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
-import { aMember } from '../../../test/fixtures'
+import { aDuel, aDuelSide } from '../../../test/fixtures'
+import { anOwnedPraxis, anOwner, aPraxisDetailState, markup } from '../../../test/praxisDetail'
+
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -56,175 +55,31 @@ vi.mock('../../../hooks/useGameConfig', () => ({ useGameConfig: () => CONFIG }))
 
 const { PraxisOwnerActions, PraxisSubmitControls } = await import('../shared')
 
-function text(element: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(/<[^>]*>/g, '')
-}
+const text = (element: ReactElement): string => markup(element).text
 
-const MEMBER = aMember({
-  id: 10,
-  character_id: 1,
-  character_display_name: 'Ada',
-})
+const praxis = (): PraxisOut =>
+  anOwnedPraxis({ created_by_faction_slug: 'snide', duel_id: 5 })
 
-function praxis(): PraxisOut {
-  return {
-    id: 1,
-    task_id: 7,
-    task_title: 'Mangrove',
-    task_point_value: 30,
-    task_level_required: 3,
-    task_faction_slug: null,
-    type: 'solo',
-    status: 'submitted',
-    title: 'Reforestation',
-    body_text: 'Seedlings.',
-    moderation_status: 'visible',
-    admin_note: null,
-    flagged_at: null,
-    submitted_at: '2026-01-02T00:00:00Z',
-    submit_proposed_at: null,
-    created_by_id: 1,
-    created_by_display_name: 'Ada',
-    created_by_avatar_url: '',
-    created_by_faction_slug: 'snide',
-    created_at: '2026-01-01T00:00:00Z',
-    updated_at: '2026-01-02T00:00:00Z',
-    members: [MEMBER],
-    invites: [],
-    media_items: [],
-    score: 0,
-    metatask_points: 0,
-    display_multiplier: 1.0,
-    points_from_votes: 0,
-    habit_bonus_points: 0,
-    is_top_for_task: false,
-    duel_id: 5,
-    can_flag: true,
-    applied_metatasks: [],
-    viewer_can_vote: true,
-    viewer_vote: null,
-    voter_count: 0,
-  }
-}
 
-const ME: DuelSideOut = {
-  praxis_id: 1,
-  character_id: 1,
-  display_name: 'Ada',
-  faction_slug: 'snide',
-  avatar_url: '',
-  points_from_votes: 4,
-  is_submitted: true,
-  nudged_at: null,
-}
-const FOE: DuelSideOut = {
-  praxis_id: 2,
-  character_id: 2,
-  display_name: 'Rax',
-  faction_slug: 'wow',
-  avatar_url: '',
-  points_from_votes: 9,
-  is_submitted: true,
-  nudged_at: null,
-}
-
-function duel(status: DuelStatus, foeSubmitted: boolean): DuelDetailOut {
-  return {
-    id: 5,
-    task_id: 7,
+const duel = (status: DuelStatus, foeSubmitted: boolean): DuelDetailOut =>
+  aDuel({
     status,
-    forfeited_by_character_id: null,
-    challenger: ME,
-    opponent: { ...FOE, is_submitted: foeSubmitted },
-    winner_character_id: null,
-    challenger_final_points: null,
-    opponent_final_points: null,
-  }
-}
+    challenger: aDuelSide({ character_id: 1, faction_slug: 'snide', points_from_votes: 4 }),
+    opponent: aDuelSide({
+      praxis_id: 2,
+      character_id: 2,
+      display_name: 'Rax',
+      faction_slug: 'wow',
+      points_from_votes: 9,
+      is_submitted: foeSubmitted,
+    }),
+  })
 
-function character(): CharacterOut {
-  return {
-    id: 1,
-    username: 'ada',
-    display_name: 'Ada',
-    bio: '',
-    tagline: '',
-    avatar_url: '',
-    location: '',
-    level: 5,
-    score: 0,
-    all_time_score: 0,
-    faction_slug: 'snide',
-    status: 'active',
-    created_at: '2026-01-01T00:00:00Z',
-    badges: [],
-    invitations: [],
-  }
-}
+const user = (): CurrentUser => anOwner({ faction_slug: 'snide' })
 
-function user(): CurrentUser {
-  return {
-    account_id: 1,
-    email: 'wz_pilgrim@example.com',
-    provider: 'google',
-    character: character(),
-    is_admin: false,
-    can_create_additional_character: false,
-    can_start_as_albescent: false,
-    albescent_revealed: false,
-    albescent_glimpsed: false,
-    can_propose_task: false,
-    can_propose_metatask: false,
-    can_apply_metatask: false,
-    can_see_retired_tasks: false,
-    can_see_pending_tasks: false,
-    can_comment: true,
-    albescent_level_required: 8,
-    second_character_level_required: 5,
-    era_name: 'Era 1',
-    level_jump_reach: 0,
-    level_jump_available: false,
-    task_browse_defaults_to_eligible: false,
-  }
-}
 
-function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: praxis(),
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: true,
-    showAdminBar: false,
-    user: user(),
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    ...overrides,
-  } as PraxisDetailState
-}
+const state = (overrides: Partial<PraxisDetailState>): PraxisDetailState =>
+  aPraxisDetailState({ praxis: praxis(), isOwner: true, user: user(), ...overrides })
 
 describe('forfeit escalation (#718)', () => {
   it('settled duel: the confirm warns, names the winner, and quotes the cost', () => {

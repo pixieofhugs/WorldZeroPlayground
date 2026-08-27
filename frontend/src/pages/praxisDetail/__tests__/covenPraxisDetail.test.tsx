@@ -19,14 +19,13 @@
  * candle/haze/wheel motions live in index.css behind
  * `prefers-reduced-motion` — neither is assertable here; both are eyeball checks.
  */
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import i18n from '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
-import type { CurrentUser } from '../../../api/auth'
-import { aMember, aPraxis, aTask } from '../../../test/fixtures'
+import type { DuelDetailOut } from '../../../api/duel'
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from '../../../test/fixtures'
+import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
+
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
@@ -42,22 +41,8 @@ vi.mock('../../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'dark' as const, toggle: () => {} }),
 }))
 
-// Imported after the mock so the archetype picks it up.
-const { default: CovenPraxisDetail } = await import('../archetypes/CovenPraxisDetail')
-
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: 'Ada',
-})
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: 'Beth',
-  joined_at: '2026-01-02T00:00:00Z',
-})
-
 const PRAXIS = aPraxis({
+
   task_faction_slug: 'coven',
   created_by_id: 3,
   created_by_display_name: 'Ada',
@@ -65,134 +50,23 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 })
 
-const MINE: DuelSideOut = {
-  praxis_id: 1,
-  character_id: 3,
-  display_name: 'Ada',
-  faction_slug: 'coven',
-  avatar_url: '',
-  points_from_votes: 18,
-  is_submitted: true,
-  nudged_at: null,
-}
-
-const RIVAL: DuelSideOut = {
-  praxis_id: 2,
-  character_id: 4,
-  display_name: 'Rax',
-  faction_slug: 'snide',
-  avatar_url: '',
-  points_from_votes: 15.4,
-  is_submitted: true,
-  nudged_at: null,
-}
-
-function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
-  return {
-    id: 5,
-    task_id: 7,
-    status: 'settled',
-    forfeited_by_character_id: null,
-    challenger: MINE,
+const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
+  aDuel({
+    challenger: aDuelSide({ faction_slug: 'coven', points_from_votes: 18 }),
     opponent: RIVAL,
-    winner_character_id: null,
-    challenger_final_points: null,
-    opponent_final_points: null,
     ...overrides,
-  }
-}
+  })
 
-const SEAL_METATASK = aTask({
-  id: 501,
-  title: 'Composting',
-  point_value: 60,
-  level_required: 0,
-  task_type: 'metatask',
-  created_by: 9,
-  metatask_faction_slug: 'coven',
-  created_by_display_name: '',
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-})
 
-const VIEWER: CurrentUser = {
-  id: 50,
-  email: 'ada@example.com',
-  display_name: 'Ada',
-  is_admin: false,
-  can_comment: true,
-  character: {
-    id: 3,
-    display_name: 'Ada',
-    faction_slug: 'coven',
-    level: 4,
-    points: 120,
-    avatar_url: null,
-  },
-} as unknown as CurrentUser
+const SEAL_METATASK = aMetatask({ metatask_faction_slug: 'coven' })
 
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
-      { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  }
-}
+const VIEWER = aCurrentUser({ character: aCharacter({ faction_slug: 'coven', level: 4 }) })
 
-function render(
-  next: PraxisDetailState,
-  formFactor: 'desktop' | 'mobile' = 'desktop',
-): { html: string; text: string } {
-  mocks.formFactor = formFactor
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <CovenPraxisDetail state={next} />
-    </MemoryRouter>,
-  )
-  return { html, text: html.replace(/<[^>]*>/g, '') }
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides })
 
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle)
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1)
-  return at
-}
+const render = skinRenderer('coven', mocks)
+
 
 /** Every opening `<a>` tag in the markup, attributes and all. */
 function anchors(html: string): string[] {

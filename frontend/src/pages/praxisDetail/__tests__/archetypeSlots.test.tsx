@@ -24,84 +24,32 @@
  * throwing. We assert the structural anchors each slot leaves behind: the
  * finding text, the "re:" task link, and the author-byline character link.
  */
-import { renderToStaticMarkup } from "react-dom/server";
 import { surfaceMap } from "../../../factions";
-import { MemoryRouter } from "react-router-dom";
-import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aPraxis, aTask } from '../../../test/fixtures'
+import { aMetatask } from '../../../test/fixtures'
+import { aPraxisDetailState, aWalkedPraxis, markup } from '../../../test/praxisDetail'
 
-function render(element: ReactElement): { html: string; text: string } {
-  const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
-  // Tag-stripped text — several archetypes split the finding across spans
-  // (the Ephemerists' lapis last-word), so the headline only reads contiguously
-  // once the wrapping tags are removed.
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
+// `markup` tag-strips into `text` — several archetypes split the finding across
+// spans (the Ephemerists' lapis last-word), so the headline only reads
+// contiguously once the wrapping tags are removed.
+const render = markup;
 
-const PRAXIS = aPraxis({
-  task_title: "Mangrove",
-  task_point_value: 30,
-  task_level_required: 3,
-  task_faction_slug: "ua",
-  title: "Reforestation",
-  body_text: "Seedlings planted along the estuary.",
-  submitted_at: "2026-01-02T00:00:00Z",
-  created_by_id: 3,
-  created_by_display_name: "Ada",
-  created_by_faction_slug: "ua",
-  updated_at: "2026-01-02T00:00:00Z",
-  members: [],
-  media_items: [],
-  // score = (base 30 + meta 0) × 1.0 + vote points 16 = 46 — the common case.
-  score: 46,
-  points_from_votes: 16,
-});
+
+const PRAXIS = aWalkedPraxis();
+
 
 /** Minimal state — the read archetypes take every number they show off the
  *  praxis payload (`scoreBreakdown`, ADR-0053); behavior-slot state is left in
  *  its default (anonymous, non-owner) shape. */
 function state(): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-  };
+  });
 }
 
 // Default fallback is a registered renderable too — guard it alongside the map.
@@ -237,19 +185,7 @@ function multiplierState(): PraxisDetailState {
 // faction (here `snide`), not the host archetype's — a UA-hosted page shows a
 // Snide-issued seal. Its condition line is the metatask title, the anchor below.
 
-const SEAL_METATASK = aTask({
-  id: 501,
-  title: "Composting",
-  point_value: 60,
-  level_required: 0,
-  task_type: "metatask",
-  created_by: 9,
-  metatask_faction_slug: "snide",
-  created_by_display_name: "",
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-});
+const SEAL_METATASK = aMetatask({ metatask_faction_slug: "snide" });
 
 /** Same praxis, now carrying one applied metatask seal. */
 function sealedState(): PraxisDetailState {

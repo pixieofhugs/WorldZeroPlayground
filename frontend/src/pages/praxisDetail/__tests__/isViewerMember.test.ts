@@ -9,62 +9,20 @@
 import { describe, it, expect } from "vitest";
 import { isViewerMember } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
+import { aMember, aPraxis } from "../../../test/fixtures";
 
-function member(characterId: number): PraxisMemberOut {
-  return {
+const member = (characterId: number): PraxisMemberOut =>
+  aMember({
     id: characterId * 10,
-    praxis_id: 1,
     character_id: characterId,
     character_display_name: `Character ${characterId}`,
-    character_avatar_url: "",
     has_submitted: false,
-    is_done: false,
-    joined_at: "2026-01-01T00:00:00Z",
-    nudged_at: null,
-    submitted_at: null,
-  };
-}
+  });
 
-function praxis(members: PraxisMemberOut[]): PraxisOut {
-  return {
-    id: 1,
-    task_id: 7,
-    task_title: "Mangrove",
-    task_point_value: 30,
-    task_level_required: 3,
-    task_faction_slug: "ua",
-    type: "collab",
-    status: "in_progress",
-    title: "Reforestation",
-    body_text: "Seedlings planted along the estuary.",
-    moderation_status: "visible",
-    admin_note: null,
-    flagged_at: null,
-    submitted_at: null,
-    submit_proposed_at: null,
-    created_by_id: 3,
-    created_by_display_name: "Ada",
-    created_by_avatar_url: "",
-    created_by_faction_slug: "ua",
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-02T00:00:00Z",
-    members,
-    invites: [],
-    media_items: [],
-    score: 0,
-    metatask_points: 0,
-    display_multiplier: 1.0,
-    points_from_votes: 0,
-    habit_bonus_points: 0,
-    is_top_for_task: false,
-    duel_id: null,
-    can_flag: true,
-    applied_metatasks: [],
-    viewer_can_vote: true,
-    viewer_vote: null,
-    voter_count: 0,
-  };
-}
+/** An unfinished collab — the only shape with a roster the guard reads. */
+const praxis = (members: PraxisMemberOut[]): PraxisOut =>
+  aPraxis({ type: "collab", status: "in_progress", submitted_at: null, members });
+
 
 describe("isViewerMember (#348)", () => {
   it("is true for the creator (always seeded as a member)", () => {

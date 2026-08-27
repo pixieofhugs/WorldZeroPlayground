@@ -13,36 +13,18 @@
  * cascade with no branch in this component, so there is nothing here to assert
  * about it; it is an eyeball check.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { DuelDetailOut } from "../../../api/duel";
-import type { CurrentUser } from "../../../api/auth";
 import type { CommentOut } from "../../../api/comments";
 import { PraxisFlagBlock } from "../shared";
-import { aMember, aPraxis } from '../../../test/fixtures'
+import { aCharacter, aCurrentUser, aPraxis } from "../../../test/fixtures";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, markup, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
-
-// Imported after the mock so the archetype picks it up.
-const { default: DefaultPraxisDetail } = await import("../archetypes/DefaultPraxisDetail");
-
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: "Ada",
-});
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: "Beth",
-  joined_at: "2026-01-02T00:00:00Z",
-});
 
 const PRAXIS = aPraxis({
   task_title: "A Chore Nobody Logged",
@@ -51,21 +33,7 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER: CurrentUser = {
-  id: 50,
-  email: "ada@example.com",
-  display_name: "Ada",
-  is_admin: false,
-  can_comment: true,
-  character: {
-    id: 3,
-    display_name: "Ada",
-    faction_slug: null,
-    level: 4,
-    points: 120,
-    avatar_url: null,
-  },
-} as unknown as CurrentUser;
+const VIEWER = aCurrentUser({ character: aCharacter({ level: 4 }) });
 
 /** One row the page fetched alongside the praxis (#1281). */
 const COMMENT: CommentOut = {
@@ -86,67 +54,10 @@ const COMMENT: CommentOut = {
   mentions: [],
 };
 
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
-      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  };
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <DefaultPraxisDetail state={next} />
-    </MemoryRouter>,
-  );
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
-
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle);
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
-  return at;
-}
+const render = skinRenderer("na", mocks);
 
 describe("Unaffiliated praxis detail — layout contract", () => {
   it("draws no navigation of its own, at either width (#2102)", () => {
@@ -223,11 +134,7 @@ describe("Unaffiliated praxis detail — layout contract", () => {
     // neutral in every faction's dress. The card must not pick up the page's
     // faction tokens — including by INHERITING the sheet's text colour, which
     // is why every text node inside it carries its own neutral token.
-    const html = renderToStaticMarkup(
-      <MemoryRouter>
-        <PraxisFlagBlock state={state()} />
-      </MemoryRouter>,
-    );
+    const { html } = markup(<PraxisFlagBlock state={state()} />);
     expect(html, "renders at all").toContain("Flag this praxis");
     expect(html, "neutral card chrome").toContain("sidebar-card");
     expect(html, "no faction dress anywhere inside").not.toContain("--faction-");

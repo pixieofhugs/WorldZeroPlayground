@@ -25,8 +25,6 @@
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
@@ -37,6 +35,7 @@ import {
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
+import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
 const SHARED_SOURCE = readFileSync(
   fileURLToPath(new URL('../shared.tsx', import.meta.url)),
@@ -100,46 +99,15 @@ function praxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
 }
 
 function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
-  return {
-    loading: false,
+  return aPraxisDetailState({
     praxis: praxis(),
-    fetchError: null,
-    comments: null,
-    voters: [],
-    duel: null,
     isOwner: true,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: '',
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: '',
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
     ...overrides,
-  } as PraxisDetailState
+  })
 }
 
-function html(element: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
-}
+const html = (element: ReactElement): string => markup(element).html
+
 
 describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
   it.each(WALL_ALARM)('%s: the failed banner reads its wall', (slug, token) => {

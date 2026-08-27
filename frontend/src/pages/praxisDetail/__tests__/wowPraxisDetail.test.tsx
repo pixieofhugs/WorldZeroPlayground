@@ -22,37 +22,26 @@
  * pure `[data-theme]` cascade with no branch in the component, so there is
  * nothing here to assert about it; it is an eyeball check.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import { surfaceMap } from "../../../factions";
 import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut } from "../../../api/duel";
-import type { CurrentUser } from "../../../api/auth";
-import { aMember, aPraxis } from '../../../test/fixtures'
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMember, aMetatask, aPraxis } from "../../../test/fixtures";
+import { CO_MEMBER as SHARED_CO_MEMBER, VOTERS, aPraxisDetailState, indexOf, renderPraxisDetail, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-// Imported after the mock so the archetype picks it up.
+// Imported after the mock. The identity check below needs the MODULE, not the
+// deferred wrapper the registry hands back — everything else renders by slug.
 const { default: WowPraxisDetail } = await import("../archetypes/WowPraxisDetail");
-const { default: DefaultPraxisDetail } = await import("../archetypes/DefaultPraxisDetail");
 
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: "Wren Abalone",
-});
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: "Bram Quilling",
-  joined_at: "2026-01-02T00:00:00Z",
-});
+const MEMBER = aMember({ character_display_name: "Wren Abalone" });
+const CO_MEMBER = { ...SHARED_CO_MEMBER, character_display_name: "Bram Quilling" };
 
 // No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
 // `&#x27;`, which survives the tag-strip and breaks a plain substring check.
@@ -65,107 +54,32 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER: CurrentUser = {
-  id: 50,
-  display_name: "Wren Abalone",
-  is_admin: false,
-  character: {
-    id: 3,
-    display_name: "Wren Abalone",
-    faction_slug: "wow",
-    level: 4,
-    points: 120,
-    avatar_url: null,
-  },
-} as unknown as CurrentUser;
-
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
-      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  };
-}
+const VIEWER = aCurrentUser({
+  character: aCharacter({ display_name: "Wren Abalone", faction_slug: "wow", level: 4 }),
+});
 
 /** A two-sided duel at a given status; this praxis is the challenger's. */
-function duel(status: DuelDetailOut["status"]): DuelDetailOut {
-  const side = (praxisId: number | null, id: number, name: string, votes: number) => ({
-    praxis_id: praxisId,
-    character_id: id,
-    display_name: name,
-    faction_slug: "wow",
-    avatar_url: "",
-    points_from_votes: votes,
-    habit_bonus_points: 0,
-    is_submitted: true,
-    nudged_at: null,
-  });
-  return {
-    id: 5,
-    task_id: 7,
+const duel = (status: DuelDetailOut["status"]): DuelDetailOut =>
+  aDuel({
     status,
-    forfeited_by_character_id: null,
-    challenger: side(1, 3, "Wren Abalone", 18),
-    opponent: side(2, 4, "Bram Quilling", 15.4),
-    winner_character_id: null,
-    challenger_final_points: null,
-    opponent_final_points: null,
-  };
-}
+    challenger: aDuelSide({
+      display_name: "Wren Abalone",
+      faction_slug: "wow",
+      points_from_votes: 18,
+    }),
+    opponent: aDuelSide({
+      praxis_id: 2,
+      character_id: 4,
+      display_name: "Bram Quilling",
+      faction_slug: "wow",
+      points_from_votes: 15.4,
+    }),
+  });
 
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <WowPraxisDetail state={next} />
-    </MemoryRouter>,
-  );
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle);
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
-  return at;
-}
+const render = skinRenderer("wow", mocks);
 
 describe("WOW claims the praxis-detail surface (#951)", () => {
   it("registers a praxisDetail archetype", () => {
@@ -176,11 +90,7 @@ describe("WOW claims the praxis-detail surface (#951)", () => {
     // The bug this closes was invisible: WOW *rendered*, it just rendered the
     // generic Default. Two different components, so the tell is the dress.
     const wow = render(state());
-    const na = renderToStaticMarkup(
-      <MemoryRouter>
-        <DefaultPraxisDetail state={state()} />
-      </MemoryRouter>,
-    );
+    const { html: na } = renderPraxisDetail("na", state());
     expect(wow.html, "the parchment field").toContain("wow-detail-field");
     expect(na, "which the na page has no notion of").not.toContain("wow-detail-field");
     expect(na, "na's page is the spectrum").toContain("--faction-default-rainbow");
@@ -204,31 +114,7 @@ describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
           type: "collab",
           members: [MEMBER, CO_MEMBER],
           applied_metatasks: [
-            {
-              id: 501,
-              title: "Composting",
-              description: '',
-              point_value: 6,
-              level_required: 0,
-              status: "active",
-              task_type: "metatask",
-              created_by: 9,
-              primary_faction_slug: 'na',
-              metatask_faction_slug: "wow",
-              created_at: "2026-01-01T00:00:00Z",
-              in_progress_count: 0,
-              created_by_display_name: "",
-              created_by_avatar_url: "",
-              created_by_faction_slug: null,
-              created_by_level: 0,
-              signup_reason: null,
-              in_progress_praxis_id: null,
-              submitted_praxis_id: null,
-              can_sign_up: false,
-              allowed_modes: [],
-              eligible_for_current_user: false,
-              start_here: false,
-            },
+            aMetatask({ metatask_faction_slug: "wow" }),
           ],
         },
       }),

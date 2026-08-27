@@ -22,14 +22,11 @@
  * is a pure `[data-theme]` cascade with no branch in the component, so there is
  * nothing here to assert about it — it is an eyeball check.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { DuelDetailOut } from "../../../api/duel";
-import type { CurrentUser } from "../../../api/auth";
-import { aMember, aPraxis, aTask } from '../../../test/fixtures'
+import { aCharacter, aCurrentUser, aMetatask, aPraxis } from "../../../test/fixtures";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 import { collabCopy } from "../../../components/collab/collabCopy";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
@@ -37,36 +34,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-// Imported after the mock so the archetype picks it up.
-const { default: EverymenPraxisDetail } = await import(
-  "../archetypes/EverymenPraxisDetail"
-);
-
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: "Ada",
-});
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: "Beth",
-  joined_at: "2026-01-02T00:00:00Z",
-});
-
-const METATASK = aTask({
-  id: 501,
-  title: "Composting",
-  point_value: 60,
-  level_required: 0,
-  task_type: "metatask",
-  created_by: 9,
-  metatask_faction_slug: "everymen",
-  created_by_display_name: "",
-  can_sign_up: false,
-  allowed_modes: [],
-  eligible_for_current_user: false,
-});
+const METATASK = aMetatask({ metatask_faction_slug: "everymen" });
 
 const PRAXIS = aPraxis({
   task_title: "Sweep The Long Corridor",
@@ -79,83 +47,14 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER: CurrentUser = {
-  id: 50,
-  email: "ada@example.com",
-  display_name: "Ada",
-  is_admin: false,
-  can_comment: true,
-  character: {
-    id: 3,
-    display_name: "Ada",
-    faction_slug: "everymen",
-    level: 4,
-    points: 120,
-    avatar_url: null,
-  },
-} as unknown as CurrentUser;
+const VIEWER = aCurrentUser({
+  character: aCharacter({ faction_slug: "everymen", level: 4 }),
+});
 
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
-      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  };
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <EverymenPraxisDetail state={next} />
-    </MemoryRouter>,
-  );
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
-
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle);
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
-  return at;
-}
+const render = skinRenderer("everymen", mocks);
 
 describe("Everymen praxis detail — the layout contract it may not restyle", () => {
   it("gives the desktop aside the shared 330px track and drops it on mobile", () => {
