@@ -40,8 +40,12 @@ const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
 
 interface SizeSet {
-  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
-  cardWidth: number;
+  /**
+   * Card width: the raw px number this archetype drew (geometry,
+   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
+   * phone — below 768px a card fills its column (#2763).
+   */
+  cardWidth: number | "100%";
   bodyPad: string;
   titleSize: string;
   levelSize: string;
@@ -70,7 +74,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     cauldron: 116,
   },
   mobile: {
-    cardWidth: 340,
+    cardWidth: "100%",
     bodyPad: "var(--space-md) var(--space-lg) var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-heading)",

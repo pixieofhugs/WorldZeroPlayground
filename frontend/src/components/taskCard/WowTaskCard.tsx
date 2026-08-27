@@ -104,8 +104,12 @@ const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
 const GILT = "var(--faction-wow-stamp-total)";
 
 interface SizeSet {
-  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
-  cardWidth: number;
+  /**
+   * Card width: the raw px number this archetype drew (geometry,
+   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
+   * phone — below 768px a card fills its column (#2763).
+   */
+  cardWidth: number | "100%";
   pad: string;
   titleSize: string;
   levelSize: string;
@@ -132,7 +136,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     plaque: 112,
   },
   mobile: {
-    cardWidth: 340,
+    cardWidth: "100%",
     pad: "var(--space-lg)",
     titleSize: "var(--text-title)",
     levelSize: "var(--text-title)",

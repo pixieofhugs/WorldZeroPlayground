@@ -1,5 +1,6 @@
 import type { CardProps } from "./TaskCard";
 import DefaultTaskCard from "./DefaultTaskCard";
+import { useFormFactor } from "../../hooks/useFormFactor";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /**
@@ -47,6 +48,7 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
  */
 export default function AlbescentTaskCard(props: CardProps) {
   const groundIsBusy = useGroundIsBusy();
+  const formFactor = useFormFactor();
   return (
     <div
       /* Two classes, two jobs.
@@ -57,7 +59,17 @@ export default function AlbescentTaskCard(props: CardProps) {
          unconditional: it is not a ground texture.
          `alb-prism` is the ground, and it is the one the alternation takes. */
       className={groundIsBusy ? "alb-task alb-moves" : "alb-task alb-moves alb-prism"}
-      style={{ position: "relative", width: "fit-content", maxWidth: "100%" }}
+      /* THE WRAPPER TAKES THE PHONE BRANCH TOO (#2763). `fit-content` shrinks
+         this box to whatever the na card inside it chose, so widening that card
+         alone would have left Albescent — and only Albescent — still narrow.
+         It is the same ruling as the other eight, arriving one level further
+         out, and the desktop keeps the shrink-wrap the drifting edge is
+         positioned against. */
+      style={{
+        position: "relative",
+        width: formFactor === "mobile" ? "100%" : "fit-content",
+        maxWidth: "100%",
+      }}
     >
       <DefaultTaskCard {...props} />
       <span aria-hidden="true" className="alb-task-edge" />
