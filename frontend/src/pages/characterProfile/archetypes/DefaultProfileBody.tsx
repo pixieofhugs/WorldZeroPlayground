@@ -886,11 +886,13 @@ function MobileProfile({
         ) : proposedTasks.length === 0 ? (
           <p className="font-body text-muted">{t('profile.proposedTasksEmpty')}</p>
         ) : (
-          /* `items-center`, not the praxis list's `items-stretch`: a task card
-             carries its own fixed width (§10 forbids regularizing it), so a
-             stretch column leaves it flush left against a ragged right (#1964).
-             A praxis card has no width of its own and still stretches. */
-          <div className="flex flex-col gap-4 items-center">
+          /* Stretched, like the praxis list beside it (#2763). This column
+             carried `items-center` because a phone task card drew at its own
+             340px and a stretch column left it flush left against a ragged
+             right (#1964); below 768px the card asks for the whole column now,
+             and centring a box that wants the full line shrinks it back to its
+             content. Both lists fill the tab again. */
+          <div className="flex flex-col gap-4">
             {proposedTasks.map((task) => (
               <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
             ))}

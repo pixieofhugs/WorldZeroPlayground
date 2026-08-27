@@ -563,15 +563,16 @@ function MobileProfile({
         ) : proposedTasks.length === 0 ? (
           <Empty>{t('profile.proposedTasksEmpty')}</Empty>
         ) : (
-          /* `alignItems: center` — a task card carries its own fixed width
-             (§10 forbids regularizing it), so the default stretch left it
-             flush left against a ragged right (#1964). The praxis column
-             above keeps the default: a praxis card has no width of its own. */
+          /* The default stretch, like the praxis column above (#2763). This
+             pinned `alignItems: center` because a phone task card carried its
+             own 340px and stretching left it flush against a ragged right
+             (#1964); below 768px the card fills its column instead, and
+             centring a box that asks for the whole line shrinks it back to its
+             content. */
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
               gap: 'var(--space-lg)',
             }}
           >
