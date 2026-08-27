@@ -23,9 +23,9 @@
  * reference implementation of the same page; the diff between the two files is
  * the whole of WOW's identity on this surface.
  *
- * One responsive component: `useComposerSizes()` picks the size set and
- * `sizes.isMobile` scales the two corner ornaments. There is no mobile twin —
- * `mobileEditPraxis` retired outright with #1181 (ADR-0065 §2).
+ * One responsive component (ADR-0065 §2): `useComposerSizes()` picks the size
+ * set and `sizes.isMobile` scales the two corner ornaments. There is no mobile
+ * twin.
  *
  * ## Copy — none of its own (ADR-0065 §3)
  *

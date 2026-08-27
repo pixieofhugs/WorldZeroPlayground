@@ -40,11 +40,8 @@
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
  * `useComposerSizes()` picks the size set; there is one tree at two widths.
- * `pages/editPraxis/mobileArchetypes/` and the `mobileEditPraxis` manifest
- * surface were retired outright with this issue — superseded by a committed
- * design, not held dormant (ADR-0063's terms, which §2 adopts over
- * ADR-0056/0058's). Mobile stacks with flow; there is no fixed-px grid anywhere
- * below (SPEC-faction-ui-profile §1a).
+ * Mobile stacks with flow; there is no fixed-px grid anywhere below
+ * (SPEC-faction-ui-profile §1a).
  *
  * ## Copy and dress
  *

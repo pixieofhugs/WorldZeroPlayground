@@ -338,8 +338,8 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * read their own words while typing — legibility beats the tell, so the tell
    * moved to the sheet's edge, where it owes no ratio.
    *
-   * One responsive component, both widths (ADR-0065 §2): there is no
-   * `mobileEditPraxis` surface to register a second row on.
+   * One responsive component, both widths (ADR-0065 §2): this one row covers
+   * the phone too.
    */
   editPraxis: () => AlbescentEditPraxis,
 
