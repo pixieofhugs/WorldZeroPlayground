@@ -26,7 +26,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 
 import MetataskSeal from "../MetataskSeal";
-import MetataskPicker from "../MetataskPicker";
+import MetataskPicker, { PickerRow } from "../MetataskPicker";
 import AlbescentSeal from "../skins/AlbescentSeal";
 import CovenSeal from "../skins/CovenSeal";
 import DefaultSeal from "../skins/DefaultSeal";
@@ -170,5 +170,67 @@ describe("the empty add slot keeps the na corner", () => {
     const html = render(<MetataskSeal metatasks={[]} onAdd={() => {}} />);
     const slot = html.match(/<button[^>]*style="([^"]*)"/);
     expect(cornerToken(slot![1])).toBe("--faction-default-card-radius");
+  });
+});
+
+/**
+ * AND SELECTION SURVIVES A RING NOBODY CAN SEE (#2729 follow-up).
+ *
+ * The seam here is the OTHER half of "which row is chosen": not *does the ring
+ * match the card* but *is the ring the only thing saying so*. Measured against
+ * the picker's own stock in light, the accent ring reads 1.19:1 on Snide's
+ * toxic acid and 1.72:1 on the Singularity's phosphor — under 1.4.11's 3:1 for
+ * a non-text state indicator — and this is the sole indicator on the row. So a
+ * mark that is present or absent rides beside it, and these cases exist so that
+ * a later edit cannot quietly put selection back on colour alone.
+ *
+ * Three properties, all nine factions:
+ *   1. a selected row draws the tick, an unselected one draws none;
+ *   2. the tick rides the CONTROL, the element the ring rides, for the same
+ *      reason — four seals paint past their own border box;
+ *   3. the tick's markup is byte-identical across the nine, and carries no
+ *      inline style, so it cannot acquire a per-faction hue without failing.
+ */
+const TICK = '<span class="metatask-pick__tick" aria-hidden="true">\u2713</span>';
+
+const selectedRow = (slug: string, selected: boolean) =>
+  render(
+    <PickerRow
+      metatask={metatask(slug)}
+      sealed={false}
+      selected={selected}
+      onPick={() => {}}
+    />,
+  );
+
+describe("selection is not carried by the accent's contrast alone", () => {
+  for (const [slug] of CORNERS) {
+    it(`${slug}'s selected row draws the tick, and only when selected`, () => {
+      expect(selectedRow(slug, true)).toContain(TICK);
+      expect(selectedRow(slug, false)).not.toContain("metatask-pick__tick");
+    });
+
+    it(`${slug}'s tick rides the control the ring rides`, () => {
+      // Straight after the control's own opening tag — inside the `inset: 0`,
+      // `zIndex: 3` overlay, where nothing in the row can paint over it.
+      expect(selectedRow(slug, true)).toMatch(
+        new RegExp(`<button[^>]*z-index:3[^>]*>${TICK.replace(/[[\]/\^$*+?.()|{}]/g, "\$&")}`),
+      );
+    });
+
+    it(`${slug}'s ring is still its own accent, beside the tick`, () => {
+      const accent = `--faction-${slug === "albescent" || slug === "na" ? "default" : slug}-card-accent`;
+      expect(selectedRow(slug, true)).toContain(
+        `outline:2px solid var(${accent})`,
+      );
+    });
+  }
+
+  it("draws ONE tell for nine factions — same markup, no inline paint", () => {
+    const ticks = CORNERS.map(
+      ([slug]) => selectedRow(slug, true).match(/<span class="metatask-pick__tick"[^>]*>[^<]*<\/span>/)![0],
+    );
+    expect(new Set(ticks).size).toBe(1);
+    expect(ticks[0]).not.toContain("style=");
   });
 });

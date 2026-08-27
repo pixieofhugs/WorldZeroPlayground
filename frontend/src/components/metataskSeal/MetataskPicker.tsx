@@ -36,6 +36,15 @@ import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 const ALL_FILTER = "all" as const;
 
+/**
+ * The selected row's non-colour tell (#2729 follow-up). The same dingbat
+ * `OptionPicker` marks a chosen filter row with — this repo has one check mark
+ * and it is this one — so nothing new is drawn for it. Its box is
+ * `.metatask-pick__tick`; the argument for why a mark and not a heavier ring
+ * lives there.
+ */
+const CHECK_GLYPH = "✓";
+
 export default function MetataskPicker({ state }: { state: EditPraxisState }) {
   const { t } = useTranslation("forms");
   const isMobile = useFormFactor() === "mobile";
@@ -217,105 +226,15 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
               {t("editPraxis.attach.empty")}
             </p>
           )}
-          {rows.map((mt) => {
-            const sealed = state.appliedMetatasks.has(mt.id);
-            const selected = pending?.id === mt.id;
-            return (
-              /*
-               * THE ROW IS A WRAPPER WITH THE CONTROL OVER IT, NOT A BUTTON
-               * AROUND THE SEAL (#2648). The row used to be one `<button>` with
-               * the seal as its content, which stopped being legal the moment a
-               * seal mounted `factionBands`: the band is a `<Link>`, and
-               * interactive content inside a button is invalid HTML — and worse
-               * than invalid here, since the link would have navigated out of
-               * the composer instead of choosing the metatask.
-               *
-               * So the hit target became a transparent overlay, a SIBLING of
-               * the seal rather than its parent. Nothing about the control
-               * moved: same `type`, same `disabled`, same handler, same
-               * `aria-pressed`/`aria-label`, and it still covers the whole row.
-               * Its `zIndex` clears the band's own 2 (`CardMasthead`) so a
-               * pointer anywhere on the row still selects.
-               *
-               * ponytail: the ceiling is the KEYBOARD. The band stays tabbable
-               * inside the sheet, so Tab reaches the faction link before the
-               * row's own control. That is valid and labelled, and it is the
-               * passport question #2648 asks — a band that cannot be told "not
-               * here" is a band that cannot enter a control.
-               *
-               * THE SELECTION RING RIDES THE CONTROL, NOT THIS WRAPPER (#2729),
-               * and its shape and its ink are BOTH the selected card's own,
-               * read off `--faction-<slug>-card-radius` / `-card-accent` — the
-               * same tokens the skin inside reads for its corner. The wrapper
-               * used to carry a hardcoded `borderRadius: 12` and paint the
-               * outline on it, so a 14px arc was drawn 2px outside a 4px
-               * Singularity corner and passed *inside* the card, which is why
-               * round-on-square and hidden-behind-the-card were one defect.
-               *
-               * It rides the control because a parent's outline is painted
-               * UNDER its children: at offset 2 the wrapper's ring landed
-               * beneath Everymen's 3px/4px paper-and-ink shadow rings and
-               * fought Ephemerists' own brass outline for the same two pixels.
-               * The control is `inset: 0` over the same box at `zIndex: 3`, so
-               * nothing in the row can paint over the ring by construction.
-               */
-              <div
-                key={mt.id}
-                className="relative text-left"
-                style={{ opacity: sealed ? 0.55 : 1 }}
-              >
-                <MetataskSeal metatasks={[mt]} />
-                <button
-                  type="button"
-                  disabled={sealed}
-                  onClick={() => setPending(mt)}
-                  aria-pressed={selected}
-                  aria-label={t("editPraxis.attach.addAria", {
-                    title: mt.title,
-                  })}
-                  className="absolute"
-                  style={{
-                    inset: 0,
-                    zIndex: 3,
-                    width: "100%",
-                    padding: 0,
-                    background: "transparent",
-                    border: "none",
-                    borderRadius: factionCssVar(
-                      mt.metatask_faction_slug,
-                      "card-radius",
-                    ),
-                    // Only when selected: an unselected row must keep the
-                    // browser's own focus ring, which an `outline-style` of
-                    // `none` in an inline style would suppress. The selected
-                    // row's ring doubles as its focus ring — one ring, and it
-                    // is the one that says what is chosen.
-                    ...(selected
-                      ? {
-                          outline: `2px solid ${factionCssVar(
-                            mt.metatask_faction_slug,
-                            "card-accent",
-                          )}`,
-                          outlineOffset: 2,
-                        }
-                      : null),
-                    cursor: sealed ? "default" : "pointer",
-                  }}
-                />
-                {sealed && (
-                  <span
-                    className="label-caption block"
-                    style={{
-                      color: "var(--color-success)",
-                      marginTop: "var(--space-xs)",
-                    }}
-                  >
-                    {t("editPraxis.attach.alreadyAttached")}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+          {rows.map((mt) => (
+            <PickerRow
+              key={mt.id}
+              metatask={mt}
+              sealed={state.appliedMetatasks.has(mt.id)}
+              selected={pending?.id === mt.id}
+              onPick={() => setPending(mt)}
+            />
+          ))}
         </div>
 
         {/*
@@ -405,4 +324,123 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
   );
 
   return drawAtRoot(overlay);
+}
+
+/**
+ * ONE ROW OF THE PICKER, EXPORTED SO ITS SELECTED STATE IS REACHABLE.
+ *
+ * `pending` is local state that only a click sets, and the frontend harness has
+ * no DOM (`renderToStaticMarkup`, no clicks), so a test that renders
+ * `MetataskPicker` can never see a selected row at all — the ring's ink and the
+ * tick below it would be permanently unassertable. `OptionOverlay` (FilterBar)
+ * and `CharacterSwitcherRows` are the precedents: export the piece, keep the
+ * markup byte-for-byte, let the guard drive it directly.
+ *
+ * THE ROW IS A WRAPPER WITH THE CONTROL OVER IT, NOT A BUTTON AROUND THE SEAL
+ * (#2648). The row used to be one `<button>` with the seal as its content,
+ * which stopped being legal the moment a seal mounted `factionBands`: the band
+ * is a `<Link>`, and interactive content inside a button is invalid HTML — and
+ * worse than invalid here, since the link would have navigated out of the
+ * composer instead of choosing the metatask.
+ *
+ * So the hit target is a transparent overlay, a SIBLING of the seal rather than
+ * its parent: same `type`, same `disabled`, same handler, same
+ * `aria-pressed`/`aria-label`, and it still covers the whole row. Its `zIndex`
+ * clears the band's own 2 (`CardMasthead`) so a pointer anywhere on the row
+ * still selects.
+ *
+ * ponytail: the ceiling is the KEYBOARD. The band stays tabbable inside the
+ * sheet, so Tab reaches the faction link before the row's own control. That is
+ * valid and labelled, and it is the passport question #2648 asks — a band that
+ * cannot be told "not here" is a band that cannot enter a control.
+ *
+ * THE SELECTION RING RIDES THE CONTROL, NOT THE WRAPPER (#2729), and its shape
+ * and its ink are BOTH the selected card's own, read off
+ * `--faction-<slug>-card-radius` / `-card-accent` — the same tokens the skin
+ * inside reads for its corner. The wrapper used to carry a hardcoded
+ * `borderRadius: 12` and paint the outline on it, so a 14px arc was drawn 2px
+ * outside a 4px Singularity corner and passed *inside* the card, which is why
+ * round-on-square and hidden-behind-the-card were one defect.
+ *
+ * It rides the control because a parent's outline is painted UNDER its
+ * children: at offset 2 the wrapper's ring landed beneath Everymen's 3px/4px
+ * paper-and-ink shadow rings and fought Ephemerists' own brass outline for the
+ * same two pixels. The control is `inset: 0` over the same box at `zIndex: 3`,
+ * so nothing in the row can paint over the ring by construction.
+ *
+ * AND THE RING DOES NOT CARRY THE SIGNAL ALONE — see `.metatask-pick__tick`.
+ * Measured against this sheet's own stock in light, Snide's accent reads
+ * 1.19:1 and the Singularity's 1.72:1, both under 1.4.11's 3:1 for a state
+ * indicator, and a ring nobody can see is the only thing telling a player which
+ * metatask is chosen. The tick is the non-colour half: a mark that is present
+ * or absent, in the sheet's neutral pair, drawn for all nine.
+ */
+export function PickerRow({
+  metatask,
+  sealed,
+  selected,
+  onPick,
+}: {
+  metatask: TaskOut;
+  sealed: boolean;
+  selected: boolean;
+  onPick: () => void;
+}) {
+  const { t } = useTranslation("forms");
+  return (
+    <div className="relative text-left" style={{ opacity: sealed ? 0.55 : 1 }}>
+      <MetataskSeal metatasks={[metatask]} />
+      <button
+        type="button"
+        disabled={sealed}
+        onClick={onPick}
+        aria-pressed={selected}
+        aria-label={t("editPraxis.attach.addAria", { title: metatask.title })}
+        className="absolute"
+        style={{
+          inset: 0,
+          zIndex: 3,
+          width: "100%",
+          padding: 0,
+          background: "transparent",
+          border: "none",
+          borderRadius: factionCssVar(
+            metatask.metatask_faction_slug,
+            "card-radius",
+          ),
+          // Only when selected: an unselected row must keep the browser's own
+          // focus ring, which an `outline-style` of `none` in an inline style
+          // would suppress. The selected row's ring doubles as its focus ring —
+          // one ring, and it is the one that says what is chosen.
+          ...(selected
+            ? {
+                outline: `2px solid ${factionCssVar(
+                  metatask.metatask_faction_slug,
+                  "card-accent",
+                )}`,
+                outlineOffset: 2,
+              }
+            : null),
+          cursor: sealed ? "default" : "pointer",
+        }}
+      >
+        {selected && (
+          <span className="metatask-pick__tick" aria-hidden="true">
+            {CHECK_GLYPH}
+          </span>
+        )}
+      </button>
+      {sealed && (
+        <span
+          className="label-caption block"
+          style={{
+            color: "var(--color-success)",
+            marginTop: "var(--space-xs)",
+          }}
+        >
+          {t("editPraxis.attach.alreadyAttached")}
+        </span>
+      )}
+    </div>
+  );
 }
