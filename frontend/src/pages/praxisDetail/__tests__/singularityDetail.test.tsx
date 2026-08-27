@@ -19,36 +19,24 @@
  * pure `[data-theme]` cascade with no branch in this component, so there is
  * nothing here to assert about it; it is an eyeball check.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../api/duel";
-import type { CurrentUser } from "../../../api/auth";
-import { aMember, aPraxis } from '../../../test/fixtures'
+import type { DuelDetailOut, DuelStatus } from "../../../api/duel";
+import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
+import {
+  CO_MEMBER,
+  MEMBER,
+  VOTERS,
+  aPraxisDetailState,
+  indexOf,
+  renderPraxisDetail,
+} from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
-
-// Imported after the mock so the archetype picks it up.
-const { default: SingularityPraxisDetail } = await import(
-  "../archetypes/SingularityPraxisDetail"
-);
-
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: "Ada",
-});
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: "Beth",
-  joined_at: "2026-01-02T00:00:00Z",
-});
 
 const PRAXIS = aPraxis({
   task_title: "Recover The Lost Array",
@@ -61,120 +49,35 @@ const PRAXIS = aPraxis({
   members: [MEMBER],
 });
 
-const VIEWER: CurrentUser = {
-  id: 50,
-  email: "ada@example.com",
-  display_name: "Ada",
-  is_admin: false,
-  can_comment: true,
-  character: {
-    id: 3,
-    display_name: "Ada",
-    faction_slug: "singularity",
-    level: 4,
-    points: 120,
-    avatar_url: null,
-  },
-} as unknown as CurrentUser;
+const VIEWER = aCurrentUser({
+  character: aCharacter({ faction_slug: "singularity", level: 4 }),
+});
 
-/** This page's side of a duel; `praxis_id` is what makes it "mine". */
-const MINE: DuelSideOut = {
-  praxis_id: 1,
-  character_id: 3,
-  display_name: "Ada",
-  faction_slug: "singularity",
-  avatar_url: "",
-  points_from_votes: 18,
-  is_submitted: true,
-  nudged_at: null,
-};
-
-const RIVAL: DuelSideOut = {
-  praxis_id: 2,
-  character_id: 4,
-  display_name: "Rax",
-  faction_slug: "snide",
-  avatar_url: "",
-  points_from_votes: 15.4,
-  is_submitted: true,
-  nudged_at: null,
-};
-
-function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
-  return {
-    id: 5,
-    task_id: 7,
-    status: "settled" as DuelStatus,
-    forfeited_by_character_id: null,
-    challenger: MINE,
-    opponent: RIVAL,
-    winner_character_id: null,
-    challenger_final_points: null,
-    opponent_final_points: null,
+/** `praxis_id: 1` on the challenger is what makes that side "mine". */
+const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
+  aDuel({
+    challenger: aDuelSide({ faction_slug: "singularity", points_from_votes: 18 }),
+    opponent: aDuelSide({
+      praxis_id: 2,
+      character_id: 4,
+      display_name: "Rax",
+      faction_slug: "snide",
+      points_from_votes: 15.4,
+    }),
     ...overrides,
-  };
-}
+  });
 
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
-      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  };
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
+// The skin comes from the real registry, resolved at render time — inside the
+// test, so after both the `vi.mock` above and the archetype preload.
 function render(
   next: PraxisDetailState,
   formFactor: "desktop" | "mobile" = "desktop",
 ): { html: string; text: string } {
   mocks.formFactor = formFactor;
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <SingularityPraxisDetail state={next} />
-    </MemoryRouter>,
-  );
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
-
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle);
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
-  return at;
+  return renderPraxisDetail("singularity", next);
 }
 
 describe("Singularity praxis detail — the inherited layout contract", () => {
