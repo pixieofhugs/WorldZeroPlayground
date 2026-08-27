@@ -59,6 +59,11 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   created_by_level: 0,
   signup_reason: null,
   in_progress_praxis_id: null,
+  // The viewer's own draft and their own filed praxis on this task (#2359,
+  // #2643) — both null for the modal task, which the viewer has never touched.
+  // The suites that care set one or the other; setting BOTH is a state the
+  // server does not produce for a task that shut sign-up.
+  submitted_praxis_id: null,
   can_sign_up: true,
   allowed_modes: ['solo'],
   eligible_for_current_user: true,
