@@ -346,7 +346,7 @@
     }
   },
   "invitation": {
-    "dismiss": "Maybe later"
+    "dismiss": "Not now"
   },
   "mobile": {
     "loadError": "Couldn't load factions.",
