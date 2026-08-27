@@ -47,6 +47,12 @@ const GOVERNED = /^--(faction|spectrum)-/;
 
 /** Suffixes actually passed to `factionCssVar(slug, suffix)` across the app. */
 const DYNAMIC_SUFFIXES = [
+  // The accent, measured safe as ink on the page (#2619). Reached only as
+  // `factionCssVar(slug, 'accent-ink')` — deliberately, because that is the
+  // two-argument spelling `local/no-faction-hue-as-ink` does not fire on, so
+  // there is no literal `var(--faction-…-accent-ink)` anywhere for a static
+  // sweep to find and all eight rows read as dead without this entry.
+  "accent-ink",
   "border",
   "card-accent",
   "card-bg",
