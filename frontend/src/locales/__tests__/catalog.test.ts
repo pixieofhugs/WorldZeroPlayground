@@ -1255,8 +1255,12 @@ describe('the invitation deferral is one key on both surfaces (#2620)', () => {
     // "Not now", not the shared key's original "Maybe later": three feed source
     // files and ADR-0070 already name this act "Not now" in prose, and
     // `forms:editPraxis.attach.cancel` — the app's other deferral — says it too.
+    //
+    // That sibling is NOT asserted here. It is evidence for the word, not a
+    // promise about it: pinning another surface's copy inside this block would
+    // fail a future reword of the attach control with a message about the
+    // invitation deferral, sending the next reader to the wrong issue.
     expect(i18n.t('factions:invitation.dismiss')).toBe('Not now')
-    expect(i18n.t('forms:editPraxis.attach.cancel')).toBe('Not now')
   })
 
   it('points the feed card at the shared key — a move, not a copy', () => {
