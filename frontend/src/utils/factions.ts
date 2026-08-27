@@ -590,9 +590,9 @@ export function factionDescription(slug: string | null | undefined): string {
  * Every slug that has a theme of its own, in declaration order.
  *
  * Derived from CSS_KEY rather than kept as a second list, which would be the
- * parallel registry #1269 removed. `albescent` and `na` are excluded for
- * free — they map to `default`, and
- * "has a resolvable theme" is exactly what isKnownFaction means.
+ * parallel registry #1269 removed. `albescent` and `na` are excluded for free —
+ * they map to `default`, and "has a resolvable theme" is exactly what
+ * isKnownFaction means.
  */
 export function getAllFactions(): FactionConfig[] {
   return Object.keys(CSS_KEY)
