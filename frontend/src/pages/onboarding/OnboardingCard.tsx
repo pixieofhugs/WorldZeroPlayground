@@ -54,12 +54,27 @@ const caption: CSSProperties = {
   color: 'var(--faction-default-card-muted)',
 }
 
+/**
+ * A CONTROL MUST BE ABLE TO BREAK ITS LINE (#2764). This carried
+ * `white-space: nowrap`, so a label wider than the sheet had nowhere to go and
+ * ran out past the rainbow border — and the sheet is only 560px, so on a phone
+ * that bit at much shorter labels. The actions row already wraps; it was the
+ * button that could not.
+ *
+ * `text-align` and not `justify-content` is what centres the wrapped line.
+ * `justify-content: center` centres the anonymous flex ITEM inside the control,
+ * but a wrapping item fills the available width, so its short second line still
+ * rags left. Both declarations are load-bearing and neither replaces the other.
+ *
+ * The control keeps its intrinsic width. Stretching it to the sheet would also
+ * end the overflow, and that is a design change rather than this fix.
+ */
 const controlBase: CSSProperties = {
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  whiteSpace: 'nowrap',
+  textAlign: 'center',
   fontFamily: LORA,
   fontWeight: 600,
   fontSize: 'var(--text-xl)',
