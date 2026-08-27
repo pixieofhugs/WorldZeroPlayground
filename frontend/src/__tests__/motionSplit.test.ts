@@ -93,7 +93,7 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'pointer-events:none, parked at left:-55% outside its own overflow:hidden ' +
     'track, and declared nowhere but inside the gate — so with the sheet absent ' +
     'there is no band, which is exactly the reduced-motion rendering.',
-  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-desk-edge::before, .alb-plate-edge::before, .alb-profile-edge::before':
+  '.alb-task-edge::before, .alb-praxis-card-edge::before, .alb-detail-edge::before, .alb-praxis-edge::before, .alb-feed-edge::before, .alb-desk-edge::before, .alb-plate-edge::before, .alb-comment-edge::before, .alb-profile-edge::before':
     "the Albescent spectrum edges' travelling ramp (#2498; the faction page's " +
     'plates joined at #2504, the phone home at #2505, the praxis ' +
     "CARD's own 3px ring at #2499 when it stopped borrowing the rail's 1px one). Two " +
@@ -105,7 +105,9 @@ const MOTION_SCAFFOLDING: Record<string, string> = {
     'frame a reduced-motion reader already gets. EIGHT since #2553 took the ' +
     "composer's ring off — that sheet already wore na's OWN 3px spectrum " +
     'border (#2520), so the ring was a second frame just inside the first. ' +
-    'All are masked rings ' +
+    "NINE since #2732 hung the comment leaf's ring on it (ADR-0088 §3): that " +
+    'leaf had been the standing exception to #2404, and stilling it again is ' +
+    'the one-line retreat noted at the mount. All are masked rings ' +
     'since #2519: the odd one out used to be `.alb-desk .spectrum-rule`, a ' +
     "filled hairline travelling in place of an edge the field desk's identity " +
     'card did not have, and the design canvas takes that bar off and gives the ' +
