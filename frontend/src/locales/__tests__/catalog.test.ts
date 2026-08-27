@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join, relative } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
+import common from '../en/common.json'
 import factions from '../en/factions.json'
 import forms from '../en/forms.json'
 import praxis from '../en/praxis.json'
@@ -1149,5 +1150,72 @@ describe('no faction sentence renders a double full stop (#2368)', () => {
       .filter(([, value]) => /\{\{faction\}\}\./.test(value))
       .map(([id, value]) => `${id} -> "${value}"`)
     expect(offenders).toEqual([])
+  })
+})
+
+/* ========================================================================== *
+ * #2789 — THE DISCLAIMER IS OWNER-WRITTEN LEGAL COPY, TRANSCRIBED VERBATIM
+ *
+ * THE SEAM IS THE CATALOG. `/disclaimer` and the onboarding terms stop (stop 3)
+ * both render `common:disclaimer.*`, so there is one document and this is where
+ * it lives. Most catalog rows need no guard — a blurb that drifts later is a
+ * copy question, not a regression. This one is different: it is the text a
+ * Player agrees to, and three of its rows LOOK like defects and would be
+ * quietly corrected by the next reader.
+ *
+ *   1. A SPACED HYPHEN, `statutes - no violation`, where the catalogs
+ *      otherwise spell a spaced dash as an em dash (#2598 measured 98 em
+ *      dashes and no spaced hyphen or en dash anywhere). The owner wrote a
+ *      hyphen. It stays a hyphen until she says otherwise.
+ *   2. `The creator, of the system of websites,` — the comma after "creator"
+ *      reads as a typo, or as an appositive that never closes.
+ *   3. STRAIGHT double quotes throughout: "Game", "Players", "Tasks". #2789's
+ *      Queries section describes `"Players"` as curly; the owner's text block,
+ *      which IS the document, has all three straight. Flagged on the issue,
+ *      transcribed as written.
+ *
+ * FOUR PARAGRAPHS BECAME THREE. `p4` is retired rather than refilled — the
+ * paragraph boundaries in a legal document are part of the document, so the
+ * three new paragraphs are not redistributed across four keys to save a key.
+ * Both surfaces dropped their fourth `<p>` with it; `t()` is typed off this
+ * catalog, so a leftover `t('disclaimer.p4')` fails the typecheck.
+ * ========================================================================== */
+describe('the Disclaimer is the owner\'s text, character for character (#2789)', () => {
+  it('holds three paragraphs and a date, with no retired fourth', () => {
+    expect(Object.keys(common.disclaimer)).toEqual(['title', 'p1', 'p2', 'p3', 'lastUpdated'])
+  })
+
+  it('transcribes the first paragraph exactly', () => {
+    expect(i18n.t('common:disclaimer.p1')).toBe(
+      `The creator, of the system of websites, events, and activities explicitly referred to as World Zero (henceforth, "Game"), assumes no responsibility for the actions of users (henceforth, "Players") of this website or any affiliated website (including but not limited to worldzero.org). This includes, but is not limited to, content posted to the Game by Players, suggested activities ("Tasks"), and actions taken by Players in particular or in general.`,
+    )
+  })
+
+  it('transcribes the second paragraph exactly', () => {
+    expect(i18n.t('common:disclaimer.p2')).toBe(
+      `As a Player, you agree to assume complete responsibility for any and all actions you or your character undertakes relating to you or your character's participation in the Game. You agree to submit no material to the Game that you have not created, or do not have permission to display publicly or reproduce in accordance with any applicable copyright. You agree that any action taken as part of your participation in the Game is in accordance with applicable laws and statutes - no violation of such is sanctioned by the Game. Any suggestion of any such violation that appears as part of the Game is due solely to the fictional nature of a game, and is not intended to condone or indemnify any violation of any local, state, or federal laws, nor any intrusion upon or violation of the rights of any Player, person, or persons.`,
+    )
+  })
+
+  it('transcribes the third paragraph exactly', () => {
+    expect(i18n.t('common:disclaimer.p3')).toBe(
+      `Due to the malleability of digital media, any appearance of such a violation by any Player may not be considered evidence, precedent, or approval of such a violation. Any material displayed as part of the Game should be considered fictive until and unless proven otherwise.`,
+    )
+  })
+
+  it('keeps the three rows that look like defects', () => {
+    // Named one by one so the failure says WHICH correction was made. The
+    // exact-transcription assertions above already cover them; what these add
+    // is a message a reader can act on instead of a 146-word diff.
+    expect(i18n.t('common:disclaimer.p2')).toContain('statutes - no violation')
+    expect(i18n.t('common:disclaimer.p1')).toContain('The creator, of the system')
+    expect(i18n.t('common:disclaimer.p1')).toContain('"Game"')
+    expect(i18n.t('common:disclaimer.p1')).toContain('"Players"')
+    expect(i18n.t('common:disclaimer.p1')).toContain('"Tasks"')
+  })
+
+  it('dates the document to the pass that rewrote it', () => {
+    // A stale date under a rewritten legal document is worse than no date.
+    expect(i18n.t('common:disclaimer.lastUpdated')).toBe('Last updated: August 2026')
   })
 })
