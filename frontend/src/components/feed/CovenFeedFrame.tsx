@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { CovenSigil } from '../sigil/CovenSigil'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
@@ -63,7 +64,8 @@ import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
  * measured on this ground — 4.70:1 light / 9.77:1 dark. A repoint, not a mint.
  * The bright `-slip-pk` is ornament only and stays so; it is 3.25:1 as type.
  */
-const ROW_SKIN: FeedRowSkin = { ink: { actor: 'var(--faction-coven-slip-deep)' } }
+const DEEP = 'var(--faction-coven-slip-deep)'
+const ROW_SKIN: FeedRowSkin = { ink: { actor: DEEP } }
 
 const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
@@ -71,7 +73,7 @@ const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 interface SizeSet {
   headPad: string
   kickerSize: string
-  /** The pentacle charm's box. Ornament geometry, so a raw px number (§4a). */
+  /** The head's faction mark. Ornament geometry, so a raw px number (§4a). */
   charm: number
 }
 
@@ -148,36 +150,18 @@ function SparkField() {
   )
 }
 
-/** The pentacle charm that heads the card — a pink disc, a dashed gold ring. */
-function Pentacle({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 44 44"
-      aria-hidden="true"
-      style={{ display: 'block', flexShrink: 0 }}
-    >
-      <circle cx="22" cy="22" r="19" fill="var(--faction-coven-slip-pk)" opacity="0.18" />
-      <circle
-        cx="22"
-        cy="22"
-        r="15"
-        fill="none"
-        stroke="var(--faction-coven-slip-gold)"
-        strokeWidth="1.2"
-        strokeDasharray="2 4"
-      />
-      <path
-        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
-        fill="none"
-        stroke="var(--faction-coven-slip-deep)"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
+/* THE HEAD'S CHARM WAS A PENTACLE, PRIVATELY DRAWN (#2746). A pink disc under a
+   dashed gold ring with a five-point star — near byte-identical to `SigilMark`,
+   the badge #2726 retired, but drawn here rather than imported, so that issue's
+   mount list never saw it and the retirement did not reach it. It draws
+   `CovenSigil` now, like the other six: a player meets ONE symbol for this
+   faction, and a copy that never went through `covenSlip`'s export is exactly
+   how a faction acquires a second identity again (#1209).
+
+   The disc and the ring go with the star rather than being kept around it. That
+   is the same cost the faction hero took knowingly at 74px — the badge was a
+   struck object where the hat is a shape — and the head already sets the mark
+   off: it sits on the slip's gradient band under a gold twinkle field. */
 
 export default function CovenFeedFrame({ kicker, time, tag, archive, children }: FeedFrameProps) {
   const formFactor = useFormFactor()
@@ -214,7 +198,7 @@ export default function CovenFeedFrame({ kicker, time, tag, archive, children }:
         <SparkField />
 
         <span style={{ position: 'relative', zIndex: 1, display: 'flex', flexShrink: 0 }}>
-          <Pentacle size={size.charm} />
+          <CovenSigil size={size.charm} color={DEEP} />
         </span>
 
         {/* kicker — the card's only kind label, in the coven's display face */}

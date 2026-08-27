@@ -4,10 +4,10 @@
  * `faction="coven"`).
  *
  * The shared composer layout (`shared.tsx`) wearing Coven's dress: a centred
- * masthead of a turning pentacle disc under a twinkle field, a glow-and-lavender
- * ground carrying the coven wheel's cat and a scatter of arcane glyphs, one
- * braid of thread closing the sheet, an 88px haloed ward for the points, a 40px
- * pentacle for the stage mark, and a full-bleed band for the cast.
+ * masthead of a turning cat under a twinkle field, a glow-and-lavender ground
+ * carrying the coven wheel's cat and a scatter of witch hats, one braid of
+ * thread closing the sheet, an 88px haloed ward for the points, a 40px hat for
+ * the stage mark, and a full-bleed band for the cast.
  *
  * ## This REPLACES the `wow.exe` window wholesale
  *
@@ -52,12 +52,19 @@
  * submitted state. Light/dark flips entirely through the `[data-theme="dark"]`
  * cascade — there is no `dark ? a : b` anywhere in this file.
  *
- * Motion is reached by CLASS only: `.ep-spin` (the masthead disc at 42s, the
- * ward's spokes at 30s, both re-timed through `--ep-spin-dur`), `.ep-twinkle`
- * (the ward's five stars, staggered through `--ep-delay`) and `.cvn-wheel` (the
- * ground's cat, Coven's own 120s turn). Every keyframe already lives in
- * `index.css` behind the shared `prefers-reduced-motion` guard; an inline
- * `animation:` would bypass that guard (#1003).
+ * Motion is reached by CLASS only: `.ep-twinkle` (the ward's five stars,
+ * staggered through `--ep-delay`) and `.cvn-wheel` (Coven's own 120s turn, worn
+ * by BOTH cats on this page — the ground's watermark and the masthead's mark).
+ * Every keyframe already lives in `index.css` or `motion.ornament.css` behind
+ * the shared `prefers-reduced-motion` guard; an inline `animation:` would
+ * bypass that guard (#1003).
+ *
+ * `.ep-spin` and the `--ep-spin-dur: 42s` that re-timed it are GONE from this
+ * file (#2746) — they turned the pentagram disc the masthead no longer draws.
+ * The hook itself is shared and stays: UA's ensō reads it at 200s and Everymen's
+ * cogs re-time their counter-turn through it. The sentence that also stood here
+ * claiming `.ep-spin` turned "the ward's spokes at 30s" described an element
+ * this file has not drawn for some time; it is not a second deletion.
  *
  * ## Not drawn as designed
  *
@@ -72,6 +79,7 @@ import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { CovenCat } from "../../../components/factionMarks/covenSlip";
+import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   ComposerFooter,
@@ -149,6 +157,10 @@ const CAST_BAND =
   "linear-gradient(180deg, var(--faction-coven-cast-from), var(--faction-coven-cast-to))";
 const CAST_INK = "var(--faction-coven-cast-ink)";
 
+/** The masthead's mark. Ornament geometry (WORLD_ZERO_STYLE §4a), and it is the
+ *  30 the disc it replaces was drawn at. */
+const MAST_CAT = 30;
+
 /** The skin's geometry: radius 14, borders 1.5, and the border takes gold. */
 const RADIUS = 14;
 const FIELD_RADIUS = 10;
@@ -168,84 +180,27 @@ function Braid({ style }: { style?: CSSProperties }) {
   );
 }
 
-/**
- * The coven's pentagram, alone. The status mark IS this at 40px in accentDeep;
- * the masthead badge is this inside a disc.
- */
-function Pentacle({
-  size,
-  color,
-  strokeWidth = 1.5,
-  opacity,
-}: {
-  size: number;
-  color: string;
-  strokeWidth?: number;
-  opacity?: number;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 44 44"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <path
-        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
-        fill="none"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinejoin="round"
-        opacity={opacity}
-      />
-    </svg>
-  );
-}
+/* TWO PRIVATE PENTAGRAM DRAWINGS STOOD HERE (#2746), and neither went through
+   `covenSlip`'s export, which is why #2726's six-mount retirement never reached
+   them:
 
-/**
- * The masthead badge: accent field, a dashed gold ring, the pentagram in
- * accentDeep and a gold centre — turning once every 42 seconds. `.ep-spin` owns
- * the motion and its reduced-motion guard; `--ep-spin-dur` re-times it without
- * a second keyframe.
- */
-function SigilDisc({ size }: { size: number }) {
-  return (
-    <svg
-      className="ep-spin"
-      width={size}
-      height={size}
-      viewBox="0 0 44 44"
-      aria-hidden="true"
-      style={
-        {
-          display: "block",
-          flex: "0 0 auto",
-          "--ep-spin-dur": "42s",
-        } as CSSProperties
-      }
-    >
-      <circle cx="22" cy="22" r="19" fill={PINK} opacity="0.18" />
-      <circle
-        cx="22"
-        cy="22"
-        r="15"
-        fill="none"
-        stroke={GOLD}
-        strokeWidth="1"
-        strokeDasharray="2 4"
-      />
-      <path
-        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
-        fill="none"
-        stroke={DEEP}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="22" cy="22" r="3" fill={GOLD} />
-    </svg>
-  );
-}
+     `Pentacle`   the bare star, mounted twice — eight times over in the
+                  ground's glyph scatter at 9-15px, and once at 40px as the
+                  stage mark. Both draw `CovenSigil` now. The reading that this
+                  was a `Spark`-class ORNAMENT rather than a badge — a different
+                  device with a different job, the split `covenSlip`'s header
+                  defends around the sparkle and the cat — was put to the owner
+                  and REJECTED. It was the retired badge's own star, at three
+                  sizes; a drawing does not become a second device by being
+                  small. Do not re-open it.
+
+     `SigilDisc`  the masthead badge: the same star in the same disc under the
+                  same dashed ring, turning once every 42 seconds on `.ep-spin`
+                  with a private `--ep-spin-dur`. It is `CovenCat` now — see
+                  the mount, which is where the tempo argument lives.
+
+   `PINK` and `GOLD` are untouched by this: the ground's glow, the twinkle
+   field, the sheet's edge and the cast band's frame all paint with them. */
 
 /**
  * Gold twinkles behind the masthead row, stretched across the band's OUTER
@@ -305,6 +260,21 @@ function TwinkleField() {
  * The ground's scatter of arcane marks. Positioned in percentages so it reflows
  * with the column instead of pinning to a canvas width — the same reason the
  * layout carries no fixed-px grid.
+ *
+ * THE MARK IS THE HAT NOW (#2746), eight of it, 9-15px at 0.22. Two things this
+ * changes, both deliberate:
+ *
+ * A TILT IS NOT A TURN. `turn` runs -24° to +22°, and a hat has an up — the
+ * exact property that stopped #2726 from letting the create-character masthead
+ * rotate its mark. A quarter-turn either way is a hat set at an angle, which is
+ * a thing hats do; a full rotation is the one that reads as broken, and nothing
+ * here does that. The angles are the design's own and are unchanged.
+ *
+ * THE FLOOR IS 9px, below the 15 `CovenSigil` is drawn to hold. That is fine
+ * BECAUSE this is texture and not a badge: at 0.22 on the wash there is no
+ * identification being asked of it, only a shape, and the shape is fill-only —
+ * the star that stood here was a 1.1px stroke, which is the thing that actually
+ * disappears under downscale.
  */
 const GLYPHS: { left: string; top: string; size: number; turn: number }[] = [
   { left: "8%", top: "14%", size: 15, turn: -12 },
@@ -332,7 +302,7 @@ function GlyphScatter() {
             opacity: 0.22,
           }}
         >
-          <Pentacle size={glyph.size} color={DEEP} strokeWidth={1.1} />
+          <CovenSigil size={glyph.size} color={DEEP} />
         </span>
       ))}
     </>
@@ -394,7 +364,12 @@ export default function CovenEditPraxis({ state }: Props) {
     borderRadius: RADIUS,
     boxShadow: "var(--faction-coven-slip-shadow)",
   };
-  const statusMark = <Pentacle size={40} color={DEEP} />;
+  /* The stage mark — the hat at the size the star held (#2746). It is ornament
+     beside the stage word, not a second identity: this page already badges
+     itself with the same mark in the masthead's cat's company, and the ONE
+     symbol rule (#2726) is about a faction running two devices, not about a
+     surface drawing its one device twice. */
+  const statusMark = <CovenSigil size={40} color={DEEP} />;
   const slip = {
     style: {
       background: FIELD,
@@ -443,7 +418,23 @@ export default function CovenEditPraxis({ state }: Props) {
                   gap: "var(--space-sm)",
                 }}
               >
-                <SigilDisc size={30} />
+                {/* THE MASTHEAD TURNS A CAT (#2746). What turned here was a
+                    pentagram disc at 42 seconds, and both halves of that go:
+                    the drawing, because the badge is retired (#2726), and the
+                    tempo, because `.cvn-wheel` already has one. The class, the
+                    `@keyframes cvn-wheel` and the `prefers-reduced-motion:
+                    no-preference` gate around it are `motion.ornament.css`'s
+                    and are untouched — this mount adds no keyframe, no class
+                    and no duration. A cat turning three times faster than every
+                    other cat in the kit would be a second device wearing the
+                    same name.
+
+                    `CovenCat` positions itself absolutely, because its four
+                    other mounts are corner watermarks; here it is a flex item
+                    beside the wordmark, so the mount hands back `static`. Full
+                    strength, not the watermark's 0.09: this one is being read,
+                    not washed under copy. */}
+                <CovenCat size={MAST_CAT} style={{ position: "static", flex: "0 0 auto" }} />
                 <span
                   style={{
                     fontFamily: DISPLAY,
