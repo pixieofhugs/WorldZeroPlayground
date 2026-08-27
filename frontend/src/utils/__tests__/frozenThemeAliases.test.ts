@@ -132,6 +132,16 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // graticule into an alias over a flipping referent. This sweep is what said
   // so; the grid moved to `:root, [data-theme]` in the same change.
   "--faction-ephemerists-grid",
+  // The two light-cascade ALIASES of the accent-ink family (#2619). They are of
+  // this shape for the family's whole point: the token means "the accent, safe
+  // as ink here", and for wow and everymen the accent already IS safe on the
+  // page and on the letter's perk tint, in both cascades — so one declaration
+  // over a flipping referent is the honest expression, and restating the hue
+  // twice would be the regression this file's docblock warns about. Their six
+  // siblings carry a light value and a dark alias, so they are not root-only and
+  // do not appear here. Ratios for all eight, both grounds, are in
+  // `factionContrast.test.ts`.
+  "--faction-everymen-accent-ink",
   "--faction-everymen-card-accent",
   "--faction-everymen-card-bg",
   "--faction-everymen-card-border",
@@ -147,6 +157,7 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-ua-vote-core",
   "--faction-ua-vote-halo",
   "--faction-ua-vote-reading",
+  "--faction-wow-accent-ink", /* #2619 — see the everymen twin above */
   "--faction-wow-figure",
   "--faction-wow-stamp-bg",
   "--faction-wow-vote-off",

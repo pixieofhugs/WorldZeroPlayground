@@ -790,6 +790,66 @@
   --faction-default-card-border: var(--faction-default-card-line);
 }
 
+/* ── THE ACCENT AS INK, ON THE PAGE (#2619) ──────────────────────────────────
+   The measured answer to "a faction wants to tint a WORD rather than a shape".
+   Read it as `factionCssVar(slug, 'accent-ink')`; never reach for the spine hue,
+   which `local/no-faction-hue-as-ink` blocks because on the app's page in light
+   it runs 2.19:1 (ephemerists) to 4.46 (ua). That rule is not the problem this
+   family solves — the problem was that there was nothing legitimate to point at,
+   and the rule is untouched.
+
+   IT IS NOT A NEW HUE, IT IS THE HUE WHERE THE HUE IS SAFE. WORLD_ZERO_STYLE.md
+   §3 stays true as written: the hue is still never an ink. This is a different
+   token that ALIASES the hue wherever the hue already clears — the whole dark
+   cascade, plus wow and everymen in light — and only carries a value where it
+   does not. An alias is the honest expression of "the accent, safe as ink here".
+
+   MEASURED ON TWO GROUNDS, NOT ONE. The page is the family's stated ground, but
+   its first consumer — the invitation letter's perk box (#2298 §2) — lays
+   `--faction-{key}-light` over the page, and a tint of the faction's own hue can
+   only pull the ground toward the ink. The ruled page-only values did not
+   survive that: ua fell to 3.83:1, coven to 4.12, singularity to 4.12, na to
+   4.26. So each value clears 4.5:1 on the TINT, which is the tighter of the two,
+   and therefore clears the bare page with room (4.72 to 5.80). Both grounds are
+   rows in `factionContrast.test.ts`, so neither can drift unnoticed.
+
+   Hue and saturation are held; only lightness moves, and only as far as the
+   ratio demands. Two factions pay for that in character and it was accepted
+   knowingly (#2619): snide reads as a dark olive rather than an acid green, and
+   ephemerists as a muddy bronze rather than plate brass. If either ever reads as
+   a DIFFERENT faction rather than a quieter one, the fallback for that faction
+   alone is the neutral `--color-text-*` this shipped instead of.
+
+   ALBESCENT IS IN THE FAMILY, THROUGH `default`. It has no `--faction-albescent-*`
+   namespace by design (CSS_KEY maps it to `default`, ADR-0039 / #783), so
+   `factionCssVar('albescent', 'accent-ink')` answers with the row below exactly
+   as `na` does — and it must, or Albescent becomes conspicuous. It does not
+   stand apart, and #2619 asked whether it should on the premise of a reveal-ink
+   token that #2632 had already deleted; there is nothing left for it to stand
+   apart AS. Its letter paints `--faction-default-card-accent`, the order's own
+   stationery ink, which is a different ground and a different question.
+
+   Theme-scoped rather than bare `:root` (#1839) for the two rows that are pure
+   aliases: their referent flips, so at a bare `:root` they would freeze at their
+   light value inside a nested `data-theme` wrapper. */
+:root, [data-theme] {
+  /* 4.63:1 on the sand tint, 5.43 on the page. The one the ruling flagged as
+     too thin at #c14a18 — that clears the bare page by 0.01 and the tinted box
+     not at all, so this takes the margin instead of the single lightness step. */
+  --faction-ua-accent-ink: #ac4115;
+  /* The plum already clears both grounds (4.90 tinted, 5.80 bare) — alias. */
+  --faction-wow-accent-ink: var(--faction-wow);
+  --faction-coven-accent-ink: #c71860; /* 4.63 tinted, 5.13 bare */
+  --faction-snide-accent-ink: #4d7900; /* 4.60 tinted, 4.72 bare */
+  --faction-ephemerists-accent-ink: #816527; /* 4.66 tinted, 5.00 bare */
+  --faction-singularity-accent-ink: #1658ea; /* 4.62 tinted, 5.29 bare */
+  /* The union red clears both (4.56 tinted, 5.32 bare) — alias, and the tightest
+     of the two aliases, so it is the row to re-measure if the tint is re-cut. */
+  --faction-everymen-accent-ink: var(--faction-everymen);
+  /* na AND Albescent (#418, #783). 4.61 tinted, 5.22 bare. */
+  --faction-default-accent-ink: #656574;
+}
+
 :root {
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
@@ -3179,6 +3239,20 @@
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
   --faction-ephemerists: #e6c877; /* brass lifted for dark — Ephemerists (#2068) */
   --faction-singularity: #60a5fa; /* blue */
+
+  /* ── THE ACCENT AS INK (dark, #2619) ── The whole cascade is an alias and that
+     is the finding, not a shortcut: every lifted hue already clears 4.5:1 on
+     #13121a (na 5.53 to snide 15.35) and on the faction tint over it (na 4.78 to
+     snide 11.56), so the night half of this family costs no colour at all. The
+     six rows exist only to STOP the light values above from cascading into dark;
+     wow and everymen are absent because they alias in both cascades, and a
+     `var()` resolves per-cascade, so their one declaration already flips. */
+  --faction-ua-accent-ink: var(--faction-ua);
+  --faction-coven-accent-ink: var(--faction-coven);
+  --faction-snide-accent-ink: var(--faction-snide);
+  --faction-ephemerists-accent-ink: var(--faction-ephemerists);
+  --faction-singularity-accent-ink: var(--faction-singularity);
+  --faction-default-accent-ink: var(--faction-default);
 
   /* ── Text on faction fills (dark, #649) ── The dark primaries brighten to pop
      against the dark page, which makes white-on-fill worse. These flip to ink;
