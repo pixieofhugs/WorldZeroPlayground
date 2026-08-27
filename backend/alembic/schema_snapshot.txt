@@ -39,6 +39,7 @@ enum taunttriggertype = score_overtake, level_up, praxis_complete
 
 table account
   column active_character_id bigint
+  column albescent_glimpsed boolean NOT NULL DEFAULT false
   column albescent_revealed boolean NOT NULL DEFAULT false
   column albescent_unlocked boolean NOT NULL DEFAULT false
   column created_at timestamp with time zone NOT NULL DEFAULT now()

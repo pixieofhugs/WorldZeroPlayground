@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getFactionStatus, type FactionOut, type FactionPageOut } from '../../api/factions'
 import { useAuth } from '../../auth/AuthContext'
 import { useFactions } from '../../hooks/useFactions'
+import { isFactionConcealed } from '../../utils/factions'
 
 /**
  * The factions-directory read, shared by both form factors (#1116).
@@ -74,7 +75,19 @@ export function useFactionsDirectory(): FactionsDirectoryState {
   }, [characterId])
 
   return {
-    factions: factions ?? [],
+    // THE CONCEALED ROW IS DROPPED HERE, once, for both form factors (#2770).
+    //
+    // `/factions` still serves every faction to every caller — ADR-0082 §5 put
+    // the boundary on the client on purpose, and #2770 leaves that follow-on
+    // (#2540) open rather than putting auth back on a public read. So the
+    // absence is built here, at the one place both directories take their list
+    // from: the desktop grid's `visibleFactions`, the phone's `visible`, and
+    // the phone's stripe legend all derive from this array, so filtering it
+    // drops the tile AND its stripe together. A per-surface filter would have
+    // been three, and the stripe would have been the one someone forgot — a
+    // gap in the legend is exactly the tell the concealed state exists to
+    // avoid.
+    factions: (factions ?? []).filter((f) => !isFactionConcealed(f.slug)),
     factionPage,
     // Still one flag, and it still means "nothing to draw yet": the grid needs
     // the faction list, so a settled membership read with `factions` still null

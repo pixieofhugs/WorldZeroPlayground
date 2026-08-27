@@ -200,6 +200,11 @@ ERA_1_TASKS: tuple[TaskDef, ...] = ()
 # `tests/unit/test_level_profiles.py` holds a tripwire for each. Before adding
 # an ability rung, find the `era.*` constant or the service-level check it
 # names; if there isn't one, it belongs in the sense list or nowhere.
+#
+# 2026-08-27 (#2770): level 6 gained its FIRST hard gate — `albescent_glimpse`,
+# grounded in `albescent_glimpse_level` below. The tripwire that asserted level 6
+# was whimsy-only (`test_level_6_has_no_hard_gate_sense_only`) was deleted with
+# this change; it guarded a fact that stopped being true.
 
 # ADR-0031: profiles carry copy KEYS, never prose. The English words live in
 # frontend/src/locales/en/progression.json (ranks.<rank_key>,
@@ -251,6 +256,7 @@ ERA_1_LEVEL_PROFILES = (
     LevelProfile(
         rank_key="chronicler",
         unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "albescent_glimpse"),
             LevelUnlock(LevelUnlockKind.sense, "place_memory"),
         ),
     ),
@@ -309,6 +315,12 @@ ERA_1 = EraConfig(
     # Character account / faction gates
     second_character_level_required=4,
     albescent_level_required=8,
+    # The floor on PERCEIVING the order, against the ceiling on joining it
+    # above (#2770). The `albescent_glimpse` rung at level 6 in
+    # ERA_1_LEVEL_PROFILES is this constant's announcement — move one and move
+    # the other, which is what `test_grounded_ability_sits_at_its_gate_constants_level`
+    # holds you to.
+    albescent_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022: 50 points from a faction's tasks
     invitation_task_threshold=2,     # ADR-0022: 2 completed tasks for that faction
     # "Habitually" means weekly in Era 1 (#1617). Stated here even though it

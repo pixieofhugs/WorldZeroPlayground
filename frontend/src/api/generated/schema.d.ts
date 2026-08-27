@@ -2535,6 +2535,11 @@ export interface components {
             /** Account Id */
             account_id: number;
             /**
+             * Albescent Glimpsed
+             * @default false
+             */
+            albescent_glimpsed: boolean;
+            /**
              * Albescent Level Required
              * @default 0
              */

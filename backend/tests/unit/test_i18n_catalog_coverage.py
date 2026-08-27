@@ -53,6 +53,20 @@ def test_every_rank_key_resolves(progression):
         )
 
 
+#: Unlock keys that are deliberately name-only, with the ruling that made them so.
+#:
+#: ``LevelUpPopup`` renders the description as ``{desc && ...}``, so the field has
+#: always been optional to the component — this test was what made it mandatory in
+#: practice, and one rung now needs it not to be. The set is the exception, not a
+#: relaxation: every other key must still carry both halves, and a rung added
+#: without a description fails here until somebody writes down why.
+#:
+#: * ``albescent_glimpse`` (#2770) — the pop-up announces that mysteries will
+#:   reveal themselves and STOPS. #2409 ruled "I'm not going to give them hints on
+#:   how", and a second sentence explaining the mechanic is exactly the hint.
+UNLOCKS_WITHOUT_A_DESCRIPTION = {"albescent_glimpse"}
+
+
 def test_every_unlock_key_resolves_name_and_desc(progression):
     unlocks = progression["unlocks"]
     for level, profile in enumerate(CURRENT_ERA.level_profiles):
@@ -62,6 +76,13 @@ def test_every_unlock_key_resolves_name_and_desc(progression):
                 f"progression:unlocks.{unlock.key} (level {level}) not in catalog"
             )
             assert entry.get("name"), f"progression:unlocks.{unlock.key}.name missing"
+            if unlock.key in UNLOCKS_WITHOUT_A_DESCRIPTION:
+                assert "desc" not in entry, (
+                    f"progression:unlocks.{unlock.key} is listed as deliberately "
+                    "wordless past its name — delete it from "
+                    "UNLOCKS_WITHOUT_A_DESCRIPTION or delete the desc"
+                )
+                continue
             assert entry.get("desc"), f"progression:unlocks.{unlock.key}.desc missing"
 
 

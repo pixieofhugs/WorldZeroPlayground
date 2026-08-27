@@ -365,25 +365,41 @@ describe("each mount overrides what its ground demands (#2042)", () => {
 });
 
 /**
- * WOW is NOT unified, and this is the record of why rather than a gap.
+ * WOW UNIFIES ON ITS GROUND, NOT ON A DEVICE — and that is a finding about the
+ * faction rather than a shortfall (owner ruling 2026-08-18, #2042).
  *
- * Both directions are closed — the plaque's fill IS the stamp's plate (see the
- * measurement below), and #2070 removed the `✦` from the card by owner ruling, so
- * the star cannot travel the other way. Whoever rules on the plaque's ground here
- * deletes this block; until then a WOW surface quietly adopting the other's mark
- * fails, because that is the guess #2042 says not to make.
+ * The other seven factions share a drawn mark: a cauldron, a compass rose, a
+ * roundel, an ensō, a pen circle, a lit well, a spectrum ring. WOW has none to
+ * share. Both of its points treatments are TYPOGRAPHIC PLAQUES — the card sets its
+ * numeral in the medieval face in gilt with the unit beneath in Lora italic plum,
+ * the stamp sets its own block in the same face inside the same 2px chronicle
+ * frame. Neither draws an emblem, so there is no component to extract and the
+ * `factionMarks/` pattern the other seven follow has nothing to hold.
+ *
+ * What was actually unshared was the GROUND. `--faction-wow-stamp-bg` was declared
+ * `var(--faction-wow-chronicle-panel)` — the card plaque's own fill — so the stamp
+ * stood on the one colour the card's plaque is defined against instead of the sheet
+ * the card's plaque stands on. The repoint (measured in the pairing block below) is
+ * the whole of the unification.
+ *
+ * THE DEVICES STILL DIFFER AND MUST: #2070 took the `✦` off the card by owner
+ * ruling, #840 carves it out on the stamp by name. This block guards that pair —
+ * one ground, and the star exactly where each ruling put it.
  */
-describe("WOW still draws two marks, on purpose (#2042)", () => {
+describe("WOW's two plaques stand on one ground (#2042)", () => {
   it("keeps the crowned plaque on the card and the star on the stamp", () => {
     const decree = card(WowTaskCard);
     const chronicle = stamp(WowScoreStamp);
     expect(decree, "the card's inset plate").toContain(
       "background:var(--faction-wow-chronicle-panel)",
     );
+    expect(chronicle, "the stamp's plate is the repointed token, nothing hard-coded").toContain(
+      "background:var(--faction-wow-stamp-bg)",
+    );
     expect(decree, "#2070 took the star off the card").not.toContain("✦");
     expect(chronicle, "#840 carves the star out by name").toContain("✦");
-    // A plaque here would be a gold frame inside a gold frame around a fill that
-    // is the plate — see the ground measurement in the pairing block.
+    // A literal panel here would re-open the 1.00:1 the repoint closed, out of
+    // reach of the token measurement below.
     expect(chronicle).not.toContain("background:var(--faction-wow-chronicle-panel)");
   });
 });
@@ -558,27 +574,85 @@ describe("the S.N.I.D.E. card's own inks do NOT survive the move (#2042)", () =>
 });
 
 /**
- * The arithmetic that keeps WOW at two marks. `--faction-wow-stamp-bg` is declared
- * `var(--faction-wow-chronicle-panel)` on `:root, [data-theme]`, so the card's
- * inset plaque and this stamp's plate are the same colour in both themes: the
- * plaque cannot be inset into a sheet it IS. If a future ruling gives the stamp its
- * own plate, this is the test that goes green and lets the plaque travel.
+ * The arithmetic of WOW's repoint (owner ruling 2026-08-18, #2042).
+ *
+ * `--faction-wow-stamp-bg` was declared `var(--faction-wow-chronicle-panel)` on
+ * `:root, [data-theme]` — the card plaque's own FILL — so the stamp's plate was
+ * the one ground in the kit a plaque cannot be inset into: 1.00:1 in both themes,
+ * with the gold frame down at 2.00:1 in light. It points at
+ * `--faction-wow-chronicle-bg` now, the cream sheet the decree's plaque has always
+ * been struck into, so the relationship the stamp stands in is the shipped,
+ * accepted card one.
+ *
+ * THIS BLOCK IS THE FLIPPED FAILURE, NOT A NEW TEST. It asserted 1.00:1 *as* a
+ * failure so that the day the plate changed it would go green and say so. The
+ * ruling is explicit that the assertion is rewritten to the passing pairing rather
+ * than deleted — the guard is what stops the alias drifting back onto the panel.
+ *
+ * ONE DECLARATION COVERS BOTH CASCADES. The token is scoped `:root, [data-theme]`
+ * (#1839, and its tombstone is still in the dark block) and the token it aliases is
+ * stated per theme, so the alias re-substitutes on its own — including inside the
+ * nested theme wrapper a foreign-faction praxis card mounts it in. Both themes are
+ * measured here anyway, because that is the only thing that proves it.
  */
-describe("the WOW plaque has no ground on the stamp (#2042)", () => {
-  it.each(BOTH)("is 1.00:1 in %s", (theme) => {
+describe("the WOW stamp's plate is the chronicle sheet (#2042)", () => {
+  it.each(BOTH)("resolves to the sheet, not the plaque's fill, in %s", (theme) => {
+    expect(opaque("--faction-wow-stamp-bg", theme)).toEqual(
+      opaque("--faction-wow-chronicle-bg", theme),
+    );
+  });
+
+  it.each(BOTH)("is a ground the plaque's fill can stand on in %s", (theme) => {
+    // The defect the ruling named, closed. Light 1.12:1, dark 1.15:1 — panel on
+    // sheet, the decree's own relation, where this was 1.00:1. The 2px gold frame
+    // is what carries the edge at that separation, on both surfaces alike.
     const ratio = contrastRatio(
       opaque("--faction-wow-chronicle-panel", theme),
       opaque("--faction-wow-stamp-bg", theme),
     );
-    expect(ratio, formatRatio(ratio)).toBeLessThan(1.05);
+    expect(ratio, formatRatio(ratio)).toBeGreaterThan(1.05);
   });
 
-  it.each(BOTH)("and its gold frame is all that would be left, at under 3:1 in light", (theme) => {
-    const ratio = contrastRatio(
+  it.each(BOTH)("lifts the gold frame off its own plate in %s", (theme) => {
+    // Light 2.24:1 (was 2.00:1), dark 7.36:1 (was 6.38:1). The frame's light
+    // ceiling is arithmetic and the ruling walked it: the gold reads by being
+    // DARKER than its ground, so no parchment value in this register reaches 3:1.
+    // What is asserted is therefore the improvement over the panel, not AA.
+    const plate = contrastRatio(
       opaque("--faction-wow-chronicle-gold", theme),
       opaque("--faction-wow-stamp-bg", theme),
     );
-    // Light 2.00:1, dark 6.38:1 — the frame alone cannot carry the plate in both.
-    if (theme === "light") expect(ratio, formatRatio(ratio)).toBeLessThan(AA_LARGE);
+    const onPanel = contrastRatio(
+      opaque("--faction-wow-chronicle-gold", theme),
+      opaque("--faction-wow-chronicle-panel", theme),
+    );
+    expect(plate, formatRatio(plate)).toBeGreaterThan(onPanel);
+  });
+
+  /**
+   * Every ink the stamp sets, re-measured on the plate it now stands on — §3's
+   * "when a surface gains a sheet, re-measure the inks it already had", and the
+   * reason a repoint is not free.
+   *
+   * The stamp reads its inks through the role map (`--wow-score-stamp-*`, #2674),
+   * so each is named here by the `-card-*` token that actually arrives.
+   * `--faction-wow-card-muted` is the one that mattered: the stamp's "base" label
+   * was **4.24:1 on the panel — under AA**, and invisible to `factionContrast`
+   * because no row there has ever named `--faction-wow-stamp-bg` as a surface. On
+   * the sheet it is 4.76:1. Every other ink gains too, in both themes: the plate
+   * moves away from the inks in light and towards them in dark.
+   */
+  const STAMP_INKS: Array<[what: string, ink: string]> = [
+    ["the base numeral (role `ink`)", "--faction-wow-card-text"],
+    ["the base label (role `quiet`)", "--faction-wow-card-muted"],
+    ["the working in Lora italic (role `accent`)", "--faction-wow-card-accent"],
+    ["the bottom-line total", "--faction-wow-stamp-total"],
+  ];
+
+  it.each(BOTH)("clears AA for every ink the stamp carries in %s", (theme) => {
+    for (const [what, ink] of STAMP_INKS) {
+      const ratio = contrastRatio(opaque(ink, theme), opaque("--faction-wow-stamp-bg", theme));
+      expect(ratio, `${what} — ${ink}: ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
   });
 });

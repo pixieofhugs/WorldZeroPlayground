@@ -44,6 +44,13 @@ class CurrentUser(WireModel):
     # character on this account has ever joined Albescent; gates whether the
     # frontend shows the real faction page vs. the sealed placeholder.
     albescent_revealed: bool = False
+    # Sticky Albescent GLIMPSE (#2770, amending ADR-0082) — the stage in front of
+    # the reveal above. True once any character on this account has reached
+    # `era.albescent_glimpse_level`; gates whether the frontend draws the eighth
+    # row AT ALL. Below it the `/factions` tile and the race lane are absent;
+    # from it up they are ADR-0082's `[REDACTED]`. Revealed implies glimpsed —
+    # the server resolves that, so the client never has to.
+    albescent_glimpsed: bool = False
     # FieldDesk "locked dossier" gate copy reads these (#270/#274): the level an
     # existing life must reach to unlock a second life, and the live era's name.
     second_character_level_required: int = 0

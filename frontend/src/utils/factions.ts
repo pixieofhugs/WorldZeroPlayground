@@ -428,6 +428,65 @@ export function setAlbescentRevealed(revealed: boolean): void {
 }
 
 /**
+ * Whether the signed-in account has reached the level at which the eighth row
+ * starts being DRAWN at all (#2770, amending ADR-0082).
+ *
+ * The stage in front of the reveal above, and the same shape for the same
+ * reasons — module-level, mutable, set from `AuthContext` on every viewer
+ * change, and `false` by default so first paint, logged-out and every non-React
+ * caller get the concealed answer. The fail-closed default matters more here
+ * than it does above: a leak past the redaction shows a word, a leak past this
+ * one shows that there is anything to redact.
+ *
+ * The server has already resolved reveal-implies-glimpse
+ * (`services.albescent_reveal.is_albescent_glimpsed`), so the two flags arrive
+ * consistent. `isFactionConcealed` re-checks it anyway — see there for why.
+ */
+let albescentGlimpsed = false;
+
+/**
+ * Point the concealment at the current viewer. Same call site, same contract and
+ * the same test obligation as `setAlbescentRevealed` above: tests MUST reset it,
+ * because it outlives the case that set it.
+ */
+export function setAlbescentGlimpsed(glimpsed: boolean): void {
+  albescentGlimpsed = glimpsed;
+}
+
+/**
+ * Whether this viewer must not be shown that the row EXISTS (#2770).
+ *
+ * Three states, and this predicate is the first cut of the three:
+ *
+ * | State | Predicate | What the two surfaces draw |
+ * |---|---|---|
+ * | concealed | `isFactionConcealed` | nothing — no tile, no lane, no gap |
+ * | redacted | `isFactionRedacted` | ADR-0082's `[REDACTED]`, control disabled |
+ * | real | neither | the ordinary card and lane |
+ *
+ * ADR-0082's reasoning — *"a row they can see and cannot read is the locked door
+ * with no keyhole"* — is not reversed and still governs from the glimpse level
+ * up. What #2770 adds is that a player below it is not yet shown the door. That
+ * restores ADR-0027's hiding posture for the early game ONLY.
+ *
+ * **Reveal implies glimpse, re-checked here.** The server resolves it too, so
+ * this is belt and braces on the leg where being wrong is unrecoverable: a
+ * revealed viewer whose `albescent_glimpsed` somehow read false would lose a
+ * faction they are a member of, which is a bug a player reports; the reverse
+ * would be a silent leak nobody reports.
+ *
+ * NOT a filter over `factionName` and NOT a fourth reading of the catalogue.
+ * Concealment is a LIST question — does this row get built — so it is answered
+ * where the lists are built (`useFactionsDirectory`, `factionStandings`) and the
+ * components below never learn there was a third state.
+ */
+export function isFactionConcealed(slug: string | null | undefined): boolean {
+  return (
+    slug === ALBESCENT_FACTION_SLUG && !albescentGlimpsed && !albescentRevealed
+  );
+}
+
+/**
  * Whether this viewer must not be shown Albescent as a CHOICE.
  *
  * The counterpart to the mask, and deliberately not the same answer. Where a
@@ -487,8 +546,17 @@ export function isFactionRedacted(slug: string | null | undefined): boolean {
  * OPT-IN, AND THAT IS THE WHOLE BOUNDARY. A surface that wants the redaction
  * ASKS for it by calling this; every other reader of the catalogue — including
  * `factionName` and `factionDescription` — goes on saying "Unaffiliated" as
- * #1891 ruled. Exactly two surfaces ask: the Albescent select tile and the
- * leaderboard's eighth lane. See `factionName`'s docblock for why the split.
+ * #1891 ruled. Exactly two surfaces ask: the Albescent select tile on
+ * `/factions`, and the faction race lane on the PLAYERS page. (Not
+ * `Leaderboard.tsx`, which contains no redaction at all — the count in this
+ * sentence was always right and the location was not, corrected in #2770.) See
+ * `factionName`'s docblock for why the split.
+ *
+ * BOTH OF THOSE SURFACES NOW HAVE A STATE IN FRONT OF THIS ONE. Below the era's
+ * glimpse level the row is not built at all, so this function is never reached
+ * for it — see `isFactionConcealed`. Nothing here changes: a concealed viewer
+ * and a redacted one would get the same answer out of this function, and the
+ * difference between them is made where the lists are built, not here.
  *
  * Deliberately NOT a registry, a context or a config. Two call sites do not
  * need a lookup table, and a table is the thing that would quietly grow back

@@ -13,10 +13,15 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import '../../../i18n'
 import type { CharacterOut, CurrentUser } from '../../../api/auth'
-import { FACTION_RAINBOW_ORDER, REDACTED, factionName } from '../../../utils/factions'
+import {
+  FACTION_RAINBOW_ORDER,
+  REDACTED,
+  factionName,
+  setAlbescentGlimpsed,
+} from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
@@ -136,15 +141,24 @@ describe('desktop podium', () => {
 })
 
 describe('the faction race', () => {
+  // #2770 put a state in FRONT of the redaction: an account below the era's
+  // glimpse level gets no eighth lane at all. These cases are about the lane
+  // being THERE and unreadable, which is the glimpsed state, so all three run
+  // with the flag set. The absent state is asserted in
+  // `utils/__tests__/albescentConcealedThirdState`. Reset after each — the flag
+  // is module-level and a leaked `true` makes a later case pass wrongly.
+  beforeEach(() => setAlbescentGlimpsed(true))
+  afterEach(() => setAlbescentGlimpsed(false))
+
   it('races eight lanes — the seven plus Albescent, never one for the unaffiliated', () => {
     const { text } = render(<DesktopPlayers {...props()} />)
     for (const slug of FACTION_RAINBOW_ORDER) {
       expect(text, `${slug} has a lane`).toContain(factionName(slug))
     }
-    // The eighth lane (#2409). This viewer is unrevealed — the default state of
-    // the module flag — so the lane is present and its name is the redaction
-    // mark, not the word. Both halves matter: the row exists, and it does not
-    // say "Albescent".
+    // The eighth lane (#2409). This viewer has glimpsed but is unrevealed — set
+    // above, since #2770 made concealed the module default — so the lane is
+    // present and its name is the redaction mark, not the word. Both halves
+    // matter: the row exists, and it does not say "Albescent".
     expect(text, 'albescent has a lane').toContain(REDACTED)
     expect(text, 'and it does not name the society').not.toContain('Albescent')
     // UNCHANGED by #2409: `na` is a state, not a faction.

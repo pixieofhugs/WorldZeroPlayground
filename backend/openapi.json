@@ -1598,6 +1598,11 @@
             "title": "Account Id",
             "type": "integer"
           },
+          "albescent_glimpsed": {
+            "default": false,
+            "title": "Albescent Glimpsed",
+            "type": "boolean"
+          },
           "albescent_level_required": {
             "default": 0,
             "title": "Albescent Level Required",
@@ -1708,6 +1713,7 @@
           "can_create_additional_character",
           "can_start_as_albescent",
           "albescent_revealed",
+          "albescent_glimpsed",
           "second_character_level_required",
           "albescent_level_required",
           "era_name",
