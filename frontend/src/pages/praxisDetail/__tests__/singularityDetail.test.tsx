@@ -24,14 +24,7 @@ import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { DuelDetailOut, DuelStatus } from "../../../api/duel";
 import { aCharacter, aCurrentUser, aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
-import {
-  CO_MEMBER,
-  MEMBER,
-  VOTERS,
-  aPraxisDetailState,
-  indexOf,
-  renderPraxisDetail,
-} from "../../../test/praxisDetail";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -70,15 +63,7 @@ const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-// The skin comes from the real registry, resolved at render time — inside the
-// test, so after both the `vi.mock` above and the archetype preload.
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  return renderPraxisDetail("singularity", next);
-}
+const render = skinRenderer("singularity", mocks);
 
 describe("Singularity praxis detail — the inherited layout contract", () => {
   it("gives the desktop aside the eight designs' 330px track, not the outlier 340", () => {

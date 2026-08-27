@@ -26,14 +26,7 @@ import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aCharacter, aCurrentUser, aPraxis, aTask } from "../../../test/fixtures";
-import {
-  CO_MEMBER,
-  MEMBER,
-  VOTERS,
-  aPraxisDetailState,
-  indexOf,
-  renderPraxisDetail,
-} from "../../../test/praxisDetail";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 import { collabCopy } from "../../../components/collab/collabCopy";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
@@ -73,15 +66,7 @@ const VIEWER = aCurrentUser({
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-// The skin comes from the real registry, resolved at render time — inside the
-// test, so after both the `vi.mock` above and the archetype preload.
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  return renderPraxisDetail("everymen", next);
-}
+const render = skinRenderer("everymen", mocks);
 
 describe("Everymen praxis detail — the layout contract it may not restyle", () => {
   it("gives the desktop aside the shared 330px track and drops it on mobile", () => {

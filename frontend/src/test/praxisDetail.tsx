@@ -33,6 +33,7 @@ import { surfaceMap } from '../factions'
 // Initialise the catalog so shared-chrome copy keys resolve to English text.
 import '../i18n'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
+import type { FormFactor } from '../hooks/useFormFactor'
 import type { VoterDetail } from '../api/votes'
 import { aMember, aPraxis } from './fixtures'
 
@@ -154,4 +155,26 @@ export function indexOf(html: string, needle: string): number {
   const at = html.indexOf(needle)
   expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1)
   return at
+}
+
+/**
+ * A per-suite `render(state, formFactor)` for one faction's skin.
+ *
+ * The faction detail suites each opened with the same eight-line wrapper: set
+ * the mocked form factor, mount the archetype, strip the tags. Only the SLUG
+ * differed.
+ *
+ * `mocks` is the suite's own `vi.hoisted` cell, passed in rather than owned
+ * here, because the mock REGISTRATION cannot move: `vi.mock` is hoisted into
+ * the file it is written in, so a call from this module would not register for
+ * the suite that imports it.
+ */
+export function skinRenderer(slug: string, mocks: { formFactor: FormFactor }) {
+  return (
+    next: Partial<PraxisDetailState>,
+    formFactor: FormFactor = 'desktop',
+  ): { html: string; text: string } => {
+    mocks.formFactor = formFactor
+    return renderPraxisDetail(slug, next)
+  }
 }

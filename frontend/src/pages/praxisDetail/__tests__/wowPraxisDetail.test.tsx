@@ -36,13 +36,7 @@ import {
   aMember,
   aPraxis,
 } from "../../../test/fixtures";
-import {
-  CO_MEMBER as SHARED_CO_MEMBER,
-  VOTERS,
-  aPraxisDetailState,
-  indexOf,
-  renderPraxisDetail,
-} from "../../../test/praxisDetail";
+import { CO_MEMBER as SHARED_CO_MEMBER, VOTERS, aPraxisDetailState, indexOf, renderPraxisDetail, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -92,15 +86,7 @@ const duel = (status: DuelDetailOut["status"]): DuelDetailOut =>
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-// The skin comes from the real registry, resolved at render time — inside the
-// test, so after both the `vi.mock` above and the archetype preload.
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  return renderPraxisDetail("wow", next);
-}
+const render = skinRenderer("wow", mocks);
 
 describe("WOW claims the praxis-detail surface (#951)", () => {
   it("registers a praxisDetail archetype", () => {

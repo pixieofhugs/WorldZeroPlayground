@@ -19,15 +19,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 import type { CommentOut } from "../../../api/comments";
 import { PraxisFlagBlock } from "../shared";
 import { aCharacter, aCurrentUser, aPraxis } from "../../../test/fixtures";
-import {
-  CO_MEMBER,
-  MEMBER,
-  VOTERS,
-  aPraxisDetailState,
-  indexOf,
-  markup,
-  renderPraxisDetail,
-} from "../../../test/praxisDetail";
+import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, markup, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -65,15 +57,7 @@ const COMMENT: CommentOut = {
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
   aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
-// `na` is a manifest row like the other eight since #2530, so the unaffiliated
-// page comes out of the same registry lookup every faction's does.
-function render(
-  next: PraxisDetailState,
-  formFactor: "desktop" | "mobile" = "desktop",
-): { html: string; text: string } {
-  mocks.formFactor = formFactor;
-  return renderPraxisDetail("na", next);
-}
+const render = skinRenderer("na", mocks);
 
 describe("Unaffiliated praxis detail — layout contract", () => {
   it("draws no navigation of its own, at either width (#2102)", () => {
