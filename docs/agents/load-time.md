@@ -37,10 +37,10 @@ const CovenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetyp
 taskDetail: () => CovenTaskDetail,
 ```
 
-Nothing else has to change. `surfaceMap()` and `pickVariant()` don't know the
+Nothing else has to change. `surfaceMap()` and `resolveVariant()` don't know the
 difference, no dispatcher is touched, and the chunk is fetched only when a
-surface for that faction actually renders. Adding a skin to all eight factions
-adds eight chunks that load for at most one faction at a time.
+surface for that faction actually renders. Adding a skin to all nine factions
+adds nine chunks that load for at most one faction at a time.
 
 Pages are the same story: every route in `App.tsx` is behind `React.lazy` under
 one `<Suspense>`. A new page is one more `lazy(() => import(...))` line and
@@ -54,7 +54,7 @@ manifest, add routes the way the neighbours do, and you get this for free."**
 Every regression will be one of these.
 
 **1. A static import from something eager.** The original bug. `factions/index.ts`
-imports all eight manifests, so anything a manifest imported *statically* landed
+imports all nine manifests, so anything a manifest imported *statically* landed
 in the entry chunk — all ~184 archetypes of it. If you find yourself writing
 `import Foo from './heavy'` at the top of a manifest, or importing an archetype
 directly from a dispatcher, you have re-created it.
