@@ -137,6 +137,29 @@ The figures arrive as `{{count}}` (or `{{hours}}` for S.N.I.D.E., already
 zero-padded). Reword freely around them; the shape of the number — 1-based
 shifts, three-digit hours — is code, not copy.
 
+### The invitation card announces; the letter is the letter (`feed.json` + `factions.json`)
+
+Two blocks describe the same object and **they are meant to say different
+things**: `feed.json` → `invitationLetter.*` is the activity-feed card, and
+`factions.json` → `<slug>.invitation.*` (plus `albescent.letter.*`) is the
+letter itself.
+
+**The card is a notification, not a preview** (owner ruling on #2620). It
+restates none of the letter's headline, pitch, perks or join CTA for any
+faction, and its own call to action sends the player to the **factions page**
+rather than opening the letter. So the two vocabularies are independent by
+design: when a copy sweep lines them up and finds them saying unrelated things,
+**that is the design, not drift to file.** Do not point the card's keys at the
+letter's.
+
+They share exactly one string, and only because it is one act: the control that
+puts an invitation off without answering it reads **`invitation.dismiss`** on
+both surfaces. It sits at the top level of `factions.json`, not under a slug —
+every faction's letter and the feed card read that one key, so rewording it is
+one edit for all of them. The card had a second key for it (`invitationLetter.
+notNow`) and #2620 deleted it; a test in `__tests__/catalog.test.ts` keeps it
+deleted and keeps both surfaces pointed at the survivor.
+
 ## Embedded markup (`<Trans>`)
 
 Some values contain numbered tags for text that must be partly bold, linked,

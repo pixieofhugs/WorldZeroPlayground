@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
 import common from '../en/common.json'
 import factions from '../en/factions.json'
+import feed from '../en/feed.json'
 import forms from '../en/forms.json'
 import praxis from '../en/praxis.json'
 import taunts from '../en/taunts.json'
@@ -1217,5 +1218,58 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
   it('dates the document to the pass that rewrote it', () => {
     // A stale date under a rewritten legal document is worse than no date.
     expect(i18n.t('common:disclaimer.lastUpdated')).toBe('Last updated: August 2026')
+  })
+})
+
+/* -------------------------------------------------------------------------- *
+ * #2620 — the invitation's deferral control is one key, on both surfaces.
+ * -------------------------------------------------------------------------- */
+
+/**
+ * The feed's invitation card ANNOUNCES that a letter arrived; it does not
+ * PREVIEW one (owner ruling, 2026-08-26). It restates none of the letter's
+ * headline, pitch or perks, and its call to action sends the player to the
+ * factions page rather than to the letter — so the two vocabularies are
+ * independent by design, and the drift between them is not a defect.
+ *
+ * The single overlap WAS one: both surfaces offer the same act — put the
+ * invitation off without answering it (ADR-0070) — and each held its own key
+ * with its own word. `feed:invitationLetter.notNow` is gone and the card reads
+ * the letter's shared `factions:invitation.dismiss`.
+ *
+ * The catalog half and the call-site half are both here because neither
+ * catches the other's bug: a deleted key with a live caller throws at render
+ * (`missingKeyHandler`), but only on a surface a DOM-less harness never mounts,
+ * and a caller left behind on a resurrected key passes every render test there
+ * is.
+ */
+describe('the invitation deferral is one key on both surfaces (#2620)', () => {
+  const src = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+  const read = (parts: string) => readFileSync(join(src, ...parts.split('/')), 'utf8')
+
+  it('keeps no second key for the act', () => {
+    expect(feed.invitationLetter).not.toHaveProperty('notNow')
+  })
+
+  it('holds the surviving word on the shared key', () => {
+    // "Not now", not the shared key's original "Maybe later": three feed source
+    // files and ADR-0070 already name this act "Not now" in prose, and
+    // `forms:editPraxis.attach.cancel` — the app's other deferral — says it too.
+    //
+    // That sibling is NOT asserted here. It is evidence for the word, not a
+    // promise about it: pinning another surface's copy inside this block would
+    // fail a future reword of the attach control with a message about the
+    // invitation deferral, sending the next reader to the wrong issue.
+    expect(i18n.t('factions:invitation.dismiss')).toBe('Not now')
+  })
+
+  it('points the feed card at the shared key — a move, not a copy', () => {
+    const card = read('components/feed/FeedCardInvitationLetter.tsx')
+    expect(card).toContain('factions:invitation.dismiss')
+    expect(card).not.toContain('invitationLetter.notNow')
+  })
+
+  it('leaves the letter on the key it always read', () => {
+    expect(read('components/InvitationLetterPopup.tsx')).toContain("t('invitation.dismiss')")
   })
 })

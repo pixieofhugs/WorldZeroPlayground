@@ -345,7 +345,14 @@ export default function InvitationLetterPopup({
           and only the confirm step is the shared control's: this button closes
           the letter and leaves the invitation standing, while the cancel one
           click further in returns to the pitch. Collapsing them would turn
-          "not now" into "never mind" on a letter that survives the dismissal. */}
+          "not now" into "never mind" on a letter that survives the dismissal.
+
+          `invitation.dismiss` is top-level, not per-slug, and since #2620 the
+          feed's invitation CARD reads it too — the one string that card and
+          this letter share, because deferring is one act. Reword it here and
+          every surface follows. Nothing ELSE is shared: the card announces the
+          letter, it does not preview it, so its `feed:invitationLetter.*` copy
+          is meant to differ from the headline, pitch and perks above. */}
       {!confirming ? (
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           <button
