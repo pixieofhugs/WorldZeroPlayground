@@ -7,9 +7,7 @@ import type { FlagReason } from '../utils/flagReasons'
 // ---------------------------------------------------------------------------
 // Types. Every one below is an alias of the generated
 // `components['schemas'][…]`, so "matches the backend exactly" is a fact rather
-// than a heading — there is no second declaration left to drift. The mirrors
-// these replaced were close but demonstrably not exact: the wire carries
-// `PraxisOut.voter_count`, which none of them declared (#1400).
+// than a heading — there is no second declaration left to drift (#1400).
 // ---------------------------------------------------------------------------
 
 export type PraxisType = components['schemas']['PraxisType']
@@ -23,9 +21,8 @@ export type PraxisInviteStatus = components['schemas']['PraxisInviteStatus']
  * the `deleted` tombstone — only comments do. The schema has no way to express
  * that, so `PraxisOut.moderation_status` admits five values where four are
  * reachable. Narrowing the alias here would put a frontend type back in
- * contradiction with the contract it is checked against, which is the drift
- * this file exists to have retired; `UNSCORED_MODERATION_STATUSES` below is
- * where the narrower truth is spent.
+ * contradiction with the contract it is checked against;
+ * `UNSCORED_MODERATION_STATUSES` below is where the narrower truth is spent.
  */
 export type ModerationStatus = components['schemas']['ModerationStatus']
 export type MediaType = components['schemas']['MediaType']
@@ -41,8 +38,8 @@ export type MediaType = components['schemas']['MediaType']
  *
  * Lives beside {@link ModerationStatus} because it is a fact about the wire
  * enum, not about any one surface, and because the pair is only safe as ONE
- * list — the defect in #1444 was a card that stamped a computed total on a
- * praxis whose score the backend had already declined to bank.
+ * list: a card that computes its own total must not stamp it on a praxis whose
+ * score the backend has declined to bank (#1444).
  */
 export const UNSCORED_MODERATION_STATUSES: ReadonlySet<ModerationStatus> = new Set([
   'hidden',
@@ -62,9 +59,8 @@ export type MediaItemOut = components['schemas']['MediaItemOut']
  * - `nudged_at` is when the VIEWER last nudged this member about this praxis
  *   (#1083), and null once that 24h window lapses. The server owns both facts
  *   through one constant, so "there is a timestamp" and "you may not nudge
- *   again yet" can never disagree — and a reload cannot un-nudge the button,
- *   which is what made the design's local-state version dishonest. Null on
- *   list-route cards, which have no nudge button.
+ *   again yet" can never disagree — and a reload cannot un-nudge the button.
+ *   Null on list-route cards, which have no nudge button.
  */
 export type PraxisMemberOut = components['schemas']['PraxisMemberOut']
 
@@ -102,17 +98,14 @@ export type PraxisInviteOut = components['schemas']['PraxisInviteOut']
  *   anonymous viewers, who get the client's own login gate instead.
  * - `viewer_vote` is the viewer's own star (1-5); null when unvoted or
  *   anonymous (#1382). Same field and meaning as `PraxisCardOut.viewer_vote`.
- *   Detail used to be the one surface without it, which is why the client once
- *   recovered the viewer's cast from the voters list into an overlay store.
  */
 export type PraxisOut = components['schemas']['PraxisOut']
 
 /**
  * A praxis as the feed and every list surface see it.
  *
- * The score fields are the same ONE set as `PraxisOut`'s (ADR-0053, supersedes
- * ADR-0047), resolved for the praxis AUTHOR for every type including collab.
- * "Merit" (base + votes, multipliers discarded) is retired, and nothing derives
+ * The score fields are the same ONE set as `PraxisOut`'s (ADR-0053), resolved
+ * for the praxis AUTHOR for every type including collab. Nothing derives
  * vote-points or a multiplier by subtraction. `score` is the stamp headline,
  * shown to 1 decimal.
  *
@@ -213,8 +206,7 @@ export async function listPraxes(filters?: {
 }): Promise<PraxisCardOut[]> {
   // The faction union travels as repeated bare `faction=` keys, which is what
   // FastAPI's `List[str] = Query(None)` reads and what the transport writes by
-  // default — the axios serializer this replaced had to be told (#1366,
-  // asserted in `__tests__/client.test.ts`).
+  // default (#1366, asserted in `__tests__/client.test.ts`).
   //
   // Note what the seam does NOT check: `filters` is a VARIABLE, so TypeScript's
   // excess-property check does not apply and a query key the backend renamed or
@@ -243,12 +235,12 @@ export async function getPraxis(id: number): Promise<PraxisOut> {
  * on (#1379).
  *
  * Every signup path — the task list, the task detail page and the home
- * FieldDesk — does `createPraxis(...)` then `navigate('/praxis/{id}/edit')`,
- * and the composer's first act was `getPraxis(id)`: a full round trip to read
- * back a row the client had been handed milliseconds earlier. `POST /praxes`
- * and `GET /praxes/{id}` both return `build_praxis_out(praxis, viewer=...)`
- * with the same viewer, so the two payloads are the same object — the read was
- * pure latency, and on the deepest waterfall in the app.
+ * FieldDesk — does `createPraxis(...)` then `navigate('/praxis/{id}/edit')`.
+ * `POST /praxes` and `GET /praxes/{id}` both return
+ * `build_praxis_out(praxis, viewer=...)` with the same viewer, so the composer
+ * reading the row back would be a full round trip for a payload the client was
+ * handed milliseconds earlier — pure latency, on the deepest waterfall in the
+ * app.
  *
  * ONE SLOT, CONSUMED ONCE. It lives in module memory rather than in router
  * state deliberately: history state survives Back/Forward, so a carried praxis
@@ -461,9 +453,8 @@ export type InviteResponseOut = components['schemas']['InviteResponseOut']
 /**
  * Accept or decline a collab invite.
  *
- * Answers an ack, not the praxis (#1383). This route used to return a full
- * tally-bearing `PraxisOut` — mistyped here as `PraxisInviteOut` — and every
- * caller discarded it, then navigated or refreshed the feed.
+ * Answers an ack, not the praxis (#1383): every caller navigates or refreshes
+ * the feed rather than reading a returned row.
  */
 export async function respondToInvite(
   praxisId: number,

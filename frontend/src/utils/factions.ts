@@ -6,13 +6,10 @@
  * dark mode arrives free via the [data-theme="dark"] cascade and there is no
  * second table to keep in sync.
  *
- * There used to be one. The docblock here asked humans to mirror every
- * --faction-* value by hand, and it drifted: `ua` sat at #c2541f in JS against
- * #c24a18 in CSS, and #c2541f is verbatim --faction-default-stop-2 — the
- * unaffiliated spectrum's orange. Every JS-sourced surface painted UA in na's
- * hue. Worse, a hex literal has no dark half by construction, so no amount of
- * mirroring could have reached the dark lift. Deleting the table is what makes
- * the drift impossible rather than merely tested (#1269).
+ * Never reintroduce a JS colour table. A hand-mirrored one cannot be made
+ * correct: a hex literal has no dark half by construction, so no amount of
+ * mirroring reaches the dark lift, and the mirroring itself drifts silently
+ * (#1269). Having no table is what makes that impossible rather than tested.
  *
  * What is left is the slug→theme mapping (CSS_KEY), which is about identity,
  * not colour: which slugs have a theme at all, and which resolve to `default`.
@@ -61,15 +58,12 @@ const CSS_KEY: Record<string, string> = {
   everymen: "everymen",
   coven: "coven",
   snide: "snide",
-  // Warriors of Whimsy is themed again (#812) — this is the flip the #784
-  // comment anticipated. This ONE line is what re-themes WOW, because
+  // This ONE line is what themes Warriors of Whimsy (#812), because
   // isKnownFaction tests the mapped VALUE (`!== "default"`), not key presence
-  // (#749). Its colour was the rainbow's yellow and is the chronicle plum since
-  // #2068; its SKIN is the cream/gold/plum chronicle, which is a different thing
-  // and does not follow the hue (#838, ADR-0050) — the two merely agree on a
-  // value now, in light, which is not the same as being one token. WOW still
-  // registers only a few manifest surfaces, so the rest fall back to Default*
-  // until #840.
+  // (#749). Its hue is the chronicle plum (#2068); its SKIN is the
+  // cream/gold/plum chronicle, which is a different thing and does not follow
+  // the hue (#838, ADR-0050) — the two merely agree on a value now, in light,
+  // which is not the same as being one token.
   wow: "wow",
   ephemerists: "ephemerists",
   singularity: "singularity",
@@ -77,8 +71,7 @@ const CSS_KEY: Record<string, string> = {
   // hiding in plain sight, so it points at `default` exactly like `na` below:
   // same neutral scalars, same rainbow through factionFill, and — because the
   // predicate reads the mapped VALUE — isKnownFaction('albescent') === false.
-  // That is the intended outcome, not a gap. It was first-class (#232) with a
-  // 35-declaration --faction-albescent-* block; the block is gone.
+  // That is the intended outcome, not a gap.
   albescent: "default",
   // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
   // --faction-default-* set (#418), so factionCssVar('na') is grey, never a
@@ -127,9 +120,8 @@ function resolveCssKey(slug: string | null | undefined): string {
  *
  * Exactly one of those is a SURFACE. `card-bg` is the sheet; `light` is a tint
  * wash; everything else is ink meant for `color:`. Reaching for `card-muted` as
- * a `background:` is what #694 was — it filled the collab roster's cast row
- * with the faction's muted TEXT ink and printed the accent pill on it at
- * 1.05:1.
+ * a `background:` fills a surface with the faction's muted TEXT ink and prints
+ * on it at about 1:1 (#694).
  *
  * `card-notice` / `card-alarm` / `card-credit` exist because a shared,
  * faction-themed component paints state colours on eight different sheets, and
@@ -143,9 +135,8 @@ function resolveCssKey(slug: string | null | undefined): string {
  * actually paints, which for four factions is a different token (#1302).
  *
  * `card-notice` and `card-alarm` are ONE role split in two: cautionary and
- * destructive. They existed as a single ink until #1449, which is why anything
- * reading `card-notice` for a red meaning is a site to re-check rather than a
- * precedent to copy.
+ * destructive (#1449). A site reading `card-notice` for a red meaning is a bug
+ * to re-check, not a precedent to copy.
  *
  * With no suffix this is also the answer for genuine SCALAR ink on a dynamic
  * slug — the feed actor's name, the invitation letter's link. `na` and
@@ -184,11 +175,10 @@ export function factionCssVar(
  * `"disc"` is `"dot"` grown large enough to hold depth (#1269): the 28px avatar
  * circle a feed row or companion card paints behind a monogram. A real faction
  * gets a 135° two-stop ramp of its own hue rather than the flat fill a 10px dot
- * takes, because at that size a flat disc reads as a sticker. It exists as a
- * shape because three feed cards had each written that ramp by hand out of an
- * interpolated hex — which is how the JS hue drifted from the CSS one in the
- * first place. na is identical to `"dot"`: the conic spectrum, already the right
- * answer at 28px.
+ * takes, because at that size a flat disc reads as a sticker. It is a shape
+ * here rather than a caller's ramp so that no surface hand-writes it out of an
+ * interpolated hex. na is identical to `"dot"`: the conic spectrum, already the
+ * right answer at 28px.
  */
 export type FactionFillShape = "bar" | "dot" | "disc" | "pill" | "frame" | "rule";
 
@@ -204,10 +194,9 @@ export type FactionFillShape = "bar" | "dot" | "disc" | "pill" | "frame" | "rule
  *                for a vertical rule, where the horizontal ramp would compress
  *                seven stops into the rule's ~3px width
  *   - `"dot"`  → the conic rainbow (`--faction-default-rainbow-conic`; a 7-stop
- *                linear is mud at 10–12px). SMOOTH, not wedged: the hard-wedge
- *                conic this used to name was deleted in #1127, because its seven
- *                light stops sit inside a 0.184 luminance band and the wedge
- *                edges merged into one dark band
+ *                linear is mud at 10–12px). SMOOTH, not wedged: the seven light
+ *                stops sit inside a 0.184 luminance band, so hard wedge edges
+ *                merge into one dark band (#1127)
  *   - `"pill"` → the rainbow as a *frame* (border-box) around a neutral paper
  *                interior with ink text — no single ink is legible across the
  *                spectrum, so the label never sits on it.
@@ -222,10 +211,10 @@ export type FactionFillShape = "bar" | "dot" | "disc" | "pill" | "frame" | "rule
  *                opaque paper for exactly this reason; `frame` keeps that fill but
  *                drops the ink so the caller owns its own text colour (#794).
  *
- * The scalar (`border/ring`) contexts that used to reach for `factionCssVar` and
- * land on grey now ask for `"frame"` instead. A real faction's `"frame"` is a
- * plain solid `var(--faction-{key})` border, so `factionCssVar` + `"frame"` agree
- * for known factions and only `na`/unregistered slugs change.
+ * A scalar `border`/`ring` context asks for `"frame"` rather than reaching for
+ * `factionCssVar` and landing on grey. A real faction's `"frame"` is a plain
+ * solid `var(--faction-{key})` border, so `factionCssVar` and `"frame"` agree
+ * for known factions and only `na`/unregistered slugs differ.
  *
  * Prefer this over `factionCssVar(slug)` for any `background:` that renders a
  * dynamic slug (one that can be `na` at runtime). Genuine single-ink TEXT
@@ -296,9 +285,9 @@ export function factionFill(
 /**
  * A card SHEET — the ground a `Default*` surface paints itself on (#2497).
  *
- * Spread it where `background: factionCssVar(slug, 'card-bg')` used to sit. The
- * rendered result for `na` is byte-identical to that one line; what it buys is a
- * seam. Albescent's kit (#2496) is "the na component plus ornament, never a
+ * Spread it wherever a card ground is painted. The rendered result for `na` is
+ * byte-identical to `background: factionCssVar(slug, 'card-bg')`; what it buys
+ * is a seam. Albescent's kit (#2496) is "the na component plus ornament, never a
  * skin", so its prism sweep (#2499) arrives by overriding three custom
  * properties under its own wrapper class — no component learns anything, and no
  * selector surgery reaches into eight files.
@@ -534,10 +523,10 @@ export function redactableText(
  * for two viewers.
  *
  * Albescent is a secret society: a player who was never invited must not
- * encounter the word. The name was leaking through every surface that labels a
- * thing with its faction — praxis bylines, task cards, metatask seals, the
- * character switcher, a sidebar `aria-label` — about thirty-five call sites,
- * each of which would have needed its own gate, and each of which is a place a
+ * encounter the word. The name reaches every surface that labels a thing with
+ * its faction — praxis bylines, task cards, metatask seals, the character
+ * switcher, a sidebar `aria-label` — about thirty-five call sites, each of
+ * which would otherwise need its own gate, and each of which is a place a
  * future page can forget.
  *
  * Putting the gate HERE is what makes a page written next month secret by
@@ -551,11 +540,10 @@ export function redactableText(
  *
  * ── THIS IS *NOT* WHERE THE REDACTION LIVES, AND THE SPLIT IS DELIBERATE ────
  *
- * #2409 asked whether the mask should become `[REDACTED]` everywhere. The
- * owner ruled it should not, and the ruling restores the sentence directly
- * above: where a name LABELS a thing already on screen, "Unaffiliated" is
- * right. A byline, a task card, a seal and a switcher row are labels, so this
- * function is unchanged by ADR-0082.
+ * The mask is deliberately not `[REDACTED]` everywhere (ADR-0082, #2409):
+ * where a name LABELS a thing already on screen, "Unaffiliated" is right. A
+ * byline, a task card, a seal and a switcher row are labels, so this function
+ * does not redact.
  *
  * The two surfaces that are ABOUT the society — the `/factions` select tile
  * and the leaderboard's eighth lane — redact instead, by calling
@@ -601,10 +589,10 @@ export function factionDescription(slug: string | null | undefined): string {
 /**
  * Every slug that has a theme of its own, in declaration order.
  *
- * Derived from CSS_KEY rather than kept as a second list: the colour table this
- * used to read was a parallel registry, and a parallel registry is what #1269
- * was. `albescent` and `na` are excluded for free — they map to `default`, and
- * "has a resolvable theme" is exactly what isKnownFaction means.
+ * Derived from CSS_KEY rather than kept as a second list, which would be the
+ * parallel registry #1269 removed. `albescent` and `na` are excluded for free —
+ * they map to `default`, and "has a resolvable theme" is exactly what
+ * isKnownFaction means.
  */
 export function getAllFactions(): FactionConfig[] {
   return Object.keys(CSS_KEY)
@@ -626,45 +614,35 @@ export function getAllFactions(): FactionConfig[] {
  * dark twin #ef5350 is h1.1), so a raw ascending sort of the light values would
  * wrap it to the tail. Move a slug here only after re-reading the hue.
  *
- * #2068 moved two hues and #2075 left this array alone, so it spent one release
- * claiming a spectrum it no longer had: WOW's yellow became a plum and the
- * Ephemerists' teal a plate brass. #2078 is the owner's ruling to follow the
- * hues — `ephemerists` up to index 2, `wow` down to index 5 — accepting the
- * repaint of every surface that reads this order. There is no teal in the
- * spectrum at all now, and green→blue is one long jump rather than two short
- * ones. The adjacency that ruling had to clear is UA's sienna beside the brass,
- * the exact "second brown" pairing the old yellow was tuned deep to avoid:
- * ΔE2000 31.1 light / 30.3 dark, against 34.2 / 31.0 for the yellow it replaces
- * and 12.4 / 13.5 for everymen|ua, which already ships as the tightest pair.
- * Measured, not assumed — and not assertable here, because this module holds no
- * colour (#1269).
+ * The order follows the hues, not the slugs: there is no teal in the spectrum,
+ * and green→blue is one long jump. The adjacency it has to carry is UA's sienna
+ * beside the Ephemerists' plate brass — a "second brown" pairing — at ΔE2000
+ * 31.1 light / 30.3 dark, against 12.4 / 13.5 for everymen|ua, which already
+ * ships as the tightest pair. Measured, not assumed — and not assertable here,
+ * because this module holds no colour (#1269).
  *
  * Albescent is deliberately absent (#783). It is a secret society hiding in
  * plain sight: /factions omits it server-side until an account is revealed to it
- * (ADR-0027, #390), so any bar built from this array would have leaked its
- * existence — in its own near-black, no less — to every unrevealed player.
- * `DefaultFactionsDirectory` worked around that by driving its legend off the
- * visible rows; `Leaderboard` and `DefaultPlayers` did not, and shipped the
- * leak. Removing the slug closes all three at the source.
+ * (ADR-0027, #390), so any bar built from this array would leak its existence —
+ * in its own near-black, no less — to every unrevealed player. Keeping the slug
+ * out closes that at the source, for every consumer at once.
  *
  * Consumers must not assume a length, and only one of them paints these fills
  * with a hard edge between them: the mobile factions directory's stripe bar,
  * which distributes stops evenly across whatever is here. `factionStandings`
  * takes this array as the ROSTER of race lanes and then re-sorts by points, and
- * the filter facet lists gapped rows — neither shows an adjacency. (The
- * Leaderboard's own bar and `Meadow`'s bloom were the other two touching
- * surfaces until #1868 and #1763 retired them.)
+ * the filter facet lists gapped rows — neither shows an adjacency.
  */
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
   "ua",
-  // Took the gold slot when #2068 emptied the teal one, so it moved up from
-  // index 4 to sit between UA's sienna and S.N.I.D.E.'s acid green (#2078).
+  // The gold slot: a plate brass sits between UA's sienna and S.N.I.D.E.'s
+  // acid green (#2078).
   "ephemerists",
   "snide",
   "singularity",
-  // Held index 2 as the yellow from #812; a plum belongs between the blue and
-  // the pink, which is the only index a plum can hold (#2068, #2078).
+  // A plum belongs between the blue and the pink, which is the only index a
+  // plum can hold (#2068, #2078).
   "wow",
   // Cozy Coven takes the pink slot, because it took the pink (#784).
   "coven",
