@@ -1,18 +1,11 @@
 /**
  * The seam: `FactionProfileBody` × `useFormFactor()` (#1319).
  *
- * Before this issue the character profile was TWO dispatches — a
- * `formFactor === 'mobile'` branch in `CharacterProfile.tsx` picking through a
- * `mobileProfile` manifest surface, and `FactionProfileBody` picking through
- * `profileBody` for desktop. The na and WOW mobile skins were reachable only
- * from the first branch, so `FactionProfileBody` itself rendered the desktop
- * markup on a phone.
- *
- * After the collapse (ADR-0056 / ADR-0067 shape) there is ONE responsive
- * component per faction and `FactionProfileBody` is the only dispatcher: a
- * phone-width viewport must reach the SAME two shipped mobile designs it always
- * did, through the `profileBody` surface. That is what this file pins — the
- * surface a caller uses, not the internals of either skin.
+ * There is ONE responsive component per faction (the ADR-0056 / ADR-0067 shape)
+ * and `FactionProfileBody` is the only dispatcher: a phone-width viewport must
+ * reach the two shipped mobile designs through the `profileBody` surface. That
+ * is what this file pins — the surface a caller uses, not the internals of
+ * either skin.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'

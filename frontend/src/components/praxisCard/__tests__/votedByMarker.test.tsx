@@ -33,7 +33,6 @@ describe('voted-by marker', () => {
     ).toBe('')
   })
 
-  // The two `MobileVotedByMarker` cases are gone with the `mobilePraxisCard`
-  // surface (ADR-0067). The marker read the same `voted_by_name` field through
-  // the same catalog key; the desktop cases above now pin both form factors.
+  // The praxis card is one responsive component (ADR-0067), so the cases above
+  // pin both form factors — there is no second marker to assert against.
 })
