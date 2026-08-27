@@ -9,70 +9,47 @@
  *     picked faction as `metatask_faction_slug` — including `na`
  *     (Unaffiliated = anyone), which the old faction guard wrongly rejected.
  *
- * The visibility half renders the pure `DefaultProposeTask` (no DOM needed).
- * The routing half exercises the extracted pure planner `planProposalSubmission`
- * — the repo has no DOM/renderHook, so hooks are tested via their pure core.
+ * The visibility half renders each ARCHETYPE as a pure function of state (no DOM
+ * needed). The routing half exercises the extracted pure planner
+ * `planProposalSubmission` — the repo has no DOM/renderHook, so hooks are tested
+ * via their pure core.
+ *
+ * PARAMETERISED OVER ARCHETYPES SINCE #2538, and that is the carry-in rather
+ * than a tidy-up: the page dispatches per faction now, so "the checkbox is gated
+ * off `canProposeMetatask`" is a claim about eight forms and was being made
+ * about one. The roster is DERIVED from `surfaceMap('proposeTask')`, so each
+ * archetype of the seven-faction fan-out inherits this gate the moment it
+ * registers, with nothing to append here.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
-import DefaultProposeTask from '../archetypes/DefaultProposeTask'
+import { archetypeFor, EVERY_SLUG, proposeTaskState } from './proposeTaskState'
 import {
   UNAFFILIATED_FACTION_SLUG,
   planProposalSubmission,
   type ProposeTaskState,
 } from '../useProposeTask'
 
-function state(overrides: Partial<ProposeTaskState> = {}): ProposeTaskState {
-  return {
-    isLoggedIn: true,
-    canProposeTask: true,
-    canProposeMetatask: false,
-    currentLevel: 6,
-    success: false,
-    factions: [],
-    title: '',
-    setTitle: () => {},
-    description: '',
-    setDescription: () => {},
-    pointValue: '10',
-    setPointValue: () => {},
-    levelRequired: 0,
-    setLevelRequired: () => {},
-    factionSlug: UNAFFILIATED_FACTION_SLUG,
-    setFactionSlug: () => {},
-    notes: '',
-    setNotes: () => {},
-    isMetatask: false,
-    setIsMetatask: () => {},
-    metaBonusValue: '10',
-    setMetaBonusValue: () => {},
-    submitting: false,
-    error: null,
-    handleSubmit: async () => {},
-    handleCancel: () => {},
-    ...overrides,
-  }
-}
-
-function renderText(overrides: Partial<ProposeTaskState> = {}): string {
+function renderText(slug: string, overrides: Partial<ProposeTaskState> = {}): string {
+  const Archetype = archetypeFor(slug)
   return renderToStaticMarkup(
     <MemoryRouter>
-      <DefaultProposeTask state={state(overrides)} />
+      <Archetype state={proposeTaskState({ factionSlug: slug, ...overrides })} />
     </MemoryRouter>,
   ).replace(/<[^>]*>/g, '')
 }
 
-describe('metatask checkbox — capability gate', () => {
+describe.each(EVERY_SLUG)('metatask checkbox — capability gate (%s)', (slug) => {
   it('is hidden below the propose-metatask gate', () => {
-    expect(renderText({ canProposeMetatask: false })).not.toContain(
+    expect(renderText(slug, { canProposeMetatask: false })).not.toContain(
       'Create as Metatask',
     )
   })
 
   it('appears once the proposer is eligible', () => {
-    expect(renderText({ canProposeMetatask: true })).toContain(
+    expect(renderText(slug, { canProposeMetatask: true })).toContain(
       'Create as Metatask',
     )
   })
