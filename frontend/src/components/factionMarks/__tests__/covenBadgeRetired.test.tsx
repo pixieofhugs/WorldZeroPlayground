@@ -21,13 +21,21 @@
  * gone, the second says the DRAWING is gone from the two files that held it, so
  * that reviving the badge under a fresh name fails too.
  *
+ * THE REMAINDER IS NOW EMPTY (#2746). This note used to record two surviving
+ * pentagram drawings — `feed/CovenFeedFrame` and `editPraxis/CovenEditPraxis`
+ * each held a private copy of the badge's star, neither routed through
+ * `covenSlip`'s export, so #2726's mount list never saw them — and to say the
+ * star scan below was therefore deliberately narrowed to two files. The owner
+ * has since ruled all four of those mounts out: the feed head's charm and the
+ * composer's glyph scatter and stage mark are `CovenSigil`, and the composer
+ * masthead's turning disc is `CovenCat` on `.cvn-wheel`, the kit's one turning
+ * device. So the star scan is TREE-WIDE now, which is what that ruling's
+ * acceptance line asks for and what a dir-scoped scan has failed to give in
+ * this repo before.
+ *
  * SCOPE, stated so it is not mistaken for a gap. `Spark` (the four-point
  * sparkle) and `CovenCat` (the turning watermark) are untouched — different
  * devices with different jobs, and `covenSlip`'s own header gives the reason.
- * Two OTHER pentagram drawings survive outside this ruling's mount list, in
- * `feed/CovenFeedFrame` and `editPraxis/CovenEditPraxis`; #2726 did not rule on
- * them, so this file does not scan for the star path tree-wide — only in the two
- * places it was told to empty.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -84,6 +92,15 @@ const MOUNTS: [file: string, size: string][] = [
   ["pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx", "22"],
 ];
 
+/** The three private re-draws #2746 handed to the hat, and their sizes. */
+const LATE_MOUNTS: [file: string, size: string][] = [
+  ["components/feed/CovenFeedFrame.tsx", "size.charm"],
+  ["pages/editPraxis/archetypes/CovenEditPraxis.tsx", "glyph.size"],
+  ["pages/editPraxis/archetypes/CovenEditPraxis.tsx", "40"],
+];
+
+const COMPOSER = "pages/editPraxis/archetypes/CovenEditPraxis.tsx";
+
 describe("Coven's retired pentagram badge (#2726)", () => {
   it("is named in no source file — not exported, not imported, not re-drawn", () => {
     // Whole-tree, because a dir-scoped scan has hidden mounts in this repo
@@ -93,15 +110,40 @@ describe("Coven's retired pentagram badge (#2726)", () => {
     expect(offenders, "`SigilMark` survives in these files").toEqual([]);
   });
 
-  it("draws its star in neither the kit module nor the detail page that copied it", () => {
-    for (const file of [
-      "components/factionMarks/covenSlip.tsx",
-      "pages/taskDetail/archetypes/CovenTaskDetail.tsx",
-    ]) {
-      expect(code(file), `the badge drawing survives in ${file} under some other name`).not.toContain(
-        BADGE_STAR,
-      );
+  it("draws its star in no source file at all — the scan is tree-wide (#2746)", () => {
+    // Narrowed to two files under #2726, because two surfaces outside that
+    // ruling's mount list still drew it. They do not any more, so what stands
+    // here is the guard a private re-draw cannot walk around: the DRAWING,
+    // wherever it is pasted, under whatever name it is pasted as.
+    const offenders = FILES.filter(([, source]) => source.includes(BADGE_STAR)).map(
+      ([path]) => path,
+    );
+    expect(
+      offenders,
+      "the badge drawing survives in these files under some other name",
+    ).toEqual([]);
+  });
+
+  it("hands the three late re-draws to the hat as well (#2746)", () => {
+    for (const [file, size] of LATE_MOUNTS) {
+      expect(code(file), `${file} draws no hat at ${size}`).toContain(`<CovenSigil size={${size}}`);
     }
+  });
+
+  it("turns the composer masthead on the kit's ONE turning device, at its own tempo", () => {
+    const composer = code(COMPOSER);
+    // `CovenCat` carries `.cvn-wheel`, whose keyframe and reduced-motion gate
+    // live in `motion.ornament.css` at 120s. Asserting the MOUNT is what keeps
+    // this honest: a private `<svg className="cvn-wheel">` would satisfy a
+    // class assertion while forking the drawing all over again. The duration
+    // half reads the source with comments stripped, for the reason
+    // `withoutComments` exists: the mount's own note has to be able to say
+    // which hook it stopped writing.
+    expect(composer, "the masthead badge is not the cat").toContain("<CovenCat size={MAST_CAT}");
+    expect(
+      withoutComments(composer),
+      "a per-mount duration is a second device wearing the cat's name — the kit turns at 120s",
+    ).not.toContain("--ep-spin-dur");
   });
 
   it("hands all six of its mounts to `CovenSigil`, each at the size it asked the badge for", () => {

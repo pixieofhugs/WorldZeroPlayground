@@ -383,12 +383,19 @@
   .evm-bolt { animation: evm-flicker 2.4s ease-in-out infinite; }
 }
 
-/* ── Coven — the spell slip's pentagram watermark turns, once every two minutes
-   (#1023). Stilled, the watermark is simply a static pentagram, which is what it
-   is at any single frame anyway. `.cvn-wheel { transform-origin: 50% 50% }` is
-   in index.css: it is the mark's resting frame and inert without the animation.
+/* ── Coven — the spell slip's CAT watermark turns, once every two minutes
+   (#1023; a pentagram until #2041, and this comment said so until #2746).
+   Stilled, it is simply a static cat, which is what it is at any single frame
+   anyway. `.cvn-wheel { transform-origin: 50% 50% }` is in index.css: it is the
+   mark's resting frame and inert without the animation.
+
    Mounted only through `CovenCat` (`components/factionMarks/covenSlip.tsx`),
-   which five surfaces wear. ── */
+   which every Coven surface with a corner to fill wears — and, since #2746, the
+   composer masthead, where it is a 30px mark read at full strength rather than
+   a corner wash. THIS 120s IS THE KIT'S ONE TEMPO:
+   that mount replaced a pentagram disc turning at 42s on `.ep-spin`, and the
+   duration went with the drawing. A cat turning three times faster than every
+   other cat is a second device wearing the same name. ── */
 @keyframes cvn-wheel { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
   .cvn-wheel { animation: cvn-wheel 120s linear infinite; }

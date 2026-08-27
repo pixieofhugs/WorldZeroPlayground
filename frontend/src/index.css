@@ -5693,7 +5693,7 @@
    who never receives the deferred sheet — would otherwise get a fist and a bolt
    with no lightning, and the mark would lose the thing it is a picture of. 0.9
    is the crackle's own 13% peak, so the rest state is a frame somebody drew,
-   the same reading as `.eph-rune` below and Coven's static pentagram. The bolt
+   the same reading as `.eph-rune` below and Coven's stilled cat. The bolt
    needs no counterpart: `evm-flicker` never leaves full strength. */
 .evm-arc { opacity: 0.9; }
 
@@ -6008,14 +6008,20 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%23f4f1e8'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%238ed11f'/%3E%3C/svg%3E");
 }
 
-/* Coven — the spell slip's pentagram watermark turns, once every two minutes
-   (#1023). The design injected this keyframe from the component; #911 retired
-   that whole shape repo-wide, so it lives here and the card carries only the
-   class. Motion is opt-in under `no-preference`, the repo's inverted form of
-   the design's `reduce → none`: stilled, the watermark is simply a static
-   pentagram, which is what it is at any single frame anyway. The keyframe and
-   the turn moved to `src/motion.ornament.css` (#2073); the resting frame below
-   stays, inert without them. */
+/* Coven — the spell slip's CAT watermark turns, once every two minutes (#1023).
+   The design injected this keyframe from the component; #911 retired that whole
+   shape repo-wide, so it lives here and the card carries only the class. Motion
+   is opt-in under `no-preference`, the repo's inverted form of the design's
+   `reduce → none`: stilled, the watermark is simply a static cat, which is what
+   it is at any single frame anyway. The keyframe and the turn moved to
+   `src/motion.ornament.css` (#2073); the resting frame below stays, inert
+   without them.
+
+   It said "pentagram" here until #2746. The drawing became a cat at #2041 and
+   the rename never reached the comments, which is the same failure #2726 hit in
+   the TSX — a retired mark leaves false prose behind it, and the sweep that
+   retires one has to grep the prose too. `.cvn-wheel` is also the composer
+   masthead's mark now, not only a corner watermark. */
 .cvn-wheel { transform-origin: 50% 50%; }
 
 /* THE SPECTRUM FRAME (#2404) — the one frame na and Albescent share.
@@ -7960,8 +7966,8 @@
    ══════════════════════════════════════════════════════════════════════════
    The detail page is the spell slip opened out: a candlelight haze washing the
    whole viewport, braided thread rules (`.cvn-braid`, already shipped for the
-   task card), the turning pentagram watermark (`.cvn-wheel`, likewise) and the
-   points held inside a glowing pentagram ward.
+   task card), the turning cat watermark (`.cvn-wheel`, likewise) and the points
+   held inside a glowing ward disc.
 
    Nearly the whole palette is ALREADY DECLARED as --faction-coven-slip-* by the
    task card (#1023), and the design's TOKENS map onto it one-for-one — same

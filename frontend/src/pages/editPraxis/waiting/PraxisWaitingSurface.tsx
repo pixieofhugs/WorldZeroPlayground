@@ -572,7 +572,7 @@ export default function PraxisWaitingSurface({
         ground={dress.ground}
       >
         {/* The status row, in the composer's own slot and carrying the skin's
-            own mark — the pentacle, the ankh, the gear, `[ok]`. The mark does
+            own mark — the witch hat, the ankh, the gear, `[ok]`. The mark does
             not move or change size when you submit; the WORD beside it does,
             and that is the whole confirmation beat. */}
         <ComposerStatusRow
