@@ -162,7 +162,7 @@ describe("triageFindings", () => {
   it("leaves a translucent-over-solid ground exactly where it was (#1715, #1579)", () => {
     // The two compositing near-misses this narrowing must not touch. The
     // scanner RESOLVES them — `--color-bg-surface-alt` over the page,
-    // `--filter-thumb` over `--filter-well` over the page — so they arrive
+    // `--switch-thumb` over `--switch-well` over the page — so they arrive
     // with a background and a ratio, and the fill path below is never
     // consulted. This asserts the branch order, which is the whole risk.
     const composited = finding({ background: "rgb(247, 244, 238)", ratio: 4.12, required: 4.5 });

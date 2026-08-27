@@ -53,7 +53,7 @@ const PROVIDER_LABEL_KEY: Readonly<Record<string, ParseKeys<'common'>>> = {
 }
 
 /** The design's static-value pill (`sec-language`), mapped to tokens: `10px
- *  14px` to the space scale, `--wz-well` to the `--filter-*` control-chrome
+ *  14px` to the space scale, `--wz-well` to the `--switch-*` control-chrome
  *  family that already holds that exact `color-mix`, and 13px up to the content
  *  floor. `overflowWrap` because an email address is the one value here that
  *  can be longer than a phone is wide. */
@@ -62,7 +62,7 @@ const VALUE_PILL: CSSProperties = {
   padding: 'var(--space-sm) var(--space-md)',
   borderRadius: 999,
   border: '1px solid var(--color-border)',
-  background: 'var(--filter-well)',
+  background: 'var(--switch-well)',
   fontSize: 'var(--text-content)',
   color: 'var(--color-text-primary)',
   overflowWrap: 'anywhere',

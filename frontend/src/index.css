@@ -37,7 +37,7 @@
      third rung that still cleared AA had nowhere at all to stand. There is no
      room below secondary for a rung anyone could see. Walking tertiary down
      there would buy an invisible step and spend the whole AA margin for it.
-     (#1549 wrote that band as [4.50, 4.96] off `--filter-well`; #1715 found the
+     (#1549 wrote that band as [4.50, 4.96] off `--switch-well`; #1715 found the
      row one wash deeper and the band was already empty.)
 
      So the axis is the one with room, and DARK ALREADY CHOSE IT: its tertiary
@@ -370,7 +370,7 @@
      picker's results, both absolutely positioned under their input. They had
      written the same alpha by hand at two different geometries (`0 4px 12px`
      and `0 6px 20px`); this is the softer of the two, which is the one a
-     floating list wants. Not --filter-popover-shadow: that is a whole popover
+     floating list wants. Not --switch-popover-shadow: that is a whole popover
      panel's cast and three times as deep. */
   --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 
@@ -3144,7 +3144,7 @@
   /* ── Shared neutrals (dark) ── */
   --color-surface-scrim: rgba(19, 18, 26, 0.85);
   /* A cast shadow on a near-black page needs far more of it to read at all —
-     the same move --filter-popover-shadow makes below. */
+     the same move --switch-popover-shadow makes below. */
   --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
   /* Same reasoning, generalised (#1609). The light 0.25 over #f7f4ee is a
      legible smudge; the same 0.25 over #13121a is nothing at all. These track
@@ -8434,13 +8434,13 @@
      of a flipping ink has to re-substitute wherever a theme is set. --color-text-secondary reads
      6.89:1 on the light well and 7.34:1 on the dark one (4.96 / 4.96 before
      #1715 lifted the neutral tiers; both grounds are `Pair` rows now). */
-  --filter-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
+  --switch-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
 
   /* The sliding thumb: a neutral highlight, never a hue. Same reasoning — one
      declaration, both themes, because the ink it mixes flips with the theme.
      The design's rgba(240,230,208,.12) / .18 IS this pair, said in dark only. */
-  --filter-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
-  --filter-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  --switch-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --switch-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
 
   /* The thumb's OFF fill (#2154). A segmented rail never needs one — its thumb
      is always over some segment — but a two-state switch does: the knob has to
@@ -8456,7 +8456,7 @@
      the family to `--control-*` is a real change across ~20 declarations and
      every FilterBar consumer, and it is a styling call, not a feature one. Read
      these from outside the filter bar in the meantime; do not mint a twin. */
-  --filter-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  --switch-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
 }
 
 :root {
@@ -8466,14 +8466,14 @@
      SegmentedRail used to read this too, to write the design's
      `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
      active segment instead, so the number is back to living in one file. */
-  --filter-rail-pad: 3px;
+  --switch-rail-pad: 3px;
 
-  --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
+  --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
 }
 
 [data-theme="dark"] {
   /* A cast shadow on a near-black page needs far more of it to read at all. */
-  --filter-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8);
+  --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8);
 }
 
 /* A list showing the PREVIOUS filter's rows while the next read is in flight
@@ -8536,8 +8536,8 @@
 .filter-bar__spectrum {
   box-sizing: border-box;
   height: var(--space-md);
-  margin-bottom: calc(var(--filter-rail-pad) - var(--space-md));
-  padding-top: var(--filter-rail-pad);
+  margin-bottom: calc(var(--switch-rail-pad) - var(--space-md));
+  padding-top: var(--switch-rail-pad);
   border-radius: calc(var(--space-md) - 1px) calc(var(--space-md) - 1px) 0 0;
   background: var(--faction-default-rainbow);
   /* Decoration, and now nine pixels taller than it paints. */
@@ -8585,7 +8585,7 @@
   padding: var(--space-sm) var(--space-lg);
   border-radius: 999px;
   border: 1px solid var(--color-border-strong);
-  background: var(--filter-well);
+  background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: var(--text-xl);
@@ -8634,7 +8634,7 @@
   padding: var(--space-sm) var(--space-lg);
   border-radius: 999px;
   border: 1px solid var(--color-border-strong);
-  background: var(--filter-well);
+  background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: var(--text-xl);
@@ -8661,14 +8661,14 @@
   flex: 0 1 auto;
   max-width: 100%;
   flex-wrap: wrap;
-  padding: var(--filter-rail-pad);
+  padding: var(--switch-rail-pad);
   border-radius: 999px;
   border: 1.5px solid transparent;
   /* Opaque well on padding-box, the spectrum on border-box: the ring reads as a
-     1.5px rainbow edge without a second element. See --filter-well on why the
+     1.5px rainbow edge without a second element. See --switch-well on why the
      interior may not be translucent here. */
   background:
-    linear-gradient(var(--filter-well), var(--filter-well)) padding-box,
+    linear-gradient(var(--switch-well), var(--switch-well)) padding-box,
     var(--faction-default-rainbow) border-box;
 }
 
@@ -8680,8 +8680,8 @@
 .filter-rail__thumb {
   position: absolute;
   border-radius: 999px;
-  background: var(--filter-thumb);
-  box-shadow: inset 0 0 0 1px var(--filter-thumb-edge);
+  background: var(--switch-thumb);
+  box-shadow: inset 0 0 0 1px var(--switch-thumb-edge);
   transition-property: left, top, width, height;
   transition-duration: 220ms;
   transition-timing-function: cubic-bezier(0.4, 1.4, 0.5, 1);
@@ -8725,7 +8725,7 @@
   padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
   border-radius: 999px;
   border: 1px solid var(--color-border-strong);
-  background: var(--filter-well);
+  background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: var(--text-xl);
@@ -8766,8 +8766,8 @@
   padding: var(--space-sm);
   border-radius: var(--space-md);
   border: 1px solid var(--color-border-strong);
-  background: var(--filter-well);
-  box-shadow: var(--filter-popover-shadow);
+  background: var(--switch-well);
+  box-shadow: var(--switch-popover-shadow);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -8806,8 +8806,8 @@
     calc(var(--space-lg) + var(--tab-bar-clearance));
   border-top: 1px solid var(--color-border-strong);
   border-radius: var(--space-lg) var(--space-lg) 0 0;
-  background: var(--filter-well);
-  box-shadow: var(--filter-popover-shadow);
+  background: var(--switch-well);
+  box-shadow: var(--switch-popover-shadow);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -8871,7 +8871,7 @@
 .filter-factions__row:hover,
 .filter-factions__row:focus-visible,
 .filter-factions__row[data-on] {
-  background: var(--filter-thumb);
+  background: var(--switch-thumb);
 }
 
 .filter-factions__box {
@@ -8921,12 +8921,12 @@
    secondary that still clears AA. What sets the count apart from the label is
    its temperature and its size, and that is the whole of it.
 
-   ONE INK, SELECTED OR NOT (#1579). A selected row inverts to `--filter-thumb`
+   ONE INK, SELECTED OR NOT (#1579). A selected row inverts to `--switch-thumb`
    and this used to promote the count to secondary there, on the stated grounds
    that tertiary was "too faint against the thumb". Measured, that was backwards
    in dark — tertiary was already the louder ink on that stock — so the
    promotion bought ~10% in light and SPENT contrast in dark. #1715's lift
-   settles it: on the thumb (10% primary over `--filter-well`, the tightest
+   settles it: on the thumb (10% primary over `--switch-well`, the tightest
    neutral stock in the app) tertiary now reads 5.66:1 light and 6.04:1 dark
    against secondary's 5.63:1 in both, so the plain rule is both the simpler and
    the higher-contrast one. Both inks are `Pair` rows in the contrast sweep, so
@@ -8971,7 +8971,7 @@
   padding: var(--space-xs) var(--space-md);
   border-radius: 999px;
   border: 1px solid var(--color-border-strong);
-  background: var(--filter-well);
+  background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: var(--text-xl);
@@ -9030,7 +9030,7 @@
   padding: var(--space-xl);
   border-radius: var(--space-md);
   border: 1px dashed var(--color-border-strong);
-  background: var(--filter-well);
+  background: var(--switch-well);
 }
 
 .filter-empty__copy {

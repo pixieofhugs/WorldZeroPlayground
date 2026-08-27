@@ -24,7 +24,7 @@ const useMeasureEffect = typeof document === 'undefined' ? useEffect : useLayout
  * not be "fixed" into a neutral border.
  *
  * The design authored the thumb as a lime/gold gradient over a raw `#1b1a24`
- * track, dark-only. Both are tokens here (`--filter-well`, `--filter-thumb`),
+ * track, dark-only. Both are tokens here (`--switch-well`, `--switch-thumb`),
  * so the rail arrives in light mode by the cascade rather than by a ternary,
  * and the Snide-lime accent is gone: selection reads as a neutral highlight
  * plus a full-strength ink, exactly as `FilterStamps` has always drawn it.
