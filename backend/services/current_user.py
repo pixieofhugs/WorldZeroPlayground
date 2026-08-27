@@ -20,7 +20,7 @@ from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, OAuthProvider
 from schemas.auth import CurrentUser
-from services.albescent_reveal import is_albescent_revealed
+from services.albescent_reveal import is_albescent_glimpsed, is_albescent_revealed
 from services.character import (
     AccountEligibility,
     build_character_out,
@@ -109,6 +109,10 @@ async def build_current_user(
         # and never consults `is_admin`, so the two flags on this payload stay
         # the two separate answers they are.
         albescent_revealed=is_albescent_revealed(account, is_admin=is_admin),
+        # Through the same seam family, and the seam is where reveal-implies-
+        # glimpse is resolved (#2770): the client receives two flags that are
+        # already consistent, so no surface has to remember to check both.
+        albescent_glimpsed=is_albescent_glimpsed(account, is_admin=is_admin),
         second_character_level_required=era.second_character_level_required,
         albescent_level_required=era.albescent_level_required,
         era_name=era.name,

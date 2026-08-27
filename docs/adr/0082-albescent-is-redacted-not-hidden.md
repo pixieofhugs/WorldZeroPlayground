@@ -15,6 +15,50 @@ ruling 1 is untouched everywhere), [ADR-0080](0080-one-life-earns-albescent-its-
 #2422 (the roster fold on the same predicate), #1855 (whose eighth-lane ruling this reverses),
 #390 / #394 (the original secrecy build), CONTEXT.md ("Account", "Faction")
 
+## Amendment
+
+**2026-08-27 (#2770): a third state goes in front of these two — absent below level 6,
+redacted from 6, real on reveal.** Owner ruling. Same decision, one more stage before it.
+
+Nothing in the reasoning below is reversed. *"A row they can see and cannot read is the locked
+door with no keyhole"* still governs, and it governs **from the era's glimpse level up**. What
+changes is that a player under it is not yet shown the door: no Albescent card, no lane, no
+tell. That restores ADR-0027's hiding posture for the **early game only** — the posture §1 and
+§5 below retired for everyone, now retired for everyone who has got far enough to be teased.
+
+**The gate is account-scoped and sticky, and that is the crux rather than a detail.** Level is
+per-character; every other Albescent gate on this record is per-account and permanent. A gate
+reading the *active* character's level would make the eighth card blink in and out with the
+character switcher — a louder tell than either state it moves between. So it mirrors
+`albescent_unlocked` exactly: `EraConfig.albescent_glimpse_level` holds the floor,
+`Account.albescent_glimpsed` is stamped the first time **any** character on the account reaches
+it, and it is never unstamped — across era resets included, which is also why it must be
+stamped rather than derived (`apply_era_reset` returns every life to level 0).
+`services.albescent_reveal.is_albescent_glimpsed` resolves **reveal implies glimpse** at the
+read, so the two flags on `/auth/me` arrive consistent and nothing downstream checks both.
+
+**Level 6 announces itself**, as an `ability` rung and not a `sense` one: the rung names a real
+gate constant, and filing it as whimsy would make the era file lie about itself. The pop-up says
+*"Now mysteries will reveal themselves to you"* and **stops** — the catalogue entry carries no
+`desc`, deliberately, for §2's own reason: *"I'm not going to give them hints on how."*
+
+**What this does NOT change:**
+
+- **The two surfaces are still exactly two** (§2). Concealment is answered where their LISTS are
+  built — `useFactionsDirectory` for the tile, `factionStandings` for the lane — so the select
+  card and the lane component are untouched and never learn there was a third state. Every
+  label site still says "Unaffiliated"; #1891's ruling 1 is as untouched by this as it was by
+  the decision below.
+- **The hide stays client-side** (§5). `list_factions` and `/factions/status` keep serving the
+  row to everyone: the slug rides every Albescent-authored task and praxis regardless, so a wire
+  filter on `/factions` alone would buy nothing and would put auth back on a public read. §5's
+  redacted-row follow-on (#2540) is **still open and still undecided**.
+- **§4's share denominator, with one correction.** Albescent's points are in the pot for a
+  viewer who can see the lane, exactly as ruled. A viewer who cannot see it does not pay the
+  size leak either: the lane leaves the denominator with the row, so seven percentages still add
+  to 100. Dropping the lane at the render sites instead would have left an arithmetic hole where
+  the eighth row was — a sharper tell than the redacted lane it replaces.
+
 ## Context
 
 ADR-0027 made Albescent secret by **omission**. `GET /factions` and `GET /factions/status`

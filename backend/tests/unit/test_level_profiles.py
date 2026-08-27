@@ -16,6 +16,7 @@ GATE_ATTRS = [
     "metatask_apply_level",
     "metatasks_per_praxis_max_level",
     "albescent_level_required",
+    "albescent_glimpse_level",
 ]
 
 
@@ -52,13 +53,6 @@ def test_grounded_ability_sits_at_its_gate_constants_level(gate_attr):
 def test_level_5_unlocks_the_metatask_abilities():
     """The three metatask gates (see / propose / apply) all land at level 5."""
     assert _ability_keys(5) == {"see_metatasks", "propose_metatask", "apply_metatasks"}
-
-
-def test_level_6_has_no_hard_gate_sense_only():
-    """Level 6 no longer carries a metatask gate (they moved to 5), so its
-    profile is whimsy-only."""
-    kinds = {unlock.kind for unlock in ERA_1.level_profiles[6].unlocks}
-    assert kinds == {LevelUnlockKind.sense}
 
 
 def test_faction_choice_is_not_a_grounded_ability_anywhere():

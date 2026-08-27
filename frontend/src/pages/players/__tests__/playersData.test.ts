@@ -7,9 +7,9 @@
  * here is asserted for both — and the repo's harness has no DOM, so this is
  * also the only place the pin/gap arithmetic can be pinned at all.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { CharacterOut } from '../../../api/auth'
-import { FACTION_RAINBOW_ORDER } from '../../../utils/factions'
+import { FACTION_RAINBOW_ORDER, setAlbescentGlimpsed } from '../../../utils/factions'
 import {
   PLAYERS_FILTERS_DEFAULT,
   PODIUM_SIZE,
@@ -79,6 +79,15 @@ describe('rankPlayers', () => {
 
 describe('factionStandings', () => {
   const ranked = rankPlayers(FIELD, 'era')
+
+  // #2770 put a state in FRONT of the redaction: below the era's glimpse level
+  // the eighth lane is not built at all. Every case here is about the lane
+  // EXISTING, which is the glimpsed state, so the flag is set for all of them —
+  // the concealed half lives in `utils/__tests__/albescentConcealedThirdState`,
+  // where the share denominator closing over seven lanes is the assertion.
+  // Reset after each: the flag is module-level and outlives the case that set it.
+  beforeEach(() => setAlbescentGlimpsed(true))
+  afterEach(() => setAlbescentGlimpsed(false))
 
   it('races the seven factions PLUS Albescent, and nobody else', () => {
     // The eighth lane (#2409, ADR-0082). This case read "the seven factions and

@@ -77,6 +77,9 @@
       "name": "Propose a metatask",
       "desc": "Draft a task built for your whole faction to apply to."
     },
+    "albescent_glimpse": {
+      "name": "Now mysteries will reveal themselves to you"
+    },
     "place_memory": {
       "name": "Remember a place you've never been",
       "desc": "Certain rooms feel already-visited. You've stopped questioning it."

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
-import { setAlbescentRevealed } from '../utils/factions'
+import { setAlbescentGlimpsed, setAlbescentRevealed } from '../utils/factions'
 
 interface AuthState {
   user: CurrentUser | null
@@ -111,6 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const adoptViewer = (me: CurrentUser | null) => {
     setAlbescentRevealed(me?.albescent_revealed ?? false)
+    // The concealment gate rides the same transitions for the same reason
+    // (#2770). Same fail-closed default: `null` is logged out, which is
+    // un-glimpsed, which is the state that shows no eighth row at all.
+    setAlbescentGlimpsed(me?.albescent_glimpsed ?? false)
     setUser(me)
   }
 

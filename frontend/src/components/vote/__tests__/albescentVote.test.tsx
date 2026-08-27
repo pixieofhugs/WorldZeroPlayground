@@ -61,6 +61,7 @@ function currentUser(): CurrentUser {
     can_create_additional_character: false,
     can_start_as_albescent: true,
     albescent_revealed: true,
+    albescent_glimpsed: false,
     can_propose_task: false,
     can_propose_metatask: false,
     can_apply_metatask: false,

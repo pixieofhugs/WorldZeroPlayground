@@ -41,6 +41,7 @@ import {
   ALBESCENT_FACTION_SLUG,
   FACTION_RAINBOW_ORDER,
   UNAFFILIATED_FACTION_SLUG,
+  isFactionConcealed,
   isFactionHiddenFromChoosers,
 } from '../../utils/factions'
 
@@ -155,8 +156,32 @@ const RACE_LANES: readonly string[] = [
   ALBESCENT_FACTION_SLUG,
 ]
 
+/**
+ * THE EIGHTH LANE IS NOT BUILT FOR A CONCEALED VIEWER (#2770, amending
+ * ADR-0082 §4).
+ *
+ * ADR-0082 made the lane a hardcoded eighth so an empty society could not have
+ * its absence read as its non-existence. That still holds — from the era's
+ * glimpse level up. Below it there is no lane at all, and dropping it HERE
+ * rather than at the two render sites is what makes the absence complete
+ * instead of merely quiet:
+ *
+ *   - the SHARE DENOMINATOR is computed below over whatever lanes survive, so a
+ *     concealed viewer's seven percentages add to 100. Filtering in the two
+ *     `Desktop/MobilePlayers` render loops would have left them adding to less
+ *     than 100 — an arithmetic hole where the eighth row used to be, which is a
+ *     sharper tell than the redacted lane it replaced.
+ *   - the society's points leave the pot with its lane, exactly as `na`'s
+ *     always have. ADR-0082 §4 accepted the size leak as the cost of showing
+ *     the lane; a viewer who is not shown the lane does not pay it.
+ *
+ * Impure, and the same impurity as `factionName`'s: the same roster answers
+ * differently for two viewers. That is the #1891 cost this module already pays
+ * through `factionHref`.
+ */
 export function factionStandings(ranked: RankedPlayer[]): FactionStanding[] {
-  const points = new Map<string, number>(RACE_LANES.map((slug) => [slug, 0]))
+  const laneSlugs = RACE_LANES.filter((slug) => !isFactionConcealed(slug))
+  const points = new Map<string, number>(laneSlugs.map((slug) => [slug, 0]))
   for (const { character, points: earned } of ranked) {
     const slug = slugKey(character.faction_slug)
     const running = points.get(slug)
