@@ -104,6 +104,39 @@ i18next native plural suffixes — two sibling keys, `_one` and `_other`:
 
 The code passes `count`; i18next picks the right key. Always provide both.
 
+## Ordinals
+
+Same mechanism, one more segment — `_ordinal_one`, `_ordinal_two`, `_ordinal_few`
+and `_ordinal_other`. English needs all four (1st, 2nd, 3rd, 4th), and i18next
+gets the teens right on its own (11th, not 11st):
+
+```json
+{
+  "day_ordinal_one": "the {{count}}st day",
+  "day_ordinal_two": "the {{count}}nd day",
+  "day_ordinal_few": "the {{count}}rd day",
+  "day_ordinal_other": "the {{count}}th day"
+}
+```
+
+### Comment timestamps (`praxis.json` → `comments.time`)
+
+Each faction reads a comment's age in its own voice, and `comments.time.<slug>`
+holds the words for it. `comments.time.default` is the plain form — the one
+`na`, `ua`, `wow`, **and Albescent** read; a faction with no branch of its own
+simply uses it.
+
+**Do not add a `comments.time.albescent` branch.** Albescent had one ("Vigil the
+Third") and #783 removed it: the dialect keys on the comment AUTHOR's faction, so
+a member announced themselves simply by commenting, to anyone, revealed or not.
+Adding the key back would not even work — `utils/commentTime.ts` chooses the
+dialect in code and never looks a slug up in this file — but a test asserts the
+branch stays absent so nobody has to rediscover why.
+
+The figures arrive as `{{count}}` (or `{{hours}}` for S.N.I.D.E., already
+zero-padded). Reword freely around them; the shape of the number — 1-based
+shifts, three-digit hours — is code, not copy.
+
 ## Embedded markup (`<Trans>`)
 
 Some values contain numbered tags for text that must be partly bold, linked,
