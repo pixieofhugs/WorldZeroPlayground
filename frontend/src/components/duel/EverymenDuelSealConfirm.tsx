@@ -1,12 +1,11 @@
 /**
  * Everymen duel seal-confirm (#721) — the design's `EvDuelDialog.dc.html`.
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin. The
- * form is the same document at both widths: `DuelSealSheet` serves it as a
- * bordered card over a scrim on a laptop and full-bleed on a phone, and the
- * masthead / scrolling middle / pinned action band the twin introduced survive
- * here as plain flex regions — they cost nothing on an auto-height card and are
- * what puts the actions under a thumb on a phone.
+ * ONE responsive component. The form is the same document at both widths:
+ * `DuelSealSheet` serves it as a bordered card over a scrim on a laptop and
+ * full-bleed on a phone, and the masthead / scrolling middle / pinned action
+ * band are plain flex regions — they cost nothing on an auto-height card and
+ * are what puts the actions under a thumb on a phone.
  *
  * Everymen files everything as paperwork, so the one irreversible beat in the
  * duel becomes a stamped form served over the composer: red masthead with a

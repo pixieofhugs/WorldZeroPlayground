@@ -1,10 +1,9 @@
 /**
  * Cozy Coven duel seal-confirm (#720, re-dressed by #1209) — the ward, asking
- * you to be sure. ONE responsive component since #1313 retired the
- * `mobileDuelSeal` twin: `DuelSealSheet` hangs this ward in a centred card on a
- * laptop and full-bleed on a phone, and the phone keeps the opponent's spine
- * rather than the twin's rounded top edge and grab handle — a bottom sheet you
- * cannot drag has no edge to advertise.
+ * you to be sure. ONE responsive component: `DuelSealSheet` hangs this ward in
+ * a centred card on a laptop and full-bleed on a phone, and the phone keeps the
+ * opponent's spine rather than a rounded top edge and grab handle — a bottom
+ * sheet you cannot drag has no edge to advertise.
  *
  * The Default dialog's content, re-hung on the coven's own paper: a slip band
  * across the head carrying the coven's witch hat and a braided thread, the

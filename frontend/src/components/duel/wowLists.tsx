@@ -5,9 +5,7 @@
  * a checkered barrier rail, a rosette for the rider who comes from elsewhere,
  * and a ribbon that goes home with the loser. This module holds the pieces that
  * would otherwise be drawn twice — the token names, the barrier band, the
- * rosette, and (until #1909) the seal's voice resolver. It shipped serving FOUR surfaces; the
- * two `*DuelRail` skins went with the rail in #1090 and the phone seal went with
- * the `mobileDuelSeal` SURFACE in #1313, so the consumer is now
+ * rosette, and (until #1909) the seal's voice resolver. Its one consumer is
  * `WowDuelSealConfirm` — one responsive component, both form factors.
  *
  * WHY THE ROSETTE IS THE ONLY PLACE THE OPPONENT'S COLOUR LANDS

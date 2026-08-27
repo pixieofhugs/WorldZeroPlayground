@@ -4,12 +4,11 @@
  * an incised small-caps masthead over the brass/nile double rule, and an italic
  * hand for the body.
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
- * `DuelSealSheet` holds the plate in a centred card on a laptop and lets it fill
- * the screen on a phone. The papyrus and the opponent's edge are `ground`; the
- * hairline that frames a floating plate is `card`. The twin's centred masthead
- * went with it — the incised caps read left-aligned at both widths, as they do
- * on every other Ephemerists surface.
+ * ONE responsive component. `DuelSealSheet` holds the plate in a centred card on
+ * a laptop and lets it fill the screen on a phone. The papyrus and the
+ * opponent's edge are `ground`; the hairline that frames a floating plate is
+ * `card`. The masthead is never centred — the incised caps read left-aligned at
+ * both widths, as they do on every other Ephemerists surface.
  *
  * TWO MODES, ONE FILE (#751). `mode` is `'submit'` or `'forfeit'` and every
  * string for both comes from `useDuelSealCopy` — heading, body, note, confirm
