@@ -86,3 +86,43 @@ def is_albescent_revealed(account: Account | None, *, is_admin: bool = False) ->
         account is not None
         and (is_admin or account.albescent_revealed or account.albescent_unlocked)
     )
+
+
+def is_albescent_glimpsed(account: Account | None, *, is_admin: bool = False) -> bool:
+    """True when this account may be shown that a row is THERE (#2770).
+
+    The stage in front of :func:`is_albescent_revealed`, and the two answer
+    different questions about the same eighth row:
+
+    * **glimpsed** — the row is drawn, unreadable, ``[REDACTED]``. ADR-0082's
+      locked door with no keyhole.
+    * **revealed** — the row is drawn and readable.
+
+    Below both, the row is not drawn at all: no tile on ``/factions``, no lane in
+    the race, and nothing on either surface saying a row was removed. That is
+    ADR-0027's hiding posture, restored for the early game only — ADR-0082's
+    reasoning still governs from the floor up.
+
+    **Reveal implies glimpse, derived here rather than stamped.** A revealed
+    account is by definition allowed to see what it is allowed to read, and an
+    admin (#2400) sees both. Writing ``albescent_glimpsed`` at reveal time
+    instead would be a second record of a fact this line already knows, and two
+    records of one fact is the drift ``is_albescent_revealed`` exists to stop —
+    see its docblock on deriving rather than stamping.
+
+    ``Account.albescent_glimpsed`` is stamped by
+    :func:`services.character.stamp_albescent_glimpse` the first time ANY life on
+    the account reaches ``era.albescent_glimpse_level``, and never unset, so the
+    sight survives switching to a level-0 character, signing out, and an era
+    reset.
+
+    Anonymous callers are un-glimpsed by definition — fail closed, same as the
+    predicate above.
+
+    ``bool()`` for the same reason: the column is ``default=False`` at *flush*,
+    so an unflushed ``Account`` still holds ``None``.
+    """
+    return bool(
+        is_albescent_revealed(account, is_admin=is_admin)
+        or (account is not None and account.albescent_glimpsed)
+    )

@@ -104,6 +104,30 @@ class Account(TimestampMixin, Base):
     albescent_unlocked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # Sticky Albescent *glimpse* — the sight of the door, before either of the
+    # two above (#2770, amending ADR-0082). Flips True the first time any life on
+    # this account reaches `era.albescent_glimpse_level`
+    # (`services.character.stamp_albescent_glimpse`, called from
+    # `recalculate_character_stats`); never unset.
+    #
+    # ACCOUNT-scoped even though the fact it records is per-character, and that
+    # is the point. Level is a `character_stats` row, so a live read of the
+    # *active* character's level would make the Albescent tile and the eighth
+    # race lane blink in and out with the character switcher — a louder tell than
+    # either the absent state or the redacted one. Same reasoning as
+    # `albescent_unlocked` above, and the same reason it must be stamped rather
+    # than derived: `apply_era_reset` returns every life to level 0, so after a
+    # reset there is nothing left to recompute this from.
+    #
+    # THREE flags, three questions, and none of them is another's answer:
+    # glimpsed = "this account may see that a row is there", revealed = "this
+    # account may read it", unlocked = "this account may put a life into it".
+    # Revealed implies glimpsed — resolved in
+    # `services.albescent_reveal.is_albescent_glimpsed`, not by a second write
+    # here, so the two never drift.
+    albescent_glimpsed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     # foreign_keys pins this to character.account_id — active_character_id adds a
     # second FK path between the tables that would otherwise be ambiguous.

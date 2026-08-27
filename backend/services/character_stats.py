@@ -24,7 +24,11 @@ from models.praxis import (
 )
 from models.task import Task
 from models.vote import Vote
-from services.character import ALBESCENT_FACTION_SLUG, stamp_albescent_unlock
+from services.character import (
+    ALBESCENT_FACTION_SLUG,
+    stamp_albescent_glimpse,
+    stamp_albescent_unlock,
+)
 from services.era import (
     get_closing_era_id,
     get_current_era_row,
@@ -356,6 +360,13 @@ async def recalculate_character_stats(
     # letters a line above that. The unlock is sticky and cannot be recomputed
     # after an era reset, so if it is not written here it is not written at all.
     await stamp_albescent_unlock(author, era_row.id, session, era)
+
+    # #2770: and the same question one stage earlier — has this life reached the
+    # level at which the account stops being shown NOTHING and starts being shown
+    # ADR-0082's redacted row. Same stamp point, same stickiness, same reason it
+    # cannot be derived after an era reset. `stats.level` is the value written a
+    # few lines up, handed over rather than re-read.
+    await stamp_albescent_glimpse(author, stats.level, session, era)
 
 
 async def recalculate_members_stats(

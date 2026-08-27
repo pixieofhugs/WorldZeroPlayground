@@ -239,6 +239,45 @@ async def stamp_albescent_unlock(
     return True
 
 
+async def stamp_albescent_glimpse(
+    character: Character,
+    level: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """Record on the account that a life has reached the glimpse floor (#2770).
+
+    Sticky and monotonic, exactly like :func:`stamp_albescent_unlock` above and
+    for the same reason: ``apply_era_reset`` returns every life to level 0, so a
+    glimpse that were derived from a live level would be *lost* at a rollover —
+    and a row that vanishes from ``/factions`` at era close is a louder tell than
+    either state it moves between.
+
+    Account-scoped on purpose. The floor is a fact about a *character's* level,
+    but the answer it feeds is a fact about the *account*: reading the active
+    character's level would blink the eighth tile and lane in and out with the
+    character switcher.
+
+    ``level`` is passed rather than read, because the caller
+    (``recalculate_character_stats``) has just written it and this function has
+    no business re-querying ``character_stats`` to learn something already in
+    hand — the same reason ``is_admin`` is caller-supplied on the reveal seam.
+
+    Cheap on the hot path: an account that already holds the glimpse
+    short-circuits before comparing anything, which is every recalc after the
+    first.
+
+    Returns whether this call is the one that flipped it, matching its sibling.
+    """
+    if level < era.albescent_glimpse_level:
+        return False
+    account = await session.get(Account, character.account_id)
+    if account is None or account.albescent_glimpsed:
+        return False
+    account.albescent_glimpsed = True
+    return True
+
+
 @dataclasses.dataclass(frozen=True)
 class AccountEligibility:
     """The two account-collective unlock flags /auth/me dresses the site with.
