@@ -104,6 +104,10 @@ const AlbescentComment = lazyArchetype(() => import('../components/comments/voic
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
 const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
+// #2538 — the propose-task chassis's first registration. Lazy like every
+// wrapper above: it renders the whole na page, which is weight the initial load
+// does not need.
+const AlbescentProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/AlbescentProposeTask'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -434,6 +438,23 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * life edits itself in a turning frame, and nobody else's page moves.
    */
   editCharacter: () => AlbescentEditCharacter,
+
+  /**
+   * PASS-THROUGH, and the first registration of the propose-task chassis
+   * (#2538). na's spectrum is all over that page — the card's gradient frame,
+   * the metatask box, the submit pill — and not one of those marks is reachable
+   * from here: every one is an INLINE style computed from the slug in
+   * `pages/proposeTask/factionSurfaces.ts`, so `.alb-moves` has no
+   * `.spectrum-dial` or `.spectrum-rule` to set moving. That is the `comment`
+   * row's finding exactly (#2531), on a second surface.
+   *
+   * The dispatch slug is the TARGET faction — the one the task is proposed FOR
+   * — so this row is reached when anyone, member or not, aims a task at
+   * Albescent. A tell on a chip a non-member can pick would be an un-hiding
+   * rather than a reveal (ADR-0027), which is the `duelSeal` row's second
+   * reason as well.
+   */
+  proposeTask: () => AlbescentProposeTask,
 
   /**
    * PASS-THROUGH. `DefaultDuelSealConfirm` is not the na SPECTRUM kit — it draws
