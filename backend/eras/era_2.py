@@ -1,9 +1,14 @@
 """
 Era 2 — Metamorphosis.
 
-Authored, not activated: ``CURRENT_ERA`` still resolves to Era 1. This file
-exists so that everything which varies by era has a second ruleset to be tested
-against, and so the rollover has somewhere to go when it happens.
+The live era: ``CURRENT_ERA`` resolves here (#2711). Era 1 stays importable by
+name — ``game_config._ERA_ATTRIBUTE_BY_CONFIG_KEY`` resolves a stored ``era_1``
+row back to Renaissance's rules, which is how a past era keeps being labelled
+with its own instead of being relabelled with this one.
+
+Deploying this config does not by itself open the era: ``scripts/era_reset.py``
+writes the new ``Era`` row. Between the two the app serves these rules against
+Era 1's row, and the seeder warns about it on every deploy.
 
 The one rule Metamorphosis actually changes is the own/other split — 1.2 / 0.8
 on solo and duel — plus a smaller roster. Everything else is Era 1's, unchanged.
