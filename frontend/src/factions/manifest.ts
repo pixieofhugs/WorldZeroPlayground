@@ -136,8 +136,9 @@ export interface FactionManifest {
   /**
    * Editing a character (#2537). ONE responsive component per faction, the same
    * discipline `createCharacter` landed with — each archetype reads
-   * `useFormFactor()` itself. `mobileEditCharacter` is RETIRED and stays that
-   * way; `src/__tests__/retiredSurfaces.test.ts` holds the name out.
+   * `useFormFactor()` itself. The phone-only twin this surface once had is
+   * RETIRED and stays that way; `src/__tests__/retiredSurfaces.test.ts` holds
+   * its name out of shipped source.
    *
    * The slug is the EDITED CHARACTER'S `faction_slug`, not the viewer's. They
    * are usually the same life and not always, and the page is about the one it

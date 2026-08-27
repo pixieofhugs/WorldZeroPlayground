@@ -5,10 +5,10 @@
  * ONE RESPONSIVE COMPONENT, no mobile twin. It reads `useFormFactor()` itself,
  * exactly as `DefaultCreateCharacter` does since #2346, and both branches — the
  * desktop card stack and the phone column (#516) — are in this one file. The
- * `mobileEditCharacter` surface stays retired: a mobile-only slot no faction
- * ever filled is how this page went undressed for six months, and
- * `src/__tests__/retiredSurfaces.test.ts` is what keeps the name from coming
- * back.
+ * phone-only surface this page used to have is RETIRED and does not come back:
+ * a mobile-only slot no faction ever filled is how the page went undressed for
+ * six months, and `src/__tests__/retiredSurfaces.test.ts` is what holds its name
+ * out of shipped source.
  *
  * THE SLUG THAT PICKS THIS ARCHETYPE IS THE EDITED CHARACTER'S, not the
  * viewer's. They are usually the same life and not always, and the page is about
@@ -339,7 +339,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
 
         {/* ── Actions ── */}
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-          <button type="submit" disabled={!canSubmit} className="btn-primary">
+          <button type="submit" disabled={!canSubmit} className="btn-primary control-off">
             {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
           </button>
           <button type="button" onClick={() => navigate(`/characters/${id}`)} className="btn-outline">
