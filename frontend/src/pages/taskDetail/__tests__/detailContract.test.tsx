@@ -219,6 +219,13 @@ const SORT_LABELS = ["Top rated", "Recent"];
  * purpose: the skins run it straight into its numeral (`base18`, `base 18`), so
  * a `\b`-anchored regex matches neither, and no other copy on this page carries
  * the word.
+ *
+ * Case-folded because the nine skins draw the row from TWO keys: Albescent owns
+ * its worth markup and reads `tasks:detail.points.base` ("Base" since the
+ * owner's 2026-08-26 pass), while the other eight inherit `TaskWorthStamp` and
+ * read `praxis:card.stamp.base` ("base"). Both are the same row to this
+ * contract, and folding keeps the NEGATIVE assertion honest for all nine —
+ * pinning one casing would let the other slip through it.
  */
 const BASE_ROW = "base";
 
@@ -250,7 +257,7 @@ describe("task-detail worth readout", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} drops the base row when it would restate the total`, () => {
       const { text } = render(<Archetype state={baseState()} />);
-      expect(text).not.toContain(BASE_ROW);
+      expect(text.toLowerCase()).not.toContain(BASE_ROW);
       expect(text).toContain("18");
       expect(text.toLowerCase()).toContain(POINTS_UNIT);
     });
@@ -259,7 +266,7 @@ describe("task-detail worth readout", () => {
       const { text } = render(
         <Archetype state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })} />,
       );
-      expect(text).toContain(BASE_ROW);
+      expect(text.toLowerCase()).toContain(BASE_ROW);
       expect(text).toContain("×1.25");
       expect(text).toContain("18");
       expect(text).toContain("23");

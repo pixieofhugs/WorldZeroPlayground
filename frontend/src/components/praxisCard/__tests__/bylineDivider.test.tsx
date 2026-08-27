@@ -171,3 +171,35 @@ describe("the Ephemerists plate rules its byline with runes (#2312)", () => {
     expect(readFileSync(CARD, "utf8")).toContain('seed={`praxis:${praxis.id}`}');
   });
 });
+
+describe("the divider is the width of the media box above it (#2724)", () => {
+  const html = () => card("ephemerists", EphemeristsPraxisCard);
+
+  it("hangs the strip in the leaf's own column, with nothing bleeding it out", () => {
+    // `LEAF_BLEED` was `0 calc(var(--space-xl) * -1)` on a wrapper around the
+    // strip: #2312 read corner-to-corner as the card's BORDER box, so the row
+    // overhung the "no proof attached" box above it by 20px a side. #2724
+    // retires that rule — a rune row is the width of the thing above it — and
+    // the wrapper is deleted rather than re-inset, because `width: 100%` inside
+    // the padded leaf already IS the media box's column.
+    expect(html(), "a negative inset around the strip").not.toContain(
+      "calc(var(--space-xl) * -1)",
+    );
+  });
+
+  it("carries no inset of its own either", () => {
+    const at = html().indexOf('data-eph-runes="divider"');
+    const tag = html().slice(html().lastIndexOf("<", at), html().indexOf(">", at));
+    expect(tag).toContain("width:100%");
+    expect(tag).not.toContain("margin");
+  });
+
+  it("keeps no bleed constant in the card's code", () => {
+    // Read with the comments stripped, the way this kit's other source guards
+    // read: the docblock NAMES the retired constant to say it is retired, and a
+    // guard a prose mention can trip is a guard nobody keeps.
+    const code = readFileSync(CARD, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");
+    expect(code).not.toContain("LEAF_BLEED");
+    expect(code).not.toContain("* -1)");
+  });
+});

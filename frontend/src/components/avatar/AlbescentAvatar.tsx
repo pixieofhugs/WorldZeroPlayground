@@ -1,14 +1,51 @@
 import DefaultAvatar from './DefaultAvatar'
 import { avatarDim } from './FactionAvatar'
 import type { FactionAvatarProps } from './FactionAvatar'
+import AlbescentSigil from '../sigil/AlbescentSigil'
+import { ALBESCENT_FACTION_SLUG, isFactionRedacted } from '../../utils/factions'
 
 /**
- * Albescent — the AVATAR's tell (#2502, epic #2496, ADR-0048). The seventh
- * surface to unfreeze, and built to the same rule as the six before it: this is
- * not a ninth skin. It renders the exact spectrum disc an unaffiliated player
- * wears — the same ring, the same monogram, the same `DefaultSigil` corner mark
- * — and hands it one inert ornament layer. Strip that span and the two avatars
- * are byte-identical, which `albescentAvatar.test.tsx` asserts on both branches.
+ * Albescent — the AVATAR's tell (#2502, epic #2496, ADR-0048), and since #2731
+ * the surface where ADR-0088 is spent.
+ *
+ * It is still not a ninth skin. It renders na's spectrum disc — the same ring,
+ * the same monogram, the same geometry — and adds exactly two things: one inert
+ * ornament layer, and, FOR A REVEALED VIEWER ONLY, the labyrinth in place of
+ * na's `DefaultSigil` on the corner badge.
+ *
+ * ### The badge is the labyrinth for a revealed viewer (ADR-0088, #2731)
+ *
+ * THIS REVERSES WHAT THIS FILE USED TO ARGUE, so read the ADR before restoring
+ * it. The old note said the badge must stay `DefaultSigil` because "a labyrinth
+ * mark on every byline would be a very loud un-hiding, and it would render to
+ * every viewer at every size, gate or no gate" — and the second half was the
+ * real objection. `isFactionRedacted()` answers it: the mark renders to a
+ * viewer who has ALREADY been let in, and to nobody else. An unrevealed viewer
+ * gets bytes identical to na's, which `albescentAvatar.test.tsx` still asserts.
+ *
+ * Two facts made the old position untenable rather than merely cautious. #2529
+ * registered the labyrinth in `FactionSigil`, so the filter facet, the
+ * credential card, the requests tray, the players roster and the sidebar rail
+ * already draw it — this avatar was the last surface in the app disagreeing
+ * with the rest. And ADR-0082 replaced secrecy with redaction: once an eighth
+ * lane on the players page reads `[REDACTED]`, the thing being withheld is not
+ * "there is a faction" but "these are its members", which is a question about
+ * the VIEWER and not about the paint.
+ *
+ * NO LIVERY IS ADDED. `AlbescentSigil` is filled with
+ * `--faction-default-rainbow-conic` — the same spectrum `DefaultSigil` sweeps —
+ * so what a revealed viewer gains is a SHAPE, never a hue. `CSS_KEY.albescent`
+ * stays `"default"` (ADR-0088), and this file names no `--faction-albescent-*`
+ * token.
+ *
+ * The gate reads the SLUG CONSTANT, not `props.character.faction_slug`. This
+ * component is only ever resolved for Albescent members, and asking about the
+ * constant is what keeps the question "is this viewer revealed" rather than the
+ * subtly different "is this character redactable".
+ *
+ * Confining the tell to surfaces where the player is the SUBJECT — podium,
+ * profile, faction page — was considered and rejected (ADR-0088): it leaves the
+ * app disagreeing with itself without keeping a secret.
  *
  * ### The ring turns at 64px and up, and is ABSENT below it — so today, nowhere
  *
@@ -68,11 +105,6 @@ import type { FactionAvatarProps } from './FactionAvatar'
  *
  * ### What this file may not do
  *
- * The badge stays `DefaultSigil`, na's closed ring. `FactionAvatar` imports it
- * directly and that is correct hiding behaviour (ADR-0027): a labyrinth mark on
- * every byline would be a very loud un-hiding, and it would render to every
- * viewer at every size, gate or no gate.
- *
  * `.alb-avatar-ring` lives in index.css with its geometry and the deferred
  * `motion.ornament.css` with its rotation — a component may not inject a
  * stylesheet (#911), and an inline `animation:` would bypass the reduced-motion
@@ -96,6 +128,11 @@ export default function AlbescentAvatar(props: FactionAvatarProps) {
         avatarDim(props.size) >= RING_TURNS_AT ? (
           <span aria-hidden="true" className="alb-avatar-ring" />
         ) : undefined
+      }
+      glyph={
+        isFactionRedacted(ALBESCENT_FACTION_SLUG)
+          ? undefined
+          : (size) => <AlbescentSigil size={size} />
       }
     />
   )

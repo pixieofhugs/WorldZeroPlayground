@@ -21,7 +21,7 @@ import UaFactionBody from '../archetypes/UaFactionBody'
 import type { FactionDetailState, MembershipState } from '../useFactionDetail'
 
 /** The panel's eyebrow — present iff a join block is drawn at all. */
-const REGISTRY_HEADING = 'Those practising'
+const REGISTRY_HEADING = 'Your standing in UA'
 /** A tail of `detail.burned.body` with no apostrophe — SSR escapes those. */
 const ERA_NOTICE = 'until the next one begins'
 
@@ -65,13 +65,14 @@ describe('UA draws a join block like any other faction', () => {
   it('tells a member they practise here', () => {
     const out = render('member')
     expect(out).toContain(REGISTRY_HEADING)
-    expect(out).toContain('You practise here')
+    // SSR escapes the apostrophe, same as ERA_NOTICE above.
+    expect(out).toContain('I dunno, you&#x27;re here I guess?')
     // The standing VALUE. `ua.join.memberStanding` interpolates the accent word
     // as `<1>`, and UA alone split the separator out as `{" "}` — which made
     // the whitespace node child 1 and the span child 2, so i18next dropped it
-    // and every UA member read a bare "Standing ·". Assert the WHOLE line:
-    // `render()` strips tags and the eyebrow above is "Those practising", so
-    // `toContain('practising')` passes vacuously against this exact defect.
+    // and every UA member read a bare "Standing ·". Assert the WHOLE line, not
+    // the accent word on its own: `render()` strips tags, so a bare
+    // `toContain('practising')` would pass off any other copy on the panel.
     expect(out).toContain('Standing · practising')
   })
 
@@ -85,7 +86,7 @@ describe('UA draws a join block like any other faction', () => {
 
   it('shows the soft gate to a viewer who is not invited yet', () => {
     const out = render('gate')
-    expect(out).toContain('Earn your place at the table')
+    expect(out).toContain('Join the art circle')
     expect(out).not.toContain(ERA_NOTICE)
   })
 
@@ -94,7 +95,7 @@ describe('UA draws a join block like any other faction', () => {
     expect(out).toContain('Closed for this era')
     expect(out).toContain(ERA_NOTICE)
     expect(out, 'the burn is not "keep tasking"').not.toContain(
-      'Earn your place at the table',
+      'Join the art circle',
     )
   })
 })

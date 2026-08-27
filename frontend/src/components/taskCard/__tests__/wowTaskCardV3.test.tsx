@@ -138,9 +138,16 @@ describe('the bunting replaces the barber ribbon (#2032)', () => {
     const html = render()
     expect(html, 'the strip the flags replace').not.toContain('--faction-wow-quest-ribbon')
     // Derived, not redrawn: WORLD_ZERO_STYLE §6 says a faction's device is one
-    // primitive, and `wowOrnament`'s `Bunting` is it. The pennant's mitred
-    // border is that component's signature and no hand-rolled twin's.
-    expect((html.match(/border-left:7px solid transparent/g) ?? []).length).toBeGreaterThan(20)
+    // primitive, and `wowOrnament`'s `Bunting` is it.
+    //
+    // This used to count the pennants' mitred borders. Since #2728 the strip
+    // MEASURES its container and draws as many whole flags as fit, so under this
+    // harness — `renderToStaticMarkup`, no DOM, effects never run — a rendered
+    // strip is an EMPTY strip by construction and there are no borders to count.
+    // `data-wow-bunting` is the primitive's handle, which a hand-rolled twin
+    // would not carry; the flags themselves are checked at their own seam in
+    // `factionMarks/__tests__/wowBunting.test.tsx`.
+    expect(html, 'the shared primitive hangs here').toContain('data-wow-bunting')
   })
 })
 

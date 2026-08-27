@@ -85,17 +85,6 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  */
 
 /**
- * How far the strip has to reach BACK to clear the leaf's own padding.
- *
- * `[data-eph-runes]` fills its container's PADDING box, and this card's leaf is
- * inset by `--space-xl` a side — so the mount bleeds itself, which is what the
- * retired `DRIFT` row did with the same expression. The strip is not given a
- * per-mount width (#2312 rules that out): one device, one behaviour, and each
- * mount answers for the box it was hung in.
- */
-const LEAF_BLEED = "0 calc(var(--space-xl) * -1)";
-
-/**
  * The field's NOMINAL width — `--praxis-card-basis`'s own default, which is what
  * `frameBase` gives a card in a roomy column. The plate cannot state a width (one
  * card, both form factors: ADR-0067), and the field does not need one measured:
@@ -225,8 +214,16 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           /* THE RUNE STRIP RULES THE BYLINE (#2312). A generic dashed line stood
              here — the shared `PraxisByline`'s `border-top` — on a plate whose
              every other division is drawn. The owner's ruling: *"the runes
-             should show up instead of the dotted line"*, corner to corner and
-             evenly spread.
+             should show up instead of the dotted line"*, evenly spread.
+
+             IT IS THE WIDTH OF THE MEDIA BOX ABOVE IT (#2724). #2312 read
+             "corner to corner" as the card's BORDER box, so a `LEAF_BLEED`
+             constant — `0 calc(var(--space-xl) * -1)` — pulled the strip back
+             out of the leaf's own padding and it overhung the "no proof
+             attached" box by 20px a side. That rule is retired: a rune row is
+             the width of the thing above it. The bleed is DELETED rather than
+             re-inset, because `width: 100%` inside the padded leaf already is
+             the media box's column, and the mount now adds nothing at all.
 
              It is `EphemeristsNotationBand`, the same component the masthead,
              the task card, the task page and the composer mount (#2230), and
@@ -240,9 +237,7 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
              also what keeps the seed distinct: the component folds `side` into
              the seed, and the composer already draws `praxis:${id}` at `top`. */
           bylineDivider={
-            <div style={{ margin: LEAF_BLEED }}>
-              <EphemeristsNotationBand side="divider" seed={`praxis:${praxis.id}`} />
-            </div>
+            <EphemeristsNotationBand side="divider" seed={`praxis:${praxis.id}`} />
           }
           voteRule={
             /* The vote section's head — the card states the prompt, so the

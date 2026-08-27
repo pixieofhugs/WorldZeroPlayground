@@ -203,12 +203,15 @@ describe("one drawing at four mounts (#2230)", () => {
     }
   });
 
-  it("fills its container at every mount, and insets at none (#2312)", () => {
-    // "Anywhere there are runes applies." A mount inside a padded box bleeds
-    // itself; the device never carries an inset of its own.
+  it("fills its container at every mount, and insets at none (#2724)", () => {
+    // The device carries neither an inset nor a bleed: the CONTAINER decides
+    // the width. Under #2312 a mount inside a padded box bled itself back out
+    // to the border box; #2724 retires that — a rune row is the width of the
+    // thing above it, and the inset belongs to the surface's content column.
     for (const side of SIDES) {
       expect(opened(side), side).toContain("width:100%");
       expect(opened(side), side).not.toContain("calc(100% -");
+      expect(opened(side), side).not.toContain("* -1)");
     }
   });
 
