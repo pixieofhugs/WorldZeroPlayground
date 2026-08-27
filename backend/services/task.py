@@ -478,9 +478,9 @@ class TaskSort(str, Enum):
     browse default — easiest first, richest within a level — and is ascending
     only: there is no level-descending twin.
 
-    Closed is the point. Until #1443 an unrecognised ``sort`` fell through to
-    ``level`` and returned 200, so a typo'd or retired value silently bought a
-    different ordering than the one asked for and nothing surfaced the mistake.
+    Closed is the point (#1443): an unrecognised ``sort`` must not fall through
+    to ``level`` and answer 200, or a typo'd value silently buys a different
+    ordering than the one asked for with nothing to surface the mistake.
     Mirrors :class:`services.praxis.PraxisSort`, whose router raises 422 on the
     same input. An *absent* sort is still legal and still means ``level``.
     """
@@ -514,8 +514,8 @@ def pending_visibility_clause(
 
     Stated once and applied at every door that can return a task — the browse
     (:func:`list_tasks`) and the detail read (:func:`get_task_for_viewer`).
-    Before #1725 the browse was the only door that asked, and task ids are
-    sequential, so guessing the next id read a proposal nobody was cleared for.
+    Both have to ask (#1725): task ids are sequential, so a detail read that
+    does not is an id-guessing door onto a proposal nobody was cleared for.
     A second copy of a rule with an era-configured level *and* an age window is
     how the two drift; hence a clause both callers pass to their query rather
     than a predicate each restates.
@@ -537,7 +537,7 @@ def pending_visibility_clause(
     ``viewer_id`` is the reading character's id, or ``None`` for an anonymous
     caller, and exempts the rows that character *wrote* (#2126). Pass it at every
     door: a carve-out one caller states and another forgets is how the profile
-    and the browse came to disagree about the same row in the first place.
+    and the browse end up disagreeing about the same row.
 
     ponytail: if a NON-admin path ever sends a task back to ``pending``,
     ``created_at`` stops being the proposal clock and this wants a dedicated
@@ -551,8 +551,8 @@ def pending_visibility_clause(
     # proposal from *other players* — which is what the propose-success screen
     # promises in so many words — and its author is not one of them. They wrote
     # the row and were just told it is under review, so there is nothing left to
-    # withhold, and hiding it made "Proposed tasks" answer "none" to the one
-    # person who knows better. This is a per-ROW carve-out, not a level, so it
+    # withhold, and hiding it would make "Proposed tasks" answer "none" to the
+    # one person who knows better. This is a per-ROW carve-out, not a level, so it
     # rides in the clause with the window rather than becoming another boolean.
     own = false() if viewer_id is None else Task.created_by == viewer_id
     if viewer_sees_pending_tasks(viewer_level, is_admin, era):
@@ -651,10 +651,8 @@ async def list_tasks(
 
     ``retired`` and ``pending`` rows are gated the same way, by
     ``era.level_to_see_retired_tasks`` and ``era.level_to_see_pending_tasks``.
-    Both are advertised level unlocks, and both were out of step with what this
-    function did — retired was withheld from nobody, pending from everybody
-    below admin. They are enforced at every door here, and
-    :func:`services.character_capabilities.compute_capabilities` states the same
+    Both are advertised level unlocks, so both are enforced at every door here,
+    and :func:`services.character_capabilities.compute_capabilities` states the same
     two thresholds for the ``/auth/me`` flags the UI gates its filter tabs on, so
     a tab is offered exactly when the query behind it will answer.
 
@@ -676,11 +674,11 @@ async def list_tasks(
 
     ``can_sign_up`` (#1130) narrows the list to the tasks ``viewer`` could claim
     right now — the SQL half of :func:`services.praxis.evaluate_signup`, the
-    single sign-up predicate (ADR-0008). It replaces the old ``level`` filter,
-    which could not express either of the live faction abilities that bend the
-    level bar (WOW's once-a-level jump, Ephemerists' retired-task access) and so
-    made them invisible. Anonymous viewers get ``[]``: ``evaluate_signup``
-    refuses them, so there is no honest list to return.
+    single sign-up predicate (ADR-0008). A plain level filter cannot express
+    either of the faction abilities that bend the level bar (WOW's once-a-level
+    jump, Ephemerists' retired-task access), which is why the whole predicate is
+    restated rather than the level alone. Anonymous viewers get ``[]``:
+    ``evaluate_signup`` refuses them, so there is no honest list to return.
 
     ``faction`` is a list of slugs matched as a union (#1364), so the browse
     filter can hold several factions at once; an empty list is no filter.
@@ -713,27 +711,21 @@ async def list_tasks(
 
     # The two status gates, stated once and applied at BOTH doors — an explicit
     # `?status=X` and the `?status=all` catch-all reach the same rows, and a gate
-    # written at only one of them is not a gate. That is exactly how the pending
-    # queue leaked before #1672: the promise lived on a branch an explicit status
-    # routed around.
+    # written at only one of them is not a gate: a promise living on a branch an
+    # explicit status routes around is how the pending queue leaks.
     #
-    # `retired` is the level-2 "the archive opens" unlock (`era_1.py`,
-    # `progression.json`). It had NO enforcement at all — anonymous callers could
-    # read the whole archive — so the ability was advertised and never withheld,
-    # and `services.era.retire_all_tasks`'s "the board un-hides itself as players
-    # climb" was describing a gate that did not exist. It is a level gate, so
+    # `retired` is the "the archive opens" level unlock (`era_1.py`,
+    # `progression.json`), which `services.era.retire_all_tasks` describes as
+    # "the board un-hides itself as players climb". It is a level gate, so
     # `skip_level_check` is what bypasses it.
     #
-    # `pending` is the level-3 "watch proposals move through review" unlock, and
+    # `pending` is the "watch proposals move through review" level unlock, and
     # is the moderation queue, so `is_admin` bypasses it rather than
     # `skip_level_check` (the two answer different questions — see the parameter
-    # docs). #1672 made it admin-ONLY, which silently killed the level-3 reward
-    # while `/auth/me` went on advertising it; the level is restored here as a
-    # deliberate decision, NOT as a revert of that fix. What #1672 closed was
-    # "anyone, signed in or not". Level 3 is 170 points of investment and an
-    # account, so pre-moderation proposals are still withheld from the anonymous
-    # web — but they ARE now visible to established players before an admin has
-    # ruled on them, and that is the trade being made.
+    # docs). The trade it makes is deliberate: reaching that level takes an
+    # account and real investment, so pre-moderation proposals stay withheld
+    # from the anonymous web while established players see them before an admin
+    # has ruled on them.
     # The faction clause is not an exception to the archive gate, it is the only
     # way the perk means anything: a faction the era lets work retired tasks
     # cannot be forbidden from finding them. Without it an Ephemerist below level
@@ -754,9 +746,9 @@ async def list_tasks(
     # a clause: every branch of the status logic below is downstream of this
     # `where`, so there is no door it can be forgotten at. That is the failure
     # this file already carries a comment about — a gate written at only one door
-    # is not a gate — and the redundant `status == "all"` restatement of the
-    # level rule is gone because this clause subsumes it. `get_task_for_viewer`
-    # passes the same clause for the same reason (#1725).
+    # is not a gate — and it is why no branch below restates the level rule for
+    # itself. `get_task_for_viewer` passes the same clause for the same reason
+    # (#1725).
     query = query.where(
         pending_visibility_clause(
             viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
@@ -789,14 +781,15 @@ async def list_tasks(
             # proposals, reached by knowing their id, and hiding a proposer's
             # accepted work from newcomers reads as a bug rather than a reward.
             #
-            # "All viewers" was one viewer too many (#2126): on your OWN profile
-            # this clause hid the proposal you had just written, so the section
-            # headed "Proposed tasks" said "No proposed tasks yet" and no amount
-            # of waiting fixed it — unlike the review window, this one never
-            # expired. Skipping it for the owner does not widen what anyone ELSE
-            # sees here; the shared pending clause above is still the only thing
-            # that decides whether a pending row is reachable at all, and it
-            # exempts the same author for the same reason.
+            # "All viewers" is one viewer too many (#2126): applied to your OWN
+            # profile this clause hides the proposal you have just written, so
+            # the section headed "Proposed tasks" answers "No proposed tasks
+            # yet" and no amount of waiting fixes it — unlike the review window,
+            # this one never expires. Skipping it for the owner does not widen
+            # what anyone ELSE sees here; the shared pending clause above is
+            # still the only thing that decides whether a pending row is
+            # reachable at all, and it exempts the same author for the same
+            # reason.
             if viewer is None or viewer.id != created_by:
                 query = query.where(Task.status != TaskStatus.pending)
         else:
@@ -866,9 +859,9 @@ async def list_tasks(
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:
             query = query.where(Task.status != TaskStatus.pending)
         # Gate 5 is the exclude_character_id clause below — reused, not rewritten.
-        # This is the ONLY place the viewer becomes that default (#2264). The
-        # route used to do it first, for every caller and regardless of
-        # `can_sign_up`, which made a faction's task count depend on who was
+        # This is the ONLY place the viewer becomes that default (#2264).
+        # Defaulting it in the route instead, for every caller and regardless of
+        # `can_sign_up`, would make a faction's task count depend on who was
         # reading it. Armed here it is scoped to the question that actually asks
         # it: "which tasks could I claim right now" — and a task you are already
         # working is not one of them, which is #1229's browse behaviour intact.
@@ -927,8 +920,8 @@ async def list_tasks(
         query = query.where(Task.primary_faction_slug.notin_(hidden_slugs))
 
     # Exclude tasks the character has already started or completed (via praxis membership).
-    # `era` is threaded rather than defaulted: since #1359 this subquery reads the era's
-    # Double Dipper set, so letting it fall back to CURRENT_ERA would answer with the LIVE
+    # `era` is threaded rather than defaulted: this subquery reads the era's
+    # Double Dipper set (#1359), so letting it fall back to CURRENT_ERA would answer with the LIVE
     # era's abilities for a caller that passed a different one — the drift the `era`
     # parameter exists to prevent.
     if exclude_character_id is not None:

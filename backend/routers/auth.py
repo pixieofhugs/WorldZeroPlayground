@@ -82,15 +82,14 @@ _COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 def _set_session_cookie(response: Response, account_id: int) -> None:
     """Put the JWT on `response`. The one place the session cookie's flags live.
 
-    Extracted when the second provider arrived (#1772) so the cookie flags are
-    stated once, and split from the redirect in #2162 when a second *shape* of
-    successful sign-in appeared — the returning player's confirm answers with a
-    JSON body, not a 302, and must not become a second copy of this block. Every
-    kwarg below is a security decision with a reason recorded against it, and
-    any handler that copies them is another place for one to be quietly dropped
-    — the failure mode being a session cookie that ships without `Secure`, which
-    nothing in the test suite would notice. Not shared with `dev_login`: that
-    seam deliberately sets different flags.
+    The cookie flags are stated once because both shapes of a successful
+    sign-in need them: the OAuth callbacks' 302, and the returning player's
+    confirm, which answers with a JSON body. Every kwarg below is a security
+    decision with a reason recorded against it, and any handler that copies them
+    is another place for one to be quietly dropped — the failure mode being a
+    session cookie that ships without `Secure`, which nothing in the test suite
+    would notice. Not shared with `dev_login`: that seam deliberately sets
+    different flags.
     """
     response.set_cookie(
         key="access_token",
@@ -135,10 +134,10 @@ _PROVIDER_ENDED_IT = coded_error(
 
 #: What a callback carries home when the sign-in went STALE rather than being
 #: refused (#1756) — the player started it, wandered off, and came back after
-#: the session cookie holding the OAuth `state` had expired. Ten minutes since
-#: #1755, which is what turns this from a fourteen-day theoretical into the
-#: ordinary outcome of getting distracted. Built, never raised, exactly as
-#: `_PROVIDER_ENDED_IT` above is.
+#: the session cookie holding the OAuth `state` had expired. That cookie lasts
+#: ten minutes (`main.py`'s `max_age`), which makes this the ordinary outcome of
+#: getting distracted rather than a theoretical one. Built, never raised,
+#: exactly as `_PROVIDER_ENDED_IT` above is.
 _STATE_WENT_STALE = coded_error(
     403, ErrorCode.oauth_state_expired, "That sign-in expired before it finished."
 )
@@ -161,8 +160,8 @@ def _sign_in_failed_redirect(exc: Exception) -> Response:
       unverified-email gate (ADR-0075, #1771). Its code rides along in the
       coded detail, so the catalog can say something specific.
     * :class:`MismatchingStateError` — the sign-in went stale: the ``state``
-      came back after the session cookie carrying it had expired. Split from
-      the case below in #1756 because it is the only one the player did not
+      came back after the session cookie carrying it had expired. Kept apart
+      from the case below (#1756) because it is the only one the player did not
       CHOOSE, and the only one where "try again" is real advice.
     * :class:`OAuthError` — the provider ended it, in practice a declined
       consent screen. Carries no detail of ours, so it borrows
@@ -212,9 +211,9 @@ _RETURNING_PLAYER_PATH = "/start/again"
 #: purpose-built token would have been a second set of cookie flags to get
 #: right and a second expiry to keep honest.
 #:
-#: `main.py` used to justify that ten minutes with "nothing in `backend/` reads
-#: `request.session` except authlib". This is the second reader, and it wants
-#: the same number for its own reasons — see the note there.
+#: This module is the SECOND reader of `request.session` (authlib is the first),
+#: and it wants that same ten minutes for its own reason: an unanswered gate
+#: should lapse, not linger. See the note on `max_age` in `main.py`.
 _PENDING_SIGNUP_KEY = "pending_returning_signup"
 
 

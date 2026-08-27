@@ -1,9 +1,9 @@
 """Media upload pipeline.
 
 Owns the side effects (PIL resize, filename sanitization, filesystem I/O,
-MIME-based MediaType detection) that the character-avatar and praxis-media
-HTTP handlers used to inline. Routers stay thin and commit the session;
-this module never calls ``session.commit`` itself.
+MIME-based MediaType detection) behind the character-avatar and praxis-media
+HTTP handlers. Routers stay thin and commit the session; this module never
+calls ``session.commit`` itself.
 """
 
 import io
@@ -67,11 +67,11 @@ def _sanitize_filename(raw: str) -> str:
 #: serves from the API's own origin, keyed by the type we detected.
 #:
 #: This exists because the served ``Content-Type`` is guessed from the stored
-#: filename (Starlette's ``FileResponse`` calls ``mimetypes.guess_type``), and
-#: the filename used to be the player's, verbatim. Uploading ``pwn.html`` while
-#: declaring ``Content-Type: image/png`` passed ``_detect_media_type`` — which
-#: reads only the declared string — and then came back off ``/media`` as
-#: ``text/html``, executing on the API origin with the session cookie attached.
+#: filename (Starlette's ``FileResponse`` calls ``mimetypes.guess_type``). Take
+#: the player's filename verbatim and uploading ``pwn.html`` while declaring
+#: ``Content-Type: image/png`` passes ``_detect_media_type`` — which reads only
+#: the declared string — and then comes back off ``/media`` as ``text/html``,
+#: executing on the API origin with the session cookie attached.
 #:
 #: ``.svg`` is deliberately absent from the image set: SVG carries script.
 _SAFE_EXTENSIONS: dict[MediaType, frozenset[str]] = {
@@ -263,12 +263,12 @@ def restore_media_to_mount(stored_paths: Iterable[str]) -> int:
 def _unlink_owned(stored_path: str | None, owner_directory: str, owner: str) -> bool:
     """Unlink a stored file that lies inside ``owner_directory``. Best-effort.
 
-    The ownership half of the guard, extracted in #2160 so the two things that
-    erase a file on a player's own instruction — an avatar
-    (:func:`delete_stored_avatar`) and a praxis-media upload
-    (:func:`delete_stored_media`) — share one implementation of it rather than
-    two that can drift. The only difference between the callers is which
-    directory counts as theirs, so that is the only parameter.
+    The ownership half of the guard, shared so the two things that erase a file
+    on a player's own instruction — an avatar (:func:`delete_stored_avatar`) and
+    a praxis-media upload (:func:`delete_stored_media`) — have one
+    implementation of it rather than two that can drift. The only difference
+    between the callers is which directory counts as theirs, so that is the only
+    parameter.
 
     Returns whether a file was actually removed. Failures are logged and
     swallowed: a filesystem problem must never block the state change the caller
@@ -393,14 +393,14 @@ async def process_and_save_avatar(
     ``Character.avatar_url``; the caller commits the session.
 
     **Every upload gets its own directory** (#1565), the same mechanism #1336
-    gave praxis media one function below. The avatar used to live at the fully
-    deterministic ``<id>/avatar/avatar.jpg``, so a re-upload changed the bytes
-    but not the URL — and the ``/media`` mount sends no ``Cache-Control``, so
-    browsers applied heuristic freshness and kept showing the old photo.
-    Uniquifying the *directory* rather than the basename changes the URL, which
-    (unlike a ``?v=`` token) no proxy can strip. The avatar is the one media
-    route that replaces rather than appends, which is why it is the one where a
-    stale cache was guaranteed rather than incidental.
+    gives praxis media one function below. A deterministic path
+    (``<id>/avatar/avatar.jpg``) would change the bytes but not the URL on a
+    re-upload — and the ``/media`` mount sends no ``Cache-Control``, so browsers
+    apply heuristic freshness and keep showing the old photo. Uniquifying the
+    *directory* rather than the basename changes the URL, which no proxy can
+    strip. The avatar is the one media route that replaces rather than appends,
+    which is why it is the one where a stale cache is guaranteed rather than
+    incidental.
 
     ``previous_avatar_url`` is the caller's pre-upload ``Character.avatar_url``;
     it is unlinked *after* the new file is written, so a unique path per upload
@@ -463,10 +463,10 @@ async def process_and_save_media(
     unattached ``MediaItem``; the caller is responsible for ``session.add`` +
     commit.
 
-    **Every upload gets its own directory** (#1336). Uploading ``photo.jpg``
-    twice used to write both to one path: the second overwrote the first while
-    both rows survived, so one row served someone else's bytes — and deleting
-    either row removed the only file, 404-ing the survivor. Uniquifying the
+    **Every upload gets its own directory** (#1336). Without it, uploading
+    ``photo.jpg`` twice writes both to one path: the second overwrites the first
+    while both rows survive, so one row serves someone else's bytes — and
+    deleting either row removes the only file, 404-ing the survivor. Uniquifying the
     *directory* rather than the basename keeps ``file_path``'s last segment
     exactly what the player picked, which the composer renders as the
     attachment caption and as the remove button's accessible name.
