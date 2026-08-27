@@ -358,7 +358,10 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
             >
               {t("everymen.join.heading")}
             </div>
-            <div style={{ position: "relative", padding: "var(--space-xl)" }}>
+            {/* #2621: the panel opens at 16px under the banner — Coven's
+                number, and the one rhythm every join panel now shares. Its own
+                value, not a shared one. The sides keep `--space-xl`. */}
+            <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)" }}>
               <Halftone />
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
