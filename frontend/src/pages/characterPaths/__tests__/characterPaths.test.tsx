@@ -16,7 +16,7 @@ import { buildCreatePayload, canSubmitName, type CreateCharacterState } from '..
 import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
 import DefaultCreateCharacter from '../archetypes/DefaultCreateCharacter'
-import DefaultEditCharacter from '../mobileArchetypes/DefaultEditCharacter'
+import DefaultEditCharacter from '../archetypes/DefaultEditCharacter'
 import { CharacterSwitcherRows } from '../../../components/CharacterSwitcherSheet'
 import type { CharacterOut } from '../../../api/auth'
 
@@ -26,7 +26,8 @@ import type { CharacterOut } from '../../../api/auth'
  * inside it now. Un-mocked, `useFormFactor` answers 'desktop' under
  * `renderToStaticMarkup` (no matchMedia), so the phone assertions below have to
  * pin the factor or they would silently measure the desktop column instead.
- * `DefaultEditCharacter` is untouched by this and reads no form factor.
+ * `DefaultEditCharacter` is ONE responsive archetype too since #2537, so its
+ * phone assertions pin the factor the same way.
  */
 const factor = vi.hoisted(() => ({ value: 'desktop' as 'mobile' | 'desktop' }))
 
@@ -232,6 +233,9 @@ describe('DefaultCreateCharacter mobile skin', () => {
 })
 
 describe('DefaultEditCharacter mobile skin', () => {
+  beforeEach(() => { factor.value = 'mobile' })
+  afterEach(() => { factor.value = 'desktop' })
+
   it('renders name, story, tagline, faction link-out, delete and sticky Save', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
     expect(html, 'name input').toContain('value="Molly"')

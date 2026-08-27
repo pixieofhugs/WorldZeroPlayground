@@ -73,7 +73,7 @@
     "CredentialCard": "src/components/CredentialCard.tsx",
     "DefaultAvatar": "src/components/avatar/DefaultAvatar.tsx",
     "DefaultCreateCharacter": "src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx",
-    "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
+    "DefaultEditCharacter": "src/pages/characterPaths/archetypes/DefaultEditCharacter.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
     "DefaultFactionHero": "src/components/factionHero/DefaultFactionHero.tsx",

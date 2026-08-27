@@ -14,7 +14,7 @@
  * declared their archetypes in a manifest and the ninth was named by hand at
  * every call site, which meant the unknown-slug rule was re-stated ~20 times by
  * whichever `Default*` the author happened to import. `factions/default.ts`
- * registers all twenty na surfaces now, so the rule is one line —
+ * registers every na surface now, so the rule is one line —
  * {@link resolveSlug} — and the dispatchers take {@link resolveVariant}.
  *
  * There is no cross-faction path: a slug renders its own variant or na's, never

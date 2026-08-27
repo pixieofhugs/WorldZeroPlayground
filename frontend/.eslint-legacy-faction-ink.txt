@@ -38,7 +38,6 @@ src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx  # 1
 src/pages/taskDetail/archetypes/shared.tsx  # 2
 
 # ── `Default*` (= na / Unaffiliated): a rename, not a repaint ──
-src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx  # 11
 src/pages/characterProfile/archetypes/DefaultProfileBody.tsx  # 21
 src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx  # 4
 src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx  # 14

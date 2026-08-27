@@ -102,6 +102,7 @@ const AlbescentSigilAdapter = lazyArchetype(() => import('../components/sigil/Fa
 const AlbescentBackdrop = lazyArchetype(() => import('../components/backdrop/AlbescentBackdrop'))
 const AlbescentComment = lazyArchetype(() => import('../components/comments/voices/AlbescentComment'))
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
+const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
@@ -420,6 +421,19 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * moment it is cleared.
    */
   createCharacter: () => AlbescentCreateCharacter,
+
+  /**
+   * RE-CUT, and the create row's twin (#2537). na draws the conic spectrum at
+   * two mounts on this page — the phone column's photo ring and the desktop
+   * portrait ring — and both wear `.spectrum-dial` now, so `.alb-moves` sets
+   * both turning. The desktop hero BAND keeps its linear ramp: a band is not a
+   * dial (#1127). No markup, no colour, no copy; strip the class and the page is
+   * na's byte for byte.
+   *
+   * The slug here is the EDITED CHARACTER'S, not the viewer's — an Albescent
+   * life edits itself in a turning frame, and nobody else's page moves.
+   */
+  editCharacter: () => AlbescentEditCharacter,
 
   /**
    * PASS-THROUGH. `DefaultDuelSealConfirm` is not the na SPECTRUM kit — it draws

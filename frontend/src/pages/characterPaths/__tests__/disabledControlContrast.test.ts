@@ -81,7 +81,7 @@ const SITES = [
   'archetypes/SnideCreateCharacter.tsx',
   'archetypes/UaCreateCharacter.tsx',
   'archetypes/WowCreateCharacter.tsx',
-  'mobileArchetypes/DefaultEditCharacter.tsx',
+  'archetypes/DefaultEditCharacter.tsx',
 ]
 
 function source(file: string): string {

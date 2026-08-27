@@ -65,7 +65,7 @@ export { default as CovenVote } from "../src/components/vote/CovenVote";
 export { default as CredentialCard } from "../src/components/CredentialCard";
 export { default as DefaultAvatar } from "../src/components/avatar/DefaultAvatar";
 export { default as DefaultCreateCharacter } from "../src/pages/characterPaths/archetypes/DefaultCreateCharacter";
-export { default as DefaultEditCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter";
+export { default as DefaultEditCharacter } from "../src/pages/characterPaths/archetypes/DefaultEditCharacter";
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/archetypes/DefaultEditPraxis";
 export { default as DefaultFactionBody } from "../src/pages/factionDetail/archetypes/DefaultFactionBody";
 export { default as DefaultFactionHero } from "../src/components/factionHero/DefaultFactionHero";
