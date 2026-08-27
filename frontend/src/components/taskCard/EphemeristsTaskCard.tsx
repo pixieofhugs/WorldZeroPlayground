@@ -4,7 +4,7 @@ import type { CardProps } from "./TaskCard";
 import { EphemeristsBand } from "../cardMasthead/factionBands";
 /* No `CARD_CTA_ROW` here: the plate's rule and its button share one inset box,
    so the clearance comes from that box's own `bodyPad` bottom. */
-import { CARD_CTA } from "./cardCta";
+import { EPHEMERISTS_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -477,21 +477,9 @@ export default function EphemeristsTaskCard({
                    inline `background` or `border` here would beat the class and
                    pin the light half in both themes on this card alone. */
                 className="eph-cta"
-                style={{
-                  ...CARD_CTA,
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  display: "flex",
-                  gap: "var(--space-md)",
-                  /* The design's 14px, on the rung below it: the air between the
-                     button and the two strips it sits between. */
-                  margin: "var(--space-md) auto",
-                  padding: "var(--space-sm) var(--space-xl)",
-                  fontFamily: CAPS,
-                  fontWeight: 500,
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                }}
+                /* ONE PAINT, TWO SURFACES (#2642) — `EphemeristsTaskDetail`
+                   spreads this same constant, and wears the same class. */
+                style={EPHEMERISTS_CARD_CTA}
               >
                 <svg width={17} height={17} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                   <path d={GLYPHS.platinum} fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
-import { CARD_CTA } from "./cardCta";
+import { DEFAULT_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -318,25 +318,10 @@ export default function DefaultTaskCard({
               }}
             />
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <CardCtaControl
-                cta={cta}
-                style={{
-                  ...CARD_CTA,
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  whiteSpace: "nowrap",
-                  fontFamily: LORA,
-                  fontWeight: 600,
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  padding: "var(--space-md) var(--space-2xl)",
-                  borderRadius: 11,
-                  color: "var(--na-task-card-ink, var(--faction-default-card-text))",
-                  background: "transparent",
-                  border:
-                    "1px solid color-mix(in srgb, var(--na-task-card-accent, var(--faction-default-card-accent)) 35%, transparent)",
-                }}
-              >
+              {/* ONE PAINT, TWO SURFACES (#2642) — `DefaultTaskDetail` spreads
+                  this same constant. Nothing may be added here: an override at
+                  one call site is the drift the constant exists to delete. */}
+              <CardCtaControl cta={cta} style={DEFAULT_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>
             </div>

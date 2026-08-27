@@ -4,7 +4,7 @@ import type { CardProps } from "./TaskCard";
 import { EverymenBand } from "../cardMasthead/factionBands";
 import PointsRoundel from "../factionMarks/PointsRoundel";
 import { EverymenCog } from "../factionMarks/everymenCogs";
-import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CARD_CTA_ROW, EVERYMEN_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
@@ -453,23 +453,9 @@ export default function EverymenTaskCard({
           {cta && (
             <div style={{ ...CARD_CTA_ROW, alignItems: "center", gap: "var(--space-sm)", position: "relative", zIndex: 2 }}>
               <FistAndBolt width={size.mark} mirrored />
-              <CardCtaControl
-                cta={cta}
-                style={{
-                  ...CARD_CTA,
-                  flex: "0 0 auto",
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  background: "var(--faction-everymen-bill-cta-bg)",
-                  color: "var(--faction-everymen-bill-cta-ink)",
-                  fontFamily: POSTER,
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  padding: "var(--space-sm) var(--space-2xl)",
-                  border: `2px solid ${INK}`,
-                  borderRadius: 2,
-                }}
-              >
+              {/* ONE PAINT, TWO SURFACES (#2642) — `EverymenTaskDetail` spreads
+                  this same constant, and nothing may be added at either site. */}
+              <CardCtaControl cta={cta} style={EVERYMEN_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>
               <FistAndBolt width={size.mark} />

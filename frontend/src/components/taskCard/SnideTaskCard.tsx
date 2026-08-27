@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { SnideBand } from "../cardMasthead/factionBands";
-import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CARD_CTA_ROW, SNIDE_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -54,7 +54,6 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
 const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
 const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
-const MARKER = "var(--faction-snide-font-marker)"; /* Permanent Marker */
 
 /* `--faction-snide-note-paper` stood here. #2065 pasted this card onto the
    flyposted wall instead of onto a second sheet of the clipping's own stock, so
@@ -366,40 +365,10 @@ export default function SnideTaskCard({
             change the box the 44px floor was solved against. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
-            <CardCtaControl
-              cta={cta}
-              style={{
-                ...CARD_CTA,
-                cursor: cta.denied ? "not-allowed" : "pointer",
-                background: "var(--faction-snide-note-bar)",
-                color: "var(--faction-snide-acid)",
-                fontFamily: MARKER,
-                fontSize: "var(--text-content)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                padding: "var(--space-sm) var(--space-2xl)",
-                border: "none",
-                // The halo, at the design's intensity (#2065). It used to put
-                // two of its three passes on `--faction-snide-light`, a FIXED
-                // 16% tint (12% in dark) — so every pass was capped at 16%
-                // however wide the radius, which is why it read muted, and it
-                // was dimmer at night, when a sprayed stencil should be
-                // loudest. `color-mix` grades the acid itself per layer, so the
-                // alphas rise as the radii TIGHTEN, and the last two passes are
-                // offset: that asymmetry is what reads as sprayed rather than
-                // lit. Still no raw colour anywhere in it.
-                textShadow: [
-                  "0 0 1px color-mix(in srgb, var(--faction-snide-acid) 95%, transparent)",
-                  "0 0 6px color-mix(in srgb, var(--faction-snide-acid) 70%, transparent)",
-                  "0 0 16px color-mix(in srgb, var(--faction-snide-acid) 45%, transparent)",
-                  "1px 2px 0 color-mix(in srgb, var(--faction-snide-note-bar) 65%, transparent)",
-                  "-2px 1px 5px color-mix(in srgb, var(--faction-snide-acid) 35%, transparent)",
-                ].join(", "),
-                boxShadow:
-                  "0 0 0 2px var(--faction-snide-acid-deep), inset 0 0 18px var(--faction-snide-light)",
-                transform: "rotate(-1.6deg)",
-              }}
-            >
+            {/* ONE PAINT, TWO SURFACES (#2642) — `SnideTaskDetail` spreads this
+                same constant, halo and skew-free rotation and all, and nothing
+                may be added at either site. */}
+            <CardCtaControl cta={cta} style={SNIDE_CARD_CTA}>
               {cta.label}
             </CardCtaControl>
           </div>

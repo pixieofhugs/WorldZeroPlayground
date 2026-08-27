@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { CovenBand } from "../cardMasthead/factionBands";
-import { CARD_CTA, CARD_CTA_ROW } from "./cardCta";
+import { CARD_CTA_ROW, COVEN_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
@@ -327,27 +327,9 @@ export default function CovenTaskCard({
             is dead code it skips in the same pass. */}
         {cta && (
           <div style={{ ...CARD_CTA_ROW, position: "relative", zIndex: 2 }}>
-            <CardCtaControl
-              cta={cta}
-              style={{
-                ...CARD_CTA,
-                cursor: cta.denied ? "not-allowed" : "pointer",
-                display: "flex",
-                gap: "var(--space-sm)",
-                background:
-                  "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
-                color: "var(--faction-coven-slip-cta-ink)",
-                fontFamily: CHROME,
-                fontWeight: 700,
-                fontSize: "var(--text-lg)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                padding: "var(--space-sm) var(--space-xl)",
-                border: "1.5px solid var(--faction-coven-slip-cta-to)",
-                borderRadius: 12,
-                boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
-              }}
-            >
+            {/* ONE PAINT, TWO SURFACES (#2642) — `CovenTaskDetail` spreads this
+                same constant, and nothing may be added at either site. */}
+            <CardCtaControl cta={cta} style={COVEN_CARD_CTA}>
               <svg width={12} height={12} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
                 <path
                   d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
