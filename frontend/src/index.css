@@ -2195,13 +2195,30 @@
   --faction-wow-body-font: var(--font-display); /* Lora */
 }
 
-/* The score stamp's PLATE. The stamp is the one WOW surface that also renders
-   inside a nested theme wrapper — a foreign-faction praxis card on a Singularity
-   or S.N.I.D.E. profile — which is where #1827 first saw this whole class of
-   bug. It is theme-scoped rather than restated in dark (#1839): #1661's ruling
-   that the value lives in one place survives intact. */
+/* The score stamp's PLATE — the chronicle's own SHEET (#2042, owner ruling
+   2026-08-18). This aliased `--faction-wow-chronicle-panel` until then, i.e. the
+   card plaque's own FILL, which made the stamp the one WOW surface standing on
+   the colour every other plaque is defined against: the plaque could not be inset
+   into it (1.00:1 in both themes), the gold frame was down at 2.00:1 in light,
+   and the stamp's own quiet ink sat at 4.24:1 — under AA, and out of reach of
+   `factionContrast`, which has never named this token as a surface.
+
+   WOW is the faction with no drawn mark to share: both its points treatments are
+   typographic plaques, so unifying them (#2042) is exactly this — the stamp's
+   block now stands on the sheet the card's plaque has always been struck into.
+   The frame lifts to 2.24:1 / 7.36:1 and every ink on the plate gains: quiet
+   4.24 → 4.76, total 4.79 → 5.38, plum working 5.16 → 5.79, body ink 12.49 →
+   14.02. Dark moves the same way (the sheet is DARKER than the panel there).
+
+   The declaration stays scoped `:root, [data-theme]` rather than restated in the
+   dark cascade: the stamp is the one WOW surface that also renders inside a
+   nested theme wrapper — a foreign-faction praxis card on a Singularity or
+   S.N.I.D.E. profile — which is where #1827 first saw this whole class of bug.
+   `--faction-wow-chronicle-bg` is stated per cascade exactly as the panel was, so
+   the alias re-substitutes in the wrapper on its own and #1661's ruling that a
+   value lives in one place survives intact. */
 :root, [data-theme] {
-  --faction-wow-stamp-bg: var(--faction-wow-chronicle-panel);
+  --faction-wow-stamp-bg: var(--faction-wow-chronicle-bg);
 }
 
 :root {
