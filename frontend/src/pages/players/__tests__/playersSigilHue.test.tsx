@@ -46,6 +46,7 @@ vi.mock('../../../hooks/useTheme', () => ({
 }))
 
 import DesktopPlayers from '../DesktopPlayers'
+import MobilePlayers from '../MobilePlayers'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
 
 function render(element: ReactElement): string {
@@ -93,6 +94,7 @@ function props(field: CharacterOut[]): PlayersViewProps {
 }
 
 const desktop = (field: CharacterOut[] = []) => render(<DesktopPlayers {...props(field)} />)
+const mobile = (field: CharacterOut[] = []) => render(<MobilePlayers {...props(field)} />)
 
 describe('a race lane', () => {
   it("draws its mark in the lane's own hue, not the page ink", () => {
@@ -130,6 +132,29 @@ describe('a race lane', () => {
     // the light page. `--faction-snide` is #6fae00 light / #b6ff2e dark: the
     // same green after dark, a legible one before it.
     expect(markFills(desktop(), 'snide')).not.toContain('var(--faction-snide-acid)')
+  })
+})
+
+describe('the MOBILE race lane', () => {
+  // The desktop lane and this one are the same lane, and #2723's body named only
+  // the desktop mount. Shipping one and not the other is the inconsistency the
+  // owner widened the scope to close, so it is pinned here rather than left to
+  // the next report.
+  //
+  // Mobile shows only `RACE_PREVIEW` (4) lanes, so a faction at zero is CROPPED
+  // rather than absent — an assertion that just rendered the default field would
+  // fail for a reason that has nothing to do with ink. Ephemerists is scored to
+  // the top so the mount under test is actually on the page.
+  const LEADING_KITE = [player({ id: 4, display_name: 'Kite', faction_slug: 'ephemerists', score: 5000 })]
+
+  it("draws its mark in the lane's own hue", () => {
+    expect(markFills(mobile(LEADING_KITE), 'ephemerists')).toContain(factionCssVar('ephemerists'))
+  })
+
+  it('draws no lane mark in the page ink', () => {
+    // The defect itself: the kite is the one mark that defaulted to
+    // `currentColor`, so after dark it came out the page's white.
+    expect(markFills(mobile(LEADING_KITE), 'ephemerists')).not.toContain('currentColor')
   })
 })
 
