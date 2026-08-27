@@ -38,8 +38,8 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * faces (§3).
  *
  * ADR-0050 fixes this identity and the vendored design agrees with it for once:
- * gold/plum/bunting/balloons is WOW; the pink candlelight and the pentagram ward
- * are Coven's. Do not reconcile the two.
+ * gold/plum/bunting/balloons is WOW; the pink candlelight and the candlelit
+ * ward are Coven's. Do not reconcile the two.
  *
  * Four contract points that are NOT this skin's to re-decide:
  * - **No in-progress roster.** The header's "In progress" count is the only
