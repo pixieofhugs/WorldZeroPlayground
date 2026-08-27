@@ -21,12 +21,20 @@
  * exists to hold "the marks every swept surface needs, drawn once" (#1209).
  * Every one of those nine mounts draws exactly what it drew before.
  *
- * Note Coven has other devices and this does not displace them: `covenSlip`'s
- * pentagram `SigilMark` still badges the slip. This is the mark the dispatcher
- * hands out — and since #2217 it is also the mark `CovenAvatar` badges a MEMBER
- * with, so a player meets one symbol for the faction rather than two. The
- * crescent that badge used to draw is retired; the moon survives only inside
- * `CovenVote`'s phase plate, where it is a 1-5 mechanic and not an identity.
+ * THIS IS NOW THE FACTION'S ONLY MARK OF IDENTITY (#2726), and the note that
+ * stood here said the opposite — that `covenSlip`'s pentagram `SigilMark` still
+ * badged the slip. It does not; it is deleted. The hat is what the dispatcher
+ * hands out, what `CovenAvatar` badges a MEMBER with (#2217), what the
+ * directory tile draws (#2325), and now what the faction hero, the faction
+ * body's join band, the task detail header, the duel seal band, the composer
+ * masthead and the mobile field desk draw. A player meets ONE symbol for this
+ * faction. The crescent the avatar used to draw is retired with it; the moon
+ * survives only inside `CovenVote`'s phase plate, where it is a 1-5 mechanic
+ * and not an identity.
+ *
+ * Coven's OTHER devices are not displaced and are not identity: `Spark`, the
+ * four-point sparkle ornament, and `CovenCat`, the turning watermark. Both live
+ * in `covenSlip` and its header says why they stay apart from the mark.
  *
  * ONE INK, WHOLESALE. `color` defaults to `--faction-coven`, which is the token
  * the design's own cell names and the sparkle's default before it. Never a hex.

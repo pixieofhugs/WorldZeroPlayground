@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { factionRoleVar } from "../../utils/factionRoles";
@@ -226,37 +227,132 @@ export function BalloonBunch({
   );
 }
 
-/** How many pennants a strip carries. They flex, so this is a density, not a width. */
-const BUNTING_PENNANTS = 30;
+/**
+ * THE PENNANT, AND WHY THE STRIP COUNTS ITSELF (#2728).
+ *
+ * A pennant is a CSS triangle: two transparent 7px side borders under an 18px
+ * top border. So it is 14px wide, and A BORDER CANNOT SHRINK. The strip used to
+ * hang a fixed thirty of them at `flex: 1; min-width: 0` under a comment
+ * claiming "they flex, so this is a density, not a width" — which was false in
+ * both directions. Below ~536px the flex could not shrink past the mitres and
+ * `overflow: hidden` ate the tail (measured on prod: `clientWidth 263 /
+ * scrollWidth 536` at a 593px window — half the strip gone). Above it, the flex
+ * stretched the zero-height CONTENT box instead, and each flag opened out into a
+ * trapezoid with a 33.5px flat top.
+ *
+ * So the count is MEASURED off the container and every pennant is drawn at its
+ * own size — the pattern `EphemeristsNotationBand` already uses (#2143), and
+ * deliberately not a second mechanism. The strip carries as many whole flags as
+ * fit, at one PITCH rather than one count, and nothing is ever clipped.
+ *
+ * All four numbers are raw px because all four are ornament geometry (§4a), and
+ * the GAP is a number rather than `var(--space-xs)` because it is now arithmetic
+ * as well as paint: one constant cannot drift out of step with itself the way a
+ * token in the style and a 4 in the maths could.
+ */
+const PENNANT_WIDTH = 14;
+const PENNANT_GAP = 4;
+const PENNANT_HEIGHT = 18;
+/** Every other flag hangs 2px lower, so the strip reads as string rather than as
+ *  a rule. A TRANSFORM, so it paints below the flag's layout box — which is why
+ *  the well below is 22 and not 18. */
+const PENNANT_STAGGER = 2;
+
+/**
+ * How many whole pennants a strip of this width carries. Exported for its test:
+ * it is measured off a real element, so a harness with no DOM can only check the
+ * arithmetic at the function — and a strip that packs one flag too many looks
+ * entirely plausible and is the bug that was reported.
+ *
+ * An unmeasured strip (width 0, before the layout effect, or under the SSR-only
+ * test harness where effects never run) draws NOTHING rather than a guess:
+ * `EphemeristsNotationBand`'s rule, for its reason — a strip that paints thirty
+ * flags and then snaps to twelve is the twitch the measurement removes. The
+ * layout effect runs before paint, so no reader sees the empty state.
+ */
+export function buntingPennantCount(width: number): number {
+  if (!(width > 0)) return 0;
+  return Math.floor((width + PENNANT_GAP) / (PENNANT_WIDTH + PENNANT_GAP));
+}
+
+/** One flag. Exported for the same reason: with the count measured, the markup a
+ *  Node harness sees is an empty strip, so the alternation and the stagger are
+ *  only checkable here. */
+export function pennantStyle(index: number): CSSProperties {
+  const odd = index % 2 === 1;
+  return {
+    height: 0,
+    borderLeft: `${PENNANT_WIDTH / 2}px solid transparent`,
+    borderRight: `${PENNANT_WIDTH / 2}px solid transparent`,
+    borderTop: `${PENNANT_HEIGHT}px solid ${odd ? PLUM : GOLD}`,
+    transform: `translateY(${odd ? PENNANT_STAGGER : 0}px)`,
+  };
+}
+
+/** The twin of `EphemeristsNotationBand`'s and `SegmentedRail`'s: a layout effect
+ *  measures before the browser paints, so the strip fills in without a frame of
+ *  emptiness, and `useEffect` is the Node-side fallback where there is no layout
+ *  to read. */
+const useMeasureEffect = typeof document === "undefined" ? useEffect : useLayoutEffect;
 
 /** Gold and plum pennants strung across the head of a page. */
 export function Bunting({ style }: { style?: CSSProperties }): ReactNode {
+  const strip = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  const measure = useCallback(() => {
+    const element = strip.current;
+    if (!element) return;
+    // The CONTENT box, not `clientWidth`, which includes whatever padding the
+    // mount added — `WowFactionBody` adds `--space-lg` either side — while the
+    // flags only ever get the content box. Counting off `clientWidth` would
+    // re-open the horizontal clip on the very mount that reported the other one.
+    const box = getComputedStyle(element);
+    setWidth(
+      element.clientWidth - parseFloat(box.paddingLeft) - parseFloat(box.paddingRight),
+    );
+  }, []);
+
+  useMeasureEffect(measure);
+
+  useEffect(() => {
+    const element = strip.current;
+    // Guarded as the band guards its own: the constructor is a browser global
+    // and this module is imported by a Node-side harness.
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [measure]);
+
   return (
     <div
+      ref={strip}
       aria-hidden="true"
+      // The strip's handle in the markup. With the count measured there are no
+      // pennants for a DOM-less test to find, so this is what a surface test
+      // asserts to say "the bunting hangs here, and it is the shared primitive".
+      data-wow-bunting=""
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: "var(--space-xs)",
-        height: 22,
+        gap: PENNANT_GAP,
+        // THE WELL, AND THE SECOND CLIP (#2728). Tailwind preflight makes
+        // everything `border-box`, so a mount passing padding used to shrink the
+        // CONTENT box of a fixed `height: 22` — `WowFactionBody` takes 8px off
+        // the top, which left 14px for an 18px flag (`clientHeight 22 /
+        // scrollHeight 28`). `content-box` keeps the well 22 however a mount
+        // spaces it, and `min-height` lets it only ever grow: a mount can no
+        // longer clip the ornament it is positioning.
+        boxSizing: "content-box",
+        minHeight: PENNANT_HEIGHT + 2 * PENNANT_STAGGER,
         overflow: "hidden",
         opacity: 0.9,
         ...style,
       }}
     >
-      {Array.from({ length: BUNTING_PENNANTS }).map((_, index) => (
-        <span
-          key={index}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            height: 0,
-            borderLeft: "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop: `18px solid ${index % 2 ? PLUM : GOLD}`,
-            transform: `translateY(${index % 2 ? 2 : 0}px)`,
-          }}
-        />
+      {Array.from({ length: buntingPennantCount(width) }, (_, index) => (
+        <span key={index} style={pennantStyle(index)} />
       ))}
     </div>
   );

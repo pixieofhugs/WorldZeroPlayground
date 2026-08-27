@@ -54,7 +54,6 @@ import { type CommentProps, authorToCharacter, ComposerControls, MentionText } f
 import {
   CommentEditor,
   OwnerControls,
-  ownerRevealStyle,
   useOwnerEdit,
   useOwnerReveal,
 } from '../OwnerControls'
@@ -224,10 +223,10 @@ export default function EphemeristsComment(props: CommentProps) {
   // drawn only when one of them has something to show — hidden while editing,
   // since the inline editor owns Save/Cancel then.
   const showControls = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN note the foot holds nothing but the gated owner row, so its rule
-  // fades with the row: a brass hairline over empty space is a state this sheet
-  // never draws. Someone else's (flaggable) note keeps its foot lit.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
 
   return (
     <Leaf
@@ -294,7 +293,6 @@ export default function EphemeristsComment(props: CommentProps) {
             paddingTop: 'var(--space-sm)',
             // A hairline INSIDE the leaf is quieter than the leaf's own edge.
             borderTop: `1px solid ${LINE}`,
-            ...footGate,
           }}
         >
           <OwnerControls owner={owner} reveal={reveal} />

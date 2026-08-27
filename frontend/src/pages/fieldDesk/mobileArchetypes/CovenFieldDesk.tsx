@@ -20,11 +20,11 @@ import {
   INK,
   READING,
   SHADOW,
-  SigilMark,
   SLIP_SHEET,
   SOFT,
   Spark,
 } from '../../../components/factionMarks/covenSlip'
+import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { formatPoints } from '../../../utils/points'
@@ -95,7 +95,7 @@ function Plate({ children }: { children: ReactNode }) {
           borderBottom: `2px solid ${BORDER}`,
         }}
       >
-        <SigilMark size={22} />
+        <CovenSigil size={22} color={DEEP} />
       </div>
       <div style={{ background: CARD, padding: 'var(--space-lg)' }}>{children}</div>
     </section>

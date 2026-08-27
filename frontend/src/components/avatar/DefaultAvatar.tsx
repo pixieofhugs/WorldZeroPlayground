@@ -40,13 +40,32 @@ import type { FactionAvatarProps } from './FactionAvatar'
  * the manifest's contract for all nine skins, and this is one component's
  * internal seam — the same shape `DefaultProfileBody`'s `identityOrnament`
  * takes.
+ *
+ * ### `glyph` — the second seam, and the one ADR-0088 spends
+ *
+ * The corner mark was `DefaultSigil`, hard-wired, and the note above it said so
+ * on the grounds that a labyrinth on every byline would be a loud un-hiding.
+ * ADR-0088 reverses that for a viewer who has already been let in: an
+ * unrevealed one still gets na's ring, and the wrapper decides which — see
+ * `AlbescentAvatar`.
+ *
+ * A FUNCTION OF THE BADGE SIZE, not a node, because the size is derived here
+ * (`dim * 0.44`, floored at 12, less the 3px the mark is inset by its own
+ * ring-shadow). Handing a caller a `ReactNode` would make it re-derive that
+ * arithmetic, and the day the badge is resized the two copies part company
+ * silently. It is the shape `BadgedAvatar`'s `glyph` already takes, so the
+ * eight faction skins and this one spell the same idea the same way.
  */
 export default function DefaultAvatar({
   character,
   size = 'md',
   badge: showBadge = true,
   ornament,
-}: FactionAvatarProps & { ornament?: ReactNode }) {
+  glyph,
+}: FactionAvatarProps & {
+  ornament?: ReactNode
+  glyph?: (size: number) => ReactNode
+}) {
   const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
@@ -108,7 +127,7 @@ export default function DefaultAvatar({
         )}
       </span>
       {ornament}
-      {/* seven-segment sigil corner mark */}
+      {/* the sigil corner mark — na's spectrum ring unless a dresser says otherwise */}
       {showBadge && (
         <span
           style={{
@@ -125,7 +144,7 @@ export default function DefaultAvatar({
             justifyContent: 'center',
           }}
         >
-          <DefaultSigil size={badge - 3} />
+          {glyph ? glyph(badge - 3) : <DefaultSigil size={badge - 3} />}
         </span>
       )}
     </span>
