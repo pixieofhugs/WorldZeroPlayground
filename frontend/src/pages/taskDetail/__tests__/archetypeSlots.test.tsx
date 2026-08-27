@@ -194,6 +194,26 @@ describe("task-detail content-slot invariant", () => {
       expect(html, "my-submission slot").toContain('href="/praxis/55"');
     });
 
+    it(`${slug} still draws ONE submitted link once the wire names it too`, () => {
+      // #2643 put the filed praxis's id on `TaskOut`, and `detailSignupCta`
+      // shares the card's resolver — so the detail's sign-up slot can now
+      // resolve to a "Read your praxis" link of its own. It must not: the page
+      // already has that link in its submitted block, and the stand-down in
+      // `shared.tsx` (`state.mySubmission → null`) is what keeps it to one.
+      const { html } = render(
+        <Archetype
+          state={baseState({
+            mySubmission: MY_PRAXIS,
+            task: { ...TASK, submitted_praxis_id: 55 },
+          })}
+        />,
+      );
+      expect(
+        html.match(/href="\/praxis\/55"/g)?.length,
+        "exactly one way in, not two",
+      ).toBe(1);
+    });
+
     it(`${slug} renders the continue control while in progress`, () => {
       const { html } = render(
         <Archetype
