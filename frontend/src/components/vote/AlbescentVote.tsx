@@ -1,5 +1,6 @@
-import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMotionTick } from '../../hooks/useMotion'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteError } from './VoteShell'
@@ -36,7 +37,8 @@ import { VoteLoginGate, VoteError } from './VoteShell'
  * MOTION. Two separate things move, and both are gated:
  *  - the rising-wave bob reuses the shared `.spectrum-dot--reached` class, which
  *    lives behind `prefers-reduced-motion: no-preference` in index.css;
- *  - the morph is a JS clock, so it reads the media query directly and FREEZES.
+ *  - the morph is a JS clock, so it runs on {@link useMotionTick} and FREEZES
+ *    whenever motion is off — the OS query and the Settings switch both (#2622).
  * Stilled, every dot holds a distinct static polygon and still fills with its
  * slice of the spectrum — the control reads and votes exactly the same.
  */
@@ -86,30 +88,6 @@ function polyClipN(sides: number): string {
   return `polygon(${points.join(',')})`
 }
 
-/** matchMedia-backed reduced-motion flag; defaults to stilled when absent (SSR/test). */
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mql = window.matchMedia('(prefers-reduced-motion: reduce)')
-      mql.addEventListener('change', onChange)
-      return () => mql.removeEventListener('change', onChange)
-    },
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    () => true,
-  )
-}
-
-/** 120ms morph clock; frozen (never ticks) when `enabled` is false. */
-function useMorphTick(enabled: boolean): number {
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    if (!enabled) return
-    const id = setInterval(() => setTick((value) => value + 1), TICK_MS)
-    return () => clearInterval(id)
-  }, [enabled])
-  return tick
-}
-
 export default function AlbescentVote({
   praxisId,
   currentValue,
@@ -117,8 +95,7 @@ export default function AlbescentVote({
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
-  const reducedMotion = usePrefersReducedMotion()
-  const tick = useMorphTick(!reducedMotion)
+  const tick = useMotionTick(TICK_MS)
 
   if (!user) {
     return <VoteLoginGate />
