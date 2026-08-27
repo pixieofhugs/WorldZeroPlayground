@@ -12,6 +12,7 @@ import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
 import { WALL } from '../../../components/factionMarks/snideAtoms'
 import { factionRoleVars } from '../../../utils/factionRoles'
+import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
  * S.N.I.D.E. MOBILE FieldDesk home (#530) — the operative's file on a phone.
@@ -328,21 +329,11 @@ export default function SnideFieldDesk({ state }: { state: FieldDeskHomeState })
           />
         </div>
 
-        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
-          {levelTrack && (
-            <span style={trackMetaStyle}>
-              {levelTrack.nextLevel === null
-                ? t('sidebar.characterCard.topLevel')
-                : t('sidebar.characterCard.toNextLevel', {
-                    points: levelTrack.pointsToNext.toLocaleString(),
-                    level: levelTrack.nextLevel,
-                  })}
-            </span>
-          )}
-          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
-            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
-          </span>
-        </div>
+        <LevelTrackMeta
+          track={levelTrack}
+          allTimeScore={character.all_time_score}
+          style={trackMetaStyle}
+        />
       </WallPanel>
 
       {/* ── The pending row, in all three of its states (#1554) ── */}
