@@ -22,6 +22,8 @@
  * assertion cannot collide with incidental markup. Every id is stable, because
  * several suites assert on hrefs built from them.
  */
+import type { CharacterOut, CurrentUser } from '../api/auth'
+import type { DuelDetailOut, DuelSideOut } from '../api/duel'
 import type { PraxisCardOut, PraxisMemberOut, PraxisOut } from '../api/praxis'
 import type { TaskOut } from '../api/tasks'
 
@@ -191,6 +193,104 @@ export const aPraxisCard = (over: Partial<PraxisCardOut> = {}): PraxisCardOut =>
   viewer_can_vote: true,
   viewer_vote: null,
   voted_by_name: null,
+  ...over,
+})
+
+/**
+ * The signed-in character.
+ *
+ * Defaults to {@link AUTHOR} — the praxis author every detail suite signs in as
+ * when it wants an OWNER's view, so `aCurrentUser()` is already the owner of
+ * `aPraxis()` and a suite that wants a visitor overrides `id`.
+ *
+ * `faction_slug` is a bare `string` on the wire, never null: `na` is the
+ * identity every player starts in (ADR-0030), which is why it is the default
+ * here rather than an empty string.
+ */
+export const aCharacter = (over: Partial<CharacterOut> = {}): CharacterOut => ({
+  id: AUTHOR.id,
+  username: 'ada',
+  display_name: AUTHOR.name,
+  bio: '',
+  tagline: '',
+  avatar_url: '',
+  location: '',
+  level: 5,
+  score: 0,
+  all_time_score: 0,
+  faction_slug: 'na',
+  status: 'active',
+  created_at: '2026-01-01T00:00:00Z',
+  badges: [],
+  invitations: [],
+  ...over,
+})
+
+/**
+ * The `/auth/me` payload — the viewer, not the character.
+ *
+ * Every capability flag defaults FALSE, which is the wire default too, so a
+ * suite that renders a control has to say which flag opened it. `can_comment`
+ * is the one exception: the comment region is on the page for an ordinary
+ * signed-in player, and defaulting it false would silently delete a section
+ * from every detail render.
+ */
+export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
+  account_id: 1,
+  email: 'wz_pilgrim@example.com',
+  provider: 'google',
+  character: aCharacter(),
+  is_admin: false,
+  can_create_additional_character: false,
+  can_start_as_albescent: false,
+  albescent_revealed: false,
+  albescent_glimpsed: false,
+  can_propose_task: false,
+  can_propose_metatask: false,
+  can_apply_metatask: false,
+  can_see_retired_tasks: false,
+  can_see_pending_tasks: false,
+  can_comment: true,
+  albescent_level_required: 8,
+  second_character_level_required: 5,
+  era_name: 'Era 1',
+  level_jump_reach: 0,
+  level_jump_available: false,
+  task_browse_defaults_to_eligible: false,
+  ...over,
+})
+
+/** One side of a duel. Defaults to THIS page's side — praxis 1, {@link AUTHOR}. */
+export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
+  praxis_id: 1,
+  character_id: AUTHOR.id,
+  display_name: AUTHOR.name,
+  faction_slug: 'na',
+  avatar_url: '',
+  points_from_votes: 0,
+  is_submitted: true,
+  nudged_at: null,
+  ...over,
+})
+
+/**
+ * A settled duel — both sides cast, no verdict frozen yet.
+ *
+ * `settled` is the status the detail suites exercise most, because it is the
+ * one where unsubmitting forfeits (ADR-0011 §Forfeit); `active` and `declined`
+ * are one override away. The frozen-outcome trio stays null: it is populated at
+ * era close (ADR-0052), and a live duel that carried one would be a lie.
+ */
+export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
+  id: 5,
+  task_id: 7,
+  status: 'settled',
+  forfeited_by_character_id: null,
+  challenger: aDuelSide(),
+  opponent: aDuelSide({ praxis_id: 2, character_id: 4, display_name: 'Rax' }),
+  winner_character_id: null,
+  challenger_final_points: null,
+  opponent_final_points: null,
   ...over,
 })
 
