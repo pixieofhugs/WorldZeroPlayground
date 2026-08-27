@@ -824,9 +824,10 @@
    namespace by design (CSS_KEY maps it to `default`, ADR-0039 / #783), so
    `factionCssVar('albescent', 'accent-ink')` answers with the row below exactly
    as `na` does — and it must, or Albescent becomes conspicuous. It does not
-   stand apart, and there is no `--albescent-reveal-ink` for it to stand apart
-   AS: the Albescent letter paints `--faction-default-card-accent`, which is the
-   order's stationery ink and a different question from page paper.
+   stand apart, and #2619 asked whether it should on the premise of a reveal-ink
+   token that #2632 had already deleted; there is nothing left for it to stand
+   apart AS. Its letter paints `--faction-default-card-accent`, the order's own
+   stationery ink, which is a different ground and a different question.
 
    Theme-scoped rather than bare `:root` (#1839) for the two rows that are pure
    aliases: their referent flips, so at a bare `:root` they would freeze at their
