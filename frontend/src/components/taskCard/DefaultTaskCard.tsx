@@ -46,8 +46,12 @@ const MONO = "var(--font-body)";
 const LORA = "var(--font-display)";
 
 interface SizeSet {
-  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
-  cardWidth: number;
+  /**
+   * Card width: the raw px number this archetype drew (geometry,
+   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
+   * phone — below 768px a card fills its column (#2763).
+   */
+  cardWidth: number | "100%";
   /** Outer diameter of the conic points ring. Geometry. */
   ringSize: number;
   pad: string;
@@ -64,7 +68,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     numeralSize: "var(--text-heading)",
   },
   mobile: {
-    cardWidth: 340,
+    cardWidth: "100%",
     ringSize: 80,
     pad: "var(--space-lg)",
     titleSize: "var(--text-content)",

@@ -164,11 +164,10 @@
   },
   "disclaimer": {
     "title": "Disclaimer",
-    "p1": "World Zero is a community game intended for entertainment purposes only. Nothing on this platform constitutes professional, legal, medical, or financial advice of any kind.",
-    "p2": "Participation is entirely voluntary. Players are solely responsible for their own safety and the legality of any real-world actions taken in the course of completing tasks. The operators of World Zero are not liable for any harm, injury, damage, or legal consequence arising from participation in the game.",
-    "p3": "All content on World Zero — including task descriptions, submissions, and comments — is user-generated. The operators do not endorse, verify, or take responsibility for user-posted material. Content that violates applicable law or community standards may be removed at the operators' discretion.",
-    "p4": "World Zero is provided \"as is\" without warranty of any kind. The operators reserve the right to modify, suspend, or discontinue the platform at any time without notice.",
-    "lastUpdated": "Last updated: April 2026"
+    "p1": "The creator, of the system of websites, events, and activities explicitly referred to as World Zero (henceforth, \"Game\"), assumes no responsibility for the actions of users (henceforth, \"Players\") of this website or any affiliated website (including but not limited to worldzero.org). This includes, but is not limited to, content posted to the Game by Players, suggested activities (\"Tasks\"), and actions taken by Players in particular or in general.",
+    "p2": "As a Player, you agree to assume complete responsibility for any and all actions you or your character undertakes relating to you or your character's participation in the Game. You agree to submit no material to the Game that you have not created, or do not have permission to display publicly or reproduce in accordance with any applicable copyright. You agree that any action taken as part of your participation in the Game is in accordance with applicable laws and statutes - no violation of such is sanctioned by the Game. Any suggestion of any such violation that appears as part of the Game is due solely to the fictional nature of a game, and is not intended to condone or indemnify any violation of any local, state, or federal laws, nor any intrusion upon or violation of the rights of any Player, person, or persons.",
+    "p3": "Due to the malleability of digital media, any appearance of such a violation by any Player may not be considered evidence, precedent, or approval of such a violation. Any material displayed as part of the Game should be considered fictive until and unless proven otherwise.",
+    "lastUpdated": "Last updated: August 2026"
   },
   "donate": {
     "title": "Support World Zero",

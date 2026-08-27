@@ -11,7 +11,6 @@ export default function Disclaimer() {
         <p>{t('disclaimer.p1')}</p>
         <p>{t('disclaimer.p2')}</p>
         <p>{t('disclaimer.p3')}</p>
-        <p>{t('disclaimer.p4')}</p>
         <p className="text-muted text-sm">{t('disclaimer.lastUpdated')}</p>
       </div>
     </div>

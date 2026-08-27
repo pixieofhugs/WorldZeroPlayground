@@ -190,7 +190,6 @@ describe('the terms card', () => {
       common.disclaimer.p1,
       common.disclaimer.p2,
       common.disclaimer.p3,
-      common.disclaimer.p4,
       common.disclaimer.lastUpdated,
     ]) {
       expect(markup).toContain(asRendered(paragraph))

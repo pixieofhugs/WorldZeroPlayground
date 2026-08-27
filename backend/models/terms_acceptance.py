@@ -37,12 +37,16 @@ from models.base import Base
 from models.mixins import CreatedAtMixin
 
 #: The version of the terms the server currently serves, and the only value
-#: this table is ever written with. ``v1`` is the existing Disclaimer copy
-#: (``frontend/src/locales/en/common.json`` → ``disclaimer.*``) — real text
-#: that is already true, which is what lets this ship to a branch that
-#: auto-deploys while the revised legal wording is still being written. The
-#: revision bumps this constant; nothing else in the backend reads it.
-CURRENT_TERMS_VERSION = "v1"
+#: this table is ever written with. It names the *document*, not this
+#: feature: ``v1`` was the four-paragraph Disclaimer, and ``v2`` is the
+#: owner's rewrite that landed with #2789
+#: (``frontend/src/locales/en/common.json`` → ``disclaimer.*``). The bump is
+#: what keeps a row unambiguous about which words it agreed to — without it,
+#: two different documents share one version string and the log stops being
+#: a record. Nothing else in the backend reads it, so the bump gates nobody;
+#: whether a future one ever does is still out of scope (see the module
+#: docstring). Rewrite the document, bump this constant.
+CURRENT_TERMS_VERSION = "v2"
 
 
 class TermsAcceptance(CreatedAtMixin, Base):
