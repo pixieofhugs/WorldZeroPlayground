@@ -1220,6 +1220,18 @@ Two rules follow, and UA is the worked example:
 
 Where a mark ships as an inline SVG and where as a masked `public/` asset is a **weight** decision, not a style one — see `components/factionMarks/index.ts`. Both are token-tinted, so both follow the dark cascade. The same faction can legitimately carry two versions of one device at different sizes for different consumers; do not consolidate them on sight.
 
+### Two grids of the same angle beat, and the replacement may not be a third grid (#2727)
+
+Four surfaces paint WOW's 135° gilt hatch — the page backdrop, the mobile header, the profile band and the recruiting hero — and three of them agree on `22px 24px`. The hero was at `20px 22px`, laid directly over the wallpaper, and two pixels of pitch between two identical angles is a **moire**: the banner shimmered, and nothing else on the site did. **The tell for this class is that only one surface is wrong and every value on it looks reasonable.** A hatch is a legitimate faction ornament; a hatch over the same hatch is not, and no pitch repairs that. **Matching the pitch is the smaller fix and it is the wrong one for a surface that already sits on the wallpaper** — the mobile header and the profile band do match, and they read as *dense* rather than as shimmering, which is why they were left alone: the defect is the beat, not the doubling.
+
+So the hero's layer was **deleted** rather than re-pitched, and the wallpaper reads through the frame. Two things about what may replace it.
+
+**Nothing that repeats on a grid.** The failure was a repeating grid over a repeating grid, so a lattice of any pitch re-opens it. What went on instead is a scatter — rounded rects at drawn angles and a few discs — plus the faction's existing `BalloonBunch` at watermark strength. No new drawing was invented for the second half: the Court already had balloons on three surfaces, and §6's "one primitive" rule cuts both ways, forbidding a *new* device as firmly as a second copy of an old one.
+
+**A scatter is SEEDED, and per-visit randomness is the rejected option, not the obvious one.** `seededRandom` (the house PRNG, `components/factionMarks/ephemeristsPlate.tsx`) draws it from the faction slug at module load, so it is byte-identical on every render and every reload. `EphemeristsNotationBand` already states half the reason — a device that redraws itself twitches whenever anything unrelated moves on the page, and a screenshot of it never reproduces. The banner adds the other half: a member meets this surface on every trip to their own faction page, and **a background that differs each visit reads as instability rather than as celebration.** It also makes a visual regression on the surface unassertable, which is the cost that is easy to miss when "a fresh throw each time" sounds like the more festive answer.
+
+**A `bob={false}` is not the whole of "still".** The bunches opt out of their drift at the mount, but the googly pupils inside them ride `.wow-balloon-eye`, which no prop reaches. A watermark behind a wordmark that moves reads as a *rendering fault*, so the layer cancels the pupils by class — in `motion.ornament.css`, beside the rule it cancels, so the opt-out can never arrive a frame later than the animation. **When you still an ornament, grep the drawing for every class it hands out, not just the one the prop names.**
+
 ### A mark below the size of its own line is a different drawing (#1635)
 
 The paragraph above allows two versions of a device at two sizes. This is the case where you owe one, and the threshold is arithmetic rather than taste.
