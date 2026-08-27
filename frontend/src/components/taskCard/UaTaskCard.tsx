@@ -61,8 +61,12 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/ua
  */
 
 interface SizeSet {
-  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
-  cardWidth: number;
+  /**
+   * Card width: the raw px number this archetype drew (geometry,
+   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
+   * phone — below 768px a card fills its column (#2763).
+   */
+  cardWidth: number | "100%";
   pad: string;
   levelSize: string;
   /** Diameter of the score's ensō, and of the lotus wash. Geometry. */
@@ -82,7 +86,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     flank: 46,
   },
   mobile: {
-    cardWidth: 340,
+    cardWidth: "100%",
     pad: "var(--space-lg)",
     levelSize: "var(--text-heading)",
     enso: 108,

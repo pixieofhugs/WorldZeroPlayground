@@ -78,17 +78,18 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         ) : tasks.length === 0 ? (
           <TaskListEmpty state={state} />
         ) : (
-          /* Every faction card carries its own fixed `width` and the style
-             guide forbids regularizing those (§10), so the phone's 340px card
-             is narrower than this column. A `flex-col` stretches its items by
-             default, which pinned each card to the left edge and left a ragged
-             right against the full-width filter bar above (#1964) — centre the
-             items instead of widening the card. Not for the SEAL branch: a
-             metatask seal has no width of its own and fills the column, so
-             `items-center` would shrink each seal to its text. The load-more
-             button keeps `w-full`, which still resolves against this column. */
+          /* THE CARD FILLS THIS COLUMN (#2763), so the column stretches.
+             It used to centre: a phone card drew at its own 340px, which is
+             narrower than this column, and a stretched item left it flush
+             against the left edge under a full-width filter bar (#1964). The
+             owner reversed that for the phone — below 768px a card fills its
+             column, the nine archetypes ask for `width: 100%`, and centring a
+             box that wants the whole line is what shrinks it back to its
+             content. The `isMetatask` carve-out went with it: the seal always
+             filled the column, and now the card does too, so both branches want
+             the same column. The load-more button keeps `w-full`, unchanged. */
           <div
-            className={`flex flex-col gap-3${isMetatask ? '' : ' items-center'}`}
+            className="flex flex-col gap-3"
             data-testid="mobile-tasks-results"
             /* Stale rows dim and stop taking taps until the read lands
                (#2431). "Load more" is a CHILD of this column rather than a

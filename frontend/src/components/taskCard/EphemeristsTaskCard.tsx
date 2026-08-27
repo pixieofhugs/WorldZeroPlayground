@@ -71,8 +71,21 @@ const CAPS = "var(--font-faction-engraved)"; /* Cinzel */
 const READING = "var(--font-faction-spectral)"; /* Spectral */
 
 interface SizeSet {
-  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
-  cardWidth: number;
+  /**
+   * Card width: the raw px number this archetype drew (geometry,
+   * WORLD_ZERO_STYLE §4a) on the desktop, and the whole content column on a
+   * phone — below 768px a card fills its column (#2763).
+   */
+  cardWidth: number | "100%";
+  /**
+   * The NOMINAL width the gravity field is struck at, and the one number in
+   * this set that may never be a string: `CardGravityField` sizes an SVG with
+   * it, so `"100%"` would not draw (#2763). It is not a second answer to
+   * `cardWidth` — the field's own note says a card wider than its nominal
+   * scales the rows up and keeps the well anchored to the right edge, which is
+   * exactly what a phone card filling its column now is. Geometry (§4a).
+   */
+  fieldWidth: number;
   /**
    * The points plate's box. Geometry — and the size that makes the compass rose
    * legible: the needles reach in to 26/74 of a 100-unit viewBox, so the clear
@@ -90,6 +103,7 @@ interface SizeSet {
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     cardWidth: 384,
+    fieldWidth: 384,
     medallion: 128,
     bodyPad: "0 var(--space-xl) var(--space-xl)",
     titleSize: "var(--text-title)",
@@ -97,7 +111,8 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     pointsSize: "var(--text-heading)",
   },
   mobile: {
-    cardWidth: 340,
+    cardWidth: "100%",
+    fieldWidth: 340,
     medallion: 112,
     bodyPad: "0 var(--space-xl) var(--space-lg)",
     titleSize: "var(--text-title)",
@@ -240,7 +255,7 @@ export default function EphemeristsTaskCard({
             exists for, since the card would still be busy after dropping the
             field. The net is untouched everywhere it belongs: the backdrop, the
             task detail page and the faction select card. */}
-        <CardGravityField width={size.cardWidth} />
+        <CardGravityField width={size.fieldWidth} />
 
         <EphemeristsBand />
         <Cornice flutes={40} />

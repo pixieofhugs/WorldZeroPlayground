@@ -371,31 +371,35 @@ describe('the task rails', () => {
 })
 
 /**
- * #1964 — the mobile results column is the seam.
+ * #2763, which REVERSES #1964 on the phone — the mobile results column is the
+ * seam for both.
  *
- * Every faction task card sets its own fixed `width` (`size.cardWidth`, 340 on
- * the phone) and §10 of the style guide forbids regularizing those widths, so
- * the column may not fix this by widening the card. A `flex-col` STRETCHES its
- * items by default, which makes each card's wrapper full-bleed and leaves the
- * narrower card pinned to the left edge — ragged right, and visibly narrower
- * than the filter bar above it. Centring the items is the compatible fix.
+ * #1964's reading was that a task card owns its width (`size.cardWidth`, 340 on
+ * the phone), §10 forbids regularizing that, and so the column had to yield:
+ * `items-center`, because a stretched item made the card's wrapper full-bleed
+ * and left the narrower card pinned to the left edge, visibly narrower than the
+ * filter bar above it. The owner reversed the premise rather than the fix —
+ * below 768px a card FILLS its column, and every archetype now asks for
+ * `width: 100%` at that form factor.
  *
- * The metatask branch is deliberately NOT centred: a seal carries no width of
- * its own and fills the column, so `items-center` would shrink every seal to
- * the width of its text. That is why the class is conditional, and why both
- * arms are pinned here.
+ * Which makes centring actively wrong here: `align-items: center` sizes an item
+ * to its content, so a card asking for the whole line gets shrunk back to what
+ * it holds. The column stretches, on BOTH branches — the metatask arm was
+ * already excluded from the centring for the same reason (a seal has no width
+ * of its own), so the two arms have simply converged, and both are pinned here
+ * so a re-centring of either one fails.
  */
-describe('mobile task cards are centred in their column (#1964)', () => {
+describe('the mobile results column stretches its cards (#2763)', () => {
   function resultsColumnClass(): string {
     const m = /class="([^"]*)"[^>]*data-testid="mobile-tasks-results"/.exec(html())
     if (m === null) throw new Error('mobile results column was not rendered')
     return m[1]
   }
 
-  it('centres the card list rather than stretching it left-flush', () => {
+  it('lets a task card fill the column instead of centring it', () => {
     dispatch.formFactor = 'mobile'
     state.current = { ...CANNED, user: VIEWER, tasks: [TASK] }
-    expect(resultsColumnClass()).toContain('items-center')
+    expect(resultsColumnClass()).not.toContain('items-center')
   })
 
   it('leaves the metatask seal stack full-bleed', () => {

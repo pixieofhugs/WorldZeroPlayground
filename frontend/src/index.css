@@ -4839,6 +4839,33 @@
     flex: 1 1 auto;
   }
 
+  /* ── BELOW 768px THE ROW'S ITEM TAKES THE WHOLE LINE (#2763) ──
+     The one place this file regularizes a card's WIDTH, and it is a ruling
+     rather than a drift: on a phone the row wraps to one card per line anyway,
+     so a card keeping its own 340px is not a ragged row, it is a card that
+     missed the margin — narrower than the plate above it and flush to the left
+     of it. Desktop is untouched; the note above about growth never starting on
+     the row's own item is a DESKTOP statement, and stays exactly true there.
+
+     WHY THE ITEM AND NOT JUST THE CARD. The nine archetypes now ask for
+     `width: 100%` on their skin root at this form factor, and that percentage
+     resolves against the flex ITEM — the dispatcher's positioned wrapper —
+     whose own width is `auto`. A percentage against an indefinite parent falls
+     back to the parent's max-content contribution, so a card with short copy
+     could sit narrower than the line and let a second card share it. This makes
+     the item definite, and only then does the inline width mean what it says.
+     It is `width` rather than `flex-grow` for the same reason: grow would
+     stretch a SHORT card's line-mate too, and this must be one card per line.
+
+     767px, because that is `MOBILE_QUERY` in `hooks/useFormFactor.ts` — this
+     rule and the branch that sets the inline width must flip on the same pixel
+     or a card gets one of the two answers. */
+  @media (max-width: 767px) {
+    .task-card-row > * {
+      width: 100%;
+    }
+  }
+
   /* ── Buttons ──
      BUTTON CHROME IS ON THE LABEL-TIER FLOOR, --text-md (#1783). It used to be
      --text-sm (9px), with .card-meta a rung below it at --text-xs (8px), while
@@ -5247,9 +5274,22 @@
 
      ONE RULE, ALL EIGHT KITS, deliberately: `.praxis-gallery` is mounted by
      every task-detail archetype and by `WowFactionBody`. Forking it per faction
-     to spare seven pages would be worse than the bug it fixed. */
-  .praxis-gallery > * {
-    max-width: 50%;
+     to spare seven pages would be worse than the bug it fixed.
+
+     AND IT IS A DESKTOP RULE (#2763). "50% never bites a full row" is true
+     above the breakpoint and false below it: on a phone the gallery is ALWAYS
+     one card per row, so the row is always under-filled and the cap always
+     fires — a praxis card drawn at 278px of a 552px column, flush left under a
+     full-width plate. That is the second half of the report the task cards are
+     the first half of, and below 768px the ruling is that a card fills its
+     column. Nothing else on the card needs to change: `frameBase` already
+     carries `width: 100%`, so lifting the cap is the whole fix. The basis stays
+     out of it — `--praxis-card-basis` says where a DESKTOP row wraps and is a
+     different question. */
+  @media (min-width: 768px) {
+    .praxis-gallery > * {
+      max-width: 50%;
+    }
   }
   /* ── Leaderboard row hover ── */
 
