@@ -259,8 +259,18 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
-/** Keys a test hands to `t()` **because** they must not resolve. */
-const DELIBERATE_MISSES = new Set(['votes:ephemerists.nonexistent', 'nonexistent:some.key'])
+/**
+ * Keys a test names **because** they must not resolve — a `t()` miss fixture,
+ * or an `i18n.exists(…)).toBe(false)` asserting a collapsed faction branch
+ * stayed collapsed. Both are the absence of copy, which is the opposite of a
+ * missing key.
+ */
+const DELIBERATE_MISSES = new Set([
+  'votes:ephemerists.nonexistent',
+  'nonexistent:some.key',
+  'forms:editPraxis.everymen',
+  'forms:editPraxis.snide',
+])
 
 /**
  * The key literals a file hands to `t()` / `i18n.t()`, already namespaced.
@@ -271,10 +281,17 @@ const DELIBERATE_MISSES = new Set(['votes:ephemerists.nonexistent', 'nonexistent
  * bare shape is the one that matters — it is what every faction body uses, and
  * a plain grep for a namespaced key never sees it.
  *
+ * A third shape is a namespaced literal held in a TABLE and handed to `t()` a
+ * line later — `commentTime.ts` keeps one so its per-faction keys stay literal
+ * and greppable instead of becoming `t(\`praxis:...${slug}...\`)` (#2666). Any
+ * `"ns:dotted.key"` whose namespace is a real catalog file is read, wherever in
+ * the file it sits; that is what makes such a table visible to this sweep at
+ * all, which is the point of writing one.
+ *
  * Template literals and computed keys are skipped on purpose: they are resolved
  * at runtime and the render tests are what cover them.
  */
-function keyLiterals(text: string): string[] {
+function keyLiterals(text: string, namespaceNames: Set<string>): string[] {
   const namespaces = [...text.matchAll(/useTranslation\(\s*["']([a-z]+)["']/g)].map((m) => m[1])
   const bound = namespaces.length === 1 ? namespaces[0] : null
   const out: string[] = []
@@ -288,32 +305,49 @@ function keyLiterals(text: string): string[] {
       out.push(`${bound}:${key}`)
     }
   }
+  for (const m of text.matchAll(/(["'])([a-z]+:[A-Za-z0-9_.-]*\.[A-Za-z0-9_.-]+)\1/g)) {
+    if (namespaceNames.has(m[2].split(':')[0])) out.push(m[2])
+  }
   return out
 }
 
-/** A plural key lives in the catalog under its `_one` / `_other` suffixes. */
+/**
+ * A plural key lives in the catalog under its suffixes, never under the base the
+ * code passes: `_one` / `_other` for cardinals, and `_ordinal_one` … for
+ * ordinals (`comments.time.ephemerists.day` → `day_ordinal_one`, #2666). Both
+ * shapes always carry an `_other`, so that is the one that must be present.
+ */
+const PLURAL_SUFFIXES = ['_one', '_other', '_ordinal_one', '_ordinal_other']
+
 function resolves(key: string, known: Set<string>): boolean {
-  return known.has(key) || known.has(`${key}_one`) || known.has(`${key}_other`) || i18n.exists(key)
+  return (
+    known.has(key) || PLURAL_SUFFIXES.some((s) => known.has(`${key}${s}`)) || i18n.exists(key)
+  )
 }
 
 describe('every i18n key literal in the source tree resolves (#1911)', () => {
   const files = sourceFiles(SRC)
-  const known = new Set(catalogLeaves().map(([id]) => id))
+  const leaves = catalogLeaves()
+  const known = new Set(leaves.map(([id]) => id))
+  const namespaceNames = new Set(leaves.map(([id]) => id.split(':')[0]))
 
   it('finds source files to scan', () => {
     expect(files.length).toBeGreaterThan(300)
   })
 
   it('finds key literals to resolve, in both the namespaced and the bound shape', () => {
-    const all = files.flatMap((f) => keyLiterals(readFileSync(f, 'utf8')))
+    const all = files.flatMap((f) => keyLiterals(readFileSync(f, 'utf8'), namespaceNames))
     expect(all.filter((k) => k.startsWith('feed:')).length).toBeGreaterThan(20)
     expect(all).toContain('factions:detail.default.membersHeading')
+    // The table shape: these are never written inside a `t(` call (#2666).
+    expect(all).toContain('praxis:comments.time.coven.hours')
+    expect(all).toContain('praxis:comments.time.default.now')
   })
 
   it('resolves every one of them to a non-empty string', () => {
     const missing: string[] = []
     for (const file of files) {
-      for (const key of keyLiterals(readFileSync(file, 'utf8'))) {
+      for (const key of keyLiterals(readFileSync(file, 'utf8'), namespaceNames)) {
         if (DELIBERATE_MISSES.has(key) || resolves(key, known)) continue
         missing.push(`${file.slice(SRC.length + 1).replace(/\\/g, '/')} -> ${key}`)
       }
