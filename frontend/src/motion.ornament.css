@@ -511,24 +511,38 @@
  * from the surface's seed) and splitting them across two sheets would put half a
  * device on the critical path.
  *
- * THE SHIMMER breathes a mark between 0.16 and its own peak. Note the inversion
- * against the design, which index.css states beside the resting rule: the base
- * IS the stilled state, at the peak, and the dip is what the animation adds.
+ * THE SHIMMER breathes a mark between NOTHING and its own peak. Note the
+ * inversion against the design, which index.css states beside the resting rule:
+ * the base IS the stilled state, at the peak, and the dip is what the animation
+ * adds. The trough is 0 and it is at 0%/100% — read the next paragraph before
+ * moving either, because the turn is aimed at that instant.
  *
  * THE TURN is what makes the row change over time WITHOUT any render-time
  * randomness. Each mark holds two seeded frames stacked in one grid cell; these
  * two keyframes are the same cut read forwards and backwards, so exactly one
- * mark is up at any instant and the swap is hard rather than a cross-fade —
- * `49.99%` and not a `steps()` timing function, because the shimmer on the
- * parent needs its own easing and the two rules are on different elements.
+ * mark is up at any instant and the swap is a hard cut — `49.99%` rather than a
+ * `steps()` timing function, because the shimmer on the parent needs its own
+ * easing and the two rules are on different elements.
  *
- * 9.4s against the shimmer's 5.2s: coprime enough that a mark's frame does not
- * change on the same beat as its own dip, twice a minute, forever.
+ * ONE CLOCK AND ITS DOUBLE, and THAT is the property not to break (#2725). The
+ * turn's 10.4s is EXACTLY twice the shimmer's 5.2s, so the turn's two cut points
+ * — the 0%/100% wrap and 50% — land on the shimmer's trough and nowhere else: a
+ * mark fades to nothing, changes in the dark, and fades back as something else.
+ * The two used to be coprime (9.4s against 5.2s), which is the same statement
+ * with the sign flipped — it guaranteed the swap happened while the mark was
+ * LIT, and it read as a glitch rather than as a hand rewriting. The shared
+ * `--epg-delay` carries the alignment to every mark whatever its phase: at delay
+ * d the troughs are d + 5.2k and the cuts are d + 5.2k too. Cadence is what it
+ * always was, a change about every five seconds.
+ *
+ * A mark therefore goes FULLY invisible on every breath. Peaks and phases are
+ * drawn per mark from the surface's seed, so the row twinkles rather than going
+ * dark all at once.
  *
  * Sheet-less or reduced-motion, `.eph-rune > span + span { opacity: 0 }` in
  * index.css leaves frame one showing in every mark — a whole, legible row. ── */
 @keyframes eph-rune-shift {
-  0%, 100% { opacity: 0.16; }
+  0%, 100% { opacity: 0; }
   50% { opacity: var(--epg-op, 0.8); }
 }
 @keyframes eph-rune-turn {
@@ -545,7 +559,7 @@
     animation-delay: var(--epg-delay, 0s);
   }
   .eph-rune > span {
-    animation: eph-rune-turn 9.4s infinite;
+    animation: eph-rune-turn 10.4s infinite;
     animation-delay: var(--epg-delay, 0s);
   }
   .eph-rune > span + span { animation-name: eph-rune-turn-back; }

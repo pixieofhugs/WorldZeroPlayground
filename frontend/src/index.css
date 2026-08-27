@@ -5731,8 +5731,9 @@
    reason `.evm-arc` above states it. The base state IS the stilled state —
    every mark showing its FIRST frame at its own peak — and both animations are
    added under `no-preference`, from the deferred sheet (#2073). Written the
-   design's way round (0.16 as the base, the animation always on) a reduced-motion
-   reader gets a row at 0.16 and reads nothing. Nothing pins the pre-delay state
+   design's way round (the shimmer's trough as the base, the animation always on)
+   a reduced-motion reader gets a row that is not there — #2725 dropped that
+   trough to 0 so the turn's cut lands in the dark. Nothing pins the pre-delay state
    either: a mark holds at its peak until its own cycle starts, which is legible
    from first paint — and legible is all it owes, since a viewer who never
    receives `motion.ornament.css` lands in exactly the reduced-motion frame.
