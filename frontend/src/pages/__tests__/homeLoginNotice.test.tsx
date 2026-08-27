@@ -17,6 +17,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../i18n'
+import home from '../../locales/en/home.json'
 
 vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => ({ user: null, refetch: () => {} }),
@@ -72,5 +73,15 @@ describe('Home, ?login=', () => {
     expect(markup).toContain('data-testid="home-hero-cta"')
     expect(markup).not.toContain('data-testid="sign-in-google"')
     expect(markup).not.toContain('data-testid="sign-in-discord"')
+  })
+
+  // #2766 — the door into the arc was itself a placeholder. It is the first
+  // line of copy a stranger meets on the public marketing page, under the
+  // wordmark and the tagline, and `main` auto-deploys.
+  it('says the written words on that CTA, not a placeholder', () => {
+    const markup = render('')
+
+    expect(markup).toContain(home.hero.cta.loggedOut)
+    expect(home.hero.cta.loggedOut).not.toContain('PLACEHOLDER')
   })
 })
