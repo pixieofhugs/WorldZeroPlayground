@@ -90,8 +90,8 @@
  * either would put the society back in the spectrum and un-hide it (ADR-0083 §1,
  * ADR-0027, WORLD_ZERO_STYLE §3).
  *
- * One responsive component, both widths (ADR-0065 §2) — there is no
- * `mobileEditPraxis` surface, so this one row covers the phone too.
+ * One responsive component, both widths (ADR-0065 §2) — no mobile twin, so
+ * this one file covers the phone too.
  */
 import DefaultEditPraxis from "./DefaultEditPraxis";
 import { type EditPraxisState } from "../useEditPraxis";

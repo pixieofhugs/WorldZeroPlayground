@@ -31,8 +31,7 @@
  * ## One responsive component, no mobile twin
  *
  * `useComposerSizes()` reads `useFormFactor()` and picks the size set; there is
- * one tree at two widths and no second file — which is also why the retired
- * `mobileCreateCharacter` slot stays retired. Every fixed number here is
+ * one tree at two widths and no second file. Every fixed number here is
  * ornament geometry, never a layout grid (SPEC-faction-ui-profile §1a).
  *
  * ## Copy — none of its own

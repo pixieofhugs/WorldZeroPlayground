@@ -74,8 +74,7 @@ export default function EditPraxis() {
   }
 
   const slug = state.task?.primary_faction_slug ?? null;
-  // One archetype at both widths (ADR-0065 §2). The `mobileEditPraxis` surface
-  // and its eight files were retired in #1181: each archetype calls
+  // One archetype at both widths (ADR-0065 §2): each archetype calls
   // `useFormFactor()` internally for its own size set, so the dispatcher has no
   // form factor to branch on.
   // ONE component per slug, drawing whichever stage the praxis is in.

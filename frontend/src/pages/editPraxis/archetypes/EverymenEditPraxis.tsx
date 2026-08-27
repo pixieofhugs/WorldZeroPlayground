@@ -18,10 +18,9 @@
  *
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
- * `useComposerSizes()` picks the size set; there is one tree at two widths, and
- * `pages/editPraxis/mobileArchetypes/EverymenEditPraxis` went with the
- * `mobileEditPraxis` surface in #1181. Mobile stacks with flow — no fixed-px
- * grid anywhere below (SPEC-faction-ui-profile §1a).
+ * `useComposerSizes()` picks the size set; there is one tree at two widths.
+ * Mobile stacks with flow — no fixed-px grid anywhere below
+ * (SPEC-faction-ui-profile §1a).
  *
  * ## Copy is the shared neutral set (ADR-0065 §3)
  *

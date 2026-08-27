@@ -231,12 +231,9 @@ describe('mobile factions directory — states (#743)', () => {
 })
 
 /**
- * The container above that view. Carried here from
- * `factionDetail/__tests__/mobileArchetypeSlots.test.tsx`, which walked the
- * retired `mobileFactionPage` registry and kept this one directory assertion as
- * a passenger (#1314). It is thin on purpose — effects never fire in this
- * harness, so the container only ever reaches its loading state — but it is the
- * one thing proving the container wires the view's chrome up at all.
+ * The container above that view. It is thin on purpose — effects never fire in
+ * this harness, so the container only ever reaches its loading state — but it is
+ * the one thing proving the container wires the view's chrome up at all.
  */
 describe('mobile factions directory — the container', () => {
   it('renders the heading and the unaffiliated banner', () => {

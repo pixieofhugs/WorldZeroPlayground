@@ -66,16 +66,15 @@ export default function PraxisDetail() {
     surfaceMap('praxisDetail'),
     state.praxis.task_faction_slug,
   )
-  // NOTHING IS MOUNTED AROUND THE ARCHETYPE ANY MORE. Two pieces of chrome used
-  // to sit here and both moved INTO the page layout:
+  // NOTHING IS MOUNTED AROUND THE ARCHETYPE. The two pieces of chrome that could
+  // sit here both live INSIDE the page layout instead:
   //
   //  - The comment thread. ADR-0061 made comments the page's third region — the
   //    archetype mounts its own via the shared `PraxisDetailComments` slot,
   //    which carries the `visible` gate so a skin cannot forget it (amending
   //    ADR-0006's "neutral chrome below every archetype").
-  //  - The duel cross-link rail (#313/#718). #1090 replaced it with the design's
-  //    duel card in the archetype's aside, and retired the `duelRail` /
-  //    `mobileDuelRail` surfaces with it. A faction now dresses the duel by
-  //    dressing its `praxisDetail`, not by registering a second skin.
+  //  - The duel cross-link (#313/#718, #1090) — the design's duel card, drawn in
+  //    the archetype's own aside. A faction dresses the duel by dressing its
+  //    `praxisDetail`, not by registering a second skin.
   return <Archetype state={state} />
 }

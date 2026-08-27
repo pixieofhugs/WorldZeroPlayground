@@ -1,17 +1,12 @@
 /**
  * The seam: `DuelSealConfirm`'s dispatch × `useFormFactor()` (#1313).
  *
- * Before this issue the seal was TWO dispatches out of one dispatcher — the
- * `formFactor === 'mobile'` branch picked through a `mobileDuelSeal` manifest
- * surface and the wide branch through `duelSeal`, so every faction shipped two
- * near-identical files whose only real difference was the positioning shell
- * (centred card + scrim vs. full-bleed sheet).
+ * There is ONE responsive component per faction and ONE surface. What this file
+ * pins is the surface a caller reaches, not the internals of any skin:
  *
- * After the collapse there is ONE responsive component per faction and ONE
- * surface. What this file pins is the surface a caller reaches, not the
- * internals of any skin:
- *
- *  - the `mobileDuelSeal` surface is gone from `SURFACE_KEYS`;
+ *  - the retired phone surface stays out of `SURFACE_KEYS` — the one assertion
+ *    below that names it, because a test name is where a rule outlives its
+ *    surface (epic #2533);
  *  - a phone reaches the SAME component the laptop does, per faction;
  *  - the eight sheets stay eight — no skin quietly falls through to Default on
  *    one form factor, which is the failure mode a shared chassis invites;

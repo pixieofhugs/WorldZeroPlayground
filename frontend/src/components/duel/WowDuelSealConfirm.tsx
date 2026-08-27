@@ -1,14 +1,12 @@
 /**
  * Warriors of Whimsy duel seal-confirm (#895) — THE LISTS SEAL.
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
- * `DuelSealSheet` frames the enclosure in gold on a plum scrim at laptop width
- * and lets it take the whole screen on a phone — "there is nothing for it to
- * float above at 375px" was the twin's own reasoning, and it is now the chassis
- * rule for all eight sheets. The kit's 46px seal buttons survive the collapse
- * through `phoneClassName`; the twin's pinned action bar does not, because the
- * band under it was drawn for a phone and the actions sit inside the enclosure
- * on the kit's laptop sheet.
+ * ONE responsive component. `DuelSealSheet` frames the enclosure in gold on a
+ * plum scrim at laptop width and lets it take the whole screen on a phone —
+ * there is nothing for it to float above at 375px, and that is the chassis rule
+ * for all eight sheets. The kit's 46px seal buttons survive the collapse through
+ * `phoneClassName`; there is no pinned action bar, because the actions sit
+ * inside the enclosure on the kit's laptop sheet.
  *
  * The kit's `16-duel-seal.html`: a gold-framed enclosure on a plum scrim, the
  * checkered barrier along its top edge, the crest set beside the title, the

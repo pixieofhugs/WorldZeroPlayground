@@ -19,8 +19,7 @@ import type { PraxesFeedState } from './usePraxes'
  * now an explicit choice on both surfaces (or the chip's ×).
  *
  * The results list renders the SHARED `<PraxisCard>` (ADR-0067) — the same
- * component the desktop feed renders. There is no mobile twin: the
- * `mobilePraxisCard` surface and its ten cards are deleted, so a faction's
+ * component the desktop feed renders. There is no mobile twin: a faction's
  * praxis card is one responsive file under `components/praxisCard/desktop/`.
  *
  * The list is a WRAPPING FLEX ROW, not a column, because that is what the

@@ -22,9 +22,8 @@
  *
  * The Default skin below is the only one this issue ships; the manifest seam
  * exists so per-faction skins (#720 for Coven, one issue per faction after) are a
- * `duelSeal` row and nothing else — ONE responsive component per faction since
- * #1313 retired the `mobileDuelSeal` twin. Skins own the FRAME only — every
- * figure and every branch lives in `duel/shared.tsx`.
+ * `duelSeal` row and nothing else — ONE responsive component per faction. Skins
+ * own the FRAME only — every figure and every branch lives in `duel/shared.tsx`.
  *
  * TWO MODES, ONE SURFACE (#751)
  * -----------------------------
@@ -174,9 +173,8 @@ export function DefaultDuelSealConfirm({
  * composer's own archetype is chosen the same way), not the opponent's — the
  * dialog is a piece of the composer, and only its tokens are foreign.
  *
- * ONE dispatch, both form factors (#1313). This used to branch on
- * `useFormFactor()` through a parallel `mobileDuelSeal` surface; the branch is
- * `DuelSealSheet`'s now, and the slug is the whole story here.
+ * ONE dispatch, both form factors: the form-factor branch is `DuelSealSheet`'s,
+ * so the slug is the whole story here.
  */
 export default function DuelSealConfirm({
   taskFactionSlug,

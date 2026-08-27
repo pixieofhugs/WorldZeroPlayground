@@ -96,8 +96,6 @@ describe("card mode chips gate on duel presence (#992)", () => {
     ).toBe("");
   });
 
-  // The mobile twins of these two cases are gone with the `mobilePraxisCard`
-  // surface (ADR-0067): `MobileModeChip` was a second chip drawing the same
-  // `isDuelPraxis` verdict, and the desktop cases above now cover both form
-  // factors because `PraxisModeChip` is what a phone renders too.
+  // `PraxisModeChip` is what a phone renders too (ADR-0067), so the cases above
+  // cover both form factors and there is no second chip to twin them against.
 });

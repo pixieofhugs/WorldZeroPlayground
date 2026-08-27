@@ -6,8 +6,8 @@
  * collapse deletes manifest rows — and `surfaceDispatch.test.ts` catches that,
  * because its BESPOKE table flips red when a slug de-registers.
  *
- * What nothing catches is the FILE. De-registering `mobileEditPraxis` removes the
- * manifest line; it does not remove `WowEditPraxisMobile.tsx`. The orphan still
+ * What nothing catches is the FILE. De-registering a skin removes the manifest
+ * line; it does not remove `WowEditPraxisMobile.tsx`. The orphan still
  * compiles, still passes `tsc`, still passes lint, and still passes every render
  * test — because no test renders a component no dispatcher can reach. It is
  * invisible until someone greps for a component name and finds two.

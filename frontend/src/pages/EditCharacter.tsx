@@ -82,8 +82,8 @@ export default function EditCharacter() {
   const state = useEditCharacter()
   const formFactor = useFormFactor()
 
-  // No faction ever claimed `mobileEditCharacter`, so the slot and its dispatch
-  // are gone: mobile renders the Default skin directly.
+  // No faction skins this page on the phone, so mobile renders the Default skin
+  // directly rather than dispatching on the slug.
   if (formFactor === 'mobile') return <DefaultEditCharacter state={state} />
 
   return <DesktopEditCharacter state={state} />

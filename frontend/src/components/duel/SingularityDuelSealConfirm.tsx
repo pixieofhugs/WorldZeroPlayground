@@ -1,11 +1,10 @@
 /**
  * Singularity duel seal-confirm (#723).
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
- * `DuelSealSheet` centres this terminal in a card on a laptop and lets it BE the
- * screen on a phone — which is exactly what the twin did, and its whole reason
- * to exist. The glass, the scanlines and the opponent's spine are `ground`; the
- * small radius and the hairline frame are `card`.
+ * ONE responsive component. `DuelSealSheet` centres this terminal in a card on a
+ * laptop and lets it BE the screen on a phone. The glass, the scanlines and the
+ * opponent's spine are `ground`; the small radius and the hairline frame are
+ * `card`.
  *
  * The Default dialog's content re-hung inside the faction's cold green-on-black
  * terminal: near-black ground lifted by two large soft radial glows (phosphor

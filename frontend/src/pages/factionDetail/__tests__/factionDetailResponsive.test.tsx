@@ -3,12 +3,10 @@
  *
  * ONE registry, walked at BOTH form factors — the shape ADR-0069 landed for the
  * duel seal and called strictly stronger than two lists. It is stronger here for
- * a reason specific to this surface: `mobileFactionPage` and `factionBody` were
- * two registries holding two DIFFERENT content sets, so a per-registry test
- * could pass on both while a phone showed generic chrome in a faction dress. On
- * a phone, every faction read `mobile.topMembers` / `mobile.recentPraxis` and
- * exactly one bespoke key (its eyebrow); the manifesto, the spotlight and the
- * faction's own join flow did not exist there at all.
+ * a reason specific to this surface: two registries would hold two DIFFERENT
+ * content sets, so a per-registry test can pass on both while a phone shows
+ * generic chrome in a faction dress — no manifesto, no spotlight, and none of
+ * the faction's own join flow.
  *
  * So the load-bearing assertion is `speaks in its own voice`: at BOTH widths the
  * page must contain the faction's own section headings. That is the whole point

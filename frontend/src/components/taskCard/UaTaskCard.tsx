@@ -24,8 +24,7 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "../factionMarks/ua
  * left margin is gone; the gilt-sandwich salon it replaced is still gone.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin: ADR-0056 was accepted and the
- * `mobileTaskCard` surface retired, so this file serves both form factors.
+ * different card. There is no mobile twin — this file serves both form factors.
  *
  * TWO MARKS, AND THE COUNT IS THE POINT (WORLD_ZERO_STYLE §6). The design draws
  * the ensō three times — in the eyebrow, behind the score, and again on the

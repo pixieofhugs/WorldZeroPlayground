@@ -77,9 +77,8 @@ describe('one score per card (#888, closes #663)', () => {
     expect(body).not.toMatch(/\d/)
   })
 
-  // `MobileVoteFooter` had the identical assertion against an identical
-  // `VoteUI` call. It is gone with the `mobilePraxisCard` surface (ADR-0067);
-  // the desktop case above is what a phone renders now.
+  // One case, not two: the praxis card is one responsive component (ADR-0067),
+  // so the `VoteUI` call asserted above is the one a phone renders.
 
   /**
    * #1444 — and no score at all on a praxis that banked none.
@@ -301,10 +300,8 @@ describe('the applied-metatask seal stack (#932)', () => {
     expect(text(html)).not.toContain('Sealmark')
   })
 
-  // The two `MobilePraxisBody` cases are gone with the `mobilePraxisCard`
-  // surface (ADR-0067). They asserted the same seal placement against a second
-  // body that composed the same `MetataskSeal` from the same field; `PraxisBody`
-  // above is now the only anatomy, on both form factors.
+  // `PraxisBody` above is the only anatomy, on both form factors (ADR-0067), so
+  // seal placement is pinned once rather than once per form factor.
 })
 
 describe('the faction font pair (#888)', () => {

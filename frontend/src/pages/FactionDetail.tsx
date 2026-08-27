@@ -16,14 +16,13 @@ import { useFactionDetail } from "./factionDetail/useFactionDetail";
  * recent-praxis) dispatches the same way, through `factionBody`, falling through
  * to DefaultFactionBody.
  *
- * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0078). There used to be
- * a `formFactor === "mobile"` early return here that dispatched a whole second
- * registry, `mobileFactionPage`. Those eight skins did not hold a narrow
- * rendering of the body below — they held DIFFERENT COPY, generic chrome in a
- * faction dress, so every faction's manifesto, spotlight and bespoke join flow
- * simply did not exist on a phone. The surface is retired and cannot be
- * re-registered; a skin that needs the viewport reads `useFormFactor()` itself,
- * the way `DefaultFactionBody` does for its pinned action band.
+ * ONE COMPONENT PER FACTION, AT BOTH WIDTHS (#1314 / ADR-0078). There is no
+ * `formFactor === "mobile"` early return here, and a second phone registry is
+ * not the shape to reach for: a parallel set of skins forks the COPY and not
+ * just the width, and every faction's manifesto, spotlight and bespoke join flow
+ * stops existing on a phone. A skin that needs the viewport reads
+ * `useFormFactor()` itself, the way `DefaultFactionBody` does for its pinned
+ * action band.
  *
  * Data + the page backdrop come from useFactionDetail; this component only
  * routes the loading / error / not-found guards and the two dispatches.

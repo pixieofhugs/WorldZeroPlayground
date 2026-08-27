@@ -41,8 +41,7 @@
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
  * `useComposerSizes()` picks the size set; there is one tree at two widths and
- * no fixed-px grid anywhere below (SPEC-faction-ui-profile §1a). The
- * `mobileEditPraxis` twin and its manifest surface were retired in #1181.
+ * no fixed-px grid anywhere below (SPEC-faction-ui-profile §1a).
  *
  * ## Colour and motion
  *

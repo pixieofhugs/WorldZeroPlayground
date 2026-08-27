@@ -16,10 +16,9 @@
  * #895 adds THE LISTS — the duel seal on both form factors, dressed as a tourney
  * joust (gold-framed enclosure, checkered barrier, the opponent held as a
  * rosette ring, a ribbon for the loser). The shared vocabulary lives in
- * `components/duel/wowLists.tsx`. It shipped as FOUR surfaces; the two rail
- * skins went with the `duelRail` / `mobileDuelRail` surfaces themselves in
- * #1090, when the duel became a card inside praxis detail rather than a
- * dispatched surface of its own.
+ * `components/duel/wowLists.tsx`. The duel itself is a card inside praxis
+ * detail, not a dispatched surface of its own (#1090), so the seal is all the
+ * kit registers for it.
  *
  * #835 adds the DESKTOP edit-praxis composer — "The Squire's Writ", the kit's
  * one form surface — and #836 its phone twin: the same writ dress on the settled
@@ -84,10 +83,9 @@
  * order and its join flow when #1611 derived that body, so nothing was left in
  * the phone skin that the body did not say better.)
  * The shared vocabulary lives in `components/factionMarks/wowMobile.tsx`.
- * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
- * `mobilePlayersDirectory` were unclaimed here on purpose — nothing in the kit
- * described them — and since no other faction claimed them either, the four
- * slots were retired outright; those pages render their `Default*` skin.
+ * Edit-character, the factions directory and the players directory are NOT
+ * skinned here on purpose — nothing in the kit describes them — and no other
+ * faction skins them either, so those pages render their `Default*` skin.
  *
  * Override-only, like every manifest — WOW simply overrides all of it now: it
  * claims every key in `SURFACE_KEYS`, and `surfaceDispatch.test.ts` holds it
@@ -161,10 +159,8 @@ export const WOW_MANIFEST: FactionManifest = {
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WowSelectCard,
 
-  // #895 — the lists: the duel seal, both form factors from ONE component since
-  // #1313 retired the `mobileDuelSeal` twin (the Lists sheet is responsive now,
-  // not deleted). Its rail skins went with the `duelRail` / `mobileDuelRail`
-  // SURFACES in #1090, not with WOW.
+  // #895 — the lists: the duel seal, both form factors from ONE responsive
+  // component.
   duelSeal: () => WowDuelSealConfirm,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
@@ -181,7 +177,6 @@ export const WOW_MANIFEST: FactionManifest = {
   // no design was needed, because the DECREE task card and the WRIT composer
   // carry the register between them: the decree's head (barber ribbon, pennants,
   // balloons) over the writ's chassis (gilt sheet, parchment fields, one zigzag,
-  // the full-bleed gold cast band). ONE responsive component; the
-  // `mobileCreateCharacter` slot retired with #901's note above and stays retired.
+  // the full-bleed gold cast band). ONE responsive component.
   createCharacter: () => WowCreateCharacter,
 }

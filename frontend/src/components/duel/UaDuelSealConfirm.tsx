@@ -2,12 +2,11 @@
  * University of Asthmatics duel seal-confirm (#725) — the breath before the
  * stroke.
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
- * `DuelSealSheet` serves this sheet as a centred card on a laptop and full-bleed
- * on a phone; the masthead, the opponent bar, the scrolling middle and the
- * pinned action band are flex regions that behave as the twin did on a phone and
- * as the card always did on a laptop. The twin's extra inner "practice sheet"
- * plate around the body went with it — one sheet, not a sheet on a sheet.
+ * ONE responsive component. `DuelSealSheet` serves this sheet as a centred card
+ * on a laptop and full-bleed on a phone; the masthead, the opponent bar, the
+ * scrolling middle and the pinned action band are flex regions that carry both
+ * widths. There is no inner "practice sheet" plate around the body — one sheet,
+ * not a sheet on a sheet.
  *
  * UA is the last core faction to get a duel dialog, and it arrives in the
  * practice's own register rather than the mock's. `UaDuel.dc.html` /

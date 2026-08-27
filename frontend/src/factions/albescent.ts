@@ -149,9 +149,8 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * the same "NA + drift" shape as the praxis cards above. It renders
    * `DefaultTaskCard` and washes two flourishes over it (a drifting spectrum
    * edge, a breathing aurora), so the design's whole delta from unaffiliated is
-   * MOTION. Note there is no `mobileTaskCard` sibling: the v2 task card is one
-   * responsive component (ADR-0056), so this single row covers both form
-   * factors.
+   * MOTION. The v2 task card is one responsive component (ADR-0056), so this
+   * single row covers both form factors.
    */
   taskCard: () => AlbescentTaskCard,
 
@@ -339,8 +338,8 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * read their own words while typing — legibility beats the tell, so the tell
    * moved to the sheet's edge, where it owes no ratio.
    *
-   * One responsive component, both widths (ADR-0065 §2): there is no
-   * `mobileEditPraxis` surface to register a second row on.
+   * One responsive component, both widths (ADR-0065 §2): this one row covers
+   * the phone too.
    */
   editPraxis: () => AlbescentEditPraxis,
 

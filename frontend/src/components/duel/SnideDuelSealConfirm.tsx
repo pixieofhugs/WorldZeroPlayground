@@ -4,12 +4,11 @@
  * acid-green border, the opponent's colour on a fat left edge, and a hard offset
  * shadow tinted hot pink. Square corners throughout.
  *
- * ONE responsive component since #1313 retired the `mobileDuelSeal` twin.
- * `DuelSealSheet` centres this clipping over a scrim on a laptop and lets it
- * take the whole screen on a phone. The halftone and the opponent's fat edge are
- * `ground` and survive full-bleed; the acid frame and the pink offset shadow are
- * `card`, because a hard 6px shadow and a border at the viewport edge are a card
- * pretending it still floats.
+ * ONE responsive component. `DuelSealSheet` centres this clipping over a scrim
+ * on a laptop and lets it take the whole screen on a phone. The halftone and the
+ * opponent's fat edge are `ground` and survive full-bleed; the acid frame and
+ * the pink offset shadow are `card`, because a hard 6px shadow and a border at
+ * the viewport edge are a card pretending it still floats.
  *
  * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
  * and the VIEWER's own faction — which is why a Snide duelist correctly reads a

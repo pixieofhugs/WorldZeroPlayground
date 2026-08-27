@@ -7,26 +7,20 @@
  * (plus its Default fallback) at BOTH form factors, so the faction skins that
  * follow Coven fail here the moment one of them loses a slot.
  *
- * IT USED TO WALK TWO REGISTRIES (#1313). `duelSeal` and `mobileDuelSeal` held
- * a pair of near-identical files per faction; the seal is one responsive
- * component now and `DuelSealSheet` owns the only form-factor branch. The
- * coverage did not shrink with the registry: every skin is rendered at both
- * widths here instead, which is the same number of assertions against half the
- * files — and it now also catches a phone shell that drops a slot, which two
- * separate component lists could never have caught for a faction that only
- * registered one.
+ * ONE REGISTRY, BOTH WIDTHS (#1313). The seal is one responsive component and
+ * `DuelSealSheet` owns the only form-factor branch, so a skin is rendered here
+ * at both widths rather than once per registry — which is also what catches a
+ * phone shell that drops a slot, something two separate component lists could
+ * never catch for a faction that only registered one.
  *
  * The seal skins mount the real `StakesTiles` / `RaceRoster` / `SealActions`, so
  * the assertion is on the anchors those slots leave behind. The game config is
  * mocked; this is about composition, not transport.
  *
- * THE RAIL HALF OF THIS FILE IS GONE (#1090). `duelRail` / `mobileDuelRail` were
- * not merely de-registered like `praxisDetail` was — the surfaces themselves
- * were retired, because the duel is no longer dispatched at all: it is a card
- * inside the praxis-detail archetype (`pages/praxisDetail/DuelCard.tsx`), and
- * its readings are guarded by `praxisDetail/__tests__/duelCard.test.tsx`. There
- * is no registry left to walk, which is why this is a deletion and not a
- * zero-entry loop.
+ * THE SEAL IS THE ONLY DUEL REGISTRY. The duel itself is not dispatched (#1090):
+ * it is a card inside the praxis-detail archetype
+ * (`pages/praxisDetail/DuelCard.tsx`), and its readings are guarded by
+ * `praxisDetail/__tests__/duelCard.test.tsx`.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'

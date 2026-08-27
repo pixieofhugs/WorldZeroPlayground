@@ -23,8 +23,7 @@
  * `useComposerSizes()` picks the size set and `sizes.isMobile` gates conditional
  * ornament — one tree at two widths. The phone stacks with flow (the task slip
  * turns its column, the mode keys wrap); there is no fixed-px grid anywhere
- * below (SPEC-faction-ui-profile §1a). `pages/editPraxis/mobileArchetypes/` and
- * the `mobileEditPraxis` surface were retired outright in #1181.
+ * below (SPEC-faction-ui-profile §1a).
  *
  * ## Copy (ADR-0065 §3)
  *

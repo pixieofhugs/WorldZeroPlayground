@@ -76,24 +76,20 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // registration freeze was reversed with the praxis-detail epic (#1151), which
 // changes whether a row may exist, not what shape it takes.
 //
-// FIVE MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all five used
-// to exist. There is no mobile task-card row (ADR-0056, surface retired by
-// #1044), no mobile task-detail row (ADR-0058, #1068), no mobile praxis-detail
-// row (ADR-0061 + epic #1085, #1089), since #1181 no `mobileEditPraxis` row
-// (ADR-0065), and since #1314 no `mobileFactionPage` row (ADR-0078): each
-// verdict accepted one responsive component per faction, so task cards partition
-// on `taskCard` alone, task detail on `taskDetail` alone, praxis detail on
-// `praxisDetail` alone, the composer on `editPraxis` alone and faction detail on
-// `factionBody` alone, for both form factors. Re-adding any of the five means
-// re-adding the surface, which those ADRs call drift rather than a rollback.
+// THERE ARE NO PHONE-ONLY ROWS, by decision. ADR-0056 (task card), ADR-0058
+// (task detail), ADR-0061 (praxis detail), ADR-0065 (the composer) and ADR-0078
+// (faction detail) each accepted one responsive component per faction, so task
+// cards partition on `taskCard` alone, task detail on `taskDetail` alone, praxis
+// detail on `praxisDetail` alone, the composer on `editPraxis` alone and faction
+// detail on `factionBody` alone, for both form factors. Adding a phone-only row
+// means adding a phone-only surface, which those ADRs call drift rather than a
+// rollback.
 // Note what that buys albescent: its single `taskDetail` registration now covers
 // the phone too, and it never needs a second row it would have had to stay out
 // of.
 //
-// THE `editPraxis` ROW IS NEW (#1181). It exists because retiring
-// `mobileEditPraxis` also retired the only test that proved composer dispatch at
-// all (`mobileArchetypes/__tests__/dispatch.test.tsx`), and the composer should
-// not be the one big surface with no row here.
+// THE `editPraxis` ROW (#1181) exists because the composer should not be the one
+// big surface with no row here.
 //
 // It said it would grow no further, and #2505 grew it by one. The claim was
 // about SKINS — all seven of those are registered and epic #1179 rebuilt them in
@@ -154,22 +150,15 @@ const BESPOKE: Record<string, string[]> = {
   // not say is WHICH of "na draws nothing to grab" and "nobody got to it" was
   // meant, and it turned out to be neither.
   createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity', 'albescent'],
-  // Was `mobileFactionPage` with this exact slug list until ADR-0078 collapsed
-  // faction detail to one responsive component per faction. Same move the
-  // praxis-card row made below: the row follows the surviving surface rather
-  // than dying with the retired one. `factionBody` is what a phone renders now,
-  // and it carries the same seven registrations the phone twin did — which is
-  // why the deleted twin was drift rather than a second design.
+  // `factionBody` is what a phone renders too (ADR-0078): faction detail is one
+  // responsive component per faction, so this one row covers both widths.
   // `albescent` appended by #2504 — a WRAPPER over `DefaultFactionBody`, not an
   // eighth skin: it forwards the whole na body and hands its plates one ornament
   // node. The row is here because the dispatch is real, not because the dress is.
   factionBody: [...CORE_SIX, 'wow', 'albescent'],
   mobileFieldDesk: [...CORE_SIX, 'wow', 'albescent'],
-  // Was `mobilePraxisCard` with this exact slug list until ADR-0067 collapsed
-  // the praxis card to one responsive component per faction. The row moved to
-  // the surviving surface rather than dying with the retired one: all eight
-  // slugs register `praxisCard`, and that card is now what a phone renders, so
-  // this proves the same dispatch it always did on the only card left.
+  // `praxisCard` is what a phone renders too (ADR-0067): the praxis card is one
+  // responsive component per faction, and all eight slugs register it.
   praxisCard: [...CORE_SIX, 'wow', 'albescent'],
 }
 
@@ -200,9 +189,7 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
 
 // The bar, derived so a new core surface raises it automatically: every surface
 // the reference core factions all skin — `duelSeal` included, since all five
-// register it. It used to exclude `mobileProfile` (only wow ever filled it) and
-// `mobileDuelSeal`; #1319 and #1313 retired both surfaces outright, so there is
-// nothing left to exclude. The crested profile is the mobile branch of
+// register it. Nothing is excluded: the crested profile is the mobile branch of
 // `profileBody` and every seal is one responsive component behind `duelSeal`,
 // and every reference faction already skins both.
 const REFERENCE_FACTIONS = ['snide', 'ephemerists', 'singularity', 'everymen', 'ua']

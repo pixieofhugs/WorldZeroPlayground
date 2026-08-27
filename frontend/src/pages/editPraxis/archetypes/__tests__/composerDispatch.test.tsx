@@ -1,13 +1,10 @@
 /**
  * Composer dispatch and the mode picker, at BOTH form factors (#1181).
  *
- * Successor to `mobileArchetypes/__tests__/dispatch.test.tsx` and
- * `modePicker.test.tsx`, which went with the `mobileEditPraxis` surface ADR-0065
- * retired. Those two proved the form-factor BRANCH (phone → the mobile twin,
- * desktop → the archetype) and the mode gates as they reached the phone skin.
- * There is no branch left to prove, so what replaces them is the claim the
- * collapse actually makes: **the same archetype answers at both widths, and the
- * shared ModePicker's gates behave identically there.**
+ * There is no form-factor BRANCH to prove (ADR-0065), so what this file proves
+ * instead is the claim one responsive composer makes: **the same archetype
+ * answers at both widths, and the shared ModePicker's gates behave identically
+ * there.**
  *
  * Rendered through `<EditPraxis />` rather than the archetype directly, so the
  * dispatcher is in the path — a regression that re-introduced a form-factor

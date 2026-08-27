@@ -21,10 +21,7 @@ import ProposeTaskLink from '../ProposeTaskLink'
  * ADR-0056 turned on. Each faction card sizes itself for the phone via
  * `useFormFactor()`, and mobile inherits the inline signup CTA (gated on
  * `can_sign_up` exactly as desktop is), the in-progress count and the
- * multiplier badge, none of which the old mobile-only cards had. That was
- * shipped as a reversible experiment; the owner's hands-on verdict accepted it,
- * so the `mobileTaskCard` dispatcher and its nine cards are now deleted and
- * there is no second task-card implementation to revert to.
+ * multiplier badge. There is one task-card implementation, not a phone twin.
  */
 export default function DefaultTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')

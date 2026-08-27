@@ -21,10 +21,9 @@
  * ## One responsive component, no mobile twin (ADR-0065 §2)
  *
  * `useComposerSizes()` picks the size set and `sizes.isMobile` picks the
- * conditional ornament; there is one tree at two widths.
- * `mobileArchetypes/EphemeristsEditPraxis.tsx` went with the `mobileEditPraxis`
- * surface in #1181. Nothing below is a fixed-px layout grid
- * (SPEC-faction-ui-profile §1a) — every fixed number here is ornament geometry.
+ * conditional ornament; there is one tree at two widths. Nothing below is a
+ * fixed-px layout grid (SPEC-faction-ui-profile §1a) — every fixed number here
+ * is ornament geometry.
  *
  * ## Copy — none of its own (ADR-0065 §3)
  *
