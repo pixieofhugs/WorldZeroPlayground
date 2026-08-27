@@ -622,6 +622,10 @@ class SignupFacts:
     #: (#2359). A third population, and neither of the two above: see
     #: :func:`in_progress_praxis_ids` for why it can be folded into neither.
     in_progress_praxis_ids: Mapping[int, int]
+    #: Task id → the viewer's FILED praxis on it, for ``TaskOut.submitted_praxis_id``
+    #: (#2643). A fourth, for :func:`submitted_praxis_ids`'s reason — the same
+    #: denial, the other side of it.
+    submitted_praxis_ids: Mapping[int, int]
 
 
 async def gather_signup_facts(
@@ -630,7 +634,7 @@ async def gather_signup_facts(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in six queries, not six per row.
+    """Read one page's worth of :class:`SignupFacts` in seven queries, not seven per row.
 
     ``era`` is threaded into the membership read so a caller evaluating against a
     non-current ruleset gets facts from that same ruleset — precomputed facts
@@ -641,9 +645,12 @@ async def gather_signup_facts(
     mean restating the Double Dipper carve-out outside the SQL that owns it — the
     #1359 defect exactly.
 
-    The sixth is the open-draft map (#2359). It is a *page-wide* query like the
-    other five, so the browse still costs a constant number of reads however
-    many rows are on it — the only property this file's #1377 work defends.
+    The sixth is the open-draft map (#2359) and the seventh its filed twin
+    (#2643). Both are *page-wide* queries like the other five, so the browse
+    still costs a constant number of reads however many rows are on it — the
+    only property this file's #1377 work defends. Seven constant reads is that
+    property held, not spent: what it forbids is a read that scales with the
+    page, and neither of these does.
     """
     era_row = await get_current_era_row(session)
     return SignupFacts(
@@ -659,6 +666,7 @@ async def gather_signup_facts(
         in_progress_praxis_ids=await in_progress_praxis_ids(
             character, task_ids, session
         ),
+        submitted_praxis_ids=await submitted_praxis_ids(character, task_ids, session),
     )
 
 
@@ -1502,6 +1510,55 @@ async def in_progress_praxis_ids(
     A character may hold more than one open draft on one task (Double Dipper);
     the ordering makes the newest one the answer rather than an arbitrary one.
     """
+    return await _own_praxis_ids(character, task_ids, PraxisStatus.in_progress, session)
+
+
+async def submitted_praxis_ids(
+    character: Character,
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """Which of ``task_ids`` ``character`` has FILED a praxis on, and which praxis
+    — ONE query. The source of ``TaskOut.submitted_praxis_id`` (#2643).
+
+    The twin of :func:`in_progress_praxis_ids` one status further on, and it
+    exists for the same reason: ``already_active_member`` is the denial a card
+    spends its only slot on, and for a *submitted* praxis the useful thing —
+    reading it — is one hop away with no id to reach it by. Same viewer scoping,
+    same page-wide shape, same absence of ``era``.
+
+    ``submitted`` ONLY, deliberately narrower than the denial's own population
+    (``in_progress``, ``pending``, ``submitted``). ``pending`` is a praxis
+    awaiting moderation and is nobody's "read your praxis"; it keeps falling
+    through to the plain label, exactly as it did before this field existed.
+
+    A character may have submitted MORE THAN ONCE to one task — re-signing up
+    after a first praxis is filed is a live path (``ctaAgain``, Double Dipper) —
+    so this holds the MOST RECENT one. That is the ordering below and not the
+    query's default: ascending ``Praxis.id`` with a last-write-wins dict leaves
+    the highest id, and ids are monotonic. A stale first attempt would be the
+    wrong door to offer someone who has already filed a second.
+    """
+    return await _own_praxis_ids(character, task_ids, PraxisStatus.submitted, session)
+
+
+async def _own_praxis_ids(
+    character: Character,
+    task_ids: Collection[int],
+    status: PraxisStatus,
+    session: AsyncSession,
+) -> dict[int, int]:
+    """Task id → ``character``'s own praxis in ``status`` on it, newest wins.
+
+    The one query behind both readers above, so the two cannot drift on the part
+    that matters most: **the membership join is what scopes this to the viewer**.
+    Written once, it cannot be dropped from one of them and leak a stranger's
+    praxis id onto a task with many submissions.
+
+    Private because the two named readers are the vocabulary — a caller wanting
+    "the viewer's praxis in status X" for some third X is a population that
+    should arrive with its own docstring saying what it means, as those two do.
+    """
     if not task_ids:
         return {}
     result = await session.execute(
@@ -1509,7 +1566,7 @@ async def in_progress_praxis_ids(
         .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character.id,
-            Praxis.status == PraxisStatus.in_progress,
+            Praxis.status == status,
             Praxis.task_id.in_(task_ids),
         )
         .order_by(Praxis.id)

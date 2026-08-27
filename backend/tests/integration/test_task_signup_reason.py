@@ -308,3 +308,164 @@ async def test_praxis_id_is_the_same_whether_or_not_the_page_precomputed_facts(
             active_task, character, db_session, signup_facts=uncovered
         )
     ).in_progress_praxis_id == praxis.id
+
+
+# ---------------------------------------------------------------------------
+# #2643 — the same seam again, on the OTHER half of the same denial:
+# `TaskOut.submitted_praxis_id`.
+#
+# `already_active_member` covers a filed praxis as well as an open draft, and
+# for the filed one the field above is null by design — so the card fell all the
+# way back to a greyed "Already done" while the task detail said "Read your
+# praxis" and linked to it. The detail can: it reaches the praxis through its
+# own submitted-only gallery. A grid of cards cannot make that request per card,
+# so this id rides along on the row exactly as its twin does.
+#
+# THE LEAK IS THE CASE WORTH A TEST. A popular task has many submissions and
+# only one of them is the requesting character's, so the assertion that matters
+# is not "the id is right" but "somebody else's id is never here".
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_the_denial_carries_the_filed_praxis_it_is_about(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """Shut, nothing to edit — and now something to read."""
+    praxis = await _seed_praxis(
+        db_session, character, active_task, PraxisStatus.submitted
+    )
+
+    out = await build_task_out_for_viewer(active_task, character, db_session)
+
+    assert out.signup_reason == SignupDenialReason.already_active_member.value
+    assert out.submitted_praxis_id == praxis.id
+    # The twin stays null: this praxis is filed, and its editor would bounce.
+    assert out.in_progress_praxis_id is None
+
+
+@pytest.mark.asyncio
+async def test_another_characters_submission_is_never_named(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """THE LEAK CASE. A task with a submission on it hands a stranger nothing.
+
+    ``character2`` has filed a praxis here; ``character`` has not. The viewer
+    sees a task with submissions, an open sign-up, and no id — because the query
+    behind the field joins ``PraxisMember`` on the *requesting* character. Drop
+    that join and this row would name someone else's praxis to every viewer of
+    the task.
+    """
+    other_praxis = await _seed_praxis(
+        db_session, character2, active_task, PraxisStatus.submitted
+    )
+
+    out = await build_task_out_for_viewer(active_task, character, db_session)
+
+    assert out.submitted_praxis_id is None
+    assert out.submitted_praxis_id != other_praxis.id
+    # And the viewer's own sign-up is untouched by a stranger's membership.
+    assert out.can_sign_up is True
+
+
+@pytest.mark.asyncio
+async def test_a_task_never_submitted_to_carries_no_filed_id(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """The plain null — nobody has submitted anything anywhere."""
+    out = await build_task_out_for_viewer(active_task, character, db_session)
+
+    assert out.submitted_praxis_id is None
+
+
+@pytest.mark.asyncio
+async def test_a_pending_praxis_is_not_something_to_read(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """The population boundary. ``pending`` shuts sign-up and stays label-only.
+
+    It is awaiting moderation, so it is neither a draft to edit nor a filed
+    praxis to read. Widening either field to the denial's full population is
+    what this pins against.
+    """
+    await _seed_praxis(db_session, character, active_task, PraxisStatus.pending)
+
+    out = await build_task_out_for_viewer(active_task, character, db_session)
+
+    assert out.signup_reason == SignupDenialReason.already_active_member.value
+    assert out.submitted_praxis_id is None
+    assert out.in_progress_praxis_id is None
+
+
+@pytest.mark.asyncio
+async def test_the_second_submission_is_the_one_offered(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """Submitted twice — the docblock promises the MOST RECENT, not the first.
+
+    Re-signing up after filing is a live path, so this is the ordering being an
+    intention rather than the query's default.
+    """
+    first = await _seed_praxis(
+        db_session, character, active_task, PraxisStatus.submitted
+    )
+    second = await _seed_praxis(
+        db_session, character, active_task, PraxisStatus.submitted
+    )
+    assert second.id > first.id
+
+    out = await build_task_out_for_viewer(active_task, character, db_session)
+
+    assert out.submitted_praxis_id == second.id
+
+
+@pytest.mark.asyncio
+async def test_filed_id_is_the_same_whether_or_not_the_page_precomputed_facts(
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+):
+    """#1377's property once more: absence from the bag is not "no praxis"."""
+    praxis = await _seed_praxis(
+        db_session, character, active_task, PraxisStatus.submitted
+    )
+    other = await _make_task(db_session, character)
+
+    covered = await gather_signup_facts(
+        character, [active_task.id, other.id], db_session
+    )
+    assert (
+        await build_task_out_for_viewer(
+            active_task, character, db_session, signup_facts=covered
+        )
+    ).submitted_praxis_id == praxis.id
+
+    uncovered = await gather_signup_facts(character, [other.id], db_session)
+    assert (
+        await build_task_out_for_viewer(
+            active_task, character, db_session, signup_facts=uncovered
+        )
+    ).submitted_praxis_id == praxis.id

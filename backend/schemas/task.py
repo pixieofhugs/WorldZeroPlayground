@@ -85,14 +85,42 @@ class TaskOut(WireModel):
     # THE POPULATION IS THE DETAIL PAGE'S, `in_progress` ONLY, and it is
     # deliberately NARROWER than the denial's own (`in_progress`, `pending`,
     # `submitted`). A submitted praxis shuts sign-up with nothing left to edit,
-    # and this field is None there — reachable, not theoretical, and the client
-    # falls back to the plain label for it.
+    # and this field is None there — reachable, not theoretical, and
+    # `submitted_praxis_id` below is what the client reaches for instead
+    # (#2643). Only `pending` still falls through to the plain label.
     #
     # It is also NOT filtered by the Double Dipper carve-out
     # (``active_member_task_ids``). "Do I hold a draft here" is a raw fact no
     # ability changes; sourcing it from the blocking set would have made an
     # Everymen player the one group whose draft the wire refused to name.
     in_progress_praxis_id: Optional[int] = None
+    # The VIEWER'S OWN FILED praxis on this task — the praxis id, or None (#2643).
+    #
+    # The field above's twin, one status further on, and it exists because the
+    # field above left half its own denial unanswered. `already_active_member`
+    # covers a submitted praxis too, and there the card had nothing to offer:
+    # a greyed "Already done" where the task detail says "Read your praxis" and
+    # links to it. The detail reaches that praxis through its own submitted-only
+    # gallery fetch, which a grid of cards cannot make one per card — so the id
+    # rides along on the row, exactly as its twin does.
+    #
+    # VIEWER-SCOPED, and this is the one that would be worth a leak. A popular
+    # task has many submissions and only ONE of them is the requesting
+    # character's: the id comes from `services.praxis.submitted_praxis_ids`,
+    # whose query joins `PraxisMember` on the viewer's own character id, and it
+    # is None for a viewer who has not submitted. It defaults None for anonymous
+    # callers exactly as the flags above do.
+    #
+    # `submitted` ONLY — narrower than the denial's population, like its twin.
+    # A `pending` praxis is awaiting moderation and is nobody's "read your
+    # praxis"; it keeps falling through to the plain label.
+    #
+    # SUBMITTED MORE THAN ONCE, this holds the MOST RECENT. Re-signing up after
+    # a praxis is filed is a live path (`ctaAgain`, Double Dipper), so the case
+    # is real rather than theoretical, and the answer is stated in the query's
+    # ordering rather than left to the default: offering someone a first attempt
+    # they have already superseded is the wrong door.
+    submitted_praxis_id: Optional[int] = None
     # The *start here* mark (#1861, SPEC-onboarding § The hand-off). True iff
     # this is the one game-wide onboarding task AND the viewing character has
     # never completed it — ever, not "not this era".
