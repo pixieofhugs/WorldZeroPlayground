@@ -7,7 +7,7 @@
  * cannot drag has no edge to advertise.
  *
  * The Default dialog's content, re-hung on the coven's own paper: a slip band
- * across the head carrying the pentagram badge and a braided thread, the
+ * across the head carrying the coven's witch hat and a braided thread, the
  * candlelit page beneath it, and the stakes + roster on a panel laid on that
  * wash. Same beat, Coven's hand.
  *
@@ -46,17 +46,18 @@ import {
   Braid,
   BORDER,
   CARD,
+  DEEP,
   DISPLAY,
   GOLD,
   INK,
   PAGE,
   READING,
   SHADOW,
-  SigilMark,
   SLIP_SHEET,
   SOFT,
   Spark,
 } from '../factionMarks/covenSlip'
+import { CovenSigil } from '../sigil/CovenSigil'
 import {
   duelSides,
   RaceRoster,
@@ -110,7 +111,7 @@ export default function CovenDuelSealConfirm({
         boxShadow: SHADOW,
       }}
     >
-      {/* the slip band — badge, heading, braid */}
+      {/* the slip band — the hat, heading, braid */}
       <div
         style={{
           flexShrink: 0,
@@ -121,7 +122,7 @@ export default function CovenDuelSealConfirm({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          <SigilMark size={26} />
+          <CovenSigil size={26} color={DEEP} />
           <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
             {copy.heading}
           </h2>

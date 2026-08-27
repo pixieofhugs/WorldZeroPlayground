@@ -21,12 +21,12 @@ import {
   INK,
   READING,
   SHADOW,
-  SigilMark,
   SlipAvatar,
   SLIP_SHEET,
   SOFT,
   Spark,
 } from "../../../components/factionMarks/covenSlip";
+import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
@@ -50,7 +50,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  * sticker headings and the two raw warm-brown rgba shadows this file carried are
  * all the lo-fi metaphor the v2 task card retired (#1023). What replaces them is
  * the vocabulary the slip already ships: the pink→lavender sheet as a band, ward
- * paper as every panel, braided thread as every rule, and the pentagram badge.
+ * paper as every panel, braided thread as every rule, and the witch hat.
  *
  * There is no roster row in the design — task and praxis detail pages carry none
  * — so the member list and the spotlight are built from the two list shapes the
@@ -265,7 +265,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 borderBottom: `2px solid ${BORDER}`,
               }}
             >
-              <SigilMark size={26} />
+              <CovenSigil size={26} color={DEEP} />
               {/*
                 #1948: this bar used to read `join.exe` — the title of the
                 pushpinned window #1209 deleted, re-hung on the panel that

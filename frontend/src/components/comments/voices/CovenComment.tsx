@@ -8,7 +8,6 @@ import { type CommentProps, authorToCharacter, ComposerControls, MentionText } f
 import {
   CommentEditor,
   OwnerControls,
-  ownerRevealStyle,
   useOwnerEdit,
   useOwnerReveal,
 } from '../OwnerControls'
@@ -172,10 +171,10 @@ export default function CovenComment(props: CommentProps) {
   // or a flag affordance. Hidden while editing — the inline editor owns
   // Save/Cancel then.
   const showFoot = !owner.editing && (owner.isOwner || canFlag)
-  // On your OWN comment the foot holds nothing but the gated owner row, so the
-  // braid above it fades with the row: a thread ruling off empty space is a state
-  // this sheet never draws. Someone else's (flaggable) comment keeps its foot.
-  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
+  // The foot RULE is never gated (#2733): on your own comment it always draws,
+  // and only the edit/delete cluster fades. `<OwnerControls reveal>` gates
+  // itself — and it alone knows to stay pinned through the withdraw-confirm
+  // strip, which an outer gate used to fade out from under mid-answer.
 
   return (
     <Slip
@@ -245,7 +244,7 @@ export default function CovenComment(props: CommentProps) {
       </div>
 
       {showFoot && (
-        <div style={{ marginTop: 'var(--space-md)', ...footGate }}>
+        <div style={{ marginTop: 'var(--space-md)' }}>
           {/* the braided thread rules the foot off the body. `.cvn-braid` owns
               both its pigments and its dark override — a data-URI SVG is a
               separate document, so `var(--…)` inside one never resolves. */}

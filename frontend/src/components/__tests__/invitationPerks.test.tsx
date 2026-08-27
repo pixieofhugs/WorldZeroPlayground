@@ -189,14 +189,14 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
  *
  * Every other perk in the catalog is a placeholder the owner fills in the file,
  * so these eight are the only rows a copy edit here would be reverting rather
- * than writing. The corrections are the point: `lose` not "loose", `aplenty`
- * not "a plenty", the serial comma, `who` not "that" for witches, `read-only`
- * hyphenated.
+ * than writing. The corrections are the point: `lose` not "loose", the serial
+ * comma, `who` not "that" for witches, `read-only` hyphenated. (UA's row is the
+ * owner's own 2026-08-26 rewrite, which is why "aplenty" is no longer here.)
  * -------------------------------------------------------------------------- */
 describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   const MECHANICS: ReadonlyArray<readonly [string, string, string]> = [
-    ['ua', 'Set Your Art Free',
-      'Make a practice of making praxis and you will have points aplenty'],
+    ['ua', 'Bonus points for persistence',
+      'Practice doing art daily, the inertia will drive you to continued more practice and be rewarded'],
     ['snide', 'Going Hard',
       'Duels you win bring glory. Duels you lose bring despair'],
     ['wow', 'Foolhardy Courage',

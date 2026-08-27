@@ -12,15 +12,15 @@ import {
   INK,
   READING,
   SHADOW,
-  SigilMark,
   SLIP_SHEET,
   Spark,
 } from "../factionMarks/covenSlip";
+import { CovenSigil } from "../sigil/CovenSigil";
 
 /**
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
  *
- * The pentagram badge, the coven's name hand-lettered in Caveat, a braided
+ * The witch hat, the coven's name hand-lettered in Caveat, a braided
  * thread under both, and — per the faction-page standardization — the three
  * counts as small candle-lit panels in a SIDE column, never a full-width band.
  * Conforms to {@link FactionHeroProps}.
@@ -75,7 +75,14 @@ export default function CovenFactionHero({
           overflow: "hidden",
         }}
       >
-        <SigilMark size={74} />
+        {/* THE FLAT SILHOUETTE AT 74px IS ACCEPTED, not overlooked (#2726).
+            This is the largest of the hat's six mounts and the one where the
+            retired badge's disc-and-ring gave it the most — a struck object
+            where this is a shape. The owner took that knowingly rather than
+            keep a second identity alive at the other five. If this ONE mount
+            later wants a setting, that is a follow-up; it is not a reason to
+            re-draw the pentagram here. */}
+        <CovenSigil size={74} color={DEEP} />
 
         <div style={{ flex: 1, minWidth: 250 }}>
           <div style={CAPTION}>{i18n.t("feed:factionHero.coven.eyebrow")}</div>
