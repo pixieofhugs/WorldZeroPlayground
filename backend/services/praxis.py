@@ -1536,27 +1536,6 @@ async def is_active_member_of_task(
     return task.id in await active_member_task_ids(character, [task.id], session, era)
 
 
-async def can_sign_up_for_task(
-    character: Optional[Character],
-    task: Task,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-    *,
-    facts: Optional[SignupFacts] = None,
-) -> bool:
-    """Return True iff ``create_praxis``'s type-agnostic gates would accept — the
-    truthful ``can_sign_up`` flag on ``TaskOut`` (ADR-0008).
-
-    Derives from :func:`evaluate_signup`, so it covers every shared gate: level,
-    retired/pending faction carve-out, active-member (Everymen Double-Dipper
-    exempt), **and the task-bank cap** — the last was previously omitted here,
-    which made the sign-up button lie once a character's bank was full.
-
-    ``facts`` is passed straight through — see :func:`evaluate_signup`.
-    """
-    return (await evaluate_signup(character, task, session, era, facts=facts)).allowed
-
-
 def allowed_praxis_modes(
     character: Optional[Character],
     character_level: int,
@@ -2169,7 +2148,6 @@ __all__ = [
     "active_member_task_ids_subquery",
     "allowed_praxis_modes",
     "can_flag_praxis",
-    "can_sign_up_for_task",
     "can_view_praxis",
     "create_praxis",
     "delete_praxis",
