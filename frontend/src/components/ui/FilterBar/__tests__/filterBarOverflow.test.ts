@@ -116,8 +116,8 @@ describe('.filter-bar__spectrum can hold the bar\'s corner (#1944)', () => {
   it('sizes its BOX to the radius and its BAND to the rail pad', () => {
     expect(strip).toMatch(/height\s*:\s*var\(--space-md\)/)
     // The tell for the regression: the band thickness back in `height`.
-    expect(strip).not.toMatch(/height\s*:\s*var\(--filter-rail-pad\)/)
-    expect(strip).toMatch(/padding-top\s*:\s*var\(--filter-rail-pad\)/)
+    expect(strip).not.toMatch(/height\s*:\s*var\(--switch-rail-pad\)/)
+    expect(strip).toMatch(/padding-top\s*:\s*var\(--switch-rail-pad\)/)
   })
 
   it('builds its radius from the same token the bar rounds with', () => {
@@ -130,7 +130,7 @@ describe('.filter-bar__spectrum can hold the bar\'s corner (#1944)', () => {
 
   it('gives back the flow the taller box would add, and masks the rest', () => {
     expect(strip).toMatch(
-      /margin-bottom\s*:\s*calc\(\s*var\(--filter-rail-pad\)\s*-\s*var\(--space-md\)\s*\)/,
+      /margin-bottom\s*:\s*calc\(\s*var\(--switch-rail-pad\)\s*-\s*var\(--space-md\)\s*\)/,
     )
     // Without the exclude, the extra 9px paints as rainbow instead of nothing.
     expect(strip).toMatch(/mask[^;]*content-box[^;]*exclude/)

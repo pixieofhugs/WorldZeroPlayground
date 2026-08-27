@@ -151,7 +151,7 @@ type Pair = {
    * bug that got past both guards in #694.
    *
    * AN ARRAY IS A STACK, applied outermost-last (#1715). A selected faction
-   * filter row is page -> `--filter-well` -> `--filter-thumb` -> ink: two washes
+   * filter row is page -> `--switch-well` -> `--switch-thumb` -> ink: two washes
    * of the same token at two alphas, and it is the tightest neutral ground in
    * the app. One wash short is how this issue's first measurement read the
    * profile card as fine — the answer moves by ~0.5 of a ratio point per layer,
@@ -2022,7 +2022,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
       text,
       floor: AAA_NORMAL,
     },
-    // `--filter-well` is `color-mix(in srgb, --color-text-primary 6%, --color-bg-page)`,
+    // `--switch-well` is `color-mix(in srgb, --color-text-primary 6%, --color-bg-page)`,
     // which is that token at 6% alpha over the page — the same arithmetic the
     // `{ token, alpha }` veil already does, and the only way to reach a
     // `color-mix()` at all (`parseColor` returns null for one, by design).

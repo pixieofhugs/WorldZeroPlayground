@@ -66,7 +66,7 @@ const CSS = readFileSync(
  *    → `--everymen-*`, `--faction-ua-*`, `--faction-wow-vote-*`,
  *    `--faction-wow-figure`) — the alias *is* the contract, and `cssVars.ts`
  *    names `--faction-everymen-card-bg` as the canonical correct case.
- *  - **composed neutrals** (`--filter-*`, `--label-ink`, `--link-ink*`) —
+ *  - **composed neutrals** (`--switch-*`, `--label-ink`, `--link-ink*`) —
  *    `color-mix()` off the page ground so there is one declaration to re-tune
  *    rather than two (WORLD_ZERO_STYLE.md §3, #1365).
  *
@@ -149,16 +149,16 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-wow-stamp-bg",
   "--faction-wow-vote-off",
   "--faction-wow-vote-on",
-  "--filter-thumb",
-  "--filter-thumb-edge",
-  // The two-state switch's OFF thumb (#2154), minted beside its ON twin above
-  // and of exactly the same shape — a color-mix() off `--color-text-primary`,
-  // which the dark block rebinds, so it flips on its own.
-  "--filter-thumb-off",
-  "--filter-well",
   "--label-ink",
   "--link-ink",
   "--link-ink-hover",
+  "--switch-thumb",
+  "--switch-thumb-edge",
+  // The two-state switch's OFF thumb (#2154), minted beside its ON twin above
+  // and of exactly the same shape — a color-mix() off `--color-text-primary`,
+  // which the dark block rebinds, so it flips on its own.
+  "--switch-thumb-off",
+  "--switch-well",
 ];
 
 const REFERENT = /var\(\s*(--[\w-]+)/g;
