@@ -16,35 +16,27 @@
  * this component, so there is nothing to assert about it here; it is an eyeball
  * check, as is the cornice glow (a CSS animation).
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import type { DuelDetailOut } from "../../../api/duel";
-import { aMember, aPraxis } from '../../../test/fixtures'
+import { aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
+import {
+  CO_MEMBER,
+  MEMBER,
+  VOTERS,
+  aPraxisDetailState,
+  indexOf,
+  renderPraxisDetail,
+} from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
-// Imported after the mock so the archetype picks it up.
-const { default: EphemeristsPraxisDetail, voterMetalWordFits } = await import(
-  "../archetypes/EphemeristsPraxisDetail"
-);
-
-const MEMBER = aMember({
-  character_id: 3,
-  character_display_name: "Ada",
-});
-
-const CO_MEMBER = aMember({
-  id: 102,
-  character_id: 4,
-  character_display_name: "Beth",
-  joined_at: "2026-01-02T00:00:00Z",
-});
+// `voterMetalWordFits` is a pure export of the archetype module, imported after
+// the mock so the module picks it up.
+const { voterMetalWordFits } = await import("../archetypes/EphemeristsPraxisDetail");
 
 const PRAXIS = aPraxis({
   task_title: "The Sunk Causeway",
@@ -58,96 +50,28 @@ const PRAXIS = aPraxis({
 });
 
 /** A settled duel this praxis is the challenger side of. */
-const DUEL: DuelDetailOut = {
-  id: 5,
-  task_id: 7,
-  status: "settled",
-  forfeited_by_character_id: null,
-  challenger: {
-    praxis_id: 1,
-    character_id: 3,
-    display_name: "Ada",
-    faction_slug: "ephemerists",
-    avatar_url: "",
-    points_from_votes: 18,
-    is_submitted: true,
-    nudged_at: null,
-  },
-  opponent: {
+const DUEL = aDuel({
+  challenger: aDuelSide({ faction_slug: "ephemerists", points_from_votes: 18 }),
+  opponent: aDuelSide({
     praxis_id: 2,
     character_id: 4,
     display_name: "Rax",
     faction_slug: "snide",
-    avatar_url: "",
     points_from_votes: 15.4,
-    is_submitted: true,
-    nudged_at: null,
-  },
-  winner_character_id: null,
-  challenger_final_points: null,
-  opponent_final_points: null,
-};
+  }),
+});
 
-function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
-  return {
-    loading: false,
-    praxis: PRAXIS,
-    fetchError: null,
-    comments: null,
-    voters: [
-      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
-      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
-    ],
-    duel: null as DuelDetailOut | null,
-    isOwner: false,
-    showAdminBar: false,
-    user: null,
-    withdrawing: false,
-    showWithdrawConfirm: false,
-    setShowWithdrawConfirm: () => {},
-    withdrawError: null,
-    adminFailNote: "",
-    setAdminFailNote: () => {},
-    showFailInput: false,
-    setShowFailInput: () => {},
-    moderating: false,
-    moderateError: null,
-    showFlagForm: false,
-    setShowFlagForm: () => {},
-    flagReason: null,
-    setFlagReason: () => {},
-    flagDetail: "",
-    setFlagDetail: () => {},
-    flagging: false,
-    flagError: null,
-    setFlagError: () => {},
-    flagSubmitted: false,
-    handleModerate: async () => {},
-    handleWithdraw: async () => {},
-    handleFlag: async () => {},
-    handleKickMember: async () => {},
-    ...overrides,
-  };
-}
+const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>
+  aPraxisDetailState({ praxis: PRAXIS, voters: VOTERS, ...overrides });
 
+// The skin comes from the real registry, resolved at render time — inside the
+// test, so after both the `vi.mock` above and the archetype preload.
 function render(
   next: PraxisDetailState,
   formFactor: "desktop" | "mobile" = "desktop",
 ): { html: string; text: string } {
   mocks.formFactor = formFactor;
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <EphemeristsPraxisDetail state={next} />
-    </MemoryRouter>,
-  );
-  return { html, text: html.replace(/<[^>]*>/g, "") };
-}
-
-/** Where a marker sits in the markup — the seam the responsive move is about. */
-function indexOf(html: string, needle: string): number {
-  const at = html.indexOf(needle);
-  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
-  return at;
+  return renderPraxisDetail("ephemerists", next);
 }
 
 describe("Ephemerists praxis detail — the inherited layout contract", () => {
