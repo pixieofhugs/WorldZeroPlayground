@@ -442,13 +442,21 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         {/* ③ RE: YOU — join / gate / standing (tilted dispatch) */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
-            <div style={{ ...WALL_PANEL, padding: "var(--space-xl)" }}>
+            {/* #2621: the panel opens at 16px above the letterhead — Coven's
+                number, and the one rhythm every join panel now shares. Its own
+                value, not a shared one. The sides keep `--space-xl`, and the
+                acid plate below keeps its own `--space-xs` stencil inset: that
+                inset is the stamp, not the panel's opening. */}
+            <div style={{ ...WALL_PANEL, padding: "var(--space-lg) var(--space-xl)" }}>
               <Halftone />
+              {/* #2299 cut this rule's `re: you` label, leaving one child. The
+                  `justify-content: space-between` that pushed the pair apart
+                  described a layout that no longer exists — a single child in a
+                  `space-between` row already sits at the start (#2621). */}
               <div
                 style={{
                   position: "relative",
                   display: "flex",
-                  justifyContent: "space-between",
                   alignItems: "baseline",
                   // The letterhead rule stays the PIGMENT: it is a drawn line
                   // carrying no words, and an acid stripe on cream reads by
