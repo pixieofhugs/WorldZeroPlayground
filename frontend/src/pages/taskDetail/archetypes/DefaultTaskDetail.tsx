@@ -20,6 +20,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { DEFAULT_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -254,9 +255,17 @@ export default function DefaultTaskDetail({
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still na's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryButton}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `DefaultTaskCard` and by this
+              page, with `size` carrying the only difference between them.
+              `primaryButton` stays for the two exits below, which are not this
+              slot and were never the card's button. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={DEFAULT_CARD_CTA}
+          >
             {cta.label}
           </CardCtaControl>
           <div

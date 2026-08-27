@@ -17,6 +17,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { WOW_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -102,7 +103,10 @@ const LABEL = "var(--faction-wow-accent-deep)";
 const PLUM = "var(--wow-task-page-accent)";
 /** Plum as a FILL — theme-invariant, 5.16:1 under `--faction-wow-on-plum`. */
 const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
-const PLUM_EDGE = "var(--faction-wow-plum-edge)";
+/* `--faction-wow-plum-edge` stood here as this page's CTA border. #2642 gave the
+   sign-up the card's paint, whose enclosure is the fill itself, and the token
+   had no other reader on this surface. It stays declared — whether a family with
+   no consumer left gets retired is not this page's call. */
 const ON_PLUM = "var(--faction-wow-on-plum)";
 /** Frame + rule gold. Never an ink: 2.24:1 on the cream (§3). */
 const GOLD = "var(--faction-wow-chronicle-gold)";
@@ -333,7 +337,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
      all come from the one place that owns them. */
   const worth = <TaskWorthStamp state={state} />;
 
-  const ctaStyle = (ghost: boolean): CSSProperties => ({
+  /**
+   * The GHOST exit — "continue", "view your praxis": plum on nothing, in a gold
+   * enclosure, so it never looks like the call to arms.
+   *
+   * It took a `ghost` flag and painted the sign-up too, in the filled variant.
+   * #2642 gave the sign-up the card's paint, so the filled arm lost its only
+   * caller and went with it; the flag existed for that split alone.
+   */
+  const ghostCta: CSSProperties = {
     display: "flex",
     width: "100%",
     boxSizing: "border-box",
@@ -346,12 +358,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     fontFamily: MED,
     fontSize: size.cta,
     letterSpacing: "0.05em",
-    color: ghost ? PLUM : ON_PLUM,
-    background: ghost ? "transparent" : PLUM_SURFACE,
-    border: `2px solid ${ghost ? GOLD : PLUM_EDGE}`,
+    color: PLUM,
+    background: "transparent",
+    border: `2px solid ${GOLD}`,
     borderRadius: 7,
     padding: desktop ? "var(--space-md) var(--space-lg)" : "var(--space-md)",
-  });
+  };
 
   const quietNote: CSSProperties = {
     ...QUIET,
@@ -377,9 +389,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={ctaStyle(false)}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `WowTaskCard` and by this page,
+              with `size` carrying the only difference between them. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={WOW_CARD_CTA}
+          >
             <Star size={13} color={ON_PLUM} />
             {cta.label}
           </CardCtaControl>
@@ -406,7 +424,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               submitted praxis straight back to `/praxis/:id` (#1164) — so this
               button used to change nothing at all. Reopening for editing lives
               on the praxis page, one honest hop away. */}
-          <Link to={`/praxis/${mySubmission.id}`} style={ctaStyle(true)}>
+          <Link to={`/praxis/${mySubmission.id}`} style={ghostCta}>
             <Star size={13} color={GOLD} />
             {t("detail.submitted.view")}
           </Link>
@@ -416,7 +434,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
         <div>
           <div style={plateHeading}>{t("detail.inProgress.text")}</div>
-          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={ctaStyle(true)}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={ghostCta}>
             <Star size={13} color={GOLD} />
             {t("detail.inProgress.continue")}
           </Link>

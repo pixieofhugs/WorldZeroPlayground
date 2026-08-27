@@ -24,6 +24,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { UA_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -271,9 +272,16 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryAction}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `UaTaskCard` and by this page,
+              with `size` carrying the only difference between them.
+              `primaryAction` stays for the two exits below. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={UA_CARD_CTA}
+          >
             {cta.label}
           </CardCtaControl>
           <div style={{ ...aside, marginTop: "var(--space-sm)" }}>
