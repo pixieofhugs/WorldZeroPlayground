@@ -15,11 +15,8 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
-from services.praxis import (
-    SignupDenialReason,
-    can_sign_up_for_task,
-    evaluate_signup,
-)
+from services.praxis import SignupDenialReason, evaluate_signup
+from services.task import build_task_out_for_viewer
 from tests.integration.factories import make_task
 
 
@@ -135,15 +132,23 @@ async def test_evaluate_signup_bank_full(
 
 
 @pytest.mark.asyncio
-async def test_can_submit_flag_false_when_bank_full(
+async def test_can_sign_up_flag_false_when_bank_full(
     db_session: AsyncSession, character: Character, active_task: Task, era: Era, some_faction: Faction
 ):
-    """Regression: the can_sign_up flag now reflects the bank cap.
+    """Regression: the wire flag reflects the bank cap.
 
     Before #330 the flag omitted the bank cap, so a full-bank character got
     can_sign_up=True and the sign-up button lied.
+
+    **The seam is the builder that ships the flag** —
+    :func:`services.task.build_task_out_for_viewer`, whose ``TaskOut.can_sign_up``
+    is what a client reads. It was previously asserted one level down, against a
+    ``evaluate_signup(...).allowed`` wrapper no route ever called (#2696), which
+    left the cap pinned to the predicate but never to the field. The test above
+    already pins the predicate; this one pins the field to it.
     """
     await _seed_in_progress_praxis(db_session, character, active_task)
     other = await _make_task(db_session, character)
     capped = replace(CURRENT_ERA, max_task_signups=1)
-    assert await can_sign_up_for_task(character, other, db_session, capped) is False
+    out = await build_task_out_for_viewer(other, character, db_session, capped)
+    assert out.can_sign_up is False

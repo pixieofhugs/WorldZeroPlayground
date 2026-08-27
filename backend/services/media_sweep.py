@@ -297,22 +297,3 @@ def prune_empty_directories(media_root: str) -> int:
             continue  # Not empty, or not ours to remove.
         removed += 1
     return removed
-
-
-__all__ = [
-    "DEFAULT_MIN_AGE_SECONDS",
-    "FORBIDDEN_MEDIA_ROOTS",
-    "KnownPaths",
-    "MediaPathShape",
-    "ScannedFile",
-    "SweepReport",
-    "classify_shape",
-    "find_orphans",
-    "load_known_paths",
-    "media_root_is_sweepable",
-    "prune_empty_directories",
-    "scan_media_root",
-    "summarise_by_shape",
-    "total_bytes",
-    "unlink_orphans",
-]
