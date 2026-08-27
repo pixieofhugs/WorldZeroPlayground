@@ -278,3 +278,42 @@ it. (`FactionSigil`'s injected slug is no longer open — #2529 closed it; see �
 **The known sharp edge** is §5's exception. It is the one entry here that a
 future reader can mistake for an oversight, and the only guard against that is
 §6 staying attached to it. Anyone editing §5 without §6 has removed the guard.
+
+## Amendment (2026-08-27, #2530): the seam is `resolveVariant`, and `na` has a manifest
+
+*Consequences* above listed "whether `na` gains a real manifest (#2530), which
+changes the *mechanism* under §2 without touching which pages use it" as an open
+question. **It landed.** This note records what moved; nothing this record
+decided changes, and §2's invariant is the same invariant.
+
+**§2's heading and first paragraph name a helper that no longer has that shape.**
+`pickVariant` had a third parameter — an explicit `Default*` fallback — because
+`na` was the one faction not in the registry, so ~20 dispatchers each re-stated
+the unknown-slug rule by hand. `frontend/src/factions/default.ts` registers all
+twenty na surfaces now, `DEFAULT_MANIFEST` is the ninth entry in
+`FACTION_MANIFESTS`, and the rule is one function — `resolveSlug`. Read §2 as:
+
+> **The seam is `surfaceMap(<key>)` + `resolveVariant`.** A page that dresses
+> calls `surfaceMap('<key>')` and hands the result to `resolveVariant`, which
+> resolves an absent slug to `na`'s own row. There is no fallback argument and no
+> `Default*` named at the call site.
+
+`pickVariant` still exists in `utils/factionDispatch.ts`, with two arguments and
+a different job: it answers "is there a **bespoke** variant for this slug",
+returning `undefined` rather than reaching for na's row. That is what the
+surface-dispatch registration tests ask, and it is not what a dispatcher asks.
+
+**The bypass clause is unaffected.** §2's "no dispatcher may inject a slug at the
+call site" and the record of `FactionSigil`'s single exception closed by #2529
+stand exactly as written — the guard in `surfaceDispatch.test.ts` is the same
+guard. The `pickVariant({ albescent: … }, slug, DefaultSigilAdapter)` call quoted
+there is a quotation of retired code, which is the point of quoting it.
+
+**§5's `ProposeTask` paragraph quotes a `ponytail:` note that has been reworded.**
+`pages/ProposeTask.tsx` now says *"Add a `resolveVariant` dispatch here when one
+does"*. The ruling is untouched: still no ruling either way, still tracked in
+#2538.
+
+The body above is preserved as written, including both readings of the seam, so
+that a reader meeting a `pickVariant(map, slug, Default)` call in old history or
+an old design brief can still find out what it was.
