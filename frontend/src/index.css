@@ -8448,14 +8448,23 @@
      composition, one rung down, so the pair reads as one control in both
      cascades.
 
-     THE FAMILY NAME IS NOW WRONG AND IS DELIBERATELY LEFT ALONE. Nothing here
-     is about filtering; this is the repo's control-chrome idiom — an opaque
-     well, a neutral thumb, a spectrum ring painted padding-box/border-box — and
-     Settings' Appearance switches (#2154) are its second consumer, with the
-     cookie toggles (#2156) and the notification rail (#1047) to come. Renaming
-     the family to `--control-*` is a real change across ~20 declarations and
-     every FilterBar consumer, and it is a styling call, not a feature one. Read
-     these from outside the filter bar in the meantime; do not mint a twin. */
+     THE FAMILY WAS `--filter-*` UNTIL #2623, and the old name only ever
+     described its first consumer. Nothing here is about filtering; this is the
+     repo's control-chrome idiom — an opaque well, a neutral thumb, a spectrum
+     ring painted padding-box/border-box — and a segmented rail IS a switch, so
+     the filter bar reading these is honest in the direction that remains.
+     Consumers: FilterBar's SegmentedRail, Settings' Appearance switches
+     (#2154), the cookie toggles (#2156), and the notification rail (#1047) to
+     come. Read these from anywhere a control needs a well and a knob; do not
+     mint a twin.
+
+     NOT `--control-*`, which this block used to suggest. #2573's
+     `--control-off-fill` / `--control-off-ink` already own that namespace, and
+     there `-off` means DISABLED — you cannot use this control. Here it means
+     the knob's paint while the switch sits in its off position, which is a
+     perfectly usable control (`SettingsSwitch.tsx` — `checked ? thumb :
+     thumb-off`). Two senses of `-off` under one prefix is the confusion #2623
+     was filed to remove, so the owner ruled `--switch-*` instead. */
   --switch-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
 }
 

@@ -149,6 +149,9 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--faction-wow-stamp-bg",
   "--faction-wow-vote-off",
   "--faction-wow-vote-on",
+  "--label-ink",
+  "--link-ink",
+  "--link-ink-hover",
   "--switch-thumb",
   "--switch-thumb-edge",
   // The two-state switch's OFF thumb (#2154), minted beside its ON twin above
@@ -156,9 +159,6 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   // which the dark block rebinds, so it flips on its own.
   "--switch-thumb-off",
   "--switch-well",
-  "--label-ink",
-  "--link-ink",
-  "--link-ink-hover",
 ];
 
 const REFERENT = /var\(\s*(--[\w-]+)/g;
