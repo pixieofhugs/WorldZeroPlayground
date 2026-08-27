@@ -9,12 +9,14 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from models.praxis import PraxisType
-from models.task import Task, TaskStatus
+from models.task import Task
 from services.praxis import (
     SignupDenialReason,
     create_praxis,
@@ -24,13 +26,19 @@ from services.praxis import (
 from tests.integration.factories import make_task
 
 WOW = "wow"
+#: Any real faction that is NOT the jumper — derived, because the live era's
+#: first real faction could itself be WOW (#2708).
+NOT_WOW = next(slug for slug in real_faction_slugs(CURRENT_ERA) if slug != WOW)
 JUMPER_LEVEL = 3
 
 
 @pytest.fixture
-async def faction_wow(db_session: AsyncSession, faction_ua: Faction) -> Faction:
-    db_session.add(Faction(slug=WOW, status=FactionStatus.visible))
-    await db_session.commit()
+async def faction_wow(db_session: AsyncSession, some_faction: Faction) -> Faction:
+    """WOW's row — seeded by ``some_faction`` since #2708, not added here.
+
+    ``some_faction`` seeds every slug any era ever configured, so adding this
+    one again is a duplicate primary key rather than a no-op.
+    """
     result = await db_session.execute(select(Faction).where(Faction.slug == WOW))
     return result.scalar_one()
 
@@ -93,9 +101,9 @@ async def test_wow_may_never_reach_two_levels_above(
 
 @pytest.mark.asyncio
 async def test_non_wow_can_never_sign_up_above_their_level(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
-    await _set_faction_and_level(db_session, character, era, "ua")
+    await _set_faction_and_level(db_session, character, era, NOT_WOW)
     task = await _make_task(db_session, character, JUMPER_LEVEL + 1)
 
     result = await evaluate_signup(character, task, db_session)
@@ -178,6 +186,6 @@ async def test_defecting_from_wow_loses_the_ability(
     task = await _make_task(db_session, character, JUMPER_LEVEL + 1)
     assert (await evaluate_signup(character, task, db_session)).allowed is True
 
-    character.faction_slug = "ua"
+    character.faction_slug = NOT_WOW
     await db_session.commit()
     assert (await evaluate_signup(character, task, db_session)).allowed is False

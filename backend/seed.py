@@ -27,9 +27,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import func, select
 
 from faction_slugs import (
-    ALBESCENT_FACTION_SLUG,
     CROSS_FACTION_SLUG,
     UNAFFILIATED_FACTION_SLUG,
+    real_faction_slugs,
 )
 from game_config import CURRENT_ERA
 from script_utils import add_env_argument, get_settings
@@ -325,16 +325,13 @@ DUEL_FIXTURE_TASK_DESCRIPTION = (
 # read off the era cannot go absent, so the guard stays as a backstop rather
 # than as the thing that decides whether the suite has a task at all.
 #
-# Sentinels are excluded (ADR-0087, faction_slugs.py): `na` is the cross-faction
-# slug, so an `na` fixture task would be indistinguishable from the onboarding
-# task, and Albescent is the secret society. `scripts/seed_demo_praxes.py`
-# spells the same predicate out for its own three fixtures; the shared home for
-# it is faction_slugs.py, beside faction_filter_slugs, the day a third site asks.
-DUEL_FIXTURE_TASK_FACTION_SLUG = next(
-    slug
-    for slug in CURRENT_ERA.factions
-    if slug not in (UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG)
-)
+# Sentinels are excluded (ADR-0087) by `real_faction_slugs`: `na` is the
+# cross-faction slug, so an `na` fixture task would be indistinguishable from the
+# onboarding task, and Albescent is the secret society. That predicate moved to
+# faction_slugs.py in #2708, when the integration fixtures became its third
+# caller — the day this comment and `scripts/seed_demo_praxes.py` were both
+# waiting for.
+DUEL_FIXTURE_TASK_FACTION_SLUG = real_faction_slugs(CURRENT_ERA)[0]
 DUEL_FIXTURE_TASK_POINT_VALUE = 10
 
 

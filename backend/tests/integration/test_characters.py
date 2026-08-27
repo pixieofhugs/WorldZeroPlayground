@@ -7,14 +7,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis
-from models.task import Task, TaskStatus
+from models.task import Task
+from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 @pytest.mark.asyncio
@@ -46,7 +56,7 @@ async def test_get_character_not_found(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_create_character(
-    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+    client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
     resp = await client.post(
         "/characters",
@@ -250,7 +260,7 @@ async def _seed_scored_character(
         account_id=account.id,
         username=username,
         display_name=username.capitalize(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -274,7 +284,7 @@ async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A prefix match outranks a higher-score substring match (#989).
 
@@ -304,12 +314,12 @@ async def test_list_characters_filter_by_faction(
     client: AsyncClient, character: Character, character2: Character
 ):
     """Filter by faction slug returns only characters in that faction."""
-    resp = await client.get("/characters", params={"faction": "ua"})
+    resp = await client.get("/characters", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) >= 1
     for entry in data:
-        assert entry["faction_slug"] == "ua"
+        assert entry["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -354,7 +364,7 @@ async def test_list_characters_excludes_own_account(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """exclude_own_account hides every life on the VIEWER'S ACCOUNT (#1385).
@@ -368,7 +378,7 @@ async def test_list_characters_excludes_own_account(
         account_id=account.id,
         username="altlife",
         display_name="Alt Life",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -493,7 +503,7 @@ async def test_second_character_blocked_below_level4(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Account with a level-3 first character cannot create a second character (R.7)."""
@@ -528,7 +538,7 @@ async def test_second_character_allowed_at_level5(
     db_session: AsyncSession,
     account2: Account,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers2: dict,
 ):
     """Account whose first character is level 5 can create a second character (R.7)."""
@@ -549,7 +559,7 @@ async def test_albescent_rejected_at_creation(
     client: AsyncClient,
     account: Account,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """ADR-0019: Albescent is join-in-the-field only — never a creation option."""
@@ -566,13 +576,13 @@ async def test_uninvited_faction_rejected_at_creation(
     client: AsyncClient,
     account: Account,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """A faction the account holds no invitation for is rejected (born-na is the default)."""
     resp = await client.post(
         "/characters",
-        json={"display_name": "Hopeful", "faction_slug": "ua"},
+        json={"display_name": "Hopeful", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 400
@@ -585,7 +595,7 @@ async def test_create_in_invited_faction(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """With an account-pooled invitation, a new life may be born straight into that faction."""
@@ -597,16 +607,22 @@ async def test_create_in_invited_faction(
         select(CharacterStats).where(CharacterStats.character_id == character.id)
     )
     stats.level = 4
-    db_session.add(InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id))
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id,
+            faction_slug=DEFAULT_FACTION_SLUG,
+            era_id=era.id,
+        )
+    )
     await db_session.commit()
 
     resp = await client.post(
         "/characters",
-        json={"display_name": "Invited One", "faction_slug": "ua"},
+        json={"display_name": "Invited One", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 201
-    assert resp.json()["faction_slug"] == "ua"
+    assert resp.json()["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -616,8 +632,7 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """#2385: the burn is per-character; the account's earned history survives it.
@@ -635,24 +650,32 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     )
     stats.level = CURRENT_ERA.second_character_level_required
     db_session.add(
-        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+        InvitationLetter(
+            character_id=character.id,
+            faction_slug=DEFAULT_FACTION_SLUG,
+            era_id=era.id,
+        )
     )
     db_session.add(
         InvitationLetter(
-            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+            character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
         )
     )
     await db_session.commit()
 
     # Life 1 walks out of UA. #2218 deletes the UA letter on the way.
     resp = await client.post(
-        "/factions/choose", json={"faction_slug": "ephemerists"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": OTHER_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert resp.status_code == 200
 
     # Direction 1 — the per-character door stays shut for life 1.
     resp = await client.post(
-        "/factions/choose", json={"faction_slug": "ua"}, headers=auth_headers
+        "/factions/choose",
+        json={"faction_slug": DEFAULT_FACTION_SLUG},
+        headers=auth_headers,
     )
     assert resp.status_code == 403
     assert resp.json()["detail"]["code"] == ErrorCode.faction_rejoin_forbidden.value
@@ -660,11 +683,11 @@ async def test_defected_faction_stays_a_birth_option_but_not_a_rejoin(
     # Direction 2 — UA is still a birth option for a life that never burned it.
     resp = await client.post(
         "/characters",
-        json={"display_name": "Second Life", "faction_slug": "ua"},
+        json={"display_name": "Second Life", "faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 201, resp.text
-    assert resp.json()["faction_slug"] == "ua"
+    assert resp.json()["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -672,7 +695,7 @@ async def test_username_derived_from_display_name(
     client: AsyncClient,
     account: Account,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Omitted username → derived from display_name (lowercase, alphanumeric-only)."""
@@ -692,7 +715,7 @@ async def test_username_collision_auto_suffix(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """A derived handle that collides gets an auto-suffix (wren, wren2)."""
@@ -730,8 +753,9 @@ async def test_empty_display_name_rejected(
 
 def _make_jpeg_bytes(width: int = 100, height: int = 100) -> bytes:
     """Return a minimal valid JPEG image as bytes."""
-    from PIL import Image
     import io as _io
+
+    from PIL import Image
 
     img = Image.new("RGB", (width, height), color=(128, 64, 32))
     buf = _io.BytesIO()
@@ -1032,7 +1056,7 @@ async def test_character_relationships_endpoint_is_gone(
 
 @pytest.mark.asyncio
 async def test_faction_slug_db_default_is_unaffiliated(
-    db_session: AsyncSession, account: Account, era: Era, faction_ua: Faction
+    db_session: AsyncSession, account: Account, era: Era, some_faction: Faction
 ):
     """A direct insert that omits faction_slug falls back to 'na', not 'ua' (#697).
 
@@ -1081,7 +1105,7 @@ TAGLINE_MAX = 140
 
 @pytest.mark.asyncio
 async def test_create_character_accepts_tagline(
-    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+    client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
     """A tagline set at creation round-trips back out on ``CharacterOut``."""
     resp = await client.post(
@@ -1095,7 +1119,7 @@ async def test_create_character_accepts_tagline(
 
 @pytest.mark.asyncio
 async def test_create_character_defaults_tagline_empty(
-    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+    client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
     """Omitting it lands "" — never null, and never seeded from bio (#1628)."""
     resp = await client.post(
@@ -1109,7 +1133,7 @@ async def test_create_character_defaults_tagline_empty(
 
 @pytest.mark.asyncio
 async def test_create_character_rejects_overlong_tagline(
-    client: AsyncClient, account: Account, era: Era, faction_ua: Faction, auth_headers: dict
+    client: AsyncClient, account: Account, era: Era, some_faction: Faction, auth_headers: dict
 ):
     resp = await client.post(
         "/characters",

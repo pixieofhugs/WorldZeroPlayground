@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 # ---------------------------------------------------------------------------
@@ -18,7 +19,7 @@ async def test_leaderboard_returns_characters(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """GET /leaderboard returns active characters ordered by score."""
     resp = await client.get("/leaderboard")
@@ -37,7 +38,7 @@ async def test_leaderboard_ordering(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """character2 (score=500) should appear before character (score=0)."""
     resp = await client.get("/leaderboard")
@@ -54,21 +55,27 @@ async def test_leaderboard_faction_filter(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
-    """GET /leaderboard?faction=ua returns only ua-faction characters."""
-    resp = await client.get("/leaderboard?faction=ua")
+    """GET /leaderboard?faction=<slug> returns only that faction's characters.
+
+    The slug comes off the character, not out of the air: a named one that this
+    era does not have answers 200 with an empty list, and the loop below then
+    asserts nothing at all (#2708). Hence the non-empty check.
+    """
+    resp = await client.get(f"/leaderboard?faction={character.faction_slug}")
     assert resp.status_code == 200
     data = resp.json()
+    assert character.id in {char["id"] for char in data}
     for char in data:
-        assert char["faction_slug"] == "ua"
+        assert char["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
 async def test_leaderboard_faction_filter_no_results(
     client: AsyncClient,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Filtering by a faction with no members returns an empty list."""
     resp = await client.get("/leaderboard?faction=nonexistent_faction")
@@ -82,7 +89,7 @@ async def test_leaderboard_pagination(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """limit and offset parameters are respected."""
     resp = await client.get("/leaderboard?limit=1&offset=0")
@@ -107,7 +114,7 @@ async def test_leaderboard_response_structure(
     client: AsyncClient,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Each character in the leaderboard has expected fields and no account_id."""
     resp = await client.get("/leaderboard")
@@ -166,7 +173,7 @@ async def test_tied_scores_order_identically_across_calls(
     client: AsyncClient,
     db_session,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """Characters tied at zero come back in the same order every request.
 
@@ -190,7 +197,7 @@ async def test_paging_tied_scores_partitions_without_overlap_or_gaps(
     client: AsyncClient,
     db_session,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """limit/offset over a tied set slices it cleanly — no duplicates, no drops."""
     seeded_ids = await _seed_tied_characters(db_session, era, count=6)

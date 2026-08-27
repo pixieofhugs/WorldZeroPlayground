@@ -22,6 +22,7 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.praxis_out import build_praxis_card_out, build_praxis_out
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:
@@ -32,7 +33,7 @@ async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:
         level_required=0,
         status=TaskStatus.active,
         created_by=author.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     session.add(task)
     await session.flush()
@@ -67,7 +68,7 @@ async def _load_card(session: AsyncSession, praxis_id: int):
 
 @pytest.mark.asyncio
 async def test_card_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     character.avatar_url = "avatars/isolde.png"
     praxis = await _make_solo_praxis(db_session, character)
@@ -80,7 +81,7 @@ async def test_card_carries_the_authors_portrait(
 
 @pytest.mark.asyncio
 async def test_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """No portrait is the ordinary case.
 
@@ -113,7 +114,7 @@ async def _load_detail(session: AsyncSession, praxis_id: int):
 
 @pytest.mark.asyncio
 async def test_detail_payload_carries_the_authors_portrait(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """#2106: the detail byline shows a face, so ``PraxisOut`` carries one.
 
@@ -132,7 +133,7 @@ async def test_detail_payload_carries_the_authors_portrait(
 
 @pytest.mark.asyncio
 async def test_detail_portraitless_author_degrades_to_empty_string(
-    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+    db_session: AsyncSession, era: Era, some_faction: Faction, character: Character
 ):
     """Same fallback as the card: "" so the byline draws the monogram."""
     character.avatar_url = ""

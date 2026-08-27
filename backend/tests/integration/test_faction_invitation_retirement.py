@@ -20,10 +20,15 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+    real_faction_slugs,
+)
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from models.invitation_letter import InvitationLetter
 from models.praxis import Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
@@ -33,25 +38,22 @@ from services.faction_service import defect_to_faction
 # Two ordinary, non-rejoinable factions — the report's Coven -> Everymen ->
 # Singularity walk. Picked from the live era rather than hardcoded so a faction
 # rename in era config fails loudly here instead of silently passing.
-LEFT_SLUG = "snide"
-FIRST_SLUG = "wow"
-# Never joined, never left — the control that proves the bell is really reading
-# this character's letters when the retired one is missing from it.
-UNTOUCHED_SLUG = "coven"
-REJOINABLE_SLUG = "albescent"
-
-
-async def _seed_faction(db_session: AsyncSession, slug: str) -> None:
-    if await db_session.scalar(select(Faction).where(Faction.slug == slug)) is None:
-        db_session.add(Faction(slug=slug, status=FactionStatus.visible))
-        await db_session.flush()
+#: Three distinct real factions of the live era: the one left behind, the one
+#: joined instead, and — never joined, never left — the control that proves the
+#: bell is really reading this character's letters when the retired one is
+#: missing from it. Taken in the era's own order rather than named (#2708);
+#: `_ROSTER` is sliced so the three cannot silently collapse into one.
+_ROSTER = real_faction_slugs(CURRENT_ERA)
+LEFT_SLUG, FIRST_SLUG, UNTOUCHED_SLUG = _ROSTER[0], _ROSTER[1], _ROSTER[2]
+#: Albescent is the one faction that can always be rejoined, in every era
+#: (ADR-0087), which is the property this module needs from it.
+REJOINABLE_SLUG = ALBESCENT_FACTION_SLUG
 
 
 async def _letter(
     db_session: AsyncSession, character: Character, era: Era, slug: str
 ) -> None:
     """Hand the character faction ``slug``'s letter — the #454 entry ticket."""
-    await _seed_faction(db_session, slug)
     db_session.add(
         InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era.id)
     )
@@ -70,7 +72,16 @@ async def _held_slugs(db_session: AsyncSession, character: Character) -> set[str
 async def _walk_out_of(
     db_session: AsyncSession, character: Character, era: Era
 ) -> None:
-    """Join ``LEFT_SLUG``, then leave it for ``FIRST_SLUG`` — the reported walk."""
+    """Join ``LEFT_SLUG``, then leave it for ``FIRST_SLUG`` — the reported walk.
+
+    Starts by putting the character back on the unaffiliated sentinel. The
+    shared fixture seats them in a real faction for the FK's sake, and since
+    #2708 the three slugs below are the era's own first three — so without this
+    the walk would begin by defecting to the faction they are already in, which
+    the API refuses. Unaffiliated is the state a character is really born into
+    (ADR-0019) and it frees every real slug for the walk.
+    """
+    character.faction_slug = UNAFFILIATED_FACTION_SLUG
     await _letter(db_session, character, era, LEFT_SLUG)
     await _letter(db_session, character, era, FIRST_SLUG)
     await db_session.commit()
@@ -90,7 +101,7 @@ def test_premise_the_left_faction_cannot_be_rejoined():
 
 @pytest.mark.asyncio
 async def test_leaving_retires_the_unusable_letter(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     await _walk_out_of(db_session, character, era)
 
@@ -107,7 +118,7 @@ async def test_the_bell_stops_offering_the_rejoin(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """The reported symptom, on the requests tab the bell badge counts."""
@@ -137,7 +148,7 @@ async def test_the_bell_stops_offering_the_rejoin(
 
 @pytest.mark.asyncio
 async def test_a_retired_letter_does_not_come_back_on_the_next_recalc(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     """Deleting the row alone is not a fix: delivery recomputes from era history.
 
@@ -180,7 +191,7 @@ async def test_a_retired_letter_does_not_come_back_on_the_next_recalc(
 
 @pytest.mark.asyncio
 async def test_a_rejoinable_faction_keeps_its_letter(
-    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
 ):
     """``can_always_rejoin`` is the exception: that invitation still works."""
     await _letter(db_session, character, era, REJOINABLE_SLUG)

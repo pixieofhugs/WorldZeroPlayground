@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # These tests set and assert a *task's* primary_faction_slug, so they name the
 # cross-faction sentinel, not the unaffiliated-character one (#1559).
-from faction_slugs import CROSS_FACTION_SLUG
+from faction_slugs import CROSS_FACTION_SLUG, real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -20,6 +20,16 @@ from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
+from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 async def _set_character_level(
@@ -129,7 +139,7 @@ async def test_list_tasks_filter_by_status_all(
         level_required=0,
         status=TaskStatus.pending,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(pending_task)
     await db_session.commit()
@@ -159,7 +169,7 @@ async def test_list_tasks_filter_by_created_by(
         level_required=0,
         status=TaskStatus.retired,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     pending_task = Task(
         title="Pending Task",
@@ -168,7 +178,7 @@ async def test_list_tasks_filter_by_created_by(
         level_required=0,
         status=TaskStatus.pending,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     other_task = Task(
         title="Other Creator Task",
@@ -177,7 +187,7 @@ async def test_list_tasks_filter_by_created_by(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([retired_task, pending_task, other_task])
     await db_session.commit()
@@ -227,10 +237,10 @@ async def test_list_tasks_filter_by_faction(
     client: AsyncClient, active_task: Task
 ):
     """faction filter returns only tasks for that faction."""
-    resp = await client.get("/tasks", params={"faction": "ua"})
+    resp = await client.get("/tasks", params={"faction": DEFAULT_FACTION_SLUG})
     assert resp.status_code == 200
     for task_data in resp.json():
-        assert task_data["primary_faction_slug"] == "ua"
+        assert task_data["primary_faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -239,7 +249,7 @@ async def test_list_tasks_filter_by_multiple_factions(
     db_session: AsyncSession,
     character: Character,
     active_task: Task,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
 ):
     """Repeated ?faction= returns the union; one slug still narrows to one; an
     absent or empty faction filters nothing at all (#1364)."""
@@ -259,26 +269,26 @@ async def test_list_tasks_filter_by_multiple_factions(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ephemerists",
+        primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add_all([unaffiliated_task, ephemerist_task])
     await db_session.commit()
 
     both = await client.get(
-        "/tasks", params={"faction": ["ua", CROSS_FACTION_SLUG]}
+        "/tasks", params={"faction": [DEFAULT_FACTION_SLUG, CROSS_FACTION_SLUG]}
     )
     assert both.status_code == 200
     both_ids = {t["id"] for t in both.json()}
     assert {active_task.id, unaffiliated_task.id} <= both_ids
     assert ephemerist_task.id not in both_ids
     assert {t["primary_faction_slug"] for t in both.json()} == {
-        "ua",
+        DEFAULT_FACTION_SLUG,
         CROSS_FACTION_SLUG,
     }
 
-    one = await client.get("/tasks", params={"faction": "ua"})
+    one = await client.get("/tasks", params={"faction": DEFAULT_FACTION_SLUG})
     assert one.status_code == 200
-    assert {t["primary_faction_slug"] for t in one.json()} == {"ua"}
+    assert {t["primary_faction_slug"] for t in one.json()} == {DEFAULT_FACTION_SLUG}
 
     # No faction axis at all, and a cleared one, are both "no filter" — never
     # "match nothing".
@@ -315,7 +325,7 @@ async def test_list_tasks_sort_oldest_reverses_newest(
                 level_required=0,
                 status=TaskStatus.active,
                 created_by=character.id,
-                primary_faction_slug="ua",
+                primary_faction_slug=DEFAULT_FACTION_SLUG,
             )
         )
     await db_session.commit()
@@ -352,7 +362,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         level_required=2,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     cheap = Task(
         title="Cheap Task",
@@ -361,7 +371,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     rich = Task(
         title="Rich Task",
@@ -370,7 +380,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([high_level, cheap, rich])
     await db_session.commit()
@@ -415,7 +425,7 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     hard = Task(
         title="Hard Task",
@@ -424,7 +434,7 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
         level_required=3,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([easy, hard])
     await db_session.commit()
@@ -626,7 +636,7 @@ async def test_list_tasks_includes_unaffiliated_tasks(
 ):
     """Cross-faction (`na`) tasks stay listable even though `na` is a hidden row.
 
-    The `faction_ua` fixture (pulled in via `character`) seeds `na` with
+    The `some_faction` fixture (pulled in via `character`) seeds `na` with
     `FactionStatus.hidden`, mirroring a freshly seeded DB. A genuinely hidden
     faction's task is excluded; the unaffiliated sentinel's task is not —
     unaffiliated is a state, not a deprecated faction (issue #921).
@@ -740,7 +750,7 @@ async def test_list_tasks_filter_by_can_sign_up(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     high_task = Task(
         title="Level 5 Task",
@@ -749,7 +759,7 @@ async def test_list_tasks_filter_by_can_sign_up(
         level_required=5,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(low_task)
     db_session.add(high_task)
@@ -789,7 +799,7 @@ async def test_list_tasks_can_sign_up_is_empty_for_anonymous(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -812,13 +822,13 @@ async def test_propose_task_faction_slug_stored(
             "title": "Faction Task",
             "point_value": 10,
             "level_required": 0,
-            "primary_faction_slug": "ua",
+            "primary_faction_slug": DEFAULT_FACTION_SLUG,
         },
         headers=auth_headers2,
     )
     assert resp.status_code == 201
     data = resp.json()
-    assert data["primary_faction_slug"] == "ua"
+    assert data["primary_faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -857,7 +867,7 @@ async def test_list_tasks_default_returns_only_active(
         level_required=0,
         status=TaskStatus.pending,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(pending_task)
     await db_session.commit()
@@ -887,7 +897,7 @@ async def test_list_tasks_limit_and_offset(
             level_required=0,
             status=TaskStatus.active,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(extra_task)
     await db_session.commit()
@@ -1016,7 +1026,7 @@ async def test_my_tasks_with_status_filter(
             level_required=0,
             status=TaskStatus.active,
             created_by=character2.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(task)
         tasks.append(task)
@@ -1109,7 +1119,7 @@ async def test_list_tasks_default_excludes_metatasks_at_see_gate(
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
         title="Metatask",
@@ -1119,8 +1129,8 @@ async def test_list_tasks_default_excludes_metatasks_at_see_gate(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(standard_task)
     db_session.add(meta_task)
@@ -1164,7 +1174,7 @@ async def test_list_tasks_all_returns_both_types(
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
         title="Metatask",
@@ -1174,8 +1184,8 @@ async def test_list_tasks_all_returns_both_types(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(standard_task)
     db_session.add(meta_task)
@@ -1218,7 +1228,7 @@ async def test_list_tasks_standard_filter(
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
         title="Metatask Filter Task",
@@ -1228,8 +1238,8 @@ async def test_list_tasks_standard_filter(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(standard_task)
     db_session.add(meta_task)
@@ -1266,7 +1276,7 @@ async def test_list_tasks_metatask_filter(
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
         title="Metatask Included Task",
@@ -1276,8 +1286,8 @@ async def test_list_tasks_metatask_filter(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(standard_task)
     db_session.add(meta_task)
@@ -1320,7 +1330,7 @@ async def _seed_standard_and_metatask(
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
         title="Gate Metatask",
@@ -1330,8 +1340,8 @@ async def _seed_standard_and_metatask(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(standard_task)
     db_session.add(meta_task)
@@ -1479,8 +1489,9 @@ async def test_get_task_can_sign_up_true_for_analog_with_existing_praxis(
     db_session: AsyncSession,
 ):
     """Analog viewer with an existing praxis still sees can_sign_up=True."""
-    from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
+
+    from models.faction import Faction, FactionStatus
 
     existing = await db_session.execute(
         sa_select(Faction).where(Faction.slug == "everymen")
@@ -1548,7 +1559,7 @@ async def test_get_task_can_sign_up_false_level_too_low(
         level_required=5,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(high_level_task)
     await db_session.commit()
@@ -1575,7 +1586,7 @@ async def test_get_task_can_sign_up_false_retired_task(
         level_required=0,
         status=TaskStatus.retired,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(retired_task)
     await db_session.commit()
@@ -1627,9 +1638,10 @@ async def test_get_task_can_sign_up_true_everymen_as_collaborator(
     auth_headers2: dict,
 ):
     """Everymen (Double Dipper) member of a collab still sees can_sign_up=True."""
+    from sqlalchemy import select
+
     from models.faction import FactionStatus
     from models.praxis import Praxis, PraxisMember, PraxisType
-    from sqlalchemy import select
 
     result = await db_session.execute(select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
@@ -1685,8 +1697,9 @@ async def test_get_task_allowed_modes_level_1(
     era,
 ):
     """Level-1 viewer sees solo and collab in allowed_modes."""
-    from models.character_stats import CharacterStats
     from sqlalchemy import select as sa_select
+
+    from models.character_stats import CharacterStats
 
     result = await db_session.execute(
         sa_select(CharacterStats).where(
@@ -1741,9 +1754,10 @@ async def test_get_task_metatask_eligibility_under_level(
     era,
 ):
     """Metatask level 5, character level 4, same faction -> eligible_for_current_user=False."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     meta_task = Task(
         title="Metatask Level 5",
@@ -1753,8 +1767,8 @@ async def test_get_task_metatask_eligibility_under_level(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(meta_task)
     await db_session.commit()
@@ -1785,9 +1799,10 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
     era,
 ):
     """Metatask level 5, character level 6, same faction -> eligible_for_current_user=True."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     meta_task = Task(
         title="Metatask Level 5",
@@ -1797,8 +1812,8 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(meta_task)
     await db_session.commit()
@@ -1828,10 +1843,11 @@ async def test_get_task_metatask_eligibility_cross_faction_is_open(
     era,
 ):
     """Metatask level 5, character level 6, different faction -> eligible (metatasks are faction-open)."""
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.faction import Faction, FactionStatus
     from models.task import TaskType
-    from sqlalchemy import select as sa_select
 
     # Seed the "snide" faction so the FK resolves
     existing = await db_session.execute(
@@ -1893,8 +1909,8 @@ async def test_get_task_metatask_eligibility_anonymous(
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(meta_task)
     await db_session.commit()
@@ -1937,7 +1953,7 @@ async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> 
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     description_match = Task(
         title="Ordinary title",
@@ -1946,7 +1962,7 @@ async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> 
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([title_match, description_match])
     await db_session.commit()
@@ -2026,7 +2042,7 @@ async def test_list_tasks_search_matches_proposer_name(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     theirs = Task(
         title="Ordinary title two",
@@ -2035,7 +2051,7 @@ async def test_list_tasks_search_matches_proposer_name(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([mine, theirs])
     await db_session.commit()
@@ -2073,7 +2089,7 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     pricey = Task(
         title="Ordinary title four",
@@ -2082,7 +2098,7 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([cheap, pricey])
     await db_session.commit()
@@ -2216,7 +2232,7 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     quiet_task = Task(
         title="Quiet Task",
@@ -2225,7 +2241,7 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([busy_task, quiet_task])
     await db_session.commit()
@@ -2288,7 +2304,7 @@ async def _make_author_with_task(
     *,
     index: int,
     level: int,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
 ) -> tuple[Character, Task]:
     """Create a distinct account + character at ``level`` and one active task by them."""
     account = Account(email=f"author{index}@example.com")
@@ -2322,7 +2338,7 @@ async def _make_author_with_task(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -2350,7 +2366,7 @@ async def test_get_task_carries_author_byline(
     assert data["created_by"] == character.id
     assert data["created_by_display_name"] == "Test Character"
     assert data["created_by_avatar_url"] == "avatars/test.png"
-    assert data["created_by_faction_slug"] == "ua"
+    assert data["created_by_faction_slug"] == DEFAULT_FACTION_SLUG
     assert data["created_by_level"] == 4
 
 
@@ -2359,7 +2375,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """``created_by_faction_slug`` is the author's MEMBER faction.
 
@@ -2383,7 +2399,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
     assert resp.status_code == 200
     data = resp.json()
     assert data["primary_faction_slug"] == CROSS_FACTION_SLUG
-    assert data["created_by_faction_slug"] == "ua"
+    assert data["created_by_faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -2391,7 +2407,7 @@ async def test_list_tasks_carries_each_rows_own_author(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """GET /tasks resolves the byline per row, not once for the page."""
     first_author, first_task = await _make_author_with_task(
@@ -2416,7 +2432,7 @@ async def test_list_tasks_author_read_is_not_an_n_plus_1(
     client: AsyncClient,
     db_session: AsyncSession,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     active_task: Task,
 ):
     """A page of many tasks costs the same number of queries as a page of one.

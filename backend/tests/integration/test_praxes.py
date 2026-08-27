@@ -16,12 +16,37 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
+from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.task import Task, TaskStatus, TaskType
+from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+#: The faction that may work RETIRED tasks — found by the perk, never named
+#: (#2708). It is era-owned: Era 1 gives it to the Ephemerists,
+#: `_inherited_perk_slugs` mirrors it onto Albescent, and an era may give it to
+#: nobody. Sentinels are dropped because a character cannot join either.
+TASK_VISION_SLUG = next(
+    (
+        slug
+        for slug in sorted(CURRENT_ERA.allow_praxis_on_retired_task_factions)
+        if slug in real_faction_slugs(CURRENT_ERA)
+    ),
+    None,
+)
+
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 async def _make_metatask(db_session: AsyncSession, character: Character) -> Task:
@@ -34,8 +59,8 @@ async def _make_metatask(db_session: AsyncSession, character: Character) -> Task
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=character.id,
-        primary_faction_slug="ua",
-        metatask_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(metatask)
     await db_session.commit()
@@ -231,7 +256,11 @@ async def test_list_praxes_filter_by_faction(
 
     # Filter to UA — only the UA praxis comes back. Read as the author-member so
     # the in_progress praxes are visible (ADR-0024).
-    ua_list = await client.get("/praxes", params={"faction": "ua"}, headers=auth_headers)
+    ua_list = await client.get(
+        "/praxes",
+        params={"faction": DEFAULT_FACTION_SLUG},
+        headers=auth_headers,
+    )
     assert ua_list.status_code == 200
     ua_ids = {item["id"] for item in ua_list.json()}
     assert ua_praxis_id in ua_ids
@@ -280,7 +309,7 @@ async def _submitted_praxis(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -503,7 +532,12 @@ async def test_faction_and_search_combine(
 
     resp = await client.get(
         "/praxes",
-        params={"status": "submitted", "faction": "ua", "q": "beacon", "sort": "newest"},
+        params={
+            "status": "submitted",
+            "faction": DEFAULT_FACTION_SLUG,
+            "q": "beacon",
+            "sort": "newest",
+        },
     )
     assert resp.status_code == 200
     assert match_id in {item["id"] for item in resp.json()}
@@ -621,7 +655,11 @@ async def test_feed_search_by_member_ands_with_other_filters(
     # Same term, matching faction: present.
     resp = await client.get(
         "/praxes",
-        params={"status": "submitted", "q": "othercharacter", "faction": "ua"},
+        params={
+            "status": "submitted",
+            "q": "othercharacter",
+            "faction": DEFAULT_FACTION_SLUG,
+        },
     )
     assert resp.status_code == 200
     assert theirs in {item["id"] for item in resp.json()}
@@ -953,7 +991,7 @@ async def test_create_praxis_bank_cap(
             level_required=0,
             status=TaskStatus.active,
             created_by=character2.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(task)
         tasks.append(task)
@@ -978,7 +1016,7 @@ async def test_create_praxis_bank_cap(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(overflow_task)
     await db_session.commit()
@@ -1329,7 +1367,7 @@ async def test_list_praxes_member_id_filters_by_membership(
         level_required=0,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(second_task)
     await db_session.commit()
@@ -1955,7 +1993,7 @@ async def test_create_praxis_below_required_level_returns_403(
         level_required=5,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(high_task)
     await db_session.commit()
@@ -2158,8 +2196,9 @@ async def test_create_praxis_duplicate_allowed_for_analog(
     db_session: AsyncSession,
 ):
     """Analog characters may create multiple praxes for the same task (Double Dipper)."""
-    from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
+
+    from models.faction import Faction, FactionStatus
 
     # Ensure the everymen faction row exists for the FK constraint
     existing = await db_session.execute(
@@ -2315,7 +2354,7 @@ async def test_create_praxis_non_active_task_returns_403(
         level_required=0,
         status=task_status,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.commit()
@@ -2332,26 +2371,29 @@ async def test_create_praxis_non_active_task_returns_403(
     assert task_status.value in detail["message"].lower()
 
 
+@pytest.mark.skipif(
+    TASK_VISION_SLUG is None, reason="no faction in the live era holds Task Vision"
+)
 @pytest.mark.asyncio
-async def test_create_praxis_retired_task_allowed_for_ephemerists(
+async def test_create_praxis_retired_task_allowed_for_the_task_vision_faction(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    faction_ephemerists,
+    some_faction,
     auth_headers: dict,
 ):
-    """Ephemerists may create praxes on retired tasks (Task Vision carve-out in Era 1)."""
-    character.faction_slug = "ephemerists"
+    """The Task Vision holder may create praxes on retired tasks."""
+    character.faction_slug = TASK_VISION_SLUG
     await db_session.commit()
 
     retired_task = Task(
-        title="Ephemerists Can Do This",
+        title="Task Vision Can Do This",
         description="",
         point_value=10,
         level_required=0,
         status=TaskStatus.retired,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(retired_task)
     await db_session.commit()
@@ -2465,8 +2507,11 @@ async def test_voter_count_and_score_after_vote(
     list_resp = await client.get("/praxes")
     card = next(c for c in list_resp.json() if c["id"] == praxis_id)
 
+    # The base carries the author's own-task modifier; the votes are flat
+    # (ADR-0086). Whichever faction the fixture handed out decides that number.
+    own = CURRENT_ERA.factions[character2.faction_slug].own_task_modifier
     assert card["voter_count"] == 1
-    assert card["score"] == active_task.point_value + 4
+    assert card["score"] == pytest.approx(active_task.point_value * own + 4)
 
 
 # ---------------------------------------------------------------------------
@@ -2526,11 +2571,11 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     db_session: AsyncSession,
 ):
     """A player already in an in-progress collab for a task cannot be re-invited to another collab for the same task."""
-    from models.account import Account
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.era import Era
     from services.auth import create_jwt
-    from sqlalchemy import select as sa_select
 
     era_row = (await db_session.execute(sa_select(Era))).scalar_one()
 
@@ -2538,7 +2583,12 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     acc3 = Account(email="collab-a-owner@example.com")
     db_session.add(acc3)
     await db_session.flush()
-    ch3 = Character(account_id=acc3.id, username="collab_a_owner", display_name="Collab A Owner", faction_slug="ua")
+    ch3 = Character(
+        account_id=acc3.id,
+        username="collab_a_owner",
+        display_name="Collab A Owner",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch3)
     await db_session.flush()
     db_session.add(CharacterStats(character_id=ch3.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
@@ -2547,7 +2597,12 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     acc4 = Account(email="collab-b-owner@example.com")
     db_session.add(acc4)
     await db_session.flush()
-    ch4 = Character(account_id=acc4.id, username="collab_b_owner", display_name="Collab B Owner", faction_slug="ua")
+    ch4 = Character(
+        account_id=acc4.id,
+        username="collab_b_owner",
+        display_name="Collab B Owner",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch4)
     await db_session.flush()
     db_session.add(CharacterStats(character_id=ch4.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
@@ -2610,8 +2665,9 @@ async def test_everymen_joined_collaborator_can_resign_up(
     db_session: AsyncSession,
 ):
     """Everymen (Double Dipper) may sign up for the same task even as a collab member."""
-    from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
+
+    from models.faction import Faction, FactionStatus
 
     result = await db_session.execute(sa_select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
@@ -2661,12 +2717,12 @@ async def test_everymen_can_be_invited_despite_active_collab(
     db_session: AsyncSession,
 ):
     """Everymen (Double Dipper) can receive an invite even when already in a collab for the same task."""
-    from models.account import Account
+    from sqlalchemy import select as sa_select
+
     from models.character_stats import CharacterStats
     from models.era import Era
     from models.faction import Faction, FactionStatus
     from services.auth import create_jwt
-    from sqlalchemy import select as sa_select
 
     result = await db_session.execute(sa_select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
@@ -2684,8 +2740,18 @@ async def test_everymen_can_be_invited_despite_active_collab(
     db_session.add(acc_a)
     db_session.add(acc_b)
     await db_session.flush()
-    ch_a = Character(account_id=acc_a.id, username="evmtest_a", display_name="EV Test A", faction_slug="ua")
-    ch_b = Character(account_id=acc_b.id, username="evmtest_b", display_name="EV Test B", faction_slug="ua")
+    ch_a = Character(
+        account_id=acc_a.id,
+        username="evmtest_a",
+        display_name="EV Test A",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    ch_b = Character(
+        account_id=acc_b.id,
+        username="evmtest_b",
+        display_name="EV Test B",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
     db_session.add(ch_a)
     db_session.add(ch_b)
     await db_session.flush()
@@ -3058,7 +3124,7 @@ async def test_card_out_includes_full_fidelity_fields(
 
     assert card["body_text"] == "the full proof text"
     # character is seeded in the 'ua' faction by the conftest fixture.
-    assert card["created_by_faction_slug"] == "ua"
+    assert card["created_by_faction_slug"] == DEFAULT_FACTION_SLUG
     member_names = [m["character_display_name"] for m in card["members"]]
     assert character.display_name in member_names
     assert card["media_items"] == []

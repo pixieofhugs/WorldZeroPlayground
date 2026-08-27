@@ -40,9 +40,10 @@ from seed import (
     ensure_onboarding_task,
     sync_era_tasks,
 )
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
-def _standard_task(title: str, faction_slug: str = "ua") -> TaskDef:
+def _standard_task(title: str, faction_slug: str = DEFAULT_FACTION_SLUG) -> TaskDef:
     return TaskDef(
         title=title,
         description="fixture task",
@@ -62,7 +63,7 @@ async def test_task_sync_propagates_new_era_task_on_seeded_db(
     db_session: AsyncSession,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A task added to the era config after the first seed reaches a seeded DB."""
     # First seed: the config has a single task.
@@ -94,11 +95,11 @@ async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
     db_session: AsyncSession,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The game-wide L0 onboarding task is seeded on every run, idempotently (#511)."""
     # The onboarding task is cross-faction (#1619 B5), so its FK target is the
-    # ``na`` row the ``faction_ua`` fixture already seeds.
+    # ``na`` row the ``some_faction`` fixture already seeds.
     # Simulate a populated DB with era content (none of it level 0 anymore).
     await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
@@ -151,7 +152,7 @@ async def test_seed_creates_no_metatask(
     db_session: AsyncSession,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """A seed run authors no metatask at all (#1398).
 
@@ -216,11 +217,11 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     db_session: AsyncSession,
     era: Era,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """It lands as a faction task the duel gate's level can sign up for, and repeats.
 
-    ``faction_ua`` is requested because Era 1's first real faction is UA and the
+    ``some_faction`` is requested because Era 1's first real faction is UA and the
     fixture task needs that row present; the assertions below name no slug.
     """
     created = await ensure_duel_fixture_task(db_session, character.id)

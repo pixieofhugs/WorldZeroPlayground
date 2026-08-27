@@ -22,6 +22,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.invitation_letter import InvitationLetter
 from models.roles import AccountRole, Role
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @contextlib.contextmanager
@@ -74,7 +75,7 @@ async def dressed_viewer(
         InvitationLetter(
             character_id=character.id,
             era_id=era.id,
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
         )
     )
     await db_session.commit()

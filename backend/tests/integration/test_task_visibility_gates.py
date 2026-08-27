@@ -40,15 +40,15 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
-from tests.integration.factories import make_admin
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 # Comfortably either side of the window, so a slow test run cannot flip a row
 # from one side of it to the other mid-assertion.
@@ -107,15 +107,25 @@ async def _ids(client: AsyncClient, query: str, headers: dict | None) -> set[int
     return {row["id"] for row in response.json()}
 
 
+#: The factions whose perk is working retired tasks reach the archive from level
+#: 0 — a perk you cannot find the rows for is not a perk. Found BY THE PERK
+#: rather than named (#2708): the holder is era-owned, and an era where nobody
+#: holds it contributes no case rather than naming a faction that is not there.
+#: The sentinels are dropped because a character cannot join either.
+TASK_VISION_CASES = [
+    (0, slug, True, False)
+    for slug in sorted(CURRENT_ERA.allow_praxis_on_retired_task_factions)
+    if slug in real_faction_slugs(CURRENT_ERA)
+]
+
+
 @pytest.mark.parametrize(
     "level, faction, sees_retired, sees_pending",
     [
-        (0, "ua", False, False),
-        (CURRENT_ERA.level_to_see_retired_tasks, "ua", True, False),
-        (CURRENT_ERA.level_to_see_pending_tasks, "ua", True, True),
-        # The faction whose perk is working retired tasks reaches the archive
-        # from level 0 — a perk you cannot find the rows for is not a perk.
-        (0, "ephemerists", True, False),
+        (0, DEFAULT_FACTION_SLUG, False, False),
+        (CURRENT_ERA.level_to_see_retired_tasks, DEFAULT_FACTION_SLUG, True, False),
+        (CURRENT_ERA.level_to_see_pending_tasks, DEFAULT_FACTION_SLUG, True, True),
+        *TASK_VISION_CASES,
     ],
 )
 @pytest.mark.asyncio
@@ -128,8 +138,7 @@ async def test_the_flag_and_the_query_agree(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -189,7 +198,7 @@ async def test_an_admin_gets_the_first_look(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -203,7 +212,7 @@ async def test_an_admin_gets_the_first_look(
     """
     await make_admin(db_session, account)
     fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
-    await _set_level_and_faction(db_session, character, era, 0, "ua")
+    await _set_level_and_faction(db_session, character, era, 0, DEFAULT_FACTION_SLUG)
 
     assert fresh.id in await _ids(client, "/tasks?status=pending", auth_headers)
     assert fresh.id in await _ids(client, "/tasks?status=all&limit=200", auth_headers)
@@ -221,7 +230,7 @@ async def test_an_admin_edit_does_not_move_the_go_live_time(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
     db_session: AsyncSession,
@@ -234,7 +243,13 @@ async def test_an_admin_edit_does_not_move_the_go_live_time(
     """
     await make_admin(db_session, account)
     ripe = await _gated_task(db_session, character, TaskStatus.pending, RIPE_AGE)
-    await _set_level_and_faction(db_session, character2, era, CURRENT_ERA.level_to_see_pending_tasks, "ua")
+    await _set_level_and_faction(
+        db_session,
+        character2,
+        era,
+        CURRENT_ERA.level_to_see_pending_tasks,
+        DEFAULT_FACTION_SLUG,
+    )
 
     patched = await client.patch(
         f"/admin/tasks/{ripe.id}",
@@ -270,13 +285,15 @@ async def test_the_detail_door_answers_what_the_browse_answers(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
     """`GET /tasks/{id}` withholds exactly the pending rows the browse withholds."""
     task = await _gated_task(db_session, character2, TaskStatus.pending, age)
-    await _set_level_and_faction(db_session, character, era, level, "ua")
+    await _set_level_and_faction(
+        db_session, character, era, level, DEFAULT_FACTION_SLUG
+    )
 
     response = await client.get(f"/tasks/{task.id}", headers=auth_headers)
     assert response.status_code == expected, response.text
@@ -320,7 +337,7 @@ async def test_the_detail_door_opens_for_an_admin_immediately(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -331,7 +348,7 @@ async def test_the_detail_door_opens_for_an_admin_immediately(
     """
     await make_admin(db_session, account)
     fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
-    await _set_level_and_faction(db_session, character, era, 0, "ua")
+    await _set_level_and_faction(db_session, character, era, 0, DEFAULT_FACTION_SLUG)
 
     response = await client.get(f"/tasks/{fresh.id}", headers=auth_headers)
     assert response.status_code == 200, response.text
@@ -348,7 +365,7 @@ async def test_a_proposer_sees_their_own_proposal_the_moment_they_write_it(
     client: AsyncClient,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
@@ -368,7 +385,8 @@ async def test_a_proposer_sees_their_own_proposal_the_moment_they_write_it(
     the ripe rows is the same bug with a 48-hour delay on it.
     """
     await _set_level_and_faction(
-        db_session, character, era, CURRENT_ERA.level_to_propose_task, "ua"
+        db_session, character, era, CURRENT_ERA.level_to_propose_task,
+        DEFAULT_FACTION_SLUG
     )
     fresh = await _gated_task(db_session, character, TaskStatus.pending, FRESH_AGE)
 
@@ -386,7 +404,7 @@ async def test_the_carve_out_is_authorship_and_not_a_hole_in_the_window(
     character: Character,
     character2: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers2: dict,
     db_session: AsyncSession,
 ):
@@ -400,7 +418,8 @@ async def test_the_carve_out_is_authorship_and_not_a_hole_in_the_window(
     wrote.
     """
     await _set_level_and_faction(
-        db_session, character2, era, CURRENT_ERA.level_to_see_pending_tasks, "ua"
+        db_session, character2, era, CURRENT_ERA.level_to_see_pending_tasks,
+        DEFAULT_FACTION_SLUG
     )
     fresh = await _gated_task(db_session, character, TaskStatus.pending, FRESH_AGE)
     ripe = await _gated_task(db_session, character, TaskStatus.pending, RIPE_AGE)

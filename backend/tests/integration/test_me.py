@@ -3,12 +3,19 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import (
+    ALBESCENT_FACTION_SLUG,
+    UNAFFILIATED_FACTION_SLUG,
+    real_faction_slugs,
+)
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.invitation_letter import InvitationLetter
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _add_character(
@@ -18,7 +25,7 @@ async def _add_character(
     *,
     username: str,
     status: CharacterStatus = CharacterStatus.active,
-    faction_slug: str = "na",
+    faction_slug: str = UNAFFILIATED_FACTION_SLUG,
 ) -> Character:
     ch = Character(
         account_id=account.id,
@@ -45,7 +52,7 @@ async def test_my_characters_excludes_banned(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """The roster is every life on the account except the banned ones.
@@ -72,7 +79,7 @@ async def test_my_characters_carried_life_first(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     second = await _add_character(db_session, account, era, username="secondlife")
@@ -102,7 +109,7 @@ async def test_switch_active_character_happy(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     second = await _add_character(db_session, account, era, username="secondlife")
@@ -137,7 +144,7 @@ async def test_switch_active_character_non_active_rejected(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     banned = await _add_character(
@@ -157,16 +164,16 @@ async def test_invited_factions_empty_by_default(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """A life that has never been anywhere earns the account no birth options.
 
-    The shared ``character`` fixture is born into ``ua``, which since #2385 is
-    itself a birth option (a faction the account holds). Put it back on the
-    unaffiliated sentinel — the real default — for the empty case.
+    The shared ``character`` fixture is born into a real faction, which since
+    #2385 is itself a birth option (a faction the account holds). Put it back on
+    the unaffiliated sentinel — the real default — for the empty case.
     """
-    character.faction_slug = "na"
+    character.faction_slug = UNAFFILIATED_FACTION_SLUG
     await db_session.commit()
 
     resp = await client.get("/me/invited-factions", headers=auth_headers)
@@ -181,20 +188,21 @@ async def test_invited_factions_account_pooled(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
-    db_session.add(InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id))
-    db_session.add(InvitationLetter(character_id=character.id, faction_slug="albescent", era_id=era.id))
-    # albescent FK row
-    from models.faction import FactionStatus
-    db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
+    for slug in (DEFAULT_FACTION_SLUG, ALBESCENT_FACTION_SLUG):
+        db_session.add(
+            InvitationLetter(
+                character_id=character.id, faction_slug=slug, era_id=era.id
+            )
+        )
     await db_session.commit()
 
     resp = await client.get("/me/invited-factions", headers=auth_headers)
     assert resp.status_code == 200
     # albescent is excluded (never invite-joinable at the picker)
-    assert resp.json() == ["ua"]
+    assert resp.json() == [DEFAULT_FACTION_SLUG]
 
 
 # --- /auth/me new fields ----------------------------------------------------
@@ -231,18 +239,22 @@ async def test_auth_me_invitations_single(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """One held current-era invitation surfaces on the carried life."""
     db_session.add(
-        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+        InvitationLetter(
+            character_id=character.id,
+            faction_slug=DEFAULT_FACTION_SLUG,
+            era_id=era.id,
+        )
     )
     await db_session.commit()
 
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["character"]["invitations"] == ["ua"]
+    assert resp.json()["character"]["invitations"] == [DEFAULT_FACTION_SLUG]
 
 
 @pytest.mark.asyncio
@@ -252,43 +264,35 @@ async def test_auth_me_invitations_two_sorted_excludes_sentinels(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua: Faction,
-    faction_ephemerists: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Two invitations return sorted; na/albescent sentinels are excluded, and
     a sibling life's invite does NOT leak onto the carried life (per-character,
     not account-pooled)."""
-    from models.faction import FactionStatus
+    # Any two real factions of the live era — which two is not the subject
+    # (#2708). Sorted here so the expectation is the endpoint's order, not the
+    # era's declaration order.
+    first, second = sorted(real_faction_slugs(CURRENT_ERA)[:2])
 
     # Pin the carried life to `character` so a later-created sibling doesn't
     # become the resolved active character.
     account.active_character_id = character.id
 
-    db_session.add(
-        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
-    )
-    db_session.add(
-        InvitationLetter(
-            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+    for slug in (first, second, ALBESCENT_FACTION_SLUG):
+        # The Albescent invite is the sentinel that is never surfaced.
+        db_session.add(
+            InvitationLetter(
+                character_id=character.id, faction_slug=slug, era_id=era.id
+            )
         )
-    )
-    # A sentinel invite is never surfaced.
-    db_session.add(
-        Faction(slug="albescent", status=FactionStatus.visible)
-    )
-    db_session.add(
-        InvitationLetter(
-            character_id=character.id, faction_slug="albescent", era_id=era.id
-        )
-    )
     # A sibling life's invite must not appear on the carried life.
     sibling = await _add_character(db_session, account, era, username="sibling")
     db_session.add(
-        InvitationLetter(character_id=sibling.id, faction_slug="ua", era_id=era.id)
+        InvitationLetter(character_id=sibling.id, faction_slug=first, era_id=era.id)
     )
     await db_session.commit()
 
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["character"]["invitations"] == ["ephemerists", "ua"]
+    assert resp.json()["character"]["invitations"] == [first, second]

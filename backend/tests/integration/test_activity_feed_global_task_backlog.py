@@ -30,6 +30,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task, TaskStatus
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _make_task(
@@ -42,7 +43,7 @@ async def _make_task(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
         created_at=created_at,
     )
     db_session.add(task)
@@ -152,7 +153,7 @@ async def test_a_second_character_on_an_old_account_starts_clean(
         account_id=account.id,
         username="secondlife",
         display_name="Second Life",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
         created_at=new.created_at + timedelta(minutes=1),
     )
     db_session.add(second)

@@ -140,7 +140,7 @@ async def test_seed_unretires_a_slug_a_later_era_lists_again(
 async def test_retired_faction_is_absent_from_the_registry(
     client: AsyncClient,
     db_session: AsyncSession,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     await _add_faction(db_session, DROPPED_SLUG, FactionStatus.retired)
 

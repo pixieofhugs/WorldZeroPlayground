@@ -24,6 +24,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -34,12 +35,17 @@ from models.praxis import PraxisType
 from models.task import Task, TaskStatus
 from services.auth import create_jwt
 from services.praxis import create_praxis, invite_to_praxis, respond_to_invite
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # The task the Easter egg is measured against: high enough that a level-1
 # character is nowhere near it, and owned by a faction the invitee is not in.
 TASK_LEVEL_REQUIRED = 6
-TASK_FACTION_SLUG = "ua"
-INVITEE_FACTION_SLUG = "ephemerists"
+TASK_FACTION_SLUG = DEFAULT_FACTION_SLUG
+INVITEE_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != TASK_FACTION_SLUG
+)
 INVITEE_LEVEL = 1
 
 
@@ -98,7 +104,7 @@ def second_inviter_headers(second_inviter: Character) -> dict:
 
 @pytest.fixture
 async def inviter(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """A character who *can* claim the level-6 task — the collab's creator."""
     return await _make_character(
@@ -108,7 +114,7 @@ async def inviter(
 
 @pytest.fixture
 async def second_inviter(
-    db_session: AsyncSession, era: Era, faction_ua: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """A second eligible claimant — one character may only hold one praxis per task,
     so a second collab on the same task needs a different creator."""
@@ -119,7 +125,7 @@ async def second_inviter(
 
 @pytest.fixture
 async def invitee(
-    db_session: AsyncSession, era: Era, faction_ephemerists: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction
 ) -> Character:
     """Level 1, wrong faction — could never sign up for the task themselves."""
     return await _make_character(

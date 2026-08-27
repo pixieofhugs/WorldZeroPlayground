@@ -14,6 +14,7 @@ from models.praxis import Praxis, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _seed_solo_praxes_with_votes(
@@ -57,7 +58,7 @@ async def _seed_solo_praxes_with_votes(
             account_id=voter_account.id,
             username=f"voter_{tag}_{praxis_index}_{author.id}",
             display_name=f"Voter {tag}-{praxis_index}",
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(voter_character)
         await db_session.flush()
@@ -183,6 +184,6 @@ async def test_ua_character_faction_not_changed_at_level_3(
     await recalculate_character_stats(character.id, db_session)
     await db_session.refresh(character)
 
-    assert character.faction_slug == "ua", (
+    assert character.faction_slug == DEFAULT_FACTION_SLUG, (
         f"recalculate_character_stats must not mutate faction_slug; got {character.faction_slug!r}"
     )

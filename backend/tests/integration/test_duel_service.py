@@ -19,6 +19,7 @@ from models.task import Task, TaskStatus
 from services.duel import respond_to_duel_challenge
 
 import pytest
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -40,7 +41,7 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
         level_required=CURRENT_ERA.duel_level_required + 20,
         status=TaskStatus.active,
         created_by=character2.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
     await db_session.flush()
@@ -67,7 +68,7 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
         account_id=opponent_account.id,
         username="duelopponent",
         display_name="Duel Opponent",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(opponent)
     await db_session.flush()

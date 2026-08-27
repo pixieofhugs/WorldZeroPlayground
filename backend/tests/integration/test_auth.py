@@ -357,7 +357,7 @@ async def test_me_reports_albescent_from_the_stamped_column(
     auth_headers: dict,
     db_session: AsyncSession,
     era,
-    faction_ua,
+    some_faction,
 ):
     """#2399: the flag is the stamped column, never a live recomputation.
 

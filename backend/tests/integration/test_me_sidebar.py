@@ -22,6 +22,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.activity_feed as activity_feed_service
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
@@ -37,6 +39,16 @@ from models.praxis import (
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
+from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A real faction of the live era that is NOT the one the shared fixtures seat
+#: characters in. Derived, never named (#2708) — "somewhere else to go" is the
+#: whole requirement.
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 @pytest.mark.asyncio
@@ -248,7 +260,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             level_required=0,
             status=TaskStatus.active,
             created_by=character.id,
-            primary_faction_slug="ua",
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for n in range(12)
     ])
@@ -317,7 +329,7 @@ async def four_request_types(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ephemerists,
+    some_faction,
 ) -> int:
     """One UNANSWERED item of each of the four request types, plus an ANSWERED
     twin of each that must not be counted. Returns the expected count (4).
@@ -416,7 +428,7 @@ async def four_request_types(
         ),
         # A letter for a faction the viewer does NOT stand in is an open ask...
         InvitationLetter(
-            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+            character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
         ),
         # ...and one for the faction they already joined is answered by standing.
         InvitationLetter(

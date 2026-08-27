@@ -15,6 +15,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task
 from services.scoring import compute_votes_available
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -204,7 +205,7 @@ async def _add_second_life(
         account_id=account.id,
         username=username,
         display_name=username.title(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -232,7 +233,7 @@ async def test_alt_life_re_rates_the_accounts_vote_instead_of_adding_one(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -293,7 +294,7 @@ async def test_alt_re_rating_is_free_and_leaves_both_budgets_alone(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -353,7 +354,7 @@ async def test_unique_constraint_rejects_a_second_vote_from_one_account(
     account: Account,
     character: Character,
     era: Era,
-    faction_ua,
+    some_faction,
     praxis_solo,
     character3: Character,
 ):
@@ -384,7 +385,7 @@ async def test_unique_constraint_rejects_a_second_vote_from_one_account(
         account_id=character3.account_id,
         username="constraintalt",
         display_name="Constraint Alt",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(alt)
     await db_session.flush()
@@ -528,7 +529,6 @@ async def test_duel_challenge_issue_and_cancel(
     era: Era,
 ):
     """character2 issues a duel challenge to character; character2 then cancels it."""
-    from models.character_stats import CharacterStats
 
     # character2 already has level 5 from fixture — meets duel level gate
     # Issue challenge
@@ -716,7 +716,7 @@ async def test_vote_on_duel_side_praxis(
         account_id=account_c.id,
         username="duel_side_voter_c",
         display_name="Duel Voter C",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(voter_c)
     await db_session.flush()
@@ -759,6 +759,7 @@ async def test_vote_budget_increases_when_score_grows(
 ):
     """R.5: Vote budget grows with score since it is computed on-read."""
     from math import floor
+
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA
@@ -799,6 +800,7 @@ async def test_vote_budget_reflects_votes_spent(
 ):
     """R.5: votes_available = base + floor(multiplier * score) - votes_spent_this_era."""
     from math import floor
+
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA
@@ -964,7 +966,7 @@ async def test_non_participant_can_vote_on_duel_side(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
 ):
     """A third party who isn't in the duel can still rate a duel side (200)."""
@@ -990,7 +992,7 @@ async def test_non_participant_can_vote_on_duel_side(
         account_id=third.id,
         username="thirdchar",
         display_name="Third Char",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(third_char)
     await db_session.flush()
@@ -1133,7 +1135,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua,
+    some_faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -1168,7 +1170,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
         account_id=third.id,
         username="duel_detail_voter",
         display_name="DD Voter",
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(third_char)
     await db_session.flush()

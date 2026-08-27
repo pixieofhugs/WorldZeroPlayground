@@ -16,14 +16,25 @@ from httpx import AsyncClient
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from faction_slugs import real_faction_slugs
+from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.faction import Faction, FactionStatus
+from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from services.praxis import PraxisEraScope, PraxisSort, list_praxes
+from tests.integration.factories import DEFAULT_FACTION_SLUG
+
+#: A second real faction of the live era — "not the one the fixtures use". The
+#: multi-select union needs two slugs; which two is not the subject (#2708).
+OTHER_FACTION_SLUG = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if slug != DEFAULT_FACTION_SLUG
+)
 
 
 async def _make_praxis(
@@ -32,7 +43,7 @@ async def _make_praxis(
     *,
     title: str,
     submitted_at: datetime | None,
-    faction_slug: str = "ua",
+    faction_slug: str = DEFAULT_FACTION_SLUG,
     status: PraxisStatus = PraxisStatus.submitted,
 ) -> Praxis:
     """A solo praxis on its own task, with its seal time pinned."""
@@ -66,13 +77,15 @@ async def _make_praxis(
 
 
 @pytest_asyncio.fixture
-async def faction_wow(db_session: AsyncSession) -> Faction:
-    """Second faction row for the multi-select union (FK on Task)."""
-    existing = await db_session.execute(select(Faction).where(Faction.slug == "wow"))
-    if existing.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="wow", status=FactionStatus.visible))
-        await db_session.commit()
-    result = await db_session.execute(select(Faction).where(Faction.slug == "wow"))
+async def other_faction(db_session: AsyncSession, some_faction: Faction) -> Faction:
+    """Second faction row for the multi-select union (FK on Task).
+
+    Seeded by ``some_faction`` since #2708 — adding it here again is a duplicate
+    primary key, not a no-op.
+    """
+    result = await db_session.execute(
+        select(Faction).where(Faction.slug == OTHER_FACTION_SLUG)
+    )
     return result.scalar_one()
 
 
@@ -174,26 +187,38 @@ async def test_faction_filter_is_a_union_over_slugs(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_wow: Faction,
+    other_faction: Faction,
 ):
     sealed = era.started_at + timedelta(minutes=1)
-    ua_praxis = await _make_praxis(
-        db_session, character, title="UA", submitted_at=sealed, faction_slug="ua"
+    own_praxis = await _make_praxis(
+        db_session,
+        character,
+        title="Own",
+        submitted_at=sealed,
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
-    wow_praxis = await _make_praxis(
-        db_session, character, title="WOW", submitted_at=sealed, faction_slug="wow"
+    other_praxis = await _make_praxis(
+        db_session,
+        character,
+        title="Other",
+        submitted_at=sealed,
+        faction_slug=OTHER_FACTION_SLUG,
     )
 
     both = await list_praxes(
-        db_session, status=PraxisStatus.submitted, faction=["ua", "wow"]
+        db_session,
+        status=PraxisStatus.submitted,
+        faction=[DEFAULT_FACTION_SLUG, OTHER_FACTION_SLUG],
     )
-    assert {p.id for p in both} == {ua_praxis.id, wow_praxis.id}
+    assert {p.id for p in both} == {own_praxis.id, other_praxis.id}
 
-    one = await list_praxes(db_session, status=PraxisStatus.submitted, faction=["wow"])
-    assert [p.id for p in one] == [wow_praxis.id]
+    one = await list_praxes(
+        db_session, status=PraxisStatus.submitted, faction=[OTHER_FACTION_SLUG]
+    )
+    assert [p.id for p in one] == [other_praxis.id]
 
     empty = await list_praxes(db_session, status=PraxisStatus.submitted, faction=[])
-    assert {p.id for p in empty} == {ua_praxis.id, wow_praxis.id}
+    assert {p.id for p in empty} == {own_praxis.id, other_praxis.id}
 
 
 @pytest.mark.asyncio
@@ -202,26 +227,41 @@ async def test_route_accepts_repeated_faction_params(
     db_session: AsyncSession,
     character: Character,
     era: Era,
-    faction_wow: Faction,
+    other_faction: Faction,
 ):
-    """``?faction=ua&faction=wow`` — the plumbing only FastAPI can prove."""
+    """Two ``?faction=`` values at once — the plumbing only FastAPI can prove."""
     sealed = era.started_at + timedelta(minutes=1)
-    ua_praxis = await _make_praxis(
-        db_session, character, title="UA route", submitted_at=sealed, faction_slug="ua"
+    own_praxis = await _make_praxis(
+        db_session,
+        character,
+        title="Own route",
+        submitted_at=sealed,
+        faction_slug=DEFAULT_FACTION_SLUG,
     )
-    wow_praxis = await _make_praxis(
-        db_session, character, title="WOW route", submitted_at=sealed, faction_slug="wow"
+    other_praxis = await _make_praxis(
+        db_session,
+        character,
+        title="Other route",
+        submitted_at=sealed,
+        faction_slug=OTHER_FACTION_SLUG,
     )
 
     resp = await client.get(
-        "/praxes", params=[("status", "submitted"), ("faction", "ua"), ("faction", "wow")]
+        "/praxes",
+        params=[
+            ("status", "submitted"),
+            ("faction", DEFAULT_FACTION_SLUG),
+            ("faction", OTHER_FACTION_SLUG),
+        ],
     )
     assert resp.status_code == 200
-    assert {item["id"] for item in resp.json()} == {ua_praxis.id, wow_praxis.id}
+    assert {item["id"] for item in resp.json()} == {own_praxis.id, other_praxis.id}
 
-    single = await client.get("/praxes", params={"status": "submitted", "faction": "wow"})
+    single = await client.get(
+        "/praxes", params={"status": "submitted", "faction": OTHER_FACTION_SLUG}
+    )
     assert single.status_code == 200
-    assert [item["id"] for item in single.json()] == [wow_praxis.id]
+    assert [item["id"] for item in single.json()] == [other_praxis.id]
 
 
 # ---------------------------------------------------------------------------

@@ -24,11 +24,11 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
-from services.praxis import list_praxes, VotedFilter
+from services.praxis import VotedFilter, list_praxes
 from services.praxis_out import build_praxis_card_out
 from services.vote import cast_or_update_vote
 from services.vote_tally import viewer_votes_for
-
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # ---------------------------------------------------------------------------
 # Local fixtures — an account-mate (2nd character on the viewer's account) and a
@@ -37,13 +37,13 @@ from services.vote_tally import viewer_votes_for
 
 
 @pytest.fixture
-def _make_character(db_session: AsyncSession, era: Era, faction_ua: Faction):
+def _make_character(db_session: AsyncSession, era: Era, some_faction: Faction):
     async def _factory(account: Account, username: str, display_name: str) -> Character:
         ch = Character(
             account_id=account.id,
             username=username,
             display_name=display_name,
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(ch)
         await db_session.flush()

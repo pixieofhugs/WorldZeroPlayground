@@ -11,14 +11,10 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
-from models.faction import Faction
 from models.praxis import Praxis
-from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
 from schemas.task import MAX_TASK_NOTES
-from tests.integration.factories import make_admin
-
-
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 # ---------------------------------------------------------------------------
 # Auth guard
@@ -685,14 +681,16 @@ async def test_admin_list_characters_filter_faction(
     """Admin can filter character list by faction slug."""
     await make_admin(db_session, account)
 
-    resp = await client.get("/admin/characters?faction=ua", headers=auth_headers)
+    resp = await client.get(
+        f"/admin/characters?faction={DEFAULT_FACTION_SLUG}", headers=auth_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
     ids = [c["id"] for c in data]
     assert character.id in ids
     assert character2.id in ids
     for c in data:
-        assert c["faction_slug"] == "ua"
+        assert c["faction_slug"] == DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -782,14 +780,14 @@ async def test_admin_edit_task_faction(
 
     resp = await client.patch(
         f"/admin/tasks/{task.id}",
-        json={"primary_faction_slug": "ua"},
+        json={"primary_faction_slug": DEFAULT_FACTION_SLUG},
         headers=auth_headers,
     )
     assert resp.status_code == 200
-    assert resp.json()["primary_faction_slug"] == "ua"
+    assert resp.json()["primary_faction_slug"] == DEFAULT_FACTION_SLUG
 
     await db_session.refresh(task)
-    assert task.primary_faction_slug == "ua"
+    assert task.primary_faction_slug == DEFAULT_FACTION_SLUG
 
     # …and back to the cross-faction sentinel, which is a real slug in config.
     back = await client.patch(
@@ -870,6 +868,7 @@ async def test_admin_patch_stats_recomputes_votes_available(
     """PATCH /admin/characters/{id}/stats with votes_available=5 stores the
     equivalent votes_spent_this_era so the on-read budget lands at 5 (R.5)."""
     from math import floor
+
     from sqlalchemy import select
 
     from game_config import CURRENT_ERA
@@ -919,8 +918,9 @@ async def test_admin_era_reset_zeros_votes_spent_this_era(
     era: Era,
 ):
     """Era reset with reset_vote_budget=True zeros votes_spent_this_era (R.5)."""
-    from sqlalchemy import select
     from math import floor
+
+    from sqlalchemy import select
 
     from game_config import CURRENT_ERA
 
@@ -991,10 +991,11 @@ async def test_admin_era_reset_preserves_votes_spent_without_flag(
     """With reset_vote_budget=False the new era carries over votes_spent_this_era (R.5)."""
     from dataclasses import replace
 
+    from sqlalchemy import select
+
     from game_config import CURRENT_ERA
     from models.era import Era as EraModel
     from services.era import apply_era_reset
-    from sqlalchemy import select
 
     await make_admin(db_session, account)
 

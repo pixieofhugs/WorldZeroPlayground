@@ -18,7 +18,7 @@ from typing import Optional
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, EraConfig
 from script_utils import get_settings
 from models.account import Account, AuthProvider, OAuthProvider
@@ -48,24 +48,18 @@ def fixture_faction_slugs(era: EraConfig) -> tuple[str, str, str]:
     modifier, and hunting an era for one that does is not worth it for a dev
     convenience — so any faction the era carries will do.
 
-    Sentinels are excluded (ADR-0087, ``faction_slugs.py``): ``na`` is "no
-    faction" for both a character and a task, and Albescent is the secret
-    society, so neither is something a demo fixture should be skinned as.
+    Sentinels are excluded by :func:`faction_slugs.real_faction_slugs`
+    (ADR-0087): ``na`` is "no faction" for both a character and a task, and
+    Albescent is the secret society, so neither is something a demo fixture
+    should be skinned as. That predicate moved to ``faction_slugs.py`` in #2708,
+    which is what the ponytail note here asked for — the integration fixtures
+    were the third site.
 
     Distinct where the era has three to give, because each fixture needs a task
     on the board carrying its slug and three tries beat one. Cycles on a
     smaller era rather than running out.
-
-    ponytail: "the real factions of an era" is a predicate ``seed.py`` now
-    spells out for itself too. Its home is ``faction_slugs.py``, beside
-    ``faction_filter_slugs`` — move it there and have both callers read it the
-    next time a third site needs the same answer.
     """
-    real = [
-        slug
-        for slug in era.factions
-        if slug not in (UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG)
-    ]
+    real = real_faction_slugs(era)
     if not real:
         # Degenerate era, but a seeder is not the place to refuse it: every
         # fixture below skips on a board with no matching task anyway.

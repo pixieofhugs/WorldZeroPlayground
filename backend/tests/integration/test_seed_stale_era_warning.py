@@ -15,10 +15,18 @@ import pytest
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from game_config import CURRENT_ERA
+from game_config import _ERA_ATTRIBUTE_BY_CONFIG_KEY, CURRENT_ERA
 from models.character_stats import CharacterStats
 from models.era import Era
 from seed import stale_era_warning
+
+#: Any era key the build knows that is **not** the live one, since the live one
+#: is what the ``era`` fixture writes the row for. Derived, never named (#2708):
+#: naming ``era_2`` here made the test vacuous the moment ``era_2`` went live,
+#: because the warning fires on "configured key != live row key" and nothing else.
+UNOPENED_ERA_KEY = next(
+    key for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY if key != CURRENT_ERA.config_key
+)
 
 
 @pytest.mark.asyncio
@@ -35,13 +43,14 @@ async def test_a_configured_era_with_no_row_names_both_keys_and_the_script(
     era: Era,
 ):
     """The state a deploy that flips CURRENT_ERA forward leaves behind."""
-    next_era = replace(CURRENT_ERA, config_key="era_2")
+    unopened_era = replace(CURRENT_ERA, config_key=UNOPENED_ERA_KEY)
 
-    warning = await stale_era_warning(db_session, next_era)
+    warning = await stale_era_warning(db_session, unopened_era)
 
     assert warning is not None
     assert (
-        f"era_2 is configured but the live Era row is {CURRENT_ERA.config_key}."
+        f"{UNOPENED_ERA_KEY} is configured but the live Era row is "
+        f"{CURRENT_ERA.config_key}."
         in warning
     )
     assert "Run scripts/era_reset.py to open it." in warning

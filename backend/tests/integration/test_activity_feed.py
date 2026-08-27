@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.task import Task
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 @pytest.mark.asyncio
@@ -199,7 +200,7 @@ async def test_badge_count_equals_windowed_fetch_length_per_tab(
         TauntMessage(
             from_character_id=character3.id,
             to_character_id=character.id,
-            faction_slug="ua",
+            faction_slug=DEFAULT_FACTION_SLUG,
             trigger_type=TauntTriggerType.score_overtake,
         )
     )
@@ -710,7 +711,7 @@ async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
         level_required=0,
         status=TaskStatus.active,
         created_by=character.id,
-        primary_faction_slug="ua",
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(sibling_task)
     await db_session.commit()

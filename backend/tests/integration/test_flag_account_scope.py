@@ -22,6 +22,7 @@ from models.faction import Faction
 from models.praxis import Praxis
 from models.task import Task
 from services.auth import create_jwt
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 FLAG_LEVEL = CURRENT_ERA.flag_level_required
 
@@ -38,7 +39,7 @@ async def _seed_life(
         account_id=account.id,
         username=username,
         display_name=username.title(),
-        faction_slug="ua",
+        faction_slug=DEFAULT_FACTION_SLUG,
         status=CharacterStatus.active,
     )
     db_session.add(ch)
@@ -91,7 +92,7 @@ async def test_sibling_cannot_flag_own_accounts_praxis(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Puppet B flagging puppet A's praxis (same account) → 403."""
@@ -115,7 +116,7 @@ async def test_account_flag_uniqueness_and_non_sibling_still_allowed(
     character2: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):
@@ -171,7 +172,7 @@ async def test_sibling_cannot_flag_own_accounts_comment(
     character: Character,
     praxis_solo: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
 ):
     """Puppet B flagging puppet A's comment (same account) -> 403, comment untouched."""
@@ -201,7 +202,7 @@ async def test_account_comment_flag_uniqueness_and_non_sibling_still_allowed(
     character2: Character,
     praxis_solo: Praxis,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     auth_headers: dict,
     auth_headers2: dict,
 ):

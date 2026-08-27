@@ -21,7 +21,7 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus, TaskType
+from models.task import Task
 from services.praxis import (
     SIGNUP_REASON_MULTI_MEMBERSHIP,
     SignupDenialReason,
@@ -98,7 +98,7 @@ async def test_perk_holder_already_on_the_task_gets_the_allowed_reason(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """Double Dipper: sign-up is open, and the wire says why — "begin again"."""
@@ -121,7 +121,7 @@ async def test_without_the_perk_the_same_task_still_reads_blocked(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The other half — remove the gate and this is what fails."""
     await _seed_in_progress_praxis(db_session, character, active_task)
@@ -138,7 +138,7 @@ async def test_a_task_never_started_carries_no_reason(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """A plain first claim is not "again" — even for the perk holder."""
@@ -157,7 +157,7 @@ async def test_reason_is_the_same_whether_or_not_the_page_precomputed_facts(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """#1377's property, extended to the new fact.
@@ -214,7 +214,7 @@ async def test_the_denial_carries_the_draft_it_is_about(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The blocked reason and the way out of it arrive on the same row."""
     praxis = await _seed_praxis(db_session, character, active_task)
@@ -231,7 +231,7 @@ async def test_a_submitted_praxis_shuts_signup_with_no_draft_to_offer(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """The reachable null: shut, but there is nothing to edit."""
     await _seed_praxis(db_session, character, active_task, PraxisStatus.submitted)
@@ -248,7 +248,7 @@ async def test_a_task_never_started_carries_no_praxis_id(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     out = await build_task_out_for_viewer(active_task, character, db_session)
 
@@ -261,7 +261,7 @@ async def test_the_perk_holder_still_gets_their_draft(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
     faction_everymen: Faction,
 ):
     """Double Dipper empties the *blocking* set; it does not hide the draft.
@@ -287,7 +287,7 @@ async def test_praxis_id_is_the_same_whether_or_not_the_page_precomputed_facts(
     character: Character,
     active_task: Task,
     era: Era,
-    faction_ua: Faction,
+    some_faction: Faction,
 ):
     """#1377's property again, for the new fact — absence from the bag is not "no"."""
     praxis = await _seed_praxis(db_session, character, active_task)
