@@ -322,14 +322,16 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
         {/* ③ ACCESS — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PANEL }}>
+            {/* #2299 cut this bar's `re: you` label, leaving one child. The
+                `justify-content: space-between` and the `gap` that paired them
+                described a layout that no longer exists — a single child in a
+                `space-between` row already sits at the start (#2621). */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
                 background: SIGNAL_FILL,
                 padding: "var(--space-sm) var(--space-lg)",
-                gap: "var(--space-md)",
               }}
             >
               <span
@@ -344,7 +346,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {t("singularity.join.heading")}
               </span>
             </div>
-            <div style={{ position: "relative", padding: "var(--space-xl) var(--space-lg)" }}>
+            {/* #2621: the panel opens at 16px under the ACCESS bar — Coven's
+                number, and the one rhythm every join panel now shares. Its own
+                value, not a shared one. Stated as a PAIR rather than collapsed
+                to one value so the horizontal half stays visibly untouched. */}
+            <div style={{ position: "relative", padding: "var(--space-lg) var(--space-lg)" }}>
               <Scanlines />
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (

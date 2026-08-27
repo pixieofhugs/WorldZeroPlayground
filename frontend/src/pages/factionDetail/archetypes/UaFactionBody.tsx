@@ -357,7 +357,12 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
       >
         {/* ③ THE REGISTRY — join / gate / standing */}
         {membership.state !== "none" && (
-          <div style={{ ...SHEET, padding: "var(--space-xl)" }}>
+          /* #2621: the panel opens at 16px, which is Coven's number and the one
+             rhythm every join panel now shares. Its own value, not a shared
+             one — the kits agree on it here and any of them may stop agreeing.
+             The sides keep `--space-xl`, so this matches the Members sheet
+             below it exactly. */
+          <div style={{ ...SHEET, padding: "var(--space-lg) var(--space-xl)" }}>
             <RuledLabel>{t("ua.join.heading")}</RuledLabel>
 
             {membership.state === "member" && (
