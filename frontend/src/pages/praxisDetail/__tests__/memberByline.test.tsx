@@ -4,78 +4,45 @@
  * order; `MemberByline` renders the ordered names Oxford-style
  * (Ada / Ada & Beth / Ada, Beth & Cy), each name linked to its character.
  */
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
+
 // Initialize the catalog so the collab submit-state markers resolve to English.
 import "../../../i18n";
 import { orderedMembers, MemberByline } from "../shared";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
+import { aMember, aPraxis } from "../../../test/fixtures";
+import { markup } from "../../../test/praxisDetail";
 
-function member(
+const member = (
   characterId: number,
   name: string,
   joinedAt: string,
   hasSubmitted = false,
-): PraxisMemberOut {
-  return {
+): PraxisMemberOut =>
+  aMember({
     id: characterId * 10,
-    praxis_id: 1,
     character_id: characterId,
     character_display_name: name,
-    character_avatar_url: "",
     has_submitted: hasSubmitted,
-    is_done: false,
     joined_at: joinedAt,
-    nudged_at: null,
-    submitted_at: null,
-  };
-}
+  });
 
-function praxis(
+const praxis = (
   members: PraxisMemberOut[],
   createdById: number,
   status: PraxisOut["status"] = "submitted",
-): PraxisOut {
-  return {
-    id: 1,
-    task_id: 7,
-    task_title: "Mangrove",
-    task_point_value: 30,
-    task_level_required: 3,
+): PraxisOut =>
+  aPraxis({
     task_faction_slug: "ua",
     type: "collab",
     status,
-    title: "Reforestation",
-    body_text: "Seedlings planted along the estuary.",
-    moderation_status: "visible",
-    admin_note: null,
-    flagged_at: null,
     submitted_at: null,
-    submit_proposed_at: null,
     created_by_id: createdById,
-    created_by_display_name: "Ada",
-    created_by_avatar_url: "",
     created_by_faction_slug: "ua",
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-02T00:00:00Z",
-    members,
-    invites: [],
     media_items: [],
-    score: 0,
-    metatask_points: 0,
-    display_multiplier: 1.0,
-    points_from_votes: 0,
-    habit_bonus_points: 0,
-    is_top_for_task: false,
-    duel_id: null,
-    can_flag: true,
-    applied_metatasks: [],
-    viewer_can_vote: true,
-    viewer_vote: null,
-    voter_count: 0,
-  };
-}
+    members,
+  });
+
 
 // Creator (id 1 = "Ada") joined last on purpose, to prove creator-first
 // overrides join order for the creator specifically.
@@ -87,12 +54,9 @@ function bylineText(
   members: PraxisMemberOut[],
   status: PraxisOut["status"] = "submitted",
 ): string {
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <MemberByline praxis={praxis(members, 1, status)} />
-    </MemoryRouter>,
-  );
+  const { html } = markup(<MemberByline praxis={praxis(members, 1, status)} />);
   return html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&");
+
 }
 
 describe("orderedMembers (#387)", () => {
@@ -125,11 +89,8 @@ describe("MemberByline join format (#387)", () => {
   });
 
   it("links each name to its character profile", () => {
-    const html = renderToStaticMarkup(
-      <MemoryRouter>
-        <MemberByline praxis={praxis([ADA, BETH], 1)} />
-      </MemoryRouter>,
-    );
+    const { html } = markup(<MemberByline praxis={praxis([ADA, BETH], 1)} />);
+
     expect(html).toContain('href="/characters/1"');
     expect(html).toContain('href="/characters/2"');
   });

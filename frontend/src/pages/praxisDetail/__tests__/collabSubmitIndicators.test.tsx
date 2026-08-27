@@ -31,121 +31,48 @@ import type {
   PraxisMemberOut,
   PraxisStatus,
 } from "../../../api/praxis";
-import type { CharacterOut, CurrentUser } from "../../../api/auth";
+import type { CurrentUser } from "../../../api/auth";
+import { aCharacter, aCurrentUser, aMember, aPraxis } from "../../../test/fixtures";
 import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 
 const text = (element: ReactElement): string => markup(element).text;
 
-
-function member(
+const member = (
   characterId: number,
   name: string,
   hasSubmitted: boolean,
-): PraxisMemberOut {
-  return {
+): PraxisMemberOut =>
+  aMember({
     id: characterId * 10,
-    praxis_id: 1,
     character_id: characterId,
     character_display_name: name,
-    character_avatar_url: "",
     has_submitted: hasSubmitted,
-    is_done: false,
-    joined_at: "2026-01-01T00:00:00Z",
-    nudged_at: null,
-    submitted_at: null,
-  };
-}
+  });
 
-function praxis(
+const praxis = (
   members: PraxisMemberOut[],
   status: PraxisStatus,
   submitProposedAt: string | null,
-): PraxisOut {
-  return {
-    id: 1,
-    task_id: 7,
-    task_title: "Mangrove",
-    task_point_value: 30,
-    task_level_required: 3,
-    task_faction_slug: null,
+): PraxisOut =>
+  aPraxis({
     type: "collab",
     status,
-    title: "Reforestation",
-    body_text: "Seedlings.",
-    moderation_status: "visible",
-    admin_note: null,
-    flagged_at: null,
     submitted_at: null,
     submit_proposed_at: submitProposedAt,
     created_by_id: 1,
-    created_by_display_name: "Ada",
-    created_by_avatar_url: "",
-    created_by_faction_slug: null,
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-02T00:00:00Z",
-    members,
-    invites: [],
     media_items: [],
-    score: 0,
-    metatask_points: 0,
-    display_multiplier: 1.0,
-    points_from_votes: 0,
-    habit_bonus_points: 0,
-    is_top_for_task: false,
-    duel_id: null,
-    can_flag: true,
-    applied_metatasks: [],
-    viewer_can_vote: true,
-    viewer_vote: null,
-    voter_count: 0,
-  };
-}
+    members,
+  });
 
-function character(id: number): CharacterOut {
-  return {
-    id,
-    username: `u${id}`,
-    display_name: `Player ${id}`,
-    bio: '',
-    tagline: '',
-    avatar_url: '',
-    location: '',
-    level: 5,
-    score: 0,
-    all_time_score: 0,
-    faction_slug: "na",
-    status: "active",
-    created_at: "2026-01-01T00:00:00Z",
-    badges: [],
-    invitations: [],
-  };
-}
+const user = (characterId: number): CurrentUser =>
+  aCurrentUser({
+    character: aCharacter({
+      id: characterId,
+      username: `u${characterId}`,
+      display_name: `Player ${characterId}`,
+    }),
+  });
 
-function user(characterId: number): CurrentUser {
-  return {
-    account_id: 1,
-    email: 'wz_pilgrim@example.com',
-    provider: 'google',
-    character: character(characterId),
-    is_admin: false,
-    can_create_additional_character: false,
-    can_start_as_albescent: false,
-    albescent_revealed: false,
-    albescent_glimpsed: false,
-    can_propose_task: false,
-    can_propose_metatask: false,
-    can_apply_metatask: false,
-    can_see_retired_tasks: false,
-    can_see_pending_tasks: false,
-    can_comment: true,
-    albescent_level_required: 8,
-    second_character_level_required: 5,
-    era_name: "Era 1",
-    level_jump_reach: 0,
-    level_jump_available: false,
-    task_browse_defaults_to_eligible: false,
-  };
-}
 
 /** Minimal PraxisDetailState — only the fields the two slots read matter; the
  *  rest are stubbed with inert defaults. */
