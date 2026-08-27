@@ -521,6 +521,7 @@ export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): Fa
     // neutral config is exactly that, and the perk has no preview surface: it
     // renders nothing at all, it prints to the devtools console.
     reads_the_array: false,
+    takes_duel_ties: false,
     ...overrides,
   }
 }

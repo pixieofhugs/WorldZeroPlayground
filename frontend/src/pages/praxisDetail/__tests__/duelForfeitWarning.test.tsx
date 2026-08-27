@@ -44,6 +44,7 @@ function faction(slug: string, win: number, lose: number): FactionConfigOut {
     // #1869: Singularity's perk flag. Irrelevant to the duel axis these
     // fixtures exercise, but part of the contract.
     reads_the_array: false,
+    takes_duel_ties: false,
   }
 }
 

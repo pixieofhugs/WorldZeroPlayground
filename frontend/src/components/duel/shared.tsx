@@ -154,13 +154,14 @@ export interface DuelStakes {
   win: number
   /** Base points if it loses. `0` for Snide — by construction, not by branch. */
   lose: number
-  /** Base points on a tie (1.0×, or the win/loss rate when exactly one side is Snide). */
+  /**
+   * Base points on a tie: 1.0×, or the win/loss rate when exactly one side
+   * holds the take-the-tie perk (`takes_duel_ties`).
+   */
   tie: number
   /** Base points if the duel never happens (declined / no opponent): plain solo. */
   solo: number
 }
-
-const SNIDE_FACTION_SLUG = 'snide'
 
 /**
  * Win / lose / tie / solo-fallback base points for ONE side of a duel.
@@ -182,15 +183,24 @@ export function useDuelStakes(
   const faction = config.factions.find((entry) => entry.slug === viewerFactionSlug)
   if (!faction) return null
 
-  // Tie: 1.0× for both sides, unless exactly one side is Snide — then Snide
-  // takes the win rate and the other side the loss rate.
-  const exactlyOneSnide =
-    (viewerFactionSlug === SNIDE_FACTION_SLUG) !== (opponentFactionSlug === SNIDE_FACTION_SLUG)
-  const tieModifier = !exactlyOneSnide
-    ? 1.0
-    : viewerFactionSlug === SNIDE_FACTION_SLUG
-      ? faction.duel_win_modifier
-      : faction.duel_loss_modifier
+  // Tie: 1.0× for both sides, unless exactly ONE side holds `takes_duel_ties` —
+  // then that side takes its win rate and the other its loss rate.
+  //
+  // #2664: this reads the era's flag off the payload rather than comparing a
+  // slug, and it is the same field the server's `sole_tie_taker_slug` banks the
+  // points from. That is the whole point: the stakes a player is shown here and
+  // the points the server actually banks are now one rule with one source,
+  // rather than two hardcoded copies of `'snide'` that agreed by luck and that
+  // no era could move (ADR-0042).
+  const opponent = config.factions.find((entry) => entry.slug === opponentFactionSlug)
+  const viewerTakesTies = faction.takes_duel_ties
+  const opponentTakesTies = opponent?.takes_duel_ties ?? false
+  const tieModifier =
+    viewerTakesTies === opponentTakesTies
+      ? 1.0
+      : viewerTakesTies
+        ? faction.duel_win_modifier
+        : faction.duel_loss_modifier
 
   return {
     win: taskPointValue * faction.duel_win_modifier,
