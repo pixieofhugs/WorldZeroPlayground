@@ -634,7 +634,7 @@ async def gather_signup_facts(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> SignupFacts:
-    """Read one page's worth of :class:`SignupFacts` in seven queries, not seven per row.
+    """Read one page's worth of :class:`SignupFacts` in seven queries, not per row.
 
     ``era`` is threaded into the membership read so a caller evaluating against a
     non-current ruleset gets facts from that same ruleset — precomputed facts
