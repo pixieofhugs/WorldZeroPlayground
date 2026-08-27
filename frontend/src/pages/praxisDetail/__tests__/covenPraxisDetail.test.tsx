@@ -24,7 +24,7 @@ import i18n from '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut } from '../../../api/duel'
 import { aCharacter, aCurrentUser, aDuel, aDuelSide, aMetatask, aPraxis } from '../../../test/fixtures'
-import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
+import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
 
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
@@ -53,13 +53,7 @@ const PRAXIS = aPraxis({
 const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
   aDuel({
     challenger: aDuelSide({ faction_slug: 'coven', points_from_votes: 18 }),
-    opponent: aDuelSide({
-      praxis_id: 2,
-      character_id: 4,
-      display_name: 'Rax',
-      faction_slug: 'snide',
-      points_from_votes: 15.4,
-    }),
+    opponent: RIVAL,
     ...overrides,
   })
 

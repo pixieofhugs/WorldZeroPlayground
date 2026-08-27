@@ -26,7 +26,7 @@ import '../../../i18n'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { DuelDetailOut } from '../../../api/duel'
 import { aDuel, aDuelSide, aPraxis } from '../../../test/fixtures'
-import { MEMBER, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
+import { MEMBER, RIVAL, aPraxisDetailState, indexOf, skinRenderer } from '../../../test/praxisDetail'
 
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
@@ -51,13 +51,6 @@ const PRAXIS = aPraxis({
 
 /** This page's side. Its `praxis_id` is what makes it "mine" rather than the rival. */
 const MINE = aDuelSide({ faction_slug: 'coven', points_from_votes: 18 })
-const RIVAL = aDuelSide({
-  praxis_id: 2,
-  character_id: 4,
-  display_name: 'Rax',
-  faction_slug: 'snide',
-  points_from_votes: 15.4,
-})
 
 const duel = (overrides: Partial<DuelDetailOut> = {}): DuelDetailOut =>
   aDuel({ challenger: MINE, opponent: RIVAL, ...overrides })

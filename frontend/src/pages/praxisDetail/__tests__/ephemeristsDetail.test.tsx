@@ -20,7 +20,7 @@ import { describe, it, expect, vi } from "vitest";
 import i18n from "../../../i18n";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import { aDuel, aDuelSide, aPraxis } from "../../../test/fixtures";
-import { CO_MEMBER, MEMBER, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
+import { CO_MEMBER, MEMBER, RIVAL, VOTERS, aPraxisDetailState, indexOf, skinRenderer } from "../../../test/praxisDetail";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -45,13 +45,7 @@ const PRAXIS = aPraxis({
 /** A settled duel this praxis is the challenger side of. */
 const DUEL = aDuel({
   challenger: aDuelSide({ faction_slug: "ephemerists", points_from_votes: 18 }),
-  opponent: aDuelSide({
-    praxis_id: 2,
-    character_id: 4,
-    display_name: "Rax",
-    faction_slug: "snide",
-    points_from_votes: 15.4,
-  }),
+  opponent: RIVAL,
 });
 
 const state = (overrides: Partial<PraxisDetailState> = {}): PraxisDetailState =>

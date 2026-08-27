@@ -31,8 +31,8 @@ import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import { PraxisStatusBanners } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { aMetatask, aPraxis } from '../../../test/fixtures'
-import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
+import { aMetatask } from '../../../test/fixtures'
+import { aPraxisDetailState, aWalkedPraxis, markup } from '../../../test/praxisDetail'
 
 // `markup` tag-strips into `text` — several archetypes split the finding across
 // spans (the Ephemerists' lapis last-word), so the headline only reads
@@ -40,24 +40,8 @@ import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 const render = markup;
 
 
-const PRAXIS = aPraxis({
-  task_title: "Mangrove",
-  task_point_value: 30,
-  task_level_required: 3,
-  task_faction_slug: "ua",
-  title: "Reforestation",
-  body_text: "Seedlings planted along the estuary.",
-  submitted_at: "2026-01-02T00:00:00Z",
-  created_by_id: 3,
-  created_by_display_name: "Ada",
-  created_by_faction_slug: "ua",
-  updated_at: "2026-01-02T00:00:00Z",
-  members: [],
-  media_items: [],
-  // score = (base 30 + meta 0) × 1.0 + vote points 16 = 46 — the common case.
-  score: 46,
-  points_from_votes: 16,
-});
+const PRAXIS = aWalkedPraxis();
+
 
 /** Minimal state — the read archetypes take every number they show off the
  *  praxis payload (`scoreBreakdown`, ADR-0053); behavior-slot state is left in

@@ -37,7 +37,7 @@ import type { FormFactor } from '../hooks/useFormFactor'
 import type { VoterDetail } from '../api/votes'
 import type { PraxisOut } from '../api/praxis'
 import type { CharacterOut, CurrentUser } from '../api/auth'
-import { aCharacter, aCurrentUser, aMember, aPraxis } from './fixtures'
+import { aCharacter, aCurrentUser, aDuelSide, aMember, aPraxis } from './fixtures'
 
 /**
  * Mount anything under the router and hand back both readings of it.
@@ -71,6 +71,48 @@ export const VOTERS: VoterDetail[] = [
   { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
   { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
 ]
+
+/**
+ * The other side of a duel: praxis 2, a S.N.I.D.E. character, just behind on
+ * votes so "leads by" has a margin to print and no reading is a tie by
+ * accident. A suite whose page is itself S.N.I.D.E. overrides `faction_slug` —
+ * a rival in the same colours would make an ink assertion vacuous.
+ */
+export const RIVAL = aDuelSide({
+  praxis_id: 2,
+  character_id: 4,
+  display_name: 'Rax',
+  faction_slug: 'snide',
+  points_from_votes: 15.4,
+})
+
+/**
+ * The praxis the two REGISTRY WALKS render through every archetype
+ * (`archetypeSlots`, `voteRegionGate`).
+ *
+ * Solo, submitted, with votes already cast and no media: every skin has each
+ * invariant slot to draw, and none of them has an upload to lay out. The score
+ * is the arithmetic those walks read — (base 30 + meta 0) × 1.0 + 16 = 46.
+ */
+export const aWalkedPraxis = (over: Partial<PraxisOut> = {}): PraxisOut =>
+  aPraxis({
+    task_title: 'Mangrove',
+    task_point_value: 30,
+    task_level_required: 3,
+    task_faction_slug: 'ua',
+    title: 'Reforestation',
+    body_text: 'Seedlings planted along the estuary.',
+    submitted_at: '2026-01-02T00:00:00Z',
+    created_by_id: 3,
+    created_by_display_name: 'Ada',
+    created_by_faction_slug: 'ua',
+    updated_at: '2026-01-02T00:00:00Z',
+    members: [],
+    media_items: [],
+    score: 46,
+    points_from_votes: 16,
+    ...over,
+  })
 
 /**
  * The praxis the OWNER-CONTROL suites act on, and the viewer who owns it.

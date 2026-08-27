@@ -38,29 +38,13 @@ import { AuthContext } from "../../../auth/AuthContext";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { CurrentUser } from "../../../api/auth";
-import { aPraxis } from '../../../test/fixtures'
-import { aPraxisDetailState } from '../../../test/praxisDetail'
+import { aPraxisDetailState, aWalkedPraxis } from '../../../test/praxisDetail'
 
 const HEADING = "Cast your vote";
 const PROMPT = "How much did this move you?";
 
-const PRAXIS = aPraxis({
-  task_title: "Mangrove",
-  task_point_value: 30,
-  task_level_required: 3,
-  task_faction_slug: "ua",
-  title: "Reforestation",
-  body_text: "Seedlings planted along the estuary.",
-  submitted_at: "2026-01-02T00:00:00Z",
-  created_by_id: 3,
-  created_by_display_name: "Ada",
-  created_by_faction_slug: "ua",
-  updated_at: "2026-01-02T00:00:00Z",
-  members: [],
-  media_items: [],
-  score: 46,
-  points_from_votes: 16,
-});
+const PRAXIS = aWalkedPraxis();
+
 
 function viewer(): CurrentUser {
   return {
