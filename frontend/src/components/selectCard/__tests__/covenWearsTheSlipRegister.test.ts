@@ -163,7 +163,7 @@ in the PR that the task card has no answer — not by widening this test.`,
     expect(source, "the mark is the shared `CovenSigil`, never re-drawn inline").toContain("CovenSigil");
     expect(
       source,
-      "`SigilMark` is the pentagram badge the card kit stood down when the bands were built (CardMasthead, #2029) — it keeps its four non-card mounts and this is not one",
+      "`SigilMark` was the pentagram badge the card kit stood down when the bands were built (CardMasthead, #2029). It kept four non-card mounts then and lost those too at #2726, so the name should not resolve at all now — this guards the tile against a paste from an old branch",
     ).not.toContain("SigilMark");
   });
 
