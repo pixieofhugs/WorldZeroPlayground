@@ -173,13 +173,15 @@ describe("Albescent's letter names the same invitation slots as the other seven 
         factions,
       )
 
-  it('nests the accept control under letter.cta.*, with the copy unchanged', () => {
-    expect(leaf('albescent.letter.cta.join')).toBe('Accept the order')
-    expect(leaf('albescent.letter.cta.joined')).toBe('You are of the Order')
+  it('nests the accept control under letter.cta.*', () => {
+    // The shape is what this case pins. The three values are the owner's, and
+    // her copy pass rewrote all three at once.
+    expect(leaf('albescent.letter.cta.join')).toBe('Accept the Honor')
+    expect(leaf('albescent.letter.cta.joined')).toBe('You have been chosen')
     // `busy` has no counterpart to align to — the shared popup reuses its idle
     // label while disabled — so it joins the nest rather than taking a name
     // from it.
-    expect(leaf('albescent.letter.cta.busy')).toBe('Entering the record…')
+    expect(leaf('albescent.letter.cta.busy')).toBe('Ascending')
   })
 
   it('leaves nothing behind under the old flat names', () => {

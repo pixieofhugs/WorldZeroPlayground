@@ -133,7 +133,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
     }}>
       {/* The masthead, in the band's anatomy rather than the band itself: the
           faction's mark hard left, the coven's name hand-lettered beside it. */}
-      <div style={{ ...CAPTION, padding: "var(--space-lg) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.coven.banner")}</div>
+      <div style={{ ...CAPTION, textTransform: "none", letterSpacing: "0.04em", padding: "var(--space-lg) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.coven.banner")}</div>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-xl) 0" }}>
         <CovenSigil size={34} color={DEEP} />
         <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK, whiteSpace: "nowrap" }}>

@@ -152,7 +152,7 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
   it('prints each perk as a name over a description', () => {
     const html = albescentLetter()
     const perks = factions.albescent.letter.perks as unknown as Record<string, Perk>
-    expect(Object.keys(perks)).toEqual(['record', 'duties', 'witnessed'])
+    expect(Object.keys(perks)).toEqual(['record'])
     for (const perk of Object.values(perks)) {
       expect(html).toContain(escaped(perk.name))
       expect(html).toContain(escaped(perk.desc))
@@ -180,7 +180,7 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
     // `cta.joined` survives here and only here: Albescent's letter renders it
     // in place after accepting, where the seven shared letters never had a
     // call site for theirs.
-    expect(block.cta.joined).toBe('You are of the Order')
+    expect(block.cta.joined).toBe('You have been chosen')
   })
 })
 
@@ -217,24 +217,27 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
     expect(perk.desc).toBe(desc)
   })
 
-  it("Albescent's mechanic is the inheritance, with no level talk in it", () => {
-    const perk = factions.albescent.letter.perks.duties as unknown as Perk
-    expect(perk.name).toBe('Enlightenment')
-    expect(perk.desc).toBe(
-      'You see the value in working together, competing, gathering information, '
-      + 'being consistent, trying again, and being in the right place at the right time '
-      + '(even if that involves a little messing around with the timeline). You know how to task',
-    )
+  it("Albescent's mechanic is named, and its description is owed back", () => {
+    // It was `perks.duties`, named "Enlightenment", until the owner's copy pass
+    // cut `duties` and `witnessed` and put the name she wrote on `record` — the
+    // only perk the letter carries now. The description that travelled with it
+    // stopped mid-clause ("You know how to task"), so on her call it went back
+    // to a placeholder rather than ship unfinished. This is the ONE Albescent
+    // row still owed, and it is owed a desc, not a name.
+    const perk = factions.albescent.letter.perks.record as unknown as Perk
+    expect(perk.name).toBe('Abilities')
+    expect(perk.desc).toMatch(/^PLACEHOLDER — /)
     // The owner's draft opened "From levels 1-7…" and closed on level 8. Both
     // sentences were cut deliberately: `inherits_faction_perks` carries no
     // level condition, and `albescent_level_required` is the door in, not a
-    // point where what you hold changes. Nothing about levels may come back.
+    // point where what you hold changes. Nothing about levels may come back —
+    // including in whatever fills this placeholder.
     expect(perk.desc).not.toMatch(/\blevel/i)
   })
 })
 
 /* -------------------------------------------------------------------------- *
- * The 16 owed names, shipped as literal placeholders (owner ruling 2026-08-23).
+ * The owed copy, shipped as literal placeholders (owner ruling 2026-08-23).
  * -------------------------------------------------------------------------- */
 describe('the owed copy ships as hinted placeholders, and nothing else does (#2298 §4)', () => {
   function allPerks(): Array<[string, Perk]> {
@@ -247,20 +250,23 @@ describe('the owed copy ships as hinted placeholders, and nothing else does (#22
     return [...shared, ...alb]
   }
 
-  it("leaves exactly the 16 slots owed — 14 names, plus WoW's two full pairs", () => {
+  it("leaves exactly the 15 slots owed — 12 names, WoW's two full pairs, Albescent's desc", () => {
     const owed = allPerks().flatMap(([id, perk]) =>
       (['name', 'desc'] as const)
         .filter((field) => perk[field].startsWith('PLACEHOLDER'))
         .map((field) => `${id}.${field}`),
     )
-    // The issue counts SLOTS: 14 name-only, plus two WoW perks owed whole.
-    // That is 18 FIELDS, because WoW's two contribute a desc each — the only
-    // two descriptions in the catalog that were not already written.
-    expect(new Set(owed.map((id) => id.replace(/\.(name|desc)$/, ''))).size).toBe(16)
-    expect(owed).toHaveLength(18)
+    // The issue counted 16 SLOTS / 18 FIELDS. Albescent's copy pass moved three
+    // of them: `witnessed` was deleted outright, `record`'s owed name was
+    // written ("Abilities"), and its desc was handed back as a placeholder. So
+    // one slot leaves and one changes hands — 15 slots, 17 fields — and
+    // Albescent joins WoW as the only rows owing a description.
+    expect(new Set(owed.map((id) => id.replace(/\.(name|desc)$/, ''))).size).toBe(15)
+    expect(owed).toHaveLength(17)
     expect(owed.filter((id) => id.endsWith('.desc'))).toEqual([
       'wow.invitation.perks.0.desc',
       'wow.invitation.perks.2.desc',
+      'albescent.letter.perks.record.desc',
     ])
   })
 
@@ -281,9 +287,9 @@ describe('the owed copy ships as hinted placeholders, and nothing else does (#22
     }
   })
 
-  it('names the 14 owed names after the description beside them', () => {
+  it('names the 12 owed names after the description beside them', () => {
     const named = allPerks().filter(([, perk]) => perk.name.startsWith('PLACEHOLDER — name for: '))
-    expect(named).toHaveLength(14)
+    expect(named).toHaveLength(12)
     for (const [id, perk] of named) {
       expect(perk.name, id).toBe(`PLACEHOLDER — name for: ${perk.desc}`)
     }

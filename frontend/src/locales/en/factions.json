@@ -71,32 +71,22 @@
     "letter": {
       "aria": "A correspondence",
       "wordmark": "Albescent",
-      "headline": "Take up the work",
-      "pitch": "Albescent is an unranked order that keeps what others let slip. Attend the quiet duties, return them well, and leave no trace of yourself in the work. There is no leaderboard here worth minding.",
+      "headline": "You have been chosen",
+      "pitch": "Albescent is a secret society for those who have created meaningful contributions to all factions and transcended the factional competition. It's also a thank you to those who have played this game with dedication.",
       "perks": {
         "record": {
-          "name": "PLACEHOLDER — name for: A record that survives the keeper",
-          "desc": "A record that survives the keeper"
-        },
-        "duties": {
-          "name": "Enlightenment",
-          "desc": "You see the value in working together, competing, gathering information, being consistent, trying again, and being in the right place at the right time (even if that involves a little messing around with the timeline). You know how to task"
-        },
-        "witnessed": {
-          "name": "PLACEHOLDER — name for: Your account, witnessed and inscribed",
-          "desc": "Your account, witnessed and inscribed"
+          "name": "Abilities",
+          "desc": "PLACEHOLDER — desc for: Abilities"
         }
       },
-      "whoHeading": "Who takes up the work",
       "newGamePlus": "Available only for New Game+",
       "lifeMeta": "@{{username}} · {{faction}}",
       "cta": {
-        "join": "Accept the order",
-        "joined": "You are of the Order",
-        "busy": "Entering the record…"
+        "join": "Accept the Honor",
+        "joined": "You have been chosen",
+        "busy": "Ascending"
       },
-      "reassurance": "you need not persuade us.",
-      "declineError": "The order declined, and gave no reason."
+      "declineError": "You were not ready"
     }
   },
   "ephemerists": {

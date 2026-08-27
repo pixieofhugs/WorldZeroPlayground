@@ -265,7 +265,7 @@
   },
   "factionSelect": {
     "ua": {
-      "banner": "The Unwavering Artisans Want you",
+      "banner": "The Unwavering Artisans Want You",
       "name": "Unwavering Artisans",
       "tagline": "Keep the Practice alive",
       "masthead": "World Zero · Nº I",
@@ -282,7 +282,7 @@
       "cta": "Create With Us"
     },
     "coven": {
-      "banner": "The cozy coven wants you",
+      "banner": "The Cozy Coven Wants You",
       "tagline": "Community is Magic",
       "name": "Cozy Coven",
       "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
@@ -296,7 +296,7 @@
       "cta": "See our Circle ✦"
     },
     "wow": {
-      "banner": "The Warriors of Whimsy Want you",
+      "banner": "THE WARRIORS OF WHIMSY WANT YOU",
       "tagline": "Imsy-whay or-fay every-oneway.",
       "name": "Warriors of Whimsy",
       "chosen": "CHOSEN",
@@ -310,7 +310,7 @@
       "cta": "Approach the Court"
     },
     "snide": {
-      "banner": "S.N.I.D.E. is cool with you",
+      "banner": "S.N.I.D.E. Is Cool With You",
       "name": "S.N.I.D.E.",
       "tagline": "Too cool for taglines",
       "masthead": "Field Dispatch · Nº 0666",
@@ -325,7 +325,7 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "banner": "The Ephemerists want you",
+      "banner": "The Ephemerists Want You",
       "name": "The Ephemerists",
       "tagline": "One who wanders is never lost",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
@@ -339,7 +339,7 @@
       "cta": "Check the Map"
     },
     "singularity": {
-      "banner": "Singularity Wants you",
+      "banner": "Singularity Wants You",
       "tagline": "// we are one",
       "name": "Singularity",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
