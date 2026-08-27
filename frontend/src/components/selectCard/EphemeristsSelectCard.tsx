@@ -1,5 +1,4 @@
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
@@ -48,8 +47,6 @@ import * as eph from "../factionMarks/ephemeristsPlate";
  *                                  which flips and needs no mix.
  *   body ink   `BAND_INK`        -> {@link eph.INK}          13.37 / 13.91
  *   blurb      `BAND_INK`        -> {@link eph.QUIET}         7.35 /  5.98
- *   coords     `BAND_QUIET`      -> {@link eph.QUIET}         7.35 /  5.98
- *   eyebrow    `GOLD`            -> {@link eph.CAPTION}       5.09 /  7.22
  *   status     `BAND_QUIET`      -> {@link eph.CAPTION}       5.09 /  7.22
  *   rule       a brass-to-nothing gradient -> the plate's DOUBLE BRASS RULE in
  *                                  {@link eph.BRASS_RULE}, which is how this
@@ -122,8 +119,8 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
           the OLD vocabulary the notation band replaced on the masthead, and it
           retires kit-wide; nothing takes its place here, because this tile
           heads itself by hand and mounts no `EphemeristsMasthead`. */}
-      <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-md)", letterSpacing: "0.1em", color: eph.QUIET, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
+        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{i18n.t("feed:factionSelect.ephemerists.banner")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           {/* The dark chip, filled rather than merely rimmed. Its ink budget is
               the BAND's and not the sheet's — see `-plate-disc` in index.css —
@@ -132,9 +129,9 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
             <EphemeristsSigil size={26} color={eph.GOLD} />
           </span>
           <div>
-            <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.CAPTION }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{factionName("ephemerists")}</div>
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.name")}</div>
+            <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
           </div>
         </div>
         {/* The plate's own closing pair — a hairline above, a `3px double`

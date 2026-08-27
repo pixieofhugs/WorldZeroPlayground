@@ -202,14 +202,14 @@
     "albescent": {
       "factionLine": "Faction · {{name}}",
       "unrankedLine": "Unranked · By design",
-      "motto": "No colours of its own. You notice it by the light.",
+      "motto": "We play for the love of the game",
       "stats": {
         "members": "Players"
       }
     },
     "ephemerists": {
       "eyebrow": "World Zero · Cartographers",
-      "motto": "OMNIA · TRANSEUNT",
+      "motto": "One who wanders is never lost",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
         "members": "wanderers"
@@ -217,13 +217,13 @@
     },
     "everymen": {
       "eyebrow": "World Zero · Hardest Workers",
-      "motto": "THE WORK OUTLASTS THE WORKER",
+      "motto": "Be the best you you can be",
       "stats": {
         "members": "fellows"
       }
     },
     "singularity": {
-      "motto": "THE THRESHOLD IS ALREADY BEHIND US",
+      "motto": "// we are one",
       "boot": {
         "faction": "FACTION: {{name}}",
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",
@@ -236,12 +236,13 @@
     },
     "snide": {
       "eyebrow": "World Zero · Arsonists",
-      "motto": "NOTHING MATTERS — DO IT ANYWAY",
+      "motto": "Too cool for taglines",
       "stats": {
         "members": "pranksters"
       }
     },
     "ua": {
+      "motto": "Keep the Practice alive",
       "eyebrow": "World Zero · A daily practice",
       "stats": {
         "members": "Artisans"
@@ -249,14 +250,14 @@
     },
     "coven": {
       "eyebrow": "World Zero · Magic's in the air",
-      "motto": "make it weird, make it matter",
+      "motto": "Community is Magic",
       "stats": {
         "members": "witches"
       }
     },
     "wow": {
       "eyebrow": "World Zero · The Capricious Court",
-      "motto": "PLACEHOLDER",
+      "motto": "Imsy-whay or-fay every-oneway.",
       "stats": {
         "members": "Knights"
       }
@@ -264,6 +265,9 @@
   },
   "factionSelect": {
     "ua": {
+      "banner": "The Unwavering Artisans Want you",
+      "name": "Unwavering Artisans",
+      "tagline": "Keep the Practice alive",
       "masthead": "World Zero · Nº I",
       "wordmark": "UA",
       "subtitle": "A daily practice of making things.",
@@ -278,6 +282,8 @@
       "cta": "Create With Us"
     },
     "coven": {
+      "banner": "The cozy coven wants you",
+      "tagline": "Community is Magic",
       "name": "Cozy Coven",
       "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
       "status": {
@@ -290,14 +296,10 @@
       "cta": "See our Circle ✦"
     },
     "wow": {
-      "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway.",
+      "banner": "The Warriors of Whimsy Want you",
+      "tagline": "Imsy-whay or-fay every-oneway.",
       "name": "Warriors of Whimsy",
       "chosen": "CHOSEN",
-      "tags": [
-        "Playful",
-        "Ceremonial",
-        "Absurdly Sincere"
-      ],
       "status": {
         "locked": "MORE JOUSTING REQUIRED",
         "eligible": "TO ADVENTURE",
@@ -308,6 +310,9 @@
       "cta": "Approach the Court"
     },
     "snide": {
+      "banner": "S.N.I.D.E. is cool with you",
+      "name": "S.N.I.D.E.",
+      "tagline": "Too cool for taglines",
       "masthead": "Field Dispatch · Nº 0666",
       "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
       "status": {
@@ -320,9 +325,9 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "eyebrow": "Exhibit C · no single here",
-      "coords": "x 41.7°",
-      "coordsPolar": "r ∞ · θ 12",
+      "banner": "The Ephemerists want you",
+      "name": "The Ephemerists",
+      "tagline": "One who wanders is never lost",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
       "status": {
         "locked": "Keep Wandering",
@@ -334,6 +339,8 @@
       "cta": "Check the Map"
     },
     "singularity": {
+      "banner": "Singularity Wants you",
+      "tagline": "// we are one",
       "name": "Singularity",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
@@ -346,6 +353,8 @@
       "cta": "visit_node --enter"
     },
     "everymen": {
+      "name": "Everymen",
+      "tagline": "Be the best you you can be",
       "banner": "THE EVERYMEN WANT YOU",
       "headline": "PICK UP THE LOAD",
       "plaque": "UNITED · WE · STAND",
@@ -359,7 +368,7 @@
       "cta": "FALL IN"
     },
     "albescent": {
-      "eyebrow": "World Zero",
+      "tagline": "We play for the love of the game",
       "name": "Albescent",
       "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
       "status": {
@@ -372,7 +381,7 @@
       "cta": "Request an audience →"
     },
     "na": {
-      "eyebrow": "World Zero · no colours yet",
+      "tagline": "We play for the love of the game",
       "name": "Unaffiliated",
       "blurb": "Every path is still open. Unaffiliated players take any task on the board and answer to no banner — pick a side when one of them earns it.",
       "status": {
