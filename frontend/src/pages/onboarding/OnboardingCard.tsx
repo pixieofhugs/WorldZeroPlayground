@@ -20,7 +20,14 @@ import { useTranslation } from 'react-i18next'
  *   1. the 3px band that IS the border — a transparent frame with the gradient
  *      painted into the border box, never a decorative stripe;
  *   2. the conic ring the step numeral sits inside;
- *   3. one tick, beside the card's single caption line.
+ *   3. one tick.
+ *
+ * THE TICK STANDS ALONE (#2766). It used to sit beside a `note` caption, and
+ * the note slot is retired outright — the owner cut all four of its strings, so
+ * the prop came off rather than becoming optional. The tick is kit furniture
+ * (`SPEC-onboarding.md`: "the 3px band that is the border, the conic ring, and
+ * one tick"), not a completion state, so it needs nothing beside it and this
+ * chassis carries no branch for a slot that is never filled.
  *
  * A card therefore cannot add a fourth by accident; it supplies words and a
  * control, and the sheet is not negotiable from outside.
@@ -44,6 +51,24 @@ const LORA = 'var(--font-display)'
 const RING_SIZE = 84
 /** The sheet stays one column at every width; no form-factor branch to drift. */
 const SHEET_WIDTH = 560
+
+/**
+ * How long `card.stepCaption` may be. GEOMETRY, NOT PREFERENCE (#2765) — the
+ * ring is drawn to hold a numeral and one short word, and the number is
+ * derivable rather than a taste:
+ *
+ *   84px outer, less `--space-xs` of conic band on each side  = 76px usable
+ *   `--text-md` is 11px, `--font-body` is a monospace at 0.6em = 6.6px advance
+ *   plus `letterSpacing: '0.2em'`                             = 2.2px tracking
+ *   76 / 8.8                                                  = 8.6 characters
+ *
+ * So eight fit and the ninth clips. `PLACEHOLDER` measured ~105px and spilled
+ * out of the circle on both sides, which is what filed the bug; the caption
+ * below now also degrades rather than overflowing, but a caption that needs the
+ * degradation is a copy problem and this constant is where that is written
+ * down. `pages/__tests__/onboardingCards.test.tsx` holds the catalog to it.
+ */
+export const RING_CAPTION_MAX_CHARS = 8
 
 /** Label-tier caption voice, shared by every small mark on the sheet. */
 const caption: CSSProperties = {
@@ -112,15 +137,12 @@ const secondaryControl: CSSProperties = {
 export default function OnboardingCard({
   step,
   title,
-  note,
   actions,
   children,
 }: {
   /** Which stop this is. Renders as the numeral inside the conic ring. */
   step: number
   title: string
-  /** The one caption line, set beside the card's single rainbow tick. */
-  note: string
   /** The card's own control(s). The look-around escape is not one of these. */
   actions: ReactNode
   children: ReactNode
@@ -194,7 +216,22 @@ export default function OnboardingCard({
               <span style={{ fontFamily: LORA, fontWeight: 600, fontSize: 'var(--text-title)' }}>
                 {step}
               </span>
-              <span style={{ ...caption, marginTop: 'var(--space-xs)' }}>
+              {/* #2765: the caption has to DEGRADE inside the circle. Without
+                  these two it wrapped to two lines that were each wider than
+                  the ring, and the second hung left. `overflow-wrap` is what
+                  lets a too-long word break at all; `text-align` is what
+                  centres the lines it breaks into — the <h1> below has carried
+                  the same pair for the same reason. Neither replaces
+                  RING_CAPTION_MAX_CHARS: this is the failure being legible
+                  rather than the failure being prevented. */}
+              <span
+                style={{
+                  ...caption,
+                  marginTop: 'var(--space-xs)',
+                  textAlign: 'center',
+                  overflowWrap: 'anywhere',
+                }}
+              >
                 {t('card.stepCaption')}
               </span>
             </div>
@@ -223,11 +260,12 @@ export default function OnboardingCard({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 'var(--space-sm)',
             margin: 'var(--space-lg) 0',
           }}
         >
-          {/* 3 of 3 — one tick. */}
+          {/* 3 of 3 — one tick, and nothing beside it (#2766 retired the note
+              slot). The row survives the caption it used to seat, so the mark
+              keeps the height and the spacing it always had. */}
           <span
             aria-hidden="true"
             style={{
@@ -239,7 +277,6 @@ export default function OnboardingCard({
               flex: 'none',
             }}
           />
-          <span style={{ ...caption, letterSpacing: '0.04em' }}>{note}</span>
         </div>
 
         <div

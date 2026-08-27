@@ -9,21 +9,32 @@ import OnboardingCard, { primaryControl } from './OnboardingCard'
  * The paragraph is assembled from six named slots and rendered as a single
  * `<p>`: the slots are what make each of the six a thing the owner can write
  * *into* rather than a thing to remember, and the join is what keeps it one
- * paragraph rather than three beats. The order front-loads the ask — what the
- * game will actually cost you is sentences two and three, never the end.
+ * paragraph rather than three beats.
  *
  * The six are called out one call site each rather than mapped over a key list,
  * so the catalog stays greppable from here (`SignInOptions` makes the same
  * trade for the same reason).
+ *
+ * THE SIX ARE NOT THE SIX THEY WERE (#2766). The owner's written pitch lands a
+ * different six — character, tasks, levels, what lies ahead — so four keys were
+ * RENAMED with it (`realWorld`→`character`, `rated`→`tasks`, `free`→`levels`,
+ * `maker`→`ahead`). A key called `free` holding a sentence about levelling is
+ * the trap #2598 spent a pass removing from another catalog.
  *
  * VOCABULARY. "Praxis" does not appear on this card, or on any card before
  * auth — the player meets the word once they have one. "Sign up" is not used
  * for account creation either; a Character *signs up for* a task, and that is
  * the only thing it means. Factions are cut entirely: invitation-gated
  * (ADR-0022) and unreachable at level 0, so naming them here sells something
- * the game cannot deliver for a long time.
+ * the game cannot deliver for a long time — which is why the written copy says
+ * "warring organizations" and not the word the guard test forbids.
  *
- * EVERY STRING IS A PLACEHOLDER. The owner writes the words.
+ * WHAT THE PITCH KNOWINGLY UNDERSTATES, ruled and recorded on #2766 rather than
+ * overlooked: voting is NOT level-gated (`services/vote.py::viewer_can_vote`
+ * refuses only on self-vote and duel), and the budget starts full, so the
+ * levels slot reads as though voting unlocks with level when a new character
+ * can already vote. The failure mode is a pleasant surprise, not a broken
+ * promise, so the owner's wording stands.
  */
 
 const prose: CSSProperties = {
@@ -39,18 +50,17 @@ export default function IntroCard({ onContinue }: { onContinue: () => void }) {
 
   const paragraph = [
     t('intro.paragraph.game'),
-    t('intro.paragraph.realWorld'),
+    t('intro.paragraph.character'),
+    t('intro.paragraph.tasks'),
     t('intro.paragraph.proof'),
-    t('intro.paragraph.rated'),
-    t('intro.paragraph.free'),
-    t('intro.paragraph.maker'),
+    t('intro.paragraph.levels'),
+    t('intro.paragraph.ahead'),
   ].join(' ')
 
   return (
     <OnboardingCard
       step={1}
       title={t('intro.title')}
-      note={t('intro.note')}
       actions={
         <button type="button" onClick={onContinue} style={primaryControl} data-testid="onboarding-continue">
           {t('intro.continue')}

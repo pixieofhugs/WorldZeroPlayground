@@ -10,7 +10,7 @@
     "tagline": "a collaborative production game played in the real world",
     "cta": {
       "loggedIn": "Find a Task",
-      "loggedOut": "PLACEHOLDER — the way in, for a stranger"
+      "loggedOut": "Start Here"
     },
     "devLogin": "dev login (no OAuth)"
   },

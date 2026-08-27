@@ -42,7 +42,6 @@ export default function AuthCard() {
     <OnboardingCard
       step={2}
       title={t('auth.title')}
-      note={t('auth.note')}
       // `className=''` drops `.btn-primary`: on this sheet the primary control
       // is na's card ink, and the app-wide button skin would put a second
       // identity on the card.

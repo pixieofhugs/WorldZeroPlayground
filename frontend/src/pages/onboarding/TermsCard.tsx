@@ -98,7 +98,6 @@ export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
     <OnboardingCard
       step={3}
       title={t('terms.title')}
-      note={t('terms.note')}
       actions={
         <button type="button" onClick={accept} style={primaryControl} data-testid="onboarding-accept-terms">
           {t('terms.accept')}

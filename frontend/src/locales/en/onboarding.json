@@ -1,40 +1,36 @@
 {
   "card": {
-    "stepCaption": "PLACEHOLDER — STEP",
-    "lookAround": "PLACEHOLDER — let me just look around first"
+    "stepCaption": "Step",
+    "lookAround": "I just want to look around"
   },
   "intro": {
-    "title": "PLACEHOLDER — the title of the pitch",
+    "title": "What is World Zero?",
     "paragraph": {
-      "game": "PLACEHOLDER (slot 1 of 6 — say that this is a game).",
-      "realWorld": "PLACEHOLDER (slot 2 of 6 — say that the things you do happen in the real world, away from the screen).",
-      "proof": "PLACEHOLDER (slot 3 of 6 — say that you photograph what you did, as proof).",
-      "rated": "PLACEHOLDER (slot 4 of 6 — say that other players rate that photo, and that is how you score).",
-      "free": "PLACEHOLDER (slot 5 of 6 — say that it is free).",
-      "maker": "PLACEHOLDER (slot 6 of 6 — say that a person made this, and that it is small and a bit silly)."
+      "game": "World Zero is a game you play in real life.",
+      "character": "Like many games, you will start by creating a character. This character doesn't need to be you.",
+      "tasks": "Like in many games, you will have a variety of tasks you can complete (such as \"slay a dragon\" or \"collect high fives\").",
+      "proof": "Complete them and post proof (in the form of photos, videos or audio) in order to get points.",
+      "levels": "When you get enough points, you can level up and have access to more interesting, more difficult tasks, and vote to give points to tasks others have completed well.",
+      "ahead": "Along the way there will be warring organizations, mysteries and most likely character development. World Zero will always be free and have no ads."
     },
-    "note": "PLACEHOLDER — one line, set beside the tick",
-    "continue": "PLACEHOLDER — go on then"
+    "continue": "I'm in"
   },
   "auth": {
-    "title": "PLACEHOLDER — the title of the sign-in stop",
-    "body": "PLACEHOLDER — one or two lines saying why a score needs somewhere to live. No provider is named here; the buttons name themselves.",
-    "note": "PLACEHOLDER — one line, set beside the tick"
+    "title": "Login Logistics",
+    "body": "World Zero doesn't store any personal information except your email and whatever you post yourself. This means we ask someone else to confirm that your email belongs to you. Choose your way in."
   },
   "terms": {
-    "title": "PLACEHOLDER — the title of the agreement stop",
-    "body": "PLACEHOLDER — one or two lines framing the document below and saying what agreeing binds you to. The document itself is the real Disclaimer and is not a placeholder.",
-    "note": "PLACEHOLDER — one line, set beside the tick",
-    "accept": "PLACEHOLDER — I agree",
-    "error": "PLACEHOLDER — that did not save; try again"
+    "title": "Terms and Conditions",
+    "body": "You understand and agree to the following",
+    "accept": "Yeah yeah, let me play",
+    "error": "Whoops! That didn't work. Try again?"
   },
   "mark": {
-    "label": "PLACEHOLDER — START HERE"
+    "label": "Start here"
   },
   "returning": {
     "title": "Welcome back",
     "body": "You deleted your World Zero account on {{date}}. Nothing from it carries over — your characters, praxis, votes and comments are gone. Start fresh as a new player?",
-    "note": "PLACEHOLDER — one line, set beside the tick",
     "confirm": "Start fresh",
     "error": "That didn't go through. Try again."
   }
