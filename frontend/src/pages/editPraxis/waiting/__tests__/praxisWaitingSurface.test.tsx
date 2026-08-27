@@ -136,6 +136,10 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     reopenForEdit: async () => {},
     kickMember: async () => {},
     nudge: async () => {},
+    // Wired in the fixture because its PRESENCE is now load-bearing (#1952):
+    // the roster draws the bulk press only where a caller supplied one, so an
+    // absent handler is the praxis-detail mount's reading, not this one's.
+    nudgeCrew: async () => {},
     ...overrides,
   } as unknown as EditPraxisState;
 }
@@ -167,7 +171,10 @@ describe("collab — my part is in, the crew is not", () => {
   });
 
   it("confirms the cast instead of dropping the player on the read page", () => {
-    expect(html).toContain(collabCopy(SLUG, "awaitingHeading"));
+    // #1952 re-cut the heading: it names who the praxis is held up on rather
+    // than restating what you already did. The ladder itself is asserted form
+    // by form further down.
+    expect(html).toContain("Waiting on Rax and Sable");
   });
 
   it("names the task it is all for — the block the issue's list omitted", () => {
@@ -357,9 +364,27 @@ describe("nudge — the honest version (#1083)", () => {
 describe("nudge the crew — the bulk press (#1418)", () => {
   const CREW_ACTION = collabCopy(SLUG, "nudgeCrewAction");
 
-  it("offers it once my part is in and somebody still owes theirs", () => {
+  it("offers it once my part is in and TWO still owe theirs", () => {
     const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
     expect(html).toContain(CREW_ACTION);
+    // …in the roster it acts on, not orphaned in the footer (#1952). The
+    // per-row buttons and the bulk press are one verb in one place now.
+    expect(html.indexOf(CREW_ACTION)).toBeLessThan(
+      html.indexOf(i18n.t("forms:editPraxis.leaveAction")),
+    );
+  });
+
+  it("draws none where a press would reach exactly one person (#1952)", () => {
+    const html = render({
+      state: state({
+        praxis: praxis({
+          members: [member(ME, "Wren", true), member(THEM, "Rax", false)],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(CREW_ACTION);
+    expect(html).toContain(collabCopy(SLUG, "nudgeAria", { name: "Rax" }));
   });
 
   it("hides it from the holdout who has not filed — the same rule as the row", () => {
@@ -471,6 +496,105 @@ describe("nudge the crew — the bulk press (#1418)", () => {
     expect(html).toContain(
       collabCopy(SLUG, "nudgeCrewResult", { sent: 2, total: 2 }),
     );
+  });
+});
+
+/**
+ * #1952 — one heading answers "am I done?", and it names who is blocking.
+ *
+ * THE SEAM. Four statements of one situation co-rendered here: this surface's
+ * `awaitingStatusMeta` and `awaitingHeading`, and the roster's `bannerWaiting`
+ * and tally. What is asserted below is that ONE heading survives, that it is
+ * the ladder, and that the other three are gone from the rendered page — the
+ * defect was never a missing status, it was four of them at four sizes.
+ */
+describe("the heading names who is blocking (#1952)", () => {
+  const NAMES = ["Pixie", "Bob", "Ann", "Dot"];
+
+  /** Me, submitted, plus `n` members who have not. */
+  const outstanding = (n: number) =>
+    render({
+      state: state({
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            ...NAMES.slice(0, n).map((name, index) =>
+              member(10 + index, name, false),
+            ),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+
+  // Each form is named, because a count of forms passes on the off-by-one this
+  // ladder exists to avoid: the ruling is "waiting on X when X is greater than
+  // 3", so three still lists all three names.
+  it("one outstanding — Waiting on Pixie", () => {
+    expect(outstanding(1)).toContain("Waiting on Pixie");
+  });
+
+  it("two outstanding — Waiting on Pixie and Bob", () => {
+    expect(outstanding(2)).toContain("Waiting on Pixie and Bob");
+  });
+
+  it("THREE outstanding — still every name", () => {
+    expect(outstanding(3)).toContain("Waiting on Pixie, Bob and Ann");
+  });
+
+  it("FOUR outstanding — the count form starts here, not at three", () => {
+    const four = outstanding(4);
+    expect(four).toContain("Waiting on 4");
+    // The names are still on their roster rows; what must be gone is the
+    // heading that tried to list them.
+    expect(four).not.toContain("Waiting on Pixie");
+  });
+
+  it("drops the three statements that said it again", () => {
+    const html = outstanding(2);
+    expect(html).not.toContain("Approved by you");
+    expect(html).not.toContain("You have approved this proposal");
+    expect(html).not.toContain("Waiting on the others");
+  });
+
+  it("states the tally exactly once, as the supporting line", () => {
+    const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
+    const tally = collabCopy(SLUG, "castStatus", { cast: 1, total: 3 });
+    expect(html.split(tally)).toHaveLength(2);
+    // …and it carries the half it was missing: whether one of them is you.
+    expect(html).toContain(collabCopy(SLUG, "yoursApproved"));
+  });
+});
+
+/**
+ * #1952 — three acts, three weights, one order, and every one of them explains
+ * itself in visible text.
+ *
+ * Three of the four explanations were `title` attributes, which a touch user
+ * never sees. That was the defect, not the copy: nothing here is retired.
+ */
+describe("the footer is three acts, each explained (#1952)", () => {
+  const html = render({ state: state(), autoSubmitDays: WINDOW_DAYS });
+
+  it("draws exactly the three, and no fourth", () => {
+    expect(html).toContain(i18n.t("forms:editPraxis.leaveAction"));
+    expect(html).toContain(collabCopy(SLUG, "deleteAction"));
+    expect(html).toContain(collabCopy(SLUG, "awaitingEditAction"));
+    // The bulk press left for the roster header — one verb, one place.
+    const footer = html.slice(html.indexOf(i18n.t("forms:editPraxis.leaveAction")));
+    expect(footer).not.toContain(collabCopy(SLUG, "nudgeCrewAction"));
+  });
+
+  it("explains all three in visible text", () => {
+    // Apostrophes are HTML-escaped in the emitted markup, so these are
+    // punctuation-free fragments of the three descriptions.
+    expect(html).toContain("Bow out of this collab");
+    expect(html).toContain("Destroys the whole collab");
+    expect(html).toContain("Takes the praxis back to drafting");
+  });
+
+  it("hides no explanation in a title attribute", () => {
+    expect(html).not.toContain("title=");
   });
 });
 
@@ -652,7 +776,9 @@ describe("collab — everybody is in (#1164)", () => {
 
   it("says `Submitted`, not `Submitted by you` — the holdout reads this too", () => {
     expect(html).toContain(collabCopy(SLUG, "completedStatusMeta"));
-    expect(html).not.toContain(collabCopy(SLUG, "awaitingStatusMeta"));
+    // `awaitingStatusMeta` — "Approved by you" — is retired outright (#1952),
+    // so neither reading carries it.
+    expect(html).not.toContain("Approved by you");
   });
 });
 

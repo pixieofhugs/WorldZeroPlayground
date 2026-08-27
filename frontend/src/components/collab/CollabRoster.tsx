@@ -342,6 +342,20 @@ export function CollabRoster({
         ).length
       : 0
   const showCrewNudge = reachableCrew >= 2
+  /**
+   * Which explanation the block owes for the nudge verb — the crew's when the
+   * bulk press is drawn, the row's when only rows are. Rows count everyone
+   * outstanding, spent window or not, because a row draws its button either way
+   * (disabled, reading `Nudged`).
+   */
+  const nudgeNote: CollabCopyKey | null = showCrewNudge
+    ? 'nudgeCrewDescription'
+    : canNudge &&
+        members.some(
+          (m) => !m.has_submitted && m.character_id !== currentCharacterId,
+        )
+      ? 'nudgeDescription'
+      : null
 
   /**
    * The supporting line's second half (#1952). The tally says how many have
@@ -458,12 +472,14 @@ export function CollabRoster({
         )}
       </div>
 
-      {/* Every act explains itself in visible text (#1952). It was a `title`,
-          which a touch user never sees — and this one is the crew's cooldown,
-          which is the reason a press comes back part refused. */}
-      {showCrewNudge && (
+      {/* The nudge verb explains itself in visible text (#1952), once for the
+          block rather than in a `title` on every row that a touch user never
+          sees. Which sentence depends on which control is on screen: the bulk
+          press has its own, and the rows fall back to theirs — both say the
+          same cooldown, which is why only one of them is ever drawn. */}
+      {nudgeNote && (
         <p className="label-caption" style={{ color: quiet, fontFamily: face }}>
-          {collabCopy(factionSlug, 'nudgeCrewDescription')}
+          {collabCopy(factionSlug, nudgeNote)}
         </p>
       )}
 
@@ -603,7 +619,6 @@ export function CollabRoster({
                   type="button"
                   disabled={row.member.nudged_at != null}
                   onClick={() => onNudge?.(row.member!.character_id)}
-                  title={collabCopy(factionSlug, 'nudgeDescription')}
                   aria-label={collabCopy(
                     factionSlug,
                     row.member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
