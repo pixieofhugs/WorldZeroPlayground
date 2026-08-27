@@ -11,10 +11,10 @@
     "na": "Unaffiliated"
   },
   "descriptions": {
-    "ua": "We are the Unwavering Artisans, also known as UA. We are driven by a desire to create. We don't care if the art is good. We don't care if anyone likes it. We don't even care if we like it. What matters isn't what we make but that we choose to make it. To create is a divine act, it's good for the soul. And with the death of the artist, even that which you most despise could be the inspiration another artist needs, even if that inspiration comes in the form of \"I bet I could do that better...\"",
+    "ua": "We are the Unwavering Artisans, also known as UA. We accept into ourselves fully the drive to create and appreciate the infinite depth and breadth of art for its own sake. We believe that art lives in the thoughts of the observer, our practice cultivates this mindset in ourselves and others. \"Bad\" art simply needs the proper framing to be appreciated, like grapefruit or dark chocolate. The phrase \"I could do that/do that better\" is not an insult, but an invitation we feel to join in the joy of making art. What matters is that the choice to make art is taken instead of the choice to not do so. To create art is a divine act, it's good for the soul, and we are unwavering in this belief and practice.",
     "snide": "We are S.N.I.D.E. We are the Society for Nihilistic Intent and Disruptive Efforts. We are the adversary to order. We are the pranksters. We are the fools. We wish to administer a wedgie to the world. We act through the sole desire to reflect the system in a funhouse mirror; to show that everything is a game, and nothing is worth any more than the value it is attributed by the person perceiving it. We have no goals (other than the wedgie thing, which S.N.I.D.E. scientists are working tirelessly in a secret undisclosed underground facility to develop a viable planetary wedgie administering system). We enjoy the game for the game and believe that it in itself is its most valuable reward.",
     "coven": "PLACEHOLDER",
-    "wow": "PLACEHOLDER",
+    "wow": "GREETINGS!! We are the Warriors of WHIMSY. We are on a crucade to thrawrt all things BORING from the world. We will find the insurence claim and JOUST it with a POOL NOODLE. YOU WILL COWER IN FEAR MUNDIANITY, FOR WE ARE COMING, OUR GOOGLY EYES WATCHING. COME those with COURAGE in their heart and SILLINESS to spare.",
     "ephemerists": "PLACEHOLDER",
     "everymen": "PLACEHOLDER",
     "singularity": "PLACEHOLDER",
@@ -249,33 +249,33 @@
   },
   "ua": {
     "join": {
-      "heading": "Those practising",
-      "memberTitle": "You practise here",
-      "memberStanding": "Standing · <1>practising</1>",
+      "heading": "Your standing in UA",
+      "memberTitle": "I dunno, you're here I guess?",
+      "memberStanding": "Standing · <1>practising</1> not sitting?",
       "eligibleTitle": "Make one true piece a day",
       "eligibleBody": "We practise. Not for the badge — for the making itself. Begin whenever you are ready.",
       "joinButton": "Begin the practice",
       "joining": "Beginning…",
-      "gateTitle": "Earn your place at the table"
+      "gateTitle": "Join the art circle"
     },
     "spotlight": {
       "label": "Champion"
     },
     "invitation": {
-      "headline": "Make one true piece a day",
-      "pitch": "We practise art as a daily, deliberate thing. Every task is a sheet to work on, every praxis a piece you set down and let stand. Not for the badge — for the making itself. Bring something made.",
+      "headline": "Make something interesting",
+      "pitch": "Every day is an opportunity to create something: beautiful, daring, funny, insightful, simple. As we make art, we make ourselves. Make yourself with us as we with you, we can grow and learn and make the world a little better than it was, together.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A circle that reads your work closely, and kindly",
-          "desc": "A circle that reads your work closely, and kindly"
+          "name": "PLACEHOLDER — name for: Fellow artists to offer both critique and appreciation",
+          "desc": "Fellow artists to offer both critique and appreciation"
         },
         {
-          "name": "Set Your Art Free",
-          "desc": "Make a practice of making praxis and you will have points aplenty"
+          "name": "Bonus points for persistence",
+          "desc": "Practice doing art daily, the inertia will drive you to continued more practice and be rewarded"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis submitted, and held up",
-          "desc": "Your praxis submitted, and held up"
+          "name": "PLACEHOLDER — name for: Your praxis held up by your fellow artisans",
+          "desc": "Your praxis held up by your fellow artisans"
         }
       ],
       "cta": {

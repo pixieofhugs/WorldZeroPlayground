@@ -359,9 +359,6 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // ---- imagery the audit kept, string by string ----
     // The wax seal on the summons — an object, not the act of submitting.
     'factions.json:wow.invitation.pitch',
-    // "a sheet to work on" is the paper, not the task; the sentence beside it
-    // already says *task*, which is what makes the picture legible.
-    'factions.json:ua.invitation.pitch',
     // "witches mid-spell" / "cast a small spell" — the doing, not the artefact.
     'factions.json:coven.invitation.pitch',
     'feed.json:factionSelect.coven.blurb',
@@ -1035,11 +1032,12 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
  * question, not a regression. Three groups are different, because each one
  * LOOKS like a defect to the next reader and would be quietly corrected:
  *
- *   1. Seven values are the literal `PLACEHOLDER`. That is deliberate — the
+ *   1. Six values are the literal `PLACEHOLDER`. That is deliberate — the
  *      owner's marker for a slot she has not written yet, put there so that
- *      seeing it on the page tells her what is missing. Two of them
- *      (`descriptions.wow`, `factionHero.wow.motto`) replaced sentences that
- *      stopped mid-clause, so a trailing comma never reaches a player.
+ *      seeing it on the page tells her what is missing. One of them
+ *      (`factionHero.wow.motto`) replaced a sentence that stopped mid-clause,
+ *      so a trailing comma never reaches a player. `descriptions.wow` was one
+ *      of those and is now written, which is why it is off this list.
  *   2. S.N.I.D.E.'s three masked-profanity strings are the faction's new punk
  *      register, not a leak and not a typo. Exact characters, exact casing.
  *   3. Two faction names changed shape: `ua` from the two-letter abbreviation
@@ -1059,7 +1057,6 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.ephemerists',
     'factions.json:descriptions.everymen',
     'factions.json:descriptions.singularity',
-    'factions.json:descriptions.wow',
     'feed.json:factionHero.wow.motto',
   ].sort()
 
