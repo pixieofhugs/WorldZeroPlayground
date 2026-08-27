@@ -29,6 +29,7 @@ import { surfaceMap } from '../../../factions'
 import DefaultPraxisDetail from '../archetypes/DefaultPraxisDetail'
 import { bylineFaces } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import type { PraxisMemberOut } from '../../../api/praxis'
 import { aPraxis, aMember, AUTHOR } from '../../../test/fixtures'
 import { aPraxisDetailState, markup } from '../../../test/praxisDetail'
 import { mediaUrl } from '../../../utils/media'
@@ -64,7 +65,24 @@ function state(over: Partial<Parameters<typeof aPraxis>[0]> = {}): PraxisDetailS
   })
 }
 
+/** The author's own member row, carrying the same portrait the byline reads. */
+const AUTHOR_FACE = aMember({
+  character_display_name: NAME,
+  character_avatar_url: PORTRAIT,
+})
+
+/** The second member. The portrait is the axis: '' is the monogram fallback. */
+const crewmate = (portrait: string): PraxisMemberOut =>
+  aMember({
+    id: 102,
+    character_id: CREWMATE.id,
+    character_display_name: CREWMATE.name,
+    character_avatar_url: portrait,
+    joined_at: '2026-01-02T00:00:00Z',
+  })
+
 function occurrences(haystack: string, needle: string): number {
+
   return haystack.split(needle).length - 1
 }
 
@@ -105,19 +123,8 @@ describe('collab byline: every member wears their own face (#2318)', () => {
           state={state({
             type: 'collab',
             created_by_avatar_url: PORTRAIT,
-            members: [
-              aMember({
-                character_display_name: NAME,
-                character_avatar_url: PORTRAIT,
-              }),
-              aMember({
-                id: 102,
-                character_id: CREWMATE.id,
-                character_display_name: CREWMATE.name,
-                character_avatar_url: CREWMATE.portrait,
-                joined_at: '2026-01-02T00:00:00Z',
-              }),
-            ],
+            members: [AUTHOR_FACE, crewmate(CREWMATE.portrait)],
+
           })}
         />,
       )
@@ -145,19 +152,8 @@ describe('collab byline: every member wears their own face (#2318)', () => {
         state={state({
           type: 'collab',
           created_by_avatar_url: PORTRAIT,
-          members: [
-            aMember({
-              character_display_name: NAME,
-              character_avatar_url: PORTRAIT,
-            }),
-            aMember({
-              id: 102,
-              character_id: CREWMATE.id,
-              character_display_name: CREWMATE.name,
-              character_avatar_url: '',
-              joined_at: '2026-01-02T00:00:00Z',
-            }),
-          ],
+          members: [AUTHOR_FACE, crewmate('')],
+
         })}
       />,
     )
@@ -176,19 +172,8 @@ describe('bylineFaces', () => {
       aPraxis({
         created_by_display_name: NAME,
         created_by_avatar_url: PORTRAIT,
-        members: [
-          aMember({
-            character_display_name: NAME,
-            character_avatar_url: PORTRAIT,
-          }),
-          aMember({
-            id: 102,
-            character_id: CREWMATE.id,
-            character_display_name: CREWMATE.name,
-            character_avatar_url: CREWMATE.portrait,
-            joined_at: '2026-01-02T00:00:00Z',
-          }),
-        ],
+        members: [AUTHOR_FACE, crewmate(CREWMATE.portrait)],
+
       }),
     )
     expect(faces).toEqual([
