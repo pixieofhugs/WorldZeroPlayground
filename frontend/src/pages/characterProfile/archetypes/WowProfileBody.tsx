@@ -25,15 +25,13 @@
  * `--faction-wow-*` token and both themes come from the cascade.
  *
  * ONE RESPONSIVE COMPONENT (#1319, the ADR-0056 / ADR-0058 / ADR-0067 shape).
- * THE FIELD PAVILION — the phone face, #901 — used to be a separate file on the
- * `mobileProfile` manifest surface (`mobileArchetypes/WowProfile`). That surface
- * is retired and the pavilion is the `MobileProfile` branch below, unchanged:
- * the crested header wash and checker from the kit's one phone screen
- * (`components/factionMarks/wowMobile`), over this archetype's own three marks — burnt-
- * gold figures on near-white plates, honours struck on gilt lozenges, and every
- * row led by a plum rule. Those marks are what make the two form factors read as
- * one page, and they are why the merge folds the pavilion in rather than letting
- * `ProfileSkin` squeeze onto a phone.
+ * THE FIELD PAVILION — the phone face, #901 — is the `MobileProfile` branch
+ * below, in this file: the crested header wash and checker from the kit's one
+ * phone screen (`components/factionMarks/wowMobile`), over this archetype's own
+ * three marks — burnt-gold figures on near-white plates, honours struck on gilt
+ * lozenges, and every row led by a plum rule. Those marks are what make the two
+ * form factors read as one page, and they are why the pavilion is folded in
+ * rather than letting `ProfileSkin` squeeze onto a phone.
  *
  * The pavilion keeps its two deviations from the kit, both of which the desktop
  * page makes too: the CREST does not appear (this is a knight's page, not the

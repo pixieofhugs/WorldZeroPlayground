@@ -3,13 +3,9 @@
  * fallback every unregistered slug lands on (#2346).
  *
  * ONE RESPONSIVE COMPONENT, no mobile twin. It reads `useFormFactor()` itself,
- * the way `editPraxis` and the profile bodies do, and the two branches below are
- * the two skins that used to be two files: the desktop two-column form that
- * lived in `pages/CreateCharacter.tsx`, and the first-run phone column that
- * lived in `characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx` (#516).
- * That second file is gone rather than left beside this one — a second mobile
- * path is exactly what the `mobileCreateCharacter` retirement note in
- * `factions/manifest.ts` forbids re-creating.
+ * the way `editPraxis` and the profile bodies do, and both branches below — the
+ * desktop two-column form and the first-run phone column (#516) — are in this
+ * one file. A second mobile path is the thing not to re-create.
  *
  * THE DEFAULT IS THE `na` KIT, NOT UA AND NOT THE VIEWER'S FACTION. An empty
  * `factionSlug` means born unaffiliated and renders this, full stop. The

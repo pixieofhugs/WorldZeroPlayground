@@ -12,11 +12,9 @@
  * the kept proposed-tasks and friend/foe features.
  *
  * ONE RESPONSIVE COMPONENT (#1319, the ADR-0056 / ADR-0058 / ADR-0067 shape).
- * The phone skin used to be a separate file on a `mobileProfile` manifest
- * surface (`mobileArchetypes/DefaultProfile`, #517, redrawn for #969); that
- * surface is retired and its markup is the `MobileProfile` branch below,
- * unchanged. `useFormFactor()` is read once, at the exported component, which
- * is the only dispatcher — the same call site `<Faction>TaskDetail` uses.
+ * The phone face is the `MobileProfile` branch below, in this file (#517,
+ * redrawn for #969). `useFormFactor()` is read once, at the exported component,
+ * which is the only dispatcher — the same call site `<Faction>TaskDetail` uses.
  *
  * The two branches are separate components rather than one body full of
  * ternaries because they are not one layout at two sizes: the phone stacks a

@@ -35,8 +35,8 @@ export default function Factions() {
   // instead of re-requesting it. Both surfaces read this one state.
   const state = useFactionsDirectory()
 
-  // No faction ever claimed `mobileFactionsDirectory`, so the slot and its
-  // dispatch are gone: mobile renders the Default skin directly.
+  // No faction skins the directory on the phone, so mobile renders the Default
+  // skin directly rather than dispatching on the slug.
   if (formFactor === 'mobile') return <DefaultFactionsDirectory state={state} />
 
   return <DesktopFactions state={state} />

@@ -414,10 +414,9 @@ export default function CharacterProfile() {
     onSignup: user ? handleSignup : undefined,
   };
 
-  // ONE dispatch, both form factors (#1319). The page used to branch on
-  // `useFormFactor()` through a `mobileProfile` surface only WOW ever filled,
-  // which meant every OTHER faction wore the na spectrum skin on a phone. Each
-  // profile body is responsive now, so the slug dispatch is the whole story.
+  // ONE dispatch, both form factors (#1319). Every profile body is responsive, so
+  // the slug dispatch is the whole story — no faction can end up wearing the na
+  // spectrum skin on a phone.
   return (
     <>
       {/* The only thing a failed sign-up can be answered with: the success path

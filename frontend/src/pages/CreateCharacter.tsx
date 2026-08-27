@@ -23,9 +23,8 @@
  * of #418/#636).
  *
  * ONE ARCHETYPE PER FACTION AT BOTH WIDTHS. There is no form factor to branch on
- * here: each archetype calls `useFormFactor()` itself, so the mobile-only
- * `mobileCreateCharacter` slot stays retired and the phone column is a branch
- * INSIDE `DefaultCreateCharacter` rather than a second file beside it.
+ * here: each archetype calls `useFormFactor()` itself, so the phone column is a
+ * branch INSIDE `DefaultCreateCharacter` rather than a second file beside it.
  */
 import { useCreateCharacter } from './characterPaths/useCreateCharacter'
 import { resolveVariant } from '../utils/factionDispatch'
