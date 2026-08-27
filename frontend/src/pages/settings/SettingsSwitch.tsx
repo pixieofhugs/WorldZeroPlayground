@@ -13,10 +13,10 @@ import type { CSSProperties } from 'react'
  * documents the same constraint. The off state swaps only the `border-box`
  * layer, for a flat `--color-border-strong` edge.
  *
- * The well and thumb read the `--filter-*` control-chrome family rather than a
- * private set: `--filter-well` and `--filter-thumb-edge` are byte-identical to
+ * The well and thumb read the `--switch-*` control-chrome family rather than a
+ * private set: `--switch-well` and `--switch-thumb-edge` are byte-identical to
  * what this control needs, and minting twins for them is the duplication this
- * repo keeps collapsing. See the note beside `--filter-thumb-off` in
+ * repo keeps collapsing. See the note beside `--switch-thumb-off` in
  * `index.css` about the family's name.
  *
  * DISABLED IS A REAL STATE HERE, AND IT IS DELIBERATE. The house rule is to
@@ -44,7 +44,7 @@ export interface SettingsSwitchProps {
   readonly testId?: string
 }
 
-const TRACK_WELL = 'linear-gradient(var(--filter-well), var(--filter-well)) padding-box'
+const TRACK_WELL = 'linear-gradient(var(--switch-well), var(--switch-well)) padding-box'
 const TRACK_EDGE_ON = 'var(--faction-default-rainbow) border-box'
 const TRACK_EDGE_OFF =
   'linear-gradient(var(--color-border-strong), var(--color-border-strong)) border-box'
@@ -68,7 +68,7 @@ const knob: CSSProperties = {
   height: 20,
   borderRadius: 999,
   display: 'block',
-  boxShadow: 'inset 0 0 0 1px var(--filter-thumb-edge)',
+  boxShadow: 'inset 0 0 0 1px var(--switch-thumb-edge)',
   transition: 'left 180ms ease',
 }
 
@@ -101,7 +101,7 @@ export default function SettingsSwitch({
         style={{
           ...knob,
           left: checked ? 22 : 3,
-          background: checked ? 'var(--filter-thumb)' : 'var(--filter-thumb-off)',
+          background: checked ? 'var(--switch-thumb)' : 'var(--switch-thumb-off)',
         }}
       />
     </button>

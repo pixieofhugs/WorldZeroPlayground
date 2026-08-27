@@ -288,8 +288,8 @@ export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
  *
  * WHAT IT DELIBERATELY DOES NOT TOUCH. A finding that already carries a
  * `background` never reaches here: translucent-over-solid grounds (#1715's
- * `--color-bg-surface-alt` over the page, #1579's `--filter-thumb` over
- * `--filter-well`) are resolved by the scanner and measured exactly as before.
+ * `--color-bg-surface-alt` over the page, #1579's `--switch-thumb` over
+ * `--switch-well`) are resolved by the scanner and measured exactly as before.
  * And a faction hue used as ink on a flat near-white ground (#1932) was never
  * an unresolved finding at all. Both classes are covered by tests in
  * `src/utils/__tests__/contrastTriage.test.ts` for exactly that reason.
