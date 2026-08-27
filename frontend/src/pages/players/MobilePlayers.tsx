@@ -128,7 +128,16 @@ export default function MobilePlayers({
                   borderBottom: '1px solid var(--color-border)',
                 }}
               >
-                <FactionSigil slug={lane.slug} size={18} />
+                {/* The MOBILE twin of the desktop race lane, and the same
+                    guard for the same reason (#2723): the mark takes the
+                    lane's own hue, except for the two spectrum slugs, whose
+                    CSS key is `default` and whose flat grey would paint over
+                    the spectra they own. */}
+                <FactionSigil
+                  slug={lane.slug}
+                  size={18}
+                  color={isKnownFaction(lane.slug) ? factionCssVar(lane.slug) : undefined}
+                />
                 {/* The lane's name opens its faction page (#1953). A race row is
                     a plain div — it links to nothing else — so this is one
                     anchor, not the nested-anchor case the roster has on
