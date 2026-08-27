@@ -17,8 +17,8 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 
 | Need... | Go to |
 |---|---|
-| Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (live `ERA_1`; `CURRENT_ERA` resolves here) |
-| Factions, tasks, level ranks/unlocks + taunt structure for the live era | `backend/eras/era_1.py` |
+| Active rule values (signup cap, vote budget, level thresholds, resets) | the live era file in `backend/eras/` — whichever one `CURRENT_ERA` resolves to in `backend/game_config.py` |
+| Factions, tasks, level ranks/unlocks + taunt structure for the live era | the same live era file in `backend/eras/` |
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
 | Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
 | Era config *shape* (dataclass fields) | `backend/game_config.py` |
@@ -28,7 +28,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Which ADRs are still rules (vs. superseded, amended, reversed) | `docs/adr/README.md` — generated; regenerate with `python scripts/adr_index.py` |
 | Account vs. Character, anti-self-voting | ADR-0041 + CONTEXT.md ("Account", "Character") |
 | DB schema | `backend/models/*.py` (source of truth) |
-| Scoring formulas / era-reset semantics | `backend/services/scoring.py` + `praxis_scoring.py` + `services/era.py`; **values** in `backend/eras/era_1.py`; rationale in ADR-0014/0042/0043/0044 |
+| Scoring formulas / era-reset semantics | `backend/services/scoring.py` + `praxis_scoring.py` + `services/era.py`; **values** in the live era file under `backend/eras/`; rationale in ADR-0014/0042/0043/0044 |
 | API routes + auth guards | `backend/routers/` (source files) |
 | Pages, routing, components | `frontend/src/` (source files) |
 | Frontend API clients | `frontend/src/api/` |
