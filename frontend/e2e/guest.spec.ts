@@ -41,5 +41,25 @@ test('the dev-login button logs a bot in', async ({ page }) => {
   // named /sign up here/i too, and had been passing vacuously against copy that
   // no longer existed anywhere in the app.
   await expect(page.getByTestId('home-hero-cta')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
+  // ...and that a SESSION exists, proved by an authenticated-only slot rather
+  // than by a control's wording (#2761). This line read /logout/i, which could
+  // not match: #2155 moved sign-out off the bar into the Settings Account card,
+  // and the app has no "logout" string at all — `common.json` says "Sign out".
+  // Swapping the matcher would still fail, because the control is not on this
+  // surface any more; the anchor has to move, not the spelling.
+  //
+  // `nav-settings` is NavBar's `/settings` link. It renders inside `{user && }`
+  // — `/settings` is a ProtectedRoute, so for a guest it would be a link to a
+  // redirect, and the bar hides it rather than disabling it. So its presence IS
+  // a session. It is also the way in to the card that now carries sign-out, it
+  // is on every authenticated route rather than just this one, and it is
+  // outside every gate on FieldDesk's own body.
+  // `components/__tests__/navSettingsSlot.test.tsx` pins both halves of that
+  // `{user && }`, so the slot cannot quietly start rendering for a guest.
+  //
+  // Role AND slot: the slot says which element, the role says what it is, and
+  // neither is copy.
+  const settings = page.getByTestId('nav-settings')
+  await expect(settings).toBeVisible()
+  await expect(settings).toHaveRole('link')
 })

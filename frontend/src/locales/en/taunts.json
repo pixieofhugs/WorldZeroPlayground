@@ -11,7 +11,7 @@
     ],
     "praxis_complete": [
       "{{from_name}} just completed a task. {{to_name}} is still thinking about it.",
-      "{{from_name}} submitted praxis. {{to_name}}... did not."
+      "{{from_name}} submitted praxis. {{to_name}}… did not."
     ]
   },
   "ua": {
