@@ -62,6 +62,27 @@ const CTA_AGAIN_KEY = "detail.signup.ctaAgain" as const;
 export const SIGNUP_IN_PROGRESS_KEY = "detail.signup.workOnThis" as const;
 
 /**
+ * What that SAME denial says when the praxis behind it is already filed (#2643).
+ *
+ * `already_active_member` covers a submitted praxis too, and there the key above
+ * does not apply: there is no draft, and `/edit` redirects a submitted praxis
+ * straight back to its read page (#1164, #1397). What is useful is READING it,
+ * which is what the task detail has always offered on this very key — so the
+ * card borrows the detail's own words rather than minting a card-sized synonym.
+ *
+ * IT IS THE `detail.submitted.*` KEY, not a `detail.signup.*` one, and that is
+ * deliberate: the copy already existed and the owner ruling (2026-08-24) was
+ * that it is the right copy for both surfaces. A second string saying the same
+ * thing is how the two would drift apart on the next edit.
+ *
+ * A ROW, not a branch, for `DENIAL_KEYS`'s reason. This key and the one above
+ * are chosen by which praxis id the wire carries, not by a second reason value
+ * — the server sends one reason for both, and the ids are what distinguish
+ * them.
+ */
+export const SIGNUP_SUBMITTED_KEY = "detail.submitted.view" as const;
+
+/**
  * Every reason sign-up is SHUT, mapped to the copy that says so (#1976).
  *
  * The left column is `services/praxis.py`'s `SignupDenialReason`, value for
@@ -92,6 +113,7 @@ export type SignupCtaKey =
   | typeof SIGNUP_CTA_KEY
   | typeof CTA_AGAIN_KEY
   | typeof SIGNUP_IN_PROGRESS_KEY
+  | typeof SIGNUP_SUBMITTED_KEY
   | SignupDenialKey;
 
 /**

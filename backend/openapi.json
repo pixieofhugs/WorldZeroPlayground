@@ -4417,6 +4417,17 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
+          "submitted_praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted Praxis Id"
+          },
           "task_type": {
             "$ref": "#/components/schemas/TaskType"
           },
@@ -4447,6 +4458,7 @@
           "eligible_for_current_user",
           "signup_reason",
           "in_progress_praxis_id",
+          "submitted_praxis_id",
           "start_here",
           "created_by_name",
           "notes"
@@ -5779,6 +5791,17 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
+          "submitted_praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted Praxis Id"
+          },
           "task_type": {
             "$ref": "#/components/schemas/TaskType"
           },
@@ -5809,6 +5832,7 @@
           "eligible_for_current_user",
           "signup_reason",
           "in_progress_praxis_id",
+          "submitted_praxis_id",
           "start_here"
         ],
         "title": "TaskOut",

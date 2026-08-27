@@ -146,10 +146,12 @@ describe('a draft you already hold', () => {
     expect(onSignup).not.toHaveBeenCalled()
   })
 
-  it('falls back to the plain label when there is no draft to land on', () => {
-    // Reachable, not theoretical: the denial's population includes `submitted`
-    // and `pending` praxes, which shut sign-up with nothing left to edit. A
-    // link to /praxis/null/edit is worse than the label it replaced.
+  it('falls back to the plain label when there is nothing to land on', () => {
+    // Reachable, not theoretical: the denial's population also covers a
+    // `pending` praxis, which shuts sign-up while awaiting moderation — no
+    // draft to edit and nothing filed to read. A link to /praxis/null/edit is
+    // worse than the label it replaced. (`submitted` used to land here too;
+    // #2643 below gave it its own door.)
     const cta = taskCardSignupCta(held({ in_progress_praxis_id: null }), vi.fn())!
     expect(cta.denied).toBe(true)
     expect(cta.href).toBeUndefined()
@@ -172,5 +174,97 @@ describe('a draft you already hold', () => {
       expect(cta.href, reason).toBeUndefined()
       expect(cta.onPress, reason).toBeUndefined()
     }
+  })
+})
+
+/**
+ * #2643 — the other half of the SAME denial.
+ *
+ * `already_active_member` covers a filed praxis as well as an open draft, and
+ * the filed half kept the greyed refusal after #2359 because the wire named no
+ * praxis to reach. It does now, so the slot becomes a link — to the READ page,
+ * because `/edit` redirects a submitted praxis straight back to it (#1164,
+ * #1397) and a button that changes nothing is the thing this issue is about.
+ *
+ * The seam is the same one #2359 uses and for the same reason: no markup
+ * assertion can tell a live link from a dead label, but a value-out `href` can.
+ */
+describe('a praxis you have already filed', () => {
+  const filed = (overrides: Partial<TaskOut> = {}) =>
+    aTask({
+      can_sign_up: false,
+      signup_reason: 'already_active_member',
+      submitted_praxis_id: 91,
+      ...overrides,
+    })
+
+  it('offers the praxis to read instead of refusing', () => {
+    const cta = taskCardSignupCta(filed(), vi.fn())!
+    expect(cta.denied, 'a way in is not a refusal').toBe(false)
+    expect(cta.href).toBe('/praxis/91')
+    expect(cta.label).toBe(i18n.t('tasks:detail.submitted.view'))
+  })
+
+  it('links to the READ page, never to the editor that would bounce', () => {
+    const cta = taskCardSignupCta(filed(), vi.fn())!
+    expect(cta.href).not.toContain('/edit')
+  })
+
+  it('does not sign up — the slot navigates, it does not post', () => {
+    const onSignup = vi.fn()
+    const cta = taskCardSignupCta(filed(), onSignup)!
+    expect(cta.onPress).toBeUndefined()
+    expect(onSignup).not.toHaveBeenCalled()
+  })
+
+  it('says the same words the task detail says', () => {
+    // One table, one copy edit. The detail's submitted block reads this very
+    // key, so the card and the detail cannot say different things about the
+    // same praxis.
+    const cta = taskCardSignupCta(filed(), vi.fn())!
+    expect(cta.label).toBe('Read your praxis')
+  })
+
+  it('prefers the open draft when a viewer somehow holds both', () => {
+    // Double Dipper can leave a filed praxis and a live draft on one task. The
+    // draft is the one with work left in it, so it keeps the slot — and this
+    // is also the no-regression assertion for #2359's behaviour.
+    const cta = taskCardSignupCta(
+      filed({ in_progress_praxis_id: 77 }),
+      vi.fn(),
+    )!
+    expect(cta.href).toBe('/praxis/77/edit')
+    expect(cta.label).toBe(i18n.t('tasks:detail.signup.workOnThis'))
+  })
+
+  it('leaves the other four denials alone — a filed id changes nothing', () => {
+    for (const reason of DENIALS.filter((r) => r !== 'already_active_member')) {
+      const cta = taskCardSignupCta(
+        aTask({
+          can_sign_up: false,
+          signup_reason: reason,
+          submitted_praxis_id: 91,
+          level_required: 4,
+        }),
+        vi.fn(),
+      )!
+      expect(cta.denied, reason).toBe(true)
+      expect(cta.href, reason).toBeUndefined()
+      expect(cta.onPress, reason).toBeUndefined()
+    }
+  })
+
+  it('leaves a PERMITTED sign-up alone — Double Dipper still begins again', () => {
+    // A faction that may hold several memberships gets `multi_membership` and a
+    // live sign-up, filed praxis or not. Turning that into a read link would
+    // take away the claim the server is willing to honour.
+    const cta = taskCardSignupCta(
+      aTask({ signup_reason: 'multi_membership', submitted_praxis_id: 91 }),
+      vi.fn(),
+    )!
+    expect(cta.denied).toBe(false)
+    expect(cta.href).toBeUndefined()
+    expect(cta.onPress).toBeTypeOf('function')
+    expect(cta.label).toBe(i18n.t('tasks:detail.signup.ctaAgain'))
   })
 })

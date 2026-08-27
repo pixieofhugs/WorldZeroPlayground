@@ -4,6 +4,7 @@ import {
   SIGNUP_CTA_KEY,
   SIGNUP_IN_PROGRESS_KEY,
   SIGNUP_REASON_ALREADY_ACTIVE_MEMBER,
+  SIGNUP_SUBMITTED_KEY,
   isSignupDenial,
   signupCtaKey,
 } from "../../pages/taskDetail/signupCta";
@@ -47,10 +48,12 @@ export interface TaskCardSignupCta {
    */
   onPress?: () => void;
   /**
-   * Where the slot GOES instead of what it posts (#2359) — a router path, set
-   * on exactly one reason: `already_active_member` with a draft to land on.
+   * Where the slot GOES instead of what it posts (#2359, #2643) — a router
+   * path, set on exactly one reason: `already_active_member` with a praxis to
+   * land on. Two destinations, one reason: a draft's editor, or a filed
+   * praxis's read page.
    *
-   * Never set together with {@link onPress}. Navigating to your own draft is
+   * Never set together with {@link onPress}. Navigating to your own praxis is
    * not signing up: the server has refused the claim and is right to, and the
    * praxis this reaches already exists.
    */
@@ -92,26 +95,44 @@ export function taskCardSignupCta(
   if (!onSignup) return null;
 
   if (isSignupDenial(task.signup_reason)) {
-    // THE ONE REFUSAL THAT IS A DOOR (#2359). `already_active_member` means the
-    // viewer holds an open draft on this task, so the card was spending its only
-    // slot telling them something they knew, with the useful thing one press
-    // away. The wire carries that draft's id now, and the slot becomes a link to
-    // its editor — pressable, and NOT a sign-up (the server has refused the
+    // THE ONE REFUSAL THAT IS A DOOR (#2359, #2643). `already_active_member`
+    // means the viewer holds a praxis on this task, so the card was spending its
+    // only slot telling them something they knew, with the useful thing one
+    // press away. The wire carries that praxis's id now, and the slot becomes a
+    // link to it — pressable, and NOT a sign-up (the server has refused the
     // claim and is right to; the praxis already exists).
     //
-    // The null branch falls through to the label below, and it is REACHABLE
-    // rather than defensive: the denial's population also covers `submitted`
-    // and `pending` praxes, which shut sign-up with nothing left to edit. A
-    // link to /praxis/null/edit is worse than the sentence it replaced.
-    if (
-      task.signup_reason === SIGNUP_REASON_ALREADY_ACTIVE_MEMBER &&
-      task.in_progress_praxis_id != null
-    ) {
-      return {
-        label: i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`),
-        denied: false,
-        href: `/praxis/${task.in_progress_praxis_id}/edit`,
-      };
+    // ONE REASON, TWO DOORS, chosen by which id the row carries and never by a
+    // second reason value — the server sends `already_active_member` for a
+    // draft and for a filed praxis alike, because both shut sign-up for the
+    // same rule. The ids are what tell them apart:
+    //
+    // * an OPEN DRAFT goes to its editor, and takes precedence when a viewer
+    //   somehow holds both (Double Dipper can leave one of each): the draft is
+    //   the one with work left in it.
+    // * a FILED praxis goes to its READ page, never `/edit` — that redirects a
+    //   submitted praxis straight back to `/praxis/:id` (#1164, #1397), so an
+    //   edit link here would be a control that changes nothing.
+    //
+    // The null-null branch falls through to the label below, and it is
+    // REACHABLE rather than defensive: the denial's population also covers a
+    // `pending` praxis, which shuts sign-up while awaiting moderation with
+    // nothing to edit and nothing to read.
+    if (task.signup_reason === SIGNUP_REASON_ALREADY_ACTIVE_MEMBER) {
+      if (task.in_progress_praxis_id != null) {
+        return {
+          label: i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`),
+          denied: false,
+          href: `/praxis/${task.in_progress_praxis_id}/edit`,
+        };
+      }
+      if (task.submitted_praxis_id != null) {
+        return {
+          label: i18n.t(`tasks:${SIGNUP_SUBMITTED_KEY}`),
+          denied: false,
+          href: `/praxis/${task.submitted_praxis_id}`,
+        };
+      }
     }
     // `level` is only read by `denied.belowLevel`; passing it to the others is
     // free and keeps this a single call rather than a branch per reason.

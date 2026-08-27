@@ -41,6 +41,7 @@ function metatask(
     created_by_level: 0,
     signup_reason: null,
     in_progress_praxis_id: null,
+    submitted_praxis_id: null,
     can_sign_up: true,
     allowed_modes: ["solo"],
     eligible_for_current_user: true,

@@ -303,7 +303,18 @@ const HELD = aTask({
   in_progress_praxis_id: 77,
 })
 
-/** The same shut card with nothing to land on — submitted, or pending. */
+/** The same shut card, the praxis already FILED (#2643) — a door to READ it. */
+const FILED = aTask({
+  can_sign_up: false,
+  signup_reason: 'already_active_member',
+  submitted_praxis_id: 91,
+})
+
+/**
+ * The same shut card with nothing to land on at all: a `pending` praxis, the
+ * one status in the denial's population that is neither editable nor readable.
+ * `submitted` used to live here too, until #2643 gave it `FILED` above.
+ */
 const HELD_WITH_NO_DRAFT = aTask({
   can_sign_up: false,
   signup_reason: 'already_active_member',
@@ -381,4 +392,36 @@ describe.each(SKINS)('$slug offers a draft you already hold (#2359)', (skin) => 
       expect(html).not.toContain('href="/praxis/')
     },
   )
+})
+
+/**
+ * #2643 — the same nine skins, the other half of the same denial.
+ *
+ * The Done-when is "in all nine skins", and the reason that is worth nine
+ * assertions rather than one is the same as #2359's: no skin should have needed
+ * touching, and the way to know is to render all nine and look. `denied` goes
+ * false and `href` is set; `CardCtaControl` does the rest.
+ */
+describe.each(SKINS)('$slug offers a praxis you already filed (#2643)', (skin) => {
+  it('draws the slot as a link to the praxis, on the 44px floor', () => {
+    const html = renderTask(skin, FILED)
+    expect(visible(html)).toContain(i18n.t('tasks:detail.submitted.view'))
+    const slot = html.match(/<a [^>]*href="\/praxis\/91"[^>]*>/)
+    expect(slot, 'the slot is an anchor to the filed praxis').not.toBeNull()
+    expect(slot![0], 'the tap floor').toContain('min-height:44px')
+  })
+
+  it('points at the READ page, not the editor that would bounce', () => {
+    // `/edit` redirects a submitted praxis straight back to `/praxis/:id`
+    // (#1164, #1397), so an edit link here is a control that changes nothing.
+    expect(renderTask(skin, FILED)).not.toContain('/edit')
+  })
+
+  it('replaces the refusal rather than sitting beside it', () => {
+    const html = renderTask(skin, FILED)
+    expect(html).not.toContain('<button')
+    expect(visible(html)).not.toContain(
+      i18n.t('tasks:detail.signup.denied.alreadyActiveMember'),
+    )
+  })
 })

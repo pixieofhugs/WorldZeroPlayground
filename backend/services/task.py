@@ -37,6 +37,7 @@ from services.praxis import (
     gather_signup_facts,
     is_task_eligible_for_character,
     signup_reason,
+    submitted_praxis_ids,
     SignupFacts,
 )
 from services.level_jump import available_level_reach
@@ -349,14 +350,21 @@ async def build_task_out_for_viewer(
         viewer, task, eligibility, session, facts=signup_facts
     )
     # The viewer's own open draft on this task, so a card can OFFER it instead of
-    # announcing it (#2359). Carries #1377's fallback property, exactly as
-    # `signup_reason` above does: an id outside the page these facts were
-    # gathered for means "not asked about", never "no draft".
+    # announcing it (#2359) — and its filed twin, so the same card can offer the
+    # praxis to READ when there is nothing left to edit (#2643). Both carry
+    # #1377's fallback property, exactly as `signup_reason` above does: an id
+    # outside the page these facts were gathered for means "not asked about",
+    # never "no praxis". Both are `viewer`-scoped by the query behind them, so
+    # neither can name a praxis that is not this viewer's own.
     if task.id in signup_facts.task_ids:
         base.in_progress_praxis_id = signup_facts.in_progress_praxis_ids.get(task.id)
+        base.submitted_praxis_id = signup_facts.submitted_praxis_ids.get(task.id)
     else:
         base.in_progress_praxis_id = (
             await in_progress_praxis_ids(viewer, [task.id], session)
+        ).get(task.id)
+        base.submitted_praxis_id = (
+            await submitted_praxis_ids(viewer, [task.id], session)
         ).get(task.id)
     base.allowed_modes = [m.value for m in allowed_praxis_modes(viewer, stats.level, era)]
     base.eligible_for_current_user = is_task_eligible_for_character(

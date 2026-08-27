@@ -266,16 +266,19 @@ export function TaskWorthStamp({ state }: { state: TaskDetailState }) {
  * for the same task offered nothing. It offers the link now.
  *
  * The conjunction from `signupAffordance` is untouched and load-bearing: the
- * reason ALONE is not a door, because it also covers a submitted or pending
- * praxis with nothing left to edit. The link needs `in_progress_praxis_id` too.
+ * reason ALONE is not a door, because it also covers a `pending` praxis, which
+ * shuts sign-up while awaiting moderation with nothing to edit and nothing to
+ * read. The link needs an id — `in_progress_praxis_id`, or since #2643
+ * `submitted_praxis_id`, whose door is the READ page rather than the editor.
  *
  * ### …but only where the page is not already the door
  *
  * The detail page has its own in-progress block — "Continue editing" beside
- * "drop" — gated on the separate `/praxis/mine` read. Where that block draws,
- * this slot stands down: two links to the same editor in one panel is not the
- * gap being closed. The slot is the FALLBACK, for the read where the task's own
- * `signup_reason` knows about a draft that the page's roster fetch does not.
+ * "drop" — gated on the separate `/praxis/mine` read, and its own submitted
+ * block ("Read your praxis") gated on `mySubmission`. Where either draws, this
+ * slot stands down: two links to the same praxis in one panel is not the gap
+ * being closed. The slot is the FALLBACK, for the read where the task's own
+ * `signup_reason` knows about a praxis that the page's own fetches do not.
  *
  * ### The anonymous viewer
  *

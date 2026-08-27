@@ -3907,6 +3907,8 @@ export interface components {
              */
             start_here: boolean;
             status: components["schemas"]["TaskStatus"];
+            /** Submitted Praxis Id */
+            submitted_praxis_id: number | null;
             task_type: components["schemas"]["TaskType"];
             /** Title */
             title: string;
@@ -4477,6 +4479,8 @@ export interface components {
              */
             start_here: boolean;
             status: components["schemas"]["TaskStatus"];
+            /** Submitted Praxis Id */
+            submitted_praxis_id: number | null;
             task_type: components["schemas"]["TaskType"];
             /** Title */
             title: string;
