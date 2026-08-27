@@ -1,4 +1,10 @@
-import { Enso } from "../factionMarks";
+// BY PATH, NOT THROUGH THE BARREL (#2779). `Sidebar` imports `FactionSigil`
+// eagerly on every page and it adapts this component, so this line is the ONE
+// import of `components/factionMarks` on the blocking path. Through the barrel
+// it also pulled `Lotus` and `PointsRoundel` — 2.0 KB gzipped that only lazy UA
+// and Everymen archetypes ever draw. The barrel is right for those seven
+// consumers and stays; the eager one takes the path.
+import Enso from "../factionMarks/Enso";
 
 /**
  * Shared UA (University of Asthmatics) identity atoms — the ensō sigil and the

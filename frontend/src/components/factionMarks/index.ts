@@ -22,8 +22,15 @@
  * `factionHero/`, `selectCard/` or `factionCard/` when `components/cards/` was
  * split up. They are NOT re-exported here: a second name for a module is the
  * thing that split was undoing, so import them by path.
+ *
+ * NEITHER IS `CovenCauldron`, AND THAT IS A BYTE RULE (#2779). This barrel is on
+ * the EAGER path — `Sidebar` -> `FactionSigil` -> `UaSigil` imports `Enso` from
+ * here on every page — so a name re-exported here is a name every first paint
+ * pays for. The cauldron's re-export had zero consumers (both surfaces already
+ * import it by path) and cost 2.0 KB gzipped of blocking JS, because it dragged
+ * `covenSlip` behind it. Import a faction's own ornament by path; only marks
+ * more than one faction's surfaces share belong in the three lines below.
  */
 export { default as Lotus, type FactionMarkProps } from "./Lotus";
 export { default as Enso } from "./Enso";
 export { default as PointsRoundel, type PointsRoundelProps } from "./PointsRoundel";
-export { default as CovenCauldron, type CovenCauldronProps } from "./CovenCauldron";
