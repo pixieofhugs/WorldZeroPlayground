@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """Per-key i18n reference check (the #1039 / #1068 method).
 
-Usage:  python scripts/i18nKeyRefs.py <namespace>          e.g. praxis
+Usage:  python frontend/scripts/i18nKeyRefs.py <namespace>   e.g. praxis
+
+THE PATH IS `frontend/scripts/`, NOT `scripts/`. It resolves its catalog and its
+source roots from `__file__`, so it runs from any cwd — but the repo ALSO has a
+top-level `scripts/`, and this tool has never lived there. #2598 was measured
+twice against `scripts/i18nKeyRefs.py`, found nothing, and both times concluded
+the TEST-ONLY column below was unbuilt when it had already shipped. Spelling the
+path out here is cheaper than a third re-measure.
 
 For EVERY leaf key in `src/locales/en/<namespace>.json`, search the source tree
 for an ANCHORED reference to that key's full dotted path:
