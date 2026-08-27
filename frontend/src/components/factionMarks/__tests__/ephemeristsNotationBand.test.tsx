@@ -255,14 +255,54 @@ describe("the two sheets: resting frame here, motion over there", () => {
   });
 
   it("adds both animations only under `prefers-reduced-motion: no-preference`", () => {
-    // Written the design's way round — the animation unconditional and
-    // `opacity: .16` as the base — a reader who asked for less motion gets a
-    // row at 16% and reads nothing.
+    // Written the design's way round — the animation unconditional and the
+    // shimmer's trough as the base — a reader who asked for less motion gets a
+    // row that is not there at all, since #2725 dropped that trough to zero.
     const gated = ruleBodies(MOTION, GATE).join("\n");
     expect(ruleBodies(gated, ".eph-rune").join("\n")).toContain("animation: eph-rune-shift");
     expect(ruleBodies(gated, ".eph-rune > span").join("\n")).toContain("animation: eph-rune-turn");
     const ungated = MOTION.split(GATE)[0];
     expect(ungated, "an ungated `.eph-rune` animation").not.toMatch(/\.eph-rune[^}]*animation:/);
+  });
+
+  it("cuts the frame at ZERO opacity — the turn is exactly twice the shimmer (#2725)", () => {
+    // THE SEAM #2725 turns on, and the only place it can be checked without a
+    // person watching a row for fifteen seconds. The swap used to land while a
+    // mark was LIT: a shimmer that bottomed out at 0.16 and never went dark,
+    // against a turn whose 9.4s was picked to be COPRIME with the shimmer's
+    // 5.2s. Both halves are asserted, because either one alone puts the cut
+    // back in the light:
+    //
+    //  • the shimmer's trough is 0, and it sits at 0%/100% — the cycle boundary
+    //    is the only phase the turn's own cuts can be aligned to;
+    //  • the turn's period is EXACTLY twice the shimmer's, so its two cut points
+    //    (the 0%/100% wrap and 50%) land on a trough at every repeat, forever.
+    //
+    // Both animations read `--epg-delay`, which carries the alignment to every
+    // mark whatever its phase: at delay d the troughs fall at d + 5.2k and the
+    // cuts fall at d + 5.2k as well.
+    const shift = ruleBodies(MOTION, "@keyframes eph-rune-shift").join("");
+    expect(shift, "the shimmer's trough").toMatch(/0%,\s*100%\s*\{\s*opacity:\s*0;/);
+
+    const gated = ruleBodies(MOTION, GATE).join("\n");
+    const seconds = (selector: string, name: string): number => {
+      const found = new RegExp(`animation:\\s*${name}\\s+([\\d.]+)s`).exec(
+        ruleBodies(gated, selector).join("\n"),
+      );
+      expect(found, `${selector} names no ${name} duration`).not.toBeNull();
+      return Number(found![1]);
+    };
+    expect(seconds(".eph-rune > span", "eph-rune-turn")).toBe(
+      seconds(".eph-rune", "eph-rune-shift") * 2,
+    );
+
+    // The cut points themselves, and the shared phase that carries them.
+    for (const name of ["eph-rune-turn", "eph-rune-turn-back"]) {
+      expect(ruleBodies(MOTION, `@keyframes ${name}`).join(""), name).toMatch(/50%,\s*100%/);
+    }
+    for (const selector of [".eph-rune", ".eph-rune > span"]) {
+      expect(ruleBodies(gated, selector).join("\n"), selector).toContain("--epg-delay");
+    }
   });
 
   it("leaves a stilled row whole and legible", () => {

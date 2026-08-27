@@ -41,16 +41,19 @@ import { BAND_INK, BRASS_RULE, CAPTION, QUIET, READING, seededRandom } from "./e
  *
  * Two animations, both in `motion.ornament.css` behind
  * `prefers-reduced-motion: no-preference`, off the critical path (#2073). The
- * SHIMMER breathes a mark between 0.16 and its own peak; the TURN cross-cuts
+ * SHIMMER breathes a mark between nothing and its own peak; the TURN cross-cuts
  * between the two marks each slot holds, so the row changes over time with no
  * render-time randomness at all — a vote landing or a hover firing re-renders
- * this component and it comes back byte-identical.
+ * this component and it comes back byte-identical. The turn's period is exactly
+ * twice the shimmer's (#2725), which is what puts every swap at zero opacity: a
+ * mark is never seen changing, only having changed.
  *
  * Note the inversion against the design, and it is the repo's form (`.evm-arc`,
  * `.cvn-wheel`): the base state IS the stilled state — every mark at its own
  * peak, showing its first frame — and both animations are ADDED under
  * `no-preference`. Written the design's way round a reduced-motion reader gets
- * a row at 0.16 and reads nothing. THERE IS NEVER AN INLINE `animation:`: an
+ * a row at the trough and reads nothing at all — since #2725 that trough is 0,
+ * so the row would not be there. THERE IS NEVER AN INLINE `animation:`: an
  * inline declaration sits outside every media query, so the gate could not
  * exist.
  *
