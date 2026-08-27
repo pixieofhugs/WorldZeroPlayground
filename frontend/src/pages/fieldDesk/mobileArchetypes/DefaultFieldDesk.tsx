@@ -14,6 +14,7 @@ import FactionSigil from '../../../components/sigil/FactionSigil'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
+import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
  * Default (na) MOBILE FieldDesk home — the account's carried life at a glance,
@@ -295,21 +296,11 @@ export default function DefaultFieldDesk({
           />
         </div>
 
-        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
-          {levelTrack && (
-            <span style={trackMetaStyle}>
-              {levelTrack.nextLevel === null
-                ? t('sidebar.characterCard.topLevel')
-                : t('sidebar.characterCard.toNextLevel', {
-                    points: levelTrack.pointsToNext.toLocaleString(),
-                    level: levelTrack.nextLevel,
-                  })}
-            </span>
-          )}
-          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
-            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
-          </span>
-        </div>
+        <LevelTrackMeta
+          track={levelTrack}
+          allTimeScore={character.all_time_score}
+          style={trackMetaStyle}
+        />
       </section>
 
       {/* ── The pending row: requests, other news, or a dead-ended "all caught
