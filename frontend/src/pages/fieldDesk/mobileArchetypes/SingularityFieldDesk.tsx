@@ -11,6 +11,7 @@ import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import PendingRowPill from '../PendingRowPill'
 import { CAST_VOTES_LINK, FIND_TASK_LINK } from '../homeDestinations'
+import LevelTrackMeta from '../../../components/LevelTrackMeta'
 
 /**
  * Singularity MOBILE FieldDesk home (#526) — the dark terminal on a phone. The
@@ -247,21 +248,11 @@ export default function SingularityFieldDesk({ state }: { state: FieldDeskHomeSt
           />
         </div>
 
-        <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
-          {levelTrack && (
-            <span style={trackMetaStyle}>
-              {levelTrack.nextLevel === null
-                ? t('sidebar.characterCard.topLevel')
-                : t('sidebar.characterCard.toNextLevel', {
-                    points: levelTrack.pointsToNext.toLocaleString(),
-                    level: levelTrack.nextLevel,
-                  })}
-            </span>
-          )}
-          <span style={{ ...trackMetaStyle, marginLeft: 'auto' }}>
-            {t('sidebar.characterCard.allTime', { points: character.all_time_score.toLocaleString() })}
-          </span>
-        </div>
+        <LevelTrackMeta
+          track={levelTrack}
+          allTimeScore={character.all_time_score}
+          style={trackMetaStyle}
+        />
       </Panel>
 
       {/* ── The pending row, in all three of its states (#1554) ── */}
