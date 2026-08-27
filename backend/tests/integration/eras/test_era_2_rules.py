@@ -40,7 +40,7 @@ from services.character_stats import recalculate_character_stats
 from services.faction_service import can_join_faction
 from services.habit_bonus import faction_habit_bonus_points
 from services.meta_task import faction_bypasses_metatask_level
-from services.praxis import can_sign_up_for_task
+from services.praxis import evaluate_signup
 from services.praxis_scoring import compute_contributions
 from tests.integration.factories import (
     cast_vote,
@@ -275,7 +275,8 @@ async def test_only_wow_reaches_a_level_above_its_own(
         db_session, member, title="One up", level_required=1, faction_slug=faction_slug
     )
 
-    assert await can_sign_up_for_task(member, task, db_session, ERA_2) is expected
+    eligibility = await evaluate_signup(member, task, db_session, ERA_2)
+    assert eligibility.allowed is expected
 
 
 # ---------------------------------------------------------------------------
@@ -297,7 +298,8 @@ async def test_only_everymen_claims_a_task_it_is_already_on(
     task = await make_task(db_session, member, faction_slug=faction_slug)
     await make_solo_praxis(db_session, task, member, status=PraxisStatus.in_progress)
 
-    assert await can_sign_up_for_task(member, task, db_session, ERA_2) is expected
+    eligibility = await evaluate_signup(member, task, db_session, ERA_2)
+    assert eligibility.allowed is expected
 
 
 # ---------------------------------------------------------------------------
@@ -388,4 +390,5 @@ async def test_task_vision_is_not_conjured_for_an_inheritor(
         faction_slug="albescent",
     )
 
-    assert await can_sign_up_for_task(member, task, db_session, ERA_2) is False
+    eligibility = await evaluate_signup(member, task, db_session, ERA_2)
+    assert eligibility.allowed is False
