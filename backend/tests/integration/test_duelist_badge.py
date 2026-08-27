@@ -29,19 +29,29 @@ from models.praxis import (
     ModerationStatus,
 )
 from services.badge import build_badge_contexts, list_badges_for_character
-from services.scoring import SNIDE_FACTION_SLUG
 from tests.integration.factories import (
     make_duel,
 )
 
 DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
 
-#: The other side of a lone-Snide tie: a real faction of the live era that is not
-#: Snide. Derived, never named — the live era's first real faction may itself be
-#: Snide, in which case a fixture default would make this a two-Snide tie and
-#: silently change the rule under test (#2708).
-NOT_SNIDE = next(
-    slug for slug in real_faction_slugs(CURRENT_ERA) if slug != SNIDE_FACTION_SLUG
+#: The two sides of a lone-tie-taker tie, derived from the PERK and never named
+#: (#2664, extending #2708). The rule is "the SOLE holder of `takes_duel_ties`
+#: takes the tie", so a fixture that hardcoded "snide" would stop naming the
+#: rule the moment an era moved the ability — and a fixture default could pick
+#: a second holder and silently turn the case under test into a real tie.
+TIE_TAKER = next(
+    (
+        slug
+        for slug in real_faction_slugs(CURRENT_ERA)
+        if CURRENT_ERA.factions[slug].takes_duel_ties
+    ),
+    None,
+)
+NOT_TIE_TAKER = next(
+    slug
+    for slug in real_faction_slugs(CURRENT_ERA)
+    if not CURRENT_ERA.factions[slug].takes_duel_ties
 )
 
 
@@ -91,17 +101,20 @@ async def test_snide_wins_the_tie_and_earns_the_badge(
     Snide side reads as the duel winner everywhere the tiebreak applies — the
     live multiplier already did this; the badge was the straggler.
     """
-    # Snide's row (and every other era's) is seeded by ``some_faction``; the
-    # slug is the one ``services.scoring.snide_tie_winner_slug`` keys the
-    # tiebreak on, so naming it here names the rule, not a roster (#2708).
+    # Every era faction's row is seeded by ``some_faction``. The side named
+    # here is the one holding ``takes_duel_ties``, i.e. the faction
+    # ``services.scoring.sole_tie_taker_slug`` picks out — so this names the
+    # rule, not a roster (#2708, #2664).
+    if TIE_TAKER is None:
+        pytest.skip(f"no faction in {CURRENT_ERA.config_key} takes duel ties")
     _, challenger, opponent = await make_duel(
         db_session,
         era,
         label="snidetie",
         challenger_votes=3,
         opponent_votes=3,
-        challenger_faction=SNIDE_FACTION_SLUG,
-        opponent_faction=NOT_SNIDE, commit=True)
+        challenger_faction=TIE_TAKER,
+        opponent_faction=NOT_TIE_TAKER, commit=True)
     assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 

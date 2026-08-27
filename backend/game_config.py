@@ -108,6 +108,17 @@ class FactionConfig:
     # read out of the very payload the perk prints. There is deliberately no
     # ``services.`` reader to pair with it and no enforcement to add.
     reads_the_array: bool = False
+    # "Take the tie" (#718, moved off a slug branch in #2664): on a *tied* duel,
+    # does this faction take the win rate while the other side takes the loss
+    # rate? False (the baseline) means a tie is a real tie at 1.0x both ways.
+    # Read via services.scoring.sole_tie_taker_slug -- never branch on a faction
+    # slug in a service. Until #2664 this WAS a slug branch, in scoring.py AND
+    # again in the browser (`useDuelStakes`), so no era could move the ability.
+    #
+    # The rule is "the SOLE holder takes the tie": two holders cancel and the
+    # duel is a real tie. That is why the flag is deliberately NOT inheritable
+    # -- see _NON_INHERITED_PERK_FIELDS.
+    takes_duel_ties: bool = False
     # Albescent's charter (#1871): this faction holds every OTHER faction's perk
     # in its era. Declared here, resolved by ``EraConfig.__post_init__`` — the
     # era file states the faction's own floor and the union is computed, so a
@@ -136,6 +147,18 @@ _ANY_PERK_FIELDS: tuple[str, ...] = (
     "can_apply_metatask_at_any_level",
     "reads_the_array",
 )
+
+#: Perk axes an inheritor does NOT pick up, and the reason each is exempt.
+#:
+#: ``takes_duel_ties`` (#2664) is self-cancelling: the ability is "the *sole*
+#: holder of this perk takes the tie", so a second holder does not gain an
+#: ability -- it *destroys* the first holder's. Unioning it would therefore turn
+#: every Snide-vs-inheritor tie from "Snide takes it" into a real tie, changing
+#: banked points rather than widening a perk. It sits beside the duel pair
+#: (:data:`_DUEL_PERK_FIELDS`) for the same underlying reason: the duel axis is
+#: a relation between two sides, not a per-side quantity, and a naive union gets
+#: it backwards.
+_NON_INHERITED_PERK_FIELDS: tuple[str, ...] = ("takes_duel_ties",)
 
 #: The duel pair — inherited TOGETHER, never field by field. See
 #: :func:`_inherited_faction_config`.
