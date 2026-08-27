@@ -339,6 +339,24 @@ class EraConfig:
     metatasks_per_praxis_max: int = 3
     metatasks_per_praxis_max_level: int = 7
 
+    # The level at which an account stops being shown NOTHING and starts being
+    # shown the redacted row (#2770, amending ADR-0082). Not the same question as
+    # `albescent_level_required` above: that is the CEILING on joining, this is
+    # the FLOOR on perceiving. A player below it sees no Albescent tile and no
+    # eighth lane; from it up they see ADR-0082's `[REDACTED]`.
+    #
+    # Stamped per ACCOUNT and never unstamped — `Account.albescent_glimpsed`,
+    # written by `services.character.stamp_albescent_glimpse`. Level is
+    # per-character, so reading the *active* character's level would make the
+    # eighth row blink in and out with the character switcher, which is a louder
+    # tell than either state.
+    #
+    # Defaulted so bare EraConfig constructions stay valid, but era files state
+    # it explicitly — same posture as `habit_window_days` above, and for the same
+    # reason: the rung announced at this level lives in the era's own
+    # `level_profiles`, so an era that moves the floor must move both together.
+    albescent_glimpse_level: int = 6
+
     # Task definitions for this era
     tasks: tuple = ()                # tuple[TaskDef, ...]
 
