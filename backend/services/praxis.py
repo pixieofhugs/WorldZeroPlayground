@@ -1,7 +1,6 @@
 """Canonical praxis service.
 
 Handles all three praxis types: solo, collab, and duel.
-Replaces the old services/submission.py and services/collaboration.py.
 """
 
 from dataclasses import dataclass
@@ -113,13 +112,13 @@ async def get_praxis(
     this helper ultimately feeds a ``build_praxis_out`` caller. The list
     endpoint uses :func:`list_praxes` which loads only what the card needs.
 
-    The loads here are for the *detail view* only. Deleting a praxis no longer
-    depends on them: the FKs into ``praxis.id`` are ``ON DELETE CASCADE`` and
+    The loads here are for the *detail view* only. Deleting a praxis does not
+    depend on them: the FKs into ``praxis.id`` are ``ON DELETE CASCADE`` and
     the collections are ``passive_deletes=True``, so :func:`delete_praxis`
-    works whether or not a collection is loaded. It is the inverse that used to
-    bite — eagerly loading ``media_items``, which has no ``delete-orphan``
-    cascade, is what made ``session.delete(praxis)`` try to write
-    ``praxis_id = NULL`` into a NOT NULL column. See ``MediaItem.praxis_id``.
+    works whether or not a collection is loaded. The inverse is the trap —
+    eagerly loading ``media_items``, which has no ``delete-orphan`` cascade,
+    makes ``session.delete(praxis)`` try to write ``praxis_id = NULL`` into a
+    NOT NULL column. See ``MediaItem.praxis_id``.
     """
     result = await session.execute(
         select(Praxis)
@@ -324,10 +323,9 @@ async def list_praxes(
     never disagree with the slot count.
 
     ``search`` is a free-text ``ilike`` over the praxis title, its body, the
-    linked task's title, and **any member's** handle / display name. The player
-    axis (#681) reverses #658's deliberate exclusion of the author: the
-    maintainer chose one box that finds content OR a person, accepting that a
-    common word can surface every praxis by anyone whose name contains it.
+    linked task's title, and **any member's** handle / display name. One box
+    finds content OR a person (the player axis, #681), accepting that a common
+    word can surface every praxis by anyone whose name contains it.
     It matches *members* rather than the author so a collab surfaces for each
     participant; a duel is two praxis rows of one member each, so each side
     already surfaces for its own duelist. A leading ``@`` is a sigil and is
@@ -431,14 +429,14 @@ async def list_praxes(
             query = query.where(~account_voted, ~account_member)
 
     # Hidden is excluded unconditionally, and the caller's filter may only narrow
-    # within what is left. This used to sit in an `else`, so *any* value for the
-    # ungated `moderation_status` query param removed the exclusion — and
-    # `?moderation_status=hidden` then selected exactly the content an admin had
-    # taken off the site. An invalid value was worse: `except ValueError: pass`
-    # dropped the caller's filter *and* the default, so a typo also published it.
-    # The detail door (`can_view_praxis`) always refused hidden; only this list
-    # door leaked. Asking for `hidden` now yields an empty page, not a 422 —
-    # a distinguishable error would answer "does hidden content exist here?".
+    # within what is left — it may never widen it. `moderation_status` is an
+    # ungated query param, so an exclusion sitting in that filter's `else` would
+    # let `?moderation_status=hidden` select exactly the content an admin has
+    # taken off the site, and an unparseable value would drop the default with
+    # it. The detail door (`can_view_praxis`) refuses hidden outright; this list
+    # door has to reach the same answer. Asking for `hidden` yields an empty
+    # page, not a 422 — a distinguishable error would answer "does hidden
+    # content exist here?".
     query = query.where(Praxis.moderation_status != ModerationStatus.hidden)
     if moderation_status is not None:
         try:
@@ -446,8 +444,8 @@ async def list_praxes(
                 Praxis.moderation_status == ModerationStatus(moderation_status)
             )
         except ValueError:
-            # Still ignored, as before — but now it only costs the caller their
-            # own filter. It used to also discard the hidden exclusion above.
+            # Ignored: an unparseable value costs the caller their own filter
+            # and nothing else — the hidden exclusion above already applies.
             pass
 
     if task_id is not None:
@@ -541,9 +539,10 @@ def meets_task_level(
 ) -> bool:
     """Whether ``character_level`` clears the task's own level bar (#292).
 
-    The single home for the **task-level** gate — the "level half" that used to
-    be ANDed inline into :func:`is_task_eligible_for_character` and the sign-up
-    predicate. A distinct axis from :func:`~services.faction_service.faction_permits`
+    The single home for the **task-level** gate — the "level half", stated once
+    here rather than ANDed inline into both
+    :func:`is_task_eligible_for_character` and the sign-up predicate. A distinct
+    axis from :func:`~services.faction_service.faction_permits`
     (the faction half, #171) and from the era-config thresholds
     (collab/flag/comment/metatask-apply), which each already sit in their own
     purpose-named predicate and share a single ``era.*`` source for their value.
@@ -681,9 +680,9 @@ async def evaluate_signup(
     Anonymous viewers are never eligible (``allowed=False``, no ``reason``).
 
     ``facts`` is the page-wide precompute (:func:`gather_signup_facts`) a list
-    route passes in so this predicate stops being an N+1 (#1377). It must have
-    been gathered for ``character``; omitting it makes every read here, exactly
-    as before. It changes no answer — only how many queries the answer costs.
+    route passes in so this predicate is not an N+1 (#1377). It must have been
+    gathered for ``character``; omitting it makes every read here instead. It
+    changes no answer — only how many queries the answer costs.
     """
     if character is None:
         return SignupEligibility(allowed=False)
@@ -977,20 +976,16 @@ async def create_praxis(
     return await get_praxis(praxis.id, session)
 
 
-# ``update_praxis`` — the debounced autosave's write — is gone (#1743,
-# ADR-0073). ``praxis.title`` and ``praxis.body_text`` are derived columns now,
-# written only by the praxis's room (``services/praxis_room.py``).
+# There is no praxis text write in this service. ``praxis.title`` and
+# ``praxis.body_text`` are derived columns, written only by the praxis's room
+# (``services/praxis_room.py``, ADR-0073), and ADR-0013's "any member may edit"
+# has its one implementation in the room's door — ``_require_member(praxis,
+# character_id, "edit")`` at connect.
 #
-# ``_require_member(praxis, character_id, "edit")`` is unchanged and still the
-# one implementation of ADR-0013's "any member may edit" — the room's door one
-# calls it at connect, which is where it moved to, not where it was duplicated.
-#
-# A text edit triggers ADR-0012's hard reset again (ADR-0079), through the room
-# rather than through a route: ``services.praxis_room._RoomFlusher.write`` calls
-# ``collab_consensus.on_room_edit`` on the trailing edge of its debounce. #1745's
-# freeze — which existed because a CRDT has no discrete edit event to key on — is
-# gone, and with it #1808's close code. Media edits and Withdraw reach the same
-# rule through ``on_member_edit``.
+# A text edit triggers ADR-0012's hard reset (ADR-0079) through that room rather
+# than through a route: ``services.praxis_room._RoomFlusher.write`` calls
+# ``collab_consensus.on_room_edit`` on the trailing edge of its debounce. Media
+# edits and Withdraw reach the same rule through ``on_member_edit``.
 
 
 async def unsubmit_praxis(
@@ -1055,12 +1050,12 @@ async def unsubmit_praxis(
     await session.flush()
     # No thaw to announce (ADR-0079): the room was never sealed. The document
     # this reopens is a fresh one all the same, seeded on first connect from the
-    # ``body_text`` this praxis published with, because publishing destroyed the
-    # old one (ADR-0073 rule 7, which survives).
+    # ``body_text`` this praxis published with, because publishing destroys the
+    # old one (ADR-0073 rule 7).
 
-    # Recalc *every* member: on a collab, co-authors' scores also counted this
-    # praxis while it was submitted, so all of them must drop (the submit paths
-    # already recalc all members — this fixes the prior single-actor under-recalc).
+    # Recalc *every* member, not just the actor: on a collab, co-authors' scores
+    # also counted this praxis while it was submitted, so all of them must drop
+    # — which is the same set the submit paths recalc.
     # The era is the one the praxis was sealed in — the seal time survives the
     # status flip above, and it is that era's row the points came out of (#1345).
     # The forfeit winner's duel side is the same praxis's era by construction.
@@ -1855,12 +1850,12 @@ async def cancel_invite(
     pending (removing an accepted member is :func:`kick_member`'s job). Deletes
     the invite row (#421).
 
-    Until #1415 this was inviter-only, which made the roster's rescind control
-    appear on some pending rows and not others with nothing on screen to explain
-    why. A collab is co-owned — ADR-0013 gives ``created_by_id`` no powers and
-    any member may already invite (:func:`invite_to_praxis`) and kick
-    (:func:`kick_member`) — so "only the person who typed the name may untype
-    it" was the one asymmetric rule in the set, and it is gone.
+    Any member, not the inviter alone (#1415): a collab is co-owned — ADR-0013
+    gives ``created_by_id`` no powers and any member may already invite
+    (:func:`invite_to_praxis`) and kick (:func:`kick_member`) — so "only the
+    person who typed the name may untype it" would be the one asymmetric rule in
+    the set, and it would make the roster's rescind control appear on some
+    pending rows and not others with nothing on screen to explain why.
 
     The guard that remains is membership: an outsider, including the invitee
     themselves, still gets 403. Declining is the invitee's verb
@@ -2039,8 +2034,8 @@ async def moderate_praxis(
 
     Every transition recalculates each member's stats (#1373). ``hidden`` and
     ``failed`` are unscored (see ``services.character_stats``), so both marking
-    and *un*marking moves the members' scores — and a score that only corrects
-    itself on the author's next unrelated vote is the bug this closes. The
+    and *un*marking moves the members' scores — which must not wait for the
+    author's next unrelated vote to correct itself. The
     recalc is unconditional rather than gated on "did the scored-ness change":
     it is the same handful of queries the vote path already runs per vote, and
     an admin action is rare.
