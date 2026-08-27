@@ -1,7 +1,7 @@
 /**
  * The praxis-detail duel card (#1090, epic #1085; design project bebdf7c7,
  * `Unaffiliated Praxis Detail.dc.html`). Successor to `DuelCrossLink` and the
- * twelve `*DuelRail` skins.
+ * duel rail.
  *
  * ## Detail narrates OUTCOMES, not the run-up
  *
