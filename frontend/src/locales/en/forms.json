@@ -60,16 +60,14 @@
     "saveBusy": "Saving…",
     "saveIdle": "Save Changes",
     "cancel": "Cancel",
-    "mobile": {
-      "changePhoto": "Change photo",
-      "factionLabel": "Faction",
-      "unaffiliated": "Unaffiliated",
-      "factionHelp": "Join a faction from the Factions tab. It re-skins your whole app.",
-      "delete": "Delete this character",
-      "deleteConfirm": "Delete this character? This can't be undone.",
-      "deleteConfirmYes": "Delete",
-      "deleteBusy": "Deleting…"
-    }
+    "changePhoto": "Change photo",
+    "factionLabel": "Faction",
+    "unaffiliated": "Unaffiliated",
+    "factionHelp": "Join a faction from the Factions tab. It re-skins your whole app.",
+    "delete": "Delete this character",
+    "deleteConfirm": "Delete this character? This can't be undone.",
+    "deleteConfirmYes": "Delete",
+    "deleteBusy": "Deleting…"
   },
   "autosaveAgo": {
     "justNow": "just now",

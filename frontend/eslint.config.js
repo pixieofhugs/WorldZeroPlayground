@@ -976,7 +976,7 @@ export default [
   },
   {
     /**
-     * THE ONE ARCHETYPE WHOSE GROUND IS THE APP'S OWN PAGE (#2346).
+     * THE TWO ARCHETYPES WHOSE GROUND IS THE APP'S OWN PAGE (#2346, #2537).
      *
      * A deliberate exemption and NOT a legacy entry — nothing here is going to
      * migrate, so a shrinking list would be lying about it.
@@ -1014,8 +1014,21 @@ export default [
      * delete that file while this entry exists: "the rule cannot judge this node"
      * is never "this node needs no judging", and between them they are the whole
      * guard.
+     *
+     * #2537 ADDED THE SECOND FILE AND SHRANK THE LEGACY LIST BY ONE.
+     * `DefaultEditCharacter` is the same page family — create and edit are one
+     * character, one faction, one form, and the edit half drew on this ground
+     * from `mobileArchetypes/` where it sat on `.eslint-legacy-faction-ink.txt`
+     * with eleven un-argued hits. Folding it into one responsive archetype moved
+     * it under `archetypes/`, so it needed an answer rather than a grandfather
+     * clause: it reads the SAME three neutrals on the SAME washed page ground,
+     * which the paired test above already resolves. A measured exemption for a
+     * measured file, and one fewer line on a ratchet that only shrinks.
      */
-    files: ['src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx'],
+    files: [
+      'src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx',
+      'src/pages/characterPaths/archetypes/DefaultEditCharacter.tsx',
+    ],
     rules: {
       'local/no-global-ink-on-faction-surface': 'off',
     },

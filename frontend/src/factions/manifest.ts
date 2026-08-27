@@ -10,7 +10,7 @@
  * declares nothing renders correctly everywhere, including on surfaces that do
  * not exist yet.
  *
- * The exception is `./default.ts`, which IS na's row and must claim all twenty.
+ * The exception is `./default.ts`, which IS na's row and must claim all twenty-one.
  * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
  * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
  * rather than falling further back.
@@ -58,6 +58,7 @@ import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../pages/editPraxis/useEditPraxis'
 import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
+import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 
@@ -132,6 +133,24 @@ export interface FactionManifest {
    */
   readonly createCharacter?: Lazy<Stateful<CreateCharacterState>>
 
+  /**
+   * Editing a character (#2537). ONE responsive component per faction, the same
+   * discipline `createCharacter` landed with — each archetype reads
+   * `useFormFactor()` itself. `mobileEditCharacter` is RETIRED and stays that
+   * way; `src/__tests__/retiredSurfaces.test.ts` holds the name out.
+   *
+   * The slug is the EDITED CHARACTER'S `faction_slug`, not the viewer's. They
+   * are usually the same life and not always, and the page is about the one it
+   * edits. `''` / `na` is an unaffiliated life and resolves to the Default (na)
+   * archetype, which is also where an unregistered slug lands.
+   *
+   * Each faction's edit dress is DERIVED from its create dress (owner ruling,
+   * 2026-08-27) plus the two slots a create page has no room for — the faction
+   * row and the destructive action, drawn once in
+   * `pages/characterPaths/editCharacterSlots.tsx` so all eight inherit them.
+   */
+  readonly editCharacter?: Lazy<Stateful<EditCharacterState>>
+
   // ─── Duel surfaces ─────────────────────────────────────────────────────────
   // The duel SEAL is the only dispatched duel surface. ONE responsive component
   // per faction, both form factors (#1313): the skins hang their interior in
@@ -193,6 +212,7 @@ export const SURFACE_KEYS = [
   'factionBody',
   'profileBody',
   'createCharacter',
+  'editCharacter',
   'duelSeal',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]

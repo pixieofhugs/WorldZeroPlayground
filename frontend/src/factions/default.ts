@@ -1,5 +1,5 @@
 /**
- * na (Unaffiliated) — the ninth faction's twenty surfaces (#2530).
+ * na (Unaffiliated) — the ninth faction's twenty-one surfaces (#2530, #2537).
  *
  * NOT AN OVERRIDE LIST, AND THE ONLY MANIFEST OF WHICH THAT IS TRUE. The other
  * eight declare what they override; this one declares what everything else
@@ -43,7 +43,7 @@
  * eight and for both of the same reasons: the deferred read keeps the
  * dispatcher/archetype module cycle harmless (see the note in `./manifest.ts` —
  * a plain object literal captures `undefined` and the faction falls back
- * forever, invisible to `tsc`), and the dynamic import keeps twenty archetypes
+ * forever, invisible to `tsc`), and the dynamic import keeps every archetype
  * out of the entry chunk. `manifestsStayLazy.test.ts` holds both.
  */
 import type { FactionManifest } from './manifest'
@@ -54,6 +54,7 @@ const DefaultBackdrop = lazyArchetype(() => import('../components/layout/Waterco
 const DefaultComment = lazyArchetype(() => import('../components/comments/CommentThread').then((m) => ({ default: m.DefaultComment })))
 const DefaultCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/DefaultCreateCharacter'))
 const DefaultDuelSealConfirm = lazyArchetype(() => import('../components/duel/DuelSealConfirm').then((m) => ({ default: m.DefaultDuelSealConfirm })))
+const DefaultEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/DefaultEditCharacter'))
 const DefaultEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/DefaultEditPraxis'))
 const DefaultFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/DefaultFactionBody'))
 const DefaultFactionHero = lazyArchetype(() => import('../components/factionHero/DefaultFactionHero'))
@@ -89,6 +90,7 @@ export const DEFAULT_MANIFEST: FactionManifest = {
   praxisDetail: () => DefaultPraxisDetail,
   editPraxis: () => DefaultEditPraxis,
   createCharacter: () => DefaultCreateCharacter,
+  editCharacter: () => DefaultEditCharacter,
   factionHero: () => DefaultFactionHero,
   factionBody: () => DefaultFactionBody,
   profileBody: () => DefaultProfileBody,

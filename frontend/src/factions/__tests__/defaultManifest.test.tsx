@@ -47,6 +47,7 @@ import DefaultTaskDetail from '../../pages/taskDetail/archetypes/DefaultTaskDeta
 import DefaultPraxisDetail from '../../pages/praxisDetail/archetypes/DefaultPraxisDetail'
 import DefaultEditPraxis from '../../pages/editPraxis/archetypes/DefaultEditPraxis'
 import DefaultCreateCharacter from '../../pages/characterPaths/archetypes/DefaultCreateCharacter'
+import DefaultEditCharacter from '../../pages/characterPaths/archetypes/DefaultEditCharacter'
 import DefaultFactionHero from '../../components/factionHero/DefaultFactionHero'
 import DefaultFactionBody from '../../pages/factionDetail/archetypes/DefaultFactionBody'
 import DefaultProfileBody from '../../pages/characterProfile/archetypes/DefaultProfileBody'
@@ -77,6 +78,7 @@ const WAS_THE_FALLBACK: Record<string, unknown> = {
   factionBody: DefaultFactionBody,
   profileBody: DefaultProfileBody,
   createCharacter: DefaultCreateCharacter,
+  editCharacter: DefaultEditCharacter,
   duelSeal: DefaultDuelSealConfirm,
   mobileFieldDesk: DefaultFieldDesk,
 }
