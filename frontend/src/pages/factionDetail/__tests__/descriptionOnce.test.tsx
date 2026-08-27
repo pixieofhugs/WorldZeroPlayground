@@ -118,7 +118,8 @@ function firstParagraph(slug: string): string {
  * nothing.
  *
  * It used to be 20 characters, chosen when every description was a sentence.
- * #2332 replaced six of them with the literal `PLACEHOLDER` — the owner's own
+ * #2332 replaced six of them with the literal `PLACEHOLDER` (five still are,
+ * WOW's having since been written) — the owner's own
  * marker for copy she has not written yet, and deliberate, so the floor moves
  * to that word's length rather than the placeholders being exempted. Eleven
  * capitals is still a token nothing else on the page spells, which is the
@@ -126,22 +127,15 @@ function firstParagraph(slug: string): string {
  */
 const BLURB_FLOOR = 'PLACEHOLDER'.length
 
-/**
- * Slots OTHER than the description that draw text identical to it, per slug.
- *
- * One only, and it is WOW's. #2332 set `descriptions.wow` and
+/*
+ * There used to be a WOW exemption here. #2332 set `descriptions.wow` and
  * `feed:factionHero.wow.motto` both to the literal `PLACEHOLDER` — two
- * different slots the owner has not written yet, which happen to spell the same
- * word. The hero draws the motto and the body draws the description, so that
- * page says `PLACEHOLDER` twice while still saying its DESCRIPTION exactly
- * once, which is what #2137 pins. Counting a substring cannot tell the two
- * apart, so the second occurrence is NAMED here rather than the assertion being
- * loosened to `>= 1`: the moment either slot gets real copy this row is wrong
- * and the test says so.
+ * different slots that happened to spell the same word — so that page said it
+ * twice while still saying its DESCRIPTION once. The owner wrote the
+ * description on 2026-08-26, the two slots no longer collide, and the count is
+ * a flat 1 again for every slug. The motto is still `PLACEHOLDER`; nothing
+ * needs to know that here.
  */
-const TWINS: Readonly<Record<string, number>> = { wow: 1 }
-
-const expected = (slug: string) => 1 + (TWINS[slug] ?? 0)
 
 describe('a faction page says its description exactly once (#2137)', () => {
   for (const slug of WITH_HERO) {
@@ -151,7 +145,7 @@ describe('a faction page says its description exactly once (#2137)', () => {
         blurb.length,
         `${slug} has a catalog blurb to count`,
       ).toBeGreaterThanOrEqual(BLURB_FLOOR)
-      expect(occurrences(pageText(slug), blurb)).toBe(expected(slug))
+      expect(occurrences(pageText(slug), blurb)).toBe(1)
     })
   }
 
@@ -161,6 +155,6 @@ describe('a faction page says its description exactly once (#2137)', () => {
       blurb.length,
       'albescent has a catalog blurb to count',
     ).toBeGreaterThanOrEqual(BLURB_FLOOR)
-    expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(expected(WITHOUT_HERO))
+    expect(occurrences(pageText(WITHOUT_HERO), blurb)).toBe(1)
   })
 })

@@ -19,9 +19,10 @@ import { CovenSigil } from '../sigil/CovenSigil'
  *
  * THE CRESCENT SURVIVES IN ONE PLACE, deliberately: `CovenVote`'s phase plate
  * builds a 1–5 rating out of moon phases. That is a game mechanic, not an
- * identity badge, and a hat cannot wax. It is the same badge/ornament split
- * `covenSlip` already makes between `SigilMark` and `Spark` — do not collapse
- * it.
+ * identity badge, and a hat cannot wax. It is the same mark/ornament split
+ * `covenSlip` still makes for `Spark`, the four-point sparkle — do not collapse
+ * it. (The badge that split once named, `SigilMark`, is gone: #2726 gave its
+ * six remaining mounts to the hat as well.)
  *
  * The monogram takes the slip's reading face rather than Caveat: Cormorant is
  * what the design letters a disc in, and one hand-script capital inside a 24px

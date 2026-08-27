@@ -52,7 +52,7 @@
       "inProgress": "people working on this"
     },
     "points": {
-      "base": "base",
+      "base": "Base",
       "multiplier": "×{{multiplier}}",
       "total_one": "Point",
       "total_other": "Points"
@@ -66,15 +66,15 @@
       "denied": {
         "belowLevel": "Must be level {{level}}",
         "taskStatusClosed": "No longer open",
-        "alreadyActiveMember": "You're on this task",
+        "alreadyActiveMember": "Already done",
         "bankFull": "No task slots open",
         "isMetatask": "Applied to praxis, not claimed"
       }
     },
     "inProgress": {
-      "text": "You're on this task",
+      "text": "In Progress",
       "continue": "Continue editing",
-      "drop": "drop",
+      "drop": "Drop",
       "dropUnavailable": "We couldn't find your draft for this task. Reload the page and try again."
     },
     "submitted": {
@@ -101,6 +101,6 @@
   "propose": {
     "pageTitle": "Propose a Task",
     "loginRequired": "You need to be logged in to propose a task.",
-    "levelGate": "You must be level 3 or higher to propose tasks. You are currently level {{level}}."
+    "levelGate": "You are not ready. But I believe you will be someday"
   }
 }

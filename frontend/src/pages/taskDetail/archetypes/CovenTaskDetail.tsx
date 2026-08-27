@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { CovenCat, SLIP_SHEET } from "../../../components/factionMarks/covenSlip";
+import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -23,8 +24,8 @@ import Breadcrumb from "../../../components/nav/Breadcrumb";
  * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
  *
  * The spell slip opened out to a full page: a cat watermark turns slowly behind
- * the copy, braided thread rules head every section, and the points are held
- * inside a glowing pentagram ward on a 452px action plate. Grenze Gotisch
+ * the copy, braided thread rules head every section, and the points are held on
+ * a 452px action plate. Grenze Gotisch
  * carries the display, Cormorant Garamond the numerals and the brief, Caveat the
  * hand, Quicksand the chrome — the same four faces the v2 task card (#1023)
  * established for this faction.
@@ -80,7 +81,6 @@ const DEEP = "var(--faction-coven-slip-deep)";
 const SOFT = "var(--faction-coven-slip-soft)";
 const LABEL = "var(--faction-coven-slip-label)";
 const GOLD = "var(--faction-coven-slip-gold)";
-const PINK = "var(--faction-coven-slip-pk)";
 const BORDER = "var(--faction-coven-slip-border)";
 const CARD = "var(--faction-coven-ward-card)";
 const PAGE = "var(--faction-coven-ward-page)";
@@ -154,30 +154,6 @@ function initialsOf(name: string): string {
 /** The braided thread rule. `.cvn-braid` owns the strands' pigments (index.css). */
 function Braid({ style }: { style?: CSSProperties }) {
   return <span aria-hidden className="cvn-braid" style={{ minWidth: 20, ...style }} />;
-}
-
-/** The coven's pentagram badge — dashed gold ring, pink field, lit centre. */
-function SigilMark({ size }: { size: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 44 44"
-      aria-hidden="true"
-      style={{ display: "block", flex: "0 0 auto" }}
-    >
-      <circle cx="22" cy="22" r="19" fill={PINK} opacity="0.18" />
-      <circle cx="22" cy="22" r="15" fill="none" stroke={GOLD} strokeWidth="1" strokeDasharray="2 4" />
-      <path
-        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
-        fill="none"
-        stroke={DEEP}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="22" cy="22" r="3" fill={GOLD} />
-    </svg>
-  );
 }
 
 
@@ -476,7 +452,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           flexWrap: "wrap",
         }}
       >
-        <SigilMark size={30} />
+        <CovenSigil size={30} color={DEEP} />
         <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{eyebrowFaction}</span>
         {isMetatask && (
           <span

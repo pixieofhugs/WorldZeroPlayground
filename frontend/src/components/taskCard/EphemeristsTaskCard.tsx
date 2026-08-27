@@ -420,23 +420,23 @@ export default function EphemeristsTaskCard({
             everything it rules (the hero's stepped lead-in, the cornice).
 
             #2067 BRACKETS IT WITH THE MASTHEAD'S OWN MOTIF. The two rune strips
-            are the registers that came off the band, and they are the reason this
-            block no longer sits inside one `bodyPad` box: `[data-eph-runes]` is
-            the full width of ITS OWN parent, so nested inside a box already inset
-            by `--space-xl` they would read as a short line rather than as a
-            register. So the wrapper is bare, the brass rule carries its own inset
-            as a margin, and the trailing strip's 18px is what closes the card in
-            place of `bodyPad`'s bottom.
+            are the registers that came off the band. This block still sits
+            outside `bodyPad` — the trailing strip's 18px is what closes the card
+            in place of `bodyPad`'s bottom — so it carries the plate's own
+            `--space-xl` inset as its PADDING.
 
-            #2312 DROPPED THE STRIP'S OWN 20px INSET (it was `calc(100% - 40px)`
-            centred), on the owner's ruling that corner-to-corner applies
-            "anywhere there are runes". Because this wrapper is bare, that is now
-            literal here: both strips run to the card's border box, where before
-            they stopped 20px short of it. The brass rule above keeps its own
-            `--space-xl` margin — a rule and a register are different marks and
-            were never meant to line up. */}
+            THE BLOCK IS ONE COLUMN (#2724), which retires #2312. #2312 dropped
+            the strips' 20px inset on a corner-to-corner reading ("anywhere there
+            are runes"), and with a bare wrapper that ran them to the card's
+            border box while the brass rule above kept its own `--space-xl`
+            margin — the rule read as a short line against them. The owner's
+            ruling now: a rune row is the width of the thing above it. So the
+            inset moved OFF the rule and ONTO this box, and the rule, the button
+            and both rune rows share one column. `[data-eph-runes]` is still the
+            full width of its own parent, and its parent is now the column;
+            nothing here insets or bleeds itself. */}
         {cta && (
-          <div style={{ position: "relative", zIndex: 2 }}>
+          <div style={{ position: "relative", zIndex: 2, padding: "0 var(--space-xl)" }}>
             <div
               aria-hidden="true"
               data-cta-rule="ephemerists"
@@ -449,7 +449,8 @@ export default function EphemeristsTaskCard({
                    opens on this rule and the CTA block closes on it. */
                 borderTop: "1px solid var(--faction-ephemerists-plate-brass-rule)",
                 borderBottom: "3px double var(--faction-ephemerists-plate-brass-rule)",
-                margin: "0 var(--space-xl) var(--space-md)",
+                /* Clearance only — the side inset is the column's now (#2724). */
+                margin: "0 0 var(--space-md)",
               }}
             />
             <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />

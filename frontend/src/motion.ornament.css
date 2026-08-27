@@ -650,7 +650,20 @@
    carrier per object), so the mount became `.alb-desk-edge`, a ninth masked
    ring, and the track it needed — the loop-cut ramp, the 300% tile, the
    `overflow: hidden` — is the shared ring's already. Nine mounts, nine rings,
-   one child. ── */
+   one child.
+
+   #2732 HANGS THE TENTH ON IT: `.alb-comment-edge`, the comment leaf's ring,
+   which replaced na's 3px spectrum cap on that sheet for a revealed viewer
+   (ADR-0088 §3). It is the surface that had been the standing exception to
+   #2404 — all Albescent borders move slowly — on #2502's objection, and that
+   objection was written about a 24px avatar disc turning inside a grid of
+   forty. A thread is a short column of wide leaves, where a slow edge reads as
+   that person's card rather than as a beacon.
+
+   IF IT PROVES TOO LOUD IN A LIVE THREAD, THE RETREAT IS ONE LINE: delete
+   `.alb-comment-edge::before` from the list below and the ring stands still,
+   keeping its colour, its weight and its corner. Nothing else has to move,
+   because everything else about it is `index.css`'s. ── */
 @keyframes alb-edge-travel { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge::before,
@@ -660,6 +673,7 @@
   .alb-feed-edge::before,
   .alb-desk-edge::before,
   .alb-plate-edge::before,
+  .alb-comment-edge::before,
   .alb-profile-edge::before {
     content: "";
     position: absolute;

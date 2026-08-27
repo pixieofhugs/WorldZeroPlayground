@@ -30,8 +30,8 @@
       "desc": "Stake reputation against another quester and settle it in the field."
     },
     "comment": {
-      "name": "Leave a comment",
-      "desc": "Weigh in on any praxis with a word of your own."
+      "name": "Communicate",
+      "desc": "Speak words of power and let the ripple out into the world. Or leave a comment."
     },
     "retired_tasks": {
       "name": "See retired tasks",
@@ -82,7 +82,7 @@
       "desc": "Certain rooms feel already-visited. You've stopped questioning it."
     },
     "apply_metatasks": {
-      "name": "Apply metatasks",
+      "name": "Add Metatasks",
       "desc": "Attach a metatask to your praxis for its bonus — any faction's, not just your own."
     },
     "multiple_metatasks": {
@@ -94,8 +94,8 @@
       "desc": "Your mind now files contingencies the way it once filed excuses."
     },
     "join_albescent": {
-      "name": "Join /Albescent",
-      "desc": "Defect a life you carry to /Albescent — the order is joined in the field, never picked at creation."
+      "name": "Join The Chroma",
+      "desc": "Defect a life you carry to The Chroma — the order is joined in the field, never picked at creation."
     },
     "underline_foresight": {
       "name": "See the underline before it's drawn",

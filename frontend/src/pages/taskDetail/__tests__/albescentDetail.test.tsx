@@ -166,7 +166,7 @@ describe("Albescent task detail — Default plus the light", () => {
         state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })}
       />,
     );
-    expect(text).toContain("base");
+    expect(text).toContain("Base");
     expect(text).toContain("×1.25");
   });
 

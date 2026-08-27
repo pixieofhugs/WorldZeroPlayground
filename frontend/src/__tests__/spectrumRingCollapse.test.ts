@@ -207,6 +207,80 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
   });
 });
 
+/**
+ * THE TENTH MOUNT — the comment leaf's ring (#2732, ADR-0088 §3).
+ *
+ * It has no row in `BEFORE` because it has no before: the leaf wore na's 3px
+ * spectrum CAP and no edge at all. So what is pinned here is not "unchanged", it
+ * is JOINED CORRECTLY — which is the failure this family has actually had. #2504
+ * and #2505 each built a mount from issue prose, took the shared list's hairline
+ * defaults, and shipped the faintest possible mark on a surface the design draws
+ * carrying a 3px border at full strength; #2519 was the correction. A tenth
+ * mount landing at 1px/0.6 is that bug a third time, and it would be invisible
+ * to every assertion above, all of which iterate a fixed list.
+ *
+ * The markup end — that the span is mounted at all, and only past the reveal —
+ * is `albescentWrapperKinds.test.tsx`. This is the CSS end.
+ */
+describe("the comment leaf's ring is a full member of the family (#2732)", () => {
+  const RING = ".alb-comment-edge";
+
+  it("is the shared masked ring, with the shared loop-cut ramp", () => {
+    const resolved = resolve(RING);
+    expect(resolved.size, "no rule matches .alb-comment-edge").toBeGreaterThan(0);
+    expect(resolved.get("mask")).toBe(MASK);
+    expect(resolved.get("-webkit-mask-composite")).toBe("xor");
+    expect(resolved.get("background-image")).toBe(RAMP);
+    expect(resolved.get("position")).toBe("absolute");
+    expect(resolved.get("pointer-events")).toBe("none");
+  });
+
+  it("carries the CARRIER's weight, not a hairline's — the #2519 bug", () => {
+    // The cap it replaced was 3px at full strength, so the amount of rainbow on
+    // the leaf is unchanged and only its GEOMETRY moved. The shared list's
+    // defaults are the rail's (1px at 0.6) and would halve it silently. Read off
+    // the task card's row rather than restated, so the four carriers and this
+    // one cannot drift apart without a test saying which.
+    const resolved = resolve(RING);
+    expect(resolved.get("padding"), "the shared list's hairline default leaked").toBe(
+      before(".alb-task-edge").find(([one]) => one === "padding")?.[1],
+    );
+    expect(resolved.get("opacity"), "a carrier is never dimmed").toBe("1");
+  });
+
+  it("takes the sheet's own corner rather than minting a literal", () => {
+    // `inherit` reads the DIRECT parent, and the span is a direct child of the
+    // sheet, whose corner is `SHEET_RADIUS` inline in CommentThread. If that
+    // number ever moves, the ring follows it — which is the whole point of not
+    // writing it twice, so the pairing is asserted rather than commented.
+    expect(resolve(RING).get("border-radius")).toBe("inherit");
+    expect(
+      read("../components/comments/CommentThread.tsx"),
+      "the sheet lost the corner the ring inherits",
+    ).toContain("const SHEET_RADIUS = 10");
+  });
+
+  it("sits above a static body and under the composer's @mention listbox", () => {
+    // The family's number, and load-bearing on this mount: the composer this
+    // same sheet dresses positions its listbox at 30 inside itself.
+    expect(resolve(RING).get("z-index")).toBe("1");
+  });
+
+  it("drifts, on the shared keyframe, behind the reduced-motion gate", () => {
+    expect(resolve(RING).get("animation"), "colour may not defer; motion must").toBeUndefined();
+    const at = MOTION.search(/\.alb-comment-edge(::before)?\s*[,{]/);
+    expect(at, "the leaf's ring has no drift rule at all").toBeGreaterThan(0);
+    const gateAt = MOTION.lastIndexOf("@media", at);
+    expect(
+      MOTION.slice(gateAt, at),
+      "the leaf travels outside the reduced-motion gate",
+    ).toContain("prefers-reduced-motion: no-preference");
+    expect(MOTION, "a tenth keyframe where the shared one does").not.toContain(
+      "@keyframes alb-comment",
+    );
+  });
+});
+
 describe("the travel moved to the deferred sheet, and only the travel (#2407)", () => {
   it("index.css runs none of the five", () => {
     // Motion may arrive late for free; colour and layout may never. What stays
