@@ -271,6 +271,13 @@ describe('useMotionStilled — the answer a JS clock asks for', () => {
     // for itself would animate here; reading `motion` cannot.
     expect(renderStilled('on', true)).toBe('true')
   })
+
+  it('answers stilled outside a provider instead of throwing', () => {
+    // A control must not be handed a private copy of the setting, so `useMotion`
+    // throws. An ornament is the other case: rendered outside the app root it
+    // should hold still, not start a clock nothing will stop.
+    expect(readStilled(renderToStaticMarkup(<StilledProbe />))).toBe('true')
+  })
 })
 
 describe('scheduleMotionTick — stilled means nothing is scheduled', () => {

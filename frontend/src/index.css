@@ -5423,9 +5423,10 @@
    case rather than lying about a control that would do nothing — see
    `hooks/useMotion.tsx` and `pages/settings/sections/AppearanceSection.tsx`.
 
-   KNOWN GAP: two faction vote skins animate from a `setInterval` in JS, which
-   no stylesheet can reach. Both already honour the OS query. See the note in
-   `hooks/useMotion.tsx`.
+   WHAT THIS RULE CANNOT REACH (#2622): motion driven from JS declares no
+   property for it to null. The two faction vote skins that animate from a
+   `setInterval` read `useMotionTick` in `hooks/useMotion.tsx` instead, which
+   is fed by the same setting that paints the attribute this rule selects on.
    ══════════════════════════════════════════════════════════════ */
 [data-motion="off"] *,
 [data-motion="off"] *::before,

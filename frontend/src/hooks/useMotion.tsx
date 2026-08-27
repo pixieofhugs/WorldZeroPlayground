@@ -195,9 +195,15 @@ export function useMotion(): MotionState {
  * `[data-motion="off"]`, and the composed answer — the OS has already had its
  * say inside `effectiveMotion`, so a caller must never pair this with its own
  * `prefers-reduced-motion` read (#2622).
+ *
+ * Unlike `useMotion`, this does NOT throw without a provider; it answers
+ * "stilled". Its callers are ornaments rather than controls, so a wrong answer
+ * is asymmetric: an ornament rendered outside the app root (a test, an isolated
+ * preview) should hold still rather than start a clock nothing will stop. That
+ * is the same default the vote skins' own matchMedia hooks carried before this.
  */
 export function useMotionStilled(): boolean {
-  return useMotion().motion === 'off'
+  return (useContext(MotionContext)?.motion ?? 'off') === 'off'
 }
 
 /**
