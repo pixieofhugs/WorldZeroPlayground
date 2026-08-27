@@ -76,6 +76,29 @@ describe('every onboarding card', () => {
       expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(3)
     })
 
+    it(`${name} lets a long control label wrap onto a centred second line`, () => {
+      const markup = render(card)
+
+      // #2764: `controlBase` set `white-space:nowrap`, so a label wider than the
+      // 560px sheet ran out past the rainbow border rather than breaking — and
+      // on a 375px phone that bites at much shorter labels. The actions row
+      // already wraps; it was the button that could not.
+      //
+      // Asserted on the MARKUP and not on the exported style object, because
+      // that is what also covers the two provider buttons `SignInOptions`
+      // renders from the style it is handed.
+      expect(markup).not.toContain('white-space:nowrap')
+
+      // `justify-content:center` centres the anonymous flex ITEM inside the
+      // control; once the label wraps that item fills the width and the short
+      // second line still rags left. Centring the LINES is `text-align`'s job,
+      // so every control carries it. `inline-flex` is `controlBase`'s alone on
+      // this surface, which is what makes it the selector.
+      for (const style of markup.match(/style="[^"]*"/g) ?? []) {
+        if (style.includes('display:inline-flex')) expect(style).toContain('text-align:center')
+      }
+    })
+
     it(`${name} states no colour of its own`, () => {
       const markup = render(card)
 
