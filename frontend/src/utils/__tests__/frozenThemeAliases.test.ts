@@ -233,16 +233,23 @@ describe("root-only aliases over a flipping referent are inventoried (#1827)", (
 
   /**
    * #1838's restatement is now redundant, and #1661's ruling is why it goes.
-   * The scope fix reaches this plaque like every other alias, so restating the
+   * The scope fix reaches this plate like every other alias, so restating the
    * value under `[data-theme="dark"]` would be a second copy of it on disk.
+   *
+   * IT IS THE CHRONICLE SHEET IT ALIASES NOW, NOT THE PANEL (#2042, owner ruling
+   * 2026-08-18): the panel is the card plaque's own fill, and pointing the stamp's
+   * plate at it left the plaque no ground to stand on. This `it` is also where the
+   * repoint's DARK half is proved — index.css states it once, so "both cascades"
+   * is a claim about resolution rather than about two declarations, and that is
+   * the claim measured here.
    */
-  it("no longer restates the WOW stamp plaque in dark (#1838 superseded)", () => {
+  it("no longer restates the WOW stamp plate in dark (#1838 superseded)", () => {
     expect(themes.dark.has("--faction-wow-stamp-bg")).toBe(false);
     expect(resolveVar("--faction-wow-stamp-bg", "dark", themes)).toBe(
-      resolveVar("--faction-wow-chronicle-panel", "dark", themes),
+      resolveVar("--faction-wow-chronicle-bg", "dark", themes),
     );
     expect(resolveVar("--faction-wow-stamp-bg", "light", themes)).toBe(
-      resolveVar("--faction-wow-chronicle-panel", "light", themes),
+      resolveVar("--faction-wow-chronicle-bg", "light", themes),
     );
   });
 });
