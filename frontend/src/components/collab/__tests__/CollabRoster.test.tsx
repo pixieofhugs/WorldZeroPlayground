@@ -507,3 +507,156 @@ describe('CollabRoster portraits (#2318)', () => {
     expect(html).toContain('avatars/gone.png')
   })
 })
+
+/**
+ * #1952 — the roster header IS the supporting line.
+ *
+ * Four statements of one situation co-rendered on the waiting surface, two of
+ * them this block's: `bannerWaiting` ("Approved. Waiting on the others.") and
+ * the tally. The surface's heading now names who is blocking, so the banner is
+ * gone and the tally keeps the half it was missing — whether one of the people
+ * being waited on is you. It is said once, on the page, here.
+ */
+describe('CollabRoster — the supporting line (#1952)', () => {
+  it('says the tally and whether YOURS is in, on one line', () => {
+    const html = render([member(1, true), member(2, false)])
+    expect(html).toContain(collabCopy(null, 'castStatus', { cast: 1, total: 2 }))
+    expect(html).toContain(collabCopy(null, 'yoursApproved'))
+  })
+
+  it('tells the holdout that theirs is the one outstanding', () => {
+    const html = render([member(1, false), member(2, true)])
+    expect(html).toContain(collabCopy(null, 'yoursOutstanding'))
+  })
+
+  it('says nothing about "yours" to somebody who is not on the crew', () => {
+    // The praxis-detail mount draws this roster to strangers. Reading
+    // `iCast === false` as "yours is outstanding" would tell a passer-by they
+    // owed the crew a part.
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={[member(1, true), member(2, false)]}
+        currentCharacterId={99}
+        factionSlug={null}
+      />,
+    )
+    expect(html).not.toContain(collabCopy(null, 'yoursApproved'))
+    expect(html).not.toContain(collabCopy(null, 'yoursOutstanding'))
+  })
+
+  it('says nothing about "yours" while no proposal is live', () => {
+    // `writing`: nobody has approved, so nothing is outstanding on anybody.
+    const html = render([member(1, false), member(2, false)])
+    expect(html).not.toContain(collabCopy(null, 'yoursOutstanding'))
+    expect(html).not.toContain(collabCopy(null, 'yoursApproved'))
+  })
+
+  it('no longer restates the surface heading as a banner', () => {
+    expect(render([member(1, true), member(2, false)])).not.toContain(
+      'Waiting on the others',
+    )
+  })
+
+  it('keeps the holdout banner, which is the right sentence for that state', () => {
+    expect(render([member(1, false), member(2, true)])).toContain(
+      collabCopy(null, 'bannerHoldout'),
+    )
+  })
+})
+
+/**
+ * #1952 — the bulk press moved off the footer and into this header.
+ *
+ * THE SEAM. Its gate is read off the same list the per-row Nudge is derived
+ * from, in the one component that holds it, rather than re-derived by whoever
+ * mounts the block — which is what let one verb sit on the page at two weights
+ * in two places. At one outstanding it would be a second button for a single
+ * row, so it is not drawn.
+ */
+describe('CollabRoster — the bulk press in the header (#1952)', () => {
+  const CREW = collabCopy(null, 'nudgeCrewAction')
+  const nudge = async () => {}
+  const nudgeCrew = async () => {}
+
+  const withCrew = (
+    members: PraxisMemberOut[],
+    crewNudge: { sent: number; skipped: number } | null = null,
+  ) =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={members}
+        currentCharacterId={1}
+        factionSlug={null}
+        onNudge={nudge}
+        onNudgeCrew={nudgeCrew}
+        crewNudge={crewNudge}
+      />,
+    )
+
+  const spent = (id: number): PraxisMemberOut => ({
+    ...member(id, false),
+    nudged_at: '2026-01-02T00:00:00Z',
+  })
+
+  it('draws one press for two outstanding, and explains it in visible text', () => {
+    const html = withCrew([member(1, true), member(2, false), member(3, false)])
+    expect(html).toContain(CREW)
+    expect(html).toContain(collabCopy(null, 'nudgeCrewDescription'))
+    expect(html).not.toContain(`title="${collabCopy(null, 'nudgeCrewDescription')}"`)
+  })
+
+  it('draws none at ONE outstanding — that is a second button for one row', () => {
+    const html = withCrew([member(1, true), member(2, false)])
+    expect(html).not.toContain(CREW)
+    // The row's own Nudge is still there; it is the bulk press that is not.
+    expect(html).toContain(collabCopy(null, 'nudgeAria', { name: 'M2' }))
+  })
+
+  it('counts who is REACHABLE, not who is outstanding', () => {
+    // Two outstanding, one already inside their server-owned 24h window: a
+    // press would poke exactly one person.
+    expect(withCrew([member(1, true), spent(2), member(3, false)])).not.toContain(CREW)
+  })
+
+  it('draws none for a member who has not approved — the row rule, once', () => {
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={[member(1, false), member(2, false), member(3, true)]}
+        currentCharacterId={1}
+        factionSlug={null}
+        onNudge={nudge}
+        onNudgeCrew={nudgeCrew}
+      />,
+    )
+    expect(html).not.toContain(CREW)
+  })
+
+  it('draws none where no crew press is wired at all', () => {
+    // The praxis-detail mount passes neither handler and draws no author
+    // controls (#646).
+    expect(render([member(1, true), member(2, false), member(3, false)])).not.toContain(
+      CREW,
+    )
+  })
+
+  it('reports what a press actually did, under the roster', () => {
+    const html = withCrew([member(1, true), member(2, false), member(3, false)], {
+      sent: 2,
+      skipped: 1,
+    })
+    expect(html).toContain(
+      collabCopy(null, 'nudgeCrewResultPartial', { sent: 2, total: 3, skipped: 1 }),
+    )
+  })
+
+  it('keeps the report up after its own button has gone', () => {
+    // Silence reads as "all of them", and the cooldown is per person per day,
+    // so a press is routinely part refused.
+    const html = withCrew([member(1, true), spent(2), spent(3)], { sent: 2, skipped: 0 })
+    expect(html).not.toContain(CREW)
+    expect(html).toContain(collabCopy(null, 'nudgeCrewResult', { sent: 2, total: 2 }))
+  })
+})

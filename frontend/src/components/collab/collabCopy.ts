@@ -78,7 +78,21 @@ export type CollabCopyKey =
   | 'pillDeclined'
   | 'you'
   | 'progressAria'
-  | 'bannerWaiting'
+  // The supporting line's second half (#1952): the tally says how many, this
+  // says whether one of them is you. `bannerWaiting` — "Approved. Waiting on
+  // the others." — was retired with it, because the surface's heading now says
+  // that with NAMES and the roster header said it again three lines below.
+  | 'yoursApproved'
+  | 'yoursOutstanding'
+  // The heading ladder (#1952), chosen between by `waitingHeading.ts`. Four
+  // forms, not three: the ruling is "waiting on X when X is greater than 3", so
+  // three outstanding still lists all three names. The joining — the comma, the
+  // "and" — is written HERE rather than assembled in a component, which is what
+  // keeps the Oxford-comma question a copy decision.
+  | 'waitingOnOne'
+  | 'waitingOnTwo'
+  | 'waitingOnThree'
+  | 'waitingOnMany'
   | 'bannerHoldout'
   | 'bannerPublished'
   // The roster's fifth state (#1274): a collab whose crew is still one person.
@@ -125,7 +139,15 @@ export type CollabCopyKey =
   | 'kickAction'
   // The post-cast waiting surface (#1080, ADR-0059). Collab first, then the
   // duel guise of the same surface.
-  | 'awaitingStatusMeta'
+  //
+  // `awaitingStatusMeta` — "Approved by you" — went with #1952: it sat above
+  // the rule restating the heading directly under it, and the heading now names
+  // who is BLOCKING rather than what you already did.
+  //
+  // `awaitingHeading` survives as the fallback the ladder cannot reach: a
+  // collab in the `waiting` gate always has somebody outstanding, so an empty
+  // list is unreachable rather than merely rare, and a heading that can render
+  // as a sentence with a hole in it is worse than one that is never seen.
   | 'awaitingHeading'
   | 'awaitingBody'
   | 'awaitingTaskLabel'

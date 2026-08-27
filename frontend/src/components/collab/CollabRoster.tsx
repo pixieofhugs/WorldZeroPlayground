@@ -155,6 +155,8 @@ export function CollabRoster({
   onKick,
   onNudge,
   onRescindInvite,
+  onNudgeCrew,
+  crewNudge,
 }: {
   /**
    * `PraxisOut.type` — the ONLY thing that decides whether this block belongs on
@@ -240,6 +242,32 @@ export function CollabRoster({
    * the same reason `onKick` is — the read-only detail mount passes none.
    */
   onRescindInvite?: (inviteId: number) => void | Promise<void>
+  /**
+   * Poke everyone still outstanding, in one request (#1418, moved here #1952).
+   *
+   * It used to sit in the waiting surface's FOOTER, which put one verb on the
+   * page at two weights in two places — the per-row buttons above and a quiet
+   * orphan below. It is drawn in this block's header now, beside the section
+   * label, and only where a single press would actually reach TWO OR MORE
+   * people: at one, it is a second button for a row that already has one.
+   *
+   * The gate is derived from the same list `onNudge` gates its rows on, which
+   * is what stops the two readings drifting — the footer had to re-derive it.
+   * Takes no recipient list: the server derives the crew and applies the same
+   * per-person 24h window.
+   */
+  onNudgeCrew?: () => void | Promise<void>
+  /**
+   * What the last crew press actually did, or null before one — the shape of
+   * `CrewNudgeResult`, spelled structurally so this leaf keeps no dependency on
+   * the composer's hooks.
+   *
+   * It deliberately OUTLIVES the button: the cooldown is per person per day and
+   * server-owned, so a press is routinely part refused, and nudging the last
+   * reachable member takes the control away. Silence would read as "all of
+   * them".
+   */
+  crewNudge?: { sent: number; skipped: number } | null
 }) {
   const { t } = useTranslation('forms')
   // The member a kick is waiting on confirmation for (#1082). Declared before
@@ -292,6 +320,70 @@ export function CollabRoster({
   // rule is read from the same place the banner is and cannot drift from it.
   const canNudge = onNudge != null && viewerIsMember && gate.iCast
 
+  /**
+   * How many people ONE press would actually reach (#1418, moved here #1952).
+   *
+   * Three conditions, none of them new, and all three are the row's own: the
+   * backend's authorisation above, the row's `!done`, and `nudged_at` — the
+   * server-owned 24h window the row reads its spent state from. Somebody
+   * already inside it would come back refused, so they are not somebody a press
+   * reaches, which is why this counts REACHABLE rather than outstanding.
+   *
+   * Two is the floor by owner ruling: at one, the bulk press is a second
+   * control for a single row that already carries its own.
+   */
+  const reachableCrew =
+    canNudge && onNudgeCrew != null
+      ? members.filter(
+          (m) =>
+            !m.has_submitted &&
+            m.character_id !== currentCharacterId &&
+            m.nudged_at == null,
+        ).length
+      : 0
+  const showCrewNudge = reachableCrew >= 2
+  /**
+   * Which explanation the block owes for the nudge verb — the crew's when the
+   * bulk press is drawn, the row's when only rows are. Rows count everyone
+   * outstanding, spent window or not, because a row draws its button either way
+   * (disabled, reading `Nudged`).
+   */
+  const nudgeNote: CollabCopyKey | null = showCrewNudge
+    ? 'nudgeCrewDescription'
+    : canNudge &&
+        members.some(
+          (m) => !m.has_submitted && m.character_id !== currentCharacterId,
+        )
+      ? 'nudgeDescription'
+      : null
+
+  /**
+   * The supporting line's second half (#1952). The tally says how many have
+   * approved; this says whether one of the people still being waited on is you.
+   *
+   * Gated on membership because the praxis-detail mount draws this block to
+   * strangers, and on a live proposal because in `writing` there is nothing to
+   * be outstanding ON — `has_submitted` is an approval of a live proposal since
+   * ADR-0079, not "this member filed their part".
+   */
+  const proposalLive = gate.state === 'waiting' || gate.state === 'holdout'
+  const yours =
+    viewerIsMember && proposalLive
+      ? collabCopy(factionSlug, gate.iCast ? 'yoursApproved' : 'yoursOutstanding')
+      : null
+
+  /** The nudge control's dress — one weight for the verb, wherever it is drawn. */
+  const nudgeStyle = (spent: boolean): CSSProperties => ({
+    padding: 'var(--space-xs) var(--space-sm)',
+    borderRadius: radius,
+    fontFamily: face,
+    border: `1px solid ${spent ? 'var(--color-border)' : accentInk}`,
+    background: 'transparent',
+    color: spent ? quiet : accentInk,
+    cursor: spent ? 'default' : 'pointer',
+    whiteSpace: 'nowrap',
+  })
+
   // A kick resets everyone's cast (ADR-0013), so it confirms before firing.
   // The dialog is mounted from HERE rather than from the EditPraxis dispatcher
   // like the composer's other six confirms: this component is also mounted by
@@ -309,6 +401,11 @@ export function CollabRoster({
   // roster. They are rows now, so the line printed the same name three lines
   // above itself; it went with the chips (#1416). What is left is the one fact
   // rows cannot state: nobody else has joined yet.
+  //
+  // `waiting` lost its banner with #1952. "Approved. Waiting on the others."
+  // was the third of four statements of one situation, and the surface above
+  // this block now leads with a heading that names the others; the half of it
+  // that was not duplication — that yours is in — is on the header line.
   const banner =
     gate.state === 'awaiting'
       ? {
@@ -316,8 +413,6 @@ export function CollabRoster({
           tone: quiet,
           warn: false,
         }
-      : gate.state === 'waiting'
-      ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accentInk, warn: false }
       : gate.state === 'holdout'
         ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: notice, warn: true }
         : gate.state === 'published'
@@ -348,18 +443,45 @@ export function CollabRoster({
           N counts MEMBERS, not rows: an invited or declined row is somebody who
           has been asked, not somebody who is on it, and the tally beside it
           reads out of the same denominator. */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="label-heading" style={{ fontFamily: face }}>
-          {t('editPraxis.composer.collaboratorsLabel', { count: gate.memberCount })}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <span className="label-heading" style={{ fontFamily: face }}>
+            {t('editPraxis.composer.collaboratorsLabel', { count: gate.memberCount })}
+          </span>
+          {/* The bulk press, beside the label it belongs to (#1952). See
+              `reachableCrew` for why two is the floor. */}
+          {showCrewNudge && (
+            <button
+              type="button"
+              onClick={() => void onNudgeCrew?.()}
+              className="label-caption"
+              style={nudgeStyle(false)}
+            >
+              {collabCopy(factionSlug, 'nudgeCrewAction')}
+            </button>
+          )}
         </span>
-        {/* `awaiting` has nothing true to say here — a tally of one over one is
+        {/* THE SUPPORTING LINE (#1952): the tally, and whether yours is in.
+            `awaiting` has nothing true to say here — a tally of one over one is
             not a gate anybody is waiting on (#1274). */}
         {!awaiting && (
           <span className="label-caption" style={{ fontFamily: face }}>
             {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
+            {yours != null && <> · {yours}</>}
           </span>
         )}
       </div>
+
+      {/* The nudge verb explains itself in visible text (#1952), once for the
+          block rather than in a `title` on every row that a touch user never
+          sees. Which sentence depends on which control is on screen: the bulk
+          press has its own, and the rows fall back to theirs — both say the
+          same cooldown, which is why only one of them is ever drawn. */}
+      {nudgeNote && (
+        <p className="label-caption" style={{ color: quiet, fontFamily: face }}>
+          {collabCopy(factionSlug, nudgeNote)}
+        </p>
+      )}
 
       {/* Progress bar. The design draws none, and #1416 asked for that to be a
           decision rather than an omission: it stays. It is the only glanceable
@@ -497,25 +619,13 @@ export function CollabRoster({
                   type="button"
                   disabled={row.member.nudged_at != null}
                   onClick={() => onNudge?.(row.member!.character_id)}
-                  title={collabCopy(factionSlug, 'nudgeDescription')}
                   aria-label={collabCopy(
                     factionSlug,
                     row.member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
                     { name: row.name },
                   )}
                   className="label-caption"
-                  style={{
-                    padding: 'var(--space-xs) var(--space-sm)',
-                    borderRadius: radius,
-                    fontFamily: face,
-                    border: `1px solid ${
-                      row.member.nudged_at != null ? 'var(--color-border)' : accentInk
-                    }`,
-                    background: 'transparent',
-                    color: row.member.nudged_at != null ? quiet : accentInk,
-                    cursor: row.member.nudged_at != null ? 'default' : 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
+                  style={nudgeStyle(row.member.nudged_at != null)}
                 >
                   {collabCopy(
                     factionSlug,
@@ -583,6 +693,29 @@ export function CollabRoster({
           )
         })}
       </div>
+
+      {/* What the last crew press did, under the roster it acted on (#1952).
+          Gated separately from the button and deliberately: nudging the last
+          reachable member takes the control away, and a press that vanishes its
+          own button without saying what it did reads as nothing having
+          happened. */}
+      {crewNudge != null && (
+        <span
+          role="status"
+          className="label-caption"
+          style={{ color: quiet, fontFamily: face }}
+        >
+          {collabCopy(
+            factionSlug,
+            crewNudge.skipped > 0 ? 'nudgeCrewResultPartial' : 'nudgeCrewResult',
+            {
+              sent: crewNudge.sent,
+              total: crewNudge.sent + crewNudge.skipped,
+              skipped: crewNudge.skipped,
+            },
+          )}
+        </span>
+      )}
 
       {/* Per-state banner */}
       {banner && (

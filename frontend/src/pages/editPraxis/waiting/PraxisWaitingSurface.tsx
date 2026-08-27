@@ -110,8 +110,8 @@ import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
-import { deriveCollabGate } from "../../../components/collab/collabGate";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
+import { waitingOnHeading } from "../../../components/collab/waitingHeading";
 import { duelSides } from "../../../components/duel/shared";
 import { useGameConfig } from "../../../hooks/useGameConfig";
 import { factionCssVar } from "../../../utils/factions";
@@ -383,7 +383,6 @@ function DuelSidePanel({
           type="button"
           disabled={nudged}
           onClick={() => void onNudge()}
-          title={collabCopy(factionSlug, "nudgeDescription")}
           aria-label={collabCopy(
             factionSlug,
             nudged ? "nudgeSentAria" : "duelNudgeAria",
@@ -403,6 +402,13 @@ function DuelSidePanel({
         >
           {collabCopy(factionSlug, nudged ? "nudgeSentAction" : "nudgeAction")}
         </button>
+      )}
+      {/* What the poke costs the rival, in visible text (#1952). It was a
+          `title`, and a duel has no roster to say it once for the page. */}
+      {onNudge && (
+        <span className="label-caption" style={dress.quietStyle}>
+          {collabCopy(factionSlug, "nudgeDescription")}
+        </span>
       )}
       {mine ? (
         <>
@@ -434,6 +440,52 @@ function DuelSidePanel({
           )}
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * One footer act: the control, and underneath it what pressing it costs (#1952).
+ *
+ * Three of the four explanations on this page were `title` attributes, which a
+ * touch user never sees and a keyboard user reaches only by hovering — so the
+ * one control that already stated its cost in body text (`awaitingEdit`, which
+ * ADR-0012 makes non-negotiable) read as the only one with consequences. This
+ * is that one rule applied to all of them, which is why it is a block rather
+ * than three hand-built columns.
+ *
+ * `maxWidth` is the measure the edit control already used: a description that
+ * runs the width of the sheet stops reading as a caption on its button.
+ */
+function FooterAct({
+  children,
+  description,
+  align = "start",
+  quietStyle,
+}: {
+  children: ReactNode;
+  description: string;
+  /** `end` mirrors it for the affirmative side of the footer (#646). */
+  align?: "start" | "end";
+  quietStyle?: CSSProperties;
+}) {
+  const end = align === "end";
+  return (
+    <div
+      className="flex flex-col gap-1"
+      style={{ alignItems: end ? "flex-end" : "flex-start" }}
+    >
+      {children}
+      <span
+        className="label-caption"
+        style={{
+          textAlign: end ? "right" : "left",
+          maxWidth: 420,
+          ...quietStyle,
+        }}
+      >
+        {description}
+      </span>
     </div>
   );
 }
@@ -499,42 +551,34 @@ export default function PraxisWaitingSurface({
   /** The skin's divider, one instance per place it is drawn. */
   const rule = (key: string): ReactNode => dress.rule?.(key) ?? <ComposerRule />;
 
+  // The stamp, and nothing else. `awaitingStatusMeta` — "Approved by you" —
+  // stood here restating the heading directly below it, and #1952 retired it:
+  // the heading names who is BLOCKING now, which is the question this page
+  // exists to answer and the one no line on it used to.
   const stamped = relativeTime(praxis.submitted_at ?? praxis.updated_at);
-  const statusMeta: ReactNode = completed ? (
-    stamped
-  ) : (
-    <>
-      {collabCopy(slug, "awaitingStatusMeta")}
-      {" · "}
-      {stamped}
-    </>
-  );
 
   /**
-   * How many of the crew a single press would actually reach (#1418).
+   * The one heading (#1952). It names whoever still owes an approval, in four
+   * written forms — and three outstanding still lists all three names, the
+   * count form starting at four. `waitingOnHeading` owns that boundary.
    *
-   * Three conditions, none of them new. `gate.iCast` is the backend's own
-   * authorisation — a member who has filed may hurry a member who has not — and
-   * it is read from the same derivation `CollabRoster` gates its per-row button
-   * on, so the two cannot drift. `nudged_at` is the server-owned 24h window on
-   * the wire, the same field the row reads its spent state from; a member
-   * already inside it would come back refused.
-   *
-   * Zero means the control is not drawn at all rather than drawn disabled. The
-   * report below it is gated separately and deliberately: nudging the last
-   * nudgeable member takes this to zero, and a press that vanishes its own
-   * button without saying what it did reads as nothing having happened.
+   * `awaitingHeading` remains the fallback for an empty list, which the gate
+   * makes unreachable: a collab only takes this reading while somebody is
+   * outstanding.
    */
-  const gate = deriveCollabGate(praxis.members, state.currentCharacterId);
-  const nudgeableCrew =
-    isCollab && !completed && gate.iCast
-      ? praxis.members.filter(
-          (member) =>
-            !member.has_submitted &&
-            member.character_id !== state.currentCharacterId &&
-            member.nudged_at == null,
-        ).length
-      : 0;
+  const outstanding = praxis.members
+    .filter((member) => !member.has_submitted)
+    .map((member) => member.character_display_name);
+  const crewHeading = waitingOnHeading(slug, outstanding);
+  const heading = completed
+    ? collabCopy(slug, isDuel ? "duelCompletedHeading" : "completedHeading")
+    : isDuel
+      ? collabCopy(slug, "duelAwaitingHeading")
+      : (crewHeading ?? collabCopy(slug, "awaitingHeading"));
+
+  // The crew press and its receipt are the ROSTER's now (#1952) — one verb, at
+  // one weight, in the block whose rows already carry it. What is left here is
+  // deciding whether they apply at all.
   const crewNudge = isCollab && !completed ? state.crewNudge : null;
 
   const primaryClass = dress.primaryStyle ? undefined : "btn-primary";
@@ -577,7 +621,7 @@ export default function PraxisWaitingSurface({
             and that is the whole confirmation beat. */}
         <ComposerStatusRow
           status={composerStageWord(state)}
-          meta={statusMeta}
+          meta={stamped}
           mark={dress.mark}
           statusStyle={dress.statusStyle}
           metaStyle={dress.metaStyle}
@@ -614,16 +658,7 @@ export default function PraxisWaitingSurface({
           }}
         >
           <h2 className="content-title" style={{ color: accent, ...dress.headingStyle }}>
-            {collabCopy(
-              slug,
-              completed
-                ? isDuel
-                  ? "duelCompletedHeading"
-                  : "completedHeading"
-                : isDuel
-                  ? "duelAwaitingHeading"
-                  : "awaitingHeading",
-            )}
+            {heading}
           </h2>
           {completed ? (
             /* Nothing is outstanding, so neither clock has anything to say — not
@@ -707,6 +742,12 @@ export default function PraxisWaitingSurface({
               taskPointValue={praxis.task_point_value}
               onKick={completed ? undefined : state.kickMember}
               onNudge={completed ? undefined : state.nudge}
+              // The bulk press and its receipt, in the block they act on
+              // (#1952). The roster decides whether one press would reach
+              // enough people to be worth a second control; this only says
+              // whether the act applies to this reading at all.
+              onNudgeCrew={completed ? undefined : state.nudgeCrew}
+              crewNudge={crewNudge}
             />
           )}
         </ComposerSection>
@@ -793,82 +834,71 @@ export default function PraxisWaitingSurface({
             }
           />
         ) : (
+          /* Three acts, three weights, one order (#1952). The footer dropped
+             from four controls to three when the crew press moved into the
+             roster header it acts on, and all three now explain themselves in
+             visible text — `leaveDescription` and `deleteDescription` were
+             `title` attributes, which a touch user never sees. No copy was
+             retired to do it: three of the four were already written and
+             already good.
+
+             `ComposerFooter`'s `start` / `end` contract is untouched. Only what
+             is passed changes, which is what keeps its other fifteen callers —
+             the eight editPraxis archetypes, `shared.tsx`, and the seven
+             character-creation pages — exactly where they are. */
           <ComposerFooter
+            style={{ alignItems: "flex-start" }}
             start={
-              <>
-                {isCollab && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void state.leaveCollab()}
-                    title={collabCopy(slug, "leaveDescription")}
-                    className="hover:underline"
-                    style={quietButton}
+              isCollab ? (
+                <div className="flex flex-wrap items-start gap-4">
+                  <FooterAct
+                    description={collabCopy(slug, "leaveDescription")}
+                    quietStyle={dress.quietStyle}
                   >
-                    {t("editPraxis.leaveAction")}
-                  </button>
-                )}
-                {isCollab && isCreator && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void state.cancel()}
-                    title={collabCopy(slug, "deleteDescription")}
-                    className="hover:underline"
-                    style={{ ...quietButton, color: "var(--color-danger)" }}
-                  >
-                    {collabCopy(slug, "deleteAction")}
-                  </button>
-                )}
-              </>
-            }
-            end={
-              <div className="flex flex-wrap items-end justify-end gap-4">
-                {/* The bulk press and its receipt (#1418), beside the way back
-                    into your own text. One request pokes everyone still owing a
-                    part; the cooldown is per person per day and lives on the
-                    server, so a press is routinely PART refused and the line
-                    under it says which — silence would read as "all of them". */}
-                {(nudgeableCrew > 0 || crewNudge != null) && (
-                  <div className="flex flex-col items-end gap-1">
-                    {nudgeableCrew > 0 && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void state.leaveCollab()}
+                      className="hover:underline"
+                      style={quietButton}
+                    >
+                      {t("editPraxis.leaveAction")}
+                    </button>
+                  </FooterAct>
+                  {isCreator && (
+                    <FooterAct
+                      description={collabCopy(slug, "deleteDescription")}
+                      quietStyle={dress.quietStyle}
+                    >
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() => void state.nudgeCrew()}
-                        title={collabCopy(slug, "nudgeCrewDescription")}
+                        onClick={() => void state.cancel()}
                         className="hover:underline"
-                        style={quietButton}
+                        style={{ ...quietButton, color: "var(--color-danger)" }}
                       >
-                        {collabCopy(slug, "nudgeCrewAction")}
+                        {collabCopy(slug, "deleteAction")}
                       </button>
-                    )}
-                    {crewNudge != null && (
-                      <span
-                        role="status"
-                        className="label-caption"
-                        style={{
-                          textAlign: "right",
-                          maxWidth: 420,
-                          ...dress.quietStyle,
-                        }}
-                      >
-                        {collabCopy(
-                          slug,
-                          crewNudge.skipped > 0
-                            ? "nudgeCrewResultPartial"
-                            : "nudgeCrewResult",
-                          {
-                            sent: crewNudge.sent,
-                            total: crewNudge.sent + crewNudge.skipped,
-                            skipped: crewNudge.skipped,
-                          },
-                        )}
-                      </span>
-                    )}
-                  </div>
+                    </FooterAct>
+                  )}
+                </div>
+              ) : undefined
+            }
+            end={
+              /* The cost, before the click, not after it. On a collab the edit
+                 this re-entry exists for cancels the pending-publish window and
+                 clears every member's cast
+                 (`cancel_pending_publish_on_edit`, ADR-0012) — the countdown
+                 drawn a few blocks up. It was already mandated visible; the
+                 other two joined it rather than it joining them. */
+              <FooterAct
+                align="end"
+                description={collabCopy(
+                  slug,
+                  isDuel ? "duelPullBackDescription" : "awaitingEditDescription",
                 )}
-                <div className="flex flex-col items-end gap-1">
+                quietStyle={dress.quietStyle}
+              >
                 <button
                   type="button"
                   disabled={busy}
@@ -886,22 +916,7 @@ export default function PraxisWaitingSurface({
                     isDuel ? "duelPullBackAction" : "awaitingEditAction",
                   )}
                 </button>
-                {/* The cost, before the click, not after it. On a collab the
-                    edit this re-entry exists for cancels the pending-publish
-                    window and clears every member's cast
-                    (`cancel_pending_publish_on_edit`, ADR-0012) — the countdown
-                    drawn a few blocks up. */}
-                <span
-                  className="label-caption"
-                  style={{ textAlign: "right", maxWidth: 420, ...dress.quietStyle }}
-                >
-                  {collabCopy(
-                    slug,
-                    isDuel ? "duelPullBackDescription" : "awaitingEditDescription",
-                  )}
-                </span>
-                </div>
-              </div>
+              </FooterAct>
             }
           />
         )}
