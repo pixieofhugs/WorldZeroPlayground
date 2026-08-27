@@ -23,8 +23,8 @@ import '../../../i18n'
 import i18n from '../../../i18n'
 import type { CurrentUser } from '../../../api/auth'
 import type { PraxisCardOut } from '../../../api/praxis'
-import FactionSigil from '../../sigil/FactionSigil'
-import { factionName } from '../../../utils/factions'
+import { markFills, occurrences, sigilPath } from '../../../utils/__tests__/sigilInk'
+import { factionCssVar, factionName } from '../../../utils/factions'
 
 const panelsMock = vi.fn()
 vi.mock('../../../hooks/useSidebarPanels', () => ({
@@ -100,18 +100,6 @@ function renderRail(taskFactionSlug: string): string {
   )
 }
 
-/** The mark's own geometry, taken from `FactionSigil` rather than transcribed. */
-function sigilPath(slug: string): string {
-  const html = renderToStaticMarkup(<FactionSigil slug={slug} />)
-  const match = html.match(/ d="([^"]+)"/)
-  if (!match) throw new Error(`the ${slug} sigil draws no path to probe`)
-  return match[1]
-}
-
-function occurrences(haystack: string, needle: string): number {
-  return haystack.split(needle).length - 1
-}
-
 beforeEach(() => {
   panelsMock.mockReset()
 })
@@ -135,6 +123,26 @@ describe('the in-progress row in the rail', () => {
    */
   it('names the faction it is drawing', () => {
     expect(renderRail('coven')).toContain(`aria-label="${factionName('coven')}"`)
+  })
+
+  /**
+   * #2723 — AND IT DRAWS IT IN THAT FACTION'S HUE. The mount passed no `color`,
+   * so each mark took its own component default: the Ephemerists kite fell
+   * through to `currentColor`, which on this neutral rail is the page's own text
+   * ink (white after dark), and S.N.I.D.E.'s `--faction-snide-acid` is declared
+   * once and so has no dark half to fall to. `factionCssVar` carries both.
+   */
+  it("paints the mark in the task faction's own hue", () => {
+    expect(markFills(renderRail('ephemerists'), 'ephemerists')).toContain(
+      factionCssVar('ephemerists'),
+    )
+    // Two factions, so this is an assertion about `task_faction_slug` rather
+    // than about a hue someone pinned to the row.
+    expect(markFills(renderRail('snide'), 'snide')).toContain(factionCssVar('snide'))
+  })
+
+  it('leaves no mark drawing in the page ink', () => {
+    expect(markFills(renderRail('ephemerists'), 'ephemerists')).not.toContain('currentColor')
   })
 
   /** Both facts survive: the mode pill is not what the sigil replaced. */
