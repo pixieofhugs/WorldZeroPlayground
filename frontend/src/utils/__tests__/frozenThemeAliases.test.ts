@@ -90,7 +90,9 @@ const CSS = readFileSync(
  * restated it under `[data-theme="dark"]` as the one instance that demonstrably
  * rendered in a nested wrapper, which took it out of the sweep by making it not
  * root-only. #1839 fixes the mechanism instead, so the restatement is deleted
- * and the plaque rejoins the list it was always a member of.
+ * and the plate rejoins the list it was always a member of. (It aliases the
+ * chronicle SHEET rather than the panel since #2042 — a different referent, the
+ * same shape, and the reason the alias has to stay reachable from a wrapper.)
  */
 const KNOWN_ROOT_ONLY_ALIASES = [
   // The ink half of the disabled-control pair (#2486). A "composed neutral" in
