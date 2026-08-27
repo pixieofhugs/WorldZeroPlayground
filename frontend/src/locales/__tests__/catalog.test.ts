@@ -1057,7 +1057,6 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     'factions.json:descriptions.ephemerists',
     'factions.json:descriptions.everymen',
     'factions.json:descriptions.singularity',
-    'feed.json:factionHero.wow.motto',
   ].sort()
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {

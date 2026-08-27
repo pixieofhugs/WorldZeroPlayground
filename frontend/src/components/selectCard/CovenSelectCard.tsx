@@ -133,12 +133,14 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
     }}>
       {/* The masthead, in the band's anatomy rather than the band itself: the
           faction's mark hard left, the coven's name hand-lettered beside it. */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-lg) var(--space-xl) 0" }}>
+      <div style={{ ...CAPTION, padding: "var(--space-lg) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.coven.banner")}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-xl) 0" }}>
         <CovenSigil size={34} color={DEEP} />
         <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK, whiteSpace: "nowrap" }}>
           {i18n.t("feed:factionSelect.coven.name")}
         </div>
       </div>
+      <div style={{ padding: "var(--space-xs) var(--space-xl) 0", fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", color: SOFT }}>{i18n.t("feed:factionSelect.coven.tagline")}</div>
       <div style={{ flex: 1, padding: "var(--space-md) var(--space-xl) 0", position: "relative" }}>
         <p className="content-text" style={{ margin: 0, fontFamily: READING, fontStyle: "italic", lineHeight: 1.5, color: SOFT }}>
           {i18n.t("feed:factionSelect.coven.blurb")}

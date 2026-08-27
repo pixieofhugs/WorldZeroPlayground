@@ -1,5 +1,4 @@
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SnideSigil } from "../sigil/SnideSigil";
 import { WALL } from "../factionMarks/snideAtoms";
@@ -102,6 +101,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
           flat ink; {@link WALL} already washes acid off its top-left corner and
           pink off its bottom-right, so the blob was that ornament drawn twice —
           once tokenised and measured, once not. The tokenised one survives. */}
+      <div style={{ fontFamily: IMPACT, fontSize: "var(--text-content)", letterSpacing: "0.06em", textTransform: "uppercase", color: INK, padding: "var(--space-md) var(--space-xl) 0" }}>{i18n.t("feed:factionSelect.snide.banner")}</div>
       <div style={{
         display: "flex", alignItems: "center", gap: "var(--space-md)",
         background: BAR, color: "var(--faction-snide-note-bar-ink)",
@@ -110,8 +110,9 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
         <SnideSigil size={40} color={ACID} />
         <div>
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
-          <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{factionName("snide")}</div>
+          <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.snide.name")}</div>
           <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
+          <div style={{ fontSize: "var(--text-base)", fontStyle: "italic", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.snide.tagline")}</div>
         </div>
       </div>
 

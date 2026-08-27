@@ -145,12 +145,6 @@ export default function DefaultSelectCard({
               whatever the manifest names for one that has its own. A mark is
               never drawn inline and never part of a wrapper (ADR-0083 §1). */}
           <FactionSigil slug={slug} size={40} />
-          <div
-            className="label-heading"
-            style={{ letterSpacing: "0.2em", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}
-          >
-            {say("eyebrow")}
-          </div>
         </div>
 
         <div
@@ -163,6 +157,9 @@ export default function DefaultSelectCard({
           }}
         >
           {say("name")}
+        </div>
+        <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}>
+          {say("tagline")}
         </div>
 
         {/* Rainbow 3 of 3: the single rule on the sheet. Trimmed to the same

@@ -215,11 +215,10 @@ describe("Albescent's name is masked, and two surfaces redact instead (#2409)", 
 
   it("redacts every Albescent-scoped key, not just the name", () => {
     setAlbescentRevealed(false);
-    // The generalisation #2409 asks for. The select tile draws seven slots off
+    // The generalisation #2409 asks for. The select tile draws its slots off
     // `feed:factionSelect.albescent.*`; one gate has to cover all of them or
     // each is a place a future slot can be forgotten.
     for (const key of [
-      "feed:factionSelect.albescent.eyebrow",
       "feed:factionSelect.albescent.name",
       "feed:factionSelect.albescent.blurb",
       "feed:factionSelect.albescent.status.locked",

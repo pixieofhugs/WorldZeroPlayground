@@ -121,11 +121,12 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     // #2504 took `feed:factionHero.albescent.motto` because the key was already
     // sitting unused in the catalog, and flagged it as a judgement call in its
     // own PR. The board prints the faction's thesis there instead, so the value
-    // was reversed — one catalog string, no code. Asserted on the LITERAL and
-    // not on the key, because reading the key back is what made the wrong line
-    // look right.
+    // was reversed — one catalog string, no code. The owner's copy pass then
+    // tied every motto to its faction's `factionSelect` tagline, which is where
+    // this line now comes from. Asserted on the LITERAL and not on the key,
+    // because reading the key back is what made the wrong line look right.
     expect(decode(page(FALL_THROUGH))).toContain(
-      "No colours of its own. You notice it by the light.",
+      "We play for the love of the game",
     );
   });
 
