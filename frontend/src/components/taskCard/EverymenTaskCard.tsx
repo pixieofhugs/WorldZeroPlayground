@@ -27,8 +27,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * POINTS hero → title → brief → in-progress → CTA.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin: ADR-0056 was accepted and the
- * `mobileTaskCard` surface retired, so this file serves both form factors.
+ * different card. There is no mobile twin — this file serves both form factors.
  *
  * v3 ornament (#2034): the seal is now the SHARED {@link PointsRoundel} rather
  * than a second circle drawn here, the poster rays converge on the sheet's

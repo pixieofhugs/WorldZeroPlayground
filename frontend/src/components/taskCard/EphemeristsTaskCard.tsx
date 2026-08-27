@@ -52,8 +52,7 @@ import {
  * left are the `--faction-ephemerists-card-*` aliases in `index.css`.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin: ADR-0056 was accepted and the
- * `mobileTaskCard` surface retired, so this file serves both form factors.
+ * different card. There is no mobile twin — this file serves both form factors.
  *
  * All colour via `--faction-ephemerists-plate-*`; light/dark flips through the
  * `[data-theme="dark"]` cascade, never a ternary. `-brass` is a rule colour and

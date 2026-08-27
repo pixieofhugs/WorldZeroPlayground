@@ -33,11 +33,9 @@ import { BalloonBunch, Bunting, Zig } from "../factionMarks/wowOrnament";
  * pink spell slip.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set.
- * There is no mobile twin: ADR-0056 was accepted and the `mobileTaskCard`
- * surface retired, so this file serves both form factors. The balloons used to
- * drop on mobile because the corner they were tucked into is the corner a 340px
- * card does not have; #2032 moves them into the sign-up row, which both form
- * factors do have, so the size set no longer forks over them.
+ * There is no mobile twin — this file serves both form factors. The balloons sit
+ * in the sign-up row (#2032), which both form factors have, rather than in a
+ * corner a 340px card does not have, so the size set does not fork over them.
  *
  * THE ORNAMENT PASS (#2032, task cards v3 phase 2). Four changes, all of them
  * dress on anatomy #2029 and #2030 already fixed:

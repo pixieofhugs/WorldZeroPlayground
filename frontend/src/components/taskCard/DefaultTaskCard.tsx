@@ -27,8 +27,7 @@ import DefaultPointsRing from "../factionMarks/DefaultPointsRing";
  * Prime everything else.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not
- * a different card. There is no mobile twin: ADR-0056 was accepted and the
- * `mobileTaskCard` surface retired, so this file serves both form factors.
+ * a different card. There is no mobile twin — this file serves both form factors.
  *
  * All colour through the ROLE MAP (#2672) — `--na-task-card-paper` / `-ink` /
  * `-quiet` / `-accent`, spread on the `<article>` and each read with today's

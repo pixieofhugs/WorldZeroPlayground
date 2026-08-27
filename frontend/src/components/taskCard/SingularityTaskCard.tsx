@@ -40,8 +40,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * ternary here; both halves live in index.css.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. There is no mobile twin: ADR-0056 was accepted and the
- * `mobileTaskCard` surface retired, so this file serves both form factors.
+ * different card. There is no mobile twin — this file serves both form factors.
  *
  * Motion is entirely index.css's (#911 retired component-injected `<style>`):
  * the design names `sgBlink`/`sgSweep`/`sgPulse` and defines none of them, and
