@@ -7,8 +7,8 @@ import { WowSigil } from "../sigil/WowSigil";
  * WOW pledge card — the Court's recruiting placard (kit §13, #900).
  *
  * A gold-framed cream card under a checker rail of gold and plum: the crest, the
- * name in MedievalSharp, the Pig-Latin tagline in Lora italic, three tag chips
- * on the decree's parchment plate, and the plum call.
+ * name in MedievalSharp, the Pig-Latin tagline in Lora italic, and the plum
+ * call. The three tag chips retired with their copy.
  *
  * One file per faction, mirroring `components/taskCard/` (#2328, a child of
  * #2321, following the pattern #2322 set). `FactionSelectCard` keeps only the
@@ -55,14 +55,8 @@ import { WowSigil } from "../sigil/WowSigil";
  *            decree declares (and which the `chosen` gold ring still composes in
  *            front of — `var()` substitutes textually, so a token holding a
  *            shadow LIST is a legal tail of a longer one).
- *   chips    `--faction-wow-chip-bg` / `-chip-border` -> the crowned points
- *            plaque: `--faction-wow-chronicle-panel` inside
- *            `--faction-wow-chronicle-gold`. The ink does not move; it was
- *            already `-card-accent`, which is what the plaque sets its unit in,
- *            so the chip becomes a pairing the card had already measured
- *            ("wow decree plaque, unit"). The two chip names were minted in the
- *            page kit's block FOR this tile and it was their entire readership,
- *            so they go — deletion as a consequence, not as the rule.
+ *   chips    RETIRED with the tag copy; the plaque tokens keep their own
+ *            readers.
  *   CTA      a three-stop gilt lozenge (`--faction-wow-avatar-pill-from` /
  *            `-gilt-mid` / `-avatar-pill-to`, ink `-avatar-pill-text`, ring
  *            `-gilt-border`) -> the decree's plum call:
@@ -104,7 +98,7 @@ import { WowSigil } from "../sigil/WowSigil";
  *     read 1.55:1 on the cream, the gold reads 2.24:1.
  *
  * MEASURED IN BOTH CASCADES, at the site each ink occupies. Name 14.02/14.72:1,
- * tagline 5.79/7.94:1, status 4.76/6.85:1, chip 5.16/6.89:1, CTA and the CHOSEN
+ * tagline 5.79/7.94:1, status 4.76/6.85:1, CTA and the CHOSEN
  * sash 5.16:1 theme-invariant. Every one of those was ALREADY PINNED in
  * `utils/__tests__/factionContrast.test.ts` — three by the generic `wow card *`
  * rows, two by the decree's own "wow decree CTA / modifier chip" and "wow decree
@@ -118,7 +112,6 @@ import { WowSigil } from "../sigil/WowSigil";
 export default function WowSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
   const chosen = state === "member";
-  const tags = i18n.t("feed:factionSelect.wow.tags", { returnObjects: true }) as string[];
   return (
     <div style={{
       // THE ROLE MAP (#2674), declared on the placard's own root. The prefix
@@ -163,15 +156,6 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent)", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
           {i18n.t("feed:factionSelect.wow.tagline")}
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "var(--space-xs)" }}>
-          {tags.map((tag) => (
-            <span key={tag} style={{
-              fontSize: "var(--text-md)", color: "var(--wow-select-card-accent)",
-              background: "var(--faction-wow-chronicle-panel)", border: "1px solid var(--faction-wow-chronicle-gold)",
-              borderRadius: 20, padding: "var(--space-xs) var(--space-md)",
-            }}>{tag}</span>
-          ))}
-        </div>
       </div>
       <div style={{ padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
         <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>

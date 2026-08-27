@@ -290,14 +290,9 @@
       "cta": "See our Circle ✦"
     },
     "wow": {
-      "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway.",
+      "tagline": "Imsy-whay or-fay every-oneway.",
       "name": "Warriors of Whimsy",
       "chosen": "CHOSEN",
-      "tags": [
-        "Playful",
-        "Ceremonial",
-        "Absurdly Sincere"
-      ],
       "status": {
         "locked": "MORE JOUSTING REQUIRED",
         "eligible": "TO ADVENTURE",
@@ -320,9 +315,6 @@
       "cta": "Jump In"
     },
     "ephemerists": {
-      "eyebrow": "Exhibit C · no single here",
-      "coords": "x 41.7°",
-      "coordsPolar": "r ∞ · θ 12",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
       "status": {
         "locked": "Keep Wandering",
@@ -359,7 +351,6 @@
       "cta": "FALL IN"
     },
     "albescent": {
-      "eyebrow": "World Zero",
       "name": "Albescent",
       "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
       "status": {
@@ -372,7 +363,6 @@
       "cta": "Request an audience →"
     },
     "na": {
-      "eyebrow": "World Zero · no colours yet",
       "name": "Unaffiliated",
       "blurb": "Every path is still open. Unaffiliated players take any task on the board and answer to no banner — pick a side when one of them earns it.",
       "status": {
