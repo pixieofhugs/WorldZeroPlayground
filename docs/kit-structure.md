@@ -14,14 +14,13 @@ vote widget, a comment voice, a whole page. The list is
 construction — a `satisfies` clause makes the array and the `FactionManifest`
 interface check each other, so a surface cannot exist without appearing in both.
 Each surface has exactly one dispatcher, which calls `surfaceMap('<key>')` and
-hands the result to `pickVariant`.
+hands the result to `resolveVariant`.
 
-An **identity** is a faction slug. Eight ship a manifest
-(`frontend/src/factions/index.ts`); the ninth is `na`, which ships none on
-purpose — see below.
+An **identity** is a faction slug. All nine ship a manifest
+(`frontend/src/factions/index.ts`), `na` included since #2530 — see below.
 
 Do not maintain those two numbers here. Count them with
-`SURFACE_KEYS.length` and `FACTION_MANIFESTS.length + 1`; this section exists to
+`SURFACE_KEYS.length` and `FACTION_MANIFESTS.length`; this section exists to
 say what the numbers *mean*, not to cache them. (They were 21 and 9 when this
 file was written, which is worth stating only because the epic that commissioned
 it went in believing the second number was 10. The first is 20 since ADR-0078
@@ -45,10 +44,13 @@ but the composition itself is hand-written per faction. When two skins genuinely
 converge, the fix is to lift the shared thing into the library, not to merge the
 skins behind a flag.
 
-The manifest is **override-only**: every field is optional, and an undeclared
-surface falls through to that surface's `Default*` archetype. A faction that
-declares nothing renders correctly everywhere, including on surfaces that do not
-exist yet. **Partial registration is the normal case, not a degraded one.**
+Every manifest field is optional, so a faction that declares nothing still
+renders correctly everywhere, including on surfaces that do not exist yet. An
+undeclared surface is not a hole: the surface map simply has no row under that
+slug, and `resolveSlug` reads `na`'s row instead. **That is a lookup in the
+ninth manifest, not a fallback mechanism behind the manifests** — `na` declares
+all twenty surfaces itself (`frontend/src/factions/default.ts`), which is why
+there is only one way a surface gets drawn.
 
 ## `Default` ≡ `na` ≡ Unaffiliated is one identity
 
@@ -58,30 +60,43 @@ are named. There is no separate "default faction" and no fallback-that-isn't-a-
 faction. ADR-0039 settles it: `na` resolves to the neutral `--faction-default-*`
 set — a spectrum, not a hue — and never borrows another faction's colour.
 
-**The naming rule: an na component is `Default*`, never `Na*`.** This is why
-`na` has no manifest file. Registering it would mean naming, for every surface,
-the component that surface *already* falls back to.
+**The naming rule: an na component is `Default*`, never `Na*`.** The name says
+which identity the component draws; it has never meant "the thing reached when
+lookup fails".
 
-### The three `Default*` archetypes that are functions, not files
+### `na` ships a manifest, and four of its rows are not `Default*.tsx` files
 
-`Default*` names an **archetype, not necessarily a module**. Three surfaces keep
-their na rendering inside the dispatcher:
+`na` used to be the one faction with no manifest, reached instead by a second
+mechanism — a `Default*` handed to `pickVariant` as a third argument, spelled
+out by hand at ~20 dispatchers. **#2530 retired that.** `frontend/src/factions/default.ts`
+declares all twenty na surfaces the way the other eight declare theirs, and
+`defaultManifest.test.tsx` fails the build if a key is missing.
 
-| Surface | What renders for `na` |
-|---|---|
-| `avatar` | `DefaultAvatar`, a local function in `components/avatar/FactionAvatar.tsx` |
-| `feedFrame` | `DefaultFeedFrame`, a local function in `components/feed/FactionFeedFrame.tsx` |
-| `backdrop` | `WatercolorBackground`, imported from `components/layout/` |
+`Default*` still names an **archetype, not necessarily a module of that name**.
+Four rows point somewhere other than a matching `Default*.tsx`:
 
-All three are designed, shipped and rendering today — `DefaultAvatar`'s conic
-spectrum ring was drawn in #1127, `DefaultFeedFrame`'s spectrum spine in #1148 —
-and a test already pins the feed frame as the Unaffiliated chassis rather than a
-passthrough (#1194).
+| Surface | What the row points at | Why |
+|---|---|---|
+| `backdrop` | `WatercolorBackground` in `components/layout/` | the site's watercolour ground *is* the designed neutral; a `DefaultBackdrop.tsx` would be a re-export with a nicer name |
+| `sigil` | `DefaultSigilAdapter`, a named export of `components/sigil/FactionSigil.tsx` | co-located with its dispatcher, reached by a `.then()` that picks the export |
+| `comment` | `DefaultComment`, a named export of `components/comments/CommentThread.tsx` | same |
+| `duelSeal` | `DefaultDuelSealConfirm`, a named export of `components/duel/DuelSealConfirm.tsx` | same |
 
-This table is here for one reason: **the absence of `DefaultAvatar.tsx` has been
+Co-location is not a bypass: the manifest is the only thing that reads those
+three exports.
+
+`avatar` and `feedFrame` were on this list until #2530 — both were functions
+defined inside their own dispatchers, and both are now modules
+(`components/avatar/DefaultAvatar.tsx`, `components/feed/DefaultFeedFrame.tsx`),
+extracted unchanged so the manifest had something to point at. They are designed,
+shipped and rendering — `DefaultAvatar`'s conic spectrum ring was drawn in #1127,
+`DefaultFeedFrame`'s spectrum spine in #1148 — and a test pins the feed frame as
+the Unaffiliated chassis rather than a passthrough (#1194).
+
+This section is here for one reason: **the absence of a `Default*.tsx` has been
 read as a hole in the na kit by four separate audits.** It is a file-layout
-observation. Counting skin *files* undercounts these three surfaces by one each.
-If you are about to file "the na kit is missing an avatar", it is not.
+observation. If you are about to file "the na kit is missing a backdrop", it is
+not — read `default.ts`, which is now the one place that answers the question.
 
 ## Albescent's partial coverage is the steady state, not a gap
 
@@ -182,7 +197,7 @@ drift is a red build for everyone.
 | Question | Answer |
 |---|---|
 | Which surfaces exist? | `SURFACE_KEYS`, `frontend/src/factions/manifest.ts` |
-| Which factions exist? | `FACTION_MANIFESTS`, `frontend/src/factions/index.ts`, plus `na` |
+| Which factions exist? | `FACTION_MANIFESTS`, `frontend/src/factions/index.ts` — all nine, `na` included |
 | Which faction dresses which surface? | that faction's `frontend/src/factions/<slug>.ts` |
 | What does a surface's prop contract look like? | the field's type in `manifest.ts` |
 | Why does a surface look the way it does? | its ADR in `docs/adr/` |
