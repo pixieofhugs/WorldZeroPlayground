@@ -9,18 +9,19 @@ import OnboardingCard, { primaryControl } from './OnboardingCard'
  * Stop 3 — the agreement, and the only card on this route whose document is
  * real copy rather than a placeholder.
  *
- * THE DOCUMENT IS THE EXISTING DISCLAIMER, VERBATIM (`common:disclaimer.*`) —
- * the same four paragraphs `pages/Disclaimer.tsx` renders, read from the same
- * keys so the two can never drift. `main` auto-deploys, so a placeholder here
- * would ship placeholder legal text to production; the revised wording is a
- * separate owner task, and until it lands this card shows the copy that already
- * exists and is already true (`docs/spec/SPEC-onboarding.md` § Terms, § Before
- * this can ship).
+ * THE DOCUMENT IS THE DISCLAIMER, VERBATIM (`common:disclaimer.*`) — the same
+ * three paragraphs `pages/Disclaimer.tsx` renders, read from the same keys so
+ * the two can never drift. `main` auto-deploys, so a placeholder here would
+ * ship placeholder legal text to production; the owner's revised wording landed
+ * on #2789 (four paragraphs became three) and is what both surfaces now show
+ * (`docs/spec/SPEC-onboarding.md` § Terms, § Before this can ship).
  *
  * NO VERSION IS DISPLAYED. `CURRENT_TERMS_VERSION` is the server's constant and
  * the route writes it into the log without being told; printing "v1" here would
- * be a second copy of it on the client, and a version identifier *in* the
- * document is one of the things the revision is meant to add.
+ * be a second copy of it on the client. The revised document carries no version
+ * identifier of its own, and whether the constant bumps now that the wording has
+ * changed is a backend question #2789 does not answer — the note that says it
+ * does is on `backend/models/terms_acceptance.py`.
  *
  * ACCEPTED AFTER AUTH, and this card is only ever reached with a session — the
  * endpoint is `Depends(get_current_account)` and consent binds to an account,
@@ -106,13 +107,12 @@ export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
     >
       <p style={prose}>{t('terms.body')}</p>
 
-      {/* The real document. Four paragraphs and a date, from the keys
+      {/* The real document. Three paragraphs and a date, from the keys
           `pages/Disclaimer.tsx` reads — not a second copy of them. */}
       <div style={documentBlock} data-testid="onboarding-terms-document">
         <p style={prose}>{tCommon('disclaimer.p1')}</p>
         <p style={prose}>{tCommon('disclaimer.p2')}</p>
         <p style={prose}>{tCommon('disclaimer.p3')}</p>
-        <p style={prose}>{tCommon('disclaimer.p4')}</p>
         <p style={lastUpdated}>{tCommon('disclaimer.lastUpdated')}</p>
       </div>
 
