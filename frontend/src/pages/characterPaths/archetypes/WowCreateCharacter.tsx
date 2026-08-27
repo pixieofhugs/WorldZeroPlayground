@@ -313,7 +313,6 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
             <h1
               style={{
                 fontFamily: MED,
-                fontWeight: 400,
                 fontSize: sizes.titleSize,
                 lineHeight: 1.1,
                 color: INK,

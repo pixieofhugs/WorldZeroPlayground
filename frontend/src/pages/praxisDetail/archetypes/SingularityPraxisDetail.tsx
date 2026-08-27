@@ -441,7 +441,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       <h1
         style={{
           fontFamily: MONO,
-          fontWeight: 400,
           fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
           lineHeight: 1.15,
           margin: "0 0 var(--space-lg)",

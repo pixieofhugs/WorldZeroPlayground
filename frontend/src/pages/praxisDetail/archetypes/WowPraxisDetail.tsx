@@ -453,7 +453,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       <h1
         style={{
           fontFamily: MED,
-          fontWeight: 400,
           fontSize: size.title,
           lineHeight: 1.08,
           margin: '0 0 var(--space-md)',

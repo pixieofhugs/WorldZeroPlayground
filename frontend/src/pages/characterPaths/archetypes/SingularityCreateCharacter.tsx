@@ -355,7 +355,6 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
             <h1
               style={{
                 fontFamily: FACE,
-                fontWeight: 400,
                 fontSize: sizes.titleSize,
                 color: BRIGHT,
                 textShadow: HALO_GREEN,

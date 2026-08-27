@@ -185,7 +185,6 @@ export default function EverymenDuelSealConfirm({
             position: 'relative',
             margin: 0,
             fontFamily: POSTER,
-            fontWeight: 400,
             // The forfeit dialog speaks quieter than the routine one — a tier
             // down, not a raw number. Both sit in the Content ramp (§4a).
             fontSize: onInk ? 'var(--text-heading)' : 'var(--text-display)',

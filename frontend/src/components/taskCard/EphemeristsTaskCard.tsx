@@ -375,7 +375,6 @@ export default function EphemeristsTaskCard({
             <h2
               style={{
                 fontFamily: DECO,
-                fontWeight: 400,
                 fontSize: size.titleSize,
                 letterSpacing: "0.02em",
                 lineHeight: 1.24,

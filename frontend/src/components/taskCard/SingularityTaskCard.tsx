@@ -244,7 +244,6 @@ export default function SingularityTaskCard({
             <h2
               style={{
                 fontFamily: MONO,
-                fontWeight: 400,
                 fontSize: size.titleSize,
                 lineHeight: 1.22,
                 color: BRIGHT,
