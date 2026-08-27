@@ -810,8 +810,37 @@
      the four petals that outlived their reader here and on Coven. The tier is
      named by the dots filling to it. Do not mint them back for a caption that
      was removed on purpose; the contrast history (#1675 walked `-vote-off` from
-     3.23:1 to 4.68:1) is in those issues, not in this file. */
-  --faction-default-dot-ring: #d6cfbf;
+     3.23:1 to 4.68:1) is in those issues, not in this file.
+
+     #d6cfbf -> #989388 (#2608), and the pair below is a FORK, not a rename.
+     #2524 lifted dark's one value for all three readers and said in as many
+     words that "light is unaffected" — true of that change, not of the surface:
+     the cream read 1.53:1 on this card, so a 4-of-5 vote showed two petals
+     rather than two of four. 1.4.11 governs an unreached petal at 3:1, and the
+     owner ruled (2026-08-26) the smallest lift that clears and no further —
+     past ~5.7:1 the empty slot starts reading as an object of its own, which is
+     the other way to get this wrong.
+
+     WHY TWO NAMES. The two readers of `-dot-ring` are `inset 0 0 0 1.5px`
+     hairlines on this flat card: #989388 is 3.01:1 there. The third reader,
+     `AlbescentVote`'s 42px blob, is NOT on this card — `.alb-prism` multiplies a
+     sweep into it, so the ground under the blob is up to ~10pp darker and
+     #989388 reads only 2.70:1 on it. One value cannot serve both grounds in
+     light; dark's could, and still does (see the dark block). `-dot-fill` is
+     therefore a `default`-family name and not an Albescent one — `CSS_KEY` maps
+     albescent -> default (ADR-0039 / #783) and `--faction-albescent-*` does not
+     exist.
+
+     #878379 is measured on the prism's darkest pixel with the sheet composited
+     TWICE — the reduced-motion rest frame (epic #2496 ruling 6), which is the
+     deepest ground an Albescent petal ever sits on. 3.01:1 there, 3.34:1 on the
+     moving prism, 3.72:1 if the card falls back to the flat sheet (Albescent's
+     praxis card drops `.alb-prism` over busy media). Tuning to the moving frame
+     alone would have given #8f8b80 and left reduced-motion readers at 2.70:1,
+     i.e. the same half-measured mistake this issue exists to correct.
+     `components/vote/__tests__/dotRingBoundary.test.ts` measures all of it. */
+  --faction-default-dot-ring: #989388;
+  --faction-default-dot-fill: #878379;
   /* The unaffiliated PLAIN CREAM SHEET (#842). The design's card is a quiet
      sheet, and the rainbow appears in exactly four places on it — the eyebrow
      text-clip, the score-box rule, the total, and one 2px divider. The
@@ -3468,10 +3497,17 @@
      than a 44px blob and wants at least what the blob wants, so a fork would have
      had to give the two rings the higher number anyway; one value, 5.73:1 on this
      card / 5.97 on the prism, is the design board's own patch. 0.45 (3.81 / 3.87)
-     clears too and was rejected for the hairlines' sake. Light is a different
-     shape of problem and is NOT touched here: it is opaque `#d6cfbf` and reads
-     1.53:1 on the light card, which no alpha change reaches. */
+     clears too and was rejected for the hairlines' sake. Light was a different
+     shape of problem and was not touched here; #2608 fixed it separately, and
+     no alpha change would have reached it — the light value was opaque.
+
+     DARK DID NOT FORK, and the alias is how that is stated. Light needed two
+     values because the flat na card and the prism are ~10pp apart there; this
+     cream clears both grounds at once (5.73 / 5.97), so `-dot-fill` points at
+     `-dot-ring` rather than restating it. Give dark its own fill value only if a
+     measurement forces it, and then say which ground forced it. */
   --faction-default-dot-ring: rgba(240, 230, 208, 0.6);
+  --faction-default-dot-fill: var(--faction-default-dot-ring);
   /* The cream sheet, lights out (#842) — the design's own dark card, not an
      inversion: the hairline becomes a white scrim and the stamp plate lifts off
      the sheet rather than sinking into it. Both narrow rainbows still swap their
