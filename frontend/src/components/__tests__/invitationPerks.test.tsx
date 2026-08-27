@@ -217,27 +217,27 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
     expect(perk.desc).toBe(desc)
   })
 
-  it("Albescent's mechanic is the inheritance, with no level talk in it", () => {
-    // It was `perks.duties` and named "Enlightenment" until the owner's copy
-    // pass cut `duties` and `witnessed` and moved this description onto
-    // `record`, which is now the only perk the letter carries.
+  it("Albescent's mechanic is named, and its description is owed back", () => {
+    // It was `perks.duties`, named "Enlightenment", until the owner's copy pass
+    // cut `duties` and `witnessed` and put the name she wrote on `record` — the
+    // only perk the letter carries now. The description that travelled with it
+    // stopped mid-clause ("You know how to task"), so on her call it went back
+    // to a placeholder rather than ship unfinished. This is the ONE Albescent
+    // row still owed, and it is owed a desc, not a name.
     const perk = factions.albescent.letter.perks.record as unknown as Perk
     expect(perk.name).toBe('Abilities')
-    expect(perk.desc).toBe(
-      'You see the value in working together, competing, gathering information, '
-      + 'being consistent, trying again, and being in the right place at the right time '
-      + '(even if that involves a little messing around with the timeline). You know how to task',
-    )
+    expect(perk.desc).toMatch(/^PLACEHOLDER — /)
     // The owner's draft opened "From levels 1-7…" and closed on level 8. Both
     // sentences were cut deliberately: `inherits_faction_perks` carries no
     // level condition, and `albescent_level_required` is the door in, not a
-    // point where what you hold changes. Nothing about levels may come back.
+    // point where what you hold changes. Nothing about levels may come back —
+    // including in whatever fills this placeholder.
     expect(perk.desc).not.toMatch(/\blevel/i)
   })
 })
 
 /* -------------------------------------------------------------------------- *
- * The 16 owed names, shipped as literal placeholders (owner ruling 2026-08-23).
+ * The owed copy, shipped as literal placeholders (owner ruling 2026-08-23).
  * -------------------------------------------------------------------------- */
 describe('the owed copy ships as hinted placeholders, and nothing else does (#2298 §4)', () => {
   function allPerks(): Array<[string, Perk]> {
@@ -250,21 +250,23 @@ describe('the owed copy ships as hinted placeholders, and nothing else does (#22
     return [...shared, ...alb]
   }
 
-  it("leaves exactly the 16 slots owed — 14 names, plus WoW's two full pairs", () => {
+  it("leaves exactly the 15 slots owed — 12 names, WoW's two full pairs, Albescent's desc", () => {
     const owed = allPerks().flatMap(([id, perk]) =>
       (['name', 'desc'] as const)
         .filter((field) => perk[field].startsWith('PLACEHOLDER'))
         .map((field) => `${id}.${field}`),
     )
-    // The issue counted 16 SLOTS / 18 FIELDS. Albescent's copy pass took two
-    // of them off the board: `witnessed` was deleted outright, and `record`'s
-    // owed name was written ("Abilities"). WoW's two still contribute a desc
-    // each — the only two descriptions in the catalog not already written.
-    expect(new Set(owed.map((id) => id.replace(/\.(name|desc)$/, ''))).size).toBe(14)
-    expect(owed).toHaveLength(16)
+    // The issue counted 16 SLOTS / 18 FIELDS. Albescent's copy pass moved three
+    // of them: `witnessed` was deleted outright, `record`'s owed name was
+    // written ("Abilities"), and its desc was handed back as a placeholder. So
+    // one slot leaves and one changes hands — 15 slots, 17 fields — and
+    // Albescent joins WoW as the only rows owing a description.
+    expect(new Set(owed.map((id) => id.replace(/\.(name|desc)$/, ''))).size).toBe(15)
+    expect(owed).toHaveLength(17)
     expect(owed.filter((id) => id.endsWith('.desc'))).toEqual([
       'wow.invitation.perks.0.desc',
       'wow.invitation.perks.2.desc',
+      'albescent.letter.perks.record.desc',
     ])
   })
 
