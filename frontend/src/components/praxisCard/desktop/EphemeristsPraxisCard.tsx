@@ -193,6 +193,12 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
           // rung covers that case too.
           titleStyle={{
             fontFamily: DECO,
+            // THIS 400 IS LOAD-BEARING — do not sweep it (#2597). Poiret One
+            // ships one cut, so a weight beside it is normally inert and #2597
+            // took twelve such lines off. Not this one: `PraxisTitle` puts a
+            // `font-semibold` CLASS on the same <h2>, and the inline 400 is the
+            // only thing suppressing a 600 the face cannot draw. Removing it
+            // trades an inert declaration for a real fake-bold.
             fontWeight: 400,
             letterSpacing: "0.02em",
             color: INK,

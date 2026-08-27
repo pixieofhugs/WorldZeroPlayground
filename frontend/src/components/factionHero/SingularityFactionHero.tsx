@@ -202,7 +202,6 @@ export default function SingularityFactionHero({
               letterSpacing: "0.04em",
               margin: "0 0 var(--space-md)",
               color: PHOSPHOR,
-              fontWeight: 400,
             }}
           >
             {name}

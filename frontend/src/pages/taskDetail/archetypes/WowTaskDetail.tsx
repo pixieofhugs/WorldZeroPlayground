@@ -523,7 +523,6 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       <h1
         style={{
           fontFamily: MED,
-          fontWeight: 400,
           fontSize: size.title,
           lineHeight: 1.08,
           margin: 0,

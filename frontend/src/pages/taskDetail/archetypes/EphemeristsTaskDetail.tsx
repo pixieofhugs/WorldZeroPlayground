@@ -458,7 +458,6 @@ export default function EphemeristsTaskDetail({
       <h1
         style={{
           fontFamily: DECO,
-          fontWeight: 400,
           fontSize: size.titleSize,
           lineHeight: 1.16,
           letterSpacing: "0.02em",

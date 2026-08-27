@@ -718,7 +718,14 @@ function MediaPlate({ children, caption, onRemove }: MediaPlateProps) {
           border: `1px solid ${RULE}`,
           color: ACCENT,
           fontSize: "var(--text-md)",
-          fontWeight: 700,
+          // 600, not 700, and the weight is DELIBERATE (#2597). This button
+          // inherits `pageStyle`'s EB Garamond, which the loader ships at 400
+          // and 600 — so the 700 that stood here was drawn as the real 600 all
+          // along and this is the same pixels, honestly named. Not a #2487
+          // sweep site: synthesis is a defect, substitution is a design call,
+          // and the owner made it. Dropping the weight would render a 22px
+          // control at 400, which is a change to a working button.
+          fontWeight: 600,
           cursor: "pointer",
           lineHeight: 1,
           padding: 0,

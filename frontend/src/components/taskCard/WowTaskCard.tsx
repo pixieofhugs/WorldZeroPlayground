@@ -314,7 +314,6 @@ export default function WowTaskCard({
             <h2
               style={{
                 fontFamily: MED,
-                fontWeight: 400,
                 fontSize: size.titleSize,
                 lineHeight: 1.1,
                 margin: "0 0 var(--space-sm)",
