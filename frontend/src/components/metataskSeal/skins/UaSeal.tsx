@@ -32,7 +32,9 @@ export default function UaSeal({ metatask, removable, onRemove }: SealSkinProps)
         background: 'var(--faction-ua-card-parchment)',
         color: 'var(--leaf-metatask-seal-ink)',
         border: '1px solid var(--faction-ua-card-frame)',
-        borderRadius: 3,
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--leaf-metatask-seal-radius)',
         fontFamily: 'var(--leaf-metatask-seal-face)',
         overflow: 'hidden',
       }}

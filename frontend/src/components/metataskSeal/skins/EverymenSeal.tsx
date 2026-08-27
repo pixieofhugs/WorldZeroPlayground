@@ -31,6 +31,9 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
         background: 'var(--everymen-paper)',
         color: 'var(--everymen-paper-text)',
         border: '1.5px solid var(--everymen-ink)',
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--ev-seal-radius)',
         boxShadow: '0 0 0 3px var(--everymen-paper), 0 0 0 4px var(--everymen-ink)',
       }}
     >

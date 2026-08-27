@@ -54,7 +54,9 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         border: '3px solid transparent',
         ...factionSpectrumSheet(),
         color: 'var(--na-seal-ink, var(--faction-default-card-text))',
-        borderRadius: 12,
+        // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
+        // selection ring reads the token behind it, so the two cannot disagree.
+        borderRadius: 'var(--na-seal-radius, var(--faction-default-card-radius))',
         overflow: 'hidden',
       }}
     >

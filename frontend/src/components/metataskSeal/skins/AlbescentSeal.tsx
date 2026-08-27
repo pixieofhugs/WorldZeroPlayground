@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { AlbescentBand } from '../sealBands'
+import { factionCssVar } from '../../../utils/factions'
 import type { SealSkinProps } from '../types'
 
 /**
@@ -65,7 +66,9 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
         background: 'var(--faction-default-card-bg)',
         color: 'var(--faction-default-card-text)',
         border: '1px solid var(--faction-default-card-line)',
-        borderRadius: 4,
+        // The corner is the TOKEN's, not this file's (#2729) — the picker's
+        // selection ring reads the same one, so the two cannot disagree.
+        borderRadius: factionCssVar('albescent', 'card-radius'),
         boxShadow: '0 2px 18px var(--color-cast-shadow-soft), 0 1px 3px var(--color-cast-shadow-soft)',
         fontFamily: 'var(--font-faction-serif)',
         overflow: 'hidden',
