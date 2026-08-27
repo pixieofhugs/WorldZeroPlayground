@@ -51,7 +51,7 @@ screen either way.
 
 1. **Skins dispatch on the *task's* faction, not the viewer's.** "The Everymen skin"
    means duels on Everymen tasks —
-   `pickVariant(surfaceMap('duelSeal'), taskFactionSlug, …)`. Only the figures follow the
+   `resolveVariant(surfaceMap('duelSeal'), taskFactionSlug)`. Only the figures follow the
    viewer, off their own multipliers. The brief itself had this backwards.
 2. **`pending` shows no stakes tiles.** `StakesTiles` emits the single
    `duelStakes.soloFallback` sentence instead, so a pending mock drawing a win/lose pair
