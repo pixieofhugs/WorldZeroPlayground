@@ -1,5 +1,4 @@
 import i18n from "../../i18n";
-import { factionName } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
@@ -121,6 +120,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
           retires kit-wide; nothing takes its place here, because this tile
           heads itself by hand and mounts no `EphemeristsMasthead`. */}
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
+        <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.24em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{i18n.t("feed:factionSelect.ephemerists.banner")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           {/* The dark chip, filled rather than merely rimmed. Its ink budget is
               the BAND's and not the sheet's — see `-plate-disc` in index.css —
@@ -130,7 +130,8 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
           </span>
           <div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{factionName("ephemerists")}</div>
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.name")}</div>
+            <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
           </div>
         </div>
         {/* The plate's own closing pair — a hairline above, a `3px double`

@@ -146,6 +146,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         background: "repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 11px, var(--faction-wow-plum-surface) 11px 22px)",
       }} />
       <div style={{ flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
+        <div style={{ fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-content)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.wow.banner")}</div>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)", filter: "drop-shadow(0 5px 6px var(--faction-wow-stamp-shadow))" }}>
           {/* above the 56px motto floor, so the seal keeps its Pig-Latin band */}
           <WowSigil size={88} />

@@ -158,6 +158,9 @@ export default function DefaultSelectCard({
         >
           {say("name")}
         </div>
+        <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}>
+          {say("tagline")}
+        </div>
 
         {/* Rainbow 3 of 3: the single rule on the sheet. Trimmed to the same
             0.45 the Default praxis card's divider carries, so the two surfaces
