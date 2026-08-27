@@ -16,9 +16,10 @@
  *   2. **Neither provider privileged.** Two buttons that drift apart in size,
  *      class or ink is how one quietly becomes the recommended way in. The
  *      assertion compares the rendered tags rather than eyeballing the source.
- *   3. **The real Disclaimer.** `main` auto-deploys. Every other string on this
- *      route is a placeholder and must be; the document is not, and the check
- *      reads `common.json` so a swap to placeholder legal text fails here.
+ *   3. **The real Disclaimer.** `main` auto-deploys, and the check reads
+ *      `common.json` so a swap to placeholder legal text fails here. Since
+ *      #2766 the copy around it is written too, and the block below holds the
+ *      whole route to that.
  *   4. **Rainbow in exactly three places.** The restraint IS the design, which
  *      makes it the one visual rule a test can hold: three references per card,
  *      counted in the markup.
@@ -37,6 +38,7 @@ vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 import IntroCard from '../onboarding/IntroCard'
 import AuthCard from '../onboarding/AuthCard'
 import TermsCard from '../onboarding/TermsCard'
+import { RING_CAPTION_MAX_CHARS } from '../onboarding/OnboardingCard'
 
 const render = (node: React.ReactNode): string =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>)
@@ -199,9 +201,10 @@ describe('the terms card', () => {
   it('reads the document from the same keys the Disclaimer page does', () => {
     const markup = render(<TermsCard onAccepted={() => {}} />)
 
-    // The document block holds no PLACEHOLDER — the framing line above it does,
-    // and that is the boundary: `main` auto-deploys, so provisional legal text
-    // would ship to production.
+    // No PLACEHOLDER in the document block: `main` auto-deploys, so provisional
+    // legal text would ship to production. The framing line above it used to be
+    // the placeholder side of that boundary and is written now (#2766), so the
+    // whole card is held to it by the block at the foot of this file.
     const document = /data-testid="onboarding-terms-document"[^>]*>([\s\S]*?)<\/div>/.exec(markup)?.[1]
 
     expect(document).toBeTruthy()
@@ -212,5 +215,67 @@ describe('the terms card', () => {
     const markup = render(<TermsCard onAccepted={() => {}} />)
 
     expect(markup).toContain('data-testid="onboarding-accept-terms"')
+  })
+})
+
+/* ========================================================================== *
+ * #2766 — THE COPY IS WRITTEN, and #2765 — THE RING HOLDS ITS CAPTION.
+ *
+ * These are one block because they are one seam: what the catalog holds and
+ * what the ring can draw are the same question. The arc is public with no
+ * `ProtectedRoute` and `main` auto-deploys, so a slot that slips back to
+ * `PLACEHOLDER` is placeholder text in front of a stranger.
+ * ========================================================================== */
+describe('the arc a stranger actually reads', () => {
+  for (const [name, card] of CARDS) {
+    it(`${name} shows a stranger no placeholder`, () => {
+      const words = render(card).replace(/<[^>]*>/g, ' ')
+
+      expect(words).not.toContain('PLACEHOLDER')
+    })
+
+    it(`${name} wraps an over-long ring caption INSIDE the circle (#2765)`, () => {
+      // 0.2em tracking is the ring caption's alone on this sheet once the note
+      // slot is gone — the control is 0.14em and the title carries none.
+      const ring = (render(card).match(/style="[^"]*"/g) ?? []).filter((style) =>
+        style.includes('letter-spacing:0.2em'),
+      )
+
+      expect(ring).toHaveLength(1)
+      // Without these the caption ran out past the conic band on both sides and
+      // the second line ragged left. `text-align` centres the LINES;
+      // `overflow-wrap` is what lets a too-long word break at all. The <h1>
+      // two elements down has carried the same pair for the same reason.
+      expect(ring[0]).toContain('text-align:center')
+      expect(ring[0]).toContain('overflow-wrap:anywhere')
+    })
+
+    it(`${name} stands its tick alone, the note slot retired (#2766)`, () => {
+      // The tick is kit furniture — "the 3px band, the conic ring, and one
+      // tick" — not a completion state, so nothing is set beside it and the
+      // `note` prop is gone rather than optional.
+      expect(render(card)).toMatch(/<span aria-hidden="true"[^>]*><\/span><\/div>/)
+    })
+  }
+
+  it('keeps the ring caption inside the characters the ring can draw', () => {
+    // Geometry, not preference: 76px of usable width at 11px with 0.2em
+    // tracking in a 0.6em-advance monospace. The constant carries the working.
+    expect(onboarding.card.stepCaption.length).toBeLessThanOrEqual(RING_CAPTION_MAX_CHARS)
+  })
+
+  it('stores the four CSS-uppercased strings unshouted', () => {
+    // `text-transform: uppercase` does the shouting — the caption style for the
+    // first two, `controlBase` for the last two. A catalog holding pre-shouted
+    // text gives the next editor no way to tell whether the caps are the design
+    // or the copy (#2598 §B2b removed exactly that trap from another catalog).
+    for (const shouted of [
+      onboarding.card.stepCaption,
+      onboarding.card.lookAround,
+      onboarding.intro.continue,
+      onboarding.terms.accept,
+    ]) {
+      expect(shouted).not.toBe(shouted.toUpperCase())
+    }
   })
 })

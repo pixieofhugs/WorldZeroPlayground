@@ -6,8 +6,17 @@ import i18n from '../../i18n'
 import OnboardingCard, { primaryControl } from './OnboardingCard'
 
 /**
- * Stop 3 — the agreement, and the only card on this route whose document is
- * real copy rather than a placeholder.
+ * Stop 3 — the agreement.
+ *
+ * THE FRAME POINTS AT THE DOCUMENT, IT DOES NOT SUMMARISE IT (#2766).
+ * `terms.body` is an affirmative acknowledgement of understanding and the
+ * control beneath it is `Yeah yeah, let me play`, so the card asserts
+ * comprehension in its frame and performs the opposite in its control. Both
+ * were ruled, one pass apart; if either ever moves they move together. Recorded
+ * with it: the Disclaimer's copyright expectation ("submit no material … you
+ * have not created") reaches a player only if they read the legalese, which
+ * `SPEC-onboarding.md`'s "withholding the cost is a bait-and-switch" rule has
+ * an interest in. Raised and overruled — decisions, not oversights.
  *
  * THE DOCUMENT IS THE DISCLAIMER, VERBATIM (`common:disclaimer.*`) — the same
  * three paragraphs `pages/Disclaimer.tsx` renders, read from the same keys so
@@ -98,7 +107,6 @@ export default function TermsCard({ onAccepted }: { onAccepted: () => void }) {
     <OnboardingCard
       step={3}
       title={t('terms.title')}
-      note={t('terms.note')}
       actions={
         <button type="button" onClick={accept} style={primaryControl} data-testid="onboarding-accept-terms">
           {t('terms.accept')}

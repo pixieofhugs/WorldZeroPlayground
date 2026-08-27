@@ -23,8 +23,15 @@ import OnboardingCard, { primaryControl } from './OnboardingCard'
  * SKIPPED ENTIRELY WHEN A SESSION EXISTS — the flow's one asymmetry, and it is
  * `Onboarding.tsx` that applies it, not this card.
  *
- * EVERY STRING HERE IS A PLACEHOLDER except the two button labels, which are
- * the shipped `common:signIn.*` copy this card reuses.
+ * THE BODY IS A FACTUAL CLAIM ON A CONSENT SURFACE (#2766). It names what is
+ * stored — the email, and whatever the player posts — so it is the sentence
+ * that would be quoted if it were ever disputed; the carve-out is worded to
+ * cover proof media and comments, which hang off the praxis rather than the
+ * character. `OAuthProvider.provider_user_id` is the one stored item it does
+ * not reach, recorded on #2766 as a known gap rather than a discovered one.
+ * The slot's job moved with the wording: it answers what happens to your data
+ * rather than why a score needs somewhere to live, which is what the old
+ * placeholder's brief and `SPEC-onboarding.md` describe.
  */
 
 const prose: CSSProperties = {
@@ -42,7 +49,6 @@ export default function AuthCard() {
     <OnboardingCard
       step={2}
       title={t('auth.title')}
-      note={t('auth.note')}
       // `className=''` drops `.btn-primary`: on this sheet the primary control
       // is na's card ink, and the app-wide button skin would put a second
       // identity on the card.

@@ -132,7 +132,6 @@ export default function ReturningCard() {
     <OnboardingCard
       step={1}
       title={t('returning.title')}
-      note={t('returning.note')}
       actions={
         <button
           type="button"
