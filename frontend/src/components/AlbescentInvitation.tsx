@@ -105,22 +105,12 @@ const MONO = "'Courier Prime', monospace"
 const HAIRLINE = 'var(--faction-default-card-line)'
 const HAIRLINE_FAINT = 'color-mix(in srgb, var(--faction-default-card-line) 55%, transparent)'
 
-// i18n key stems under factions:albescent.letter — resolved at render.
-//
 // The whole terms slip stood here as `TERM_KEYS` — toll, skills, output, and
 // before them a fourth "standing" row #1909 cut. #2298 cut the remaining three
-// across all eight letters and gave the slip's box to the perks, so what is
-// left is the perk stems.
-//
-// `duties` is Albescent's real mechanic, the way `perks[1]` is on the other
-// seven — same ponytail as `MECHANIC_INDEX` in InvitationLetterPopup: the slot
-// is positional, and a `mechanic` flag on the catalog object is the upgrade if
-// a letter ever needs it elsewhere.
-const PERK_KEYS: ReadonlyArray<{ stem: string; mechanic: boolean }> = [
-  { stem: 'perks.record', mechanic: false },
-  { stem: 'perks.duties', mechanic: true },
-  { stem: 'perks.witnessed', mechanic: false },
-]
+// across all eight letters and gave the slip's box to the perks; the owner's
+// copy pass then cut two of the three perks, so one row is left and it is the
+// mechanic. The `mechanic` flag that picked it out of three went with them —
+// nothing to pick from. `perks.record` is rendered by name below, no map.
 
 export interface AlbescentInvitationProps {
   /** The account's roster (every life but the banned ones). */
@@ -136,9 +126,6 @@ export interface AlbescentInvitationProps {
 export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvitationProps) {
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
-  // Dynamic term/perk keys are data-driven; resolve them through a plain
-  // string view of `t` (the typed union can't see the interpolated key).
-  const tDynamic = t as unknown as (key: string) => string
   // The ceiling is the server's number, never a literal here (#2399) — same
   // idiom as `second_character_level_required` on the locked-dossier copy.
   const albescentLevelRequired = user?.albescent_level_required ?? 0
@@ -218,20 +205,16 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
           name over their description rather than sitting in the loose em-dash
           row that used to run under the term grid. */}
       <ul style={{ position: 'relative', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', margin: '0 var(--space-3xl)', borderTop: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
-        {PERK_KEYS.map(({ stem, mechanic }) => (
-          <li key={stem} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '0 0 var(--space-sm)' }}>
-            {/* The slip's label treatment — mono, uppercase, tracked — but at a
-                read size, not the 7px engraving: a perk name is copy now, where
-                a term label was stationery. The order's own accent marks the
-                one perk that states a real mechanic; the two flavour names sit
-                in the muted ink, so the mechanic reads first. */}
-            <div style={{
-              ...monoCaps, letterSpacing: '0.14em', fontSize: 'var(--text-md)',
-              color: mechanic ? ACCENT : MUTED,
-            }}>{tDynamic(`albescent.letter.${stem}.name`)}</div>
-            <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 'var(--space-xs)' }}>{tDynamic(`albescent.letter.${stem}.desc`)}</div>
-          </li>
-        ))}
+        <li style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '0 0 var(--space-sm)' }}>
+          {/* The slip's label treatment — mono, uppercase, tracked — but at a
+              read size, not the 7px engraving: a perk name is copy now, where a
+              term label was stationery. It takes the order's own accent: it is
+              the mechanic, and there is no flavour row left to rank it against. */}
+          <div style={{
+            ...monoCaps, letterSpacing: '0.14em', fontSize: 'var(--text-md)', color: ACCENT,
+          }}>{t('albescent.letter.perks.record.name')}</div>
+          <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 'var(--space-xs)' }}>{t('albescent.letter.perks.record.desc')}</div>
+        </li>
       </ul>
 
       {/* answer */}
@@ -240,11 +223,6 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
           <div style={{ ...serifItalic, fontSize: 'var(--text-title)', color: INK, textAlign: 'center' }}>{t('albescent.letter.cta.joined')}</div>
         ) : (
           <>
-            <div style={{
-              ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
-              fontSize: 7,
-            }}>{t('albescent.letter.whoHeading')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-xl)' }}>
               {choices.map((life) => {
                 const selected = life.id === selectedId
@@ -287,7 +265,6 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
               <button type="button" onClick={() => void handleAccept()} disabled={submitting || selectedId === null} style={acceptButton}>
                 {submitting ? t('albescent.letter.cta.busy') : t('albescent.letter.cta.join')}
               </button>
-              <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>{t('albescent.letter.reassurance')}</span>
             </div>
             {error && (
               <p style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, textAlign: 'center', marginTop: 'var(--space-lg)', marginBottom: 0 }}>{error}</p>

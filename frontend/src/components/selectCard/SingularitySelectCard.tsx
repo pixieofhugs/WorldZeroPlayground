@@ -133,7 +133,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
             the audit is `feed:factionSelect.*`, every one of which this card
             still reads; the `identity.*` overline was a different, single-faction
             slot on top of it. */}
-        <div style={{ fontSize: "var(--text-md)", color: BLUE, letterSpacing: "0.08em", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.singularity.banner")}</div>
+        <div style={{ fontSize: "var(--text-md)", color: BLUE, letterSpacing: "0.04em" }}>{i18n.t("feed:factionSelect.singularity.banner")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
           <SingularitySigil size={30} color={BRIGHT} />
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
