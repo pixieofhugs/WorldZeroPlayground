@@ -1,5 +1,5 @@
 /**
- * na (Unaffiliated) — the ninth faction's twenty-one surfaces (#2530, #2537).
+ * na (Unaffiliated) — the ninth faction's twenty-two surfaces (#2530, #2538).
  *
  * NOT AN OVERRIDE LIST, AND THE ONLY MANIFEST OF WHICH THAT IS TRUE. The other
  * eight declare what they override; this one declares what everything else
@@ -63,6 +63,7 @@ const DefaultFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileAr
 const DefaultPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/DefaultPraxisCard'))
 const DefaultPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/DefaultPraxisDetail'))
 const DefaultProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/DefaultProfileBody'))
+const DefaultProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/DefaultProposeTask'))
 const DefaultScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/DefaultScoreStamp'))
 const DefaultSeal = lazyArchetype(() => import('../components/metataskSeal/skins/DefaultSeal'))
 const DefaultSelectCard = lazyArchetype(() => import('../components/selectCard/DefaultSelectCard'))
@@ -91,6 +92,7 @@ export const DEFAULT_MANIFEST: FactionManifest = {
   editPraxis: () => DefaultEditPraxis,
   createCharacter: () => DefaultCreateCharacter,
   editCharacter: () => DefaultEditCharacter,
+  proposeTask: () => DefaultProposeTask,
   factionHero: () => DefaultFactionHero,
   factionBody: () => DefaultFactionBody,
   profileBody: () => DefaultProfileBody,

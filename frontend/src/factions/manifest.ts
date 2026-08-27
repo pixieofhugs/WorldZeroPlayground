@@ -10,7 +10,7 @@
  * declares nothing renders correctly everywhere, including on surfaces that do
  * not exist yet.
  *
- * The exception is `./default.ts`, which IS na's row and must claim all twenty-one.
+ * The exception is `./default.ts`, which IS na's row and must claim all twenty-two.
  * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
  * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
  * rather than falling further back.
@@ -59,6 +59,7 @@ import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../pages/editPraxis/useEditPraxis'
 import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
+import type { ProposeTaskState } from '../pages/proposeTask/useProposeTask'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 
@@ -152,6 +153,35 @@ export interface FactionManifest {
    */
   readonly editCharacter?: Lazy<Stateful<EditCharacterState>>
 
+  /**
+   * Proposing a task (#2538). ONE responsive component per faction, the same
+   * discipline the two character paths landed with.
+   *
+   * THE SLUG IS THE TARGET FACTION — the one the task is being proposed FOR,
+   * which the form asks for as a first-class field (#1824's chips) — and NOT the
+   * viewer's. Owner ruling, 2026-08-24: "propose a task should have the faction
+   * of the task being proposed". So the semantics are `createCharacter`'s,
+   * deliberately and exactly, because a reader should not have to learn two: the
+   * page reskins LIVE as the chips change, and returns to the Default (na)
+   * archetype when the pick is cleared (`''`) or when "unaffiliated" (`na`) is
+   * picked. An unregistered slug lands there too.
+   *
+   * ADR-0084's test is what licenses the dress at all — a page wears a faction
+   * iff the page as a whole resolves to exactly one, and this one does. The
+   * `Settings` exception (#2539) does not reach here: that page has a landed
+   * neutral DESIGN, and this one has no sheet, which puts it back under the
+   * standing rulings that a surface with no sheet gets DERIVED (2026-08-16)
+   * rather than left generic.
+   *
+   * Each faction's propose dress is derived from that faction's
+   * `createCharacter` page — same register, same geometry, same field furniture.
+   *
+   * `state.isLoggedIn` and `state.canProposeTask` are answered in the DISPATCHER,
+   * above the archetype: an archetype only ever draws the happy-path form, or
+   * its success screen. Eight copies of one gate is what that keeps out.
+   */
+  readonly proposeTask?: Lazy<Stateful<ProposeTaskState>>
+
   // ─── Duel surfaces ─────────────────────────────────────────────────────────
   // The duel SEAL is the only dispatched duel surface. ONE responsive component
   // per faction, both form factors (#1313): the skins hang their interior in
@@ -214,6 +244,7 @@ export const SURFACE_KEYS = [
   'profileBody',
   'createCharacter',
   'editCharacter',
+  'proposeTask',
   'duelSeal',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
