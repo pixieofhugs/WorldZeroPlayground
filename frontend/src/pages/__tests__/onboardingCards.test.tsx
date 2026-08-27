@@ -16,9 +16,10 @@
  *   2. **Neither provider privileged.** Two buttons that drift apart in size,
  *      class or ink is how one quietly becomes the recommended way in. The
  *      assertion compares the rendered tags rather than eyeballing the source.
- *   3. **The real Disclaimer.** `main` auto-deploys. Every other string on this
- *      route is a placeholder and must be; the document is not, and the check
- *      reads `common.json` so a swap to placeholder legal text fails here.
+ *   3. **The real Disclaimer.** `main` auto-deploys, and the check reads
+ *      `common.json` so a swap to placeholder legal text fails here. Since
+ *      #2766 the copy around it is written too, and the block below holds the
+ *      whole route to that.
  *   4. **Rainbow in exactly three places.** The restraint IS the design, which
  *      makes it the one visual rule a test can hold: three references per card,
  *      counted in the markup.
@@ -200,9 +201,10 @@ describe('the terms card', () => {
   it('reads the document from the same keys the Disclaimer page does', () => {
     const markup = render(<TermsCard onAccepted={() => {}} />)
 
-    // The document block holds no PLACEHOLDER — the framing line above it does,
-    // and that is the boundary: `main` auto-deploys, so provisional legal text
-    // would ship to production.
+    // No PLACEHOLDER in the document block: `main` auto-deploys, so provisional
+    // legal text would ship to production. The framing line above it used to be
+    // the placeholder side of that boundary and is written now (#2766), so the
+    // whole card is held to it by the block at the foot of this file.
     const document = /data-testid="onboarding-terms-document"[^>]*>([\s\S]*?)<\/div>/.exec(markup)?.[1]
 
     expect(document).toBeTruthy()

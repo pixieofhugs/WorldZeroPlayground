@@ -33,8 +33,13 @@ import { useTranslation } from 'react-i18next'
  * earns the mark it would wear na's ink over that faction's skin; the upgrade
  * is a `slug` prop through `factionCssVar`, and it is not worth a prop today.
  *
- * The copy is a PLACEHOLDER, like every string in this arc — the owner writes
- * the words (`locales/en/onboarding.json`).
+ * THE MARK SHOUTS, THE CATALOG DOES NOT (#2766). `mark.label` is stored as
+ * `Start here` and this surface uppercases it, so the player reads START HERE.
+ * The stored casing is therefore the sentence-case one; the home page's
+ * `home:hero.cta.loggedOut` says `Start Here` because THAT button does not
+ * uppercase and its Title Case is its own. Same phrase deliberately — the
+ * promise made on the marketing page is repeated where it pays off — and the
+ * two differ in the catalog only because one of the two surfaces shouts.
  */
 export default function StartHereMark() {
   const { t } = useTranslation('onboarding')
