@@ -225,9 +225,10 @@ export function scheduleMotionTick(
 
 /**
  * A counter that increments every `intervalMs` while motion is on, for an
- * ornament that animates by re-rendering rather than by CSS. Frozen at 0 while
- * motion is stilled, and — because `stilled` is a dependency of the effect —
- * torn down mid-life the moment a reader flips the switch off.
+ * ornament that animates by re-rendering rather than by CSS. While motion is
+ * stilled it holds whatever value it had reached (0 if it never ran), and —
+ * because `stilled` is a dependency of the effect — its timer is torn down
+ * mid-life the moment a reader flips the switch off.
  */
 export function useMotionTick(intervalMs: number): number {
   const stilled = useMotionStilled()
