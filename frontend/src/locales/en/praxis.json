@@ -5,7 +5,7 @@
   },
   "listPage": {
     "title": "Praxis",
-    "loading": "Loading praxis...",
+    "loading": "Loading praxis…",
     "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
     "emptyCaughtUp": "All caught up",
@@ -111,7 +111,7 @@
       "hide": "hide",
       "fail": "fail",
       "restore": "restore",
-      "failReasonPlaceholder": "Reason for failure (visible to player)...",
+      "failReasonPlaceholder": "Reason for failure (visible to player)…",
       "confirm": "confirm"
     },
     "owner": {

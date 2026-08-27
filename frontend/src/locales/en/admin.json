@@ -30,7 +30,7 @@
     "detailError": "Could not load account detail.",
     "suspendError": "Could not update account.",
     "banError": "Could not update character.",
-    "searchPlaceholder": "Search by email...",
+    "searchPlaceholder": "Search by email…",
     "empty": "No accounts found.",
     "idLabel": "ID #{{id}}",
     "suspend": "suspend",
@@ -127,7 +127,7 @@
       "flags_other": "{{count}} flags",
       "viewPraxis": "View praxis →",
       "viewThread": "View thread →",
-      "failNotePlaceholder": "Reason for failure (visible to player)...",
+      "failNotePlaceholder": "Reason for failure (visible to player)…",
       "actions": {
         "keep": "keep",
         "remove": "remove",

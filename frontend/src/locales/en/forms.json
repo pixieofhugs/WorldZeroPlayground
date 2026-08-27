@@ -57,7 +57,7 @@
     "basedPlaceholder": "City, region…",
     "basedCount": "{{count}}/100",
     "optional": "· optional",
-    "saveBusy": "Saving...",
+    "saveBusy": "Saving…",
     "saveIdle": "Save Changes",
     "cancel": "Cancel",
     "mobile": {
@@ -374,7 +374,7 @@
       "propose": "Could not propose task."
     },
     "submit": {
-      "busy": "Submitting...",
+      "busy": "Submitting…",
       "meta": "Propose Metatask",
       "task": "Submit proposal",
       "cancel": "Cancel",
