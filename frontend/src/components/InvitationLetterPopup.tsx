@@ -100,6 +100,10 @@ export default function InvitationLetterPopup({
 
   // Faction accent tokens (theme-aware; flip in dark via index.css cascade).
   const accent = factionCssVar(factionSlug)
+  // The same accent, measured safe as INK rather than as a fill (#2619). A
+  // separate name because it is a separate token: `accent` still paints the
+  // bullet, the box rule and the ENLIST fill, where the bare hue belongs.
+  const accentInk = factionCssVar(factionSlug, 'accent-ink')
   const border = factionCssVar(factionSlug, 'border')
   const name = factionName(factionSlug)
 
@@ -290,11 +294,20 @@ export default function InvitationLetterPopup({
                 </span>
                 <span>
                   {/* The slip's old label treatment: mono, uppercase, tracked.
-                      The mechanic's name takes the primary ink and the two
-                      flavour names the tertiary, so the true perk reads first.
-                      The faction hue stays on the bullet, the box rule and the
-                      ENLIST fill — it is a FILL, not an ink (#1932/#2108), and
-                      as 11px type here it ran 2.19:1 to 4.46:1 in light. */}
+                      #2298 §2 as ruled, finally (#2619): the mechanic's name is
+                      in the faction ACCENT and the two flavour names in the
+                      tertiary, so the true perk reads first by colour and not
+                      only by weight.
+
+                      `accentInk`, never `accent`. The spine hue as ink here is
+                      2.19:1 to 4.46:1 in light and `no-faction-hue-as-ink` is
+                      right to block it; the accent-ink family is the measured
+                      answer that did not exist when #2298 shipped the neutral.
+                      It clears 4.5:1 on this box's tinted ground in both
+                      cascades, which is the ground that gates — the bare page is
+                      the looser reading. The hue itself keeps the bullet, the
+                      box rule and the ENLIST fill: a FILL, not an ink
+                      (#1932/#2108, WORLD_ZERO_STYLE.md §3). */}
                   <span
                     style={{
                       display: 'block',
@@ -303,7 +316,7 @@ export default function InvitationLetterPopup({
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
                       lineHeight: 1.4,
-                      color: mechanic ? INK : FAINT,
+                      color: mechanic ? accentInk : FAINT,
                     }}
                   >
                     {perk.name}
