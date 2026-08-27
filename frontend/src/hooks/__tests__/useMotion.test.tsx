@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
 import {
   DEFAULT_MOTION,
@@ -26,7 +26,9 @@ import {
   nextMotion,
   readReducedMotion,
   resolveInitialMotion,
+  scheduleMotionTick,
   useMotion,
+  useMotionStilled,
 } from '../useMotion'
 
 const INDEX_CSS = readFileSync(
@@ -203,4 +205,150 @@ describe('index.css carries the kill switch the attribute drives', () => {
     expect(body).toMatch(/animation:\s*none\s*!important/)
     expect(body).toMatch(/transition:\s*none\s*!important/)
   })
+})
+
+/**
+ * #2622 — the half of the switch a stylesheet cannot reach.
+ *
+ * Two faction vote skins animate from a `setInterval` re-render rather than a
+ * CSS animation, so `[data-motion="off"]` had no property to null and they kept
+ * ticking with the switch off. NOT an accessibility defect: both honoured the
+ * OS query before this change and still do (the `systemReduced` cases below).
+ * What was broken is only the device-local switch reaching them.
+ *
+ * The seam is this hook, and the harness has no DOM, so the scheduling decision
+ * is asserted where it is made rather than by counting repaints.
+ */
+
+/** Pretend the reader has (or has not) stored a choice. */
+function withStoredMotion<T>(stored: string | null, body: () => T): T {
+  const holder = globalThis as { localStorage?: unknown }
+  const previous = holder.localStorage
+  holder.localStorage = { getItem: () => stored, setItem: () => {} }
+  try {
+    return body()
+  } finally {
+    if (previous === undefined) delete holder.localStorage
+    else holder.localStorage = previous
+  }
+}
+
+function StilledProbe() {
+  return <span data-testid="stilled">{String(useMotionStilled())}</span>
+}
+
+const readStilled = (html: string) =>
+  /<span data-testid="stilled">([^<]+)<\/span>/.exec(html)?.[1]
+
+const renderStilled = (stored: string | null, systemReduced: boolean) =>
+  readStilled(
+    withStoredMotion(stored, () =>
+      withSystemReduced(systemReduced, () =>
+        renderToStaticMarkup(
+          <MotionProvider>
+            <StilledProbe />
+          </MotionProvider>,
+        ),
+      ),
+    ),
+  )
+
+describe('useMotionStilled — the answer a JS clock asks for', () => {
+  it('is not stilled by default, so the skins animate as designed', () => {
+    expect(renderStilled(null, false)).toBe('false')
+  })
+
+  it('is stilled when the reader turned the Settings switch off (#2622)', () => {
+    expect(renderStilled('off', false)).toBe('true')
+  })
+
+  it('is stilled when the OS asks for reduced motion, switch untouched', () => {
+    expect(renderStilled(null, true)).toBe('true')
+  })
+
+  it('takes the composed answer, never the raw stored choice', () => {
+    // 'on' stored + OS asking = off in effect. A skin re-deriving the switch
+    // for itself would animate here; reading `motion` cannot.
+    expect(renderStilled('on', true)).toBe('true')
+  })
+
+  it('answers stilled outside a provider instead of throwing', () => {
+    // A control must not be handed a private copy of the setting, so `useMotion`
+    // throws. An ornament is the other case: rendered outside the app root it
+    // should hold still, not start a clock nothing will stop.
+    expect(readStilled(renderToStaticMarkup(<StilledProbe />))).toBe('true')
+  })
+})
+
+describe('scheduleMotionTick — stilled means nothing is scheduled', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('schedules no timer at all while motion is stilled', () => {
+    const onTick = vi.fn()
+    const stop = scheduleMotionTick(true, onTick, 120)
+    expect(vi.getTimerCount(), 'a stilled clock must not hold a timer').toBe(0)
+    vi.advanceTimersByTime(1000)
+    expect(onTick).not.toHaveBeenCalled()
+    stop()
+  })
+
+  it('ticks on its interval while motion is on', () => {
+    const onTick = vi.fn()
+    const stop = scheduleMotionTick(false, onTick, 120)
+    expect(vi.getTimerCount()).toBe(1)
+    vi.advanceTimersByTime(360)
+    expect(onTick).toHaveBeenCalledTimes(3)
+    stop()
+  })
+
+  /**
+   * The flip-while-mounted half, which a naive test misses: `stilled` is a dep
+   * of the effect that calls this, so React runs this teardown the moment a
+   * reader turns the switch off with a vote widget on screen — the widget does
+   * not go on ticking until it unmounts.
+   */
+  it('tears down its timer, so a flip to off stops an already-running clock', () => {
+    const onTick = vi.fn()
+    const stop = scheduleMotionTick(false, onTick, 120)
+    stop()
+    expect(vi.getTimerCount(), 'teardown left a timer running').toBe(0)
+    vi.advanceTimersByTime(1000)
+    expect(onTick).not.toHaveBeenCalled()
+  })
+
+  it('is safe to tear down a clock that never started', () => {
+    expect(() => scheduleMotionTick(true, () => {}, 120)()).not.toThrow()
+  })
+})
+
+/**
+ * Neither skin may keep a private clock or a private copy of the OS query — a
+ * second one would escape the switch exactly as the first pair did, and no
+ * render in this DOM-less harness can see it.
+ */
+describe('the two JS-driven vote skins read the shared clock', () => {
+  for (const skin of ['AlbescentVote', 'SingularityVote'] as const) {
+    const source = readFileSync(
+      fileURLToPath(new URL(`../../components/vote/${skin}.tsx`, import.meta.url)),
+      'utf8',
+    )
+
+    it(`${skin} schedules no interval of its own`, () => {
+      expect(source).not.toContain('setInterval')
+    })
+
+    it(`${skin} does not re-derive the motion state from matchMedia`, () => {
+      expect(source).not.toContain('matchMedia')
+    })
+
+    it(`${skin} drives its clock from useMotionTick`, () => {
+      expect(source).toContain('useMotionTick')
+    })
+  }
 })

@@ -1,5 +1,6 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMotionTick } from '../../hooks/useMotion'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteError } from './VoteShell'
@@ -20,9 +21,10 @@ import { VOTE_REFRAMES } from './voteReframes'
  *
  * The always-on scramble is a JS interval (a decode strip that stood still would
  * read as broken, not stilled), so it cannot be class-gated like the other widgets'
- * CSS animations. Instead it reads `prefers-reduced-motion` directly and FREEZES the
- * tick when set — the strip still shows noise vs. resolved glyphs, it just stops
- * churning.
+ * CSS animations. It runs on {@link useMotionTick}, which FREEZES it whenever motion
+ * is off — whether the OS asked for reduced motion or the reader turned the Settings
+ * switch off (#2622). Frozen, the strip still shows noise vs. resolved glyphs; it
+ * just stops churning.
  */
 
 /** Density glyphs a resolved tier prints, tier 1→5: noise floor → solid block. */
@@ -45,36 +47,11 @@ const SCRAMBLE_INTERVAL_MS = 120
 
 const TIERS = VOTE_REFRAMES['singularity'].tiers
 
-/** matchMedia-backed reduced-motion flag; defaults to stilled when absent (SSR/test). */
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mql = window.matchMedia('(prefers-reduced-motion: reduce)')
-      mql.addEventListener('change', onChange)
-      return () => mql.removeEventListener('change', onChange)
-    },
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    () => true,
-  )
-}
-
-/** 120ms scramble clock; frozen (never ticks) when `enabled` is false. */
-function useScrambleTick(enabled: boolean): number {
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    if (!enabled) return
-    const id = setInterval(() => setTick((value) => value + 1), SCRAMBLE_INTERVAL_MS)
-    return () => clearInterval(id)
-  }, [enabled])
-  return tick
-}
-
 export default function SingularityVote({ praxisId, currentValue }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
   const [hovered, setHovered] = useState(0)
-  const reducedMotion = usePrefersReducedMotion()
-  const tick = useScrambleTick(!reducedMotion)
+  const tick = useMotionTick(SCRAMBLE_INTERVAL_MS)
 
   if (!user) {
     return <VoteLoginGate />

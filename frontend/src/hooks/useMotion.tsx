@@ -41,14 +41,14 @@ import {
  * disabled state is DELIBERATE — it is not a bug, and it is not a loading
  * state.
  *
- * KNOWN GAP (deliberate, #2154 scope). Two faction vote skins animate from JS
- * rather than CSS — `SingularityVote`'s scramble clock and `AlbescentVote`'s
- * morph clock are `setInterval` re-renders. A CSS kill switch cannot reach
- * either. Both already honour the OS `prefers-reduced-motion` query, which is
- * the accessibility-critical half; wiring them to this preference as well is a
- * separate change to two faction components.
- * ponytail: the upgrade path is to export `useMotionStilled()` from here and
- * have both skins read it instead of their duplicated local matchMedia hook.
+ * WHAT THE ATTRIBUTE CANNOT DRIVE
+ * -------------------------------
+ * A stylesheet can only null a property that exists. Motion driven from JS —
+ * `SingularityVote`'s scramble clock and `AlbescentVote`'s morph clock, both
+ * `setInterval` re-renders — has no `animation` or `transition` for the rule
+ * above to reach, so the switch left them ticking (#2622). Those two now read
+ * `useMotionTick` below and schedule nothing while motion is off. Anything else
+ * that animates from JS belongs on the same clock for the same reason.
  */
 export type Motion = 'on' | 'off'
 
@@ -188,4 +188,54 @@ export function useMotion(): MotionState {
     throw new Error('useMotion must be used within a MotionProvider')
   }
   return value
+}
+
+/**
+ * Is motion stilled right now? The JS-clock equivalent of matching
+ * `[data-motion="off"]`, and the composed answer — the OS has already had its
+ * say inside `effectiveMotion`, so a caller must never pair this with its own
+ * `prefers-reduced-motion` read (#2622).
+ *
+ * Unlike `useMotion`, this does NOT throw without a provider; it answers
+ * "stilled". Its callers are ornaments rather than controls, so a wrong answer
+ * is asymmetric: an ornament rendered outside the app root (a test, an isolated
+ * preview) should hold still rather than start a clock nothing will stop. That
+ * is the same default the vote skins' own matchMedia hooks carried before this.
+ */
+export function useMotionStilled(): boolean {
+  return (useContext(MotionContext)?.motion ?? 'off') === 'off'
+}
+
+/**
+ * Start a repeating clock unless motion is stilled, returning its teardown.
+ *
+ * Lifted out of `useMotionTick` because "off schedules nothing" is the whole
+ * claim of #2622 and the test harness has no DOM to observe an effect in. Plain
+ * function, no React: the test can assert the timer directly.
+ */
+export function scheduleMotionTick(
+  stilled: boolean,
+  onTick: () => void,
+  intervalMs: number,
+): () => void {
+  if (stilled) return () => {}
+  const id = setInterval(onTick, intervalMs)
+  return () => clearInterval(id)
+}
+
+/**
+ * A counter that increments every `intervalMs` while motion is on, for an
+ * ornament that animates by re-rendering rather than by CSS. While motion is
+ * stilled it holds whatever value it had reached (0 if it never ran), and —
+ * because `stilled` is a dependency of the effect — its timer is torn down
+ * mid-life the moment a reader flips the switch off.
+ */
+export function useMotionTick(intervalMs: number): number {
+  const stilled = useMotionStilled()
+  const [tick, setTick] = useState(0)
+  useEffect(
+    () => scheduleMotionTick(stilled, () => setTick((value) => value + 1), intervalMs),
+    [stilled, intervalMs],
+  )
+  return tick
 }
