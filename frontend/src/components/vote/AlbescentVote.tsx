@@ -151,7 +151,13 @@ export default function AlbescentVote({
             transition: MORPH_TRANSITION,
             // Unreached blobs sit as a faint neutral fill (the spectrum has not
             // reached them yet); reached ones window the shared rainbow.
-            backgroundColor: reached ? 'transparent' : 'var(--faction-default-dot-ring)',
+            //
+            // `-dot-fill`, not the `-dot-ring` the other two vote surfaces read
+            // (#2608). Same token until light forked: this blob composites on
+            // `.alb-prism`'s multiply sweep rather than the flat na card, where
+            // the ring's value reads 2.70:1. The name is `default`-family
+            // because `CSS_KEY` maps albescent -> default (ADR-0039 / #783).
+            backgroundColor: reached ? 'transparent' : 'var(--faction-default-dot-fill)',
             backgroundImage: reached ? 'var(--faction-default-rainbow)' : 'none',
             backgroundRepeat: 'no-repeat',
             backgroundSize: `${SPAN}px ${size}px`,
