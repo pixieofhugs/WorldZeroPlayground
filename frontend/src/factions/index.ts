@@ -45,25 +45,14 @@ export { SURFACE_KEYS } from './manifest'
  * consumer that iterates gets the house order for free, with `na` last —
  * outside the rainbow, the way it is outside `FACTION_RAINBOW_ORDER`.
  *
- * `na` HAS A MANIFEST SINCE #2530, and the sentence that used to stand here
- * ("unaffiliated is a state rather than a faction and deliberately has no
- * manifest: it falls through to the neutral `Default*` skins everywhere") was
- * true about the game and false about this file. It is still a state rather than
- * a faction — `CSS_KEY['na'] === 'default'` and `isKnownFaction('na')` is still
- * false (ADR-0039, #749) — but "falls through" described a SECOND dispatch
- * mechanism, `pickVariant`'s third argument, hand-written at ~20 call sites for
- * this one slug. `./default.ts` is the same twenty components reached the same
- * way as everyone else's; nothing about what renders changed.
+ * `na` has a manifest here (`./default.ts`) and is nonetheless a state rather
+ * than a faction everywhere else: `CSS_KEY['na'] === 'default'` and
+ * `isKnownFaction('na')` is false (ADR-0039, #749). Being in this list means it
+ * is reached by the registry like the other eight, not that it joined them.
  *
- * `wow` (Warriors of Whimsy) began with no manifest (#784 moved its old pink
- * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gave it its
- * FIRST bespoke surfaces: the praxis card (the cream/gold/plum chronicle), its
- * mobile twin and the balloon vote widget; #840 added the score stamp and #835
- * the edit-praxis composer ("The Squire's Writ") — which #836 gave a mobile twin
- * and #1181 collapsed back to one responsive component when ADR-0065 retired the
- * `mobileEditPraxis` surface. It claims every key in `SURFACE_KEYS` now, and
- * `surfaceDispatch.test.ts` is what holds it there: that file derives the bar
- * from what the reference factions skin, so a new surface raises it by itself.
+ * `surfaceDispatch.test.ts` is the executable record of which slugs skin which
+ * surface — a de-registration flips a bespoke row red, an accidental
+ * registration flips a defaulted row red.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,
