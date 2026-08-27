@@ -372,19 +372,3 @@ def detail_params(detail: Any) -> dict[str, Any]:
         if isinstance(params, Mapping):
             return dict(params)
     return {}
-
-
-__all__ = [
-    "DETAIL_CODE_KEY",
-    "DETAIL_CONTEXT_PARAM",
-    "DETAIL_MESSAGE_KEY",
-    "DETAIL_PARAMS_KEY",
-    "ErrorCode",
-    "ErrorParams",
-    "coded_detail",
-    "coded_error",
-    "detail_code",
-    "detail_message",
-    "detail_params",
-    "raise_coded",
-]

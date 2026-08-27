@@ -179,9 +179,3 @@ async def remove_metatask(
 
     await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
-
-
-__all__ = [
-    "apply_metatask",
-    "remove_metatask",
-]
