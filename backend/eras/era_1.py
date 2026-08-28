@@ -51,7 +51,7 @@ ERA_1_FACTIONS = {
         collab_other_modifier=1.0,
         duel_win_modifier=2.0,        # duel win: 200% of base (Snide high-risk bonus)
         duel_loss_modifier=0.0,       # duel loss: 0% of base (Snide high-risk penalty)
-        takes_duel_ties=True,         # takes the tie, when it is the SOLE holder (#2664)
+        takes_duel_ties=True,         # takes the tie, as SOLE holder (#2664)
     ),
     # Warriors of Whimsy (#811). Its perk is MECHANICAL, not multiplicative: the
     # level jump below is WOW's only perk, so every modifier drops to the Era 1

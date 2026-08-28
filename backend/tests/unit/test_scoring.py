@@ -439,8 +439,12 @@ def test_duel_multiplier_tie_follows_the_config_not_the_slug():
     era that hands the ability to wow must bank wow the win rate on a tie.
     """
     moved = _era_where_only("wow")
-    wow = compute_duel_multiplier("wow", "snide", is_winner=False, is_tied=True, era=moved)
-    snide = compute_duel_multiplier("snide", "wow", is_winner=False, is_tied=True, era=moved)
+    wow = compute_duel_multiplier(
+        "wow", "snide", is_winner=False, is_tied=True, era=moved
+    )
+    snide = compute_duel_multiplier(
+        "snide", "wow", is_winner=False, is_tied=True, era=moved
+    )
     assert wow == moved.factions["wow"].duel_win_modifier
     assert snide == moved.factions["snide"].duel_loss_modifier
 
