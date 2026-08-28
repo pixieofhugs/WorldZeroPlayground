@@ -103,8 +103,19 @@ function card(Card: ComponentType<CardProps>): string {
   );
 }
 
-function stamp(Stamp: ComponentType<ScoreStampProps>): string {
-  return renderToStaticMarkup(<Stamp praxis={PRAXIS} />);
+/**
+ * The same praxis banked at the TASK DETAIL fixture's total (#2638).
+ *
+ * `snideDetail` builds `modifiedPoints: 1080`, four glyphs — the widest figure
+ * the loop has to hold — while `PRAXIS` banks two. That gap is why the mount
+ * comparison below used to mask the number out. It does not have to: the two
+ * surfaces can be asked for the SAME figure, and then the two marks are
+ * byte-identical with nothing masked at all.
+ */
+const PRAXIS_WIDE = { ...PRAXIS, score: 1080 } as PraxisCardOut;
+
+function stamp(Stamp: ComponentType<ScoreStampProps>, praxis: PraxisCardOut = PRAXIS): string {
+  return renderToStaticMarkup(<Stamp praxis={praxis} />);
 }
 
 /**
@@ -333,26 +344,80 @@ describe("each mount overrides what its ground demands (#2042)", () => {
    * fails this, where a list of expected declarations would only fail the ones
    * somebody remembered to list.
    *
-   * WHAT THIS DOES NOT SETTLE, and #2638 carries: the mark got SMALLER (96 from
-   * 128) on the page that draws the widest figure the loop ever holds, and its
-   * figure moved from cream to acid on the detail slab. Both follow from the
-   * mount and neither has been looked at in a browser.
+   * #2638 SETTLED THE SIZE HALF and the ink half, and neither reopens the fork.
+   * The loop stays 96 on both surfaces; what gives at four glyphs is the type
+   * rung, which is a function of the DATUM and so is the same function on both
+   * surfaces — see the ramp test below. That is why this comparison is now made
+   * at a MATCHED figure and masks nothing: ask the two surfaces for the same
+   * number and every byte of the two marks has to agree, rung included.
    */
   it("S.N.I.D.E.'s task detail draws the praxis card's mark, byte for byte", () => {
-    // The FIGURE differs and must: a task detail totals `modifiedPoints` (1080
-    // here) where the praxis fixture banked 22. Everything that is the drawing
-    // rather than the datum is compared, so the number is masked out and nothing
-    // else is.
-    const drawing = (markup: string) => markup.replace(/>\d+</g, ">#<");
     const mark = penCircle(snideDetail());
-    expect(drawing(mark), "the same drawing, not a look-alike").toBe(
-      drawing(penCircle(stamp(SnideScoreStamp))),
+    expect(mark, "the same drawing, not a look-alike").toBe(
+      penCircle(stamp(SnideScoreStamp, PRAXIS_WIDE)),
     );
     // The wall's inks still may not reach a slab: `-note-ink` is the SAME HEX as
     // `-card-bg` in light (1.05:1) and `-note-pink-ink` is 3.27:1. Kept from the
     // pair above, because the mount changed which inks arrive and not this rule.
     expect(mark).not.toContain("--faction-snide-note-ink");
     expect(mark).not.toContain("--faction-snide-note-pink-ink");
+  });
+
+  /**
+   * The four-glyph step-down (#2638, owner ruling 2026-08-27).
+   *
+   * #2554 gave the task detail the task CARD's loop — 96px, sized against the
+   * praxis card's two-glyph `22` — on the page whose figure is `modifiedPoints`
+   * and runs to four. The ruling is that the loop keeps its one width across
+   * both surfaces and the TYPE steps down one rung when the figure is long:
+   * `--text-title` (24px, "titles, scores" in index.css) from `--text-heading`
+   * (32px). No size seam on `ScoreStampProps`; the other eight archetypes see no
+   * diff.
+   *
+   * Both halves are pinned here because only the pair is the ruling: a
+   * step-down that also caught `22` would be a regression on the surface the
+   * loop was drawn for.
+   */
+  it("steps the figure down one rung at four digits and leaves shorter ones alone", () => {
+    // The census fixture's `modifiedPoints: 1080` — the widest figure the loop
+    // has to hold, and the case the ruling was drawn at.
+    expect(penCircle(snideDetail()), "1080 drops to the next rung down").toContain(
+      "font-size:var(--text-title)",
+    );
+    // The praxis card's `22` must not move.
+    const banked = penCircle(stamp(SnideScoreStamp));
+    expect(banked, "22 keeps the headline rung").toContain("font-size:var(--text-heading)");
+    expect(banked).not.toContain("font-size:var(--text-title)");
+    // The loop itself is 96 on both, which is the half of #2638 that did NOT change.
+    for (const mark of [penCircle(snideDetail()), banked]) {
+      expect(mark, "the loop keeps one width across both surfaces").toContain("width:96px");
+    }
+  });
+
+  /**
+   * THE DECIMAL, which is where "four glyphs" and "four digits" part company
+   * (owner, 2026-08-28, sharpening the #2638 ruling).
+   *
+   * `21.6` is four glyphs and three digits. `PenCircle`'s docblock has already
+   * measured this shape — at `--text-heading` a four-glyph `13.6` is ~47px
+   * against the loop's ~77px of inner span — so a glyph count would shrink a
+   * figure the atom documents as fitting, and leave the two contradicting each
+   * other.
+   *
+   * NOT A HYPOTHETICAL, AND NOT REACHABLE TODAY, WHICH IS EXACTLY WHY IT IS
+   * PINNED HERE. Era 1 sets every faction's `own_task_modifier` and
+   * `other_task_modifier` to 1.0, so `modifiedPoints` is integral and this case
+   * cannot be produced on the live site. Era 2 ships 1.2 and 0.8
+   * (`backend/eras/era_2.py`), so the flip is what makes it real — and a case a
+   * browser cannot currently reach is one only a test can defend.
+   */
+  it("keeps a four-glyph decimal at the headline rung — digits are what crowd", () => {
+    const decimal = penCircle(stamp(SnideScoreStamp, { ...PRAXIS, score: 21.6 } as PraxisCardOut));
+    expect(decimal, "21.6 renders as four glyphs").toContain(">21.6<");
+    expect(decimal, "…and keeps 32px, because it is three DIGITS").toContain(
+      "font-size:var(--text-heading)",
+    );
+    expect(decimal).not.toContain("font-size:var(--text-title)");
   });
 
   it("Singularity needs no ink override — the well carries its own ground", () => {
