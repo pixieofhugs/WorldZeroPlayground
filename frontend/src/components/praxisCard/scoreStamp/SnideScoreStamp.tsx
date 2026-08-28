@@ -30,6 +30,31 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
   const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
+  /* THE FIGURE STEPS DOWN WHEN IT IS LONG; THE LOOP NEVER MOVES (#2638, owner
+     ruling 2026-08-27). #2554 mounted this stamp on the S.N.I.D.E. TASK DETAIL,
+     whose figure is `modifiedPoints` and runs to four glyphs, on a loop drawn at
+     96 for the praxis card's two-glyph `22`. Of the three shapes the issue drew,
+     the ruling took the third: one width across both surfaces, and the TYPE
+     gives. So there is deliberately no size on `ScoreStampProps` — the other
+     eight archetypes see no diff — and nothing new on the atom either, because
+     `PenCircle` has taken `valueSize` since #2035 for exactly this.
+
+     One rung down the ramp, not an invented number: `--text-title` is 24px and
+     `index.css` defines it as "titles, scores". The count is of GLYPHS in the
+     formatted figure, so `13.6` steps too — a decimal point is narrow, but the
+     rule the ruling states is a glyph count and one rule beats a per-character
+     width model nobody can check.
+
+     It is resolved HERE rather than inside `PenCircle` so the atom stays dumb
+     and the S.N.I.D.E. TASK CARD, which draws base points through the same atom,
+     keeps the rung it was measured at. `DefaultPointsRing` and
+     `SingularityReadout` are the same shape with the same `--text-heading`
+     default, so the same crowding is latent on their surfaces — deliberately out
+     of scope (#2638 scopes to S.N.I.D.E.; #2626's sweep looks). The fix shape is
+     proven, so generalising it later is a move, not a re-derivation. */
+  const figure = formatPoints(total);
+  const figureSize = figure.length >= 4 ? "var(--text-title)" : "var(--text-heading)";
+
   /** The tag's typed working line — meta, the tally, and the habit bonus. */
   const typedLine = {
     fontFamily: "var(--font-body)",
@@ -174,11 +199,14 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           The plate itself is opaque since that issue; see `-stamp-bg`.
 
           The loop is drawn at 96, which is the desktop task card's own width, so
-          the tag's `minWidth: 116` grows to fit it rather than clipping it. */}
+          the tag's `minWidth: 116` grows to fit it rather than clipping it. It
+          stays 96 on the task detail too, and the figure steps down instead —
+          see `figureSize` above (#2638). */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <PenCircle
           size={96}
-          value={formatPoints(total)}
+          value={figure}
+          valueSize={figureSize}
           unit={t("card.stamp.pointsShort")}
           valueColor="var(--faction-snide-acid)"
           unitColor="var(--faction-snide-vote-off)"
