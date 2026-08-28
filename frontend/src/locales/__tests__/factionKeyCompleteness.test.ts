@@ -53,8 +53,12 @@ const EXEMPT: Record<string, string> = {
   "votes:(root)|albescent":
     "Albescent still has no vote voice and counts in arabic (#783), pinned in voteLadders.test.tsx.",
   "feed:factionHero|na":
-    "#2805 folds the hero's motto onto factionSelect.{F}.tagline, which na does have. " +
-    "Revisit this exemption when that lands — the block may not need an na entry at all.",
+    "Revisited when #2805 landed, and it stays: the hole this exemption was hiding is " +
+    "closed rather than papered over. The motto — the one slot na was missing — is gone " +
+    "from the block entirely and every hero reads factionSelect.{F}.tagline, which na has. " +
+    "What is left under factionHero is each faction's own eyebrow and members noun, and " +
+    "na's hero draws neither: DefaultFactionHero takes the SHARED factions:detail.eyebrow " +
+    "and factionHero.stats.members. So there is no na entry to write.",
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",

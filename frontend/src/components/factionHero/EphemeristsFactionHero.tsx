@@ -161,7 +161,7 @@ export default function EphemeristsFactionHero({
               border: `1px solid ${BRASS}`,
             }}
           >
-            {i18n.t("feed:factionHero.ephemerists.motto")}
+            {i18n.t("feed:factionSelect.ephemerists.tagline")}
           </div>
           <p
             className="content-text"

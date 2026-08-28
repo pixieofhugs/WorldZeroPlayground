@@ -216,6 +216,12 @@ answer — not by widening this test.`,
       // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
       // one declares by interpolation to every scan (#2674).
       "../../utils/factionRoles",
+      // Resolved, not waived: the only binding taken from here is
+      // `redactableText`, which reads the copy catalog through the Albescent
+      // gate (#2806). It returns a STRING and names no token — the module's
+      // paint helpers (`factionFill`, `factionCssVar`, `factionSpectrumSheet`)
+      // are not imported, so nothing colour-bearing arrives with it.
+      "../../utils/factions",
       "../sigil/WowSigil",
       // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
       // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the

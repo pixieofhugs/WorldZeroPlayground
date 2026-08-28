@@ -201,14 +201,12 @@
     "albescent": {
       "factionLine": "Faction · {{name}}",
       "unrankedLine": "Unranked · By design",
-      "motto": "We play for the love of the game",
       "stats": {
         "members": "Players"
       }
     },
     "ephemerists": {
       "eyebrow": "World Zero · Cartographers",
-      "motto": "One who wanders is never lost",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
         "members": "wanderers"
@@ -216,13 +214,11 @@
     },
     "everymen": {
       "eyebrow": "World Zero · Hardest Workers",
-      "motto": "Be the best you you can be",
       "stats": {
         "members": "fellows"
       }
     },
     "singularity": {
-      "motto": "// we are one",
       "boot": {
         "faction": "FACTION: {{name}}",
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",
@@ -235,13 +231,11 @@
     },
     "snide": {
       "eyebrow": "World Zero · Arsonists",
-      "motto": "Too cool for taglines",
       "stats": {
         "members": "pranksters"
       }
     },
     "ua": {
-      "motto": "Keep the Practice alive",
       "eyebrow": "World Zero · A daily practice",
       "stats": {
         "members": "Artisans"
@@ -249,14 +243,12 @@
     },
     "coven": {
       "eyebrow": "World Zero · Magic's in the air",
-      "motto": "Community is Magic",
       "stats": {
         "members": "witches"
       }
     },
     "wow": {
       "eyebrow": "World Zero · The Capricious Court",
-      "motto": "Imsy-whay or-fay every-oneway.",
       "stats": {
         "members": "Knights"
       }
@@ -265,7 +257,6 @@
   "factionSelect": {
     "ua": {
       "banner": "The Unwavering Artisans Want You",
-      "name": "Unwavering Artisans",
       "tagline": "Keep the Practice alive",
       "masthead": "World Zero · Nº I",
       "wordmark": "UA",
@@ -283,7 +274,6 @@
     "coven": {
       "banner": "The Cozy Coven Wants You",
       "tagline": "Community is Magic",
-      "name": "Cozy Coven",
       "blurb": "A little magic, a lot of mischief. World Zero's coven for the soft and the strange — take a task, cast a small spell, let the circle cheer.",
       "status": {
         "locked": "Keep Working Together ✦",
@@ -297,7 +287,6 @@
     "wow": {
       "banner": "THE WARRIORS OF WHIMSY WANT YOU",
       "tagline": "Imsy-whay or-fay every-oneway.",
-      "name": "Warriors of Whimsy",
       "chosen": "CHOSEN",
       "status": {
         "locked": "MORE JOUSTING REQUIRED",
@@ -310,7 +299,6 @@
     },
     "snide": {
       "banner": "S.N.I.D.E. Is Cool With You",
-      "name": "S.N.I.D.E.",
       "tagline": "Too cool for taglines",
       "masthead": "Field Dispatch · Nº 0666",
       "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
@@ -325,7 +313,6 @@
     },
     "ephemerists": {
       "banner": "The Ephemerists Want You",
-      "name": "The Ephemerists",
       "tagline": "One who wanders is never lost",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
       "status": {
@@ -340,7 +327,6 @@
     "singularity": {
       "banner": "Singularity Wants You",
       "tagline": "// we are one",
-      "name": "Singularity",
       "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
       "status": {
         "locked": "// accrue signal to be granted access",
@@ -352,7 +338,6 @@
       "cta": "visit_node --enter"
     },
     "everymen": {
-      "name": "Everymen",
       "tagline": "Be the best you you can be",
       "banner": "THE EVERYMEN WANT YOU",
       "headline": "PICK UP THE LOAD",
@@ -368,7 +353,6 @@
     },
     "albescent": {
       "tagline": "We play for the love of the game",
-      "name": "Albescent",
       "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
       "status": {
         "locked": "Keep Playing",
@@ -381,7 +365,6 @@
     },
     "na": {
       "tagline": "We play for the love of the game",
-      "name": "Unaffiliated",
       "blurb": "Every path is still open. Unaffiliated players take any task on the board and answer to no banner — pick a side when one of them earns it.",
       "status": {
         "locked": "No faction has claimed you.",
