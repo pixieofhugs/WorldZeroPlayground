@@ -85,7 +85,7 @@ export interface FieldDeskHomeState {
  * answer, and neither used to say which it was. `PendingRowPill.activityLabel`
  * holds the copy and the argument.
  */
-export type PendingRowKind = 'requests' | 'notifications' | 'clear'
+type PendingRowKind = 'requests' | 'notifications' | 'clear'
 
 export interface PendingRowState {
   kind: PendingRowKind
@@ -104,7 +104,7 @@ export interface PendingRowState {
 }
 
 /** The news side of `/me/sidebar`, which reports it twice over. */
-export interface NewsWaiting {
+interface NewsWaiting {
   /**
    * `global_activity_count` — how many items there are. `undefined` only under
    * deploy skew, when the API predates the field (#1587).

@@ -20,7 +20,7 @@
  * than a confident wrong number.
  */
 
-export interface CollabPublishWindow {
+interface CollabPublishWindow {
   /** How much of the window is gone, clamped to 0–1. Drives the ring sweep. */
   fraction: number;
   /** Whole days left. */

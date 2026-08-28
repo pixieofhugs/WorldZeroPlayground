@@ -42,7 +42,7 @@ import { collabCopy } from "../../../components/collab/collabCopy";
 import { factionCssVar } from "../../../utils/factions";
 import { collabPublishWindow } from "../waiting/waitingClock";
 
-export interface HoldoutPublishNoticeProps {
+interface HoldoutPublishNoticeProps {
   members: readonly PraxisMemberOut[];
   currentCharacterId: number | null | undefined;
   factionSlug: string | null | undefined;

@@ -14,7 +14,7 @@
 // finds duplicate object keys. Array indices are not reflected in the reported
 // path — a duplicate inside `[{...}, {...}]` reports the enclosing key path.
 
-export interface DuplicateKey {
+interface DuplicateKey {
   /** Dotted path to the object that holds the duplicate, plus the key itself. */
   path: string
   key: string

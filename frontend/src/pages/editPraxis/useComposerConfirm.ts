@@ -14,7 +14,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 
-export interface ComposerConfirm {
+interface ComposerConfirm {
   pendingConfirm: ConfirmRequest | null;
   /** Ask, and await the answer. Resolves false on dismiss. */
   askConfirm: (request: ConfirmRequest) => Promise<boolean>;

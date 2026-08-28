@@ -45,7 +45,7 @@ export type TaskCreate = components['schemas']['TaskCreate']
  */
 export type TaskSort = 'newest' | 'oldest' | 'level'
 
-export interface TaskFilters {
+interface TaskFilters {
   status?: string
   /**
    * Repeated `?faction=` — a UNION, not an intersection (#1364). One slug

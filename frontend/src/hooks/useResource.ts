@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState, type DependencyList } from 'react'
 
-export interface UseResourceResult<T> {
+interface UseResourceResult<T> {
   data: T | null
   loading: boolean
   error: Error | null
   refetch: () => void
 }
 
-export interface ResourceHandlers<T> {
+interface ResourceHandlers<T> {
   onStart: () => void
   onData: (data: T) => void
   onError: (error: Error) => void

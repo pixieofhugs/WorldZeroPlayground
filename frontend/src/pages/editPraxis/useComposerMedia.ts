@@ -48,7 +48,7 @@ export function imageEditFailureMessage(
   });
 }
 
-export interface ComposerMedia {
+interface ComposerMedia {
   media: MediaItemOut[];
   /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
   setMedia: (items: MediaItemOut[]) => void;

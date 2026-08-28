@@ -53,7 +53,7 @@ import { isFactionHiddenFromChoosers } from '../utils/factions'
  */
 
 /** One faction's row in the readout — the six modifiers, plus the flag. */
-export interface ArrayFactionRow {
+interface ArrayFactionRow {
   slug: string
   own_task_modifier: number
   other_task_modifier: number
@@ -65,7 +65,7 @@ export interface ArrayFactionRow {
 }
 
 /** The era rules stated as prose everywhere else, stated as numbers here. */
-export interface ArrayRules {
+interface ArrayRules {
   level_thresholds: number[]
   duel_level_required: number
   max_task_signups: number
@@ -73,7 +73,7 @@ export interface ArrayRules {
   pending_task_admin_review_hours: number
 }
 
-export interface ArrayReadout {
+interface ArrayReadout {
   rules: ArrayRules
   factions: ArrayFactionRow[]
   level_profiles: LevelProfile[]

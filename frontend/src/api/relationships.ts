@@ -34,7 +34,7 @@ export interface RelationshipListItem {
   display_status: 'Mutual Friends' | 'Rivals' | 'Tsundere' | 'One-sided Friend' | 'One-sided Foe' | 'Secret Admirer' | 'Targeted' | 'Unknown'
 }
 
-export interface RelationshipFilters {
+interface RelationshipFilters {
   status?: string
   type?: string
 }

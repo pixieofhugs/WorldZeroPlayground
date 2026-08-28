@@ -214,7 +214,7 @@ export function applyMarkdown(
 }
 
 /** A single-range document edit, in the shape CodeMirror's `dispatch` takes. */
-export interface TextReplacement {
+interface TextReplacement {
   from: number;
   to: number;
   insert: string;

@@ -24,7 +24,7 @@ export type AccountDetail = components['schemas']['AccountDetail']
 export type CharacterStatus = components['schemas']['CharacterStatus']
 
 /** Full admin character row. */
-export type AdminCharacterSummary = components['schemas']['CharacterSummary']
+type AdminCharacterSummary = components['schemas']['CharacterSummary']
 
 /** One flag row on a queue item (#237, ADR-0037). `reason` is a vocabulary key;
  *  legacy free text and `other` notes surface via `reason_detail`, which is

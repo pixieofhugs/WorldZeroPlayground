@@ -23,7 +23,7 @@ export function resolveInitialCollapsed(stored: string | null): boolean {
   return stored === COLLAPSED
 }
 
-export interface SidebarCollapsedState {
+interface SidebarCollapsedState {
   readonly collapsed: boolean
   readonly toggle: () => void
 }

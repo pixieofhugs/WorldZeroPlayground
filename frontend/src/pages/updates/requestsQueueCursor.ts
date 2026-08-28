@@ -136,7 +136,7 @@ export function isQueueDone(items: readonly ActivityFeedItem[]): boolean {
   return items.length === 0
 }
 
-export interface QueueTray {
+interface QueueTray {
   /** The chips to draw, in feed order, never including the card on screen. */
   chips: ActivityFeedItem[]
   /** How many waiting obligations the cap is hiding — the `+N more` number. */

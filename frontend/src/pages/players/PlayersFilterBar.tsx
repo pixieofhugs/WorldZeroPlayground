@@ -8,7 +8,7 @@ import {
   type PlayersRail,
 } from './playersData'
 
-export interface PlayersFilterBarProps {
+interface PlayersFilterBarProps {
   filters: PlayersFilters
   onChange: (next: PlayersFilters) => void
   /**

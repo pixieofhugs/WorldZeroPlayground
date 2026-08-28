@@ -1,12 +1,12 @@
 import i18n from '../../i18n'
 import { hasOwnKey } from '../../utils/hasOwnKey'
 
-export interface ReframeTier {
+interface ReframeTier {
   value: number
   label: string
 }
 
-export interface VoteReframe {
+interface VoteReframe {
   /** Omit for arabic; 'roman' for Ephemerists-style roman numeral display. */
   numeral?: 'roman'
   tiers: ReframeTier[]

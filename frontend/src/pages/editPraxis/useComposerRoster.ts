@@ -54,7 +54,7 @@ export interface CrewNudgeResult {
   skipped: number;
 }
 
-export interface ComposerRoster {
+interface ComposerRoster {
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
   inviteResults: CharacterOut[];

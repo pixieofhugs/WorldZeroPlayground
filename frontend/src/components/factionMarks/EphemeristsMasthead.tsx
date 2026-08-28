@@ -118,7 +118,7 @@ const DECLINATION = "+44° 03′";
  * a register under keys of its own.
  */
 
-export type MastheadScale = "page" | "card";
+type MastheadScale = "page" | "card";
 
 interface MastheadSize {
   /** The sigil's box. It was a HEIGHT while the mark owned a 486:560 ratio

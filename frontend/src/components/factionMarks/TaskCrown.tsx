@@ -26,7 +26,7 @@ import i18n from "../../i18n";
  * for this one mark, and #1219 stands everywhere else. The disc and the glyph
  * still flip; only the ring stopped.
  */
-export interface TaskCrownProps {
+interface TaskCrownProps {
   /** Overall medallion diameter, px. */
   size?: number;
   /** Ring inset from the edge, px (the coloured rainbow band width). */

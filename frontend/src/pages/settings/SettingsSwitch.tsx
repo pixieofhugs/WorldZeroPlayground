@@ -32,7 +32,7 @@ import type { CSSProperties } from 'react'
  * `disabled` button leaves the tab order, so the one reader most likely to need
  * the explanation is the one who can never reach it.
  */
-export interface SettingsSwitchProps {
+interface SettingsSwitchProps {
   readonly checked: boolean
   /** The accessible name. Carries the REASON when the switch is not movable. */
   readonly label: string

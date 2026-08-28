@@ -39,7 +39,7 @@ const DEFAULT_MAX_TASK_SLOTS = 20;
  * that none of the nine archetypes has to know a confirm exists. They keep
  * calling `handleDrop`; this is what the dispatcher draws when they do.
  */
-export interface DropConfirmState {
+interface DropConfirmState {
   /** Fully worded, built by `composerConfirms` — see `dropConfirm` below. */
   request: ConfirmRequest;
   onConfirm: () => void;

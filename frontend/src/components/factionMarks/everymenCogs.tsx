@@ -84,7 +84,7 @@ function buildCogPath(): string {
  */
 export const EVERYMEN_COG_PATH = buildCogPath();
 
-export interface EverymenCogProps {
+interface EverymenCogProps {
   /** Drawn width and height in px. Ornament geometry (§4a). */
   size: number;
   /** The teeth and rim. A token, never a hex. */

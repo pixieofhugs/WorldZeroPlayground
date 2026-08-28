@@ -54,7 +54,7 @@ export const SIDEBAR_PANEL_COLLAPSIBLE: Readonly<Record<SidebarPanelId, boolean>
   'recent-activity': true,
 }
 
-export interface SidebarPanelLayout {
+interface SidebarPanelLayout {
   readonly order: readonly SidebarPanelId[]
   readonly collapsed: readonly SidebarPanelId[]
 }
@@ -175,7 +175,7 @@ export function movePanelBy(
   return movePanelTo(order, movedId, order[to])
 }
 
-export interface SidebarPanelLayoutState {
+interface SidebarPanelLayoutState {
   readonly order: readonly SidebarPanelId[]
   readonly isCollapsed: (id: SidebarPanelId) => boolean
   readonly toggleCollapsed: (id: SidebarPanelId) => void

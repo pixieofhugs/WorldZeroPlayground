@@ -181,7 +181,7 @@ export function blobToFile(blob: Blob, originalName: string): File {
  */
 export type ApplyFailureReason = 'not-ready' | 'render-failed'
 
-export interface ApplyImageEditOptions {
+interface ApplyImageEditOptions {
   /** The picked source image. */
   file: File
   /** Object URL backing the cropper, null before the effect has minted it. */

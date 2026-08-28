@@ -16,7 +16,7 @@
  * When it returns false (allowance spent, or the task is plainly out of reach)
  * the sign-up CTA does not render at all, so the task reads as locked.
  */
-export interface LevelJumpSignupParams {
+interface LevelJumpSignupParams {
   /** Whether the backend says this viewer may sign up (trusted, not recomputed). */
   canSignUp: boolean;
   /** Levels above own level the viewer's faction grants (0 = no such ability). */

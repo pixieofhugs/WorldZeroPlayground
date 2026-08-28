@@ -98,7 +98,7 @@ export type FactionRole = (typeof FACTION_ROLES)[number];
  * no expressions: a `color-mix` or a gradient is a surface's business, because
  * it is composed from a role rather than being one.
  */
-export type FactionRoleMap = Record<FactionRole, string | null>;
+type FactionRoleMap = Record<FactionRole, string | null>;
 
 /**
  * The grounds a surface can ask a faction to answer for.

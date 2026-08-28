@@ -116,7 +116,7 @@ export function userMediaHook(character: CharacterOut): string | undefined {
  * faction avatar variants so the img/initial + sizing logic lives in one place;
  * only the border/surface/text colors differ per faction.
  */
-export interface CircleStyle {
+interface CircleStyle {
   borderColor: string
   bg: string
   textColor: string

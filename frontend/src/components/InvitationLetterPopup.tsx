@@ -77,7 +77,7 @@ interface Perk {
  */
 const MECHANIC_INDEX = 1
 
-export interface InvitationLetterPopupProps {
+interface InvitationLetterPopupProps {
   factionSlug: string
   onClose: () => void
 }

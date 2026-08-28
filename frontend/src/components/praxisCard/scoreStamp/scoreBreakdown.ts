@@ -44,7 +44,7 @@ export interface ScoredPraxis {
   score: number;
 }
 
-export interface ScoreBreakdown {
+interface ScoreBreakdown {
   /**
    * The task's base points, or null when the base row is hidden because it
    * would only restate the total (#1131).

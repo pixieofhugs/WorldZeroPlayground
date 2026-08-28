@@ -103,7 +103,7 @@ export const TASK_FILTER_PARAMS = {
  * may SEE `retired` / `pending` is a separate, server-owned question — see
  * `statusFilters`, which is what the control offers.
  */
-export type TaskStatusFilter = 'All' | 'active' | 'retired' | 'pending'
+type TaskStatusFilter = 'All' | 'active' | 'retired' | 'pending'
 
 /** Browse mode default: ordinary tasks, metatasks excluded backend-side. */
 export const TASK_TYPE_DEFAULT: TaskType = 'standard'
@@ -166,7 +166,7 @@ const TASK_STATUSES: readonly TaskStatusFilter[] = [
 const FILTER_NAV_OPTIONS = { replace: true } as const
 
 /** Every filter axis the browse owns, as read out of the address bar. */
-export interface TaskFilterAxes {
+interface TaskFilterAxes {
   taskType: TaskType
   sort: TaskSort
   status: TaskStatusFilter

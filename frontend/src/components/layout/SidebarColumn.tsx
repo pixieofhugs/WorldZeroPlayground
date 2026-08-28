@@ -41,7 +41,7 @@ import SidebarHandle from './SidebarHandle'
  * FieldDesk — so since #1456 the response carries the count itself rather than
  * up to 100 serialized feed items for three callers to run `.length` over.
  */
-export interface SidebarColumnProps {
+interface SidebarColumnProps {
   readonly collapsed: boolean
   readonly onToggle: () => void
 }

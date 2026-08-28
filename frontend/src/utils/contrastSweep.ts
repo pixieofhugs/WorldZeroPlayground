@@ -77,7 +77,7 @@ export type SweepTheme = (typeof SWEEP_THEMES)[number];
 export type SweepViewport = keyof typeof SWEEP_VIEWPORTS;
 
 /** One cell of the 9 × 2 × 2 matrix. */
-export type SweepRun = {
+type SweepRun = {
   faction: SweepFaction;
   theme: SweepTheme;
   viewport: SweepViewport;
@@ -234,7 +234,7 @@ function nodesIn(surfaces: Map<string, Finding[]>): number {
 }
 
 /** Everything one run of the sweep concluded. The spec asserts on it and prints it. */
-export type SweepVerdict = {
+type SweepVerdict = {
   /** Distinct AA failures, already deduped and human-described. Must be empty. */
   failures: string[];
   failureMessage: string;

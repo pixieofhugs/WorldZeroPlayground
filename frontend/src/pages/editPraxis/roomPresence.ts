@@ -69,7 +69,7 @@ const SELECTION_TINT = "22%";
 const IDENTITY_WEIGHT = "60%";
 
 /** What this client publishes about itself. JSON — it crosses a socket. */
-export interface PresenceUser {
+interface PresenceUser {
   characterId: number;
   name: string;
   factionSlug: string;
@@ -96,7 +96,7 @@ export interface AwarenessLike {
 }
 
 /** The identity fields presence publishes. A `CharacterOut` satisfies it. */
-export interface PresenceCharacter {
+interface PresenceCharacter {
   id: number;
   display_name: string;
   faction_slug: string;

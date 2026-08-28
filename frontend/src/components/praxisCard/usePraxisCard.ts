@@ -19,7 +19,7 @@ import { useAdminMode } from "../../auth/AdminModeContext";
 import { extractError } from "../../utils/errors";
 import type { AdminProps } from "./shared";
 
-export interface PraxisCardModeration {
+interface PraxisCardModeration {
   localPraxis: PraxisCardOut;
   adminProps: AdminProps;
 }

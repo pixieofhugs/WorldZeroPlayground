@@ -14,7 +14,7 @@ import { extractError } from '../utils/errors'
  * `undefined` ids).
  */
 
-export type RequestResponseStatus = 'pending' | 'accepted' | 'declined'
+type RequestResponseStatus = 'pending' | 'accepted' | 'declined'
 
 /**
  * Collapse the per-type raw status into the three states the UI cares about.
@@ -70,7 +70,7 @@ export async function respondToRequest(
   }
 }
 
-export interface RespondResult {
+interface RespondResult {
   ok: boolean
   /** Praxis to navigate to after a successful accept (null on decline/failure). */
   praxisId: number | null

@@ -22,7 +22,7 @@ import { hasOwnKey } from '../../utils/hasOwnKey'
 // where no faction archetype has asked for the sheet.
 import '../../factionFaces'
 
-export interface BadgeArtProps {
+interface BadgeArtProps {
   /** px box (square). */
   size?: number
 }

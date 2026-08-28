@@ -80,7 +80,7 @@ const MONO = "var(--font-body)";
 /** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
 const DISPLAY = "var(--na-select-card-face, var(--faction-default-card-font))";
 
-export interface DefaultSelectCardProps
+interface DefaultSelectCardProps
   extends Omit<FactionSelectCardProps, "faction"> {
   /**
    * Whose words and whose mark. Defaults to the unaffiliated sheet, which is

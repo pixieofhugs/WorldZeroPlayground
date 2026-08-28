@@ -45,7 +45,7 @@ const tString = i18n.t as unknown as (
 export const UNAFFILIATED_FACTION_SLUG = "na";
 
 /** What getAllFactions() hands back. Slug only — colour comes from the cascade. */
-export interface FactionConfig {
+interface FactionConfig {
   slug: string;
 }
 

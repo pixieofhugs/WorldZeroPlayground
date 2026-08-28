@@ -56,7 +56,7 @@ export function persistTheme(theme: Theme): void {
   localStorage.setItem(THEME_STORAGE_KEY, theme)
 }
 
-export interface ThemeState {
+interface ThemeState {
   theme: Theme
   toggle: () => void
 }
