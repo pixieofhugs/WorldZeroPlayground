@@ -46,29 +46,47 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
   } as PraxisCardOut
 }
 
-describe('the Coven subtotal row is (base + meta) and nothing else (#2019)', () => {
-  it('prints the subtotal under the meta row when a metatask is live', () => {
+/**
+ * THE COVEN SUBTOTAL WAS `(base + meta)` ON THE `meta` GATE UNTIL #2634.
+ *
+ * Both halves were wrong and each was wrong for its own reason. The GATE was
+ * `meta !== null` alone, so the plate printed a subtotal on every metatask
+ * praxis with nothing subsequently applied to it — which is what made Coven look
+ * like the only skin drawing one when three did. The FIGURE was `base + meta`,
+ * which #2633 retired by moving the metatask out of the multiplier: what a
+ * multiplier applies to is the base, so the subtotal is `base × mult` and the
+ * gate is the multiplier alone.
+ *
+ * The habit-bonus trap the old cases guarded is unchanged and still guarded
+ * below — the bonus is flat and may never be folded into the figure.
+ */
+describe('the Coven subtotal is base × mult, on the multiplier alone (#2634)', () => {
+  it('draws no subtotal on a metatask praxis with no multiplier', () => {
     const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ metatask_points: 5, score: 17 })} />))
-    expect(html).toContain('subtotal')
-    // 12 + 5. Stated once as a row, and once more as the cauldron's total.
-    expect(html.split('17')).toHaveLength(3)
+    expect(html, 'the metatask row itself still prints').toContain('meta')
+    expect(html).not.toContain('subtotal')
+    // 17 is the cauldron's total and nothing else on the plate.
+    expect(html.split('17')).toHaveLength(2)
   })
 
-  it('leaves the subtotal row out when there is no metatask', () => {
+  it('draws one on a duel side with no metatask at all', () => {
     const html = text(
       renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ display_multiplier: 1.5, score: 18 })} />),
     )
-    expect(html).toContain('mult')
-    expect(html).not.toContain('subtotal')
+    expect(html, 'the ratio rides the base line as a chip now').toContain('×1.50')
+    expect(html).toContain('subtotal')
+    // 12 × 1.5 = 18, stated once as the subtotal and once as the cauldron's
+    // total — the state the old `meta` gate drew nothing at all for.
+    expect(html.split('18')).toHaveLength(3)
   })
 
   /**
-   * The trap. `12 + 5 = 17`, and the habit bonus of 7 is added AFTER the
-   * multiplier — so the total is `17 × 1.5 + 7 = 32.5` and the subtotal is 17.
-   * A subtotal that folded the bonus in would print 24, which multiplies out to
-   * 36 and reaches no figure on the card.
+   * The trap, restated for the new formula. `12 × 1.5 = 18`; the metatask (5)
+   * and the habit bonus (7) are both added AFTER the multiplier, so the total is
+   * `18 + 5 + 7 = 30`. A subtotal that folded either in would print 25.5 or 28.5
+   * and reach no figure on the card.
    */
-  it('holds the subtotal at base + meta while a habit row is live beside it', () => {
+  it('holds the subtotal at base × mult while meta and habit sit beside it', () => {
     const html = text(
       renderToStaticMarkup(
         <CovenScoreStamp
@@ -76,7 +94,7 @@ describe('the Coven subtotal row is (base + meta) and nothing else (#2019)', () 
             metatask_points: 5,
             display_multiplier: 1.5,
             habit_bonus_points: 7,
-            score: 32.5,
+            score: 30,
           })}
         />,
       ),
@@ -84,9 +102,10 @@ describe('the Coven subtotal row is (base + meta) and nothing else (#2019)', () 
     // The habit row is rendered even though the design never draws one.
     expect(html).toContain('habit')
     expect(html).toContain('+7')
-    expect(html).toContain('17')
-    expect(html).not.toContain('24')
-    expect(html).toContain('32.5')
+    expect(html, 'base × mult').toContain('18')
+    expect(html, 'never (base + meta) × mult').not.toContain('25.5')
+    expect(html, 'and never the bonus folded in').not.toContain('28.5')
+    expect(html).toContain('30')
   })
 })
 
