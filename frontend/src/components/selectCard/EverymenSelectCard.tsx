@@ -3,7 +3,7 @@ import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { EverymenCog } from "../factionMarks/everymenCogs";
-import { CARD_CTA } from "../taskCard/cardCta";
+import { CTA_SELECT_SIZE, EVERYMEN_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
@@ -236,13 +236,13 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
           <div style={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)", marginBottom: "var(--space-md)" }}>
             {status}
           </div>
+          {/* The struck block, from the constant rather than beside it (#2818).
+              This tile already spread `CARD_CTA` — it was the ONE of ten
+              carrying the 44px floor — and then restated the whole of
+              `EVERYMEN_CARD_CTA` on top of it. Spreading the faction's constant
+              instead picks the floor up on the way through. */}
           <button onClick={onVisit} style={{
-            ...CARD_CTA,
-            width: "100%", cursor: "pointer",
-            background: "var(--faction-everymen-bill-cta-bg)", color: "var(--faction-everymen-bill-cta-ink)",
-            border: `2px solid ${INK}`, borderRadius: 2,
-            fontFamily: POSTER, fontSize: "var(--text-xl)", letterSpacing: "0.22em", textTransform: "uppercase",
-            padding: "var(--space-sm) var(--space-2xl)",
+            cursor: "pointer", ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE,
           }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
         </div>
       </div>

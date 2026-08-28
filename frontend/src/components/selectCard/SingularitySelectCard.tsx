@@ -2,6 +2,7 @@ import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { CTA_SELECT_SIZE, SINGULARITY_CARD_CTA } from "../taskCard/cardCta";
 
 /**
  * Singularity — the faction-DIRECTORY tile (#2326, a child of #2321).
@@ -107,8 +108,7 @@ const CHASSIS = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
 const DIM = "var(--faction-singularity-term-dim)";
 const BLUE = "var(--faction-singularity-term-blue)";
-/** The CTA's unlit wash, and the chrome dots — the same blue at two densities. */
-const CTA_WASH = `color-mix(in srgb, ${BLUE} 14%, transparent)`;
+/** The chrome dots. The CTA's unlit 14% twin retired with the hover (#2818). */
 const DOT = `color-mix(in srgb, ${BLUE} 50%, transparent)`;
 
 export default function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
@@ -156,14 +156,22 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
             anything. It is punctuation on the prompt, not an indicator, so it
             is drawn at full strength: the call the task card's block cursor
             already makes with `currentColor`. */}
+        {/* THE LIT KEY, LIT AT REST (#2818). This mount drew the same key UNLIT
+            — a 14% wash of `-term-blue` over the chassis — and lit it to the
+            card's own `-term-cta-bg` on `onMouseEnter`, which made the hover
+            state, not the resting one, the thing that matched the sign-up it
+            leads to. The two handlers go with the wash: no task-card CTA carries
+            one, `index.css` declares no `:hover` on any CTA class, and a hover
+            reachable only by mouse was never the affordance here. Focus is a
+            stylesheet state and is untouched.
+
+            The prompt's `$` is a plain text node now rather than a span beside a
+            `gap`: the constant centres one flex item, and one text run is one
+            item. */}
         <button onClick={onVisit} style={{
-          display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: "var(--space-sm)",
-          border: `1px solid ${BRIGHT}`, background: CTA_WASH, color: BRIGHT,
-          fontFamily: MONO, fontSize: "var(--text-xl)", letterSpacing: "0.06em", padding: "var(--space-sm) var(--space-md)",
+          cursor: "pointer", ...SINGULARITY_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--faction-singularity-term-cta-bg)"; e.currentTarget.style.color = "var(--faction-singularity-term-cta-ink)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = CTA_WASH; e.currentTarget.style.color = BRIGHT; }}
-        ><span>$</span> {i18n.t("feed:factionSelect.singularity.cta")}</button>
+        >{`$ ${i18n.t("feed:factionSelect.singularity.cta")}`}</button>
       </div>
     </div>
   );

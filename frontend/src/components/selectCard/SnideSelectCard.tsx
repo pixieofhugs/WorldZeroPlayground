@@ -2,6 +2,7 @@ import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SnideSigil } from "../sigil/SnideSigil";
 import { WALL } from "../factionMarks/snideAtoms";
+import { CTA_SELECT_SIZE, SNIDE_CARD_CTA } from "../taskCard/cardCta";
 
 /**
  * S.N.I.D.E. — the faction-DIRECTORY tile (#2322, the pattern child of #2321).
@@ -127,18 +128,26 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
             own pigments and its own dark half. */}
         <span aria-hidden="true" className="snd-censor" style={{ marginBottom: "var(--space-md)" }} />
         <div style={{ fontFamily: MARKER, fontSize: "var(--text-xl)", color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1deg)", marginBottom: "var(--space-md)" }}>{status}</div>
+        {/* THE BUTTON THE BUG WAS REPORTED ON (#2818). "Jump In" was Anton at a
+            raw 15 behind a `no-raw-style-values` hatch — the hatch covered that
+            one number and nothing else on the line, so it goes with it — while
+            the sign-up it leads to is Permanent Marker at `--text-content` with
+            the sprayed halo, the `-acid-deep` ring and the 1.6° tilt. Same
+            faction, same act, two paints. `SNIDE_CARD_CTA` is now the only one.
+
+            The two hover handlers go with it: they inverted bar and acid on
+            mouse-over, which no task-card CTA does and no CTA class in
+            `index.css` declares. Focus-visible is a stylesheet state and is
+            untouched.
+
+            The member count keeps its right-hand seat WITHOUT the button
+            declaring `justify-content: space-between`, which would be paint the
+            other eight tiles do not share: an auto margin on the count's own
+            span absorbs the free space first, so the CTA's box is untouched. */}
         <button onClick={onVisit} style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", cursor: "pointer",
-          border: "none", background: BAR, color: ACID,
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is Anton condensed caps, part of the ransom-note voice, not label chrome
-          fontFamily: IMPACT, fontSize: 15, letterSpacing: "0.08em", padding: "var(--space-sm) var(--space-lg)", textTransform: "uppercase",
-          /* A box-shadow rather than a border so the ring cannot change the box
-             the hit target was solved against — the task card's call. */
-          boxShadow: "0 0 0 2px var(--faction-snide-acid-deep)",
+          cursor: "pointer", ...SNIDE_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = ACID; e.currentTarget.style.color = "var(--faction-snide-note-cta-ink)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = BAR; e.currentTarget.style.color = ACID; }}
-        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ fontSize: "var(--text-base)" }}>{i18n.t("feed:factionSelect.snide.members", { count: members })}</span>}</button>
+        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ marginLeft: "auto", fontSize: "var(--text-base)" }}>{i18n.t("feed:factionSelect.snide.members", { count: members })}</span>}</button>
       </div>
     </div>
   );
