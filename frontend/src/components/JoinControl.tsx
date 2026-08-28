@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { factionName } from "../utils/factions";
-import { CARD_CTA } from "./taskCard/cardCta";
+import { CARD_CTA } from "./ctaTapFloor";
 
 const NA_SLUG = "na";
 
@@ -70,9 +70,10 @@ const PAIR_ROW: CSSProperties = { display: "flex", gap: "var(--space-sm)" };
 /* ---------------------------------------------------------------------------
  * THE 44px TAP FLOOR, DECLARED ONCE FOR THE FOURTH CTA SURFACE (#2826).
  *
- * `CARD_CTA` is the task card's sign-up geometry (#2030) and the faction SELECT
- * card's (#2818). The faction DETAIL page's join verb is the same act on a third
- * surface and had no floor at all: measured at `10e41471`, `min-height` computed
+ * `CARD_CTA` is the task card's sign-up geometry (#2030), the task detail's and
+ * the faction SELECT card's (#2818). The faction DETAIL page's join verb is the
+ * same act on a fourth surface and had no floor at all: measured at
+ * `10e41471`, `min-height` computed
  * to `0px` on all seven detail CTAs, six cleared 44px only because their own
  * padding and type added up to it, and Singularity's `> CONNECT` stood at
  * 40.5px. Coven's exactly-44.0 was one type rung away from the same fall.
@@ -92,6 +93,12 @@ const PAIR_ROW: CSSProperties = { display: "flex", gap: "var(--space-sm)" };
  * — a flex item is blockified — and on the open verb it only centres a label the
  * button already centred, since every kit's label is a single text node bar
  * Coven's, which was already a flex box.
+ *
+ * IT IS IMPORTED FROM `ctaTapFloor` AND NOT FROM `taskCard/cardCta`, which is
+ * where it used to live and still re-exports it. This component is on the
+ * critical path and `cardCta.ts` sets eight faction `font-family` values, so a
+ * static import of that module from here strands the faction font sheet
+ * (#2079). `factionFaceSplit.test.ts` failed on exactly that import.
  *
  * `joinTapTarget.test.tsx` is the guard, off the rendered markup of all nine
  * bodies and of the pair.

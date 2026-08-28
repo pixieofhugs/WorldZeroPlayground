@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { factionRoleVar } from "../../utils/factionRoles";
+import { CARD_CTA } from "../ctaTapFloor";
 
 /**
  * The shape of the sign-up affordance across the nine task cards (#2030, task
@@ -54,16 +55,13 @@ import { factionRoleVar } from "../../utils/factionRoles";
  * The 44px is the touch-target floor and is not negotiable; the flex box is
  * what keeps a label centred once the floor stretches a button past its
  * padding. A skin spreads this first and paints over it.
+ *
+ * IT MOVED OUT OF THIS FILE IN #2826 and is re-exported here so the eight paints
+ * below and every consumer of them read one name. The join control spreads it
+ * too and sits on the critical path, where this module's faction faces may not
+ * go — `../ctaTapFloor` carries the whole argument.
  */
-export const CARD_CTA: CSSProperties = {
-  // Geometry, so a raw number (WORLD_ZERO_STYLE §4a) — and the tap floor is a
-  // fixed 44, not a rung of a spacing ramp that a redesign could move.
-  minHeight: 44,
-  boxSizing: "border-box",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
+export { CARD_CTA } from "../ctaTapFloor";
 
 /**
  * The row a converted footer bar now sits in: centred, with the clearance under
