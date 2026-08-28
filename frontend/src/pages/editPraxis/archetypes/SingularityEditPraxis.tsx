@@ -639,6 +639,16 @@ export default function SingularityEditPraxis({ state }: Props) {
             <BodyTextarea
               state={state}
               skin={{
+                /* The second surface that re-points the house disabled pair
+                   (#2574), and for the same reason the publish band does: the
+                   terminal is theme-invariant, so the neutral `--control-off-*`
+                   would lay a pale slab on a black chassis — here a full-width
+                   one, at ΔE 80.6 from this field in light. NOT `sg-control-off`:
+                   that class answers the band's ground, whose panel is a raised
+                   box on the chassis, and this box already IS the panel. The
+                   values live in `index.css` beside the rule that reads them;
+                   this only says which ground. Inert until `aria-disabled`. */
+                className: "sg-composer-off",
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
                   ...fieldBox,

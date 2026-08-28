@@ -915,6 +915,20 @@ export interface BodyTextareaSkin {
    * See `bodyEditorTheme.ts` for the two rules that make that true.
    */
   textareaStyle: CSSProperties;
+  /**
+   * A class on the editor's host, for a skin that has to re-point a token the
+   * shared dress reads. Same seam `PublishButton` already gives its band
+   * (`skin.className`), and it exists for the same one caller: the Singularity
+   * terminal hands this `sg-composer-off`, which moves `--control-off-fill` /
+   * `--control-off-ink` off the house neutral for the unavailable state (#2574,
+   * measured in `index.css` beside the rule that reads them).
+   *
+   * NOT a general dress seam. `textareaStyle` is where a skin paints; a class
+   * here is for the case an inline style cannot express, which is re-pointing a
+   * custom property a stylesheet rule consumes. It is appended to the host's
+   * own classes, never replaces them.
+   */
+  className?: string;
   placeholder?: string;
   /** Optional override for the toolbar wrapper (e.g. archetype spacing). */
   toolbarStyle?: CSSProperties;
@@ -1037,26 +1051,32 @@ export const ROOM_SEED_GRACE_MS = 8000;
  * wrong was that the box went on looking exactly as ready as a live one. This
  * is the announcement to match the refusal.
  *
- * `cursor` is inherited and `@codemirror/view`'s base theme declares none, so
- * the one declaration here reaches `.cm-content` — the element the pointer is
- * really over — without a themed rule that would have to be reconfigured.
+ * THE DIM IS GONE, AND IT WAS NOT A MIS-TUNED NUMBER (#2574). It used to be
+ * `opacity: 0.6` here, argued as costing no token and following every skin's
+ * ground for free. Measured on the real composited ground — the washed sheet,
+ * not the declared token — it cost the placeholder more than half its contrast:
+ * 5.52–9.13:1 live against **2.74–4.11:1** dimmed, all sixteen pairings under
+ * AA and nine under 3:1, worst 2.74:1 on S.N.I.D.E. in light. That is #2486's
+ * failure mode exactly: `opacity` composites the element as a group, so the
+ * ground fades toward the sheet and the ink fades over the faded ground.
  *
- * `opacity` and not an ink: the ink is the skin's, eight times over, and a
- * neutral picked here would be unreachable from the root a faction frame
- * repoints (#1819). Dimming the whole box costs no token and follows every
- * skin's ground and rule for free. WCAG 1.4.3 exempts inactive components from
- * the contrast floor, and this box is inactive in the strongest sense the
- * platform has.
+ * And no alpha rescues it, because every composer field is the same family of
+ * stock as the sheet behind it. Fading one toward the other spends everything
+ * on the ink and buys almost no ground: at 0.6 the ground moves ΔE 1.0–6.5,
+ * five of sixteen at or below the just-noticeable threshold; at 0.85, where the
+ * ink is still 4.38:1 in dark, the median ground shift is ΔE 1.7–2.2. So the
+ * upgrade the old ponytail proposed — a `--composer-unavailable-opacity` a skin
+ * could repoint — is NOT the fix and is deliberately not minted. The ground is
+ * replaced instead, with #2573's own `--control-off-*` pair, by the
+ * `[data-composer-body][aria-disabled="true"]` rule in `index.css`. The
+ * measurement and the Singularity exception are written out there.
  *
- * ponytail: one ratio for all eight skins in both themes, unmeasured in a
- * browser (this harness has none) — "reads as unavailable without reading as
- * broken" is an eyeball question. If one ground turns out wrong, the upgrade is
- * a `--composer-unavailable-opacity` custom property in `index.css` that a skin
- * may repoint, not eight literals here.
+ * What is left here is the one property that has to be inline: `cursor` is
+ * inherited and `@codemirror/view`'s base theme declares none, so this reaches
+ * `.cm-content` — the element the pointer is really over.
  */
 const BODY_UNAVAILABLE_STYLE: CSSProperties = {
   cursor: "not-allowed",
-  opacity: 0.6,
 };
 
 export function BodyTextarea({
@@ -1353,7 +1373,7 @@ export function BodyTextarea({
         // inside it cannot take focus, because the pane is not disabled in the
         // form sense: it is merely not editable.
         onClick={awaitingRoom ? () => noticeRef.current?.focus() : undefined}
-        className="content-text"
+        className={skin.className ? `content-text ${skin.className}` : "content-text"}
         style={{
           ...BODY_EDITOR_HOST_STYLE,
           ...skin.textareaStyle,
