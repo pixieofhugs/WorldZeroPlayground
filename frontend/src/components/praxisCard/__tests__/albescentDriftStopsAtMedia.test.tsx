@@ -58,6 +58,8 @@ import { DefaultComment } from "../../comments/CommentThread";
 import AlbescentPraxisCard from "../desktop/AlbescentPraxisCard";
 import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
 import AlbescentPraxisDetail from "../../../pages/praxisDetail/archetypes/AlbescentPraxisDetail";
+import AlbescentScoreStamp from "../scoreStamp/AlbescentScoreStamp";
+import type { StampablePraxis } from "../scoreStamp/ScoreStamp";
 
 const css = stripComments(
   readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
@@ -435,5 +437,110 @@ describe("the avatar disc a photograph sits on carries the hook (#2457)", () => 
     );
     expect(html, "shared avatar, shared hook").toContain("user-media");
     expect(html, "and no Albescent scope above it").not.toContain("alb-praxis-card");
+  });
+});
+
+/**
+ * #2634 — THE STAMP RESTRUCTURED UNDER THE SOCIETY, AND ITS RULE HAS TO SURVIVE IT.
+ *
+ * `AlbescentScoreStamp` is `DefaultScoreStamp` plus `.alb-stamp .alb-moves` and
+ * nothing else, so every edit to the na sheet lands on Albescent unreviewed.
+ * #2634 is a big one: the ring moved from the top of the plate to the bottom,
+ * the two prose lines became rows, and the `.spectrum-rule` moved from above the
+ * working to below it. The society's whole delta on this object is that na's own
+ * spectra MOVE, and the rule is one of the two that do.
+ *
+ * ## The seam, and why it is a second one
+ *
+ * `albescentSpectraMove.test.tsx` already censuses every `.spectrum-rule` mount
+ * in `src/` and asserts this one is written childless — as SOURCE TEXT, by
+ * walking the JSX for a self-closing tag. #2543 is the case for not stopping
+ * there: a mount can be childless in the file and hold a child at RUNTIME, and a
+ * source scan cannot see the difference. So this reads the RENDER, on the
+ * component the wrapper actually mounts, in the states the restructure moved
+ * things between.
+ *
+ * Two properties, and each is inert without the other:
+ *
+ *  1. the rule is EMPTY, so `.alb-moves .spectrum-rule:empty` matches it at all;
+ *  2. the rule is POSITIONED, so the `::before` that travels resolves against
+ *     the rule instead of against the plate — where it would paint the ramp
+ *     straight over the working out.
+ */
+describe("the Albescent stamp's rule still travels after #2634's restructure", () => {
+  /** The `.spectrum-rule` span the na sheet draws, with its inline style. */
+  const ruleSpan = (html: string) =>
+    html.match(/<span[^>]*class="spectrum-rule"[^>]*>(<\/span>)?/)?.[0] ?? "";
+
+  const stamp = (overrides: Record<string, unknown>) =>
+    renderToStaticMarkup(
+      <AlbescentScoreStamp
+        praxis={
+          {
+            task_point_value: 12,
+            display_multiplier: 1,
+            metatask_points: 0,
+            points_from_votes: 0,
+            habit_bonus_points: 0,
+            is_top_for_task: false,
+            task_faction_slug: "albescent",
+            moderation_status: "visible",
+            score: 12,
+            ...overrides,
+          } as StampablePraxis
+        }
+      />,
+    );
+
+  /**
+   * The four states, chosen for what #2634 moved between them: the two flat
+   * terms are ROWS inside the working now rather than prose beneath the mark,
+   * and the multiplier brings a subtotal and a second rule with it. A restructure
+   * that put any of them INSIDE the span would render perfectly and stop moving.
+   */
+  const STATES = {
+    "+ metatask": { metatask_points: 20, score: 32 },
+    "+ votes": { points_from_votes: 4, score: 16 },
+    "+ habit": { habit_bonus_points: 5, score: 17 },
+    "× mult, which also draws the subtotal": { display_multiplier: 0.8, score: 9.6 },
+  };
+
+  it("wraps the na sheet and nothing else — the wrapper is the whole delta", () => {
+    expect(stamp({}), "the marker the cascade scopes on").toMatch(
+      /class="alb-stamp alb-moves"/,
+    );
+  });
+
+  for (const [name, fields] of Object.entries(STATES)) {
+    it(`leaves the rule childless and positioned — ${name}`, () => {
+      const span = ruleSpan(stamp(fields));
+      expect(span, "the rule is drawn in this state").not.toBe("");
+      // `:empty` is the whole mechanism. React does not self-close a
+      // non-void element, so a childless span renders as `…></span>` and one
+      // with a child does not — which is the difference the selector reads.
+      expect(span, "childless, so `:empty` reaches it").toMatch(/><\/span>$/);
+      expect(span, "a containing block for the travelling ::before").toContain(
+        "position:relative",
+      );
+    });
+  }
+
+  it("draws exactly one, so the ramp cannot travel twice on one plate", () => {
+    // ADR-0083 §3b — one structural carrier per object. The ring's
+    // `.spectrum-dial` is the other mount the marker dresses, and the subtotal's
+    // own rule is deliberately NOT a spectrum: it is the plate's `-card-line`
+    // hairline, so it neither counts here nor moves.
+    for (const fields of Object.values(STATES)) {
+      const html = stamp(fields);
+      expect(html.split("spectrum-rule").length - 1, "one rule").toBe(1);
+      expect(html.split("spectrum-dial").length - 1, "one dial").toBe(1);
+    }
+  });
+
+  it("draws none at all on a bare praxis, where there is no working to rule off", () => {
+    // ADR-0076: base-only prints no breakdown, so there is nothing to part from
+    // the ring and the turning annulus is the whole tell.
+    expect(stamp({}), "no rule").not.toContain("spectrum-rule");
+    expect(stamp({}), "the dial still turns").toContain("spectrum-dial");
   });
 });

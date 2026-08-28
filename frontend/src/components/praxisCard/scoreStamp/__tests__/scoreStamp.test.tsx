@@ -64,6 +64,11 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       meta: null,
       habit: null,
       votes: 4,
+      // #2634 — the multiplier's result, written as the product rather than as
+      // `9.6`, because that is not what a double holds: `12 * 0.8` is
+      // `9.600000000000001` and the rounding belongs to `formatPoints` at the
+      // render sites, not to the resolver.
+      subtotal: 12 * 0.8,
       total: 13.6,
     })
   })
@@ -115,6 +120,9 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       meta: null,
       habit: null,
       votes: null,
+      // No multiplier, no subtotal — the #2634 gate, and the reason a bare stamp
+      // draws no rule and no chip either.
+      subtotal: null,
       total: 10,
     })
   })
@@ -154,7 +162,15 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       scoreBreakdown(
         praxis({ task_point_value: null, points_from_votes: null, score: null }),
       ),
-    ).toEqual({ base: 0, mult: 0.8, meta: null, habit: null, votes: null, total: 0 })
+    ).toEqual({
+      base: 0,
+      mult: 0.8,
+      meta: null,
+      habit: null,
+      votes: null,
+      subtotal: 0,
+      total: 0,
+    })
   })
 
   it('formats the multiplier to two decimals', () => {
@@ -410,8 +426,15 @@ function expectBaseRow(html: string, showsBase: boolean, baseLabel = 'base') {
   else expect(html).not.toContain(baseLabel)
 }
 
-/** The same, for the tally — ADR-0076: no votes, no votes row. */
-function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'from votes') {
+/**
+ * The same, for the tally — ADR-0076: no votes, no votes row.
+ *
+ * The default label was `'from votes'` until #2634. Four skins read the sentence
+ * key `card.stamp.fromVotes` while the other five read the bare `card.stamp.votes`,
+ * so this helper needed an override on five of its nine callers and the ledger
+ * read in two registers. One register now, one default, no overrides.
+ */
+function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'votes') {
   if (showsVotes) expect(html).toContain(votesLabel)
   else expect(html).not.toContain(votesLabel)
 }
@@ -426,7 +449,7 @@ function expectVotesRow(html: string, showsVotes: boolean, votesLabel = 'from vo
  * `card.stamp.fromVotes` interpolates a figure, and the row sets its own `+ N`
  * outside the label (#1637's bound), so it takes `card.stamp.votes`.
  */
-const EPHEMERISTS_LABEL = { base: 'base', points: 'points', fromVotes: 'votes' } as const
+const EPHEMERISTS_LABEL = { base: 'base', points: 'points', votes: 'votes' } as const
 
 /**
  * Coven's arched Points plate (#2019) — the elliptical head over a die-cut foot.
@@ -455,7 +478,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain('ON THE RECORD')
       // The roundel carries the total whichever rows are present.
       expect(html).toContain(formatPoints(fields.score))
-      expectVotesRow(html, showsVotes, 'votes')
+      expectVotesRow(html, showsVotes)
       expectBaseRow(html, showsBase)
       expect(html).not.toMatch(HEX)
     })
@@ -465,7 +488,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
         renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
       )
       expectBaseRow(html, showsBase, EPHEMERISTS_LABEL.base)
-      expectVotesRow(html, showsVotes, EPHEMERISTS_LABEL.fromVotes)
+      expectVotesRow(html, showsVotes, EPHEMERISTS_LABEL.votes)
       expect(html).toContain(formatPoints(fields.score))
       expect(html).not.toMatch(HEX)
     })
@@ -512,8 +535,9 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expectBaseRow(html, showsBase)
       // #2019 moved the tally onto the plate as a ✦-bulleted row, so it takes
       // `card.stamp.votes` and sets its own `+ N` — the same bound the
-      // Ephemerists row already sits inside (#1637). No copy changed.
-      expectVotesRow(html, showsVotes, 'votes')
+      // Ephemerists row already sits inside (#1637). Since #2634 that is the
+      // shared default, because the other four skins came to meet it.
+      expectVotesRow(html, showsVotes)
       // The plate holds the working, so it is drawn only when there IS working:
       // an arch over an empty block is the orphaned rule ADR-0076 warns about,
       // and it replaces the braid #1209 had ruling the slip.
@@ -578,7 +602,16 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     expect(withoutMult).not.toContain('×')
   })
 
-  it('draws the UA subtotal only when a metatask AND a multiplier are both live', () => {
+  /**
+   * #2634 re-cut both of these gates, and the figure with them.
+   *
+   * They read "only when a metatask AND a multiplier are both live", and printed
+   * `base + meta` — 32 on the fixture below. #2633 moved the metatask out of the
+   * multiplier, so the subtotal is what the multiplier applies to and nothing
+   * else: `12 × 0.80 = 9.6`, on a metatask praxis and on a bare duel side alike.
+   * The metatask no longer bears on whether the row exists.
+   */
+  it('draws the UA subtotal on the multiplier alone, at base × mult', () => {
     const full = text(
       renderToStaticMarkup(
         <UaScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
@@ -589,13 +622,19 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
         <UaScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
       ),
     )
-    // (base + meta) = 32, under the plate's rule.
+    const multOnly = text(
+      renderToStaticMarkup(
+        <UaScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 0 })} />,
+      ),
+    )
     expect(full).toContain('subtotal')
-    expect(full).toContain('32')
-    expect(metaOnly).not.toContain('subtotal')
+    expect(full, 'the multiplier applied to the base, not to base + meta').toContain('9.6')
+    expect(full, 'and never the old sum').not.toContain('32')
+    expect(metaOnly, 'no multiplier, no subtotal').not.toContain('subtotal')
+    expect(multOnly, 'a duel side with no metatask still shows one').toContain('subtotal')
   })
 
-  it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
+  it('draws the Everymen subtotal rule on the multiplier alone', () => {
     const full = text(
       renderToStaticMarkup(
         <EverymenScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
@@ -606,8 +645,15 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
         <EverymenScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
       ),
     )
+    const multOnly = text(
+      renderToStaticMarkup(
+        <EverymenScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 0 })} />,
+      ),
+    )
     expect(full).toContain('subtotal')
+    expect(full).toContain('9.6')
     expect(metaOnly).not.toContain('subtotal')
+    expect(multOnly).toContain('subtotal')
   })
 })
 
@@ -764,20 +810,26 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
  * below are its rules, not this skin's.
  */
 describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
-  it('hides the multiplier row under a neutral era and shows it otherwise', () => {
+  it('hides the multiplier chip under a neutral era and shows it otherwise', () => {
     // era_1 neutralises own/other_task_modifier to 1.0 for every faction, so
-    // the row is dark today and lights up on its own if an era configures one.
+    // the chip is dark today and lights up on its own if an era configures one.
+    //
+    // It was a `mult` ROW until #2634 and is a bare chip on the base line now,
+    // so the WORD is gone and the ratio is the whole of it — the shape UA,
+    // S.N.I.D.E. and WOW already drew. What goes with the chip is the subtotal
+    // and its rule; the gate is one and the same.
     const neutral = text(
       renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ display_multiplier: 1 })} />),
     )
-    expect(neutral).not.toContain('mult')
     expect(neutral).not.toContain('×')
+    expect(neutral).not.toContain('subtotal')
 
     const live = text(
       renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ display_multiplier: 1.1 })} />),
     )
-    expect(live).toContain('mult')
     expect(live).toContain('×1.10')
+    expect(live, 'and its result directly beneath').toContain('subtotal')
+    expect(live).toContain('13.2')
   })
 
   it('shows the metatask row only when metatask points are live', () => {
@@ -812,7 +864,7 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
         <DefaultScoreStamp praxis={praxis({ points_from_votes: 7, score: 19 })} />,
       ),
     )
-    expect(html).toContain('7 from votes')
+    expect(html).toContain('votes+7')
   })
 
   it('keeps a total mark and the working rule, both from tokens', () => {
@@ -863,46 +915,48 @@ describe('the unaffiliated disc shrink-wraps when nothing follows it (#1894)', (
     habit_bonus_points: 0,
   }
 
-  it('drops the disc margin when the sheet is the disc alone', () => {
+  /**
+   * THE SEPARATOR'S SPACE MOVED WITH THE SEPARATOR (#2634). It was
+   * `margin-bottom` on the DISC's wrapper, because the disc led the sheet; the
+   * ring is last now and the gap belongs to the spectrum rule between the
+   * working and the mark. The property this reads is that gap, wherever it
+   * hangs — present exactly when there is working to be separated from.
+   */
+  const GAP = 'margin:var(--space-sm) 0 var(--space-md)'
+
+  it('draws no separating gap when the sheet is the mark alone', () => {
     const markup = renderToStaticMarkup(
       <DefaultScoreStamp praxis={praxis({ ...bareFields, score: 10 })} />,
     )
-    // Nothing renders below the disc, so the box wraps to padding + disc +
-    // padding and the disc is dead-centre.
-    expect(markup).not.toContain('margin-bottom')
+    // Nothing renders above the mark, so the box wraps to padding + mark +
+    // padding and the mark is dead-centre.
+    expect(markup).not.toContain(GAP)
+    expect(markup, 'and no rule to hang it off').not.toContain('spectrum-rule')
   })
 
-  it('keeps it whenever any working follows — rows, votes or a habit bonus', () => {
+  it('keeps it whenever any working precedes — rows, votes or a habit bonus', () => {
     const working = {
       votes: praxis({ ...bareFields, points_from_votes: 4, score: 14 }),
-      // Rows but no flat terms: the case that separates `hasWorking` from the
-      // flat-terms guard.
       metatask: praxis({ ...bareFields, metatask_points: 3, score: 13 }),
-      // Flat terms but drawn under a rule, since the base row comes back too.
       habit: praxis({ ...bareFields, habit_bonus_points: 5, score: 15 }),
       multiplier: praxis({ ...bareFields, display_multiplier: 1.1, score: 11 }),
     }
     for (const [name, p] of Object.entries(working)) {
-      expect(renderToStaticMarkup(<DefaultScoreStamp praxis={p} />), name).toContain(
-        'margin-bottom:var(--space-md)',
-      )
+      expect(renderToStaticMarkup(<DefaultScoreStamp praxis={p} />), name).toContain(GAP)
     }
   })
 
-  it('draws no tally block on a metatask praxis nobody has voted on', () => {
-    // The flat-terms block is `margin-top:var(--space-sm)` and this sheet's only
-    // reader of `card.stamp.fromVotes`, so the tally's absence is countable off
-    // the copy. Until #2520 this case ALSO asserted that no rule was drawn —
-    // the rule was that block's own `border-top` and could not exist without
-    // it. The stamp's rule is its own element now and prints here too, which is
-    // the design's "one spectrum rule per stamp, in every state"; what must
-    // still not appear is the empty tally.
+  it('draws no tally row on a metatask praxis nobody has voted on', () => {
+    // The flat terms are ROWS since #2634 rather than a prose block of their
+    // own, so the tally's absence is read off the shared label instead of off
+    // the block's `margin-top`. `not.toContain('votes')` is the whole check the
+    // old `margin-top:var(--space-sm)` proxy was standing in for.
     const markup = renderToStaticMarkup(
       <DefaultScoreStamp praxis={praxis({ ...bareFields, metatask_points: 3, score: 13 })} />,
     )
     expect(markup).toContain('meta')
-    expect(text(markup)).not.toContain('from votes')
-    expect(markup).not.toContain('margin-top:var(--space-sm)')
+    expect(text(markup)).not.toContain('votes')
+    expect(text(markup)).not.toContain('habit')
   })
 })
 
@@ -1081,7 +1135,7 @@ describe('the Ephemerists score stamp reads in the shared words (#1909)', () => 
     const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({})} />))
     expect(html).toContain('base')
     expect(html).toContain('points')
-    expect(html).toContain('from votes')
+    expect(html).toContain('votes')
     expect(html).not.toMatch(/[基点票計]/)
   })
 })
@@ -1108,7 +1162,9 @@ describe('every stamp shows the habit bonus when one is banked (#1617)', () => {
    * — its declared terminal notation, the same one its votes row already uses.
    */
   const STAMPS = [
-    ['the unaffiliated sheet', DefaultScoreStamp, 'habit', '+ 5 habit bonus'],
+    // The na sheet's `+ 5 habit bonus` prose went with #2634's one-register
+    // ruling: it is a two-column ledger row like the other four now.
+    ['the unaffiliated sheet', DefaultScoreStamp, 'habit', 'habit+5'],
     ['Everymen', EverymenScoreStamp, 'habit', 'habit+5'],
     // #2285 put the figure and the word in two columns of the cell's grid, so
     // they butt together once the tags are stripped — the same shape Coven's
@@ -1228,14 +1284,26 @@ describe('the na stamp rules its working in the spectrum (#2520)', () => {
     expect(markup).toContain('margin-left:auto')
   })
 
-  it('prints the rule under the TOTAL, above the working', () => {
-    // The board's own words: where there is no votes divider the same single
-    // rule prints "under BASE — the row directly after the total — so the
-    // geometry matches the votes case". Under the total, above the working.
+  /**
+   * #2634 REVERSED THIS, and the reversal is the assertion.
+   *
+   * It read "prints the rule under the TOTAL, above the working" — the owner's
+   * ruling of 2026-08-23, taken so the one rule could never be orphaned at the
+   * foot of a sheet whose total was on TOP. Totals sit at the bottom on all nine
+   * stamps now, so the rule sits where the other eight put theirs: under the
+   * whole working, above the mark. The orphan guard below is unchanged and still
+   * passes, because the ring is what now follows it in every state.
+   */
+  it('prints the rule under the WORKING, above the total', () => {
     const markup = renderToStaticMarkup(
       <DefaultScoreStamp praxis={praxis(STATES['+ metatask'])} />,
     )
-    expect(markup.indexOf(RULE)).toBeLessThan(markup.lastIndexOf('meta'))
+    expect(markup.indexOf(RULE), 'below the last working row').toBeGreaterThan(
+      markup.lastIndexOf('meta'),
+    )
+    expect(markup.indexOf(RULE), 'and above the spectrum ring').toBeLessThan(
+      markup.indexOf('spectrum-dial'),
+    )
   })
 
   // THE ORPHAN GUARD (owner ruling 2026-08-23, ADR-0076).

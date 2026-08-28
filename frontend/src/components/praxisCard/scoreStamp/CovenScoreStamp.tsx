@@ -30,7 +30,9 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *    moot the moment the chip stopped being a chip.
  *  • The gold multiplier chip, now an ordinary `mult` row in the working. The
  *    plate's rows ARE the working, so a term pinned to the right of the base
- *    line was the odd one out.
+ *    line was the odd one out. #2634 PUT THE MULTIPLIER BACK ON THE BASE LINE
+ *    and left the pill retired: see the chip's own note below for why those are
+ *    two decisions and only one of them reverses.
  *  • The `✨`. It was decoration beside the figure; the cauldron IS the mark now.
  *  • The braid, whose job — ruling the working off from the total — belongs to
  *    the plate's own dashed rule above the subtotal.
@@ -38,11 +40,23 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * a few px off the top-right corner it is describing the shared component this
  * stamp already mounted at those numbers.
  *
- * THE SUBTOTAL ROW IS COVEN-LOCAL, AND IT MUST NOT SWALLOW THE HABIT BONUS.
- * It exists so `×1.50` is visibly applied to `17` and not to `12`, and it is a
- * subtotal of two figures `scoreBreakdown` already returns — arithmetic, not a
- * new term, which is why `ScoreBreakdown` gains no `subtotal` field and ADR-0049 is
- * unamended. The bonus is FLAT and sits outside the multiplier (#1617), so it is
+ * THE SUBTOTAL ROW IS NO LONGER COVEN-LOCAL (#2634), AND IT STILL MUST NOT
+ * SWALLOW THE HABIT BONUS.
+ *
+ * THIS FILE USED TO ARGUE THE OPPOSITE and the argument is kept rather than
+ * deleted, because it was right about its own moment: the row was "a subtotal of
+ * two figures `scoreBreakdown` already returns — arithmetic, not a new term,
+ * which is why `ScoreBreakdown` gains no `subtotal` field". Two things then
+ * happened. #2633 moved the metatask OUT of the multiplier, so `base + meta` is
+ * no longer what a multiplier applies to and the figure this plate printed
+ * became wrong rather than merely local. And #2634 found the same row drawn
+ * three different ways on three different gates — Coven's on `meta` alone,
+ * which is why it printed on every metatask praxis with nothing subsequently
+ * applied to it. The figure is `subtotal` off the resolver now, `base × mult`,
+ * gated on the multiplier alone; ADR-0049 is still unamended, because the
+ * shared half deciding what a stamp may show is exactly what it always said.
+ *
+ * The bonus is FLAT and sits outside the multiplier (#1617), so it is
  * written beside the votes and never inside the subtotal. This skin genuinely meets
  * that case: the stamp dispatches on the TASK's faction (`ScoreStamp.tsx`), so a
  * UA character's praxis on a Coven task lands here with a live habit row — a
@@ -84,7 +98,7 @@ function value(strong: boolean, color: string): CSSProperties {
 export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** One ✦-bulleted line of the working. */
@@ -115,32 +129,57 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
   if (base !== null) {
     rows.push(
       row("base", t("card.stamp.base"), (
-        <span style={value(false, "var(--faction-coven-slip-row-base)")}>{base}</span>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: "var(--space-xs)",
+          }}
+        >
+          <span style={value(false, "var(--faction-coven-slip-row-base)")}>{base}</span>
+          {/*
+           * THE CHIP IS BACK ON THE BASE LINE (#2634), and it is the same
+           * multiplier #2019 turned into "an ordinary `mult` row". That change
+           * was right about the row and wrong about the line: under #2633's
+           * formula the multiplier reaches the BASE and nothing else, so
+           * `base × mult` on one line is arithmetically true, and the dashed
+           * rule beneath then has exactly one line above it. The gold pill it
+           * was is NOT back — the plate's rows are its working, so the chip is
+           * the mult row's own ink (`-slip-row-mult`, already measured on this
+           * plate) set beside the figure it multiplies. No ground moves, so no
+           * pairing is minted.
+           */}
+          {mult !== null && (
+            <span style={value(false, "var(--faction-coven-slip-row-mult)")}>
+              {formatMult(mult)}
+            </span>
+          )}
+        </span>
       ), {}),
     );
   }
-  if (meta !== null) {
+  /*
+   * The subtotal, under the dashed rule that says "the multiplier has been
+   * applied". It is `scoreBreakdown`'s figure now, not this file's `base + meta`
+   * — see the header — and it is gated on the MULTIPLIER alone, which is what
+   * put Coven's subtotal on every metatask praxis for as long as it did.
+   *
+   * `formatPoints`, like the cauldron's own total: `12 × 0.8` is
+   * `9.600000000000001` in doubles (#1866).
+   */
+  if (subtotal !== null) {
     rows.push(
-      row("meta", t("card.stamp.meta"), <span style={value(false, INK)}>+{meta}</span>, {}),
-      /*
-       * The subtotal, under the dashed rule that says "the multiplier applies
-       * from here". `base` is non-null whenever `meta` is — the resolver hides
-       * it exactly when NO other term is in play — so `?? 0` is the compiler's
-       * proof rather than a fourth state.
-       */
       row("subtotal", t("card.stamp.subtotal"), (
-        <span style={value(true, INK)}>{(base ?? 0) + meta}</span>
+        <span style={value(true, INK)}>{formatPoints(subtotal)}</span>
       ), {
         borderTop: `1.5px dashed color-mix(in srgb, ${DEEP} 45%, transparent)`,
         paddingTop: "var(--space-xs)",
       }),
     );
   }
-  if (mult !== null) {
+  if (meta !== null) {
     rows.push(
-      row("mult", t("card.stamp.mult"), (
-        <span style={value(false, "var(--faction-coven-slip-row-mult)")}>{formatMult(mult)}</span>
-      ), {}),
+      row("meta", t("card.stamp.meta"), <span style={value(false, INK)}>+{meta}</span>, {}),
     );
   }
   if (votes !== null) {

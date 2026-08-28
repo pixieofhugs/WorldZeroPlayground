@@ -25,6 +25,12 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * and `10.0` on the other seven, which is one figure printed three ways. It goes
  * through the shared `formatPoints` with every other stamp now.
  *
+ * ROW ORDER stays there too, since #2634: base with the ratio struck on it, the
+ * subtotal under a rule, then `+ meta`, `+ votes`, `+ habit`, then the register
+ * rule and the lit well. What moved is the ratio — off a register line of its
+ * own and onto the base line — and what arrived is the subtotal the read-out
+ * never printed.
+ *
  * Row SELECTION stays in `scoreBreakdown` — a hidden row leaves the register
  * shorter, never gappy, so all five conditional states read as one read-out.
  * That includes `BASE`, which the resolver drops when the figure would only
@@ -35,7 +41,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   const rowStyle = {
@@ -53,22 +59,44 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
    * above the tally is optional — including `base` — and the read-out's first
    * line is the one that must not carry a leading gap. Whichever line comes
    * first gets `marginTop: 0`; the machine never prints a blank line at the top.
+   *
+   * THE ORDER IS THE SHARED ONE SINCE #2634: base (with the ratio struck on the
+   * same line), the register's own rule, the subtotal, then the three additive
+   * terms. `chip` is the ratio; `ruled` draws the hairline above a line.
    */
-  const lines: { key: string; label: string; value: string; valueColor: string }[] = [];
+  const lines: {
+    key: string
+    label: string
+    value: string
+    valueColor: string
+    chip?: string
+    ruled?: boolean
+  }[] = [];
   if (base !== null) {
     lines.push({
       key: "base",
       label: t("card.stamp.base"),
       value: `${base}`,
       valueColor: "var(--faction-singularity-terminal-ink)",
+      // The ratio is printed ON the base line, in the amber it already wore as a
+      // register of its own (#2634). It is not a term the machine adds — under
+      // #2633's formula it applies to the base and to nothing else — and a
+      // read-out that gave it a line implied a fifth addend.
+      chip: mult !== null ? formatMult(mult) : undefined,
     });
   }
-  if (mult !== null) {
+  // The subtotal — what the ratio made of the base — under a rule of the
+  // register's own. Gated on the multiplier ALONE, and printed through
+  // `formatPoints` like `TOTAL` below: `12 × 0.8` is `9.600000000000001` in
+  // doubles, and #1866 already ruled that this stamp does not invent its own
+  // rounding.
+  if (subtotal !== null) {
     lines.push({
-      key: "mult",
-      label: t("card.stamp.mult"),
-      value: formatMult(mult),
-      valueColor: "var(--faction-singularity-led-amber)",
+      key: "subtotal",
+      label: t("card.stamp.subtotal"),
+      value: formatPoints(subtotal),
+      valueColor: "var(--faction-singularity-terminal-ink)",
+      ruled: true,
     });
   }
   if (meta !== null) {
@@ -127,9 +155,31 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
       )}
 
       {lines.map((line, index) => (
-        <div key={line.key} style={{ ...rowStyle, marginTop: index === 0 ? 0 : rowStyle.marginTop }}>
-          <span>{line.label}</span>
-          <span style={{ color: line.valueColor }}>{line.value}</span>
+        <div key={line.key}>
+          {/* THE SUBTOTAL'S RULE — the same phosphor hairline the register/TOTAL
+              rule below draws, at half strength. One rule material, two weights:
+              the machine parts a line from its own result more quietly than it
+              parts the whole register from the bottom line. */}
+          {line.ruled && (
+            <div
+              aria-hidden
+              style={{
+                height: 1,
+                background: "var(--faction-singularity-stamp-rule)",
+                opacity: 0.5,
+                margin: "var(--space-xs) 0 0",
+              }}
+            />
+          )}
+          <div style={{ ...rowStyle, marginTop: index === 0 ? 0 : rowStyle.marginTop }}>
+            <span>{line.label}</span>
+            <span style={{ display: "flex", gap: "var(--space-xs)" }}>
+              <span style={{ color: line.valueColor }}>{line.value}</span>
+              {line.chip && (
+                <span style={{ color: "var(--faction-singularity-led-amber)" }}>{line.chip}</span>
+              )}
+            </span>
+          </div>
         </div>
       ))}
 

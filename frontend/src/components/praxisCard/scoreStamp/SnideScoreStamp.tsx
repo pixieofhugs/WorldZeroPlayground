@@ -23,11 +23,17 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * five conditional states; nothing here is positioned relative to a row that
  * may not exist. Since #1131 the BASE line is optional too: with nothing to
  * multiply, add or vote, the tag types the tally and the numeral says the rest.
+ *
+ * THE ORDER IS THE CANONICAL ONE SINCE #2634: base + chip, the half-tear, the
+ * subtotal, then `+ meta`, `+ votes`, `+ habit`, then the perforation and the
+ * loop. S.N.I.D.E. already drew the chip on the base line and already put its
+ * total last — this tag gained the subtotal it never had, and gave up the one
+ * prose line it was typing among four labelled ones.
  */
 export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /* THE FIGURE STEPS DOWN WHEN IT IS LONG; THE LOOP NEVER MOVES (#2638, owner
@@ -158,9 +164,43 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         </div>
       )}
 
+      {/* THE HALF-TEAR AND THE SUBTOTAL (#2634). One rung down from the
+          perforation below — 1px where that is 2px — because it parts a line
+          from its own result rather than the working from the total, and the
+          tag must never read as though it were torn twice. Gated on
+          `subtotal !== null`, i.e. on the multiplier ALONE: no chip, no
+          half-tear, no subtotal, which under `era_1` is every praxis that is
+          not a duel side.
+
+          The figure runs through `formatPoints` like the loop's own total does:
+          `12 × 0.8` is `9.600000000000001` in doubles and a tag that types
+          fifteen digits of arithmetic noise is not evidence of anything. */}
+      {subtotal !== null && (
+        <>
+          <div
+            aria-hidden
+            style={{
+              height: 0,
+              borderTop: "1px dashed var(--faction-snide-acid-deep)",
+              opacity: 0.75,
+              margin: "var(--space-xs) 0 0",
+            }}
+          />
+          <div style={typedLine}>
+            {t("card.stamp.subtotal")} {formatPoints(subtotal)}
+          </div>
+        </>
+      )}
+
       {meta !== null && <div style={typedLine}>{t("card.stamp.meta")} +{meta}</div>}
 
-      {/* The tally, typed only when somebody voted (ADR-0076). */}
+      {/* The tally, typed only when somebody voted (ADR-0076).
+
+          IT SPEAKS IN THE TAG'S OWN REGISTER SINCE #2634. It typed the sentence
+          `card.stamp.fromVotes` — "+ 4 from votes" — while the three lines
+          around it typed `LABEL +N`, so one tag ran two copy registers. The
+          sentence key is deleted and this line takes the bare `votes` label the
+          other five skins were already using. */}
       {votes !== null && (
         <div
           style={{
@@ -170,7 +210,7 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
             marginTop: base !== null ? typedLine.marginTop : undefined,
           }}
         >
-          {t("card.stamp.fromVotes", { votes })}
+          {t("card.stamp.votes")} +{votes}
         </div>
       )}
 
