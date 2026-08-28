@@ -373,12 +373,11 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     'feed.json:factionSelect.singularity.status.locked',
     // "filed under 'us'" is a filing cabinet, not the submit verb — the audit
     // left this row's wording untouched where it rewrote its three siblings.
-    // #2298 split the perk into name + desc; the wording is on `.desc`, and the
-    // `.name` beside it repeats it because the name itself is still owed and
-    // ships as `PLACEHOLDER — name for: <the description>`. Both leave together
-    // when the owner writes the name.
+    // #2298 split the perk into name + desc and the `.name` beside it repeated
+    // the wording back, because the name was owed and shipped as
+    // `PLACEHOLDER — name for: <the description>`. #2774 deleted the flavour
+    // names outright rather than writing them, so one leaf carries the word now.
     'factions.json:snide.invitation.perks.2.desc',
-    'factions.json:snide.invitation.perks.2.name',
     // "Join the ranks" / "one rank brighter" is the membership, not the level.
     'factions.json:everymen.invitation.headline',
     'taunts.json:coven.level_up.0',
@@ -445,11 +444,10 @@ describe('"seal" survives nowhere it means submitted (#1863)', () => {
   ].sort()
 
   const FILED_SURVIVORS = [
-    // A filing cabinet, not the submit verb. Two leaves since #2298 split the
-    // perk into name + desc: the wording is the `.desc`, and the `.name` is the
-    // placeholder that quotes it back until the owner writes the name.
+    // A filing cabinet, not the submit verb. One leaf again: #2298 split the
+    // perk into name + desc and the placeholder `.name` quoted the wording
+    // back, and #2774 cut every flavour name instead of writing it.
     'factions.json:snide.invitation.perks.2.desc',
-    'factions.json:snide.invitation.perks.2.name',
     'praxis.json:listPage.emptyFiltered',
     // Pure metaphor — a mind filing contingencies submits no praxis.
     'progression.json:unlocks.three_plans.desc',
