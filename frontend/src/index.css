@@ -8545,6 +8545,88 @@
   outline-offset: -2px;
 }
 
+/* ══ The write-up box while the room has not seeded (#2574, was #2566) ══
+   THE SIXTH SITE OF #2486'S FAILURE MODE, AND THE ONE `.control-off` COULD NOT
+   REACH. That class hangs off `:disabled`, which only exists on form controls;
+   this is a CodeMirror `contenteditable` host. So the SELECTOR is different and
+   the VOCABULARY is deliberately the same — `--control-off-fill` /
+   `--control-off-ink`, unchanged, no `--composer-unavailable-*` family beside
+   them. Two names for one state is how the seventh site repeats itself.
+
+   WHAT WAS THERE, AND WHAT IT MEASURED. `BODY_UNAVAILABLE_STYLE` in
+   `controls.tsx` set `opacity: 0.6` on this host. `opacity` composites the
+   element as a GROUP, so the field's ground faded toward the composer sheet and
+   the placeholder faded over the faded ground — the ink loses contrast twice,
+   which is exactly what #2486 ruled against on eight CTAs. Measured on the real
+   composited ground (the washed sheet, not the declared token) the placeholder
+   went from 5.52–9.13:1 to **2.74–4.11:1**: all sixteen pairings under AA, nine
+   of them under 3:1. Worst honest reading 2.74:1 (S.N.I.D.E., light).
+
+   NO ALPHA FIXES IT, WHICH IS THE FINDING — the number was not merely wrong.
+   Every composer field is the same family of stock as the sheet behind it, so
+   fading one toward the other spends the whole budget on the ink and buys
+   almost no ground. At 0.6 the ground moves ΔE 1.0–6.5 (five of sixteen at or
+   below the just-noticeable threshold — Coven light is ΔE 1.0). Walk the alpha
+   up until the placeholder clears AA and the ground stops moving at all: at
+   0.85 the worst ink is still 4.38:1 in dark while the median ground shift is
+   ΔE 1.7–2.2, and at 0.9 it is ΔE 1.1–1.5. There is no value that reads as
+   disabled AND stays legible. `opacity` is the wrong instrument here, not a
+   mis-tuned one.
+
+   SO THE GROUND IS REPLACED RATHER THAN FADED, #2573's shape exactly. The fill
+   is OPAQUE, which is the load-bearing half: the ink lands on this token and
+   not on eight faction sheets, so there is ONE ratio — 6.31:1 light, 6.49:1
+   dark — already gated in `characterPaths/__tests__/disabledControlContrast`.
+   Against the live field the neutral sits ΔE 3.4–20.4 on fifteen of the sixteen
+   pairings, so it reads as a change of state without a second measurement.
+
+   `--label-ink` IS THE THIRD DECLARATION AND IT IS NOT OPTIONAL. The only text
+   in this box before the seed is CodeMirror's placeholder, and
+   `bodyEditorTheme.ts` paints `.cm-placeholder` with `var(--label-ink)` — the
+   #1819 seam — not with `color`. Setting `color` alone would leave the one
+   visible string on the skin's own quiet tier over a ground it was never
+   measured against.
+
+   `!important` FOR THE REASON `.control-off:disabled` GIVES: the enabled paint
+   is inline, because it is the skin's `fieldBox`, and an inline declaration
+   beats any stylesheet. A rule a skin could out-specify is the pattern this
+   replaces.
+
+   The BORDER is left alone on purpose. The frame is what still says which
+   faction's composer this is, and it is the mark that keeps the box a box; only
+   the fill and the ink are the state. */
+[data-composer-body][aria-disabled="true"] {
+  background: var(--control-off-fill) !important;
+  color: var(--control-off-ink) !important;
+  --label-ink: var(--control-off-ink);
+}
+
+/* THE ONE SKIN THAT RE-POINTS THE PAIR HERE, and it is a SECOND ground rather
+   than a second vocabulary. `.sg-control-off` (above) already re-points these
+   two for the Singularity's publish band, because the terminal is
+   theme-invariant — `--faction-singularity-term-panel` is #0b1b12 in the LIGHT
+   cascade — and the house neutral would lay a pale slab on a black chassis. It
+   measures ΔE 80.6 from this field in light: a full-width, 200px-tall pale
+   rectangle, unambiguously the loudest thing on the page.
+
+   It cannot simply take `.sg-control-off`, because that class answers a
+   DIFFERENT ground question. The publish band sits on the chassis, so the panel
+   is a raised box and a visible change; the write-up box IS the panel, so the
+   same override would move the ground ΔE 0.0 and change nothing at all.
+
+   One rung DOWN instead — `-term-page` is the desk under the chassis (#2039),
+   so an unavailable field reads as a panel that is not lit yet. ΔE 7.0 light /
+   4.7 dark from the field, inside the band the other fifteen pairings sit in,
+   with `-term-dim` on it at 5.17:1 / 5.93:1. That also retires a pre-existing
+   defect this measurement turned up: the Singularity placeholder reads the
+   global `--color-text-tertiary`, which is 2.07:1 on the terminal panel in
+   light — the #1819 unreachability, still true of the LIVE box and recorded on
+   #2574 rather than fixed here. */
+.sg-composer-off {
+  --control-off-fill: var(--faction-singularity-term-page);
+  --control-off-ink: var(--faction-singularity-term-dim);
+}
+
 /* ══════════════════════════════════════════
    FILTER BAR (#1365, epic #1361)
    One responsive filter surface for tasks and praxes. Chrome, not a faction
