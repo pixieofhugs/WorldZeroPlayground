@@ -151,7 +151,10 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *    design's "ratio", so that a faction word could not fork one number's name
  *    between two surfaces. #2634 settled the question by removing the label
  *    entirely: a chip on the base line names itself, on all nine stamps, and
- *    the notation stays `×0.80` through the shared `formatMult`.
+ *    the notation stays `×0.80` through the shared `formatMult`. #2821 then
+ *    deleted the key, this being the last skin that had ever cast it; the
+ *    stamp's own test guards the absence off the base cell's SHAPE rather than
+ *    off a catalog word, which a deleted key would have made vacuous.
  *  • the design draws no metatask row (its sample has none). One is drawn here,
  *    in the box pattern's own place, because the stamp must stay legible in all
  *    five states.
