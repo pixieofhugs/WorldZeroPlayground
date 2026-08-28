@@ -5,7 +5,6 @@ import { ADMIN_MODE_STORAGE_KEY } from '../../../auth/AdminModeContext'
 import { SESSION_HINT_KEY } from '../../../auth/AuthContext'
 import { SEEN_INVITES_KEY_PREFIX } from '../../../components/InvitationWatcher'
 import { LAST_SEEN_LEVEL_KEY_PREFIX } from '../../../components/LevelUpWatcher'
-import { useFormFactor } from '../../../hooks/useFormFactor'
 import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
@@ -190,14 +189,6 @@ const deletionParagraph: CSSProperties = {
   maxWidth: '62ch',
 }
 
-/** The inventory's own frame — the design's tinted well, minus its raw px. */
-const inventory: CSSProperties = {
-  marginTop: 'var(--space-md)',
-  padding: 'var(--space-md)',
-  borderRadius: 'var(--radius-md)',
-  background: 'var(--color-bg-surface-alt)',
-}
-
 /**
  * The list itself, split out for ONE reason: the disclosure it lives behind is
  * shut on first paint, this repo's test env has no DOM to click with, and a
@@ -206,31 +197,17 @@ const inventory: CSSProperties = {
  */
 export function StorageInventory({ id }: { readonly id: string }) {
   const { t } = useTranslation('common')
-  const isMobile = useFormFactor() === 'mobile'
 
-  // Three columns on desktop, one stack on a phone. Sized in `ch` off the
-  // longest key rather than the canvas' `150px 1fr 90px`: the left cell holds
-  // an identifier that must not wrap mid-token, and a fixed px grid is what
-  // `frontend/CLAUDE.md` rules out for layout structure on the mobile path.
-  const entryRow: CSSProperties = isMobile
-    ? {
-        display: 'grid',
-        gap: 'var(--space-xs)',
-        padding: 'var(--space-sm) 0',
-        borderBottom: '1px dotted var(--color-border-strong)',
-      }
-    : {
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 32ch) minmax(0, 1fr) minmax(0, 26ch)',
-        gap: 'var(--space-md)',
-        alignItems: 'baseline',
-        padding: 'var(--space-xs) 0',
-      }
-
+  // THE WELL AND ITS ROWS ARE DRESSED IN `index.css` (#2824). Three columns
+  // where the pane is wide enough for three, one stack where it is not — and
+  // the pane narrows when the app sidebar expands, with the viewport standing
+  // still, so the question is the CONTAINER's width rather than the form
+  // factor. An inline `grid-template-columns` would beat the container query
+  // that has to yield it, which is why nothing here declares one.
   return (
-    <div id={id} style={inventory}>
+    <div id={id} className="settings-inventory">
       {STORED_ENTRIES.map((entry) => (
-        <div key={entry.name} style={entryRow}>
+        <div key={entry.name} className="settings-inventory-row">
           <code style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
             {entry.name}
             {entry.family === 'account' && t('settings.cookies.suffix.account')}
