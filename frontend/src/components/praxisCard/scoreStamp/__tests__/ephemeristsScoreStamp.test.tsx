@@ -75,13 +75,12 @@ describe('the crown is not a child of the clipped panel (#2122)', () => {
   it('still hangs the crown outside the panel, which is the design', () => {
     // The overhang is the point — #2122 is fixed by moving the clip, never by
     // pulling the crown inside the box or shrinking it.
-    // The 13px is now written against the panel's own clearance (#2634 §5):
-    // the root pads above the brass mount, and an absolutely positioned child
-    // resolves against that padding box, so the offset has to subtract it back
-    // out or the ♛ floats in the new gap instead of overhanging the corner.
-    expect(render({ is_top_for_task: true })).toContain(
-      'top:calc(var(--space-sm) - 13px);right:-12px',
-    )
+    // #2634 §5 asked this root for a top pad and it could not be given one: the
+    // crown resolves against the root's PADDING box, so any pad here moves the
+    // ♛ off the Ephemerists praxis card's cavetto cornice — the sum
+    // `ephemeristsPlateSurfaces.test.tsx` pins for #2360/#2655. See the note in
+    // the component. The literal is deliberately unchanged.
+    expect(render({ is_top_for_task: true })).toContain('top:-13px;right:-12px')
   })
 
   it('draws no crown when the praxis is not top for its task', () => {

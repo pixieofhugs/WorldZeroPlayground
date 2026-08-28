@@ -47,15 +47,35 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * the cell is the ratio's line (see the chip below) and one new row: the
  * SUBTOTAL, `base × ratio`, under a brass hairline, gated on the ratio alone.
  *
- * ## The panel is not flush to the stamp's box any more (#2634 §5)
+ * ## THE TOP CLEARANCE IS THE HOST'S TO STATE, NOT THIS FILE'S (#2634 §5)
  *
- * The root declared no clearance above the brass mount, so the chamfered panel
- * met the top of the stamp's box while the other eight sit inside a plate's own
- * inset. `PANEL_CLEARANCE` is that space, and the crown's offset is written
- * against it so the ♛ still overhangs the panel's corner by the 13px it always
- * did rather than floating clear of it. The praxis card's masthead band sits
- * directly above this stamp, so how much of the reported gap was the band's is a
- * question only a browser can answer; the PR says so.
+ * #2634 asks this root for the outer padding "the others have", on the reading
+ * that its brass panel is the only one of nine sitting flush to the stamp's box.
+ * That is measured against the wrong thing and the change cannot be made here.
+ *
+ * The eight paddings the issue cites are each a PLATE's own inner inset — Coven
+ * `--space-2xl`, the na sheet `--space-md`, S.N.I.D.E. and Singularity
+ * `--space-sm` — and this cell has one too, on the chamfered sheet below. What
+ * no stamp of the nine has is OUTER spacing, and #2655's law 09 is why: a
+ * travelling piece owns none, because a per-faction margin standing in for a gap
+ * the host declined to state is the same defect wearing a different box. This
+ * stamp travels through four hosts (the praxis card's heading row, the mobile
+ * card, the composer's task slip, the detail rail).
+ *
+ * And the arithmetic breaks a second ruling outright. The crown hangs at
+ * `top: -13` and an absolutely positioned child resolves against the ROOT's
+ * padding box, so a `--space-sm` pad here moves the panel down 8px and leaves
+ * the crown either 8px clear of the corner it is drawn to overhang (#2122) or,
+ * offset back against the pad, 3px INSIDE the Ephemerists praxis card's leaf
+ * instead of 5px into its cavetto cornice — which is exactly the sum
+ * `ephemeristsPlateSurfaces.test.tsx` pins for #2360/#2655, on a leaf that
+ * states `--space-sm` precisely because 8px against a 13px overhang still breaks
+ * the crown into the band.
+ *
+ * So the gap belongs to whichever host is short, and the praxis card's masthead
+ * band sits directly above this stamp — which the issue itself flags: "the
+ * reported gap may be partly the band's, confirm in a browser". It was not
+ * confirmed and this is not guessed at. Everything else in #2634 shipped.
  *
  * WITH NOTHING BUT A TOTAL THE PLATE FALLS AWAY and the rose stands alone.
  * `base === null` is `scoreBreakdown`'s own predicate for "no working at all"
@@ -159,21 +179,6 @@ import type { ScoreStampProps } from "./ScoreStamp";
 const STAMP_WIDTH = 128;
 const ROSE = 84;
 
-/**
- * The space above the brass mount (#2634 §5). Ornament geometry in the sense of
- * §4a's sibling rule: it is the inset the other eight stamps get from their own
- * plate padding, which this one has no plate to take it from.
- */
-const PANEL_CLEARANCE = "var(--space-sm)";
-/**
- * The crown's overhang, measured from the PANEL rather than from the stamp's
- * box — the 13px every skin hangs it by, less the clearance the panel now sits
- * below. Absolutely positioned children resolve against the root's padding box,
- * so without this the clearance would push the panel down and leave the ♛
- * hanging in the gap.
- */
-const CROWN_TOP = `calc(${PANEL_CLEARANCE} - 13px)`;
-
 /** The cell's label voice: incised caps at the label tier's 11px (#1608). */
 const LABEL: CSSProperties = { ...SMALL_CAPS, fontSize: "var(--text-md)" };
 
@@ -270,7 +275,6 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         position: "relative",
         width: "100%",
         maxWidth: working ? STAMP_WIDTH : ROSE,
-        paddingTop: PANEL_CLEARANCE,
       }}
       /* WCAG 2.2.2's pause mechanism for the labels' turn (#2148): the
          stylesheet's pause rule is a descendant selector, so the whole cell is
@@ -282,7 +286,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
           size={26}
           ringInset={3}
           rotate="6deg"
-          style={{ position: "absolute", top: CROWN_TOP, right: -12, zIndex: 3 }}
+          style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />
       )}
 

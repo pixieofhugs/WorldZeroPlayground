@@ -41,6 +41,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactElement } from 'react'
 import '../../../../i18n'
 import i18n from '../../../../i18n'
+import praxisCatalog from '../../../../locales/en/praxis.json'
 import type { PraxisCardOut } from '../../../../api/praxis'
 import { scoreBreakdown } from '../scoreBreakdown'
 import { formatPoints } from '../../../../utils/points'
@@ -328,13 +329,41 @@ describe('every skin prints the working in ONE order (#2634)', () => {
  * ========================================================================== */
 
 describe('the ledger speaks in one register (#2634 ruling 4)', () => {
-  it('the two prose keys are gone from the catalog', () => {
-    // `card.stamp.fromVotes` ("+ 4 from votes") and `card.stamp.habitBonus`
-    // ("+ 5 habit bonus") had four readers between them and the other five skins
-    // used the bare labels. i18next returns the KEY when a string is missing, so
-    // a surviving reader would print `card.stamp.fromVotes` and fail below.
-    expect(i18n.exists('praxis:card.stamp.fromVotes')).toBe(false)
-    expect(i18n.exists('praxis:card.stamp.habitBonus')).toBe(false)
+  it('holds exactly the keys the nine stamps still read', () => {
+    // The two sentence keys — "+ {{votes}} from votes" and "+ {{points}} habit
+    // bonus" — had four readers between them while the other five skins used the
+    // bare labels; they are deleted. `card.stamp.subtotal` already existed and
+    // is reused.
+    //
+    // `mult` SURVIVES WITH NO READER, deliberately. #2634's chip is bare on all
+    // nine — the shape UA, S.N.I.D.E. and WOW already drew — so the Ephemerists
+    // cell, which was the last skin to label its ratio, gave the word up. That
+    // leaves a key nothing prints, which is a COPY decision the issue did not
+    // make; it is flagged on the PR rather than taken here.
+    //
+    // Asserted as the whole key SET rather than as two absences, and read off
+    // the catalog rather than through `i18n.exists`. Both halves matter: an
+    // exact set catches a key quietly added as readily as one lost, and a key
+    // LITERAL written here would be picked up by
+    // `locales/__tests__/factionCopyCollapse.test.ts`, which walks every
+    // `praxis:card.stamp.*` string in the tree and requires it to resolve — so
+    // naming a deleted key in source is itself a failing assertion.
+    expect(Object.keys(praxisCatalog.card.stamp).sort()).toEqual(
+      [
+        'base',
+        'mult',
+        'meta',
+        'habit',
+        'votes',
+        'total',
+        'subtotal',
+        'tally',
+        'onTheRecord',
+        'points_one',
+        'points_other',
+        'pointsShort',
+      ].sort(),
+    )
   })
 
   for (const { name, render } of SKINS) {
