@@ -8620,11 +8620,42 @@
    with `-term-dim` on it at 5.17:1 / 5.93:1. That also retires a pre-existing
    defect this measurement turned up: the Singularity placeholder reads the
    global `--color-text-tertiary`, which is 2.07:1 on the terminal panel in
-   light — the #1819 unreachability, still true of the LIVE box and recorded on
-   #2574 rather than fixed here. */
+   light — the #1819 unreachability, still true of the LIVE box, recorded on
+   #2831 rather than fixed here, and answered by the rule below. */
 .sg-composer-off {
   --control-off-fill: var(--faction-singularity-term-page);
   --control-off-ink: var(--faction-singularity-term-dim);
+}
+
+/* THE LIVE HALF OF THAT SAME BOX (#2831), which is the defect the rule above
+   only turned up. `SingularityEditPraxis`'s `dress.pageStyle` now sets
+   `--label-ink` to `-term-ink` on the composer's root — the repoint #1800 made
+   on the Ephemerists composer, the other near-black one — because everything
+   the seam reaches on the SHEET stands on the washed chassis, where the quiet
+   rung reads 4.12:1 / 4.20:1.
+
+   The write-up box is not on the sheet. It is the raised `-term-panel`, opaque,
+   so `ComposerGround`'s raster and travelling band never reach under it — and
+   `-term-ink` there is the field's OWN typed ink (`fieldBox` sets `color: INK`).
+   A placeholder painted in it is a box that looks like it already has words in
+   it. So this steps back down one rung: `-term-dim` on the panel is 4.72:1
+   light / 5.56:1 dark, and it is what the preview tab's empty state already
+   draws the very same string in. That is the ground split this archetype's
+   `MUTED` docblock states — chassis takes INK, the raised panel keeps MUTED —
+   applied to the one seam that had not been given it.
+
+   THE SELECTOR IS FENCED OFF THE UNAVAILABLE STATE ON PURPOSE. `.sg-composer-off`
+   is this box's only Singularity-side hook — `ComposerSheet` and `ComposerPage`
+   take style objects, not class names — and it is named for the ground it hands
+   the OFF state. `:not([aria-disabled="true"])` is what keeps this declaration
+   from having any opinion about that state, which stays entirely the rule above
+   plus `[data-composer-body][aria-disabled="true"]`.
+
+   Measured in `editPraxis/archetypes/__tests__/composerGround.test.ts`, both
+   rungs and both grounds, with the global tertiary's 1.81 / 2.07 asserted to
+   still miss. */
+[data-composer-body].sg-composer-off:not([aria-disabled="true"]) {
+  --label-ink: var(--faction-singularity-term-dim);
 }
 
 /* ══════════════════════════════════════════
