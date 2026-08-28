@@ -51,6 +51,7 @@ import DefaultEditCharacter from '../../pages/characterPaths/archetypes/DefaultE
 import DefaultFactionHero from '../../components/factionHero/DefaultFactionHero'
 import DefaultFactionBody from '../../pages/factionDetail/archetypes/DefaultFactionBody'
 import DefaultProfileBody from '../../pages/characterProfile/archetypes/DefaultProfileBody'
+import DefaultProposeTask from '../../pages/proposeTask/archetypes/DefaultProposeTask'
 import DefaultFieldDesk from '../../pages/fieldDesk/mobileArchetypes/DefaultFieldDesk'
 
 /**
@@ -79,6 +80,7 @@ const WAS_THE_FALLBACK: Record<string, unknown> = {
   profileBody: DefaultProfileBody,
   createCharacter: DefaultCreateCharacter,
   editCharacter: DefaultEditCharacter,
+  proposeTask: DefaultProposeTask,
   duelSeal: DefaultDuelSealConfirm,
   mobileFieldDesk: DefaultFieldDesk,
 }
