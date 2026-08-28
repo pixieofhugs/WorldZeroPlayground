@@ -45,7 +45,13 @@ import {
   parseColor,
   type Rgba,
 } from '../../../../utils/contrast'
-import { readThemes, resolveVar, type Theme } from '../../../../utils/__tests__/cssVars'
+import {
+  readThemes,
+  resolveVar,
+  ruleBodies,
+  stripComments,
+  type Theme,
+} from '../../../../utils/__tests__/cssVars'
 
 const CSS_PATH = fileURLToPath(new URL('../../../../index.css', import.meta.url))
 const CSS = readFileSync(CSS_PATH, 'utf8')
@@ -331,6 +337,133 @@ describe('Coven washes at the strength its own faction minted', () => {
     )
     const ratio = worst(resolve('--faction-coven-slip-label', theme), hard)
     expect(ratio, `at 0.7 the label tier is ${formatRatio(ratio)}`).toBeLessThan(AA_NORMAL)
+  })
+})
+
+/**
+ * THE SINGULARITY COMPOSER'S LABEL SEAM, ON BOTH GROUNDS IT LANDS ON (#2831).
+ *
+ * `.label-caption` and `.label-heading` paint `--label-ink`, and so does
+ * CodeMirror's `.cm-placeholder` (`bodyEditorTheme.ts`, the #1819 seam). This
+ * skin never re-pointed it, so every one of them fell through to the global
+ * tertiary — a tier calibrated against ordinary page stock, on a terminal that
+ * is near-black in BOTH cascades. Measured on the real composited grounds, in
+ * light: **1.81:1** on the washed chassis, where the waiting notices, the live-
+ * proposal line and the publish-needs-title line sit, and **2.07:1** on the
+ * panel, where the placeholder sits. Dark was never the miss (6.79 / 8.99).
+ *
+ * The placeholder is the reading #2831 was filed on. The captions are WORSE,
+ * which is what picked the fix: not a token minted for one element, but the
+ * root re-point `EphemeristsEditPraxis` already makes for the identical defect
+ * on the identical component (#1800) — the other near-black composer.
+ *
+ * TWO RUNGS, BECAUSE THE SKIN ALREADY SPLITS ITS QUIET TIER BY GROUND (#2485,
+ * #2353), not because two names are nicer than one. `-term-dim` MISSES the
+ * washed chassis at 4.12 / 4.20 — the refusal the SKINS table above already
+ * asserts — so the root cannot be the quiet rung; and `-term-ink` on the panel
+ * is the field's OWN typed ink, so a placeholder painted with it is
+ * indistinguishable from body text the player has actually written. (The
+ * preview tab's empty state already draws this same string in `-term-dim` on
+ * this same panel.) So the chassis takes `-term-ink` and the box steps back
+ * down to `-term-dim`, which is the split this archetype's `MUTED` docblock
+ * spells out in full.
+ */
+describe('the Singularity composer re-points the label seam (#2831)', () => {
+  const CHASSIS_RUNG = '--faction-singularity-term-ink'
+  const PANEL_RUNG = '--faction-singularity-term-dim'
+  /** The live write-up box: the raised panel, opaque, so the wash never reaches it. */
+  const PANEL = '--faction-singularity-term-panel'
+  const FELL_THROUGH_TO = '--color-text-tertiary'
+  const LIVE_BOX = '[data-composer-body].sg-composer-off:not([aria-disabled="true"])'
+
+  /** The `var(--token)` one declaration names, or `null`. */
+  function seamIn(selector: string): string | null {
+    const bodies = ruleBodies(stripComments(CSS), selector)
+    expect(bodies.length, `\`${selector}\` is declared in index.css`).toBeGreaterThan(0)
+    const match = /--label-ink\s*:\s*var\(\s*(--[\w-]+)\s*\)/.exec(bodies.join(';'))
+    return match?.[1] ?? null
+  }
+
+  it('sets the seam on its own root, the way the other near-black composer does', () => {
+    // `dress.pageStyle` is the root both `ComposerPage` and
+    // `PraxisWaitingSurface` mount — the same element #1800 fixed on the
+    // Ephemerists plate, reached the same way. There is no className on
+    // `ComposerPage`, so the seam is an inline custom property there and not a
+    // rule; it is a `var()` reference either way, never a colour.
+    expect(
+      source('SingularityEditPraxis.tsx'),
+      'without this every .label-caption in the composer reads the global tertiary at 1.81:1 on the washed chassis',
+    ).toContain('["--label-ink" as string]: INK')
+  })
+
+  it('and steps it back down to the quiet rung inside the live write-up box', () => {
+    // Scoped OFF the live half explicitly: `[data-composer-body][aria-disabled]`
+    // is #2574's rule and owns the unavailable state, and `:not()` here is what
+    // keeps this declaration from having an opinion about it.
+    expect(seamIn(LIVE_BOX), 'the live placeholder rung').toBe(PANEL_RUNG)
+  })
+
+  for (const theme of BOTH_THEMES) {
+    it(`the sheet's captions clear AA on the washed chassis — ${theme}`, () => {
+      const ratio = worst(resolve(CHASSIS_RUNG, theme), GROUNDS.singularity(theme))
+      expect(ratio, `${CHASSIS_RUNG} on the composite is ${formatRatio(ratio)}`)
+        .toBeGreaterThanOrEqual(AA_NORMAL)
+    })
+
+    it(`the placeholder clears AA on the panel it actually sits on — ${theme}`, () => {
+      const panel = resolve(PANEL, theme)
+      // Opaque, which is why the panel IS the composite here: the standing
+      // raster and the travelling band are drawn by `ComposerGround` at
+      // `zIndex: 0`, under a field the content column paints at `zIndex: 1`.
+      expect(panel.a, 'the write-up box grounds itself opaquely').toBe(1)
+      const ratio = contrastRatio(resolve(PANEL_RUNG, theme), panel)
+      expect(ratio, `the live placeholder is ${formatRatio(ratio)} on the panel`)
+        .toBeGreaterThanOrEqual(AA_NORMAL)
+    })
+  }
+
+  /**
+   * THE BLAST RADIUS, MEASURED RATHER THAN ARGUED. A seam set on the root
+   * cascades to every bare `.label-caption` and `.label-heading` under it, on
+   * whichever of the terminal's grounds each one happens to stand on — and the
+   * two stages this root spans (the composer and `PraxisWaitingSurface`) draw
+   * on all four. Naming them one at a time is what makes "whatever else
+   * inherits it has been measured" a fact rather than a hope.
+   *
+   * The bare page under the sheet is deliberately not in this list. It is the
+   * app's own `--color-bg-page`, where a phosphor would be unreadable — and the
+   * only thing standing on it is the breadcrumb, neutral site chrome that
+   * paints `--color-text-tertiary` directly and carries no label class, so the
+   * seam does not reach it (#2102). A `.label-caption` mounted straight on the
+   * composer page would be the exception, and there is none.
+   */
+  const EVERY_GROUND = [
+    ['the sheet, flat', '--faction-singularity-term-bg'],
+    ['the raised panel — fields, slip, toolbar', PANEL],
+    ['the window bar', '--faction-singularity-term-chrome'],
+    ['the desk under the chassis', '--faction-singularity-term-page'],
+  ] as const
+
+  for (const theme of BOTH_THEMES) {
+    for (const [what, ground] of EVERY_GROUND) {
+      it(`and clears AA on ${what} too — ${theme}`, () => {
+        const ratio = contrastRatio(resolve(CHASSIS_RUNG, theme), resolve(ground, theme))
+        expect(ratio, `${CHASSIS_RUNG} on ${ground} is ${formatRatio(ratio)}`)
+          .toBeGreaterThanOrEqual(AA_NORMAL)
+      })
+    }
+  }
+
+  // LIGHT ONLY, and that is the finding rather than a gap in the sweep. The
+  // global tertiary flips with the cascade and the terminal does not, so at
+  // night the neutral is a pale ink on a black box and reads 6.79 / 8.99. A
+  // refusal asserted there would be asserting against a value that never failed.
+  it('and the global tertiary it fell through to misses BOTH grounds — light', () => {
+    const neutral = resolve(FELL_THROUGH_TO, 'light')
+    const chassis = worst(neutral, GROUNDS.singularity('light'))
+    expect(chassis, `the captions were ${formatRatio(chassis)}`).toBeLessThan(AA_NORMAL)
+    const panel = contrastRatio(neutral, resolve(PANEL, 'light'))
+    expect(panel, `the placeholder was ${formatRatio(panel)}`).toBeLessThan(AA_NORMAL)
   })
 })
 
