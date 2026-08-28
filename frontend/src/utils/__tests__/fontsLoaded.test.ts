@@ -927,18 +927,55 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
   );
 
   /**
-   * The one scope where a `fontWeight: 400` on a one-cut face is load-bearing.
+   * The scopes where a `fontWeight: 400` on a one-cut face is load-bearing.
    *
    * `PraxisTitle` hands its `<h2>` a `font-semibold` CLASS as well as the skin's
    * `titleStyle`, so on that element the inline 400 is not restating the default
    * — it is the only thing suppressing a 600 the class would otherwise impose,
-   * and Poiret One has no 600 to give. Deleting it swaps an inert declaration
-   * for a real fake-bold, which is the trap #2597's ruling names. Every other
-   * skin routing a one-cut face through that same title inherits the class and
-   * carries no such guard: those are reported on the PR, not fixed here, because
-   * the honest fix repaints UA and Coven and wants an owner's call.
+   * and neither Poiret One nor Anton has a 600 to give. Deleting it swaps an
+   * inert-looking declaration for a real fake-bold, which is the trap #2597's
+   * ruling names.
+   *
+   * FOUR SKINS KEEP THE SYNTHESISED 600 ON PURPOSE (#2797). That is #2487's
+   * rule — *synthesis is a defect, substitution is a design call* — being
+   * knowingly departed from, not satisfied. On 2026-08-27 the owner rendered
+   * every one of these titles at its real cut beside the browser's fake bold and
+   * ruled by eye: **"600 looks better for most of them. S.N.I.D.E. is the only
+   * one that looks better with 400."** So:
+   *
+   * | skin | title face resolves to | verdict |
+   * | --- | --- | --- |
+   * | na (`DefaultPraxisCard`) | `--faction-default-card-font` → Bebas Neue | keep the synthesised 600 |
+   * | Everymen (`EverymenPraxisCard`) | `--ev-praxis-face` → `--faction-everymen-card-font` → Bebas Neue | keep the synthesised 600 |
+   * | Singularity (`SingularityPraxisCard`) | `--font-faction-terminal` → Share Tech Mono | keep the synthesised 600 |
+   * | WOW (`WowPraxisCard`) | `--wow-praxis-card-face` → `--faction-wow-card-font` → MedievalSharp | keep the synthesised 600 |
+   * | S.N.I.D.E. (`SnidePraxisCard`) | `--faction-snide-font-impact` → Anton | inline 400 — below |
+   * | Ephemerists (`EphemeristsPraxisCard`) | Poiret One | inline 400 — below |
+   *
+   * UA and Coven are untouched: Cormorant Garamond and Caveat ship a real 600
+   * and declare it themselves. The shared `font-semibold` stays.
+   *
+   * WHY THE RULING IS RECORDED HERE. This check cannot see those four: it reads
+   * source declarations and cannot follow `className="font-semibold"` → the
+   * `fonts.display` / `titleStyle` prop → a per-skin CSS variable → a faction
+   * token → a face. The day it learns that indirection it will go red on all
+   * four, and that red is a DECISION, not an oversight — do not "fix" it, and do
+   * not add cuts to the payload (the byte budget is in WARN, #2469). Note the
+   * evidence's ceiling: fake-bold is drawn by the browser and the algorithm
+   * differs by engine and platform, so one browser on one OS is a fair basis for
+   * a taste call and not a guarantee. A title that looks wrong on another engine
+   * is new evidence, not a contradiction.
+   *
+   * ponytail: the entries below are files, not elements, so a second weight on a
+   * one-cut face anywhere in an exempted file goes unseen. Two annotated files is
+   * under the bar for a scope-precise exemption; if this set grows, narrow it.
    */
-  const LOAD_BEARING = new Set(["components/praxisCard/desktop/EphemeristsPraxisCard.tsx"]);
+  const LOAD_BEARING = new Set([
+    "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
+    // #2797, above: Anton ships one cut and the `font-semibold` class is on the
+    // same <h2>, so this 400 is the ruled substitution, not an inert line.
+    "components/praxisCard/desktop/SnidePraxisCard.tsx",
+  ]);
 
   it("derives the one-cut families from the sheets rather than a list", () => {
     // Sanity check on the derivation: the six #2597 swept, plus #2487's three.
