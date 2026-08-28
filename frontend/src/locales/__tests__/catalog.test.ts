@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join, relative, sep } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
 import common from '../en/common.json'
@@ -1148,6 +1148,107 @@ describe('no faction sentence renders a double full stop (#2368)', () => {
       .filter(([id]) => id.startsWith('factions.json:'))
       .filter(([, value]) => /\{\{faction\}\}\./.test(value))
       .map(([id, value]) => `${id} -> "${value}"`)
+    expect(offenders).toEqual([])
+  })
+})
+
+/* ========================================================================== *
+ * #2827 — A CALL SITE MAY NOT DROP THE VALUES ITS COPY INTERPOLATES.
+ *
+ * THE SEAM IS THE CALL, not the leaf, and the block above is why it has to be:
+ * `mobile.gateHint` is one shared key, it is correct, and every catalog-level
+ * check it has passed. `SingularityFactionBody` wrote `t("mobile.gateHint")`
+ * with no second argument, so `/factions/singularity` printed the literal
+ * `{{faction}}` to the reader in its gate panel while the title one line above
+ * it interpolated fine. i18next does not throw on a missing value — it leaves
+ * the placeholder in and returns a perfectly good string, so "the key resolved"
+ * and "the element is non-empty" both pass.
+ *
+ * The RENDERED half of this guard lives at the render seam it belongs to
+ * (`pages/factionDetail/__tests__/burnedNotice.test.tsx`, which draws every
+ * faction body in every membership state). This half is the class: any key in
+ * any catalog whose copy interpolates, called anywhere in `src` with no options
+ * object at all. On `origin/main` it found exactly one call — the reported one.
+ *
+ * ponytail: only a call whose key is a STRING LITERAL can be resolved
+ * statically, so `t(\`${slug}.join.joinButton\`)` and `<Trans i18nKey>` are out
+ * of reach here. Those are covered where they are rendered; the upgrade path, if
+ * a third instance ever appears, is a rendered sweep over a page census rather
+ * than a cleverer regex.
+ * ========================================================================== */
+
+/** `src`, from this file. */
+const SRC_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+
+/**
+ * A `t("key")` with a string-literal key and NOTHING after it. The closing
+ * paren is required immediately, so any call that passes options — on the same
+ * line or the next one — is not a match.
+ */
+const BARE_CALL = /\bt\(\s*(['"])([^'"\n]+)\1\s*\)/g
+
+/**
+ * Every catalog key whose copy interpolates, by its DOTTED part alone — a call
+ * site writes `ns:key` or the bare form under a `useTranslation(ns)`, and both
+ * have to land. Read once: this walks every catalog file.
+ */
+const INTERPOLATED_KEYS = new Set(
+  catalogLeaves()
+    .filter(([, value]) => value.includes('{{'))
+    .map(([id]) => id.split(':')[1]),
+)
+
+/** Every `.ts`/`.tsx` under `src` that ships, src-relative and slash-separated. */
+function shippedSources(): string[] {
+  return readdirSync(SRC_ROOT, { recursive: true, encoding: 'utf8' })
+    .map((name) => name.split(sep).join('/'))
+    .filter((name) => /\.tsx?$/.test(name))
+    .filter((name) => !name.includes('__tests__/') && !name.startsWith('locales/'))
+}
+
+/**
+ * Offending `t()` calls in one source: bare calls naming a key whose copy has a
+ * `{{placeholder}}` in it. Keys are matched on the dotted part, so `ns:key` and
+ * the bare form written under a `useTranslation(ns)` both land.
+ */
+function droppedInterpolations(name: string, source: string): string[] {
+  const found: string[] = []
+  for (const hit of source.matchAll(BARE_CALL)) {
+    const key = hit[2].includes(':') ? hit[2].split(':')[1] : hit[2]
+    if (!INTERPOLATED_KEYS.has(key)) continue
+    found.push(`${name}:${source.slice(0, hit.index).split('\n').length} -> t("${hit[2]}")`)
+  }
+  return found
+}
+
+describe('no call site drops an interpolation (#2827)', () => {
+  it('has a scanner that catches the defect it was written for', () => {
+    // THE TRIPWIRE, and it is the whole reason this guard can be trusted: a
+    // regex that matched nothing would report a clean board forever. The exact
+    // shape #2827 shipped is caught, and the shape its seven siblings ship is
+    // not.
+    const key = 'mobile.gateHint'
+    expect(i18n.t(`factions:${key}`)).toContain('{{')
+    expect(droppedInterpolations('probe.tsx', `: t("${key}")}`)).toHaveLength(1)
+    expect(
+      droppedInterpolations('probe.tsx', `: t("${key}", { faction: factionName(slug) })}`),
+    ).toEqual([])
+    expect(
+      droppedInterpolations('probe.tsx', `: t("${key}", {\n  faction: name,\n})}`),
+      'options on the next line are still options',
+    ).toEqual([])
+  })
+
+  it('scans a tree it can actually see', () => {
+    const files = shippedSources()
+    expect(files.length).toBeGreaterThan(200)
+    expect(files).toContain('pages/factionDetail/archetypes/SingularityFactionBody.tsx')
+  })
+
+  it('finds no interpolated string called without its values', () => {
+    const offenders = shippedSources().flatMap((name) =>
+      droppedInterpolations(name, readFileSync(join(SRC_ROOT, name), 'utf8')),
+    )
     expect(offenders).toEqual([])
   })
 })
