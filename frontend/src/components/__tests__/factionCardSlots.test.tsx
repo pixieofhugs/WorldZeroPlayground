@@ -23,7 +23,10 @@ import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import type { PraxisCardOut, PraxisMemberOut, MediaItemOut } from "../../api/praxis";
 import type { CommentOut } from "../../api/comments";
-import { aPraxisCard, aTask } from '../../test/fixtures'
+import type { CommentComponent } from "../comments/shared";
+import { aCharacter, aCurrentUser, aPraxisCard, aTask } from '../../test/fixtures'
+import { AuthContext } from "../../auth/AuthContext";
+import type { CurrentUser } from "../../api/auth";
 
 function markup(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>);
@@ -313,6 +316,80 @@ describe("comment content-slot invariant (row mode)", () => {
       const { html, text } = markup(<Comment mode="row" comment={COMMENT} />);
       expect(html, "author-identity slot").toContain('href="/characters/3"');
       expect(text, "body slot").toContain("Photosynthesis");
+    });
+  }
+});
+
+/*
+ * #2817 — THE SIGNED-OUT GATE, ASSERTED ONCE OVER EVERY VOICE.
+ *
+ * THE SEAM: what a voice's row emits for a viewer the shared controls refuse.
+ * `OwnerControls` self-hides for a non-author and `CommentFlagControl` for
+ * anyone who cannot flag, so a signed-out reader must be shown neither — but
+ * that is a decision the shared controls make and each voice merely has to not
+ * re-make. `OwnerControls.test.tsx` and `FlagControl.test.tsx` prove the
+ * controls behave; the loop above proves the voice renders content. Whether a
+ * voice GATES those controls fell between them, written out by hand in four of
+ * the nine suites and nowhere else.
+ *
+ * BOTH POSITIVE CASES FIRST. A bare `not.toContain` passes when the fixture
+ * never produced the thing at all, so each viewer that SHOULD see an affordance
+ * is rendered first — the author sees the owner row, another member sees the
+ * flag. Only then does the signed-out render assert their absence.
+ *
+ * The viewer is given through `AuthContext.Provider`, which the context exports
+ * for exactly this: effects never run under `renderToStaticMarkup`, so
+ * `AuthProvider` would fetch nothing and every viewer would read as signed out
+ * — including the two that must not.
+ *
+ * The four hand-written copies stay until the owner has QA'd this (epic #2814
+ * phase 2).
+ */
+const EDIT_LABEL = `aria-label="${i18n.t("praxis:comments.edit")}"`;
+const DELETE_LABEL = `aria-label="${i18n.t("praxis:comments.delete")}"`;
+// The closed flag control is a lone button carrying just that word — anchoring
+// on the text node keeps this off any faction ornament spelling it elsewhere.
+const FLAG_BUTTON = `>${i18n.t("praxis:detail.flag.flag")}</button>`;
+
+const AUTHOR = aCharacter({ id: COMMENT.author.id });
+const ANOTHER_MEMBER = aCharacter({ id: COMMENT.author.id + 1 });
+
+function asViewer(
+  Comment: CommentComponent,
+  character: CurrentUser["character"] | null,
+): string {
+  const user = character === null ? null : aCurrentUser({ character });
+  return renderToStaticMarkup(
+    <AuthContext.Provider
+      value={{
+        user,
+        loading: false,
+        refetch: async () => {},
+        applyUser: () => {},
+        signOut: async () => {},
+      }}
+    >
+      <MemoryRouter>
+        <Comment mode="row" comment={COMMENT} />
+      </MemoryRouter>
+    </AuthContext.Provider>,
+  );
+}
+
+describe("comment voices gate the owner row and the flag on the viewer", () => {
+  for (const [slug, Comment] of Object.entries(commentArchetypes)) {
+    it(`${slug} shows no owner row and no flag affordance to a signed-out viewer`, () => {
+      const own = asViewer(Comment, AUTHOR);
+      expect(own, "positive case: the author gets the owner row").toContain(EDIT_LABEL);
+      expect(own).toContain(DELETE_LABEL);
+
+      const other = asViewer(Comment, ANOTHER_MEMBER);
+      expect(other, "positive case: another member gets the flag").toContain(FLAG_BUTTON);
+
+      const strangerToTheSite = asViewer(Comment, null);
+      expect(strangerToTheSite, "no owner row").not.toContain(EDIT_LABEL);
+      expect(strangerToTheSite, "no owner row").not.toContain(DELETE_LABEL);
+      expect(strangerToTheSite, "no flag affordance").not.toContain(FLAG_BUTTON);
     });
   }
 });
