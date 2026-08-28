@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { factionName } from "../utils/factions";
+import { CARD_CTA } from "./ctaTapFloor";
 
 const NA_SLUG = "na";
 
@@ -65,6 +66,43 @@ export interface JoinControlSkin {
 
 /** The pair's row. Identical in all nine kits before the extraction. */
 const PAIR_ROW: CSSProperties = { display: "flex", gap: "var(--space-sm)" };
+
+/* ---------------------------------------------------------------------------
+ * THE 44px TAP FLOOR, DECLARED ONCE FOR THE FOURTH CTA SURFACE (#2826).
+ *
+ * `CARD_CTA` is the task card's sign-up geometry (#2030), the task detail's and
+ * the faction SELECT card's (#2818). The faction DETAIL page's join verb is the
+ * same act on a fourth surface and had no floor at all: measured at
+ * `10e41471`, `min-height` computed
+ * to `0px` on all seven detail CTAs, six cleared 44px only because their own
+ * padding and type added up to it, and Singularity's `> CONNECT` stood at
+ * 40.5px. Coven's exactly-44.0 was one type rung away from the same fall.
+ *
+ * IT IS SPREAD HERE AND NOT INTO THE NINE SKINS. Every join verb on the site
+ * routes through this component — eight faction bodies and
+ * `InvitationLetterPopup` — so nine copies of the same declaration would be nine
+ * places for it to rot, which is the shape #2651 extracted this control to
+ * remove. A kit supplies PAINT; a tap target is not paint.
+ *
+ * SPREAD FIRST, so a kit's own geometry still wins: Coven's open verb declares
+ * `display: flex` for the glyph it carries and keeps it. No kit declares a
+ * `minHeight`, so nothing overrides the floor today, and a kit that wanted to
+ * would have to write the number down where this comment is visible.
+ *
+ * The `display: inline-flex` this brings is inert on the two halves of the pair
+ * — a flex item is blockified — and on the open verb it only centres a label the
+ * button already centred, since every kit's label is a single text node bar
+ * Coven's, which was already a flex box.
+ *
+ * IT IS IMPORTED FROM `ctaTapFloor` AND NOT FROM `taskCard/cardCta`, which is
+ * where it used to live and still re-exports it. This component is on the
+ * critical path and `cardCta.ts` sets eight faction `font-family` values, so a
+ * static import of that module from here strands the faction font sheet
+ * (#2079). `factionFaceSplit.test.ts` failed on exactly that import.
+ *
+ * `joinTapTarget.test.tsx` is the guard, off the rendered markup of all nine
+ * bodies and of the pair.
+ * ------------------------------------------------------------------------- */
 
 /**
  * The join trio — [Join] → the switch sentence, the error slot and
@@ -140,7 +178,7 @@ export function JoinControl({
           autoFocus={autoFocus}
           className={skin.className}
           onClick={() => setConfirming(true)}
-          style={skin.openStyle}
+          style={{ ...CARD_CTA, ...skin.openStyle }}
         >
           {openLabel}
         </button>
@@ -214,7 +252,7 @@ export function JoinConfirm({
           data-join="cancel"
           onClick={onCancel}
           disabled={busy}
-          style={{ ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}
+          style={{ ...CARD_CTA, ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}
         >
           {t("detail.join.cancel")}
         </button>
@@ -226,6 +264,7 @@ export function JoinConfirm({
           onClick={() => void membership.join()}
           disabled={busy}
           style={{
+            ...CARD_CTA,
             ...skin.confirmStyle,
             flex: 1,
             opacity: busy ? 0.6 : 1,
