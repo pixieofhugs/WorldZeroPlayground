@@ -65,14 +65,16 @@ const NOTE_MUTED = "var(--faction-snide-note-muted)";
    ground (the join button, 5.38:1 through `-on-accent`) and 2.98:1 as TYPE on
    the light wall. Where pink carries a WORD it takes this one. */
 const NOTE_PINK = "var(--faction-snide-note-pink-ink)";
-/* The marker scrawl's green. `GREEN` above is `-acid-deep`, which was picked
-   because it "reads correctly on the always-dark ink" — the panel is no longer
-   always-dark, and it reaches 2.30:1 on the light wall (#2173 computes the same
-   number for the same reason). `-wall-credit` is the wall-end rung of the same
-   hue, minted by #2177: 7.72:1 light / 11.35:1 dark. `GREEN` keeps the two
+/* NO `WALL_GREEN` ROW. It was the marker scrawl's green — `-wall-credit`, the
+   wall-end rung of the acid hue minted by #2177 (7.72:1 light / 11.35:1 dark) —
+   and its only two readers here were the About and Members headings, which #2807
+   converted to {@link SectionHeading}. The ink came off the file with them. The
+   TOKEN is untouched and six other files spend it, `SnideProfileBody` among
+   them, which is why `factionContrast.test.ts` still measures it BARE on this
+   wall. `GREEN` above stays what it always was: `-acid-deep`, kept for the two
    marks whose ground really is the press — the barcode rule and the mugshot's
-   rim — so this is a second name rather than a repoint. */
-const WALL_GREEN = "var(--faction-snide-wall-credit)";
+   rim — and 2.30:1 as type on the light wall, which is why it never carried a
+   word. */
 /* The wall's alarm ink. The join error printed the GLOBAL `--color-danger`,
    which is measured on `--color-bg-page` and reads 4.08:1 on this wall (it was
    3.93:1 on the ink panel before it — an AA miss that predates this issue and
@@ -162,6 +164,15 @@ function Halftone() {
 const ACID_PLATE: CSSProperties = { color: ACID, background: INK };
 
 const SECTION_HEADING_ROW: CSSProperties = {
+  /* LOAD-BEARING SINCE #2807, when About and Members joined the two sections
+     that already used this row. Those two sit INSIDE a `WALL_PANEL`, which also
+     mounts {@link Halftone} — `position: absolute; inset: 0` over the panel's
+     whole box — and every sibling that must paint above that raster carries its
+     own `position`. The two marker scrawls did; this row did not, so wrapping
+     them dropped both headings under an 8% dot screen. That reads as a slightly
+     dulled heading rather than a broken one, which is the kind that ships green.
+     Inert for Tasks and Recent, which stand on the bare wall. */
+  position: "relative",
   display: "flex",
   alignItems: "center",
   gap: "var(--space-md)",
@@ -342,19 +353,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               cream, so it is the first place to look if 40% is too heavy. */}
           <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
             <Halftone />
-            <div
-              style={{
-                position: "relative",
-                fontFamily: MARKER,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the xerox flyer.
-                fontSize: 26,
-                color: WALL_GREEN,
-                transform: "rotate(-1deg)",
-                marginBottom: "var(--space-md)",
-              }}
-            >
-              {t("detail.aboutHeading")}
-            </div>
+            <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
               {paragraphs.length ? (
                 paragraphs.map((para, i) => (
@@ -656,19 +655,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 of the seventeen and the first candidate for a light tier. */}
             <div style={{ ...WALL_PANEL, boxShadow: "4px 5px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
               <Halftone />
-              <div
-                style={{
-                  position: "relative",
-                  fontFamily: MARKER,
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the rap sheet.
-                  fontSize: 22,
-                  color: WALL_GREEN,
-                  transform: "rotate(-1deg)",
-                  marginBottom: "var(--space-md)",
-                }}
-              >
+              <SectionHeading>
                 {t("detail.default.membersHeading", { total: members.length })}
-              </div>
+              </SectionHeading>
               {rapSheet.length === 0 ? (
                 <p className="content-text" style={{ position: "relative", fontFamily: TYPE, color: NOTE_MUTED }}>
                   {spot
