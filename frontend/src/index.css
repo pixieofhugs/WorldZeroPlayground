@@ -9860,3 +9860,73 @@
   color: var(--faction-default-card-bg);
   box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
+
+/* ── SETTINGS · THE STORAGE INVENTORY'S SHAPE IS THE PANE'S CALL (#2824) ─────
+   The eleven-row cookie/localStorage inventory was a three-column grid on every
+   desktop viewport: `minmax(0, 32ch) minmax(0, 1fr) minmax(0, 26ch)`. Two
+   intrinsic maxima either side of one flexible track is the shape that starves
+   the middle — grid maximizes `minmax()` tracks toward their limits BEFORE it
+   gives a `1fr` anything, so where the outer two cannot both be satisfied they
+   split the free space evenly and the `1fr` resolves to zero. In the 483px
+   settings pane at a 1280px window that was `229.5px 0px 229.5px`, and because
+   the description's `overflow` is `visible` the text was not clipped: it spilled
+   out of a zero-width box across the third column.
+
+   THE WIDTH THAT DECIDES THIS IS THE PANE'S, NOT THE WINDOW'S. Settings is a
+   232px rail plus a pane that absorbs every width change, so expanding the app
+   sidebar narrows the inventory with the viewport standing still — the case a
+   `@media` query is wrong about and `useFormFactor` cannot see at all. Same
+   ruling as the Ephemerists vote plate (§5, #2236): a container query for a
+   component mounted at two widths on one screen, and the values have to leave
+   the inline style to be yielded at all.
+
+   THE TRACKS ARE `auto`, NOT `ch`, AND THAT IS THE ROOT CAUSE GOING AWAY. Both
+   `ch` maxima were guesses, and both resolved against the ROW's inherited body
+   font while the key renders in the MONO face — `32ch` came out ~272px for a
+   31-character key that measures ~224px where it actually renders, over-declaring
+   by ~50px, and `26ch` ~221px for a value that needs ~118px. `auto` is the same
+   intention without the guess: min-content as the floor, so the key can never be
+   squeezed below a token, and max-content as the ceiling, so neither outer track
+   can claim a pixel it does not use. The description then keeps a HARD floor
+   rather than a flexible one — `minmax(110px, 1fr)`, the width below which it is
+   crushed rather than tight — which makes the zero-width failure structurally
+   impossible above the threshold instead of merely unlikely.
+
+   THE THRESHOLD IS 476px BECAUSE A SIZE QUERY MEASURES THE CONTENT BOX. The
+   owner's arithmetic floor is stated in PANE pixels: key 224 + value 118 + two
+   12px gaps + two 12px of well padding + a 110px description = ~500px. But
+   `.settings-inventory` carries that padding itself and `container-type:
+   inline-size` queries the container's own content box, so the 24px of padding is
+   already outside what the query sees: 224 + 118 + 24 + 110 = 476. Writing 500
+   here would demand 24px the row never had, and hold the table back a step past
+   where it fits. At exactly 476 the tracks land 224 / 110 / 118 — the model's own
+   floor — and every pixel above it goes to the description.
+
+   Consequence, ruled and intended: the 483px pane at a 1280px window still
+   STACKS. The table appears when the app sidebar is collapsed, or on a wider
+   window. NOT MEASURED IN A BROWSER on this side — this is arithmetic over the
+   sheet against the owner's render, and the PR says the eyeballing is still
+   owed. */
+.settings-inventory {
+  container-type: inline-size;
+  container-name: settings-inventory;
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-alt);
+}
+.settings-inventory-row {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px dotted var(--color-border-strong);
+}
+@container settings-inventory (min-width: 476px) {
+  .settings-inventory-row {
+    grid-template-columns: auto minmax(110px, 1fr) auto;
+    gap: var(--space-md);
+    align-items: baseline;
+    padding: var(--space-xs) 0;
+    border-bottom: none;
+  }
+}
