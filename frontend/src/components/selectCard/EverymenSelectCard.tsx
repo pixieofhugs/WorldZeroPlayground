@@ -93,10 +93,13 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *                                        small-caption ink (4.97 / 5.32).
  *   CTA        gold fill, ink type     -> the report-for-duty bar: `-bill-cta-bg`
  *                                        under `-bill-cta-ink` inside a 2px rule
- *                                        in the paper's ink, on the shared
- *                                        {@link CARD_CTA} chassis so the 44px
- *                                        tap floor is the kit's and not a number
- *                                        re-typed here.
+ *                                        in the paper's ink. Gathered here as a
+ *                                        transcription over the shared `CARD_CTA`
+ *                                        chassis; since #2818 it is
+ *                                        {@link EVERYMEN_CARD_CTA} entire, which
+ *                                        spreads that chassis itself, so the
+ *                                        44px tap floor still arrives with the
+ *                                        kit rather than as a number re-typed.
  *   faces      `--font-faction-poster` -> `--faction-everymen-card-font`. A
  *                                        PROVEN synonym, not a waived one: both
  *                                        resolve to `"Bebas Neue", Impact,

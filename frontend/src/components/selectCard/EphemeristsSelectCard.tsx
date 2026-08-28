@@ -82,7 +82,11 @@ import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
  *   • NO HOVER. `.eph-cta` declares none, on any of its six surfaces, so the
  *     ghost button's two `onMouseEnter`/`onMouseLeave` handlers are DELETED
  *     rather than re-tinted. Giving this one tile a hover the other five lack is
- *     how a shared control starts becoming six again (#2146).
+ *     how a shared control starts becoming six again (#2146). #2818 made that
+ *     the rule for all nine tiles, so this line is no longer this file's alone.
+ *   • The TYPE, since #2818, is `EPHEMERISTS_CARD_CTA` rather than this mount's
+ *     own small-caps at 0.16em. The class was always shared; the setting was
+ *     not, which is the whole of what the tile still had to get wrong.
  *   • NO CORNICE. `Cornice` is the register's band-as-a-band and would be the
  *     literal reading of "the band may still appear as a band" (#2323). It is
  *     left off because the tile's coordinate block is absolutely positioned at

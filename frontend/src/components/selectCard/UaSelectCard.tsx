@@ -82,8 +82,9 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * 11.32/12.28:1 and the CTA 4.98/5.35:1. Every one of those was ALREADY PINNED
  * by the leaf's own rows in `utils/__tests__/factionContrast.test.ts` ("ua leaf
  * darkest stop, *" and "ua leaf CTA") — gathering a register inherits its
- * measurements. One row is new, and only because the hover names a ground the
- * card has no hover for.
+ * measurements. One row was new when this tile was gathered, and only because
+ * the hover named a ground the card has no hover for; #2818 deleted the hover
+ * and the row with it, so the tile now sits entirely inside the leaf's rows.
  *
  * The wordmark is `feed:factionSelect.ua.wordmark` ("UA"), NOT `names.ua` —
  * #2332 renamed the faction to "Unwavering Artisans" and deliberately left this

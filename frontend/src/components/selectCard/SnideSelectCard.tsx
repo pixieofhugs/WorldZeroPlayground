@@ -59,8 +59,9 @@ import { CTA_SELECT_SIZE, SNIDE_CARD_CTA } from "../taskCard/cardCta";
  * rows in `utils/__tests__/factionContrast.test.ts` — SNIDE_WALL_PAIRS for the
  * three wall inks across all four of the ramp's readings, plus "snide clipping
  * bar, ordinal", "snide clipping bar, wordmark" and "snide acid CTA bar". That
- * is the point of gathering a register rather than inventing one; only the
- * CTA's hover ground needed a new row.
+ * is the point of gathering a register rather than inventing one. One row was
+ * new — the CTA's hover ground — and #2818 deleted that hover and its row, so
+ * every pairing on this tile is now one the task card already measures.
  *
  * WHERE THE TASK CARD HAS NO ANSWER, and nothing is invented for it:
  *   • `--faction-snide-font-black` (Archivo Black) is cut 2 of the ransom

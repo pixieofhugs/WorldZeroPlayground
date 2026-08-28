@@ -53,14 +53,14 @@ import { CTA_SELECT_SIZE, SINGULARITY_CARD_CTA } from "../taskCard/cardCta";
  *                                walked up for the lighter chassis (#4c7fef by
  *                                day, #60a5fa by night) — the two-theme twin of
  *                                the token this line was already reading.
- *   CTA fill   `color-mix(-border-hard 14%)` -> the same wash on `-term-blue`.
- *   CTA edge   `1px solid -border-hard` -> `-term-bright`, the ink the task
- *                                card's CTA is bordered in.
- *   CTA press  a green flood, hand-mixed -> `-term-cta-bg` / `-term-cta-ink`,
- *                                the lit key the task card wears at rest. The
- *                                tile already inverted to this pairing; it just
- *                                spelt it as two other tokens that happen to
- *                                hold the same value TODAY.
+ *   CTA        a wash, an edge and a hover flood, each gathered separately ->
+ *                                `SINGULARITY_CARD_CTA` entire (#2818). The key
+ *                                is LIT AT REST now, which is what the task
+ *                                card and the task detail both draw; the 14%
+ *                                wash and the two handlers that lit it were the
+ *                                last thing making the tile's hover state, not
+ *                                its resting one, the match for the sign-up it
+ *                                leads to.
  *   face       `--font-faction-terminal` -> `--faction-singularity-card-font`,
  *                                the ROLE name the task card, the band, the
  *                                readout and the comment voice all read. Same
@@ -71,11 +71,11 @@ import { CTA_SELECT_SIZE, SINGULARITY_CARD_CTA } from "../taskCard/cardCta";
  * measured already — the payoff of gathering a register instead of minting one.
  * `singularity terminal chassis, title / brief / boot line` and `singularity
  * CTA, prompt` in `utils/__tests__/factionContrast.test.ts` cover the name, the
- * brief, the status line and the pressed key. Two rows are new, because this
- * tile is the only surface that draws them: the CTA at REST (its wash is only
- * 1.16:1 against the chassis, so the control's affordance is its `-term-bright`
- * edge at 9.35:1 light / 11.41:1 dark, well over 1.4.11's 3:1) and the CTA's
- * label on that wash.
+ * brief, the status line and the key. Two rows were new when this tile was
+ * gathered, both of them the unlit wash the CTA drew at rest (1.16:1 against
+ * the chassis, so the control's affordance was its `-term-bright` edge rather
+ * than its fill). #2818 lit the key at rest and the rows went with the wash:
+ * every pairing here is now one the task card already measures.
  *
  * WHERE THE TASK CARD HAS NO ANSWER, and nothing is invented for it:
  *   • THE CHROME STRIP. The task card's is `SingularityBand` — a window bar in
