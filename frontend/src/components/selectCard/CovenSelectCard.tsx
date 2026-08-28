@@ -6,11 +6,7 @@ import {
   Braid,
   CAPTION,
   CHROME,
-  CTA_FROM,
-  CTA_INK,
-  CTA_TO,
   DEEP,
-  GLOW,
   HAND,
   INK,
   READING,
@@ -18,6 +14,7 @@ import {
   SLIP_SHEET,
   SOFT,
 } from "../factionMarks/covenSlip";
+import { COVEN_CARD_CTA, CTA_SELECT_SIZE } from "../taskCard/cardCta";
 
 /**
  * Cozy Coven — the faction-DIRECTORY tile (#2325, a child of #2321). The spell
@@ -154,12 +151,13 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
           <div style={{ fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", lineHeight: 1.3, color: SOFT }}>{status}</div>
           {members != null && <div style={{ ...CAPTION, flexShrink: 0 }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
         </div>
+        {/* The pink box, from the one place it is written (#2818). It was
+            transcribed here declaration for declaration — the same ramp between
+            the same two `-slip-cta-*` stops, the same 12 radius, the same glow —
+            which is the #2642 shape: a paint maintained twice agrees until it
+            doesn't. `COVEN_CARD_CTA` is now the only copy. */}
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-sm)",
-          border: `1.5px solid ${CTA_TO}`, borderRadius: 12,
-          background: `linear-gradient(180deg, ${CTA_FROM}, ${CTA_TO})`, color: CTA_INK,
-          fontFamily: CHROME, fontWeight: 700, fontSize: "var(--text-lg)", letterSpacing: "0.12em", textTransform: "uppercase",
-          padding: "var(--space-md) var(--space-lg)", boxShadow: `0 3px 8px ${GLOW}`,
+          cursor: "pointer", ...COVEN_CARD_CTA, ...CTA_SELECT_SIZE,
         }}>{i18n.t("feed:factionSelect.coven.cta")}</button>
       </div>
     </div>

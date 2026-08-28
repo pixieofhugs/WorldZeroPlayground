@@ -55,6 +55,14 @@ function registerSource(): string {
   ].join("\n");
 }
 
+/** One faction's CTA constant, sliced out of the module that holds all eight. */
+function ctaSource(name: string): string {
+  const module = code("../../taskCard/cardCta.ts");
+  const at = module.indexOf(`export const ${name}`);
+  expect(at, `no \`${name}\` in taskCard/cardCta.ts`).toBeGreaterThan(-1);
+  return module.slice(at, module.indexOf("\n};", at));
+}
+
 /** Every custom property named in a source, in document order, deduplicated. */
 const propsIn = (source: string): string[] => [
   ...new Set([...source.matchAll(/--[a-z0-9-]+/g)].map((match) => match[0])),
@@ -123,10 +131,19 @@ widening this test.`,
     // `--faction-ua` is a FILL and reaches the register through `uaAtoms`'
     // ink column, so the sweep above cannot see it here. The card had already
     // decided this control is a chip; pin that decision directly.
-    const source = code(TILE);
-    expect(source).toContain("var(--faction-ua-card-chip-bg)");
-    expect(source).toContain("var(--faction-ua-card-chip-ink)");
-    expect(source, "the bare fill / on-fill pair is the retired CTA").not.toMatch(
+    //
+    // READ AT THE CONSTANT SINCE #2818, for the reason the S.N.I.D.E. and
+    // Singularity files already read theirs there: the tile spreads
+    // `UA_CARD_CTA` and adds no paint, so the chip pair is spelt once. The tile
+    // is still swept for the retired fill — that half is about what the TILE may
+    // not say, and it stays where it can go wrong.
+    const cta = ctaSource("UA_CARD_CTA");
+    expect(cta).toContain("var(--faction-ua-card-chip-bg)");
+    expect(cta).toContain("var(--faction-ua-card-chip-ink)");
+    expect(code(TILE), "the tile adds no CTA paint of its own").toContain(
+      "...UA_CARD_CTA",
+    );
+    expect(code(TILE), "the bare fill / on-fill pair is the retired CTA").not.toMatch(
       /var\(--faction-ua\)|--faction-ua-on-fill/,
     );
   });

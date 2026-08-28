@@ -2,6 +2,7 @@ import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
+import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
 
 /**
  * WOW pledge card — the Court's recruiting placard (kit §13, #900).
@@ -162,13 +163,14 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
         <div style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · {i18n.t("feed:factionSelect.wow.members", { count: members })}</>}
         </div>
+        {/* The plum call, from the decree's own constant (#2818). The face
+            arrives as the `face` ROLE either way — `WOW_CARD_CTA` asks
+            `factionRoleVar("wow", "face")` where this tile asked
+            `--wow-select-card-face`, which the role map declares from the same
+            token — so the only visible move is the radius, off `--radius-md`
+            onto the card's own 7. */}
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer",
-          fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-content)", letterSpacing: "0.04em",
-          color: "var(--faction-wow-on-plum)",
-          background: "var(--faction-wow-plum-surface)",
-          border: "2px solid var(--faction-wow-plum-surface)", borderRadius: "var(--radius-md)",
-          padding: "var(--space-md) var(--space-lg)",
+          cursor: "pointer", ...WOW_CARD_CTA, ...CTA_SELECT_SIZE,
         }}>{i18n.t("feed:factionSelect.wow.cta")}</button>
       </div>
     </div>

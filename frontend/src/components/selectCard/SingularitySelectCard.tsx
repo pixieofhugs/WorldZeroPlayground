@@ -2,6 +2,7 @@ import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { CTA_SELECT_SIZE, SINGULARITY_CARD_CTA } from "../taskCard/cardCta";
 
 /**
  * Singularity — the faction-DIRECTORY tile (#2326, a child of #2321).
@@ -52,14 +53,14 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *                                walked up for the lighter chassis (#4c7fef by
  *                                day, #60a5fa by night) — the two-theme twin of
  *                                the token this line was already reading.
- *   CTA fill   `color-mix(-border-hard 14%)` -> the same wash on `-term-blue`.
- *   CTA edge   `1px solid -border-hard` -> `-term-bright`, the ink the task
- *                                card's CTA is bordered in.
- *   CTA press  a green flood, hand-mixed -> `-term-cta-bg` / `-term-cta-ink`,
- *                                the lit key the task card wears at rest. The
- *                                tile already inverted to this pairing; it just
- *                                spelt it as two other tokens that happen to
- *                                hold the same value TODAY.
+ *   CTA        a wash, an edge and a hover flood, each gathered separately ->
+ *                                `SINGULARITY_CARD_CTA` entire (#2818). The key
+ *                                is LIT AT REST now, which is what the task
+ *                                card and the task detail both draw; the 14%
+ *                                wash and the two handlers that lit it were the
+ *                                last thing making the tile's hover state, not
+ *                                its resting one, the match for the sign-up it
+ *                                leads to.
  *   face       `--font-faction-terminal` -> `--faction-singularity-card-font`,
  *                                the ROLE name the task card, the band, the
  *                                readout and the comment voice all read. Same
@@ -70,11 +71,11 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * measured already — the payoff of gathering a register instead of minting one.
  * `singularity terminal chassis, title / brief / boot line` and `singularity
  * CTA, prompt` in `utils/__tests__/factionContrast.test.ts` cover the name, the
- * brief, the status line and the pressed key. Two rows are new, because this
- * tile is the only surface that draws them: the CTA at REST (its wash is only
- * 1.16:1 against the chassis, so the control's affordance is its `-term-bright`
- * edge at 9.35:1 light / 11.41:1 dark, well over 1.4.11's 3:1) and the CTA's
- * label on that wash.
+ * brief, the status line and the key. Two rows were new when this tile was
+ * gathered, both of them the unlit wash the CTA drew at rest (1.16:1 against
+ * the chassis, so the control's affordance was its `-term-bright` edge rather
+ * than its fill). #2818 lit the key at rest and the rows went with the wash:
+ * every pairing here is now one the task card already measures.
  *
  * WHERE THE TASK CARD HAS NO ANSWER, and nothing is invented for it:
  *   • THE CHROME STRIP. The task card's is `SingularityBand` — a window bar in
@@ -107,8 +108,7 @@ const CHASSIS = "var(--faction-singularity-term-bg)";
 const BRIGHT = "var(--faction-singularity-term-bright)";
 const DIM = "var(--faction-singularity-term-dim)";
 const BLUE = "var(--faction-singularity-term-blue)";
-/** The CTA's unlit wash, and the chrome dots — the same blue at two densities. */
-const CTA_WASH = `color-mix(in srgb, ${BLUE} 14%, transparent)`;
+/** The chrome dots. The CTA's unlit 14% twin retired with the hover (#2818). */
 const DOT = `color-mix(in srgb, ${BLUE} 50%, transparent)`;
 
 export default function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
@@ -156,14 +156,22 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
             anything. It is punctuation on the prompt, not an indicator, so it
             is drawn at full strength: the call the task card's block cursor
             already makes with `currentColor`. */}
+        {/* THE LIT KEY, LIT AT REST (#2818). This mount drew the same key UNLIT
+            — a 14% wash of `-term-blue` over the chassis — and lit it to the
+            card's own `-term-cta-bg` on `onMouseEnter`, which made the hover
+            state, not the resting one, the thing that matched the sign-up it
+            leads to. The two handlers go with the wash: no task-card CTA carries
+            one, `index.css` declares no `:hover` on any CTA class, and a hover
+            reachable only by mouse was never the affordance here. Focus is a
+            stylesheet state and is untouched.
+
+            The prompt's `$` is a plain text node now rather than a span beside a
+            `gap`: the constant centres one flex item, and one text run is one
+            item. */}
         <button onClick={onVisit} style={{
-          display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: "var(--space-sm)",
-          border: `1px solid ${BRIGHT}`, background: CTA_WASH, color: BRIGHT,
-          fontFamily: MONO, fontSize: "var(--text-xl)", letterSpacing: "0.06em", padding: "var(--space-sm) var(--space-md)",
+          cursor: "pointer", ...SINGULARITY_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--faction-singularity-term-cta-bg)"; e.currentTarget.style.color = "var(--faction-singularity-term-cta-ink)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = CTA_WASH; e.currentTarget.style.color = BRIGHT; }}
-        ><span>$</span> {i18n.t("feed:factionSelect.singularity.cta")}</button>
+        >{`$ ${i18n.t("feed:factionSelect.singularity.cta")}`}</button>
       </div>
     </div>
   );

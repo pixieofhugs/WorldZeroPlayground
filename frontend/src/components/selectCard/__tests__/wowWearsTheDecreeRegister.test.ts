@@ -67,13 +67,20 @@ import { describe, it, expect } from "vitest";
 
 import { FACTION_ROLES, factionRoleVar } from "../../../utils/factionRoles";
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
-import { resolveRoleReads } from '../../../test/sourceScan'
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 
 /** Comments are the decision record and cite the retired names on purpose. */
 const code = (relative: string): string => stripComments(read(relative));
+
+/** One faction's CTA constant, sliced out of the module that holds all eight. */
+function ctaSource(name: string): string {
+  const module = code("../../taskCard/cardCta.ts");
+  const at = module.indexOf(`export const ${name}`);
+  expect(at, `no \`${name}\` in taskCard/cardCta.ts`).toBeGreaterThan(-1);
+  return module.slice(at, module.indexOf("\n};", at));
+}
 
 const TILE = "../WowSelectCard.tsx";
 const TASK_CARD = "../../taskCard/WowTaskCard.tsx";
@@ -210,6 +217,10 @@ answer — not by widening this test.`,
       // one declares by interpolation to every scan (#2674).
       "../../utils/factionRoles",
       "../sigil/WowSigil",
+      // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
+      // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
+      // call is still pinned to a face and a size, one module further along.
+      "../taskCard/cardCta",
       "./FactionSelectCard",
     ]);
   });
@@ -221,12 +232,25 @@ answer — not by widening this test.`,
   });
 
   it("sets the call in the decree's own face and size", () => {
-    const source = resolveRoleReads(code(TILE));
-    expect(source, "MedievalSharp, asked for as the `face` ROLE (#2674)").toContain(
-      'fontFamily: "var(--faction-wow-card-font)", fontSize: "var(--text-content)"',
+    // READ AT THE CONSTANT SINCE #2818. The tile spreads `WOW_CARD_CTA` and adds
+    // no paint, so the face and the size are spelt once, in `cardCta.ts` — and
+    // reading them there is what makes this case measure the CALL again rather
+    // than the banner above it, which happens to be set the same way.
+    // The constant asks for the role as a CALL rather than as a `var()` read, so
+    // the fold is `factionRoleVar` itself — resolved through the one seam, never
+    // a second table.
+    const cta = ctaSource("WOW_CARD_CTA");
+    expect(cta, "the face is asked for as the `face` ROLE (#2674)").toContain(
+      'fontFamily: factionRoleVar("wow", "face")',
+    );
+    expect(factionRoleVar("wow", "face"), "and that role is MedievalSharp").toBe(
+      "var(--faction-wow-card-font)",
+    );
+    expect(cta, "the decree's CTA IS `--text-content`").toContain(
+      'fontSize: "var(--text-content)"',
     );
     expect(
-      source,
+      code(TILE),
       "the raw 16 was a `no-raw-style-values` exemption arguing a label token would flatten the placard; the decree's CTA IS `--text-content`, so the exemption went with it",
     ).not.toContain("local/no-raw-style-values -- ornament: the CTA");
   });

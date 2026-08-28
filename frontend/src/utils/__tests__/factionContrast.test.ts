@@ -1310,17 +1310,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // alpha-over-chassis, precisely so this row can exist at all.
   { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
   { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
+  // The directory tile's join button is this same row since #2818: it drew the
+  // key UNLIT — a 14% wash of `-term-blue` over the chassis, lit to `-term-cta-bg`
+  // only on `onMouseEnter` — and now spreads `SINGULARITY_CARD_CTA` like the two
+  // other surfaces. The wash row that measured the resting state went with the
+  // hover it existed for; every other pairing on that tile was already one of
+  // the rows above, ink for ground.
   { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
-  // THE ONE ROW THE TASK CARD DOES NOT ALREADY MAKE (#2326). The directory tile
-  // draws the same key UNLIT at rest and lights it on hover, so its label sits
-  // on a 14% wash of `-term-blue` over the chassis rather than on the solid
-  // `-term-cta-bg` the row above measures. The wash is only 1.16:1 against the
-  // bare chassis, which is the point of writing it down: what makes the control
-  // findable is its `-term-bright` edge, not its fill, and what makes the label
-  // legible is that the wash barely moves the ground under it. Every other
-  // pairing on that tile IS one of the rows above, ink for ground, so none of
-  // them is restated here — a second `what` for one pair measures nothing new.
-  { what: "singularity tile CTA at rest, label", surface: "--faction-singularity-term-bg", veil: { token: "--faction-singularity-term-blue", alpha: 0.14 }, text: "--faction-singularity-term-bright" },
 
   // S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023). Unlike the faction's
   // older ink-dark families, this one FLIPS, so each row genuinely measures two
@@ -1339,13 +1335,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Headline cut 1 and the CTA bar are the same pairing — ink on acid — and the
   // acid does not flip, so one row covers both in both themes.
   { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
-  // The DIRECTORY TILE's CTA on hover (#2322), which floods with the acid
-  // itself rather than with `-note-cta-bg`. Same hex today, and deliberately a
-  // row of its own: the tile's source names `--faction-snide-acid`, and a
-  // fixture that measures a synonym stops measuring the site the day one of the
-  // two moves. The resting state is the bar, covered by "clipping bar, wordmark"
-  // one block up.
-  { what: "snide select tile CTA, hovered", surface: "--faction-snide-acid", text: "--faction-snide-note-cta-ink" },
+  // The DIRECTORY TILE's CTA had a hover that flooded with `--faction-snide-acid`
+  // itself (#2322) and owned a row here for it. #2818 deleted the handler — the
+  // tile now spreads `SNIDE_CARD_CTA`, which has no hover on any of its three
+  // surfaces — so the row went with the state it measured. The tile's resting
+  // pairing is acid on the bar, covered by "clipping bar, wordmark" above.
   // The modifier chip. The design set its label in PAPER on the pink (3.10:1);
   // it takes the near-black CTA ink instead, one value for both themes because
   // `--faction-snide-pink` does not flip either.
@@ -1364,15 +1358,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // 2.93:1 here and so misses even AA_LARGE — the ONE ink this card walks down,
   // onto the accent it already owns rather than onto a new token.
   { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
+  // And the DIRECTORY TILE's join button since #2818, which is why the row
+  // beneath this one is gone: the tile had a hover the card's chip never had,
+  // swapping the chip's ground for `-card-accent`, and #2818 deleted it along
+  // with the two other tiles that repainted themselves inline. The tile now
+  // spreads `UA_CARD_CTA`, so this row measures both.
   { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
-  // The one row #2324 owed. The DIRECTORY TILE now wears the leaf's register,
-  // and every ink it paints was already measured by the four rows above — with
-  // this exception: the tile's CTA has a hover the card's has not, and it swaps
-  // the chip's ground for `-card-accent` while keeping `-card-chip-ink` on top.
-  // `--faction-ua-on-accent` measures the same two hexes today, but a fixture
-  // that measures a synonym stops measuring the site the day one of the two
-  // moves — so the pairing is written at the names the tile actually names.
-  { what: "ua leaf CTA, hovered", surface: "--faction-ua-card-accent", text: "--faction-ua-card-chip-ink" },
 
   // WOW — THE QUEST DECREE (task card v2, #1023). Every pairing on this card
   // resolves to a family measured somewhere above, which is the whole finding:

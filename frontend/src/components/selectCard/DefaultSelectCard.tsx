@@ -5,6 +5,7 @@ import {
   UNAFFILIATED_FACTION_SLUG,
 } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { CTA_SELECT_SIZE, DEFAULT_CARD_CTA } from "../taskCard/cardCta";
 // Type-only, so this does NOT close a runtime cycle with the dispatcher that
 // imports this component as its fallback.
 import type { FactionSelectCardProps } from "./FactionSelectCard";
@@ -205,21 +206,25 @@ export default function DefaultSelectCard({
         <button
           onClick={onVisit}
           disabled={redacted}
+          /* THE PAINT IS THE TASK CARD'S, AND IT IS NOT SPELT HERE (#2818).
+             This button used to restate `DEFAULT_CARD_CTA` declaration for
+             declaration — same face, same tracking, same 11px radius, the same
+             35% hairline — which is the pair #2642 unified, one surface further
+             out. What is left at this call site is affordance (`cursor`, which
+             is `disabled`'s partner) and geometry (`CTA_SELECT_SIZE`, spread
+             LAST for the reason its docblock gives).
+
+             The constant reads `--na-task-card-*` where this file reads
+             `--na-select-card-*`, and for `na` that is the same value: the role
+             map is EMPTY for the unaffiliated slug, so both arms resolve to the
+             `--faction-default-card-*` fallback they always did. A
+             surface-prefixed name cannot travel between surfaces — `cardCta.ts`
+             says so at length — so the CTA is the one slot on this tile a host
+             dresses through the task card's prefix rather than this one's. */
           style={{
-            width: "100%",
             cursor: redacted ? "default" : "pointer",
-            fontFamily: DISPLAY,
-            fontSize: "var(--text-xl)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            padding: "var(--space-md)",
-            borderRadius: 11,
-            color: "var(--na-select-card-ink, var(--faction-default-card-text))",
-            background: "transparent",
-            // A scalar context, so it stays neutral on purpose (ADR-0039) — the
-            // same hairline the Default task card's CTA carries.
-            border:
-              "1px solid color-mix(in srgb, var(--na-select-card-accent, var(--faction-default-card-accent)) 35%, transparent)",
+            ...DEFAULT_CARD_CTA,
+            ...CTA_SELECT_SIZE,
           }}
         >
           {say("cta")}

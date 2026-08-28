@@ -3,6 +3,7 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
 import * as eph from "../factionMarks/ephemeristsPlate";
+import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
 
 /**
  * The Ephemerists — the faction-DIRECTORY tile (#2323, a child of #2321).
@@ -81,7 +82,11 @@ import * as eph from "../factionMarks/ephemeristsPlate";
  *   • NO HOVER. `.eph-cta` declares none, on any of its six surfaces, so the
  *     ghost button's two `onMouseEnter`/`onMouseLeave` handlers are DELETED
  *     rather than re-tinted. Giving this one tile a hover the other five lack is
- *     how a shared control starts becoming six again (#2146).
+ *     how a shared control starts becoming six again (#2146). #2818 made that
+ *     the rule for all nine tiles, so this line is no longer this file's alone.
+ *   • The TYPE, since #2818, is `EPHEMERISTS_CARD_CTA` rather than this mount's
+ *     own small-caps at 0.16em. The class was always shared; the setting was
+ *     not, which is the whole of what the tile still had to get wrong.
  *   • NO CORNICE. `Cornice` is the register's band-as-a-band and would be the
  *     literal reading of "the band may still appear as a band" (#2323). It is
  *     left off because the tile's coordinate block is absolutely positioned at
@@ -146,9 +151,14 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
       </div>
       <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
         <div style={{ ...eph.SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: eph.CAPTION, marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
+        {/* THE ONE PLATE CTA, and now at the one setting (#2818). The class was
+            already shared with five other surfaces; the TYPE was not — this
+            mount set its own 0.16em where the card's constant sets 0.24em, on a
+            small-caps object rather than the card's engraved face. Ground, ink
+            and enclosure still come from `.eph-cta` and nothing here declares
+            them, which is what `ephemeristsWearsThePlateRegister` pins. */}
         <button onClick={onVisit} className="eph-cta" style={{
-          width: "100%", cursor: "pointer",
-          ...eph.SMALL_CAPS, fontSize: "var(--text-xl)", letterSpacing: "0.16em", padding: "var(--space-md)",
+          cursor: "pointer", ...EPHEMERISTS_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
         >{i18n.t("feed:factionSelect.ephemerists.cta")}</button>
       </div>
