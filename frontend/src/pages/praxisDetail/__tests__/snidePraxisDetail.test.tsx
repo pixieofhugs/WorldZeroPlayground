@@ -264,8 +264,14 @@ describe("S.N.I.D.E. praxis detail — the dress traps", () => {
     const { text } = render(state());
     expect(text, "base").toContain("12");
     expect(text, "total from the shared resolver").toContain("16");
+    // The tally read "+ 4 from votes" until #2634 put every skin's flat terms
+    // in one register; the tag types `votes +4` now. Counting it is still the
+    // point — ONE readout, so the page may not restate the tally beside the
+    // stamp's own. Matched WITH its figure, because the bare word also appears
+    // in the who-voted panel's own "2 votes" heading, which is a count of
+    // people and not this row.
     expect(
-      text.match(/from votes/g)?.length,
+      text.match(/votes \+\d/g)?.length,
       "the stamp carries the tally; the page does not restate it",
     ).toBe(1);
   });

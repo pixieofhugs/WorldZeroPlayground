@@ -175,14 +175,21 @@ describe("Unaffiliated praxis detail — the state axes", () => {
   // #1091: the rows come from the mounted `ScoreStamp` now, so they speak the
   // shared `card.stamp.*` vocabulary the praxis cards already use. The page's
   // own duplicate strip is gone — one readout, one set of words.
-  it("shows the multiplier row only when the factor is not 1.0", () => {
-    expect(render(state()).text, "neutral era hides it").not.toContain("mult");
+  // #2634 turned the multiplier ROW into a CHIP on the base line, on all nine
+  // stamps, so there is no `mult` word to look for any more — the ratio is the
+  // whole of it. Its result arrives with it: a chip is always followed by the
+  // subtotal it produced, under the sheet's rule.
+  it("shows the multiplier chip only when the factor is not 1.0", () => {
+    const neutral = render(state()).text;
+    expect(neutral, "neutral era hides it").not.toContain("×");
+    expect(neutral, "and hides its result with it").not.toContain("subtotal");
     const boosted = state({
       praxis: { ...PRAXIS, display_multiplier: 1.1, score: 17.2 },
     });
     const { text } = render(boosted);
-    expect(text).toContain("mult");
     expect(text).toContain("×1.10");
+    expect(text).toContain("subtotal");
+    expect(text, "12 × 1.1, through formatPoints").toContain("13.2");
   });
 
   it("names the metatask contribution only when one is applied", () => {

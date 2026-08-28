@@ -121,7 +121,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
   it('moves the score panel the archetypes render, not just the vote line', () => {
     // The regression: every praxis-detail archetype mounts ScoreStamp, which
     // resolves its rows from the praxis object. Before the fix this stayed at
-    // "+ 4 from votes" / total 16 until a refresh.
+    // "votes +4" / total 16 until a refresh.
     const voted = applyCastTally(DETAIL, firstCastOfFive())
     expect(scoreBreakdown(voted)).toEqual({
       base: 12,
@@ -129,6 +129,9 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       meta: null,
       habit: null,
       votes: 9,
+      // No multiplier on this payload, so no subtotal (#2634) — a cast tally
+      // moves the votes row and nothing else.
+      subtotal: null,
       total: 21,
     })
   })

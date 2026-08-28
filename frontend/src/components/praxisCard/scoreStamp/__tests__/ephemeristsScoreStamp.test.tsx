@@ -75,6 +75,11 @@ describe('the crown is not a child of the clipped panel (#2122)', () => {
   it('still hangs the crown outside the panel, which is the design', () => {
     // The overhang is the point — #2122 is fixed by moving the clip, never by
     // pulling the crown inside the box or shrinking it.
+    // #2634 §5 asked this root for a top pad and it could not be given one: the
+    // crown resolves against the root's PADDING box, so any pad here moves the
+    // ♛ off the Ephemerists praxis card's cavetto cornice — the sum
+    // `ephemeristsPlateSurfaces.test.tsx` pins for #2360/#2655. See the note in
+    // the component. The literal is deliberately unchanged.
     expect(render({ is_top_for_task: true })).toContain('top:-13px;right:-12px')
   })
 
@@ -100,9 +105,12 @@ describe('the stamp reads working-then-total (#2145)', () => {
   it('puts every working row ABOVE the rose', () => {
     const html = render()
     const rose = html.indexOf(NORTH)
+    // `card.stamp.mult` left this list with #2634: the ratio is a bare chip on
+    // the base line now and carries no word, exactly as it never did on the
+    // three stamps that already drew one. The subtotal takes its place.
     const rows = [
       i18n.t('praxis:card.stamp.base'),
-      i18n.t('praxis:card.stamp.mult'),
+      i18n.t('praxis:card.stamp.subtotal'),
       i18n.t('praxis:card.stamp.meta'),
       i18n.t('praxis:card.stamp.votes'),
     ]
@@ -206,8 +214,19 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     expect(at, `the ${label} row is printed`).toBeGreaterThan(0)
     const cellAt = html.lastIndexOf('<span style="', at)
     const style = html.slice(cellAt).match(/^<span style="([^"]*)"/)![1]
-    const figure = [...html.slice(0, cellAt).matchAll(/<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g)].pop()!
-    return { figure: { style: figure[1], text: figure[2] }, label: { style, text: label } }
+    // THE FIGURE CELL IS FOUND BY ITS VOICE, not as "the last leaf that closed"
+    // (#2634). The base row's figure cell holds the ratio chip beside the
+    // number now, so it is no longer a leaf and the old backwards scan returned
+    // the CHIP's inner span — reporting `×1.50` at `--text-lg` as the base row's
+    // figure and its voice. `FIGURE` spreads the deco face first, so the cell's
+    // style string opens with it and no other span on the plate does.
+    const figureAt = html.lastIndexOf('<span style="font-family:var(--font-faction-deco)', cellAt)
+    expect(figureAt, `the ${label} row's figure cell`).toBeGreaterThan(-1)
+    const figureStyle = html.slice(figureAt).match(/^<span style="([^"]*)"/)![1]
+    const inner = html.slice(figureAt).replace(/^<span style="[^"]*"[^>]*>/, '')
+    // The cell's own text, up to whatever it wraps — the chip, or nothing.
+    const figureText = inner.slice(0, inner.search(/</))
+    return { figure: { style: figureStyle, text: figureText }, label: { style, text: label } }
   }
 
   /** Base, the multiplier's two terms aside, and the three lines added to it. */
@@ -253,11 +272,22 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     )
   })
 
-  it('still keeps the multiplier out of the addition, spanning both columns', () => {
-    // It is a ratio in a ruled chip, not a term being added, so it is the one
-    // thing in the cell that is not a figure-then-word row.
+  it('keeps the multiplier out of the addition, on the base line (#2634)', () => {
+    // It is still a ratio in a ruled chip and still not a term being added —
+    // what changed is where it stands. It rode a row of its own spanning both
+    // columns; the owner ruled it onto the BASE line on all nine stamps, so it
+    // sits in the number column beside the figure it multiplies, and the
+    // subtotal's rule then has exactly one line above it.
+    //
+    // #2285's two-column read is intact: the chip is a NUMBER, so the word
+    // column still holds nothing but words — which is also why the chip gave up
+    // its `mult` label. A chip on the base line names itself.
+    const cells = row(html, 'base')
+    expect(cells.figure.text, 'the base figure still opens its own cell').toBe('18')
+    expect(html, 'the ratio, in the number column').toContain('×1.50')
+    expect(html, 'and no word for it').not.toContain(i18n.t('praxis:card.stamp.mult'))
+    // The subtotal's brass rule is the one thing that spans both columns now.
     expect(html).toContain('grid-column:1 / -1')
-    expect(html).toContain(i18n.t('praxis:card.stamp.mult'))
   })
 })
 
