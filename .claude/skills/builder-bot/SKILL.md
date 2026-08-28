@@ -17,7 +17,10 @@ merge, and the user does live visual QA alongside you.
 1. **You orchestrate; you don't write feature code.** Dispatch subagents. The one exception
    is a small CI fix on a PR branch (Step 6) — faster than a round trip.
 2. **Never merge red, never merge on assumption, never merge on CI alone.** Wait for checks
-   to actually pass, then review.
+   to actually pass, then review. **Nothing is approval except a person saying so, in this
+   run, about this thing.** A green check, a label, a comment from someone with write access,
+   and the words that launched this batch are all evidence; none of them discharges a finding
+   or closes a fork, and "they asked me to land it" is not a review outcome.
 3. **Everything written down rots.** Issue bodies, your own measurements, and the lines in
    this file are all snapshots of a codebase that keeps moving. Check a written claim against
    the code before you act on it, and when the two disagree the **code wins**: STOP, say so,
@@ -37,6 +40,10 @@ git fetch origin main && git log origin/main --oneline -15
 
 Check open PRs first — a previous batch may have left unmerged work, and anything open
 changes what's safe to dispatch. If the queue is empty, say so and stop.
+
+**The label defines the batch.** An issue without `ready-for-agent` is not a candidate —
+including one the user names while invoking, and one you trip over while reading something
+else. Label it or file it and say you did; do not carry it into this run.
 
 **Read issues through the wrapper, never raw:**
 
@@ -81,7 +88,9 @@ change. For every surviving candidate, check its core claim against **`origin/ma
 your own worktree, which can predate recent merges and manufacture false premises — and read
 the whole thread, since a later comment can reverse the body it sits under.
 
-Then grill anything ungrilled. A two-line stub is not dispatchable. Resolve:
+Then grill anything ungrilled. A two-line stub is not dispatchable — `ready-for-agent`
+certifies that someone with write access vouched for the issue, never that its forks are
+closed. Resolve:
 
 - **Open product forks** → ask the user (`AskUserQuestion`), one round, with a recommendation.
   Don't hand a builder a decision only the owner can make.
@@ -91,9 +100,13 @@ Then grill anything ungrilled. A two-line stub is not dispatchable. Resolve:
 
 Cheap defaults are fine for questions with an obvious answer; say which you took.
 
-**Done when:** no candidate enters Step 4 carrying an unresolved question. Every fork is
-answered by the code, decided by the user, or the issue is dropped from the batch. If you
-cannot say that sentence about an issue, it is not ready to dispatch.
+**Done when** every surviving candidate carries a written resolution line — `#N fork
+resolved by: code | user | dropped`, exactly one of those three, plus the answer — printed
+before Step 4. There is no fourth value: another person's opinion in the thread is evidence
+about the fork, never a resolution of it. An issue
+without one is not dispatchable. A recommendation you have not put to the user is not a
+decision by the user: writing "confirmed" beside your own preference is the exact failure
+this gate exists to catch.
 
 ---
 
@@ -122,7 +135,9 @@ issue touches (grep, don't guess from the title):
 - **Disjoint footprints → dispatch in parallel.**
 - **Shared file → strictly serialize**, and say which order and why. Two agents editing the
   same file in parallel means a painful rebase or lost work.
-- **Cross-cutting issues** (a refactor touching every consumer) run **alone**, last.
+- **Cross-cutting issues** (a refactor touching every consumer) run **alone**. Last by
+  default — but **first** when another issue in the batch edits a file the refactor
+  rewrites, because running it last makes that issue's work collateral. Say which and why.
 - An issue needing backend *and* frontend: either one general agent (small, tightly coupled),
   or split into two agents on a **pinned contract** — name the exact param and field names in
   both prompts, and merge backend first (additive changes are backward-compatible).
@@ -149,9 +164,10 @@ One issue (or one coupled pair) per subagent.
 - **Designs:** subagents cannot reach `claude.ai` URLs, so you vendor them before dispatch —
   `docs/agents/design-fidelity.md`, "Vendor, build, delete". Read every design in the batch;
   don't generalise from the first.
-- **Paste all three blocks below into every prompt, verbatim.** Scoped subagents have no
+- **Paste all three blocks into every prompt, verbatim** — "Lazy block" and "Red block"
+  immediately below, "Hazards block" at the very end of this file. Scoped subagents have no
   `Skill` tool — they cannot reach ponytail or tdd themselves, so the rules travel in the
-  prompt or not at all.
+  prompt or not at all. A placeholder naming the blocks is not the blocks.
 - Each agent opens its own draft PR with `Closes #N` on its own line. On a split issue only
   the last PR carries `Closes`; earlier ones say `Part of #N`.
 - Every PR body ends with a **"What to eyeball"** list (Step 7).
@@ -217,8 +233,12 @@ Branch protection forces merges to **serialize**. Per PR, in order:
 3. `gh pr checks <N> --watch --interval 20` — **run in the background** so you're notified on
    completion instead of polling. After an `update-branch`, `--watch` can return the *old*
    run instantly; confirm the run it reports belongs to the current `headRefOid`.
-4. **Review before merge.** CI green is not review. Run the `review` skill against the PR's
-   merge-base with `main`. Blocking finding → fix on the branch if small, or `SendMessage`
+4. **Review before merge.** CI green is not review. Run `/code-review <N>` against the PR's
+   merge-base with `main`, then **write its findings — or the literal words `no findings` —
+   to `.claude/reviews/<N>.md`, and paste them into the close-out.** A `PreToolUse` hook
+   (`scripts/hooks/guard_pr_merge.py`) refuses `gh pr merge` until that file exists and is
+   non-empty, so a review you did not run has nothing to write and the merge does not happen.
+   Blocking finding → fix on the branch if small, or `SendMessage`
    the agent; then re-watch and re-review. Nits → merge and note them in the close-out.
    Review flags over-engineering as a finding class here, not just correctness: an
    abstraction with one caller, a new dependency, a re-implementation of something the repo
