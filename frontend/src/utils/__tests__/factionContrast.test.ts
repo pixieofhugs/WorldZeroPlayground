@@ -2463,33 +2463,31 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // of them was fixed here — repointing a colour to go green is the failure
   // mode this loop exists to make impossible, not a shortcut it may take.
   //
-  //   (a) THE HAIRLINE, `line` on `paper`, at 1.4.11's 3:1 for a non-text mark.
-  //       Nine of the eighteen (slug x cascade) readings fail and NOT ONE had
-  //       ever been measured: `-card-border` was a value in the §3 contract
-  //       that no row of this file pointed a ratio at.
+  //   (a) WAS THE HAIRLINE, `line` on `paper`, at 1.4.11's 3:1 for a non-text
+  //       mark — NINE of the eighteen (slug x cascade) readings, and NOT ONE of
+  //       them had ever been measured before the loop landed. ALL NINE ARE
+  //       FIXED, SO ALL NINE LINES ARE GONE (#2668).
   //
-  //       FILED AS #2668, WHICH OWES A DISTINCTION THIS FILE CANNOT MAKE. On a card that
-  //       brings its own stock, the edge is not the only thing separating the
-  //       card from the page and 1.4.11 may not bite; on a ground that is NOT a
-  //       card — a panel on a page of the same paper — the hairline IS the
-  //       boundary and 3:1 is the floor (#2065). The loop measures the ink
-  //       against the faction's own `paper`, which is the side a role map can
-  //       express; the page side is a rendered pairing and belongs to
-  //       `e2e/contrast.spec.ts`. `snide/chrome` is the one below that is
-  //       unambiguously load-bearing: it is the rail, standing on the wall.
-  "light | singularity/sheet line on paper": { ratio: 2.3, issue: 2668 },
-  "light | wow/sheet line on paper": { ratio: 2.24, issue: 2668 },
-  "light | coven/sheet line on paper": { ratio: 1.64, issue: 2668 },
-  "light | na/sheet line on paper": { ratio: 1.33, issue: 2668 },
-  "dark | everymen/sheet line on paper": { ratio: 1.38, issue: 2668 },
-  "dark | singularity/sheet line on paper": { ratio: 2.3, issue: 2668 },
-  "dark | coven/sheet line on paper": { ratio: 2.08, issue: 2668 },
-  "dark | na/sheet line on paper": { ratio: 1.54, issue: 2668 },
-  //       The rail's own edge on the wall it stands on, in the cascade the wall
-  //       goes black in. `-note-wall-edge` is `rgba(182,255,46,0.35)` and the
-  //       alpha is the whole of it: composited it lands at 2.77:1, and measured
-  //       un-composited it would read clear — which is #594's mistake exactly.
-  "dark | snide/chrome line on paper": { ratio: 2.77, issue: 2668 },
+  //       THE DISTINCTION THIS FILE COULD NOT MAKE WAS RULED, NOT DODGED. The
+  //       question was whether a card that brings its own stock is exempt,
+  //       because the ground change carries the boundary. The owner measured
+  //       every card sheet against `--color-bg-page` (2026-08-27) and the
+  //       exemption failed: in dark not one faction's stock separates its card
+  //       from the page (1.03–1.09:1), and in light only singularity and snide
+  //       do — both because they are near-black slabs on cream. `wow` is
+  //       1.00:1, the same luminance, held together entirely by its gold rule.
+  //       An exemption covering two of eighteen readings, both dark slabs, is a
+  //       rule about slabs and not about cards. So: A FACTION HAIRLINE IS
+  //       LOAD-BEARING, all nine readings, both cascades, 3:1 is the floor.
+  //
+  //       HOW THEY WERE FIXED, WHICH IS THE HALF THAT MATTERS HERE. Four are
+  //       re-aliased `-card-border`s and two are alpha, and no token gained a
+  //       new colour or lost the one it had — the arithmetic is on #2668 and
+  //       the reasoning is beside each declaration in `index.css`. The ninth,
+  //       `snide/chrome`, is the rail's own edge on the wall it stands on in
+  //       the cascade the wall goes black in: `-note-wall-edge` composited on
+  //       `--faction-snide-wall` read 2.77:1 and un-composited would have read
+  //       clear, which is #594's mistake exactly.
   //
   //   (b) WAS THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT —
   //       AND IT IS FIXED, SO ITS LINE IS GONE (#2669). S.N.I.D.E.'s `chrome`
@@ -2703,6 +2701,70 @@ describe("faction token contrast (WCAG AA)", () => {
         expect(kept.has(id), `${slug}/${ground} ${pairing.text} on ${pairing.on} was enumerated and then dropped`).toBe(true);
       }
     });
+  });
+
+  /**
+   * #2668 — THE HAIRLINE, ASSERTED PER SLUG RATHER THAN PER TOKEN PAIR.
+   *
+   * The rows above measure `line` on `paper` already, and that is what found
+   * these nine. But they measure it ONCE PER RESOLVED PAIR, which is the right
+   * shape for a debt list and the wrong shape for the claim #2668's ruling
+   * makes: "all nine factions, both cascades". Under the dedup, `albescent` has
+   * no row of its own (it collapses onto `na` through CSS_KEY, ADR-0039 /
+   * #783), seven factions' `chrome` collapses onto their `sheet`, and a slug
+   * quietly leaving `ROLE_SLUGS` would take its reading with it while every
+   * remaining row stayed green. Eighteen readings is the acceptance criterion,
+   * so eighteen readings is what is spelled here — the dedup is an efficiency,
+   * not the guarantee.
+   *
+   * NO SECOND SOURCE OF TRUTH. The pair is read out of the SAME resolver the
+   * rows above use, and the row's existence in `ROLE_PAIRS` is asserted rather
+   * than assumed, so this block cannot drift into measuring something the loop
+   * does not. It is authored, not enumerated, and belongs with the rest of the
+   * authored half when #2698 relocates them.
+   */
+  describe("every faction answers for its hairline, all nine, both cascades (#2668)", () => {
+    const HAIRLINE = ROLE_PAIRINGS.find(
+      (pairing) => pairing.text === "line" && pairing.on === "paper",
+    );
+
+    it("the vocabulary still asks the hairline question", () => {
+      expect(
+        HAIRLINE,
+        "`line` on `paper` left ROLE_PAIRINGS — #2668's eighteen readings would go unmeasured",
+      ).toBeDefined();
+      // 1.4.11's graphical-object floor, not 1.4.3's large-type allowance.
+      expect(HAIRLINE?.floor).toBe(AA_LARGE);
+    });
+
+    for (const theme of BOTH_THEMES) {
+      for (const slug of ROLE_SLUGS) {
+        it(`${slug} draws a 3:1 rule on its own paper (${theme})`, () => {
+          for (const ground of FACTION_GROUNDS) {
+            const line = roleToken(slug, "line", ground);
+            const paper = roleToken(slug, "paper", ground);
+            expect(
+              ROLE_PAIRS.some(
+                (pair) => pair.surface === paper && pair.text === line && pair.floor === AA_LARGE,
+              ),
+              `${slug}/${ground}'s hairline resolves to a pair the loop never enumerated`,
+            ).toBe(true);
+
+            const surface = resolveColor(paper, theme);
+            const text = resolveColor(line, theme);
+            expect(surface.color, `${paper} (${theme}) resolved to "${surface.raw}"`).not.toBeNull();
+            expect(text.color, `${line} (${theme}) resolved to "${text.raw}"`).not.toBeNull();
+            expect(surface.color!.a, `${paper} is a surface — it must be opaque`).toBe(1);
+
+            const ratio = contrastRatio(text.color!, surface.color!);
+            expect(
+              ratio,
+              `${theme} | ${slug}/${ground}: ${line} (${text.raw}) on ${paper} (${surface.raw}) = ${formatRatio(ratio)}, needs ${AA_LARGE}:1.`,
+            ).toBeGreaterThanOrEqual(AA_LARGE);
+          }
+        });
+      }
+    }
   });
 });
 

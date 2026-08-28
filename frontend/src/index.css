@@ -778,16 +778,66 @@
    Every one of these is an ALIAS over a referent with a dark half, so the block
    is theme-scoped (#1839) — declared at a bare `:root` it would resolve once on
    `<html>` and inherit its already-light value into a nested `data-theme`
-   wrapper, half-flipping the surface. */
+   wrapper, half-flipping the surface.
+
+   FOUR OF THE EIGHT WERE REPOINTED IN #2668, AND NOT ONE COLOUR MOVED. #2661's
+   role loop measured this row for the first time — `-card-border` was a value
+   in the contract that no ratio had ever been pointed at — and nine of the
+   eighteen (slug x cascade) readings failed 1.4.11's 3:1 for a drawn mark. The
+   owner drew every card on its real page ground with and without its hairline
+   (2026-08-27) and ruled the "a card brings its own stock" exemption dead: in
+   dark not one faction's stock separates its card from the page (1.03-1.09:1),
+   and `wow`'s does not separate in light either (1.00:1 — #fbf4e0 on #f7f4ee is
+   the same luminance, and the chronicle card is held together entirely by its
+   gold rule). A faction hairline is load-bearing, all nine, both cascades.
+
+   THE FIX IS A DIFFERENT REFERENT, NEVER A DIFFERENT VALUE. Each referent below
+   already existed, already carried both cascades and was already measured for
+   something; editing one of them instead would have moved a colour its OTHER
+   readers never asked to move (`--faction-wow-chronicle-border` alone dresses
+   the hero, the seal, the praxis card and the faction page). Ratios are the
+   token's own on its faction's `card-bg`, light / dark:
+
+     wow        `-chronicle-border`  2.24 / 7.36  ->  `-avatar-pill-border`  3.56 / 4.64
+     coven      `-slip-border`       1.64 / 2.08  ->  `-slip-row-base`       4.84 / 5.32
+     everymen   `--everymen-frame`  13.19 / 1.38  ->  `--everymen-paper-text` 13.19 / 13.96
+     default    `-card-line`         1.33 / 1.54  ->  `-dot-ring`            3.01 / 5.73
+
+   WHY THESE FOUR AND NOT THE BRIGHTEST THING THAT CLEARS. #2608's owner ruling
+   — "the smallest lift that clears and no further; past ~5.7:1 the mark starts
+   reading as an object of its own" — picks three of them outright. WOW's rank
+   pill is the kit's deepest stamped gold and the only in-family gold that
+   clears light without overshooting dark (`-quest-border` clears at 11.00:1 and
+   is the same #a6791c by day, so the choice is purely about night); it does not
+   flip, which is also why this alias stays out of `frozenThemeAliases`'s
+   inventory. Coven's row rule is the ONLY in-family pink with both cascades
+   under 5.7 — every other one overshoots night (`-slip-pk` is 3.07 / 6.76).
+   `-dot-ring` is not a near miss at all: it is the token #2608 minted FOR a
+   1.5px hairline on this exact card under this exact clause, and 3.01 / 5.73
+   are the numbers the owner ruled there, so na and Albescent get a hairline
+   that was already decided rather than a second answer to the same question.
+
+   EVERYMEN IS THE ONE THAT DOES NOT MINIMISE, AND THE ARCHETYPE IS WHY. Its
+   light frame is 13.19:1 — a near-black rule on cream — because on this bill
+   `--everymen-frame` IS the ink ("the sheet is ruled in `--everymen-frame`,
+   which is ink. The two are one token", `EverymenCreateCharacter`). What broke
+   is that the two stopped being one token at night: the ink flips to #f3e7ce
+   and the frame only to #3e3320, which is 1.38:1 — a dim rule is still no rule.
+   So this repoint is not a new gold rule for the dark bill (`--everymen-gold-
+   deep` would be 5.14:1); it is the light cascade's own relationship carried
+   across, and 13.96 / 13.19 is that relationship being symmetric. The frame
+   token itself is left alone here, so the Everymen ARCHETYPE cards still draw
+   #3e3320 at night — that is a rendered pairing this loop cannot see, and it
+   wants its own issue rather than a value edit smuggled in under this one. */
 :root, [data-theme] {
   --faction-ua-card-border: var(--faction-ua-card-frame);
-  --faction-wow-card-border: var(--faction-wow-chronicle-border);
-  --faction-everymen-card-border: var(--everymen-frame);
-  --faction-coven-card-border: var(--faction-coven-slip-border);
+  --faction-wow-card-border: var(--faction-wow-avatar-pill-border);
+  --faction-everymen-card-border: var(--everymen-paper-text);
+  --faction-coven-card-border: var(--faction-coven-slip-row-base);
   --faction-snide-card-border: var(--faction-snide-acid-deep);
   --faction-ephemerists-card-border: var(--faction-ephemerists-plate-brass);
   --faction-singularity-card-border: var(--faction-singularity-frame);
-  --faction-default-card-border: var(--faction-default-card-line);
+  --faction-default-card-border: var(--faction-default-dot-ring);
 }
 
 /* ── THE ACCENT AS INK, ON THE PAGE (#2619) ──────────────────────────────────
@@ -1588,7 +1638,19 @@
      Singularity is always-dark (§6) — so there is no [data-theme] override for
      this group, deliberately. */
   --faction-singularity-terminal-ink: #d7ffe6; /* pale mint — titles + body */
-  --faction-singularity-frame: rgba(74, 222, 128, 0.35);
+  /* 0.35 -> 0.45 (#2668), and the ALPHA is the whole of it: the phosphor green
+     is untouched, so the frame is the same colour drawn a little less thinly.
+     Composited on the slab this hairline read 2.30:1 in BOTH cascades — the
+     terminal is theme-invariant — against 1.4.11's 3:1 for a drawn mark, and
+     the owner's ruling of 2026-08-27 retired the "a card brings its own stock"
+     exemption that would have covered it. 0.45 is 3.06:1 and 0.44 is 2.97:1, so
+     this is the smallest step that clears and no further, the same rule #2608
+     set for the na petal.
+     BOTH READERS ARE THIS ONE HAIRLINE, which is why the alpha moves here
+     rather than a second name being minted beside it: `--faction-singularity-
+     card-border` aliases it for the §3 contract and `SingularityPraxisCard`
+     draws it as the slab's 1px frame. Nothing else reads it. */
+  --faction-singularity-frame: rgba(74, 222, 128, 0.45);
   /* The dimmer `-rule` twin of the frame (the same green at 0.2) stood here and
      was read by nothing — the slab draws one hairline and it is `-frame`.
      #2535. */
@@ -3448,7 +3510,21 @@
   --faction-snide-note-scan: rgba(0, 0, 0, 0.5);
   --faction-snide-note-wash-acid: rgba(182, 255, 46, 0.11);
   --faction-snide-note-wash-pink: rgba(255, 45, 139, 0.12);
-  --faction-snide-note-wall-edge: rgba(182, 255, 46, 0.35);
+  /* 0.35 -> 0.40 (#2668) — the acid's alpha, not the acid. Composited on
+     `--faction-snide-wall` (#0a0a0b, which is the ground the `chrome` override
+     puts under it) this edge read 2.769:1; un-composited it would have read
+     clear, which is #594's mistake exactly and the reason the loop composites.
+     0.40 is 3.289:1. 0.38 (3.072:1) also clears and was passed over: this is
+     the one reading #2668 calls unambiguously load-bearing — the rail's own
+     edge on the wall, in the cascade the wall goes black in — and a rule whose
+     whole job is to separate is worth two points of alpha in margin.
+     ONE EDGE, SIX READERS, ONE EDIT. The rail (`--rail-line`, through the
+     `chrome` ground override), the task card, the select card, the field desk,
+     the profile body and the faction page all draw THIS token as a hairline on
+     THIS wall, so a second name would have fixed the measured row and left five
+     siblings at 2.77:1. The light half is `rgba(20,17,11,0.55)` and reads
+     3.97:1 on the light wall — it was never in the finding and does not move. */
+  --faction-snide-note-wall-edge: rgba(182, 255, 46, 0.4);
   --faction-snide-note-wall-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.9), 0 18px 40px -22px rgba(0, 0, 0, 1);
 
