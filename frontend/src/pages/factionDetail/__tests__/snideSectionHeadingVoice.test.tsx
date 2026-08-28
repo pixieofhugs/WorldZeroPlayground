@@ -105,11 +105,14 @@ const RULE = "repeating-linear-gradient(90deg";
 function headingRow(markup: string, label: string): string {
   const at = markup.indexOf(label);
   expect(at, `"${label}" is drawn on the page at all`).toBeGreaterThan(-1);
-  const open = markup.lastIndexOf(ROW, at);
+  const found = markup.lastIndexOf(ROW, at);
   expect(
-    open,
+    found,
     `"${label}" is not inside a SectionHeading row — no heading row opens before it.`,
   ).toBeGreaterThan(-1);
+  // Back to the row's own `style="`, so the slice carries every declaration and
+  // not only the ones that happen to follow the anchor.
+  const open = markup.lastIndexOf('style="', found);
   const close = markup.indexOf(RULE, at);
   expect(
     close,
@@ -117,7 +120,7 @@ function headingRow(markup: string, label: string): string {
   ).toBeGreaterThan(-1);
   const row = markup.slice(open, close);
   expect(
-    row.indexOf(ROW, 1),
+    row.indexOf(ROW, row.indexOf(ROW) + 1),
     `a second heading row opens between "${label}" and the row above it, so this is not its row.`,
   ).toBe(-1);
   return row;

@@ -770,6 +770,13 @@ const SNIDE_WALL_GROUNDS: { where: string; surface: string; wash?: string }[] = 
  * them BARE: `-wall-credit` as the marker scrawl over the About flyer and the rap
  * sheet, `-wall-alarm` as the join error. A reading through a veil does not vouch
  * for the reading without one, which is #1028 in the direction people forget.
+ *
+ * `-wall-credit` KEEPS ITS ROW ON A DIFFERENT SURFACE (#2807). The two scrawls
+ * named above were the faction page's only bare readers of it and both became
+ * plated `SectionHeading`s, so that page no longer takes this reading. The row
+ * stays because `SnideProfileBody` does: its level numeral is a bare `color:`
+ * knob on the shared renderer, standing on this same wall with no plate it could
+ * carry. Deleting the row would drop live coverage, not stale coverage.
  */
 const SNIDE_WALL_INKS = [
   ["headline and title", "--faction-snide-note-ink"],
@@ -3869,7 +3876,12 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
       ["NOTE_INK", "--faction-snide-note-ink"],
       ["NOTE_MUTED", "--faction-snide-note-muted"],
       ["NOTE_PINK", "--faction-snide-note-pink-ink"],
-      ["WALL_GREEN", "--faction-snide-wall-credit"],
+      // NO `WALL_GREEN` ROW. The body's two readers of the wall's green rung were
+      // the About and Members marker scrawls, and #2807 converted both to the
+      // plated `SectionHeading` the other two sections already used; the alias
+      // came off the file with them. The TIER is untouched — `SnideProfileBody`
+      // still spends it bare on this same wall, which is what the
+      // `SNIDE_WALL_INKS` row "the marker scrawl, bare" still measures.
       ["WALL_ALARM", "--faction-snide-wall-alarm"],
     ],
     [HERO]: [
@@ -4050,7 +4062,12 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
       source,
       "`GREEN` is `-acid-deep`, picked because it read on the always-dark panel; on the light wall it is 2.30:1. It keeps the barcode and the mugshot's rim, whose ground really is the press.",
     ).not.toMatch(/color: GREEN[,\s}]/);
-    expect(source, "the marker scrawl takes the wall's own green").toContain("color: WALL_GREEN");
+    // The positive half of this pair — "the marker scrawl takes the wall's own
+    // green" — was retired by #2807 with its subject. This surface has no scrawl
+    // left: About and Members are plated headings now, and the four section
+    // headings are checked as a set by `snideSectionHeadingVoice.test.tsx`. The
+    // negative above is the load-bearing half and is unchanged — `GREEN` is
+    // 2.30:1 on the light wall and still must not carry a word here.
     expect(
       source,
       "the join error printed the GLOBAL `--color-danger`, measured on `--color-bg-page` and 4.08:1 here.",
