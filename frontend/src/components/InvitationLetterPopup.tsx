@@ -51,9 +51,19 @@ const FONT_DISPLAY = 'var(--font-display)'
 const FONT_BODY = 'var(--font-body)'
 const FONT_MONO = "'Courier Prime', monospace"
 
-/** One perk: the label-cased name, and the line that says what it gets you. */
+/**
+ * One perk: the line that says what it gets you, and — on the mechanic row
+ * alone — a label-cased name above it.
+ *
+ * `name` IS OPTIONAL, and that is the shape (#2774). Every letter is written
+ * flavour → mechanic → flavour, and the owner ruled that only the mechanic is
+ * named: the two flavour names had never been written, and #2298 §2 had already
+ * muted them to `--color-text-tertiary` so the real perk would read first.
+ * Deleting them is the end of that same gradient rather than a reversal of it.
+ * A missing `name` is therefore normal, not a catalog gap to defend against.
+ */
 interface Perk {
-  name: string
+  name?: string
   desc: string
 }
 
@@ -294,10 +304,14 @@ export default function InvitationLetterPopup({
                 </span>
                 <span>
                   {/* The slip's old label treatment: mono, uppercase, tracked.
-                      #2298 §2 as ruled, finally (#2619): the mechanic's name is
-                      in the faction ACCENT and the two flavour names in the
-                      tertiary, so the true perk reads first by colour and not
-                      only by weight.
+                      #2298 §2 as ruled (#2619) put the mechanic's name in the
+                      faction ACCENT and the two flavour names in the tertiary,
+                      so the true perk read first by colour and not only by
+                      weight. #2774 finishes that: the flavour names are gone
+                      from the catalog, so this span is the MECHANIC'S and is
+                      not rendered at all beside it — a muted name is still a
+                      line box competing for the eye, and an empty one is worse
+                      than either. `perk.name` absent is the normal shape.
 
                       `accentInk`, never `accent`. The spine hue as ink here is
                       2.19:1 to 4.46:1 in light and `no-faction-hue-as-ink` is
@@ -308,19 +322,21 @@ export default function InvitationLetterPopup({
                       the looser reading. The hue itself keeps the bullet, the
                       box rule and the ENLIST fill: a FILL, not an ink
                       (#1932/#2108, WORLD_ZERO_STYLE.md §3). */}
-                  <span
-                    style={{
-                      display: 'block',
-                      fontFamily: FONT_MONO,
-                      fontSize: 'var(--text-md)',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      lineHeight: 1.4,
-                      color: mechanic ? accentInk : FAINT,
-                    }}
-                  >
-                    {perk.name}
-                  </span>
+                  {perk.name && (
+                    <span
+                      style={{
+                        display: 'block',
+                        fontFamily: FONT_MONO,
+                        fontSize: 'var(--text-md)',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1.4,
+                        color: accentInk,
+                      }}
+                    >
+                      {perk.name}
+                    </span>
+                  )}
                   <span
                     style={{
                       display: 'block',

@@ -510,13 +510,16 @@ function JoinBlock({
             </div>
             {/* #2299 (b): the eighth slot the other six already fill — a sworn
                 knight is told what they rank as. The WORD is the owner's
-                (PLACEHOLDER in factions.json); this is only the mount. */}
+                (#2774: GLORIOUS, in factions.json); this is only the mount, and
+                the child below only mirrors the catalog so `<1>` has a shape to
+                index. The caps diverge from the six lowercase role phrases on
+                purpose — WOW is the faction whose own description shouts. */}
             <div
               className="content-text"
               style={{ fontFamily: LORA, color: MUTED, margin: "var(--space-sm) 0 0" }}
             >
               <Trans t={t} i18nKey="wow.join.memberStanding">
-                Standing · <b style={{ color: PLUM }}>PLACEHOLDER</b>
+                Standing · <b style={{ color: PLUM }}>GLORIOUS</b>
               </Trans>
             </div>
           </>
