@@ -30,6 +30,49 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
   const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
+  /* THE FIGURE STEPS DOWN WHEN IT IS LONG; THE LOOP NEVER MOVES (#2638, owner
+     ruling 2026-08-27). #2554 mounted this stamp on the S.N.I.D.E. TASK DETAIL,
+     whose figure is `modifiedPoints` and runs to four glyphs, on a loop drawn at
+     96 for the praxis card's two-glyph `22`. Of the three shapes the issue drew,
+     the ruling took the third: one width across both surfaces, and the TYPE
+     gives. So there is deliberately no size on `ScoreStampProps` — the other
+     eight archetypes see no diff — and nothing new on the atom either, because
+     `PenCircle` has taken `valueSize` since #2035 for exactly this.
+
+     One rung down the ramp, not an invented number: `--text-title` is 24px and
+     `index.css` defines it as "titles, scores".
+
+     THE COUNT IS OF DIGITS, NOT GLYPHS, AND THAT IS THE RULING SHARPENED RATHER
+     THAN BENT (owner, 2026-08-28). The ruling says "four or more glyphs", which
+     was drawn at `1080` and reads the same either way for an integer. It parts
+     company on a DECIMAL: `21.6` is four glyphs and three digits. `PenCircle`'s
+     own docblock has already measured that case — at `--text-heading` a
+     four-glyph `13.6` is ~47px against the loop's ~77px of inner span — so
+     stepping it down would shrink a figure the atom documents as fitting, and
+     leave the code contradicting its own measurement. Counting digits keeps
+     `1080` stepping and `21.6` at the headline rung.
+
+     This is not a per-character width model: `formatPoints` is
+     `Number(v.toFixed(1)).toString()`, so the only characters it can emit are
+     digits and one decimal point. One character class, checkable by reading it.
+
+     It matters from era 2 rather than today. Era 1 sets every faction's
+     `own_task_modifier` and `other_task_modifier` to 1.0, so `modifiedPoints` is
+     always integral and no figure here has ever had a decimal point in it.
+     Era 2 ships 1.2 and 0.8 (`backend/eras/era_2.py`), which is what makes the
+     decimal case real and this distinction worth drawing now.
+
+     It is resolved HERE rather than inside `PenCircle` so the atom stays dumb
+     and the S.N.I.D.E. TASK CARD, which draws base points through the same atom,
+     keeps the rung it was measured at. `DefaultPointsRing` and
+     `SingularityReadout` are the same shape with the same `--text-heading`
+     default, so the same crowding is latent on their surfaces — deliberately out
+     of scope (#2638 scopes to S.N.I.D.E.; #2626's sweep looks). The fix shape is
+     proven, so generalising it later is a move, not a re-derivation. */
+  const figure = formatPoints(total);
+  const digits = figure.replace(/\D/g, "").length;
+  const figureSize = digits >= 4 ? "var(--text-title)" : "var(--text-heading)";
+
   /** The tag's typed working line — meta, the tally, and the habit bonus. */
   const typedLine = {
     fontFamily: "var(--font-body)",
@@ -174,11 +217,14 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
           The plate itself is opaque since that issue; see `-stamp-bg`.
 
           The loop is drawn at 96, which is the desktop task card's own width, so
-          the tag's `minWidth: 116` grows to fit it rather than clipping it. */}
+          the tag's `minWidth: 116` grows to fit it rather than clipping it. It
+          stays 96 on the task detail too, and the figure steps down instead —
+          see `figureSize` above (#2638). */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <PenCircle
           size={96}
-          value={formatPoints(total)}
+          value={figure}
+          valueSize={figureSize}
           unit={t("card.stamp.pointsShort")}
           valueColor="var(--faction-snide-acid)"
           unitColor="var(--faction-snide-vote-off)"
