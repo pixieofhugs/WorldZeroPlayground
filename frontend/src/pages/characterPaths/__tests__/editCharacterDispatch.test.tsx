@@ -249,3 +249,56 @@ describe('the destructive action survives every skin, at both widths', () => {
     expect(text).not.toContain("This can't be undone")
   })
 })
+
+describe('the focus ring survives every skin, at both widths (#2825)', () => {
+  /* #2488's other half. That issue swept the eight CREATE archetypes for an
+     inline `outline: none` with nothing in its place, and the guard it left
+     behind (`createCharacterFields.test.tsx`) sweeps that registry — so the same
+     two declarations on the EDIT page went on shipping, invisible to it. The
+     seam is the rendered field on the surface the player is actually on: reading
+     sources one at a time is how #2488 stayed at two archetypes when the defect
+     was on seven.
+
+     A programmatic `element.focus()` cannot ask this question — it reports
+     `:focus-visible false` and `outline-style: none` even on a plate whose ring
+     works — so what is asserted is the markup that DECIDES the ring, not a
+     computed style. The painted pixel is visual QA. */
+
+  /** Every `<input>`/`<textarea>` a caret can land in, with its attributes.
+   *  File inputs are out of scope for the same reason they are on create: each
+   *  is hidden behind a button that takes the focus itself. */
+  function textFields(html: string): string[] {
+    return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
+      .map(([, attrs]) => attrs)
+      .filter((attrs) => !/type="(?:file|hidden)"/.test(attrs))
+  }
+
+  for (const width of ['desktop', 'mobile'] as const) {
+    it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+      `slug "%s" suppresses no field's outline on ${width}`,
+      (slug) => {
+        const fields = textFields(renderFor(slug, width))
+        expect(fields.length, 'the skin draws at least the name field').toBeGreaterThan(0)
+        for (const field of fields) {
+          expect(field, `outline killed on: ${field.trim()}`).not.toMatch(/outline:\s*none/)
+        }
+      },
+    )
+
+    it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+      `slug "%s" takes the SHARED ring on ${width}`,
+      (slug) => {
+        // `[data-composer-field]:focus-visible` (#2266) — `currentColor` at a
+        // negative offset, the ring seven of the eight create plates take —
+        // rather than a second bespoke focus treatment minted for this surface.
+        // The one documented exception on create is Singularity, which keeps the
+        // user agent's ring and says so in its header; no edit skin claims that,
+        // and one that did would amend this row with its reason rather than
+        // quietly drop the indicator.
+        for (const field of textFields(renderFor(slug, width))) {
+          expect(field, `no shared ring on: ${field.trim()}`).toContain('data-composer-field')
+        }
+      },
+    )
+  }
+})

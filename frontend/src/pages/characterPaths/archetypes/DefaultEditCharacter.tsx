@@ -30,6 +30,19 @@
  * portrait picker or the avatar hook. The load / not-found / not-yours guards
  * are hoisted to the dispatcher below so the two branches cannot drift on them.
  *
+ * THE FIELDS TAKE THE COMPOSER'S SHARED FOCUS RING, not one of their own
+ * (#2825). Both style objects below used to set `outline: 'none'` inline with
+ * nothing in its place, and an inline declaration beats any stylesheet — so
+ * every field on this page took focus invisibly on both widths, which is
+ * WCAG 2.4.7 at the tier this repo already enforces. The two suppressions are
+ * DELETED and each field carries `data-composer-field`
+ * (`[data-composer-field]:focus-visible` in `index.css`, #2266): `currentColor`
+ * at a negative offset, so the ring is this page's own ink on the ground that
+ * ink was measured against, and costs no token. It is the same defect and the
+ * same fix #2488 shipped on the create plates; that issue was scoped to
+ * creation, so this surface kept it. `editCharacterDispatch.test.tsx` sweeps
+ * the edit registry for both halves — no suppression, and the shared ring.
+ *
  * INKS ARE THE APP'S OWN NEUTRALS, and that is measured rather than inherited —
  * the same exemption `DefaultCreateCharacter` carries, for the same reason and
  * on the same ground. `local/no-global-ink-on-faction-surface` reads a DIRECTORY
@@ -238,6 +251,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
                 {t('editCharacter.displayNameLabel')}
               </span>
               <input
+                data-composer-field
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -286,6 +300,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
             </span>
           </div>
           <textarea
+            data-composer-field
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
@@ -305,6 +320,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               </span>
             </div>
             <input
+              data-composer-field
               type="text"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
@@ -319,6 +335,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               {t('editCharacter.basedLabel')} <span style={{ color: 'var(--color-text-tertiary)' }}>{t('editCharacter.optional')}</span>
             </span>
             <input
+              data-composer-field
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -464,6 +481,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
       <div>
         <label style={label}>{t('editCharacter.displayNameLabel')}</label>
         <input
+          data-composer-field
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={50}
@@ -480,6 +498,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
       <div>
         <label style={label}>{t('editCharacter.storyLabel')}</label>
         <input
+          data-composer-field
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           maxLength={500}
@@ -493,6 +512,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
       <div>
         <label style={label}>{t('editCharacter.taglineLabel')}</label>
         <input
+          data-composer-field
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
           maxLength={TAGLINE_MAX}
@@ -549,7 +569,6 @@ const inputStyle: CSSProperties = {
   fontSize: 'var(--text-content)',
   color: 'var(--color-text-primary)',
   padding: 'var(--space-md)',
-  outline: 'none',
   boxSizing: 'border-box',
 }
 
@@ -628,7 +647,7 @@ const label: CSSProperties = {
 const field: CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box',
   background: 'var(--color-bg-page)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)',
+  borderRadius: 8, fontFamily: 'var(--font-body)',
   color: 'var(--color-text-primary)', padding: 'var(--space-md)',
 }
 const counterRow: CSSProperties = {
