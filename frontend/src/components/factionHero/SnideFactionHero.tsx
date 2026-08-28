@@ -302,7 +302,7 @@ export default function SnideFactionHero({
               boxShadow: "2px 3px 0 var(--faction-snide-pink)",
             }}
           >
-            {i18n.t("feed:factionHero.snide.motto")}
+            {i18n.t("feed:factionSelect.snide.tagline")}
           </div>
         </div>
 

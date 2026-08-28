@@ -201,14 +201,12 @@
     "albescent": {
       "factionLine": "Faction · {{name}}",
       "unrankedLine": "Unranked · By design",
-      "motto": "We play for the love of the game",
       "stats": {
         "members": "Players"
       }
     },
     "ephemerists": {
       "eyebrow": "World Zero · Cartographers",
-      "motto": "One who wanders is never lost",
       "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
       "stats": {
         "members": "wanderers"
@@ -216,13 +214,11 @@
     },
     "everymen": {
       "eyebrow": "World Zero · Hardest Workers",
-      "motto": "Be the best you you can be",
       "stats": {
         "members": "fellows"
       }
     },
     "singularity": {
-      "motto": "// we are one",
       "boot": {
         "faction": "FACTION: {{name}}",
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",
@@ -235,13 +231,11 @@
     },
     "snide": {
       "eyebrow": "World Zero · Arsonists",
-      "motto": "Too cool for taglines",
       "stats": {
         "members": "pranksters"
       }
     },
     "ua": {
-      "motto": "Keep the Practice alive",
       "eyebrow": "World Zero · A daily practice",
       "stats": {
         "members": "Artisans"
@@ -249,14 +243,12 @@
     },
     "coven": {
       "eyebrow": "World Zero · Magic's in the air",
-      "motto": "Community is Magic",
       "stats": {
         "members": "witches"
       }
     },
     "wow": {
       "eyebrow": "World Zero · The Capricious Court",
-      "motto": "Imsy-whay or-fay every-oneway.",
       "stats": {
         "members": "Knights"
       }

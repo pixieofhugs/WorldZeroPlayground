@@ -30,12 +30,14 @@ import FactionSigil from "../sigil/FactionSigil";
  *   kicker   the shared `detail.eyebrow` — the same word the chrome this
  *            replaces printed above the name.
  *   name     `factionName(slug)`, resolved by the page (ADR-0038).
- *   tagline  the faction's own motto out of the copy catalog, drawn only when
- *            the catalog has one. A LOOKUP, not a branch: the key is built from
- *            the slug, so a faction gets a tagline by having copy rather than by
- *            this file learning its name. (It is therefore invisible to a grep
- *            for `t("…")` literals — `factionCopyCollapse.test.ts` skips
- *            computed keys by design and the render tests are what cover it.)
+ *   tagline  the faction's tagline out of the copy catalog — the same string
+ *            its select tile draws, and since #2805 the same KEY, drawn only
+ *            when the catalog has one. A LOOKUP, not a branch: the key is built
+ *            from the slug, so a faction gets a tagline by having copy rather
+ *            than by this file learning its name. (It is therefore invisible to
+ *            a grep for `t("…")` literals — `factionCopyCollapse.test.ts` skips
+ *            computed keys by design; `heroDrawsTheTileTagline.test.tsx` is
+ *            what covers it, across all nine.)
  *   counts   the three raw numbers the page passes, under the shared labels.
  *            NOT a faction's own words for them: the seven bespoke heroes each
  *            rename `members` in their own voice, and the fall-through has no
@@ -50,7 +52,13 @@ import FactionSigil from "../sigil/FactionSigil";
  * width, so there is no reason to make the browser wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  const tagline: string = i18n.t(`feed:factionHero.${slug}.motto`, { defaultValue: "" });
+  // ONE STRING, READ FROM THE TILE'S KEY (#2805). The hero's own
+  // `factionHero.{F}.motto` family said exactly what `factionSelect.{F}.tagline`
+  // says — #2782 ruled the two surfaces speak with one voice and then nothing
+  // held them to it. `defaultValue` stays for an unregistered slug; every
+  // faction has a tagline, including `na`, which had no `factionHero` block at
+  // all and so printed nothing here.
+  const tagline: string = i18n.t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" });
   const counts = [
     { value: members, label: i18n.t("feed:factionHero.stats.members") },
     { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },

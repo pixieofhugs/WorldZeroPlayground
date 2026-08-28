@@ -112,7 +112,7 @@ export default function CovenFactionHero({
               color: INK,
             }}
           >
-            {i18n.t("feed:factionHero.coven.motto")}
+            {i18n.t("feed:factionSelect.coven.tagline")}
           </div>
         </div>
 

@@ -17,6 +17,13 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * are gone, and so is the ruling that kept this surface undimmed: both themes
  * come from the `[data-theme="dark"]` cascade.
  *
+ * THE RIBBON'S REMOVAL DID NOT SETTLE THE TAGLINE, and the sentence above was
+ * read as if it had (#2805). This hero drew no tagline of any kind while the
+ * other seven did, so UA was the one faction page that could not say the line
+ * the catalog held for it. The owner ruled the slot back: a plain line under
+ * the wordmark, in the type step Coven's hero already uses — the RIBBON is
+ * still retired, the LINE is not.
+ *
  * The page passes raw counts; the practice supplies its own labels from the
  * copy catalog (feed:factionHero.ua.stats.*), per ADR-0016 — presentation only,
  * no new fields.
@@ -103,6 +110,26 @@ export default function UaFactionHero({
               >
                 {name}
               </h1>
+              {/* THE TAGLINE, RESTORED AS A LINE AND NOT AS THE RIBBON (#2805,
+                  owner ruling). This hero drew no tagline at all — UA was the
+                  one faction whose page could not say the thing the catalog
+                  held for it. The gilt ribbon the redesign retired is not
+                  coming back; what comes back is the plain line the other six
+                  heroes draw, in Coven's cut (display face, 600,
+                  `--text-title`, 0.02em) so it is the kit's existing step
+                  rather than a new one. Same key as the select tile, which is
+                  the whole of #2805. */}
+              <div
+                style={{
+                  fontFamily: UA_DISPLAY,
+                  fontWeight: 600,
+                  fontSize: "var(--text-title)",
+                  letterSpacing: "0.02em",
+                  color: "var(--leaf-faction-hero-ink)",
+                }}
+              >
+                {i18n.t("feed:factionSelect.ua.tagline")}
+              </div>
             </div>
           </div>
         </div>

@@ -133,8 +133,9 @@ const BLURB_FLOOR = 'PLACEHOLDER'.length
  * different slots that happened to spell the same word — so that page said it
  * twice while still saying its DESCRIPTION once. The owner wrote the
  * description on 2026-08-26, the two slots no longer collide, and the count is
- * a flat 1 again for every slug. The motto is still `PLACEHOLDER`; nothing
- * needs to know that here.
+ * a flat 1 again for every slug. The motto key is gone outright now — #2805
+ * folded every hero onto `feed:factionSelect.{F}.tagline` — so there is no
+ * second slot left to collide with; nothing here needs to know that either.
  */
 
 describe('a faction page says its description exactly once (#2137)', () => {

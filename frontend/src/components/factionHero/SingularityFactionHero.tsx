@@ -217,7 +217,7 @@ export default function SingularityFactionHero({
               marginBottom: "var(--space-lg)",
             }}
           >
-            {i18n.t("feed:factionHero.singularity.motto")}
+            {i18n.t("feed:factionSelect.singularity.tagline")}
           </div>
 
         </div>
