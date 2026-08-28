@@ -22,6 +22,37 @@
  * because "one adaptive prospectus skinned per faction" means a per-slug break
  * is a catalog break, and Albescent's letter is the one that does NOT share the
  * code path — it carries the same four cuts on differently-named keys.
+ *
+ * -------------------------------------------------------------------------- *
+ * #2774 SUPERSEDES §2 OF THAT: EVERY LETTER NAMES ONE PERK, AND IT IS THE
+ * MECHANIC. This is a decision, not an oversight — read it before "fixing" the
+ * two nameless rows back.
+ *
+ * The two flavour perks either side of the mechanic never had names in the
+ * catalog: all sixteen shipped as `PLACEHOLDER — name for: <the desc>`, waiting
+ * on the owner. #2298 §2 then muted them deliberately — the mechanic's name in
+ * the faction accent-ink, the flavour names in `--color-text-tertiary` — so
+ * that the real perk would read first. This file's own guard used to assert
+ * exactly that, under the title *"marks the mechanic and mutes the two flavour
+ * names, so the real perk reads first"*.
+ *
+ * The owner's ruling on #2774: deleting the flavour names is **the honest end of
+ * that same gradient**. Muting a name towards invisible so it stops competing
+ * achieves the goal by degree; removing it achieves it outright. So the sixteen
+ * placeholders are not written — they are cut, `name` becomes optional on the
+ * perk contract, and the muted tier has nothing left to mute.
+ *
+ * What that costs the guards, and what replaced each one:
+ *   - "prints every perk as a name over a description" → name-over-description
+ *     for the mechanic, description-only for the other two.
+ *   - the box's `expect(body).toContain(perk.name)` → the descriptions carry the
+ *     box now; only the mechanic's name is looked for in it.
+ *   - the mute assertion → **only the mechanic renders a name span at all**,
+ *     which is a stronger statement than a colour tier and cannot go vacuous
+ *     the way #2619 found the old row-scoped `toContain` had.
+ *
+ * Albescent needed no change: #2782 had already cut its letter to a single
+ * perk, and that one is its mechanic, named.
  * ========================================================================== */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -35,11 +66,12 @@ import type { CharacterOut, CurrentUser } from '../../api/auth'
 /** The seven slugs with an `invitation` block — the shared popup's whole range. */
 const SLUGS = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow'] as const
 
-/** Where the mechanic sits in every letter (`MECHANIC_INDEX` / `PERK_KEYS`). */
+/** Where the mechanic sits in every letter (`MECHANIC_INDEX`). */
 const MECHANIC = 1
 
+/** `name` is optional since #2774 — only the mechanic row carries one. */
 interface Perk {
-  name: string
+  name?: string
   desc: string
 }
 
@@ -95,16 +127,19 @@ function albescentLetter(): string {
 }
 
 describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (slug) => {
-  it('prints every perk as a name over a description', () => {
+  it('prints the mechanic as a name over a description, and the flavour rows as description alone (#2774)', () => {
     const html = letter(slug)
     const perks = perksOf(slug)
     expect(perks).toHaveLength(3)
-    for (const perk of perks) {
-      expect(html).toContain(escaped(perk.name))
-      expect(html).toContain(escaped(perk.desc))
-    }
-    // The shape change's own failure mode: the element rendered whole.
+    // Every row still says what it gets you — the deletion took names, not copy.
+    for (const perk of perks) expect(html).toContain(escaped(perk.desc))
+    // Exactly one name in the catalog, on the mechanic, and it reaches the page.
+    expect(perks.filter((perk) => perk.name !== undefined)).toHaveLength(1)
+    expect(html).toContain(escaped(perks[MECHANIC].name as string))
+    // The shape change's own failure mode: the element rendered whole. A perk
+    // whose `name` is gone must not print `undefined` in its place either.
     expect(html).not.toContain('[object Object]')
+    expect(html).not.toContain('undefined')
   })
 
   it('puts all three perks inside the ONE tinted box the terms slip vacated', () => {
@@ -116,7 +151,11 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     expect(style).toContain(`background:var(--faction-${slug}-light)`)
     expect(style).toContain(`border:1px solid var(--faction-${slug}-border)`)
     expect(style).toContain('border-radius:8px')
-    for (const perk of perksOf(slug)) expect(body).toContain(escaped(perk.name))
+    // The box is proved by what all three rows still have — their descriptions
+    // — plus the one name that survived (#2774). It used to be proved by three
+    // names; two of those no longer exist to look for.
+    for (const perk of perksOf(slug)) expect(body).toContain(escaped(perk.desc))
+    expect(body).toContain(escaped(perksOf(slug)[MECHANIC].name as string))
   })
 
   it('carries no heading on the box, and none of the chrome that was cut', () => {
@@ -132,7 +171,7 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     expect(invitation.cta).not.toHaveProperty('joined')
   })
 
-  it('marks the mechanic and mutes the two flavour names, so the real perk reads first', () => {
+  it('renders a name on the mechanic row and on NO other row (#2774)', () => {
     const html = letter(slug)
     const rows = [...html.matchAll(/<li style="[^"]*">([\s\S]*?)<\/li>/g)].map((m) => m[1])
     expect(rows).toHaveLength(3)
@@ -142,21 +181,21 @@ describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (s
     // carried that string whatever the name did, and this test stayed green
     // across the very repaint it exists to pin. The name is the only span in the
     // row that is `text-transform:uppercase`.
-    const nameInk = (row: string) =>
-      /<span style="([^"]*text-transform:uppercase[^"]*)"/.exec(row)?.[1] ?? ''
+    const nameSpan = (row: string) =>
+      /<span style="([^"]*text-transform:uppercase[^"]*)"/.exec(row)?.[1] ?? null
 
-    // #2298 §2, as ruled and now shippable (#2619): the mechanic's name is in
-    // the faction ACCENT and the two flavour names in the tertiary, so one of
-    // the three reads first by colour. The ink is `-accent-ink` and never the
-    // bare hue — `local/no-faction-hue-as-ink` is right that the spine hue is
-    // 2.19:1 to 4.46:1 as type here, and this is the measured token that says
-    // the same thing legibly. The hue itself keeps the BULLET, which is a fill.
+    // #2774 supersedes #2298 §2 (see the header). The mechanic keeps its ink —
+    // `-accent-ink` and never the bare hue, because `local/no-faction-hue-as-ink`
+    // is right that the spine hue is 2.19:1 to 4.46:1 as type here — and the
+    // hue itself keeps the BULLET, which is a fill. What changed is the other
+    // two rows: there is no muted name any more, there is no name.
     expect(rows[MECHANIC]).toContain(`color:var(--faction-${slug})`)
-    expect(nameInk(rows[MECHANIC])).toContain(`color:var(--faction-${slug}-accent-ink)`)
-    expect(nameInk(rows[MECHANIC])).not.toContain('color:var(--color-text-primary)')
+    expect(nameSpan(rows[MECHANIC])).toContain(`color:var(--faction-${slug}-accent-ink)`)
     for (const idx of [0, 2]) {
       expect(rows[idx]).not.toContain(`color:var(--faction-${slug})`)
-      expect(nameInk(rows[idx])).toContain('color:var(--color-text-tertiary)')
+      // Not "muted to tertiary" — ABSENT. An empty name span left behind would
+      // still take its line box and its margin on the page.
+      expect(nameSpan(rows[idx])).toBeNull()
     }
   })
 })
@@ -167,7 +206,11 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
     const perks = factions.albescent.letter.perks as unknown as Record<string, Perk>
     expect(Object.keys(perks)).toEqual(['record'])
     for (const perk of Object.values(perks)) {
-      expect(html).toContain(escaped(perk.name))
+      // Albescent needed no #2774 cut: #2782 had already reduced this letter to
+      // one perk, and that one is the mechanic — so it is the faction that
+      // already ships the shape the other seven just moved to.
+      expect(perk.name).toBeDefined()
+      expect(html).toContain(escaped(perk.name as string))
       expect(html).toContain(escaped(perk.desc))
     }
     expect(html).not.toContain('[object Object]')
@@ -250,9 +293,17 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
 })
 
 /* -------------------------------------------------------------------------- *
- * The owed copy, shipped as literal placeholders (owner ruling 2026-08-23).
+ * WHAT IS STILL OWED — one slot, and it is a DESCRIPTION.
+ *
+ * #2298 §4 shipped 15 owed slots as hinted `PLACEHOLDER — …` strings on the
+ * owner's ruling of 2026-08-23. #2774 closed 14 of them without writing 12 of
+ * them: the twelve owed NAMES were the flavour rows, and those were deleted
+ * rather than written (see the header), while WoW's two owed descriptions were
+ * written. Albescent's mechanic description is the remainder — the one row
+ * where a placeholder is still the honest state, because a description is copy
+ * and the letter would say nothing there without it.
  * -------------------------------------------------------------------------- */
-describe('the owed copy ships as hinted placeholders, and nothing else does (#2298 §4)', () => {
+describe('one perk slot is still owed, and nothing else is (#2298 §4, #2774)', () => {
   function allPerks(): Array<[string, Perk]> {
     const shared = SLUGS.flatMap((slug) =>
       perksOf(slug).map((perk, idx) => [`${slug}.invitation.perks.${idx}`, perk] as [string, Perk]),
@@ -263,30 +314,19 @@ describe('the owed copy ships as hinted placeholders, and nothing else does (#22
     return [...shared, ...alb]
   }
 
-  it("leaves exactly the 15 slots owed — 12 names, WoW's two full pairs, Albescent's desc", () => {
+  it("leaves exactly one owed slot — Albescent's mechanic description", () => {
     const owed = allPerks().flatMap(([id, perk]) =>
       (['name', 'desc'] as const)
-        .filter((field) => perk[field].startsWith('PLACEHOLDER'))
+        .filter((field) => perk[field]?.startsWith('PLACEHOLDER'))
         .map((field) => `${id}.${field}`),
     )
-    // The issue counted 16 SLOTS / 18 FIELDS. Albescent's copy pass moved three
-    // of them: `witnessed` was deleted outright, `record`'s owed name was
-    // written ("Abilities"), and its desc was handed back as a placeholder. So
-    // one slot leaves and one changes hands — 15 slots, 17 fields — and
-    // Albescent joins WoW as the only rows owing a description.
-    expect(new Set(owed.map((id) => id.replace(/\.(name|desc)$/, ''))).size).toBe(15)
-    expect(owed).toHaveLength(17)
-    expect(owed.filter((id) => id.endsWith('.desc'))).toEqual([
-      'wow.invitation.perks.0.desc',
-      'wow.invitation.perks.2.desc',
-      'albescent.letter.perks.record.desc',
-    ])
+    expect(owed).toEqual(['albescent.letter.perks.record.desc'])
   })
 
-  it('hints every placeholder, so the file says what it wants', () => {
+  it('hints that placeholder, so the file says what it wants', () => {
     for (const [id, perk] of allPerks()) {
       for (const field of ['name', 'desc'] as const) {
-        if (!perk[field].startsWith('PLACEHOLDER')) continue
+        if (!perk[field]?.startsWith('PLACEHOLDER')) continue
         // `PLACEHOLDER — <hint>`. A bare one is legal and wastes the slot.
         expect(perk[field], `${id}.${field}`).toMatch(/^PLACEHOLDER — .+/)
       }
@@ -295,16 +335,19 @@ describe('the owed copy ships as hinted placeholders, and nothing else does (#22
 
   it('drops no interpolation tag: perk copy is plain, and stays plain', () => {
     for (const [id, perk] of allPerks()) {
-      expect(perk.name, id).not.toMatch(/<\d/)
+      expect(perk.name ?? '', id).not.toMatch(/<\d/)
       expect(perk.desc, id).not.toMatch(/<\d/)
     }
   })
 
-  it('names the 12 owed names after the description beside them', () => {
-    const named = allPerks().filter(([, perk]) => perk.name.startsWith('PLACEHOLDER — name for: '))
-    expect(named).toHaveLength(12)
-    for (const [id, perk] of named) {
-      expect(perk.name, id).toBe(`PLACEHOLDER — name for: ${perk.desc}`)
+  it('names one perk per letter, and it is the mechanic (#2774)', () => {
+    for (const slug of SLUGS) {
+      const named = perksOf(slug)
+        .map((perk, idx) => [idx, perk] as const)
+        .filter(([, perk]) => perk.name !== undefined)
+      expect(named.map(([idx]) => idx), slug).toEqual([MECHANIC])
+      // A key present but empty is the same defect wearing a different mask.
+      expect(named[0][1].name, slug).not.toBe('')
     }
   })
 })

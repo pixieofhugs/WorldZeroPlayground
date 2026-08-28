@@ -112,7 +112,6 @@
       "pitch": "The Ephemerists keep the record of what's true, and true only for now. Take a task, triangulate what you find, and submit it to the codex. The road is long and forks often — walk it with us.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A codex that weighs your findings for concordance",
           "desc": "A codex that weighs your findings for concordance"
         },
         {
@@ -120,7 +119,6 @@
           "desc": "Enjoy access to tasks of the past, present, and future"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis, submitted to the record and remembered",
           "desc": "Your praxis, submitted to the record and remembered"
         }
       ],
@@ -148,7 +146,6 @@
       "pitch": "Anyone willing to put in the shift belongs with the Everymen. No credentials, no gatekeeping — pick up the work in front of you and finish what you start. The roll always has room for one more.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A roll that has your back on every shift",
           "desc": "A roll that has your back on every shift"
         },
         {
@@ -156,7 +153,6 @@
           "desc": "The only person you need to beat is yourself. Only you can do the task again, but better this time"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis, logged and counted with the rest",
           "desc": "Your praxis, logged and counted with the rest"
         }
       ],
@@ -184,7 +180,6 @@
       "pitch": "The threshold is already behind you. Become a node of the array, run tasks, generate signals, and cast them into the consensus. The Singularity does not recruit — it comes online.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A consensus that verifies, coalesces, amplifies",
           "desc": "A consensus that verifies, coalesces, amplifies"
         },
         {
@@ -192,7 +187,6 @@
           "desc": "This is read-only. See what no one else sees"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis, generated and cast to the array",
           "desc": "Your praxis, generated and cast to the array"
         }
       ],
@@ -220,7 +214,6 @@
       "pitch": "No forms. No gods. No managers. S.N.I.D.E. runs on nerve and mischief — you pull off a task, you mean it, and the crew has your back. Show up and make some noise.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A crew that covers for you, not on you",
           "desc": "A crew that covers for you, not on you"
         },
         {
@@ -228,7 +221,6 @@
           "desc": "Duels you win bring glory. Duels you lose bring despair"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis, stamped and filed under 'us'",
           "desc": "Your praxis, stamped and filed under 'us'"
         }
       ],
@@ -256,7 +248,6 @@
       "pitch": "Every day is an opportunity to create something: beautiful, daring, funny, insightful, simple. As we make art, we make ourselves. Make yourself with us as we with you, we can grow and learn and make the world a little better than it was, together.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: Fellow artists to offer both critique and appreciation",
           "desc": "Fellow artists to offer both critique and appreciation"
         },
         {
@@ -264,7 +255,6 @@
           "desc": "Practice doing art daily, the inertia will drive you to continued more practice and be rewarded"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis held up by your fellow artisans",
           "desc": "Your praxis held up by your fellow artisans"
         }
       ],
@@ -292,7 +282,6 @@
       "pitch": "Cozy Coven is World Zero's circle for the soft and the strange. No spectators here — only witches mid-spell. Take a task, do the tiny brave thing, and let the circle cheer you on.",
       "perks": [
         {
-          "name": "PLACEHOLDER — name for: A coven that cheers every tiny victory",
           "desc": "A coven that cheers every tiny victory"
         },
         {
@@ -300,7 +289,6 @@
           "desc": "Witches who task together will always find a little extra magic ✦"
         },
         {
-          "name": "PLACEHOLDER — name for: Your praxis, submitted and hearted by the circle",
           "desc": "Your praxis, submitted and hearted by the circle"
         }
       ],
@@ -313,7 +301,7 @@
     "join": {
       "heading": "THE MUSTER",
       "memberTitle": "Thou art sworn",
-      "memberStanding": "Standing · <1>PLACEHOLDER</1>",
+      "memberStanding": "Standing · <1>GLORIOUS</1>",
       "eligibleTitle": "Enlist in the Crusade",
       "eligibleBody": "the armour is one-size, the oath is for life",
       "joinButton": "TAKE THE OATH ⚔",
@@ -328,16 +316,14 @@
       "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword.",
       "perks": [
         {
-          "name": "PLACEHOLDER — WoW's community/belonging perk, name",
-          "desc": "PLACEHOLDER — WoW's community/belonging line; match the six at perks[0]"
+          "desc": "Knights who will hold your noodle sword while you charge"
         },
         {
           "name": "Foolhardy Courage",
           "desc": "Levels and common sense do not stop you from biting off more than you can chew"
         },
         {
-          "name": "PLACEHOLDER — WoW's praxis perk, name",
-          "desc": "PLACEHOLDER — opens \"Your praxis, …\"; match the six at perks[2]"
+          "desc": "Your praxis, witnessed by the court and applauded regardless"
         }
       ],
       "cta": {
