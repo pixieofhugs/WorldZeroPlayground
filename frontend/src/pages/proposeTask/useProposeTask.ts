@@ -35,7 +35,7 @@ import { UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
 export { UNAFFILIATED_FACTION_SLUG };
 
 /** Raw form fields the submission planner reads. */
-export interface ProposalFields {
+interface ProposalFields {
   isMetatask: boolean;
   title: string;
   description: string;
@@ -49,7 +49,7 @@ export interface ProposalFields {
 }
 
 /** Which endpoint {@link handleSubmit} will hit, plus its ready-built body. */
-export type ProposalPlan =
+type ProposalPlan =
   | { kind: "metatask"; body: MetataskProposal }
   | { kind: "standard"; body: TaskCreate };
 

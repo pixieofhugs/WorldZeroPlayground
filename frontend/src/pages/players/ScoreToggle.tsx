@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ScoreMode } from './playersData'
 
-export interface ScoreToggleProps {
+interface ScoreToggleProps {
   mode: ScoreMode
   onChange: (mode: ScoreMode) => void
   /** `--text-*` token — the phone sets these pills a rung smaller. */

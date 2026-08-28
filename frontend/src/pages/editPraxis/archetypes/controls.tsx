@@ -574,7 +574,7 @@ export function InviteSearch({
   );
 }
 
-export interface FilePickerSkin {
+interface FilePickerSkin {
   buttonStyle: CSSProperties;
   /**
    * Optional since #2089, and unset by all eight composers: the words depend on
@@ -641,7 +641,7 @@ export function FilePicker({
   );
 }
 
-export interface DropButtonSkin {
+interface DropButtonSkin {
   style?: CSSProperties;
   label?: string;
   className?: string;
@@ -704,7 +704,7 @@ export function DropButton({
 /* Nothing here asks first — saving a draft destroys nothing, so a confirm      */
 /* would be ceremony. (The composer has `askConfirm` for the ones that do.)     */
 /* -------------------------------------------------------------------------- */
-export interface SaveDraftButtonSkin {
+interface SaveDraftButtonSkin {
   style?: CSSProperties;
   label?: string;
   /** Replaces the shared classes rather than adding to them (#1181). */
@@ -759,7 +759,7 @@ export function SaveDraftButton({
 /* previews); this control only owns the value/onChange binding so no         */
 /* archetype re-implements it.                                                */
 /* -------------------------------------------------------------------------- */
-export interface TitleFieldSkin {
+interface TitleFieldSkin {
   inputStyle: CSSProperties;
   placeholder?: string;
   /**
@@ -907,7 +907,7 @@ export function TitleField({
 /* bespoke chrome (line-number gutters, etc.) can still consume the shared     */
 /* binding.                                                                    */
 /* -------------------------------------------------------------------------- */
-export interface BodyTextareaSkin {
+interface BodyTextareaSkin {
   /**
    * The body's box. Dresses the editor's host (#1742) exactly as it dressed the
    * `<textarea>` before it — ground, rule, radius, padding, min-height, ink,
@@ -1434,7 +1434,7 @@ export function BodyTextarea({
 /* -------------------------------------------------------------------------- */
 export type ComposerTab = "write" | "preview";
 
-export interface WriteUpTabsSkin {
+interface WriteUpTabsSkin {
   containerStyle?: CSSProperties;
   buttonStyle?: (active: boolean) => CSSProperties;
 }
@@ -1487,7 +1487,7 @@ export function WriteUpTabs({
 /* MarkdownPreview block component. The archetype supplies the bespoke wrapper, */
 /* eyebrow label, and markdown typography via the skin.                        */
 /* -------------------------------------------------------------------------- */
-export interface BodyPreviewSkin {
+interface BodyPreviewSkin {
   wrapperStyle?: CSSProperties;
   label?: ReactNode;
   markdownClassName?: string;
@@ -1544,14 +1544,14 @@ export function BodyPreview({
 /* metadata and renders each option's bespoke button via `renderOption` —      */
 /* arrangement stays the faction's identity (ADR-0016).                        */
 /* -------------------------------------------------------------------------- */
-export interface ModeOptionRenderArgs {
+interface ModeOptionRenderArgs {
   active: boolean;
   disabled: boolean;
   onSelect: () => void;
   index: number;
 }
 
-export interface ModePickerSkin<O extends { key: PraxisType }> {
+interface ModePickerSkin<O extends { key: PraxisType }> {
   containerStyle?: CSSProperties;
   options: O[];
   renderOption: (option: O, args: ModeOptionRenderArgs) => ReactNode;

@@ -82,7 +82,7 @@ export function writeSearchQuery(setSearchParams: SearchParamsSetter, next: stri
   )
 }
 
-export type SearchQueryBinding = [query: string, setQuery: (next: string) => void]
+type SearchQueryBinding = [query: string, setQuery: (next: string) => void]
 
 export function useSearchQueryParam(): SearchQueryBinding {
   const [searchParams, setSearchParams] = useSearchParams()

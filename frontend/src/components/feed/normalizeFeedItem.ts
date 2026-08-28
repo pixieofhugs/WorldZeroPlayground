@@ -43,7 +43,7 @@ export const FACTION_ROW_TYPES = new Set([
  * here — a state drawn on a sheet with no API behind it is not built (epic
  * #1192 amendment, owner ruling 2026-07-29).
  */
-export type FeedRowCall = { endpoint: 'leavePraxis'; praxisId: number }
+type FeedRowCall = { endpoint: 'leavePraxis'; praxisId: number }
 
 /**
  * A CTA in the row's action slot (epic #1192 amendment §3). The slot is a

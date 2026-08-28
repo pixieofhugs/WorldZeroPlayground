@@ -131,7 +131,7 @@ export function resolveFeedRowInk(
 }
 
 /** The figure the row would otherwise print in its own caption voice. */
-export interface FeedRowPoints {
+interface FeedRowPoints {
   /** Pre-formatted points string, e.g. "40 pts" / "+12 pts", or null. */
   points: string | null
   level: number | null

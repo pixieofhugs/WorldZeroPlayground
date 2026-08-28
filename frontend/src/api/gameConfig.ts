@@ -19,7 +19,7 @@ export type FactionConfigOut = components['schemas']['FactionConfigOut']
  * a `StrEnum` so the schema carries the union — after which the cast goes and
  * `LevelUnlock` / `LevelProfile` / `GameConfigOut` can alias with it.
  */
-export type LevelUnlockKind = 'ability' | 'sense'
+type LevelUnlockKind = 'ability' | 'sense'
 
 // ADR-0031: the backend emits copy KEYS; the progression.json catalog owns the
 // words. Resolve with t('progression:unlocks.<key>.name' | '.desc') and

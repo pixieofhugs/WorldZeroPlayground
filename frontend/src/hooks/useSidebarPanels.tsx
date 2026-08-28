@@ -18,7 +18,7 @@ const EMPTY_PANELS: SidebarPanels = {
   active_praxes: [],
 }
 
-export interface SidebarState extends SidebarPanels {
+interface SidebarState extends SidebarPanels {
   /** True until the first response lands. Drives the FieldDesk's task skeleton. */
   loading: boolean
   /** Re-read all three panels. One call, so one request — the panels move together. */

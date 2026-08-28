@@ -23,7 +23,7 @@ import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
-export interface ComposerDuel {
+interface ComposerDuel {
   duel: DuelDetailOut | null;
   setDuel: (duel: DuelDetailOut | null) => void;
   /** The challenge pane is open: the search box is picking an opponent. */

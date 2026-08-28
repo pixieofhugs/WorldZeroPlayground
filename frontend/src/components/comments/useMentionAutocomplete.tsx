@@ -21,7 +21,7 @@ const WHITESPACE = /\s/
 const DEBOUNCE_MS = 200
 const RESULT_LIMIT = 8
 
-export interface ActiveMention {
+interface ActiveMention {
   /** Text between '@' and the token end (empty for a bare '@'). */
   query: string
   /** Index of the '@'. */

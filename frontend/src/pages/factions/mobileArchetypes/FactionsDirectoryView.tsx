@@ -10,7 +10,7 @@ const STATUS_INVITED = 'invited'
 const STATUS_NOT_INVITED = 'not_invited'
 const STATUS_CAN_RETURN = 'can_return'
 
-export interface FactionsDirectoryViewProps {
+interface FactionsDirectoryViewProps {
   /** Slug-only faction list from GET /factions — Albescent absent until revealed. */
   factions: FactionOut[]
   /** Per-faction viewer status from GET /factions/status — drives card state. */

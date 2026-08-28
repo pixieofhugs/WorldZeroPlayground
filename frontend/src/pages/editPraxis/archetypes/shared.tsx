@@ -163,7 +163,7 @@ export function composerStageWord(state: EditPraxisState): string {
  * bypasses the guard, which is what #1003 retired.
  * ========================================================================== */
 
-export interface ComposerSizes {
+interface ComposerSizes {
   /** Column width. Desktop pins the design's 720; mobile fills the phone. */
   maxWidth: number | string;
   /** Sheet padding, from the --space-* scale. */
@@ -289,7 +289,7 @@ export function composerDropGround(field: string): string {
   return `color-mix(in srgb, ${field} 42%, transparent)`;
 }
 
-export interface ComposerBand {
+interface ComposerBand {
   /**
    * The band's fill. The skin's CTA while there is something to file, and its
    * CAST paint once the viewer has — the confirmation signal the design says the
@@ -858,7 +858,7 @@ export function RingMark({
  */
 const COPY_MEASURE = 260;
 
-export interface TaskSlipProps {
+interface TaskSlipProps {
   praxis: PraxisOut;
   task: TaskOut | null;
   /**

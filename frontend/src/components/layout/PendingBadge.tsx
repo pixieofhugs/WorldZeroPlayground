@@ -32,7 +32,7 @@ const BADGE_STYLE: CSSProperties = {
   background: 'var(--badge-collab)',
 }
 
-export interface PendingBadgeProps {
+interface PendingBadgeProps {
   readonly count: number
   /** Positioning only — the mobile bell pins its badge over the icon. */
   readonly className?: string

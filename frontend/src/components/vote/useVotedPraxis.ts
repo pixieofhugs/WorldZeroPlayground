@@ -14,7 +14,7 @@ import { useCastTally } from './castTallies'
  * decision instead of two that can drift. `voter_count` is optional because a
  * duel side carries none.
  */
-export type VoteScoredPraxis = ScoredPraxis & { voter_count?: number }
+type VoteScoredPraxis = ScoredPraxis & { voter_count?: number }
 
 /**
  * Overwrite a payload's vote numbers with the tally the server returned (#1382).

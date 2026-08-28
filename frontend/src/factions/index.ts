@@ -67,7 +67,7 @@ export const FACTION_MANIFESTS: readonly FactionManifest[] = [
 ]
 
 /** A slug-keyed map of one surface, in the shape `resolveVariant` consumes. */
-export type SurfaceMap<K extends FactionSurface> = Record<
+type SurfaceMap<K extends FactionSurface> = Record<
   string,
   ReturnType<NonNullable<FactionManifest[K]>>
 >

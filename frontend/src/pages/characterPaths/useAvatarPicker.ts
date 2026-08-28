@@ -29,7 +29,7 @@ const TOO_LARGE_MESSAGE = 'Portrait must be under 10 MB.'
  * releases the current one. Extracted (and exported) so the preview lifecycle is
  * unit-testable without a DOM.
  */
-export interface ObjectUrlSlot {
+interface ObjectUrlSlot {
   set: (source: Blob) => string
   revoke: () => void
   current: () => string | null
@@ -53,7 +53,7 @@ export function createObjectUrlSlot(): ObjectUrlSlot {
   }
 }
 
-export interface AvatarPicker {
+interface AvatarPicker {
   /** The cropped file awaiting upload (null until a crop is confirmed). */
   avatarFile: File | null
   /** The raw file currently open in the crop modal (null when closed). */

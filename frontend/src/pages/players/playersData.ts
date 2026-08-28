@@ -278,7 +278,7 @@ export function selectRoster(
  * the page renders fully without them and the footer simply does not draw when
  * one is missing or its request failed.
  */
-export interface LatestPraxis {
+interface LatestPraxis {
   taskTitle: string
   submittedAt: string | null
 }
@@ -304,12 +304,12 @@ export interface PlayersViewProps {
 }
 
 /** The gap the pin jumps: the global ranks that are loaded past but not drawn. */
-export interface RosterGap {
+interface RosterGap {
   from: number
   to: number
 }
 
-export interface RosterView {
+interface RosterView {
   /** The loaded page, in rank order. */
   rows: RankedPlayer[]
   /** Set only when the viewer's own row is pinned below the page. */

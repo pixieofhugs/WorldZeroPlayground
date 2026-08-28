@@ -81,7 +81,7 @@ export function shrinkIndex(crumbs: readonly Crumb[]): number {
   return widest;
 }
 
-export interface BreadcrumbProps {
+interface BreadcrumbProps {
   /** The task all three of these surfaces hang off. */
   taskId: number;
   taskTitle: string;

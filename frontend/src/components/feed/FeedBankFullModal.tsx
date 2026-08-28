@@ -40,7 +40,7 @@ import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 /** One in-progress praxis the viewer may drop to free a bank slot. */
-export interface BankFullDropOption {
+interface BankFullDropOption {
   /** The praxis id — the React key, never rendered. */
   id: number
   /** The fully worded button, built by the caller from its own catalog keys. */

@@ -8,7 +8,7 @@ export function seenInvitesKey(characterId: number): string {
   return `${SEEN_INVITES_KEY_PREFIX}${characterId}`
 }
 
-export interface InviteDiff {
+interface InviteDiff {
   /** Slugs earned since the last observation, in stable (sorted) order. */
   toAnnounce: string[]
   /** The set to persist as last-seen (a superset of `stored`, never shrinking). */

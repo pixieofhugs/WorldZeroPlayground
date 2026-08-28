@@ -9,7 +9,7 @@ export function lastSeenLevelKey(characterId: number): string {
   return `${LAST_SEEN_LEVEL_KEY_PREFIX}${characterId}`
 }
 
-export interface LevelDiff {
+interface LevelDiff {
   levelsToAnnounce: number[]
   nextStored: number
 }

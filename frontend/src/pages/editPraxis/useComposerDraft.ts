@@ -21,7 +21,7 @@
  */
 import { useCallback, useState } from "react";
 
-export interface ComposerDraft {
+interface ComposerDraft {
   title: string;
   setTitle: (value: string) => void;
   body: string;

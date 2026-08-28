@@ -41,7 +41,7 @@ import {
 } from './contrast';
 import type { Finding } from './contrastScan';
 
-export type BaselineEntry = {
+type BaselineEntry = {
   /** Measured ratio when this entry landed. Every entry here was MEASURED. */
   ratio: number;
   /** The issue that owns the fix. 651 = found by the sweep, awaiting a child. */
@@ -305,7 +305,7 @@ export const RENDERED_BASELINE: Record<string, BaselineEntry> = {
  * The darkest and lightest opaque colour a fill can put under text. `lo`/`hi`
  * are ordered by WCAG relative luminance, not by stop order.
  */
-export type FillBand = { lo: Rgba; hi: Rgba };
+type FillBand = { lo: Rgba; hi: Rgba };
 
 /** A finding whose ground is known — either resolved by the scanner or banded here. */
 type Resolved = Finding & { background: string };
@@ -481,7 +481,7 @@ export function measureOverFill(finding: Finding): Resolved | null {
 }
 
 /** What the sweep does with one test's worth of findings. */
-export type Triage = {
+type Triage = {
   /** Measured below AA and not grandfathered — these FAIL the run. */
   failures: Finding[];
   /** Grandfathered pairs that now clear AA — the list only shrinks, so these FAIL too. */

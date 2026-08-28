@@ -149,7 +149,7 @@ export function duelSides(
 /* Stakes arithmetic                                                          */
 /* -------------------------------------------------------------------------- */
 
-export interface DuelStakes {
+interface DuelStakes {
   /** Base points if this side wins the head-to-head. */
   win: number
   /** Base points if it loses. `0` for Snide — by construction, not by branch. */
@@ -410,7 +410,7 @@ export function RaceRoster({
 export type DuelSealMode = 'submit' | 'forfeit'
 
 /** Everything that varies between the modes, resolved once for every skin. */
-export interface DuelSealCopy {
+interface DuelSealCopy {
   /** Dialog title, also its `aria-label`. */
   heading: string
   /** The main body line. */

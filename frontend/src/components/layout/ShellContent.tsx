@@ -42,7 +42,7 @@ import SidebarColumn from './SidebarColumn'
  * the whole rail appears BELOW the page. `col-start-*` is inert with no grid
  * active, so the signed-out and mobile branches are untouched.
  */
-export interface ShellContentProps {
+interface ShellContentProps {
   /** Straight from `useFormFactor()`; the region only re-dresses itself. */
   readonly isMobile: boolean
   /** Held by `Layout`, not here — `ShellContent` is called as a plain function

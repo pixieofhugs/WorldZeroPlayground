@@ -46,7 +46,7 @@ import { useAuth } from "../../auth/AuthContext";
 /** The two long galleries, in page order. */
 export const FACTION_SECTION_IDS = ["tasks", "praxis"] as const;
 
-export type FactionSectionId = (typeof FACTION_SECTION_IDS)[number];
+type FactionSectionId = (typeof FACTION_SECTION_IDS)[number];
 
 /** Base key; the account id is appended, exactly as the rail's is. */
 export const FACTION_SECTION_STORAGE_KEY = "wz-faction-sections";
@@ -112,7 +112,7 @@ export function toggleCollapsedSection(
 }
 
 /** One section's disclosure: what the heading needs and what the body needs. */
-export interface FactionSection {
+interface FactionSection {
   readonly open: boolean;
   readonly bodyId: string;
   readonly toggle: () => void;

@@ -41,7 +41,7 @@ export type QueueItem =
   | { kind: 'comment'; comment: FlaggedCommentOut }
 
 /** Client-side content-type filter over the merged queue (#576). */
-export type QueueFilter = 'all' | 'praxis' | 'comment'
+type QueueFilter = 'all' | 'praxis' | 'comment'
 
 /** Narrow the merged queue to one content type; 'all' passes through (#576). */
 export function filterQueueByType(queue: QueueItem[], filter: QueueFilter): QueueItem[] {

@@ -14,7 +14,7 @@ import type { CharacterOut } from '../../api/auth'
 import type { CommentMention, CommentOut } from '../../api/comments'
 import { MentionDropdown, useMentionAutocomplete } from './useMentionAutocomplete'
 
-export interface CommentRowProps {
+interface CommentRowProps {
   mode: 'row'
   comment: CommentOut
   /** Lift an author edit back into the thread's list (re-renders with is_edited). */
@@ -23,7 +23,7 @@ export interface CommentRowProps {
   onWithdrawn?: (id: number) => void
 }
 
-export interface CommentComposerProps {
+interface CommentComposerProps {
   mode: 'composer'
   character: CharacterOut
   value: string

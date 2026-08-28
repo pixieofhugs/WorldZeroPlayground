@@ -49,7 +49,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
  */
 export const SEAL_SCRIM = 'radial-gradient(circle, rgba(0,0,0,0.55), rgba(0,0,0,0.75))'
 
-export interface DuelSealSheetProps {
+interface DuelSealSheetProps {
   /** The dialog's accessible name — every skin passes `copy.heading`. */
   label: string
   /** The desktop scrim behind the card. Defaults to {@link SEAL_SCRIM}. */

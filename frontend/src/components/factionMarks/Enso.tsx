@@ -48,7 +48,7 @@ import type { FactionMarkProps } from "./Lotus";
 /** Where the asset lives under `public/`. */
 const ENSO_ASSET = "url(/factionMarks/enso.webp)";
 
-export interface EnsoProps extends Omit<FactionMarkProps, "lineColor"> {
+interface EnsoProps extends Omit<FactionMarkProps, "lineColor"> {
   /**
    * Box height, when the mark must fill a non-square slot. Defaults to
    * {@link FactionMarkProps.size}, so the ordinary call stays square. The mask

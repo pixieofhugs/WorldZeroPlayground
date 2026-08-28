@@ -425,7 +425,7 @@ const FLAKE_INKS = ["var(--faction-wow-hatch)", "var(--faction-wow-court-glow)"]
 /** Ornament strength for the bunches, on the `UaMandala` "texture" rung (§6). */
 const BALLOON_WATERMARK = 0.15;
 
-export interface WowFlake {
+interface WowFlake {
   /** Percent across and down the plate, so the throw reflows with the banner. */
   left: number;
   top: number;

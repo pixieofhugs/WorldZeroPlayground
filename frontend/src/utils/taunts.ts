@@ -20,7 +20,7 @@ const tString = i18n.t as unknown as (
   o: { from_name: string; to_name: string },
 ) => string
 
-export interface TauntRef {
+interface TauntRef {
   id: number
   faction_slug: string
   trigger_type: string

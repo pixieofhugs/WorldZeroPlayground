@@ -33,7 +33,7 @@ import { CARD, DEEP, DISPLAY, READING, SOFT } from "./covenSlip";
 /** The drawing's own coordinate space. The design draws it at 158 CSS px. */
 const VIEW = 132;
 
-export interface CovenCauldronProps {
+interface CovenCauldronProps {
   /** The figure held in the pot, already formatted for display (`29.5`). */
   total: string;
   /** The caption struck under it — `points` on the stamp, shorter elsewhere. */

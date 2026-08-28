@@ -112,7 +112,7 @@ const HAIRLINE_FAINT = 'color-mix(in srgb, var(--faction-default-card-line) 55%,
 // mechanic. The `mechanic` flag that picked it out of three went with them —
 // nothing to pick from. `perks.record` is rendered by name below, no map.
 
-export interface AlbescentInvitationProps {
+interface AlbescentInvitationProps {
   /** The account's roster (every life but the banned ones). */
   lives: CharacterOut[]
   /**

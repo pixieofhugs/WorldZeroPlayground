@@ -33,7 +33,7 @@ import type { CSSProperties, ReactElement } from "react";
  */
 
 /** How loudly the pattern speaks on a surface. `absent` draws nothing. */
-export type UaMandalaStrength = "full" | "texture" | "absent";
+type UaMandalaStrength = "full" | "texture" | "absent";
 
 /** Default opacity per strength. `texture` sits mid-range of the kit's 6-22%. */
 const STRENGTH_OPACITY: Record<UaMandalaStrength, number> = {
@@ -42,7 +42,7 @@ const STRENGTH_OPACITY: Record<UaMandalaStrength, number> = {
   absent: 0,
 };
 
-export interface UaMandalaProps {
+interface UaMandalaProps {
   /** Rendered box, in px. The figure is square and fills it. */
   size?: number;
   /** Which of the three strengths this surface is entitled to. */

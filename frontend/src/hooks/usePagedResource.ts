@@ -100,7 +100,7 @@ export function loadPage<T>(
   return cached.cache.read(pageCacheKey(cached.viewer, deps), () => fetchPage(limit))
 }
 
-export interface PagedResource<T> {
+interface PagedResource<T> {
   /** The current page's rows (null before the first settle). */
   data: T[] | null
   loading: boolean

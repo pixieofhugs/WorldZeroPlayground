@@ -85,7 +85,7 @@ import { CAPS } from "./ephemeristsPlate";
 
 /** The registered scripts, in the order the design names them. */
 export const SCRIPTS = ["cuneiform", "arabic", "japanese", "latin"] as const;
-export type Script = (typeof SCRIPTS)[number];
+type Script = (typeof SCRIPTS)[number];
 
 /** Every word the catalog glosses. Derived, so a typo cannot compile. */
 export type GlossWord = keyof typeof catalog;

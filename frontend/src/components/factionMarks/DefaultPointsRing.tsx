@@ -54,7 +54,7 @@ import { factionRoleVar } from "../../utils/factionRoles";
 /** Lora, via the shared display token — the face the `na` task-card design names. */
 const LORA = "var(--font-display)";
 
-export interface DefaultPointsRingProps {
+interface DefaultPointsRingProps {
   /** The figure inside the ring, already formatted by the caller. */
   value: string | number;
   /** The unit lettered under it. */

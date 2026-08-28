@@ -14,7 +14,7 @@ import type { CSSProperties, ReactNode } from 'react'
  * Hierarchy therefore comes from ink rather than size — primary over secondary
  * — which is the same split the canvas uses on top of the size step.
  */
-export interface SettingsRowProps {
+interface SettingsRowProps {
   readonly title: string
   readonly help: string
   /**

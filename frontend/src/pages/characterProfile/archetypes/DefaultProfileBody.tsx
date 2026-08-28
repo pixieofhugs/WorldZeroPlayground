@@ -256,7 +256,7 @@ function progressionFigures(progression: ProfileBodyProps['progression']) {
  * rule, and the same shape `DefaultTaskDetail`'s `worthSlot` and
  * `DefaultPraxisDetail`'s `ornament` already take.
  */
-export interface DefaultProfileBodyProps extends ProfileBodyProps {
+interface DefaultProfileBodyProps extends ProfileBodyProps {
   identityOrnament?: ReactNode
 }
 

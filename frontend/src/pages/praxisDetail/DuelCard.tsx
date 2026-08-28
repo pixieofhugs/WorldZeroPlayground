@@ -112,7 +112,7 @@ const AVATAR_SIZE = 30
  * the guard only reads inks and grounds. Nothing else about this comment is
  * advisory any more.
  */
-export interface DuelCardInk {
+interface DuelCardInk {
   /** The duellist's name. Default `--faction-default-card-text`. */
   name?: string
   /** A side's total, and the em-dash standing in for an absent one. Default `--faction-default-card-text`. */
@@ -282,7 +282,7 @@ function sidesForPraxis(
     : { mine: duel.challenger, rival: duel.opponent }
 }
 
-export interface DuelCardProps {
+interface DuelCardProps {
   state: PraxisDetailState
   /** The archetype's panel chrome, so a faction skin dresses the card as its own. */
   style?: CSSProperties

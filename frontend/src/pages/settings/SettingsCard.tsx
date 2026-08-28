@@ -15,7 +15,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
  * same key that names the nav item — one string, so the rail cannot point at an
  * anchor that does not exist.
  */
-export interface SettingsCardProps {
+interface SettingsCardProps {
   readonly sectionId: string
   readonly title: string
   readonly lead?: string

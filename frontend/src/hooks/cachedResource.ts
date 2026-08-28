@@ -79,7 +79,7 @@ export const SESSION_TTL_MS = Number.POSITIVE_INFINITY
  */
 export const AMBIENT_TTL_MS = 5 * 60 * 1000
 
-export interface CacheEntry<T> {
+interface CacheEntry<T> {
   readonly value: T
   /** `Date.now()` at the moment the fetch RESOLVED, not when it was issued. */
   readonly fetchedAt: number
@@ -94,7 +94,7 @@ export function isFresh(entry: CacheEntry<unknown> | null, now: number, ttlMs: n
   return entry !== null && now - entry.fetchedAt < ttlMs
 }
 
-export interface ResourceCache<T> {
+interface ResourceCache<T> {
   /** The held value, fresh or stale; `null` before the first response. */
   peek: () => T | null
   /**
