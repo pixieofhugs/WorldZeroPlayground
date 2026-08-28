@@ -432,7 +432,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60) }}>
                       {burned
                         ? t("detail.burned.body", { faction: factionName(faction.slug) })
-                        : t("mobile.gateHint")}
+                        : t("mobile.gateHint", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}
