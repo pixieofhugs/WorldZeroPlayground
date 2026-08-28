@@ -108,7 +108,7 @@ describe('the subtotal is the multiplier applied to the base (#2634)', () => {
     ).toBeNull()
     expect(
       scoreBreakdown(praxis({ display_multiplier: 0.8, metatask_points: 0, score: 9.6 })).subtotal,
-    ).toBe(9.6)
+    ).toBeCloseTo(9.6, 10)
   })
 
   it('survives a ×0.0 duel side, which is a live multiplier and not an absent one', () => {
@@ -234,7 +234,6 @@ describe('every skin prints the working in ONE order (#2634)', () => {
       }
       const sequence: [string, number][] = [
         ['base', at(LABEL.base)],
-        ['× chip', at('×0.80')],
         ['subtotal', at(LABEL.subtotal)],
         ['meta', at(LABEL.meta)],
         ['votes', at(LABEL.votes)],
@@ -249,6 +248,23 @@ describe('every skin prints the working in ONE order (#2634)', () => {
           sequence[i][1],
           `${name}: ${sequence[i][0]} must follow ${sequence[i - 1][0]}`,
         ).toBeGreaterThan(sequence[i - 1][1])
+      }
+
+      // THE CHIP RIDES THE BASE LINE, asserted as "nothing else is between the
+      // two" rather than as "the chip follows the label". Which comes first
+      // inside the row is the skin's own drawing and two of the nine differ:
+      // the Ephemerists cell is figures-left/words-right by #2285's ruling, so
+      // its `×0.80` is printed before the word `base`. What the canonical stamp
+      // fixes is that no OTHER row may come between them — that is what makes
+      // the subtotal's rule have exactly one line above it.
+      const chipAt = at('×0.80')
+      const baseAt = at(LABEL.base)
+      const [lo, hi] = [Math.min(chipAt, baseAt), Math.max(chipAt, baseAt)]
+      for (const [row, index] of sequence.slice(1)) {
+        expect(
+          index > lo && index < hi,
+          `${name}: ${row} is printed between the base figure and its chip`,
+        ).toBe(false)
       }
     })
 
