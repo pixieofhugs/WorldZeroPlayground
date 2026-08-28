@@ -256,8 +256,11 @@ export const EVERYMEN_CARD_CTA: CSSProperties = {
  * Ephemerists — THE ONE PLATE CTA (#2146). Ground, ink and enclosure are NOT
  * here: they come from `.eph-cta` in index.css, because the enclosure changes
  * WIDTH between the cascades and no token can carry that. Every element
- * spreading this must also carry `className="eph-cta"` — an inline `background`
- * or `border` would beat the class and pin the light half in both themes.
+ * spreading this must also wear the `.eph-cta` class — an inline `background` or
+ * `border` would beat the class and pin the light half in both themes. (Spelt
+ * with the leading dot on purpose: `ephemeristsCta.test.tsx` censuses the
+ * MOUNTS of that class by grepping for it at a `className`, and a module that
+ * only talks about it is not a mount.)
  */
 export const EPHEMERISTS_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
