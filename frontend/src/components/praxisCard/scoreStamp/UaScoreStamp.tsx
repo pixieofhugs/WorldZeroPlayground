@@ -34,6 +34,13 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * merely repeats (#1131): with nothing to multiply, add or vote there is no
  * working at all, so the plate goes with it and the ensō holds the figure alone.
  *
+ * NEITHER IS THE ORDER, SINCE #2634. The plate reads base + chip, the rule,
+ * the subtotal, then `+ meta`, `+ votes`, `+ habit`, and the ensō last — the
+ * canonical stamp all nine take. UA supplied two thirds of it already (the chip
+ * on the base line, the total at the bottom); what moved here is the subtotal,
+ * from under the metatask line to directly under the rule, and the tally's copy,
+ * from a sentence to the bare label the rest of the plate uses.
+ *
  * Every raw number below is ornament: the plate's own insets and leads, and
  * display type sized to the drawing rather than to the text scale (§4a).
  */
@@ -86,7 +93,7 @@ function MultChip({ children }: { children: ReactNode }) {
 export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   return (
@@ -170,28 +177,23 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             </div>
           )}
 
-          {meta !== null && (
-            <div
-              style={{
-                ...workingStyle,
-                color: "var(--leaf-score-stamp-accent)",
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
-                marginTop: 3,
-              }}
-            >
-              + {meta} {t("card.stamp.meta")}
-            </div>
-          )}
-
           {/*
-           * The subtotal, drawn under a hairline. It exists only when a
-           * metatask AND a multiplier are both live — the design's "full formula"
-           * column — because without a multiplier `(base + meta)` explains
-           * nothing and the plate reads as a form with a hole in it. Either of
-           * those keeps the base row alive too (#1131), so the `base !== null`
-           * clause is the compiler's proof, not a fourth state.
+           * THE SUBTOTAL, DRAWN UNDER THE PLATE'S HAIRLINE — the multiplier's
+           * result, directly beneath the chip that is its operation (#2634).
+           *
+           * IT MOVED, TWICE OVER. It used to sit BELOW the metatask line and
+           * read `base + meta`, gated on `meta !== null && mult !== null`. Both
+           * halves were wrong once #2633 took the metatask out of the
+           * multiplier: what a multiplier applies to is the base alone, so the
+           * figure is `subtotal` off the resolver and the gate is `mult` alone.
+           * The plate now has exactly one line above its rule, which is the
+           * shape the owner's ruling asks of all nine.
+           *
+           * `formatPoints`, not the bare number: `12 × 0.8` is
+           * `9.600000000000001` in doubles, and this figure rounds like the
+           * total in the ensō below rather than by a private `toFixed` (#1866).
            */}
-          {meta !== null && mult !== null && base !== null && (
+          {subtotal !== null && (
             <div
               style={{
                 display: "flex",
@@ -215,8 +217,23 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                   color: "var(--leaf-score-stamp-ink)",
                 }}
               >
-                {base + meta}
+                {formatPoints(subtotal)}
               </span>
+            </div>
+          )}
+
+          {/* The metatask award, added after the multiplier has been applied —
+              `base × mult + meta + votes + habit` (#2633). */}
+          {meta !== null && (
+            <div
+              style={{
+                ...workingStyle,
+                color: "var(--leaf-score-stamp-accent)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+                marginTop: 3,
+              }}
+            >
+              + {meta} {t("card.stamp.meta")}
             </div>
           )}
 
@@ -225,6 +242,12 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
            * design drew all along, and the deviation UA declared against it is
            * withdrawn. Inside the plate the base row is always above this one, so
            * the lead between working LINES is unconditional here.
+           *
+           * THE PROSE IS GONE (#2634). It read `card.stamp.fromVotes`, "+ 4 from
+           * votes", while the habit line two rows down set the bare
+           * `card.stamp.habit` — one plate, two copy registers. Both flat terms
+           * now take the bare label, in the `+ N word` shape the metatask line
+           * beside them already used, and the sentence key is deleted.
            */}
           {votes !== null && (
             <div
@@ -234,7 +257,7 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
                 marginTop: 3,
               }}
             >
-              {t("card.stamp.fromVotes", { votes })}
+              + {votes} {t("card.stamp.votes")}
             </div>
           )}
 

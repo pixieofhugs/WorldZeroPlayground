@@ -69,7 +69,18 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
 /** Strip tags so a copy assertion cannot be satisfied by an attribute value. */
 const text = (html: string) => html.replace(/<[^>]*>/g, ' ')
 
-const label = (key: string) => i18n.t(`praxis:card.stamp.${key}`)
+/**
+ * The five shared row labels, read from the catalog rather than typed out —
+ * `i18n`'s key type is generated from the JSON, so a renamed or deleted key
+ * fails `tsc` here rather than turning an assertion vacuous.
+ */
+const LABEL = {
+  base: i18n.t('praxis:card.stamp.base'),
+  subtotal: i18n.t('praxis:card.stamp.subtotal'),
+  meta: i18n.t('praxis:card.stamp.meta'),
+  votes: i18n.t('praxis:card.stamp.votes'),
+  habit: i18n.t('praxis:card.stamp.habit'),
+}
 
 /* ========================================================================== *
  * THE SHARED HALF
@@ -221,14 +232,14 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         expect(index, `${name} prints ${JSON.stringify(needle)}`).toBeGreaterThan(-1)
         return index
       }
-      const sequence = [
-        ['base', at(label('base'))],
+      const sequence: [string, number][] = [
+        ['base', at(LABEL.base)],
         ['× chip', at('×0.80')],
-        ['subtotal', at(label('subtotal'))],
-        ['meta', at(label('meta'))],
-        ['votes', at(label('votes'))],
-        ['habit', at(label('habit'))],
-      ] as const
+        ['subtotal', at(LABEL.subtotal)],
+        ['meta', at(LABEL.meta)],
+        ['votes', at(LABEL.votes)],
+        ['habit', at(LABEL.habit)],
+      ]
       // Positions are read off the TEXT, never the markup:
       // `--faction-coven-slip-row-base` and `-row-votes` are style-attribute
       // tokens a markup `indexOf` would find long before the row itself.
@@ -247,10 +258,10 @@ describe('every skin prints the working in ONE order (#2634)', () => {
       const markup = renderToStaticMarkup(render(EVERYTHING))
       const flat = text(markup)
       const lastLabel = Math.max(
-        flat.indexOf(label('base')),
-        flat.indexOf(label('meta')),
-        flat.indexOf(label('votes')),
-        flat.indexOf(label('habit')),
+        flat.indexOf(LABEL.base),
+        flat.indexOf(LABEL.meta),
+        flat.indexOf(LABEL.votes),
+        flat.indexOf(LABEL.habit),
       )
       // Compare on TEXT positions: the mark's own caption is the last words the
       // stamp prints, which is what "the total sits at the bottom" means to a
@@ -275,9 +286,9 @@ describe('every skin prints the working in ONE order (#2634)', () => {
           ),
         ),
       )
-      expect(flat, `${name} keeps its working`).toContain(label('base'))
+      expect(flat, `${name} keeps its working`).toContain(LABEL.base)
       expect(flat, `${name} draws no chip`).not.toContain('×')
-      expect(flat, `${name} draws no subtotal`).not.toContain(label('subtotal'))
+      expect(flat, `${name} draws no subtotal`).not.toContain(LABEL.subtotal)
     })
 
     it(`${name} prints the subtotal on a duel praxis with no metatask`, () => {
@@ -289,7 +300,7 @@ describe('every skin prints the working in ONE order (#2634)', () => {
           render(praxis({ display_multiplier: 0.8, metatask_points: 0, score: 9.6 })),
         ),
       )
-      expect(flat).toContain(label('subtotal'))
+      expect(flat).toContain(LABEL.subtotal)
       expect(flat).toContain('9.6')
       expect(flat, 'the float artifact never reaches the plate').not.toContain('9.600000')
     })
@@ -313,8 +324,8 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
   for (const { name, render } of SKINS) {
     it(`${name} labels the two flat terms in the bare register`, () => {
       const flat = text(renderToStaticMarkup(render(EVERYTHING)))
-      expect(flat).toContain(label('votes'))
-      expect(flat).toContain(label('habit'))
+      expect(flat).toContain(LABEL.votes)
+      expect(flat).toContain(LABEL.habit)
       expect(flat, 'no prose survivor').not.toContain('from votes')
       expect(flat, 'no prose survivor').not.toContain('habit bonus')
       expect(flat, 'and no untranslated key').not.toContain('card.stamp.')

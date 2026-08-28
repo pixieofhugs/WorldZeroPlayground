@@ -51,11 +51,17 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * (ADR-0047) — base included, which drops out when it would only repeat the
  * total under the rule (#1131). Everything else is the chronicle: MedievalSharp figures, Lora
  * italic for the working, the plum chip, the gold rule.
+ *
+ * SO DOES THE ORDER, SINCE #2634: base + chip, a gold hairline, the subtotal,
+ * then `+ meta`, `+ votes`, `+ habit`, then the gold→plum bar and the bottom
+ * line. WOW already drew the chip on the base line and already set its total
+ * last; what it gained is the subtotal, and what it gave up is the one prose
+ * line it was entering among three labelled ones.
  */
 export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** The working's voice: Lora italic, the chronicle's quiet secondary face. */
@@ -150,6 +156,48 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         </div>
       )}
 
+      {/* THE SCRIBE'S RULE AND THE SUBTOTAL (#2634) — a plain gold hairline
+          ruling the base off from what the multiplier made of it, gated on
+          `subtotal !== null`, which is the multiplier ALONE.
+
+          IT IS NOT THE GOLD→PLUM GRADIENT below and must not become one. That
+          bar is the chronicle's SEPARATING rule between the whole working and
+          the bottom line (ADR-0076), and one leaf carrying two of the same
+          drawing would say the working ends twice. A flat gold hairline is the
+          quieter of the two, which is the relation the arithmetic wants.
+
+          `formatPoints` for the figure, as for the bottom line: `12 × 0.8` is
+          `9.600000000000001` in doubles (#1866). */}
+      {subtotal !== null && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            borderTop: "1px solid var(--faction-wow-chronicle-gold)",
+            marginTop: "var(--space-xs)",
+            paddingTop: "var(--space-xs)",
+          }}
+        >
+          <span style={{ ...workingStyle, marginTop: undefined }}>
+            {t("card.stamp.subtotal")}
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--wow-score-stamp-face)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the subtotal numeral, one step under the base's 25 (§4a)
+              fontSize: 20,
+              lineHeight: 0.8,
+              color: "var(--wow-score-stamp-ink)",
+            }}
+          >
+            {formatPoints(subtotal)}
+          </span>
+        </div>
+      )}
+
+      {/* The metatask award, entered after the multiplier has been applied —
+          `base × mult + meta + votes + habit` (#2633). */}
       {meta !== null && (
         <div style={workingStyle}>
           {t("card.stamp.meta")} +{meta}
@@ -158,7 +206,12 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
 
       {/* The tally, when there are votes to enter (ADR-0076). Its lead belongs to
           the line above, so it goes when the base entry does (#1131) and the leaf
-          keeps its own inset. */}
+          keeps its own inset.
+
+          IT IS ENTERED IN THE LEAF'S OWN REGISTER SINCE #2634. It read the
+          sentence `card.stamp.fromVotes` — "+ 4 from votes" — while the entries
+          above and below it read `label +N`; one leaf, two registers. The
+          sentence key is deleted and the bare label stands. */}
       {votes !== null && (
         <div
           style={{
@@ -166,7 +219,7 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
             marginTop: base !== null ? workingStyle.marginTop : undefined,
           }}
         >
-          {t("card.stamp.fromVotes", { votes })}
+          {t("card.stamp.votes")} +{votes}
         </div>
       )}
 
