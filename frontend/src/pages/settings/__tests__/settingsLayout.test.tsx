@@ -20,7 +20,8 @@
  *          changes without the viewport moving — so the shape is chosen by an
  *          `@container` query in the sheet, not by `useFormFactor` and not by
  *          an inline style (an inline `grid-template-columns` beats every rule
- *          that could yield it).
+ *          that could yield it). The threshold and the description's floor are
+ *          an owner ruling on #2835; the last two tests pin both numbers.
  */
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -93,5 +94,35 @@ describe('the storage inventory picks its shape from the pane (#2824)', () => {
     const base = /\.settings-inventory-row\s*\{([^}]*)\}/.exec(CSS)?.[1] ?? ''
     expect(base).not.toMatch(/grid-template-columns/)
     expect(base).toMatch(/display:\s*grid/)
+  })
+
+  /**
+   * The two numbers the owner ruled on (#2835), pinned because neither is
+   * re-derivable from the rule alone.
+   *
+   * 476px is the ~500px PANE floor — key 224 + value 118 + 24 of gaps + 24 of
+   * well padding + a 110px description — minus the well's own padding: a size
+   * query measures the container's CONTENT box, and `.settings-inventory`
+   * carries that padding itself. 500 here would demand 24px the row never had
+   * and hold the table back a step past where it fits.
+   */
+  it('switches at the content-box equivalent of the pane floor', () => {
+    expect(CSS).toMatch(/@container settings-inventory \(min-width: 476px\)/)
+  })
+
+  /**
+   * And the description's floor is HARD. `minmax(0, 1fr)` between two intrinsic
+   * maxima is what resolved to 0px in the first place, so a fixed min is what
+   * makes the failure impossible above the threshold rather than unlikely. The
+   * `ch` maxima went with it: both were guesses measured against the ROW's body
+   * font, while the key they were sizing renders in mono.
+   */
+  it('floors the description and declares no ch maximum', () => {
+    const table =
+      /@container settings-inventory[^{]*\{\s*\.settings-inventory-row\s*\{([^}]*)\}/.exec(
+        CSS,
+      )?.[1] ?? ''
+    expect(table).toMatch(/grid-template-columns:\s*auto minmax\(110px, 1fr\) auto/)
+    expect(table).not.toMatch(/\dch/)
   })
 })
