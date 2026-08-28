@@ -162,6 +162,53 @@ function registerTokens(): Set<string> {
   return props;
 }
 
+/** One import statement: the module it reads, and the names taken from it. */
+interface TileImport {
+  from: string;
+  names: string[];
+}
+
+/**
+ * The tile's imports, read per BINDING. A default or namespace clause yields its
+ * own single name (`i18n`, `* as factions`), so neither can wear a named
+ * import's clothes to slip past the allowlist below.
+ */
+function importsOf(source: string): TileImport[] {
+  return [...source.matchAll(/^import (?:type )?(.*?) from "([^"]+)";$/gm)].map((match) => ({
+    from: match[2],
+    names: match[1]
+      .replace(/^\{|\}$/g, " ")
+      .split(",")
+      .map((name) => name.replace(/^type /, "").trim())
+      .filter(Boolean),
+  }));
+}
+
+/**
+ * Rider 2's pin. A bare string admits the module wholesale; an entry carrying
+ * `bindings` admits ONLY those names from it (#2841) — because a module's string
+ * helpers and its paint helpers sit side by side, so a path-grained allowlist
+ * admitted every export of a file the moment one safe name was taken from it.
+ */
+const ALLOWED_IMPORTS: readonly (string | { from: string; bindings: readonly string[] })[] = [
+  "../../i18n",
+  // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
+  // one declares by interpolation to every scan (#2674).
+  "../../utils/factionRoles",
+  // Resolved, not waived, and pinned to the BINDING: `redactableText` reads the
+  // copy catalog through the Albescent gate (#2806). It returns a STRING and
+  // names no token. The module's paint helpers — `factionFill`, `factionCssVar`,
+  // `factionSpectrumSheet` — are NOT admitted alongside it, which is the whole
+  // reason this entry names the binding rather than the path (#2841).
+  { from: "../../utils/factions", bindings: ["redactableText"] },
+  "../sigil/WowSigil",
+  // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
+  // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
+  // call is still pinned to a face and a size, one module further along.
+  "../taskCard/cardCta",
+  "./FactionSelectCard",
+];
+
 describe("the WOW tile wears the quest decree's register (#2328)", () => {
   it("names no TOKEN its own task card does not", () => {
     const register = registerTokens();
@@ -210,25 +257,35 @@ answer — not by widening this test.`,
     // in the broken state AND the fixed one. This tile spells its names inline,
     // which is what makes the text scan above the transitive answer; pin the
     // import list so that stays true rather than merely being true today.
-    const imports = [...code(TILE).matchAll(/^import .*?from "([^"]+)";$/gm)].map((m) => m[1]);
-    expect(imports.sort(), "a new import here needs `propsBehind` resolving it, the way #2325 resolves `covenSlip`").toEqual([
-      "../../i18n",
-      // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
-      // one declares by interpolation to every scan (#2674).
-      "../../utils/factionRoles",
-      // Resolved, not waived: the only binding taken from here is
-      // `redactableText`, which reads the copy catalog through the Albescent
-      // gate (#2806). It returns a STRING and names no token — the module's
-      // paint helpers (`factionFill`, `factionCssVar`, `factionSpectrumSheet`)
-      // are not imported, so nothing colour-bearing arrives with it.
-      "../../utils/factions",
-      "../sigil/WowSigil",
-      // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
-      // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
-      // call is still pinned to a face and a size, one module further along.
-      "../taskCard/cardCta",
-      "./FactionSelectCard",
-    ]);
+    // Asked per BINDING since #2841: `utils/factions` exports paint helpers
+    // beside the one string helper this tile takes, so a path-grained answer
+    // admitted `factionFill` the moment `redactableText` was let in.
+    const source = code(TILE);
+    const imports = importsOf(source);
+
+    expect(
+      imports.length,
+      "an import split over several lines would slip this scan entirely",
+    ).toBe((source.match(/^import /gm) ?? []).length);
+
+    expect(
+      imports.map((entry) => entry.from).sort(),
+      "a new import here needs `propsBehind` resolving it, the way #2325 resolves `covenSlip`",
+    ).toEqual(
+      ALLOWED_IMPORTS.map((entry) => (typeof entry === "string" ? entry : entry.from)).sort(),
+    );
+
+    for (const entry of ALLOWED_IMPORTS) {
+      if (typeof entry === "string") continue;
+      const taken = imports.filter((i) => i.from === entry.from).flatMap((i) => i.names);
+      expect(
+        taken.filter((name) => !entry.bindings.includes(name)),
+        `\`${entry.from}\` is admitted for { ${entry.bindings.join(", ")} } and nothing
+else: each of those names is resolved above, and every other export of that module
+is unresolved paint as far as this sweep is concerned. Widen the binding set only
+with the same proof the listed ones carry — never because the path is on the list.`,
+      ).toEqual([]);
+    }
   });
 
   it("badges itself with the canonical crest, never a re-drawn one", () => {
