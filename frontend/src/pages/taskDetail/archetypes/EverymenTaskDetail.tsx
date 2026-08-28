@@ -16,6 +16,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { EVERYMEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -466,9 +467,16 @@ export default function EverymenTaskDetail({
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryBar}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `EverymenTaskCard` and by this
+              page, with `size` carrying the only difference between them.
+              `primaryBar` stays for the two exits below. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={EVERYMEN_CARD_CTA}
+          >
             {cta.label}
           </CardCtaControl>
           <div

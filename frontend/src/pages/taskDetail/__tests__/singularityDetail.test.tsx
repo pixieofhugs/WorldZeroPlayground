@@ -31,7 +31,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import SingularityTaskDetail from "../archetypes/SingularityTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
-import { aTask } from '../../../test/fixtures'
+import { aPraxisCard, aTask } from '../../../test/fixtures'
 
 const TASK = aTask({
   id: 208,
@@ -118,7 +118,19 @@ describe("Singularity task detail — the terminal dress", () => {
     const { html } = render(<SingularityTaskDetail state={baseState()} />);
     expect(html).toContain("var(--faction-singularity-term-halo-green)");
     expect(html).toContain("var(--faction-singularity-term-halo-blue)");
-    expect(html).toContain("var(--faction-singularity-term-cta-glow)");
+    // `-term-cta-glow` moved with its control (#2642). The SIGN-UP now wears
+    // the task card's paint, which is this same lit key without the bloom, so
+    // the glow is drawn on the state that still spends `primaryButton` — the
+    // way back to a filed praxis. (Not the DRAFT's "continue", which stills the
+    // shadow to `none` on purpose.) It is asserted rather than dropped because
+    // the token is `none` in light and a real shadow in dark: exactly the kind
+    // of value a ternary would come back as.
+    const { html: filed } = render(
+      <SingularityTaskDetail
+        state={baseState({ mySubmission: aPraxisCard({ id: 91 }), canSignUp: false })}
+      />,
+    );
+    expect(filed).toContain("var(--faction-singularity-term-cta-glow)");
   });
 
   // The window bar used to slug the task's id in hex (`0x0D0` for 208) as a

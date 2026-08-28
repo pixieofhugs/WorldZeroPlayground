@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import { SingularityBand } from "../cardMasthead/factionBands";
-import { CARD_CTA } from "./cardCta";
+import { SINGULARITY_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -288,23 +288,10 @@ export default function SingularityTaskCard({
                 marginTop: "var(--space-lg)",
               }}
             >
-              <CardCtaControl
-                cta={cta}
-                style={{
-                  ...CARD_CTA,
-                  gridColumn: 2,
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  whiteSpace: "nowrap",
-                  fontFamily: MONO,
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.02em",
-                  padding: "var(--space-sm) var(--space-xl)",
-                  borderRadius: 5,
-                  color: "var(--faction-singularity-term-cta-ink)",
-                  background: "var(--faction-singularity-term-cta-bg)",
-                  border: `1.5px solid ${BRIGHT}`,
-                }}
-              >
+              {/* ONE PAINT, TWO SURFACES (#2642) — `SingularityTaskDetail`
+                  spreads this same constant, and nothing may be added at either
+                  site. */}
+              <CardCtaControl cta={cta} style={SINGULARITY_CARD_CTA}>
                 {cta.label}
                 {/* The block cursor trailing the prompt. `.sg-cursor` carries the
                     reduced-motion-guarded blink; stilled it stays drawn, because

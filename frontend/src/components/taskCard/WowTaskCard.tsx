@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { WowBand } from "../cardMasthead/factionBands";
-import { CARD_CTA } from "./cardCta";
+import { WOW_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -373,22 +373,9 @@ export default function WowTaskCard({
                   infinite animations. The googly eyes still wiggle, on the
                   faction's reduced-motion-gated `.wow-balloon-eye`. */}
               <BalloonBunch size={KNIGHT} bob={false} style={{ transform: "rotate(-6deg)" }} />
-              <CardCtaControl
-                cta={cta}
-                style={{
-                  ...CARD_CTA,
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  fontFamily: MED,
-                  fontSize: "var(--text-content)",
-                  letterSpacing: "0.04em",
-                  whiteSpace: "nowrap",
-                  padding: "var(--space-sm) var(--space-xl)",
-                  borderRadius: 7,
-                  color: "var(--faction-wow-on-plum)",
-                  background: PLUM_SURFACE,
-                  border: `2px solid ${PLUM_SURFACE}`,
-                }}
-              >
+              {/* ONE PAINT, TWO SURFACES (#2642) — `WowTaskDetail` spreads this
+                  same constant, and nothing may be added at either site. */}
+              <CardCtaControl cta={cta} style={WOW_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>
               {/* The second knight, mirrored so the pair faces the call. */}

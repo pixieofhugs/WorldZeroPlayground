@@ -50,7 +50,21 @@ function registerSource(): string {
     code("../../taskCard/SnideTaskCard.tsx"),
     code("../../factionMarks/snideAtoms.tsx"),
     bands.slice(at, bands.indexOf("\n}", at)),
+    // The sprayed stencil, which stopped being spelt in the card in #2642: one
+    // CTA constant per faction, spread by the card AND by the task detail so
+    // the two can no longer drift. Same reach as the band above — the card AS
+    // RENDERED — and `cardCta.ts` holds all nine, so only this one's body
+    // counts.
+    ctaSource("SNIDE_CARD_CTA"),
   ].join("\n");
+}
+
+/** One faction's CTA constant, sliced out of the module that holds all eight. */
+function ctaSource(name: string): string {
+  const module = code("../../taskCard/cardCta.ts");
+  const at = module.indexOf(`export const ${name}`);
+  expect(at, `no \`${name}\` in taskCard/cardCta.ts`).toBeGreaterThan(-1);
+  return module.slice(at, module.indexOf("\n};", at));
 }
 
 /** Every custom property named in a source, in document order, deduplicated. */

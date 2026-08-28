@@ -25,6 +25,7 @@ import {
   Tally,
 } from "../../../components/factionMarks/ephemeristsPlate";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { EPHEMERISTS_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -647,15 +648,21 @@ export default function EphemeristsTaskDetail({
               praxis" below wear the same `primaryButton` paint but are exits
               from a task already taken, not the summons. */}
           <EphemeristsNotationBand side="top" seed={`task:${task.id}`} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread
-              last. `.eph-cta` is the class this faction already shares across
-              three surfaces (#2146), and it still arrives as `className`. */}
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `EphemeristsTaskCard` and by
+              this page, with `size` carrying the only difference between them.
+              `.eph-cta` is the class this faction already shares across three
+              surfaces (#2146) and it still arrives as `className` — it is what
+              the constant deliberately leaves out, because the enclosure changes
+              WIDTH between the cascades and no inline style has a cascade to
+              change in. `primaryButton` stays for the two exits below, which
+              wear the same class and are not this slot. */}
           <CardCtaControl
             cta={cta}
             testId="task-signup-cta"
             className="eph-cta"
-            style={{ ...primaryButton, margin: "var(--space-md) auto" }}
+            size="detail"
+            style={EPHEMERISTS_CARD_CTA}
           >
             <Sign name="platinum" size={15} color={CTA_INK} weight={1.3} />
             <span style={{ whiteSpace: "nowrap" }}>{cta.label}</span>

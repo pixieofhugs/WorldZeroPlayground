@@ -16,6 +16,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { SNIDE_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -271,38 +272,43 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     boxSizing: "border-box",
   };
   /**
-   * The skewed, hard-shadowed call to action. `done` inverts it — near-black
-   * plate, acid rule, pink shadow — so "continue" never looks like "sign up".
+   * The skewed, hard-shadowed EXIT — "continue", "view your praxis". Near-black
+   * plate, acid rule, pink shadow, so it never looks like "sign up".
    *
-   * The done shadow takes the INVARIANT pink now (#2066): it is a drawn block
-   * that falls on the slab, and the slab does not flip, so the walked
-   * `-note-pink-ink` it used to wear would have been the one value on this sheet
-   * that changed character between themes. The `done` FILL is deliberately left
-   * as printed photocopier black, which is `-card-bg`'s own light value — see
-   * the note on the base chip in `worth`.
+   * It used to take a `done` flag and paint the sign-up too, in its own
+   * `-note-cta-*` pair. #2642 gave the sign-up the card's paint, so the false
+   * arm had no caller left and went with it; what remains is the inversion,
+   * which was always the only reason for the flag.
+   *
+   * The shadow takes the INVARIANT pink (#2066): it is a drawn block that falls
+   * on the slab, and the slab does not flip, so the walked `-note-pink-ink` it
+   * used to wear would have been the one value on this sheet that changed
+   * character between themes. The FILL is deliberately left as printed
+   * photocopier black, which is `-card-bg`'s own light value — see the note on
+   * the base chip in `worth`.
    */
-  const plateButton = (done: boolean): CSSProperties => ({
+  const plateButton: CSSProperties = {
     position: "relative",
     boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",
     textDecoration: "none",
-    background: done ? HARD : "var(--faction-snide-note-cta-bg)",
-    color: done ? "var(--faction-snide-acid)" : "var(--faction-snide-note-cta-ink)",
+    background: HARD,
+    color: "var(--faction-snide-acid)",
     fontFamily: IMPACT,
     fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
     letterSpacing: "0.2em",
     textTransform: "uppercase",
-    border: `3px solid ${done ? "var(--faction-snide-acid)" : HARD}`,
+    border: "3px solid var(--faction-snide-acid)",
     padding: desktop ? "var(--space-lg) var(--space-xl)" : "var(--space-md)",
-    boxShadow: `7px 7px 0 ${done ? PINK : HARD}`,
+    boxShadow: `7px 7px 0 ${PINK}`,
     transform: "skewX(-4deg) rotate(-0.8deg)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "var(--space-sm)",
-  });
+  };
   /** The label rides back out of the button's skew so it stays readable. */
   const plateLabel: CSSProperties = { transform: "skewX(4deg)" };
 
@@ -374,11 +380,21 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={plateButton(false)}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `SnideTaskCard` and by this
+              page, with `size` carrying the only difference between them.
+              NO `plateLabel` HERE ANY MORE: that span exists to ride back out of
+              `plateButton`'s `skewX(-4deg)`, and the card's stencil is rotated
+              rather than skewed — counter-skewing a label that is not skewed is
+              how a shared paint drifts back apart one span at a time. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={SNIDE_CARD_CTA}
+          >
             <XMark size={17} />
-            <span style={plateLabel}>{cta.label}</span>
+            <span>{cta.label}</span>
             <XMark size={17} />
           </CardCtaControl>
           <div
@@ -424,7 +440,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               submitted praxis straight back to `/praxis/:id` (#1164) — so this
               button used to change nothing at all. Reopening for editing lives
               on the praxis page, one honest hop away. */}
-          <Link to={`/praxis/${mySubmission.id}`} style={plateButton(true)}>
+          <Link to={`/praxis/${mySubmission.id}`} style={plateButton}>
             <XMark size={17} />
             <span style={plateLabel}>{t("detail.submitted.view")}</span>
             <XMark size={17} />
@@ -448,7 +464,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.text")}
           </div>
-          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={plateButton(true)}>
+          <Link to={`/praxis/${inProgressPraxisId}/edit`} style={plateButton}>
             <XMark size={17} />
             <span style={plateLabel}>{t("detail.inProgress.continue")}</span>
             <XMark size={17} />

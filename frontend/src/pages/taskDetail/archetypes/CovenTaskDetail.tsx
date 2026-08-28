@@ -17,6 +17,7 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import { COVEN_CARD_CTA } from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
@@ -283,9 +284,17 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={pinkButton}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `CovenTaskCard` and by this
+              page, with `size` carrying the only difference between them.
+              `pinkButton` stays: `goldButton`, the "you already hold this"
+              band, is composed from it. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={COVEN_CARD_CTA}
+          >
             {cta.label}
           </CardCtaControl>
           <div

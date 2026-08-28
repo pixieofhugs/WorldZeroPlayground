@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { CTA_DETAIL_SIZE } from "./cardCta";
 import type { TaskCardSignupCta } from "./signupAffordance";
 
 /**
@@ -38,27 +39,48 @@ import type { TaskCardSignupCta } from "./signupAffordance";
  * element rather than a wrapper for the same reason the handle exists: the
  * element is what gets clicked, and in the `href` branch it is an `<a>`. Cards
  * pass nothing and render nothing extra.
+ *
+ * ONE THING THE SKIN NO LONGER HANDS IN, AND ONE IT NOW ASKS FOR (#2642).
+ *
+ * `cursor` moved here because it is affordance rather than paint: it is a pure
+ * function of `cta.denied`, all eight cards wrote the same ternary, and the
+ * eight DETAILS wrote a flat `cursor: pointer` that lied on a refusal. It is
+ * spread FIRST, so a skin that genuinely needs another cursor can still say so.
+ *
+ * `size` is the one difference between a card's CTA and a detail's that survived
+ * #2642 — the same paint, in a narrow column or standing alone in a panel. It
+ * arrives as a geometry-only token (`CTA_DETAIL_SIZE`) rather than as a second
+ * style object, because a second style object is exactly how the pair drifted
+ * apart in the first place. It is spread LAST, after the skin's paint, and that
+ * is the one deliberate inversion of the rule above: a card's narrow-column
+ * `padding` must not survive into a panel, and nothing in that token is a
+ * colour.
  */
 export function CardCtaControl({
   cta,
   className,
+  size = "card",
   style,
   testId,
   children,
 }: {
   cta: TaskCardSignupCta;
   className?: string;
+  /** Which surface is mounting it. Geometry only — never paint. */
+  size?: "card" | "detail";
   style?: CSSProperties;
   testId?: string;
   children: ReactNode;
 }) {
+  const cursor = { cursor: cta.denied ? "not-allowed" : "pointer" } as const;
+  const sized = size === "detail" ? CTA_DETAIL_SIZE : null;
   if (cta.href) {
     return (
       <Link
         to={cta.href}
         className={className}
         data-testid={testId}
-        style={{ textDecoration: "none", ...style }}
+        style={{ textDecoration: "none", ...cursor, ...style, ...sized }}
       >
         {children}
       </Link>
@@ -71,7 +93,7 @@ export function CardCtaControl({
       data-testid={testId}
       onClick={cta.onPress}
       aria-disabled={cta.denied || undefined}
-      style={style}
+      style={{ ...cursor, ...style, ...sized }}
     >
       {children}
     </button>

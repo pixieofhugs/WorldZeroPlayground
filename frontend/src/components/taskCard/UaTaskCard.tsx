@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "./TaskCard";
 import { UaBand } from "../cardMasthead/factionBands";
-import { CARD_CTA } from "./cardCta";
+import { UA_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import i18n from "../../i18n";
@@ -344,23 +344,9 @@ export default function UaTaskCard({
                   in-flow items, the control in the middle — see UaCtaFlank. */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-md)" }}>
               <UaCtaFlank side="start" size={size.flank} />
-              <CardCtaControl
-                cta={cta}
-                style={{
-                  ...CARD_CTA,
-                  cursor: cta.denied ? "not-allowed" : "pointer",
-                  fontFamily: UA_DISPLAY,
-                  fontWeight: 600,
-                  fontSize: "var(--text-content)",
-                  letterSpacing: "0.02em",
-                  whiteSpace: "nowrap",
-                  padding: "var(--space-sm) var(--space-xl)",
-                  borderRadius: 5,
-                  color: "var(--faction-ua-card-chip-ink)",
-                  background: "var(--faction-ua-card-chip-bg)",
-                  border: "1.5px solid var(--faction-ua-card-frame)",
-                }}
-              >
+              {/* ONE PAINT, TWO SURFACES (#2642) — `UaTaskDetail` spreads this
+                  same constant, and nothing may be added at either site. */}
+              <CardCtaControl cta={cta} style={UA_CARD_CTA}>
                 {cta.label}
               </CardCtaControl>
               <UaCtaFlank side="end" size={size.flank} />

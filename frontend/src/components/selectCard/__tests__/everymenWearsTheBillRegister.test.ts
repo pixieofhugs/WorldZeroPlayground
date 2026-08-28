@@ -61,6 +61,14 @@ const code = (relative: string): string => stripComments(read(relative));
 const TILE = "../EverymenSelectCard.tsx";
 const TASK_CARD = "../../taskCard/EverymenTaskCard.tsx";
 const BANDS = "../../cardMasthead/factionBands.tsx";
+/**
+ * The card's sign-up paint, which stopped being spelt in the card in #2642: one
+ * constant per faction, spread by the card AND by the task detail, so the two
+ * can no longer drift. It is the same reach the band already needed — the card
+ * AS RENDERED, not the one file — and `cardCta.ts` holds all nine, so only
+ * `EVERYMEN_CARD_CTA`'s own binding counts.
+ */
+const CARD_CTA = "../../taskCard/cardCta.ts";
 
 /** Every top-level binding in a module, mapped to its own declaration text. */
 function declarations(source: string): Map<string, string> {
@@ -122,6 +130,13 @@ function registerTokens(): Set<string> {
   ).toContain("EverymenBand");
   const props = propsIn(code(TASK_CARD));
   for (const prop of propsBehind(bandDecls, ["EverymenBand"])) {
+    if (isFactionPaint(prop)) props.add(prop);
+  }
+  const ctaDecls = declarations(code(CARD_CTA));
+  expect([...ctaDecls.keys()], "no `EVERYMEN_CARD_CTA` in taskCard/cardCta.ts").toContain(
+    "EVERYMEN_CARD_CTA",
+  );
+  for (const prop of propsBehind(ctaDecls, ["EVERYMEN_CARD_CTA"])) {
     if (isFactionPaint(prop)) props.add(prop);
   }
   return props;

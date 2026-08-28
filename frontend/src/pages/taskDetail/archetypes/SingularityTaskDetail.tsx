@@ -17,6 +17,10 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
+import {
+  SINGULARITY_CARD_CTA,
+  SINGULARITY_DETAIL_GLOW,
+} from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
@@ -495,9 +499,16 @@ export default function SingularityTaskDetail({
       {cta && (
         <div>
           <LevelJumpBanner state={state} />
-          {/* The CARDS' control, mounted (#2554) — element and affordance from
-              `CardCtaControl`, paint and geometry still this skin's, spread last. */}
-          <CardCtaControl cta={cta} testId="task-signup-cta" style={primaryButton}>
+          {/* The CARDS' control, mounted (#2554) — and since #2642 the cards'
+              PAINT too: one constant, spread by `SingularityTaskCard` and by
+              this page, with `size` carrying the only difference between them.
+              `primaryButton` stays for the two exits below. */}
+          <CardCtaControl
+            cta={cta}
+            testId="task-signup-cta"
+            size="detail"
+            style={{ ...SINGULARITY_CARD_CTA, ...SINGULARITY_DETAIL_GLOW }}
+          >
             {prompt}
             {cta.label}
             <Cursor />
