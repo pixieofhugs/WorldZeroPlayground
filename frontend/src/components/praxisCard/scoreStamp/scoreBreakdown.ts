@@ -11,6 +11,23 @@
  * ADR-0053 made this the ONLY place the breakdown is resolved. A praxis has one
  * number, `score`, and carries the terms behind it; nothing anywhere derives
  * vote-points or a multiplier by subtraction (the old Merit assumption).
+ *
+ * #2634 WIDENED THE CONTRACT FROM SELECTION TO ORDER. Selection alone left nine
+ * skins free to invent three row orders, three different subtotals and two copy
+ * registers for the same five terms. The canonical stamp is now:
+ *
+ *     base × mult      the multiplier is a CHIP on the base line, in all nine
+ *     ──────────       the subtotal rule
+ *       subtotal       base × mult
+ *     + meta
+ *     + votes
+ *     + habit
+ *     ━━━━━━━━━━       the SEPARATING rule (ADR-0076), gated on `base !== null`
+ *     [total mark]     the faction's own device, last on every skin
+ *
+ * The drawing of each of those is still the faction's — a dashed keepsake rule,
+ * a typewriter perforation, a gold hairline, a brass one — which is the #1911
+ * precedent: unify the contract, not the components.
  */
 
 /**
@@ -60,6 +77,31 @@ export interface ScoreBreakdown {
    * owner ruled that a score with no votes reads as the total alone.
    */
   votes: number | null;
+  /**
+   * `base × mult` — the multiplier's RESULT, and the one figure a stamp draws
+   * that is arithmetic rather than a term off the wire (#2634).
+   *
+   * It is null exactly when `mult` is: no multiplier, no chip, no rule, no
+   * subtotal. Under `era_1` that is every non-duel praxis, so most cards never
+   * draw it at all.
+   *
+   * IT LIVES HERE RATHER THAN IN NINE SKINS. Three of them used to compute a
+   * subtotal locally and all three computed `base + meta`, which was true under
+   * the OLD formula and stopped being true when #2633 moved the metatask out of
+   * the multiplier: the model is `base × faction × duel + meta + votes + habit`,
+   * so what the multiplier applies to is the base alone. `CovenScoreStamp`'s
+   * docblock argued the opposite case — "a subtotal of two figures
+   * `scoreBreakdown` already returns … which is why `ScoreBreakdown` gains no
+   * `subtotal` field" — and #2634 supersedes it. That reasoning held while the
+   * sum was a skin-local convenience; it does not survive nine copies having to
+   * agree about which terms an era's multiplier reaches. ADR-0049 is unamended
+   * either way: this is still the shared half deciding what a stamp may show.
+   *
+   * The FIGURE is not rounded here. `12 × 0.8` is `9.600000000000001` in
+   * doubles, so a skin prints it through `formatPoints` exactly like the total
+   * (#1866) rather than each inventing a `toFixed`.
+   */
+  subtotal: number | null;
   total: number;
 }
 
@@ -80,6 +122,10 @@ export interface ScoreBreakdown {
  *    declared exception until 2026-08-15 — ADR-0047 kept `+0` on the grounds
  *    that an absent row cannot say "nobody has voted yet" — and the owner ruled
  *    the other way: a score with no votes reads as the total alone.
+ *  - the SUBTOTAL row only when `mult !== null` (#2634). It is the multiplier's
+ *    result, so with no multiplier there is nothing to have applied and nothing
+ *    for a rule to part; gating it on anything else is how three skins ended up
+ *    drawing three different subtotals.
  *  - total through `formatPoints` at the render sites — one decimal only when
  *    the score has one (#1866)
  *
@@ -115,6 +161,13 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
     meta,
     habit,
     votes,
+    /*
+     * `rawBase`, not `base`, and that needs no null branch: `baseRestatesTotal`
+     * requires `mult === null`, so a live multiplier always keeps the base row
+     * — the two can never disagree. Reading the raw value is what says so to the
+     * compiler without a `?? 0` standing in for a state that cannot occur.
+     */
+    subtotal: mult !== null ? rawBase * mult : null,
     total,
   };
 }
