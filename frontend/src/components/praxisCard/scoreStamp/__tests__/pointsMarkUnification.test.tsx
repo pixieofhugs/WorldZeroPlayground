@@ -378,7 +378,7 @@ describe("each mount overrides what its ground demands (#2042)", () => {
    * step-down that also caught `22` would be a regression on the surface the
    * loop was drawn for.
    */
-  it("steps the figure down one rung at four glyphs and leaves shorter ones alone", () => {
+  it("steps the figure down one rung at four digits and leaves shorter ones alone", () => {
     // The census fixture's `modifiedPoints: 1080` — the widest figure the loop
     // has to hold, and the case the ruling was drawn at.
     expect(penCircle(snideDetail()), "1080 drops to the next rung down").toContain(
@@ -392,6 +392,32 @@ describe("each mount overrides what its ground demands (#2042)", () => {
     for (const mark of [penCircle(snideDetail()), banked]) {
       expect(mark, "the loop keeps one width across both surfaces").toContain("width:96px");
     }
+  });
+
+  /**
+   * THE DECIMAL, which is where "four glyphs" and "four digits" part company
+   * (owner, 2026-08-28, sharpening the #2638 ruling).
+   *
+   * `21.6` is four glyphs and three digits. `PenCircle`'s docblock has already
+   * measured this shape — at `--text-heading` a four-glyph `13.6` is ~47px
+   * against the loop's ~77px of inner span — so a glyph count would shrink a
+   * figure the atom documents as fitting, and leave the two contradicting each
+   * other.
+   *
+   * NOT A HYPOTHETICAL, AND NOT REACHABLE TODAY, WHICH IS EXACTLY WHY IT IS
+   * PINNED HERE. Era 1 sets every faction's `own_task_modifier` and
+   * `other_task_modifier` to 1.0, so `modifiedPoints` is integral and this case
+   * cannot be produced on the live site. Era 2 ships 1.2 and 0.8
+   * (`backend/eras/era_2.py`), so the flip is what makes it real — and a case a
+   * browser cannot currently reach is one only a test can defend.
+   */
+  it("keeps a four-glyph decimal at the headline rung — digits are what crowd", () => {
+    const decimal = penCircle(stamp(SnideScoreStamp, { ...PRAXIS, score: 21.6 } as PraxisCardOut));
+    expect(decimal, "21.6 renders as four glyphs").toContain(">21.6<");
+    expect(decimal, "…and keeps 32px, because it is three DIGITS").toContain(
+      "font-size:var(--text-heading)",
+    );
+    expect(decimal).not.toContain("font-size:var(--text-title)");
   });
 
   it("Singularity needs no ink override — the well carries its own ground", () => {
