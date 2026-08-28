@@ -2871,6 +2871,8 @@ export interface components {
             reads_the_array: boolean;
             /** Slug */
             slug: string;
+            /** Takes Duel Ties */
+            takes_duel_ties: boolean;
         };
         /** FactionOut */
         FactionOut: {

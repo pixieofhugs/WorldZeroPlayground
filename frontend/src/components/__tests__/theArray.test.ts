@@ -56,6 +56,7 @@ function makeFaction(slug: string, overrides: Record<string, unknown> = {}) {
     duel_win_modifier: 1.5,
     duel_loss_modifier: 0.5,
     reads_the_array: slug === 'singularity',
+    takes_duel_ties: false,
     ...overrides,
   }
 }

@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 
 import pytest
 
-from game_config import ERA_1, ERA_2
+from game_config import ERA_1, ERA_2, EraConfig
 from models.praxis import ModerationStatus
 from services.duel_outcome import duel_winner
 from services.scoring import (
@@ -18,8 +18,8 @@ from services.scoring import (
     compute_votes_available,
     exact,
     round_half_up,
-    snide_tie_winner_id,
-    snide_tie_winner_slug,
+    sole_tie_taker_id,
+    sole_tie_taker_slug,
 )
 
 
@@ -377,23 +377,76 @@ def test_duel_tie_both_snide():
     assert result == 1.0
 
 
-def test_snide_tie_winner_slug_sole_snide_wins():
-    assert snide_tie_winner_slug("snide", "wow") == "snide"
-    assert snide_tie_winner_slug("wow", "snide") == "snide"
+def _era_where_only(slug_with_the_perk: str) -> EraConfig:
+    """``ERA_1`` with ``takes_duel_ties`` held by exactly one named faction.
+
+    Inheritance is switched off across the board so the era states the perk
+    literally; ``takes_duel_ties`` is not an inherited axis (see
+    ``game_config._NON_INHERITED_PERK_FIELDS``), but flattening it here keeps
+    the fixture readable rather than implicitly relying on that.
+    """
+    return replace(
+        ERA_1,
+        factions={
+            slug: replace(
+                faction,
+                takes_duel_ties=(slug == slug_with_the_perk),
+                inherits_faction_perks=False,
+            )
+            for slug, faction in ERA_1.factions.items()
+        },
+    )
 
 
-def test_snide_tie_winner_slug_no_or_both_snide_is_a_real_tie():
-    assert snide_tie_winner_slug("wow", "ua") is None
-    assert snide_tie_winner_slug("snide", "snide") is None
+def test_sole_tie_taker_slug_sole_holder_wins():
+    assert sole_tie_taker_slug("snide", "wow", ERA_1) == "snide"
+    assert sole_tie_taker_slug("wow", "snide", ERA_1) == "snide"
 
 
-def test_snide_tie_winner_id_resolves_to_the_snide_side():
-    # Snide is the challenger → the challenger id wins the tie.
-    assert snide_tie_winner_id("snide", 1, "wow", 2) == 1
-    # Snide is the opponent → the opponent id wins the tie.
-    assert snide_tie_winner_id("wow", 1, "snide", 2) == 2
-    # No Snide → nobody wins the tie.
-    assert snide_tie_winner_id("wow", 1, "ua", 2) is None
+def test_sole_tie_taker_slug_two_holders_or_none_is_a_real_tie():
+    assert sole_tie_taker_slug("wow", "ua", ERA_1) is None
+    # The ability is "the SOLE holder takes the tie", not "this faction wins
+    # ties" — two holders cancel (#2664).
+    assert sole_tie_taker_slug("snide", "snide", ERA_1) is None
+
+
+def test_sole_tie_taker_slug_follows_the_config_not_the_slug():
+    """#2664: move the perk and the rule moves with it.
+
+    This is the whole point of the flag. With the ability on wow instead of
+    snide, a snide-vs-wow tie goes to *wow*, and snide-vs-ua is a real tie —
+    outcomes a ``faction == "snide"`` comparison can never produce.
+    """
+    moved = _era_where_only("wow")
+    assert sole_tie_taker_slug("snide", "wow", moved) == "wow"
+    assert sole_tie_taker_slug("wow", "snide", moved) == "wow"
+    assert sole_tie_taker_slug("snide", "ua", moved) is None
+
+
+def test_sole_tie_taker_id_resolves_to_the_holding_side():
+    # The holder is the challenger → the challenger id wins the tie.
+    assert sole_tie_taker_id("snide", 1, "wow", 2, ERA_1) == 1
+    # The holder is the opponent → the opponent id wins the tie.
+    assert sole_tie_taker_id("wow", 1, "snide", 2, ERA_1) == 2
+    # Nobody holds it → nobody wins the tie.
+    assert sole_tie_taker_id("wow", 1, "ua", 2, ERA_1) is None
+
+
+def test_duel_multiplier_tie_follows_the_config_not_the_slug():
+    """The banked multiplier reads the same moved perk the predicate does.
+
+    Guards the seam between the predicate and the number actually scored: an
+    era that hands the ability to wow must bank wow the win rate on a tie.
+    """
+    moved = _era_where_only("wow")
+    wow = compute_duel_multiplier(
+        "wow", "snide", is_winner=False, is_tied=True, era=moved
+    )
+    snide = compute_duel_multiplier(
+        "snide", "wow", is_winner=False, is_tied=True, era=moved
+    )
+    assert wow == moved.factions["wow"].duel_win_modifier
+    assert snide == moved.factions["snide"].duel_loss_modifier
 
 
 def _winner(**overrides):

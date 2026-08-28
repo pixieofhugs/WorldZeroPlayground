@@ -25,6 +25,7 @@ from game_config import (
     _ANY_PERK_FIELDS,
     _DUEL_PERK_FIELDS,
     _MAX_PERK_FIELDS,
+    _NON_INHERITED_PERK_FIELDS,
     ERA_1,
     ERA_2,
     EraConfig,
@@ -269,6 +270,7 @@ def test_every_faction_config_field_is_classified() -> None:
         | set(_MAX_PERK_FIELDS)
         | set(_ANY_PERK_FIELDS)
         | set(_DUEL_PERK_FIELDS)
+        | set(_NON_INHERITED_PERK_FIELDS)
     )
     assert {f.name for f in dataclasses.fields(FactionConfig)} == classified
 

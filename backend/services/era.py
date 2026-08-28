@@ -17,7 +17,7 @@ from models.task import Task, TaskStatus
 # task alive in every era (#511); the sweep below only has to recognise it.
 from seed import ONBOARDING_TASK_TITLE
 from services.duel_outcome import duel_winner
-from services.scoring import snide_tie_winner_id
+from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
 
@@ -179,6 +179,7 @@ async def resolve_duels_at_era_close(
     session: AsyncSession,
     resolved_at: datetime | None = None,
     closing_era_id: int | None = None,
+    era: EraConfig = CURRENT_ERA,
 ) -> list[Duel]:
     """Freeze every unresolved duel's outcome (ADR-0052). Returns the frozen rows.
 
@@ -286,11 +287,12 @@ async def resolve_duels_at_era_close(
                     opponent_praxis.moderation_status if opponent_praxis else None
                 ),
                 forfeited_by_character_id=duel.forfeited_by_character_id,
-                tie_break_winner_id=snide_tie_winner_id(
+                tie_break_winner_id=sole_tie_taker_id(
                     faction_by_character.get(challenger_character_id, ""),
                     challenger_character_id,
                     faction_by_character.get(duel.opponent_character_id, ""),
                     duel.opponent_character_id,
+                    era,
                 ),
             )
             if is_contest
