@@ -42,7 +42,7 @@ import SnideTaskCard from "../SnideTaskCard";
 import UaTaskCard from "../UaTaskCard";
 import WowTaskCard from "../WowTaskCard";
 import type { CardProps } from "../TaskCard";
-import { CTA_DETAIL_SIZE } from "../cardCta";
+import { CTA_DETAIL_SIZE, SINGULARITY_DETAIL_GLOW } from "../cardCta";
 
 import AlbescentTaskDetail from "../../../pages/taskDetail/archetypes/AlbescentTaskDetail";
 import CovenTaskDetail from "../../../pages/taskDetail/archetypes/CovenTaskDetail";
@@ -130,6 +130,19 @@ function kebab(key: string): string {
 const SIZE_KEYS = new Set(Object.keys(CTA_DETAIL_SIZE).map(kebab));
 
 /**
+ * The ONE per-faction exception, owner-ruled on #2642 (2026-08-27): Singularity's
+ * detail keeps the glow the consolidation would otherwise have subtracted.
+ *
+ * Keyed BY SLUG and read off the constant, so this file learns nothing about
+ * which declarations those are and a second exception cannot be smuggled in by
+ * editing a test. Every other faction's allowance is empty, which is the point:
+ * `singularity` is named here and the other eight are named by their absence.
+ */
+const EXTRA_DETAIL_KEYS: Record<string, Set<string>> = {
+  singularity: new Set(Object.keys(SINGULARITY_DETAIL_GLOW).map(kebab)),
+};
+
+/**
  * The CTA's declarations, keyed, with the size token's keys dropped.
  *
  * Anchored on `min-height:44px` — the WCAG 2.5.5 floor out of `CARD_CTA`, which
@@ -138,7 +151,11 @@ const SIZE_KEYS = new Set(Object.keys(CTA_DETAIL_SIZE).map(kebab));
  * guard: it is what makes the anchor a handle on the sign-up rather than on
  * whatever else happens to be tall enough.
  */
-function ctaPaint(html: string, where: string): Map<string, string> {
+function ctaPaint(
+  html: string,
+  where: string,
+  allowed: Set<string> = new Set(),
+): Map<string, string> {
   const styles = [...html.matchAll(/style="([^"]*)"/g)]
     .map(([, value]) => value)
     .filter((value) => value.includes("min-height:44px"));
@@ -148,7 +165,7 @@ function ctaPaint(html: string, where: string): Map<string, string> {
     const at = declaration.indexOf(":");
     if (at < 0) continue;
     const key = declaration.slice(0, at).trim();
-    if (SIZE_KEYS.has(key)) continue;
+    if (SIZE_KEYS.has(key) || allowed.has(key)) continue;
     paint.set(key, declaration.slice(at + 1).trim());
   }
   return paint;
@@ -169,11 +186,26 @@ describe("a faction's task card and task detail wear one CTA paint", () => {
         ),
         `${slug} card`,
       );
-      const detail = ctaPaint(markup(<Detail state={detailState()} />), `${slug} detail`);
+      const detail = ctaPaint(
+        markup(<Detail state={detailState()} />),
+        `${slug} detail`,
+        EXTRA_DETAIL_KEYS[slug],
+      );
 
       expect(Object.fromEntries(detail)).toEqual(Object.fromEntries(card));
       // Not vacuous: a paint is a colour and a face, never an empty map.
       expect(card.size, `${slug} declares a paint at all`).toBeGreaterThan(4);
+    });
+
+    it(`${slug} declares every exception it is allowed, and no other`, () => {
+      // The allowance above lets a key DIFFER; it does not require the key to be
+      // there. Without this, dropping Singularity's glow again passes the pair
+      // check silently -- which is precisely how it was dropped in the first
+      // place, and the failure mode a subtractive carve-out always has.
+      const detail = ctaPaint(markup(<Detail state={detailState()} />), `${slug} detail`);
+      for (const key of EXTRA_DETAIL_KEYS[slug] ?? []) {
+        expect(detail.has(key), `${slug} detail still declares ${key}`).toBe(true);
+      }
     });
 
     it(`${slug} keeps the 44px hit target on both surfaces`, () => {

@@ -17,7 +17,10 @@ import {
   TaskWorthStamp,
 } from "./shared";
 import { CardCtaControl } from "../../../components/taskCard/CardCtaControl";
-import { SINGULARITY_CARD_CTA } from "../../../components/taskCard/cardCta";
+import {
+  SINGULARITY_CARD_CTA,
+  SINGULARITY_DETAIL_GLOW,
+} from "../../../components/taskCard/cardCta";
 import type { TaskDetailState } from "../useTaskDetail";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
@@ -504,7 +507,7 @@ export default function SingularityTaskDetail({
             cta={cta}
             testId="task-signup-cta"
             size="detail"
-            style={SINGULARITY_CARD_CTA}
+            style={{ ...SINGULARITY_CARD_CTA, ...SINGULARITY_DETAIL_GLOW }}
           >
             {prompt}
             {cta.label}

@@ -296,6 +296,31 @@ export const SINGULARITY_CARD_CTA: CSSProperties = {
   border: "1.5px solid var(--faction-singularity-term-bright)",
 };
 
+/**
+ * THE ONE PER-FACTION DIFFERENCE BETWEEN THE TWO SURFACES, and it is a ruling
+ * rather than a drift (owner, 2026-08-27, on #2642).
+ *
+ * Consolidating the eighteen paints onto nine cost Singularity's detail button
+ * its glow, because the glow is a treatment the CARD never had and the card's
+ * paint is canonical. Every other faction's change was a SWAP -- one paint for
+ * another. This one was purely subtractive, so the owner carved it out: keep
+ * the glow where it already is.
+ *
+ * IT IS A NAMED CONSTANT, NOT A SECOND STYLE OBJECT AT THE CALL SITE. A loose
+ * `boxShadow` spread into the detail's JSX is exactly the shape #2642 exists to
+ * remove -- eighteen paints came about one override at a time, each of them
+ * locally reasonable. This is greppable, it is spread after the shared paint so
+ * the order is visible, and `ctaPaintPairs.test.tsx` knows its keys by name and
+ * allows those and nothing else. A second faction wanting an exception has to
+ * come here and be argued for.
+ *
+ * The pair still agree on colour, face, border and geometry; they differ by one
+ * shadow, deliberately.
+ */
+export const SINGULARITY_DETAIL_GLOW: CSSProperties = {
+  boxShadow: "var(--faction-singularity-term-cta-glow)",
+};
+
 /** Warriors of Whimsy — the plum call the two knights face. */
 export const WOW_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
