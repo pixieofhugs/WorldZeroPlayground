@@ -335,11 +335,15 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
     // bare labels; they are deleted. `card.stamp.subtotal` already existed and
     // is reused.
     //
-    // `mult` SURVIVES WITH NO READER, deliberately. #2634's chip is bare on all
-    // nine — the shape UA, S.N.I.D.E. and WOW already drew — so the Ephemerists
-    // cell, which was the last skin to label its ratio, gave the word up. That
-    // leaves a key nothing prints, which is a COPY decision the issue did not
-    // make; it is flagged on the PR rather than taken here.
+    // THE MULTIPLIER'S WORD IS GONE TOO, since #2821. #2634's chip is bare on
+    // all nine — the shape UA, S.N.I.D.E. and WOW already drew — so the
+    // Ephemerists cell, which was the last skin to label its ratio, gave the
+    // word up, and #2634 left the key standing because deleting copy is a
+    // decision it had not been asked to make. The owner made it on #2821: a key
+    // nothing renders is a key that rots. The Ephemerists stamp's own test now
+    // guards the chip's wordlessness off the base cell's SHAPE, because an
+    // absence asserted through `i18n.t` goes vacuous the moment the key it
+    // spells stops existing.
     //
     // Asserted as the whole key SET rather than as two absences, and read off
     // the catalog rather than through `i18n.exists`. Both halves matter: an
@@ -351,7 +355,6 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
     expect(Object.keys(praxisCatalog.card.stamp).sort()).toEqual(
       [
         'base',
-        'mult',
         'meta',
         'habit',
         'votes',

@@ -295,13 +295,18 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     expect(cells.figure.text, 'the base figure still opens its own cell').toBe('18')
     expect(html, 'the ratio, in the number column').toContain('×1.50')
     // AND NO WORD FOR IT — read off the cell's SHAPE since #2821, not off the
-    // catalog. This line was `not.toContain(i18n.t('praxis:card.stamp.mult'))`;
-    // #2821 deleted that orphaned key, and a missing key makes `i18n.t` return
-    // the key PATH, so the assertion would have degraded to "the markup does not
-    // contain the string `card.stamp.mult`" — true of every markup ever rendered.
-    // The whole base figure cell, tags stripped, is the figure and the ratio and
-    // nothing else, so ANY word put back in the chip fails this — not just the
-    // one word the deleted key happened to spell.
+    // catalog. This line used to ask `i18n.t` for the multiplier's own catalog
+    // entry under `card.stamp` and assert the result absent. #2821 deleted that
+    // orphaned entry, and a missing key makes `i18n.t` hand back the key PATH,
+    // so the assertion would have degraded to "the markup does not contain that
+    // dotted path" — true of every markup ever rendered. The whole base figure
+    // cell, tags stripped, is the figure and the ratio and nothing else, so ANY
+    // word put back in the chip fails this — not just the one word the deleted
+    // key happened to spell.
+    //
+    // (The path is not spelled in full anywhere here on purpose: the #1911 scan
+    // in `locales/__tests__/factionCopyCollapse.test.ts` reads source RAW and
+    // would take a quoted `ns:a.b.c` out of a COMMENT as a live lookup.)
     expect(cells.figure.all, 'the base cell is its figure and the ratio, no word').toBe('18×1.50')
     // The subtotal's brass rule is the one thing that spans both columns now.
     expect(html).toContain('grid-column:1 / -1')
