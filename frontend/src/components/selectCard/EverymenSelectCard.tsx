@@ -3,7 +3,7 @@ import i18n from "../../i18n";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { EverymenCog } from "../factionMarks/everymenCogs";
-import { CARD_CTA } from "../taskCard/cardCta";
+import { CTA_SELECT_SIZE, EVERYMEN_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
@@ -93,10 +93,13 @@ import { factionRoleVars } from "../../utils/factionRoles";
  *                                        small-caption ink (4.97 / 5.32).
  *   CTA        gold fill, ink type     -> the report-for-duty bar: `-bill-cta-bg`
  *                                        under `-bill-cta-ink` inside a 2px rule
- *                                        in the paper's ink, on the shared
- *                                        {@link CARD_CTA} chassis so the 44px
- *                                        tap floor is the kit's and not a number
- *                                        re-typed here.
+ *                                        in the paper's ink. Gathered here as a
+ *                                        transcription over the shared `CARD_CTA`
+ *                                        chassis; since #2818 it is
+ *                                        {@link EVERYMEN_CARD_CTA} entire, which
+ *                                        spreads that chassis itself, so the
+ *                                        44px tap floor still arrives with the
+ *                                        kit rather than as a number re-typed.
  *   faces      `--font-faction-poster` -> `--faction-everymen-card-font`. A
  *                                        PROVEN synonym, not a waived one: both
  *                                        resolve to `"Bebas Neue", Impact,
@@ -236,13 +239,13 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
           <div style={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)", marginBottom: "var(--space-md)" }}>
             {status}
           </div>
+          {/* The struck block, from the constant rather than beside it (#2818).
+              This tile already spread `CARD_CTA` — it was the ONE of ten
+              carrying the 44px floor — and then restated the whole of
+              `EVERYMEN_CARD_CTA` on top of it. Spreading the faction's constant
+              instead picks the floor up on the way through. */}
           <button onClick={onVisit} style={{
-            ...CARD_CTA,
-            width: "100%", cursor: "pointer",
-            background: "var(--faction-everymen-bill-cta-bg)", color: "var(--faction-everymen-bill-cta-ink)",
-            border: `2px solid ${INK}`, borderRadius: 2,
-            fontFamily: POSTER, fontSize: "var(--text-xl)", letterSpacing: "0.22em", textTransform: "uppercase",
-            padding: "var(--space-sm) var(--space-2xl)",
+            cursor: "pointer", ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE,
           }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
         </div>
       </div>

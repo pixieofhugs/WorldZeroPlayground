@@ -3,6 +3,7 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "../factionMarks/uaAtoms";
+import { CTA_SELECT_SIZE, UA_CARD_CTA } from "../taskCard/cardCta";
 import { factionRoleVars } from "../../utils/factionRoles";
 
 /**
@@ -81,8 +82,9 @@ import { factionRoleVars } from "../../utils/factionRoles";
  * 11.32/12.28:1 and the CTA 4.98/5.35:1. Every one of those was ALREADY PINNED
  * by the leaf's own rows in `utils/__tests__/factionContrast.test.ts` ("ua leaf
  * darkest stop, *" and "ua leaf CTA") — gathering a register inherits its
- * measurements. One row is new, and only because the hover names a ground the
- * card has no hover for.
+ * measurements. One row was new when this tile was gathered, and only because
+ * the hover named a ground the card has no hover for; #2818 deleted the hover
+ * and the row with it, so the tile now sits entirely inside the leaf's rows.
  *
  * The wordmark is `feed:factionSelect.ua.wordmark` ("UA"), NOT `names.ua` —
  * #2332 renamed the faction to "Unwavering Artisans" and deliberately left this
@@ -136,15 +138,17 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
         <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · <span>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
+        {/* The chip the mandalas flank on the card, at one setting (#2818). The
+            transcription here already named the same `-card-chip-*` pair; what
+            it also had was a `transition` and a handler pair that swapped the
+            chip's ground for `-card-accent` under a cursor. Both go — the card's
+            chip has neither, and a hover only a mouse can reach was never the
+            affordance. `:focus-visible` is a stylesheet state and is untouched.
+            `--faction-ua-card-chip-bg` / `-ink` are now spelt once, in
+            `UA_CARD_CTA`. */}
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", borderRadius: "var(--radius-sm)",
-          border: "1.5px solid var(--faction-ua-card-frame)",
-          background: "var(--faction-ua-card-chip-bg)", color: "var(--faction-ua-card-chip-ink)",
-          fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-content)", letterSpacing: "0.02em",
-          padding: "var(--space-md)", transition: "background 140ms",
+          cursor: "pointer", ...UA_CARD_CTA, ...CTA_SELECT_SIZE,
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--leaf-faction-select-card-accent)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--faction-ua-card-chip-bg)"; }}
         >{i18n.t("feed:factionSelect.ua.cta")}</button>
       </div>
     </div>

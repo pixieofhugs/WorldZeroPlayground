@@ -142,6 +142,40 @@ export const CTA_DETAIL_SIZE: CSSProperties = {
   padding: "var(--space-md) var(--space-xl)",
 };
 
+/**
+ * THE THIRD SURFACE'S GEOMETRY, and the third consumer of the eight constants
+ * below (#2818).
+ *
+ * The faction DIRECTORY tile draws a join button — "Jump In", "Approach the
+ * Court", "Check the Map" — which is the same act as the task card's sign-up
+ * and was nowhere near the same paint: nine hand-written CTAs, three type
+ * sizes, three paddings, one raw `fontSize: 15` behind an eslint hatch, and not
+ * one of them carrying the 44px floor `CARD_CTA` has always had. That is the
+ * #2642 shape one surface further out, so it takes the #2642 answer: the
+ * faction's `*_CARD_CTA` is the paint and this token is the whole of the
+ * difference.
+ *
+ * ONE TOKEN, NOT NINE, AND GEOMETRY ONLY — the same two rules
+ * {@link CTA_DETAIL_SIZE} is held to, for the same reason. It is spread AFTER
+ * the faction's paint by every tile, which is the deliberate inversion of
+ * "paint last": a task card's narrow-column padding must not survive onto a
+ * tile whose button is full width. A colour here would silently beat the
+ * skin's.
+ *
+ * WHAT IS DELIBERATELY *NOT* HERE, though two tiles need it: the
+ * label-plus-member-count layout. `justify-content` is declared by
+ * {@link CARD_CTA} and shared by all three surfaces, so a `space-between` here
+ * would left-align the single child the other seven tiles have. The count wears
+ * `margin-left: auto` on its own span instead — an auto margin absorbs the free
+ * space before `justify-content` is consulted — which leaves the button's own
+ * box, and therefore the paint comparison, untouched. Layout that belongs to a
+ * CHILD is not the button's geometry.
+ */
+export const CTA_SELECT_SIZE: CSSProperties = {
+  width: "100%",
+  padding: "var(--space-md) var(--space-lg)",
+};
+
 /** na — and Albescent, which wraps the na card and the na detail alike. */
 export const DEFAULT_CARD_CTA: CSSProperties = {
   ...CARD_CTA,
