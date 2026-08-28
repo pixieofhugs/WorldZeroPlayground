@@ -94,11 +94,21 @@ from game_config import (
 #                                    config in the browser console. Purely
 #                                    client-side — /game-config already ships to
 #                                    everyone, so there is no server door to add
+#   takes_duel_ties               -- "take the tie" (#718/#2664): on a TIED duel
+#                                    this faction takes the win rate and the
+#                                    other side the loss rate. The rule is "the
+#                                    SOLE holder takes it" -- grant it to two
+#                                    factions and a duel between them is a real
+#                                    tie, so it is the one perk the inheritor
+#                                    below does NOT pick up. Rides on
+#                                    /game-config: the browser shows the stakes
+#                                    from this same flag
 #   inherits_faction_perks        -- holds every OTHER faction's perk in this era
 #                                    (#1871). Declare the faction's own floor and
 #                                    EraConfig resolves the union; the duel pair
 #                                    is inherited WHOLE from the highest
-#                                    duel_win_modifier, downside included.
+#                                    duel_win_modifier, downside included, and
+#                                    takes_duel_ties is not inherited at all.
 #
 # ** Perks live in TWO places. ** The fields above are one; the other is the
 # pair of EraConfig frozensets in the ERA_N block below,

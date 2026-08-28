@@ -65,7 +65,7 @@ def duel_winner(
        ``VoteTally.points_from_votes`` wins.
     3. **Tiebreak.** Equal points returns ``tie_break_winner_id`` — a winner some
        faction ability grants on a tie (Snide wins ties, #748), pre-resolved from
-       the factions by the caller (:func:`services.scoring.snide_tie_winner_id`)
+       the factions by the caller (:func:`services.scoring.sole_tie_taker_id`)
        so this rule stays plain-ids-in. ``None`` (the default) is a real tie, and
        also the correct answer for a no-contest (a duel that never became votable),
        which callers express by passing equal points.

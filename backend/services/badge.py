@@ -17,13 +17,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from badges import ALL_BADGES, BadgeContext
+from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import Praxis
 from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
-from services.scoring import snide_tie_winner_id
+from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
 # Every duel status that can feed the duelist badge. `resolved` is included
@@ -66,6 +67,7 @@ async def _previous_era_id(session: AsyncSession) -> Optional[int]:
 async def _duel_winner_facts(
     character_ids: set[int],
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> DuelWinnerFacts:
     """Both duel facts for the given characters, from one pass over their duels.
 
@@ -186,11 +188,12 @@ async def _duel_winner_facts(
                 challenger_moderation=row.challenger_moderation,
                 opponent_moderation=row.opponent_moderation,
                 forfeited_by_character_id=row.forfeited_by_character_id,
-                tie_break_winner_id=snide_tie_winner_id(
+                tie_break_winner_id=sole_tie_taker_id(
                     faction_by_character.get(row.challenger_character_id, ""),
                     row.challenger_character_id,
                     faction_by_character.get(row.opponent_character_id, ""),
                     row.opponent_character_id,
+                    era,
                 ),
             )
         if winner_character_id is None or winner_character_id not in character_ids:

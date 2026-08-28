@@ -2303,6 +2303,10 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "takes_duel_ties": {
+            "title": "Takes Duel Ties",
+            "type": "boolean"
           }
         },
         "required": [
@@ -2313,7 +2317,8 @@
           "collab_other_modifier",
           "duel_win_modifier",
           "duel_loss_modifier",
-          "reads_the_array"
+          "reads_the_array",
+          "takes_duel_ties"
         ],
         "title": "FactionConfigOut",
         "type": "object"

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA
 from models.account import Account
 from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
+from services.scoring import sole_tie_taker_slug
 
 
 @pytest.mark.asyncio
@@ -99,6 +100,60 @@ async def test_game_config_carries_the_array_flag(client: AsyncClient):
     if not holders:
         pytest.skip(f"no faction in {CURRENT_ERA.config_key} reads the array")
     assert {slug for slug, value in served.items() if value} == holders
+
+
+@pytest.mark.asyncio
+async def test_game_config_carries_the_tie_taking_flag(client: AsyncClient):
+    """The seam #2664 exists for: ONE rule, served to the half that displays it.
+
+    The take-the-tie ability is computed twice — once by the server, when it
+    banks a tied duel's points (``services.scoring.sole_tie_taker_slug``), and
+    once by the browser, when it shows a player their stakes before they cast
+    (``useDuelStakes``). Before #2664 both were ``faction == "snide"``: two
+    copies of a rule, consistent only by luck, and neither movable by an era.
+
+    So this asserts more than "the field is emitted". It asserts the flag the
+    client is handed picks out **exactly** the factions the scoring predicate
+    treats as tie takers. Given that, and given the client reads the flag rather
+    than re-deriving the rule, the stakes shown and the points banked cannot
+    disagree — they are one rule with one source.
+    """
+    data = (await client.get("/game-config")).json()
+    served = {
+        faction["slug"]: faction["takes_duel_ties"] for faction in data["factions"]
+    }
+
+    assert served == {
+        slug: faction.takes_duel_ties
+        for slug, faction in CURRENT_ERA.factions.items()
+    }
+
+    # The flag the wire carries IS the rule the scorer applies. Ask the
+    # predicate itself, per faction, against a side that does not hold the perk.
+    holders = {slug for slug, value in served.items() if value}
+    if not holders:
+        pytest.skip(f"no faction in {CURRENT_ERA.config_key} takes duel ties")
+    a_non_holder = next(slug for slug, value in served.items() if not value)
+    scored = {
+        slug
+        for slug in served
+        if sole_tie_taker_slug(slug, a_non_holder, CURRENT_ERA) == slug
+    }
+    assert scored == holders
+
+    # And the perk is self-cancelling: two holders make a real tie, which is why
+    # it is the one perk the inheritor does not pick up (#2664).
+    for slug in holders:
+        assert sole_tie_taker_slug(slug, slug, CURRENT_ERA) is None
+    inheritors = {
+        slug
+        for slug, faction in CURRENT_ERA.factions.items()
+        if faction.inherits_faction_perks
+    }
+    assert not (inheritors & holders), (
+        "an inheritor holding the tie-taking perk would DESTROY the sole "
+        "holder's ability, not gain one"
+    )
 
 
 # ---------------------------------------------------------------------------
