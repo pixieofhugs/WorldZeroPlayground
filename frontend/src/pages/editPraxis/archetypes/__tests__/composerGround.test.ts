@@ -422,6 +422,38 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
     })
   }
 
+  /**
+   * THE BLAST RADIUS, MEASURED RATHER THAN ARGUED. A seam set on the root
+   * cascades to every bare `.label-caption` and `.label-heading` under it, on
+   * whichever of the terminal's grounds each one happens to stand on — and the
+   * two stages this root spans (the composer and `PraxisWaitingSurface`) draw
+   * on all four. Naming them one at a time is what makes "whatever else
+   * inherits it has been measured" a fact rather than a hope.
+   *
+   * The bare page under the sheet is deliberately not in this list. It is the
+   * app's own `--color-bg-page`, where a phosphor would be unreadable — and the
+   * only thing standing on it is the breadcrumb, neutral site chrome that
+   * paints `--color-text-tertiary` directly and carries no label class, so the
+   * seam does not reach it (#2102). A `.label-caption` mounted straight on the
+   * composer page would be the exception, and there is none.
+   */
+  const EVERY_GROUND = [
+    ['the sheet, flat', '--faction-singularity-term-bg'],
+    ['the raised panel — fields, slip, toolbar', PANEL],
+    ['the window bar', '--faction-singularity-term-chrome'],
+    ['the desk under the chassis', '--faction-singularity-term-page'],
+  ] as const
+
+  for (const theme of BOTH_THEMES) {
+    for (const [what, ground] of EVERY_GROUND) {
+      it(`and clears AA on ${what} too — ${theme}`, () => {
+        const ratio = contrastRatio(resolve(CHASSIS_RUNG, theme), resolve(ground, theme))
+        expect(ratio, `${CHASSIS_RUNG} on ${ground} is ${formatRatio(ratio)}`)
+          .toBeGreaterThanOrEqual(AA_NORMAL)
+      })
+    }
+  }
+
   // LIGHT ONLY, and that is the finding rather than a gap in the sweep. The
   // global tertiary flips with the cascade and the terminal does not, so at
   // night the neutral is a pale ink on a black box and reads 6.79 / 8.99. A
