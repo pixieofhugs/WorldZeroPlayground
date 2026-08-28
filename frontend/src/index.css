@@ -7700,18 +7700,36 @@
    surface, instead of five wrappers that a future sixth slot can be added
    without.
 
-   KNOWN GAP, RECORDED RATHER THAN FIXED HERE (#2632): those slots declare their
-   ink in the STYLE ATTRIBUTE, which outranks this rule as surely as it outranks
-   inheritance, so the mark is painted for a slot that inherits its colour and is
-   not for one that names it. `.control-off` hit the same wall and answered it
-   with `!important`; doing that here would also change the leaderboard lane's
-   redaction, so it wants a ruling rather than a drive-by.
+   THE `!important` IS LOAD-BEARING TOO, AND IT IS HALF OF THAT SENTENCE
+   (#2646). Those five slots declare their ink in the STYLE ATTRIBUTE, which
+   outranks a class rule as surely as it outranks inheritance — so the arm added
+   for exactly these slots caught them in the cascade and lost to them in the
+   style attribute. What a reader got was four `[REDACTED]` markers painted
+   normally and one blank gap where the display-size name should be: a
+   half-struck tile, which reads as a rendering bug rather than as a device.
+   With the flag, the descendant arm reaches an inline declaration too, and the
+   pair — ARM plus FLAG — is what actually lets one mark redact a whole subtree.
+   Neither half does it alone. `.control-off` took the flag at the same wall for
+   the same reason (#2478), so this is the house answer, not a special case.
+
+   DO NOT REMOVE IT AS A TIDY-UP. The blast radius was checked before it went
+   in and it is empty: the only other consumer is the players-page faction lane
+   (`FactionLaneName`, both form factors), whose inline style is `fontSize` and
+   nothing else — this rule already won there, and forcing it moves nothing.
+   `__tests__/redactionOutranksInlineInk.test.ts` pins both facts and names the
+   mounts, because `renderToStaticMarkup` records a class and a style attribute
+   without ever resolving which of them wins.
+
+   THE SELECTION REVEAL BELOW IS DELIBERATELY UNFLAGGED. Importance is not
+   inherited and `.redacted *` does not match `*::selection`, so a pseudo-element
+   keeps its own cascade and the drag-to-reveal survives the flag untouched.
+   Flagging those two would be the fix eating the thing it exists to protect.
 
    No raw value here, so nothing for `no-raw-style-values` to catch — the
    ratchet is satisfied by construction rather than by an exemption. */
 .redacted,
 .redacted * {
-  color: transparent;
+  color: transparent !important;
 }
 
 .redacted ::selection,
