@@ -9860,3 +9860,57 @@
   color: var(--faction-default-card-bg);
   box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
+
+/* ── SETTINGS · THE STORAGE INVENTORY'S SHAPE IS THE PANE'S CALL (#2824) ─────
+   The eleven-row cookie/localStorage inventory was a three-column grid on every
+   desktop viewport: `minmax(0, 32ch) minmax(0, 1fr) minmax(0, 26ch)`. Two
+   intrinsic maxima either side of one flexible track is the shape that starves
+   the middle — grid maximizes `minmax()` tracks toward their limits BEFORE it
+   gives a `1fr` anything, so where the outer two cannot both be satisfied they
+   split the free space evenly and the `1fr` resolves to zero. In the 483px
+   settings pane at a 1280px window that was `229.5px 0px 229.5px`, and because
+   the description's `overflow` is `visible` the text was not clipped: it spilled
+   out of a zero-width box across the third column.
+
+   THE WIDTH THAT DECIDES THIS IS THE PANE'S, NOT THE WINDOW'S. Settings is a
+   232px rail plus a pane that absorbs every width change, so expanding the app
+   sidebar narrows the inventory with the viewport standing still — the case a
+   `@media` query is wrong about and `useFormFactor` cannot see at all. Same
+   ruling as the Ephemerists vote plate (§5, #2236): a container query for a
+   component mounted at two widths on one screen, and the values have to leave
+   the inline style to be yielded at all.
+
+   THE THRESHOLD IS ARITHMETIC OVER THIS SHEET, NOT A MEASUREMENT, AND THE
+   RENDER IS STILL OWED AN EYEBALLING. The row inherits the app's body size
+   rather than `--text-content` (the cells set that themselves), so its `ch` is
+   ~8.5px: the outer tracks want ~493px, the two gaps 12px each, and a
+   description is not a column until it holds ~20ch (~170px). 700px is that sum
+   rounded. Below it the rows stack — the shape the phone already used, now
+   reached by any pane too narrow for three columns rather than by a form factor.
+
+   The first column is NOT the failure and does not shrink: 32ch is what
+   `wz-faction-sections[:account id]` needs at 31 characters, and that key must
+   not wrap mid-token. */
+.settings-inventory {
+  container-type: inline-size;
+  container-name: settings-inventory;
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-alt);
+}
+.settings-inventory-row {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px dotted var(--color-border-strong);
+}
+@container settings-inventory (min-width: 700px) {
+  .settings-inventory-row {
+    grid-template-columns: minmax(0, 32ch) minmax(0, 1fr) minmax(0, 26ch);
+    gap: var(--space-md);
+    align-items: baseline;
+    padding: var(--space-xs) 0;
+    border-bottom: none;
+  }
+}
