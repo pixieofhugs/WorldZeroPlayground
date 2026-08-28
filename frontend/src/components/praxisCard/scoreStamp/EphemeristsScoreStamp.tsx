@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskCrown } from "../../factionMarks/TaskCrown";
 import EphemeristsGloss, { type GlossWord } from "../../factionMarks/EphemeristsGloss";
@@ -41,6 +41,21 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * order is base, ratio, the foreign award, the tally — and then the rose. It
  * also puts the rose against the panel's chamfered corner, where the disc and
  * the cut belong together.
+ *
+ * #2634 did not disturb that — every other stamp came to MEET it, because
+ * "totals sit at the bottom" is now the rule for all nine. What changed inside
+ * the cell is the ratio's line (see the chip below) and one new row: the
+ * SUBTOTAL, `base × ratio`, under a brass hairline, gated on the ratio alone.
+ *
+ * ## The panel is not flush to the stamp's box any more (#2634 §5)
+ *
+ * The root declared no clearance above the brass mount, so the chamfered panel
+ * met the top of the stamp's box while the other eight sit inside a plate's own
+ * inset. `PANEL_CLEARANCE` is that space, and the crown's offset is written
+ * against it so the ♛ still overhangs the panel's corner by the 13px it always
+ * did rather than floating clear of it. The praxis card's masthead band sits
+ * directly above this stamp, so how much of the reported gap was the band's is a
+ * question only a browser can answer; the PR says so.
  *
  * WITH NOTHING BUT A TOTAL THE PLATE FALLS AWAY and the rose stands alone.
  * `base === null` is `scoreBreakdown`'s own predicate for "no working at all"
@@ -95,10 +110,14 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * introduced and the metatask row, whose word and figure were already one
  * colour, is untouched.
  *
- * THE MULTIPLIER CHIP KEEPS ITS OWN SHAPE. It is not one of the addends and it
- * is not a line of the working — it is a ruled chip with a brass hairline
- * between its word and its ratio, rebuilt one commit ago (#2150/#2314) — so it
- * spans both columns and is otherwise left alone.
+ * THE MULTIPLIER CHIP KEPT ITS OWN SHAPE UNTIL #2634, and the reasoning is left
+ * standing because only its conclusion moved. It is not one of the addends and
+ * it is not a line of the working — it is a ruled chip, rebuilt one commit ago
+ * (#2150/#2314) — which is why it spanned both columns rather than filing itself
+ * as a term. #2633 then took the metatask out of the multiplier, so what the
+ * ratio applies to is the base and nothing else, and the owner ruled the chip
+ * onto the base line on all nine stamps. It keeps the chamfer and loses the word
+ * and the brass hairline that parted the word from the ratio; see the mount.
  *
  * `-plate-quiet` therefore leaves this cell. It was here because the vendored
  * frame asked for `-plate-band-quiet`, which is a DISC ink (#c2ae7e, minted for
@@ -107,11 +126,12 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * here.
  *
  * DEVIATIONS from the vendored frame, both named in the PR:
- *  • the multiplier chip is labelled from the SHARED `card.stamp.mult` key
- *    rather than the design's "ratio", and prints `×0.80` rather than `0.80 :1`.
- *    The stamp's row vocabulary is shared across every faction showing the same
- *    number (the praxis-detail skin's note says so out loud); a faction word for
- *    it would fork one number's name between two surfaces.
+ *  • the multiplier chip printed `×0.80` rather than the design's `0.80 :1`,
+ *    and was LABELLED from the shared `card.stamp.mult` key rather than from the
+ *    design's "ratio", so that a faction word could not fork one number's name
+ *    between two surfaces. #2634 settled the question by removing the label
+ *    entirely: a chip on the base line names itself, on all nine stamps, and
+ *    the notation stays `×0.80` through the shared `formatMult`.
  *  • the design draws no metatask row (its sample has none). One is drawn here,
  *    in the box pattern's own place, because the stamp must stay legible in all
  *    five states.
@@ -138,6 +158,21 @@ import type { ScoreStampProps } from "./ScoreStamp";
  */
 const STAMP_WIDTH = 128;
 const ROSE = 84;
+
+/**
+ * The space above the brass mount (#2634 §5). Ornament geometry in the sense of
+ * §4a's sibling rule: it is the inset the other eight stamps get from their own
+ * plate padding, which this one has no plate to take it from.
+ */
+const PANEL_CLEARANCE = "var(--space-sm)";
+/**
+ * The crown's overhang, measured from the PANEL rather than from the stamp's
+ * box — the 13px every skin hangs it by, less the clearance the panel now sits
+ * below. Absolutely positioned children resolve against the root's padding box,
+ * so without this the clearance would push the panel down and leave the ♛
+ * hanging in the gap.
+ */
+const CROWN_TOP = `calc(${PANEL_CLEARANCE} - 13px)`;
 
 /** The cell's label voice: incised caps at the label tier's 11px (#1608). */
 const LABEL: CSSProperties = { ...SMALL_CAPS, fontSize: "var(--text-md)" };
@@ -170,20 +205,44 @@ function WorkingRow({
   figure,
   label,
   gloss,
-  ordinal,
+  ordinal = 0,
   ink,
+  chip,
 }: {
   figure: string;
   label: string;
-  gloss: GlossWord;
-  ordinal: number;
+  /**
+   * The catalog entry the label is cast through, or absent for a label that
+   * does NOT turn.
+   *
+   * Only the SUBTOTAL is absent, and the reason is the mechanism rather than the
+   * row: `glosses.json` holds seven words and each one costs four subset webface
+   * requests in `fetch-fonts.mjs` (#2148), with
+   * `ephemeristsScriptTurn.test.tsx` checking the shipped `unicode-range`
+   * covers every cast. An eighth word for one arithmetic label is a font build
+   * for a line that is not a term of the working. It rests in English, which is
+   * frame 0 for every other label on this cell anyway.
+   */
+  gloss?: GlossWord;
+  ordinal?: number;
   ink: string;
+  /** The ratio, struck in the FIGURE column beside the number it multiplies. */
+  chip?: ReactNode;
 }) {
   return (
     <>
-      <span style={{ ...FIGURE, color: ink }}>{figure}</span>
+      <span
+        style={{ ...FIGURE, color: ink, display: "flex", alignItems: "center", gap: "var(--space-xs)" }}
+      >
+        {figure}
+        {chip}
+      </span>
       <span style={{ ...LABEL, color: ink }}>
-        <EphemeristsGloss word={gloss} english={label} ordinal={ordinal} />
+        {gloss ? (
+          <EphemeristsGloss word={gloss} english={label} ordinal={ordinal} />
+        ) : (
+          label
+        )}
       </span>
     </>
   );
@@ -192,7 +251,7 @@ function WorkingRow({
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
   const working = base !== null;
 
@@ -211,6 +270,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         position: "relative",
         width: "100%",
         maxWidth: working ? STAMP_WIDTH : ROSE,
+        paddingTop: PANEL_CLEARANCE,
       }}
       /* WCAG 2.2.2's pause mechanism for the labels' turn (#2148): the
          stylesheet's pause rule is a descendant selector, so the whole cell is
@@ -222,7 +282,7 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
           size={26}
           ringInset={3}
           rotate="6deg"
-          style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
+          style={{ position: "absolute", top: CROWN_TOP, right: -12, zIndex: 3 }}
         />
       )}
 
@@ -259,34 +319,76 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             {/* 基 stood at the base row, glossed "base". #1909 cut all five of this
                 cell's kanji: they were the only faction-specific score-stamp labels
                 in the app, on a surface the audit ruled generic. The shared gloss
-                each one carried is now the visible label. */}
-            <WorkingRow figure={`${base}`} label={t("card.stamp.base")} gloss="base" ordinal={0} ink={CAPTION} />
+                each one carried is now the visible label.
 
-            {/* The multiplier, in its own ruled chip — the design's "ratio" cell.
-                Not an addend and not a line of the working, so it spans both
-                columns and keeps its word-then-ratio shape. */}
-            {mult !== null && (
-              /* The chamfer treatment of #2150/#2314, one rung down — the chip had
-                 the same clipped border. */
-              <div style={{ ...chamferMount(5), gridColumn: "1 / -1" }}>
-                <div
-                  style={{
-                    ...chamferSheet(5, WASH),
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--space-xs)",
-                    padding: "var(--space-xs) var(--space-sm)",
-                  }}
-                >
-                  <span style={{ ...LABEL, color: CAPTION, letterSpacing: "0.2em" }}>
-                    {t("card.stamp.mult")}
+                THE RATIO RIDES THIS ROW SINCE #2634. It stood beneath as a ruled
+                chip of its own spanning both columns, on the stated grounds that
+                "it is not one of the addends and it is not a line of the
+                working" (#2150/#2314/#2285). Both halves of that are still true
+                and the conclusion no longer follows: under #2633's formula the
+                ratio applies to the BASE and to nothing else, so `base × ratio`
+                on one line is the shortest true drawing, and the rule beneath it
+                then has exactly one line above it — which is the owner's ruling
+                of 2026-08-24 for all nine stamps.
+
+                #2285's two-column read survives intact: the ratio is a NUMBER,
+                so it sits in the number column with the figure it multiplies,
+                and the word column still holds nothing but words. What the chip
+                gives up is its `mult` label and the brass hairline that parted
+                that word from the ratio — a chip on the base line names itself,
+                which is why the three stamps that already drew one (UA,
+                S.N.I.D.E., WOW) never labelled theirs. */}
+            <WorkingRow
+              figure={`${base}`}
+              label={t("card.stamp.base")}
+              gloss="base"
+              ordinal={0}
+              ink={CAPTION}
+              chip={
+                mult !== null ? (
+                  /* The chamfer treatment of #2150/#2314, one rung down — the chip
+                     kept the clipped border it always had. */
+                  <span style={chamferMount(5)}>
+                    <span
+                      style={{
+                        ...chamferSheet(5, WASH),
+                        display: "block",
+                        padding: "0 var(--space-xs)",
+                        fontFamily: DECO,
+                        fontSize: "var(--text-lg)",
+                        lineHeight: 1.4,
+                        color: INK,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {formatMult(mult)}
+                    </span>
                   </span>
-                  <span aria-hidden style={{ width: 1, height: 11, background: BRASS_LIGHT }} />
-                  <span style={{ fontFamily: DECO, fontSize: "var(--text-lg)", lineHeight: 1, color: INK }}>
-                    {formatMult(mult)}
-                  </span>
-                </div>
-              </div>
+                ) : undefined
+              }
+            />
+
+            {/* THE BRASS RULE AND THE SUBTOTAL (#2634) — what the ratio made of
+                the base, under a hairline of the plate's rule brass. `-brass`
+                stays a RULE colour and never an ink (see the header), so the
+                line is brass and the figure beside its label is the cell's
+                caption gold like every other row's.
+
+                Gated on the multiplier ALONE. `formatPoints` for the figure,
+                exactly as the rose's total: `12 × 0.8` is `9.600000000000001` in
+                doubles (#1866). */}
+            {subtotal !== null && (
+              <>
+                <span
+                  aria-hidden
+                  style={{ gridColumn: "1 / -1", height: 1, background: BRASS_LIGHT }}
+                />
+                <WorkingRow
+                  figure={formatPoints(subtotal)}
+                  label={t("card.stamp.subtotal")}
+                  ink={CAPTION}
+                />
+              </>
             )}
 
             {/* The metatask award, struck in the plate's one accent — a foreign
