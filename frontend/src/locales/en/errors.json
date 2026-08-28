@@ -94,6 +94,17 @@
     "OAUTH_STATE_EXPIRED": "That sign-in took too long, so we let it lapse. Pick a way in and you'll go straight through.",
     "ACCOUNT_SUSPENDED": "That account is suspended, so we can't sign you in. Get in touch if you think that's wrong.",
     "ACCOUNT_DELETED": "That account was deleted and can't be signed into.",
-    "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one."
+    "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one.",
+    "ATPROTO_UNAVAILABLE": "The identity organ isn't answering right now. Give it a minute and try again.",
+    "ATPROTO_BAD_CREDENTIALS": "That handle and app password didn't check out. Make an app password in your account's settings and paste that one, not your main password.",
+    "ATPROTO_RATE_LIMITED": "That's a lot of sign-ins; the identity service asked us to slow down. Try again in a bit.",
+    "ATPROTO_CHALLENGE_PENDING": "We don't see the token on your feed yet. Post it where we can see it, then check again.",
+    "ATPROTO_CHALLENGE_EXPIRED": "That token took too long to show up, so we let it lapse. Start a new one.",
+    "KEY_INVALID": "That isn't a key we know how to read.",
+    "KEY_BAD_SIGNATURE": "That signature didn't check out. Sign the exact text we gave you and send it back.",
+    "KEY_CHALLENGE_MISSING": "There's no key sign-in waiting on you. Start one to get your text to sign.",
+    "KEY_CHALLENGE_EXPIRED": "That key sign-in took too long, so we let it lapse. Start a new one.",
+    "KEY_ALREADY_LINKED": "That key already opens an account. Sign in with it instead.",
+    "RETURNING_PLAYER_CONSENT_REQUIRED": "That identity used to be somebody here. Say the word and we'll start you fresh."
   }
 }

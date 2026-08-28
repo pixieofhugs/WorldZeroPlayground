@@ -109,7 +109,11 @@ async def render_snapshot(dsn: str) -> str:
             " FROM pg_constraint con"
             " JOIN pg_class c ON c.oid = con.conrelid"
             " JOIN pg_namespace n ON n.oid = c.relnamespace"
-            " WHERE n.nspname = 'public'"
+            # pg18 raises NOT NULL to a named pg_constraint row (contype 'n');
+            # pg15 never lists it. The fact is already on the column line, so
+            # excluding it keeps this dump identical across server majors —
+            # the skew the header warns about, removed at the source.
+            " WHERE n.nspname = 'public' AND con.contype <> 'n'"
             " ORDER BY c.relname, con.conname"
         )
         indexes = await conn.fetch(

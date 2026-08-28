@@ -5,25 +5,49 @@ from typing import Optional
 # publishes only `OAuthError` — hence the one level down for it.
 from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi import Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
 from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
-from models.account import Account, AuthProvider
+from models.account import Account, AuthProvider, OAuthProvider
 from schemas.auth import (
+    AtprotoChallengeIn,
+    AtprotoChallengeOut,
+    AtprotoLoginIn,
+    AtprotoVerifyIn,
     CurrentUser,
     DevLoginOut,
+    KeyChallengeIn,
+    KeyChallengeOut,
+    KeyRegisterIn,
+    KeyVerifyIn,
     LogoutOut,
     ReturningPlayerOut,
+    SessionOut,
     StartFreshOut,
 )
 from schemas.character import CharacterCreate
 from services.account_deletion import resolve_account_tombstone
+from services.atproto_identity import (
+    challenge_start as atp_challenge_start,
+)
+from services.atproto_identity import (
+    challenge_verify as atp_challenge_verify,
+)
+from services.atproto_identity import (
+    key_challenge as atp_key_challenge,
+)
+from services.atproto_identity import (
+    key_verify as atp_key_verify,
+)
+from services.atproto_identity import (
+    session_login as atp_session_login,
+)
 from services.auth import (
     ReturningPlayerConsentRequired,
     create_jwt,
@@ -33,6 +57,7 @@ from services.auth import (
 from services.character import create_character, resolve_active_character
 from services.current_user import build_current_user
 from services.era import get_current_era_row, get_or_create_stats
+from services.key_auth import decode_public_key, decode_signature
 
 router = APIRouter()
 
@@ -591,3 +616,197 @@ async def dev_login(
         character_name=character.display_name if character else None,
         faction_slug=character.faction_slug if character else None,
     )
+
+
+# ---------------------------------------------------------------------------
+# The email-less lanes (ADR-0088): atproto via the atp organ, and raw Ed25519
+# keys. Both answer JSON — they are XHR lanes, not browser-navigations — so the
+# OAuth redirects' shape law does not reach here, and the parking machinery is
+# shared with /returning-player instead of the redirect family.
+# ---------------------------------------------------------------------------
+
+def _answer_paused_player(
+    request: Request, pending: ReturningPlayerConsentRequired
+) -> None:
+    """Park a paused sign-in and answer the XHR lane's coded 409.
+
+    The OAuth callbacks redirect to the gate; these lanes respond with a code
+    the frontend turns into the same navigation. The parked payload is the
+    identical four fields, so ``confirm_returning_player`` cannot tell which
+    door the sign-in came in through — which is the point.
+    """
+    request.session[_PENDING_SIGNUP_KEY] = {
+        "provider": str(pending.provider),
+        "provider_user_id": pending.provider_user_id,
+        "email": pending.email,
+        "deleted_on": pending.deleted_on.isoformat(),
+    }
+    raise_coded(
+        409,
+        ErrorCode.returning_player_consent_required,
+        "That identity used to be somebody here.",
+    )
+
+
+@router.post("/atproto", response_model=SessionOut)
+async def auth_atproto(
+    payload: AtprotoLoginIn,
+    response: Response,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+) -> SessionOut:
+    """Sign in with an ATProto handle/DID + app password, via the organ.
+
+    The organ proves the identity and answers ``(did, handle)``; the password
+    dies there. ``provider_user_id`` is the DID ONLY — handles are mutable,
+    DIDs are not, and the tombstone/link machinery keys on the stable half.
+
+    ``email_verified=False`` is INERT here, not a claim: the gate reads it only
+    on the email branch, and this lane carries ``None``. Written out so the
+    call stays honest about what it is not asking.
+    """
+    did, _handle = await atp_session_login(payload.identifier, payload.password)
+    try:
+        account = await create_or_get_account(
+            provider=AuthProvider.ATPROTO,
+            provider_user_id=did,
+            email=None,
+            email_verified=False,
+            session=session,
+        )
+    except ReturningPlayerConsentRequired as pending:
+        _answer_paused_player(request, pending)
+    _set_session_cookie(response, account.id)
+    return SessionOut(message="Signed in.")
+
+
+@router.post("/atproto/challenge", response_model=AtprotoChallengeOut)
+async def auth_atproto_challenge(
+    payload: AtprotoChallengeIn,
+) -> AtprotoChallengeOut:
+    """Start the zero-credential lane: a token to post from the account.
+
+    No cookie, no identity yet — the answer is public information by design
+    (a DID and a token). The proof arrives when the token shows up on the
+    account's own feed.
+    """
+    out = await atp_challenge_start(payload.handle)
+    return AtprotoChallengeOut(
+        token=out["token"], did=out["did"], expires_in=out["expires_in"]
+    )
+
+
+@router.post("/atproto/challenge/verify", response_model=SessionOut)
+async def auth_atproto_challenge_verify(
+    payload: AtprotoVerifyIn,
+    response: Response,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+) -> SessionOut:
+    """Find the token on the feed and sign the DID in. Same mint law as above."""
+    did, _proof = await atp_challenge_verify(payload.handle, payload.token)
+    try:
+        account = await create_or_get_account(
+            provider=AuthProvider.ATPROTO,
+            provider_user_id=did,
+            email=None,
+            email_verified=False,
+            session=session,
+        )
+    except ReturningPlayerConsentRequired as pending:
+        _answer_paused_player(request, pending)
+    _set_session_cookie(response, account.id)
+    return SessionOut(message="Signed in.")
+
+
+@router.post("/key/challenge", response_model=KeyChallengeOut)
+async def auth_key_challenge(
+    payload: KeyChallengeIn,
+) -> KeyChallengeOut:
+    """Ask the organ for the exact text to sign, one-shot by its own law.
+
+    The client signs ``message`` verbatim and POSTs it to ``/auth/key/verify``.
+    The challenge lives in the organ's book, not a session row: the same
+    signature can never mint a session anywhere else, and a bad attempt still
+    burns the entry — a restart is the only retry.
+    """
+    decode_public_key(payload.public_key)  # refuse early: no book entry for bad keys
+    out = await atp_key_challenge(payload.public_key)
+    return KeyChallengeOut(message=out["message"], expires_in=out["expires_in"])
+
+
+@router.post("/key/verify", response_model=SessionOut)
+async def auth_key_verify(
+    payload: KeyVerifyIn,
+    response: Response,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+) -> SessionOut:
+    """Verify the parked challenge's signature and sign the key in.
+
+    The challenge is consumed FIRST: a failed verify buys nothing and a
+    succeeded one cannot be replayed — one parked nonce, one attempt either way.
+    A payload key differing from the parked key reads as ``KEY_BAD_SIGNATURE`` on
+    purpose: which half disagreed is information a caller does not get.
+    """
+    decode_public_key(payload.public_key)
+    decode_signature(payload.signature)
+    await atp_key_verify(payload.public_key, payload.signature)
+
+    try:
+        account = await create_or_get_account(
+            provider=AuthProvider.KEY,
+            # The key names itself: ``provider_user_id`` is the base64 raw key.
+            provider_user_id=payload.public_key,
+            email=None,
+            email_verified=False,
+            session=session,
+        )
+    except ReturningPlayerConsentRequired as pending:
+        _answer_paused_player(request, pending)
+    _set_session_cookie(response, account.id)
+    return SessionOut(message="Signed in.")
+
+
+@router.post("/key/register", response_model=SessionOut)
+async def auth_key_register(
+    payload: KeyRegisterIn,
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db),
+) -> SessionOut:
+    """Attach a key to the signed-in account — the other birth an (account, key)
+    pairing can have (mint being the one ``/auth/key/verify`` performs).
+
+    Birth is proven: the organ checks the signature FIRST, so a register
+    without possession cannot claim somebody else's key and capture their
+    future sign-ins. Idempotent for the same account (re-registering your own
+    key is a fresh proof answered like a first one), a coded 409 across
+    accounts: a key already speaks for somebody, and a second claimant is not
+    a state we mint.
+    """
+    decode_public_key(payload.public_key)
+    decode_signature(payload.signature)
+    await atp_key_verify(payload.public_key, payload.signature)  # possession, proven
+    result = await session.execute(
+        select(OAuthProvider).where(
+            OAuthProvider.provider == AuthProvider.KEY,
+            OAuthProvider.provider_user_id == payload.public_key,
+        )
+    )
+    existing = result.scalar_one_or_none()
+    if existing is not None and existing.account_id != account.id:
+        raise_coded(
+            409,
+            ErrorCode.key_already_linked,
+            "That key already speaks for an account.",
+        )
+    if existing is None:
+        session.add(
+            OAuthProvider(
+                account_id=account.id,
+                provider=AuthProvider.KEY,
+                provider_user_id=payload.public_key,
+            )
+        )
+        await session.flush()
+    return SessionOut(message="Key registered.")

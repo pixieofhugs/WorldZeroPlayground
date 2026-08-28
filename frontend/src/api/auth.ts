@@ -86,6 +86,56 @@ export function loginWith(provider: AuthProvider): void {
   window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/auth/${provider}`
 }
 
+// ---------------------------------------------------------------------------
+// The email-less lanes (ADR-0088). Unlike loginWith these are XHR, not full
+// navigations: the answer is a Set-Cookie plus a small body, and any failure
+// is an ApiError the caller renders via extractError — same as every other
+// apiPost in the app.
+// ---------------------------------------------------------------------------
+
+export type SessionOut = components['schemas']['SessionOut']
+export type AtprotoChallengeOut = components['schemas']['AtprotoChallengeOut']
+export type KeyChallengeOut = components['schemas']['KeyChallengeOut']
+
+/** Handle/DID + app password. The password dies at the organ; see services/atproto_identity.py. */
+export async function atprotoLogin(identifier: string, password: string): Promise<SessionOut> {
+  const { data } = await apiPost('/auth/atproto', { body: { identifier, password } })
+  return data
+}
+
+/** Zero-credential lane: the organ issues a token to post from the account's own feed. */
+export async function atprotoChallengeStart(handle: string): Promise<AtprotoChallengeOut> {
+  const { data } = await apiPost('/auth/atproto/challenge', { body: { handle } })
+  return data
+}
+
+export async function atprotoChallengeVerify(handle: string, token: string): Promise<SessionOut> {
+  const { data } = await apiPost('/auth/atproto/challenge/verify', { body: { handle, token } })
+  return data
+}
+
+/** The key lane's challenge: `message` is the exact text to sign (see auth/keyLane.ts). */
+export async function keyChallenge(publicKey: string): Promise<KeyChallengeOut> {
+  const { data } = await apiPost('/auth/key/challenge', { body: { public_key: publicKey } })
+  return data
+}
+
+export async function keyVerify(publicKey: string, signature: string): Promise<SessionOut> {
+  const { data } = await apiPost('/auth/key/verify', {
+    body: { public_key: publicKey, signature },
+  })
+  return data
+}
+
+/** Attach a key to the signed-in account — the other birth, and also proven:
+ *  the signature must answer a live challenge message (see auth/keyLane.ts). */
+export async function keyRegister(publicKey: string, signature: string): Promise<SessionOut> {
+  const { data } = await apiPost('/auth/key/register', {
+    body: { public_key: publicKey, signature },
+  })
+  return data
+}
+
 /**
  * The one thing the returning-player consent gate is told (#2162): the date the
  * account was deleted. A date, not a timestamp — the backend truncates it.

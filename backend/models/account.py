@@ -57,10 +57,19 @@ class AuthProvider(enum.StrEnum):
     writes it for the demo roster, and those rows exist only so the seeded
     characters have the Account every character needs. Nothing signs in through
     it (the dev bypass mints ``DEV`` rows).
+
+    ``ATPROTO`` and ``KEY`` are the email-less lanes (ADR-00XX, 2026-08-27):
+    the player's identity is a DID / an Ed25519 public key, not a mailbox, so a
+    row carrying either has ``account.email`` NULL. ``provider_user_id`` holds
+    the DID (``did:plc:…`` — handles are mutable, DIDs are not) or the base64
+    raw key bytes. The DID speaks through the atp organ; the key speaks
+    through a session-parked challenge, and neither touches OAuth.
     """
 
     GOOGLE = "google"
     DISCORD = "discord"
+    ATPROTO = "atproto"
+    KEY = "key"
     DEV = "dev"
     DEMO = "demo"
 
@@ -69,7 +78,11 @@ class Account(TimestampMixin, Base):
     __tablename__ = "account"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    # NULL when the account holds only email-less identities (ATPROTO/KEY — a
+    # DID or a public key is not a mailbox). Uniqueness is untouched: Postgres
+    # treats NULLs as distinct, so the verified-email pairing law (ADR-0075)
+    # bites exactly as hard on the addresses that exist.
+    email: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     status: Mapped[AccountStatus] = mapped_column(
         Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
     )

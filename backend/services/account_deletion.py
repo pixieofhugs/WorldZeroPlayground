@@ -73,9 +73,11 @@ DELETED_DISPLAY_NAME = "Deleted player"
 
 #: ``.invalid`` is reserved by RFC 2606 and can never be issued, so no provider
 #: can hand us an address that collides with a released one. That matters
-#: because ``Account.email`` is ``unique`` and ``nullable=False``: the address
-#: cannot be nulled, and it has to be *released* so the same person can sign up
-#: again later without colliding with their own corpse.
+#: because ``Account.email`` is ``unique``: the address has to be *released* so
+#: the same person can sign up again later without colliding with their own
+#: corpse. (The column went nullable in 0018 for the email-less providers; the
+#: placeholder scheme stays anyway — a tombstone speaking NULL instead would
+#: be a third shape for every reader of ``account.email`` to remember.)
 DELETED_EMAIL_DOMAIN = "deleted.invalid"
 
 

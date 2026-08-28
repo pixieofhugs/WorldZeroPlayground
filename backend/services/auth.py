@@ -47,10 +47,15 @@ class ReturningPlayerConsentRequired(Exception):
     March"*; the hour and minute would be a more precise signal about an account
     that no longer exists, disclosed to somebody who has authenticated as
     nobody, in exchange for nothing the sentence needs.
+
+    ``email`` is ``str | None`` since the email-less lanes landed (ADR-0088):
+    an atproto/key sign-in that parks here carries no address, and the confirm
+    step hands ``None`` straight back to :func:`create_or_get_account`, which
+    mints email-less as it did before the pause.
     """
 
     def __init__(
-        self, provider: str, provider_user_id: str, email: str, deleted_on: date
+        self, provider: str, provider_user_id: str, email: str | None, deleted_on: date
     ) -> None:
         super().__init__(provider, deleted_on)
         self.provider = provider
@@ -110,7 +115,7 @@ async def get_current_account(
 async def create_or_get_account(
     provider: AuthProvider,
     provider_user_id: str,
-    email: str,
+    email: str | None,
     email_verified: bool,
     session: AsyncSession,
 ) -> Account:
@@ -120,6 +125,13 @@ async def create_or_get_account(
     address, and it has **no default on purpose** (#1771): a boolean a caller
     must supply is harder to forget than a check a new provider handler must
     remember to write. It is enforced on the email branch only — see below.
+
+    ``email`` became ``str | None`` when the email-less lanes landed
+    (ADR-0088): an ATProto DID or an Ed25519 key is not a mailbox. A ``None``
+    email skips the verified claim, the account lookup and the link below
+    wholesale — they are all statements about an address this caller does not
+    carry. The ``provider_user_id`` + tombstone work above is email-agnostic
+    and runs for every lane unchanged.
 
     Deliberately takes no ``access_token`` (#1374): World Zero authenticates
     every request with its own JWT and never calls a provider API on the
@@ -199,10 +211,11 @@ async def create_or_get_account(
 
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
 
-    # `is not True` rather than a falsy test: Google has emitted this claim as
-    # the *string* "true", and every other non-bool is equally a provider whose
-    # answer we did not understand.
-    if email_verified is not True:
+    # The whole verified-email argument applies to a caller carrying an
+    # address. Email-less lanes (ADR-0088) hold nothing a provider could vouch
+    # for, so the gate below does not apply to them at all: guard the branch,
+    # not the value.
+    if email is not None and email_verified is not True:
         raise_coded(
             403,
             ErrorCode.oauth_email_unverified,
@@ -232,9 +245,13 @@ async def create_or_get_account(
             deleted_on=tombstone.created_at.date(),
         )
 
-    # No existing OAuth link — find or create the Account by email
-    result = await session.execute(select(Account).where(Account.email == email))
-    account = result.scalar_one_or_none()
+    # No existing OAuth link — find or create the Account by email. None of
+    # this branch exists for a None email (ADR-0088): there is no address to
+    # look up, nothing to link, and a mint is the only question left.
+    account: Account | None = None
+    if email is not None:
+        result = await session.execute(select(Account).where(Account.email == email))
+        account = result.scalar_one_or_none()
 
     if account is None:
         account = Account(email=email)

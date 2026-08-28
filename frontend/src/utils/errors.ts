@@ -94,6 +94,9 @@ const GENERIC_SERVER_PROSE = 'Internal Server Error'
  */
 export const ErrorCode = {
   taskBankFull: 'TASK_BANK_FULL',
+  // ADR-0088: the XHR sign-in lanes (ATProto, public key) meet a 409 where the
+  // OAuth redirect family would have been SENT to the gate; the lane navigates.
+  returningPlayerConsentRequired: 'RETURNING_PLAYER_CONSENT_REQUIRED',
 } as const
 
 /**

@@ -447,6 +447,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/atproto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Atproto
+         * @description Sign in with an ATProto handle/DID + app password, via the organ.
+         *
+         *     The organ proves the identity and answers ``(did, handle)``; the password
+         *     dies there. ``provider_user_id`` is the DID ONLY — handles are mutable,
+         *     DIDs are not, and the tombstone/link machinery keys on the stable half.
+         *
+         *     ``email_verified=False`` is INERT here, not a claim: the gate reads it only
+         *     on the email branch, and this lane carries ``None``. Written out so the
+         *     call stays honest about what it is not asking.
+         */
+        post: operations["auth_atproto_auth_atproto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/atproto/challenge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Atproto Challenge
+         * @description Start the zero-credential lane: a token to post from the account.
+         *
+         *     No cookie, no identity yet — the answer is public information by design
+         *     (a DID and a token). The proof arrives when the token shows up on the
+         *     account's own feed.
+         */
+        post: operations["auth_atproto_challenge_auth_atproto_challenge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/atproto/challenge/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Atproto Challenge Verify
+         * @description Find the token on the feed and sign the DID in. Same mint law as above.
+         */
+        post: operations["auth_atproto_challenge_verify_auth_atproto_challenge_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/dev-login": {
         parameters: {
             query?: never;
@@ -570,6 +642,84 @@ export interface paths {
         get: operations["auth_google_callback_auth_google_callback_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/key/challenge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Key Challenge
+         * @description Ask the organ for the exact text to sign, one-shot by its own law.
+         *
+         *     The client signs ``message`` verbatim and POSTs it to ``/auth/key/verify``.
+         *     The challenge lives in the organ's book, not a session row: the same
+         *     signature can never mint a session anywhere else, and a bad attempt still
+         *     burns the entry — a restart is the only retry.
+         */
+        post: operations["auth_key_challenge_auth_key_challenge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/key/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Key Register
+         * @description Attach a key to the signed-in account — the other birth an (account, key)
+         *     pairing can have (mint being the one ``/auth/key/verify`` performs).
+         *
+         *     Birth is proven: the organ checks the signature FIRST, so a register
+         *     without possession cannot claim somebody else's key and capture their
+         *     future sign-ins. Idempotent for the same account (re-registering your own
+         *     key is a fresh proof answered like a first one), a coded 409 across
+         *     accounts: a key already speaks for somebody, and a second claimant is not
+         *     a state we mint.
+         */
+        post: operations["auth_key_register_auth_key_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/key/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Key Verify
+         * @description Verify the parked challenge's signature and sign the key in.
+         *
+         *     The challenge is consumed FIRST: a failed verify buys nothing and a
+         *     succeeded one cannot be replayed — one parked nonce, one attempt either way.
+         *     A payload key differing from the parked key reads as ``KEY_BAD_SIGNATURE`` on
+         *     purpose: which half disagreed is information a caller does not get.
+         */
+        post: operations["auth_key_verify_auth_key_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1928,6 +2078,59 @@ export interface components {
             primary_faction_slug?: string | null;
             /** Title */
             title?: string | null;
+        };
+        /**
+         * AtprotoChallengeIn
+         * @description ``POST /auth/atproto/challenge`` — the zero-credential lane (ADR-0088).
+         *
+         *     One field: the handle whose feed will carry the proof. No credentials of
+         *     any kind — the proof is a public post.
+         */
+        AtprotoChallengeIn: {
+            /** Handle */
+            handle: string;
+        };
+        /**
+         * AtprotoChallengeOut
+         * @description What the zero-credential lane answers at start: token, DID, timeout.
+         *
+         *     ``token`` is the string to post. ``did`` is who the organ resolved the
+         *     handle to — the player checks it matches the account they meant before
+         *     posting anything. ``expires_in`` is seconds (the organ's book law).
+         */
+        AtprotoChallengeOut: {
+            /** Did */
+            did: string;
+            /** Expires In */
+            expires_in: number;
+            /** Token */
+            token: string;
+        };
+        /**
+         * AtprotoLoginIn
+         * @description ``POST /auth/atproto`` — the app-password lane (ADR-0088).
+         *
+         *     ``identifier`` is the player's handle OR their DID; the organ resolves
+         *     either and its DID answer is authoritative. The password is an atproto
+         *     **app password** (narrow, revocable from the account's settings), handed to
+         *     the atp organ's ``createSession`` and dropped there — it is never stored,
+         *     forwarded, or logged on either side of that call.
+         */
+        AtprotoLoginIn: {
+            /** Identifier */
+            identifier: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * AtprotoVerifyIn
+         * @description ``POST /auth/atproto/challenge/verify`` — ``handle`` + the token we issued.
+         */
+        AtprotoVerifyIn: {
+            /** Handle */
+            handle: string;
+            /** Token */
+            token: string;
         };
         /** AwaitingSubmissionItem */
         AwaitingSubmissionItem: {
@@ -3604,6 +3807,55 @@ export interface components {
             /** Praxis Id */
             praxis_id: number;
         };
+        /**
+         * KeyChallengeIn
+         * @description ``POST /auth/key/challenge`` — the base64 raw Ed25519 key (32 bytes).
+         */
+        KeyChallengeIn: {
+            /** Public Key */
+            public_key: string;
+        };
+        /**
+         * KeyChallengeOut
+         * @description The canonical challenge text, verbatim — sign THESE bytes as UTF-8.
+         *
+         *     Nothing else to assemble and nothing the client may edit: the server
+         *     re-derives the message from what it parked, so the document signed is the
+         *     document checked. ``services.key_auth`` owns the format law.
+         */
+        KeyChallengeOut: {
+            /** Expires In */
+            expires_in: number;
+            /** Message */
+            message: string;
+        };
+        /**
+         * KeyRegisterIn
+         * @description ``POST /auth/key/register`` — attach a key to the signed-in account.
+         *
+         *     A signature over a live challenge, not just the key: without proof of
+         *     possession, attaching someone else's public key here would capture every
+         *     sign-in that key ever makes (only one account may hold a key, and first
+         *     claimant wins). The client gets its message from ``/auth/key/challenge``
+         *     first — mint and attach are the two births an (account, key) pairing can
+         *     have, and both are born proven.
+         */
+        KeyRegisterIn: {
+            /** Public Key */
+            public_key: string;
+            /** Signature */
+            signature: string;
+        };
+        /**
+         * KeyVerifyIn
+         * @description ``POST /auth/key/verify`` — key + base64 signature over the challenge.
+         */
+        KeyVerifyIn: {
+            /** Public Key */
+            public_key: string;
+            /** Signature */
+            signature: string;
+        };
         /** LevelProfileOut */
         LevelProfileOut: {
             /** Rank Key */
@@ -4312,6 +4564,18 @@ export interface components {
              * Format: date
              */
             deleted_on: string;
+        };
+        /**
+         * SessionOut
+         * @description Acknowledgement for every XHR sign-in lane (ADR-0088).
+         *
+         *     Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
+         *     and the body exists so the generated client has a declared shape. The
+         *     caller learns who it now is from ``/auth/me``, always.
+         */
+        SessionOut: {
+            /** Message */
+            message: string;
         };
         /**
          * SidebarOut
@@ -5613,6 +5877,105 @@ export interface operations {
             };
         };
     };
+    auth_atproto_auth_atproto_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtprotoLoginIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_atproto_challenge_auth_atproto_challenge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtprotoChallengeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AtprotoChallengeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_atproto_challenge_verify_auth_atproto_challenge_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtprotoVerifyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dev_login_auth_dev_login_post: {
         parameters: {
             query?: {
@@ -5716,6 +6079,107 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    auth_key_challenge_auth_key_challenge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeyChallengeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeyChallengeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_key_register_auth_key_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeyRegisterIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_key_verify_auth_key_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeyVerifyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

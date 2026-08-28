@@ -2,7 +2,6 @@ from datetime import date
 from typing import Optional
 
 from schemas.base import WireModel
-
 from schemas.character import CharacterOut
 
 
@@ -146,3 +145,98 @@ class DevLoginOut(WireModel):
     character_id: Optional[int] = None
     character_name: Optional[str] = None
     faction_slug: Optional[str] = None
+
+
+class AtprotoLoginIn(WireModel):
+    """``POST /auth/atproto`` — the app-password lane (ADR-0088).
+
+    ``identifier`` is the player's handle OR their DID; the organ resolves
+    either and its DID answer is authoritative. The password is an atproto
+    **app password** (narrow, revocable from the account's settings), handed to
+    the atp organ's ``createSession`` and dropped there — it is never stored,
+    forwarded, or logged on either side of that call.
+    """
+
+    identifier: str
+    password: str
+
+
+class AtprotoChallengeIn(WireModel):
+    """``POST /auth/atproto/challenge`` — the zero-credential lane (ADR-0088).
+
+    One field: the handle whose feed will carry the proof. No credentials of
+    any kind — the proof is a public post.
+    """
+
+    handle: str
+
+
+class AtprotoChallengeOut(WireModel):
+    """What the zero-credential lane answers at start: token, DID, timeout.
+
+    ``token`` is the string to post. ``did`` is who the organ resolved the
+    handle to — the player checks it matches the account they meant before
+    posting anything. ``expires_in`` is seconds (the organ's book law).
+    """
+
+    token: str
+    did: str
+    expires_in: int
+
+
+class AtprotoVerifyIn(WireModel):
+    """``POST /auth/atproto/challenge/verify`` — ``handle`` + the token we issued."""
+
+    handle: str
+    token: str
+
+
+class SessionOut(WireModel):
+    """Acknowledgement for every XHR sign-in lane (ADR-0088).
+
+    Same posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,
+    and the body exists so the generated client has a declared shape. The
+    caller learns who it now is from ``/auth/me``, always.
+    """
+
+    message: str
+
+
+class KeyChallengeIn(WireModel):
+    """``POST /auth/key/challenge`` — the base64 raw Ed25519 key (32 bytes)."""
+
+    public_key: str
+
+
+class KeyChallengeOut(WireModel):
+    """The canonical challenge text, verbatim — sign THESE bytes as UTF-8.
+
+    Nothing else to assemble and nothing the client may edit: the server
+    re-derives the message from what it parked, so the document signed is the
+    document checked. ``services.key_auth`` owns the format law.
+    """
+
+    message: str
+    expires_in: int
+
+
+class KeyVerifyIn(WireModel):
+    """``POST /auth/key/verify`` — key + base64 signature over the challenge."""
+
+    public_key: str
+    signature: str
+
+
+class KeyRegisterIn(WireModel):
+    """``POST /auth/key/register`` — attach a key to the signed-in account.
+
+    A signature over a live challenge, not just the key: without proof of
+    possession, attaching someone else's public key here would capture every
+    sign-in that key ever makes (only one account may hold a key, and first
+    claimant wins). The client gets its message from ``/auth/key/challenge``
+    first — mint and attach are the two births an (account, key) pairing can
+    have, and both are born proven.
+    """
+
+    public_key: str
+    signature: str

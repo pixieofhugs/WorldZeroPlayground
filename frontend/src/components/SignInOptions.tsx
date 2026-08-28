@@ -1,7 +1,17 @@
-import { useEffect, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { loginWith, type AuthProvider } from '../api/auth'
+import { useNavigate } from 'react-router-dom'
+import {
+  atprotoChallengeStart,
+  atprotoChallengeVerify,
+  atprotoLogin,
+  loginWith,
+  type AuthProvider,
+} from '../api/auth'
+import { keyLaneAvailable, loadOrCreateKey, loginWithKey } from '../auth/keyLane'
 import { useFormFactor } from '../hooks/useFormFactor'
+import { extractError, extractErrorCode } from '../utils/errors'
+import { ErrorCode } from '../utils/errors'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
@@ -11,10 +21,12 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * Discord shipped server-side (#1772) and stayed unreachable. This is the one
  * component that knows which providers exist and what they are called.
  *
- * Two callers now: the NavBar's sign-in sheet below, and the onboarding arc's
- * auth card (#1861), which is where the Home hero's pair went — a stranger is
- * owed the explanation before the ask, so the hero leads into `/start` and
- * `/start` offers the providers.
+ * Two caller families now (ADR-0088): the NavBar's sign-in sheet below, and
+ * the onboarding arc's auth card (#1861), which is where the Home hero's pair
+ * went — a stranger is owed the explanation before the ask, so the hero leads
+ * into `/start` and `/start` offers the providers. The email-less lanes render
+ * the same in both: they are forms, not navigations, so they stack under the
+ * buttons wherever the container stacks.
  *
  * NO PROVIDER NAME IN FRAMING COPY (#1738): a provider is named on the button
  * that goes to it and nowhere else. `signIn.title` frames the stop as somewhere
@@ -22,7 +34,13 @@ import { drawAtRoot } from './ui/drawAtRoot'
  *
  * The caller owns the container — a column in the sheet below, a wrapping row
  * on the onboarding sheet — so the buttons need no layout variant of their own,
- * and neither provider is styled as the recommended one.
+ * and no provider is styled as the recommended one.
+ *
+ * XHR lanes vs the redirect family: OAuth needs the browser to LEAVE, so its
+ * success is this tab's death; the ATProto and key lanes answer in place and
+ * finish with `location.assign('/')` — one full read of the app's own boot,
+ * exactly the boot the OAuth callback performs, so the player's landing can
+ * never hinge on which door they walked through.
  */
 export default function SignInOptions({
   className = 'btn-primary',
@@ -35,9 +53,9 @@ export default function SignInOptions({
    * Run just before the browser leaves for the provider.
    *
    * `loginWith` is a full document navigation, so this is the last moment any
-   * of this tab's code runs. The onboarding flow uses it to record that it was
-   * mid-flow, because the backend callback redirects to a constant
-   * (`FRONTEND_URL`) and nothing else survives the round trip. Absent
+   * of this tab's code runs; the XHR lanes call it on the same terms, right
+   * before `location.assign('/')`. The onboarding flow uses it to record that
+   * it was mid-flow, because nothing else survives a whole-page boot. Absent
    * everywhere else — the NavBar sheet and the Home hero have no place to
    * return to.
    */
@@ -48,8 +66,6 @@ export default function SignInOptions({
     onChoose?.()
     loginWith(provider)
   }
-  // Written out rather than mapped over a provider list: two of them, and a
-  // literal key is what keeps the catalog greppable from the call site.
   return (
     <>
       <button
@@ -70,7 +86,221 @@ export default function SignInOptions({
       >
         {t('signIn.discord')}
       </button>
+      <AtprotoLane className={className} style={style} onChoose={onChoose} />
+      <KeyLane className={className} style={style} onChoose={onChoose} />
     </>
+  )
+}
+
+/**
+ * The shared end of any XHR sign-in: a yes boots the app anew, a paused
+ * identity walks to the returning-player gate, anything else is an error line
+ * under the lane that asked. One helper so no lane invents its own copy of
+ * the law. Returns nothing; renders nothing itself — the setter shapes that.
+ */
+async function finishSignIn(
+  trySignIn: () => Promise<unknown>,
+  onChoose: (() => void) | undefined,
+  setError: (copy: string) => void,
+  navigate: (to: string) => void,
+): Promise<void> {
+  try {
+    await trySignIn()
+  } catch (err) {
+    if (extractErrorCode(err) === ErrorCode.returningPlayerConsentRequired) {
+      navigate('/start/again')
+      return
+    }
+    setError(extractError(err))
+    return
+  }
+  onChoose?.()
+  window.location.assign('/')
+}
+
+/** ATProto: handle/DID + app password, or the zero-credential "prove it in a post" lane. */
+function AtprotoLane({
+  className,
+  style,
+  onChoose,
+}: {
+  className?: string
+  style?: CSSProperties
+  onChoose?: () => void
+}) {
+  const { t } = useTranslation('common')
+  const navigate = useNavigate()
+  const [handle, setHandle] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'password' | 'challenge'>('password')
+  const [challenge, setChallenge] = useState<{ token: string } | null>(null)
+
+  const submitPassword = async () => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    await finishSignIn(
+      () => atprotoLogin(handle.trim(), password),
+      onChoose,
+      setError,
+      navigate,
+    )
+    setBusy(false)
+  }
+
+  const startChallenge = async () => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const out = await atprotoChallengeStart(handle.trim())
+      setChallenge({ token: out.token })
+    } catch (err) {
+      setError(extractError(err))
+    }
+    setBusy(false)
+  }
+
+  const checkChallenge = async () => {
+    if (busy || !challenge) return
+    setBusy(true)
+    setError(null)
+    await finishSignIn(
+      () => atprotoChallengeVerify(handle.trim(), challenge.token),
+      onChoose,
+      setError,
+      navigate,
+    )
+    setBusy(false)
+  }
+
+  return (
+    <div style={lane} data-testid="sign-in-atproto">
+      <input
+        aria-label={t('signIn.atprotoHandle')}
+        placeholder={t('signIn.atprotoHandle')}
+        value={handle}
+        onChange={(e) => setHandle(e.target.value)}
+        style={laneInput}
+        autoComplete="username"
+      />
+      {mode === 'password' ? (
+        <>
+          <input
+            aria-label={t('signIn.atprotoPassword')}
+            placeholder={t('signIn.atprotoPassword')}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={laneInput}
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            className={className}
+            style={style}
+            onClick={submitPassword}
+            data-testid="sign-in-atproto-go"
+          >
+            {busy ? t('signIn.signingIn') : t('signIn.atproto')}
+          </button>
+          <button type="button" style={laneLink} onClick={() => setMode('challenge')}>
+            {t('signIn.atprotoSwitchToPost')}
+          </button>
+        </>
+      ) : (
+        <>
+          {challenge ? (
+            <>
+              <p style={laneHelp}>{t('signIn.atprotoPostHelp')}</p>
+              <code style={laneToken}>{challenge.token}</code>
+              <button
+                type="button"
+                className={className}
+                style={style}
+                onClick={checkChallenge}
+                data-testid="sign-in-atproto-check"
+              >
+                {busy ? t('signIn.signingIn') : t('signIn.atprotoCheck')}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className={className}
+              style={style}
+              onClick={startChallenge}
+              data-testid="sign-in-atproto-start"
+            >
+              {busy ? t('signIn.signingIn') : t('signIn.atprotoStart')}
+            </button>
+          )}
+          <button type="button" style={laneLink} onClick={() => setMode('password')}>
+            {t('signIn.atprotoSwitchToPassword')}
+          </button>
+        </>
+      )}
+      {error && (
+        <p role="alert" style={laneError} data-testid="sign-in-atproto-error">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** The key lane (ADR-0088): this browser IS the key; hidden where it cannot be one. */
+function KeyLane({
+  className,
+  style,
+  onChoose,
+}: {
+  className?: string
+  style?: CSSProperties
+  onChoose?: () => void
+}) {
+  const { t } = useTranslation('common')
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (!keyLaneAvailable()) return null
+
+  const signInWithKey = async () => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    await finishSignIn(
+      async () => {
+        const key = await loadOrCreateKey()
+        await loginWithKey(key)
+      },
+      onChoose,
+      setError,
+      navigate,
+    )
+    setBusy(false)
+  }
+
+  return (
+    <div style={lane} data-testid="sign-in-key">
+      <button
+        type="button"
+        className={className}
+        style={style}
+        onClick={signInWithKey}
+        data-testid="sign-in-key-go"
+      >
+        {busy ? t('signIn.signingIn') : t('signIn.key')}
+      </button>
+      {error && (
+        <p role="alert" style={laneError} data-testid="sign-in-key-error">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -185,4 +415,48 @@ const options: CSSProperties = {
 }
 const fullWidth: CSSProperties = {
   width: '100%', padding: 'var(--space-md) var(--space-lg)',
+}
+
+// --- the email-less lanes (ADR-0088) ----------------------------------------
+// Token-driven, dressless: lane buttons wear the caller's class like every
+// other door's, so no package of borders makes one look chosen. Inputs read
+// the sheet's own ground and line tokens — the same pair the seam around them
+// is cut from — because a lane that invents its own input surface is a lane
+// that drifts.
+const lane: CSSProperties = {
+  display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)',
+  paddingTop: 'var(--space-sm)',
+  borderTop: '1px solid var(--color-border-strong)',
+}
+const laneInput: CSSProperties = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border-strong)', borderRadius: 6,
+  padding: 'var(--space-sm) var(--space-md)',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
+}
+const laneHelp : CSSProperties = {
+  margin: 0, color: 'var(--color-text-primary)',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
+}
+const laneToken: CSSProperties = {
+  display: 'block', padding: 'var(--space-sm) var(--space-md)',
+  background: 'var(--color-bg-surface)', color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border-strong)', borderRadius: 6,
+  fontSize: 'var(--text-content)',
+  wordBreak: 'break-all', userSelect: 'all',
+}
+// A lane switcher is a plain sentence of type, not a third button: the section
+// already holds the button that names the provider, and the framing-copy law
+// (#1738) leaves no button-shaped home for "the other way in".
+const laneLink: CSSProperties = {
+  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+  color: 'var(--color-text-primary)', textDecoration: 'underline',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
+  alignSelf: 'flex-start',
+}
+const laneError: CSSProperties = {
+  margin: 0, color: 'var(--color-text-primary)',
+  fontFamily: 'var(--font-body)', fontStyle: 'italic',
+  fontSize: 'var(--text-content)',
 }

@@ -250,6 +250,82 @@
         "title": "AdminTaskPatch",
         "type": "object"
       },
+      "AtprotoChallengeIn": {
+        "description": "``POST /auth/atproto/challenge`` — the zero-credential lane (ADR-0088).\n\nOne field: the handle whose feed will carry the proof. No credentials of\nany kind — the proof is a public post.",
+        "properties": {
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "handle"
+        ],
+        "title": "AtprotoChallengeIn",
+        "type": "object"
+      },
+      "AtprotoChallengeOut": {
+        "description": "What the zero-credential lane answers at start: token, DID, timeout.\n\n``token`` is the string to post. ``did`` is who the organ resolved the\nhandle to — the player checks it matches the account they meant before\nposting anything. ``expires_in`` is seconds (the organ's book law).",
+        "properties": {
+          "did": {
+            "title": "Did",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "did",
+          "expires_in"
+        ],
+        "title": "AtprotoChallengeOut",
+        "type": "object"
+      },
+      "AtprotoLoginIn": {
+        "description": "``POST /auth/atproto`` — the app-password lane (ADR-0088).\n\n``identifier`` is the player's handle OR their DID; the organ resolves\neither and its DID answer is authoritative. The password is an atproto\n**app password** (narrow, revocable from the account's settings), handed to\nthe atp organ's ``createSession`` and dropped there — it is never stored,\nforwarded, or logged on either side of that call.",
+        "properties": {
+          "identifier": {
+            "title": "Identifier",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "title": "AtprotoLoginIn",
+        "type": "object"
+      },
+      "AtprotoVerifyIn": {
+        "description": "``POST /auth/atproto/challenge/verify`` — ``handle`` + the token we issued.",
+        "properties": {
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "handle",
+          "token"
+        ],
+        "title": "AtprotoVerifyIn",
+        "type": "object"
+      },
       "AwaitingSubmissionItem": {
         "properties": {
           "actor_avatar_url": {
@@ -3830,6 +3906,77 @@
         "title": "InviteResponseOut",
         "type": "object"
       },
+      "KeyChallengeIn": {
+        "description": "``POST /auth/key/challenge`` — the base64 raw Ed25519 key (32 bytes).",
+        "properties": {
+          "public_key": {
+            "title": "Public Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_key"
+        ],
+        "title": "KeyChallengeIn",
+        "type": "object"
+      },
+      "KeyChallengeOut": {
+        "description": "The canonical challenge text, verbatim — sign THESE bytes as UTF-8.\n\nNothing else to assemble and nothing the client may edit: the server\nre-derives the message from what it parked, so the document signed is the\ndocument checked. ``services.key_auth`` owns the format law.",
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "expires_in"
+        ],
+        "title": "KeyChallengeOut",
+        "type": "object"
+      },
+      "KeyRegisterIn": {
+        "description": "``POST /auth/key/register`` — attach a key to the signed-in account.\n\nA signature over a live challenge, not just the key: without proof of\npossession, attaching someone else's public key here would capture every\nsign-in that key ever makes (only one account may hold a key, and first\nclaimant wins). The client gets its message from ``/auth/key/challenge``\nfirst — mint and attach are the two births an (account, key) pairing can\nhave, and both are born proven.",
+        "properties": {
+          "public_key": {
+            "title": "Public Key",
+            "type": "string"
+          },
+          "signature": {
+            "title": "Signature",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_key",
+          "signature"
+        ],
+        "title": "KeyRegisterIn",
+        "type": "object"
+      },
+      "KeyVerifyIn": {
+        "description": "``POST /auth/key/verify`` — key + base64 signature over the challenge.",
+        "properties": {
+          "public_key": {
+            "title": "Public Key",
+            "type": "string"
+          },
+          "signature": {
+            "title": "Signature",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_key",
+          "signature"
+        ],
+        "title": "KeyVerifyIn",
+        "type": "object"
+      },
       "LevelProfileOut": {
         "properties": {
           "rank_key": {
@@ -5408,6 +5555,20 @@
           "deleted_on"
         ],
         "title": "ReturningPlayerOut",
+        "type": "object"
+      },
+      "SessionOut": {
+        "description": "Acknowledgement for every XHR sign-in lane (ADR-0088).\n\nSame posture as :class:`LogoutOut`: the work is the ``Set-Cookie`` header,\nand the body exists so the generated client has a declared shape. The\ncaller learns who it now is from ``/auth/me``, always.",
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "SessionOut",
         "type": "object"
       },
       "SidebarOut": {
@@ -7985,6 +8146,132 @@
         ]
       }
     },
+    "/auth/atproto": {
+      "post": {
+        "description": "Sign in with an ATProto handle/DID + app password, via the organ.\n\nThe organ proves the identity and answers ``(did, handle)``; the password\ndies there. ``provider_user_id`` is the DID ONLY — handles are mutable,\nDIDs are not, and the tombstone/link machinery keys on the stable half.\n\n``email_verified=False`` is INERT here, not a claim: the gate reads it only\non the email branch, and this lane carries ``None``. Written out so the\ncall stays honest about what it is not asking.",
+        "operationId": "auth_atproto_auth_atproto_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtprotoLoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Atproto",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/atproto/challenge": {
+      "post": {
+        "description": "Start the zero-credential lane: a token to post from the account.\n\nNo cookie, no identity yet — the answer is public information by design\n(a DID and a token). The proof arrives when the token shows up on the\naccount's own feed.",
+        "operationId": "auth_atproto_challenge_auth_atproto_challenge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtprotoChallengeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtprotoChallengeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Atproto Challenge",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/atproto/challenge/verify": {
+      "post": {
+        "description": "Find the token on the feed and sign the DID in. Same mint law as above.",
+        "operationId": "auth_atproto_challenge_verify_auth_atproto_challenge_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtprotoVerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Atproto Challenge Verify",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/auth/dev-login": {
       "post": {
         "description": "Dev-only bot login (bypasses Google OAuth). Disabled in production.\n\nOptional query params turn it into a one-call e2e fixture:\n  key     — distinct dev account selector (\"1\" = the legacy dev account)\n  name    — if set, ensure the account carries a character with this display name\n  level   — if >0, seed the carried character's current-era level (collab needs >=1)\n  faction — if set, place the carried character in that faction directly\n\n`faction` deliberately bypasses the join gate rather than replaying it.\nPlayers start unaffiliated and most factions are invite-gated\n(ADR-0030), so there is no real flow that puts a test character in all\nseven — and the contrast sweep (#651) needs exactly that. This is the\nsame dev-only seam as `key`/`name`/`level`, behind the same production\nguard; it is not a second enabler.\n\nReturns account_id + character_id so tests can invite/credit by id.",
@@ -8126,6 +8413,155 @@
           }
         },
         "summary": "Auth Google Callback",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/key/challenge": {
+      "post": {
+        "description": "Ask the organ for the exact text to sign, one-shot by its own law.\n\nThe client signs ``message`` verbatim and POSTs it to ``/auth/key/verify``.\nThe challenge lives in the organ's book, not a session row: the same\nsignature can never mint a session anywhere else, and a bad attempt still\nburns the entry — a restart is the only retry.",
+        "operationId": "auth_key_challenge_auth_key_challenge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeyChallengeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyChallengeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Key Challenge",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/key/register": {
+      "post": {
+        "description": "Attach a key to the signed-in account — the other birth an (account, key)\npairing can have (mint being the one ``/auth/key/verify`` performs).\n\nBirth is proven: the organ checks the signature FIRST, so a register\nwithout possession cannot claim somebody else's key and capture their\nfuture sign-ins. Idempotent for the same account (re-registering your own\nkey is a fresh proof answered like a first one), a coded 409 across\naccounts: a key already speaks for somebody, and a second claimant is not\na state we mint.",
+        "operationId": "auth_key_register_auth_key_register_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeyRegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Auth Key Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/key/verify": {
+      "post": {
+        "description": "Verify the parked challenge's signature and sign the key in.\n\nThe challenge is consumed FIRST: a failed verify buys nothing and a\nsucceeded one cannot be replayed — one parked nonce, one attempt either way.\nA payload key differing from the parked key reads as ``KEY_BAD_SIGNATURE`` on\npurpose: which half disagreed is information a caller does not get.",
+        "operationId": "auth_key_verify_auth_key_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeyVerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Key Verify",
         "tags": [
           "auth"
         ]

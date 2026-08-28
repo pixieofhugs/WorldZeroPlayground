@@ -91,7 +91,11 @@ async def build_current_user(
 
     return CurrentUser(
         account_id=account.id,
-        email=account.email,
+        # "" rather than None CANNOT mean "no email here" anymore — ADR-0088's
+        # email-less lanes make None a live value: an atproto/key player has no
+        # address, and the card's email line is simply absent then, exactly
+        # like the provider line for a row-less account (see `AccountSection`).
+        email=account.email or "",
         # "" rather than None: a demo/seeded account can carry no OAuth row, and
         # the card's provider line is simply absent then — see `AccountSection`.
         provider=provider or "",

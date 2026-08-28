@@ -48,6 +48,7 @@ import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
+import { KEY_STORAGE_KEY } from '../../../auth/keyLane'
 import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
@@ -88,6 +89,8 @@ describe('the section reaches the page', () => {
 const KNOWN_WRITERS = [
   'auth/AdminModeContext.tsx',
   'auth/AuthContext.tsx',
+  // ADR-0088: the key lane's keyring — disclosed in entry form below.
+  'auth/keyLane.ts',
   'components/InvitationWatcher.tsx',
   'components/LevelUpWatcher.tsx',
   'hooks/useMotion.tsx',
@@ -118,8 +121,8 @@ describe('nothing writes to a browser store without being disclosed', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all ten storage entries and the one cookie', () => {
-    expect(names).toHaveLength(11)
+  it('discloses all eleven storage entries and the one cookie', () => {
+    expect(names).toHaveLength(12)
   })
 
   it.each([
@@ -133,6 +136,7 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     ['seen invites', SEEN_INVITES_KEY_PREFIX],
     ['last seen level', LAST_SEEN_LEVEL_KEY_PREFIX],
     ['onboarding handoff', ONBOARDING_HANDOFF_KEY],
+    ['key ring', KEY_STORAGE_KEY],
   ])('discloses the %s key', (_label, key) => {
     expect(names).toContain(key)
   })

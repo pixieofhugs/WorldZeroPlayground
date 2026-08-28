@@ -18,6 +18,7 @@
  * established).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import '../../i18n'
 
@@ -27,13 +28,28 @@ vi.mock('../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
 }))
 
-vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
+// Every name SignInOptions/its lanes import: a partial mock is a broken module.
+vi.mock('../../api/auth', () => ({
+  loginWith: () => {},
+  atprotoLogin: () => {},
+  atprotoChallengeStart: () => {},
+  atprotoChallengeVerify: () => {},
+  keyChallenge: () => {},
+  keyVerify: () => {},
+  keyRegister: () => {},
+}))
 
 const { SignInSheet } = await import('../SignInOptions')
 
 const draw = (formFactor: 'mobile' | 'desktop') => {
   mocks.formFactor = formFactor
-  return renderToStaticMarkup(<SignInSheet open onClose={() => {}} />)
+  // The XHR lanes navigate (paused sign-in -> the gate), so a router
+  // ambiently, the way Layout always mounts it.
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <SignInSheet open onClose={() => {}} />
+    </MemoryRouter>,
+  )
 }
 
 describe('SignInSheet chassis', () => {
@@ -74,6 +90,8 @@ describe('SignInSheet chassis', () => {
       expect(markup).toContain('aria-modal="true"')
       expect(markup).toContain('data-testid="sign-in-google"')
       expect(markup).toContain('data-testid="sign-in-discord"')
+      expect(markup).toContain('data-testid="sign-in-atproto"')
+      expect(markup).toContain('data-testid="sign-in-key"')
       // The scrim is a real, labelled button: dismissal is not mouse-only.
       expect(markup).toContain('aria-label="Close"')
     }

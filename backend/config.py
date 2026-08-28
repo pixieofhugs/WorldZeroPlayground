@@ -17,9 +17,10 @@ _ENV_DEVELOPMENT = "development"
 #: Every OAuth credential, in one list, because the list *is* the mechanism
 #: (#1814). These are blank-by-default so a checkout whose ``.env`` predates a
 #: provider still boots — and required in production, enforced below by walking
-#: this tuple. Adding provider #3 means adding its three names here and nothing
-#: else: it inherits the guard, and no stale ``.env`` anywhere takes a whole test
-#: suite down at collection the way #1789's Discord fields did.
+#: this tuple. Adding a provider #3 means adding its three names here and nothing
+#: else — UNLESS the provider carries no shared secret at all (#1771's tuple is
+#: about console-minted client credentials; the email-less lanes of ADR-0088 —
+#: atproto via the atp organ, and raw Ed25519 keys — hold none, and stay out).
 _OAUTH_CREDENTIAL_FIELDS = (
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
@@ -52,6 +53,11 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     COOKIE_DOMAIN: str | None = None
     ADMIN_CLI_SECRET: str = ""
+    #: The atp organ's loopback address (ADR-0088). Loopback by default because
+    #: that is where the organ lives in every deployment so far; NOT in
+    #: ``_OAUTH_CREDENTIAL_FIELDS`` — the organ holds no shared secret, it holds
+    #: custody.
+    ATP_ORGAN_URL: str = "http://127.0.0.1:8571"
     # Comma-separated browser origins allowed to talk to this API. Read by
     # exactly two consumers, and it has to stay exactly two: ``CORSMiddleware``
     # (every REST route) and the praxis room's hand-rolled ``Origin`` check

@@ -9,6 +9,7 @@ import { useFormFactor } from '../../../hooks/useFormFactor'
 import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
+import { KEY_STORAGE_KEY } from '../../../auth/keyLane'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
@@ -93,6 +94,11 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
   {
     name: MOTION_STORAGE_KEY,
     purposeKey: 'settings.cookies.entries.motion',
+    whereKey: BROWSER_WHERE,
+  },
+  {
+    name: KEY_STORAGE_KEY,
+    purposeKey: 'settings.cookies.entries.keyRing',
     whereKey: BROWSER_WHERE,
   },
   {

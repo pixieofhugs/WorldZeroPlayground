@@ -244,6 +244,46 @@ class ErrorCode(str, enum.Enum):
     #: session cookie's ten minutes lapsed. Not a failure of the sign-in: there
     #: is no sign-in. The player starts one.
     returning_player_consent_expired = "RETURNING_PLAYER_CONSENT_EXPIRED"
+    #: ADR-0088. The atp organ is World Zero's one AT Protocol speaker; this is
+    #: the lane where it (or the network behind it) is not answering. Never a
+    #: statement about the player's credentials — those are `atproto_bad_credentials`.
+    atproto_unavailable = "ATPROTO_UNAVAILABLE"
+    #: ADR-0088. The organ answered and the identity did not check out: a bad
+    #: handle/password pair, or a handle that resolves to nothing. One code for
+    #: every refusal because which of them it was is information a caller does
+    #: not get for free.
+    atproto_bad_credentials = "ATPROTO_BAD_CREDENTIALS"
+    #: ADR-0088. The organ is answering slowly on everyone's behalf. Split from
+    #: `atproto_unavailable` because "try again later" is genuine advice here,
+    #: the same argument `oauth_state_expired` made.
+    atproto_rate_limited = "ATPROTO_RATE_LIMITED"
+    #: ADR-0088. The zero-credential lane was asked to verify before the token
+    #: reached the player's feed — or no challenge was ever started. 404 both:
+    #: "nothing found yet" is the honest answer either way.
+    atproto_challenge_pending = "ATPROTO_CHALLENGE_PENDING"
+    #: ADR-0088. The challenge's five minutes lapsed unanswered.
+    atproto_challenge_expired = "ATPROTO_CHALLENGE_EXPIRED"
+    #: ADR-0088. A key-lane call carried a key that is not 32 bytes of honest
+    #: base64. 400 because no challenge should park for a key that cannot verify.
+    key_invalid = "KEY_INVALID"
+    #: ADR-0088. The verify half of the key lane: wrong key, wrong message,
+    #: wrong signature — one answer, same disclosure argument as
+    #: `atproto_bad_credentials`.
+    key_bad_signature = "KEY_BAD_SIGNATURE"
+    #: ADR-0088. A verify arrived with no challenge parked (straight to the
+    #: endpoint, or the tab restarted between the calls). The player starts one.
+    key_challenge_missing = "KEY_CHALLENGE_MISSING"
+    #: ADR-0088. The parked challenge's five minutes lapsed before the verify.
+    key_challenge_expired = "KEY_CHALLENGE_EXPIRED"
+    #: ADR-0088. An attach found the key already speaking for another account —
+    #: a key is an identity, and identity-sharing is not a state we mint.
+    key_already_linked = "KEY_ALREADY_LINKED"
+    #: ADR-0088. The OAuth callbacks answer a paused sign-in with a 302 to the
+    #: consent gate (`_returning_player_redirect`); the XHR lanes cannot follow
+    #: a redirect into a page, so they answer this instead — and ``/start/again``
+    #: is where the frontend sends the player on seeing it. The parked session
+    #: is identical either way; only the courier differs.
+    returning_player_consent_required = "RETURNING_PLAYER_CONSENT_REQUIRED"
 
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
