@@ -1,4 +1,4 @@
-# World Zero on fundies — the strangler's roadmap
+# World Zero on fundies — the digestr's roadmap
 
 *Drafted 2026-08-27, after the email-less sign-in lanes shipped (ADR-0089).
 Direction, not prediction: the order below is chosen so each leg is where the
@@ -52,7 +52,7 @@ byte-proven.**
 
 ## Standing laws for the migration
 
-- **Strangler, never rewrite:** every ported lane is reachable through the
+- **Digest, never rewrite:** every ported lane is reachable through the
   gateway with the Python original one config flag away, until its lane has
   been green in production for a month.
 - **Ratchets port too:** openapi dump, schema snapshot, i18n coverage — the
