@@ -157,7 +157,14 @@ export default function DefaultSelectCard({
             marginTop: "var(--space-md)",
           }}
         >
-          {say("name")}
+          {/* The CANONICAL name (ADR-0038), not a copy of it under this tile's
+              own stem (#2806). Still through `say`, so the redaction gate is
+              unchanged: `ALBESCENT_SCOPED_KEY` matches the segment in any
+              namespace, so `factions:names.albescent` redacts exactly as
+              `factionSelect.albescent.name` did. `factionName()` would NOT —
+              it returns the MASKED name, which is a different ruled behaviour
+              (ADR-0082 §2) and would silently reverse this tile. */}
+          {redactableText(`factions:names.${slug}`)}
         </div>
         <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}>
           {say("tagline")}

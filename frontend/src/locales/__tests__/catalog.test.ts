@@ -926,9 +926,23 @@ describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
  * ========================================================================== */
 describe('no key is named for a word or a name it no longer holds (#1910)', () => {
   /**
-   * #1864 §3. Two of these seven had no reader at all on `origin/main`
+   * #1864 §3. Two of the first seven had no reader at all on `origin/main`
    * (`frame.albescent.masthead`, `taskCard.everymen.masthead`); the other five
    * now resolve through `factionName(slug)`.
+   *
+   * #2806 added the nine `factionSelect.{F}.name` slots — the same defect, one
+   * surface further out and nine wide. Every value was character-for-character
+   * the canonical `factions:names.{F}` (ADR-0038), four of them minted in #2777
+   * purely to make the tile uniform. The tile reads the canonical name now.
+   *
+   * The select tile is NOT a `factionName()` caller, and that is the one thing
+   * to know before repointing it again: unrevealed, `factionName('albescent')`
+   * returns the MASKED name while this tile must print `[REDACTED]` (ADR-0082
+   * §2). It reads `redactableText('factions:names.<slug>')` instead —
+   * `ALBESCENT_SCOPED_KEY` matches the segment in any namespace, so the gate
+   * already covered the key it moved onto. A tile that later wants to say
+   * something other than its faction's full name adds a `wordmark`, which is
+   * the mechanism `ua` already uses; it does not get a shadow copy of the name.
    */
   const NAME_DUPLICATES = [
     'feed.json:frame.albescent.masthead',
@@ -938,6 +952,15 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
     'feed.json:taskCard.coven.masthead',
     'feed.json:taskCard.ephemerists.masthead',
     'feed.json:taskCard.everymen.masthead',
+    'feed.json:factionSelect.albescent.name',
+    'feed.json:factionSelect.coven.name',
+    'feed.json:factionSelect.ephemerists.name',
+    'feed.json:factionSelect.everymen.name',
+    'feed.json:factionSelect.na.name',
+    'feed.json:factionSelect.singularity.name',
+    'feed.json:factionSelect.snide.name',
+    'feed.json:factionSelect.ua.name',
+    'feed.json:factionSelect.wow.name',
   ] as const
 
   /**
@@ -978,9 +1001,10 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   ]
 
   it('has the whole ruling in the list', () => {
-    // 3 keys / 7 strings from #1864 §3, plus the 20 `seal`-named leaves #1863
-    // falsified. A line lost to a bad merge would silently shrink the guard.
-    expect(new Set(NAME_DUPLICATES).size).toBe(7)
+    // 3 keys / 7 strings from #1864 §3 plus #2806's nine, and the 20
+    // `seal`-named leaves #1863 falsified. A line lost to a bad merge would
+    // silently shrink the guard.
+    expect(new Set(NAME_DUPLICATES).size).toBe(16)
     expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
   })
 
