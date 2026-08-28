@@ -146,6 +146,16 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           }}
           titleStyle={{
             fontFamily: "var(--faction-snide-font-impact)",
+            // THIS 400 IS LOAD-BEARING — do not sweep it (#2797). Anton ships
+            // one cut, so a weight beside it is normally inert: not here.
+            // `PraxisTitle` puts a `font-semibold` CLASS on the same <h2>, and
+            // this inline 400 is the only thing suppressing a 600 the face
+            // cannot draw. The owner looked at all five synthesised titles on
+            // 2026-08-27 and ruled S.N.I.D.E. the one that reads better at 400;
+            // the other four keep the fake bold ON PURPOSE (see LOAD_BEARING in
+            // `utils/__tests__/fontsLoaded.test.ts`). Removing this trades an
+            // inert-looking declaration for a real fake-bold.
+            fontWeight: 400,
             textTransform: "uppercase",
             letterSpacing: "0.04em",
             lineHeight: 1,
