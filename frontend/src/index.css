@@ -1309,10 +1309,17 @@
   --faction-snide-note-ink: #14110b; /* headline, level, points numeral (FLIPS) — 9.87:1 in the pink corner */
   /* Brief + in-progress copy. #5f5c50 read 5.93:1 on the stock and 4.23:1 in
      the wall's pink corner; walked until the corner clears — 5.03:1 there,
-     6.75:1 at the top of the ramp. */
-  --faction-snide-note-muted: #545143;
+     6.75:1 at the top of the ramp.
+
+     WALKED AGAIN FOR THE FULL COMPOSITE (#2450). Those readings are the wall's
+     four FLAT ones; the pixel a glyph actually stands on has all five printed
+     layers over the ramp, and #545143 read 3.87:1 there — 36 of the nightly's
+     39 failures. Half the correction is here and half is in the washes below;
+     4.67:1 on the worst-case composite, 6.51:1 flat on the ramp's deep stop.
+     See the composite note beside `-note-scan`. */
+  --faction-snide-note-muted: #4e4a3d;
   --faction-snide-note-rule: rgba(20, 17, 11, 0.28);
-  --faction-snide-note-grain: rgba(20, 17, 11, 0.045); /* the xerox raster */
+  --faction-snide-note-grain: rgba(20, 17, 11, 0.036); /* the xerox raster */
   --faction-snide-note-bar: #14110b; /* the header bar */
   --faction-snide-note-bar-ink: #f4f1e8; /* the ordinal on that bar */
   /* The pink that is TEXT, as opposed to the pink that is a drawn line. Walked
@@ -1323,8 +1330,15 @@
      `--faction-snide-wall-alarm` by measurement rather than by borrowing, and
      stays its own token for #1181's reason — one is the clipping's caption ink,
      the other is the wall's destructive mark, and a shared value today is not a
-     shared contract tomorrow. 4.98:1 in the corner, 6.67:1 at the ramp's top. */
-  --faction-snide-note-pink-ink: #9d174d;
+     shared contract tomorrow. 4.98:1 in the corner, 6.67:1 at the ramp's top.
+
+     WALKED A FOURTH TIME, AND FOR THE SAME REASON A FOURTH TIME (#2450): the
+     value was measured on a ground it does not stand on. Every reading above is
+     a FLAT one, and the wall paints five layers — #9d174d is 3.83:1 on the
+     worst-case composite. #8d1345 is 4.79:1 there with the washes eased below,
+     5.91:1 flat in the pink corner. It no longer shares a hex with
+     `--faction-snide-wall-alarm`, which is what having two tokens was for. */
+  --faction-snide-note-pink-ink: #8d1345;
   /* The headline's four cuts. Cut 2 is knocked out of the near-black ink and
      cut 1 sits on acid: both are stated as their own pair rather than reusing
      `-paper`/`-ink`, because those two SWAP under the dark cascade and a
@@ -1346,10 +1360,29 @@
      jobs, two tokens. Nor is `-note-wall-shadow` a retune of `-note-shadow`
      above — that one is shared with both detail pages (#2066) and stays put.
      The light shadow is a hard printed offset with NO blur: a clipping pasted
-     flat on a wall, not a card floating over one. */
-  --faction-snide-note-scan: rgba(20, 17, 11, 0.05);
-  --faction-snide-note-wash-acid: rgba(111, 174, 0, 0.14);
-  --faction-snide-note-wash-pink: rgba(190, 24, 93, 0.1);
+     flat on a wall, not a card floating over one.
+
+     ── THE WORST-CASE COMPOSITE, AND WHY THESE THREE CAME DOWN (#2450) ──
+     THE BASE OF THE STACK IS THE RAMP, NOT `-note-paper`. That is the fact
+     three rounds of walking this family missed, and it is why the numbers kept
+     coming out flattering: `WALL` in `factionMarks/snideAtoms` is FIVE layers
+     and the bottom one is `WALL_PLAIN`, the `-wall`/`-wall-deep` ramp. Nothing
+     composites onto `-note-paper` — it has had no consumer since #2065.
+
+     Worst case in LIGHT is the darkest pixel: the ramp's deep stop with all
+     four printed layers over it. At the shipped alphas that is rgb(188,181,155)
+     — exactly what the nightly's runner read off the element, and the ground
+     that failed 36 of its 39 tests. Eased to the values below it is
+     rgb(195,188,165). That is only half the fix; the inks above carry the rest,
+     per the owner's ruling of 2026-08-27 — bringing the washes far enough on
+     their own thins the acid and pink tint, and that texture is the register.
+     `utils/__tests__/snideWallComposite.test.ts` holds the model and the
+     arithmetic. Two of the five layers are duty-cycled stripes and two are
+     positional radials, so there is no single ground: the composite varies by
+     pixel and the gate is the worst one. */
+  --faction-snide-note-scan: rgba(20, 17, 11, 0.04);
+  --faction-snide-note-wash-acid: rgba(111, 174, 0, 0.11);
+  --faction-snide-note-wash-pink: rgba(190, 24, 93, 0.08);
   /* The edge and the shadow are LOAD-BEARING, not ornament: the S.N.I.D.E.
      faction page paints its own ground with the same wall recipe through
      `useFactionBackdrop`, so these two are the only thing that separates the
@@ -3384,10 +3417,17 @@
   --faction-snide-note-ink: #f4f1e8;
   --faction-snide-note-muted: #cfcdbf;
   --faction-snide-note-rule: rgba(244, 241, 232, 0.26);
-  --faction-snide-note-grain: rgba(244, 241, 232, 0.05);
+  --faction-snide-note-grain: rgba(244, 241, 232, 0.042);
   --faction-snide-note-bar: #080706;
   --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
-  --faction-snide-note-pink-ink: #ff69ac;
+  /* BRIGHTENED PART WAY (#2450). The dark cascade runs BACKWARDS and that is
+     the trap in this fix: this half's paper is #14110b, DARKER than the
+     rgb(71,56,41) the browser paints, so here the washes LIGHTEN the ground
+     instead of darkening it and the correction is the mirror of the light
+     half's — washes down, ink UP. #ff69ac read 4.22:1 on the worst-case
+     composite; #ff71b1 on the eased one is 4.91:1. `-note-muted` needed
+     nothing, at 7.82:1. */
+  --faction-snide-note-pink-ink: #ff71b1;
   --faction-snide-note-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.85);
   /* The wall the clipping is pasted to, lights out (#2065). The scanline still
      darkens — a scan is subtractive in both themes — while the two washes and
@@ -3395,10 +3435,19 @@
      the deep ones composite to nothing. The shadow loses its printed offset and
      becomes a hairline plus a deep drop: an offset in the dark is invisible, and
      the hairline is what keeps the card an object on the faction page's
-     identical ground. */
+     identical ground.
+
+     THE WORST CASE HERE IS THE LIGHTEST PIXEL, not the darkest (#2450): the
+     inks on this half are light, so what gates them is the ramp's TOP stop with
+     the three lightening layers over it and the scanline OFF — a 1px-on/3px-off
+     stripe leaves most pixels in an off-band, and a glyph that lands there gets
+     no help from it. That reads rgb(71,56,41) at the shipped alphas, which is
+     what the nightly measured, and rgb(63,49,37) at the eased ones below. The
+     scan itself does NOT come down: it is the one layer that darkens in this
+     cascade, so easing it would push the ground the wrong way. */
   --faction-snide-note-scan: rgba(0, 0, 0, 0.5);
-  --faction-snide-note-wash-acid: rgba(182, 255, 46, 0.13);
-  --faction-snide-note-wash-pink: rgba(255, 45, 139, 0.14);
+  --faction-snide-note-wash-acid: rgba(182, 255, 46, 0.11);
+  --faction-snide-note-wash-pink: rgba(255, 45, 139, 0.12);
   --faction-snide-note-wall-edge: rgba(182, 255, 46, 0.35);
   --faction-snide-note-wall-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.9), 0 18px 40px -22px rgba(0, 0, 0, 1);
