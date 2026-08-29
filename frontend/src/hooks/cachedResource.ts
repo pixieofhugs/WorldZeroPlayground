@@ -13,6 +13,9 @@ import { createResourceCache } from '../utils/resourceCache'
  * filed. This module re-exports all of it for existing callers and adds the one
  * thing that belongs here: {@link createCachedResource}, the `useState`/
  * `useEffect` wrapper that turns a `ResourceCache` into a hook.
+ *
+ * Whether all this machinery is right-sized for its four consumers is answered
+ * in `utils/resourceCache.ts`'s docstring (#2892), where the machinery is.
  */
 export {
   SESSION_TTL_MS,
