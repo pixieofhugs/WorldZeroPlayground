@@ -9,6 +9,7 @@ from dependencies import (
     get_current_account_optional,
     get_current_character,
     get_current_character_optional,
+    get_viewer_is_admin,
 )
 from models.account import Account
 from models.character import Character
@@ -51,6 +52,7 @@ async def list_tasks(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
+    is_admin: bool = Depends(get_viewer_is_admin),
 ):
     # An unrecognised sort is an error, not a silent fall-back to the level
     # default (#1443) — matching GET /praxes, which has always raised here.
@@ -64,9 +66,6 @@ async def list_tasks(
         except ValueError:
             raise HTTPException(status_code=422, detail=f"Invalid task sort: {sort}")
 
-    is_admin = account is not None and await account_has_admin_role(
-        account.id, session
-    )
     # `exclude_character_id` is passed through untouched (#2264). The route used
     # to default it to the viewer for #1229's "the browse hides tasks you have
     # already started" — but a route default reaches EVERY caller of GET /tasks,
@@ -155,6 +154,7 @@ async def get_task(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
+    is_admin: bool = Depends(get_viewer_is_admin),
 ):
     # Deliberately no docstring: a route's docstring is published in the public
     # `openapi.json`, and the reasoning below is not something to hand out.
@@ -164,9 +164,6 @@ async def get_task(
     # an absent id gets: task ids are sequential, so a 403 would confirm the row
     # exists and make the review window enumerable. `retired` and `active` are
     # unaffected — praxis link back to retired tasks.
-    is_admin = account is not None and await account_has_admin_role(
-        account.id, session
-    )
     task = await get_task_for_viewer(session, task_id, viewer, is_admin=is_admin)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
