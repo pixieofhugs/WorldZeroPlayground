@@ -27,7 +27,7 @@
  *      stack is precisely how the canvas came to say 30 days.
  *   4. A CANVAS FALSEHOOD BEING "RESTORED" from the design file.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -51,6 +51,7 @@ import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
+import { sourceFiles } from '../../../test/sourceScan'
 import CookiesSection, {
   SESSION_COOKIE_DAYS,
   STORED_ENTRIES,
@@ -100,17 +101,9 @@ const KNOWN_WRITERS = [
   'utils/onboardingResume.ts',
 ]
 
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = join(dir, entry.name)
-    if (entry.isDirectory()) return entry.name === '__tests__' ? [] : sourceFiles(full)
-    return /\.tsx?$/.test(entry.name) ? [full] : []
-  })
-}
-
 describe('nothing writes to a browser store without being disclosed', () => {
   it('finds exactly the writers this card knows about', () => {
-    const writers = sourceFiles(SRC)
+    const writers = sourceFiles({ dir: SRC })
       .filter((file) => /(?:local|session)Storage\.setItem\(/.test(readFileSync(file, 'utf8')))
       .map((file) => relative(SRC, file).split('\\').join('/'))
       .sort()

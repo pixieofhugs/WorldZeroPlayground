@@ -19,13 +19,15 @@
  * Verified against the BUILT stylesheet by hand as well, per #1941: a
  * brace-balanced source edit proves nothing about the Tailwind layer merge.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { BodyTextarea, TitleField } from "../controls";
+import { sourceFiles } from "../../../../test/sourceScan";
 import { stripComments } from "../../../../utils/__tests__/cssVars";
 
 const CSS = stripComments(
@@ -36,12 +38,10 @@ const ARCHETYPE_DIR = fileURLToPath(new URL("..", import.meta.url));
 
 /** Every source file the composer is built from (the eight skins + the shared controls). */
 function composerSources(): Array<{ name: string; source: string }> {
-  return readdirSync(ARCHETYPE_DIR)
-    .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-    .map((name) => ({
-      name,
-      source: readFileSync(`${ARCHETYPE_DIR}/${name}`, "utf8"),
-    }));
+  return sourceFiles({ dir: ARCHETYPE_DIR, match: /\.tsx?$/ }).map((path) => ({
+    name: basename(path),
+    source: readFileSync(path, "utf8"),
+  }));
 }
 
 /** An `outline: "none"` in an inline style object, in any spacing. */

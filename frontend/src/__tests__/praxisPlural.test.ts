@@ -19,8 +19,8 @@
  * and is not a finding. Import specifiers are stripped too — `pages/praxes/` is
  * a real directory, and renaming directories is out of scope for #1136.
  */
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { basename, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 // `includeTests` is on: this sweep is about every `/praxes` in the tree, and it
 // excuses its own fixtures by name (FIXTURE_FILES) rather than by directory.
@@ -108,7 +108,9 @@ describe('no user-visible string says "praxes" (#1136)', () => {
     return []
   }
 
-  const catalogs = readdirSync(LOCALES_DIR).filter((entry) => entry.endsWith('.json'))
+  const catalogs = sourceFiles({ dir: LOCALES_DIR, match: /\.json$/ }).map((path) =>
+    basename(path),
+  )
 
   it.each(catalogs)('%s', (catalog) => {
     const values = stringValues(JSON.parse(readFileSync(join(LOCALES_DIR, catalog), 'utf8')))

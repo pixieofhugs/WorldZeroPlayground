@@ -28,7 +28,7 @@
  *    segment. `votes.json`'s `Mark {{value}}` DOES, and is exempted by name
  *    below, for a reason that is about grammar rather than about UA.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { SRC_DIR, readStripped, sourceFiles, toRelative } from '../test/sourceScan'
@@ -42,10 +42,7 @@ const MARK = /\bmarks?\b/i
 const EMOJI_ARROW = '\u2197'
 const TEXT_TRIANGLE = '\u25b8'
 
-const catalogs = (): string[] =>
-  readdirSync(LOCALE_DIR)
-    .filter((entry) => entry.endsWith('.json'))
-    .map((entry) => join(LOCALE_DIR, entry))
+const catalogs = (): string[] => sourceFiles({ dir: LOCALE_DIR, match: /\.json$/ })
 
 // Docstrings may name a retired word; only what ships to a screen counts, which
 // is what the shared `readStripped` is for.

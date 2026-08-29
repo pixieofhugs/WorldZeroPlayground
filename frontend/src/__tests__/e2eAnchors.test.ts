@@ -46,37 +46,27 @@
  * `frontend/` with the whole tree on disk — the same reason
  * `designSyncSrcMap.test.ts` sits here.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import forms from '../locales/en/forms.json'
+import { sourceFiles } from '../test/sourceScan'
 
 const FRONTEND_DIR = fileURLToPath(new URL('../..', import.meta.url))
 const E2E_DIR = join(FRONTEND_DIR, 'e2e')
 const SRC_DIR = join(FRONTEND_DIR, 'src')
 
-function filesUnder(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    return statSync(path).isDirectory() ? filesUnder(path) : [path]
-  })
-}
-
 const readAll = (paths: string[]) =>
   paths.map((path) => readFileSync(path, 'utf8')).join('\n')
 
-const e2eSource = readAll(filesUnder(E2E_DIR).filter((p) => p.endsWith('.ts')))
+const e2eSource = readAll(sourceFiles({ dir: E2E_DIR, match: /\.ts$/ }))
 // The app itself, minus its own tests — a testid that survives only in a
-// `__tests__` fixture is exactly the rot this guard is for.
+// `__tests__` fixture is exactly the rot this guard is for. `__tests__` is
+// excluded by sourceFiles()'s own default; the co-located `.test.ts(x)` files
+// it does not know about are folded into the match instead.
 const appSource = readAll(
-  filesUnder(SRC_DIR).filter(
-    (path) =>
-      (path.endsWith('.tsx') || path.endsWith('.ts')) &&
-      !path.includes('__tests__') &&
-      !path.endsWith('.test.ts') &&
-      !path.endsWith('.test.tsx'),
-  ),
+  sourceFiles({ dir: SRC_DIR, match: /^(?!.*\.test\.).*\.tsx?$/ }),
 )
 
 const matchAll = (source: string, pattern: RegExp) =>
