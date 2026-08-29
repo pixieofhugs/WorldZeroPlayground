@@ -9,6 +9,7 @@ import {
   type FactionRole,
 } from "../factionRoles";
 import { resolveRoleReads, sourceFiles } from "../../test/sourceScan";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * Guard for the silently-unloaded font family (#839).
@@ -166,7 +167,7 @@ function namedFamilies(source: string): string[] {
  * cheap; dropping one costs a silently-unstyled surface.
  */
 function declaredFontTokens(): string[] {
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  const css = readIndexCss();
   return [...new Set([...css.matchAll(/(--font-[a-z0-9-]+)\s*:/g)].map((match) => match[1]))];
 }
 
@@ -558,7 +559,7 @@ function familiesBehindToken(
 let tokenValueCache: Map<string, string> | undefined;
 function tokenValues(): Map<string, string> {
   if (tokenValueCache) return tokenValueCache;
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  const css = readIndexCss();
   tokenValueCache = new Map();
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
     // Light theme wins; the dark cascade never repoints a family token.

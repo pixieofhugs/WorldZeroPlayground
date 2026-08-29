@@ -25,8 +25,6 @@
  * danger veil). Restating them here would be a second name for one measurement,
  * which that file warns against in as many words.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
@@ -37,9 +35,9 @@ import {
   type Rgba,
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const THEMES = readThemes(readFileSync(CSS_PATH, 'utf8'))
+const THEMES = readThemes(readIndexCss())
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
 /**
@@ -147,7 +145,7 @@ describe('keeps the wash list in step with the stylesheet', () => {
   // Transcribed constants rot. This is the guard that makes the numbers above
   // mean something: repaint a stop in `index.css` and the measurement must be
   // re-run rather than silently keep asserting the old ground.
-  const css = readFileSync(CSS_PATH, 'utf8')
+  const css = readIndexCss()
 
   it.each(BOTH_THEMES)('%s names exactly the stops this file measures', (theme) => {
     const block = theme === 'light'

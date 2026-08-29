@@ -16,8 +16,6 @@
  * ragged widths, the left-flush wrap and the rotations, which is why every
  * assertion here comes in a pair.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ComponentType, ReactElement } from 'react'
@@ -37,6 +35,7 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
 // Imported after the mock is registered.
 import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from '../../../test/indexCss'
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
@@ -101,7 +100,7 @@ describe('below 768px every task card asks for the whole column (#2763)', () => 
   })
 })
 
-const CSS = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const CSS = readIndexCss()
 
 /**
  * The `@media` preludes wrapping the first rule whose selector contains

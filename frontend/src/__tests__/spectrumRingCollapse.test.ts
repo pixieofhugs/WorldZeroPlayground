@@ -27,11 +27,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { stripComments } from "../utils/__tests__/cssVars";
+import { readIndexCss } from "../test/indexCss";
 
 const read = (path: string) =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
-const INDEX = stripComments(read("../index.css"));
+const INDEX = stripComments(readIndexCss());
 const MOTION = stripComments(read("../motion.ornament.css"));
 const PROFILE_BODY = read(
   "../pages/characterProfile/archetypes/DefaultProfileBody.tsx",

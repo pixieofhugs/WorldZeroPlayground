@@ -20,8 +20,6 @@
  * measured at every stop it declares: UA's parchment is a three-stop sheet, and
  * "clears on the middle stop" is not a claim about the card.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
@@ -39,8 +37,9 @@ import { AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import '../../../i18n'
 import { resolveRoleReads } from '../../../test/sourceScan'
+import { readIndexCss } from '../../../test/indexCss'
 
-const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'))
+const THEMES = readThemes(readIndexCss())
 
 /** Every solid colour a ground declares — one for a flat token, three for a gradient. */
 function groundStops(name: string, theme: Theme): string[] {

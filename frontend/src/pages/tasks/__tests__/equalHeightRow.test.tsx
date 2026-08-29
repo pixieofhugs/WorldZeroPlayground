@@ -19,8 +19,6 @@
  * This repo has no jsdom, so nothing here measures a height: `renderToStaticMarkup`
  * runs no layout. VISUAL QA IS OUTSTANDING and stated as such on the PR.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ComponentType, ReactElement } from 'react'
@@ -50,6 +48,7 @@ import SnideTaskCard from '../../../components/taskCard/SnideTaskCard'
 import UaTaskCard from '../../../components/taskCard/UaTaskCard'
 import WowTaskCard from '../../../components/taskCard/WowTaskCard'
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from '../../../test/indexCss'
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
@@ -232,7 +231,7 @@ describe('every skin honours the chain the row hands its height down', () => {
  * So the assertion is not "the row is still a row" — nothing here lays anything
  * out. It is that the selector and the markup name the SAME single anchor.
  */
-const CSS = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const CSS = readIndexCss()
 
 /**
  * The anchor attributes the two chain rules key on, read out of the stylesheet

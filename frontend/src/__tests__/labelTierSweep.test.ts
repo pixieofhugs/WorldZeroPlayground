@@ -39,10 +39,9 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 
 import { sourceFiles } from '../test/sourceScan'
+import { readIndexCss } from '../test/indexCss'
 
 const SRC = fileURLToPath(new URL('..', import.meta.url))
-const CSS = fileURLToPath(new URL('../index.css', import.meta.url))
-
 /** Every shipped `.ts`/`.tsx` under `src/`, tests included — a test fixture may
  *  not resurrect the class either, and this file names it only in prose. */
 function sources(): { path: string; source: string }[] {
@@ -94,7 +93,7 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
   })
 
   it('no longer declares the rule, so nothing can reach for it again', () => {
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(css).not.toMatch(/^\s*\.eyebrow\s*\{/m)
   })
 
@@ -105,7 +104,7 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
     // the only file quoting `.label-heading`; asserting the declarations here
     // means a rename that misses one shows up as a failure and not as a rule
     // that silently stops shipping.
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(css).toMatch(/^\s*\.label-heading\s*\{/m)
     expect(css).toMatch(/^\s*\.label-caption\s*\{/m)
   })
@@ -147,7 +146,7 @@ function declaredFontSize(css: string, selector: string): string | undefined {
 
 describe('button and card-meta chrome sits on the label-tier floor (#1783)', () => {
   it('declares all three at the floor, in one place, so none of them can fork', () => {
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(CHROME_RULES.map((selector) => [selector, declaredFontSize(css, selector)])).toEqual(
       CHROME_RULES.map((selector) => [selector, LABEL_TIER_FLOOR]),
     )

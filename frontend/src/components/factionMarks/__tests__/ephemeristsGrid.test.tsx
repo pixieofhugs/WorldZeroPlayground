@@ -11,14 +11,13 @@
  * the box) is invisible to markup and to `renderToStaticMarkup`, so it is
  * asserted against the stylesheet on disk.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import EphemeristsFactionHero from "../../factionHero/EphemeristsFactionHero";
+import { readIndexCss } from "../../../test/indexCss";
 
-const CSS = readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8");
+const CSS = readIndexCss();
 
 /** The declaration body of one rule, by selector. */
 function ruleFor(selector: string): string {

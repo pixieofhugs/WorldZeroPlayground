@@ -76,6 +76,7 @@ vi.mock('../../../hooks/useGameConfig', () => ({
 }))
 
 import Sidebar from '../Sidebar'
+import { readIndexCss } from '../../../test/indexCss'
 
 function renderAs(slug: string | null): string {
   viewer.slug = slug
@@ -89,7 +90,7 @@ function renderAs(slug: string | null): string {
 const sheet = (name: string) =>
   readFileSync(fileURLToPath(new URL(`../../../${name}`, import.meta.url)), 'utf8')
 
-const INDEX = sheet('index.css')
+const INDEX = readIndexCss()
 const MOTION = sheet('motion.ornament.css')
 
 /** One rule body, for the first selector that contains `needle`. */

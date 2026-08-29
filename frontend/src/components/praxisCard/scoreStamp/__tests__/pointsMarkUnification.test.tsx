@@ -31,8 +31,6 @@
  * there. Three unified plus one measured refusal is the shape of #2042; a silent
  * omission is not.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -70,6 +68,7 @@ import WowScoreStamp from "../WowScoreStamp";
 import SnideTaskDetail from "../../../../pages/taskDetail/archetypes/SnideTaskDetail";
 import type { TaskDetailState } from "../../../../pages/taskDetail/useTaskDetail";
 import { aTask } from "../../../../test/fixtures";
+import { readIndexCss } from "../../../../test/indexCss";
 
 const TASK = aTask({ description: "Leave something small where a stranger finds it." });
 /** The same task, owned by S.N.I.D.E. — see `snideDetail` for why the slug matters. */
@@ -473,8 +472,7 @@ describe("WOW's two plaques stand on one ground (#2042)", () => {
 /* 2. The pairing seam                                                        */
 /* -------------------------------------------------------------------------- */
 
-const CSS_PATH = fileURLToPath(new URL("../../../../index.css", import.meta.url));
-const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
+const THEMES = readThemes(readIndexCss());
 const BOTH: Theme[] = ["light", "dark"];
 
 /**

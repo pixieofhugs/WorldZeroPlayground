@@ -23,8 +23,6 @@
  * CONDITIONAL on the vote value (`rung <= voter.value ? SPECTRUM : 'none'`), and
  * a class cannot be conditional. #2500 is where that one is settled.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -41,9 +39,10 @@ vi.mock("../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }))
 import DefaultTaskCard from "../taskCard/DefaultTaskCard";
 import DefaultScoreStamp from "../praxisCard/scoreStamp/DefaultScoreStamp";
 import DefaultSeal from "../metataskSeal/skins/DefaultSeal";
+import { readIndexCss } from "../../test/indexCss";
 
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 /** The two inline declarations the classes replaced, in rendered-markup form. */

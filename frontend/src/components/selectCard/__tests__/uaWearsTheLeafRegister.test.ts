@@ -25,6 +25,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
 import { stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -70,7 +71,7 @@ function declaration(css: string, name: string): string {
  */
 describe("the UA tile wears the vellum leaf's register (#2324)", () => {
   it("grounds on the leaf's own paper stock, under the name every UA surface may read", () => {
-    const css = read("../../../index.css");
+    const css = readIndexCss();
     const [publicName, cardName] = GROUND_SYNONYM;
     expect(code(TILE), "the tile must not read the praxis-card exception's name").not.toContain(cardName);
     expect(code(TILE)).toContain(`var(${publicName})`);

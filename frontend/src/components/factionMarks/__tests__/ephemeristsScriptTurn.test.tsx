@@ -54,12 +54,13 @@ import EphemeristsFactionHero from '../../factionHero/EphemeristsFactionHero'
 import { aTask } from '../../../test/fixtures'
 import catalog from '../../../locales/en/glosses.json'
 import { readStripped, sourceFiles, toRelative } from '../../../test/sourceScan'
+import { readIndexCss } from "../../../test/indexCss"
 
 const SRC = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..')
 const FONTS_CSS =
   readFileSync(join(SRC, 'fonts.css'), 'utf-8') +
   readFileSync(join(SRC, 'fonts.faction.css'), 'utf-8')
-const INDEX_CSS = readFileSync(join(SRC, 'index.css'), 'utf-8')
+const INDEX_CSS = readIndexCss()
 const WORDS = Object.keys(catalog) as GlossWord[]
 
 /** Every English copy catalog but the gloss catalog itself. */

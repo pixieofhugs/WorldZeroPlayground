@@ -28,7 +28,6 @@
  * until #2195 ruled one ornament per faction, and the gravity field took it.
  */
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
@@ -40,9 +39,10 @@ import EphemeristsTaskCard from "../../taskCard/EphemeristsTaskCard";
 import { aTask } from "../../../test/fixtures";
 import { sourceFiles, toRelative } from "../../../test/sourceScan";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 const TASK = aTask({ description: "Chart the pole nobody has fixed." });

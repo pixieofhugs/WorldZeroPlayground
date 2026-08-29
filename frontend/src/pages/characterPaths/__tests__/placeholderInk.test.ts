@@ -33,8 +33,6 @@
  * the wash has a point of room to spend before AA is at risk — a proxy, stated
  * as one, rather than a second copy of a five-gradient shorthand.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
@@ -46,8 +44,9 @@ import {
   type Rgba,
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, stripComments, type Theme } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_TEXT = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const CSS_TEXT = readIndexCss()
 const THEMES = readThemes(CSS_TEXT)
 const BOTH: Theme[] = ['light', 'dark']
 

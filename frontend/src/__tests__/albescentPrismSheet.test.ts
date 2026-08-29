@@ -41,11 +41,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { stripComments } from "../utils/__tests__/cssVars";
+import { readIndexCss } from "../test/indexCss";
 
 const read = (path: string) =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
-const INDEX = stripComments(read("../index.css"));
+const INDEX = stripComments(readIndexCss());
 const MOTION = stripComments(read("../motion.ornament.css"));
 
 const SHEET = "--faction-default-card-sheet";
@@ -509,6 +510,6 @@ describe("the two cards are the same material (#2499 — the owner's report)", (
  */
 describe("the reveal register is deleted (#2632)", () => {
   it("declares no --albescent-reveal- anywhere, not even in a comment", () => {
-    expect(read("../index.css")).not.toContain("--albescent-reveal-");
+    expect(readIndexCss()).not.toContain("--albescent-reveal-");
   });
 });

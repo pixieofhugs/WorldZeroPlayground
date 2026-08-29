@@ -4,8 +4,6 @@
  * This guards (a) the normalizer maps each faction event to the right slots and
  * leaves the four companions alone, and (b) the row renders its invariant slots.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
@@ -18,6 +16,7 @@ import { collabCopy } from '../collab/collabCopy'
 import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
 import { FACTION_RAINBOW_ORDER } from '../../utils/factions'
 import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../test/indexCss'
 
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
@@ -524,7 +523,7 @@ describe('FeedRowContent skin seam', () => {
  * on a faction hue. It failed 4.5:1 on twelve of these fourteen pairs.
  */
 describe('the monogram disc is inked with the faction pair, not a global neutral', () => {
-  const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../index.css', import.meta.url)), 'utf8'))
+  const THEMES = readThemes(readIndexCss())
   // Derived, not typed (#2815): the pairing under test is `--faction-<slug>`
   // against its `-on-fill`, so the population is exactly the slugs that HAVE a
   // fill. `FACTION_RAINBOW_ORDER` is that set — it is the hue wheel, so a slug
