@@ -19,6 +19,16 @@ import type { CSSProperties } from 'react'
  * repo keeps collapsing. See the note beside `--switch-thumb-off` in
  * `index.css` about the family's name.
  *
+ * THE RING NEEDS A SECOND, COMPLIANT EDGE (#2845). The rainbow is the only
+ * perceivable state signal on this control — the thumb alone is 1.22:1 /
+ * 1.30:1 against the well — and two of its seven stops read under 1.4.11's
+ * 3:1 there in light. The stops are the faction hue wheel and may not move
+ * for a switch, and no `--switch-well` density clears both without going
+ * effectively black (see `--switch-ring-hairline` in `index.css`), so
+ * `TRACK_RING_HAIRLINE` draws a solid, always-opaque line just inside the
+ * rainbow border on the ON state, which alone carries the 3:1 the ring itself
+ * cannot at every stop. The rainbow is emphasis once that edge exists.
+ *
  * DISABLED IS A REAL STATE HERE, AND IT IS DELIBERATE. The house rule is to
  * hide a control a reader cannot use rather than render it dead — this is the
  * ruled exception (#2154). When the OS asks for reduced motion the Animations
@@ -48,6 +58,20 @@ const TRACK_WELL = 'linear-gradient(var(--switch-well), var(--switch-well)) padd
 const TRACK_EDGE_ON = 'var(--faction-default-rainbow) border-box'
 const TRACK_EDGE_OFF =
   'linear-gradient(var(--color-border-strong), var(--color-border-strong)) border-box'
+
+/**
+ * The rainbow edge's compliant boundary (#2845). Two of the ring's seven
+ * stops (yellow, green) read under 1.4.11's 3:1 against `--switch-well` in
+ * light, and the stops may not move to fix a switch — see
+ * `--switch-ring-hairline` in `index.css` for the measurement that ruled out
+ * darkening the well instead. This hairline is a second, always-opaque edge
+ * drawn just inside the rainbow border; it alone clears the floor (6.89:1
+ * light / 7.34:1 dark, asserted in `factionContrast.test.ts`), so once it is
+ * there the rainbow is emphasis on a boundary that is already perceivable,
+ * and the stops themselves stay unmeasured. ON only: the OFF edge is already
+ * a flat, non-hue line and was never the pairing this issue found.
+ */
+const TRACK_RING_HAIRLINE = 'inset 0 0 0 1px var(--switch-ring-hairline)'
 
 const track: CSSProperties = {
   position: 'relative',
@@ -94,6 +118,7 @@ export default function SettingsSwitch({
         ...track,
         cursor: disabled ? 'not-allowed' : 'pointer',
         background: `${TRACK_WELL}, ${checked ? TRACK_EDGE_ON : TRACK_EDGE_OFF}`,
+        boxShadow: checked ? TRACK_RING_HAIRLINE : undefined,
       }}
     >
       <span
