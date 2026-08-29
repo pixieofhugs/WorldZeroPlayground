@@ -9,7 +9,7 @@ from enum import Enum
 from typing import List, Optional
 
 from fastapi import HTTPException, UploadFile
-from sqlalchemy import and_, exists, func, not_, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -24,7 +24,7 @@ from faction_slugs import faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
-from models.duel import Duel, DuelStatus
+from models.duel import DuelStatus
 from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import (
     MediaItem,
@@ -68,6 +68,11 @@ from services.praxis_duel import (
     maybe_settle_duel,
 )
 from services.praxis_room import close_member_sockets
+from services.praxis_visibility import (
+    duel_side_hidden_condition,
+    praxis_membership_condition,
+    praxis_visibility_condition,
+)
 from services.signup_eligibility import (
     # Re-exported for existing `from services.praxis import ...` call sites
     # (SIGNUP_REASON_MULTI_MEMBERSHIP, gather_signup_facts) that this module
@@ -131,89 +136,6 @@ async def get_praxis(
         raise HTTPException(status_code=404, detail="Praxis not found.")
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxis
-
-
-# Statuses in which a duel is still live and its outcome incomplete: the
-# opponent has not yet committed a competing side (ADR-0011). While a duel sits
-# in one of these, a *submitted* side is author-only — revealing it early would
-# let the opponent crib the other body, or leak a private draft to spectators
-# (#999). Every terminal-ish state reveals: ``settled``/``resolved`` (both cast),
-# ``declined`` (no second party to protect), and forfeit (which keeps the duel
-# ``settled``) all fall outside this tuple.
-_LIVE_INCOMPLETE_DUEL_STATUSES = (DuelStatus.pending, DuelStatus.active)
-
-
-def _duel_side_hidden_condition(viewer_id: Optional[int]):
-    """SQL predicate — TRUE when the correlated ``Praxis`` row must be HIDDEN
-    because it is a side of a live, incomplete duel and ``viewer_id`` is not its
-    author (#999).
-
-    This is the single source of truth shared by BOTH visibility doors — the
-    ``/praxes/{id}`` detail gate (:func:`can_view_praxis`) and the feed/list
-    predicate (:func:`praxis_visibility_condition`). Keeping one helper means the
-    detail door and the feed predicate can never drift and leave the leak open on
-    one path while the other is patched. A submitted duel side is world-public
-    only once the duel seals (both cast) or otherwise terminates; until then only
-    its author may see it.
-    """
-    is_live_incomplete_side = exists(
-        select(Duel.id).where(
-            or_(
-                Duel.challenger_praxis_id == Praxis.id,
-                Duel.opponent_praxis_id == Praxis.id,
-            ),
-            Duel.status.in_(_LIVE_INCOMPLETE_DUEL_STATUSES),
-        )
-    )
-    if viewer_id is None:
-        # Anonymous / no character: never the author, so always hidden.
-        return is_live_incomplete_side
-    return and_(is_live_incomplete_side, Praxis.created_by_id != viewer_id)
-
-
-def praxis_membership_condition(character_id: int):
-    """SQL predicate — TRUE when ``character_id`` holds a ``PraxisMember`` row on
-    the correlated ``Praxis``.
-
-    The single spelling of "is part of this praxis" in SQL. Membership is not
-    authorship (ADR-0013 co-ownership): an accepted collab invite makes you a
-    member of a praxis you did not create, while solo/duel praxes have exactly
-    one member — their creator — so for those the two coincide.
-
-    Shared by the viewer-scoped visibility gate (:func:`praxis_visibility_condition`)
-    and by the subject-scoped ``character_id``/``member_id`` filters in
-    :func:`list_praxes`, so a second membership join cannot drift from the first.
-
-    ``IN (subquery)`` rather than a join: a praxis yields exactly one row however
-    many of its members match.
-    """
-    return Praxis.id.in_(
-        select(PraxisMember.praxis_id).where(
-            PraxisMember.character_id == character_id
-        )
-    )
-
-
-def praxis_visibility_condition(viewer_id: Optional[int]):
-    """SQL predicate for who may see a praxis (ADR-0024).
-
-    ``submitted`` praxes are public; an ``in_progress`` praxis is visible only to
-    its members (character-scoped, matching ``_require_member``). Push this into
-    the query so pagination stays honest instead of post-filtering a page.
-
-    Exception (#999): a ``submitted`` side of a live, incomplete duel stays
-    author-only until the duel seals — see :func:`_duel_side_hidden_condition`,
-    the same guard :func:`can_view_praxis` runs so the two doors can't drift.
-
-    This is the *viewer* gate and nothing else: it answers "may this reader see
-    the row", never "is this row part of character X's record". A caller that
-    wants the latter ANDs :func:`praxis_membership_condition` on top — see the
-    profile grid in :func:`list_praxes` and ``GET /characters/{id}/praxes``.
-    """
-    visible = Praxis.status == PraxisStatus.submitted
-    if viewer_id is not None:
-        visible = or_(visible, praxis_membership_condition(viewer_id))
-    return and_(visible, not_(_duel_side_hidden_condition(viewer_id)))
 
 
 class PraxisSort(str, Enum):
@@ -1081,7 +1003,7 @@ async def can_view_praxis(
       the account-vs-character question in #293 is deliberately not entangled here).
 
     Async because the duel-seal gate needs a DB lookup. It evaluates the SAME
-    :func:`_duel_side_hidden_condition` the feed predicate uses, scoped to this
+    :func:`duel_side_hidden_condition` the feed predicate uses, scoped to this
     one row, so the detail door and the list door can never disagree.
     """
     if praxis.moderation_status == ModerationStatus.hidden:
@@ -1089,7 +1011,7 @@ async def can_view_praxis(
     if praxis.status == PraxisStatus.submitted:
         viewer_id = viewer.id if viewer is not None else None
         hidden = await session.scalar(
-            select(_duel_side_hidden_condition(viewer_id))
+            select(duel_side_hidden_condition(viewer_id))
             .select_from(Praxis)
             .where(Praxis.id == praxis.id)
         )
