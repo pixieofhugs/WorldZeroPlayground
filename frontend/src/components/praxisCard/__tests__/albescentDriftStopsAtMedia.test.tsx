@@ -49,6 +49,7 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 import { aPraxis, aPraxisCard } from "../../../test/fixtures";
+import { stripResourceHints } from "../../../test/ssrMarkup";
 import type { AdminProps } from "../shared";
 import type { CharacterOut } from "../../../api/auth";
 import type { MediaItemOut, PraxisCardOut } from "../../../api/praxis";
@@ -95,7 +96,7 @@ function admin(praxis: PraxisCardOut): AdminProps {
 }
 
 const render = (node: ReactElement) =>
-  renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
+  stripResourceHints(renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>));
 
 /** Minimal read-only detail state; `aPraxis` already carries one image. */
 function detailState(): PraxisDetailState {

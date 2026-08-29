@@ -38,6 +38,7 @@ import type { VoterDetail } from '../api/votes'
 import type { PraxisOut } from '../api/praxis'
 import type { CharacterOut, CurrentUser } from '../api/auth'
 import { aCharacter, aCurrentUser, aDuelSide, aMember, aPraxis } from './fixtures'
+import { stripResourceHints } from './ssrMarkup'
 
 /**
  * Mount anything under the router and hand back both readings of it.
@@ -48,7 +49,9 @@ import { aCharacter, aCurrentUser, aDuelSide, aMember, aPraxis } from './fixture
  * name is asserted against.
  */
 export function markup(element: ReactElement): { html: string; text: string } {
-  const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
+  const html = stripResourceHints(
+    renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>),
+  )
   return { html, text: html.replace(/<[^>]*>/g, '') }
 }
 

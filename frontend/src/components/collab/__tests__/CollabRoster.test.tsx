@@ -4,6 +4,7 @@ import '../../../i18n'
 import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { CollabRoster, deriveCollabGate } from '../CollabRoster'
 import { collabCopy } from '../collabCopy'
+import { stripResourceHints } from '../../../test/ssrMarkup'
 
 function member(id: number, cast: boolean, avatar = ''): PraxisMemberOut {
   return {
@@ -43,14 +44,16 @@ const render = (
   members: PraxisMemberOut[],
   invites: PraxisInviteOut[] = [],
 ) =>
-  renderToStaticMarkup(
-    <CollabRoster
-      praxisType="collab"
-      members={members}
-      invites={invites}
-      currentCharacterId={1}
-      factionSlug={null}
-    />,
+  stripResourceHints(
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={members}
+        invites={invites}
+        currentCharacterId={1}
+        factionSlug={null}
+      />,
+    ),
   )
 
 describe('deriveCollabGate — the consensus state machine (#591)', () => {

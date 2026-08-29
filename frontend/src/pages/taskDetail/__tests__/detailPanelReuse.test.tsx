@@ -86,14 +86,20 @@ function stateFor(slug: string, overrides: Partial<TaskDetailState> = {}) {
 /**
  * Markup with React's `useId` values flattened.
  *
- * The Everymen roundel mints an SVG `<defs>` id per mount (`wz-roundel-R3` vs
- * `wz-roundel-Rra`), so two renders of the same component differ in exactly
- * those bytes and nowhere else. Normalising them is what keeps the containment
- * assertion below about the COMPONENT rather than about React's counter.
+ * The Everymen roundel mints an SVG `<defs>` id per mount (`wz-roundel-_R_3_`
+ * vs `wz-roundel-_R_ra_`), so two renders of the same component differ in
+ * exactly those bytes and nowhere else. Normalising them is what keeps the
+ * containment assertion below about the COMPONENT rather than about React's
+ * counter.
+ *
+ * The suffix is matched loosely because `useId`'s format is React's to change
+ * and it did: React 18 minted `R3`, React 19 mints `_R_3_`. Anchoring on the
+ * old `R` right after the dash silently stopped normalising anything under 19,
+ * which failed this test on the ids rather than on the markup it is about.
  */
 function markup(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(
-    /wz-roundel-R[\w:-]+/g,
+    /wz-roundel-[\w:-]+/g,
     "wz-roundel-ID",
   );
 }

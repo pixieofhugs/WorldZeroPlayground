@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import type { CharacterOut } from "../../../api/auth";
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER } from "../../../utils/factions";
+import { stripResourceHints } from "../../../test/ssrMarkup";
 import FactionAvatar from "../FactionAvatar";
 
 function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
@@ -121,7 +122,8 @@ describe("FactionAvatar — Coven wears the hat (#2217)", () => {
  * FactionAvatar.tsx) and `BadgedAvatar` (the seven registered skins).
  */
 describe("an avatar is a circle in a flex row (#2232)", () => {
-  const root = (html: string) => html.match(/^<[a-z]+[^>]*>/)?.[0] ?? "";
+  const root = (html: string) =>
+    stripResourceHints(html).match(/^<[a-z]+[^>]*>/)?.[0] ?? "";
 
   it.each([
     ["the unaffiliated ring", "na"],
