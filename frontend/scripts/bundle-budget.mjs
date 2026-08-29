@@ -196,6 +196,63 @@ const BUDGETS = {
   css: { warn: 22_700, fail: 25_000, target: 20_000 },
 }
 
+/**
+ * ALBESCENT'S NAMED ALLOWANCE (#2719, under #2649's "Nine Kits, One Vocabulary").
+ *
+ * The two numbers above are the payload wall. This one is not about bytes at
+ * all — it is about who is spending them. Albescent declares more top-level
+ * class selectors in the blocking stylesheet than any other faction, and until
+ * now nobody had decided that; it is simply what accumulated one lane at a time.
+ *
+ * THE ASYMMETRY IS RIGHT. ADR-0083 rules that Albescent is one ornament
+ * vocabulary over na rather than a skin per surface, and an ornament vocabulary
+ * is exactly the thing a token cannot express — so it lands as class rules while
+ * a faction that is mostly paint lands as custom properties. #2650's kill-test
+ * is the same finding from the other end: paint travels through tokens, tree
+ * does not. Albescent is the faction with the most tree.
+ *
+ * THE SILENCE IS NOT RIGHT. An unremarked number cannot be reviewed, and it
+ * cannot be over-spent, because nothing says what "over" would be. This line
+ * says it: Albescent may declare up to ALBESCENT_ALLOWANCE top-level class
+ * selectors in the sheet, and the next lane that wants a fifty-first raises the
+ * number in a diff a human reads, with a ledger line saying what it bought.
+ *
+ * WHY A SELECTOR COUNT AND NOT GZIPPED BYTES. Bytes are already guarded, above,
+ * for the whole sheet — and they are guarded well enough that five faction lanes
+ * shipped net −16 bytes. What bytes cannot see is concentration: Albescent could
+ * double its rule count inside the existing CSS budget and no check would speak.
+ * The rule count is the thing #2649 wanted decided, so the rule count is what is
+ * pinned.
+ *
+ * THE MEASUREMENT, EXACTLY. The sheet is assembled the way `src/test/indexCss.ts`
+ * assembles it (#2891 made `index.css` an import map, so reading that path alone
+ * yields eleven `@import` lines and a guard that passes on nothing). Comments are
+ * stripped; grouping at-rules — `@layer`, `@media`, `@supports`, `@container` —
+ * are TRANSPARENT, so a rule inside one still counts; selector lists are split on
+ * commas; a selector counts for Albescent when it begins `.alb`.
+ *
+ * Grouping at-rules are transparent deliberately. #2719 quotes "44 of 205 top-level
+ * class rules", which reproduces as 44 of 206 at `c5ff48cb` under the narrower
+ * reading that counts only depth-0 rules — but that reading FAILS OPEN: wrapping a
+ * new `.alb` rule in `@media (min-width: …)` would hide it from the count without
+ * removing a single selector from the sheet. Under the transparent reading the same
+ * commit measures 47 of 319. Today's numbers are 47 of 215 narrow, 50 of 330 here.
+ *
+ * ONE MORE THING THIS GUARD MUST NOT DO: pass by reading nothing. That is the exact
+ * failure `src/test/indexCss.ts` was written to prevent and it applies twice over
+ * here, because this file is plain Node and cannot import that TypeScript helper —
+ * it re-implements the map read. So the total is floored as well as Albescent's
+ * share being capped, and `src/css/__tests__/albescentAllowance.test.ts` asserts
+ * that this file's reading of the sheet and `readIndexCss()`'s agree.
+ */
+const ALBESCENT_ALLOWANCE = 50
+
+/**
+ * Below this many top-level class selectors the sheet did not assemble and the
+ * check is blind, not passing. ~330 today; eleven `@import` lines are zero.
+ */
+const CLASS_SELECTOR_FLOOR = 200
+
 /** Asset paths the entry HTML forces the browser to fetch before first render. */
 function criticalPathAssets(html) {
   // Vite emits the entry as <script type="module" src>, and one
@@ -217,6 +274,48 @@ function criticalPathAssets(html) {
 
 function gzippedSize(relativePath) {
   return gzipSync(readFileSync(join(DIST, relativePath)), { level: 9 }).length
+}
+
+/**
+ * Every top-level class selector in the blocking stylesheet, in cascade order.
+ *
+ * Mirrors `src/test/indexCss.ts` on purpose: the parts are read through the
+ * import map so the order is the cascade, and the map's own `@import` regex is
+ * copied verbatim rather than loosened, so the two readers rot together and
+ * `albescentAllowance.test.ts` sees it when they do.
+ */
+function topLevelClassSelectors() {
+  const src = join(dirname(fileURLToPath(import.meta.url)), '..', 'src')
+  const map = readFileSync(join(src, 'index.css'), 'utf8')
+  const sheet = [...map.matchAll(/^@import\s+'\.\/css\/([\w.-]+\.css)';$/gm)]
+    .map((match) => readFileSync(join(src, 'css', match[1]), 'utf8'))
+    .join('')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+
+  // Grouping at-rules are transparent; a rule nested in another rule is not a
+  // top-level rule. See the ALBESCENT_ALLOWANCE ledger for why that matters.
+  const selectors = []
+  const open = []
+  let head = ''
+  for (const character of sheet) {
+    if (character === '{') {
+      const isAtRule = head.trimStart().startsWith('@')
+      if (!isAtRule && !open.includes('rule')) {
+        for (const selector of head.split(',')) {
+          const trimmed = selector.trim()
+          if (trimmed.startsWith('.')) selectors.push(trimmed)
+        }
+      }
+      open.push(isAtRule ? 'at-rule' : 'rule')
+      head = ''
+    } else if (character === '}') {
+      open.pop()
+      head = ''
+    } else {
+      head += character
+    }
+  }
+  return selectors
 }
 
 function kb(bytes) {
@@ -269,6 +368,23 @@ for (const [kind, budget] of Object.entries(BUDGETS)) {
   )
 }
 
+const classSelectors = topLevelClassSelectors()
+const albescent = classSelectors.filter((selector) => selector.startsWith('.alb')).length
+if (classSelectors.length < CLASS_SELECTOR_FLOOR) {
+  // Same reason the empty-asset case above exits 1: a check that has stopped
+  // seeing the stylesheet is guarding nothing, and reports a perfect board.
+  console.error(
+    `\nbundle-budget: assembled only ${classSelectors.length} top-level class selectors from` +
+      ` src/index.css — the Albescent allowance is blind, not passing.\n`,
+  )
+  process.exit(1)
+}
+const overspent = albescent > ALBESCENT_ALLOWANCE
+console.log(
+  `  ${(overspent ? 'FAIL' : 'ok').padEnd(4)} ALB  ${String(albescent).padStart(10)}` +
+    `   allow>${ALBESCENT_ALLOWANCE}  of ${classSelectors.length} top-level class selectors`,
+)
+
 if (failed) {
   console.error(
     '\nBundle budget EXCEEDED. The initial payload is now big enough to push first paint past ~2s on a mid-tier phone.' +
@@ -281,5 +397,16 @@ if (warned) {
     '\nBundle budget WARNING — this change grew the initial payload past the agreed line.' +
       '\nNot blocking, but it is now on the wrong side of the 2-second rule. Prefer a lazy route/component over a bigger budget.\n',
   )
+}
+if (overspent) {
+  // Deliberately NOT folded into the payload failure above: this is not a byte
+  // wall and saying "first paint is past 2s" would be a lie about the cause.
+  console.error(
+    `\nAlbescent's named CSS allowance EXCEEDED — ${albescent} top-level class selectors against` +
+      ` an allowance of ${ALBESCENT_ALLOWANCE}.` +
+      '\n#2719 pinned this so the asymmetry stays a decision rather than an accumulation.' +
+      '\nIf the growth is paid for, raise ALBESCENT_ALLOWANCE and add a ledger line saying what it bought.\n',
+  )
+  process.exit(1)
 }
 if (!failed && !warned) console.log('\nWithin budget.\n')
