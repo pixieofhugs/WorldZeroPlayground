@@ -274,30 +274,7 @@ describe("task-detail worth readout", () => {
   }
 });
 
-describe("na / Default task detail — the reference anatomy", () => {
-  it("hides the multiplier badge at the identity factor", () => {
-    const { text } = render(<DefaultTaskDetail state={baseState()} />);
-    expect(text).not.toContain("×");
-  });
-
-  it("shows the raw multiplier badge once an era ships a real factor", () => {
-    const { text } = render(
-      <DefaultTaskDetail
-        state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })}
-      />,
-    );
-    expect(text).toContain("×1.25");
-    // Base and total are both legible; the badge is not a substitute for either.
-    expect(text).toContain("18");
-    expect(text).toContain("23");
-  });
-
-  it("renders the in-progress population as a header count", () => {
-    const { text } = render(<DefaultTaskDetail state={baseState()} />);
-    expect(text).toContain("people working on this");
-    expect(text).toContain("6");
-  });
-
+describe("na / Default task detail — the state contract", () => {
   /**
    * #1262 — the roster is unrenderable, not merely unrendered.
    *
@@ -313,32 +290,84 @@ describe("na / Default task detail — the reference anatomy", () => {
     // @ts-expect-error `signups` is not part of TaskDetailState.
     baseState({ signups: [] });
   });
+});
 
-  it("renders the author byline from the task's denormalised fields", () => {
-    const { html, text } = render(<DefaultTaskDetail state={baseState()} />);
-    expect(text).toContain("Wren Abalone");
-    expect(text).toContain("author · lvl 4");
-    expect(html).toContain('href="/characters/31"');
-  });
+/**
+ * The six invariants that used to run against `DefaultTaskDetail` alone,
+ * under the "na / Default task detail — the reference anatomy" heading
+ * (#2812). Each was already hand-copied into up to eight of the nine per-kit
+ * suites; this loop is the one copy that reaches all nine. The per-kit
+ * copies stay for now — deleting them is held for a follow-up once the owner
+ * has QA'd this loop green.
+ */
+describe("task-detail header population", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} renders the in-progress population as a header count`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      expect(text).toContain("people working on this");
+      expect(text).toContain("6");
+    });
+  }
+});
 
-  it("draws the brief in full — no clamp, no truncation", () => {
-    const long = "x".repeat(2000);
-    const { text } = render(
-      <DefaultTaskDetail
-        state={baseState({ task: { ...TASK, description: long } })} />,
-    );
-    expect(text).toContain(long);
-  });
+describe("task-detail multiplier badge", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    // `/×\d/`, not a bare `×`: the Ephemerists plate draws decorative rune
+    // strips that put a bare `×` in the markup as ornament, unrelated to the
+    // multiplier badge. See `ephemeristsDetail.test.tsx`'s own version of
+    // this check.
+    it(`${slug} hides the multiplier badge at the identity factor`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      expect(text).not.toMatch(/×\d/);
+    });
 
-  it("speaks the shared neutral copy, not the retired na voice", () => {
-    const { text } = render(<DefaultTaskDetail state={baseState()} />);
-    expect(text).toContain("Task Description");
-    expect(text).toContain("Discussion");
-    // ADR-0057: the old na-voiced headings are gone from this surface.
-    expect(text).not.toContain("The brief");
-    expect(text).not.toContain("What people filed");
-    expect(text).not.toContain("counts for everyone");
-  });
+    it(`${slug} shows the raw multiplier badge once an era ships a real factor`, () => {
+      const { text } = render(
+        <Archetype state={baseState({ factionMultiplier: 1.25, modifiedPoints: 23 })} />,
+      );
+      expect(text).toContain("×1.25");
+      // Base and total are both legible; the badge is not a substitute for either.
+      expect(text).toContain("18");
+      expect(text).toContain("23");
+    });
+  }
+});
+
+describe("task-detail author byline", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} renders the author byline from the task's denormalised fields`, () => {
+      const { html, text } = render(<Archetype state={baseState()} />);
+      expect(text).toContain("Wren Abalone");
+      expect(text).toContain("author · lvl 4");
+      expect(html).toContain('href="/characters/31"');
+    });
+  }
+});
+
+describe("task-detail brief", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} draws the brief in full — no clamp, no truncation`, () => {
+      const long = "x".repeat(2000);
+      const { text } = render(
+        <Archetype state={baseState({ task: { ...TASK, description: long } })} />,
+      );
+      expect(text).toContain(long);
+    });
+  }
+});
+
+describe("task-detail shared neutral copy", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} speaks the shared neutral copy, not the retired na voice`, () => {
+      const { text } = render(<Archetype state={baseState()} />);
+      expect(text).toContain("Task Description");
+      expect(text).toContain("Discussion");
+      // ADR-0057: the old na-voiced headings are gone from this surface.
+      expect(text).not.toContain("The brief");
+      expect(text).not.toContain("What people filed");
+      expect(text).not.toContain("counts for everyone");
+    });
+  }
 });
 
 /**
