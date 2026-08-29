@@ -30,7 +30,7 @@
  * easily: all five frames are laid in ONE grid cell, so the slot is the widest
  * of them by layout rather than by a measurement pass a test could not run.
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -63,12 +63,10 @@ const INDEX_CSS = readFileSync(join(SRC, 'index.css'), 'utf-8')
 const WORDS = Object.keys(catalog) as GlossWord[]
 
 /** Every English copy catalog but the gloss catalog itself. */
-const catalogs = (): string[] => {
-  const dir = join(SRC, 'locales', 'en')
-  return readdirSync(dir)
-    .filter((entry) => entry.endsWith('.json') && entry !== 'glosses.json')
-    .map((entry) => join(dir, entry))
-}
+const catalogs = (): string[] =>
+  sourceFiles({ dir: join(SRC, 'locales', 'en'), match: /\.json$/ }).filter(
+    (path) => !path.endsWith('glosses.json'),
+  )
 
 const TASK = aTask({ in_progress_count: 2 })
 
