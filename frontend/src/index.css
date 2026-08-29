@@ -1,3 +1,19 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION MARKERS (#2890) — navigation only: no rule moved, no selector
+   changed, not one byte of built output differs. Each banner below marks a
+   boundary between concerns that already existed in this file:
+
+     PRELUDE             · this block — font-face import + Tailwind directives
+     BASE TOKENS (light) · :root / :root,[data-theme] token blocks
+     BASE TOKENS (dark)  · the one large [data-theme="dark"] override block
+     FACTION CHROME      · per-faction component classes + token blocks,
+                           in two runs (interrupted once by LAYOUT)
+     COMPONENT CLASSES   · @layer base, @layer components, shared utilities
+     LAYOUT              · filter bar / requests queue, settings inventory
+
+   Prefactor for #2891, which will split the file along these seams.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* The SHELL's three self-hosted faces (#1977, #2079). Generated — see
    scripts/fetch-fonts.mjs. First, because @import must precede every rule, and
    because these are the @font-face blocks --font-display / --font-body /
@@ -11,6 +27,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — BASE TOKENS (light / theme-invariant) (#2890).
+   :root and :root,[data-theme] custom-property blocks: color, spacing,
+   type, motion, shadow, radius, and the shared faction palette (rainbow
+   spine, on-fill/on-accent inks, tints, borders, card paint, fonts). Runs
+   to the [data-theme="dark"] override block below.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════
    COLOR SYSTEM — Single source of truth
@@ -3234,6 +3258,12 @@
   --badge-admin-text: #f7f4ee;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — BASE TOKENS: DARK OVERRIDES (#2890).
+   The one large [data-theme="dark"] block mirroring the light tokens above,
+   property by property, for every value that flips.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* ══════════════════════════════════════════
    DARK MODE OVERRIDES
    Applied via [data-theme="dark"] on <html>
@@ -4058,6 +4088,15 @@
   --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — FACTION CHROME, first run (#2890).
+   The file's first per-faction component classes (Everymen stamp/dispatch,
+   S.N.I.D.E. detail sheet, na backdrop) interleaved with more base-token
+   :root/[data-theme] blocks (motion durations, type scale, Task Crown, the
+   cross-faction notice/alarm/credit ink family) and the shared faction-page
+   grid class. Ends where the Tailwind layers begin.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* ══ Everymen rubber-stamp print (#841) ══
    The tally stamp and the points roundel are INKED onto the sheet, so in light
    they multiply into the paper's rule lines. On the dark broadsheet multiply
@@ -4671,6 +4710,11 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — COMPONENT CLASSES: Tailwind `@layer base` (#2890).
+   Global element resets (body, headings, placeholder ink).
+   ══════════════════════════════════════════════════════════════════════════ */
+
 @layer base {
   body {
     @apply bg-paper font-body text-ink;
@@ -4739,6 +4783,11 @@
     opacity: 1;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — COMPONENT CLASSES: Tailwind `@layer components` (#2890).
+   Shared card patterns read by every faction archetype.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 @layer components {
   /* ── Shared card patterns ── */
@@ -5579,6 +5628,15 @@
      the token blocks above and below). `frontend/src/__tests__/snideWearsNoTape.test.ts`
      is what keeps it retired. */
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — FACTION CHROME, second run (#2890).
+   Backdrops, keyframe animation and per-faction card/detail/profile chrome,
+   ordered by commit history rather than grouped by faction — Ephemerists,
+   Singularity, Coven, WOW, Everymen, S.N.I.D.E. and Albescent all recur
+   more than once below. Interrupted once by the LAYOUT run marked further
+   down, then resumes.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════
    EPHEMERISTS BACKDROP — the page under the faction page and a
@@ -8926,6 +8984,12 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — LAYOUT: task feed filter bar + requests queue (#2890).
+   Not faction-specific — shared filtering/queue chrome interrupting the
+   FACTION CHROME run above and below.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .filter-bar {
   border: 1px solid var(--color-border);
   border-radius: var(--space-md);
@@ -9647,6 +9711,11 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — FACTION CHROME, second run resumes (#2890).
+   Per-faction profile-page identity chrome (Albescent, Coven, Ephemerists).
+   ══════════════════════════════════════════════════════════════════════════ */
+
 /* ── #1630: identity-header flair, one treatment per faction ────────────────
    Two of the seven are perpetual motions, so both live here behind the shared
    `prefers-reduced-motion: no-preference` guard rather than in an inline
@@ -9902,6 +9971,12 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   SECTION — COMPONENT CLASSES: shared cross-faction utilities (#2890).
+   Disabled-control contrast (+ Singularity variant) and the metatask
+   picker's selection tick.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════════════════
    THE DISABLED PRIMARY ACTION (#2486)
 
    Ten controls in this tree start out disabled and one of them is the first
@@ -10050,6 +10125,10 @@
   color: var(--faction-default-card-bg);
   box-shadow: 0 0 0 2px var(--faction-default-card-bg);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — LAYOUT: settings page inventory panel (#2890).
+   ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── SETTINGS · THE STORAGE INVENTORY'S SHAPE IS THE PANE'S CALL (#2824) ─────
    The eleven-row cookie/localStorage inventory was a three-column grid on every
