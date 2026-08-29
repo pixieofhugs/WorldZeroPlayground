@@ -37,8 +37,8 @@ Nine era fields, nine predicates — but only six get repointed here:
   touch (enforcement moves in #2868). Their predicates are included here,
   unwired, as a pure level floor matching today's enforcement
   (``services.praxis.available_creation_modes``,
-  ``services.duel.accept_duel``/``create_duel_challenge``) — no admin or
-  faction bypass exists at either site today.
+  ``services.duel.issue_duel_challenge``/``respond_to_duel_challenge``) — no
+  admin or faction bypass exists at either site today.
 - ``albescent_level_required`` is deliberately **not** given a predicate here.
   Its two sites read the SAME era field in OPPOSITE directions for two
   different questions: ``services.character.character_earns_albescent``
