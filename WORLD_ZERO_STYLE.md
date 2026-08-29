@@ -1,6 +1,6 @@
 # World Zero — Frontend Style Guide
 
-**Design system reference.** This document describes _intent and constraints_ — not implementation. For exact values, see `index.css` (CSS variables) and `factions.ts` (faction config). The code is the source of truth for colors, sizes, and spacing.
+**Design system reference.** This document describes _intent and constraints_ — not implementation. For exact values, see the `index.css` tree (CSS variables — `src/index.css` is an import map since #2891 and the rules are in `src/css/*.css`, tokens in `01-base-tokens.css` and `02-base-tokens-dark.css`) and `factions.ts` (faction config). The code is the source of truth for colors, sizes, and spacing.
 
 ---
 
@@ -727,6 +727,10 @@ One drawing decision rode along and is worth recording because it is not a colou
 `index.css` is now large enough that skin work routinely moves whole token blocks between the light declarations, the `[data-theme="dark"]` cascade and the media queries. **A dropped `}` fails nothing.** With CSS nesting and `@media` blocks, a lost closing brace produces no parse error — it silently **reparents** everything after it, and the result is valid CSS that simply applies to almost nobody. This wave a whole token block ended up nested inside `@media (prefers-reduced-motion)`; `tsc`, `eslint` and `vitest` were green throughout, and only `vite build` plus reading the emitted file caught it.
 
 Balanced brace counts prove nothing here — the file balances either way, the braces just close different things than you meant. After moving or merging a block, run `vite build` and grep the **emitted** stylesheet for the moved selectors, checking the **depth** each one sits at. The question is never "is the selector present", it is "is it still at the nesting level it was written for".
+
+**`index.css` is an import map now, and the rules live in `src/css/*.css` (#2891).** Eleven parts, cut along the section boundaries #2890 drew, numerically prefixed because **the file order IS the cascade** — `src/index.css` holds nothing but `@import` lines and one declaration in it would push all eleven parts, Tailwind's output included, behind it. Three parts say FACTION CHROME: the faction rules were never contiguous, and one run is interrupted by the filter-bar layout block, so it comes back as a third file. Naming the runs after the cascade beat naming them after the concern. Nothing else about this document changes — "in `index.css`" everywhere below still means "in the sheet", and a colour value still belongs nowhere else in the tree.
+
+Two things follow for anyone editing it. **Never read the sheet with `readFileSync` on that path** — a guard that filters an import map for matching rules and asserts over the survivors finds nothing, survives nothing, and reports a perfect board; `src/test/indexCss.ts`'s `readIndexCss()` assembles the parts in import order, and `src/test/__tests__/indexCss.test.ts` is what stops that ever returning thin. And **the byte-for-byte check above is what proves a re-cut**: this split was verified by building before and after and `cmp`-ing `dist/assets/index-*.css`, not by reading the source diff, because a rule that moves earlier or later than a rule it ties with changes the paint and the source diff cannot show you that.
 
 ---
 
