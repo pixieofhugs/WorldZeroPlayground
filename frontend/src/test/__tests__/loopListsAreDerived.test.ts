@@ -46,7 +46,11 @@ const DERIVED =
  * Shrinks as #2815 converts them; it must never grow without a reason.
  */
 const GRANDFATHERED: ReadonlySet<string> = new Set([
-  'components/__tests__/feedRow.test.tsx|FILL_SLUGS',
+  // DELIBERATE, not pending: `MECHANICS` is a copy DECISION RECORD — seven
+  // [slug, name, desc] triples pinning the owner's finished mechanic copy by
+  // value. The slugs are the subject beside the strings, not the iteration
+  // range, and the range question (does every letter still have a written
+  // mechanic?) is answered by the derived SLUGS loop in the same file.
   'components/__tests__/invitationPerks.test.tsx|MECHANICS',
   'components/collab/__tests__/collabCopy.test.ts|FACTION_SLUGS',
   'components/comments/__tests__/commentFootRule.test.tsx|VOICES',
@@ -57,10 +61,7 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'components/praxisCard/__tests__/praxisMasthead.test.tsx|BANDED',
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   'components/sigil/__tests__/factionSigil.test.tsx|SLUGS',
-  'components/taskCard/__tests__/factionTaskCardsV2.test.tsx|SKINS',
   'components/taskCard/__tests__/mastheadFactionLink.test.tsx|MASTHEADED',
-  'components/taskCard/__tests__/mobileCardFillsColumn.test.tsx|SKINS',
-  'components/taskCard/__tests__/taskCardsV3.test.tsx|SKINS',
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
   'pages/characterPaths/__tests__/singularityCreateCharacterRegister.test.tsx|WIDTHS',
   'pages/characterProfile/__tests__/factionProfileBody.test.tsx|SLUGS',
