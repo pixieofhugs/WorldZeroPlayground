@@ -8853,6 +8853,40 @@
      thumb-off`). Two senses of `-off` under one prefix is the confusion #2623
      was filed to remove, so the owner ruled `--switch-*` instead. */
   --switch-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+
+  /* The ring's compliant edge (#2845). `--faction-default-stop-3` / `-4`
+     (yellow / green) measure 2.37:1 / 2.66:1 against `--switch-well` in
+     light — the rainbow ring is the only perceivable state signal on a
+     two-state switch (the thumb itself is 1.22:1 / 1.30:1 light/dark against
+     the same well), so 1.4.11's 3:1 graphical-object floor applies to it.
+
+     The stops cannot move to fix this: `--faction-default-rainbow` IS the
+     faction hue wheel, drawn on mastheads, bands, the points ring, the CTA
+     rules, and #2845 rules the wheel does not move for a switch.
+
+     NO WELL DENSITY CLEARS BOTH STOPS EITHER, so darkening `--switch-well`
+     (the other switch-local lever, and the one #2845 says to measure first)
+     was tried and measured out: stop-3 (yellow, relative luminance 0.307)
+     caps at 2.94:1 against a PURE WHITE well, and clearing stop-4 (green,
+     luminance 0.269) on the dark side needs the well mixed to ~80%
+     `--color-text-primary` — at that density the well is not a well in light
+     mode for anyone, and `--switch-well` is read by the filter rail, the
+     cookie toggles and the notification rail besides this switch (see the
+     note above), so the cost would land on every one of them to fix two
+     stops on one control.
+
+     So the ring gets a second, ALWAYS-DRAWN edge instead: a solid hairline
+     just inside the rainbow border (`SettingsSwitch.tsx`'s `track`). Once
+     that edge exists the rainbow sits on top of a compliant boundary and is
+     emphasis in 1.4.11's own terms, so the seven stops are not individually
+     re-measured for it — `frontend/src/utils/__tests__/factionContrast.test.ts`
+     asserts this token's own edge instead, at the site, so a future repoint
+     cannot drift back unseen. Aliased straight to `--color-text-tertiary`
+     rather than minted as a new value: that ink already clears both
+     `--switch-well` composites at 6.89:1 (light) / 7.34:1 (dark) — see
+     "filter well, tertiary ink" in the contrast test — so nothing new is
+     being measured here, only named for this site. */
+  --switch-ring-hairline: var(--color-text-tertiary);
 }
 
 :root {

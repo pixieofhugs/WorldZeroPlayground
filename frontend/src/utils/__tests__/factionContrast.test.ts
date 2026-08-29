@@ -2304,6 +2304,51 @@ const CALLING_CHIP_PAIRS: Pair[] = [
 ];
 
 /**
+ * THE SWITCH RING'S COMPLIANT EDGE (#2845), a block of its own — do not fold
+ * into CALLING_CHIP_PAIRS above; that block is #2852's and this is a
+ * different site.
+ *
+ * `--faction-default-stop-3` / `-4` (yellow / green) measure 2.37:1 / 2.66:1
+ * against `--switch-well` in light. The two-state switch's rainbow ring is
+ * the only perceivable state signal — the thumb itself is 1.22:1 / 1.30:1
+ * light/dark against the same well — so 1.4.11's 3:1 graphical-object floor
+ * applies to the ring, and two of its seven stops miss it.
+ *
+ * THE STOPS DO NOT MOVE. `--faction-default-rainbow` is the faction hue
+ * wheel — mastheads, bands, the points ring, the CTA rules — and #2845 rules
+ * it does not move for a switch.
+ *
+ * OPTION 1 (darken `--switch-well`, switch-local, measure first) WAS
+ * MEASURED AND RULED OUT, not skipped: stop-3 (yellow, relative luminance
+ * 0.307) caps at 2.94:1 against a PURE WHITE well — lightening cannot clear
+ * it either — and clearing stop-4 (green, luminance 0.269) on the dark side
+ * needs the well mixed to ~80% `--color-text-primary`, which is not a "well"
+ * for anyone in light mode and would carry into the filter rail, the cookie
+ * toggles and the notification rail besides this switch (`--switch-well`'s
+ * other readers, per its own note in index.css).
+ *
+ * SO THIS IS OPTION 2: `SettingsSwitch.tsx`'s `track` now draws a second,
+ * always-opaque hairline (`--switch-ring-hairline`, aliased to
+ * `--color-text-tertiary`) just inside the rainbow border on the ON state.
+ * That edge alone clears the floor, which is what this row asserts; once it
+ * is there the rainbow sits on top of a boundary that is already
+ * perceivable, so it is decorative in 1.4.11's own terms and its seven
+ * stops are deliberately NOT re-measured row-by-row here — asserting them
+ * would require moving the wheel to pass, which is the one thing #2845
+ * forbids.
+ */
+const SWITCH_RING_PAIRS: Pair[] = [
+  {
+    what: "switch ring hairline, on the switch well",
+    surface: "--color-bg-page",
+    veil: { token: "--color-text-primary", alpha: 0.06 },
+    text: "--switch-ring-hairline",
+    floor: AA_LARGE,
+    nonText: "the switch ring's compliant edge is a drawn line, not lettering — 1.4.11's 3:1 (#2845)",
+  },
+];
+
+/**
  * A `SKY_PAIRS` block stood here (#1792): seven rows measuring each faction's
  * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
  *
@@ -2485,6 +2530,7 @@ const PAIRS: Pair[] = [
   ...ARCHETYPE_PAIRS,
   ...RAIL_PAIRS,
   ...CALLING_CHIP_PAIRS,
+  ...SWITCH_RING_PAIRS,
 ];
 
 /**
