@@ -62,6 +62,11 @@ from services.media import (
     restore_media_to_mount,
     withdraw_media_from_mount,
 )
+from services.praxis_duel import (
+    discard_dissolved_duels_for_praxis,
+    get_duel_for_praxis,
+    maybe_settle_duel,
+)
 from services.praxis_room import close_member_sockets
 from services.signup_eligibility import (
     # Re-exported for existing `from services.praxis import ...` call sites
@@ -789,8 +794,6 @@ async def unsubmit_praxis(
     # ADR-0011 §Forfeit (#307): unsubmitting a *settled* duel side forfeits the
     # contest. Mark the forfeit (first one sticks) and recalc the winner below so
     # their guaranteed-win modifier lands immediately.
-    from services.duel import get_duel_for_praxis
-
     duel = await get_duel_for_praxis(praxis_id, session)
     forfeit_winner_character_id: Optional[int] = None
     if duel is not None and duel.status == DuelStatus.settled:
@@ -868,8 +871,6 @@ async def change_praxis_type(
         return praxis
 
     # A duel side is a solo praxis + Duel row; dissolve the duel before switching.
-    from services.duel import get_duel_for_praxis
-
     if await get_duel_for_praxis(praxis_id, session) is not None:
         raise HTTPException(
             status_code=409, detail="End the duel before changing this praxis's mode."
@@ -912,8 +913,8 @@ async def delete_praxis(
     declined Duel row goes with the praxis, because the two duel FKs are the one
     pair into ``praxis.id`` that does not cascade. A live or resolved duel still
     refuses the delete — the reasoning is on
-    :func:`services.duel.discard_dissolved_duels_for_praxis`, which owns the
-    predicate.
+    :func:`services.praxis_duel.discard_dissolved_duels_for_praxis`, which owns
+    the predicate.
     """
     praxis = await get_praxis(praxis_id, session)
     if praxis.created_by_id != character_id:
@@ -923,9 +924,6 @@ async def delete_praxis(
             status_code=400,
             detail="Cannot delete a submitted praxis. Move it to editing first.",
         )
-    # Local import: services.duel imports this module at module scope (#307).
-    from services.duel import discard_dissolved_duels_for_praxis
-
     await discard_dissolved_duels_for_praxis(praxis_id, session)
     await session.delete(praxis)
     await session.flush()
@@ -1592,9 +1590,8 @@ async def submit_praxis(
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
         # Settle any duel BEFORE the stats recalc — the outcome feeds the duel
-        # multiplier. Kept here (not in collab_consensus) because it depends on
-        # services.duel, which imports services.praxis (import-cycle avoidance).
-        from services.duel import maybe_settle_duel
+        # multiplier. Kept here rather than in collab_consensus so the whole
+        # duel side effect of a submit reads in one place.
         await maybe_settle_duel(praxis_id, session)
         await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
@@ -1704,8 +1701,6 @@ async def _duel_opponent_character_id(
     ADR-0052 says a frozen outcome never recomputes), or a challenge with no
     opponent praxis yet.
     """
-    from services.duel import get_duel_for_praxis
-
     duel = await get_duel_for_praxis(praxis_id, session)
     if duel is None:
         return None

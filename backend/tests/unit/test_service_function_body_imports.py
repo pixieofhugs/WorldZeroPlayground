@@ -29,7 +29,7 @@ def _deferred_service_imports(source: str) -> list[str]:
             continue
         if node.module and node.module.split(".")[0] == "services":
             found.append((node.lineno, node.module))
-    return [f"line {lineno}: from {module} import ..." for lineno, module in sorted(found)]
+    return [f"line {n}: from {module} import ..." for n, module in sorted(found)]
 
 
 def test_no_service_exceeds_the_deferred_import_tripwire():
