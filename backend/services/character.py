@@ -787,7 +787,7 @@ async def list_characters_for_viewer(
     roster question or a prober's (#2422). ``None`` — anonymous, or a caller who
     passed none — keeps the anti-oracle answer.
     """
-    from services.praxis import multi_membership_faction_slugs
+    from services.signup_eligibility import multi_membership_faction_slugs
 
     era_row = await get_current_era_row_safe(session)
     era_id = era_row.id if era_row else None
