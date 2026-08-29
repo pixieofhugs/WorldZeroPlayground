@@ -37,28 +37,19 @@
  * sparkle) and `CovenCat` (the turning watermark) are untouched — different
  * devices with different jobs, and `covenSlip`'s own header gives the reason.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import { CovenSigil } from "../../sigil/CovenSigil";
+import { sourceFiles } from "../../../test/sourceScan";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 /** The badge's five-point star, in its own 44-unit box. */
 const BADGE_STAR = "M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z";
-
-function sourceFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...sourceFiles(path));
-    else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) out.push(path);
-  }
-  return out;
-}
 
 /**
  * Source with its comments removed, because a TOMBSTONE has to be able to name
@@ -74,9 +65,9 @@ function withoutComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 }
 
-const FILES = sourceFiles(SRC).map(
-  (path) => [path, withoutComments(readFileSync(path, "utf8"))] as const,
-);
+const FILES = sourceFiles({ dir: SRC, includeTests: true })
+  .filter((path) => !/\.test\.tsx?$/.test(path))
+  .map((path) => [path, withoutComments(readFileSync(path, "utf8"))] as const);
 
 function code(relative: string): string {
   return readFileSync(join(SRC, relative), "utf8");
@@ -104,7 +95,7 @@ const COMPOSER = "pages/editPraxis/archetypes/CovenEditPraxis.tsx";
 describe("Coven's retired pentagram badge (#2726)", () => {
   it("is named in no source file — not exported, not imported, not re-drawn", () => {
     // Whole-tree, because a dir-scoped scan has hidden mounts in this repo
-    // before. Tests are excluded by `sourceFiles`, comments by
+    // before. `*.test.tsx?` files are filtered out of `FILES`, comments by
     // `withoutComments` — see that helper for why the second exclusion exists.
     const offenders = FILES.filter(([, source]) => source.includes("SigilMark")).map(([path]) => path);
     expect(offenders, "`SigilMark` survives in these files").toEqual([]);
