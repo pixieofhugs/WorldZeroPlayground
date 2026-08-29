@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import account_has_admin_role, get_current_account_optional
+from dependencies import get_current_account_optional, get_viewer_is_admin
 from game_config import CURRENT_ERA
 from models.account import Account
 from schemas.game_config import (
@@ -20,6 +20,7 @@ router = APIRouter()
 async def get_game_config(
     account: Account | None = Depends(get_current_account_optional),
     session: AsyncSession = Depends(get_db),
+    is_admin: bool = Depends(get_viewer_is_admin),
 ) -> GameConfigOut:
     # NOTE — this docstring ships verbatim to the PUBLIC ``/openapi.json``, so
     # it says what the route does without naming what it hides. The reason lives
@@ -33,9 +34,6 @@ async def get_game_config(
     # Deliberately outside the docstring, per the NOTE above: the reason a
     # moderation role is read here is #2400, and naming it publicly would name
     # what it unhides. `services.albescent_reveal` holds the reason.
-    is_admin = account is not None and await account_has_admin_role(
-        account.id, session
-    )
     factions = [
         FactionConfigOut(
             slug=faction.slug,
