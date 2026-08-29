@@ -2073,10 +2073,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
 
   // THE TWO BANDS THAT OWN A GROUND NAMED FOR THE BAND (#2635) — a hairline and
   // the disc behind a sigil are what "the nearest token to hand" looks like, and
-  // both are what these two stopped standing on. The five other bands stand on
-  // materials their kits draw and are measured with those kits above; `the nine
-  // masthead bands stand on their own ground` at the foot of this file is the
-  // guard that keeps it so.
+  // both are what these two stopped standing on. The five other FACTION bands
+  // stand on materials their kits draw and are measured with those kits above,
+  // and the seal-only pair (Albescent, na) letters in the na card's ink and is
+  // measured on its own at the foot of this file. Two plus five plus two is the
+  // nine that `the nine masthead bands stand on their own ground` covers, which
+  // is the guard that keeps all of it so.
   {
     // ONE ROW COVERS BOTH THEMES because BOTH tokens are frozen, exactly as
     // `everymen bill masthead` above is: ground and ink are each declared once,
