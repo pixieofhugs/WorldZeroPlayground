@@ -41,6 +41,23 @@ import type { CSSProperties } from 'react'
  * `aria-disabled` rather than the `disabled` attribute, on purpose: a
  * `disabled` button leaves the tab order, so the one reader most likely to need
  * the explanation is the one who can never reach it.
+ *
+ * THE LOCK GLYPH IS "LOCKED ON" ONLY, NOT "LOCKED" IN GENERAL (#2844). A
+ * locked-off switch (`Analytics`, `Marketing`) already reads as a distinct
+ * state without any glyph: its edge is the flat `--color-border-strong` line
+ * from `TRACK_EDGE_OFF`, not the rainbow, and its thumb sits left. The only
+ * pairing that was pixel-identical to a live, changeable switch was
+ * locked-**on** (`Essential`) against `Dark mode` — same rainbow edge, same
+ * thumb position, only `cursor` differed, and cursor needs a hover that a
+ * touch reader never gets. So the glyph is gated on `checked && disabled`
+ * specifically, not on `disabled` alone; giving it to the off switches too
+ * would draw a distinction nothing needs. The design canvas's `opacity: .45`
+ * dim on the locked track is deliberately NOT ported — see the measurement
+ * in #2844: at .45 every one of the rainbow ring's seven stops falls under
+ * 1.4.11's 3:1, and the ring is the only perceivable state signal this
+ * control has (see #2845 above). The glyph is drawn in `--switch-thumb-edge`,
+ * the token already load-bearing for the thumb's own ring, so it introduces
+ * no new token and no new `factionContrast.test.ts` pairing.
  */
 interface SettingsSwitchProps {
   readonly checked: boolean
@@ -91,9 +108,33 @@ const knob: CSSProperties = {
   width: 20,
   height: 20,
   borderRadius: 999,
-  display: 'block',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   boxShadow: 'inset 0 0 0 1px var(--switch-thumb-edge)',
   transition: 'left 180ms ease',
+}
+
+/**
+ * The locked-on glyph (#2844). Decorative only — the outer knob `<span>` is
+ * already `aria-hidden`, and the accessible name (set by the caller) already
+ * says the switch is locked. Sized to sit inside the 20px thumb with room to
+ * spare, and drawn in `--switch-thumb-edge` — the same token the thumb's own
+ * ring already uses, so this mints nothing new.
+ */
+function LockGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10">
+      <path
+        d="M3.5 5V3.6a2.5 2.5 0 0 1 5 0V5"
+        fill="none"
+        stroke="var(--switch-thumb-edge)"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <rect x="2.5" y="5" width="7" height="5.5" rx="1.1" fill="var(--switch-thumb-edge)" />
+    </svg>
+  )
 }
 
 export default function SettingsSwitch({
@@ -128,7 +169,9 @@ export default function SettingsSwitch({
           left: checked ? 22 : 3,
           background: checked ? 'var(--switch-thumb)' : 'var(--switch-thumb-off)',
         }}
-      />
+      >
+        {checked && disabled && <LockGlyph />}
+      </span>
     </button>
   )
 }
