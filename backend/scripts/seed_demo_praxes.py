@@ -4,8 +4,10 @@ by real demo Characters, so the per-faction praxis cards render with genuine
 scores for local testing.
 
 Idempotent: re-running creates only what's missing (keyed on demo usernames and
-a per-faction title marker). Dev DB only — these are throwaway test rows; remove
-with `scripts/seed_demo_praxes.py --remove`.
+a per-faction title marker), and repairs any of its own rows a prior run left
+corrupt (#2846 — status=submitted with no submitted_at, which the app hides
+from every feed and profile). Dev DB only — these are throwaway test rows;
+remove with `scripts/seed_demo_praxes.py --remove`.
 
     backend/.venv/Scripts/python scripts/seed_demo_praxes.py
     backend/.venv/Scripts/python scripts/seed_demo_praxes.py --remove
@@ -637,8 +639,88 @@ async def get_or_create_players(
     return chars
 
 
+async def _repair_corrupt_submitted(session) -> int:
+    """Repair pre-existing rows this script created that violate the sealed
+    invariant (#2846): ``status == submitted`` with a NULL ``submitted_at``.
+
+    Only the per-faction loop below ever produced these — every other creation
+    site in this file has always passed ``submitted_at`` — but a script that
+    just learned to stop making them is still pointed at a database that may
+    already hold the six it made before. ``if already: continue`` above keys
+    on title, so a plain re-run would skip past them forever and keep printing
+    ``=  … already present``. Scoped to ``TITLE_MARKER``-prefixed titles: rows
+    this script owns, never anything a player created.
+
+    Uses each praxis's own ``created_at`` as the seal time — the row was never
+    sealed through ``collab_consensus._apply_seal``, so there is no real seal
+    moment to recover; ``created_at`` is the closest fact on hand and is fixture
+    data either way. Repairs the matching submitted ``PraxisMember`` rows too,
+    so a repaired row is shaped the same as one this script creates fresh.
+    """
+    rows = (
+        await session.execute(
+            select(Praxis).where(
+                Praxis.title.like(f"{TITLE_MARKER}%"),
+                Praxis.status == PraxisStatus.submitted,
+                Praxis.submitted_at.is_(None),
+            )
+        )
+    ).scalars().all()
+    for praxis in rows:
+        praxis.submitted_at = praxis.created_at
+        members = (
+            await session.execute(
+                select(PraxisMember).where(
+                    PraxisMember.praxis_id == praxis.id,
+                    PraxisMember.has_submitted.is_(True),
+                    PraxisMember.submitted_at.is_(None),
+                )
+            )
+        ).scalars().all()
+        for member in members:
+            member.submitted_at = praxis.created_at
+    if rows:
+        await session.flush()
+        print(
+            f"  ! repaired {len(rows)} pre-existing corrupt row(s) "
+            "(status=submitted, submitted_at=NULL — #2846) — re-stamped from created_at"
+        )
+    return len(rows)
+
+
+async def _assert_no_corrupt_submitted(session) -> None:
+    """Fail loudly rather than report success over a row the app will hide.
+
+    ``services.praxis.list_praxes`` documents and enforces the invariant this
+    checks: ``status == submitted`` implies ``submitted_at IS NOT NULL``. This
+    is the check that stops the defect from returning silently the next time a
+    creation site is added to this file — it does not trust any one call site
+    to have gotten it right, it verifies the database after. Scoped to
+    ``TITLE_MARKER``, which is every row this script owns.
+    """
+    bad = (
+        await session.execute(
+            select(func.count())
+            .select_from(Praxis)
+            .where(
+                Praxis.title.like(f"{TITLE_MARKER}%"),
+                Praxis.status == PraxisStatus.submitted,
+                Praxis.submitted_at.is_(None),
+            )
+        )
+    ).scalar()
+    if bad:
+        raise RuntimeError(
+            f"seed_demo_praxes: {bad} row(s) with status=submitted and "
+            "submitted_at=NULL survived seeding — services/praxis.py hides "
+            "these from every feed and profile. Fix the creation site that "
+            "made them; see #2846."
+        )
+
+
 async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
     players = await get_or_create_players(session, era)
+    repaired = await _repair_corrupt_submitted(session)
     created = 0
     for faction, (author_username, title, body, ptype, stars) in DEMOS.items():
         task = (
@@ -662,6 +744,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             print(f"  = {faction}: demo praxis already present — skipped")
             continue
 
+        now = datetime.now(timezone.utc)
         praxis = Praxis(
             task_id=task.id,
             type=ptype,
@@ -670,11 +753,17 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             body_text=body,
             created_by_id=author.id,
             moderation_status=ModerationStatus.visible,
+            submitted_at=now,
         )
         session.add(praxis)
         await session.flush()
 
-        session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=True))
+        session.add(PraxisMember(
+            praxis_id=praxis.id,
+            character_id=author.id,
+            has_submitted=True,
+            submitted_at=now,
+        ))
         voters = [c for c in players.values() if c.id != author.id][: len(stars)]
         for voter, star in zip(voters, stars):
             session.add(Vote(
@@ -688,7 +777,11 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
 
     await seed_score_fixtures(session, players, era)
     await session.commit()
-    print(f"\nDone. {created} demo praxis(es) created.")
+    await _assert_no_corrupt_submitted(session)
+    summary = f"\nDone. {created} demo praxis(es) created"
+    if repaired:
+        summary += f", {repaired} corrupt row(s) repaired"
+    print(summary + ".")
     print_login_recipe(era)
 
 
