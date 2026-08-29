@@ -58,11 +58,12 @@ import DefaultAvatar from '../DefaultAvatar'
 import { surfaceMap } from '../../../factions'
 import { setAlbescentRevealed } from '../../../utils/factions'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
 const read = (path: string): string =>
   stripComments(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'))
 
-const INDEX = read('../../../index.css')
+const INDEX = stripComments(readIndexCss())
 const MOTION = read('../../../motion.ornament.css')
 
 /** The one node the wrapper adds. Removing it must leave the na disc. */

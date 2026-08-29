@@ -1,0 +1,845 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — COMPONENT CLASSES: Tailwind `@layer components` (#2890).
+   Shared card patterns read by every faction archetype.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Shared card patterns ── */
+
+  /* ── THE FROST IS A LAYER OVER A GROUND, NOT A GROUND (#1413) ────────────
+     `--color-bg-surface` is ALPHA in both themes — rgba(255,255,255,0.72) light,
+     0.04 dark — so a card filled with it has no colour of its own. What its inks
+     are measured against is decided by whatever it happens to be mounted on, and
+     `.sidebar-card` is the app's neutral chrome: it lands on the page, on eight
+     faction backdrops, and (ADR-0061) on all nine praxis-detail walls, wearing
+     the global `--color-*` inks the whole way. Over Singularity's always-dark
+     terminal the same 72% white resolves to a mid-grey and `--color-danger` is
+     2.54:1, `--color-warning` 2.65, `--color-text-tertiary` 3.11.
+
+     Nothing could catch it. `parseColor` cannot read a browser composite, so no
+     contrast row can name "72% white over whatever this is mounted on" — the
+     pairing was unassertable rather than merely unmeasured, which is why it was
+     reported by eye. (The dark half of the same hazard is already written down
+     at --faction-wow-court-glow: a 4% fill lets the ground through undimmed, and
+     WOW paid for it by dialling its own backdrop glow down.)
+
+     So the frost becomes a background IMAGE and the stock beneath it becomes a
+     declared property. `--card-ground` unset is `transparent`, which composites
+     to exactly today's render — every card that genuinely wants to frost what is
+     behind it, and the blur that goes with it, is byte-identical. A SHEET that
+     paints its own wall may name the stock its cards frost; the app's own
+     neutral chrome takes `.card-on-page` below.
+
+     Do NOT reach for `backdrop-filter: none` on the grounded case just because
+     the blur is now invisible under an opaque fill: the filter is what makes
+     this card a containing block, which #1148 relies on for the `position:
+     fixed` modals its feed bodies open. */
+  .sidebar-card {
+    background-color: var(--card-ground, transparent);
+    background-image: linear-gradient(var(--color-bg-surface), var(--color-bg-surface));
+    border-radius: var(--radius-xl);
+    padding: 0.9rem;
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(var(--card-blur));
+  }
+
+  /* Neutral chrome that must keep the app's own stock wherever it is mounted.
+     #1118: a block whose ink you do not control gets the stock that ink was
+     measured on — and these inks are the global set, chosen on the page ground,
+     flipping with the theme. The praxis detail's steward bar and report card are
+     the case that forced it: ADR-0061 mounts them BARE on nine faction walls
+     precisely so moderation chrome reads the same everywhere, which is a promise
+     the frost was quietly breaking. Worst reading on this ground is 4.71:1
+     (danger, light), against 2.54 on the terminal.
+
+     THE INK IS THE SAME PROMISE, ONE PROPERTY OVER (#1606). The ground was only
+     half of what kept these cards neutral. `.eyebrow` HARDCODED
+     `--color-text-tertiary`, so a label in the steward bar read the app's own
+     quiet ink whatever it was mounted inside; #1307 retired it into
+     `.label-heading` / `.label-caption`, which read `--label-ink` — a SEAM a
+     faction frame is meant to set ONCE on its own root, and these cards render
+     inside that root. So the neutral survived the sweep by accident, and the
+     first praxis-detail skin to repoint the seam (three light sheets cannot
+     clear the neutral, so one is coming) would tint moderation chrome on its
+     wall and nowhere else. `WowFactionBody` already repoints it — on the
+     faction detail page, which mounts no neutral chrome, so nothing renders
+     wrong today and this is pre-emptive.
+
+     Pinning it HERE is what the tiers' own declaration asks for: the alternative
+     is an inline colour on each label, which is the per-component contradiction
+     #1252 exists to stop and is invisible to every ratio in
+     `factionContrast.test.ts`. The neutral is already measured on this exact
+     ground for the tier's floor — both tiers sit under WCAG's large-text
+     threshold and so owe 4.5:1; tertiary on the page reads 5.40:1 light and
+     6.21:1 dark. Gated beside the ground, in the same file. */
+  .card-on-page {
+    --card-ground: var(--color-bg-page);
+    --label-ink: var(--color-text-tertiary);
+  }
+
+  .card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(var(--card-blur));
+  }
+
+  /* ── THE DESKTOP RAIL'S DISPLAY FACE (#2361) ──
+     Colour, radius and frame reach the rail as custom properties with a
+     fallback (`var(--rail-ink, var(--color-text-primary))`, declared by
+     `layout/Sidebar.tsx::railFaceVars`), so an unaffiliated viewer is
+     pixel-identical because nothing is declared at all. The FACE cannot use
+     that shape: `.font-display` is a Tailwind utility with the stack written
+     into it, and there is no fallback slot in a utility to hang the na value
+     on. Restating the stack here would be a second copy of it, drifting.
+
+     So the switch is the ATTRIBUTE, and it is set only for a viewer whose
+     faction has a `-card-font` at all. Unset, this rule does not match and the
+     utility is untouched; set, `--rail-face` is guaranteed declared beside it.
+     `na` and `albescent` both resolve to `default` in `CSS_KEY`, so neither
+     ever carries the attribute — which is ADR-0048's ruling for Albescent
+     ("revealed by a shimmer, never by a colour") holding on the type too.
+
+     Specificity is what makes this win, not order: (0,2,0) against the
+     utility's (0,1,0), so it holds wherever Tailwind emits the layers.
+
+     ONE SURPRISE IN THE BUILT SHEET, recorded so nobody re-derives it: naming
+     `.font-display` in a selector makes this rule part of what `@apply
+     font-display` copies. The base `h1…h4` rule and `.markdown-preview h1…h3`
+     each `@apply` it, so the build also emits `[data-rail-face] h1`, `…h2` and
+     so on — eight selectors, merged into two rules. They are inert everywhere
+     but inside the rail, which renders no heading element and no markdown; and
+     inside the rail they say the same thing this rule does. Left alone rather
+     than dodged with a private attribute: the copies are correct, and the
+     alternative is a second name for "the rail's display type". */
+  [data-rail-face] .font-display {
+    font-family: var(--rail-face);
+  }
+
+  /* ── Task card shared patterns ── */
+
+  /* --text-md, not --text-xs (#1783). See the note above .btn-primary: this is
+     the same uppercase, letter-spaced heading register at the same step, and it
+     was the one rule still sitting on the ramp's very bottom rung. */
+  .card-meta {
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  /* Body copy — the class is named for it, so it sits on the floor (#627). */
+  .card-description {
+    font-size: var(--text-content);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  /* ── The equal-height task-card row (#1945) ───────────────────────────────
+     Every surface that lists <TaskCard>s in a flex-wrap row wears this class.
+     The rows used to set `align-items: flex-start`, so each card kept its own
+     content height and a row's bottom edges disagreed by the length of a
+     description — cards that are meant to look hand-made looked unfinished.
+
+     THIS DOES NOT REOPEN §6. "Do not regularize card sizes" is about WIDTHS and
+     ROTATIONS, and both are untouched: the row's own items never grow (see the
+     third rule's note), so every `cardWidth` and every `rotate()` still reads
+     exactly as its archetype drew it. A ragged bottom edge in a wrapping row is
+     a layout accident, not an archetype (owner ruling 2026-08-17, §6).
+
+     WHY `align-items: stretch` ALONE DOES NOTHING HERE. The row's flex item is
+     not the thing that gets painted. Every task card mounts as
+
+       row > TaskCard's positioned wrapper > skin root ([data-form-factor])
+           > <article>                  ← the frame, the ground and the shadow
+           > … > <a data-card-link>     ← the region a player reads
+
+     and a block box does not inherit its parent's height. So the height is
+     handed down that chain one level at a time, and it stops at the region
+     holding the card's link — which is what makes the four archetypes with a
+     full-width CTA BAR (Coven, Ephemerists, S.N.I.D.E., Everymen) keep that bar
+     flush with the bottom edge instead of leaving paper under it. The other
+     five centre a pill instead, and it settles to the bottom of its own frame.
+     No archetype's internal geometry is reflowed: the slack is empty ground.
+
+     WHAT IS DELIBERATELY NOT TOUCHED. Every ornament these cards position
+     absolutely — START HERE, the META stack and the admin controls on the
+     dispatcher, Albescent's aurora and drifting edge, Coven's wheel, WoW's
+     balloons — is out of flow, so none of it is a flex item and none of these
+     rules reach it. The two `bottom`-anchored ones (that wheel, those balloons)
+     ride down with the frame, which is where a corner ornament belongs.
+
+     A SKIN MAY NOT BREAK THE CHAIN. `[data-form-factor] > article` and the one
+     `data-card-link` anchor per card are the contract this file is written
+     against; `pages/tasks/__tests__/equalHeightRow.test.tsx` renders all nine
+     skins and fails if a redraw moves the frame off the skin root or moves the
+     hook. Nothing here can be restated inline in a component: an inline
+     `display` would beat every rule below. */
+  .task-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  /* Each box on the path from the row down to the card's link becomes a column,
+     so the height keeps travelling instead of stopping at the first block.
+     `:has(> [data-form-factor])` is Albescent: its tell wraps a second skin root
+     one level deeper than the other eight, and it is named by what it contains
+     rather than counted, so nesting may change without this going quiet.
+
+     WHY THE HOOK AND NOT `a[href]` (#2380). These two rules used to end in
+     `:has(a[href])` — *any* descendant holding *any* anchor — and agreed with
+     the paragraph above them only because the reading link was, for a while,
+     the only anchor a card drew. It stopped being: #2167 gave the masthead one
+     (which then had to pin `flex-grow: 0` in TWO components to climb back off
+     this chain), and #2359 gave the CTA slot a link branch for a viewer holding
+     a draft. That branch is a SIBLING of the reading link — deliberately, so
+     the markup stays valid — and it flipped its own row to a column, which
+     turned Everymen's two `flex: 0 1 96px` marks from 96px wide into 96px tall
+     with `width: 100%` behind them: hands the full width of the card.
+
+     `data-card-link` is the fix and it is one attribute: the card-wide anchor
+     says which anchor it is, and the selector asks for that one instead of
+     guessing. A skin that draws a second link now costs nothing, and one that
+     forgets the hook fails the suite named above rather than quietly ceasing to
+     stretch. */
+  .task-card-row > *,
+  .task-card-row > * :has(> [data-form-factor]),
+  .task-card-row [data-form-factor],
+  .task-card-row [data-form-factor] > article,
+  .task-card-row [data-form-factor] > article :has(a[data-card-link]) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* …and each takes the slack. NEVER `.task-card-row > *` itself: the row's own
+     item grows along the ROW's main axis, which is horizontal, so a `flex-grow`
+     there would stretch cards to fill the line — the exact width-regularizing
+     §6 forbids. Growth starts one level in, where the axis is vertical. */
+  .task-card-row > * :has(> [data-form-factor]),
+  .task-card-row [data-form-factor],
+  .task-card-row [data-form-factor] > article,
+  .task-card-row [data-form-factor] > article :is(a[data-card-link], :has(a[data-card-link])) {
+    flex: 1 1 auto;
+  }
+
+  /* ── BELOW 768px THE ROW'S ITEM TAKES THE WHOLE LINE (#2763) ──
+     The one place this file regularizes a card's WIDTH, and it is a ruling
+     rather than a drift: on a phone the row wraps to one card per line anyway,
+     so a card keeping its own 340px is not a ragged row, it is a card that
+     missed the margin — narrower than the plate above it and flush to the left
+     of it. Desktop is untouched; the note above about growth never starting on
+     the row's own item is a DESKTOP statement, and stays exactly true there.
+
+     WHY THE ITEM AND NOT JUST THE CARD. The nine archetypes now ask for
+     `width: 100%` on their skin root at this form factor, and that percentage
+     resolves against the flex ITEM — the dispatcher's positioned wrapper —
+     whose own width is `auto`. A percentage against an indefinite parent falls
+     back to the parent's max-content contribution, so a card with short copy
+     could sit narrower than the line and let a second card share it. This makes
+     the item definite, and only then does the inline width mean what it says.
+     It is `width` rather than `flex-grow` for the same reason: grow would
+     stretch a SHORT card's line-mate too, and this must be one card per line.
+
+     767px, because that is `MOBILE_QUERY` in `hooks/useFormFactor.ts` — this
+     rule and the branch that sets the inline width must flip on the same pixel
+     or a card gets one of the two answers. */
+  @media (max-width: 767px) {
+    .task-card-row > * {
+      width: 100%;
+    }
+  }
+
+  /* ── Buttons ──
+     BUTTON CHROME IS ON THE LABEL-TIER FLOOR, --text-md (#1783). It used to be
+     --text-sm (9px), with .card-meta a rung below it at --text-xs (8px), while
+     #1307 had already walked the tier's two role classes up — .label-heading to
+     --text-md, .label-caption to --text-lg. All three of these rules are
+     uppercase and letter-spaced, i.e. the HEADING register, so --text-md is the
+     step they join. NOT --text-lg: the caption is nominally the larger of the
+     two only because it drops the casing, and pulling caps up to 12px to match
+     the number un-matches the voices (the argument is written out in full at
+     .label-caption).
+
+     WHY THE WHOLE SITE'S BUTTONS MOVED AT ONCE, AND WHY THEY HAD TO. A button
+     label carries the four stacked legibility costs the tier split exists to
+     remove, and unlike a caption it is text a player must read TO ACT. #769
+     ruled the duel seal's buttons stay --text-sm "as button chrome"; that was a
+     decorative seal rather than the primary action chrome of the site, and
+     #1783 weighed it and did not carry it. The seal buttons ride this rule now
+     like everything else.
+
+     THE HAZARD THIS RULE HAS ALREADY SURVIVED ONCE, so do not re-open it: 19
+     components had this number typed into an inline `style` beside the class —
+     a RESTATEMENT, not an override, identical by intent and load-bearing by
+     accident. An inline style wins, so every one of them would have pinned its
+     button at 9px while the rest of the site moved, and nothing would have
+     warned you. They were deleted, not edited. `__tests__/labelTierSweep.test.ts`
+     reads this declaration and counts the two smallest steps in the source tree
+     so the pair can never drift apart again. If you are about to write
+     `fontSize: 'var(--text-*)'` next to `className="btn-…"`, the answer is that
+     the class already says it. */
+
+  .btn-primary {
+    @apply font-body;
+    background: var(--color-text-primary);
+    color: var(--color-bg-page);
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: opacity 150ms;
+  }
+  .btn-primary:hover {
+    opacity: 0.85;
+  }
+
+  .btn-outline {
+    @apply font-body;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-strong);
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: opacity 150ms;
+  }
+  .btn-outline:hover {
+    opacity: 0.85;
+  }
+
+  /* ── Feed action controls ──
+     The feed's accept / decline / withdraw / dismiss controls, and the one
+     plain link that sits among them. NOT .btn-* on purpose: they carry
+     font-weight 700, 0.1em tracking and a denser pad, and they take their fill
+     from a --badge-* rather than the neutral. That is dress a design owns, so
+     #1783 did not flatten them into the button classes — it deleted the eight
+     hand-rolled copies of this face across FeedCardCollabInvite,
+     FeedCardDuelChallenge, FeedBankFullModal and FeedCardInvitationLetter and
+     left the copies' per-instance colour, padding and cursor inline, where they
+     belong. Reading --text-md here is the point: the two families now step
+     together off one token instead of two ramps drifting apart.
+
+     Size, face and casing only. It sets no colour and no box, so a caller keeps
+     dressing itself and an inline style still wins for everything it does set. */
+  .feed-action {
+    @apply font-body;
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Filter chips ── */
+
+  .chip {
+    @apply font-body;
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-strong);
+    padding: 0.25rem 0.625rem;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+  .chip:hover {
+    background: var(--color-bg-surface-alt);
+  }
+  .chip-active {
+    background: var(--color-text-primary);
+    color: var(--color-bg-page);
+    border-color: var(--color-text-primary);
+  }
+
+  /* ── The label tier is TWO roles, not one (#1307) ──────────────────────────
+     `.eyebrow` — DELETED HERE, by the last of #1307's sweeps — covered five
+     jobs: section headings, metadata captions, status chips, counts, bylines,
+     all at 9px uppercase on 0.15em tracking in the weakest neutral. Four
+     legibility costs stacked on one string, and the file had already admitted
+     the stack half-fails: `.eyebrow-sentence` lived here (deleted earlier in
+     #1307) precisely because "a sentence set that way is a wall". That was a
+     CAPTION wearing a heading's clothes, and a variant rather than the rethink
+     it should have had. The five jobs are two intents:
+
+       .label-heading   THIS NAMES A REGION. "COLLABORATORS · 4", "WRITE-UP",
+                        "IN PROGRESS TASKS". 11px, uppercase, tracked. Being
+                        hard to read as prose is acceptable here — the job is
+                        marking where a region starts, and a region name is one
+                        or two words by construction.
+
+       .label-caption   THIS IS A SMALL FACT ABOUT THE THING. "5d ago",
+                        "5 / 20 slots", a byline, a status. 12px, normal case,
+                        normal tracking. It is genuinely read, so it may not be
+                        hard to read.
+
+     THE CAPTION IS NOMINALLY LARGER THAN THE HEADING, ON PURPOSE. Uppercase
+     reads optically larger than its nominal size, so 11px caps and 12px
+     lowercase land at about the same weight while doing different jobs. Do not
+     "fix" the inversion by pulling the caption to 11px: the casing is what the
+     size is compensating for, and matching the numbers un-matches the voices.
+
+     COLOUR IS `--label-ink`, WHICH IS NOT DECLARED HERE. Its measurement and
+     the reason a faction repoints it (three light-mode sheets the neutral
+     cannot clear) are at its declaration, up with the text tiers. Unset it is
+     `--color-text-tertiary`, which is the ink `.eyebrow` hardcoded — so a label
+     outside a faction frame is unchanged by the retirement. Both tiers read the
+     SAME property: they land on one AA floor, so one measurement serves the
+     pair, and a frame that had to repoint two properties would eventually
+     repoint one.
+
+     PURGE, AND ONE FRAGILE THING ABOUT IT. These live in @layer components, so
+     Tailwind emits a class only once it sees the literal string in a scanned
+     file — same as `.content-text`, and it means a name assembled at runtime is
+     a name that never ships. Write both as literals.
+     Both tiers now have real callers across propose-task, praxis detail, task
+     detail, the feed and admin (#1601, #1603, #1604, #1605, #1602), so neither
+     depends any longer on `factionContrast.test.ts` quoting it to survive the
+     purge — which it did, for `.label-heading`, between landing and its first
+     sweep. Worth knowing that this was ever true: a class held in the bundle
+     only by a spec is one `src`-relative move away from silently vanishing, and
+     the symptom is a rule that does nothing rather than a build that fails. If
+     either tier ever appears inert, check the BUILT stylesheet rather than the
+     source before believing the source. (Do not write that glob out here. It contains
+     a star-slash, which ENDS a CSS comment, and postcss then fails on the
+     remains of the sentence rather than on the thing you typed.)
+
+     `.eyebrow` is GONE — 124 class sites across 61 files went to one of these
+     two, and the rule went with the last of them. What is left of the name in
+     this file is prose and one token (`--faction-default-eyebrow-rainbow`,
+     which names a three-stop cut of the spectrum and not this class). The
+     sweep's own guard is `src/__tests__/labelTierSweep.test.ts`, which counts
+     the name inside `className` values rather than in the file, because the
+     whole-string count is ~369 and that over-count is what put "461 sites" in
+     the issue title. */
+
+  /* Written as two whole rules rather than a grouped selector plus two
+     role rules: the shared face and ink LOOK like 29 raw bytes of duplication,
+     and hoisting them measured 6 bytes gzip WORSE on the day (22,968 against
+     22,962, warn line 23,000). gzip had already collapsed the repetition and
+     the second selector list is new text. Measure a de-duplication in the
+     BUILT stylesheet before believing it — the raw file is not the payload. */
+
+  .label-heading {
+    @apply font-body;
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--label-ink);
+  }
+
+  /* `text-transform: none` is not redundant. A caption inherits its casing, and
+     several faction frames uppercase whole regions — a swept caption without
+     this line renders as the wall the split exists to remove, silently, at the
+     one size that makes it worse. `.eyebrow` never needed the reset because it
+     sets uppercase itself. */
+  .label-caption {
+    @apply font-body;
+    font-size: var(--text-lg);
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--label-ink);
+  }
+
+  /* ── Level gem (issue #728) ──
+     A square rotated 45° — outlined, never filled, so the numeral sits on
+     whatever surface the gem lands on and stays AA-safe without per-faction
+     tuning. The caller supplies four custom properties inline:
+       --gem-size   overall box in px (task-card ~24 → roster ~34)
+       --gem-stroke paint for the outline: a faction colour, or the
+                    --faction-default-rainbow gradient for unaffiliated
+       --gem-ink    numeral colour. `currentColor` for a known faction, so the
+                    numeral takes the ink of the surface the gem landed on and
+                    the sentence above stays true — it was the faction hue until
+                    #1932, which is 1.96:1 on the app page. Unaffiliated passes
+                    `transparent` and takes the rainbow class below.
+       --gem-glow   colour cast around the shape
+     The outline is a gradient-capable "border": a filled lozenge whose middle
+     is masked out. That is what lets the rainbow stroke and the solid faction
+     strokes be the same code path. */
+
+  .level-gem {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .level-gem-box {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--gem-size);
+    height: var(--gem-size);
+  }
+
+  .level-gem-shape {
+    position: absolute;
+    /* a square inscribed in the box once rotated: side = box / √2 */
+    width: calc(var(--gem-size) / 1.414);
+    height: calc(var(--gem-size) / 1.414);
+    box-sizing: border-box;
+    padding: max(1.5px, calc(var(--gem-size) * 0.07));
+    transform: rotate(45deg);
+    background: var(--gem-stroke);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    filter: drop-shadow(0 0 calc(var(--gem-size) * 0.17) var(--gem-glow));
+  }
+
+  .level-gem-number {
+    position: relative;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: calc(var(--gem-size) * 0.42);
+    line-height: 1;
+    color: var(--gem-ink);
+  }
+
+  /* Unaffiliated ink, per ADR-0039: the spectrum, not a grey fallback.
+     .rainbow-ink is the general form (roster points numeral, #729); the gem's
+     own class rides the same rule so there is one gradient-clip in the sheet.
+
+     WARNING: background-clip:text fails INVISIBLY — if the gradient token ever
+     resolves to nothing the glyph renders transparent, i.e. blank. Any surface
+     adopting this owes it a human eyeball in both themes. Contrast here also
+     cannot be machine-measured (axe punts on gradients, see #651); the stop to
+     hand-check is the darkest light-mode red, #c1272d, on the light page. */
+  .rainbow-ink,
+  .level-gem-number-rainbow {
+    background: var(--faction-default-rainbow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .level-gem-caption {
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-tertiary);
+  }
+
+  /* ── Content-tier role classes (issue #627) ──
+     The whole design-system surface for the content-text floor. Put anything
+     readable on one of these instead of typing a number: user-authored free
+     text, titles, and numbers a player cares about. They set size only — a
+     skin still owns font, colour and ornament, never its own type size.
+     There is deliberately no .content-heading / .content-display: each has a
+     single caller (Sidebar, PageTitle), and a class for one caller is a class
+     for nobody.
+
+     Note: these live in @layer components, so Tailwind only emits a class once
+     it sees the literal string in a scanned file. Until the sweeps land a real
+     caller, probing one in devtools will show it doing nothing — that's the
+     purge, not a broken rule. Same as the label tier. It also means a class name
+     assembled at runtime gets purged: write it as a literal. */
+
+  .content-text {
+    font-size: var(--text-content);
+  }
+
+  .content-title {
+    font-size: var(--text-title);
+  }
+
+  /* ── Functional ink role classes (issue #1609) ──
+     The className half of the `--color-danger` / `--color-warning` families.
+     Forty-one sites across twenty-three pages painted their error chrome with
+     Tailwind's STOCK ramp — `text-red-600`, `border-red-300` — which reads
+     Tailwind's own hexes rather than index.css, so it sits outside the
+     `[data-theme="dark"]` cascade entirely and paints the light-theme red on a
+     dark page. (`text-red-600` IS #dc2626, i.e. `--color-danger`'s light value:
+     the light render is byte-identical and only dark was ever wrong.)
+
+     One class per TOKEN, not one class per banner. Deliberate: the eighteen
+     bordered banners repeat `font-body content-text … border-2 px-3 py-2`
+     near-verbatim and want a single shared <ErrorBanner>, but that is a
+     component decision about type and spacing, and folding those into a class
+     here would freeze one archetype's metrics in the stylesheet just before the
+     component that owns them arrives. These three carry paint and nothing else,
+     which is what the drift actually was, and they are the seam that component
+     would read.
+
+     Note the tier split. A counter that turns colour as it APPROACHES a limit
+     is a warning, not an error — nothing has gone wrong yet and the character
+     is still accepted — so the eight length counters take `.warning-text` and
+     only the over-limit message under the propose-task fields takes danger.
+     Every one of them was red before. `--color-warning` also measures better on
+     the page than the red it replaces — 4.57:1 light / 11.14:1 dark, and
+     4.89 / 10.18 on `--color-bg-surface` composited over it (utils/contrast.ts)
+     — against `--color-danger`'s 4.40:1 light, the global-ink debt recorded at
+     --color-danger-veil above, which the counters now step off rather than onto.
+
+     `.danger-edge` is a border-COLOUR only: the sites keep their `border-2`,
+     which lives in Tailwind's utilities layer and would win over a shorthand
+     declared here in @layer components. No `-veil` fill is minted — none of
+     these banners had a background and inventing one is a redesign. */
+
+  .danger-text {
+    color: var(--color-danger);
+  }
+
+  .danger-edge {
+    border-color: var(--color-danger-edge);
+  }
+
+  .warning-text {
+    color: var(--color-warning);
+  }
+
+  /* ── Task-detail praxis gallery (issue #1137) ──
+     The completed-praxis grid on a task detail mounts the SAME <PraxisCard> the
+     /praxes feed does — one responsive component per faction since ADR-0067 —
+     so it arrived at the feed's 394px basis and landed two to a row inside the
+     1200 column, reading as somebody else's list dropped into the page.
+
+     The constraint lives on the CONTAINER, which is the whole point: the basis
+     is an inline style on nine bespoke frames, so a class selector could not
+     override it and a `compact` prop would fork all nine. A custom property
+     inherits, so the mount answers the question and every other surface — the
+     feed, the character profile, the faction pages — keeps `frameBase`'s 394px
+     fallback untouched.
+
+     320px, not lower: the basis only decides where the row WRAPS (the cards
+     then grow to fill it), so 320 puts three in the ~1136px content column at
+     ~368px each and degrades to two the moment the column drops under ~992px,
+     rather than cramming three narrow cards into a tablet. It is also clear of
+     the card's own 280px min-width, which is the floor that keeps a phone at
+     one card per row and would silently swallow anything smaller. */
+
+  .praxis-gallery {
+    --praxis-card-basis: 320px;
+  }
+
+  /* The basis only says where the row WRAPS, and `frameBase` carries
+     `flex: 1 1 <basis>` — that leading `1` is flex-grow, so a task with exactly
+     ONE filed praxis had that card stretch across the whole gallery row and
+     dominate the page (#1897). One card should read like one of three.
+
+     HALF THE ROW, NOT THE BASIS (#2229). The cap first read
+     `--praxis-card-basis`, which reused one number for two questions and got
+     the second one wrong: 320px is where three cards should WRAP, but as a
+     ceiling in a ~1136px column it left a lone card stranded — clamped to a
+     quarter of the row and reading as squished rather than as one of three. A
+     fraction answers the actual question, "how much of the row may one card
+     take", at every column width instead of at one. So the two numbers are now
+     separate on purpose: the variable above still means where the row wraps and
+     stays at 320px, and this cap no longer reads it. Do not re-point it at the
+     variable to make them one knob again — that is the bug.
+
+     50% NEVER BITES A FULL ROW. Three items cannot each exceed half a row, so
+     the 3-across case is untouched and still wraps on the basis; the cap only
+     shows up once a row is under-filled, which is exactly when it is wanted.
+
+     `max-width` and not `width`: it clamps a flex item regardless of flex-grow,
+     and it constrains a different property than the card's inline `width: 100%`,
+     so the cap lands without a specificity fight and without touching any of the
+     nine bespoke frames. Empty space to the right of a lone card is still the
+     point — a gallery with one item in it, which is the truth. Half a row of it
+     rather than three quarters.
+
+     No `min-width` here on purpose: `frameBase`'s 280px floor must keep winning
+     under a 320px viewport, one card per row on a phone. A percentage cap makes
+     that floor matter MORE, not less — 50% of a 320px viewport is 160px, and
+     the only reason the card does not collapse to it is that `min-width` beats
+     `max-width` in the cascade. Adding one here would fight the floor that is
+     already doing the job.
+
+     ONE RULE, ALL EIGHT KITS, deliberately: `.praxis-gallery` is mounted by
+     every task-detail archetype and by `WowFactionBody`. Forking it per faction
+     to spare seven pages would be worse than the bug it fixed.
+
+     AND IT IS A DESKTOP RULE (#2763). "50% never bites a full row" is true
+     above the breakpoint and false below it: on a phone the gallery is ALWAYS
+     one card per row, so the row is always under-filled and the cap always
+     fires — a praxis card drawn at 278px of a 552px column, flush left under a
+     full-width plate. That is the second half of the report the task cards are
+     the first half of, and below 768px the ruling is that a card fills its
+     column. Nothing else on the card needs to change: `frameBase` already
+     carries `width: 100%`, so lifting the cap is the whole fix. The basis stays
+     out of it — `--praxis-card-basis` says where a DESKTOP row wraps and is a
+     different question. */
+  @media (min-width: 768px) {
+    .praxis-gallery > * {
+      max-width: 50%;
+    }
+  }
+  /* ── Leaderboard row hover ── */
+
+  .leaderboard-row:hover {
+    background: var(--leaderboard-row-hover) !important;
+  }
+
+  /* ── Curved row divider (issue #729) ──
+     A divided row whose rule flares into an upward curl at each end instead of
+     terminating flat. Owns the dashed line itself, so a caller drops its inline
+     `border-bottom` and adds this class — the two pseudo-elements are the only
+     new paint and no element is added per row.
+
+     Each curl is a quarter arc: a box with ONLY a bottom border plus a 100%
+     radius on its FAR corner, so the stroke leaves the baseline tangentially at
+     the line's end and sweeps up. Radius 100% means there is no flat run in the
+     arc, so it never double-draws over the line it springs from — the two meet
+     at a single point. Anchored inside the row's own box, so it survives the
+     `overflow: hidden` on the card that wraps the roster.
+
+     Deliberately NEUTRAL, never faction-tinted: the avatar ring, level gem and
+     points numeral already carry the colour, and a coloured rule under every
+     row would compete with all three.
+
+     ponytail: desktop roster only for now. Three other surfaces use divided
+     rows (CharacterSwitcherSheet, DefaultProfileBody badges, Sidebar activity)
+     but none is a ranked list; promoting the class is one line each, later. */
+  .divider-curved {
+    position: relative;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before,
+  .divider-curved::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before {
+    left: 0;
+    border-bottom-right-radius: 100%;
+  }
+
+  .divider-curved::after {
+    right: 0;
+    border-bottom-left-radius: 100%;
+  }
+
+  /* ── Page wrapper ── */
+
+  .page {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 py-8;
+  }
+
+  /* ── Nav links (Courier Prime 10px uppercase — Style Guide §5.1) ── */
+
+  .nav-link {
+    @apply font-body transition-colors;
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding-bottom: 2px;
+  }
+
+  /* ── Markdown preview ── */
+
+  /* The body a player typed, so it wraps wherever it has to (#2268). Without
+     this the class carried type-scale rules only, `normal` wrapping applied,
+     and a pasted URL or a keysmash — which has no word boundary to break at —
+     ran straight out of its panel. One declaration on the one shared class
+     reaches all eleven surfaces that mount it: the composer's Preview tab, the
+     duel/collab waiting panel, the Ephemerists composer and all eight
+     praxis-detail archetypes.
+
+     `anywhere` rather than `break-word`: it also lets min-content width shrink,
+     so a long token cannot force a flex or grid sibling wider. The duel panels
+     are a two-column pair, where `break-word` wraps the text and still blows
+     the column out.
+
+     Scoped to prose on purpose. §"A wordmark is a MARK" (#2000) is the other
+     half of this rule: a faction name must never carry `anywhere`, because a
+     break that invents a new word is worse than an overflow. `pre` is exempt by
+     construction — `white-space: pre` disallows wrapping, so this cannot reach
+     it and its own `overflow-x-auto` below is what a code block gets instead. */
+  .markdown-preview {
+    overflow-wrap: anywhere;
+  }
+
+  .markdown-preview h1 {
+    @apply font-display text-2xl font-bold mt-4 mb-2;
+  }
+  .markdown-preview h2 {
+    @apply font-display text-xl font-bold mt-3 mb-1.5;
+  }
+  .markdown-preview h3 {
+    @apply font-display text-lg font-bold mt-2 mb-1;
+  }
+  .markdown-preview p {
+    @apply mb-3 leading-relaxed;
+  }
+  .markdown-preview strong {
+    @apply font-bold;
+  }
+  .markdown-preview em {
+    @apply italic;
+  }
+  .markdown-preview ul {
+    @apply list-disc pl-5 mb-3 space-y-1;
+  }
+  .markdown-preview ol {
+    @apply list-decimal pl-5 mb-3 space-y-1;
+  }
+  .markdown-preview code {
+    background: var(--color-bg-surface-alt);
+    @apply px-1 text-xs;
+    border: 1px solid var(--color-border);
+  }
+  .markdown-preview pre {
+    background: var(--color-bg-surface-alt);
+    border: 1px solid var(--color-border);
+    @apply p-3 mb-3 overflow-x-auto text-xs;
+  }
+  .markdown-preview blockquote {
+    border-left: 4px solid var(--color-border-strong);
+    @apply pl-3 italic mb-3;
+    color: var(--color-text-secondary);
+  }
+  /* The seam, not the neutral (#1636) — see `--link-ink` in :root. Unset it
+     resolves to exactly the two neutrals this rule used to name, so every
+     surface outside a faction frame renders what it rendered before. */
+  .markdown-preview a {
+    @apply underline;
+    color: var(--link-ink);
+  }
+  .markdown-preview a:hover {
+    color: var(--link-ink-hover);
+  }
+
+  /* ── S.N.I.D.E. punk textures — shared utilities for faction surfaces ──
+     Cheap, filter-free craft layers. `currentColor` drives the halftone tint,
+     so set `color` on the element (or a wrapper) to recolor the dots. */
+  .ht-dots {
+    background-image: radial-gradient(currentColor 32%, transparent 34%);
+    background-size: 5px 5px;
+  }
+  .xerox {
+    background-color: var(--faction-snide-paper);
+    background-image:
+      radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+      radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 3px 3px, 4px 4px;
+    background-position: 0 0, 2px 1px;
+  }
+  /* `.snide-tape` — the strip, with its serrated ::before/::after edges — stood
+     here until #1708. Eleven surfaces wore it; the owner retired the whole
+     family, and both tokens behind it went with the class (see the two notes in
+     the token blocks above and below). `frontend/src/__tests__/snideWearsNoTape.test.ts`
+     is what keeps it retired. */
+}
+

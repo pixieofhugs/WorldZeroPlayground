@@ -40,8 +40,6 @@
  * above the wash is what excludes it. Hence the z-index floor below is derived
  * from the overlays' own declared values rather than typed in twice.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
@@ -61,9 +59,10 @@ import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
 import AlbescentPraxisDetail from "../../../pages/praxisDetail/archetypes/AlbescentPraxisDetail";
 import AlbescentScoreStamp from "../scoreStamp/AlbescentScoreStamp";
 import type { StampablePraxis } from "../scoreStamp/ScoreStamp";
+import { readIndexCss } from "../../../test/indexCss";
 
 const css = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 /** The highest `z-index` declared across a set of rule bodies. */

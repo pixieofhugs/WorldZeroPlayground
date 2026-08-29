@@ -43,6 +43,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -102,7 +103,7 @@ describe("the Ephemerists tile wears the plate's register (#2323)", () => {
     const prop = paletteExports().get(ground!);
     expect(prop, `eph.${ground} is not a palette export`).toBeDefined();
 
-    const themes = readThemes(read("../../../index.css"));
+    const themes = readThemes(readIndexCss());
     const [light, dark] = (["light", "dark"] as const).map((theme) =>
       resolveVar(prop!, theme, themes),
     );

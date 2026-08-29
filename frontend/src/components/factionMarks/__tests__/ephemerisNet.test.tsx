@@ -20,14 +20,13 @@
  * someone reading the design rather than the ruling (the design says 0.17 on a
  * card and 0.42 on the brief), so each is pinned to its number here.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import EphemerisNet from "../EphemerisNet";
 import EphemeristsBackdrop from "../../backdrop/EphemeristsBackdrop";
+import { readIndexCss } from "../../../test/indexCss";
 
-const CSS = readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8");
+const CSS = readIndexCss();
 
 /** The declaration body of one rule, by selector. */
 function ruleFor(selector: string): string {

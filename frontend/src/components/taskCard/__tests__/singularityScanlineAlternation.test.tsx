@@ -37,8 +37,6 @@
  * WHAT IS NOT HERE: whether it looks right at either card size. That is visual
  * QA and is stated as outstanding on the PR.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
@@ -56,11 +54,9 @@ import SingularityTaskCard from "../SingularityTaskCard";
 import { SingularityPraxisCard } from "../../praxisCard/desktop/SingularityPraxisCard";
 import { BackdropContext } from "../../backdrop/BackdropContext";
 import { aTask, aPraxisCard } from "../../../test/fixtures";
+import { readIndexCss } from "../../../test/indexCss";
 
-const CSS = readFileSync(
-  fileURLToPath(new URL("../../../index.css", import.meta.url)),
-  "utf8",
-);
+const CSS = readIndexCss();
 
 /**
  * THE one Singularity raster, byte for byte as six other surfaces in the kit

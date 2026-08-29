@@ -35,14 +35,13 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 
 // Initialize the catalog so copy keys resolve to English text.
 import '../../../i18n'
 import { factionName } from '../../../utils/factions'
 import SnideFactionHero from '../SnideFactionHero'
+import { readIndexCss } from '../../../test/indexCss'
 
 /**
  * Anton's content area, in ems: (hhea.ascender 2409 + |hhea.descender| 674) /
@@ -53,7 +52,7 @@ import SnideFactionHero from '../SnideFactionHero'
  */
 const ANTON_CONTENT_EM = (2409 + 674) / 2048
 
-const CSS = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const CSS = readIndexCss()
 
 /** Resolve a `--space-*` rung to its px number from the `:root` scale. */
 function spaceToken(name: string): number {

@@ -23,9 +23,10 @@ import { describe, expect, it } from "vitest";
 
 import { factionCssVar, factionFill, getAllFactions } from "../factions";
 import { readThemes, resolveVar } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const themes = readThemes(readFileSync(join(SRC_DIR, "index.css"), "utf-8"));
+const themes = readThemes(readIndexCss());
 
 /** Block and line comments — issue refs like `#812` live there, legitimately. */
 const COMMENT = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;

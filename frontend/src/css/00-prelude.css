@@ -1,0 +1,21 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — PRELUDE (#2890, split out in #2891).
+   The shell font sheet and Tailwind's three layers. First in the import map
+   in ../index.css, because @import must precede every rule and because
+   everything after this file is a rule.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The SHELL's three self-hosted faces (#1977, #2079). Generated — see
+   scripts/fetch-fonts.mjs. First, because @import must precede every rule, and
+   because these are the @font-face blocks --font-display / --font-body /
+   --font-accent name.
+   The kit's other 15 families are NOT here: they are in ../fonts.faction.css,
+   which only src/factionFaces.ts imports and only a faction chunk fetches.
+   Adding it to this @import puts 62 @font-face rules back in front of first
+   paint — factionFaceSplit.test.ts fails if anything reaches it eagerly. */
+@import '../fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+

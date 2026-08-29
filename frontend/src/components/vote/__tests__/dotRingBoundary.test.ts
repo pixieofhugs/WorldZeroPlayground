@@ -50,9 +50,9 @@ import {
   stripComments,
   type Theme,
 } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const CSS = readFileSync(CSS_PATH, 'utf8')
+const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 
 function resolve(token: string, theme: Theme): Rgba {

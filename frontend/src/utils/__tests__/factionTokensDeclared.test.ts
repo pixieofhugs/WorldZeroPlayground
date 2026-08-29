@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { FACTION_ROLES, factionRoleProperty } from "../factionRoles";
 import { sourceFiles } from "../../test/sourceScan";
 import { readThemes, stripComments } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * Guard for the "looks tokenized, is not" failure class (#806, widened by #879).
@@ -116,7 +117,7 @@ const orphans = [...referenced.keys()].filter((name) => !declared.has(name));
 describe("CSS custom properties are declared before use (#806, #879)", () => {
   // readThemes strips comments and reads both theme blocks, so a token merely
   // *mentioned* in a comment never counts as declared.
-  const themes = readThemes(readFileSync(join(SRC_DIR, "index.css"), "utf-8"));
+  const themes = readThemes(readIndexCss());
   const factionTokens = new Set(
     [...themes.light.keys(), ...themes.dark.keys()].filter((name) =>
       name.startsWith("--faction-"),

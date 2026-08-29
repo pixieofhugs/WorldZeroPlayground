@@ -16,13 +16,12 @@
  * `ruleBodies` — the same brace-balanced extractor the contrast/token ratchets
  * already trust — rather than inventing a second parser.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { ruleBodies, stripComments } from '../../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../../test/indexCss'
 
 const css = stripComments(
-  readFileSync(fileURLToPath(new URL('../../../../index.css', import.meta.url)), 'utf8'),
+  readIndexCss(),
 )
 
 describe('.filter-bar does not clip its overflow (#1506)', () => {

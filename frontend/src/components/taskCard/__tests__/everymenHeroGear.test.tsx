@@ -17,8 +17,6 @@
  * between them. Put the cog back inside a single stretched middle block and the
  * halves disappear and this goes red.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -29,6 +27,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' 
 
 import EverymenTaskCard from '../EverymenTaskCard'
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from '../../../test/indexCss'
 
 const POINTS = 137
 
@@ -72,7 +71,7 @@ describe('Everymen task card — the hero cog', () => {
     // faction), so the axis is read from the stylesheet — the card's job here
     // is only to mount it.
     expect(markup, 'the card still mounts the burst').toContain('class="em-burst"')
-    const css = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+    const css = readIndexCss()
     expect(css).toContain('repeating-conic-gradient(from 0deg at 50% 50%')
   })
 })

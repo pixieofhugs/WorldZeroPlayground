@@ -27,6 +27,7 @@ import FactionProfileBody, {
 import { surfaceMap } from "../../../factions";
 import i18n from "../../../i18n";
 import { factionName } from "../../../utils/factions";
+import { readIndexCss } from "../../../test/indexCss";
 
 function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
   return {
@@ -491,11 +492,13 @@ describe.each(["desktop", "mobile"] as const)(
  * reading only the deferred one would stop noticing an ungated twin left behind.
  */
 describe("#1630 motion sits behind the reduced-motion guard", () => {
-  const css = ["../../../index.css", "../../../motion.ornament.css"]
-    .map((sheet) =>
-      readFileSync(fileURLToPath(new URL(sheet, import.meta.url)), "utf8"),
-    )
-    .join("\n");
+  const css = [
+    readIndexCss(),
+    readFileSync(
+      fileURLToPath(new URL("../../../motion.ornament.css", import.meta.url)),
+      "utf8",
+    ),
+  ].join("\n");
 
   /** The source split into (inside a no-preference block, outside it). */
   const partitionByGuard = (source: string): [string, string] => {

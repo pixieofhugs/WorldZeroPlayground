@@ -29,9 +29,9 @@ import { describe, expect, it } from "vitest";
 
 import { parseColor } from "../contrast";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
-const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
-const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
+const THEMES = readThemes(readIndexCss());
 const BOTH_THEMES: Theme[] = ["light", "dark"];
 
 const SHARED_PATH = fileURLToPath(

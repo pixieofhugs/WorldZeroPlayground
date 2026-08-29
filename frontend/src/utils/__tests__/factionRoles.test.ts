@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { getAllFactions } from "../factions";
@@ -14,6 +11,7 @@ import {
   type GroundOverride,
 } from "../factionRoles";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * THE SEAM IS THE RESOLVER'S OUTPUT (#2659).
@@ -44,8 +42,7 @@ import { readThemes, resolveVar, type Theme } from "./cssVars";
  * resolve, and is the colour it resolves to legible.
  */
 
-const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const themes = readThemes(readFileSync(join(SRC_DIR, "index.css"), "utf-8"));
+const themes = readThemes(readIndexCss());
 
 const SLUGS = getAllFactions().map((faction) => faction.slug);
 const THEMES: Theme[] = ["light", "dark"];

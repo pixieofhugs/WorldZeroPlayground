@@ -21,7 +21,8 @@
     caller would pull it out of the component tree that owns its contract to
     fix a single import direction. Left in place, named here as the recorded
     exception rather than silently drifted past.
-- Color values live only in `index.css` (CSS vars). Never hardcode hex.
+- Color values live only in the `index.css` tree — `src/css/*.css`, ordered by
+  the `src/index.css` import map (#2891). CSS vars only; never hardcode hex.
 - Faction config: `factions.ts`.
 - **A surface reads a ROLE, not a token.** Spread `factionRoleVars(slug, prefix)` on the
   root you own and read `var(--<prefix>-<role>)` below it — nine roles (`paper`, `ink`,

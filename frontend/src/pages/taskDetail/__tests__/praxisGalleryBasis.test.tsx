@@ -33,8 +33,6 @@
  * this cannot prove a card got smaller, that three land in a row, or that a skin
  * is not cramped. Those are visual QA. It proves the wiring is connected.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
@@ -46,6 +44,7 @@ import { frameBase } from "../../../components/praxisCard/desktop/shared";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { PraxisCardOut } from "../../../api/praxis";
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from "../../../test/indexCss";
 
 const TASK = aTask({
   title: "Reforestation",
@@ -140,7 +139,7 @@ function render(element: ReactElement): string {
 const archetypes = { ...surfaceMap("taskDetail"), __default__: DefaultTaskDetail };
 
 const css = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 describe("task-detail praxis gallery basis (#1137)", () => {

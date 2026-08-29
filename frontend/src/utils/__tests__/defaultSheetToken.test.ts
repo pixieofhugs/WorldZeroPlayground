@@ -16,15 +16,11 @@
  * eight `Default*` mounts painted before, in both cascades.
  */
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { factionSheet, factionSpectrumSheet } from "../factions";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
-const CSS = readFileSync(
-  fileURLToPath(new URL("../../index.css", import.meta.url)),
-  "utf8",
-);
+const CSS = readIndexCss();
 const THEMES = readThemes(CSS);
 const CASCADES: Theme[] = ["light", "dark"];
 

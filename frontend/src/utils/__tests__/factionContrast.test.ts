@@ -97,9 +97,9 @@ import {
 } from "../factionRoles";
 import { readStripped, resolveRoleReads, sourceFiles, toRelative } from "../../test/sourceScan";
 import { readThemes, resolveVar, stripComments, type Theme } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
-const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
-const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
+const THEMES = readThemes(readIndexCss());
 const BOTH_THEMES: Theme[] = ["light", "dark"];
 
 /** Every faction that supplies the standard `--faction-{key}-card-*` block (§3). */
@@ -2516,7 +2516,7 @@ function resolveColor(name: string, theme: Theme) {
  * green through both, which is the whole reason source assertions belong in a
  * contrast spec at all. Shared so there is one reader of the file.
  */
-const CSS_TEXT = readFileSync(CSS_PATH, "utf8");
+const CSS_TEXT = readIndexCss();
 
 function ruleBody(selector: string): string {
   const at = CSS_TEXT.indexOf(`${selector} {`);

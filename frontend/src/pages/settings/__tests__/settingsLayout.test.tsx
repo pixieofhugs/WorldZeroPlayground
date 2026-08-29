@@ -23,9 +23,6 @@
  *          that could yield it). The threshold and the description's floor are
  *          an owner ruling on #2835; the last two tests pin both numbers.
  */
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 
@@ -38,9 +35,9 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 import '../../../i18n'
 import SettingsRow from '../SettingsRow'
 import { StorageInventory } from '../sections/CookiesSection'
+import { readIndexCss } from '../../../test/indexCss'
 
-const HERE = dirname(fileURLToPath(import.meta.url))
-const CSS = readFileSync(join(HERE, '..', '..', '..', 'index.css'), 'utf8')
+const CSS = readIndexCss()
 
 /** A row whose control is a string of the length a real account carries. */
 const textValuedRow = () =>

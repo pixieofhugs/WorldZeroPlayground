@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,6 +9,7 @@ import {
   THEME_SCOPED,
   type VarMap,
 } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * Inventory of the "frozen theme alias" shape (#1827), and the guard on the
@@ -51,10 +49,7 @@ import {
  * declared where a nested theme can reach it.
  */
 
-const CSS = readFileSync(
-  join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", "index.css"),
-  "utf-8",
-);
+const CSS = readIndexCss();
 
 /**
  * Aliases known to be root-only, in three families:

@@ -45,9 +45,10 @@ import { BackdropContext } from '../../backdrop/BackdropContext'
 import { aTask, aPraxisCard } from '../../../test/fixtures'
 import { sourceFiles, toRelative } from '../../../test/sourceScan'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
 const SRC = fileURLToPath(new URL('../../../', import.meta.url))
-const CSS = stripComments(readFileSync(join(SRC, 'index.css'), 'utf8'))
+const CSS = stripComments(readIndexCss())
 
 /** The canonical drawing, owner-named: the task card's own conic. */
 const CONIC =

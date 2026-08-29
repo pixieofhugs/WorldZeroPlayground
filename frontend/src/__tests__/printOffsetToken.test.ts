@@ -42,18 +42,17 @@
  * at most a light and a heavy TIER — a named token, argued here — and a per-site
  * percentage typed straight into a `style=` is the thing this test refuses.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
 import { readThemes } from '../utils/__tests__/cssVars'
 import { readStripped, sourceFiles, toRelative } from '../test/sourceScan'
+import { readIndexCss } from '../test/indexCss'
 
 const TOKEN = '--color-print-offset'
 
 const themes = readThemes(
-  readFileSync(fileURLToPath(new URL('../index.css', import.meta.url)), 'utf8'),
+  readIndexCss(),
 )
 
 /** The one strength every offset register is struck at (#2302 phase 1). */

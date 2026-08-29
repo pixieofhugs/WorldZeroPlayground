@@ -17,8 +17,6 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 
@@ -33,9 +31,9 @@ import WowTaskCard from '../WowTaskCard'
 import { aTask } from '../../../test/fixtures'
 import { AA_LARGE, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const THEMES = readThemes(readFileSync(CSS_PATH, 'utf8'))
+const THEMES = readThemes(readIndexCss())
 const BOTH: Theme[] = ['light', 'dark']
 
 const TASK = aTask({

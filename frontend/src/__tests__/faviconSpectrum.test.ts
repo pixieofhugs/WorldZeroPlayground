@@ -38,9 +38,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { readThemes, resolveVar } from "../utils/__tests__/cssVars";
+import { readIndexCss } from "../test/indexCss";
 
 const FAVICON = readFileSync(fileURLToPath(new URL("../../public/favicon.svg", import.meta.url)), "utf8");
-const THEMES = readThemes(readFileSync(fileURLToPath(new URL("../index.css", import.meta.url)), "utf8"));
+const THEMES = readThemes(readIndexCss());
 
 /** Resolve a light-theme token, failing loudly rather than comparing against null. */
 function lightValue(token: string): string {

@@ -1,0 +1,830 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — BASE TOKENS: DARK OVERRIDES (#2890).
+   The one large [data-theme="dark"] block mirroring the light tokens above,
+   property by property, for every value that flips.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════
+   DARK MODE OVERRIDES
+   Applied via [data-theme="dark"] on <html>
+   ══════════════════════════════════════════ */
+[data-theme="dark"] {
+  /* ── Page backgrounds ── */
+  --color-bg-page: #13121a;
+  --color-bg-surface: rgba(255, 255, 255, 0.04);
+  --color-bg-surface-alt: rgba(255, 255, 255, 0.06);
+
+  /* ── Text ── ─ #1549 SET THE HUES, #1715 SET THE WEIGHT. The hue argument is
+     unchanged and this cascade is still where it came from: tertiary is a
+     lavender (h 295°) against a warm-grey secondary (h 85°) at one weight, and
+     light was walked to this relation rather than the other way round.
+
+     WHAT MOVED IS L*, AND ONLY BECAUSE THE GROUND WAS MEASURED WRONG. Both
+     inks read comfortably on `--color-bg-page`, which is the measurement that
+     kept them where they were (6.21 / 5.63). The profile does not draw on the
+     page — it draws on `--color-bg-surface-alt`, which is ALPHA here, so the
+     ground is 6% white over #13121a = #212028, not #13121a. On the sheet the
+     text is actually on, secondary was 4.87:1: clearing AA by 0.37 while
+     carrying `23 / 60 pts this level`. AA is the line below which text is a
+     defect, not where the app's most-painted ink should live, so both tiers
+     now clear AAA 7:1 there. #988c78 -> #b9ac97, #9490c0 -> #b3b0d6.
+
+     THE LIFT IS BOUNDED ABOVE, and this is the number to know before touching
+     it again: `--color-text-primary` is a warm cream at L* 91.5 and secondary
+     is the same hue family, so the two are separated by lightness alone. The
+     lift spends 12 of the 32.7 ΔE that separated them and lands at 20.7 —
+     #1549's tier floor is 20. There is ~1 L* of headroom left. A further lift
+     of secondary is not available without moving primary, which is a different
+     issue with a much larger blast radius.
+
+     CHROMA FALLS AS L* RISES, on purpose. Tertiary lands at C 20.7 where it
+     was C 27, because the same chroma at L* 73 reads as a saturated periwinkle
+     rather than the tint the role wants — the inverse of the note in `:root`
+     about C 27 reading as a colour on cream. It also puts both cascades'
+     tertiary at the same chroma, which the hue argument always implied.
+
+     Measured in `factionContrast.test.ts` on four neutral grounds:
+       page 8.33 / 8.94 · surface-alt 7.21 / 7.74 · filter-well 7.34 / 7.88 ·
+       selected filter row 5.63 / 6.04  (secondary / tertiary)
+     The last is the tightest neutral stock in the app — two washes of
+     `--color-text-primary` — and both inks were UNDER AA on it (3.80 / 4.19)
+     before this lift. */
+  --color-text-primary: #f0e6d0;
+  --color-text-secondary: #b9ac97;
+  --color-text-tertiary: #b3b0d6;
+
+  /* ── Borders ── */
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* ── Accent ── */
+  --color-accent-primary: #be185d;
+
+  /* ── Nav ── */
+  --color-nav-bg: rgba(19, 18, 26, 0.92);
+
+  /* ── Functional ── */
+  --color-success: #4ade80;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+
+  /* ── The danger / warning FILL family (dark, #1169) ── The dark red was
+     brightened to work as an INK on a dark page, which is right for the role it
+     mostly plays and is exactly what makes it a poor fill for white: 2.77:1.
+     Deepening it back was the rejected lever (it would sink the ~30 ink sites),
+     so the ink flips instead — the same near-black every faction -on-fill token
+     flips to. The tints take the dark hue rather than inheriting the light one,
+     for the reason the :root block states. */
+  --color-on-danger: #14110b; /* #f87171 — white only 2.77:1; ink 6.81:1 */
+  --color-danger-veil: rgba(248, 113, 113, 0.14);
+  --color-danger-edge: rgba(248, 113, 113, 0.3);
+  --color-danger-ring: rgba(248, 113, 113, 0.5);
+  --color-warning-veil: rgba(251, 191, 36, 0.14);
+  --color-warning-edge: rgba(251, 191, 36, 0.3);
+  --color-warning-ring: rgba(251, 191, 36, 0.5);
+
+  /* ── Shared neutrals (dark) ── */
+  --color-surface-scrim: rgba(19, 18, 26, 0.85);
+  /* A cast shadow on a near-black page needs far more of it to read at all —
+     the same move --switch-popover-shadow makes below. */
+  --dropdown-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  /* Same reasoning, generalised (#1609). The light 0.25 over #f7f4ee is a
+     legible smudge; the same 0.25 over #13121a is nothing at all. These track
+     --dropdown-shadow's ~4x lift rather than inventing a second answer to the
+     one question. --color-overlay-strong deliberately gets NO dark counterpart
+     — a scrim is already correct at 0.25 on a dark page — which is precisely
+     the disagreement that made these their own token. */
+  --color-cast-shadow: rgba(0, 0, 0, 0.7);
+  --color-cast-shadow-soft: rgba(0, 0, 0, 0.4);
+
+  /* ── Faction primary colors (dark — brightened rainbow) ── */
+  --faction-ua: #e8703a; /* sienna lifted for dark — UA */
+  --faction-wow: #a875c9; /* plum lifted for dark — WOW (#2068) */
+  --faction-coven: #f472b6; /* magenta */
+  --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
+  --faction-ephemerists: #e6c877; /* brass lifted for dark — Ephemerists (#2068) */
+  --faction-singularity: #60a5fa; /* blue */
+
+  /* ── THE ACCENT AS INK (dark, #2619) ── The whole cascade is an alias and that
+     is the finding, not a shortcut: every lifted hue already clears 4.5:1 on
+     #13121a (na 5.53 to snide 15.35) and on the faction tint over it (na 4.78 to
+     snide 11.56), so the night half of this family costs no colour at all. The
+     six rows exist only to STOP the light values above from cascading into dark;
+     wow and everymen are absent because they alias in both cascades, and a
+     `var()` resolves per-cascade, so their one declaration already flips. */
+  --faction-ua-accent-ink: var(--faction-ua);
+  --faction-coven-accent-ink: var(--faction-coven);
+  --faction-snide-accent-ink: var(--faction-snide);
+  --faction-ephemerists-accent-ink: var(--faction-ephemerists);
+  --faction-singularity-accent-ink: var(--faction-singularity);
+  --faction-default-accent-ink: var(--faction-default);
+
+  /* ── Text on faction fills (dark, #649) ── The dark primaries brighten to pop
+     against the dark page, which makes white-on-fill worse. These flip to ink;
+     snide/ephemerists (ink in both) are theme-invariant and inherit their :root
+     value. WOW is the row that reads the other way since #2068 — white in light,
+     ink here — so its line below is a DECLARATION, not a leftover. */
+  --faction-ua-on-fill: #201a14; /* #e8703a — warm white only 2.89:1; ink 5.59:1 */
+  --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
+  --faction-wow-on-fill: #14110b; /* #a875c9 — white only 3.47:1; ink 5.43:1 */
+  --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
+  /* na/albescent lifts too (#6b6a7a -> #8b8aa0), so it flips with the rest. */
+  --faction-default-on-fill: #14110b; /* #8b8aa0 — white only 3.36:1; ink 5.60:1 */
+
+  /* ── Text on the comment-composer ACCENT (dark, #924) ── The accents brighten in
+     dark, so most flip to ink. snide (pink) and singularity (green) have
+     theme-invariant accents and inherit their :root ink through the cascade.
+     Ephemerists used to be the one row that stayed white here; #1232 deleted the
+     token outright — see the `:root` block's note for why. */
+  --faction-ua-on-accent: #201a14; /* #f0894a — warm white only 2.35:1; ink 6.87:1 */
+  --faction-everymen-on-accent: #14110b; /* #e2433f — white only 4.11:1; ink 4.58:1 */
+  --faction-coven-on-accent: #14110b; /* #f472b6 — white only 2.65:1; ink 7.11:1 */
+  --faction-wow-on-accent: #14110b; /* #c79be0 plum lifted — white only 2.28:1; ink 8.25:1 */
+  --faction-default-on-accent: #14110b; /* #f0e6d0 — white only 1.24:1; ink 15.19:1 */
+
+  /* ── Faction tints (dark) ── */
+  --faction-ua-light: #241e18; /* sand tint, dimmed — same stock as the card */
+  --faction-wow-light: rgba(168, 117, 201, 0.1);
+  --faction-coven-light: rgba(244, 114, 182, 0.08);
+  --faction-snide-light: rgba(182, 255, 46, 0.12);
+  --faction-ephemerists-light: rgba(230, 200, 119, 0.1);
+  --faction-singularity-light: rgba(96, 165, 250, 0.1);
+
+  /* ── Faction borders (dark) ── */
+  --faction-ua-border: rgba(232, 112, 58, 0.32); /* the orange hairline, lifted */
+  --faction-wow-border: rgba(168, 117, 201, 0.3);
+  --faction-coven-border: rgba(244, 114, 182, 0.25);
+  --faction-snide-border: rgba(182, 255, 46, 0.3);
+  --faction-ephemerists-border: rgba(230, 200, 119, 0.35);
+  --faction-singularity-border: rgba(96, 165, 250, 0.25);
+
+  /* ── Faction card backgrounds (dark mode) ── */
+  --faction-ua-card-bg: #241e18; /* the sheet at dusk — UA dims now (#848) */
+  --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
+  --faction-coven-card-bg: #2a0d1c;
+  --faction-snide-card-bg: #0c0a07; /* deeper ink */
+  /* Ephemerists declares no card GROUND here, and the reason changed in #2141
+     even though the line did not. It used to be that `-card-bg` aliased the
+     cornice BAND, which is the compass blue in both cascades, so there was one
+     value and nothing to restate. The owner ruling moved it onto the Valley
+     plate's SHEET (`-plate-bg`) — and that token restates its own night value
+     in the plate register below, so the alias flips without help. Still nothing
+     to restate, for the opposite reason. The FIVE INKS whose day value is now
+     vellum-correct do restate their night values: `-card-text` and
+     `-card-muted` in the two blocks below, `-card-notice` / `-card-alarm` /
+     `-card-credit` in the functional-ink block further down. `-card-accent`
+     does not, because it aliases `-plate-brass-light`, which flips. */
+  --faction-singularity-card-bg: #050f08;
+
+  /* ── Faction card text (dark mode) ── */
+  --faction-ua-card-text: #f1e8da; /* body ink, inverted — 13.58:1 */
+  --faction-wow-card-text: #f3e7c4; /* chronicle parchment ink — 14.72:1 */
+  /* THE VALUE #1627 SHIPPED, KEPT (#2141's owner ruling). The card ground moved
+     off the compass blue and onto the night plate, so this reading moved with
+     it — 7.59:1 on the band, 7.22:1 on `-plate-bg` #171a26 — and the ruling is
+     that only the LIGHT half is being cut. NOT `-plate-ink` #f0e6c8, which is
+     what the sheet's other slots take at 13.91:1: repointing here would repaint
+     dark pixels the ruling did not ask to move. If a later issue wants the
+     card's night ink to be the sheet's rather than the band's mark, that is a
+     deliberate change and this is the line it edits. */
+  --faction-ephemerists-card-text: #c9a24b;
+  --faction-coven-card-text: #fbcfe0;
+  --faction-snide-card-text: #f4f1e8;
+  --faction-singularity-card-text: #4ade80;
+
+  /* ── Faction card accents (dark mode) ── */
+  --faction-ua-card-accent: #f0894a; /* 6.58:1 */
+  /* Dark inverts the light-mode problem: on a dark card the bright primary is
+     the legible choice, so here the accent CAN be the faction colour — for the
+     factions whose skin IS their spine hue. WOW's is not (#838): the plum lifts
+     instead, which is the flip the chronicle's gold deliberately does not make. */
+  /* The kit's `whimsy · dk`, under the name it already had (see :root). */
+  --faction-wow-card-accent: #c79be0; /* chronicle plum, lifted — 7.94:1 */
+  --faction-coven-card-accent: #f472b6;
+  --faction-snide-card-accent: #b6ff2e;
+  --faction-singularity-card-accent: #4ade80; /* terminal green */
+
+  /* ── Faction card secondary text (dark mode) ── */
+  /* Walked up from the kit's #a08c72, which measures 4.11:1 on
+     --faction-ua-lift. This clears every UA surface: 4.55 lift, 5.10 panel,
+     5.64 card, 6.25 page. */
+  --faction-ua-card-muted: #a8947a;
+  --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
+  --faction-coven-card-muted: #dd719c;
+  /* The band's quiet gold, kept for the night half exactly as `-card-text`
+     above is and for the same reason — 8.37:1 on the band it left, 7.96:1 on
+     the night plate it now sits on. */
+  --faction-ephemerists-card-muted: #c2ae7e;
+  --faction-snide-card-muted: #cfcdbf;
+  /* SNIDE flyposted wall flips to concrete-at-night. Retuned to the design's
+     blacks in #2065, when the task card's ground became this wall: pitch black
+     by night against xerox stock by day. The light pair already matched the
+     design hex-for-hex and did not move. This DELIBERATELY moves three other
+     surfaces that read the wall — `.snd-detail-sheet` on both detail pages and
+     `SnideFieldDesk` — because this is the new S.N.I.D.E. look, not a card-local
+     tweak. Every wall-scoped ink is bright, so the pairings only gain. */
+  --faction-snide-wall: #0a0a0b;
+  --faction-snide-wall-deep: #050506;
+  --faction-snide-wall-text: #e9e6da;
+  /* The night pair: the faction's own bright pink and amber, unwalked — on a
+     near-black wall the light values would be the miss, so only light moved. */
+  --faction-snide-wall-alarm: #ff69ac;
+  --faction-snide-wall-notice: #fbbf24;
+  --faction-snide-wall-credit: #4ade80;
+  /* The evidence slab, lights out (#842): the plate itself is already ink, so
+     only its printed shadow and the score well deepen. */
+  --faction-snide-slab-shadow: rgba(0, 0, 0, 0.5);
+  /* The opaque night value of the same well: what rgba(0,0,0,0.5) computed to
+     over the dark `-card-bg` (#0c0a07). See the light declaration. */
+  --faction-snide-stamp-bg: #060504;
+  --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.6);
+
+  /* ── The ransom clipping, lights out (#1023) ──
+     The stock and its ink SWAP: the clipping is a sheet of paper, so it goes
+     photocopier-black and the type goes xerox-white, rather than staying dark
+     the way the faction's amp face and evidence slab do. Everything the design
+     ships for this half measures 5.38:1 and up as drawn, including the header
+     bar's hot-pink ordinal at 5.75:1 — only the light half needed walking. */
+  --faction-snide-note-paper: #14110b;
+  --faction-snide-note-ink: #f4f1e8;
+  --faction-snide-note-muted: #cfcdbf;
+  --faction-snide-note-rule: rgba(244, 241, 232, 0.26);
+  --faction-snide-note-grain: rgba(244, 241, 232, 0.042);
+  --faction-snide-note-bar: #080706;
+  --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
+  /* BRIGHTENED PART WAY (#2450). The dark cascade runs BACKWARDS and that is
+     the trap in this fix: this half's paper is #14110b, DARKER than the
+     rgb(71,56,41) the browser paints, so here the washes LIGHTEN the ground
+     instead of darkening it and the correction is the mirror of the light
+     half's — washes down, ink UP. #ff69ac read 4.22:1 on the worst-case
+     composite; #ff71b1 on the eased one is 4.91:1. `-note-muted` needed
+     nothing, at 7.82:1. */
+  --faction-snide-note-pink-ink: #ff71b1;
+  --faction-snide-note-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.85);
+  /* The wall the clipping is pasted to, lights out (#2065). The scanline still
+     darkens — a scan is subtractive in both themes — while the two washes and
+     the edge take the faction's BRIGHT pigments, because on a near-black wall
+     the deep ones composite to nothing. The shadow loses its printed offset and
+     becomes a hairline plus a deep drop: an offset in the dark is invisible, and
+     the hairline is what keeps the card an object on the faction page's
+     identical ground.
+
+     THE WORST CASE HERE IS THE LIGHTEST PIXEL, not the darkest (#2450): the
+     inks on this half are light, so what gates them is the ramp's TOP stop with
+     the three lightening layers over it and the scanline OFF — a 1px-on/3px-off
+     stripe leaves most pixels in an off-band, and a glyph that lands there gets
+     no help from it. That reads rgb(71,56,41) at the shipped alphas, which is
+     what the nightly measured, and rgb(63,49,37) at the eased ones below. The
+     scan itself does NOT come down: it is the one layer that darkens in this
+     cascade, so easing it would push the ground the wrong way. */
+  --faction-snide-note-scan: rgba(0, 0, 0, 0.5);
+  --faction-snide-note-wash-acid: rgba(182, 255, 46, 0.11);
+  --faction-snide-note-wash-pink: rgba(255, 45, 139, 0.12);
+  /* 0.35 -> 0.40 (#2668) — the acid's alpha, not the acid. Composited on
+     `--faction-snide-wall` (#0a0a0b, which is the ground the `chrome` override
+     puts under it) this edge read 2.769:1; un-composited it would have read
+     clear, which is #594's mistake exactly and the reason the loop composites.
+     0.40 is 3.289:1. 0.38 (3.072:1) also clears and was passed over: this is
+     the one reading #2668 calls unambiguously load-bearing — the rail's own
+     edge on the wall, in the cascade the wall goes black in — and a rule whose
+     whole job is to separate is worth two points of alpha in margin.
+     ONE EDGE, SIX READERS, ONE EDIT. The rail (`--rail-line`, through the
+     `chrome` ground override), the task card, the select card, the field desk,
+     the profile body and the faction page all draw THIS token as a hairline on
+     THIS wall, so a second name would have fixed the measured row and left five
+     siblings at 2.77:1. The light half is `rgba(20,17,11,0.55)` and reads
+     3.97:1 on the light wall — it was never in the finding and does not move. */
+  --faction-snide-note-wall-edge: rgba(182, 255, 46, 0.4);
+  --faction-snide-note-wall-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.9), 0 18px 40px -22px rgba(0, 0, 0, 1);
+
+  /* ── The flyposted sheet, lights out (#1184) ──
+     The stock and its type SWAP, exactly as the clipping's do: photocopier black
+     with xerox-white type. The masthead bar and the censor stripe go a shade
+     BELOW the sheet rather than above it — a redaction is always the darkest
+     thing on the page, and lifting it to white would turn every section rule
+     into a highlighter. Acid becomes text-safe on this ground, so
+     `-acid-ink` takes the bright pigment back. Measured on the dark stock:
+     muted 11.0:1, faint 5.7:1, acid-ink 15.6:1. */
+  --faction-snide-composer-sheet: #14110b;
+  --faction-snide-composer-ink: #f4f1e8;
+  --faction-snide-composer-muted: #cfcdbf;
+  --faction-snide-composer-faint: #94917f;
+  --faction-snide-composer-field: #1e1a12;
+  --faction-snide-composer-rule: rgba(244, 241, 232, 0.32);
+  --faction-snide-composer-bar: #080706;
+  --faction-snide-composer-acid-ink: #b6ff2e;
+  --faction-snide-composer-alarm: #ff69ac;
+
+  /* ── The intercepted slip, lights out (#1198) ──
+     The stock and its type SWAP, as the clipping's and the sheet's do. The intake
+     bar goes a shade BELOW the stock rather than above it, for the same reason
+     the composer's redaction does — an over-inked band is the darkest thing on
+     the sheet, and lifting it to white would turn the card's own header into a
+     highlighter. That leaves the bar only 1.4:1 against the stock, so the acid
+     rule at its foot is what draws the band here; it is structure, not garnish.
+     Acid and pink become text-safe on this ground and both take their bright
+     pigment back. Measured on the dark stock: ink 16.68:1, muted 11.79:1,
+     faint 5.93:1, acid-ink 15.55:1, pink-ink 7.06:1. The shared body's global
+     inks land at primary 15.19:1, secondary 5.70:1, tertiary 6.29:1 — the
+     pairings the previous invariant stock broke (1.10:1 and 2.92:1). */
+  --faction-snide-slip-paper: #14110b;
+  --faction-snide-slip-ink: #f4f1e8;
+  --faction-snide-slip-muted: #cfcdbf;
+  --faction-snide-slip-faint: #94917f;
+  --faction-snide-slip-field: #1e1a12;
+  --faction-snide-slip-rule: rgba(244, 241, 232, 0.32);
+  --faction-snide-slip-grain: rgba(244, 241, 232, 0.07);
+  --faction-snide-slip-bar: #080706;
+  --faction-snide-slip-acid-ink: #b6ff2e;
+  --faction-snide-slip-pink-ink: #ff69ac;
+  --faction-snide-slip-shadow: 3px 4px 0 rgba(0, 0, 0, 0.6);
+  --faction-snide-slip-scrap-shadow: rgba(0, 0, 0, 0.6);
+  --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+  /* The credits accent at night (#1766) — the value the retired
+     --faction-default-gold alias already resolved to here, so the roster
+     readouts render byte-identically. 10.59:1 on the terminal. */
+  --faction-singularity-amber: #e6b94f;
+
+  /* ── Singularity terminal session, lights out (#1023) ──
+     The chassis stays black (§6) — what moves is the phosphor. Every ink here is
+     BRIGHTER than its light-half counterpart, because the dark chassis is darker
+     and the design tunes contrast rather than inverting the card. Measured
+     5.10:1 (dim on the chrome bar) and up, as drawn: only the light half needed
+     walking. */
+  --faction-singularity-term-bg: #050f08;
+  --faction-singularity-term-page: #030b06; /* the desk, one rung under it (#2039) */
+  --faction-singularity-term-chrome: #0a1a10;
+  --faction-singularity-term-ink: #4ade80;
+  --faction-singularity-term-bright: #86efac;
+  --faction-singularity-term-dim: #3a9e63;
+  --faction-singularity-term-blue: #60a5fa;
+  --faction-singularity-term-blue-bright: #93c5fd;
+  --faction-singularity-term-border: rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-hair: rgba(74, 222, 128, 0.2);
+  --faction-singularity-term-readout: #0e1e20;
+  --faction-singularity-term-scan: rgba(74, 222, 128, 0.045);
+  --faction-singularity-term-sweep: linear-gradient(
+    rgba(96, 165, 250, 0),
+    rgba(96, 165, 250, 0.16),
+    rgba(96, 165, 250, 0)
+  );
+  --faction-singularity-term-shadow: 0 16px 42px -24px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(74, 222, 128, 0.12);
+
+  /* ── Singularity task detail, lights out (#1034) ──
+     The panel sinks with the chassis, and the three halos LIGHT — see the light
+     half for why they are `none` there. Values are the design's own. */
+  --faction-singularity-term-panel: #08150d;
+  --faction-singularity-term-halo-green: 0 0 16px rgba(74, 222, 128, 0.28);
+  --faction-singularity-term-halo-blue: 0 0 14px rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-cta-glow: 0 0 18px rgba(74, 222, 128, 0.18);
+
+  /* ── UA · sun-bleached practice, after dark (#788, #848) ──
+     The mesa at night, not a parchment held up to a black page. Surfaces sink
+     (page darkest, then card, panel, lift), inks rise, and the sienna lifts —
+     the same ordering the light block has, mirrored. This block is what makes
+     UA a two-theme faction for the first time (#848). */
+  --faction-ua-page: #191410; /* app ground — mesa at night */
+  --faction-ua-page-text: #e7dcc9; /* text directly on the ground — 13.47:1 */
+  --faction-ua-panel: #2d261f; /* inset panel, media well */
+  --faction-ua-lift: #372e25; /* raised highlight — the shallowest surface */
+  --faction-ua-card-body: #d6c9b2; /* running prose — 10.09:1 */
+  --faction-ua-rule: #3b3229; /* neutral hairline / divider */
+  --faction-ua-hair: #332b22; /* faintest divider, below -rule */
+  --faction-ua-glow: #f08a4e; /* ORNAMENT ONLY — ensō, mandala. Never text. */
+  --faction-ua-vermil: #d9542a; /* the ensō score numeral — large display only */
+
+  /* The mandala's hue ramp after dark (#2072) — the design's own nine hexes,
+     which were sampled here. The light block above carries the derivation and
+     the ORNAMENT-ONLY / no-contrast-floor ruling; read it before touching
+     either half. Stop A is --faction-ua-glow, reused. */
+  --faction-ua-glow-gold: #f5c542;
+  --faction-ua-glow-clay: #c1653f;
+  --faction-ua-glow-apricot: #e8a15e;
+  --faction-ua-glow-straw: #f4d472;
+  --faction-ua-glow-flame: #e07a3a;
+  --faction-ua-glow-umber: #b45a22;
+  --faction-ua-glow-sand: #ffd9a0;
+  --faction-ua-glow-ember: #e86a2c;
+
+  /* The reading ramp, mirrored (#849). Not the light ramp lightened: the light
+     ladder climbs toward depth and would arrive at its dimmest rung here, so
+     this one climbs toward brightness and rank 5 is the brightest swatch, not
+     the darkest. Contrast on --faction-ua-card-bg (#241e18), all clearing the
+     3:1 ornament floor: 3.31 / 4.39 / 4.91 / 4.82 / 6.58. Rank 5 lands on
+     --faction-ua-glow's dark value on purpose — "radiant" is the ornament hue
+     at full strength, which is what the ensō is drawn in. */
+  --faction-ua-rank-1: #7a6e5e; /* faint */
+  --faction-ua-rank-2: #a67c46; /* forming */
+  --faction-ua-rank-3: #c77a33; /* true */
+  --faction-ua-rank-4: #e0672c; /* alive */
+  --faction-ua-rank-5: #f0894a; /* radiant */
+
+  /* ── UA · PRAXIS CARD ONLY, after dark (#857) ──
+     The handoff carries a `UA DARK` band for this card, so it dims like every
+     other UA surface — #848 reversed the old "the salon never dims" ruling.
+     The parchment gradient needs no dark entry: it is composed from
+     lift/card-bg/panel, all three of which flip above, and the design's dark
+     stops (#372E25, #241E18, #2D261F) are exactly those three values.
+     The design dims the ensō with `filter: brightness(1.15)` on an orange
+     asset; the repo's ensō is a MASK tinted from a token, so the lift is
+     expressed as a lighter ink instead of a filter — same result, one fewer
+     paint layer, and it stays in the cascade rather than in a component. */
+  --faction-ua-card-frame: #f0894a;
+  --faction-ua-card-box-bg: #1f1913; /* the box sinks BELOW the sheet in dark */
+  --faction-ua-card-chip-bg: #e86a2c;
+  --faction-ua-card-total: var(--faction-ua-card-accent); /* #f0894a — design's own */
+  --faction-ua-card-points: #f0a85a;
+  --faction-ua-card-lotus-opacity: 0.22;
+
+  /* ── DEFAULT · unaffiliated (dark — brightened spectrum) ── */
+  --faction-default: #8b8aa0;
+  --faction-default-light: rgba(255, 255, 255, 0.06);
+  --faction-default-border: rgba(255, 255, 255, 0.12);
+  /* The seven stops, brightened — the twin the light block's docstring points
+     at. Every ramp below is the same composition as its light counterpart, so
+     re-cutting the spectrum for dark means editing these seven lines and
+     nothing else. Since #1220 these also carry the retired brand chrome (nav
+     wordmark, page titles, the level-up popup), which had no dark form at all
+     before; they were tuned for a dark faction CARD, so that chrome is the
+     pairing to re-check when a stop moves. */
+  --faction-default-stop-1: #e2433f; /* red */
+  --faction-default-stop-2: #e07a3a; /* orange */
+  --faction-default-stop-3: #e6b94f; /* yellow */
+  --faction-default-stop-4: #4ade80; /* green */
+  --faction-default-stop-5: #3aa0a4; /* teal */
+  --faction-default-stop-6: #60a5fa; /* blue */
+  --faction-default-stop-7: #f472b6; /* magenta */
+  /* The four ramps are NOT restated here, and the seven lines above are why
+     (#1661). `data-theme` is set on `document.documentElement`, so `:root` and
+     `[data-theme="dark"]` match the SAME element: a ramp declared once in the
+     light block computes its `var(--faction-default-stop-N)` against whichever
+     stop declaration wins on that element, which after dark is these. The dark
+     copies were byte-identical to the light ones — ~1 KB of source restating a
+     composition the cascade already performs — and, being copies, they were the
+     shape #1220 retired the brand palette for. Re-cutting the spectrum for dark
+     is still "edit these seven lines and nothing else"; it is now true of the
+     file as well as of the intent. */
+  --faction-default-card-bg: #1c1b24;
+  --faction-default-card-text: #f0e6d0;
+  --faction-default-card-accent: #f0e6d0;
+  --faction-default-card-muted: #9b9080;
+  /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity).
+     The caption pair that was overridden here left in #2535; see the light
+     half.
+
+     0.3 -> 0.6 (#2524). An unreached petal is what tells you the control HAS a
+     fifth position, so WCAG 1.4.11 governs it at 3:1 and not 4.5 — and at 0.3
+     the cream read 2.42:1 on this card, 2.39 on the Albescent prism, i.e. the
+     vote row read as an empty line. LIFTED RATHER THAN FORKED, with the consumer
+     list in hand: all three readers are boundaries and none is text — the fill on
+     `AlbescentVote`'s clipped blob, and the `inset 0 0 0 1.5px` ring on
+     `DefaultVote` and `DefaultPraxisDetail`. A 1.5px hairline is a THINNER target
+     than a 44px blob and wants at least what the blob wants, so a fork would have
+     had to give the two rings the higher number anyway; one value, 5.73:1 on this
+     card / 5.97 on the prism, is the design board's own patch. 0.45 (3.81 / 3.87)
+     clears too and was rejected for the hairlines' sake. Light was a different
+     shape of problem and was not touched here; #2608 fixed it separately, and
+     no alpha change would have reached it — the light value was opaque.
+
+     DARK DID NOT FORK, and the alias is how that is stated. Light needed two
+     values because the flat na card and the prism are ~10pp apart there; this
+     cream clears both grounds at once (5.73 / 5.97), so `-dot-fill` points at
+     `-dot-ring` rather than restating it. Give dark its own fill value only if a
+     measurement forces it, and then say which ground forced it. */
+  --faction-default-dot-ring: rgba(240, 230, 208, 0.6);
+  --faction-default-dot-fill: var(--faction-default-dot-ring);
+  /* The cream sheet, lights out (#842) — the design's own dark card, not an
+     inversion: the hairline becomes a white scrim and the stamp plate lifts off
+     the sheet rather than sinking into it. Both narrow rainbows still swap their
+     stops for the brightened spectrum's; since #1220 they do it by composition
+     rather than by a second declaration (see below). */
+  --faction-default-card-line: rgba(255, 255, 255, 0.14);
+  --faction-default-stamp-bg: #26252f;
+  /* -total-rainbow and -eyebrow-rainbow need no dark entry: since #1220 both
+     compose from --faction-default-stop-*, which this block rebinds above, so
+     the `:root` declarations re-resolve to the brightened spectrum on their own.
+     Same argument the UA parchment gradient makes further up. Restating them
+     here would be lines that have to be remembered whenever the light cut
+     changes.
+
+     --faction-default-gold was a third member of that list until #1766 took it
+     off the stop (see :root for why an ink may not be a ramp position). Breaking
+     the alias broke the tracking with it, so the dark half is declared. THE
+     RENDERED VALUE DOES NOT MOVE — #e6b94f is what the dark stop resolved to,
+     reading 8.23:1 on the dark score plate and 9.27:1 on the sheet, and the
+     caption was never in trouble at night. If the spectrum is ever re-cut, this
+     line no longer follows it, which is the price of the split and is why it
+     says so here.
+
+     #1220 corrected one drift on the way: the dark gold and the dark total's
+     yellow were both #e6b34a, a hair off the dark yellow STOP (#e6b94f) the
+     comment above claimed they took. One hue, one source — the delta is ~6/255
+     on one channel and lifts the POINTS caption's contrast on the dark sheet
+     rather than lowering it. */
+  --faction-default-gold: #e6b94f;
+  /* The composer's three tiers, lights out (#1181). The field LIFTS off the
+     sheet here rather than sinking into it — the same inversion --faction-
+     default-stamp-bg already makes one block up — and both hairlines become
+     white scrims. */
+  --faction-default-composer-field: #1f1e2b;
+  --faction-default-composer-faint: #b0aebe; /* #1232, then #2485 — see :root */
+  --faction-default-composer-hair: rgba(255, 255, 255, 0.06);
+  /* The aurora needs no dark hue list either — the `:root` wash reads the seven
+     stops, so it arrives on the brightened spectrum by itself. What still flips
+     is the wash's COMPOSITING: screen-blended so it lifts off the dark sheet
+     instead of muddying into it, and blurred less hard because a lit wash
+     spreads further on a dark ground than a dark one does on a light. */
+  --faction-default-aurora-opacity: 0.22;
+  --faction-default-aurora-filter: blur(48px) saturate(0.8);
+  --faction-default-aurora-blend: screen;
+  --glow-neutral: rgba(255, 255, 255, 0.75);
+
+  /* Duel Victor seal, lights out (#823): the design's 2b. Only the frame
+     flips — ivory sheet to ink — because the seal is a cut-out and the frame
+     is the ONLY painted part. The ten spectrum stops are identity and stay put
+     (see the light block); brightening them would put a lit rainbow behind an
+     unlit frame and break the cut. */
+  --badge-victor-frame: #14100b;
+
+  /* ══ Ephemerists CODEX palette (dark) — pigments stay vivid; vellum darkens
+     to aged tobacco and its text flips ink→parchment. The card contract used to
+     inherit these through the :root var() rebind; since #1627 it rebinds to the
+     Valley plate instead and this half has no reader either. ══ */
+  --eph-gold: #cda24a;
+  --eph-rubric: #c0533a; /* rubric brightens on dark vellum */
+  --eph-ink: #0c0a06; /* element ink stays dark */
+  --eph-vellum: #211a10; /* aged tobacco — a surface on the dark page */
+  --eph-vellum-text: #efe3c6; /* text FLIPS to parchment */
+  --eph-muted: #b6a079;
+  --eph-parchment: #efe3c6;
+  --eph-field: #102a3a; /* celestial field deepens */
+  /* The night halves of the ten codex colours #1661 deleted went with them. */
+
+  /* ══ Ephemerists — THE VALLEY PLATE, night half (#2141) ══
+     The note that stood here said the register declared NOTHING in this block
+     (#1627): it was theme-invariant and lived entirely in `:root`, because a
+     design that FLIPPED THE BAND would have needed four card inks to serve two
+     polarities and no value lies in both intervals. It is rewritten rather than
+     deleted because the argument was sound and the premise moved — the band is
+     the compass blue #12151f in both cascades now, so the sheet under it is
+     free to flip and this half exists again. The full reasoning is beside the
+     light half in `:root`; what follows is the night VALUES, which are the ones
+     that used to be the only values.
+
+     FIFTEEN DECLARATIONS, AND THE ABSENCES ARE THE POINT. `-band`, `-band-ink`
+     and `-band-quiet` are theme-invariant on purpose (the compass blue is the
+     faction, not a mode); `-plate-disc` is the dark chip the metals are struck
+     on and does not flip either; `-plate-brass-rule` is one value across all
+     three grounds by construction; `-plate-gold` and `-plate-wash` have no
+     light value to differ from. Nothing below should be "completed" by adding
+     them. */
+  --faction-ephemerists-plate-bg: #171a26;
+  --faction-ephemerists-plate-page: #101320;
+  --faction-ephemerists-plate-inner: #1d2130;
+  --faction-ephemerists-plate-ink: #f0e6c8;
+  --faction-ephemerists-plate-muted: #a2977a;
+  --faction-ephemerists-plate-quiet: #a2977a;
+  --faction-ephemerists-plate-caption: #c9a24b;
+  --faction-ephemerists-plate-brass: #c9a24b;
+  --faction-ephemerists-plate-brass-light: #e6c877;
+  --faction-ephemerists-plate-ochre: #d9744c;
+  /* The CTA bar trades ends with the light half: brass carrying the blue, where
+     the day's bar is the blue carrying brass. 7.59:1 either way. */
+  --faction-ephemerists-plate-cta-bg: #c9a24b;
+  --faction-ephemerists-plate-cta-ink: #12151f;
+  --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12);
+  --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28);
+  --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
+
+  /* The night half of the retired `coven.exe` chrome and its scraps was deleted
+     with the light half in #1661. */
+
+  /* ══ Praxis-card redesign (#821, repointed by #838) — dark ══
+     Re-DERIVED against the pink/chronicle assignment, not translated from the
+     inverted one: Coven's old dark surfaces were tuned for plum-on-black and
+     pink does not clear the same slots by substitution (ADR-0050). The moon and
+     balloon ramps are fixed surfaces that read in both themes, so only the frame
+     chrome, the balloon plate and the caption inks are overridden here. */
+
+  /* The night half of Coven's retired `-sticker-*` / `-stamp-*` families was
+     deleted with the light half in #1661, and the `-vote-on` / `-vote-off`
+     caption pair overridden here followed in #2535 — #2166 had already struck
+     the row that read it. */
+
+  /* ══ Coven — the candlelit spell slip (dark, #1023) ══
+     Read off the design's own dark half, not derived by inverting the light
+     one. Two calls the design's annotation does not make:
+       • the CTA ink flips to INK. Its dark band is two LIGHT pinks
+         (#f472b6 → #f9a8d4) and white on them is 2.65:1 — the same call
+         --faction-coven-on-accent already makes for this faction.
+       • the aura darkens instead of brightening: it is a glow BEHIND the disc,
+         so on a night slip it reads as depth, not as a white plate. */
+  --faction-coven-slip-from: #4a2038;
+  --faction-coven-slip-mid: #5e2a46;
+  --faction-coven-slip-lav: #2e2145;
+  --faction-coven-slip-vio: #2b1c42;
+  --faction-coven-slip-border: #7a3358;
+  --faction-coven-slip-ink: #fbcfe4;
+  --faction-coven-slip-deep: #f9a8d4;
+  --faction-coven-slip-pk: #f472b6;
+  --faction-coven-slip-soft: #e58cb6;
+  /* Lifted from the design's #c78aa6, which pays 4.02:1 on the ramp's LIGHTEST
+     dark stop (#5e2a46). Same hue, one step up. */
+  --faction-coven-slip-label: #d29bb4;
+  --faction-coven-slip-gold: #f4d472;
+  /* The night bloom is the day's ramp exactly (#2135) — see the light twin for
+     the measurement that walked 0.55/0.20 down to 0.38/0.14. `-slip-gold` is
+     itself lighter by night (#f4d472), so the two cascades still differ; what
+     no longer differs is the STRENGTH, because the hue that made a strong night
+     ramp safe was the pink. */
+  --faction-coven-slip-sigil-halo: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-gold) 38%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-gold) 14%, transparent) 55%, transparent 100%);
+  --faction-coven-slip-sigil-ground: #1a0713;
+  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 90%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 60%, transparent) 62%, transparent 100%);
+  --faction-coven-slip-cta-from: #f472b6;
+  --faction-coven-slip-cta-to: #f9a8d4;
+  --faction-coven-slip-cta-ink: #14110b;
+  --faction-coven-slip-glow: rgba(244, 114, 182, 0.42);
+  --faction-coven-slip-shadow: 0 16px 38px -14px rgba(0, 0, 0, 0.7);
+  /* The masthead band, UNMOVED (#2635). These are `-slip-sigil-ground`'s and
+     `-slip-ink`'s own night values — the ground the band already stood on and
+     the ink it already inherited from the card body — so the night band is what
+     shipped, under a name that belongs to it. The owner ruled the dark band
+     fine; only the day half was borrowed paint. */
+  --faction-coven-mast: #1a0713;
+  --faction-coven-mast-ink: #fbcfe4;
+  /* The night plate (#2019). The foot is the same 34% of `-mid` into the ward
+     paper the light ramp mixes, taken on the dark stops (#5e2a46 into #2a0f1e).
+     The three row inks lift on their own hue lines; the gold needs no lift at
+     all by night, which is the whole shape of the light walk seen from the far
+     side. Ratios are in the light block above, both cascades together. */
+  --faction-coven-slip-plate-foot: #3c182c;
+  --faction-coven-slip-row-base: #d66796;
+  --faction-coven-slip-row-mult: #d9a521;
+  --faction-coven-slip-row-votes: #5c8fca;
+
+  /* WOW — cream/gold/plum chronicle (dark). The gold #c8a02a does NOT lift; the
+     plum is what carries the flip (#7a4a9e → #c79be0). */
+  --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
+  --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
+  /* The quiet ink does NOT need its own dark value: the light-theme miss is the
+     whole bug, and by night the metadata olive already reads 5.94:1 on the
+     darkened plate. Aliased rather than copied so a future repaint of the dark
+     metadata ink carries the panel with it — the contrast row guards the pair
+     either way. */
+  --faction-wow-chronicle-quiet: var(--faction-wow-card-muted);
+  --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
+  /* The eyebrow ink lifts (the kit states light only). Same 43deg olive-gold,
+     raised until it clears both dark chronicle grounds — 8.83:1 on the deep
+     ground, 7.66:1 on the darkened panel. Deliberately short of the "gold
+     bright" below, which the stamp total reserves for its own line. */
+  --faction-wow-accent-deep: #cfb268;
+  /* `--faction-wow-stamp-bg` was restated here by #1827, because the stamp
+     renders inside a NESTED theme wrapper and an alias declared only at `:root`
+     froze at its light value in there. #1839 fixed the scope instead — the
+     light declaration is on `:root, [data-theme]` now, so it re-substitutes in
+     the wrapper on its own and this copy is redundant. Deleted (#1661: a value
+     lives in one place). */
+  --faction-wow-stamp-total: #e3b84a; /* the design's dark "gold bright" */
+  --faction-wow-stamp-shadow: rgba(0, 0, 0, 0.4);
+  /* The plum chip lifts to the design's dark secondary plum, one step below the
+     text plum, so the chip stays a chip and not a second heading. */
+  --faction-wow-stamp-chip-bg: #8a5aae;
+  --faction-wow-stamp-chip-text: var(--faction-wow-card-text);
+  /* The quest decree, lights out (#1023). Only two of its roles move: the blade
+     goes bone-white so the swords read against their own hilts, and the drop
+     shadow loses the light card's gilt inset ring. The ribbon is composed from
+     two theme-invariant surfaces, so it does not appear here at all. */
+  --faction-wow-quest-blade: #f3e7c4;
+  --faction-wow-quest-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8);
+  --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
+  --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
+  /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
+
+  /* THE IDLE BALLOON IS THE PLATE, AND ONLY ONE OF THE TWO FLIPPED (#1946).
+     The block in `:root` calls #EDE4C8 a "dead parchment", and the arithmetic
+     says it is the plate itself: the light plate runs #FBF4E0 → #F3E7C4 and
+     the idle fill is #EDE4C8, a hair under its darker stop. So an untouched
+     bunch reads as five OUTLINE drawings on parchment, and the ramp is the
+     only thing that carries rank. That is the design, and it is right.
+
+     It could not survive the plate going dark. `-plate-from` / `-plate-to`
+     flip to #2A2210 → #1B1508 and the fill stayed a literal cream, which
+     inverts the whole widget: at rest, the UNREACHED state is now the loudest
+     thing on the plate — five near-white blobs at ~15:1, louder than any
+     colour the ramp climbs to. "They look like sperms" is that inversion
+     reported from the far side. The defect sorts perfectly by cascade
+     (WORLD_ZERO_STYLE §3, #1792 / #1932), so it is one bug about a flip and
+     not a quarrel with the drawing.
+
+     Dark therefore restates what light already does — a fill a shade off its
+     own plate, lifting rather than sinking because a dark sheet lifts. The
+     ramp stays theme-invariant and untouched; nothing about the light render
+     moves by a byte.
+
+     WHICH FORCES THE OUTLINE, and the note this replaces says so in its own
+     words: the dark ink line was kept "because every balloon is filled now, so
+     the dark line lands on parchment or on a ramp colour either way". With the
+     idle fill no longer parchment, an ink outline on a #3A2F16 body is an
+     invisible line around an invisible balloon — #821's four missing balloons
+     by another route (#860 ask 3). It inverts to parchment, at the same alpha
+     it carried in light, which is the treatment the STRING beside it already
+     shipped. The two hairlines are the same drawing; only one of them had been
+     asked the question. */
+  --faction-wow-balloon-idle: #3a2f16;
+  --faction-wow-balloon-outline: rgba(243, 231, 196, 0.42);
+  --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
+  /* The crest family is theme-invariant (struck metal — see :root). Only the
+     disc the coin is MOUNTED on flips, to the kit's dark avatar field. */
+  --faction-wow-avatar-field: #241c0b;
+
+  /* ── Watercolor splash opacities (dimmer in dark) ── */
+  --wc-opacity-blob: 0.15;
+  --wc-opacity-drip: 0.11;
+  --wc-opacity-drop: 0.08;
+
+  /* ── Shared tokens ── */
+  --nav-blur: 8px;
+
+  /* ── Leaderboard table row hover (dark) ── */
+  --leaderboard-row-hover: rgba(255, 255, 255, 0.03);
+
+  /* The night halves of the rank-strip and level-track tokens went with their
+     light halves in #1661. */
+
+  /* ══ Everymen (dark) — paper surface + text flip; red/field deepen ══ */
+  --faction-everymen: #ef5350;
+  --everymen-cream: #f3e7ce;
+  --everymen-gold: #e7b94f;
+  --everymen-gold-deep: #b3852a;
+  --everymen-olive: #8a955a;
+  --everymen-ink: #0d0907;
+  --everymen-red: #e2433f;
+  --everymen-red-deep: #b32a28;
+  --everymen-red-light: rgba(226, 67, 63, 0.08); /* low-alpha red wash — error-banner field */
+  --everymen-paper: #221a16;
+  --everymen-paper-deep: #17110d;
+  --everymen-paper-text: #f3e7ce;
+  --everymen-muted: #b6a079;
+  /* No separate dark value (#1173): the light theme is where the deep stock
+     costs contrast — by night the muted brown reads 7.39:1 on it, its most
+     comfortable ground in either theme. Aliased rather than copied so a repaint
+     of the dark muted ink carries the deep stock with it. */
+  --everymen-quiet: var(--everymen-muted);
+  /* The paper stock's accent ink at night (#1341). `--everymen-red` is 4.16:1 on
+     the dark paper — a real failure, not a near-miss — so this half takes the
+     lifted red the faction already uses for type after dark, the value
+     --faction-everymen-sheet-accent carries. Declared rather than aliased for
+     the reason the slip/note/composer families are declared apart: same value
+     today, a different stock's contract tomorrow. 6.09:1. */
+  --everymen-paper-accent: #f4726c;
+  /* The deep stock's accent ink at night (#1766). The light half is a DARKENED
+     red for a tan panel; on the near-black deep stock that value reads 2.39:1,
+     so this half lifts, exactly as `-paper-accent` and `-sheet-accent` do one
+     line up and one block down. Same lifted red all three take: 6.66:1 (against
+     4.55:1 for a bare `--everymen-red`, which clears but with nothing to spare).
+     Declared rather than aliased, for the reason `-paper-accent` gives. */
+  --everymen-deep-accent: #f4726c;
+  --everymen-field: #3c1416;
+  /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
+     ink would vanish), and the masthead's red bar carries INK, not cream —
+     white/cream on #e2433f fails AA, which is the same call
+     --faction-everymen-on-fill already makes. */
+  --everymen-frame: #3e3320;
+  --everymen-masthead-text: #161009;
+  --everymen-stamp-field: rgba(226, 67, 63, 0.08);
+  --everymen-stamp-ink: #d67b6a;
+  --everymen-stamp-numeral: #ece1c6;
+  --everymen-stamp-mult: #e6b34a;
+  /* ── The Help Wanted bill (dark, #1023) ── The masthead does NOT flip: see the
+     light block for why a bill printed at night is the same bill. The CTA bar
+     deepens to the design's near-black red-brown, and the modifier badge hands
+     back to the family's own gold, which already clears on the dark paper. */
+  --faction-everymen-bill-cta-bg: #200c0a;
+  --faction-everymen-bill-cta-ink: #f3e7ce;
+  --faction-everymen-bill-mult-ink: var(--everymen-gold-deep);
+  --faction-everymen-bill-ray: rgba(243, 231, 206, 0.045);
+  --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
+  --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
+  --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
+  /* ── The broadsheet sheet (dark, #1033) ── The panel becomes a lifted plate on
+     the near-black newsprint (the design's own dark `cream`), the hairline
+     inverts, and red-as-ink lifts to clear AA on it (5.45:1 on the panel,
+     6.18:1 on the paper; the light #c1272d would pay 3.73:1). */
+  --faction-everymen-sheet-panel: #2c231c;
+  --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
+  --faction-everymen-sheet-accent: #f4726c;
+  /* The work order's frame at night: the design's skin row swaps gold for the
+     deep accent, which is the one edge on the sheet that does NOT lift with the
+     paper — a printed poster frame stays the colour it was printed in (#1187). */
+  --faction-everymen-composer-frame: var(--everymen-red-deep);
+  /* The dispatch slip at night (#1200): the drop shadow goes to the near-black
+     of the dark ground rather than the ink brown, and deepens — a slip on a dark
+     press bench lifts off it more than one on a lit paper page. */
+  --faction-everymen-slip-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 6px 16px -10px rgba(0, 0, 0, 0.8);
+  /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
+     the dark paper (the light double-drop-shadow would muddy against it). */
+  --faction-everymen-vote-edge: #8a7856;
+  --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
+}
+

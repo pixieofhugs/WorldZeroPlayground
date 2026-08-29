@@ -40,8 +40,6 @@
  * and walking them is a design call the 2026-08-27 ruling did not make; they are
  * reported on #2450 for a follow-up. Add their rows here when it lands.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
@@ -56,9 +54,9 @@ import {
 } from "../contrast";
 import { WALL, WALL_PLAIN } from "../../components/factionMarks/snideAtoms";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
+import { readIndexCss } from "../../test/indexCss";
 
-const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
-const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
+const THEMES = readThemes(readIndexCss());
 
 /**
  * The worst pixel, per cascade: which ramp stop is under it and which of the

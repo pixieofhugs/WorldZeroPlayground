@@ -35,11 +35,11 @@ import { describe, expect, it } from "vitest";
 
 import { parseColor, relativeLuminance } from "../../../utils/contrast";
 import { readThemes, resolveVar, stripComments, type Theme } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
-const CSS_PATH = fileURLToPath(new URL("../../../index.css", import.meta.url));
 const BACKDROP_PATH = fileURLToPath(new URL("../SingularityBackdrop.tsx", import.meta.url));
 
-const THEMES = readThemes(readFileSync(CSS_PATH, "utf8"));
+const THEMES = readThemes(readIndexCss());
 const BOTH: Theme[] = ["light", "dark"];
 
 /** The ground the backdrop paints, and the chassis the v3 task card paints. */

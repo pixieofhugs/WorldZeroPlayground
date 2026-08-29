@@ -1,0 +1,3355 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — FACTION CHROME, second run (#2890).
+   Backdrops, keyframe animation and per-faction card/detail/profile chrome,
+   ordered by commit history rather than grouped by faction — Ephemerists,
+   Singularity, Coven, WOW, Everymen, S.N.I.D.E. and Albescent all recur
+   more than once below. Interrupted once by the LAYOUT run marked further
+   down, then resumes.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════
+   EPHEMERISTS BACKDROP — the page under the faction page and a
+   member's profile, rendered by the ephemerists FactionBackdrop
+   variant.
+
+   SWEPT OFF THE CODEX (#1208). This was the aged-vellum ephemeris
+   sheet — foxing, astrolabe rings, scribe-lines — and it was the
+   GROUND the two surfaces above it stand on, so leaving it in
+   `--eph-*` while their plates moved would have been the second
+   identity in its most visible form: papyrus floating on vellum.
+
+   It became `-plate-page`, the same ground the task detail's sheet
+   sits on, and #2144 then took every mark off it. The wash was a
+   gold bloom off the top edge, surveyor's rings bleeding from the
+   top corner, papyrus grain and the journal's ruling (plus two nile
+   layers #2141 deleted with the token). All of it is replaced by ONE
+   layer, and that layer is not here: it is `EphemerisNet`, drawn in
+   JS by `components/backdrop/EphemeristsBackdrop.tsx`.
+
+   THIS RULE IS NOW THE SHEET COLOUR AND NOTHING ELSE, on purpose.
+   The colour is the one item on that list which was never a wash
+   layer — it is what makes this page vellum by day and the night
+   plate after dark, and dropping it would drop the faction's stock
+   back to the site's neutral ground. Everything ABOVE the colour is
+   the chart, and the chart has to follow the theme through a var(),
+   which an image can only do while it is drawn in the document —
+   see the net's header for why that ruled out a `url()` here.
+
+   `z-index: 0` on a fixed element makes this a stacking context,
+   which is what keeps the net's `z-index: -1` above this colour
+   instead of behind the page.
+   ══════════════════════════════════════════════════════════════ */
+.eph-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--faction-ephemerists-plate-page);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THE EPHEMERIS GRID, as a card ground (#1635)
+
+   "The ruling is a ground, not a veil" — so it sits between the card's
+   own fill and everything printed on it, and it is inert: no hit
+   testing, no contribution to any ink's contrast reading.
+
+   The design lifts the card's content to `z-index: 1` over a `z-index: 0`
+   ::before. This does the same render with `isolation: isolate` and a
+   NEGATIVE layer instead, because the lift is the half that costs: a
+   `> *` rule strong enough to lift static children has to set
+   `position: relative`, which overrides any absolutely-positioned
+   ornament the card already had — and the plate skins are full of them.
+   Isolating makes the host a stacking context, so `-1` paints after the
+   host's own background and before every descendant, and an adopting
+   card adds one class and changes nothing else.
+
+   Sized `100% 100%` / `no-repeat` per the design, which is a no-op for a
+   repeating gradient and is exactly what a warped SVG would need — see
+   the token's upgrade path beside its declaration.
+   ══════════════════════════════════════════════════════════════ */
+.eph-grid-ground {
+  position: relative;
+  isolation: isolate;
+}
+.eph-grid-ground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.17;
+  background-image: var(--faction-ephemerists-grid);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THE ANIMATIONS OFF-SWITCH (#2154)
+
+   One rule, driven by `[data-motion]` on `<html>` from `hooks/useMotion.tsx`.
+   It is the entire mechanism: there is deliberately NO `[data-motion]` clause
+   added to the 42 `@media (prefers-reduced-motion: no-preference)` blocks in
+   this file and `motion.ornament.css`. That sweep was ruled against — it would
+   cost critical-CSS bytes on every block and touch every motion test, to say
+   what these three declarations already say.
+
+   WHY `!important`, WHICH IS NOT LAZINESS. This tree writes a great many
+   `transition:` declarations INLINE in JSX style objects, and a style attribute
+   outranks every selector there is. `!important` is the only thing that reaches
+   them. It also beats the deferred ornament sheet, which loads after this one.
+
+   WHY IT CAN ONLY EVER SUBTRACT. Every animation here lives inside
+   `@media (prefers-reduced-motion: no-preference)`, so a reader whose OS asks
+   for no motion is already still and no value of this attribute can give it
+   back. That is why the Appearance switch renders OFF and DISABLED in that
+   case rather than lying about a control that would do nothing — see
+   `hooks/useMotion.tsx` and `pages/settings/sections/AppearanceSection.tsx`.
+
+   WHAT THIS RULE CANNOT REACH (#2622): motion driven from JS declares no
+   property for it to null. The two faction vote skins that animate from a
+   `setInterval` read `useMotionTick` in `hooks/useMotion.tsx` instead, which
+   is fed by the same setting that paints the attribute this rule selects on.
+   ══════════════════════════════════════════════════════════════ */
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. Both
+   `@keyframes ticker-roll` and `@keyframes wz-blink` moved to
+   `src/motion.ornament.css` in #2104, with `.ticker-roll` / `.ticker-live-dot`.
+   They could not go with the rest in #2073 because `ActivityTicker.tsx` named
+   them from an inline `animation:` string, which no consumer analysis can see
+   and no `@media` query can gate — that was the defect, not the deferral.
+   `wz-blink` is still the ONE blink keyframe (#911); it used to have four names
+   — `sg-term-blink`, `sg-blink`, bare `blink` — three of them injected inline by
+   components, bypassing the reduced-motion guard. One keyframe, one guard. */
+
+/* The codex's slow motion — turning astrolabe rings, breathing points — went
+   with the surfaces that used it (#1208). `eph-twinkle` is the survivor and is
+   no longer an Ephemerists keyframe at all: `.coven-moon-dust` is its only
+   consumer, and it carries the name it was written under. Both moved to
+   `src/motion.ornament.css` in #2073, off the critical path. */
+
+/* Players page faction race (#1855) — each lane's bar grows from the left, one
+   after another. Class-gated on reduced-motion like every other motion here, so
+   a stilled page still shows the full-width bar: the WIDTH carries the number,
+   the animation only reveals it. The per-lane stagger arrives as an inline
+   custom property. */
+@keyframes wz-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .wz-race-fill {
+    animation: wz-fill 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--wz-fill-delay, 0s);
+  }
+}
+
+/* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
+   wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
+   so the widget never writes `animation:` inline and bypass the gate; the dot
+   still fills with the rainbow when stilled, only the bob stops. Per-dot
+   duration/delay/travel arrive as inline custom properties.
+
+   IT IS TRANSFORM-ONLY AND MUST STAY SO: this is a vote READOUT, so a dot that
+   faded would read as a value going out. The Singularity ASCII face borrowed
+   this keyframe until #2071, which is why the fade the design asked for could
+   not simply be added here — the face got its own `sg-float` instead. Keep it
+   this way, and mint a bespoke keyframe for any ornament that needs more. */
+@keyframes spec-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--spec-bounce, -3px)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .spectrum-dot--reached {
+    animation: spec-rise var(--spec-dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--spec-delay, 0s);
+  }
+}
+
+/* Singularity terminal — phosphor glow breathes, sigil turns. (#222) */
+@keyframes sg-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.04); } }
+@keyframes sg-rotate { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .sg-pulse { animation: sg-pulse 2.6s ease-in-out infinite; }
+  .sg-rotate { animation: sg-rotate 120s linear infinite; }
+}
+
+/* Singularity system slab (#842) — the praxis card's two terminal motions: a
+   cyan SCANLINE that sweeps down the slab every 5s, and the block CURSOR
+   trailing the computed total. Both are class-gated on reduced-motion, so the
+   slab stills into a legible screenshot: the sweep parks off-slab and the
+   cursor stops blinking but stays drawn (it is punctuation on the number, not
+   an indicator, so it must not vanish). The sweep element is a scrim, not
+   content — the card gives it `position:absolute; pointer-events:none`.
+
+   THE TWO ANIMATIONS MOVED to `src/motion.ornament.css` (#2073). What stays is
+   the sweep's resting offset, because that is layout: it is what parks the band
+   off-slab for a reader who gets neither the motion sheet nor `no-preference`. */
+.sg-scan { top: -24%; }
+
+/* The task card's ASCII face drifts beside the sign-up key (#2036) — and since
+   #2071 it drifts on its OWN keyframe, `sg-float` in `src/motion.ornament.css`.
+   It borrowed `spec-rise` (the vote readout's bob), which is transform-only, so
+   the design's fade was dropped silently by the reuse; opacity could not be
+   added to the shared keyframe without fading every reached spectrum dot.
+
+   WHAT STAYS HERE IS THE RESTING FRAME, because opacity is paint. 0.45 is
+   `sg-float`'s own 0%/100% value, so stilled — or with the deferred motion sheet
+   never received — the robot is parked and drawn at the drift's rest rather than
+   at a brightness it never reaches in motion. It is ornament, not an indicator,
+   and it must not vanish; same reading as `.eph-rune` below. */
+.sg-ascii { opacity: 0.45; }
+
+/* ══ Praxis-card redesign vote widgets (#821) ══
+   Every animation is gated on reduced-motion and driven by a class, never an
+   inline `animation:` (the widgets would bypass the gate otherwise). Meaning is
+   carried by the fill/selection, not the motion — the widgets read correctly
+   stilled.
+
+   THAT LAST SENTENCE IS WHY THIS SET WENT FIRST in #2073: every widget's motion
+   is now in `src/motion.ornament.css`, off the critical path, and only the
+   RESTING form is below — the burst's gradient and mask, the shock and sheen at
+   `opacity: 0`, the sweep's clipping track, the confetti hidden. Add a resting
+   declaration here and its animation there; do not put the two in one file. */
+
+/* Coven — the moon-phase plate's sparkles and dust are in motion.ornament.css. */
+
+/* Coven — THE CAULDRON (#2019), the score stamp's total mark and, per the owner
+   ruling, the vessel the Coven task card mounts too. Two motions, both drawn by
+   the design as inline `animation:` and both classes here so the reduced-motion
+   gate can reach them: the pot's seal-pink glow breathes, and three bubbles rise
+   off the brew. Stilled, the pot keeps its glow-less outline and all three
+   bubbles stay drawn at their static opacity — they are ornament, so nothing is
+   carried by the motion.
+
+   The stagger reuses `--tw-delay`, the same real app variable the moon plate's
+   dust and sparkles take theirs from (#1318).
+
+   The glow RADIUS is a custom property rather than a pair of literals, because
+   the vessel is size-parameterised: the component derives it from `size`, so an
+   84px cauldron on a task card wears a proportional halo instead of the 158px
+   one's. The bubbles need no such help — they are geometry inside the viewBox,
+   and a CSS `translateY` on an SVG element is in user-space units. */
+@keyframes cvn-cauldron-glow {
+  0%, 100% { filter: drop-shadow(0 0 calc(var(--cvn-cauldron-glow, 8px) * 0.25) var(--faction-coven-slip-deep)); }
+  50% { filter: drop-shadow(0 0 var(--cvn-cauldron-glow, 8px) var(--faction-coven-slip-deep)); }
+}
+@keyframes cvn-cauldron-bub {
+  0% { opacity: 0; transform: translateY(7px) scale(0.7); }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.05); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-cauldron-sigil { animation: cvn-cauldron-glow 3.4s ease-in-out infinite; }
+  .cvn-cauldron-bub {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: cvn-cauldron-bub 3.2s ease-in-out infinite;
+    animation-delay: var(--tw-delay, 0s);
+  }
+}
+
+/* Ephemerists — THE METALS LADDER (#1207), which replaced the constellation
+   plate and took `.eph-vote-star` / `.eph-vote-sparkle` with it.
+
+   Three marks a disc makes once its rank is reached: the shock ring leaving it,
+   the sheen wiping across it, and the seven planetary metals orbiting rank 5.
+   The design writes them as inline `animation:` strings and stills them under
+   `reduce`; here each is a class, opt-in under `no-preference`, so the BASE
+   state is the stilled one — a reduced-motion reader still gets a fully lit
+   ladder. Phase and cycle arrive per element as `--metal-delay` / `--metal-dur`.
+
+   THE BURST IS GONE (#2142), and with it the last of this block's paint.
+   `.eph-metal-burst` was a conic ring pulsing around EVERY reached disc at that
+   metal's spoke pitch — the readout #1638 built to retire the struck numeral.
+   The owner struck it in turn: five haloed discs at once is fog, and 60° against
+   45° is not a distinction anyone reads at 44px. Rank is the count of lit discs.
+
+   The pitch itself did not go. It is now the tick pitch of the CAST DIAL, which
+   one disc throws once, at the moment it is struck — and that whole ornament
+   lives in `src/motion.ornament.css` with its paint INLINE on the elements, so
+   none of it is on this sheet at all. Nothing here draws a cast.
+
+   `@keyframes eph-metal-ray` and `.eph-metal-rail` / `eph-metal-current` were
+   deleted with the fan and the dashed track (#1638). The keyframes and the
+   gated rules that run them are in `src/motion.ornament.css` (#2073); the two
+   resting states below stayed, because they are what a reader sees without
+   them. */
+/* Pure motion: a shock ring and a wipe have no resting form to show. */
+.eph-metal-shock, .eph-metal-sheen { opacity: 0; }
+.eph-metal-filing { opacity: 0.55; }
+
+/* THE LADDER'S SPACING ANSWERS THE PLATE, NOT THE VIEWPORT (#2236).
+   The five hit boxes are 44px (50 at rank 5) and may never shrink — §6, and
+   the reason the reported ellipses were a bug rather than a squeeze. So the
+   thing that gives way in a narrow plate is the spacing, and the question is
+   how narrow THIS plate is: the same widget sits on a 402px phone and inside a
+   praxis card that is a `flex: 1 1 394px` cell with a 280px floor, so a
+   viewport media query would answer for one and lie about the other. Hence the
+   container: `--space-xl` is #1633's burst clearance (re-derived by #1638 —
+   12px of overhang each side, 24 rim to rim) and it holds wherever the row's
+   own intrinsic width fits, which is 226 + 4×24 + 2×24 = 370px, hence the
+   372 below. Narrower again and the row WRAPS rather than letting `stepClip`
+   shave a disc: five circles on two lines beats five ellipses on one, and
+   5 × 44 simply does not fit a 320px phone.
+   The BLOCK padding is not on the query: `--space-lg` is what clears the cast
+   burst vertically, and nothing above or below the row competes for it. Neither
+   is the ROW gap — that is what separates a wrapped ladder's two lines.
+
+   ── #2315: THE YIELD IS A RAMP, AND IT WAS A CLIFF ──
+
+   #2236 shipped ONE rung, the bottom one: under 372px the clearance dropped
+   straight to `--space-xs` / `--space-sm`, however much room the plate actually
+   had. Reported back as "the voting icons are squished", and the discs were
+   never the problem — nothing on either sheet carries `flex-shrink` or an
+   `!important`, so the inline `flex-shrink: 0` cannot be beaten and no disc has
+   ever gone oval since. What the cliff did was bunch them: a 375px phone leaves
+   the plate about 291px, the discs need 226, and there was room for ~11px
+   between them — the row drew 4 and `justify-content: center` piled the other
+   33 up at the two ends.
+
+   So the clearance is what the plate can actually pay. The row has to seat five
+   discs (`4 × 44 + 50 = 226`, and `EphemeristsVote` exports that figure so its
+   test can hold this transcription to it), four gaps and two end pads, which is
+   `226 + 6g`; the plate's own inline size is `100cqi`, so `g = (100cqi − 226) / 6`
+   spends the room exactly and nothing is left over to pile up. Gap and pad are
+   ONE figure because a disc at the end of the row wants the same air against
+   the plate's edge as against its neighbour.
+
+   Clamped to the same two rungs the cliff jumped between, and the CEILING is
+   the interesting end: at `--space-xl` the expression solves to 370px, which is
+   the un-queried rule's own intrinsic width, so the ramp meets it exactly and
+   the 372 threshold stops being a step at all. At the floor it solves to 250px,
+   so the row seats all five down to a plate 8px narrower than the old bottom
+   rung managed, and only then wraps.
+
+   NOT MEASURED IN A BROWSER, and the PR says so: this is arithmetic over the
+   sheet, and the render is still owed an eyeballing. */
+.eph-vote-plate { container-type: inline-size; }
+.eph-metal-row { gap: var(--space-lg) var(--space-xl); padding: var(--space-lg) var(--space-xl); }
+@container (width < 372px) {
+  .eph-metal-row {
+    --eph-metal-air: clamp(var(--space-xs), (100cqi - 226px) / 6, var(--space-xl));
+    column-gap: var(--eph-metal-air);
+    padding-inline: var(--eph-metal-air);
+  }
+}
+
+/* S.N.I.D.E. — the amp/EQ meter's party VU is in motion.ornament.css (#2073).
+   The segments' lit HEIGHT carries the rank and is set by the widget. */
+
+/* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes
+   wiggle, and a rainbow sweep travels behind the whole row (#840). The sweep is
+   pure decoration layered UNDER the balloons — it carries no rank, so stilling
+   it costs nothing; the same is true of the rank-5 confetti, which is hidden
+   entirely at rest rather than frozen mid-fall.
+
+   The five keyframes and the gated rules moved to `src/motion.ornament.css`
+   (#2073), INCLUDING `.wow-balloon-sweep::after`, which carries paint: that
+   pseudo-element exists only inside the gate, so it is motion scaffolding with
+   no resting form to leave behind. The two rules below have resting forms and
+   therefore stay. */
+/* The sweep's TRACK clips at all times — the travelling band must never escape
+   the plate — so only the band itself lives behind the motion gate. */
+.wow-balloon-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Confetti is opacity:0 at rest; the keyframes are what reveal it. */
+.wow-balloon-confetti {
+  position: absolute;
+  width: 5px;
+  height: 7px;
+  border-radius: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* WOW — THE CREST (#897). Four motions, all pure ornament: the whole seal sways
+   on its ribbon, the noodle sword flops, the unicorn bobs, and the sparkles (plus
+   the horn glint) twinkle. None of them carries state, so stilling every one of
+   them costs no information — which is why they are gated wholesale below rather
+   than frozen mid-frame. The kit spells its own reduced-motion block out at the
+   end of the faction-kit <head>; this is the house inversion of it (opt IN on
+   no-preference), same as the balloon plate above.
+
+   `.wow-seal` keeps the kit's class name: it is the wrapper name every WOW
+   surface in the kit puts round the crest, so a downstream slice reading the kit
+   finds the name it expects. `WowSigil` carries it itself, so the sway comes for
+   free everywhere the crest lands. */
+@keyframes wow-seal-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@keyframes wow-sword-wobble { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
+@keyframes wow-crest-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes wow-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-seal { animation: wow-seal-sway 5s ease-in-out infinite; }
+  /* transform-box:fill-box makes the SVG group's own bounding box the origin
+     frame; without it the rotation pivots on the viewport and the sword swings
+     off the coin. The kit's own origin (16px 148px) is the hilt. */
+  .wow-crest-sword { transform-box: fill-box; transform-origin: 16px 148px; animation: wow-sword-wobble 1.9s ease-in-out infinite; }
+  .wow-crest-unicorn { transform-box: fill-box; transform-origin: center; animation: wow-crest-bob 3.4s ease-in-out infinite; }
+  .wow-crest-twinkle { transform-box: fill-box; transform-origin: center; animation: wow-twinkle 2.2s ease-in-out infinite; animation-delay: var(--wow-twinkle-delay, 0s); }
+  .wow-crest-glint { transform-box: fill-box; transform-origin: center; animation: wow-twinkle 1.6s ease-in-out infinite; }
+}
+
+/* Everymen — the gearworks' turn and sparks are in motion.ornament.css (#2073).
+   Stilled, the gears keep their heat/glow (that carries the rank) and the sparks
+   stay hidden (opacity:0 inline), so nothing here has a resting form to hold. */
+
+/* Everymen — the HELP WANTED bill's fists-and-lightning at the sign-up (#2034).
+   The discharge MOVES since #2071: `evm-crackle` on the arcs and `evm-flicker`
+   on the bolt, both in `src/motion.ornament.css` off the critical path, with the
+   per-arc stagger arriving as an inline `animation-delay`.
+
+   THIS LINE IS THE WHOLE REASON THE STILLED MARK IS STILL A DISCHARGE.
+   `evm-crackle` opens at `opacity: 0`, so a reduced-motion reader — or anyone
+   who never receives the deferred sheet — would otherwise get a fist and a bolt
+   with no lightning, and the mark would lose the thing it is a picture of. 0.9
+   is the crackle's own 13% peak, so the rest state is a frame somebody drew,
+   the same reading as `.eph-rune` below and Coven's stilled cat. The bolt
+   needs no counterpart: `evm-flicker` never leaves full strength. */
+.evm-arc { opacity: 0.9; }
+
+/* `.epg-glyph` and `@keyframes epg-breathe` stood here — the Valley plate's
+   incised glyph registers (#1023), a pair of rows breathing behind the
+   masthead. #2210 took them off the masthead and the class outlived the thing
+   it was named for, paced by the praxis card's inline `DRIFT` row; #2312
+   deleted that row as a third transcription of the rune strip, so nothing wears
+   the class any more and it goes with it. The `--epg-op` / `--epg-delay` NAMES
+   live on: `.eph-rune` below carries the same peak and phase, which is one
+   vocabulary for one motif rather than a leftover. */
+
+/* Ephemerists — THE NOTATION BAND (#2067's rune strip, absorbed by #2230). One
+   row of mathematical marks: the masthead's last line, the pair that brackets
+   the plate's CTA, and the praxis card's byline rule. The only mount is
+   `components/factionMarks/EphemeristsNotationBand.tsx`; nothing else wears
+   these, and there is no second drawing to keep in step with — that is what
+   #2230 was for.
+
+   WHAT IS LEFT HERE IS WHAT A STYLESHEET IS FOR, and it is less than it was.
+   The strip's 9/10/11px `nth-child` size cycle is gone: the component's draw
+   carries a size per mark (11/13/15/17, the masthead's own cycle since #2143),
+   so the row's type is seeded rather than positional and no selector has to say
+   it. `flex: auto` went with it — the row is `justify-content: space-between`
+   at a MEASURED count now, so the marks sit at their natural widths and the air
+   between them is the constant. The box itself (flex, width, min-height, the
+   brass rules on the band) is inline in the component beside the measurement
+   that decides it.
+
+   THE THREE OFFSETS STAY, because they are raw lengths off the ramp and this is
+   where those belong. `band` — the masthead — takes none: its lead is a token
+   (`--space-xs`) and rides with the rest of its box.
+
+   MOTION IS OPT-IN, and note the inversion against the design for the same
+   reason `.evm-arc` above states it. The base state IS the stilled state —
+   every mark showing its FIRST frame at its own peak — and both animations are
+   added under `no-preference`, from the deferred sheet (#2073). Written the
+   design's way round (the shimmer's trough as the base, the animation always on)
+   a reduced-motion reader gets a row that is not there — #2725 dropped that
+   trough to 0 so the turn's cut lands in the dark. Nothing pins the pre-delay state
+   either: a mark holds at its peak until its own cycle starts, which is legible
+   from first paint — and legible is all it owes, since a viewer who never
+   receives `motion.ornament.css` lands in exactly the reduced-motion frame.
+   `--epg-op` (peak) and `--epg-delay` (phase) arrive inline: they are numbers
+   per mark, which a stylesheet has nowhere to put.
+
+   BOTH ANIMATIONS LIVE IN `motion.ornament.css` (#2146 moved the shimmer there
+   with the turn). The resting form is here, the motion is off the critical path,
+   and the split is the sheet's own rule: a rule with an ungated twin is split
+   and only the animation travels. #2230 changed neither — it changed who wears
+   them, which is now the masthead band as well.
+
+   `divider` IS THE THIRD OFFSET. The praxis card's byline rule is not a CTA and
+   has nothing to bracket, so it gets its own air rather than `top`'s -7px lift;
+   the value is also what keeps its seed off the composer's, which already draws
+   `praxis:${id}` at `top`.
+
+   THE DESIGN'S `user-select: none` IS DROPPED, and it is a budget decision. It
+   would ship prefixed (`-webkit-user-select` beside it) into the one stylesheet
+   that blocks first paint, and what it buys is that a drag-select across the card
+   does not pick up a row of mathematical symbols — a copy-paste nicety on a row
+   that is already `aria-hidden`. §6's lazy-ornament rule says the blocking sheet
+   is the wrong place to spend, and this is the cheapest thing here to not spend
+   it on. ponytail: if the junk-in-clipboard ever matters, the upgrade is one
+   `user-select: none` here, ~20 gzipped bytes, not a rethink. */
+[data-eph-runes="top"] { margin-top: -7px; }
+[data-eph-runes="bottom"] { margin-bottom: 18px; }
+[data-eph-runes="divider"] { margin-block: var(--space-sm); }
+.eph-rune {
+  /* A GRID, so the mark's two frames stack in one cell (#2146). The cell is
+     therefore the wider of the two by layout — no measuring pass, nothing to go
+     stale when a font swaps in, and the row cannot reflow as it turns. Same
+     mechanism the card's `Turning` label uses for its five scripts. */
+  display: grid;
+  text-align: center;
+  opacity: var(--epg-op, 0.8);
+}
+/* The RESTING frame: frame one shown, frame two hidden. This is what a
+   reduced-motion reader sees and what anyone sees before the deferred sheet
+   arrives, so it must be a whole legible row on its own. */
+.eph-rune > span { grid-area: 1 / 1; }
+.eph-rune > span + span { opacity: 0; }
+
+/* ══════════════════════════════════════════════════════════════
+   THE PLATE CTA — one control, and it INVERTS (#2146)
+
+   Blue ground carrying a brass label by day, brass ground carrying
+   the blue after dark. Both values are the compass blue and the
+   mark trading places, 7.59:1 either way, so the ground and the
+   ink flip themselves through their own tokens (#2141) and nothing
+   here has to know which theme it is in.
+
+   THE ENCLOSURE IS WHY THIS IS A CLASS AT ALL. It changes WIDTH
+   between the cascades — 2px of the rule brass by day, 1px of the
+   mark brass after dark — and a width is not a colour, so no token
+   can carry it and an inline style would need a `dark ? a : b`
+   ternary, which is the one thing §3 forbids outright.
+
+   Keeping the light 2px in dark was rejected on measurement, and
+   so was keeping the blue: `#12151f` on the `#171a26` plate is
+   1.10:1, so the fill would do nothing and the rule would end up
+   carrying the primary action alone — with the rune strips sitting
+   11px above and below it, that outline stops reading as an
+   enclosure at all.
+
+   FIVE SURFACES WEAR IT and none of them restates it: the task
+   card, the task detail, the composer's submit band, the faction
+   page's join pair and the phone's field desk. An inline
+   `background`, `color` or `border` at any of those beats this
+   rule and pins the light half in BOTH themes on that surface
+   alone, which is exactly the drift #2146 exists to end.
+
+   The composer's band takes the ground and the ink and keeps its
+   own 1.5px top rule: it is full-bleed by #1828 and has no
+   enclosure to be given one.
+   ══════════════════════════════════════════════════════════════ */
+.eph-cta {
+  background: var(--faction-ephemerists-plate-cta-bg);
+  color: var(--faction-ephemerists-plate-cta-ink);
+  border: 2px solid var(--faction-ephemerists-plate-brass-rule);
+}
+[data-theme="dark"] .eph-cta {
+  border: 1px solid var(--faction-ephemerists-plate-brass);
+}
+
+/* Ephemerists — the sheet a page-sized Valley plate is printed on (task detail
+   v2, #1032). The archetype's own content column wears it: this whole page IS
+   the plate, so the papyrus is the column's surface, not a tint under it.
+
+   NOT a fixed full-bleed backdrop, and that is the point. #1056 pulled that
+   pattern off the na build after live QA, and the layout says why: the routed
+   page sits inside a `position: relative; z-index: 5` wrapper, so a fixed
+   `z-index: 0` child of it is a POSITIONED descendant of that stacking context
+   and paints over the non-positioned sidebar beside it.
+
+   Deliberately NOT `.eph-backdrop` either. That was the illuminated-codex ground
+   until #1208 repainted it onto `-plate-page`; the two are now the same colour
+   and still not the same thing — the backdrop is FIXED and belongs to the
+   faction page and the profile, this is the column's own surface.
+
+   The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
+   inks this ground carries were walked down to a measured margin over the FLAT
+   page value, and a darkening vignette eats that margin exactly where the page
+   runs longest: `-nile` falls from 4.70 to 4.29 under a 5% black veil. That is
+   how a decorative gradient fails AA without anything reporting it.
+
+   THE STOCK IS A LONGHAND (#1636). It was a `background` shorthand carrying the
+   gradient and the token together, with `transition: background` over the top —
+   a declaration that resets four other longhands and animates a list only one
+   member of which interpolates. `.wow-detail-field` and `.ua-praxis-leaf` had
+   already settled the shape; this is the third ground to take it.
+
+   ONE RULE, NOT TWO. The dark twin existed to swap the bloom's gold for a
+   dimmer one over a night plate. Every token named below is theme-aware in its
+   own declaration since #2141, so one rule still says both halves, and the LINK
+   INKS the column hands down (#1636) are declared here for the same reason a
+   faction frame sets `--label-ink` once on its own root. THE LINK INK IS
+   `-plate-brass-light` (#2141 §4): nile is deleted, and a link is text that
+   owes 4.5:1 — 5.09:1 on the vellum sheet by day, 9.68:1 on the plate by
+   night — which `-brass-rule`'s 3.58:1 would not have paid.
+
+   AND THE LABEL INK IS NOW ONE OF THEM (#1754). The seam was declared for this
+   sheet and never spent on it: unset, the label tier inherits the global
+   tertiary, which on this column's three night grounds reads 2.15 (page) /
+   2.01 (plate) / 1.86 (panel cell) in light. #1715's lift to AAA made those
+   worse rather than better — they were 3.12 / 2.92 / 2.70 — because lifting a
+   neutral in the LIGHT cascade means darkening it, and this register is night
+   in both. That is not a regression to revert: 2.92:1 was already far under
+   the floor, and the answer the seam exists for is a per-faction ink.
+
+   NOT `-card-muted`, which is the default the seam's own declaration names.
+   The Ephemerists card sheet is the cornice band, so `-card-muted` is
+   `-plate-band-quiet` — an ink measured on the compass blue. This column's
+   grounds are the page, the plate and the panel cell, and `-plate-quiet` is the
+   sibling minted for exactly those three (#1173), clearing them at 6.67 / 7.35
+   / 8.21 in light and 6.38 / 5.98 / 5.52 in dark. It is also what the plate's
+   own quiet prose already reads,
+   so the label tier joins the register rather than adding a fourth warm tone
+   to one sheet. Dark spends ~2.3 points for that (8.33 -> 5.98 on the plate)
+   and stays well over the 4.5 floor; a faction ink is not the most-painted
+   neutral in the repo, which is the surface #1715 argued to AAA.
+
+   NEUTRAL CHROME IS UNAFFECTED: `.card-on-page` pins the seam back to the
+   global (#1606), and ADR-0061 mounts the steward bar and the report card in
+   it. What this DOES repaint is the comment leaves' owner controls and the
+   thread heading, which read the seam bare on `-plate-bg` — i.e. the labels
+   that were sitting at 2.01:1. Measured in `factionContrast.test.ts`; the
+   three pairings it creates were already gated there. */
+.eph-plate-sheet {
+  --label-ink: var(--faction-ephemerists-plate-quiet);
+  --link-ink: var(--faction-ephemerists-plate-brass-light);
+  --link-ink-hover: var(--faction-ephemerists-plate-ink);
+  background-color: var(--faction-ephemerists-plate-page);
+  background-image: radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%);
+  transition: background-color 300ms;
+}
+
+/* `.eph-plate-crown` stood here — the drop-shadow lifting the winged sun disc
+   off the task detail's action panel (#1032). #1634 retired the disc across the
+   kit ("the sigil is the only mark"), so the shadow has nothing left to lift.
+
+   THE GLOSS PANEL (#1634, taking up #1637's ponytail). Every glossed kanji is an
+   `<abbr title>`, and a title is a POINTER affordance: hovering opens the
+   browser's tooltip and focusing opens nothing. `tabIndex={0}` put the glyph in
+   the tab order, which without this rule buys a focus ring around a mark whose
+   expansion the keyboard user still cannot read. The panel is the expansion,
+   drawn from `attr(title)` so it cannot drift from the tooltip beside it.
+
+   `:focus-visible` rather than `:focus`, so a pointer user who clicks a glyph
+   gets the tooltip they were already getting and not two copies of it.
+
+   The panel is theme-INVARIANT because every surface it can appear on is one of
+   the plate register's night grounds (#1627) — the score stamp's cut cell and
+   the masthead's cornice band. `-band` under `-band-ink` is the pairing the
+   masthead's own wordmark already runs at 14.00:1.
+
+   `white-space: nowrap` plus `pointer-events: none` keep it a readout: it never
+   wraps to two lines over the row beneath, and it cannot swallow a click meant
+   for whatever it is covering. */
+.eph-gloss {
+  position: relative;
+}
+.eph-gloss:focus-visible::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--space-xs));
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--faction-ephemerists-plate-brass);
+  background: var(--faction-ephemerists-plate-band);
+  color: var(--faction-ephemerists-plate-band-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Ephemerists — THE SLOW GLOW ON THE CORNICE (praxis detail v2, #1120). A gold
+   bloom drifts along the cavetto band at the head of the record: the one piece
+   of motion on a page whose whole subject is a thing already done.
+
+   All the pigment is here rather than in the archetype, which reserves the layer
+   and nothing else. This needs no `[data-theme="dark"]` twin, though not for the
+   reason it originally gave: the gold token USED to flip in the dark cascade and
+   the bloom followed the band it sat on. Since #1627 the gold does not flip at
+   all — the plate register is theme-invariant — so the same one rule is correct
+   by a shorter argument, and there is nothing here that a cascade could reach.
+
+   Motion is opt-in under `no-preference`, the repo's inversion of the design's
+   `reduce → none`: the BASE state is the stilled one (a bloom at rest, centred),
+   so a reduced-motion reader gets the ornament rather than a blank band. Same
+   ordering as `.eph-rune` above it. */
+@keyframes eph-cornice-glow {
+  0%, 100% { opacity: 0.3; transform: translateX(-9%); }
+  50% { opacity: 0.85; transform: translateX(9%); }
+}
+.eph-cornice-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.45;
+  background: radial-gradient(
+    38% 150% at 50% 100%,
+    color-mix(in srgb, var(--faction-ephemerists-plate-gold) 45%, transparent),
+    transparent 72%
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .eph-cornice-glow {
+    animation: eph-cornice-glow 16s ease-in-out infinite;
+  }
+}
+
+/* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
+   bead at each crossing, tiled horizontally. It lives here rather than in the
+   card because a data-URI SVG is a SEPARATE DOCUMENT — `var(--…)` inside one
+   never resolves, so the only way to keep the two pigments out of the TSX is to
+   let index.css own the whole mark, dark override included. */
+.cvn-braid {
+  display: block;
+  height: 12px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23c9327a' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4c430' opacity='0.9'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .cvn-braid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23f9a8d4' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4d472' opacity='0.9'/%3E%3C/svg%3E");
+}
+
+/* S.N.I.D.E. — the ransom clipping's CENSOR RULE (#1023): a cut-up strip of
+   redaction blocks, five in photocopier ink and two inked in colour, tiled
+   horizontally. Here rather than in the card for the reason `.cvn-braid` states
+   one block up — a data-URI SVG is a SEPARATE DOCUMENT, so `var(--…)` inside one
+   never resolves, and letting index.css own the whole mark is the only way to
+   keep the pigments out of the TSX and still flip them for dark. */
+.snd-censor {
+  display: block;
+  height: 10px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%2314110b'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%236fae00'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .snd-censor {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%23f4f1e8'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%238ed11f'/%3E%3C/svg%3E");
+}
+
+/* Coven — the spell slip's CAT watermark turns, once every two minutes (#1023).
+   The design injected this keyframe from the component; #911 retired that whole
+   shape repo-wide, so it lives here and the card carries only the class. Motion
+   is opt-in under `no-preference`, the repo's inverted form of the design's
+   `reduce → none`: stilled, the watermark is simply a static cat, which is what
+   it is at any single frame anyway. The keyframe and the turn moved to
+   `src/motion.ornament.css` (#2073); the resting frame below stays, inert
+   without them.
+
+   It said "pentagram" here until #2746. The drawing became a cat at #2041 and
+   the rename never reached the comments, which is the same failure #2726 hit in
+   the TSX — a retired mark leaves false prose behind it, and the sweep that
+   retires one has to grep the prose too. `.cvn-wheel` is also the composer
+   masthead's mark now, not only a corner watermark. */
+.cvn-wheel { transform-origin: 50% 50%; }
+
+/* THE SPECTRUM FRAME (#2404) — the one frame na and Albescent share.
+ *
+ * The owner's ruling: "NA has a border at least (a rainbow one) and that border
+ * probably has a radius. Albescent should be the same, but the rainbow in the
+ * borders for all albescent things should slowly move." An unaffiliated rail
+ * declares no `--rail-*` local at all (#2361's promise, and it holds), so its
+ * frame fell all the way through to `--color-border` — `rgba(0, 0, 0, 0.07)`, a
+ * 7% black hairline, effectively invisible.
+ *
+ * A MASKED RING, NOT A BORDER, and not `border-image`. `border-image` does not
+ * clip to `border-radius`, which is the usual trap and the reason there is not
+ * one occurrence of it in this file. The `mask-composite` idiom draws the
+ * gradient over the whole box and punches the middle out, so there is no solid
+ * border colour anywhere in it and nothing needs a `border-color` fallback. It
+ * is the same technique the five Albescent edges use — since #2407 it is
+ * literally the same rule — for the same reason they use it: the sheets these
+ * dress are components' inline styles, not markup this file can reach
+ * behind. The other radius-safe ring here — `.alb-detail-ring`'s pseudo-rim with
+ * a real `-face` child punched over it — needs a face element to punch WITH, and
+ * a rail panel full of copy has none.
+ *
+ * `::before` RATHER THAN A CHILD SPAN, which is where `.alb-detail-ring`'s
+ * docblock still applies: it records that the rim is a pseudo-element because
+ * spinning the element itself would rotate the content inside it, and the
+ * content has to stay readable. The same holds around a panel of text — so the
+ * drift is a background slide on this pseudo-element, and nothing the reader is
+ * reading moves at all.
+ *
+ * THE LOOP CUT, at the tile size `alb-drift` was written for.
+ * `--faction-default-rainbow-loop` repeats its first colour at 100%, so a frame
+ * that wraps a corner never carries a red-meets-magenta seam past the eye. The
+ * 220px tile is a LENGTH, not a percentage, so a narrow panel and a wide one
+ * drift at the same apparent speed rather than the wide one crawling.
+ *
+ * `border-radius: inherit` rather than a number: the ring takes whatever corner
+ * its own element has. On the rail that is `--faction-default-card-radius`
+ * (10px, the documented Default/Albescent rung) for an unaffiliated viewer and
+ * the member's own `--rail-radius` otherwise — one expression, no second radius
+ * minted. It is the DEFAULT for the whole list below, and #2407 could only take
+ * it on two of the five card edges: `inherit` reads the DIRECT parent, and only
+ * `.alb-praxis-edge` and `.alb-profile-edge` are mounted straight inside the
+ * rounded sheet they trace (18px and 16px, both inline at the mount). The other
+ * three hang off an unrounded wrapper — `.alb-task`, `.alb-detail`, `.alb-feed`
+ * — where `inherit` would resolve to 0 and square the ring off, so those keep
+ * the literal radius they already carried, in the rules further down. (#1942
+ * moved `.alb-feed-edge` inside the card it traces; it keeps its literal anyway,
+ * because it is offset back out to the BORDER box and `inherit` would hand it
+ * the padding box's corner. See its own rule.)
+ *
+ * SUPPRESSED, NOT UNMOUNTED, FOR A MEMBER. `--spectrum-frame-image` is `none`
+ * wherever a faction kit is dressing the surface (`railFaceVars` declares it),
+ * so the ring paints nothing and that member's own hairline stands. A rainbow
+ * over a faction kit would be a colour leak.
+ *
+ * DECORATIVE, so it owes no contrast ratio — and the panel's own 1px hairline
+ * stays underneath it, so a sheet whose spectrum reads faint against the page
+ * still reads as a panel. Both cascades: the stops flip with the theme on their
+ * own, so no dark half is written here.
+ *
+ * THE DRIFT IS NOT HERE. It is `src/motion.ornament.css`, delivered past first
+ * paint. Colour and layout may never defer; motion is exactly what that sheet
+ * is for. */
+.spectrum-frame {
+  /* A floor, not an override — an inline `position` at the mount still wins.
+     Both mounts today set `relative` themselves; without this a third that
+     forgot would send the ring off to the nearest positioned ancestor, which is
+     a ring drawn around the wrong element rather than a missing one. */
+  position: relative;
+}
+/* ONE RING, NINE MOUNTS (#2407; the seventh is #2504's plate, the eighth
+   #2505's composer, the ninth #2519's field-desk identity card — which took
+   this shape when the desk's own hairline stopped being its carrier).
+ *
+ * The five `.alb-*-edge` spans below were five hand-written copies of exactly
+ * this device: the same `mask … exclude` idiom, the same tiling loop cut, the
+ * same `pointer-events: none` overlay — differing only in width, tile, opacity
+ * and corner. They join the selector list and each states its own four
+ * differences in its own rule further down the sheet; later source order at
+ * equal specificity, so every one of them paints the pixels it painted before.
+ * This is a byte reclaim, not a redesign — nothing here is allowed to move.
+ *
+ * The defaults are the CHEAPEST cover, not a claim about which mount is
+ * canonical: `padding: 1px` and `opacity: 0.6` are the rail's and the feed
+ * card's, so those two say nothing, and `background-size: 300% 100%` is the
+ * four card edges', so only the rail (a LENGTH tile, below) and the profile
+ * band (200%) restate it.
+ *
+ * `.spectrum-frame::before` sits LAST in the list on purpose. It is the one
+ * member whose whole rule the tests look up by name, and the `ruleBodies`
+ * helper in `utils/__tests__/cssVars.ts` matches a selector only where nothing
+ * follows it before the brace — so a trailing position is what keeps it
+ * findable while the five element selectors resolve to their own rules.
+ *
+ * THE DEFAULTS ARE FOR HAIRLINES, NOT FOR CARRIERS, and #2519 is the issue
+ * that had to say so. `.alb-composer-edge` (#2505) and `.alb-plate-edge`
+ * (#2504) joined and stated nothing of their own, so each shipped as a 1px ring
+ * at 0.6 on a surface the design canvas draws carrying a 3px border at full
+ * strength. `.alb-plate-edge` now restates the carrier's two values in the
+ * block further down that `.alb-task-edge` has always owned, together with
+ * `.alb-desk-edge`, the ninth mount (#2519). What it still takes from here is
+ * the geometry: the mask, the loop-cut ramp, the 300% tile, and
+ * `border-radius: inherit`, which reads each mount's own corner — the plate's
+ * `--faction-default-card-radius`, the desk card's `--radius-xl`.
+ *
+ * `.alb-composer-edge` LEFT BOTH LISTS AT #2553, and widening it here was not
+ * what broke it. The composer sheet already carried a 3px na spectrum frame —
+ * #2520 gave it a `3px solid transparent` border with the ramp painted into the
+ * border box — so this ring was the SECOND 3px frame on that sheet, sitting one
+ * frame inside the first, and #2519 only made the pair symmetrical. It could
+ * not be moved onto na's frame either: the ornament must live INSIDE the sheet
+ * (#1028's `overflow: hidden` is what stops a composer ornament reaching the
+ * viewport), and that clip resolves at the PADDING box, so no descendant can
+ * reach the border a covering ring would need. na's frame is the carrier and it
+ * stands still — ADR-0083 §3a's frame rule, with this exact clip named as one
+ * of its three reasons. */
+.alb-task-edge,
+.alb-praxis-card-edge,
+.alb-detail-edge,
+.alb-praxis-edge,
+.alb-feed-edge,
+.alb-profile-edge,
+.alb-plate-edge,
+.alb-desk-edge,
+.alb-comment-edge,
+.spectrum-frame::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  background-image: var(--spectrum-frame-image, var(--faction-default-rainbow-loop));
+  background-size: 300% 100%;
+  opacity: 0.6;
+  /* The TRACK for the travelling child (#2498). Five of the six mounts grow a
+     `::before` inside the reduced-motion gate in `motion.ornament.css`, several
+     times this box wide, and slide it by transform instead of walking this
+     background. Border width is 0 here, so `overflow` clips to the same rounded
+     box the mask does — nothing that stands still moves by one pixel, and with
+     the deferred sheet absent there is no child to clip. */
+  overflow: hidden;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+/* The rail's own three. A pseudo-element needs `content` to exist at all; the
+   five spans are real elements and must not be given it. `z-index: 1` lifts it
+   over the panel's copy — the four card edges declare their own (1, 2, 2, 1)
+   and `.alb-profile-edge` deliberately declares none, so it cannot be shared.
+   And the 220px tile is the LENGTH cut this ring was written for, so a narrow
+   panel and a wide one drift at the same apparent speed. */
+.spectrum-frame::before {
+  content: "";
+  z-index: 1;
+  background-size: 220px 100%;
+}
+
+/* ── `.spectrum-frame`'s TWO SIBLINGS (#2497, epic #2496) ──
+   The na spectrum shows up in three geometries and `.spectrum-frame` above only
+   ever named one of them, the ring. The other two were unclassed inline styles
+   at seventeen mounts across the ten `Default*` files Albescent wears, which is
+   why the design canvas reached for a DOM WALK to animate them: with no selector
+   to hang a rule on, there was nothing else to reach for. These two classes are
+   that selector, and #2500 is what will animate them.
+
+   • `.spectrum-rule` — the LINEAR cut: bands, hairlines, dividers, the sheet-head
+     stripe. `--faction-default-rainbow`, the 90deg seven-stop ramp.
+   • `.spectrum-dial` — the CONIC cut: the points ring and the score total's
+     annulus. `--faction-default-rainbow-conic`, the smooth wheel, which is what a
+     ring needs and what a linear ramp reads as mud on (see `factionFill`'s
+     shape note — the spectrum comes cut for its geometry).
+
+   EACH CARRIES EXACTLY THE PAINT ITS MOUNT HAD INLINE AND NOTHING ELSE. Height,
+   opacity, radius and position stay at the call site: those are per-mount
+   GEOMETRY (the profile band is 3px at 0.7, the task-detail rules are 1–2px at
+   0.55) and folding them in here would repaint seventeen surfaces to save a
+   line. The one thing every mount agreed on is the ramp, so the ramp is the one
+   thing that moved.
+
+   NO `--spectrum-*-image` INDIRECTION, deliberately, where `.spectrum-frame`
+   above has one. That token exists because the RAIL has to suppress its ring for
+   a member (`railFaceVars` declares `--spectrum-frame-image: none`), i.e. it has
+   a live declarer. These two have none: every mount is inside a `Default*` file,
+   which is na's own kit, and a dresser reaches them with `.alb-x .spectrum-rule`
+   — two classes, so it wins on specificity from wherever it is written. Minting
+   an override name with nothing declaring it is scaffolding for later, and
+   `factionTokensDeclared.test.ts` fails it on exactly that ground.
+
+   Both cascades — the stops flip on their own, so no dark half is written here.
+
+   DECORATIVE, so no contrast ratio is owed; every mount is `aria-hidden` chrome
+   beside type that carries its own ink. */
+.spectrum-rule {
+  background-image: var(--faction-default-rainbow);
+}
+.spectrum-dial {
+  background-image: var(--faction-default-rainbow-conic);
+}
+
+/* ── `.spectrum-wash` — THE SPECTRUM AS A CARD GROUND (#2730, ADR-0088 §2) ──
+   A third cut of the same ramp, for the one geometry the two above cannot
+   reach: a faint tint laid across a whole card and faded out before it gets to
+   the other side. The players podium's leader card is the mount — a themed
+   leader has always carried `color-mix(in oklab, var(--faction-x) 10%,
+   transparent)` on a 170deg axis, and the two SPECTRUM slugs (`na` and, through
+   CSS key `default`, Albescent) got no wash at all because `color-mix()` takes
+   colours and this identity is a gradient.
+
+   THE FADE IS A MASK, WHICH IS THE WHOLE REASON THIS IS A CLASS. Everything
+   else on that card is an inline style, and an inline style cannot fade a
+   gradient it did not author: `opacity` on the element would take the name and
+   the points down with it, and a page-coloured veil painted over the ramp would
+   be an opaque rectangle that only looks right for as long as the podium has no
+   background of its own. A pseudo-element carries the opacity and the mask, and
+   the card's copy is untouched by both.
+
+   `z-index: -1` WITH `isolation: isolate`, the pair `.snd-detail-sheet::after`
+   uses further up: the card is positioned, so a positioned ::before would
+   otherwise paint over the copy, and the isolation is what keeps -1 inside the
+   card instead of letting it slide behind whatever ancestor gets a background
+   next.
+
+   THE AXIS IS THE MOUNT'S, the fade is not. `--spectrum-wash-axis` defaults to
+   the desktop column's 170deg and the phone's row hands it 90deg, because a row
+   ~72px tall spends a 170deg ramp before it has crossed the avatar. The 68%
+   stop is shared: it is where both of the themed washes had already faded out
+   (the phone's was 62%, and a 6% difference in where a 10% tint reaches zero is
+   not a distinction worth a second knob).
+
+   DECORATIVE at 10%, so no contrast ratio is owed and none is spent — the card
+   is `--color-text-primary` on the page in both cascades either way. The stops
+   flip with the theme on their own, so no dark half is written here. */
+.spectrum-wash {
+  position: relative;
+  isolation: isolate;
+}
+.spectrum-wash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--faction-default-rainbow);
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(var(--spectrum-wash-axis, 170deg), #000, transparent 68%);
+  mask-image: linear-gradient(var(--spectrum-wash-axis, 170deg), #000, transparent 68%);
+}
+
+/* ── `alb-moves` — THE DRESSER THE TWO CLASSES ABOVE WERE MINTED FOR (#2500,
+   epic #2496 ruling 3). The block above says it in as many words: "a dresser
+   reaches them with `.alb-x .spectrum-rule` … and #2500 is what will animate
+   them." This is that class, and it is the whole of it.
+
+   ONE MARKER, NOT A LIST OF WRAPPERS. `.alb-stamp .spectrum-rule` (#2501) was
+   the first dresser and named one surface; eight more surfaces each carry na
+   spectra of their own, and a nine-selector list restated in four rule bodies is
+   a place for one of them to be forgotten silently. The marker rides on the
+   wrapper each Albescent archetype already draws — the manifest row IS the
+   claim, so a surface that stops being dispatched stops moving by construction.
+   `__tests__/albescentSpectraMove.test.tsx` holds the census — twice over since
+   #2543: once per surface for the marker, and once per MOUNT for the
+   ornament/frame split below, which is the half `:empty` actually reads.
+
+   `:empty` SEPARATES TWO DIFFERENT OBJECTS WEARING ONE CLASS, and it is the one
+   decision in this block. Most `.spectrum-rule` mounts are ORNAMENT — an
+   `aria-hidden` hairline, band, chip or progress fill with no children — and
+   those are what "the na spectrum" means on these surfaces. Four are FRAMES: a
+   padded ramp with an opaque inner sheet sitting in it (the ×mult badge and the
+   action panel on the task detail, the proof panel on the praxis detail, the
+   profile's identity band). Three reasons they stay still, and any one is
+   enough:
+
+     • a travelling child inside a frame paints over the frame's CONTENT, so it
+       needs the content lifted back into the positioned layer — which changes
+       the stacking of a panel holding live controls;
+     • the clip that child needs is `overflow: hidden` on a box whose contents
+       are a gallery, a CTA and a credential card, not an empty 2px band;
+     • the identity band already carries `.alb-profile-edge`, a ring travelling
+       on its own clock. Moving the ramp underneath it would put two spectra at
+       two speeds on one object — the doubling #2519 spent a PR undoing.
+
+   Every one of those four sits on a surface whose own carrier already travels,
+   so no Albescent surface is left standing still by this line.
+
+   WHAT LIVES HERE IS ONLY WHAT A DEFERRED CHILD CANNOT BRING WITH IT, the shape
+   #2498 and #2501 established: the clip, and the containing block the child's
+   `inset` resolves against. The travel and the turn are in
+   `src/motion.ornament.css` behind the reduced-motion gate. Stranded — reduced
+   motion, or that sheet not yet delivered — there is no child at all and the
+   still frame is each mount's own background right above, which is the na
+   surface exactly. Nothing here carries meaning through motion alone.
+
+   A mount that declares its own `position` inline keeps it: an inline style beats
+   a stylesheet, and `absolute` is a containing block too (the score stamp's band
+   is exactly that). Decorative on every mount, so no contrast is owed, and both
+   cascades come from the tokens, so no dark half is written here. */
+.alb-moves .spectrum-rule:empty {
+  position: relative;
+  overflow: hidden;
+}
+.alb-moves .spectrum-dial {
+  position: relative;
+}
+/* The dial's face — the disc holding the numeral, the monogram or the portrait.
+   The rim is a pseudo-element precisely so the face does not turn with it, and an
+   absolutely positioned `::before` paints over a STATIC sibling however late it
+   sits in the DOM. No offsets, so this moves nothing while the rim is absent. */
+.alb-moves .spectrum-dial > * {
+  position: relative;
+}
+
+/* ── THE na PLATE (#2497, epic #2496) ──
+   A kicker, a sheet and a hairline: the three-part block every other faction
+   body already draws for itself (`WowFactionBody`'s `PLATE_FRAME`, the Coven's
+   slip, the Ephemerists' plate) and the `Default` body did not, which is why its
+   own docstring still called its chrome PLACEHOLDER. `DefaultFactionBody`'s four
+   regions wear it.
+
+   `SectionPanel` IS NOT THIS AND MUST NOT BECOME IT. That component is the
+   disclosure half — an id and `hidden={!section.open}` — and seven sibling
+   archetypes mount it, every one of them inside a plate it already draws in its
+   own dress. Putting a sheet on the wrapper would paint a second plate inside
+   each of those seven. The disclosure and the plate are different jobs on
+   different elements, and the plate is the one that was missing.
+
+   THE SHEET IS THE SAME TRIPLE THE CARDS READ, spelled out rather than spread
+   from `factionSheet()` because this is a stylesheet and there is no call site to
+   spread into. The trailing `border-box` on the clip does the same job here as it
+   does there — the frame is a translucent hairline at night and the sheet has to
+   show through it. Epic ruling 9 washes plates as well as cards in dark, and this
+   is the declaration that makes that one override rather than nine.
+
+   THE HAIRLINE IS `.spectrum-rule`, not a token of its own: the plate's rule is
+   the na spectrum, so it is the same ornament the sheet-head band and the
+   section heads are, and it moves when they move. Only its GEOMETRY lives here —
+   the same `flex: 1 1 20%` / 2px / 0.55 cut `DefaultTaskDetail`'s section heads
+   use, so the two pages rule their headings identically instead of by
+   coincidence. */
+.faction-plate {
+  /* The containing block for one optional child: the ornament
+     `DefaultFactionBody` mounts in each region when a dresser hands it one
+     (#2504). na hands it nothing, and this line then costs a plate nothing — a
+     box with no absolutely positioned descendant does not move for it. */
+  position: relative;
+  background-color: var(--faction-default-card-bg);
+  background-image: var(--faction-default-card-sheet);
+  background-blend-mode: var(--faction-default-card-sheet-blend);
+  background-clip: var(--faction-default-card-sheet-clip), border-box;
+  border: 1px solid var(--faction-default-card-line);
+  border-radius: var(--faction-default-card-radius);
+  padding: var(--space-lg) var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+.faction-plate-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.faction-plate-rule {
+  flex: 1 1 20%;
+  min-width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0.55;
+}
+/* ── THE na FRONTISPIECE (#2504, epic #2496 ruling 11) ──
+   The eighth faction hero, and the fall-through: `pickVariant` had no default
+   for `factionHero`, so a faction that registered none got `PageTitle` plus a
+   bordered blurb where the other seven got a plate.
+
+   THE SPECTRUM IS THE BORDER — the same 3px-transparent-frame idiom
+   `DefaultTaskCard` wears, and for the same reason: a gradient cannot be a
+   `border-color`, so the ramp is painted into the BORDER box and the sheet over
+   the padding box on top. The ramp is appended to all three of the sheet's
+   lists, which is what keeps the arity right when Albescent's override grows the
+   sheet from one layer to six (see `--faction-default-card-sheet`'s note).
+
+   STATIC, AND THAT IS THE WHOLE na/Albescent DELTA. Nothing here drifts, blooms
+   or turns; `.alb-faction-hero` below adds all three by overriding tokens and
+   naming one spinning mark, and strips back to exactly this rule.
+
+   THREE COLUMNS: mark | wordmark | counts, with the counts behind a hairline —
+   `auto minmax(0, 1fr) auto`, so a long faction name wraps inside its column
+   instead of pushing the counts off the plate. On a phone the mark and the
+   wordmark stay side by side and the counts drop to a full-width three-column
+   row under a rule of the same weight. A media query rather than
+   `useFormFactor()`: nothing in the component branches on width, so nothing
+   should wait for JS to find that out.
+
+   The two label tiers are the CARD's ink (`--faction-default-card-muted`), not
+   the page's `--label-ink` seam. The sheet under them is a card sheet, and it is
+   the one Albescent repaints — a label reading the page seam would keep the
+   page's ink over a bloomed ground. */
+.faction-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xl);
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  border-radius: var(--faction-default-card-radius);
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+  background-color: var(--faction-default-card-bg);
+  background-image: var(--faction-default-card-sheet), var(--faction-default-rainbow);
+  background-blend-mode: var(--faction-default-card-sheet-blend), normal;
+  background-origin: border-box;
+  background-clip: var(--faction-default-card-sheet-clip), border-box;
+  color: var(--faction-default-card-text);
+}
+/* A flex box, so the mark can be turned: `transform` does not apply to an
+   inline element, and the sigils are inline spans. */
+.faction-hero-sigil {
+  display: flex;
+}
+.faction-hero-kicker,
+.faction-hero-count-label {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faction-default-card-muted);
+}
+.faction-hero-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-display);
+  line-height: 1.02;
+  margin: var(--space-xs) 0 0;
+}
+.faction-hero-tagline {
+  font-family: var(--font-body);
+  font-size: var(--text-content);
+  color: var(--faction-default-card-muted);
+  margin-top: var(--space-xs);
+}
+.faction-hero-counts {
+  display: grid;
+  grid-auto-flow: column;
+  gap: var(--space-xl);
+  padding-left: var(--space-xl);
+  border-left: 1px solid var(--faction-default-card-line);
+}
+.faction-hero-count-value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-title);
+  line-height: 1;
+  margin-bottom: var(--space-xs);
+}
+.faction-hero-count-label {
+  display: block;
+}
+@media (max-width: 767px) {
+  .faction-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-lg);
+    padding: var(--space-xl);
+  }
+  .faction-hero-counts {
+    grid-column: 1 / -1;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-lg) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--faction-default-card-line);
+  }
+}
+
+/* ── Albescent — THE FACTION PAGE (#2504, epic #2496) ──
+   The seventh and eighth surfaces to unfreeze, and the same rule as the six
+   before them: the na page whole, with light over it. Two wrapper classes, no
+   fork, no copy, no colour of Albescent's own — every value below is a cut of
+   the SHARED spectrum, which is what keeps the society a shimmer rather than a
+   livery (ADR-0027, #783).
+
+   IT IS A TOKEN OVERRIDE, NOT SELECTOR SURGERY (epic ruling 2). The wrapper
+   declares the na card's sheet TRIPLE, and every surface inside inherits it:
+   the hero's plate, the five body plates, and the task and praxis cards those
+   plates hold, all of which already read `--faction-default-card-sheet` and
+   none of which is named. The three properties move together because CSS CYCLES
+   a short list rather than padding it — one layer in light, six in dark, so a
+   lone `multiply` beside them would be right by accident in one cascade and
+   wrong in the other.
+
+   THE GROUND IS DECLARED WITH `.alb-prism` NOW (#2550), and there is nothing
+   left in this block. Two rules stood here — `.alb-faction-hero` in light, and
+   the hero and the body together in dark — carrying #2504's own deeper cut of
+   the prism, which made a SECOND Albescent ground beside the one the cards
+   read: five blooms at 0.06 against `.alb-prism`'s five at 0.16, a 46%/120%
+   geometry against its 62%/66%, five different centres, a different light ramp,
+   and nothing at all declared for the body in light. Side by side with a task
+   card the faction page did not read as the same faction, which is the report
+   `.alb-prism` was minted to close for the two cards. Both classes now join the
+   prism's four selector lists, so there is ONE declaration of this ground and
+   it cannot drift again.
+
+   EPIC RULING 9 IS REVERSED, and the reversal is the owner's, not a builder's.
+   Ruling 9 made the light/dark asymmetry — hero alone by day, hero and body by
+   night — a ruled looks decision, and the comment above `.alb-prism` cited it
+   to keep the faction page OUT of that list. #2550 supersedes it: Albescent's
+   backgrounds are in general the task and praxis cards'.
+
+   THE MEASUREMENTS THAT WERE HERE WENT WITH THE VALUES. The binding ones are at
+   `.alb-prism`'s own rule and they measure the same pairing on the same na
+   card — `--faction-default-card-muted`, worst pixel, 5.43:1 light and 5.02:1
+   dark — so the heavier ground is still clear of AA on this page's prose. The
+   alpha is not to be re-tuned for the faction page: it is set so the
+   reduced-motion rest frame, which composites the layer list twice, fits under
+   the ceiling too.
+
+   NOTHING ABOUT THE FACTION PAGE MOVES with the ground either. Every layer is
+   static: `motion.ornament.css` turns the labyrinth and travels the plates'
+   rings, on the deferred sheet and inside the reduced-motion gate. A wash that
+   animated a gradient parameter would re-rasterise the whole sheet every frame,
+   which is the one technique ADR-0083 §4 forbids outright. */
+
+/* ══ ALBESCENT — THE PRISM SWEEP (#2499, epic #2496 ruling 2) ══
+   The GROUND of every ordinary Albescent surface: the task card, the praxis
+   card, the task detail, the praxis detail and the feed row. One class, one
+   drawing, five mounts — and it retires five aurora overlays that were five
+   different drawings of the same idea.
+
+   THE OWNER'S BUG IS WHY THIS IS ONE CLASS. Reported live: "the background and
+   borders on the praxis and task cards are still different from each other."
+   They were. The praxis card wore `.alb-rainbow` — a rotated 220px repeating
+   LINEAR ramp, multiplied at 0.15, which reads as stripes — and the task card
+   wore `.alb-task-aurora`, six blurred RADIALS at 0.34, which reads as cloud.
+   Different geometry, different strength, different idiom, on two cards meant to
+   be the same paper. A token on the na card cannot diverge that way: there is
+   one value and both cards read it.
+
+   IT IS A LAYER OF THE CARD'S OWN BACKGROUND, NEVER AN OVERLAY, and that is the
+   design board's own first sentence ("Prism sweep · locked"): "painted as a
+   layer of the card's OWN background — not an overlay — so every word, rule and
+   score stamp sits in front of it." Three things follow that no overlay could
+   give:
+     • copy, rules, seals, score stamps and PHOTOGRAPHS all sit in front of it,
+       so #1646's lift stops being needed for the wash (see its rule below —
+       what still needs lifting is the two detail pages' remaining ornaments);
+     • a nested card cannot be washed twice. The praxis thumbnails inside an
+       Albescent task detail took `.alb-detail-aurora` on top of their own card's
+       drift (#1942's whole trap). A token is set once per element and inherited,
+       so the same value declared twice paints once;
+     • it costs nothing to still. There is no span to animate and no keyframe to
+       defer — the ground is on the render-blocking sheet and arrives with the
+       first paint, for everyone.
+
+   THE BLEND MODES ARE NOT NEGOTIABLE, and the board says why: "Unaffiliated is a
+   white sheet… Screen and soft-light blends do nothing on white; only a multiply
+   can show colour." Light multiplies, dark screens. It is also why the triple
+   exists: light is TWO layers and dark is SIX, so a lone `multiply` beside them
+   would be right by accident in one cascade and cycled wrong in the other.
+
+   MEASURED ON THE REAL COMPOSITED GROUND, at the WORST pixel on the card rather
+   than at a stop or a hotspot centre, and against `--faction-default-card-muted`
+   — the tightest pairing the na card has, and the one #2504 established as the
+   binding constraint. The five dark radials OVERLAP by construction, so the
+   worst point is where three of them meet (40%/56%), not any one centre.
+
+     light   the board's six stops, verbatim, at full strength.
+             worst pixel: muted 5.43:1, ink 16.36:1, ground 87.8% L
+             (flat: 6.05 / 18.22 / 98.4% L).
+
+     dark    the board's five radials — its centres, its sizes, its hues — at
+             alpha 0.16 rather than opaque. AT THE BOARD'S LITERAL OPAQUE STOPS
+             THE MUTED TIER READS 3.02:1 across the middle of the card, a plain
+             AA failure, because the board priced its depth against the body ink
+             and the five blooms pile up where they overlap. This is exactly the
+             finding #2504 wrote into WORLD_ZERO_STYLE §3 for the same token on
+             the same family, so the depth is set the same way it set the hero's.
+             worst pixel: muted 5.02:1, ink 12.69:1, ground 1.67% L
+             (flat: 5.44 / 13.75 / 1.16% L — the bloom lifts the ground by ~44%).
+
+   THE COMPONENT OWNS ITS GROUND, and this is the one rule that keeps a NESTED
+   card from going wrong. The design board hit the defect and had to patch it by
+   hand: it dressed the page with a descendant selector, so a praxis card inside
+   an Albescent surface inherited the page's `multiply` WITHOUT the prism layer
+   that justifies it, and its own border spectrum multiplied into its cream fill —
+   one card brighter than every card beside it. The board's fix was
+   `background-blend-mode: normal !important` walled round the nested card.
+
+   NOTHING HERE CAN CAUSE THAT, and it is worth saying why rather than testing
+   it and hoping. These rules declare three CUSTOM PROPERTIES and no background
+   property at all. Custom properties inherit as a set, and the actual
+   `background-blend-mode` is written only where `background-image` is written —
+   inside `factionSheet()` / `factionSpectrumSheet()`, `.faction-plate` and
+   `.faction-hero`, each of which takes all three from the same family on the
+   same element. `background-blend-mode` is not itself inherited, so an element
+   that does not compose the sheet gets `normal` however deep it sits. A nested
+   card therefore either paints the whole triple or none of it; it can never take
+   the blend and miss the layer. `__tests__/albescentPrismSheet.test.ts` holds the
+   line that would break it: no Albescent selector may set `background-blend-mode`
+   on a DESCENDANT, and since #2519 NONE may paint a descendant's background at
+   all. The one that could — `.alb-desk .spectrum-rule`, re-cutting an
+   ORNAMENT's ramp rather than a ground — stopped needing to when the field
+   desk's carrier moved off na's hairline and onto a ring of its own.
+
+   THE FACTION PAGE JOINED THIS LIST AT #2550, and the comment that stood here
+   said the opposite. It read: *"THE FACTION PAGE IS NOT IN THIS LIST,
+   deliberately… epic ruling 9 makes their light/dark asymmetry a ruled looks
+   decision… repainting them here would be the 'fix' ruling 9 forbids."* That
+   was a correct account of what had been ruled and is superseded. The owner's
+   ruling on #2550 is that Albescent's backgrounds are in general the task and
+   praxis cards' — so `.alb-faction-hero` and `.alb-faction-body` read this
+   drawing, and #2504's fainter cut of it is deleted rather than kept beside it.
+   RULING 9 IS REVERSED; do not restore the two rules citing it.
+
+   They join the SELECTORS rather than copying the values, in all four rules
+   below, so this ground has one declaration and the faction page cannot drift
+   away from the cards again. Their contrast is the same pairing this rule
+   already measures — `--faction-default-card-muted` on the na card — so the
+   numbers above are the faction page's numbers too. */
+.alb-prism,
+.alb-faction-hero,
+.alb-faction-body {
+  --faction-default-card-sheet:
+    linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: multiply, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box;
+}
+[data-theme="dark"] .alb-prism,
+[data-theme="dark"] .alb-faction-hero,
+[data-theme="dark"] .alb-faction-body {
+  --faction-default-card-sheet:
+    radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+    radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+    radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+    radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+    radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+    linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+  --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, normal;
+  --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
+}
+
+/* THE REST FRAME (epic #2496 ruling 6). Under `prefers-reduced-motion: reduce`
+   the sheet is COMPOSITED WITH ITSELF: the same layer list, listed twice, under
+   the same blend. Not one new colour value, and "deeper" is not a re-tune by eye
+   — it is the drawing applied a second time.
+
+   WHY IT EXISTS. Stilled, an Albescent surface loses everything that moves: the
+   travelling edge, the turning foil, the wheeling ring. All of that lives in the
+   DEFERRED `motion.ornament.css`, which means a reader who never receives that
+   sheet lands in exactly the reduced-motion frame — that equivalence is the
+   whole safety argument for deferring it at all. So without a rest frame "the
+   motion sheet did not arrive" and "this player is not in Albescent" become the
+   same picture, and nothing in CI can tell them apart. The precedent used to be
+   `.alb-spark`, which parked at a steady low opacity rather than freezing
+   because a spark frozen at its keyframe start is invisible; #2555 retired it,
+   and Coven's `.cvn-profile-spark` further down this file is the same call made
+   for the same reason on a mark that is still drawn.
+
+   MEASURED THE SAME WAY, worst pixel, tightest pairing:
+     light  muted 4.89:1, ink 14.72:1, ground 78.5% L — a 9.3pp drop, plainly
+            visible, and still clear of AA on the prose tier.
+     dark   muted 4.60:1, ink 11.63:1, ground 2.28% L — the bloom lifts ~37%
+            further than the moving frame's. Dark has the least headroom on this
+            card (5.44:1 flat to a 4.5 floor), which is why the base alpha is
+            0.16 and not more: the rest frame has to fit UNDER the ceiling too.
+
+   Paint, so it is in this sheet and not the deferred one — `motion.ornament.css`
+   may never carry a colour. */
+@media (prefers-reduced-motion: reduce) {
+  .alb-prism,
+  .alb-faction-hero,
+  .alb-faction-body {
+    --faction-default-card-sheet:
+      linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+      linear-gradient(114deg, transparent 10%, #fff1ee 22%, #fff6e8 33%, #f8fbeb 44%, #eef8f2 56%, #eef4ff 68%, #f9f0f8 80%, transparent 92%),
+      linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+    --faction-default-card-sheet-blend: multiply, multiply, normal;
+    --faction-default-card-sheet-clip: padding-box, padding-box, padding-box;
+  }
+  [data-theme="dark"] .alb-prism,
+  [data-theme="dark"] .alb-faction-hero,
+  [data-theme="dark"] .alb-faction-body {
+    --faction-default-card-sheet:
+      radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+      radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+      radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+      radial-gradient(62% 66% at 26% 26%, rgba(44, 8, 16, 0.16), transparent 78%),
+      radial-gradient(58% 62% at 64% 20%, rgba(38, 24, 4, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 40% 56%, rgba(8, 36, 14, 0.16), transparent 80%),
+      radial-gradient(64% 66% at 74% 64%, rgba(3, 22, 52, 0.16), transparent 78%),
+      radial-gradient(60% 64% at 32% 80%, rgba(29, 6, 48, 0.16), transparent 78%),
+      linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg));
+    --faction-default-card-sheet-blend: screen, screen, screen, screen, screen, screen, screen, screen, screen, screen, normal;
+    --faction-default-card-sheet-clip: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box;
+  }
+}
+
+/* `.alb-rainbow` RETIRED HERE (#2499). It was the praxis card's ground — a
+   190%-wide `--faction-default-rainbow-loop` rotated 24deg, tiled at 220px and
+   walked by `alb-drift` — and it is the half of the owner's live report that was
+   Albescent's own to fix: the praxis card read as STRIPES where the task card
+   read as CLOUD. `.alb-prism` above is now both cards' ground, so there is no
+   second texture left to diverge.
+
+   THE KEYFRAME STAYS, and it is not orphaned: the RAIL's own drifting ring still
+   runs it from the deferred sheet (#2404, the drift-attribute rule), reaching
+   it across the chunk boundary because keyframe names are document-global and
+   this is the entry sheet the reference resolves against.
+
+   ponytail: `alb-drift` still walks `background-position`, which epic #2496's
+   technique ruling retires everywhere else. Its one remaining consumer IS a
+   pseudo-element, so it cannot grow the pre-painted child the transform idiom
+   needs without a real span in the rail's markup. Upgrade path: give the rail's
+   ring a span, then it joins `alb-edge-travel` and this keyframe retires too. */
+@keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
+
+/* `.alb-spark` RETIRED HERE (#2555). #842 called it "the other half of the tell"
+   — three faint gold ✦ twinkling over the praxis card at their own positions,
+   sizes and delays — and the owner ruled the twinkle is not part of the Albescent
+   kit. A DELETION and not a re-tune: there is no quieter spark, and nothing takes
+   its place on the card.
+
+   THE KEYFRAME WENT WITH IT, because it had exactly one reference — the gated
+   rule directly under it. That is the only reason it was safe to take: an
+   `@keyframes` NAME being unused-looking is not the test, a grep for the
+   `animation:` that references it is (`alb-drift` two rules up is the shape that
+   survives a retirement on the strength of one remaining consumer).
+
+   WHAT THIS LEAVES. The card's whole delta over the unaffiliated one is now the
+   prism ground and `.alb-praxis-card-edge`'s travelling ring, which is what
+   ADR-0083 says an Albescent surface is: one ornament vocabulary shared with na,
+   moving. It also means NO Albescent animation runs from this sheet any more —
+   they are all in the deferred `motion.ornament.css`, and `motionSplit.test.ts`
+   asserts that set is now empty rather than "the spark, alone". */
+
+/* THE ALBESCENT LIGHT STOPS AT USER MEDIA (#1646). ADR-0048 / #821 wash the
+   light over the whole sheet. This narrows it by one element: the proof photo is
+   the one thing on the sheet that is not the site's to tint. Everything else —
+   copy, score box, seals, footer, the empty media slot's dashed drop-target — is
+   chrome the light is supposed to colour, and still is.
+
+   #2499 TOOK AWAY MOST OF WHAT THIS DEFENDS AGAINST, and left exactly enough to
+   keep the rule. The GROUND is no longer an overlay at all: `.alb-prism` sets a
+   background layer on the card's own sheet, and a background paints behind its
+   element's content by construction, so no photograph on any of these four
+   surfaces is under the prism. What is still painted OVER content, and therefore
+   still needs excluding, is the ornament that is not a ground:
+
+     `.alb-praxis-card`  `.alb-praxis-card-edge` at 1. The three `.alb-spark`
+                         glyphs at 0 were what this entry was written for; #2555
+                         retired them and the ring is what is left. Masked back to
+                         the 3px carrier, so — like the feed's below — it cannot
+                         reach a photo, and it stays listed for the same two
+                         reasons: the surface may gain a wash again, and the four
+                         wrappers share ONE lift rule, so dropping a scope here
+                         would be a second mechanism rather than a smaller one.
+     `.alb-praxis`       `.alb-praxis-ring`, a blurred conic annulus at 2.
+     `.alb-detail`       `.alb-detail-foil`, a blurred conic wheel at 2.
+     `.alb-feed`         `.alb-feed-edge` at 1. Masked back to the hairline, so it
+                         cannot reach a photo — kept in the list because the
+                         surface may gain a wash again and because dropping it
+                         would take `.feed-avatar-link`'s ceiling with it.
+
+   THE LIFT, NOT A HOLE. There is no way to punch a blended overlay out around a
+   rectangle, so the media is raised ABOVE it instead: a blend composites against
+   what is already painted beneath it, so anything painted after is untouched.
+   `z-index: 3` clears every one of the layers above in one number. `position` is
+   required for `z-index` to apply at all; `relative` keeps the box exactly where
+   flow put it.
+
+   One rejected shape, for the next reader: confining the light TO the photo is
+   the complaint inverted. The OTHER historical rejection — "move the wash behind
+   the card content" — was rejected because Default's sheet is opaque and there
+   was no way to get behind it. #2497 made the sheet a token and #2499 took that
+   option, which is why the ground is not in the list above.
+
+   SCOPED TO THE ALBESCENT WRAPPERS ON PURPOSE. `.user-media` is a shared hook —
+   `PraxisMediaGallery` is one component for all nine praxis archetypes and
+   `MediaGallery` serves the detail page — so an unscoped lift would reorder
+   skins that stack their own layers (Ephemerists' plate at 1, Singularity's
+   content at 2). The other eight sheets must render byte-identical.
+
+   Nothing here is inside a motion query: reduced motion stills the ornaments and
+   it stills them over exactly the same layers.
+
+   #1942 ADDED TWO OF THE FOUR SURFACES, AND THEY EACH NEEDED A TRAP CLEARED
+   FIRST. The number below did not change and could not have: a `z-index` only
+   competes inside its own stacking context, and on the feed card and the task
+   detail the media sat inside one the ornament was outside of, so `3` was INERT
+   there however large it grew. Both traps are cleared at their own sites, below
+   and in the mount; read those two rules as part of this one. */
+.alb-praxis-card .user-media,
+.alb-praxis .user-media,
+.alb-detail .user-media,
+.alb-feed .user-media {
+  position: relative;
+  z-index: 3;
+}
+
+/* TRAP ONE: THE TASK DETAIL'S 1200 COLUMN (#1942). `DefaultTaskDetail` mounts
+   its sheet at `z-index: 1` so the surface sits above the page it is drawn on;
+   positioned with an integer, that is a stacking context, and it capped every
+   descendant at 1 while the page's ornaments washed over from 2. Nothing inside
+   could reach the light, which is why the byline photo and — since #1941 lifted
+   them — the whole gallery of `AlbescentPraxisCard` thumbnails were washed a
+   second time on this one page. (#2499 retired the aurora that found this
+   trap; `.alb-detail-foil`'s wheel still sits at 2, so the clearing stands.)
+
+   `auto`, not a bigger number: the column must keep painting BENEATH the
+   ornaments (they are a wash over the sheet, ADR-0048), and only stop being the
+   ceiling for what is inside it. The `z-index: 1` it gives up is the column's
+   own — it is the only one in that subtree, so the sheet paints exactly where it
+   did and the lift above is the one thing that now escapes.
+
+   ALBESCENT-SCOPED. `DefaultTaskDetail` is the page the unaffiliated player and
+   several skins read; the base rule below keeps their column exactly as it was.
+   The number lives here rather than inline at the mount for one reason: an
+   inline `z-index` cannot be overridden by a selector, so a stylesheet fix was
+   not available until it moved. */
+.task-detail-sheet {
+  z-index: 1;
+}
+.alb-detail .task-detail-sheet {
+  z-index: auto;
+}
+
+/* TRAP TWO'S HALF THAT LIVES HERE: the feed avatar's anchor (#1893's lift,
+   #1942's ceiling). `FEED_BODY_LIFTED` puts this anchor above the body's
+   stretched click overlay, and an integer `z-index` on a positioned element is a
+   stacking context — so a photo inside it could never rise past the anchor's own
+   1, which is exactly where the card's own ornament sits. Same move as the
+   column: the number comes out of the inline style so `.alb-feed .user-media`
+   above can win on the anchor itself where the child is a photograph.
+   Everywhere else it computes to the 1 it always was. */
+.feed-avatar-link {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+/* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
+   unfreeze, and built to the same rule as the first: the exact spectrum sheet an
+   unaffiliated player sees, plus a flourish that reveals the society to someone
+   already looking. Strip the classes and the card is `DefaultTaskCard`, byte for
+   byte.
+
+   THE AURORA IS RETIRED (#2499, epic #2496 ruling 2). `.alb-task-aurora` was six
+   blurred radials, blurred past recognition and blended over the vellum at 0.34
+   — an OVERLAY, because in 2023 the card's ground was a component's inline style
+   this file could not reach into. It can now: `--faction-default-card-sheet` is
+   a token, and `.alb-prism` above sets it. The bloom moved from on top of the
+   card to inside its background, which is where the design board always drew it,
+   and the praxis card — which wore a different texture entirely — now reads the
+   same value. The KIT'S ONE ORNAMENT is still one drawing; it is simply a ground
+   now rather than a span.
+
+   THE EDGE STAYS, AND STAYS AN OVERLAY. It is a masked ring rather than a border
+   because a `border-image` does not clip to `border-radius`: `mask … exclude`
+   punches the middle out of a 3px inset so only the frame paints, landing exactly
+   on `DefaultTaskCard`'s own static rainbow border so the effect reads as that
+   border coming alive. Its radius must track that card's (14px); if the corner
+   changes, this follows. Since #2407 it is the shared `.spectrum-frame` ring that
+   seven other mounts wear, and since #2499 the praxis card wears the twin of it.
+
+   THE ALTERNATION NEEDS A NEW MECHANISM, and it has one (#2397, epic #2195). The
+   law — "either burst, or plain", owner 2026-08-17 — is that a card standing on a
+   patterned page ground shows no ground texture of its own. A SPAN could satisfy
+   it by not being mounted; a background LAYER has nothing to unmount, so the
+   wrapper drops `.alb-prism` instead and the na sheet stands. Same predicate
+   (`useGroundIsBusy()`), same law, one class instead of one span. Nothing here
+   branches, so a plain card still costs no rules. THE EDGE NEVER BRANCHES: it is
+   chrome, and it is what keeps ADR-0048's reveal-by-motion true on a card that
+   has gone plain. */
+.alb-task-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 14px;
+}
+/* The third flourish washed over the na sheet (#2030). The spectrum hairline
+   above the sign-up is the unaffiliated card's own; Albescent draws it fainter,
+   0.45 against 0.6, which is a shimmer's worth of difference and not a colour —
+   the same rule every other Albescent delta obeys (ADR-0048). Declared here
+   rather than passed as a prop so `AlbescentTaskCard` still forwards
+   `CardProps` whole and the sheet inside it stays byte-for-byte na's. */
+.alb-task {
+  --faction-default-cta-rule-opacity: 0.45;
+}
+/* ── THE CARRIER, AT ITS ONE WEIGHT (#2519, epic #2496) ──
+   The ring is the shared one (#2407, top of the `.spectrum-frame` block); these
+   are the two things a CARRIER says differently from a hairline. `opacity: 1`
+   is stated rather than left off because the shared rule's default is the
+   rail's 0.6, and a carrier is never dimmed.
+
+   FIVE MOUNTS, ONE WEIGHT, AND THAT IS THE RULE ITSELF. The design canvas draws
+   every Albescent object carrying its spectrum as a 3px border at full strength
+   — the idiom `DefaultTaskCard` ships — and says the rule out loud: ONE CARRIER
+   PER OBJECT, and whatever bar, strip or hairline was doing that job comes off.
+   #2504 and #2505 built three of these mounts from the issue prose without the
+   drawing and each took the shared list's defaults instead (1px at 0.6), which
+   is the FAINTEST possible mark, added beside the marks the drawing removes.
+   This rule is the correction, and it is one rule so the five cannot diverge
+   again:
+
+     `.alb-task-edge`         the task card's, since #1038
+     `.alb-praxis-card-edge`  the praxis card's twin of it, since #2499
+     `.alb-plate-edge`        the faction page's five plates (#2504 → #2519)
+     `.alb-desk-edge`         the mobile field desk's identity card (ditto)
+
+   FOUR, NOT FIVE, SINCE #2553. `.alb-composer-edge` was in this list; the
+   edit-praxis sheet's carrier is na's own 3px border (#2520) and the ring was a
+   second frame just inside it. The shared masked-ring block above records why
+   it could not be moved onto na's frame instead.
+
+   A MASKED RING RATHER THAN THE BOARD'S REAL BORDER, on all five, and the
+   choice is per-surface reasoning that lands in the same place five times.
+   `.alb-task-edge`'s own note has the general form of it — a `border-image`
+   does not clip to `border-radius`, so the mask idiom is what draws a rounded
+   3px frame at all — and three more things decide it here:
+
+     • THE BOX BELONGS TO na. The plate's border is `.faction-plate`'s 1px and
+       the desk card's is inline in `DefaultFieldDesk`. Growing either to a 3px
+       transparent border is an edit to na's own geometry, which is #2520's half
+       of this pass and not this issue's. (On the composer sheet #2520 DID grow
+       it, and that is what made the ring there a duplicate — #2553.)
+     • A REAL BORDER HERE WOULD BREAK #2499's GUARANTEE. Painting the ramp into
+       a border box means writing `background-image` on a DESCENDANT of the
+       `.alb-*` wrapper, and `__tests__/albescentPrismSheet.test.ts` forbids
+       exactly that: the blend and the layer must be written on one element or a
+       nested card takes the blend without the layer. The overlay is the shape
+       that cannot cause it.
+     • IT LANDS ON THE SAME PIXELS. Inset 0 with a 3px pad paints the outer 3px
+       of the mount's own box, covering na's 1px hairline and 2px of sheet — the
+       drawing's 3px border, at the drawing's strength, in the idiom this repo
+       already had. Where the board and the repo differ is the technique, not
+       the picture.
+
+   The travel is one deferred rule these five share with the other four rings
+   (`alb-edge-travel`, motion.ornament.css); no keyframe is minted here. */
+.alb-plate-edge,
+.alb-desk-edge,
+.alb-task-edge,
+.alb-praxis-card-edge,
+.alb-comment-edge {
+  padding: 3px;
+  opacity: 1;
+}
+/* Albescent — the COMMENT LEAF's ring, the tenth mount (#2732, ADR-0088 §3).
+   The sheet in `CommentThread` carried na's 3px spectrum CAP across its top and
+   no edge at all; a revealed viewer now gets this instead, and the cap comes off
+   in the same breath. That is the carrier rule above applied literally — one
+   carrier per object — which is why this joins that list rather than the
+   hairline defaults: the leaf's spectrum was already 3px at full strength, so
+   the amount of rainbow on the surface is unchanged and only its GEOMETRY moved,
+   from a bar across the top to a frame round the whole leaf.
+
+   It states nothing else. The corner is the shared `border-radius: inherit`,
+   which reads `SHEET_RADIUS` (10px, inline at the mount) off the sheet the span
+   is a direct child of — no literal, and it follows if that number ever changes.
+
+   THE ONE THING IT DOES SAY. `z-index: 1` is the FAMILY's number, the same one
+   `.alb-task-edge` and `.alb-praxis-card-edge` carry, and it is load-bearing
+   here: the composer this sheet also dresses positions its @mention listbox
+   inside itself. The listbox sits at 30 and stays over the ring; a static body
+   sits under it. Without a number the ring would be beatable by any positioned
+   descendant that declares one.
+
+   REVEAL-GATED IN THE COMPONENT, NOT HERE. `AlbescentComment` mounts this span
+   only past `isFactionRedacted` (ADR-0082), and an unrevealed viewer gets na's
+   cap with no ring — so there is no redacted state for this rule to know about.
+
+   The travel is the shared `alb-edge-travel` in `motion.ornament.css`; no
+   keyframe is minted here, and stopped it reads as a still spectrum edge. */
+.alb-comment-edge {
+  z-index: 1;
+}
+/* The praxis card's twin of it (#2499). Its own rule states only the two things
+   the task card's does not: this span hangs off a wrapper whose corner is the
+   token, so the shared `border-radius: inherit` is right and no literal is
+   needed; and the `z-index`.
+
+   THE `z-index: 1` STAYS, AND ITS ORIGINAL REASON DOES NOT (#2555). It was
+   written to clear the three `.alb-spark` glyphs at 0, and those are gone. It is
+   kept because it is the FAMILY's number, not this card's workaround:
+   `.alb-task-edge` carries the same `z-index: 1` on a card that never had a
+   spark near it, and both rings have to sit above whatever their wrapped na card
+   positions inside itself while staying under `.user-media`'s 3. Dropping to
+   `auto` would leave the ring beatable by any positioned descendant of
+   `DefaultPraxisCard` that declares a positive one — an invisible-until-it-isn't
+   dependency on a component this rule cannot see into.
+
+   IT REPLACED A 1px RING AT 0.6. Until #2499 this card borrowed the RAIL's ring
+   through `.spectrum-frame` and the rail's drift hook — the rail's width, walking
+   the rail's 220px tile — because the card underneath it had a 1px cream hairline.
+   `DefaultPraxisCard` now wears the same 3px spectrum border `DefaultTaskCard`
+   does, so the ring over it has to be the same 3px at the same full strength or
+   the two cards read as different objects, which is the half of the owner's
+   report that was na's. It also puts the card on `alb-edge-travel` with the six
+   others, so the last surface walking a `background-position` is the rail. */
+.alb-praxis-card-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+/* Albescent — the TASK DETAIL's tell (#1038, ADR-0048). The third surface to
+   unfreeze, same rule as the first two: `DefaultTaskDetail` unchanged, with
+   light washed over it. The design's own header states the thesis — "Albescent's
+   difference is the light, not the layout" — so nothing here repaints, moves or
+   renames anything na draws.
+
+   THE AURORA AND THE SHEEN ARE RETIRED (#2499, epic #2496 ruling 2).
+   `.alb-detail-aurora` was seven blurred blooms drifting over the sheet and
+   `.alb-detail-foil::after` a diagonal near-white sweep passing across it. The
+   PRISM SWEEP is the second of those two drawings made static and moved into the
+   sheet's own background — a 114deg near-white ramp, multiplied — so the surface
+   keeps the sweep and stops carrying two washes of the same light. `.alb-prism`
+   on the wrapper is the whole of it, and it reaches the column, the praxis
+   thumbnails inside it and any plate the page draws, because every one of them
+   reads `--faction-default-card-sheet`. THE WHEEL STAYS: `.alb-detail-foil
+   ::before` is a turning prism disc, which is a mark rather than a ground.
+
+   WHAT THIS BLOCK STILL DECIDES, each of which a "make it match the design" edit
+   would undo:
+
+   • THE LIGHT IS CLIPPED TO THE COMPONENT, NOT THE PAGE. The design paints its
+     ground on the viewport; the owner ruled the site background must still show
+     around the detail component (QA on #1055, #1057, #1065 — six skins had to be
+     corrected for `position: fixed; inset: 0`). `.alb-detail` is therefore the
+     1200 column itself, and every layer is inset by --space-2xl top and bottom
+     to land exactly on `DefaultTaskDetail`'s sheet, whose own `py-8` band that
+     is. The 18px radius tracks that sheet's corner; if it changes, this follows.
+
+   • WHAT IS LEFT SITS ON TOP, BLENDED. Default's column paints an OPAQUE sheet,
+     so an ornament behind it is invisible — `z-index: -1` is not a position
+     available here. And the column is positioned, so a positioned overlay at
+     `z-index: 0` would paint above the copy anyway with none of the blending
+     that keeps ink legible. Multiply on the light sheet, screen on the dark one,
+     `pointer-events: none`. `isolation` keeps the blend inside the component so
+     it cannot tint the page around it. THE GROUND NO LONGER NEEDS ANY OF THAT —
+     a background layer is behind the copy by construction, which is exactly why
+     the wash moved into the sheet and the wheel did not.
+
+   • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
+     inverted form of the design's `reduce → none`. Stilled, the page is a static
+     prism ground and a static prism ring — and since #2499 the ground DEEPENS for
+     that reader rather than merely standing still (ruling 6). */
+.alb-detail {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  isolation: isolate;
+}
+.alb-detail-foil,
+.alb-detail-edge {
+  position: absolute;
+  /* Mounted INSIDE the sheet through `DefaultTaskDetail`'s `sheetOverlay`
+     (#2549), so the containing block IS the box these trace and the inset is
+     zero rather than a guess at where the page band begins. It was
+     `--space-2xl` top and bottom, which held only while the sheet's top edge
+     and `.py-8`'s padding were the same line; #2102 put the shared Breadcrumb
+     between them and the ring's corner drifted 29px up onto the trail.
+
+     Negative by exactly the sheet's 1px border: an absolutely positioned child
+     is inset from its containing block's PADDING box, and the spectrum edge is
+     meant to land ON Default's hairline so the effect reads as that border
+     coming alive. `inset: 0` would sit it one pixel inside and leave the
+     hairline showing through. */
+  inset: -1px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* The holographic foil: a prism wheel turning behind the page. A pseudo-element
+   rather than a span — the component may not carry ornament markup it does not
+   need. Its `::after` sheen retired with the aurora (#2499): a diagonal
+   near-white sweep across the sheet is exactly what `.alb-prism` now paints INTO
+   the sheet, so keeping both would be the same light drawn twice. */
+.alb-detail-foil::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  height: 240%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-image: var(--faction-default-rainbow-conic);
+  filter: blur(56px) saturate(0.75);
+  mix-blend-mode: multiply;
+  opacity: 0.16;
+}
+[data-theme="dark"] .alb-detail-foil::before {
+  filter: blur(48px) saturate(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.24;
+}
+
+/* The spectrum edge, drifting. A masked ring rather than a border, for the same
+   reason the rail's is one: the sheet it dresses is a component's inline style,
+   not markup this file can reach into. It lands on Default's own hairline so the
+   effect reads as that border coming alive. The mask itself is the shared
+   `.spectrum-frame::before` list (#2407); a 2px inset at 0.75 is the whole of
+   what this mount says differently. Its 18px corner is in the positioning rule
+   above rather than `border-radius: inherit`, because the span hangs off
+   `.alb-detail`, which is unrounded — `inherit` would square it. */
+.alb-detail-edge {
+  padding: 2px;
+  opacity: 0.75;
+}
+
+/* The prism worth ring — the design's one departure from na's anatomy, reached
+   through `DefaultTaskDetail`'s optional `worthSlot`. The face is the page sheet
+   punched out of a smooth conic spectrum, so the total reads on plain vellum
+   while the rim turns. Size arrives at the call site (92 desktop / 74 mobile).
+   The RIM is a pseudo-element and the face a real child, so only the rim turns:
+   spinning the element itself would rotate the number inside it, which is the
+   one thing on this page that has to stay readable. */
+.alb-detail-ring {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+.alb-detail-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image: var(--faction-default-rainbow-conic);
+}
+.alb-detail-ring-face {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--faction-default-card-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 0.9;
+  text-align: center;
+}
+
+/* Albescent — the PRAXIS DETAIL's tell (#1140, epic #1085, ADR-0048). The fourth
+   surface to unfreeze, and the same rule as the three before it: the shared
+   `DefaultPraxisDetail` page unchanged, with light washed over it. The design's
+   dress is Lora + Courier Prime + Bebas Neue — the site's own three faces, not a
+   faction face — on na's spectrum palette, so every delta here is the light and
+   the motion: a prism ground, a slowly turning prism ring, an edge that comes
+   alive.
+
+   THE AURORA IS RETIRED (#2499, epic #2496 ruling 2). `.alb-praxis-aurora` was
+   the third of five hand-drawn washes across this kit — seven blooms here, six
+   on the task card, a rotated stripe tile on the praxis card — all of them the
+   same idea drawn differently because each was an OVERLAY invented at its own
+   mount. `.alb-prism` on the wrapper replaces all five with one value on the na
+   sheet, so the page and every card standing on it read the same ground.
+
+   WHAT THIS BLOCK STILL DECIDES, each of which a "make it match the design" edit
+   would undo:
+
+   • THE LIGHT IS MOUNTED INSIDE THE SHEET, not wrapped around the page. The
+     praxis page puts a variable-height breadcrumb above its 1200 column, so —
+     unlike `.alb-detail`, which could inset by Default's own py-8 band — no
+     fixed inset from outside lands on the sheet's top edge. The layers arrive
+     through `DefaultPraxisDetail`'s optional `ornament` slot and sit at
+     `inset: 0` inside a sheet that already clips (`overflow: hidden`, 18px
+     radius). That makes the #1028 ruling structural rather than arithmetic: the
+     light CANNOT paint the viewport, so the site background still shows around
+     the component. The GROUND keeps that property for a different and stronger
+     reason — it is a layer of the sheet's own background, so it cannot leave the
+     sheet at all.
+
+   • WHAT IS LEFT SITS ON TOP, BLENDED. Default's column paints an opaque sheet,
+     so an ornament behind it is invisible and `z-index: -1` is not a position
+     available here; and the sheet is positioned, so a positioned overlay at
+     `z-index: 0` would paint above the copy with none of the blending that keeps
+     ink legible (§5). Multiply on the light sheet, screen on the dark one,
+     `pointer-events: none`. `isolation` on `.alb-praxis` keeps the blend inside
+     the component so it cannot tint the page around it.
+
+   • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
+     inverted form of the design's `reduce → none`. Stilled, the page is a static
+     prism ground, a static ring and a static edge — and since #2499 that ground
+     DEEPENS for that reader rather than merely standing still (ruling 6).
+
+   The 18px radius tracks `DefaultPraxisDetail`'s own sheet corner. If that
+   changes, this follows. */
+.alb-praxis {
+  isolation: isolate;
+}
+.alb-praxis-ring,
+.alb-praxis-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* The prism RING, turning. A conic spectrum disc masked back to an annulus —
+   the design's "slow ring spin", and the reason it is a ring rather than
+   `.alb-detail-foil`'s filled wheel: a praxis page is one long reading column,
+   and a filled wheel at this size tints its middle band more than its edges.
+   The mask keeps the light off the copy in the centre of the page.
+
+   Square by `aspect-ratio`, not by matching percentages: the sheet's height is
+   the write-up's, so a `height: 132%` would be an ellipse on a long praxis and a
+   circle on a short one. */
+.alb-praxis-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-image: var(--faction-default-rainbow-conic);
+  filter: blur(40px) saturate(0.7);
+  mix-blend-mode: multiply;
+  opacity: 0.15;
+  -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 62%, #000 84%, transparent 96%);
+  mask: radial-gradient(closest-side, transparent 50%, #000 62%, #000 84%, transparent 96%);
+}
+[data-theme="dark"] .alb-praxis-ring::before {
+  filter: blur(34px) saturate(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.22;
+}
+
+/* The spectrum edge, drifting. A masked ring rather than a border, for the same
+   reason the other four are: the sheet it dresses is a component's inline style,
+   not markup this file can reach into. It lands on Default's own hairline so the
+   effect reads as that border coming alive. The mask is the shared
+   `.spectrum-frame::before` list (#2407); a 2px inset at 0.72 is all this mount
+   says differently. The 18px corner in the positioning rule above is now
+   redundant with the shared `border-radius: inherit` — this span IS mounted
+   straight inside the 1200px sheet, whose own `borderRadius: 18` is inline at
+   the mount — but it is shared with `.alb-praxis-ring`, which is
+   not, so it stays. */
+.alb-praxis-edge {
+  padding: 2px;
+  opacity: 0.72;
+}
+
+/* Albescent — the FEED CARD's tell (#1203, epic #1192, ADR-0048). The fifth
+   surface to unfreeze, and the same rule as the four before it: the shared
+   chassis an unaffiliated player sees, with light washed over it. Strip the
+   class and the span and the card is `DefaultFeedFrame`, byte for byte.
+
+   NOT ONE NEW COLOUR VALUE IS DECLARED HERE, and that is still the point. A hue
+   of Albescent's own would put the society back in the spectrum and un-hide it
+   (#783 / WORLD_ZERO_STYLE §3), so the delta is the shared prism ground plus one
+   travelling hairline.
+
+   THE WASH IS RETIRED AS A SPAN (#2499, epic #2496 ruling 2). `.alb-feed-aurora`
+   read `--faction-default-aurora` — the composer's own ground token — and had to
+   contradict its blend to do it: that token says `normal` because it describes a
+   ground painted BEHIND copy, and an overlay at `normal` is a 20% coloured film
+   sitting on the ink. The whole contradiction dissolves once the wash is a ground
+   again. `.alb-prism` sets `--faction-default-card-sheet`, `DefaultFeedFrame`
+   already composes it through `factionSheet(slug)`, and the light lands behind
+   every word without a blend-mode argument at any tier.
+
+   WHAT THIS BLOCK STILL DECIDES:
+
+   • THE EDGE IS A 1px MASKED RING, not a border, for the same reason
+     `.alb-task-edge` and `.alb-praxis-edge` are. It lands on `.sidebar-card`'s
+     own hairline so the effect reads as that border coming alive, and it is a
+     hairline rather than the two cards' 3px so the chassis's own 4px rule down
+     the left edge stays the louder of the two. #1148 made that rule the VERTICAL
+     spectrum (it was `card-accent`, a near-black ink drawn as a border), so the
+     two are now the same palette in two geometries — a still ramp down the left
+     edge under a travelling loop around all four. The reason for the hairline did
+     not change with it: 3px of moving spectrum beside 4px of resting spectrum is
+     two rainbows arguing, which is exactly what an unremarkable card must not
+     look like.
+
+   • THE RADIUS IS THE TOKEN, not a literal. `.sidebar-card` corners with
+     `--radius-xl`, so this follows it for free — unlike the earlier Albescent
+     blocks, which had to hardcode 14 / 18px to track a component's inline style.
+
+   • MOTION IS OPT-IN, gated on `no-preference`. Stilled, the card is a static
+     prism ground and a static edge, and the ground deepens for that reader
+     (#2499, ruling 6). */
+.alb-feed {
+  position: relative;
+  isolation: isolate;
+}
+/* `inset: -1px`, NOT 0, BECAUSE THE MOUNT MOVED (#1942). This span used to hang
+   off `.alb-feed`, one level outside the card, where `inset: 0` landed on
+   `.sidebar-card`'s margin box — i.e. its border box, hairline included. It is
+   now mounted INSIDE the card (see AlbescentFeedFrame for why: the card's
+   `backdrop-filter` makes it a stacking context, so no lift on a photo within it
+   could reach a wash outside it). An absolutely positioned child resolves against
+   its parent's PADDING box, so the same `0` would now start one pixel in and the
+   travelling ring would float just inside the border it is meant to bring alive.
+   The −1px is that border's width, and the radius stays `--radius-xl` — the
+   card's own corner, measured on the same border box this offset restores. */
+.alb-feed-edge {
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+}
+
+/* The hairline, travelling. The loop cut is the seamless one, so the ring scrolls
+   forever without a red-meets-magenta seam passing through every cycle — and it
+   has no paint rule of its own at all since #2407, because a 1px inset at 0.6 IS
+   the shared `.spectrum-frame::before` default. The radius above is `--radius-xl`
+   rather than the shared `inherit` for a reason that OUTLIVED its cause: the span
+   used to hang off the unrounded `.alb-feed`, where `inherit` would have squared
+   the ring off. Since #1942 it is mounted inside `.sidebar-card`, whose corner IS
+   `--radius-xl`, so the two now agree — the literal is kept because it is
+   measured on the border box the `-1px` above restores, and `inherit` would take
+   the padding box's corner instead. */
+
+/* ── Albescent — the SCORE STAMP's tell (#2501, epic #2496, generalised by
+   #2500). The last faction with a roster to claim a `scoreStamp` row, and the
+   shortest wrapper in the kit: `AlbescentScoreStamp` renders `DefaultScoreStamp`
+   whole and adds a class.
+
+   NOT ONE ORNAMENT SPAN, AND NOT ONE NEW COLOUR. The five blocks above each hang
+   an aurora, a ring or an edge off their surface, because na drew nothing there
+   to move. This stamp already carries the na spectrum, and since #2497 its
+   mounts are classed, so the whole tell is na's own marks getting up and walking:
+
+     `.spectrum-dial`  the 96px points ring's annulus  → TURNS (always drawn)
+     `.spectrum-rule`  the rule over the working out   → TRAVELS (when there is one)
+
+   A THIRD LINE STOOD HERE — `.spectrum-rule`, the 2px band across the stamp's
+   top edge. #2559 removed it from `DefaultScoreStamp`: #2042 had already made
+   the disc a spectrum RING, so the band was a second structural rainbow on one
+   object (ADR-0083 §3b, one carrier per object). Nothing in this sheet changed
+   for it — the marker dresses the class, not the mount.
+
+   That is the epic's ruling 3 ("everything moves") read literally, and ruling 4
+   ("upgrade, never replace") kept honestly: strip the class and every pixel is
+   the one an unaffiliated player sees.
+
+   THE THREE DECLARATIONS THAT STOOD HERE ARE GONE, and nothing about this stamp
+   changed. They were `.alb-stamp .spectrum-rule`/`-dial`/`-dial > *`, and #2500
+   found eight more Albescent surfaces carrying the same two classes and standing
+   still. The stamp's wrapper wears `alb-moves` beside `alb-stamp` now, and the
+   rules it used to own are that marker's, near `.spectrum-rule`'s own
+   declaration further up this sheet — same properties, same durations, nine
+   surfaces instead of one. `.alb-stamp` survives because
+   `DefaultScoreStamp`'s own note points at it; it declares nothing. ── */
+
+/* UA — the growing mandala's five motions (bloom, twist, spin, ring-grow, halo)
+   are in `src/motion.ornament.css` (#2073). Meaning is carried by the mandala's
+   fullness and the reading word, not the motion — it reads correctly stilled,
+   which is what let it move. Nothing resting is left here: the widget's own
+   inline styles hold the geometry and the halo's `opacity: 0`. */
+
+/* FieldDesk life-card hover-lift (#274). The CredentialCard owns its own rotation;
+   this lifts the clickable wrapper without touching the card's tilt. */
+.fielddesk-life { transition: transform 160ms ease; }
+.fielddesk-life:hover { transform: translateY(-6px); }
+.fielddesk-life:disabled { cursor: default; }
+
+/* ── Faction display-font aliases. Each names a family already loaded in
+   index.html; the header used to say "referenced by FactionSelectCard (design
+   select.card)", which was true when the directory's eight archetypes lived
+   inline in that one file and is true of NONE of the three below now that epic
+   #2321 has split them out (#2329, the last child). Re-derived rather than
+   patched — an attribution nothing checks is how a comment outlives its fact:
+
+     --font-faction-codex-script  read ONLY by `--faction-ua-body-font` above.
+                                  No component names it; UA's role token is its
+                                  entire readership.
+     --font-faction-vellum        read by the three ALBESCENT REVEAL surfaces —
+                                  `selectCard/AlbescentSelectCard`,
+                                  `AlbescentInvitation` and
+                                  `pages/AlbescentSecretPlaceholder`. The only
+                                  one of the three a component still spells, and
+                                  the reason it is not a role token is that
+                                  Albescent has no --faction-albescent-* block
+                                  to hold one (see the reveal note below).
+     --font-faction-medieval      read ONLY by `--faction-wow-card-font` above,
+                                  which has ~30 readers of its own.
+
+   NONE of the three has lost its last reader, so nothing is retired here.
+   `fontsLoaded.test.ts` is what would notice if one had: an unread family token
+   is not inert, because index.css is itself in the corpus the family check
+   searches, so the declaration vouches for its own family and holds the face in
+   the shipped kit — which is how `--font-faction-anton` (#2322) and
+   `--font-faction-poster` (#2327) came to go. ── */
+:root {
+  /* `--font-faction-anton` stood here. The S.N.I.D.E. directory tile was its
+     last reader and #2322 moved it onto `--faction-snide-font-impact`, the
+     faction's own ROLE token, which names Anton directly. `fontsLoaded.test.ts`
+     is what noticed: an unread family token is not inert, because index.css is
+     itself in the corpus the family check searches, so the declaration vouches
+     for its own family and holds Anton in the shipped kit. The family stays —
+     `-font-impact` still asks for it — and only the alias goes. */
+  --font-faction-codex-script: "EB Garamond", Georgia, serif;
+  /* `--font-faction-poster` stood here, and went the same way for the same
+     reason (#2327). The Everymen directory tile was its last reader; gathering
+     that tile's register off its task card moved it onto
+     `--faction-everymen-card-font`, the faction's own ROLE token, which reaches
+     Bebas Neue through `--font-accent`. The swap was PROVEN free before it was
+     made — both names resolved to `"Bebas Neue", Impact, sans-serif` in both
+     cascades — so no pixel moved and only the alias goes. Bebas stays in the
+     kit: `-card-font` still asks for it. */
+  --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
+  --font-faction-medieval: "MedievalSharp", cursive;
+}
+
+/* ── Bare faction extension tokens (design select.card). Values from the design
+   system's tokens/colors.css. The repo already carries these hues under the
+   --faction-<slug>-* namespace; the bare names are aliased here. The header used
+   to say "consumed by FactionSelectCard": two of the three families it named are
+   now retired outright (see the tombstones below), and the survivor is read by
+   `selectCard/AlbescentSelectCard` and the other reveal surfaces since #2329
+   split the directory's archetypes into one file each. ── */
+:root {
+  /* The `--gestalt-*` whimsy.exe alias family stood here (eleven names, both
+     cascades). `FactionSelectCard`'s COVEN tile was its entire readership and
+     #1209 rewrote that tile onto the spell slip's own tokens, leaving the family
+     declared and unread — see the guard in
+     `__tests__/covenSpeaksOneIdentity.test.ts`, which keeps the names retired.
+     Deleted in #1661; the guard is what stops them coming back. */
+  /* The `--snide-*` ransom-dispatch constants stood here — acid, ink, paper and
+     pink, four always-dark values with an always-dark twin in the namespaced
+     `--faction-snide-*` block. `FactionSelectCard`'s S.N.I.D.E. tile was their
+     entire readership, and #2322 moved that tile onto the register its own task
+     card wears (`--faction-snide-note-*`, which FLIPS), leaving the four
+     declared and unread. Retired for the same reason and by the same rule as
+     the `--gestalt-*` family above and `--snide-tape` before them (#1708): a
+     token nobody reads is a FORK waiting to happen, because it resolves.
+     Nothing in CI can see a surface drifting onto a second real family — every
+     lint passes, every census counts it, every contrast sweep measures it — so
+     the guard that keeps them retired is not a ratio, it is the name being
+     gone. `selectCard/__tests__/snideWearsTheClippingRegister.test.ts` pins it. */
+  /* ALBESCENT'S VELLUM REVEAL REGISTER STOOD HERE AND IS DELETED (#2632).
+
+     Seventy lines of light half and forty of dark: a pure-white sheet, a
+     near-black ink and five mixed hairlines, read by four surfaces — the
+     directory tile, the invitation letter, the metatask seal and the sealed
+     placeholder. It was the last hand-authored register in the kit and the one
+     part of Albescent that never adopted the prism, because all four wrote its
+     surface as a `background` in the STYLE ATTRIBUTE and no class can outrank
+     one. Owner ruling: the white aesthetic is purged and Albescent commits
+     entirely to the new setup; the four surfaces take `--faction-default-card-*`
+     like every other Albescent surface, and the society's delta is the prism and
+     the motion, not a colour of its own (ADR-0083 §8, as amended).
+
+     Deleting it was smaller than it looked because only the LIGHT half was ever
+     authored: #2301's dark half aliased the na card outright, so after dark
+     these four already WERE na. Retired by the same rule as the two families
+     above — a token nobody reads is a fork waiting to happen — and the guard is
+     `__tests__/albescentPrismSheet.test.ts`, which asserts the name appears
+     nowhere in this file, comments included. */
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE REDACTION MARK (#2409, ADR-0082)
+
+   `[REDACTED]` painted in its own ground's colour, so it reads as blank until
+   a player drags a cursor across it. A locked door with no keyhole: the shape
+   of the withheld thing is visible, the thing is not.
+
+   WHY `transparent` AND NOT A GROUND TOKEN. The owner's words are "the same
+   colour as its own ground", and `transparent` is that colour by construction
+   rather than by mirroring. A `--redaction-ink` naming some ground would be a
+   parallel registry of exactly the kind #1269 deleted — it would be right on
+   the two surfaces someone remembered and wrong on the third, and it could
+   never be right at all on the vellum card and the leaderboard row at once,
+   because those are two different grounds. There is nothing here to keep in
+   sync, and a surface written next month inherits the behaviour for free.
+
+   IT IS NOT `visibility: hidden` AND NOT `aria-hidden`. Screen readers
+   announce "REDACTED" plainly and that is the ruling, not an oversight: the
+   secret is equally discoverable to a screen-reader user and to a sighted user
+   who selects the line. Making it inaudible would hand sighted players a tease
+   and blind players nothing.
+
+   THE SELECTION IS THE REVEAL, and it is drawn as the bar lifting: the page's
+   own ink and stock, inverted. Both tokens flip, so the mark reads in both
+   themes at the same measured ratio as ordinary body copy — the pair is
+   `--color-text-primary` / `--color-bg-page` with the roles swapped, and a
+   swap does not change a contrast ratio.
+
+   THE 1:1 PAIRING IS DELIBERATE AND IS EXEMPTED AT THE SITE. `.redacted`
+   carries `data-redacted="true"`, which `e2e/contrastScan.ts` skips alongside
+   its two existing exemptions; the reason is recorded there and in ADR-0082.
+   It is NOT on `e2e/contrastBaseline.ts` — that list is debt awaiting a fix
+   and only ever shrinks, and this pairing is never going to be fixed. The
+   token test pins the ratio as an intended 1.00 rather than looking away.
+
+   THE DESCENDANT ARM IS LOAD-BEARING, not a convenience. `color` inherits, so
+   a bare `.redacted` would be enough for a lane label — but the directory tile
+   draws five slots that each declare their OWN ink (`--faction-default-card-
+   text` and `-muted`, since #2632 collapsed the Albescent tile onto the na one),
+   and every one of those declarations outranks an inherited value. Marking the
+   tile's root and catching the subtree is what lets ONE mark redact a whole
+   surface, instead of five wrappers that a future sixth slot can be added
+   without.
+
+   THE `!important` IS LOAD-BEARING TOO, AND IT IS HALF OF THAT SENTENCE
+   (#2646). Those five slots declare their ink in the STYLE ATTRIBUTE, which
+   outranks a class rule as surely as it outranks inheritance — so the arm added
+   for exactly these slots caught them in the cascade and lost to them in the
+   style attribute. What a reader got was four `[REDACTED]` markers painted
+   normally and one blank gap where the display-size name should be: a
+   half-struck tile, which reads as a rendering bug rather than as a device.
+   With the flag, the descendant arm reaches an inline declaration too, and the
+   pair — ARM plus FLAG — is what actually lets one mark redact a whole subtree.
+   Neither half does it alone. `.control-off` took the flag at the same wall for
+   the same reason (#2478), so this is the house answer, not a special case.
+
+   DO NOT REMOVE IT AS A TIDY-UP. The blast radius was checked before it went
+   in and it is empty: the only other consumer is the players-page faction lane
+   (`FactionLaneName`, both form factors), whose inline style is `fontSize` and
+   nothing else — this rule already won there, and forcing it moves nothing.
+   `__tests__/redactionOutranksInlineInk.test.ts` pins both facts and names the
+   mounts, because `renderToStaticMarkup` records a class and a style attribute
+   without ever resolving which of them wins.
+
+   THE SELECTION REVEAL BELOW IS DELIBERATELY UNFLAGGED. Importance is not
+   inherited and `.redacted *` does not match `*::selection`, so a pseudo-element
+   keeps its own cascade and the drag-to-reveal survives the flag untouched.
+   Flagging those two would be the fix eating the thing it exists to protect.
+
+   No raw value here, so nothing for `no-raw-style-values` to catch — the
+   ratchet is satisfied by construction rather than by an exemption. */
+.redacted,
+.redacted * {
+  color: transparent !important;
+}
+
+.redacted ::selection,
+.redacted::selection {
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   WOW — THE LISTS (#895): the duel seal and the duel rail.
+
+   Appended as its own :root / [data-theme="dark"] pair rather than edited into
+   the WOW blocks above, so this slice never rewrites a line another WOW slice
+   is also touching. The cascade merges it; `readThemes` in the contrast test
+   merges it too (it collects EVERY `:root` body, later wins).
+
+   The kit ships four `--faction-wow-duel-*` names. Two of them are values WOW
+   already owns under a different name, and re-declaring the literal would be
+   the "tokenized-looking, not tokenized" trap #896 caught on the avatar ring —
+   so those two are declared as REFERENCES and only the genuinely new values are
+   literals:
+
+     duel-hold      = the kit's #C8A02A, which is `--faction-wow-chronicle-gold`
+                      to the byte AND to the role (frame + rule, never an ink).
+                      Theme-invariant for the same reason: struck metal.
+     duel-lists-bg  = the kit's light #FBF4E0 is `--faction-wow-card-bg`. Its
+                      DARK #221A0C is not (#1b1508), so dark carries a literal:
+                      the seal and the rail sit ON the page, a step lighter than
+                      the chronicle ground so the gold frame reads as an edge.
+     duel-champion  = the gold the winning stakes tile is struck in. New.
+     duel-ribbon    = the plum the losing tile wears — the "ribbon" that makes
+                      the loss floor read as generosity rather than punishment.
+
+   Verified ratios (measured, not taken from the kit's table — which is wrong in
+   both directions: it claims 7.2:1 for champion/ink where the pair measures
+   7.78:1, and 5.3:1 for ribbon/parchment where it measures 6.34:1):
+
+     champion / --faction-wow-on-fill          10.27:1 light · 10.07:1 dark
+     ribbon   / --faction-wow-stamp-chip-text   6.34:1 light ·  7.39:1 dark
+     lists-bg / --faction-wow-card-text        14.02:1 light · 13.95:1 dark
+     lists-bg / --faction-wow-accent-deep       5.32:1 light ·  8.37:1 dark
+
+   `--faction-wow-duel-scrim` is a house addition, not a kit name: the kit draws
+   its modal wash inline on a documentation plate, and a dialog overlay is a
+   colour, so it may not live in TSX. It is the kit's own plum→bitumen radial. */
+:root {
+  --faction-wow-duel-champion: #e7b94e;
+  --faction-wow-duel-ribbon: #6e3a93;
+  --faction-wow-duel-lists-bg: var(--faction-wow-card-bg);
+  --faction-wow-duel-hold: var(--faction-wow-chronicle-gold);
+  --faction-wow-duel-scrim: radial-gradient(
+    circle at 50% 20%,
+    rgba(122, 74, 158, 0.34),
+    rgba(30, 20, 4, 0.62)
+  );
+}
+
+[data-theme="dark"] {
+  --faction-wow-duel-champion: #e3b84a;
+  --faction-wow-duel-ribbon: #5e3a6e;
+  --faction-wow-duel-lists-bg: #221a0c;
+  /* hold does NOT flip — see above. */
+  --faction-wow-duel-scrim: radial-gradient(
+    circle at 50% 20%,
+    rgba(122, 74, 158, 0.3),
+    rgba(0, 0, 0, 0.78)
+  );
+}
+
+/* WOW — THE LISTS: motion. Both marks are pure ornament and carry no state, so
+   they are stilled wholesale under reduced motion. Neither needs a new keyframe:
+   the ✦ reuses the crest's twinkle and the ❦ reuses the seal's sway, which is
+   the point of ornament being one primitive at named strengths (§6). */
+/* ══════════════════════════════════════════════════════════════════════════
+   WOW — THE PAGE SURFACES (#900): faction hero, page backdrop, profile body,
+   faction select card. The kit's §08/§13/§14/§15.
+
+   Everything here is the chronicle palette carried out of the card and onto the
+   page. Three deliberate splits from the existing block:
+
+   1. PLUM AS A FILL vs PLUM AS INK. `--faction-wow-card-accent` is the plum a
+      chronicle is WRITTEN in, so it lifts to #c79be0 in dark to clear AA on the
+      dark ground. The plum below is a SURFACE — the gilt checker rail, the
+      CHOSEN banner, the chronicle rule down a profile row — and it carries cream
+      lettering, so lifting it would LOWER the contrast of the thing on top of
+      it. It is therefore theme-invariant, on the same reasoning as
+      `--faction-wow-chronicle-gold`: #f3e7c4 on #7a4a9e is 5.16:1 in both
+      themes, where the kit's dark #8a5aae would have been 4.10:1 and failed.
+   2. THE FIGURES ALIAS a value rather than restate it. The hero/select/profile
+      tallies are set in the same burnt gold as the score stamp's total, so
+      `--faction-wow-figure` dereferences `--faction-wow-stamp-total` instead of
+      re-declaring #8a5a16 — the "tokenized-looking, not tokenized" trap is a
+      duplicated VALUE, not a second name for one.
+   3. THE PAGE GROUND AND GLOW ARE DIALLED DOWN from the kit, and DARK is walked
+      further than light. The kit tunes both inside a 432x300 swatch where
+      nothing but its own caption sits on them; the page backdrop carries a whole
+      composition of INDEPENDENTLY-THEMED surfaces (ADR-0002), including other
+      factions' cards and `.sidebar-card`, whose dark fill is
+      rgba(255,255,255,0.04) -- 4% white, so the ground bleeds essentially
+      undimmed through anything mounted on it.
+
+      Measured, dark, at the glow hotspot under a frosted sidebar card:
+      --color-text-secondary reads 3.76:1 at the kit's own #241c0b ground and
+      .34 glow, against a 5.14:1 house baseline. The glow was not the whole
+      cause -- the GROUND was: the kit's #241c0b still only reaches 4.32:1 with
+      the glow taken all the way down to .06. So dark ground-from becomes
+      #1b1508, which is WOW's OWN already-audited chronicle ground
+      (--faction-wow-card-bg, dark), and the glow lands at .10 for 4.52:1
+      secondary / 4.98:1 tertiary -- clear of AA with the house baseline
+      substantially preserved.
+
+      LIGHT ships the kit's ground unchanged (it measures 5.75:1, against a
+      5.99:1 baseline); only its glow comes down, .24 -> .13, the same order as
+      UaBackdrop's stated 6-8% ceiling. A backdrop's job is to be felt, not
+      seen.
+
+      Every figure above is a PRE-#1715 reading and every one of them moved up:
+      that issue lifted both quiet inks away from the AA floor, brightening them
+      on this night ground and darkening them on the cream one. The margins named
+      here are the floors the ground was chosen against, not ceilings — the
+      ground choice stands on its own (the kit's #241c0b failed at any glow). */
+:root {
+  /* the ground — the cream sweep both the hero plate and the page sit on */
+  --faction-wow-ground-from: #fbf4e0;
+  --faction-wow-ground-to: #f1e3b8;
+  /* the plum court-glow, off the upper right (see note 3 above) */
+  --faction-wow-court-glow: rgba(122, 74, 158, 0.13);
+  /* the 135deg gilt hatch, 2px every 24 */
+  --faction-wow-hatch: rgba(200, 160, 42, 0.16);
+  /* plum AS A SURFACE — theme-invariant (note 1 above) */
+  --faction-wow-plum-surface: #7a4a9e;
+  --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
+
+  /* ── THE PAVILION GROUND'S OWN INKS (#2248) ──────────────────────────────
+     Three siblings, the shape `--faction-wow-chronicle-quiet` already set for
+     the parchment plate: when a surface gains a darker ground, RE-MEASURE the
+     inks it already had (WORLD_ZERO_STYLE §3). This is the third WOW ground and
+     nobody had measured on it.
+
+     The ground is not `-ground-from`. `wowMobilePage` / `.wow-backdrop` paint
+     the court glow AND the gilt hatch over the `165deg from → to` sweep, so the
+     darkest point a line of type can land on is
+
+       rgba(122,74,158,.13) over rgba(200,160,42,.16) over #f1e3b8  =  #dcc6a1
+
+     and the three chronicle inks read 3.82 / 3.51 / 3.14 there — all under AA
+     for the 12–18px type the pavilion sets in them. The card values were
+     measured on the CREAM CARD (#fbf4e0) and stay correct there; these are the
+     same three hues walked down at constant hue and saturation until they clear
+     the corner, exactly as `-accent-deep` and `-chronicle-quiet` were walked.
+
+     RECEDING THE GROUND WAS TRIED FIRST AND IS UNSATISFIABLE: with the hatch and
+     the glow taken all the way to zero the corner is still `-ground-to` #f1e3b8,
+     where `-card-muted` reaches only 4.09:1. The ink side is the only side that
+     moves. Measured on #dcc6a1 / #f1e3b8 / the cream card:
+
+       -ground-accent  #6a4089   4.66 · 6.06 · 7.06   (was 3.82 as -card-accent)
+       -ground-label   #675014   4.61 · 6.01 · 6.99   (was 3.51 as -accent-deep)
+       -ground-quiet   #5e5235   4.61 · 6.01 · 6.99   (was 3.14 as -card-muted)
+
+     DARK NEEDS NO WALK. The night corner is #32271c and the same three chronicle
+     inks read 6.39 / 7.10 / 5.51 there, so the dark block below aliases each
+     back to the card ink rather than minting a night value nothing needed. That
+     is why this is a light-only defect and why the sweep reported no dark twin
+     for any of the four rows. */
+  --faction-wow-ground-accent: #6a4089; /* headings, section marks */
+  --faction-wow-ground-label: #675014; /* small caps, links, captions */
+  --faction-wow-ground-quiet: #5e5235; /* metadata, empty-state copy */
+}
+
+:root, [data-theme] {
+  /* the tallies (note 2 above) — theme-scoped, being an alias (#1839) */
+  --faction-wow-figure: var(--faction-wow-stamp-total);
+}
+
+:root {
+  /* the near-white plate a stat / honour / chronicle row is struck on */
+  --faction-wow-plate: #fffcf2;
+  --faction-wow-plate-border: rgba(200, 160, 42, 0.34);
+  /* The tag chip on the pledge card was `--faction-wow-chip-bg` /
+     `-chip-border` and is now the DECREE's crowned plaque — `-chronicle-panel`
+     inside `-chronicle-gold` (#2328). The tile was the two names' entire
+     readership, so they went with it: a page-kit plate answering a role the
+     faction's own card had already answered is the fork #2321 is about, even
+     though both sides were live, declared and measured. */
+  /* the hairline rule between hero tallies */
+  --faction-wow-rule: rgba(200, 160, 42, 0.4);
+  /* The gilt mid stop, kept for `WowBand`'s lettering (3.47:1 on the plum) —
+     theme-invariant, which is why it is not restated below. The button ring
+     `--faction-wow-gilt-border` went with the pledge card's gilt lozenge
+     (#2328): the decree's CTA is plum, and that button was its only reader.
+     `-gilt-mid`'s companions from/to/ink live on as `--faction-wow-quest-*`,
+     which alias the avatar pill's stops directly. */
+  --faction-wow-gilt-mid: #e7b94e;
+}
+[data-theme="dark"] {
+  /* NOT the kit's #241c0b — see note 3 above. This is --faction-wow-card-bg's
+     dark value, restated rather than referenced so the light declaration above
+     (which is NOT card-bg; the kit's hero plate starts a shade above it) and
+     this one read as one pair. */
+  --faction-wow-ground-from: #1b1508;
+  --faction-wow-ground-to: #141005;
+  --faction-wow-court-glow: rgba(138, 90, 174, 0.1);
+  --faction-wow-hatch: rgba(227, 184, 74, 0.1);
+  --faction-wow-plate: #221a0c;
+  --faction-wow-plate-border: #4a3a0e;
+  --faction-wow-rule: #4a3a0e;
+  /* plum-surface, on-plum, figure and gilt-mid do NOT flip — see notes 1 and 2 */
+  /* The night pavilion needs no walked ink (#2248): on the dark corner #32271c
+     the three chronicle inks read 6.39 / 7.10 / 5.51, so each page ink is the
+     card ink itself rather than a second night value to keep in step. */
+  --faction-wow-ground-accent: var(--faction-wow-card-accent);
+  --faction-wow-ground-label: var(--faction-wow-accent-deep);
+  --faction-wow-ground-quiet: var(--faction-wow-card-muted);
+}
+
+/* ══ WOW page backdrop (faction-context pages; theme-aware) ══
+   Gilt checker rail along the top edge, plum court-glow off the upper right, a
+   135deg gilt hatch, and — added by WowBackdrop.tsx — the watermark crest bled
+   off the lower right plus six drifting twinkles.
+
+   The rail is drawn at the very top of the FIXED layer, which puts it behind the
+   frosted nav rather than above it. That is the kit's placement kept honestly:
+   the nav is translucent, so the rail reads as a gilt shimmer crowning the page.
+
+   Nothing here is a text ground. Every alpha is tuned so an unrelated faction's
+   card can sit on it and stay legible (ADR-0002). */
+.wow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--faction-wow-ground-from);
+  background-image:
+    radial-gradient(58% 46% at 80% 16%, var(--faction-wow-court-glow), transparent 62%),
+    repeating-linear-gradient(135deg, transparent 0 22px, var(--faction-wow-hatch) 22px 24px),
+    linear-gradient(165deg, var(--faction-wow-ground-from), var(--faction-wow-ground-to));
+}
+.wow-backdrop::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--faction-wow-chronicle-gold) 0 12px,
+    var(--faction-wow-plum-surface) 12px 24px
+  );
+}
+
+/* The backdrop's drifting ✦ twinkles. Pure ornament carrying no state, so they
+   are gated wholesale the way #897 gates the crest's four motions, and they
+   REUSE that slice's `wow-twinkle` keyframe rather than restating it — the kit's
+   own `wowKitTwinkle` and the crest's sparkle are the same 0.3→1 pulse. The
+   stagger arrives per-element as --wow-twinkle-delay, same custom property. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   WOW — THE DECREE (#899): the desktop task card, comment and feed frame.
+
+   The task card is the kit's "archetype the others mirror", so these three
+   surfaces share one chrome: a gold/plum checker band, the crest as a wax seal,
+   and gilt lettering on cream parchment. Only the values that are genuinely new
+   are declared here — the cream, the plum, the frame gold, the parchment plate
+   and the whole crest family already ship from #838/#840/#896/#897.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* The knobbed rod the decree hung from had a three-token family here. The
+     v2 task card redrew the surface without it ("the knobbed rod and the crest
+     seal are gone", `taskCard/WowTaskCard.tsx`), which left all six
+     declarations unread — deleted in #1661. */
+
+  /* The chronicle hairline — the kit's #d9c589, the 1px rule it puts round
+     inset plates, comment cards and the feed's points pill. Distinct from
+     --faction-wow-chronicle-border (2px gold frame): this is the quiet one. */
+  --faction-wow-chronicle-rule: #d9c589;
+
+  /* "Take Up the Quest" — the gilt button. Its outer stops ARE the avatar's rank
+     pill (same stamped lozenge, same metal), so they are referenced rather than
+     re-minted; only the middle stop, the sheen and the border are its own. The
+     border is the one part that flips: a dark ground needs a bright edge to keep
+     the button from dissolving into the parchment. */
+  --faction-wow-quest-from: var(--faction-wow-avatar-pill-from);
+  --faction-wow-quest-mid: #e7b94e;
+  --faction-wow-quest-to: var(--faction-wow-avatar-pill-to);
+  --faction-wow-quest-text: var(--faction-wow-avatar-pill-text);
+  --faction-wow-quest-border: var(--faction-wow-avatar-pill-border);
+  --faction-wow-quest-sheen: rgba(255, 249, 225, 0.7); /* inset top highlight */
+  --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
+}
+[data-theme="dark"] {
+  --faction-wow-chronicle-rule: #4a3a0e;
+  --faction-wow-quest-border: #e1c877;
+}
+
+/* The glisten travelling across the quest button, and the ✦ twinkle beside the
+   decree's byline / on the herald's dispatch band. Both are the kit's own class
+   names (`.wow-btn`, `.wow-tw`) so a later slice reading the kit finds what it
+   expects, and both follow #897's inversion: structure always on, motion opted
+   INTO on no-preference. The twinkle reuses #897's `wow-twinkle` keyframes
+   rather than minting the kit's near-identical `wowKitTwinkle` — one sparkle
+   tempo for the whole faction. */
+@keyframes wow-glisten {
+  0% { left: -60%; }
+  60%, 100% { left: 130%; }
+}
+.wow-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.wow-tw {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-duel-twinkle {
+    display: inline-block;
+    animation: wow-twinkle 2.4s ease-in-out infinite;
+  }
+  .wow-duel-ribbon-sway {
+    display: inline-block;
+    transform-origin: top center;
+    animation: wow-seal-sway 4s ease-in-out infinite;
+  }
+}
+
+/* The seal's action pair. `SealActions` is shared and owns its own markup, so
+   the design's 46px thumb targets (above the 44 minimum — the kit specifies 46
+   and #895 says keep it) are applied from the skin's wrapper rather than by
+   growing a size prop on the shared component. Desktop keeps the shared height;
+   only the mobile wrapper opts in. */
+.wow-seal-actions--mobile > div {
+  width: 100%;
+}
+.wow-seal-actions--mobile button {
+  flex: 1 1 0;
+  min-height: 46px;
+}
+
+/* REPAIRED BY #901. Landing #895 hand-merged this file and the rule above
+   swallowed the opener of the motion block below, so `.wow-backdrop-twinkle`
+   (#900), `.wow-btn::after` (#899) and `.wow-tw` (#899) were left NESTED inside
+   `.wow-seal-actions--mobile button` — i.e. they only matched as descendants of
+   a duel-seal button and matched nothing in practice. Every WOW motion except
+   the duel pair was silently dead on main, and no build step could see it:
+   native CSS nesting is valid syntax. Restored verbatim; nothing here is new. */
+@media (prefers-reduced-motion: no-preference) {
+  .wow-backdrop-twinkle {
+    display: inline-block;
+    animation: wow-twinkle 2.4s ease-in-out infinite;
+    animation-delay: var(--wow-twinkle-delay, 0s);
+  }
+  .wow-btn::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -60%;
+    width: 45%;
+    background: linear-gradient(105deg, transparent, var(--faction-wow-quest-glisten), transparent);
+    transform: skewX(-18deg);
+    animation: wow-glisten 3.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .wow-tw { animation: wow-twinkle 2.4s ease-in-out infinite; animation-delay: var(--wow-twinkle-delay, 0s); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WOW — THE FIELD PAVILION (#901): the mobile skins.
+
+   The kit drew ONE mobile screen (`10-mobile-skins.html`) — a status/header
+   block, a quest list and a bottom nav — plus a complete two-theme contract in
+   its `mobileThemes` array. Almost every value in that array is already a
+   shipped `--faction-wow-*` token, so this block declares exactly TWO names.
+   The mapping, for the next reader (kit key → what it ships as here):
+
+     bezel     — dropped. It is the MOCKUP's phone shell, not a surface.
+     page      → --faction-wow-ground-from/-to. The kit's flat #F6EFDA / #151007
+                 sits a hair off WOW's own page wallpaper; using the wallpaper
+                 makes the phone ground and the desktop backdrop literally the
+                 same surface, and inherits #900's dark-ground audit (the kit's
+                 #241c0b family was measured and rejected there).
+     rim       → --faction-wow-plate-border  (kit rgba(200,160,42,.35) vs the
+                 shipped .34, and dark #4A3A0E exactly).
+     field     → --faction-wow-avatar-field  (exact, both themes).
+     headerA/B → the two names below.
+     name      → --faction-wow-card-text     (exact, both themes).
+     sub       → --faction-wow-card-muted on the CARD; see the deviation note.
+     plumTx    → --faction-wow-card-accent   (exact in dark; light ships #7a4a9e
+                 rather than the kit's #6e3a93, measured 5.53:1 on the ground —
+                 a fourth plum would be a duplicated value, not a new meaning).
+     plum      → --faction-wow-plum-surface  (the checker bar is a SURFACE and is
+                 theme-invariant — #900's note 1).
+     cardBg    → --faction-wow-card-bg       (exact, both themes).
+     gold      → --faction-wow-stamp-total   (exact, both themes).
+
+   ONE MEASURED DEVIATION. The kit sets the header's byline in `sub`. On the
+   header's LOWER gradient stop (#f1e3b8) --faction-wow-card-muted measures
+   4.10:1 — under AA — so the header byline alone takes
+   --faction-wow-accent-deep instead (4.58:1 light, 8.87:1 dark). On the quest
+   card and the page ground, `sub` stays card-muted (4.76:1 and 4.55:1). This is
+   the epic's standing lesson that the kit's own contrast claims do not survive
+   measurement; every pair above was recomputed rather than trusted. */
+:root {
+  /* The pavilion header's wash. Light IS the page ground's pair; dark LIFTS off
+     it (the kit's dark header is a shade above its dark page), which is why this
+     cannot simply reference one existing pair in both themes. */
+  --faction-wow-mobile-header-from: var(--faction-wow-ground-from);
+  --faction-wow-mobile-header-to: var(--faction-wow-ground-to);
+}
+[data-theme="dark"] {
+  --faction-wow-mobile-header-from: var(--faction-wow-avatar-field);
+  --faction-wow-mobile-header-to: var(--faction-wow-card-bg);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COVEN — THE CANDLELIT WARD (task detail v2, #1031)
+   ══════════════════════════════════════════════════════════════════════════
+   The detail page is the spell slip opened out: a candlelight haze washing the
+   whole viewport, braided thread rules (`.cvn-braid`, already shipped for the
+   task card), the turning cat watermark (`.cvn-wheel`, likewise) and the points
+   held inside a glowing ward disc.
+
+   Nearly the whole palette is ALREADY DECLARED as --faction-coven-slip-* by the
+   task card (#1023), and the design's TOKENS map onto it one-for-one — same
+   pinks, same lavenders, same gold. This block adds only what the slip family
+   has no name for: the page ground the haze sits on, the panel ground the
+   copy sits on, the stat hairline, the haze strength, and the gold "you're on
+   it" band.
+
+   THE DESIGN'S `soft` AND `label` INKS ARE NOT RE-INTRODUCED. It states
+   #b8517f / #b06a92; #1023 already measured those and walked them down to
+   #973660 / #83466a for AA. WORLD_ZERO_STYLE §6: when the kit and a shipped
+   token disagree, find out whether the disagreement is already settled. It is.
+
+   MEASURED, against the worst case each ink actually meets — the page ground
+   under the peak of a haze bloom, since the header copy sits directly on it:
+     light, page #fdeef5 under the pink bloom at 22% → #f9c9d9-ish
+       --faction-coven-slip-ink   4.85:1 floor … 5.75:1   (title, section heads)
+       --faction-coven-slip-label 4.85:1                  (eyebrows, captions)
+     dark, page #1d0a15 under the pink bloom at 28%
+       --faction-coven-slip-ink   8.5:1
+       --faction-coven-slip-label 5.05:1
+   The gold bloom is the brightest of the four and is therefore mixed to 55%
+   before it lands: at full strength it drags slip-label to 4.02:1 in dark. */
+:root {
+  /* The page ground the haze washes. Light is the design's #fdeef5 verbatim. */
+  --faction-coven-ward-page: #fdeef5;
+  /* The panel ground — brief, action-plate inner boxes, sort rail. A shade
+     ABOVE the page so a panel reads as paper laid on the wash, not as a hole. */
+  --faction-coven-ward-card: #fff6fb;
+  /* The hairline between the header stats. Ornament — nothing is painted on it. */
+  --faction-coven-ward-hair: rgba(201, 50, 122, 0.18);
+  /* Haze strength. A NUMBER, not a colour, because the two themes want the same
+     four blooms at different weights and an opacity picked in TSX is a
+     `dark ? a : b` in numeric clothing (WORLD_ZERO_STYLE §6). */
+  --faction-coven-ward-haze: 0.22;
+  /* The "you're on this task" band: candle gold instead of the pink CTA, so the
+     two states never read alike. THEME-INVARIANT, on WOW's gold reasoning (§3) —
+     a lit candle does not dim when the room does. Only the band's upper stop
+     flips, and it does so by reading --faction-coven-slip-gold. Ink #5c3a06 on
+     the lower stop #d9a521 measures 4.55:1, and better on the brighter stop. */
+  --faction-coven-ward-hold-to: #d9a521;
+  --faction-coven-ward-hold-ink: #5c3a06;
+  --faction-coven-ward-hold-border: #c08d14;
+
+  /* ── The composer's cast band (#1188) ──
+     The edit-praxis submit bar runs pink while you are still composing and
+     flips GREEN once your part is in. The green had to be its own pair rather
+     than `--color-success` or `--faction-coven-card-credit`: both of those are
+     INKS measured as text on a sheet, and reading an ink as a fill is the "var()
+     at the wrong tier" failure — it passes every lint gate and still ends up
+     with a colour nobody measured for the job it is doing.
+     Polarity follows --faction-coven-slip-cta-*: a dark band under white by day,
+     a bright band under near-black by night. Measured against
+     --faction-coven-cast-ink at BOTH gradient stops (the lower stop is the
+     tighter reading in light, the upper in dark):
+       light  #ffffff on #2f7d4f  5.04:1  ·  on #1c5a37  7.4:1
+       dark   #14110b on #4ade80 10.69:1  ·  on #22c55e  8.27:1 */
+  --faction-coven-cast-from: #2f7d4f;
+  --faction-coven-cast-to: #1c5a37;
+  --faction-coven-cast-ink: #ffffff;
+}
+[data-theme="dark"] {
+  --faction-coven-ward-page: #1d0a15;
+  --faction-coven-ward-card: #2a0f1e;
+  --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
+  --faction-coven-cast-from: #4ade80;
+  --faction-coven-cast-to: #22c55e;
+  --faction-coven-cast-ink: #14110b;
+  /* The night slip carries more candle, exactly as the design's own dark half
+     does (.5 → .7 there; both walked down here for the contrast floor above). */
+  --faction-coven-ward-haze: 0.28;
+}
+
+/* The candlelight wash. Same markup hook shape as `.na-backdrop`:
+   `<div class="coven-candle-backdrop" aria-hidden />` inside the archetype.
+   The design blurs a floating gradient stack at `blur(70px)` and blends it
+   `screen` in dark; both are replaced by soft-stopped radial gradients over the
+   page ground, which is the repo's established backdrop shape and costs no
+   filter layer. The FLOAT survives — it is the candle, and it lives here rather
+   than in a component-injected <style> (#911).
+
+   IT HAS ONE CONSUMER NOW, AND IT IS NOT A DETAIL COLUMN (#2135). Both detail
+   columns wore this wash until the owner ruled that Coven's surfaces should wear
+   the SLIP the task card wears; they take `SLIP_SHEET` from `covenSlip` now, and
+   the class is left mounted only by
+   `pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx`, where the candlelight
+   IS the page ground. So this is live code with one caller — #2135's body called
+   it dead after the two columns left and it is not, because a form-factor
+   archetype is not in the archetype folders a detail-page sweep greps. Do not
+   delete it without checking the field desk. */
+.coven-candle-backdrop {
+  /* Painted on a page or a column, never the viewport — the site background
+     shows around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the ground and its blooms. `overflow: hidden` stays because the
+     ::before bloom is inset -25% and must be clipped to whatever carries it. */
+  overflow: hidden;
+  /* A longhand, for the reason `.na-backdrop` gives (#1636). */
+  background-color: var(--faction-coven-ward-page);
+  transition: background-color 300ms;
+}
+/* The same wash on the VIEWPORT. `.coven-backdrop` is the `backdrop` surface,
+   which `FactionBackdrop` mounts behind a Coven player's character profile AND
+   behind the Coven faction page — `useFactionBackdrop` has TWO callers
+   (`CharacterProfile`, `useFactionDetail`), and both stack `<TaskCard>` on this
+   ground, so it is a surface a card sits on and not only a portrait wall
+   (verified #2039; this note used to claim one caller and that is what got the
+   backdrops filed as unable to disagree with a card).
+   It was the lo-fi `coven.exe` desktop until #1209; the blooms are SHARED with
+   the column wash above rather than restated, because a second copy of four
+   radial gradients is a second thing to re-tune. The vignette went with the
+   desktop metaphor — the haze already falls off at its own edges. */
+.coven-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--faction-coven-ward-page);
+  transition: background-color 300ms;
+}
+.coven-candle-backdrop::before,
+.coven-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  opacity: var(--faction-coven-ward-haze);
+  background-image:
+    radial-gradient(50% 40% at 12% 8%, var(--faction-coven-slip-pk), transparent 100%),
+    radial-gradient(46% 38% at 88% 14%, var(--faction-coven-slip-lav), transparent 100%),
+    radial-gradient(42% 34% at 62% 84%, color-mix(in srgb, var(--faction-coven-slip-gold) 55%, transparent), transparent 100%),
+    radial-gradient(46% 36% at 20% 92%, var(--faction-coven-slip-vio), transparent 100%);
+}
+@keyframes cvn-haze {
+  0%,
+  100% {
+    transform: translate3d(-3%, -2%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.18);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coven-candle-backdrop::before,
+  .coven-backdrop::before {
+    animation: cvn-haze 34s ease-in-out infinite;
+  }
+}
+
+/* The ward's aura breathes like a candle. Opt-in under `no-preference`, the
+   repo's inverted form of the design's `reduce → none`: stilled, the aura is
+   simply a steady glow. */
+@keyframes cvn-flicker {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  38% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+  71% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+.cvn-candle {
+  transform-origin: 50% 50%;
+  opacity: 0.72;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-candle {
+    animation: cvn-flicker 5.5s ease-in-out infinite;
+  }
+}
+
+/* ══ WOW — TASK DETAIL, the parchment field (#1037) ══
+   WOW's first DESKTOP task-detail skin: gold-and-plum parchment under a fine dot
+   texture, bunting across the head, a struck points plaque, wavy gold→plum rules
+   and a bunch of googly balloons. Until this slice a WOW task rendered the na
+   dossier on desktop — one of #951's four bullets.
+
+   ALMOST NOTHING IS NEW. #1023's quest decree already minted the ribbon, the
+   plaque shadow, the blade, the balloon ramp and the eye parts, and this page
+   reads them verbatim rather than growing a parallel set. FIVE roles had no
+   name, and they are the whole block.
+
+   THREE PAIRINGS FROM THE DESIGN DID NOT SURVIVE MEASUREMENT, all against the
+   new page field (which is DARKER than the cream card, so every light-mode
+   claim measured on the card had to be recomputed):
+     • The design sets label text in its `muted` grey. On the field that is
+       --faction-wow-card-muted at 4.20:1 — under AA. Labels on the field take
+       --faction-wow-accent-deep instead (4.70:1 light, 9.49:1 dark), the same
+       walked-down olive-gold #860 landed on for the cards.
+     • The design's third text tier (`dim`, #a79668 light) is ~2.4:1 on its own
+       page and is not shipped at all; its lines fold into card-muted on a panel
+       and accent-deep on the field.
+     • The design paints the CTA in `t.plum`, which in dark is the LIFTED
+       #c79be0 under cream text. That is plum-as-ink used as a fill. The CTA and
+       the ×mult chip take the theme-invariant --faction-wow-plum-surface
+       (5.16:1 in both themes) — note 1 by that declaration already settled it.
+   Measured on the field: plum ink 5.11:1 light / 8.54:1 dark; body ink 12.38:1
+   light / 15.83:1 dark. Inside the plate: card-muted 4.52:1 light / 6.43:1 dark,
+   accent-deep 5.06:1 light. */
+:root {
+  /* The page ground. NOT --faction-wow-ground-from (the WowBackdrop wallpaper):
+     that is a full-page wash a WOW *viewer* carries between pages, while this is
+     the sheet this one page is printed on, and it is a shade deeper so the cream
+     cards read as laid ON something. */
+  --faction-wow-detail-field: #efe6ce;
+  /* The fine dot texture, 1px on a 5px grid. Ink-on-parchment in light, gilt
+     specks in dark — the only way a dot stays visible on both grounds. */
+  --faction-wow-detail-dot: rgba(74, 56, 10, 0.05);
+  /* The plate's inner boxes: a shade off the cream card so the two nested
+     parchments separate without a second border. */
+  --faction-wow-detail-inset: #f7eed8;
+  /* The edge of a plum FILL. Theme-invariant, because the surface it edges
+     (--faction-wow-plum-surface) is — a struck border does not repaint itself
+     when the lights go out, same reasoning as the gold (§3). */
+  --faction-wow-plum-edge: #5b3277;
+  /* The page's lift. Deeper than the card's --faction-wow-quest-shadow: a whole
+     plate throws a longer shadow than a card does. */
+  --faction-wow-detail-shadow: 0 12px 30px -16px rgba(74, 56, 10, 0.5);
+}
+[data-theme="dark"] {
+  --faction-wow-detail-field: #100c05;
+  --faction-wow-detail-dot: rgba(227, 184, 74, 0.06);
+  --faction-wow-detail-inset: #231b0c;
+  /* --faction-wow-plum-edge is theme-invariant; see the note above. */
+  --faction-wow-detail-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* The parchment ground for a WOW detail COLUMN, not the viewport — the site
+   background shows around it (owner QA on #1055, applied to every task-detail
+   skin). The archetype supplies position / z-index / radius / padding; this rule
+   owns only the field and its dot texture. Two pages read it: the task detail
+   (#1037, the field a decree is posted on) and the praxis detail (#1121, the
+   chronicle entry its proof is written into) — one ground, two surfaces, which
+   is why the class is named for the field rather than for either page.
+   (It was modelled on `.na-backdrop`, which IS a real full-viewport wash — but
+   that pattern was retired from this surface, not copied onto it.) */
+.wow-detail-field {
+  background-color: var(--faction-wow-detail-field);
+  background-image: radial-gradient(var(--faction-wow-detail-dot) 1px, transparent 1px);
+  background-size: 5px 5px;
+  transition: background-color 300ms;
+}
+
+/* The balloon bunch bobs and tilts. Class-gated on reduced-motion like every
+   other faction motion in the house, so the skin never writes `animation:`
+   inline and bypasses the gate; the bunch is pure ornament, carries no state,
+   and reads correctly stilled. The pupils inside it travel on the existing
+   `.wow-balloon-eye` wiggle. */
+@keyframes wow-balloon-bob {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  40% { transform: translateY(-7px) rotate(-2deg); }
+  70% { transform: translateY(-3px) rotate(2deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-balloon-bunch { animation: wow-balloon-bob 6s ease-in-out infinite; }
+}
+
+/* ══ UA — PRAXIS DETAIL, the toothed leaf (#1119) ══
+   UA's praxis-detail ground. `UaTaskDetail` (#1036) is the vellum leaf a brief
+   is drawn on and paints `--faction-ua-page` flat; this is the leaf a finished
+   piece of work is PRESSED INTO, and the difference between the two pages is the
+   paper's tooth — a fine dot field, 1px on a 6px grid. Same practice, two
+   stocks, so a reader can tell a record from a brief before reading a word.
+
+   Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
+   the archetype supplies position / z-index / border / radius / padding, and
+   this rule owns only the paper.
+
+   NO NEW TOKENS, which is the whole reason the tooth is a `color-mix` rather
+   than a declared `--faction-ua-*-dot` pair. The speck is mixed FROM the ink
+   token, so it inverts with the theme for free — dark tooth on mesa sand by day,
+   warm specks on the night ground after dark — and there is no second value to
+   keep in step. `uaShade()` makes the identical move for UA's drop shadows.
+
+   The tooth is a texture, not a veil: a 1px dot on a 6px grid covers ~2% of the
+   area at 4% opacity, so it moves the ground by a fraction of a percent and
+   every `--faction-ua-page` pairing gated by factionContrast.test.ts still
+   holds. A wash laid over the whole sheet would NOT be free that way — see §3's
+   "a veil is part of the pairing". */
+.ua-praxis-leaf {
+  background-color: var(--faction-ua-page);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--faction-ua-card-text) 4%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 6px 6px;
+  transition: background-color 300ms;
+}
+
+/* ══ Edit-praxis composer ornament (#1181, epic #1179, ADR-0065) ══
+   The composer is ONE shared layout every faction dresses, and its dress is
+   ornament plus AMBIENT MOTION lifted from each faction's task-card archetype.
+   All seven motions live here, declared once, so that the seven skin issues
+   that follow this foundation never touch this file: a keyframe added per skin
+   is seven chances to land a component-injected <style> instead, and an inline
+   `animation:` bypasses the reduced-motion guard outright (#1003 retired that
+   pattern). Only two of the seven are read by the Unaffiliated composer that
+   ships with them — `.ep-edge` on the masthead band and `.ep-drift` on the
+   aurora. The other five are declared UNUSED on purpose; that is the point.
+
+   Every one is class-gated, and every one is decoration: the composer reads
+   correctly stilled, because nothing here carries state a player needs.
+
+   Durations that a skin will plausibly want to re-time are read from a custom
+   property with the design's own value as the fallback, so a faction re-times a
+   motion from its own file without a second keyframe. `epEdge` and `epDrift`
+   take fixed durations — they are the spectrum's own two motions and the design
+   pins both (14s and 46s). */
+@keyframes epEdge { to { background-position: 300% 0; } }
+@keyframes epSpin { to { transform: rotate(360deg); } }
+@keyframes epDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(3%, -3%, 0) scale(1.08); }
+}
+@keyframes epPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes epSweep { 0% { transform: translateY(-120%); } 100% { transform: translateY(220%); } }
+@keyframes epTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes epBlink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* The masthead band: a 300%-wide spectrum walked one full width. The element
+     must set `background-size: 300% 100%` for the travel to land seamlessly. */
+  .ep-edge { animation: epEdge 14s linear infinite; }
+  .ep-spin { animation: epSpin var(--ep-spin-dur, 90s) linear infinite; }
+  .ep-spin-rev { animation: epSpin var(--ep-spin-dur, 90s) linear infinite reverse; }
+  /* The ground. Paired with a layer at a negative inset, so the drift never
+     exposes an unpainted edge of the sheet. */
+  .ep-drift { animation: epDrift 46s ease-in-out infinite; }
+  .ep-pulse { animation: epPulse var(--ep-pulse-dur, 2.4s) ease-in-out infinite; }
+  .ep-sweep { animation: epSweep var(--ep-sweep-dur, 6s) linear infinite; }
+  .ep-twinkle {
+    animation: epTwinkle var(--ep-twinkle-dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--ep-delay, 0s);
+  }
+  .ep-blink { animation: epBlink 1s step-end infinite; }
+}
+
+/* ══ The composer's focus ring (#2266) ══
+   WCAG 2.4.7 Focus Visible is Level AA — the tier this repo already enforces
+   for contrast — and the composer was the one surface that owed it and paid
+   nothing. All eight skins' `fieldBox` set `outline: none` inline, the invite
+   input set a ninth and the CodeMirror theme a tenth, and NOTHING replaced any
+   of them: the title, the write-up and the invite search all took focus
+   invisibly on every skin. That is why clicking into the write-up box looked
+   like nothing had happened, and why tabbing through the sheet was worse.
+
+   ONE rule, not ten, because ten copies of `outline: none` is what the bug was.
+   The eight inline suppressions are deleted (an inline declaration wins over
+   any stylesheet, so they had to go for this to reach anything), and the next
+   skin inherits the ring rather than having to remember it.
+
+   `:focus-visible`, never a bare `:focus` — the app's own convention, stated at
+   `.eph-gloss` and worn by `.filter-bar__toggle` and its siblings: a pointer
+   user who clicks into a field is not asking to be told where the caret went.
+
+   `[data-composer-body]` takes `:focus-within` instead, and that is the same
+   decision rather than a second convention. The host div never receives focus
+   itself — CodeMirror's contenteditable pane inside it does — so there is no
+   `:focus-visible` for the host to match, and the only focusable thing under it
+   is that pane. On a text-entry surface `:focus-visible` matches on every focus
+   route anyway, which is what makes the two equivalent here.
+
+   `currentColor`, so this costs no token and needs no eight-way measurement:
+   each skin already sets its field's `color` against its own `fieldBox` ground,
+   and that pairing is measured as body text. A distinct focus hue would need
+   measuring against eight field grounds in both themes, which is a bigger job
+   than this bug — and the blocking sheet has no room for a per-skin token set.
+
+   The offset is NEGATIVE for the same reason: the ring is drawn just inside the
+   box, on the ground the ink was measured against, rather than out on whatever
+   sheet the field happens to sit on. It follows the skin's own border-radius.
+
+   `bodyEditorTheme.ts` keeps its `&.cm-focused { outline: none }`. That one is
+   not a suppression this replaces but the reason this exists: CodeMirror's base
+   theme draws its dotted default on the editor PANE, inside the padding, rather
+   than around the field box the player sees. It is paired now, which is the
+   whole of #2266. */
+[data-composer-field]:focus-visible,
+[data-composer-body]:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+/* ══ The write-up box while the room has not seeded (#2574, was #2566) ══
+   THE SIXTH SITE OF #2486'S FAILURE MODE, AND THE ONE `.control-off` COULD NOT
+   REACH. That class hangs off `:disabled`, which only exists on form controls;
+   this is a CodeMirror `contenteditable` host. So the SELECTOR is different and
+   the VOCABULARY is deliberately the same — `--control-off-fill` /
+   `--control-off-ink`, unchanged, no `--composer-unavailable-*` family beside
+   them. Two names for one state is how the seventh site repeats itself.
+
+   WHAT WAS THERE, AND WHAT IT MEASURED. `BODY_UNAVAILABLE_STYLE` in
+   `controls.tsx` set `opacity: 0.6` on this host. `opacity` composites the
+   element as a GROUP, so the field's ground faded toward the composer sheet and
+   the placeholder faded over the faded ground — the ink loses contrast twice,
+   which is exactly what #2486 ruled against on eight CTAs. Measured on the real
+   composited ground (the washed sheet, not the declared token) the placeholder
+   went from 5.52–9.13:1 to **2.74–4.11:1**: all sixteen pairings under AA, nine
+   of them under 3:1. Worst honest reading 2.74:1 (S.N.I.D.E., light).
+
+   NO ALPHA FIXES IT, WHICH IS THE FINDING — the number was not merely wrong.
+   Every composer field is the same family of stock as the sheet behind it, so
+   fading one toward the other spends the whole budget on the ink and buys
+   almost no ground. At 0.6 the ground moves ΔE 1.0–6.5 (five of sixteen at or
+   below the just-noticeable threshold — Coven light is ΔE 1.0). Walk the alpha
+   up until the placeholder clears AA and the ground stops moving at all: at
+   0.85 the worst ink is still 4.38:1 in dark while the median ground shift is
+   ΔE 1.7–2.2, and at 0.9 it is ΔE 1.1–1.5. There is no value that reads as
+   disabled AND stays legible. `opacity` is the wrong instrument here, not a
+   mis-tuned one.
+
+   SO THE GROUND IS REPLACED RATHER THAN FADED, #2573's shape exactly. The fill
+   is OPAQUE, which is the load-bearing half: the ink lands on this token and
+   not on eight faction sheets, so there is ONE ratio — 6.31:1 light, 6.49:1
+   dark — already gated in `characterPaths/__tests__/disabledControlContrast`.
+   Against the live field the neutral sits ΔE 3.4–20.4 on fifteen of the sixteen
+   pairings, so it reads as a change of state without a second measurement.
+
+   `--label-ink` IS THE THIRD DECLARATION AND IT IS NOT OPTIONAL. The only text
+   in this box before the seed is CodeMirror's placeholder, and
+   `bodyEditorTheme.ts` paints `.cm-placeholder` with `var(--label-ink)` — the
+   #1819 seam — not with `color`. Setting `color` alone would leave the one
+   visible string on the skin's own quiet tier over a ground it was never
+   measured against.
+
+   `!important` FOR THE REASON `.control-off:disabled` GIVES: the enabled paint
+   is inline, because it is the skin's `fieldBox`, and an inline declaration
+   beats any stylesheet. A rule a skin could out-specify is the pattern this
+   replaces.
+
+   The BORDER is left alone on purpose. The frame is what still says which
+   faction's composer this is, and it is the mark that keeps the box a box; only
+   the fill and the ink are the state. */
+[data-composer-body][aria-disabled="true"] {
+  background: var(--control-off-fill) !important;
+  color: var(--control-off-ink) !important;
+  --label-ink: var(--control-off-ink);
+}
+
+/* THE ONE SKIN THAT RE-POINTS THE PAIR HERE, and it is a SECOND ground rather
+   than a second vocabulary. `.sg-control-off` (above) already re-points these
+   two for the Singularity's publish band, because the terminal is
+   theme-invariant — `--faction-singularity-term-panel` is #0b1b12 in the LIGHT
+   cascade — and the house neutral would lay a pale slab on a black chassis. It
+   measures ΔE 80.6 from this field in light: a full-width, 200px-tall pale
+   rectangle, unambiguously the loudest thing on the page.
+
+   It cannot simply take `.sg-control-off`, because that class answers a
+   DIFFERENT ground question. The publish band sits on the chassis, so the panel
+   is a raised box and a visible change; the write-up box IS the panel, so the
+   same override would move the ground ΔE 0.0 and change nothing at all.
+
+   One rung DOWN instead — `-term-page` is the desk under the chassis (#2039),
+   so an unavailable field reads as a panel that is not lit yet. ΔE 7.0 light /
+   4.7 dark from the field, inside the band the other fifteen pairings sit in,
+   with `-term-dim` on it at 5.17:1 / 5.93:1. That also retires a pre-existing
+   defect this measurement turned up: the Singularity placeholder reads the
+   global `--color-text-tertiary`, which is 2.07:1 on the terminal panel in
+   light — the #1819 unreachability, still true of the LIVE box, recorded on
+   #2831 rather than fixed here, and answered by the rule below. */
+.sg-composer-off {
+  --control-off-fill: var(--faction-singularity-term-page);
+  --control-off-ink: var(--faction-singularity-term-dim);
+}
+
+/* THE LIVE HALF OF THAT SAME BOX (#2831), which is the defect the rule above
+   only turned up. `SingularityEditPraxis`'s `dress.pageStyle` now sets
+   `--label-ink` to `-term-ink` on the composer's root — the repoint #1800 made
+   on the Ephemerists composer, the other near-black one — because everything
+   the seam reaches on the SHEET stands on the washed chassis, where the quiet
+   rung reads 4.12:1 / 4.20:1.
+
+   The write-up box is not on the sheet. It is the raised `-term-panel`, opaque,
+   so `ComposerGround`'s raster and travelling band never reach under it — and
+   `-term-ink` there is the field's OWN typed ink (`fieldBox` sets `color: INK`).
+   A placeholder painted in it is a box that looks like it already has words in
+   it. So this steps back down one rung: `-term-dim` on the panel is 4.72:1
+   light / 5.56:1 dark, and it is what the preview tab's empty state already
+   draws the very same string in. That is the ground split this archetype's
+   `MUTED` docblock states — chassis takes INK, the raised panel keeps MUTED —
+   applied to the one seam that had not been given it.
+
+   THE SELECTOR IS FENCED OFF THE UNAVAILABLE STATE ON PURPOSE. `.sg-composer-off`
+   is this box's only Singularity-side hook — `ComposerSheet` and `ComposerPage`
+   take style objects, not class names — and it is named for the ground it hands
+   the OFF state. `:not([aria-disabled="true"])` is what keeps this declaration
+   from having any opinion about that state, which stays entirely the rule above
+   plus `[data-composer-body][aria-disabled="true"]`.
+
+   Measured in `editPraxis/archetypes/__tests__/composerGround.test.ts`, both
+   rungs and both grounds, with the global tertiary's 1.81 / 2.07 asserted to
+   still miss. */
+[data-composer-body].sg-composer-off:not([aria-disabled="true"]) {
+  --label-ink: var(--faction-singularity-term-dim);
+}
+
+/* ══════════════════════════════════════════
+   FILTER BAR (#1365, epic #1361)
+   One responsive filter surface for tasks and praxes. Chrome, not a faction
+   skin — it is deliberately outside the MOBILE_ARCHETYPE_BY_SLUG seam.
+
+   THE DESIGN WAS AUTHORED DARK-ONLY IN RAW HEX (#1b1a24, #f5c542, #b6ff2e,
+   #13121a, #14110b) and used var(--faction-snide) — a faction hue — as a
+   global accent. Neither ships. The lime is replaced by the repo's existing
+   inverted-selection idiom (--color-text-primary fill, --color-bg-page ink),
+   the same pairing FilterStamps drew for as long as it existed — this bar
+   (components/ui/FilterBar/) replaced it in #1368 and inherited the idiom, so
+   the bar carries no faction's identity but one.
+
+   That one is the SPECTRUM RING on every rail, and it stays (#1361 ruling 1).
+   --faction-default-rainbow is na's identity AND the site's default chrome
+   because na is the site default — one identity (ADR-0066). The collision is
+   deliberate; do not "fix" it to a neutral border.
+   ══════════════════════════════════════════ */
+:root, [data-theme] {
+  /* An opaque, slightly-lifted well for filter chrome: rail tracks, chips, the
+     popover, the sheet, the search field.
+
+     It has to be OPAQUE, and that is why it is a token rather than
+     --color-bg-surface. The rail paints its ring with the padding-box /
+     border-box gradient trick, so a translucent interior lets the spectrum
+     show straight through the middle of the track — the same constraint
+     factionFill's `pill` / `frame` shapes document. Both --color-bg-surface
+     and --color-bg-surface-alt are alpha in dark, so neither could hold the
+     job.
+
+     Composed from the page ground rather than declared twice: 6% of the ink
+     over the page is a lift in light (#eae6e0) and in dark (#202025, within a
+     shade of the design's #1b1a24), so one declaration covers both themes and
+     nothing drifts when the page ground moves. Being composed is why this block
+     carries the theme scope (#1839; see the note near the top) — a color-mix()
+     of a flipping ink has to re-substitute wherever a theme is set. --color-text-secondary reads
+     6.89:1 on the light well and 7.34:1 on the dark one (4.96 / 4.96 before
+     #1715 lifted the neutral tiers; both grounds are `Pair` rows now). */
+  --switch-well: color-mix(in srgb, var(--color-text-primary) 6%, var(--color-bg-page));
+
+  /* The sliding thumb: a neutral highlight, never a hue. Same reasoning — one
+     declaration, both themes, because the ink it mixes flips with the theme.
+     The design's rgba(240,230,208,.12) / .18 IS this pair, said in dark only. */
+  --switch-thumb: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --switch-thumb-edge: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+
+  /* The thumb's OFF fill (#2154). A segmented rail never needs one — its thumb
+     is always over some segment — but a two-state switch does: the knob has to
+     stay drawn when the switch is off, quieter than when it is on. Same
+     composition, one rung down, so the pair reads as one control in both
+     cascades.
+
+     THE FAMILY WAS `--filter-*` UNTIL #2623, and the old name only ever
+     described its first consumer. Nothing here is about filtering; this is the
+     repo's control-chrome idiom — an opaque well, a neutral thumb, a spectrum
+     ring painted padding-box/border-box — and a segmented rail IS a switch, so
+     the filter bar reading these is honest in the direction that remains.
+     Consumers: FilterBar's SegmentedRail, Settings' Appearance switches
+     (#2154), the cookie toggles (#2156), and the notification rail (#1047) to
+     come. Read these from anywhere a control needs a well and a knob; do not
+     mint a twin.
+
+     NOT `--control-*`, which this block used to suggest. #2573's
+     `--control-off-fill` / `--control-off-ink` already own that namespace, and
+     there `-off` means DISABLED — you cannot use this control. Here it means
+     the knob's paint while the switch sits in its off position, which is a
+     perfectly usable control (`SettingsSwitch.tsx` — `checked ? thumb :
+     thumb-off`). Two senses of `-off` under one prefix is the confusion #2623
+     was filed to remove, so the owner ruled `--switch-*` instead. */
+  --switch-thumb-off: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+
+  /* The ring's compliant edge (#2845). `--faction-default-stop-3` / `-4`
+     (yellow / green) measure 2.37:1 / 2.66:1 against `--switch-well` in
+     light — the rainbow ring is the only perceivable state signal on a
+     two-state switch (the thumb itself is 1.22:1 / 1.30:1 light/dark against
+     the same well), so 1.4.11's 3:1 graphical-object floor applies to it.
+
+     The stops cannot move to fix this: `--faction-default-rainbow` IS the
+     faction hue wheel, drawn on mastheads, bands, the points ring, the CTA
+     rules, and #2845 rules the wheel does not move for a switch.
+
+     NO WELL DENSITY CLEARS BOTH STOPS EITHER, so darkening `--switch-well`
+     (the other switch-local lever, and the one #2845 says to measure first)
+     was tried and measured out: stop-3 (yellow, relative luminance 0.307)
+     caps at 2.94:1 against a PURE WHITE well, and clearing stop-4 (green,
+     luminance 0.269) on the dark side needs the well mixed to ~80%
+     `--color-text-primary` — at that density the well is not a well in light
+     mode for anyone, and `--switch-well` is read by the filter rail, the
+     cookie toggles and the notification rail besides this switch (see the
+     note above), so the cost would land on every one of them to fix two
+     stops on one control.
+
+     So the ring gets a second, ALWAYS-DRAWN edge instead: a solid hairline
+     just inside the rainbow border (`SettingsSwitch.tsx`'s `track`). Once
+     that edge exists the rainbow sits on top of a compliant boundary and is
+     emphasis in 1.4.11's own terms, so the seven stops are not individually
+     re-measured for it — `frontend/src/utils/__tests__/factionContrast.test.ts`
+     asserts this token's own edge instead, at the site, so a future repoint
+     cannot drift back unseen. Aliased straight to `--color-text-tertiary`
+     rather than minted as a new value: that ink already clears both
+     `--switch-well` composites at 6.89:1 (light) / 7.34:1 (dark) — see
+     "filter well, tertiary ink" in the contrast test — so nothing new is
+     being measured here, only named for this site. */
+  --switch-ring-hairline: var(--color-text-tertiary);
+}
+
+:root {
+  /* The rail's inner padding, and the THICKNESS of the bar's spectrum edge —
+     which since #1944 is the strip's `padding-top` rather than its `height`,
+     because a 3px box cannot hold the bar's corner. Same number, same job.
+     SegmentedRail used to read this too, to write the design's
+     `calc(i * (100% - 6px) / n + 3px)` thumb maths in JS; #1726 measures the
+     active segment instead, so the number is back to living in one file. */
+  --switch-rail-pad: 3px;
+
+  --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] {
+  /* A cast shadow on a near-black page needs far more of it to read at all. */
+  --switch-popover-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* A list showing the PREVIOUS filter's rows while the next read is in flight
+   (#2431). `useResource` deliberately keeps the old rows in `data` so the list
+   cannot flash empty, and every surface's `loading && length === 0` branch is
+   therefore false on every filter change after first paint — so without this
+   the stale cards stayed fully lit and fully clickable, and clicking a facet
+   changed nothing on screen at all. `pointer-events: none` is the substance:
+   these rows are about to be replaced and must not be navigable meanwhile. The
+   filter bar states the same fact in words, in `aria-busy` and its summary. */
+[data-stale='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* The dimming itself applies to everyone; only the FADE is opt-in. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-stale='true'] {
+    transition: opacity 150ms;
+  }
+}
+

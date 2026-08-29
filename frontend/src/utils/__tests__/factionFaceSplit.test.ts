@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { sourceFiles as walkSource } from "../../test/sourceScan";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * The critical-path half of the font kit (#2079).
@@ -81,7 +82,7 @@ const ruleCount = (sheet: string): number =>
 
 /** `--token: value` from index.css; the light cascade wins, families never flip. */
 const TOKEN_VALUES = ((): Map<string, string> => {
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf8");
+  const css = readIndexCss();
   const values = new Map<string, string>();
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
     if (!values.has(match[1])) values.set(match[1], match[2].trim());

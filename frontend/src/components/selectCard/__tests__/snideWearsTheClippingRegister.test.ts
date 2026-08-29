@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
 import { stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -61,7 +62,7 @@ describe("the S.N.I.D.E. tile wears the clipping's register (#2322)", () => {
   });
 
   it("keeps the retired names undeclared, which is what stops the fork returning", () => {
-    const css = read("../../../index.css");
+    const css = readIndexCss();
     for (const name of ["--snide-acid", "--snide-ink", "--snide-paper", "--snide-pink"]) {
       expect(css, `${name} is declared again in index.css`).not.toMatch(
         new RegExp(`^\\s*${name}\\s*:`, "m"),

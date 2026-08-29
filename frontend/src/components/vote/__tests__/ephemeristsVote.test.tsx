@@ -34,6 +34,7 @@ vi.mock('../../../api/votes', () => ({
 import EphemeristsVote, { CastBurst, DISC_RUN } from '../EphemeristsVote'
 import { METAL_SIGILS } from '../../factionMarks/ephemeristsPlate'
 import { VOTE_REFRAMES, reframeLabel } from '../voteReframes'
+import { readIndexCss } from '../../../test/indexCss'
 
 /** No hex may reach the markup — every colour is a token. */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -91,7 +92,7 @@ const text = (html: string) => html.replace(/<[^>]*>/g, '')
 const METALS = ['lead', 'copper', 'silver', 'gold', 'platinum']
 
 /** The critical sheet, where the plate's own spacing lives since #2236. */
-const SHEET = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const SHEET = readIndexCss()
 /** The row's unconditional rule — the one outside the container query. */
 const metalRow = () => SHEET.match(/^\.eph-metal-row \{[^}]*\}/m)?.[0] ?? ''
 /** The container query's whole block — what the row does in a narrow plate. */
@@ -566,9 +567,10 @@ describe('EphemeristsVote markup', () => {
  * than make it three.
  */
 describe('#2142 the cast burst sits behind the reduced-motion guard', () => {
-  const css = ['../../../index.css', '../../../motion.ornament.css']
-    .map((sheet) => readFileSync(fileURLToPath(new URL(sheet, import.meta.url)), 'utf8'))
-    .join('\n')
+  const css = [
+    readIndexCss(),
+    readFileSync(fileURLToPath(new URL('../../../motion.ornament.css', import.meta.url)), 'utf8'),
+  ].join('\n')
 
   /** The source split into (inside a no-preference block, outside it). */
   const partitionByGuard = (source: string): [string, string] => {

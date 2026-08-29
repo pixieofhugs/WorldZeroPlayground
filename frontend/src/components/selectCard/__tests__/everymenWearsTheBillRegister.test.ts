@@ -51,6 +51,7 @@ import { describe, it, expect } from "vitest";
 
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
 import { resolveRoleReads } from '../../../test/sourceScan'
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -60,7 +61,7 @@ const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../EverymenSelectCard.tsx";
 
-const themes = readThemes(read("../../../index.css"));
+const themes = readThemes(readIndexCss());
 
 /**
  * The two invariants this file used to assert here — the fluid 360x300 box

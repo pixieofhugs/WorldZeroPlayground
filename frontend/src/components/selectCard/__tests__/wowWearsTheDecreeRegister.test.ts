@@ -67,6 +67,7 @@ import { describe, it, expect } from "vitest";
 
 import { FACTION_ROLES, factionRoleVar } from "../../../utils/factionRoles";
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -83,8 +84,6 @@ function ctaSource(name: string): string {
 }
 
 const TILE = "../WowSelectCard.tsx";
-const CSS = "../../../index.css";
-
 /**
  * Rider 2's one genuine case: `utils/factionRoles` DOES hand a file paint, and
  * a text scan cannot see it (#2674).
@@ -186,7 +185,7 @@ describe("the WOW tile wears the quest decree's register (#2328)", () => {
     // and the PR says that repaints zero pixels. That is a claim about
     // index.css, so it is measured there — in BOTH cascades, because an alias
     // may be restated under `[data-theme="dark"]` and quietly stop being one.
-    const themes = readThemes(read(CSS));
+    const themes = readThemes(readIndexCss());
     for (const theme of ["light", "dark"] as const) {
       expect(
         resolveVar("--faction-wow-chronicle-border", theme, themes),

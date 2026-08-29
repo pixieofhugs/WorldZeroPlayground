@@ -29,9 +29,10 @@ import type { EditPraxisState } from "../../useEditPraxis";
 import { BodyTextarea, TitleField } from "../controls";
 import { sourceFiles } from "../../../../test/sourceScan";
 import { stripComments } from "../../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../../test/indexCss";
 
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 const ARCHETYPE_DIR = fileURLToPath(new URL("..", import.meta.url));
