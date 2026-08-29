@@ -106,7 +106,8 @@ class TaskOut(WireModel):
     #
     # VIEWER-SCOPED, and this is the one that would be worth a leak. A popular
     # task has many submissions and only ONE of them is the requesting
-    # character's: the id comes from `services.praxis.submitted_praxis_ids`,
+    # character's: the id comes from
+    # `services.signup_eligibility.submitted_praxis_ids`,
     # whose query joins `PraxisMember` on the viewer's own character id, and it
     # is None for a viewer who has not submitted. It defaults None for anonymous
     # callers exactly as the flags above do.
