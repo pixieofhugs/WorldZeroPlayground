@@ -49,9 +49,7 @@ const read = (relative: string): string =>
 const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../CovenSelectCard.tsx";
-const TASK_CARD = "../../taskCard/CovenTaskCard.tsx";
 const SLIP = "../../factionMarks/covenSlip.tsx";
-const BANDS = "../../cardMasthead/factionBands.tsx";
 
 /** Every top-level binding in a module, mapped to its own declaration text. */
 function declarations(source: string): Map<string, string> {
@@ -115,39 +113,14 @@ function tokensPainting(relative: string): Set<string> {
   return new Set([...props].filter(isFactionPaint));
 }
 
-function registerTokens(): Set<string> {
-  const bandDecls = declarations(code(BANDS));
-  expect(
-    [...bandDecls.keys()],
-    "no `CovenBand` in cardMasthead/factionBands.tsx",
-  ).toContain("CovenBand");
-  // ONLY Coven's band. `factionBands` holds all seven, and the reach is by
-  // reference from `CovenBand` outward, so WOW's plum and the Ephemerists'
-  // brass never enter this faction's register.
-  const props = tokensPainting(TASK_CARD);
-  for (const prop of propsBehind(bandDecls, ["CovenBand"])) {
-    if (isFactionPaint(prop)) props.add(prop);
-  }
-  return props;
-}
-
+/**
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no token family its own task card does not" (#2321) — now
+ * live in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all
+ * nine kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to Coven.
+ */
 describe("the Coven tile wears the spell slip's register (#2325)", () => {
-  it("names no token family its own task card does not", () => {
-    const register = registerTokens();
-    const strays = [...tokensPainting(TILE)].filter((prop) => !register.has(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with — directly, or through
-a \`covenSlip\` constant — and the TASK CARD never names. That is the shape
-#2321 calls a forked family, and Coven's instance was
-\`--faction-coven-ward-card\` arriving through \`SLIP_PANEL\`: the faction
-DETAIL page's paper, boxed up and laid on the slip. Fix it by finding the
-\`--faction-coven-slip-*\` role that answers the same question, or by saying
-in the PR that the task card has no answer — not by widening this test.`,
-    ).toEqual([]);
-  });
-
   it("takes the ward family off the tile for good", () => {
     // The specific fork, named. The sweep above would also pass if `CARD` were
     // ever added to the task card; this says the tile does not want it either
@@ -176,15 +149,5 @@ in the PR that the task card has no answer — not by widening this test.`,
       source,
       "Caveat ships at 400 only (`fonts.faction.css`), so a 700 here is a synthesised faux bold",
     ).not.toMatch(/fontWeight: 700[\s\S]{0,120}HAND|HAND[\s\S]{0,120}fontWeight: 700/);
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });

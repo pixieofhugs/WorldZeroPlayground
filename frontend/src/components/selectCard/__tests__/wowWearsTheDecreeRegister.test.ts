@@ -83,45 +83,7 @@ function ctaSource(name: string): string {
 }
 
 const TILE = "../WowSelectCard.tsx";
-const TASK_CARD = "../../taskCard/WowTaskCard.tsx";
-const BANDS = "../../cardMasthead/factionBands.tsx";
 const CSS = "../../../index.css";
-
-/** Every top-level binding in a module, mapped to its own declaration text. */
-function declarations(source: string): Map<string, string> {
-  const heads = [...source.matchAll(/^(?:export (?:default )?)?(?:const|function) ([A-Za-z_$][\w$]*)/gm)];
-  return new Map(
-    heads.map((head, i) => [
-      head[1],
-      source.slice(head.index!, i + 1 < heads.length ? heads[i + 1].index! : source.length),
-    ]),
-  );
-}
-
-/**
- * The custom properties a binding paints with, following the module's own
- * aliases. `WowBand` spells none itself — its plum, its gilt and its face all
- * arrive through `GILT_MID` and `MED`, module-level bindings that sit beside it.
- */
-function propsBehind(
-  decls: Map<string, string>,
-  names: readonly string[],
-  seen = new Set<string>(),
-): Set<string> {
-  const found = new Set<string>();
-  for (const name of names) {
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const declaration = decls.get(name);
-    if (!declaration) continue;
-    for (const [, prop] of declaration.matchAll(/(--[a-z0-9-]+)/g)) found.add(prop);
-    const onward = [...decls.keys()].filter(
-      (other) => other !== name && new RegExp(`\\b${other}\\b`).test(declaration),
-    );
-    for (const prop of propsBehind(decls, onward, seen)) found.add(prop);
-  }
-  return found;
-}
 
 /**
  * Rider 2's one genuine case: `utils/factionRoles` DOES hand a file paint, and
@@ -150,16 +112,6 @@ function tokensPainting(relative: string): Set<string> {
     for (const prop of ROLE_MAP_PROPS) props.add(prop);
   }
   return new Set([...props].filter(isFactionPaint));
-}
-
-function registerTokens(): Set<string> {
-  const bandDecls = declarations(code(BANDS));
-  expect([...bandDecls.keys()], "no `WowBand` in cardMasthead/factionBands.tsx").toContain("WowBand");
-  const props = tokensPainting(TASK_CARD);
-  for (const prop of propsBehind(bandDecls, ["WowBand"])) {
-    if (isFactionPaint(prop)) props.add(prop);
-  }
-  return props;
 }
 
 /** One import statement: the module it reads, and the names taken from it. */
@@ -209,22 +161,14 @@ const ALLOWED_IMPORTS: readonly (string | { from: string; bindings: readonly str
   "./FactionSelectCard",
 ];
 
+/**
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no TOKEN its own task card does not" (#2321) — now live
+ * in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all nine
+ * kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to WOW.
+ */
 describe("the WOW tile wears the quest decree's register (#2328)", () => {
-  it("names no TOKEN its own task card does not", () => {
-    const register = registerTokens();
-    const strays = [...tokensPainting(TILE)].filter((prop) => !register.has(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with and the TASK CARD
-never names. Asked per FAMILY this tile passed while wearing the avatar's gilt
-button and the faction page's tag plate, which is why #2321's five finished
-children sharpened the question to the token. Fix it by finding the decree's
-own answer to the same role, or by saying in the PR that the task card has no
-answer — not by widening this test.`,
-    ).toEqual([]);
-  });
-
   it("takes the page kit's and the avatar's plates off the tile for good", () => {
     // The specific strays, named. The sweep above would also pass if one of
     // these were ever added to the task card; this says the tile does not want
@@ -316,15 +260,5 @@ with the same proof the listed ones carry — never because the path is on the l
       code(TILE),
       "the raw 16 was a `no-raw-style-values` exemption arguing a label token would flatten the placard; the decree's CTA IS `--text-content`, so the exemption went with it",
     ).not.toContain("local/no-raw-style-values -- ornament: the CTA");
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });
