@@ -6,9 +6,8 @@
  * seals a viewer may apply is a load keyed on the viewer
  * (`eligible_for_current_user`), and it stays with the composer's other loads;
  * what lives here is the *applied* set, which is keyed on the praxis and
- * changes only when the player seals or peels one. `addMetatask` and
- * `toggleMetatask` take the whole `TaskOut` row, so this side never needs the
- * catalogue to do its work.
+ * changes only when the player seals or peels one. `addMetatask` takes the
+ * whole `TaskOut` row, so this side never needs the catalogue to do its work.
  *
  * Split out of `useEditPraxis.ts` (#1392); behaviour unchanged.
  */
@@ -22,7 +21,6 @@ export interface MetataskApply {
   appliedMetatasks: Set<number>;
   appliedMetataskList: TaskOut[];
   applyingMetatask: number | null;
-  toggleMetatask: (mt: TaskOut) => Promise<void>;
   addMetatask: (mt: TaskOut) => Promise<void>;
   metataskPickerOpen: boolean;
   openMetataskPicker: () => void;
@@ -40,7 +38,7 @@ export interface MetataskApply {
 }
 
 /**
- * Both mutations answer with the re-scored praxis, so all three paths below
+ * Both mutations answer with the re-scored praxis, so both paths below
  * write it back through `setPraxis` (#2464). The seal stack alone is not the
  * whole state a seal changes: the composer's score stamp reads `praxis.score`
  * and `praxis.metatask_points`, and leaving those at whatever the initial load
@@ -64,36 +62,6 @@ export function useMetataskApply(options: {
   const [metataskPickerOpen, setMetataskPickerOpen] = useState(false);
   const [metataskRemovalTarget, setMetataskRemovalTarget] =
     useState<TaskOut | null>(null);
-
-  // Legacy toggle (apply when absent, remove when present) kept on the state
-  // shape; the new compose flow adds through the picker and removes through the
-  // confirm below. All three keep `appliedMetataskList` in sync.
-  const toggleMetatask = useCallback(
-    async (mt: TaskOut) => {
-      if (!praxis) return;
-      if (applyingMetatask !== null) return;
-      setApplyingMetatask(mt.id);
-      setError("");
-      try {
-        if (appliedMetatasks.has(mt.id)) {
-          setPraxis(await removeMetatask(praxis.id, mt.id));
-          setAppliedMetataskList((previous) =>
-            previous.filter((m) => m.id !== mt.id),
-          );
-        } else {
-          setPraxis(await applyMetatask(praxis.id, mt.id));
-          setAppliedMetataskList((previous) => [...previous, mt]);
-        }
-      } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
-        );
-      } finally {
-        setApplyingMetatask(null);
-      }
-    },
-    [praxis, setPraxis, applyingMetatask, appliedMetatasks, setError],
-  );
 
   // Section D: the picker seals one metatask at a time, then closes.
   const addMetatask = useCallback(
@@ -171,7 +139,6 @@ export function useMetataskApply(options: {
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,
-    toggleMetatask,
     addMetatask,
     metataskPickerOpen,
     openMetataskPicker,

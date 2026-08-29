@@ -70,7 +70,6 @@ function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
     metataskPickerOpen: false,
     metataskRemovalTarget: null,
     addMetatask: asyncNoop,
-    toggleMetatask: asyncNoop,
     openMetataskPicker: noop,
     closeMetataskPicker: noop,
     requestRemoveMetatask: noop,
