@@ -178,8 +178,8 @@ async def test_signing_up_holds_a_lock_keyed_on_the_character(
 #
 # Owner ruling (2026-08-15): the *declined* row goes with the praxis; a duel that
 # reached a result keeps refusing the delete. The reasoning and the exact
-# predicate live on ``services.duel.discard_dissolved_duels_for_praxis``. Both
-# halves are pinned below — the dissolve-then-drop sequence the composer's
+# predicate live on ``services.praxis_duel.discard_dissolved_duels_for_praxis``.
+# Both halves are pinned below — the dissolve-then-drop sequence the composer's
 # ``cancel`` runs, and the settled duel that still refuses.
 
 

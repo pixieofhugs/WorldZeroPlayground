@@ -278,18 +278,18 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
       } as unknown as PraxisOut,
     });
 
-  // Every slug that registers `editPraxis`, plus the two that fall through to
-  // the na kit (ADR-0065 §4).
-  const SLUGS = [
+  /**
+   * Every slug the `editPraxis` surface dispatches to, plus `null`.
+   *
+   * Derived from the registry rather than typed (#2815): all nine kits register
+   * a composer, so a tenth is covered here by existing. `null` is prepended
+   * because it is not a slug — it is the viewer whose character has no faction,
+   * a distinct input `resolveVariant` sends to the na kit (ADR-0065 §4), and
+   * nothing in the map stands in for it.
+   */
+  const SLUGS: (string | null)[] = [
     null,
-    "albescent",
-    "coven",
-    "ephemerists",
-    "everymen",
-    "singularity",
-    "snide",
-    "ua",
-    "wow",
+    ...Object.keys(surfaceMap("editPraxis")),
   ];
 
   it.each(SLUGS)("%s draws the waiting reading, not its composer", (slug) => {

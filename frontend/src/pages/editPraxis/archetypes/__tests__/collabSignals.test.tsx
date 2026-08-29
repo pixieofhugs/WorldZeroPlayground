@@ -41,17 +41,18 @@ const ME = 1;
 const THEM = 2;
 const PROPOSED_AT = "2026-08-17T10:00:00Z";
 
-/** Every slug that registers `editPraxis`, plus the two that fall through. */
-const SLUGS = [
+/**
+ * Every slug the `editPraxis` surface dispatches to, plus `null`.
+ *
+ * Derived from the registry rather than typed (#2815): all nine kits register
+ * a composer, so a tenth is covered here by existing. `null` is prepended
+ * because it is not a slug — it is the viewer whose character has no faction,
+ * a distinct input `resolveVariant` sends to the na kit (ADR-0065 §4), and
+ * nothing in the map stands in for it.
+ */
+const SLUGS: (string | null)[] = [
   null,
-  "albescent",
-  "coven",
-  "ephemerists",
-  "everymen",
-  "singularity",
-  "snide",
-  "ua",
-  "wow",
+  ...Object.keys(surfaceMap("editPraxis")),
 ];
 
 function member(

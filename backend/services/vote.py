@@ -21,6 +21,7 @@ from models.praxis import (
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
+from services.praxis_duel import get_duel_for_praxis
 from services.scoring import compute_votes_available
 from services.vote_tally import VoteTally, tally_votes
 
@@ -333,10 +334,8 @@ async def _voter_in_praxis_duel(
     praxis's duel, on either side. A duel participant — any life on their
     account — cannot rate EITHER side of a duel they're in, not just their own.
     Uses the same active-duel window (pending/active/settled) as
-    :func:`services.duel.get_duel_for_praxis`.
+    :func:`services.praxis_duel.get_duel_for_praxis`.
     """
-    from services.duel import get_duel_for_praxis
-
     duel = await get_duel_for_praxis(praxis.id, session)
     if duel is None:
         return False
