@@ -27,7 +27,7 @@
  * look of the collapsed drawing on nine surfaces is visual QA and is stated as
  * outstanding on the PR.
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { ReactElement } from 'react'
@@ -43,6 +43,7 @@ import EverymenPraxisCard from '../../praxisCard/desktop/EverymenPraxisCard'
 import type { ArchetypeProps } from '../../praxisCard/desktop/shared'
 import { BackdropContext } from '../../backdrop/BackdropContext'
 import { aTask, aPraxisCard } from '../../../test/fixtures'
+import { sourceFiles, toRelative } from '../../../test/sourceScan'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 
 const SRC = fileURLToPath(new URL('../../../', import.meta.url))
@@ -53,16 +54,8 @@ const CONIC =
   'repeating-conic-gradient(from 0deg at 50% 50%, var(--em-burst-ray, var(--faction-everymen-bill-ray)) 0 5.2deg, transparent 5.2deg 10.4deg)'
 const MASK = 'radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)'
 
-function walk(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
-    entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)],
-  )
-}
-
 /** Every Everymen component in the tree — the surfaces that could re-draw it. */
-const EVERYMEN_SOURCES = walk(SRC).filter(
-  (path) => /Everymen/.test(path) && /\.tsx?$/.test(path) && !path.includes('__tests__'),
-)
+const EVERYMEN_SOURCES = sourceFiles().filter((path) => /Everymen/.test(path))
 
 const adminProps = {
   showAdminControls: false,
@@ -144,7 +137,7 @@ describe('Everymen draws ONE burst (#2195)', () => {
       const code = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
       expect(
         code,
-        `${path.slice(SRC.length)} draws its own conic — mount \`em-burst\` instead`,
+        `${toRelative(path)} draws its own conic — mount \`em-burst\` instead`,
       ).not.toContain('repeating-conic-gradient')
     }
   })

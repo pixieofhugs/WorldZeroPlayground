@@ -19,26 +19,21 @@
  * markup — a mis-wire surfaces there, not as a bare identity check here.
  */
 import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, sep } from 'node:path'
-import { surfaceMap, SURFACE_KEYS } from '..'
+import { readFileSync } from 'node:fs'
+import { FACTION_MANIFESTS, surfaceMap, SURFACE_KEYS } from '..'
 import type { FactionSurface } from '..'
+import { sourceFiles, toRelative } from '../../test/sourceScan'
 
-/** Every non-test source module under `src`, as [path relative to src, text]. */
-function walkSource(root: string): Array<[string, string]> {
-  const files = (dir: string): string[] =>
-    readdirSync(dir).flatMap((entry) => {
-      const full = join(dir, entry)
-      return statSync(full).isDirectory() ? files(full) : [full]
-    })
-  return files(root)
-    .filter(
-      (path) =>
-        /\.tsx?$/.test(path) &&
-        !/\.test\.tsx?$/.test(path) &&
-        !path.includes(`${sep}__tests__${sep}`),
-    )
-    .map((path) => [relative(root, path), readFileSync(path, 'utf8')])
+/**
+ * Every non-test source module under `src`, as [path relative to src, text].
+ * The walk itself is the shared one (`sourceFiles` already skips `__tests__`
+ * dirs); the one thing that was ever different here is the extra filter for a
+ * stray `*.test.tsx` sitting outside a `__tests__` dir.
+ */
+function walkSource(): Array<[string, string]> {
+  return sourceFiles()
+    .filter((path) => !/\.test\.tsx?$/.test(path))
+    .map((path) => [toRelative(path), readFileSync(path, 'utf8')])
 }
 
 // The table asserts each surface's registry CONTENTS: a bespoke slug has an
@@ -56,9 +51,9 @@ function walkSource(root: string): Array<[string, string]> {
 // to the surface Default" would be asking na's row not to exist. What the row
 // meant is asserted where it is now true — `defaultManifest.test.tsx` pins each
 // of the twenty to the component this dispatcher used to name by hand.
-const ALL_SLUGS = [
-  'coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'ua', 'wow', 'albescent',
-]
+const ALL_SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
+  (slug) => slug !== 'na',
+)
 
 // The six with a full bespoke treatment. (They HAD a bespoke desktop skin and a
 // separate bespoke phone one on several surfaces; ADR-0056/0058/0061/0065/0067
@@ -316,7 +311,7 @@ describe('WOW is bespoke on every core surface, never the Default', () => {
  * — by the time `pickVariant` has an object, the injected key is
  * indistinguishable from a registered one.
  */
-const CALL_SITES = walkSource(join(process.cwd(), 'src'))
+const CALL_SITES = walkSource()
 const READS_SURFACE_MAP = CALL_SITES.filter(([, text]) => text.includes('surfaceMap('))
 
 describe('every dispatcher reads surfaceMap() whole (#2529)', () => {
