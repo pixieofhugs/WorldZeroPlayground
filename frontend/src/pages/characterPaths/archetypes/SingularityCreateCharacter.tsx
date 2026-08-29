@@ -104,7 +104,7 @@
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
  */
-import { useId, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
@@ -114,6 +114,7 @@ import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import PortraitPicker from '../PortraitPicker'
+import { namedField } from '../characterFields'
 import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
 import {
   NAME_MAX,
@@ -184,13 +185,10 @@ function chassisLabel(overrides: CSSProperties = {}): CSSProperties {
 }
 
 export default function SingularityCreateCharacter({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const sizes = useComposerSizes()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  // Two forms could in principle share a document, so the field ids are
-  // generated rather than written down.
-  const fieldId = useId()
   const {
     displayName,
     setDisplayName,
@@ -382,19 +380,13 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
           </div>
 
           {/* Chosen name */}
-          <ComposerSection
-            rule={false}
-            htmlFor={`${fieldId}-name`}
-            label={t('createCharacter.nameLabel')}
-            labelStyle={{ fontFamily: FACE, color: INK }}
-          >
+          <ComposerSection rule={false}>
             <div style={boxStyle}>
               <input
-                id={`${fieldId}-name`}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={NAME_MAX}
-                placeholder={t('createCharacter.namePlaceholder')}
+                {...namedField(t('character.namePlaceholder'))}
                 autoFocus
                 style={inputStyle}
               />
@@ -403,19 +395,13 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
           </ComposerSection>
 
           {/* About */}
-          <ComposerSection
-            rule={false}
-            htmlFor={`${fieldId}-about`}
-            label={t('createCharacter.aboutLabel')}
-            labelStyle={{ fontFamily: FACE, color: INK }}
-          >
+          <ComposerSection rule={false}>
             <div style={boxStyle}>
               <textarea
-                id={`${fieldId}-about`}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={BIO_MAX}
-                placeholder={t('createCharacter.aboutPlaceholder')}
+                {...namedField(t('character.bioPlaceholder'))}
                 rows={3}
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
               />
@@ -427,19 +413,13 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
               alarm on the cap the way the name field's does: this is the field
               the profile header's identity slot is laid out against, so running
               out of room is worth seeing before the text stops appearing. */}
-          <ComposerSection
-            rule={false}
-            htmlFor={`${fieldId}-tagline`}
-            label={t('createCharacter.taglineLabel')}
-            labelStyle={{ fontFamily: FACE, color: INK }}
-          >
+          <ComposerSection rule={false}>
             <div style={boxStyle}>
               <textarea
-                id={`${fieldId}-tagline`}
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 maxLength={TAGLINE_MAX}
-                placeholder={t('createCharacter.taglinePlaceholder')}
+                {...namedField(t('character.taglinePlaceholder'))}
                 rows={2}
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
               />
@@ -459,7 +439,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
             rule={false}
             label={
               <>
-                {t('createCharacter.portraitLabel')}{' '}
+                {t('character.portrait')}{' '}
                 <span style={{ textTransform: 'none', letterSpacing: 0 }}>
                   {t('createCharacter.optional')}
                 </span>
@@ -592,7 +572,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                     cursor: 'pointer',
                   })}
                 >
-                  {t('createCharacter.cancel')}
+                  {t('common:actions.cancel')}
                 </button>
                 <span style={{ fontFamily: FACE, fontSize: 'var(--text-content)', color: INK }}>
                   {t('createCharacter.startsAt')}

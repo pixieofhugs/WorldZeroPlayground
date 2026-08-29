@@ -113,7 +113,7 @@
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
  */
-import { useId, useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -125,6 +125,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { WowSpark } from '../../../components/factionMarks/wowMobile'
 import PortraitPicker from '../PortraitPicker'
+import { namedField } from '../characterFields'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -205,7 +206,7 @@ const PICKER_SIGIL = 18
 const RADIUS = 6
 
 export default function WowCreateCharacter({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const sizes = useComposerSizes()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -235,9 +236,6 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
     handle,
     showPicker,
   } = state
-
-  /** One id per field, so each label names its own control (#2488). */
-  const fieldId = useId()
 
   /** Lora label ink on the cream — every section head on this sheet. */
   const sectionLabel: CSSProperties = { fontFamily: LORA, color: LABEL }
@@ -341,14 +339,13 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
           </div>
 
           {/* Chosen name */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-name`} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <input
-              id={`${fieldId}-name`}
               data-composer-field
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               maxLength={NAME_MAX}
-              placeholder={t('createCharacter.namePlaceholder')}
+              {...namedField(t('character.namePlaceholder'))}
               autoFocus
               style={{ ...fieldBox, fontFamily: MED }}
             />
@@ -361,14 +358,13 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
           </ComposerSection>
 
           {/* About */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-about`} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <textarea
-              id={`${fieldId}-about`}
               data-composer-field
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={BIO_MAX}
-              placeholder={t('createCharacter.aboutPlaceholder')}
+              {...namedField(t('character.bioPlaceholder'))}
               rows={3}
               style={{ ...fieldBox, resize: 'vertical', lineHeight: 1.7 }}
             />
@@ -379,14 +375,13 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
               alarm on the cap the way the name field's does: this is the field
               the profile header's identity slot is laid out against, so running
               out of room is worth seeing before the text stops appearing. */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-tagline`} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <textarea
-              id={`${fieldId}-tagline`}
               data-composer-field
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               maxLength={TAGLINE_MAX}
-              placeholder={t('createCharacter.taglinePlaceholder')}
+              {...namedField(t('character.taglinePlaceholder'))}
               rows={2}
               style={{ ...fieldBox, resize: 'vertical', lineHeight: 1.7 }}
             />
@@ -400,7 +395,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
             rule={false}
             label={
               <>
-                {t('createCharacter.portraitLabel')}{' '}
+                {t('character.portrait')}{' '}
                 <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span>
               </>
             }
@@ -529,7 +524,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
                     textDecoration: 'underline',
                   })}
                 >
-                  {t('createCharacter.cancel')}
+                  {t('common:actions.cancel')}
                 </button>
                 <span style={{ fontFamily: LORA, fontStyle: 'italic', fontSize: 'var(--text-content)', color: MUTED }}>
                   {t('createCharacter.startsAt')}

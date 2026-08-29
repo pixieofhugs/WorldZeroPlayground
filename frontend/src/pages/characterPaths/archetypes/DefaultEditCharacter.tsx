@@ -30,6 +30,16 @@
  * portrait picker or the avatar hook. The load / not-found / not-yours guards
  * are hoisted to the dispatcher below so the two branches cannot drift on them.
  *
+ * PLACEHOLDER-ONLY, AND EVERY FIELD NAMES ITSELF (#2793). No field on this page
+ * wears a visible label: the owner ruling unified the two character forms'
+ * vocabulary AROUND THE CHARACTER — "Character name", "Character bio" — and put
+ * those words inside the boxes rather than above them. On an edit form every
+ * box is already full, so a returning player reads their own contents rather
+ * than a placeholder; that cost is known and was accepted (the #2772 trade).
+ * What is NOT optional is the accessible name the deleted `<label>` used to
+ * supply: `namedField()` sets `placeholder` and `aria-label` from one string at
+ * every field on both branches, and both registries are swept for it.
+ *
  * THE FIELDS TAKE THE COMPOSER'S SHARED FOCUS RING, not one of their own
  * (#2825). Both style objects below used to set `outline: 'none'` inline with
  * nothing in its place, and an inline declaration beats any stylesheet — so
@@ -52,7 +62,7 @@
  * `__tests__/createCharacterContrast.test.ts` is the measurement, and
  * `eslint.config.js` names both files in the one paired exemption.
  */
-import { useId, useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../../utils/media'
@@ -62,6 +72,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import PortraitPicker from '../PortraitPicker'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
+import { namedField } from '../characterFields'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 
@@ -158,7 +169,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
 
         {/* ── Portrait ── */}
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
-          <div className="label-heading" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.portraitHeading')}</div>
+          <div className="label-heading" style={{ marginBottom: 'var(--space-lg)' }}>{t('character.portrait')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xl)', flexWrap: 'wrap' }}>
             {/* Spectrum-framed portrait — the DefaultAvatar look at portrait size
                 (reuses DefaultSigil for the corner mark). Every path still open.
@@ -224,9 +235,13 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <label className="font-body text-sm font-bold" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
+              {/* A SPAN, not a <label>: this heads the picker's BUTTON, and a
+                  <label> with nothing to point at is an accessible name
+                  attached to nothing — the #2834 defect class, on the width
+                  that issue's guard did not sweep. */}
+              <span className="font-body text-sm font-bold" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
                 {t('editCharacter.avatarLabel')}
-              </label>
+              </span>
               {/* The picker owns the hidden input and the readout (#1149). On this
                   screen there may already be a saved portrait, so "nothing new
                   chosen" reads as keeping it rather than as having none. */}
@@ -246,17 +261,17 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
           <div className="label-heading" style={{ marginBottom: 'var(--space-lg)' }}>{t('editCharacter.identityHeading')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <label style={{ display: 'block' }}>
-              <span style={fieldLabel}>
-                {t('editCharacter.displayNameLabel')}
-              </span>
+            {/* A DIV, not a <label>: this form is placeholder-only since #2793,
+                so the wrapper has no visible text to lend and the field names
+                itself. */}
+            <div>
               <input
                 data-composer-field
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={50}
-                placeholder={t('editCharacter.displayNamePlaceholder')}
+                {...namedField(t('character.namePlaceholder'))}
                 style={inputStyle}
               />
               <span
@@ -265,25 +280,26 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               >
                 {t('editCharacter.displayNameCount', { count: displayName.length })}
               </span>
-            </label>
+            </div>
             <div>
-              <span style={fieldLabel}>
-                {t('editCharacter.handleLabel')}
-              </span>
-              {/* Read-only: `username` is the auto-derived, unique handle (ADR-0019). */}
-              <div
+              {/* Read-only: `username` is the auto-derived, unique handle
+                  (ADR-0019). A real `readOnly` input rather than the styled
+                  <div> it used to be — the div could not carry an accessible
+                  name at all (`aria-label` on a role-less element is ignored),
+                  and with the visible "Handle" label deleted by #2793 that left
+                  the readout announcing a bare handle and nothing else. */}
+              <input
+                data-composer-field
+                type="text"
+                readOnly
+                value={`@${character.username}`}
+                {...namedField(t('character.handlePlaceholder'))}
                 style={{
                   ...inputStyle,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-xs)',
                   background: 'var(--color-bg-surface-alt)',
                   color: 'var(--color-text-tertiary)',
-                  cursor: 'not-allowed',
                 }}
-              >
-                <span style={{ fontFamily: 'var(--font-body)' }}>@{character.username}</span>
-              </div>
+              />
               <span className="label-caption" style={{ display: 'block', marginTop: 'var(--space-sm)' }}>
                 {t('editCharacter.handleHint')}
               </span>
@@ -293,8 +309,10 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
 
         {/* ── Your story ── */}
         <section className="sidebar-card" style={{ padding: 'var(--space-xl)' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
-            <span className="label-heading">{t('editCharacter.storyLabel')}</span>
+          {/* The counter keeps the row the deleted heading used to share with it
+              (#2793), so it stays where it has always been: hard right, above
+              the field it counts. */}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', marginBottom: 'var(--space-lg)' }}>
             <span className={`font-body text-xs ${bio.length >= 450 ? 'warning-text' : 'text-muted'}`}>
               {t('editCharacter.storyCount', { count: bio.length })}
             </span>
@@ -305,7 +323,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             maxLength={500}
-            placeholder={t('editCharacter.storyPlaceholder')}
+            {...namedField(t('character.bioPlaceholder'))}
             style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
           />
 
@@ -313,8 +331,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               than in one of its own so the two read as the pair they are: the
               paragraph, and the line that goes above it. */}
           <div style={{ marginTop: 'var(--space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={fieldLabel}>{t('editCharacter.taglineLabel')}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end' }}>
               <span className={`font-body text-xs ${tagline.length >= TAGLINE_MAX ? 'warning-text' : 'text-muted'}`}>
                 {t('editCharacter.taglineCount', { count: tagline.length })}
               </span>
@@ -325,22 +342,24 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               maxLength={TAGLINE_MAX}
-              placeholder={t('editCharacter.taglinePlaceholder')}
+              {...namedField(t('character.taglinePlaceholder'))}
               style={inputStyle}
             />
           </div>
 
           <div style={{ marginTop: 'var(--space-lg)' }}>
-            <span style={fieldLabel}>
-              {t('editCharacter.basedLabel')} <span style={{ color: 'var(--color-text-tertiary)' }}>{t('editCharacter.optional')}</span>
-            </span>
+            {/* An AIRPORT CODE, and the placeholder is the only thing that says
+                so (owner ruling on #2793): close enough for two players to find
+                each other, too coarse to track anyone. Nothing validates the
+                format — the column is free text to 100 chars — so the hint is
+                the whole of the convention. */}
             <input
               data-composer-field
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               maxLength={100}
-              placeholder={t('editCharacter.basedPlaceholder')}
+              {...namedField(t('character.locationPlaceholder'))}
               style={{ ...inputStyle, maxWidth: 280 }}
             />
             <span
@@ -360,7 +379,7 @@ function DesktopPlate({ state }: { state: EditCharacterState }) {
             {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
           </button>
           <button type="button" onClick={() => navigate(`/characters/${id}`)} className="btn-outline">
-            {t('editCharacter.cancel')}
+            {t('common:actions.cancel')}
           </button>
         </div>
       </form>
@@ -397,11 +416,6 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
-  // One id per field, so each label names its own control (#2834) — the same
-  // shape `DefaultCreateCharacter` already uses; these three drew a sibling
-  // <label> with no `htmlFor` and no `id`, so neither the desktop plate's
-  // implicit (wrapping) association nor an explicit one existed.
-  const fieldId = useId()
   const {
     id,
     character,
@@ -436,7 +450,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
     <form data-skin="default" data-testid="mobile-edit-character" onSubmit={handleSubmit} style={page}>
       {/* Top row — back + title */}
       <div style={topRow}>
-        <button type="button" onClick={() => navigate(`/characters/${id}`)} style={backBtn} aria-label={t('editCharacter.cancel')}>
+        <button type="button" onClick={() => navigate(`/characters/${id}`)} style={backBtn} aria-label={t('common:actions.cancel')}>
           ‹
         </button>
         <span className="label-heading">{t('editCharacter.heading')}</span>
@@ -484,32 +498,28 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
 
       {/* Name */}
       <div>
-        <label htmlFor={`${fieldId}-name`} style={label}>{t('editCharacter.displayNameLabel')}</label>
         <input
-          id={`${fieldId}-name`}
           data-composer-field
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={50}
-          placeholder={t('editCharacter.displayNamePlaceholder')}
+          {...namedField(t('character.namePlaceholder'))}
           className="content-text"
           style={field}
         />
       </div>
 
-      {/* Your story — the long-form bio. It wore the label "Tagline" until #1628
-          gave that name to a real, much shorter field one block down; it now
-          takes the desktop label so both surfaces call the same field the same
-          thing. */}
+      {/* The long-form bio. It wore the label "Tagline" until #1628 gave that
+          name to a real, much shorter field one block down; since #2793 neither
+          wears a label at all, and the two are told apart by the words inside
+          them — "Character bio" here, "Character Catchphrase" below. */}
       <div>
-        <label htmlFor={`${fieldId}-story`} style={label}>{t('editCharacter.storyLabel')}</label>
         <input
-          id={`${fieldId}-story`}
           data-composer-field
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           maxLength={500}
-          placeholder={t('editCharacter.storyPlaceholder')}
+          {...namedField(t('character.bioPlaceholder'))}
           className="content-text"
           style={field}
         />
@@ -517,14 +527,12 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
 
       {/* Tagline — the slogan line (#1628), capped far below the bio above it. */}
       <div>
-        <label htmlFor={`${fieldId}-tagline`} style={label}>{t('editCharacter.taglineLabel')}</label>
         <input
-          id={`${fieldId}-tagline`}
           data-composer-field
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
           maxLength={TAGLINE_MAX}
-          placeholder={t('editCharacter.taglinePlaceholder')}
+          {...namedField(t('character.taglinePlaceholder'))}
           className="content-text"
           style={field}
         />
@@ -578,15 +586,6 @@ const inputStyle: CSSProperties = {
   color: 'var(--color-text-primary)',
   padding: 'var(--space-md)',
   boxSizing: 'border-box',
-}
-
-// Form field labels — read to fill the form in, so they sit on the content
-// floor, not the label ramp (#623). Static, hoisted per #586.
-const fieldLabel: CSSProperties = {
-  display: 'block',
-  fontSize: 'var(--text-content)',
-  color: 'var(--color-text-secondary)',
-  marginBottom: 'var(--space-sm)',
 }
 
 const headingStyle: CSSProperties = {
@@ -647,10 +646,6 @@ const ringInner: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden',
   background: 'var(--faction-default-card-bg)',
-}
-const label: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
-  color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)',
 }
 const field: CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box',

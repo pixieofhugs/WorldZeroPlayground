@@ -33,7 +33,7 @@
  * exemption they justify. Layout is flex/relative single-column on the phone —
  * no fixed-px grid drives the page (SPEC-faction-ui-profile §1a).
  */
-import { useId, useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -43,6 +43,7 @@ import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import PortraitPicker from '../PortraitPicker'
+import { namedField } from '../characterFields'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -114,7 +115,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
 /* -------------------------------------------------------------------------- */
 
 function DesktopPlate({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const {
@@ -143,9 +144,6 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
     showPicker,
   } = state
 
-  /** One id per field, so each label names its own control (#2488). */
-  const fieldId = useId()
-
   return (
     <div className="page" data-skin="default">
       <button onClick={() => navigate('/')} style={backLink}>{t('createCharacter.back')}</button>
@@ -155,15 +153,13 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
         <form onSubmit={handleSubmit} style={{ flex: '1 1 320px', maxWidth: 440 }}>
           <h1 style={titleStyle}>{t('createCharacter.heading')}</h1>
 
-          {/* Chosen name */}
-          <label htmlFor={`${fieldId}-name`} style={eyebrow}>{t('createCharacter.nameLabel')}</label>
+          {/* Name */}
           <input
-            id={`${fieldId}-name`}
             data-composer-field
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={NAME_MAX}
-            placeholder={t('createCharacter.namePlaceholder')}
+            {...namedField(t('character.namePlaceholder'))}
             autoFocus
             style={nameInput}
           />
@@ -174,17 +170,16 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
             </span>
           </div>
 
-          {/* About */}
-          <label htmlFor={`${fieldId}-about`} style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.aboutLabel')}</label>
+          {/* Bio. The gap the deleted label used to open above it moves onto the
+              field itself, so the stack keeps the rhythm it had (#2793). */}
           <textarea
-            id={`${fieldId}-about`}
             data-composer-field
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={BIO_MAX}
-            placeholder={t('createCharacter.aboutPlaceholder')}
+            {...namedField(t('character.bioPlaceholder'))}
             rows={3}
-            style={bioInput}
+            style={{ ...bioInput, marginTop: 'var(--space-xl)' }}
           />
           <div style={metaRow}>
             <span />
@@ -195,16 +190,14 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
               danger on the cap the way the name field's does: this is the field
               the profile header's identity slot is laid out against, so running
               out of room is worth seeing before the text stops appearing. */}
-          <label htmlFor={`${fieldId}-tagline`} style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.taglineLabel')}</label>
           <textarea
-            id={`${fieldId}-tagline`}
             data-composer-field
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
             maxLength={TAGLINE_MAX}
-            placeholder={t('createCharacter.taglinePlaceholder')}
+            {...namedField(t('character.taglinePlaceholder'))}
             rows={2}
-            style={bioInput}
+            style={{ ...bioInput, marginTop: 'var(--space-xl)' }}
           />
           <div style={metaRow}>
             <span />
@@ -221,7 +214,7 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
               is an accessible name attached to nothing (#2488). `ComposerSection`
               draws these the same way on every faction plate — a heading when no
               `htmlFor` is passed — so this is the shared answer, not a local one. */}
-          <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></span>
+          <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('character.portrait')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></span>
           <PortraitPicker
             inputRef={fileInputRef}
             onChange={handleAvatarChange}
@@ -274,7 +267,7 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
             <button type="submit" disabled={!canSubmit} className="control-off" style={primaryBtn}>
               {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
             </button>
-            <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('createCharacter.cancel')}</button>
+            <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('common:actions.cancel')}</button>
             <span style={{ fontSize: 'var(--text-content)', color: FAINT, letterSpacing: '0.06em' }}>
               {t('createCharacter.startsAt')}
             </span>
@@ -315,7 +308,7 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
 /* -------------------------------------------------------------------------- */
 
 function MobileColumn({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const {
@@ -339,9 +332,6 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
     showPicker,
   } = state
 
-  /** One id per field, so each label names its own control (#2488). */
-  const fieldId = useId()
-
   // One string for the ring's accessible name and its visible caption (#1149).
   // The ring never showed the browser's "No file chosen" — its input has always
   // been hidden — but it had no accessible name either: the name fell through to
@@ -355,7 +345,7 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
     <form data-skin="default" data-testid="mobile-create-character" onSubmit={handleSubmit} style={page}>
       {/* Top row — back + title */}
       <div style={topRow}>
-        <button type="button" onClick={() => navigate('/')} style={backBtn} aria-label={t('createCharacter.cancel')}>
+        <button type="button" onClick={() => navigate('/')} style={backBtn} aria-label={t('common:actions.cancel')}>
           ‹
         </button>
         <span className="label-heading">{t('createCharacter.mobile.title')}</span>
@@ -398,14 +388,12 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
 
       {/* Name */}
       <div>
-        <label htmlFor={`${fieldId}-name`} style={label}>{t('createCharacter.nameLabel')}</label>
         <input
-          id={`${fieldId}-name`}
           data-composer-field
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={NAME_MAX}
-          placeholder={t('createCharacter.namePlaceholder')}
+          {...namedField(t('character.namePlaceholder'))}
           autoFocus
           className="content-text"
           style={field}
