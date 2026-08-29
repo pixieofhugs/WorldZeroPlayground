@@ -3,6 +3,7 @@
 Handles all three praxis types: solo, collab, and duel.
 """
 
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
@@ -51,6 +52,7 @@ from services.character_stats import (
 from services.faction_service import faction_permits
 from services.media import (
     process_and_save_media,
+    resolve_stored_media_path,
     restore_media_to_mount,
     withdraw_media_from_mount,
 )
@@ -1269,6 +1271,51 @@ async def add_media_batch(
     if saved_count:
         await collab_consensus.on_member_edit(praxis, session, era)
     return results
+
+
+async def delete_media_item(
+    praxis: Praxis,
+    media_item: MediaItem,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """Remove one media item from a live praxis: DB row authoritative, disk best-effort.
+
+    Caller contract: the praxis has been fetched, ``_require_member`` has
+    passed, and ``media_item`` has been confirmed to belong to ``praxis`` —
+    same batch-wide-verdicts-first contract as :func:`add_media_batch`.
+
+    Through the shared predicate, not a bare join. ``resolve_stored_media_path``
+    is the one "is this a file we own?" gate every column-value-to-filesystem
+    operation passes (see its docstring): ``file_path`` is server-generated
+    today so there is no live traversal, but joining ``MEDIA_ROOT`` to it
+    directly would let a stored value with an absolute or ``..``-bearing path
+    escape ``MEDIA_ROOT`` entirely, the day any other writer touches that
+    column. Same two lines as ``delete_stored_avatar``.
+
+    ``resolve_stored_media_path`` returning ``None`` -- an unresolvable path,
+    same as a row this process does not own -- means there is nothing on disk
+    to touch, and removing the row is still a no-op success, never a 500.
+    """
+    abs_path = resolve_stored_media_path(media_item.file_path)
+    if abs_path is not None:
+        try:
+            os.remove(abs_path)
+        except OSError:
+            pass
+        # Each upload owns its directory (#1336), so removing the file leaves
+        # that directory empty. rmdir refuses a non-empty one, which is
+        # exactly the guard we want for pre-#1336 rows that still share a
+        # per-praxis directory.
+        try:
+            os.rmdir(os.path.dirname(abs_path))
+        except OSError:
+            pass
+
+    await session.delete(media_item)
+    await session.flush()
+    # Removing media edits the shared document — cancels a pending publish (ADR-0012).
+    await collab_consensus.on_member_edit(praxis, session, era)
 
 
 async def can_view_praxis(
