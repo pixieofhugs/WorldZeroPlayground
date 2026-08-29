@@ -20,11 +20,12 @@
  * Both read the catalog and the source tree rather than any rendered markup —
  * the harness has no DOM, and the words are what changed.
  * ========================================================================== */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, extname, join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
+import { sourceFiles as walkSource, toRelative } from '../../test/sourceScan'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const EN = join(HERE, '..', 'en')
@@ -42,13 +43,12 @@ function catalogLeaves(): Array<[string, string]> {
     }
     return []
   }
-  return readdirSync(EN)
-    .filter((entry) => entry.endsWith('.json'))
-    .flatMap((entry) =>
-      walk(JSON.parse(readFileSync(join(EN, entry), 'utf8')), []).map(
-        ([key, value]) => [`${entry.replace(/\.json$/, '')}:${key}`, value] as [string, string],
-      ),
+  return walkSource({ dir: EN, match: /\.json$/ }).flatMap((path) => {
+    const entry = path.slice(EN.length + 1)
+    return walk(JSON.parse(readFileSync(path, 'utf8')), []).map(
+      ([key, value]) => [`${entry.replace(/\.json$/, '')}:${key}`, value] as [string, string],
     )
+  })
 }
 
 /**
@@ -248,15 +248,14 @@ describe('the 40 per-faction key families are one shared string each (#1911)', (
 /**
  * Every `.ts`/`.tsx` under `src/`, minus the generated API client and the
  * ambient declarations — `i18next.d.ts` documents the call shape with a literal
- * example key, which is prose, not a lookup.
+ * example key, which is prose, not a lookup. `__tests__` stays IN, unlike the
+ * shared walk's default: this sweep wants every `t()` call in the tree,
+ * fixtures included, not just what ships.
  */
 function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const full = join(dir, entry)
-    if (statSync(full).isDirectory()) return entry === 'generated' ? [] : sourceFiles(full)
-    if (entry.endsWith('.d.ts')) return []
-    return ['.ts', '.tsx'].includes(extname(entry)) ? [full] : []
-  })
+  return walkSource({ dir, includeTests: true })
+    .filter((path) => !toRelative(path).split('/').includes('generated'))
+    .filter((path) => !path.endsWith('.d.ts'))
 }
 
 /**

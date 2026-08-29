@@ -19,14 +19,14 @@
  * This file is deliberately its own, not an append to `taskCardsV3.test.tsx`:
  * six sibling faction passes are in flight against that shared table.
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import i18n from '../../../i18n'
+import { sourceFiles } from '../../../test/sourceScan'
 
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
 
@@ -161,21 +161,9 @@ describe('the rose is drawn in exactly one file', () => {
   const KIT = fileURLToPath(
     new URL('../../factionMarks/ephemeristsPlate.tsx', import.meta.url),
   )
-  const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 
   it('declares the needle path only in the kit', () => {
-    const found: string[] = []
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === '__tests__') continue
-        const full = join(dir, entry.name)
-        if (entry.isDirectory()) walk(full)
-        else if (/\.tsx?$/.test(entry.name) && readFileSync(full, 'utf8').includes(NORTH)) {
-          found.push(full)
-        }
-      }
-    }
-    walk(SRC)
+    const found = sourceFiles().filter((path) => readFileSync(path, 'utf8').includes(NORTH))
     expect(found).toEqual([KIT])
   })
 })

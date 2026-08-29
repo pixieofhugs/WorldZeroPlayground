@@ -44,6 +44,7 @@ vi.mock('../../../api/me', () => ({
 
 // Imported after the mocks are registered.
 import FieldDesk from '../../FieldDesk'
+import { surfaceMap } from '../../../factions'
 
 function currentUser(faction_slug: string): CurrentUser {
   const character: CharacterOut = {
@@ -98,10 +99,16 @@ function render(faction_slug: string): string {
 }
 
 // Every mobile home skin paints the same track; a per-faction skin that grew
-// its own arithmetic is the defect one level up, so all eight are checked.
-const SKINS = ['na', 'coven', 'snide', 'wow', 'ua', 'everymen', 'singularity', 'ephemerists']
+// its own arithmetic is the defect one level up, so every registered skin —
+// all nine, including Albescent's DefaultFieldDesk wrapper (#2815) — is
+// checked. Derived from the manifest so a tenth kit is covered by existing.
+const SKINS = Object.keys(surfaceMap('mobileFieldDesk'))
 
 describe('the home level track', () => {
+  it('covers every skin the app can dispatch mobileFieldDesk to', () => {
+    expect(SKINS).toHaveLength(9)
+  })
+
   it.each(SKINS)('fills against the current band on the %s home', (slug) => {
     const html = render(slug)
     expect(html).toContain('width:9.375%')

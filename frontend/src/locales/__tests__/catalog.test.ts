@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, relative, sep } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
 import common from '../en/common.json'
@@ -12,6 +12,7 @@ import taunts from '../en/taunts.json'
 import votes from '../en/votes.json'
 import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
 import { factionName } from '../../utils/factions'
+import { sourceFiles, toRelative } from '../../test/sourceScan'
 
 // Factions with a vote voice (per-faction tier labels). Kept as an explicit
 // list, mirroring the seed catalog this test was ported from. Albescent is not
@@ -296,13 +297,12 @@ function catalogLeaves(): Array<[string, string]> {
     }
     return []
   }
-  return readdirSync(dir)
-    .filter((entry) => entry.endsWith('.json'))
-    .flatMap((entry) =>
-      walk(JSON.parse(readFileSync(join(dir, entry), 'utf8')), []).map(
-        ([key, value]) => [`${entry}:${key}`, value] as [string, string],
-      ),
+  return sourceFiles({ dir, match: /\.json$/ }).flatMap((path) => {
+    const entry = basename(path)
+    return walk(JSON.parse(readFileSync(path, 'utf8')), []).map(
+      ([key, value]) => [`${entry}:${key}`, value] as [string, string],
     )
+  })
 }
 
 /**
@@ -642,10 +642,7 @@ describe('no duplicate keys in any locale catalog', () => {
   // cannot catch it — we scan the raw file text instead. Guard for #670.
   const localesDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-  // recursive + no withFileTypes → path strings; the cast drops the string|Buffer union.
-  const jsonFiles = (readdirSync(localesDir, { recursive: true }) as string[])
-    .filter((entry) => entry.endsWith('.json'))
-    .map((entry) => join(localesDir, entry))
+  const jsonFiles = sourceFiles({ dir: localesDir, match: /\.json$/ })
 
   it('finds catalog files to scan', () => {
     // Fails loudly if the glob ever silently matches nothing (moved dir, etc.).
@@ -1226,10 +1223,9 @@ const INTERPOLATED_KEYS = new Set(
 
 /** Every `.ts`/`.tsx` under `src` that ships, src-relative and slash-separated. */
 function shippedSources(): string[] {
-  return readdirSync(SRC_ROOT, { recursive: true, encoding: 'utf8' })
-    .map((name) => name.split(sep).join('/'))
-    .filter((name) => /\.tsx?$/.test(name))
-    .filter((name) => !name.includes('__tests__/') && !name.startsWith('locales/'))
+  return sourceFiles()
+    .map((path) => toRelative(path))
+    .filter((name) => !name.startsWith('locales/'))
 }
 
 /**
