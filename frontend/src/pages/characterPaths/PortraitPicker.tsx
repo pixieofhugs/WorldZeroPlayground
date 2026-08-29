@@ -46,7 +46,7 @@ interface PortraitPickerProps {
    * create screen's credential-card portrait is a second trigger for it. Omit and
    * the control keeps its own.
    */
-  inputRef?: RefObject<HTMLInputElement>
+  inputRef?: RefObject<HTMLInputElement | null>
   /** Wrapper override, for a surface that owns the surrounding spacing. */
   style?: CSSProperties
   buttonStyle?: CSSProperties
