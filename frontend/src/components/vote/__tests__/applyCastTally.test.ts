@@ -26,7 +26,7 @@ import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { VoteTallyOut } from '../../../api/votes'
 import { scoreBreakdown, type ScoredPraxis } from '../../praxisCard/scoreStamp/scoreBreakdown'
 import { applyCastTally, applyDuelCastTally } from '../useVotedPraxis'
-import { __resetCastTallies, castTally, recordCastTally } from '../castTallies'
+import { __resetCastTallies, castTally, recordCastTally } from '../../../utils/castTallies'
 import { aPraxis, aPraxisCard } from '../../../test/fixtures'
 
 const PRAXIS_ID = 7

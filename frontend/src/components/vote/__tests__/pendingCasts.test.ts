@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../../../api/votes', () => ({ castVote: mocks.castVote }))
 
-import { castTally, __resetCastTallies } from '../castTallies'
+import { castTally, __resetCastTallies } from '../../../utils/castTallies'
 import {
   applyPendingCast,
   flushPendingCast,

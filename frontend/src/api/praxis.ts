@@ -1,5 +1,5 @@
 import { apiDelete, apiGet, apiPost } from './client'
-import { clearCastTallies } from '../components/vote/castTallies'
+import { clearCastTallies } from '../utils/castTallies'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { components } from './generated/schema'
 import type { FlagReason } from '../utils/flagReasons'
