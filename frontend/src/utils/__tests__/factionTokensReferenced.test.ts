@@ -1,9 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { FACTION_RAINBOW_ORDER, factionCssVar } from "../factions";
+import { sourceFiles } from "../../test/sourceScan";
 import { stripComments } from "./cssVars";
 
 /**
@@ -35,12 +36,11 @@ import { stripComments } from "./cssVars";
  * sweep (references from non-test sources only) reports five more names, among
  * them `--faction-wow-vote-on` / `-off`, which nothing but `frozenThemeAliases`
  * has read since the vote caption row was struck in #2166. Upgrade path when
- * someone wants those bytes: drop `__tests__` from `collectSourceFiles` and
+ * someone wants those bytes: drop `includeTests: true` from the `sourceFiles()` call and
  * carry the survivors as a named, dated allowlist.
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css"];
 
 /** The namespaces this rule polices. Everything else is out of #2535's scope. */
 const GOVERNED = /^--(faction|spectrum)-/;
@@ -99,17 +99,6 @@ const DYNAMICALLY_BUILT = new Set([
  */
 const SELF = fileURLToPath(import.meta.url);
 
-function collectSourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return collectSourceFiles(path);
-    if (path === SELF) return [];
-    return SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))
-      ? [path]
-      : [];
-  });
-}
-
 /** A declaration: `--x: value`. Comments are stripped before this runs. */
 const DECLARED_IN_CSS = /(?:^|[;{\s])(--[\w-]+)\s*:/g;
 /** A `var()` reference; the trailing `[,)]` excludes interpolated names. */
@@ -135,10 +124,16 @@ function matchAll(text: string, pattern: RegExp): string[] {
  * a JS docblock therefore counts as read here. That is the safe direction: this
  * rule DELETES things.
  */
-const sources = collectSourceFiles(SRC_DIR).map((path) => {
-  const text = readFileSync(path, "utf-8");
-  return { path, text: path.endsWith(".css") ? stripComments(text) : text };
-});
+const sources = sourceFiles({
+  dir: SRC_DIR,
+  includeTests: true,
+  match: /\.(?:tsx?|jsx?|css)$/,
+})
+  .filter((path) => path !== SELF)
+  .map((path) => {
+    const text = readFileSync(path, "utf-8");
+    return { path, text: path.endsWith(".css") ? stripComments(text) : text };
+  });
 
 const declared = new Map<string, string>();
 for (const { path, text } of sources) {
