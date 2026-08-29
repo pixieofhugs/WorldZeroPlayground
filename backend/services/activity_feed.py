@@ -47,7 +47,7 @@ from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from services.block_service import blocked_counterpart_ids
 from services.meta_task import character_sees_metatasks
-from services.praxis import praxis_visibility_condition
+from services.praxis_visibility import praxis_visibility_condition
 from models.character_stats import CharacterStats
 from models.task import Task, TaskStatus, TaskType
 from models.taunt_message import TauntMessage
