@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+import { API_BASE_URL } from '../api/baseUrl'
 
 /**
  * Resolve a media path to a full URL.
@@ -11,5 +11,5 @@ export function mediaUrl(path: string | null | undefined): string {
   if (path.startsWith('http://') || path.startsWith('https://')) return path
   // Strip leading slash to avoid double-slash
   const cleaned = path.startsWith('/') ? path : `/media/${path}`
-  return `${BASE_URL}${cleaned}`
+  return `${API_BASE_URL}${cleaned}`
 }
