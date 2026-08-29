@@ -39,7 +39,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
 | Kit shape: how many surfaces, which faction identities, responsive-vs-split | `docs/kit-structure.md` |
 | Shipping a surface without slowing the site down (payload budget, what makes a surface free, asset + font rules) | `docs/agents/load-time.md` |
-| CSS variables (colors, type, themes) | `frontend/src/index.css` |
+| CSS variables (colors, type, themes) | `frontend/src/css/*.css` (`index.css` is the import map that orders them; #2891) |
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |

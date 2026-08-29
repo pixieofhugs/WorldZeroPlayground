@@ -10,7 +10,7 @@
    THE ORDER BELOW IS THE CASCADE. CSS is order-dependent, so a part moved up
    or down this list repaints the site even though every byte of every part is
    untouched. The numeric prefixes exist so that order is impossible to get
-   wrong by accident, and `src/test/__tests__/indexCssParts.test.ts` fails if
+   wrong by accident, and `src/test/__tests__/indexCss.test.ts` fails if
    this list and `src/css/` ever disagree.
 
    Three of the eleven parts say FACTION CHROME, and that is not a mistake:
