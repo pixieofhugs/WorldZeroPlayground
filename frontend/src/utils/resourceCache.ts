@@ -54,8 +54,8 @@ import { CACHE_EPOCH, type CacheEpoch } from './cacheEpoch'
  *
  * What CAN change mid-session is who is asking. `/factions` hides Albescent
  * until the account is revealed to it (ADR-0027), and joining reveals it. That
- * is a mutation, so it is answered like one — `chooseFaction()` calls
- * `dropAllCaches()` — not by aging the whole class out on a timer in the hope of
+ * is a mutation, so it is answered like one — the join flow calls
+ * `dropAllCaches` — not by aging the whole class out on a timer in the hope of
  * catching it.
  */
 export const SESSION_TTL_MS = Number.POSITIVE_INFINITY
