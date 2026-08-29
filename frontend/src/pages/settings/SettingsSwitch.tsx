@@ -41,6 +41,37 @@ import type { CSSProperties } from 'react'
  * `aria-disabled` rather than the `disabled` attribute, on purpose: a
  * `disabled` button leaves the tab order, so the one reader most likely to need
  * the explanation is the one who can never reach it.
+ *
+ * THE LOCK GLYPH IS "LOCKED ON" ONLY, NOT "LOCKED" IN GENERAL (#2844). A
+ * locked-off switch (`Analytics`, `Marketing`) already reads as a distinct
+ * state without any glyph: its edge is the flat `--color-border-strong` line
+ * from `TRACK_EDGE_OFF`, not the rainbow, and its thumb sits left. The only
+ * pairing that was pixel-identical to a live, changeable switch was
+ * locked-**on** (`Essential`) against `Dark mode` — same rainbow edge, same
+ * thumb position, only `cursor` differed, and cursor needs a hover that a
+ * touch reader never gets. So the glyph is gated on `checked && disabled`
+ * specifically, not on `disabled` alone; giving it to the off switches too
+ * would draw a distinction nothing needs. The design canvas's `opacity: .45`
+ * dim on the locked track is deliberately NOT ported — see the measurement
+ * in #2844: at .45 every one of the rainbow ring's seven stops falls under
+ * 1.4.11's 3:1, and the ring is the only perceivable state signal this
+ * control has (see #2845 above).
+ *
+ * THE GLYPH'S OWN INK IS `--color-text-tertiary`, NOT `--switch-thumb-edge`
+ * (review finding on #2844's first pass). `--switch-thumb-edge` is 18% of
+ * `--color-text-primary` — a wash on the OUTER side of the thumb, against the
+ * well, where it reads. Drawn INSIDE the thumb instead, its only neighbour is
+ * the thumb's own fill (`--switch-thumb`, a 10% wash of the same primary), and
+ * 18%-ink-on-10%-ink composites to 1.44:1 light / 1.65:1 dark — reproduced with
+ * this file's own `compositeOver`/`contrastRatio` helpers over the same
+ * page -> `--switch-well` (6%) -> `--switch-thumb` (10%) stack `SWITCH_RING_PAIRS`
+ * documents. That is not perceivable, so it would have shipped the acceptance
+ * criterion's exact failure mode again with different pixels. `--color-text-tertiary`
+ * on that same composited thumb measures 5.66:1 light / 6.04:1 dark — comfortably
+ * over 1.4.11's 3:1 in both — and it is not a new token: it is the same one
+ * `--switch-ring-hairline` already aliases for the ring (#2845). Asserted as its
+ * own row in `factionContrast.test.ts`, "switch lock glyph, on the locked-on
+ * thumb".
  */
 interface SettingsSwitchProps {
   readonly checked: boolean
@@ -91,9 +122,38 @@ const knob: CSSProperties = {
   width: 20,
   height: 20,
   borderRadius: 999,
-  display: 'block',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   boxShadow: 'inset 0 0 0 1px var(--switch-thumb-edge)',
   transition: 'left 180ms ease',
+}
+
+/**
+ * The locked-on glyph (#2844). Decorative only — the outer knob `<span>` is
+ * already `aria-hidden`, and the accessible name (set by the caller) already
+ * says the switch is locked. Sized to sit inside the 20px thumb with room to
+ * spare.
+ *
+ * `--color-text-tertiary`, NOT `--switch-thumb-edge` — see the long note
+ * above `knob` for the measurement. The ring's own edge token washes out to
+ * 1.44:1 / 1.65:1 once it is drawn against the thumb's fill instead of the
+ * well; tertiary clears 5.66:1 / 6.04:1 on that same composited thumb and is
+ * an existing token, not a new one.
+ */
+function LockGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10">
+      <path
+        d="M3.5 5V3.6a2.5 2.5 0 0 1 5 0V5"
+        fill="none"
+        stroke="var(--color-text-tertiary)"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <rect x="2.5" y="5" width="7" height="5.5" rx="1.1" fill="var(--color-text-tertiary)" />
+    </svg>
+  )
 }
 
 export default function SettingsSwitch({
@@ -128,7 +188,9 @@ export default function SettingsSwitch({
           left: checked ? 22 : 3,
           background: checked ? 'var(--switch-thumb)' : 'var(--switch-thumb-off)',
         }}
-      />
+      >
+        {checked && disabled && <LockGlyph />}
+      </span>
     </button>
   )
 }
