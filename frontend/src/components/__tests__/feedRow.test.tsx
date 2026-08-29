@@ -16,6 +16,7 @@ import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { collabCopy } from '../collab/collabCopy'
 import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
+import { FACTION_RAINBOW_ORDER } from '../../utils/factions'
 import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
 
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
@@ -524,7 +525,15 @@ describe('FeedRowContent skin seam', () => {
  */
 describe('the monogram disc is inked with the faction pair, not a global neutral', () => {
   const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../index.css', import.meta.url)), 'utf8'))
-  const FILL_SLUGS = ['ua', 'wow', 'everymen', 'coven', 'snide', 'ephemerists', 'singularity']
+  // Derived, not typed (#2815): the pairing under test is `--faction-<slug>`
+  // against its `-on-fill`, so the population is exactly the slugs that HAVE a
+  // fill. `FACTION_RAINBOW_ORDER` is that set — it is the hue wheel, so a slug
+  // is in it iff index.css declares a `--faction-<slug>` colour. The two kits
+  // outside it are outside it for that reason: `albescent` ships no
+  // `--faction-albescent-*` block at all (#783 — a bar built from the wheel
+  // would leak the secret society), and `na` is a state, not a faction, so it
+  // paints no monogram disc. A tenth kit with a hue joins this loop by existing.
+  const FILL_SLUGS = FACTION_RAINBOW_ORDER
 
   it.each(FILL_SLUGS)('%s: the emitted glyph ink clears AA on the disc fill in both themes', (slug) => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow(slug)} avatarUrl={null} /></MemoryRouter>)

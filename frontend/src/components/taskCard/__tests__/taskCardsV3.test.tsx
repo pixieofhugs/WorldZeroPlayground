@@ -27,15 +27,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 }))
 
 // Imported after the mock is registered.
-import AlbescentTaskCard from '../AlbescentTaskCard'
-import CovenTaskCard from '../CovenTaskCard'
-import DefaultTaskCard from '../DefaultTaskCard'
-import EphemeristsTaskCard from '../EphemeristsTaskCard'
-import EverymenTaskCard from '../EverymenTaskCard'
-import SingularityTaskCard from '../SingularityTaskCard'
-import SnideTaskCard from '../SnideTaskCard'
-import UaTaskCard from '../UaTaskCard'
-import WowTaskCard from '../WowTaskCard'
+import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
 import { factionName } from '../../../utils/factions'
 
@@ -49,18 +41,21 @@ interface Skin {
   Card: ComponentType<CardProps>
 }
 
-/** All nine, `na` and `albescent` included — they are cards, not exceptions. */
-const SKINS: Skin[] = [
-  { slug: 'na', Card: DefaultTaskCard },
-  { slug: 'albescent', Card: AlbescentTaskCard },
-  { slug: 'coven', Card: CovenTaskCard },
-  { slug: 'ephemerists', Card: EphemeristsTaskCard },
-  { slug: 'everymen', Card: EverymenTaskCard },
-  { slug: 'singularity', Card: SingularityTaskCard },
-  { slug: 'snide', Card: SnideTaskCard },
-  { slug: 'ua', Card: UaTaskCard },
-  { slug: 'wow', Card: WowTaskCard },
-]
+/**
+ * All nine, `na` and `albescent` included — they are cards, not exceptions.
+ *
+ * Read off `surfaceMap('taskCard')` rather than typed (#2815): the three shared
+ * passes are properties of the KIT, so the range has to be whatever the kit
+ * dispatches to, not a list that has to be edited when a tenth one arrives.
+ */
+const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) => ({
+  slug,
+  Card,
+}))
+
+it('covers every skin the app can dispatch taskCard to', () => {
+  expect(SKINS).toHaveLength(9)
+})
 
 function render({ Card }: Skin): { html: string; text: string } {
   const html = renderToStaticMarkup(

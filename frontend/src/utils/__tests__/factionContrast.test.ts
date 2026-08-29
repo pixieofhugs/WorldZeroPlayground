@@ -105,10 +105,9 @@ const BOTH_THEMES: Theme[] = ["light", "dark"];
 /** Every faction that supplies the standard `--faction-{key}-card-*` block (§3). */
 const CARD_KEYS = [
   "ua",
-  // `wow` supplied the §3 block and nothing more until #896 gated the chronicle
-  // primitives, so it now appears here AND in ARCHETYPE_PAIRS below. The §3
-  // block still covers four of the kit's six stated pairs on its own — see the
-  // WOW comment down there for which.
+  // `wow` appears here AND in ARCHETYPE_PAIRS below: the §3 block covers four
+  // of the kit's six stated pairs on its own and the chronicle primitives carry
+  // the rest — see the WOW comment down there for which.
   "wow",
   "everymen",
   "coven",
@@ -121,13 +120,10 @@ const CARD_KEYS = [
 /**
  * Factions whose primary is a solid fill that carries text.
  *
- * `default` (na) was absent here until #2297, on the reading that ADR-0039
- * makes the unaffiliated fill a *gradient* rather than a hue, so the neutral
- * `--faction-default` hex was canvas/SVG only and never a text backdrop. It is
- * one now: the praxis composer's remote-collaborator label paints the remote's
- * SOLID hue and prints their name on it, and a `na`/Albescent co-author resolves
- * to `--faction-default` there like everywhere else. So `--faction-default-on-fill`
- * exists and is measured, and #649 counts 16 pairs (8 x 2) rather than 14.
+ * `default` (na) is one of them: the praxis composer's remote-collaborator
+ * label paints the remote's SOLID hue and prints their name on it, and a
+ * `na`/Albescent co-author resolves to `--faction-default` there like everywhere
+ * else. So `--faction-default-on-fill` exists and is measured.
  *
  * The rail well below still excludes `default`, for the different reason stated
  * there — an unaffiliated viewer declares no locals at all.
@@ -193,13 +189,10 @@ type Veil = string | { token: string; alpha: number };
 /**
  * THE CROSS-PRODUCT (#2661) — roles x factions x grounds x themes.
  *
- * WHAT THIS REPLACES AND WHY. `CARD_PAIRS` and `FILL_PAIRS` stood here: two
- * hand-written generators over `CARD_KEYS`, measuring the three card inks and
- * the on-fill ink. They were right about every pair they named and blind to
- * every pair nobody thought to name, which is the defect. A token family added
- * next month is unmeasured while this file stays green, because a curated list
- * only covers what a human remembered to add to it — and "the contrast gate
- * covers it" has been asserted in this repo and been false.
+ * WHY IT IS NOT A CURATED LIST. A token family added next month is unmeasured
+ * while this file stays green, because a curated list only covers what a human
+ * remembered to add to it — and "the contrast gate covers it" has been asserted
+ * in this repo and been false.
  *
  * SO THE MANIFEST IS NOT AUTHORED, IT IS ENUMERATED. `factionRoles.ts` (#2659)
  * made the space finite: nine roles, nine slugs, two grounds, two cascades.
@@ -314,15 +307,11 @@ const ROLE_PAIRS: Pair[] = (() => {
  * INCLUDED here where ROLE_PAIRS omits it: the na composer paints its button in a
  * solid accent (not the rainbow), so `--faction-default-on-accent` is real text.
  *
- * SEVEN, NOT EIGHT (#1232). `EphemeristsComment` no longer passes an `-on-accent`
- * at all: the Valley plate gave the voice its own CTA pair (`-plate-cta-bg` /
- * `-plate-cta-ink`, measured by `ephemerists plate CTA band` below), which left
- * `--faction-ephemerists-on-accent` with no reader anywhere in the app except the
- * row that measured it. A row whose only consumer is itself is not coverage, so
- * the token and the row went together.
+ * SEVEN, NOT EIGHT. The Ephemerists voice passes no `-on-accent` at all — it
+ * carries the Valley plate's own CTA pair, measured by `ephemerists plate CTA
+ * band` below. A row whose only consumer is itself is not coverage.
  *
- * The remaining seven were re-checked against their voices at the same time. Two
- * name an ALIAS rather than the literal var the voice passes — everymen's
+ * Two of the seven name an ALIAS rather than the literal var the voice passes — everymen's
  * `-card-accent` resolves to `--everymen-red` and singularity's
  * `-card-text` to `--faction-singularity-term-bright`, both value-for-value — so
  * they measure the pairing that is on screen. Coven's does not: the voice sends
@@ -546,13 +535,12 @@ const COLLAB_PAIRS: Pair[] = [
 /**
  * #1302 — THE PRAXIS CARD'S ADMIN OVERLAY AND MODE CHIP, on all eight sheets.
  *
- * The third instance of the shape #694 and #1168 already fixed twice, and the
- * one nobody had measured: `components/praxisCard/shared.tsx` is a SHARED
- * component mounted inside every faction's praxis-card frame, and it painted the
- * app's global `--color-danger` / `--color-warning` / `--color-success` — inks
- * chosen against a near-white page — straight onto cream, vellum, papyrus, a
- * pink ward slip and two near-black plates. Every one of those pairings failed
- * AA in light; see the PR table.
+ * The third instance of the shape #694 and #1168 already fixed twice.
+ * `components/praxisCard/shared.tsx` is a SHARED component mounted inside every
+ * faction's praxis-card frame, so the app's global `--color-danger` /
+ * `--color-warning` / `--color-success` — inks chosen against a near-white page
+ * — would land on cream, vellum, papyrus, a pink ward slip and two near-black
+ * plates, and every one of those pairings fails AA in light.
  *
  * THE SURFACE COLUMN IS THE SHEET THE CARD ACTUALLY PAINTS, not
  * `--faction-{key}-card-bg`, and for half the set those differ:
@@ -564,11 +552,6 @@ const COLLAB_PAIRS: Pair[] = [
  *                                                only honest scalar reading — the
  *                                                same call `ua leaf darkest stop` makes)
  *   coven        `--faction-coven-ward-card`     the ward panel, not the slip
- *   (ephemerists  WAS in this list and left it in #2141. `-card-bg` aliased the
- *                 cornice band, a different sheet from the plate this card
- *                 paints; the owner ruling repointed it at `-plate-bg`, so the
- *                 name and the sheet are one token again and the crossing this
- *                 map existed to record is gone rather than remapped.)
  *   wow          `--faction-wow-chronicle-bg`    same value as `-card-bg` today, a
  *                                                different token tomorrow (the reason
  *                                                the snide composer block gives)
@@ -599,12 +582,10 @@ const PRAXIS_CARD_SHEET: Record<(typeof CARD_KEYS)[number], string> = {
 /**
  * The four whose sheet is a different TOKEN from `--faction-{key}-card-bg`.
  *
- * EPHEMERISTS LEFT IN #2141 (owner ruling). Its `-card-bg` now aliases
- * `-plate-bg`, which is the sheet its praxis card paints, so `ephemerists
- * praxis card sheet, muted ink` would resolve the identical (ink, ground) pair
- * as `ephemerists/sheet quiet on paper` in ROLE_PAIRS — a second name for one
- * measurement, which is the thing this file keeps warning about. The pairing is
- * still gated; it is gated once.
+ * The Ephemerists are not among them: `-card-bg` aliases `-plate-bg`, the sheet
+ * its praxis card paints, so a row here would resolve the identical (ink,
+ * ground) pair as `ephemerists/sheet quiet on paper` in ROLE_PAIRS — a second
+ * name for one measurement. The pairing is gated; it is gated once.
  */
 const OWN_SHEET_KEYS = ["ua", "coven", "wow", "snide"] as const;
 
@@ -654,12 +635,6 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
       // the flagged badge and the `hide` control take the alarm ink on the
       // danger veil, the failed badge and the `fail` control the notice ink on
       // the warning veil.
-      //
-      // Both marks used to read the notice ink, so both veils had to be
-      // measured against that one token — which of the two gated FLIPPED with
-      // the theme (danger is 5% in light against warning's 5%, on a red rather
-      // than an amber; both jump to 14% in dark). One ink per veil retires that
-      // question rather than answering it.
       {
         what: `${key} praxis card flagged badge, alarm ink under the danger veil`,
         surface,
@@ -702,12 +677,6 @@ const PRAXIS_CARD_PAIRS: Pair[] = [
   // see the component). For the other five keys that is `{slug}/sheet quiet on
   // paper`, and a second name for one measurement is what this file keeps
   // warning about.
-  //
-  // A bare NOTICE row used to sit beside it, for `moderateError`. That
-  // paragraph reads the alarm ink now (#1449) and nothing on this card paints
-  // the notice ink bare any more, so the row lost its consumer and went — the
-  // notice ink is still measured on these four sheets, under the warning veil,
-  // which is the tighter of the two readings anyway.
   ...OWN_SHEET_KEYS.flatMap((key) => [
     {
       what: `${key} praxis card sheet, muted ink`,
@@ -762,21 +731,16 @@ const SNIDE_WALL_GROUNDS: { where: string; surface: string; wash?: string }[] = 
  * columns); the `-composer-*` tiers are the sheet's. They carry the same values
  * today and stay two families for #1181's reason.
  *
- * The FOURTH surface is the faction page itself (#2343): its hero and all four
- * panels stopped grounding on the invariant press ink and took this wall, so
- * every tier below is read there too. Two rows are new with it — both are inks
- * that already existed for this ground and were only ever measured UNDER a wash
- * (the badge's danger veil, the mode chip's own 8%), and the faction page reads
- * them BARE: `-wall-credit` as the marker scrawl over the About flyer and the rap
- * sheet, `-wall-alarm` as the join error. A reading through a veil does not vouch
- * for the reading without one, which is #1028 in the direction people forget.
+ * The FOURTH surface is the faction page itself: its hero and all four panels
+ * ground on this wall, so every tier below is read there too. Two of the rows
+ * are BARE readings of inks the generator otherwise only measures UNDER a wash
+ * (the badge's danger veil, the mode chip's own 8%) — a reading through a veil
+ * does not vouch for the reading without one, which is #1028 in the direction
+ * people forget.
  *
- * `-wall-credit` KEEPS ITS ROW ON A DIFFERENT SURFACE (#2807). The two scrawls
- * named above were the faction page's only bare readers of it and both became
- * plated `SectionHeading`s, so that page no longer takes this reading. The row
- * stays because `SnideProfileBody` does: its level numeral is a bare `color:`
- * knob on the shared renderer, standing on this same wall with no plate it could
- * carry. Deleting the row would drop live coverage, not stale coverage.
+ * `-wall-credit`'S BARE ROW IS `SnideProfileBody`'S: its level numeral is a bare
+ * `color:` knob on the shared renderer, standing on this same wall with no plate
+ * it could carry. Deleting the row would drop live coverage.
  */
 const SNIDE_WALL_INKS = [
   ["headline and title", "--faction-snide-note-ink"],
@@ -844,8 +808,8 @@ const SNIDE_WALL_PAIRS: Pair[] = [
   // ruling, restated by #2177), so on the detail page the card is a slab and
   // its shared slots resolve the `-card-*` family they were always measured on.
   // `{slug}/sheet ink/quiet/accent on paper` already pin the three reading inks
-  // on that ground; these are the three functional inks the generator used to
-  // cover for snide before its sheet became the wall.
+  // on that ground; these are the three functional inks the wall generator
+  // above cannot reach for this one dress.
   {
     what: "snide detail slab, flagged badge alarm ink under the danger veil",
     surface: "--faction-snide-card-bg",
@@ -922,10 +886,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "snide deep wall", surface: "--faction-snide-wall-deep", text: "--faction-snide-wall-text" },
   { what: "snide xerox paper, ink", surface: "--faction-snide-paper", text: "--faction-snide-ink" },
 
-  // (The legacy UA gilt-salon family was measured here until #853 deleted it.
-  // Every surface that painted with it now reads the sun-bleached primitives
-  // below, which are measured in BOTH themes rather than light only.)
-
   // UA — the sun-bleached practice (#788, #848). UA is the first faction with
   // FOUR themed surfaces (page ground, card, inset panel, raised lift) rather
   // than one, and a minimal desert palette sits in a narrow luminance band, so
@@ -978,12 +938,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // WOW ink, is theme-invariant like the gold it sits on, and measures 7.64:1
   // where the kit's own value manages 6.68:1 — not the 8.1:1 the kit claims.
   //
-  // THE TEXT COLUMN SAID `-on-fill` UNTIL #2068 and this row is how that was
-  // caught. The two tokens held the same near-black, so the borrow was free
-  // right up to the moment the spine hue stopped being a gold: a plum fill needs
-  // white, and white on this gold is 2.47:1. A row that names the ink by the
-  // ground it was measured on cannot be re-broken by a hue change somewhere else
-  // (WORLD_ZERO_STYLE §3, #1766).
+  // THE INK IS NAMED FOR THE GROUND IT WAS MEASURED ON, never for the fill. The
+  // two tokens hold the same near-black today, and the borrow stops being free
+  // the moment the spine hue stops being a gold: a plum fill needs white, and
+  // white on this gold is 2.47:1 (WORLD_ZERO_STYLE §3, #1766).
   { what: "wow chronicle gold element, ink", surface: "--faction-wow-chronicle-gold", text: "--faction-wow-on-gold" },
   // The kit's "gold / card-bg dk" pair. The bright total is a *dark*-theme
   // value; measuring the token in both themes also gates its light sibling,
@@ -1065,14 +1023,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // surface column below is that darkest stop deliberately — measuring the
   // lightest one would reproduce the design's own mistake.
   //
-  // FOUR SURFACES READ THESE ROWS NOW (#2135): the task card, the praxis card
-  // and both detail columns. That is also what forced the praxis card's `tint`
-  // from DEEP to INK when its ground moved off the ward panel — `tint` is the
-  // shared body's `accent`, which paints a collab member's name and a duel
-  // rival's name at --text-content straight on the sheet, and DEEP reads 3.33:1
-  // there against 4.70:1 on the panel it left. No row records that reading,
-  // because after the swap nothing paints it: `coven ward panel, accent ink`
-  // below still gates DEEP where DEEP is still text.
+  // FOUR SURFACES READ THESE ROWS: the task card, the praxis card and both
+  // detail columns. DEEP is not among the inks they carry — it reads 3.33:1 on
+  // this ramp — so nothing paints that pairing and no row records it;
+  // `coven ward panel, accent ink` below gates DEEP where DEEP is still text.
   { what: "coven slip, ink", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" },
   { what: "coven slip, brief", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" },
   { what: "coven slip, caption", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" },
@@ -1133,12 +1087,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "coven ward page, ink", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-ink" },
   { what: "coven ward page, brief", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-soft" },
   { what: "coven ward page, caption", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-label" },
-  // THE TWO DETAIL COLUMNS LEFT THAT GROUND (#2135). Both wore
-  // `.coven-candle-backdrop` — the ward page under a haze — and both now wear
-  // the SLIP, so the copy that sits outside a panel on those pages is measured
-  // against the gradient instead. The three rows above stay live and are not a
-  // duplicate of these: `CovenFieldDesk` still grounds a whole mobile page on
-  // the ward page, and it is the class's one remaining mount.
+  // THE TWO DETAIL COLUMNS WEAR THE SLIP, so the copy that sits outside a panel
+  // on those pages is measured against the gradient. The three ward-page rows
+  // above are not a duplicate of these: `CovenFieldDesk` still grounds a whole
+  // mobile page on the ward page, and it is that class's one remaining mount.
   //
   // The surfaces are the ramp's two ENDS, for the reason the task card's block
   // gives up top: `-mid` is the darkest stop an ink meets and `-vio` is a
@@ -1168,8 +1120,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
-  // The bill's level caption ("Grade" until #1702 renamed it). Olive on the
-  // paper was never measured before this card set a label in it.
+  // The bill's level caption. Olive on the paper had no other reader until this
+  // card set a label in it.
   { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
   {
     // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the
@@ -1191,29 +1143,21 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // text. The caption ink that REPLACED it in the one text slot the design gave
   // it is measured here instead.
   //
-  // EVERY ROW HERE IS NOW TWO REAL MEASUREMENTS. Between #1627 and #2141 the
-  // whole register was night-valued in both cascades, so each of these ratios
-  // was one reading taken twice, and the light column of this file said nothing
-  // about the faction at all. The sheet is vellum by day now; what did NOT
-  // follow it is the band and the disc, which are the compass blue #12151f in
-  // both themes because the metals struck on them have no light value. That
-  // asymmetry is the trap the three disc rows below exist to hold shut.
+  // EVERY ROW HERE IS TWO REAL MEASUREMENTS, and the asymmetry is the trap the
+  // three disc rows below hold shut: the SHEET is vellum by day, while the band
+  // and the disc are the compass blue #12151f in both themes because the metals
+  // struck on them have no light value.
   { what: "ephemerists plate, ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
   { what: "ephemerists cornice band, masthead", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-ink" },
-  // THE TASK CARD'S BAND IS THE DISC NOW (#2067), and that is a NEW pairing
-  // rather than the row above wearing a different ground. The restrained
-  // masthead grounds on `-plate-disc` — the medallion's own field, two values
-  // lighter than the cornice band — and keeps `-plate-band-ink`, so the gold
-  // that was measured on #0a0c15 is now also asked to clear #12151f. It does;
-  // the row exists so that the NEXT move of this band cannot repeat #1627's
-  // failure, where an ink stayed put while the ground under it changed and every
-  // row in this file went on passing. #2141 CLOSED THE GAP THIS ROW WAS SPLIT
-  // FOR: the cornice band moved onto #12151f too, so the band and the disc are
-  // now one hex and both readings are 7.59:1. The row stays anyway — two
-  // surfaces that agree today are still two surfaces, and this file's whole
-  // method is that a shared value is a coincidence until something asserts it
+  // THE TASK CARD'S BAND IS THE DISC: the restrained masthead grounds on
+  // `-plate-disc`, the medallion's own field, and keeps `-plate-band-ink`. Band
+  // and disc are one hex today and both readings are 7.59:1; the row stays
+  // anyway, because two surfaces that agree today are still two surfaces and a
+  // shared value is a coincidence until something asserts it. The failure it
+  // holds shut is an ink staying put while the ground under it changes, with
+  // every row in this file still passing.
   { what: "ephemerists card masthead band, wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
   // THE DISC'S INK BUDGET IS THE BAND'S (#2141), and these two rows moved for
   // that reason rather than to make a failing measurement pass. The disc is a
@@ -1229,21 +1173,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-quiet" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
   // THE PROFILE HEADER ADDS NO ROW, and that is the finding rather than an
-  // omission. `EphemeristsProfileBody` handed `profileSkin` a kit whose `muted`
-  // was `-plate-quiet` — the ink measured for the plate, the page and the panel
-  // cells — while its `headerStyle` grounds on the cornice BAND, so five quiet
-  // lines inside `<header>` sat on a sheet their ink was never chosen for and
-  // read 2.07:1 in light, with every row in this file green.
-  //
-  // The first fix written was a row for that crossing. It would have measured
-  // 6.73:1 and passed, and it would have recorded the WRONG (ink, ground) pair
-  // as the intended one: `-plate-band-quiet` is the ink the band owns, it only
-  // read 6.73 because #1627 repainted the ground under the bug, and the pairing
-  // that ships now — band-quiet on the band — is `ephemerists cornice band,
-  // quiet ink` further down, which has gated it since #1199. So the kit grew a
-  // `headerMuted` and this file gains nothing: a second name for one
-  // measurement is what the WOW block above warns about, and a row that
-  // certifies a bug is worse than no row at all.
+  // omission. `EphemeristsProfileBody`'s `headerStyle` grounds on the cornice
+  // BAND while the kit's quiet tier is `-plate-quiet`, the ink measured for the
+  // plate, the page and the panel cells — 2.07:1 there in light, with every row
+  // in this file green. The kit carries a `headerMuted` for it, and the pairing
+  // that ships is band-quiet on the band: `ephemerists cornice band, quiet ink`
+  // further down. A row here would be a second name for that one measurement.
   //
   // THE LOGGED-OUT VOTE GATE (#1627). `VoteShell`'s gate voice paints
   // `--faction-ephemerists-card-accent`, and `EphemeristsVote` early-returns the
@@ -1293,14 +1228,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // inverted and therefore the same 3.0007:1 — a normal-text pairing sitting on
   // the LARGE-text floor, and clearing it by seven ten-thousandths at that.
   { what: "ephemerists panel cell, metatask award", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ochre" },
-  // `ephemerists medallion disc, caption` STOOD HERE and is retired rather than
-  // repointed (#2141). It measured `-plate-caption` on the disc, and the caption
-  // is a SHEET ink — #6f5620 by day, 2.63:1 on a chip that does not flip — so
-  // the medallion's caption took `-band-quiet` with the rose's unit. That makes
-  // it byte-identical to `ephemerists medallion disc, unit` above, and a second
-  // `what` for one (ink, ground) pair measures nothing new: it is the call the
-  // WOW block and the four "checked and deliberately NOT written" pairings make.
-
   // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
   // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
   // twice against a near-black ground rather than once against a light one. The
@@ -1317,12 +1244,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // alpha-over-chassis, precisely so this row can exist at all.
   { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
   { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
-  // The directory tile's join button is this same row since #2818: it drew the
-  // key UNLIT — a 14% wash of `-term-blue` over the chassis, lit to `-term-cta-bg`
-  // only on `onMouseEnter` — and now spreads `SINGULARITY_CARD_CTA` like the two
-  // other surfaces. The wash row that measured the resting state went with the
-  // hover it existed for; every other pairing on that tile was already one of
-  // the rows above, ink for ground.
+  // The directory tile's join button is this same row: it spreads
+  // `SINGULARITY_CARD_CTA`, like the two other surfaces. Every other pairing on
+  // that tile is already one of the rows above, ink for ground.
   { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
 
   // S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023). Unlike the faction's
@@ -1342,11 +1266,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Headline cut 1 and the CTA bar are the same pairing — ink on acid — and the
   // acid does not flip, so one row covers both in both themes.
   { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
-  // The DIRECTORY TILE's CTA had a hover that flooded with `--faction-snide-acid`
-  // itself (#2322) and owned a row here for it. #2818 deleted the handler — the
-  // tile now spreads `SNIDE_CARD_CTA`, which has no hover on any of its three
-  // surfaces — so the row went with the state it measured. The tile's resting
-  // pairing is acid on the bar, covered by "clipping bar, wordmark" above.
+  // The DIRECTORY TILE spreads `SNIDE_CARD_CTA`, which has no hover on any of
+  // its three surfaces; its resting pairing is acid on the bar, covered by
+  // "clipping bar, wordmark" above.
   // The modifier chip. The design set its label in PAPER on the pink (3.10:1);
   // it takes the near-black CTA ink instead, one value for both themes because
   // `--faction-snide-pink` does not flip either.
@@ -1365,11 +1287,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // 2.93:1 here and so misses even AA_LARGE — the ONE ink this card walks down,
   // onto the accent it already owns rather than onto a new token.
   { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
-  // And the DIRECTORY TILE's join button since #2818, which is why the row
-  // beneath this one is gone: the tile had a hover the card's chip never had,
-  // swapping the chip's ground for `-card-accent`, and #2818 deleted it along
-  // with the two other tiles that repainted themselves inline. The tile now
-  // spreads `UA_CARD_CTA`, so this row measures both.
+  // And the DIRECTORY TILE's join button, which spreads `UA_CARD_CTA` rather
+  // than repainting itself inline — so this one row measures both.
   { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
 
   // WOW — THE QUEST DECREE (task card v2, #1023). Every pairing on this card
@@ -1405,10 +1324,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   //     composer STATE (a duel side, mid-cast, before confirm), which no route
   //     walk produces. "The surface is skinned by a faction" is not the same
   //     claim as "the sweep has been there".
-  //   - Two of the failing inks were not reachable from a skin AT ALL until this
-  //     issue: `StakesTiles` and `RaceRoster` hardcoded them, so no amount of
-  //     per-skin care could have fixed them. `DuelSlotTheme` now takes
-  //     `credit` / `alarm`, which is what makes the routed rows below possible.
+  //   - `StakesTiles` and `RaceRoster` reach their two functional inks through
+  //     `DuelSlotTheme`'s `credit` / `alarm`, which is what makes the routed
+  //     rows below possible at all; hardcoded, no per-skin care could fix them.
   //
   // WHAT IS DELIBERATELY NOT REPEATED HERE. Four of the sixteen pairings resolve
   // to a pair some row above already measures, and a second name for one
@@ -1416,10 +1334,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   //   ua seal body / note              = `ua roster notice ink` / `credit ink`
   //   singularity seal body / note     = `singularity roster notice / credit ink`
   //   ephemerists forfeit cost panel   = `ephemerists cornice band, masthead`
-  //                                      (#1208 moved the panel onto the plate's
-  //                                      night band; the ratio is symmetric, so
-  //                                      swapping which is the ground measures
-  //                                      nothing new)
+  //                                      (the ratio is symmetric, so swapping
+  //                                      which of the two is the ground
+  //                                      measures nothing new)
   //   ephemerists seal note            = `ephemerists plate, quiet ink`
   //   default stakes panel             = `default seal note` (one ground)
   //
@@ -1439,10 +1356,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--color-bg-page",
     text: "--faction-default-card-notice",
   },
-  // #1209 moved this ground: the seal dialogs were a `coven.exe` window on the
-  // dotted board and are the candlelit ward page now. The RED still fails on it
-  // — 4.31:1 in light, the identical reading it had on the board — so the notice
-  // ink survives the move for exactly the reason it was routed in the first place.
+  // The seal dialogs are the candlelit ward page, and the global RED fails on
+  // it — 4.31:1 in light — which is why this skin routes its own notice ink.
   { what: "coven seal body, notice ink", surface: "--faction-coven-ward-page", text: "--faction-coven-card-notice" },
   { what: "wow seal body, notice ink", surface: "--faction-wow-duel-lists-bg", text: "--faction-wow-card-notice" },
   { what: "everymen seal body, notice ink", surface: "--everymen-paper", text: "--faction-everymen-card-notice" },
@@ -1482,11 +1397,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--everymen-gold",
   },
   { what: "snide seal stakes scrap, credit ink", surface: "--faction-snide-ink", text: "--faction-snide-card-credit" },
-  // #1208 swept this dialog off the codex; the band is the plate's panel cell.
-  // The INK moved too, in #1627: the panel cell is dark in both cascades now, so
-  // the light-theme `--color-success` lands on a night ground at 1.76:1 and the
-  // skin routes its own credit — S.N.I.D.E.'s and Singularity's call, made here
-  // for the third time and for the identical reason.
+  // The band is the plate's panel cell, which is dark in BOTH cascades, so the
+  // light-theme `--color-success` lands on a night ground at 1.76:1 and the skin
+  // routes its own credit — S.N.I.D.E.'s and Singularity's call, a third time.
   { what: "ephemerists seal ledger band, credit ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-card-credit" },
   { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
 
@@ -1508,11 +1421,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // panel and Everymen's `-muted` 4.25:1 on the deep stock, so each grew a
   // `-quiet` sibling for its own panel; the ink itself is untouched and keeps
   // clearing on the body ground (ROLE_PAIRS still measures it there). The
-  // EPHEMERISTS panel needed nothing: #1208 moved that band off the codex onto
-  // the Valley plate's inner cell, whose quiet ink `ephemerists panel cell,
-  // quiet ink` above already measures — at 6.21 / 5.52 then, and at 5.52 in both
-  // cascades since #1627 made the register theme-invariant. The same pairing
-  // either way, so a second row here would be a second name for one measurement.
+  // EPHEMERISTS panel needs nothing: its band is the Valley plate's inner cell,
+  // whose quiet ink `ephemerists panel cell, quiet ink` above already measures.
+  // A second row here would be a second name for one measurement.
   { what: "wow seal stakes plate, quiet ink", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-chronicle-quiet" },
   { what: "everymen seal stakes panel, quiet ink", surface: "--everymen-paper-deep", text: "--everymen-quiet" },
 
@@ -1520,10 +1431,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
   // so AA_LARGE genuinely applies; every one of these clears it as shipped and
   // none is repainted. They are rows so that a later repaint of any panel is
-  // caught. `ephemerists seal zero figure` used to measure 3.01:1 and be the
-  // narrowest margin in the family; #1208 moved that band onto the Valley
-  // plate's panel cell and it reads 3.93:1 there, so the tightest reading in
-  // this group is now somebody else's.
+  // caught.
   {
     what: "default seal zero figure, large display type",
     surface: "--color-bg-page",
@@ -1604,8 +1512,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   //   bg-surface  on danger  3.08 light / 1.04 dark   ← alpha, composited
   //
   // `--color-on-danger` is one named ink for the one fill, in the shape #649 and
-  // #924 already established for faction fills. Deepening `--color-danger` in
-  // dark was the rejected lever: it is the same token the ink role reads.
+  // #924 already established for faction fills.
   {
     what: "danger fill, on-danger ink",
     surface: "--color-danger",
@@ -1614,12 +1521,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
 
   // ── THE EDIT-PRAXIS COMPOSERS (#1179) and THE FEED CHASSIS (#1192) ───────
   //
-  // WHY BOTH WAVES LAND IN ONE PR, and why they had to. Every skin agent in
-  // both epics declined to touch this file while its siblings were live, and
-  // each was right: `ARCHETYPE_PAIRS` is asserted BOTH ways (listed = measured,
-  // unlisted = nothing), so two branches that each restate it drop each other's
-  // rows — every branch green, `main` red only after the second squash. The
-  // deferral was correct and the debt is settled here, once, for all eight.
+  // THIS REGISTRY IS ASSERTED BOTH WAYS — listed = measured, unlisted = nothing
+  // — so two branches that each restate it drop each other's rows: every branch
+  // green, `main` red only after the second squash. Two red `main`s came of
+  // that. A wave that touches these rows lands as ONE edit, not one per skin.
   //
   // WHAT IS NEW ABOUT THESE SURFACES. Both waves put shared slots on a SECOND
   // faction stock: `PraxisWaitingSurface` renders `dress.bodyStyle` and
@@ -1790,12 +1695,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // neutral (the `-veil` wash and the `-edge` rule are #1169's global rungs on
   // every skin); what is faction-aware is THE GROUND, and therefore the ink.
   //
-  // The neutral ink missed AA on ALL EIGHT sheets in light under its own veil —
-  // 3.31 (ephemerists), 3.47 (everymen), 3.71 (ua), 3.85 (singularity), 3.97
-  // (snide), 4.08 (wow), 4.23 (coven), 4.41 (na) — and cleared on all eight in
-  // dark (4.80-5.97). That asymmetry is #1449's finding restated: the light hue
-  // was chosen against the app's near-white page, and six of these sheets are
-  // warm paper while two are near-black in both themes.
+  // The neutral ink misses AA on ALL EIGHT sheets in light under its own veil
+  // (3.31-4.41) and clears on all eight in dark (4.80-5.97). That asymmetry is
+  // #1449's finding restated: the light hue was chosen against the app's
+  // near-white page, and six of these sheets are warm paper while two are
+  // near-black in both themes.
   //
   // SEVEN SKINS MINT NOTHING. `--faction-{key}-card-alarm` already exists for
   // all eight keys in both cascades, and it clears every composer ground it is
@@ -1849,11 +1753,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // and the deep end is what gates the light hue. `na` covers Albescent, which
   // renders `DefaultPraxisDetail` plus an ornament layer (#1140).
   //
-  // WHAT FAILED, measured before the fix: 25 of these 54 assertions in light and
-  // one in dark. Bare on the wall, `--color-danger` ran 3.32 (ephemerists) to
-  // 4.75 (na); under its own veil — the banner's and the confirm button's fill —
-  // 3.11 to 4.41, i.e. every one of the nine. `--color-warning` under that same
-  // veil ran 3.23 to 4.62. Dark cleared everywhere except Everymen at 4.47.
+  // WHY THE NEUTRALS CANNOT STAY: bare on the wall `--color-danger` runs 3.32
+  // (ephemerists) to 4.75 (na), and under its own veil 3.11 to 4.41 — every one
+  // of the nine, in light.
   //
   // SEVEN SKINS MINT NOTHING. `-card-alarm` (#1449) and `-card-notice` (#694)
   // exist for all eight keys in both cascades and clear every wall asked of them
@@ -1921,15 +1823,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // costs nothing new: `Veil` already resolves a declared token and composites
   // it at its own alpha.
   //
-  // NINE ROWS BECAME ONE, and the collapse IS the fix. Written against the nine
-  // walls these read, in light: danger 2.54 (singularity) / 4.37 (ephemerists) /
-  // 4.45 (ua, snide deep) / 4.55 (wow) / 4.61 (snide) / 4.62 (everymen) / 4.68
-  // (coven) / 4.81 (na); warning, tertiary and secondary all under AA on the
-  // terminal at 2.65 / 3.11 / 3.24; and in dark, everymen secondary at 4.15.
-  // Eight assertions red. `.sidebar-card` now paints the frost over a declared
-  // `--card-ground` and its neutral-chrome mounts wear `.card-on-page`, so the
-  // stock is the app's page on every skin and the wall is no longer part of the
-  // pairing — there is one ground to measure because there is one ground.
+  // NINE ROWS ARE ONE ROW, and the collapse IS the fix. `.sidebar-card` paints
+  // the frost over a declared `--card-ground` and its neutral-chrome mounts wear
+  // `.card-on-page`, so the stock is the app's page on every skin and the wall
+  // is no longer part of the pairing — there is one ground to measure because
+  // there is one ground. On the nine walls it read `--color-danger` at 2.54:1
+  // (singularity) in light, with the terminal under AA on three more inks.
   //
   // The structural half of that claim is asserted separately, at the bottom of
   // this file: a ratio row on a fixed ground cannot notice the ground going
@@ -1974,11 +1873,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // which is exactly what it composites to. Same trick, same reason as the
   // frost rows above (#1413).
   //
-  // These are the pairings #1549's repaint moves, so they are the ones that
-  // have to be pinned: light tertiary goes #6c6358 -> #656081, which is a hue
-  // swing at held weight and reads a fraction HIGHER on every one of them
-  // (page 5.37 -> 5.40, alt 5.04 -> 5.07). The tier separation itself is not a
-  // ratio and is asserted at the bottom of this file.
+  // The tier separation itself is not a ratio, and is asserted at the bottom of
+  // this file.
   //
   // ── AND THEY OWE AAA, NOT AA (#1715) ─────────────────────────────────────
   //
@@ -2001,12 +1897,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // TIGHTEST neutral stocks in the app — the selected row is two washes of
   // `--color-text-primary` deep — and both inks failed AA on it before the lift
   // (light 4.05 / 3.90, dark 3.80 / 4.19). The lift is what fixes them: 5.63 /
-  // 5.66 light and 5.63 / 6.04 dark. On those numbers #1579 deleted the rule
-  // that promoted the selected row's count to secondary — tertiary is the
-  // louder ink on that stock in BOTH themes now, so the count keeps it. Both
-  // inks stay measured: secondary still crosses the thumb on the rail (the
-  // thumb animates over segments that carry it), and the promotion is one CSS
-  // line from returning.
+  // 5.66 light and 5.63 / 6.04 dark. Tertiary is the louder ink on that stock in
+  // BOTH cascades, so the count keeps it. Both inks stay measured: secondary
+  // still crosses the thumb on the rail, which animates over segments carrying
+  // it, and a promotion back to secondary is one CSS line away.
   ...(
     [
       ["secondary", "--color-text-secondary"],
@@ -2050,9 +1944,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // to an accent that already cleared their own ground and left these four,
   // which failed in LIGHT at 2.41 (snide), 2.98 (coven), 4.37 (ephemerists, and
   // 4.15 with the plate wash composited) and 4.49 (everymen). All four clear
-  // dark on the raw hue; #1252's "ephemerists 3.16:1 dark" was the LIGHT wash
-  // measured over the DARK plate, and `--faction-ephemerists-plate-wash` is
-  // `none` in dark, so that composite is not a surface anything paints.
+  // dark on the raw hue — `--faction-ephemerists-plate-wash` is `none` there, so
+  // the dark composite is not a surface anything paints.
   //
   // THREE OF THE FOUR ADD NO ROW, which is a finding rather than an omission —
   // each fix repoints to an ink whose pairing with that exact ground is already
@@ -2072,22 +1965,18 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // uses for `-sheet-accent`, one stock further down.
   { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--everymen-paper-accent" },
 
-  // ALBESCENT HAS NO ROWS HERE ANY MORE, AND THAT IS THE POINT (#2632). Its
-  // FACTION tokens went with #783; three rows for the private vellum register —
-  // the invitation letter's and the sealed placeholder's sheet, ink and muted
-  // tier — stood here until the owner ruled the white aesthetic purged. All four
-  // reveal surfaces read `--faction-default-card-*` now, which `default` already
-  // measures in both themes, so re-declaring them would be the same pairing
-  // asserted twice under a second name. `__tests__/albescentPrismSheet.test.ts`
-  // holds the other half: the register's name appears nowhere in `index.css`.
+  // ALBESCENT HAS NO ROWS HERE, AND THAT IS THE POINT (#2632). All four reveal
+  // surfaces read `--faction-default-card-*`, which `default` already measures in
+  // both themes, so a row would be the same pairing asserted twice under a second
+  // name. `__tests__/albescentPrismSheet.test.ts` holds the other half: the
+  // private vellum register's name appears nowhere in `index.css`.
   //
-  // What #2523 found is NOT retired with the rows and has moved with the tokens:
-  // the placeholder's eyebrow — `— no such account —`, the line that makes the
-  // page a dead end instead of a 404 — was an inline `color-mix()` at 1.92:1, a
-  // tier the register did not name, sitting beside a "muted" row that was green
-  // the entire time. A value-level sweep cannot reach a per-site mix, so no row
-  // here could ever have caught it. `pages/__tests__/albescentSealedInk.test.tsx`
-  // is what does, by reading what the component EMITS.
+  // AND A VALUE SWEEP CANNOT REACH A PER-SITE MIX. The sealed placeholder's
+  // eyebrow — `— no such account —`, the line that makes the page a dead end
+  // instead of a 404 — was an inline `color-mix()` at 1.92:1, a tier the register
+  // did not name, sitting beside a "muted" row that was green the entire time.
+  // `pages/__tests__/albescentSealedInk.test.tsx` is what catches that, by
+  // reading what the component EMITS.
 
   // ── Three accents used as TEXT on grounds that are not their fill (#1766) ──
   //
@@ -2096,12 +1985,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // here rather than overnight. All three fixes are site by site, per the
   // 2026-08-14 owner ruling: no per-faction on-page ink tier is minted.
   //
-  // na's POINTS caption was the whole light half of the sweep on its own — it
-  // failed all FOURTEEN light combinations, because `--faction-default-gold` is
-  // site chrome rather than one faction's hue and every walked route paints it.
-  // It was `var(--faction-default-stop-3)`, a ramp position read back as type:
-  // 2.94:1 on the white score plate, 2.89:1 on the card sheet. The stop is
-  // untouched — seven surfaces are cut from it — and the ink walked down.
+  // `--faction-default-gold` is site chrome rather than one faction's hue, so
+  // every walked route paints it — which is why it carries the light half of
+  // that sweep on its own. It is a walked-down ink, NOT `-stop-3`: the bare ramp
+  // position read back as type is 2.94:1 on the white score plate and 2.89:1 on
+  // the card sheet, and seven surfaces are cut from that stop.
   //
   // The PLATE is the tighter of the two grounds and the one that gates: pure
   // white by day, and a stock the sheet does not share.
@@ -2183,13 +2071,14 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-ua-card-points",
   },
 
-  // THE TWO BANDS THAT STOPPED BORROWING (#2635). Both grounded on a token
-  // belonging to something else — UA on `--faction-ua-hair` ("the faintest
-  // divider", by its own comment), Coven on `--faction-coven-slip-sigil-ground`
-  // (the white disc behind the sigil) — and both now own a ground named for the
-  // band. The five other bands stand on materials their kits draw and are
-  // measured with those kits above; `the seven card masthead bands stand on
-  // their own ground` at the foot of this file is the guard that keeps it so.
+  // THE TWO BANDS THAT OWN A GROUND NAMED FOR THE BAND (#2635) — a hairline and
+  // the disc behind a sigil are what "the nearest token to hand" looks like, and
+  // both are what these two stopped standing on. The five other FACTION bands
+  // stand on materials their kits draw and are measured with those kits above,
+  // and the seal-only pair (Albescent, na) letters in the na card's ink and is
+  // measured on its own at the foot of this file. Two plus five plus two is the
+  // nine that `the nine masthead bands stand on their own ground` covers, which
+  // is the guard that keeps all of it so.
   {
     // ONE ROW COVERS BOTH THEMES because BOTH tokens are frozen, exactly as
     // `everymen bill masthead` above is: ground and ink are each declared once,
@@ -2202,8 +2091,8 @@ const ARCHETYPE_PAIRS: Pair[] = [
     // ink, which is why `--faction-everymen-bill-mast-ink` exists beside its own
     // frozen red.
     //
-    // 4.59:1 is a deliberate DROP from the `-card-text` at 10.35:1 the band took
-    // on the hairline: it clears AA at --text-title, and the band's job is to be
+    // 4.59:1 is a deliberate DROP from `-card-text`'s 10.35:1 on this band: it
+    // clears AA at --text-title, and the band's job is to be
     // UA's colour rather than its quietest surface. The MARK takes the same ink
     // — the ensō's own `--faction-ua-glow` is 1.30:1 here, which is what
     // `markColor` exists for.
@@ -2212,9 +2101,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-ua-mast-ink",
   },
   {
-    // Coven's pair FLIPS, unlike UA's: only the day band was borrowed paint, so
-    // the night half is `-slip-sigil-ground`'s and `-slip-ink`'s own dark values
-    // under a name that belongs to the band. The day value is the CTA's
+    // Coven's pair FLIPS, unlike UA's: the night half is `-slip-sigil-ground`'s
+    // and `-slip-ink`'s own dark values under a name that belongs to the band.
+    // The day value is the CTA's
     // `-cta-from` / `-cta-ink` transcribed rather than aliased — index.css says
     // why at the token — so this row and `coven slip CTA band top` measure the
     // same two hexes on purpose, at the names each surface actually names.
@@ -2389,27 +2278,15 @@ const SWITCH_LOCK_GLYPH_PAIRS: Pair[] = [
 ];
 
 /**
- * A `SKY_PAIRS` block stood here (#1792): seven rows measuring each faction's
- * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
+ * NO ROW MEASURES A BARE FACTION HUE AS INK, and that is a finding rather than
+ * a gap.
  *
- * #1855 retires the Constellation, and with it both the canvas and the tier —
- * the Players page draws on the ordinary page ground. The rows are not relaxed;
- * they have no surface left to measure on. Anything that paints a permanently
- * dark ground again needs its own measured ink and its own rows here — #1792's
- * reasoning is why, and it is kept in git rather than as a comment about a token
- * nobody declares.
- *
- * THE SENTENCE THAT USED TO FOLLOW WAS WRONG, AND IT IS WHY #1932 SHIPPED.
- * It read: "where the ordinary faction hue is the theme-correct ink and
- * `ROLE_PAIRS` / `ACCENT_PAIRS` already gate it." Both halves fail.
- *
- * THEME-CORRECT IS NOT LEGIBLE. `--faction-{key}` flipping with the cascade was
- * the whole of #1792's bug, so a hue that flips reads as the fix — and it is,
- * for the flip. It says nothing about the ratio. Light `--faction-wow` is
- * 1.96:1 on `--color-bg-page` and 2.09:1 on the frost the signed-in player's own
- * roster row wears; dark's is 11.47 / 10.47. Every one of the nightly's fourteen
- * failures was LIGHT, which is the tell: a bug that sorts cleanly by cascade is
- * one bug, and this one is "the light hue is a fill".
+ * THEME-CORRECT IS NOT LEGIBLE. A `--faction-{key}` that flips with the cascade
+ * reads as the fix for a permanently dark canvas, and it is — for the flip. It
+ * says nothing about the ratio: light `--faction-wow` is 1.96:1 on
+ * `--color-bg-page` and 2.09:1 on the frost the signed-in player's own roster
+ * row wears, against 11.47 / 10.47 in dark. A bug that sorts cleanly by cascade
+ * is one bug, and this one is "the light hue is a fill".
  *
  * AND NEITHER BLOCK GATES THAT PAIRING. `ROLE_PAIRS` measures
  * `--faction-{key}-on-fill` ON the hue — the hue is the GROUND there, which is
@@ -2420,6 +2297,9 @@ const SWITCH_LOCK_GLYPH_PAIRS: Pair[] = [
  * can name, and no row is added here for it: the honest assertion is not a ratio
  * but that nothing paints it, which is
  * `pages/players/__tests__/playersFactionInk.test.tsx`.
+ *
+ * A surface that paints a permanently dark ground again needs its own measured
+ * ink and its own rows here.
  */
 
 /**
@@ -2493,9 +2373,8 @@ const SEAL_CAPTION_PAIRS: Pair[] = [
   { what: "na seal caption", surface: "--faction-default-card-bg", text: "--faction-default-card-muted" },
   // Coven's slip caption voice on the ward panel — `CAPTION` in covenSlip.tsx.
   { what: "coven seal caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" },
-  // The plate's incised small caps in its own caption ink. The tab this
-  // replaces was BAND_INK on BAND; the caption sits on the plate instead,
-  // which is a different pairing and so a row of its own.
+  // The plate's incised small caps in its own caption ink — the caption sits on
+  // the plate, not on the band, so it is a pairing and a row of its own.
   { what: "ephemerists seal caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
   { what: "everymen seal caption", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "singularity seal caption", surface: "--faction-singularity-card-bg", text: "--faction-singularity-card-muted" },
@@ -2591,19 +2470,8 @@ const PAIRS: Pair[] = [
  * comment, awaiting triage into a child".
  */
 const BASELINE: Record<string, { ratio: number; issue: number }> = {
-  // ── #649 fixed: `--faction-{key}-on-fill` now carries AA-legible text on every
-  //    faction fill in both themes, so the 7 failing white-on-fill pairs are gone. ──
-
-  // ── Albescent faint ink — the sibling #594 left alive (named in #651) ──
-
   // ── Found by this sweep — awaiting triage into children (#651 audit comment) ──
   // Card accents used as metadata text (§3: "metadata / decorative accent").
-  // #848 fixed both `ua/sheet accent on paper` entries: the sun-bleached repaint gave UA
-  // a metadata sienna that is not the fill hue (5.18:1 light, 6.58:1 dark).
-  // (Renamed by #2661, not re-measured. These three rows were `{key} card
-  // accent` while a hand-written generator produced them; they are now
-  // `{slug}/{ground} accent on paper` because the same pairing is read out of
-  // the role resolver. Same tokens, same ratios, same owner.)
   "light | everymen/sheet accent on paper": { ratio: 4.49, issue: 651 },
   "light | coven/sheet accent on paper": { ratio: 2.81, issue: 651 },
   "dark | everymen/sheet accent on paper": { ratio: 4.16, issue: 651 },
@@ -2615,56 +2483,19 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // primitive; it survives because the `--eph-*` family is still declared, and
   // it should go with the family's deletion rather than be fixed.)
   "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
-  // (UA mono metadata labels on the legacy gilt sheet measured 3.06:1 in both
-  // themes and were listed here until #853 deleted the legacy family, exactly
-  // as this entry predicted. The surfaces that used to paint that pair now read
-  // --faction-ua-card-muted, which clears AA on every UA surface.)
-
-  // ══ Found by the role loop on landing — filed as #2668 (the hairline) and #2669 ══
+  // ══ THE HAIRLINE RULING (#2668) — the measurement, kept without its entries ══
   //
-  // NOT "NEW WORK", WHICH IS WHAT THE RULE ABOVE FORBIDS. Every ratio here was
-  // already on screen and had been for months; what is new is that anything at
-  // all measures it. This is the same situation the ratchet was created for and
-  // the same treatment #651 gave: enumerate the debt so the guard can land
-  // green and block the NEXT one. Each line is issue-worthy on its own and none
-  // of them was fixed here — repointing a colour to go green is the failure
-  // mode this loop exists to make impossible, not a shortcut it may take.
-  //
-  //   (a) WAS THE HAIRLINE, `line` on `paper`, at 1.4.11's 3:1 for a non-text
-  //       mark — NINE of the eighteen (slug x cascade) readings, and NOT ONE of
-  //       them had ever been measured before the loop landed. ALL NINE ARE
-  //       FIXED, SO ALL NINE LINES ARE GONE (#2668).
-  //
-  //       THE DISTINCTION THIS FILE COULD NOT MAKE WAS RULED, NOT DODGED. The
-  //       question was whether a card that brings its own stock is exempt,
-  //       because the ground change carries the boundary. The owner measured
-  //       every card sheet against `--color-bg-page` (2026-08-27) and the
-  //       exemption failed: in dark not one faction's stock separates its card
-  //       from the page (1.03–1.09:1), and in light only singularity and snide
-  //       do — both because they are near-black slabs on cream. `wow` is
-  //       1.00:1, the same luminance, held together entirely by its gold rule.
-  //       An exemption covering two of eighteen readings, both dark slabs, is a
-  //       rule about slabs and not about cards. So: A FACTION HAIRLINE IS
-  //       LOAD-BEARING, all nine readings, both cascades, 3:1 is the floor.
-  //
-  //       HOW THEY WERE FIXED, WHICH IS THE HALF THAT MATTERS HERE. Four are
-  //       re-aliased `-card-border`s and two are alpha, and no token gained a
-  //       new colour or lost the one it had — the arithmetic is on #2668 and
-  //       the reasoning is beside each declaration in `index.css`. The ninth,
-  //       `snide/chrome`, is the rail's own edge on the wall it stands on in
-  //       the cascade the wall goes black in: `-note-wall-edge` composited on
-  //       `--faction-snide-wall` read 2.77:1 and un-composited would have read
-  //       clear, which is #594's mistake exactly.
-  //
-  //   (b) WAS THE ONE THAT IS A DEFECT IN A GROUND OVERRIDE, NOT AN OLD DEBT —
-  //       AND IT IS FIXED, SO ITS LINE IS GONE (#2669). S.N.I.D.E.'s `chrome`
-  //       map moved six roles onto the wall family and left `accent` inheriting
-  //       the sheet's `--faction-snide-card-accent`: the acid, measured for the
-  //       near-black photocopier SLAB, reading 1.03:1 on the light wall. The
-  //       owner took the candidate this loop's own note named — `-wall-credit`,
-  //       the rung of the same hue `fill` already moved to — so the entry was
-  //       DELETED rather than re-measured, which is the only lawful way a line
-  //       leaves this list.
+  // The nine `line`-on-`paper` readings the role loop found are fixed and their
+  // lines are gone. The RULING that settled them is not re-derivable from the
+  // rows, so it stays: the question was whether a card that brings its own stock
+  // is exempt, on the reasoning that the ground change carries the boundary.
+  // Every card sheet was measured against `--color-bg-page` (owner, 2026-08-27)
+  // and the exemption failed — in dark not one faction's stock separates its
+  // card from the page (1.03–1.09:1), and in light only singularity and snide
+  // do, both being near-black slabs on cream; `wow` is 1.00:1, held together
+  // entirely by its gold rule. An exemption covering two of eighteen readings is
+  // a rule about slabs, not about cards. SO: A FACTION HAIRLINE IS LOAD-BEARING,
+  // all nine readings, both cascades, and 3:1 is the floor.
 };
 
 function key(theme: Theme, pair: Pair): string {
@@ -2743,8 +2574,7 @@ const ROLE_READ_END = String.raw`\)?`;
  */
 function ephemeristsComposerPageStyle(): string {
   const source = sourceOf("pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx");
-  // `breadcrumbInk:` was the end marker until #2102 deleted the field; `sheetStyle`
-  // is the next key in the dress literal and is the same boundary.
+  // `sheetStyle` is the next key in the dress literal, and is the boundary.
   return source.slice(source.indexOf("pageStyle: {"), source.indexOf("sheetStyle,"));
 }
 
@@ -3269,13 +3099,8 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * it is what the plate's own quiet prose already reads, so the label tier
    * joins the register instead of introducing a fourth warm tone on the same
    * sheet. The three pairings are gated by `ephemerists page ground / plate /
-   * panel cell, quiet ink` below, in BOTH cascades — since #2141 those are two
-   * real readings each rather than one taken twice, because the register grew a
-   * vellum half. The figures this note used to quote (6.38 / 5.98 / 5.52, and
-   * "dark gives up ~2.3 points to hold one ink across a register that declares
-   * nothing under dark") were measured on the frozen night-valued register and
-   * are not restated here: the rows carry the numbers, and a comment that
-   * restates them is the thing that goes stale.
+   * panel cell, quiet ink` below, in BOTH cascades, and the rows carry the
+   * numbers — a comment that restates a ratio is the thing that goes stale.
    *
    * NO `Pair` ROW IS ADDED, for the reason this file keeps giving. All three
    * pairings are already gated above — `ephemerists page ground, quiet ink`,
@@ -3317,10 +3142,9 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * broken by that today — every `.label-caption` this root cascades to renders
    * inside `ComposerSheet` (`-plate-bg`) or a panel (`-plate-inner`), and the
    * breadcrumb, the one thing on the bare page, is neutral SITE chrome reading
-   * the app's own tertiary — it took a `breadcrumbInk` off the dress until
-   * #2102 collapsed the site onto one breadcrumb and deleted the field. A label
-   * mounted directly on the composer page would be the
-   * exception, and it would be the same defect #1793 fixed on the faction page.
+   * the app's own tertiary. A label mounted directly on the composer page would
+   * be the exception, and it would be the same defect #1793 fixed on the faction
+   * page.
    */
   it("the composer and waiting surface set the same label seam on their own root (#1800)", () => {
     const pageStyle = ephemeristsComposerPageStyle();
@@ -3354,8 +3178,7 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
  * declared "links + affirmations" and is already measured on all three of the
  * register's sheets by the rows above, which is why this block asserts the
  * WIRING and adds no `Pair`. A second name for a measured value is a name
- * pretending to be one. (It was the register's nile until #2141 deleted the
- * faction's aqua; the seam is unchanged, only what it points at.)
+ * pretending to be one.
  *
  * And the wiring is the only assertable half. Every ratio in this file stays
  * green through a `.markdown-preview a` that hardcodes the neutral, because the
@@ -3436,12 +3259,11 @@ describe("a prose link's ink is a seam (#1636)", () => {
  * gives: a ground that is not a ground leaves every ratio in this file green.
  */
 describe("a themed ground is a longhand (#1636)", () => {
-  // A SCAN, NOT A LIST. This block began as four named selectors — the four
-  // grounds #1636 fixed — which is precisely the shape WORLD_ZERO_STYLE warns
-  // about two sections earlier: a per-file check leaves the fifth instance
-  // unguarded, and the fifth instance is the one nobody is looking at. The
-  // defect has an exact syntactic signature, so the whole stylesheet can be
-  // asked at once and every future rule is covered for free.
+  // A SCAN, NOT A LIST — the shape WORLD_ZERO_STYLE warns about two sections
+  // earlier: a per-file check leaves the fifth instance unguarded, and the fifth
+  // instance is the one nobody is looking at. The defect has an exact syntactic
+  // signature, so the whole stylesheet is asked at once and every future rule is
+  // covered for free.
   it("no rule transitions the `background` shorthand", () => {
     const offenders = [...stripComments(CSS_TEXT).matchAll(/transition:[^;}]*/g)]
       .map((match) => match[0].trim())
@@ -3511,11 +3333,9 @@ describe("the Ephemerists faction page paints the page's ink outside its cards (
   // The two strings the nightly sweep measured, plus the roster's — the third
   // is INSIDE a `CARD` and is here to prove the guard can tell them apart.
   //
-  // The keys were `ephemerists.tasks.empty` / `.praxis.empty` / `.roster.
-  // emptyWithSpotlight` until #1911 collapsed all three families onto the
-  // shared `detail.*` block. The ELEMENTS did not move and neither did their
-  // inks: this guard is about which ground a paragraph sits on, and that is
-  // still a property of this file rather than of the catalog.
+  // The keys are the shared `detail.*` block's. This guard is about which
+  // ground a paragraph sits on, which is a property of this file and not of the
+  // copy catalog — a key rename moves the marker, never the finding.
   for (const key of ["detail.default.tasksEmpty", "detail.default.recentEmpty"]) {
     it(`\`${key}\` reads the page's quiet ink, not the plate's`, () => {
       const at = SOURCE.indexOf(`t("${key}")`);
@@ -3594,11 +3414,6 @@ describe("UA's display-only vermilion stays on display type (#1766)", () => {
   const READERS: Record<string, string> = {
     "pages/characterProfile/archetypes/UaProfileBody.tsx": "a gradient stop, not text",
     "pages/editPraxis/archetypes/UaEditPraxis.tsx": "the composer's errorColor",
-    // `pages/taskDetail/archetypes/UaTaskDetail.tsx` left this list in #2554:
-    // that page drew its own ensō at display size and now mounts
-    // `UaScoreStamp`, which letters the same mark in `--faction-ua-card-accent`.
-    // The scope is one file smaller because a drawing was deleted, not because
-    // a rule was relaxed — the entry goes rather than being kept unread.
   };
 
   it("is read only where the numeral is display type or the mark is not text", () => {
@@ -3955,19 +3770,11 @@ describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
   });
 
   /**
-   * #2580 SUPERSEDED THIS TEST'S FIRST HALF, and the reason is a deletion rather
-   * than a redraw. #2287 pinned the FIELDDESK masthead as the per-letter ransom
-   * cut — the repair for a report that the skin read "boring". On 2026-08-23 the
-   * owner cut the masthead's copy itself: the `HOME` kicker and the `FieldDesk`
-   * title both name a page the bottom nav already marks as current, and the
-   * page's `<h1>` is now the carried life. There is no title left to cut, so the
-   * desk no longer mounts `Ransom` at all.
-   *
-   * What #2287 was actually protecting is untouched and still asserted below:
-   * the per-letter cut is drawn ONCE, in `snideAtoms`, and the comment voice
-   * consumes it rather than transcribing a fourth scrap table. The desk simply
-   * stopped being one of its consumers. Snide's acid rule, the flyposted `WALL`
-   * ground and every ink pairing this describe block measures are all unchanged.
+   * THE DESK MOUNTS NO `Ransom` (#2580 cut its masthead copy: the `HOME` kicker
+   * and the `FieldDesk` title both named a page the bottom nav already marks as
+   * current). What #2287 protects is the other half and is unchanged — the
+   * per-letter cut is drawn ONCE, in `snideAtoms`, and the comment voice
+   * consumes it rather than transcribing a fourth scrap table.
    */
   it("the comment byline is cut from the ONE shared drawing", () => {
     expect(
@@ -4082,12 +3889,10 @@ describe("the S.N.I.D.E. field desk stands on the wall (#2287)", () => {
  * was minted. The rows below are the ones the generator cannot reach: a pairing
  * whose ground is the plate rather than the wall.
  *
- * WHAT MOVED IN DARK, stated because "unchanged" is the acceptance and this is
- * not byte-identical. The panel ground goes #14110b -> #0a0a0b and its primary
- * ink is unchanged at #f4f1e8; against the page's own backdrop the panel was
- * already only 1.045:1 and is now 1.000:1, which is a separation the edge and the
- * offset were always doing. `-card-muted` -> `-note-muted` is #d8d6c8 -> #cfcdbf.
- * Every dark pairing on both surfaces stays above 11:1.
+ * IN DARK THE PANEL AND THE PAGE ARE ONE COLOUR — 1.000:1 — so the edge and the
+ * offset are the whole of the separation there, which is why the edge is
+ * asserted below rather than left to the ground. Every dark pairing on both
+ * surfaces stays above 11:1.
  */
 describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
   const BODY = "pages/factionDetail/archetypes/SnideFactionBody.tsx";
@@ -4116,10 +3921,10 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
     [HERO]: [
       ["WALL", "--faction-snide-wall"],
       ["NOTE_INK", "--faction-snide-note-ink"],
-      // NO `NOTE_MUTED` ROW. The hero's one reader of the wall's quiet tier was
-      // the wordmark's expansion, and #2368 made that a SUBHEAD in the full ink;
-      // the alias came off the file with it. The tier is untouched and the four
-      // panels in BODY still read it, which is what the row below still checks.
+      // NO `NOTE_MUTED` ROW: the hero reads no quiet tier — its wordmark's
+      // expansion is a SUBHEAD in the full ink (#2368). The tier itself is
+      // untouched and the four panels in BODY read it, which the row below
+      // checks.
       ["GRAIN", "--faction-snide-wall-text"],
       ["ACID", "--faction-snide-acid"],
       ["PLATE", "--faction-snide-ink"],
@@ -4291,12 +4096,10 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
       source,
       "`GREEN` is `-acid-deep`, picked because it read on the always-dark panel; on the light wall it is 2.30:1. It keeps the barcode and the mugshot's rim, whose ground really is the press.",
     ).not.toMatch(/color: GREEN[,\s}]/);
-    // The positive half of this pair — "the marker scrawl takes the wall's own
-    // green" — was retired by #2807 with its subject. This surface has no scrawl
-    // left: About and Members are plated headings now, and the four section
-    // headings are checked as a set by `snideSectionHeadingVoice.test.tsx`. The
-    // negative above is the load-bearing half and is unchanged — `GREEN` is
-    // 2.30:1 on the light wall and still must not carry a word here.
+    // There is no positive half: this surface has no bare scrawl left, and its
+    // four section headings are checked as a set by
+    // `snideSectionHeadingVoice.test.tsx`. The negative above is the
+    // load-bearing claim — `GREEN` is 2.30:1 on the light wall.
     expect(
       source,
       "the join error printed the GLOBAL `--color-danger`, measured on `--color-bg-page` and 4.08:1 here.",
@@ -4356,9 +4159,8 @@ describe("the S.N.I.D.E. faction page stands on the wall (#2343)", () => {
  * THE HERO IS NO LONGER ONE OF THEM (#2368). The owner ruled its medallion black
  * in both cascades, so that disc is the press's `-ink` now and its marks are
  * measured by the block below — on a frozen ground whose BOTH ends were checked,
- * which is why the sigil is allowed to keep flipping there. Nothing about this
- * block changed: the cream stock is still frozen, and the three surfaces still
- * drawing on it still owe it a frozen mark.
+ * which is why the sigil is allowed to keep flipping there. The cream stock is
+ * frozen, and the three surfaces still drawing on it owe it a frozen mark.
  */
 describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
   const DISC = "--faction-snide-paper";
@@ -4887,9 +4689,7 @@ describe("the collab block takes its dress from the skin (#2269, #2267)", () => 
  *
  * WHY IT NEEDS ONE AT ALL. The card kit's own mark does not need a floor of its
  * own: `CovenBand` hands the hat an explicit `markColor` since #2635, so on that
- * band the mark is the wordmark's ink and is measured with it. (It used to
- * stand on the band's borrowed white `--faction-coven-slip-sigil-ground`, at the
- * 3.15:1 index.css still records beside `--faction-coven-on-fill`.) The
+ * band the mark is the wordmark's ink and is measured with it. The
  * faction-DIRECTORY tile has no band and hands the mark nothing, so it is the
  * one surface that lays a drawn Coven mark straight on the four-stop ramp --
  * and `--faction-coven` is 2.11:1 there, which is why the tile takes
@@ -5095,12 +4895,10 @@ describe("S.N.I.D.E. is not an always-dark faction (#2631)", () => {
 
   it("the rail's own ground is the wall too", () => {
     // The sixth surface, and the only one that reaches its ground through a
-    // shared seam. `SNIDE_WALL_FACE` used to be a literal inside `railFaceVars`
-    // and this assertion used to slice it out of `Sidebar.tsx` as text; #2659
-    // generalised it into the `chrome` ground of `utils/factionRoles.ts`, so
-    // the assertion now ASKS the resolver instead of grepping for it — a
-    // question that survives the next move. What the rendered `<aside>` then
-    // declares is still measured by the seam's own spec,
+    // shared seam — the `chrome` ground of `utils/factionRoles.ts`. This ASKS
+    // the resolver rather than grepping `Sidebar.tsx` for a literal, which is a
+    // question that survives the next move; what the rendered `<aside>` then
+    // declares is measured by the seam's own spec,
     // `layout/__tests__/sidebarFactionFace.test.tsx`.
     expect(factionRoleVar("snide", "paper", "chrome"), "the rail's sheet is the wall").toBe(
       "var(--faction-snide-wall)",
@@ -5295,8 +5093,7 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
     // Coven's hat to `--faction-coven` (3.15:1 on white, far less on the new
     // pink) — a faction's own mark disappears on a ground of the faction's own
     // hue, which is exactly what `CardMasthead`'s `markColor` exists for.
-    // Everymen and WOW have passed it since their bands were built; these two
-    // are the pair #2635 added.
+    // Everymen and WOW have passed it since their bands were built.
     for (const [band, ink] of [
       ["UaBand", "--faction-ua-mast-ink"],
       ["CovenBand", "--faction-coven-mast-ink"],

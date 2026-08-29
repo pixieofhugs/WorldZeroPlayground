@@ -62,9 +62,24 @@ import { AuthContext } from '../../auth/AuthContext'
 import InvitationLetterPopup from '../InvitationLetterPopup'
 import AlbescentInvitation from '../AlbescentInvitation'
 import type { CharacterOut, CurrentUser } from '../../api/auth'
+import { FACTION_MANIFESTS } from '../../factions'
 
-/** The seven slugs with an `invitation` block — the shared popup's whole range. */
-const SLUGS = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow'] as const
+/**
+ * The shared popup's whole range: every registered kit whose catalog entry
+ * carries an `invitation` block.
+ *
+ * Derived, not typed (#2815) — the kits come from the manifest, so a tenth joins
+ * this loop the moment it ships a letter, and the filter states its own
+ * exclusions rather than hiding them in a written-out list. Two kits fall out
+ * of it today, both on purpose: `na` is a state rather than a faction and has
+ * no catalog block at all, and `albescent` keeps its letter under
+ * `albescent.letter` on its own component — the describe block below is that
+ * letter's test, so it is covered, just not here.
+ */
+const CATALOG = factions as unknown as Record<string, { invitation?: unknown }>
+const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
+  (slug) => CATALOG[slug]?.invitation !== undefined,
+)
 
 /** Where the mechanic sits in every letter (`MECHANIC_INDEX`). */
 const MECHANIC = 1
@@ -75,7 +90,7 @@ interface Perk {
   desc: string
 }
 
-function perksOf(slug: (typeof SLUGS)[number]): Perk[] {
+function perksOf(slug: string): Perk[] {
   return (factions as unknown as Record<string, { invitation: { perks: Perk[] } }>)[slug]
     .invitation.perks
 }
@@ -125,6 +140,12 @@ function albescentLetter(): string {
   } as unknown as CharacterOut
   return withAuth(<AlbescentInvitation lives={[life]} onJoined={() => {}} />)
 }
+
+// A filtered derivation can go quietly EMPTY, and `describe.each([])` reports a
+// perfect board when it does. Seven of the nine kits ship a shared letter.
+it('resolves to every kit that ships a shared letter', () => {
+  expect(SLUGS).toHaveLength(7)
+})
 
 describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (slug) => {
   it('prints the mechanic as a name over a description, and the flavour rows as description alone (#2774)', () => {
@@ -268,7 +289,7 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   ]
 
   it.each(MECHANICS)('%s states its mechanic in the middle slot', (slug, name, desc) => {
-    const perk = perksOf(slug as (typeof SLUGS)[number])[MECHANIC]
+    const perk = perksOf(slug)[MECHANIC]
     expect(perk.name).toBe(name)
     expect(perk.desc).toBe(desc)
   })

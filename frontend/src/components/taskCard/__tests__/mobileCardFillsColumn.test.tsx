@@ -35,15 +35,7 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
 }))
 
 // Imported after the mock is registered.
-import AlbescentTaskCard from '../AlbescentTaskCard'
-import CovenTaskCard from '../CovenTaskCard'
-import DefaultTaskCard from '../DefaultTaskCard'
-import EphemeristsTaskCard from '../EphemeristsTaskCard'
-import EverymenTaskCard from '../EverymenTaskCard'
-import SingularityTaskCard from '../SingularityTaskCard'
-import SnideTaskCard from '../SnideTaskCard'
-import UaTaskCard from '../UaTaskCard'
-import WowTaskCard from '../WowTaskCard'
+import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
 
 const TASK = aTask({
@@ -53,18 +45,17 @@ const TASK = aTask({
   in_progress_count: 6,
 })
 
-/** Albescent is in the table as itself: its own wrapper is the outermost box. */
-const SKINS: [string, ComponentType<CardProps>][] = [
-  ['default (na)', DefaultTaskCard],
-  ['albescent', AlbescentTaskCard],
-  ['coven', CovenTaskCard],
-  ['ephemerists', EphemeristsTaskCard],
-  ['everymen', EverymenTaskCard],
-  ['singularity', SingularityTaskCard],
-  ['snide', SnideTaskCard],
-  ['ua', UaTaskCard],
-  ['wow', WowTaskCard],
-]
+/**
+ * Albescent is in the table as itself: its own wrapper is the outermost box.
+ *
+ * Read off `surfaceMap('taskCard')` rather than typed (#2815) — a card that a
+ * tenth kit registers has the same column to fill, and a table naming nine
+ * components is a range someone has to remember to widen. Annotated as a tuple
+ * array rather than inferred, the way `duelSkinSlots.test.tsx` does it:
+ * `Object.entries` widens to `(string | ComponentType)[]` otherwise and
+ * `it.each` then cannot match the two-arg callback.
+ */
+const SKINS: [string, ComponentType<CardProps>][] = Object.entries(surfaceMap('taskCard'))
 
 function markup(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -88,6 +79,10 @@ function widthOf(tag: string): string | undefined {
 }
 
 describe('below 768px every task card asks for the whole column (#2763)', () => {
+  it('covers every skin the app can dispatch taskCard to', () => {
+    expect(SKINS).toHaveLength(9)
+  })
+
   it.each(SKINS)('%s: the outermost box fills the line on a phone', (_name, Card) => {
     dispatch.formFactor = 'mobile'
     // 340px is the number the report is about, and `fit-content` is
