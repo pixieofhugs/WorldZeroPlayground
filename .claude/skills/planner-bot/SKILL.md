@@ -30,6 +30,12 @@ writes no feature code and opens no PRs.
    Closing is not: on a solo repo the owner filed most of these, and a close reads as
    *we have decided against this*. Every close goes to her first, with its evidence.
 
+**Applying a label needs no approval and never waits for the close-out.** Rule 4 grants it
+outright; the close-gate above covers closes only. Steps 2–7 each end with the labels they
+decided already **on their issues** — not listed in a summary, not staged in a file of
+commands to run later. A verdict you reached and did not write is a verdict this board
+never received, and the next session starts from the body you already disproved.
+
 ---
 
 ## Step 0 — Agree the scope
@@ -45,7 +51,7 @@ honour it and skip this.
 ```
 gh issue list --state open --limit 500 --json number,title,labels,createdAt,updatedAt
 gh issue list --state open --limit 500 --json labels --jq '[.[]|.labels|map(.name)]|flatten|group_by(.)|map({(.[0]):length})|add'
-gh pr list --state open --json number,title,headRefName
+gh pr list --state open --json number,title,headRefName,body
 ```
 
 **Count untriaged by the ABSENCE OF A STATE LABEL, never by `labels == []`.** A *kind* label
@@ -60,13 +66,26 @@ gh issue list --state open --limit 500 --json number,title,labels \
         |"#\(.number) \(.title)"'
 ```
 
+The same census catches an epic wearing a second state label. Print it here — Step 2 strips
+what this finds, and a rule stated only where the fix happens gets skipped by any run that
+never reaches that step:
+
+```
+gh issue list --state open --limit 500 --json number,title,labels \
+  --jq '.[]|select([.labels[].name]|index("epic"))
+        |select([.labels[].name]-["epic","bug","enhancement","documentation"]|length>0)
+        |"#\(.number) epic also wearing \([.labels[].name]-["epic"]|join(", "))"'
+```
+
 Open PRs matter here: **a ruling for an open issue may already exist on an unmerged
 branch.** Before asking the owner anything, `git fetch origin pull/N/head:prN` and grep the
 relevant PRs — a review may have settled it already. When she then rules differently, say so
 on the PR, because its record is now stale.
 
-**Done when** you can state five numbers: open issues, unlabeled, `needs-triage`,
-`ready-for-agent`, and `deferred`. A guess is not a number.
+**Done when** you can state five numbers — open issues, unlabeled, `needs-triage`,
+`ready-for-agent`, `deferred` — you have named every epic wearing a second state label, and
+you have read every open PR **body** and named any open issue one of them already rules on.
+A guess is not a number.
 
 ---
 
@@ -101,10 +120,13 @@ gh issue list --state open --limit 500 --json number,title,body --jq '.[]|"\(.nu
 Wire what you find (Step 3) so the next run's graph is worth trusting. Empty output from
 `sub_issues` means **no native children**, not "no children".
 
-Close as **completed**, never "not planned" (Rule 4 and the reason behind it). Name the
-evidence — the child numbers, the file now on `main` — in the closing comment.
+The close itself is hers (Rule 4): propose it with its evidence — the child numbers, the
+file now on `main` — and once she approves, close as **completed**, never "not planned".
 
-**Done when** every parent has a counted graph and every all-closed one has a verdict.
+**Done when** every parent has a counted graph, every all-closed one has a verdict, and every
+epic you touched wears `epic` alone — `ready-for-agent` stripped where it had crept on,
+applied, not proposed. An epic's state is its children's; one whose body says "one child per
+cluster" is otherwise handed to a single agent as a single PR.
 
 ---
 
@@ -120,8 +142,10 @@ the same symptom on different surfaces are usually one root cause and two valid 
 
 Three outcomes:
 
-- **True duplicate** → keep the **older** one, label the other `duplicate`, close it
-  pointing at the survivor.
+- **True duplicate** → keep the **older** one. Label the other `duplicate` and
+  `ready-for-human`, naming the survivor; the close is hers like every other (Rule 4). A
+  duplicate is not an exception because it looks obvious — it is the close most often taken
+  without asking.
 - **Same root cause, different sites** → keep both; make the root-cause issue the parent and
   attach the others as sub-issues:
   `gh api --method POST repos/pixieofhugs/WorldZeroPlayground/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>`
@@ -130,11 +154,12 @@ Three outcomes:
   issue carries her screenshots, her design link, her words; hiding it behind your tidier
   epic reads as a rejection. Add an `Epic:` title prefix that preserves her phrasing, move
   the children onto it (sub-issues have exactly one parent, so re-POSTing is a move), and
-  close *your* duplicate epic instead.
+  propose *your* duplicate epic for closing instead — hers survives, yours goes to her as a
+  close like any other.
 
-**Done when** every proposed pairing has been through the one-change test and the survivors
-are named. Report the pairs you rejected too — a near-miss you silently dropped is
-indistinguishable from one you never saw.
+**Done when** every proposed pairing has been through the one-change test, the survivors are
+named, and each survivor's label is on the issue. Report the pairs you rejected too — a
+near-miss you silently dropped is indistinguishable from one you never saw.
 
 ---
 
@@ -155,23 +180,55 @@ and manufacture false premises), the guard tests that would fail if the claim we
 **The strongest cheap check is running the guard test that would fail if the issue were
 right.** An "X is missing" issue has been wrong here before, with 33 green tests proving it.
 
+**Run this step one subagent per issue, and have each apply its own label.** This is the
+widest step and the one attention runs out on: by the time a single pass has read twelve
+issues it writes summaries instead of labels, and a verdict reached in a summary never
+reaches the board. Per-issue agents are independent, so the split matches the seam.
+
+Dispatch one agent for every issue still carrying `needs-triage` or no state label after
+Steps 2–3 — no batching, one issue each. Give each agent exactly: the issue number, the repo
+path, `python scripts/gh_issue_comments.py <N>` as the only way to read it, the "where to
+look" list above, and the label definitions from Step 8. Give it no other issue's contents.
+
+Require each to return this shape, and nothing else:
+
+```
+{number, verdict, label_applied, evidence, owner_question}
+```
+
+- `verdict` is one of `already-shipped`, `already-built`, `answered`, `product-fork`.
+- **The agent applies `label_applied` itself before returning.** It may relabel; it may
+  never close, and it may never write feature code.
+- `already-shipped` and `already-built` take `ready-for-human` — the close is hers, and
+  proposing one is work only she can finish. Never `ready-for-agent`: dispatching finished
+  work is the expensive mistake here.
+- `product-fork` keeps `needs-triage` and fills `owner_question`. That is the only label
+  that survives this step, and only into Step 5.
+
+Merge by re-running the Step 1 census, not by trusting the returns: an agent that failed,
+returned nothing, or returned a shape you cannot read leaves its issue visibly unlabelled,
+so re-dispatch that one. Collect every `owner_question` into Step 5's queue and every
+`already-*` verdict into the close-out's proposed-close list.
+
 **`needs-info` is nearly always the wrong label on this board.** It means *waiting on the
 reporter* — and the reporter is the owner, and she is in the session. Use it only for
 something genuinely outside the repo: a screenshot of a device you cannot reach, a
 third-party response. Everything else is Step 5.
 
-If you do land on `needs-info`, post the triage-notes template from `/triage` — everything
+If you do land on `needs-info`, post triage notes in the usual shape — everything
 established so far, then specific answerable questions.
 
-**Done when** no surviving issue carries an unknown you could have answered by reading.
+**Done when** no surviving issue carries an unknown you could have answered by reading, and
+every issue you answered has both the answer and its new label written to it.
 
 ---
 
 ## Step 5 — Grill what only she can decide
 
 For each issue needing a human decision — `needs-triage`, an unlabeled issue with a real
-fork in it, or anything Step 4 could not resolve — run
-`/mattpocock-skills:grill-with-docs` on it.
+fork in it, or anything Step 4 could not resolve — grill her on it **here, in this session**.
+`/mattpocock-skills:grill-with-docs` is the same shape but is user-invocation-only, so you
+cannot call it yourself; ask her to run it when an issue needs an ADR minted.
 
 Working rules, learned the hard way:
 
@@ -214,7 +271,7 @@ Working rules, learned the hard way:
 - **The tracker moves while you grill.** Re-read an issue before acting on a decision made
   several issues ago.
 
-**ADR hazard.** `grill-with-docs` mints ADRs. An ADR number is claimed at *merge* time on
+**ADR hazard.** A grill mints ADRs. An ADR number is claimed at *merge* time on
 disk but written into an issue at *authoring* time, so any number sitting in a backlog can
 already be taken. Run `ls docs/adr/ | tail` before writing one, and if two ADRs come out of
 one pass, assign their numbers explicitly rather than letting both take "the next free" one.
@@ -229,7 +286,9 @@ Follow the status vocabulary in #2536; do not rewrite or delete ADR bodies.
 `deferred` means *later, not now*. Only the stale ones get re-opened for discussion — the
 rest are skipped in silence, not re-litigated.
 
-Age it by **when it was deferred**, not when it was filed:
+Age it by **when it was deferred**, not when it was filed. Step 1's `createdAt` and
+`updatedAt` are both wrong for this — a re-defer moves neither, so an issue she deliberately
+re-deferred last week reads as years stale. Run the events loop:
 
 ```
 for n in $(gh issue list --label deferred --state open --limit 100 --json number --jq '.[].number'); do
@@ -243,7 +302,8 @@ title, one line of what it asked for, and whether the codebase has moved under i
 Three outcomes: promote it (`deferred` off, into Step 4/5), close it, or **re-defer** — and
 a re-defer means re-applying the label so the clock restarts from today.
 
-**Done when** every deferral is either under 3 months old or has an answer.
+**Done when** every deferral is either under 3 months old or has an answer, and every answer
+is on the issue as a label — a promote, a close proposal, or a re-applied `deferred`.
 
 ---
 
@@ -256,23 +316,34 @@ captures the values and writes them where they belong.
 
 Offer, don't assume — a wizard is worth building for a tedious multi-stage procedure and is
 overkill for a two-minute click. Say which you think it is. Do not build a wizard for a step
-you could have done yourself; that is a mislabelled issue, so fix the label instead.
+you could have done yourself; that is a mislabelled issue, so fix the label instead. Skip the
+issues wearing this label because they are proposed closes — those need a ruling, not a
+script; list them with the close-out instead.
 
 ---
 
 ## Step 8 — Close out with the board
 
-The pass is done when every open issue carries one of:
+Steps 2–7 applied these as they went; this step **verifies**, it does not apply. Re-run the
+Step 1 census and confirm every open issue already carries one of — and `needs-triage` is
+not on this list, so an issue still wearing it has not been triaged:
 
 - **`ready-for-agent`** — dispatchable, with an agent brief. Durable and behavioural: name
   types, contracts and acceptance criteria; never file paths or line numbers, which rot.
+  Never on an issue whose comments say it already shipped, and never on one whose fork
+  Step 5 has not ruled on — the label is not the ruling, and applying it to an open question
+  hands an agent a coin toss.
 - **`needs-design`** — the shape needs drawing before it can be built.
 - **`deferred`** — deliberately later, deferred within the last 3 months.
-- **`ready-for-human`** — with Step 7's verdict attached.
-- **`epic`** — a tracking issue. Its state is its children's, not its own, so it wears no other
-  state label and the grill skips it. **An epic must never wear `ready-for-agent`**: an epic
-  whose body says "one child per cluster" will otherwise be handed to one agent as one PR.
-  If an epic has no open children, it needs children filed or it needs closing — say which.
+- **`ready-for-human`** — with Step 7's verdict attached. This is also where a **proposed
+  close** waits: Rule 4 reserves the close for her, so an issue you found already shipped or
+  already built is work only she can finish, and it wears this until she rules. Do not invent
+  a sixth label for it, and do not park it on `needs-triage`. An **epic** proposed for closing
+  is the exception — it keeps `epic` and nothing else, because its state is still its
+  children's; the proposal rides in the close-out list, not in a label.
+- **`epic`** — a tracking issue. Its state is its children's, not its own, so it wears no
+  other state label (Step 2 strips `ready-for-agent`) and the grill skips it. If an epic has
+  no open children, it needs children filed or it needs closing — say which.
 
 Print the before/after counts, every close you proposed and what she ruled, the duplicate
 pairs and how they were resolved, and — explicitly — **anything still unlabeled and why**.
@@ -302,8 +373,12 @@ Then say what `/builder-bot` would pick up next. Do not start it.
 5. **A tool that errors is not a tool that says "empty".** An empty `sub_issues` response and
    a failed call look identical through `| wc -l`. Check that each measurement succeeded
    before classifying on it.
-6. **Never dispatch from this pass.** Labelling something `ready-for-agent` is the end of
-   planner-bot's job; building it is `/builder-bot`'s.
+6. **Never dispatch from this pass, and never build in it.** Labelling something
+   `ready-for-agent` is the end of planner-bot's job; building it is `/builder-bot`'s. When
+   she asks for a fix mid-pass — *"it's a one-liner, just do it"* — the answer is the label
+   plus "`/builder-bot` picks that up next", not a branch. Refuse the code and the PR even
+   when the diff really is one line; a planning pass that ships is no longer reviewable as
+   a planning pass.
 7. **The repo's guard hook matches on SUBSTRING, not intent.** A heredoc or file whose *text*
    quotes the banned `gh` comment-read command is blocked exactly like a real call. Write such
    content with the Write tool, which the hook does not gate.
