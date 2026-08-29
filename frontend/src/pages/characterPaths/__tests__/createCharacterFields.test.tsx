@@ -9,8 +9,16 @@
  * every archetype there is — renders each at both widths, and asks the markup
  * two questions no per-file grep can ask:
  *
- *   1. does every text field have a `<label for>` pointing at it?
+ *   1. does every text field carry an accessible name?
  *   2. does any of them suppress its focus outline?
+ *
+ * (1) USED TO ASK FOR A `<label for>`. Since #2793 both character forms are
+ * PLACEHOLDER-ONLY — the owner ruling deletes every visible field label on
+ * create and on edit, so the words that named a field are now the words inside
+ * it. That moves the accessible name from the label to `aria-label`, and the
+ * two rows below are what make the trade safe rather than a straight
+ * accessibility regression: every field is named, the name is the placeholder
+ * the player can see, and no `<label>` survives to name anything.
  *
  * WHY (2) IS "NO SUPPRESSION" AND NOT "CARRIES THE SHARED RING". An inline
  * `outline: none` beats any stylesheet, so a plate that sets it has no ring
@@ -113,14 +121,17 @@ describe('every character-creation field is reachable', () => {
     expect(ARCHETYPES.length).toBeGreaterThan(1)
   })
 
-  it.each(CASES)('%s on %s: a label points at every field', (_name, slug, width) => {
+  it.each(CASES)('%s on %s: the placeholder is every field’s accessible name', (_name, slug, width) => {
     const html = renderSkin(slug, width)
     const fields = textFields(html)
     expect(fields.length, 'the skin draws at least the name field').toBeGreaterThan(0)
     for (const field of fields) {
-      const id = attr(field, 'id')
-      expect(id, `an unlabelled textbox: ${field.trim()}`).toBeTruthy()
-      expect(html, `no <label for="${id}">`).toContain(`for="${id}"`)
+      const name = attr(field, 'aria-label')
+      expect(name, `a textbox with no accessible name: ${field.trim()}`).toBeTruthy()
+      // One string, two attributes: what a screen reader announces and what a
+      // sighted player reads in the empty box are the same words, so the copy
+      // cannot drift into two vocabularies again (#2793).
+      expect(attr(field, 'placeholder'), `placeholder and aria-label disagree on "${name}"`).toBe(name)
     }
   })
 
@@ -132,17 +143,14 @@ describe('every character-creation field is reachable', () => {
     }
   })
 
-  it('a label that names no control is not drawn as a <label>', () => {
-    // The portrait key and the calling grid are headings over a group of
-    // buttons, not fields. `ComposerSection` already renders those as a <span>
-    // when no `htmlFor` is passed; the `na` archetype used to draw them as
-    // orphan <label>s, which is an accessible name attached to nothing.
-    for (const width of WIDTHS) {
-      const html = renderSkin('', width)
-      const labels = [...html.matchAll(/<label\b([^>]*)>/g)].map(([, a]) => a)
-      for (const label of labels) {
-        expect(attr(label, 'for'), `orphan <label>: ${label.trim()}`).toBeTruthy()
-      }
-    }
+  it.each(CASES)('%s on %s: draws no visible field label at all', (_name, slug, width) => {
+    // Was "a label that names no control is not drawn as a <label>" — the
+    // portrait key and the calling grid head a group of BUTTONS, and the `na`
+    // archetype used to draw them as orphan <label>s. #2793 makes the stronger
+    // statement available: this form is placeholder-only, so the correct number
+    // of <label> elements on it is ZERO, orphan or not. A skin that wants a
+    // visible label back has to change this row and say why.
+    const labels = [...renderSkin(slug, width).matchAll(/<label\b[^>]*>/g)].map(([whole]) => whole)
+    expect(labels, 'a visible label survives on a placeholder-only form').toEqual([])
   })
 })

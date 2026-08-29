@@ -303,6 +303,51 @@ describe('the focus ring survives every skin, at both widths (#2825)', () => {
   }
 })
 
+describe('every field on the edit form names itself (#2793)', () => {
+  /* The other half of `createCharacterFields.test.tsx`'s sweep, on the registry
+     that file cannot see. #2793's ruling deletes every visible label on BOTH
+     character forms and makes them placeholder-only, which moves the accessible
+     name from a `<label>` onto the input — so the guard that keeps that from
+     being a plain accessibility regression has to run on both registries or it
+     only protects the surface it was written on. That is the mechanism #2834
+     already caught once here.
+
+     Both widths, because the `na` kit mounts every field twice (a desktop plate
+     and a phone column) and a fan-out archetype may mount it twice again. */
+  function textFields(html: string): string[] {
+    return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
+      .map(([, attrs]) => attrs)
+      .filter((attrs) => !/type="(?:file|hidden)"/.test(attrs))
+  }
+
+  function attr(attrs: string, name: string): string | null {
+    return new RegExp(`${name}="([^"]*)"`).exec(attrs)?.[1] ?? null
+  }
+
+  for (const width of ['desktop', 'mobile'] as const) {
+    it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+      `slug "%s" names every field with its own placeholder on ${width}`,
+      (slug) => {
+        const fields = textFields(renderFor(slug, width))
+        expect(fields.length, 'the skin draws at least the name field').toBeGreaterThan(0)
+        for (const field of fields) {
+          const name = attr(field, 'aria-label')
+          expect(name, `a textbox with no accessible name: ${field.trim()}`).toBeTruthy()
+          expect(attr(field, 'placeholder'), `placeholder and aria-label disagree on "${name}"`).toBe(name)
+        }
+      },
+    )
+
+    it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+      `slug "%s" draws no visible field label on ${width}`,
+      (slug) => {
+        const labels = [...renderFor(slug, width).matchAll(/<label\b[^>]*>/g)].map(([whole]) => whole)
+        expect(labels, 'a visible label survives on a placeholder-only form').toEqual([])
+      },
+    )
+  }
+})
+
 describe('the phone column names every control it draws a <label> for (#2834)', () => {
   /* `createCharacterFields.test.tsx`'s "a label that names no control is not
      drawn as a <label>" guard sweeps the createCharacter registry only — the
