@@ -66,7 +66,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'pages/characterProfile/__tests__/factionProfileBody.test.tsx|SLUGS',
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
   'pages/praxisDetail/__tests__/detailWallAlarmInk.test.tsx|WALL_ALARM',
-  'pages/tasks/__tests__/equalHeightRow.test.tsx|SKINS',
 ])
 
 function typedLoopLists(): string[] {
