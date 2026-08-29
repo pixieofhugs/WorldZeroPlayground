@@ -112,9 +112,11 @@ function AlbescentBand() {
       <CardMasthead
         slug="albescent"
         style={{
-          // `resolveCssKey` sends `albescent` to `default` and `isKnownFaction`
-          // is false for it, so this is `{}` too — the society stays out of the
-          // spectrum (ADR-0048, #783) without this file naming it.
+          // `resolveCssKey` sends `albescent` to `default`, so this declares the
+          // same neutral family the na band above does — the society stays out
+          // of the spectrum (ADR-0048, ADR-0083, #783) without this file naming
+          // it. Before #2690 the map answered `{}` here and the fallback arms
+          // said the same thing; the family is unchanged, only its delivery.
           ...factionRoleVars("albescent", "alb-band"),
           background: "var(--alb-band-paper)",
           color: "var(--alb-band-ink)",
