@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import account_has_admin_role, get_current_account_optional
+from dependencies import get_current_account_optional, get_viewer_is_admin
 from models.account import Account
 from schemas.character import CharacterOut
 from services.character import build_character_outs, list_characters_for_viewer
@@ -19,6 +19,7 @@ async def get_leaderboard(
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
     account: Optional[Account] = Depends(get_current_account_optional),
+    viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
     """Top characters by current era score, optionally filtered by faction.
 
@@ -32,9 +33,7 @@ async def get_leaderboard(
         faction_slug=faction,
         viewer_account=account,
         # An admin counts as revealed for that question and no other (#2400).
-        viewer_is_admin=(
-            account is not None and await account_has_admin_role(account.id, session)
-        ),
+        viewer_is_admin=viewer_is_admin,
         limit=limit,
         offset=offset,
     )
