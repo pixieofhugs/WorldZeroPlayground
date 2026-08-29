@@ -300,7 +300,7 @@ function SideAvatar({ side }: { side: DuelSideOut }) {
  * One side of the duel.
  *
  * The rival's panel carries a placeholder rather than a body because the body is
- * genuinely not on the wire: `_duel_side_hidden_condition` (#999) hides a duel
+ * genuinely not on the wire: `duel_side_hidden_condition` (#999) hides a duel
  * side from everyone but its author while the duel is live and incomplete,
  * through the one helper both visibility doors share. This labels that rule; it
  * does not implement it.

@@ -20,7 +20,7 @@ puts "someone did a thing involving you", and it lands beside the
 the sender's. For a collab those are the same row; for a duel they are the two
 linked sides (ADR-0011) and the recipient's is the one their feed card can link
 to — the sender's side is hidden from them while the duel is live and incomplete
-(``_duel_side_hidden_condition``, #999).
+(``duel_side_hidden_condition``, #999).
 
 The (from, to, praxis) triple plus ``created_at`` is also the rate-limit key: one
 nudge per sender → recipient → praxis per 24h. That limit is a safety control,

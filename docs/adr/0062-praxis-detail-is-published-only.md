@@ -43,7 +43,8 @@ and duel never enter it** (`backend/models/praxis.py`, the `PraxisStatus`
 enum comment on `pending`; the status is assigned only in
 `backend/services/collab_consensus.py`). A duel side that has cast is
 `submitted` with the duel still `active`, which is why #999 needs
-`_duel_side_hidden_condition` (`backend/services/praxis.py`) to hide it
+`duel_side_hidden_condition` (`backend/services/praxis_visibility.py`) to
+hide it
 rather than relying on status.
 
 So state the rule by intent, not by enum: *drafting, mid-consensus, or
@@ -51,7 +52,8 @@ waiting on a rival — all composer.*
 
 ## Why the redirect is safe
 
-`praxis_visibility_condition` (`backend/services/praxis.py`) exposes
+`praxis_visibility_condition` (`backend/services/praxis_visibility.py`)
+exposes
 `submitted` praxes publicly plus the viewer's own member praxes. A `pending`
 praxis is not `submitted`, so only members reach it, and every member has a
 destination in the composer — the waiting surface if they have cast, the
