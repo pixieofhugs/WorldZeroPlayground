@@ -15,5 +15,5 @@ httpx
 # file: these two agree on a CRDT wire format and on a document's stored shape,
 # and a silent minor bump on either side is a data-compatibility change, not a
 # library upgrade.
-pycrdt==0.14.3
+pycrdt==0.14.4
 pycrdt-websocket==0.16.4

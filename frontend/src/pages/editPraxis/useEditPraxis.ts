@@ -594,8 +594,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // as "a duel row never goes": `delete_praxis` now discards the DECLINED
     // rows first, which is why the dissolve below is what unblocks the delete.
     // A live (`pending`/`active`) or finished (`settled`/`resolved`) duel is
-    // still refused outright — see `services.duel.discard_dissolved_duels_for_praxis`,
-    // which owns that predicate and the owner ruling behind it.
+    // still refused outright — see
+    // `services.praxis_duel.discard_dissolved_duels_for_praxis`, which owns that
+    // predicate and the owner ruling behind it.
     const inDuel = praxis.duel_id != null;
     const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
     const confirmed = await askConfirm(
