@@ -9,6 +9,7 @@ export { default as AlbescentBackdrop } from "../src/components/backdrop/Albesce
 export { default as AlbescentComment } from "../src/components/comments/voices/AlbescentComment";
 export { default as AlbescentCreateCharacter } from "../src/pages/characterPaths/archetypes/AlbescentCreateCharacter";
 export { default as AlbescentDuelSealConfirm } from "../src/components/duel/AlbescentDuelSealConfirm";
+export { default as AlbescentEditCharacter } from "../src/pages/characterPaths/archetypes/AlbescentEditCharacter";
 export { default as AlbescentEditPraxis } from "../src/pages/editPraxis/archetypes/AlbescentEditPraxis";
 export { default as AlbescentFactionBody } from "../src/pages/factionDetail/archetypes/AlbescentFactionBody";
 export { default as AlbescentFactionHero } from "../src/components/factionHero/AlbescentFactionHero";
@@ -18,6 +19,7 @@ export { default as AlbescentInvitation } from "../src/components/AlbescentInvit
 export { default as AlbescentPraxisCard } from "../src/components/praxisCard/desktop/AlbescentPraxisCard";
 export { default as AlbescentPraxisDetail } from "../src/pages/praxisDetail/archetypes/AlbescentPraxisDetail";
 export { default as AlbescentProfileBody } from "../src/pages/characterProfile/archetypes/AlbescentProfileBody";
+export { default as AlbescentProposeTask } from "../src/pages/proposeTask/archetypes/AlbescentProposeTask";
 export { default as AlbescentScoreStamp } from "../src/components/praxisCard/scoreStamp/AlbescentScoreStamp";
 export { default as AlbescentSeal } from "../src/components/metataskSeal/skins/AlbescentSeal";
 export { default as AlbescentSelectCard } from "../src/components/selectCard/AlbescentSelectCard";
@@ -166,6 +168,7 @@ export { default as InvitationWatcher } from "../src/components/InvitationWatche
 export { JoinControl } from "../src/components/JoinControl";
 export { default as Layout } from "../src/components/Layout";
 export { default as LevelGem } from "../src/components/ui/LevelGem";
+export { default as LevelTrackMeta } from "../src/components/LevelTrackMeta";
 export { default as LevelUpPopup } from "../src/components/LevelUpPopup";
 export { default as LevelUpWatcher } from "../src/components/LevelUpWatcher";
 export { default as Lotus } from "../src/components/factionMarks/Lotus";

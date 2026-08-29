@@ -992,3 +992,118 @@ stale), #2686 re-cut S.N.I.D.E. chrome contrast 1.03:1 -> 7.71:1, #2528 touched
 `DefaultSettings` line this round had flagged). Merged, regenerated kit.css +
 ds-types + both barrels, re-ran the whole chain. **Re-check `origin/main` immediately
 before `finalize_plan`, every single time** — this is now five for five.
+
+## [2026-08-28] Sixth round — 305 -> 308, and the auth that never arrived
+
+Ran from a worktree at `origin/main` 3fb2cf6f (115+ commits past the 08-25 round's
+d3f98246). Build clean, `package-validate.mjs` **exit 0**, zero new warn lines.
+
+### THE BLOCKER: `DesignSync` cannot authorize from a Claude Code desktop session
+Every `DesignSync` call — `get_project`, `get_file` — returned the same error:
+
+> DesignSync needs design-system authorization, but /design-login requires an
+> interactive terminal and is not available in this environment.
+
+Tried four times across the run, including after the owner ran `/design-login` in a
+separate interactive terminal. **The credential does not propagate into an
+already-running session.** So this round: no `_ds_sync.json` anchor fetch, no diff, no
+upload. Everything else was completed locally.
+
+**Next round: authorize BEFORE starting.** Run `/design-login` first, then start the
+session. Do not begin the build expecting to fetch the anchor part-way through — the
+anchor decides the verification scope, and without it the render check is unscoped.
+
+### The whole-tree scan, sixth round running — 37 unmapped, 3 genuinely new
+`.design-sync/.cache/newdirs.mjs` (regenerate it; gitignored) found 37. **34 were
+documented deliberate exclusions** — the route-level `src/pages/*.tsx`, `src/auth`,
+`pages/admin` set (NOTES line ~488), `TheArray`, and one false positive
+(`BackdropContext.tsx`, which IS mapped, under the component name `BackdropProvider` —
+the scan keys by basename, so a file mapped under a different name reads as unmapped).
+
+The 3 real ones:
+- `LevelTrackMeta` (`src/components/`, #2767) — the shared baseline row under the level
+  track. ONE ROW, NINE MOUNTS; it is TREE not skin, and the kit's voice arrives entirely
+  through the `style` prop.
+- `AlbescentEditCharacter` (#2788) and `AlbescentProposeTask` (#2802) — the two surfaces
+  that grew a second faction skin this cycle.
+
+### Do NOT mirror the Default sibling's viewport for `*EditCharacter`
+Mirroring `DefaultEditCharacter`'s `390x760` onto `AlbescentEditCharacter` **clipped the
+card**: the save bar overlapped the faction explainer and the delete control fell off the
+bottom edge entirely. #2788's whole point is "the fold, and the two slots a create dress
+has no room for" — the Albescent edit form is genuinely taller. It now sits at
+**`390x1280`** and renders whole.
+
+This is NOT the thing the 08-25 note warns against normalising. That warning is about the
+`*CreateCharacter` pair (Albescent + Default at `390x760` because they render the shorter
+na form, against the other seven at `390x1280`). Different component, opposite direction,
+decided on evidence from the sheet.
+
+Related trap: `preview-rebuild.mjs` **refuses** after an `cfg.overrides` change —
+`[CONFIG_STALE]`, "run package-build.mjs first". A `package-capture.mjs` fired straight
+afterwards will happily capture the STALE html and hand you a sheet of the old viewport.
+Full build first, then recapture.
+
+### `AlbescentProposeTask` ships the floor card on purpose
+Its own family sibling `DefaultProposeTask` has no authored preview either, and
+`previews/_state.tsx` has no `proposeTaskState` builder — authoring it means building a
+whole `ProposeTaskState` fixture from scratch. Floor tier, consistent with the family.
+The standing offer for any future round.
+
+### Playwright drift: the repo pin moved, the cache did not
+`frontend/package.json` now asks for `@playwright/test@^1.62.1`, which pins **chromium
+1234**. The box still caches **chromium-1228**. The 08-17 recipe is unchanged and still
+correct: `cd .ds-sync && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i playwright@1.61.1`.
+Expect this line to keep drifting as the repo bumps; always check
+`playwright-core/browsers.json` (read it as a FILE — the exports map blocks `require`)
+against the `ms-playwright` cache dir name rather than trusting either pin.
+
+### The conventions header had ONE stale claim
+All 37 components it names, all 7 Tailwind utilities and 67/74 tokens verified against
+the fresh build. The 7 that did not are `--faction-albescent-*`, which the header never
+claims — it says Albescent has no palette of its own, and that is still true.
+
+What HAD rotted: it listed `DefaultEditCharacter` among "the singletons". #2788 and #2802
+made `editcharacter` and `proposetask` dispatched families of two. Left alone, a design
+agent would never reach for `AlbescentEditCharacter`. Fixed with the owner's approval.
+
+**Checked and deliberately NOT added**: the per-faction class layer in the shipped CSS
+(`.alb-*` 28, `.eph-*` 21, `.wow-*` 20, `.ua-*` 9, `.coven-*` 4, `.snide-*` 2, `.na-*` 1).
+These are **component-internal** — `.alb-desk` is applied inside `AlbescentFieldDesk`,
+`.ua-gilt` inside `UaPraxisCard`/`UaScoreStamp`. The header is right to omit them and
+right to say "compose the faction's own component and let it carry its identity". Do not
+"fix" this next round by enumerating them; it would teach the agent to hand-apply classes
+that belong to a component.
+
+### Known render warns — unchanged standing set, nothing new
+`[TOKENS_MISSING]` 35 (33 `--tw-*` + `--rail-face` + one more, all runtime-set),
+`[FONT_MISSING]` the same 4 system families (Marker Felt, Trajan Pro, Impact,
+Trebuchet MS), `[RENDER_THIN]` on `EphemeristsSigil` (pure SVG mark, no text node).
+All three were already recorded. Sampled render check 39/39 clean, 10 floor cards.
+All 308 `.d.ts` parse cleanly; `window.WZ` carries 309 exports (308 + `DSProvider`).
+
+### Re-sync risks (2026-08-28)
+- **Nothing was uploaded this round.** The project still holds the 08-25 build, so its
+  `_ds_sync.json` anchor describes **305** components, not 308. The next authorized round
+  will see `LevelTrackMeta`, `AlbescentEditCharacter`, `AlbescentProposeTask` as `added`
+  and a large `changed` partition (new bundle across 115+ commits) — budget for a wide
+  render check, not a scoped one.
+- **Grades for the two newly authored components live in the gitignored `.cache/`.**
+  They are campaign-local and what makes them durable is the upload, which did not
+  happen. A fresh clone re-grades both. They are cheap (3 cells) — just do not be
+  surprised.
+- The full 308-preview render check was **never run this round** (sampled 39). A round
+  that uploads must run it unsampled, via the driver.
+- `.design-sync/overrides/source-kit.mjs` is still exactly 2 deltas from the bundled
+  `lib/source-kit.mjs` (header + relative imports, and the widened `GENERIC_DIR`).
+  Upstream has not moved under it. Verified again this round.
+- `LevelTrackMeta` lands in the `general` group, the only component there. If a future
+  round wants it grouped by surface, that is a `docsMap` stub, not a code change.
+- **NOTES contradicts itself on `frontend/.ds-kit/index.tsx`** — the "How the build is
+  wired" section calls it committed, the "Two barrels now" section calls it generated and
+  gitignored. Git is the truth: `index.tsx` is **tracked** (it shows up in `git status`
+  after `gen-barrel.mjs`), `frontend/index.d.ts` and `frontend/ds-types/` are **not**.
+  So a barrel regen is part of the commit; the types tree is not.
+- The `newdirs.mjs` basename-keying false positive (`BackdropContext` -> mapped as
+  `BackdropProvider`) will recur every round. Two more files are mapped under a name
+  that differs from their basename? Not as of this round — but the scan cannot tell you.

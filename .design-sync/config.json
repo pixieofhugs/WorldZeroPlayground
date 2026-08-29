@@ -17,6 +17,7 @@
     "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
     "AlbescentCreateCharacter": "src/pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx",
     "AlbescentDuelSealConfirm": "src/components/duel/AlbescentDuelSealConfirm.tsx",
+    "AlbescentEditCharacter": "src/pages/characterPaths/archetypes/AlbescentEditCharacter.tsx",
     "AlbescentEditPraxis": "src/pages/editPraxis/archetypes/AlbescentEditPraxis.tsx",
     "AlbescentFactionBody": "src/pages/factionDetail/archetypes/AlbescentFactionBody.tsx",
     "AlbescentFactionHero": "src/components/factionHero/AlbescentFactionHero.tsx",
@@ -26,6 +27,7 @@
     "AlbescentPraxisCard": "src/components/praxisCard/desktop/AlbescentPraxisCard.tsx",
     "AlbescentPraxisDetail": "src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx",
     "AlbescentProfileBody": "src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx",
+    "AlbescentProposeTask": "src/pages/proposeTask/archetypes/AlbescentProposeTask.tsx",
     "AlbescentScoreStamp": "src/components/praxisCard/scoreStamp/AlbescentScoreStamp.tsx",
     "AlbescentSeal": "src/components/metataskSeal/skins/AlbescentSeal.tsx",
     "AlbescentSelectCard": "src/components/selectCard/AlbescentSelectCard.tsx",
@@ -174,6 +176,7 @@
     "JoinControl": "src/components/JoinControl.tsx",
     "Layout": "src/components/Layout.tsx",
     "LevelGem": "src/components/ui/LevelGem.tsx",
+    "LevelTrackMeta": "src/components/LevelTrackMeta.tsx",
     "LevelUpPopup": "src/components/LevelUpPopup.tsx",
     "LevelUpWatcher": "src/components/LevelUpWatcher.tsx",
     "Lotus": "src/components/factionMarks/Lotus.tsx",
@@ -332,6 +335,10 @@
       "cardMode": "single",
       "viewport": "700x680"
     },
+    "AlbescentEditCharacter": {
+      "cardMode": "single",
+      "viewport": "390x1280"
+    },
     "AlbescentEditPraxis": {
       "cardMode": "single",
       "viewport": "1200x900"
@@ -356,6 +363,10 @@
       "viewport": "1200x900"
     },
     "AlbescentProfileBody": {
+      "cardMode": "single",
+      "viewport": "1200x900"
+    },
+    "AlbescentProposeTask": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -828,6 +839,6 @@
   },
   "readmeHeader": ".design-sync/conventions.md",
   "libOverrides": {
-    "source-kit.mjs": "GENERIC_DIR += pages,archetypes,mobileArchetypes,desktop,mobile,skins,blocks,waiting → page skins and card families group by surface"
+    "source-kit.mjs": "GENERIC_DIR += pages,archetypes,mobileArchetypes,desktop,mobile,skins,blocks,waiting \u00e2\u2020\u2019 page skins and card families group by surface"
   }
 }
