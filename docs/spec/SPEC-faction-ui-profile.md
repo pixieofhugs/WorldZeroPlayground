@@ -131,6 +131,78 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 11. **Contrast:** verify every text/background color pair in the faction's tokens (light **and** dark) meets WCAG AA — 4.5:1 for normal text, 3:1 for large text and UI components — before registering the faction.
 
+    Since #2661 the **role pairings are enumerated for you**: `factionContrast.test.ts` loops
+    9 slugs × 2 grounds × 5 pairings × 2 cascades and measures them the moment the slug is in
+    `CSS_KEY`. You do not write those rows. What you still owe is everything the loop cannot
+    see, and its docblock lists five such things — pairings that are not role-on-role, the
+    *other* side of a hairline (a card edge also faces the page, and no role names the page),
+    anything composed from a role (`color-mix`, a ramp, a scrim: the loop sees the ingredient,
+    not the dish), whether any component renders the pair at all, and a token block written
+    `:root,\n[data-theme] {`, which the resolver matches on one line and therefore cannot see
+    at all. **Read that list before claiming the gate covers you** — it is false by default.
+
+**The role vocabulary (#2659) — usually nothing to do**
+
+12. `utils/factionRoles.ts` needs **no edit for a new faction**. Nine roles (`paper`, `ink`,
+    `quiet`, `line`, `accent`, `fill`, `onFill`, `radius`, `face`) resolve out of the
+    `--faction-{key}-card-*` block step 6 already requires, so *registering the slug in
+    `CSS_KEY` beside a `-card-*` block is the whole of joining the vocabulary*. **A faction
+    supplies a map, not values** — zero new declarations.
+
+    The one exception is a faction whose **chrome stands on a ground that is not its card**.
+    S.N.I.D.E. is the only one today (its flyposted wall, ADR-0085) and it is a
+    `GROUND_OVERRIDES.chrome.<slug>` entry. Note that `GroundOverride`'s type makes a
+    fill-only override *unrepresentable*: `fill` and `onFill` must move together, because an
+    ink is measured against the fill it sits on.
+
+13. Surfaces read roles **by role name, not by faction**: spread `factionRoleVars(slug, prefix)`
+    on a root, or call `factionRoleVar(slug, role, ground)` where a module has no root of its
+    own to hang a prefix on. The prefix convention is `<faction stem>-<the surface's
+    SURFACE_KEYS key>` — derived rather than invented, so uniqueness holds by construction.
+    The stem is the faction's own short form and is **not always the slug**: UA's is `leaf`
+    (`leaf-comment`, `leaf-duel-seal`), because `--ua-*` is UA's *retired* legacy family and
+    live guards assert nothing reads it. Others in use: `wow`, `sg`, `snd`, `ev`, `na`.
+
+14. **Hand the resolver a live slug only where the surface's ground is a role too.** Where an
+    archetype stands on a ground that takes no slug — `factionSheet()`, `factionSpectrumSheet()`,
+    `.na-backdrop` — pin the call (`factionRoleVars("na", …)`). The ground moves with the ink or
+    neither moves; #2669 measured what the other choice costs, at 1.03:1.
+
+**What a faction does not author**
+
+- **Any surface it does not want to override.** `SURFACE_KEYS` declares **22** surfaces and the
+  manifest is override-only, so an undeclared surface renders `na`'s row. Partial registration
+  is the normal case: Albescent is the deliberate example (ADR-0083 — one ornament vocabulary
+  over na, not a skin per surface). The single exception is `default.ts`, which *must* claim all
+  22, because nothing stands behind it.
+- **Outer margin on anything that travels.** A shared piece owns its own box; the **host** owns
+  every gap (#2655). This is the score stamp's ruled exemption and it is a law, not a default.
+- **Its contrast rows** (item 11), or **new custom properties for the role map** (item 12).
+- **Behaviour or copy.** A capability belongs to `FactionConfig` in `backend/game_config.py`
+  because abilities move between factions from era to era (ADR-0042, #2660, #2664); wording
+  belongs to `locales/en/factions.json` (ADR-0038). **ADR-0090 is the procedure for deciding
+  which of the four buckets — paint, tree, behaviour, content — a difference is in**, and it
+  is worth reading before you design anything a `Default*` archetype does not already do.
+
+**Faction-dressed surfaces that are not manifest surfaces**
+
+These paint by faction without going through `SURFACE_KEYS`, so a new faction reaches them
+through tokens only and never by registering an archetype. They are named here because they are
+where a correctly registered faction most often still looks wrong, and because each was found by
+a lane rather than by a census:
+
+| file | how it dresses |
+|---|---|
+| `components/sigil/FactionSigil.tsx` | reaches `factionCssVar` for UA *and* Singularity in one file |
+| `pages/proposeTask/factionSurfaces.ts` | `gradientFrame()` paints `--faction-default-card-bg` as the paper under *every* faction's hue ramp |
+| `components/vote/VoteShell.tsx` | shared shell, faction paint |
+| `components/cardMasthead/factionBands.tsx` | travels across four host surfaces |
+| `components/InvitationLetterPopup.tsx` | 375 lines serving all nine factions, registered nowhere |
+| `utils/factions.ts` | the `CSS_KEY` map itself |
+
+This list is a census, not a registry — it records where the boundary sat when #2649's faction
+lanes finished, and nothing keeps it current. Re-derive before trusting it.
+
 ---
 
 ## 5. Designer brief template (copy/paste for the next faction)
@@ -148,6 +220,24 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 ## 6. Change log
 
+- **2026-08-29** — **§4 becomes the "what a faction needs" checklist (#2719, Batch Ω of #2649).**
+  The epic's success condition was *"adding a hypothetical tenth faction is demonstrably a token
+  set plus its drawings — write that down somewhere a person will find it"*, and its decision 03
+  makes a tenth faction a **documentation** goal rather than an architecture one. This section
+  was already that document, so it was extended rather than duplicated: a second checklist is
+  the manifest-inversion failure §4 was pruned to avoid in 2026-07-18, and it would have rotted
+  the same way. Added: the role vocabulary (items 12–14 — normally *no edit at all*, because a
+  faction supplies a map rather than values, #2659), what the contrast loop now enumerates for
+  you and the five things it still cannot see (#2661/#2669), what a faction does **not** author,
+  and the census of faction-dressed surfaces that are not manifest surfaces. Item 11 was extended
+  in place and items 1–11 keep their numbers, because other files cite them by number and one
+  such citation (`factionContrast.test.ts`'s "§4 item 15") is already stale.
+  **`SURFACE_KEYS` is 22, not twenty** — verified against `src/factions/manifest.ts`; #2649's
+  plan says twenty and `docs/kit-structure.md` said twenty and 21 in three places, all corrected.
+  The classification procedure that decides what belongs in this checklist at all is
+  **ADR-0090** (paint · tree · behaviour · content), which records a *procedure* rather than a
+  rule because the epic's original rule mispredicted five of six cases on the easiest family
+  (#2650).
 - **2026-07-18** — **§4's dispatcher list removed; faction registration inverted (#782).**
   Each faction now owns one manifest module (`src/factions/<slug>.ts`) declaring the
   surfaces it overrides, and the dispatchers read from it via `surfaceMap()`; the 31
