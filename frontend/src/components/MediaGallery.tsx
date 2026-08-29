@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import type { MediaItemOut } from '../api/praxis'
-
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+import { mediaUrl } from '../utils/media'
 
 interface Props {
   media: MediaItemOut[]
@@ -31,7 +30,7 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
       }
     >
       {sorted.map((item) => {
-        const src = `${BASE_URL}/media/${item.file_path}`
+        const src = mediaUrl(item.file_path)
         if (item.type === 'image') {
           // #1896. Both layouts crop the thumbnail, so the full file is only
           // reachable through the browser's own image viewer — which is also
