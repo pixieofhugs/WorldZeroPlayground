@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { castVote, type VoterDetail } from '../../api/votes'
-import { recordCastTally } from './castTallies'
+import { recordCastTally } from '../../utils/castTallies'
 
 /**
  * The vote a viewer has CHOSEN, which the server may not have heard yet (#1895).

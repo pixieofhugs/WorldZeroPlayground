@@ -64,6 +64,7 @@ import {
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
 import { roomStoreName, trackRoomStore } from "./roomStore";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 /**
  * The body's root key — `ROOM_BODY_KEY` in `praxis_room.py`. The server seeds a
@@ -94,8 +95,7 @@ const ROOM_PATH = "/rooms/praxis";
  * nothing here should try.
  */
 function roomServerUrl(): string {
-  const apiBase = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-  return `${apiBase.replace(/^http/, "ws")}${ROOM_PATH}`;
+  return `${API_BASE_URL.replace(/^http/, "ws")}${ROOM_PATH}`;
 }
 
 /*

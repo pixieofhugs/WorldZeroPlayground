@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from './client'
 import { notifyRequestsChanged } from '../utils/requestsBus'
-import { clearCastTallies } from '../components/vote/castTallies'
+import { clearCastTallies } from '../utils/castTallies'
 import type { components } from './generated/schema'
 
 // ---------------------------------------------------------------------------

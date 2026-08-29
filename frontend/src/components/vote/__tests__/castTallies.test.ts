@@ -4,7 +4,7 @@ import {
   castTally,
   clearCastTallies,
   recordCastTally,
-} from '../castTallies'
+} from '../../../utils/castTallies'
 
 const PRAXIS = 42
 

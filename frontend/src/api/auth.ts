@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from './client'
+import { API_BASE_URL } from './baseUrl'
 import type { components } from './generated/schema'
 import { noteEraStamp } from '../utils/cacheEpoch'
 
@@ -83,7 +84,7 @@ export type AuthProvider = 'google' | 'discord'
  * `?login=<ErrorCode>`; `pages/Home.tsx` renders it.
  */
 export function loginWith(provider: AuthProvider): void {
-  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/auth/${provider}`
+  window.location.href = `${API_BASE_URL}/auth/${provider}`
 }
 
 /**
