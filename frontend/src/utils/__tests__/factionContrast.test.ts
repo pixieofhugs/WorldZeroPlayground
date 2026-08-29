@@ -2349,6 +2349,46 @@ const SWITCH_RING_PAIRS: Pair[] = [
 ];
 
 /**
+ * THE LOCKED-ON SWITCH'S LOCK GLYPH (#2844), a block of its own — do not fold
+ * into SWITCH_RING_PAIRS above (#2845's) or CALLING_CHIP_PAIRS (#2852's);
+ * this is a third site on the same control.
+ *
+ * `Essential` (on, locked) was pixel-identical to a live `Dark mode` switch
+ * except for `cursor: not-allowed`, which needs a hover a touch reader never
+ * gets. The design canvas's `opacity: .45` fix cannot ship (measured in
+ * #2844: every rainbow stop falls under 3:1 at that dim), so the fix is a
+ * lock glyph drawn inside the thumb instead, gated on `checked && disabled`.
+ *
+ * THE FIRST PASS AT THIS GLYPH REUSED `--switch-thumb-edge`, the token the
+ * thumb's own ring already carries, on the reasoning that it "mints nothing
+ * new". That reasoning does not transfer: the ring reads because its OUTER
+ * side borders `--switch-well`, a different neighbour than the thumb's fill.
+ * A glyph drawn INSIDE the thumb only ever contrasts against the thumb, and
+ * 18%-ink-on-10%-ink composites to 1.44:1 (light) / 1.65:1 (dark) — under
+ * 1.4.11's 3:1, the same failure #2844 was filed to fix, with different
+ * pixels.
+ *
+ * SO THE GLYPH USES `--color-text-tertiary` INSTEAD — the same token
+ * `--switch-ring-hairline` already aliases (#2845), not a new one. On the
+ * composited stack `page -> --switch-well (6%) -> --switch-thumb (10%)`, the
+ * SAME stack `SWITCH_RING_PAIRS` above documents one layer short of, it
+ * measures 5.66:1 light / 6.04:1 dark.
+ */
+const SWITCH_LOCK_GLYPH_PAIRS: Pair[] = [
+  {
+    what: "switch lock glyph, on the locked-on thumb",
+    surface: "--color-bg-page",
+    veil: [
+      { token: "--color-text-primary", alpha: 0.06 }, // --switch-well
+      { token: "--color-text-primary", alpha: 0.1 }, // --switch-thumb
+    ],
+    text: "--color-text-tertiary",
+    floor: AA_LARGE,
+    nonText: "the lock glyph is a drawn mark inside the thumb, not lettering — 1.4.11's 3:1 (#2844)",
+  },
+];
+
+/**
  * A `SKY_PAIRS` block stood here (#1792): seven rows measuring each faction's
  * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
  *
@@ -2531,6 +2571,7 @@ const PAIRS: Pair[] = [
   ...RAIL_PAIRS,
   ...CALLING_CHIP_PAIRS,
   ...SWITCH_RING_PAIRS,
+  ...SWITCH_LOCK_GLYPH_PAIRS,
 ];
 
 /**
