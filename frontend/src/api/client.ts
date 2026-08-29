@@ -18,12 +18,13 @@ import createClient, {
 } from 'openapi-fetch'
 
 import { ApiError, ApiNetworkError } from './apiError'
-import { dropCachesAfterWrite } from '../hooks/cachedResource'
+import { API_BASE_URL } from './baseUrl'
+import { dropCachesAfterWrite } from '../utils/resourceCache'
 import type { paths } from './generated/schema'
 import { returnToLandingIfSessionExpired } from './sessionRedirect'
 
 const client = createClient<paths>({
-  baseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
+  baseUrl: API_BASE_URL,
   // The JWT is an httpOnly cookie. Without this every authenticated call goes
   // out anonymous and comes back as a guest's answer — which is not an error,
   // just quietly the wrong page.
