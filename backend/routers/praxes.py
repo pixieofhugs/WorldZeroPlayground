@@ -87,7 +87,7 @@ from services.praxis import (
     delete_media_item,
     delete_praxis,
     flag_praxis,
-    get_praxis,
+    get_praxis_settling_consensus,
     invite_to_praxis,
     kick_member,
     leave_praxis,
@@ -235,9 +235,9 @@ async def get_praxis_route(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
-    # Route through the service loader so the lazy-on-access publish timeout
-    # (ADR-0012) fires on this read path.
-    praxis = await get_praxis(praxis_id, session)
+    # The canonical ADR-0012 read path: with no scheduler, this is where a
+    # lapsed pending-publish window is noticed. Named loader since #2874.
+    praxis = await get_praxis_settling_consensus(praxis_id, session)
     # 404 (not 403) when not viewable — don't reveal existence of hidden or
     # of another character's in_progress draft (ADR-0024).
     if not await can_view_praxis(viewer, praxis, session):
