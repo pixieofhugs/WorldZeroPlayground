@@ -76,7 +76,7 @@ def may_propose_metatask(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.level_to_propose_metatask`` — admin bypasses, no character never meets it."""
+    """``era.level_to_propose_metatask`` — admin bypasses, no character meets it."""
     if is_admin:
         return True
     if level is None:
@@ -94,11 +94,12 @@ def may_see_retired_tasks(
 
     The faction clause (#1672) is not an exception to the level gate, it is the
     only way the perk means anything: a faction the era lets work retired tasks
-    cannot be forbidden from finding them. Reads ``era.allow_praxis_on_retired_task_factions``
-    directly, matching ``services.task.list_tasks``'s ``viewer_sees_retired``
-    clause exactly (``skip_level_check or level >= threshold or faction in
-    the set``, with ``is_admin`` this module's name for ``skip_level_check``
-    and ``level is None`` this module's shape for "no viewer").
+    cannot be forbidden from finding them. Reads
+    ``era.allow_praxis_on_retired_task_factions`` directly, matching
+    ``services.task.list_tasks``'s ``viewer_sees_retired`` clause exactly
+    (``skip_level_check or level >= threshold or faction in the set``, with
+    ``is_admin`` this module's name for ``skip_level_check`` and ``level is
+    None`` this module's shape for "no viewer").
     """
     if is_admin:
         return True
@@ -148,7 +149,7 @@ def may_apply_metatask(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.metatask_apply_level`` OR the faction bypass — NOT short-circuited by admin.
+    """``era.metatask_apply_level`` OR the faction bypass — admin does not bypass.
 
     Unlike every predicate above, ``is_admin`` does not bypass this one:
     ``services.praxis_metatask.apply_metatask`` has no admin escape hatch, so
@@ -173,7 +174,7 @@ def may_create_collab_praxis(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.collaboration_level_required`` — a flat floor, no admin/faction bypass today.
+    """``era.collaboration_level_required`` — a flat floor, no bypass today.
 
     Matches ``services.praxis.available_creation_modes``'s
     ``character_level >= era.collaboration_level_required`` clause. Not yet
