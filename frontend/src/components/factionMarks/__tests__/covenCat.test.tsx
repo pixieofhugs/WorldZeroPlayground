@@ -30,30 +30,23 @@
  * `covenBadgeRetired.test.tsx` guards that. This file is still only about the
  * thing under `.cvn-wheel`.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import { CovenCat } from "../covenSlip";
+import { sourceFiles } from "../../../test/sourceScan";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 /** The five-pointed star every Coven surface used to turn. */
 const PENTAGRAM = "M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z";
 
-function sourceFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...sourceFiles(path));
-    else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) out.push(path);
-  }
-  return out;
-}
-
-const FILES = sourceFiles(SRC).map((path) => [path, readFileSync(path, "utf8")] as const);
+const FILES = sourceFiles({ dir: SRC, includeTests: true })
+  .filter((path) => !/\.test\.tsx?$/.test(path))
+  .map((path) => [path, readFileSync(path, "utf8")] as const);
 
 describe("the Coven watermark", () => {
   it("draws the retired pentagram nowhere", () => {

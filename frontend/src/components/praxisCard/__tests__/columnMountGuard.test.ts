@@ -27,21 +27,9 @@
  * being a flex item on a column main axis. It cannot prove nothing is clipped;
  * it proves no mount is shaped so that it can be.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-
-const SRC = fileURLToPath(new URL("../../../", import.meta.url));
-
-function tsxFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = `${dir}${entry.name}`;
-    if (entry.isDirectory()) return tsxFiles(`${path}/`);
-    return entry.isFile() && path.endsWith(".tsx") && !path.includes("__tests__")
-      ? [path]
-      : [];
-  });
-}
+import { sourceFiles, toRelative } from "../../../test/sourceScan";
 
 /** A line that opens a JSX element — the mount's nearest enclosing candidate. */
 const OPENS_ELEMENT = /^<[A-Za-z]/;
@@ -78,11 +66,11 @@ const isComment = (text: string) => /^(\*|\/\/|\/\*)/.test(text.trim());
 /** The element, not `PraxisCardOut` in a `useState<PraxisCardOut[]>`. */
 const MOUNT = /<PraxisCard(?!Out)/;
 
-const mounts: Mount[] = tsxFiles(SRC).flatMap((file) => {
+const mounts: Mount[] = sourceFiles({ match: /\.tsx$/ }).flatMap((file) => {
   const lines = readFileSync(file, "utf8").split(/\r?\n/);
   return lines.flatMap((text, i) =>
     MOUNT.test(text) && !isComment(text)
-      ? [{ file: file.slice(SRC.length), line: i + 1, tag: enclosingTag(lines, i) }]
+      ? [{ file: toRelative(file), line: i + 1, tag: enclosingTag(lines, i) }]
       : [],
   );
 });

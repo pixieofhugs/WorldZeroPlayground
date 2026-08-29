@@ -17,48 +17,30 @@
  * an explicit list. A count is what let a wrong mount pass, so the roll-call
  * below is written out and a new surface has to add its own line.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
+import { sourceFiles, stripComments, toRelative } from "../../../test/sourceScan";
 
-const SRC = fileURLToPath(new URL("../../..", import.meta.url));
 const KIT = fileURLToPath(new URL("../SingularityProcessLight.tsx", import.meta.url));
 
 /**
- * Every shipped `.ts`/`.tsx` under `src/`, comments stripped and tests skipped —
- * both exclusions matter, because this file and the mark's own docblock name the
- * retired shape in prose and prose must not answer for a live copy.
+ * Every shipped `.ts`/`.tsx` under `src/`, comments stripped and tests skipped
+ * (the shared walk — `sourceFiles()` skips `__tests__` by default; nothing
+ * under `src/` is `node_modules`, so that former exclusion was never live).
+ * The test-skip matters, because this file and the mark's own docblock name
+ * the retired shape in prose and prose must not answer for a live copy.
  */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === "__tests__" || entry.name === "node_modules") continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({
-          path: full,
-          source: readFileSync(full, "utf8")
-            .replace(/\/\*[\s\S]*?\*\//g, "")
-            .replace(/^\s*\/\/.*$/gm, ""),
-        });
-      }
-    }
-  };
-  walk(SRC);
-  return found;
+  return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, "utf8")) }));
 }
-
-const rel = (path: string) => path.slice(SRC.length).replace(/\\/g, "/");
 
 describe("the process light is declared once, in the kit (#2092)", () => {
   it("mounts the kit on every surface that shows one", () => {
     const mounts = sources().filter(({ source }) =>
       source.includes("<SingularityProcessLight"),
     );
-    expect(mounts.map((file) => rel(file.path)).sort()).toEqual([
+    expect(mounts.map((file) => toRelative(file.path)).sort()).toEqual([
       "components/taskCard/SingularityTaskCard.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
@@ -77,7 +59,7 @@ describe("the process light is declared once, in the kit (#2092)", () => {
       ({ path, source }) =>
         path !== KIT && /(?:sg|ep)-pulse/.test(source) && /width: 7,/.test(source),
     );
-    expect(copies.map((file) => rel(file.path))).toEqual([]);
+    expect(copies.map((file) => toRelative(file.path))).toEqual([]);
   });
 
   it("keeps the hue and the bloom in the kit — one pairing, not three", () => {
