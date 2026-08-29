@@ -24,24 +24,21 @@
  * has already forgotten. Only the filesystem remembers the corpse.
  */
 import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join, basename, relative, sep } from 'node:path'
 
 import { SURFACE_KEYS } from '..'
+import { sourceFiles } from '../../test/sourceScan'
 
 const SRC = join(process.cwd(), 'src')
 
 /** Directories whose contents are dispatched skins rather than plain modules. */
 const SKIN_DIRS = ['archetypes', 'mobileArchetypes', 'voices', 'skins']
 
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const full = join(dir, entry)
-    return statSync(full).isDirectory() ? walk(full) : [full]
-  })
-}
-
-const ALL_FILES = walk(SRC).filter((path) => /\.tsx?$/.test(path))
+// includeTests: true, because the IS_TEST filter below does that job itself —
+// it also excludes a `.test.tsx?` file living OUTSIDE a `__tests__` dir, which
+// `sourceFiles()`'s own default does not know to do.
+const ALL_FILES = sourceFiles({ dir: SRC, includeTests: true, match: /\.tsx?$/ })
 const IS_TEST = (path: string) => /\.test\.tsx?$/.test(path) || path.includes(`${sep}__tests__${sep}`)
 
 /** Every dispatched skin on disk: a non-test module inside a skin directory. */

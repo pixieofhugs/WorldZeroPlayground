@@ -32,30 +32,17 @@
  * functions, `npm run build`, and diff `dist/` against a build from `main`.
  * Identical output means they are still free.
  */
-import { readdirSync, readFileSync } from 'node:fs'
-import { dirname, join, relative, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { describe, it, expect } from 'vitest'
-
-const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+import { sourceFiles, toRelative } from '../../../test/sourceScan'
 
 /**
  * Vitest helpers loaded through `setupFiles`, which are not in the application
  * graph and may legitimately hold a shared reset. Exempted by path so the
  * exemption is visible; everything else under `src/` is application code until
- * proven otherwise.
+ * proven otherwise. `toRelative` always reports forward slashes.
  */
-const TEST_HELPER_DIR = `test${sep}`
-
-function sourceFiles(dir: string): string[] {
-  const out: string[] = []
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) out.push(...sourceFiles(path))
-    else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) out.push(path)
-  }
-  return out
-}
+const TEST_HELPER_DIR = `test/`
 
 /**
  * Source with its comments removed, because this file's own reasoning — and the
@@ -68,9 +55,10 @@ function withoutComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
 }
 
-const FILES = sourceFiles(SRC)
+const FILES = sourceFiles({ includeTests: true })
+  .filter((path) => !/\.test\.tsx?$/.test(path))
   .map((path) => ({
-    path: relative(SRC, path),
+    path: toRelative(path),
     code: withoutComments(readFileSync(path, 'utf8')),
   }))
   .filter(({ path }) => !path.startsWith(TEST_HELPER_DIR))
@@ -85,7 +73,7 @@ const SEAMS = FILES.flatMap(({ path, code }) =>
 
 describe('test seams are reachable only from tests (#2697)', () => {
   it('scans the source tree, so a bad path cannot pass this by vacuum', () => {
-    // Without this, an SRC that resolved somewhere empty would give no files,
+    // Without this, a walk that resolved somewhere empty would give no files,
     // no seams, and a green run that proved nothing at all.
     expect(FILES.length).toBeGreaterThan(400)
   })

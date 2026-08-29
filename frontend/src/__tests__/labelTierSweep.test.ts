@@ -34,10 +34,11 @@
  * site to reach for it — and the two-tier split (`.label-heading` /
  * `.label-caption`) would be a third option rather than the only one.
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
+
+import { sourceFiles } from '../test/sourceScan'
 
 const SRC = fileURLToPath(new URL('..', import.meta.url))
 const CSS = fileURLToPath(new URL('../index.css', import.meta.url))
@@ -45,18 +46,10 @@ const CSS = fileURLToPath(new URL('../index.css', import.meta.url))
 /** Every shipped `.ts`/`.tsx` under `src/`, tests included — a test fixture may
  *  not resurrect the class either, and this file names it only in prose. */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({ path: full, source: readFileSync(full, 'utf8') })
-      }
-    }
-  }
-  walk(SRC)
-  return found
+  return sourceFiles({ dir: SRC, includeTests: true, match: /\.tsx?$/ }).map((path) => ({
+    path,
+    source: readFileSync(path, 'utf8'),
+  }))
 }
 
 /**

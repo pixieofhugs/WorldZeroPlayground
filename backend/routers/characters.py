@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import (
-    account_has_admin_role,
     get_current_account_optional,
     get_current_character,
     get_current_character_optional,
+    get_viewer_is_admin,
 )
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -45,6 +45,7 @@ async def list_characters(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
+    viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
     """List all active characters. Optionally filter by name or faction.
 
@@ -76,9 +77,7 @@ async def list_characters(
         # callers are unaffected — `account` is None and the fold stands. An
         # admin counts as revealed for that question and no other (#2400).
         viewer_account=account,
-        viewer_is_admin=(
-            account is not None and await account_has_admin_role(account.id, session)
-        ),
+        viewer_is_admin=viewer_is_admin,
         limit=limit,
         offset=offset,
     )

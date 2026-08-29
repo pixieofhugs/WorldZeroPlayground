@@ -32,7 +32,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.era import get_or_create_stats
 from services.level_jump import available_level_reach
-from services.praxis import (
+from services.signup_eligibility import (
     allowed_praxis_modes,
     evaluate_signup,
     is_task_eligible_for_character,

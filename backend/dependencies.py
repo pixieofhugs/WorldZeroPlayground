@@ -117,6 +117,22 @@ async def require_admin(
     return account
 
 
+async def get_viewer_is_admin(
+    account: Optional[Account] = Depends(get_current_account_optional),
+    session: AsyncSession = Depends(get_db),
+) -> bool:
+    """Resolve "is the viewer an admin", anonymous-safe.
+
+    For routes that stay reachable by anonymous callers but let an admin see
+    more (#2400-style reveals). Never raises — an anonymous caller resolves to
+    ``False`` rather than 401. Use :func:`require_admin` instead when admin is
+    a hard gate rather than a behaviour modifier.
+    """
+    if account is None:
+        return False
+    return await account_has_admin_role(account.id, session)
+
+
 async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool:
     """Return True if the given account has the 'admin' role.
 

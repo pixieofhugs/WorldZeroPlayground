@@ -24,8 +24,7 @@
  *     markup assertion pins the plates that exist today; the failure mode #2150
  *     describes is the NEXT plate hand-rolling a chamfer and a border again.
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -33,6 +32,7 @@ import '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
 import EphemeristsScoreStamp from '../../praxisCard/scoreStamp/EphemeristsScoreStamp'
 import { chamferMount, chamferSheet, chamferSheetLeg } from '../ephemeristsPlate'
+import { sourceFiles, stripComments } from '../../../test/sourceScan'
 
 /** The rule brass — a frame is a line, so never the mark brass (#2141/#2142). */
 const RULE = 'var(--faction-ephemerists-plate-brass-rule)'
@@ -140,29 +140,11 @@ describe('the Ephemerists score stamp carries its rule through the clip (#2314)'
   })
 })
 
-const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 const KIT = fileURLToPath(new URL('../ephemeristsPlate.tsx', import.meta.url))
 
 /** Every shipped `.ts`/`.tsx` under `src/`, comments stripped, tests skipped. */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === '__tests__') continue
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({
-          path: full,
-          source: readFileSync(full, 'utf8')
-            .replace(/\/\*[\s\S]*?\*\//g, '')
-            .replace(/^\s*\/\/.*$/gm, ''),
-        })
-      }
-    }
-  }
-  walk(SRC)
-  return found
+  return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, 'utf8')) }))
 }
 
 describe('the chamfer has exactly one door (#2150)', () => {

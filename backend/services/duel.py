@@ -33,9 +33,9 @@ from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
-from services.praxis import (
-    _count_in_progress_praxes,
-    get_praxis,
+from services.praxis import get_praxis
+from services.signup_eligibility import (
+    count_in_progress_praxes,
     is_active_member_of_task,
 )
 
@@ -409,7 +409,7 @@ async def respond_to_duel_challenge(
         )
 
     # Opponent bank cap check.
-    in_progress_count = await _count_in_progress_praxes(character_id, session)
+    in_progress_count = await count_in_progress_praxes(character_id, session)
     if in_progress_count >= era.max_task_signups:
         raise_coded(
             400,

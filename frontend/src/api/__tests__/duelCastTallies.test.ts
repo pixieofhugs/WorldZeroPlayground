@@ -43,7 +43,7 @@ import {
   __resetCastTallies,
   castTally,
   recordCastTally,
-} from '../../components/vote/castTallies'
+} from '../../utils/castTallies'
 
 const MINE_PRAXIS = 7
 const RIVAL_PRAXIS = 8

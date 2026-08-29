@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -11,6 +11,7 @@ import {
   type FactionGround,
   type FactionRole,
 } from "../factionRoles";
+import { sourceFiles } from "../../test/sourceScan";
 
 /**
  * THE STANDING RULE FOR "a faction supplies a MAP, not values" (#2659, #2689).
@@ -78,7 +79,8 @@ import {
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const SOURCE_EXTENSIONS = [".ts", ".tsx"];
+/** TS/TSX source, excluding a test file even where one is not under `__tests__`. */
+const SOURCE_MATCH = /^(?!.*\.test\.).*\.tsx?$/;
 
 /** A map declared with both slug and prefix written out, optionally a ground. */
 const LITERAL_DECLARATION =
@@ -118,17 +120,6 @@ const CORE_SUFFIXES = [
  */
 function stripComments(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(?<!:)\/\/[^\n]*/g, "");
-}
-
-function collectSourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      return entry.name === "__tests__" ? [] : collectSourceFiles(path);
-    }
-    if (!SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) return [];
-    return entry.name.includes(".test.") ? [] : [path];
-  });
 }
 
 /**
@@ -189,7 +180,7 @@ interface Surface {
 
 function harvest(): Surface[] {
   const surfaces: Surface[] = [];
-  for (const path of collectSourceFiles(SRC_DIR)) {
+  for (const path of sourceFiles({ dir: SRC_DIR, match: SOURCE_MATCH })) {
     const text = stripComments(readFileSync(path, "utf-8"));
     const file = path.slice(SRC_DIR.length + 1).replace(/\\/g, "/");
 
