@@ -82,6 +82,13 @@ function tokensNamedByTile(): Map<string, string> {
   return used;
 }
 
+/**
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no token family its own task card does not use" (#2321)
+ * — now live in `everySelectTileWearsItsCardsRegister.test.ts`, derived over
+ * all nine kits including the `Default`-backed tile this suite could not
+ * reach (#2816). This file keeps everything bespoke to the Ephemerists.
+ */
 describe("the Ephemerists tile wears the plate's register (#2323)", () => {
   it("grounds on a sheet that FLIPS, not on the theme-invariant band", () => {
     // The root style object is the first one in the file, and its `background`
@@ -124,14 +131,6 @@ dark-only. Find the PLATE role that answers the same question (\`INK\`,
     ).toEqual([]);
   });
 
-  it("names no token family its own task card does not use", () => {
-    // #2322's sweep, kept so the eight siblings encode one rule — and applied to
-    // the RESOLVED names, since this tile spells none of them literally.
-    const register = [code("../../taskCard/EphemeristsTaskCard.tsx"), code(PLATE_MODULE)].join("\n");
-    const strays = [...tokensNamedByTile().values()].filter((prop) => !register.includes(prop));
-    expect(strays).toEqual([]);
-  });
-
   it("leaves no `--eph-*` codex consumer in the tile", () => {
     // The retired illuminated codex. Its family is still DECLARED and has no
     // dark override tuned for the plate, so a stray reader is a silent
@@ -152,15 +151,5 @@ dark-only. Find the PLATE role that answers the same question (\`INK\`,
         new RegExp(`\\b${property}:`),
       );
     }
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });
