@@ -52,7 +52,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   // range, and the range question (does every letter still have a written
   // mechanic?) is answered by the derived SLUGS loop in the same file.
   'components/__tests__/invitationPerks.test.tsx|MECHANICS',
-  'components/collab/__tests__/collabCopy.test.ts|FACTION_SLUGS',
   'components/comments/__tests__/commentFootRule.test.tsx|VOICES',
   'components/comments/__tests__/mentionPopoverClip.test.tsx|VOICES',
   'components/factionHero/__tests__/factionWordmarkWrap.test.tsx|HEROES',
@@ -66,9 +65,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'pages/characterPaths/__tests__/singularityCreateCharacterRegister.test.tsx|WIDTHS',
   'pages/characterProfile/__tests__/factionProfileBody.test.tsx|SLUGS',
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
-  'pages/editPraxis/archetypes/__tests__/collabSignals.test.tsx|SLUGS',
-  'pages/editPraxis/archetypes/__tests__/composerDispatch.test.tsx|SLUGS',
-  'pages/editPraxis/archetypes/__tests__/taskSlipLink.test.tsx|SLUGS',
   'pages/praxisDetail/__tests__/detailWallAlarmInk.test.tsx|WALL_ALARM',
   'pages/tasks/__tests__/equalHeightRow.test.tsx|SKINS',
 ])
@@ -102,6 +98,11 @@ describe('a list driving per-kit iteration is derived from the manifest', () => 
   // The tripwire. This guard's whole output is a list of things that are WRONG,
   // so a scanner that silently stopped matching would report a perfect board.
   it('still finds the typed lists it is meant to be watching', () => {
+    // THE FLOOR IS ONE CONVERSION AWAY. `GRANDFATHERED` is down to sixteen, so
+    // the next #2815 pass makes this fail on a correct change. That is the
+    // signal to swap the count for a fixed anchor — the survivor named below —
+    // and NOT to relax the number: a scanner that stopped matching would report
+    // a perfect board, which is the only thing this line exists to catch.
     expect(TYPED.length, 'the scan matched nothing — the regexes have drifted').toBeGreaterThan(15)
     // homeTrackBand (the issue's worked example) converted in #2815 and its
     // GRANDFATHERED entry came off with it. Any still-typed survivor works as
