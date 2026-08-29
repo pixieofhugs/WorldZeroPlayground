@@ -427,7 +427,37 @@ export default function SingularityEditPraxis({ state }: Props) {
     // read on the waiting stage resolving through its fallback, and reaching
     // that stage any other way means a new prop, which is tree work rather than
     // a paint lane's.
-    pageStyle: { ...factionRoleVars("singularity", "sg-compose"), fontFamily: FACE, color: INK },
+    //
+    // AND THE LABEL SEAM IS ONE OF THEM NOW (#2831). `.label-caption` /
+    // `.label-heading` paint `--label-ink`, and so does CodeMirror's
+    // `.cm-placeholder` -- `bodyEditorTheme.ts` reads the seam rather than
+    // `color`, which is #1819. Unset, all of them fell through to the global
+    // tertiary: an ink calibrated against ordinary page stock, on a terminal
+    // that is near-black in BOTH cascades. Measured on the real composited
+    // grounds in light, that is 1.81:1 on the washed chassis -- the waiting
+    // notices, the live-proposal line, the publish-needs-title line -- and
+    // 2.07:1 on the panel, where the write-up box's placeholder sits. Dark was
+    // never the miss (6.79 / 8.99). `EphemeristsEditPraxis` makes the identical
+    // repoint on the identical slot for the identical reason (#1800); this is
+    // the other near-black composer, and it was the one that never got it.
+    //
+    // INK AND NOT `MUTED`, which is the ground split {@link MUTED} spells out.
+    // Everything this seam reaches on the sheet stands on the washed chassis,
+    // where the quiet rung reads 4.12 / 4.20 -- the refusal
+    // `composerGround.test.ts` already asserts. INK clears it at 6.82 / 8.11.
+    // The one reader on the raised panel is the placeholder, and `index.css`
+    // steps it back down to `MUTED` there rather than let it borrow this
+    // field's own typed ink.
+    //
+    // The breadcrumb is untouched by this too, and for a second reason beyond
+    // the one above: it paints `--color-text-tertiary` directly and carries no
+    // label class, so the seam never reaches it (#2102).
+    pageStyle: {
+      ...factionRoleVars("singularity", "sg-compose"),
+      fontFamily: FACE,
+      color: INK,
+      ["--label-ink" as string]: INK,
+    } as CSSProperties,
     sheetStyle,
     masthead,
     ground,

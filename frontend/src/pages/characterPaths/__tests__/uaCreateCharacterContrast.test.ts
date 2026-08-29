@@ -44,9 +44,9 @@ import {
   type Rgba,
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const THEMES = readThemes(readFileSync(CSS_PATH, 'utf8'))
+const THEMES = readThemes(readIndexCss())
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
 function resolve(token: string, theme: Theme): Rgba {

@@ -219,6 +219,21 @@ describe("UA praxis detail — the layout contract (#1129)", () => {
     expect(render(state(), "mobile").html, "and only when crowned").not.toContain(crown);
   });
 
+  it("carries its ground on the column, never the viewport", () => {
+    // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
+    // the page. The toothed vellum is painted on the leaf itself, not a
+    // `position: fixed` mount.
+    const { html } = render(state());
+    expect(html, "the leaf is the column").toContain("ua-praxis-leaf");
+    expect(html, "no full-viewport ground").not.toContain("position:fixed");
+  });
+
+  it("mounts the comments region with the layout's heading, not the thread's", () => {
+    const { text } = render(state());
+    expect(text, "the layout's section head").toContain("Discussion");
+    expect(text, "and not a second heading for the same list").not.toContain("0 comments");
+  });
+
   it("moves the score above the proof on mobile, and draws it exactly once", () => {
     const wide = render(state());
     expect(wide.text.match(/Score/g)?.length, "one score block on desktop").toBe(1);

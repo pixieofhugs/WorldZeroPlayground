@@ -27,7 +27,7 @@
  *      stack is precisely how the canvas came to say 30 days.
  *   4. A CANVAS FALSEHOOD BEING "RESTORED" from the design file.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -51,6 +51,7 @@ import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
+import { sourceFiles } from '../../../test/sourceScan'
 import CookiesSection, {
   SESSION_COOKIE_DAYS,
   STORED_ENTRIES,
@@ -66,6 +67,8 @@ const list = () => renderToStaticMarkup(<StorageInventory id="sec-cookies-invent
 const text = (markup: string) => markup.replace(/<[^>]*>/g, '')
 const control = (markup: string, testId: string) =>
   new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>`).exec(markup)?.[0] ?? ''
+const controlWithChildren = (markup: string, testId: string) =>
+  new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>[\\s\\S]*?</button>`).exec(markup)?.[0] ?? ''
 
 const names = STORED_ENTRIES.map((entry) => entry.name)
 
@@ -98,17 +101,9 @@ const KNOWN_WRITERS = [
   'utils/onboardingResume.ts',
 ]
 
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = join(dir, entry.name)
-    if (entry.isDirectory()) return entry.name === '__tests__' ? [] : sourceFiles(full)
-    return /\.tsx?$/.test(entry.name) ? [full] : []
-  })
-}
-
 describe('nothing writes to a browser store without being disclosed', () => {
   it('finds exactly the writers this card knows about', () => {
-    const writers = sourceFiles(SRC)
+    const writers = sourceFiles({ dir: SRC })
       .filter((file) => /(?:local|session)Storage\.setItem\(/.test(readFileSync(file, 'utf8')))
       .map((file) => relative(SRC, file).split('\\').join('/'))
       .sort()
@@ -225,6 +220,39 @@ describe('all three switches render, all three inert, all three say why', () => 
       expect(button).toMatch(/aria-describedby="sec-cookies-[a-z]+-note"/)
     },
   )
+})
+
+/**
+ * #2844 — the locked-ON switch (`Essential`) now carries a lock glyph, so it
+ * no longer renders byte-identically to a live, changeable switch. The
+ * locked-OFF switches (`Analytics`, `Marketing`) do NOT get the glyph — see
+ * the rationale on `SettingsSwitch`: the flat, non-rainbow edge already reads
+ * as "off" there, so only "locked on" was ever ambiguous.
+ */
+describe('the locked-on switch carries a lock glyph; the locked-off ones do not', () => {
+  it('draws a glyph on the locked-and-checked Essential switch', () => {
+    const button = controlWithChildren(html(), 'settings-cookies-essential')
+    expect(button).toContain('<svg')
+  })
+
+  it.each(['settings-cookies-analytics', 'settings-cookies-marketing'])(
+    'draws no glyph on the locked-and-unchecked %s switch',
+    (testId) => {
+      const button = controlWithChildren(html(), testId)
+      expect(button).not.toContain('<svg')
+    },
+  )
+
+  it('never adds opacity to the track — the dim was rejected on measurement, not lost', () => {
+    for (const testId of [
+      'settings-cookies-essential',
+      'settings-cookies-analytics',
+      'settings-cookies-marketing',
+    ]) {
+      const button = controlWithChildren(html(), testId)
+      expect(button).not.toContain('opacity')
+    }
+  })
 })
 
 /**

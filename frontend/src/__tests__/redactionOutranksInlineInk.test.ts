@@ -35,14 +35,14 @@
  * inventory below reads draw calls only — the prose in `DefaultSelectCard` and
  * in `index.css` names `.redacted` a dozen times and none of it counts.
  */
-import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
 import { readStripped, sourceFiles, toRelative } from '../test/sourceScan'
 import { stripComments } from '../utils/__tests__/cssVars'
+import { readIndexCss } from '../test/indexCss'
 
-const CSS = stripComments(readFileSync(new URL('../index.css', import.meta.url), 'utf8'))
+const CSS = stripComments(readIndexCss())
 
 /** The class token as a className string writes it — never `data-redacted`. */
 const CLASS_TOKEN = /(?<![-\w])redacted(?![-\w])/

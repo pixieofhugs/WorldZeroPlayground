@@ -445,8 +445,12 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                       }}
                     >
                       {/* The faction's own mark, from the dispatcher every other
-                          chooser draws (#2223). */}
-                      <FactionSigil slug={slug} size={PICKER_SIGIL} />
+                          chooser draws (#2223). Selected, the ground becomes
+                          FILL — this kit's own fill, not the offered slug's —
+                          so the mark has to move to this kit's `onFill` ink
+                          the same way the label beside it already does
+                          (#2852). */}
+                      <FactionSigil slug={slug} size={PICKER_SIGIL} color={selected ? ON_FILL : undefined} />
                       <span
                         style={{
                           fontFamily: factionCssVar(slug, 'card-font'),

@@ -47,7 +47,7 @@
  * no compositor in CI (SPEC-testing.md), so nothing here proves a pixel. The
  * pixels are visual QA and stated outstanding on the PR.
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -57,11 +57,13 @@ import '../i18n'
 import { stripComments, ruleBodies } from '../utils/__tests__/cssVars'
 import AlbescentSeal from '../components/metataskSeal/skins/AlbescentSeal'
 import type { TaskOut } from '../api/tasks'
+import { sourceFiles, toRelative } from '../test/sourceScan'
+import { readIndexCss } from '../test/indexCss'
 
 const read = (path: string) =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8')
 
-const INDEX = stripComments(read('../index.css'))
+const INDEX = stripComments(readIndexCss())
 const MOTION = stripComments(read('../motion.ornament.css'))
 
 /**
@@ -289,11 +291,9 @@ function ruleMounts(source: string): { line: number; childless: boolean }[] {
 /** Every file under `src/` that mounts one, tests aside — so a NEW file cannot
  *  grow a spectrum without appearing in the table above. */
 const filesWithARule = () =>
-  readdirSync(SRC, { recursive: true, encoding: 'utf8' })
-    .map((entry) => entry.split(/[\\/]/).join('/'))
-    .filter((rel) => rel.endsWith('.tsx') && !rel.includes('__tests__'))
-    .filter((rel) => ruleMounts(readFileSync(`${SRC}${rel}`, 'utf8')).length > 0)
-    .map((rel) => `../${rel}`)
+  sourceFiles({ dir: SRC, match: /\.tsx$/ })
+    .filter((path) => ruleMounts(readFileSync(path, 'utf8')).length > 0)
+    .map((path) => `../${toRelative(path)}`)
     .sort()
 
 describe('the census, per mount: which spectra travel and which frame content', () => {

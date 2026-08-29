@@ -1,0 +1,259 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SECTION — FACTION CHROME, second run resumes (#2890).
+   Per-faction profile-page identity chrome (Albescent, Coven, Ephemerists).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── #1630: identity-header flair, one treatment per faction ────────────────
+   Two of the seven are perpetual motions, so both live here behind the shared
+   `prefers-reduced-motion: no-preference` guard rather than in an inline
+   `animation:` a component could not opt out of (#1003). */
+
+/* Albescent — the PROFILE's tell (#1630, ADR-0048), the sixth surface to
+   unfreeze. `DefaultProfileBody`'s identity band is a 4px spectrum frame around
+   an opaque sheet; na wears it STILL and Albescent wears the same frame
+   drifting. The contrast is the whole treatment, so nothing here repaints
+   anything — strip the class and the two profiles are byte-identical.
+
+   A masked ring rather than a border, for the reason `.alb-task-edge` already
+   documents: the band belongs to a component this file cannot reach into, so
+   the drift is drawn as an overlay that lands exactly on Default's own frame
+   and reads as that frame moving. The `padding` must track the band's own inset
+   (--space-xs) and the radius its corner (16px); if either moves in
+   DefaultProfileBody, this follows.
+
+   The ramp is --faction-default-rainbow-loop, the spectrum's TILING cut whose
+   last stop is its first — which is what lets the position walk a full tile and
+   arrive back with no seam. THE 200% IS DELIBERATE AND IT IS A PAIR: this is the
+   one of the five edges whose tile is TWO band-widths rather than three, so its
+   keyframe must travel 200% where the other four travel 300%, or the ring would
+   stop short of the seam and jump. #2407 retired the four identical 300%
+   keyframes into one and kept this one for exactly that reason — change the
+   `background-size` below and `@keyframes alb-profile-edge` in
+   `motion.ornament.css` has to change with it. The design's 9s is the pace, and
+   no dark half is declared because none is needed: the token flips on its own.
+
+   Stilled, this paints an ordinary static spectrum ring on top of an identical
+   static spectrum frame, i.e. nothing — so it can freeze outright. The contrast
+   used to be drawn against `.alb-spark`, which had to PARK at a resting opacity
+   because its keyframe start was invisible; #2555 retired the spark, and Coven's
+   `.cvn-profile-spark` is now this file's example of a mark that must park.
+
+   The ring itself is the shared `.spectrum-frame::before` list (#2407), which is
+   also where `border-radius: inherit` now comes from: this span mounts straight
+   inside `DefaultProfileBody`'s identity band, whose `borderRadius: 16` is
+   inline at the mount in BOTH form factors, so the hardcoded 16 that had to
+   track it is gone. No z-index, deliberately, which is why the shared rule
+   declares none: a positioned overlay already paints above the static sheet it
+   sits beside, whatever their DOM order. */
+.alb-profile-edge {
+  padding: var(--space-xs);
+  background-size: 200% 100%;
+  opacity: 1;
+}
+
+/* ── THE DOUBLED CARRIER COMES OFF (#2519, epic #2496) ──
+   The other half of the rule the block above states: *"one carrier per object —
+   whatever bar, strip or hairline was doing that job comes off."* One na mark is
+   doing it, on a surface that has now grown an edge of its own, so it goes.
+
+     `.alb-desk .spectrum-rule`  the mobile field desk's 3px identity hairline
+       — #1553's "one mark at three scales", across the top of the identity
+       card. The board: *"the desk ships a static 3px spectrum bar across the top
+       of the identity card; under the tell that bar doubles the edge, so it
+       comes off and the plate's own travelling border does the work."*
+
+   `.alb-composer .ep-edge` STOOD HERE AND HID NOTHING (#2553). It was written
+   for the edit-praxis sheet's masthead band, drawn by `ComposerMasthead` — but
+   #2520 had already taken the masthead out of `DEFAULT_COMPOSER_DRESS`
+   altogether and made na's spectrum the sheet's own 3px border, so na renders
+   no `.ep-edge` on this page for anyone (`composerRule.test.tsx` asserts that
+   from na's side). The mark the composer's ring was actually doubling was that
+   new border, which is why the RING is what came off in #2553 and this rule
+   went with it as dead weight.
+
+   WHAT #2505 DID INSTEAD, and why it is not the same thing. On the desk it
+   classed the bar, re-cut it to the loop tile and set it TRAVELLING — which
+   replaced the static rule, truthfully, but not the carrier: the bar was still
+   the only spectrum on the card, and the card still had no edge, so the surface
+   read as the na home with a moving stripe rather than as an object the
+   spectrum is holding. On the composer it did not replace anything at all; it
+   added a 1px ring at 0.6 BESIDE a 3px band. The desk's whole re-cut now lives
+   on `.alb-desk-edge` (the loop ramp, the 300% tile and the `overflow: hidden`
+   track come from the shared ring), and the composer carries one mark.
+
+   `display: none` RATHER THAN AN UNMOUNT, because the mark is na's and
+   `DefaultFieldDesk` draws it for every unaffiliated player. Two classes beat
+   one from anywhere in the card, so it needs no `!important` and no structural
+   selector; strip the wrapper class and the na surface is back, byte for byte. `display` is also the one property that can do this from OUTSIDE: a
+   background written on a descendant of an `.alb-*` wrapper is what
+   `__tests__/albescentPrismSheet.test.ts` forbids, and with the desk rule
+   reduced to this the sheet no longer paints any descendant at all.
+
+   The desktop `/field-desk` page has no faction dispatch and this does not give
+   it one (ruling 5). */
+.alb-desk .spectrum-rule {
+  display: none;
+}
+
+/* Albescent — the AVATAR's tell (#2502, epic #2496, ADR-0048), the seventh
+   surface to unfreeze and the same shape as the six before it: `DefaultAvatar`
+   whole, plus one span. The disc's spectrum ring is a 2px pad on a conic, with
+   the portrait or the monogram in the content box inside it; this overlay is
+   that band redrawn on top of itself, and `motion.ornament.css` turns it.
+
+   AN ANNULUS BY RADIAL MASK, not by the `padding … content-box exclude` idiom
+   the five `.alb-*-edge` rings share (`.spectrum-frame::before`, #2407). That
+   mask excludes a RECTANGLE, which is a 1px frame on a rounded card and four
+   detached lens-shaped caps on a circle: the content box's corners reach further
+   from the centre than the disc's edge does, so the whole diagonal of the ring
+   would be masked away. `.alb-praxis-ring::before` above is the mount that
+   already draws a conic back to a ring this way, and this is its cut with the
+   band width `DefaultAvatar` states inline (2px, at every diameter — the ring is
+   a drawn stroke, not a scaling inset).
+
+   FULLY OPAQUE, WHICH IS CORRECTNESS RATHER THAN TASTE. The static ring stays
+   underneath and is the SAME conic; a translucent overlay would show two
+   spectra at two rotations through each other and read as mud rather than as a
+   ring turning. At opacity 1 the band is exactly the ring it covers, turned —
+   which is also what makes the still frame free.
+
+   NO NEW COLOUR AND NO DARK HALF. It reads `--faction-default-rainbow-conic`,
+   the same token the disc under it paints; the stops flip on their own. A hue of
+   Albescent's own would put the society back in the spectrum and un-hide it
+   (#783 / WORLD_ZERO_STYLE §3).
+
+   THE 48px GATE IS THE COMPONENT'S, NOT A MEDIA QUERY'S. Below it the span is
+   never rendered at all — see `AlbescentAvatar` for why a byline in a roster of
+   twenty must cost what na costs, and why a 2px band turning on a 24px disc
+   reads as a spinner. A container query would still ship the node to forty
+   mounts to hide it.
+
+   `pointer-events: none` because the disc is very often inside a link, and no
+   `z-index`: it is a positioned overlay, so it already paints above the in-flow
+   ring beside it and below the sigil badge that follows it in the DOM. Both of
+   those are load-bearing — see the `ornament` slot's docstring in
+   `FactionAvatar.tsx`.
+
+   Stranded (this ornament's motion is deferred) or stilled (reduced motion), it
+   is the static spectrum ring an unaffiliated player already wears, drawn in its
+   final colours at its final size. Decorative, so it owes no contrast ratio. */
+.alb-avatar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background-image: var(--faction-default-rainbow-conic);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 0);
+  mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 0);
+}
+
+/* Coven — the candle catching the profile header (#1630). Eight `Spark`
+   marks scattered over the identity band, twinkling on a 5.5s loop with a
+   per-mark delay so the field never pulses in unison.
+
+   The delay is the one thing that differs per instance, so it arrives as a
+   custom property set at the call site (`--cvn-spark-delay`) — the shape
+   `--ev-spark-delay` already uses, and the reason this is one rule instead of
+   eight. (`.alb-spark` was the third member of that shape and is retired, #2555:
+   the twinkle is not part of the Albescent kit. Coven's candle and Everymen's
+   are unaffected — this is a ruling about one faction's vocabulary, not about
+   the idiom.)
+
+   Reduced motion parks the field at a steady low opacity rather than freezing
+   it: opacity .12 is the keyframe's own resting value and a spark stopped there
+   reads as dirt on the paper. This is now the file's own example of that call
+   rather than a restatement of the Albescent one. */
+@keyframes cvn-profile-spark {
+  0%, 100% { opacity: 0.12; transform: scale(0.8); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+/* Positioning and inertness belong to the `inset: 0` wrapper the field mounts
+   in, so a mark carries only its own place and its resting opacity. */
+.cvn-profile-spark {
+  position: absolute;
+  opacity: 0.4;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-profile-spark {
+    opacity: 0.12;
+    animation: cvn-profile-spark 5.5s ease-in-out infinite;
+    animation-delay: var(--cvn-spark-delay, 0s);
+  }
+}
+
+/* ══ Ephemerists — THE SCRIPT ROTATION (task cards v3, #2038) ══════════════
+   The task card's points label and its sign-up turn through five scripts: the
+   catalogue's own word, then PVNCTA, then the same word in Arabic, Japanese
+   and cuneiform. All of it lives here because all of it is MOTION, and motion
+   in this repo is a class the media query can reach, never an inline
+   `animation` a preference cannot see.
+
+   THE ANIMATION IS THE CLOCK, not just the fade. `EphemeristsTaskCard` swaps
+   the visible frame on `animationiteration`, so a browser that never starts
+   this animation never advances the frame either: under
+   `prefers-reduced-motion: reduce` the label sits on frame 1, which is the
+   live i18n string, with nothing in the component branching on the preference.
+   That is the whole reduced-motion story — there is no JS twin.
+
+   The keyframes end and begin at opacity 0 so the swap happens at the
+   invisible instant: the word fades out, changes script while nobody can see
+   it, and fades back in. A cycle that returned to opacity 1 would pop.
+
+   WCAG 2.2.2 (Pause, Stop, Hide). The turn auto-updates, starts on its own and
+   sits beside other content, so it owes the reader a way to stop it. Two ship:
+     • the platform's reduce-motion setting, which stills it outright — WCAG's
+       own glossary allows a mechanism "relied upon to be provided by either
+       the platform or by user agents";
+     • hovering the card, or focusing anything in it, which pauses every turn
+       inside it in place. That one is also why the CTA's word cannot change
+       under a cursor or a focus ring on its way to a click.
+   `animation-play-state` is a pause proper, not a reset: the frame showing
+   stays showing and the cycle resumes where it stopped.
+
+   The BOX is pinned in the component, not here — every frame renders into one
+   grid cell, so the label is as wide as its widest script and the button never
+   resizes under it. */
+@keyframes eph-turn {
+  0%, 6% { opacity: 0; }
+  12%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* ONE RULE, ONE PERIOD, A PHASE PER LABEL (#2392, closing #2148's own
+     acceptance line).
+
+     This was two rules — `.eph-turn-points` at 6.5s and `.eph-turn-cta` at 7s,
+     alternated by the label's ordinal. Two rules stagger exactly two labels, so
+     the score stamp's five turned in three groups, and neither period was in
+     the 9–11s band #2148 asked for. A period plus a per-instance phase does for
+     N what a second rule did for two.
+
+     `--ephturn-period` is declared HERE and nowhere else, so retuning the clock
+     is one number in one place — the component's phase is a fraction OF it (see
+     `EphemeristsGloss`), not a second literal that could drift out of step with
+     it.
+
+     THE NAME IS `--ephturn-`, NOT `--eph-turn-`, and the missing hyphen is
+     load-bearing: `--eph-*` is the RETIRED illuminated-codex colour family
+     (`--eph-vellum`, `--eph-rubric`, …), and four suites assert that no plate
+     surface renders `/--eph-[a-z]/` because the two palettes must never mix on
+     one surface. A motion token wearing that prefix would trip them, and would
+     blur a namespace whose whole job is to be un-mixable.
+
+     THE PHASE IS NEGATIVE, and that is not a detail. A positive delay would
+     leave a label sitting at its normal opacity 1 until the clock started and
+     then snap it to the keyframes' 0% — a visible flick, worse the later the
+     label. A negative delay starts the animation already part-way through, so
+     every label is mid-plateau at first paint and nothing moves that should
+     not. */
+  .eph-turn {
+    --ephturn-period: 10s;
+    animation: eph-turn var(--ephturn-period) ease-in-out infinite;
+    animation-delay: var(--ephturn-phase, 0s);
+  }
+  .eph-turn-scope:hover .eph-turn,
+  .eph-turn-scope:focus-within .eph-turn {
+    animation-play-state: paused;
+  }
+}
+

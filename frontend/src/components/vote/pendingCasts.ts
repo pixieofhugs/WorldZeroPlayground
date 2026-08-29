@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { castVote, type VoterDetail } from '../../api/votes'
-import { recordCastTally } from './castTallies'
+import { recordCastTally } from '../../utils/castTallies'
 
 /**
  * The vote a viewer has CHOSEN, which the server may not have heard yet (#1895).
@@ -51,9 +51,9 @@ import { recordCastTally } from './castTallies'
 const DEBOUNCE_MS = 2_000
 
 /** Who the viewer is, for the row we draw before the server draws it. */
-export type VoterIdentity = Omit<VoterDetail, 'value'>
+type VoterIdentity = Omit<VoterDetail, 'value'>
 
-export interface PendingCast {
+interface PendingCast {
   /**
    * The star that stands for this viewer: optimistic until the flush lands,
    * then the server's own `viewer_vote`. Null when there is nothing to show —

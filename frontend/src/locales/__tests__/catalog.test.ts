@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
 import common from '../en/common.json'
@@ -12,6 +12,7 @@ import taunts from '../en/taunts.json'
 import votes from '../en/votes.json'
 import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
 import { factionName } from '../../utils/factions'
+import { sourceFiles, toRelative } from '../../test/sourceScan'
 
 // Factions with a vote voice (per-faction tier labels). Kept as an explicit
 // list, mirroring the seed catalog this test was ported from. Albescent is not
@@ -296,13 +297,12 @@ function catalogLeaves(): Array<[string, string]> {
     }
     return []
   }
-  return readdirSync(dir)
-    .filter((entry) => entry.endsWith('.json'))
-    .flatMap((entry) =>
-      walk(JSON.parse(readFileSync(join(dir, entry), 'utf8')), []).map(
-        ([key, value]) => [`${entry}:${key}`, value] as [string, string],
-      ),
+  return sourceFiles({ dir, match: /\.json$/ }).flatMap((path) => {
+    const entry = basename(path)
+    return walk(JSON.parse(readFileSync(path, 'utf8')), []).map(
+      ([key, value]) => [`${entry}:${key}`, value] as [string, string],
     )
+  })
 }
 
 /**
@@ -642,10 +642,7 @@ describe('no duplicate keys in any locale catalog', () => {
   // cannot catch it — we scan the raw file text instead. Guard for #670.
   const localesDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-  // recursive + no withFileTypes → path strings; the cast drops the string|Buffer union.
-  const jsonFiles = (readdirSync(localesDir, { recursive: true }) as string[])
-    .filter((entry) => entry.endsWith('.json'))
-    .map((entry) => join(localesDir, entry))
+  const jsonFiles = sourceFiles({ dir: localesDir, match: /\.json$/ })
 
   it('finds catalog files to scan', () => {
     // Fails loudly if the glob ever silently matches nothing (moved dir, etc.).
@@ -926,9 +923,23 @@ describe('the slots the copy audit ruled generic stay deleted (#1909)', () => {
  * ========================================================================== */
 describe('no key is named for a word or a name it no longer holds (#1910)', () => {
   /**
-   * #1864 §3. Two of these seven had no reader at all on `origin/main`
+   * #1864 §3. Two of the first seven had no reader at all on `origin/main`
    * (`frame.albescent.masthead`, `taskCard.everymen.masthead`); the other five
    * now resolve through `factionName(slug)`.
+   *
+   * #2806 added the nine `factionSelect.{F}.name` slots — the same defect, one
+   * surface further out and nine wide. Every value was character-for-character
+   * the canonical `factions:names.{F}` (ADR-0038), four of them minted in #2777
+   * purely to make the tile uniform. The tile reads the canonical name now.
+   *
+   * The select tile is NOT a `factionName()` caller, and that is the one thing
+   * to know before repointing it again: unrevealed, `factionName('albescent')`
+   * returns the MASKED name while this tile must print `[REDACTED]` (ADR-0082
+   * §2). It reads `redactableText('factions:names.<slug>')` instead —
+   * `ALBESCENT_SCOPED_KEY` matches the segment in any namespace, so the gate
+   * already covered the key it moved onto. A tile that later wants to say
+   * something other than its faction's full name adds a `wordmark`, which is
+   * the mechanism `ua` already uses; it does not get a shadow copy of the name.
    */
   const NAME_DUPLICATES = [
     'feed.json:frame.albescent.masthead',
@@ -938,6 +949,15 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
     'feed.json:taskCard.coven.masthead',
     'feed.json:taskCard.ephemerists.masthead',
     'feed.json:taskCard.everymen.masthead',
+    'feed.json:factionSelect.albescent.name',
+    'feed.json:factionSelect.coven.name',
+    'feed.json:factionSelect.ephemerists.name',
+    'feed.json:factionSelect.everymen.name',
+    'feed.json:factionSelect.na.name',
+    'feed.json:factionSelect.singularity.name',
+    'feed.json:factionSelect.snide.name',
+    'feed.json:factionSelect.ua.name',
+    'feed.json:factionSelect.wow.name',
   ] as const
 
   /**
@@ -978,9 +998,10 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   ]
 
   it('has the whole ruling in the list', () => {
-    // 3 keys / 7 strings from #1864 §3, plus the 20 `seal`-named leaves #1863
-    // falsified. A line lost to a bad merge would silently shrink the guard.
-    expect(new Set(NAME_DUPLICATES).size).toBe(7)
+    // 3 keys / 7 strings from #1864 §3 plus #2806's nine, and the 20
+    // `seal`-named leaves #1863 falsified. A line lost to a bad merge would
+    // silently shrink the guard.
+    expect(new Set(NAME_DUPLICATES).size).toBe(16)
     expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
   })
 
@@ -1034,10 +1055,12 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
  *
  *   1. Six values are the literal `PLACEHOLDER`. That is deliberate — the
  *      owner's marker for a slot she has not written yet, put there so that
- *      seeing it on the page tells her what is missing. One of them
- *      (`factionHero.wow.motto`) replaced a sentence that stopped mid-clause,
- *      so a trailing comma never reaches a player. `descriptions.wow` was one
- *      of those and is now written, which is why it is off this list.
+ *      seeing it on the page tells her what is missing. Two have since left the
+ *      list by different doors: `descriptions.wow` was written, and
+ *      `factionHero.wow.motto` — the one that replaced a sentence stopping
+ *      mid-clause, so a trailing comma never reached a player — was reworded to
+ *      WOW's tagline in #2782 and then deleted with the whole motto family in
+ *      #2805, which folded the hero onto `factionSelect.{F}.tagline`.
  *   2. S.N.I.D.E.'s three masked-profanity strings are the faction's new punk
  *      register, not a leak and not a typo. Exact characters, exact casing.
  *   3. Two faction names changed shape: `ua` from the two-letter abbreviation
@@ -1148,6 +1171,106 @@ describe('no faction sentence renders a double full stop (#2368)', () => {
       .filter(([id]) => id.startsWith('factions.json:'))
       .filter(([, value]) => /\{\{faction\}\}\./.test(value))
       .map(([id, value]) => `${id} -> "${value}"`)
+    expect(offenders).toEqual([])
+  })
+})
+
+/* ========================================================================== *
+ * #2827 — A CALL SITE MAY NOT DROP THE VALUES ITS COPY INTERPOLATES.
+ *
+ * THE SEAM IS THE CALL, not the leaf, and the block above is why it has to be:
+ * `mobile.gateHint` is one shared key, it is correct, and every catalog-level
+ * check it has passed. `SingularityFactionBody` wrote `t("mobile.gateHint")`
+ * with no second argument, so `/factions/singularity` printed the literal
+ * `{{faction}}` to the reader in its gate panel while the title one line above
+ * it interpolated fine. i18next does not throw on a missing value — it leaves
+ * the placeholder in and returns a perfectly good string, so "the key resolved"
+ * and "the element is non-empty" both pass.
+ *
+ * The RENDERED half of this guard lives at the render seam it belongs to
+ * (`pages/factionDetail/__tests__/burnedNotice.test.tsx`, which draws every
+ * faction body in every membership state). This half is the class: any key in
+ * any catalog whose copy interpolates, called anywhere in `src` with no options
+ * object at all. On `origin/main` it found exactly one call — the reported one.
+ *
+ * ponytail: only a call whose key is a STRING LITERAL can be resolved
+ * statically, so `t(\`${slug}.join.joinButton\`)` and `<Trans i18nKey>` are out
+ * of reach here. Those are covered where they are rendered; the upgrade path, if
+ * a third instance ever appears, is a rendered sweep over a page census rather
+ * than a cleverer regex.
+ * ========================================================================== */
+
+/** `src`, from this file. */
+const SRC_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+
+/**
+ * A `t("key")` with a string-literal key and NOTHING after it. The closing
+ * paren is required immediately, so any call that passes options — on the same
+ * line or the next one — is not a match.
+ */
+const BARE_CALL = /\bt\(\s*(['"])([^'"\n]+)\1\s*\)/g
+
+/**
+ * Every catalog key whose copy interpolates, by its DOTTED part alone — a call
+ * site writes `ns:key` or the bare form under a `useTranslation(ns)`, and both
+ * have to land. Read once: this walks every catalog file.
+ */
+const INTERPOLATED_KEYS = new Set(
+  catalogLeaves()
+    .filter(([, value]) => value.includes('{{'))
+    .map(([id]) => id.split(':')[1]),
+)
+
+/** Every `.ts`/`.tsx` under `src` that ships, src-relative and slash-separated. */
+function shippedSources(): string[] {
+  return sourceFiles()
+    .map((path) => toRelative(path))
+    .filter((name) => !name.startsWith('locales/'))
+}
+
+/**
+ * Offending `t()` calls in one source: bare calls naming a key whose copy has a
+ * `{{placeholder}}` in it. Keys are matched on the dotted part, so `ns:key` and
+ * the bare form written under a `useTranslation(ns)` both land.
+ */
+function droppedInterpolations(name: string, source: string): string[] {
+  const found: string[] = []
+  for (const hit of source.matchAll(BARE_CALL)) {
+    const key = hit[2].includes(':') ? hit[2].split(':')[1] : hit[2]
+    if (!INTERPOLATED_KEYS.has(key)) continue
+    found.push(`${name}:${source.slice(0, hit.index).split('\n').length} -> t("${hit[2]}")`)
+  }
+  return found
+}
+
+describe('no call site drops an interpolation (#2827)', () => {
+  it('has a scanner that catches the defect it was written for', () => {
+    // THE TRIPWIRE, and it is the whole reason this guard can be trusted: a
+    // regex that matched nothing would report a clean board forever. The exact
+    // shape #2827 shipped is caught, and the shape its seven siblings ship is
+    // not.
+    const key = 'mobile.gateHint'
+    expect(i18n.t(`factions:${key}`)).toContain('{{')
+    expect(droppedInterpolations('probe.tsx', `: t("${key}")}`)).toHaveLength(1)
+    expect(
+      droppedInterpolations('probe.tsx', `: t("${key}", { faction: factionName(slug) })}`),
+    ).toEqual([])
+    expect(
+      droppedInterpolations('probe.tsx', `: t("${key}", {\n  faction: name,\n})}`),
+      'options on the next line are still options',
+    ).toEqual([])
+  })
+
+  it('scans a tree it can actually see', () => {
+    const files = shippedSources()
+    expect(files.length).toBeGreaterThan(200)
+    expect(files).toContain('pages/factionDetail/archetypes/SingularityFactionBody.tsx')
+  })
+
+  it('finds no interpolated string called without its values', () => {
+    const offenders = shippedSources().flatMap((name) =>
+      droppedInterpolations(name, readFileSync(join(SRC_ROOT, name), 'utf8')),
+    )
     expect(offenders).toEqual([])
   })
 })

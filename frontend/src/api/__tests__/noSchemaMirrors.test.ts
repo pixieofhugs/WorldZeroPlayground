@@ -21,10 +21,12 @@
  * (`TaskImportRowError`) and client-side unions (`CommentTarget`) mirror
  * nothing. This only guards the names the schema already owns.
  */
-import { readdirSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
+
+import { sourceFiles } from '../../test/sourceScan'
 
 const API_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SCHEMA_PATH = join(API_DIR, 'generated', 'schema.d.ts')
@@ -95,9 +97,13 @@ const DELIBERATE_MIRRORS: Record<string, string> = {
   RelationshipListItem: 'type and status are bare str, not enums',
 }
 
-const API_MODULES = readdirSync(API_DIR)
-  .filter((name) => name.endsWith('.ts'))
-  .map((name) => ({ name, source: readFileSync(join(API_DIR, name), 'utf8') }))
+// Top-level api/*.ts only — `sourceFiles()` recurses into api/generated/ and
+// api/__tests__/ too, and neither belongs here: generated/schema.d.ts is the
+// schema itself, not a hand-written module, and it ends in ".ts" so a plain
+// extension match would pull it in as a "mirror" of every type it declares.
+const API_MODULES = sourceFiles({ dir: API_DIR, match: /\.ts$/ })
+  .filter((path) => dirname(path) === API_DIR)
+  .map((path) => ({ name: basename(path), source: readFileSync(path, 'utf8') }))
 
 describe('api modules do not re-declare a type the schema already defines', () => {
   const schemaNames = schemaTypeNames()

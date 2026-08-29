@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next'
  * owns its archetype) and only gained the accessible name the ring was missing.
  */
 
-export interface PortraitPickerProps {
+interface PortraitPickerProps {
   /** The picker hook's input handler — validates size, then opens the cropper. */
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
   /**
@@ -46,7 +46,7 @@ export interface PortraitPickerProps {
    * create screen's credential-card portrait is a second trigger for it. Omit and
    * the control keeps its own.
    */
-  inputRef?: RefObject<HTMLInputElement>
+  inputRef?: RefObject<HTMLInputElement | null>
   /** Wrapper override, for a surface that owns the surrounding spacing. */
   style?: CSSProperties
   buttonStyle?: CSSProperties

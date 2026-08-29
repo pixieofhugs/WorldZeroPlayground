@@ -28,7 +28,7 @@ interface Props {
  * pair. Pure, exported, and tested directly: the harness is
  * `renderToStaticMarkup`, so the branch is provable but the click is not.
  */
-export type AcceptMode = "one-click" | "confirm-first" | "suppressed";
+type AcceptMode = "one-click" | "confirm-first" | "suppressed";
 
 /**
  * Which `Accept` a holder of this letter gets.

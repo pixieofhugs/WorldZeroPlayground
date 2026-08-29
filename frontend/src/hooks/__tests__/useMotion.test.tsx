@@ -30,11 +30,9 @@ import {
   useMotion,
   useMotionStilled,
 } from '../useMotion'
+import { readIndexCss } from '../../test/indexCss'
 
-const INDEX_CSS = readFileSync(
-  fileURLToPath(new URL('../../index.css', import.meta.url)),
-  'utf8',
-)
+const INDEX_CSS = readIndexCss()
 
 /** Pretend the OS has (or has not) asked for reduced motion. */
 function withSystemReduced<T>(matches: boolean, body: () => T): T {

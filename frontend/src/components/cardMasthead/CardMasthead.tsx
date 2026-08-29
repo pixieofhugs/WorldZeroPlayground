@@ -87,7 +87,7 @@ import { factionName } from "../../utils/factions";
  */
 const MARK = 20;
 
-export interface CardMastheadProps {
+interface CardMastheadProps {
   /** Whose band this is. Real components know their own faction (#2027). */
   slug: string;
   /**

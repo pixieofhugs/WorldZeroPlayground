@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
@@ -124,7 +125,7 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
         <div style={{ ...UA_EYEBROW, textTransform: "none", letterSpacing: "0.06em" }}>{i18n.t("feed:factionSelect.ua.banner")}</div>
         <div style={{ ...UA_EYEBROW, letterSpacing: "0.24em" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
         <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1, letterSpacing: "-0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
-        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.name")}</div>
+        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{redactableText("factions:names.ua")}</div>
         <p className="content-text" style={{ margin: "var(--space-xs) 0 0", fontStyle: "italic", lineHeight: 1.4, color: "var(--leaf-faction-select-card-quiet)" }}>{i18n.t("feed:factionSelect.ua.tagline")}</p>
         {/* #850 made the subtitle a full sentence. A sentence cannot be set in
             0.24em all-caps, so it takes the display cut here rather than the

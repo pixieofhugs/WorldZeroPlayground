@@ -140,7 +140,7 @@ export function markCount(width: number): number {
   return Math.min(CEILING, Math.max(FLOOR, Math.round(width / PITCH)));
 }
 
-export interface NotationMark {
+interface NotationMark {
   /** The two marks this slot turns between; `frames[0]` is the resting one. */
   frames: string[];
   /** Raw px — ornament geometry. See {@link MARK_SIZES}. */

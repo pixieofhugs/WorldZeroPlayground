@@ -35,11 +35,13 @@
  * draws the separating rule and no subtotal at all.
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactElement } from 'react'
 import '../../../../i18n'
+import { sourceFiles } from '../../../../test/sourceScan'
 import i18n from '../../../../i18n'
 import praxisCatalog from '../../../../locales/en/praxis.json'
 import type { PraxisCardOut } from '../../../../api/praxis'
@@ -138,9 +140,9 @@ describe('the subtotal is the multiplier applied to the base (#2634)', () => {
 
 describe('the subtotal is computed once, in the shared half (#2634)', () => {
   const dir = fileURLToPath(new URL('../', import.meta.url))
-  const skins = readdirSync(dir).filter(
-    (name) => name.endsWith('ScoreStamp.tsx') && name !== 'ScoreStamp.tsx',
-  )
+  const skins = sourceFiles({ dir, match: /ScoreStamp\.tsx$/ })
+    .map((path) => basename(path))
+    .filter((name) => name !== 'ScoreStamp.tsx')
 
   it('finds all nine skins, so absence cannot be vacuous', () => {
     expect(skins).toHaveLength(9)
@@ -335,11 +337,15 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
     // bare labels; they are deleted. `card.stamp.subtotal` already existed and
     // is reused.
     //
-    // `mult` SURVIVES WITH NO READER, deliberately. #2634's chip is bare on all
-    // nine — the shape UA, S.N.I.D.E. and WOW already drew — so the Ephemerists
-    // cell, which was the last skin to label its ratio, gave the word up. That
-    // leaves a key nothing prints, which is a COPY decision the issue did not
-    // make; it is flagged on the PR rather than taken here.
+    // THE MULTIPLIER'S WORD IS GONE TOO, since #2821. #2634's chip is bare on
+    // all nine — the shape UA, S.N.I.D.E. and WOW already drew — so the
+    // Ephemerists cell, which was the last skin to label its ratio, gave the
+    // word up, and #2634 left the key standing because deleting copy is a
+    // decision it had not been asked to make. The owner made it on #2821: a key
+    // nothing renders is a key that rots. The Ephemerists stamp's own test now
+    // guards the chip's wordlessness off the base cell's SHAPE, because an
+    // absence asserted through `i18n.t` goes vacuous the moment the key it
+    // spells stops existing.
     //
     // Asserted as the whole key SET rather than as two absences, and read off
     // the catalog rather than through `i18n.exists`. Both halves matter: an
@@ -351,7 +357,6 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
     expect(Object.keys(praxisCatalog.card.stamp).sort()).toEqual(
       [
         'base',
-        'mult',
         'meta',
         'habit',
         'votes',

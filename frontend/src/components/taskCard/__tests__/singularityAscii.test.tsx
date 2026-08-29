@@ -48,11 +48,12 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 import SingularityTaskCard from '../SingularityTaskCard'
 import { aTask } from '../../../test/fixtures'
 import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
 const sheet = (name: string): string =>
   stripComments(readFileSync(fileURLToPath(new URL(`../../../${name}`, import.meta.url)), 'utf8'))
 
-const CSS = sheet('index.css')
+const CSS = stripComments(readIndexCss())
 const MOTION = sheet('motion.ornament.css')
 
 const GATE = '@media (prefers-reduced-motion: no-preference)'

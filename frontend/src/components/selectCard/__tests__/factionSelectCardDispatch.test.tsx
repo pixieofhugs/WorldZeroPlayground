@@ -81,7 +81,9 @@ describe("FactionSelectCard fallback", () => {
 
   it("renders the na copy slots", () => {
     const text = markup(<DefaultSelectCard {...REST} />).replace(/<[^>]*>/g, "");
-    expect(text).toContain(i18n.t("feed:factionSelect.na.name"));
+    // The name comes from the CANONICAL catalog now, not a per-tile copy of it
+    // (#2806) — the tile's own stem holds every other slot below.
+    expect(text).toContain(i18n.t("factions:names.na"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.blurb"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.status.eligible"));
     expect(text).toContain(i18n.t("feed:factionSelect.na.cta"));

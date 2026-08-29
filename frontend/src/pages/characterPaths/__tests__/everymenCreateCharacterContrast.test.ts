@@ -36,8 +36,6 @@
  * its ground is the flat token and `factionContrast.test.ts` already owns it.
  * Restating those would be a second name for one measurement.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
@@ -48,9 +46,9 @@ import {
   type Rgba,
 } from '../../../utils/contrast'
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const CSS = readFileSync(CSS_PATH, 'utf8')
+const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 

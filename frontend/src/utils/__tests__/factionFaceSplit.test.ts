@@ -1,7 +1,10 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+
+import { sourceFiles as walkSource } from "../../test/sourceScan";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * The critical-path half of the font kit (#2079).
@@ -60,17 +63,9 @@ const ENTRY_MODULE = join(SRC_DIR, "main.tsx");
  */
 const SHELL_FAMILIES = new Set(["lora", "courier prime", "bebas neue"]);
 
-function sourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      return entry.name === "__tests__" || entry.name === "assets" ? [] : sourceFiles(path);
-    }
-    return /\.(ts|tsx|css)$/.test(entry.name) ? [path] : [];
-  });
-}
-
-const ALL_FILES = sourceFiles(SRC_DIR);
+// `assets` holds no `.ts`/`.tsx`/`.css` file today, so no explicit exclusion is
+// needed beyond the extension match `walkSource` already applies.
+const ALL_FILES = walkSource({ dir: SRC_DIR, match: /\.(ts|tsx|css)$/ });
 const relative = (file: string): string => file.slice(SRC_DIR.length + 1).replace(/\\/g, "/");
 
 /** The families a generated sheet ships an `@font-face` rule for. */
@@ -87,7 +82,7 @@ const ruleCount = (sheet: string): number =>
 
 /** `--token: value` from index.css; the light cascade wins, families never flip. */
 const TOKEN_VALUES = ((): Map<string, string> => {
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf8");
+  const css = readIndexCss();
   const values = new Map<string, string>();
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
     if (!values.has(match[1])) values.set(match[1], match[2].trim());
@@ -265,9 +260,9 @@ function staticallyReachable(roots: string[]): Set<string> {
 
 /** The archetype modules the eight faction manifests name in an `import()`. */
 const ARCHETYPE_ROOTS = new Set(
-  readdirSync(join(SRC_DIR, "factions"))
-    .filter((name) => name.endsWith(".ts"))
-    .flatMap((name) => DYNAMIC_EDGES.get(join(SRC_DIR, "factions", name)) ?? []),
+  walkSource({ dir: join(SRC_DIR, "factions"), match: /\.ts$/ }).flatMap(
+    (file) => DYNAMIC_EDGES.get(file) ?? [],
+  ),
 );
 
 /** Everything the app can begin loading on its own: the entry, and every chunk. */

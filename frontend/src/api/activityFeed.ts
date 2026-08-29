@@ -150,10 +150,10 @@ function movesThePendingCount(itemKey: string): boolean {
 
 /** Result of archiving/restoring one item. `archived` is the state AFTER the
  *  call (both endpoints are idempotent); `changed` says whether a row moved. */
-export type FeedItemArchiveResult = components['schemas']['FeedItemArchiveResponse']
+type FeedItemArchiveResult = components['schemas']['FeedItemArchiveResponse']
 
 /** Result of a bulk archive/restore — how many items moved. */
-export type FeedBulkArchiveResult = components['schemas']['FeedBulkArchiveResponse']
+type FeedBulkArchiveResult = components['schemas']['FeedBulkArchiveResponse']
 
 export async function getActivityFeed(params?: {
   filter?: string

@@ -45,7 +45,7 @@ export const MEDIA_BATCH_MAX_FILES = 20
  */
 export const MEDIA_BATCH_MAX_BYTES = 100 * 1024 * 1024
 
-export interface BatchUploadOutcome {
+interface BatchUploadOutcome {
   /** Successfully stored media, in selection order — ready to append to the gallery. */
   uploaded: MediaItemOut[]
   /** One message per failed file, in selection order. */

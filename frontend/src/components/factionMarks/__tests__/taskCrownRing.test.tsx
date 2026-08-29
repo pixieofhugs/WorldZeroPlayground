@@ -21,18 +21,13 @@
  * and is only wrong when you hold the two themes side by side — exactly the
  * shape of the regression this issue reported.
  */
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 
 import { TaskCrown } from "../TaskCrown";
+import { readIndexCss } from "../../../test/indexCss";
 
-const CSS = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "index.css"),
-  "utf8",
-);
+const CSS = readIndexCss();
 
 /** How many times `--name:` is DECLARED (a `var(--name)` read does not count). */
 function declarations(name: string): number {

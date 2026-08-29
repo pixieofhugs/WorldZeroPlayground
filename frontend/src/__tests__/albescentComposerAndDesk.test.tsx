@@ -49,10 +49,11 @@ import type { TaskOut } from '../api/tasks'
 import type { CharacterOut } from '../api/auth'
 import { aPraxisCard } from '../test/fixtures'
 import { REQUESTS_QUEUE_LINK } from '../pages/updates/requestsQueueAnchor'
+import { readIndexCss } from '../test/indexCss'
 
 const read = (path: string) =>
   stripComments(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'))
-const INDEX = read('../index.css')
+const INDEX = stripComments(readIndexCss())
 const MOTION = read('../motion.ornament.css')
 
 const html = (node: React.ReactElement) =>

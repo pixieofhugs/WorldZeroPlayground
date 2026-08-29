@@ -107,9 +107,9 @@ const DENIAL_KEYS = {
   is_metatask: "detail.signup.denied.isMetatask",
 } as const;
 
-export type SignupDenialKey = (typeof DENIAL_KEYS)[keyof typeof DENIAL_KEYS];
+type SignupDenialKey = (typeof DENIAL_KEYS)[keyof typeof DENIAL_KEYS];
 
-export type SignupCtaKey =
+type SignupCtaKey =
   | typeof SIGNUP_CTA_KEY
   | typeof CTA_AGAIN_KEY
   | typeof SIGNUP_IN_PROGRESS_KEY

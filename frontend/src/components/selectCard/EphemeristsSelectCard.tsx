@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EphemeristsSigil } from "../sigil/EphemeristsSigil";
 import EphemerisNet from "../factionMarks/EphemerisNet";
@@ -135,7 +136,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
           </span>
           <div>
             {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the plate’s masthead wordmark — Poiret One letterspaced until the width is the mark */}
-            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.name")}</div>
+            <div style={{ fontFamily: eph.DECO, fontSize: 24, lineHeight: 1.1, letterSpacing: "0.22em", textTransform: "uppercase", color: eph.INK, marginTop: "var(--space-xs)" }}>{redactableText("factions:names.ephemerists")}</div>
             <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", color: eph.QUIET, marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ephemerists.tagline")}</div>
           </div>
         </div>

@@ -26,8 +26,6 @@
  * this control would spend it at 40%. `feedRowInk.test.tsx` measures the ink a
  * frame publishes to the row BODY, one level down, and passes `archive={null}`.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -47,8 +45,9 @@ import { AA_LARGE, compositeOver, contrastRatio, formatRatio, parseColor, type R
 import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
 import '../../../i18n'
 import { resolveRoleReads } from '../../../test/sourceScan'
+import { readIndexCss } from '../../../test/indexCss'
 
-const THEMES = readThemes(readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'))
+const THEMES = readThemes(readIndexCss())
 
 /** The control as it ships, dormant — the state 99% of its life is spent in. */
 const CONTROL = renderToStaticMarkup(<FeedArchiveButton onAct={() => {}} />)

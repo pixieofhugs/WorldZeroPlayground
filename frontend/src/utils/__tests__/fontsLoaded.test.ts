@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve as resolvePath } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, dirname, join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -8,7 +8,8 @@ import {
   type FactionGround,
   type FactionRole,
 } from "../factionRoles";
-import { resolveRoleReads } from "../../test/sourceScan";
+import { resolveRoleReads, sourceFiles } from "../../test/sourceScan";
+import { readIndexCss } from "../../test/indexCss";
 
 /**
  * Guard for the silently-unloaded font family (#839).
@@ -49,7 +50,6 @@ import { resolveRoleReads } from "../../test/sourceScan";
 
 const FRONTEND_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", "..");
 const SRC_DIR = join(FRONTEND_DIR, "src");
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".css"];
 
 /**
  * The generated stylesheets are the LOADER, never a source that names families.
@@ -94,16 +94,10 @@ const GENERIC_FAMILIES = new Set([
   "trajan pro",
 ]);
 
-function collectSourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      // Tests quote family names as prose and fixtures.
-      return entry.name === "__tests__" ? [] : collectSourceFiles(path);
-    }
-    if (FONT_SHEETS.includes(path)) return [];
-    return SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext)) ? [path] : [];
-  });
+function collectSourceFiles(): string[] {
+  return sourceFiles({ dir: SRC_DIR, match: /\.(tsx?|css)$/ }).filter(
+    (path) => !FONT_SHEETS.includes(path),
+  );
 }
 
 /** One `@font-face` block's body, in source order, across both sheets. */
@@ -173,7 +167,7 @@ function namedFamilies(source: string): string[] {
  * cheap; dropping one costs a silently-unstyled surface.
  */
 function declaredFontTokens(): string[] {
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  const css = readIndexCss();
   return [...new Set([...css.matchAll(/(--font-[a-z0-9-]+)\s*:/g)].map((match) => match[1]))];
 }
 
@@ -193,7 +187,7 @@ function withoutDeclarations(source: string, tokens: string[]): string {
 
 describe("font families are loaded (#839)", () => {
   const loaded = loadedFamilies();
-  const sources = collectSourceFiles(SRC_DIR).map((file) =>
+  const sources = collectSourceFiles().map((file) =>
     readFileSync(file, "utf-8").toLowerCase(),
   );
 
@@ -224,7 +218,7 @@ describe("font families are loaded (#839)", () => {
 
   it("names no family that the loader never requests", () => {
     const missing = new Set<string>();
-    for (const file of [...collectSourceFiles(SRC_DIR)]) {
+    for (const file of [...collectSourceFiles()]) {
       for (const family of namedFamilies(readFileSync(file, "utf-8"))) {
         if (!GENERIC_FAMILIES.has(family) && !loaded.has(family)) {
           missing.add(`${family} (named in ${file})`);
@@ -497,7 +491,7 @@ function declaredFaces(loadedFamilyNames: Set<string>): Face[] {
     }
   };
 
-  for (const file of collectSourceFiles(SRC_DIR)) {
+  for (const file of collectSourceFiles()) {
     const raw = readFileSync(file, "utf-8");
     const source = file.endsWith(".css") ? raw : inlineConstants(file, raw);
 
@@ -565,7 +559,7 @@ function familiesBehindToken(
 let tokenValueCache: Map<string, string> | undefined;
 function tokenValues(): Map<string, string> {
   if (tokenValueCache) return tokenValueCache;
-  const css = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  const css = readIndexCss();
   tokenValueCache = new Map();
   for (const match of css.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
     // Light theme wins; the dark cascade never repoints a family token.
@@ -773,7 +767,9 @@ describe("used weights are requested (#1294)", () => {
  */
 describe("an inherited page face is not asked to fake a bold (#2487)", () => {
   const COMPOSER_DIR = join(SRC_DIR, "pages", "editPraxis", "archetypes");
-  const composers = readdirSync(COMPOSER_DIR).filter((name) => name.endsWith("EditPraxis.tsx"));
+  const composers = sourceFiles({ dir: COMPOSER_DIR, match: /EditPraxis\.tsx$/ }).map((path) =>
+    basename(path),
+  );
   const faces = loadedFaces();
   const familyNames = new Set(faces.map((face) => face.family));
 
@@ -1001,7 +997,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
 
   it("names no weight in a scope that pins a single-cut family", () => {
     const asked: string[] = [];
-    for (const file of collectSourceFiles(SRC_DIR)) {
+    for (const file of collectSourceFiles()) {
       if (FONT_SHEETS.includes(file)) continue;
       const rel = file.slice(SRC_DIR.length + 1).replace(/\\/g, "/");
       if (LOAD_BEARING.has(rel)) continue;

@@ -5,7 +5,6 @@ Replaces the old submissions, collaborations, and praxes routers.
 """
 
 import logging
-import os
 from typing import List, Optional
 
 from fastapi import (
@@ -24,10 +23,10 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_db
 from dependencies import (
-    account_has_admin_role,
     get_current_account_optional,
     get_current_character,
     get_current_character_optional,
+    get_viewer_is_admin,
 )
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA
@@ -85,6 +84,7 @@ from services.praxis import (
     cancel_invite,
     change_praxis_type,
     create_praxis,
+    delete_media_item,
     delete_praxis,
     flag_praxis,
     get_praxis,
@@ -106,7 +106,7 @@ from services.praxis_out import (
     build_praxis_cards,
     build_praxis_out,
 )
-from services.media import process_and_save_media, resolve_stored_media_path
+from services.media import process_and_save_media
 from services.nudge import nudge_the_crew, send_nudge
 from services.vote import cast_vote_on_praxis
 
@@ -138,6 +138,7 @@ async def list_praxes_route(
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
+    viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
     # Five rejections of the same shape — a query parameter naming a value no
     # enum member matches — so they share one code and name their field in
@@ -221,9 +222,7 @@ async def list_praxes_route(
         # Optional auth; only the Albescent reveal flag is read from it (#2422),
         # for which an admin counts as revealed (#2400).
         viewer_account=account,
-        viewer_is_admin=(
-            account is not None and await account_has_admin_role(account.id, session)
-        ),
+        viewer_is_admin=viewer_is_admin,
         limit=limit,
         offset=offset,
     )
@@ -457,33 +456,7 @@ async def delete_media_route(
     if media_item is None or media_item.praxis_id != praxis_id:
         raise_coded(404, ErrorCode.media_item_not_found, "Media item not found.")
 
-    # Through the shared predicate, not a bare join. `resolve_stored_media_path`
-    # is documented as the one "is this a file we own?" gate every
-    # column-value-to-filesystem operation passes; this route bypassed it and
-    # joined MEDIA_ROOT to `file_path` directly. `file_path` is server-generated
-    # today so there is no live traversal — but `os.path.join` with an absolute
-    # or `..`-bearing value escapes MEDIA_ROOT entirely, so the day any other
-    # writer touches that column (an import, an admin editor, a migration) this
-    # silently becomes an arbitrary-unlink primitive. Same two lines as
-    # `delete_stored_avatar`.
-    abs_path = resolve_stored_media_path(media_item.file_path)
-    try:
-        if abs_path is not None:
-            os.remove(abs_path)
-    except OSError:
-        pass
-    # Each upload owns its directory (#1336), so removing the file leaves that
-    # directory empty. rmdir refuses a non-empty one, which is exactly the guard
-    # we want for pre-#1336 rows that still share a per-praxis directory.
-    try:
-        os.rmdir(os.path.dirname(abs_path))
-    except OSError:
-        pass
-
-    await session.delete(media_item)
-    await session.flush()
-    # Removing media edits the shared document — cancels a pending publish (ADR-0012).
-    await on_member_edit(praxis, session)
+    await delete_media_item(praxis, media_item, session, era=CURRENT_ERA)
     return Response(status_code=204)
 
 

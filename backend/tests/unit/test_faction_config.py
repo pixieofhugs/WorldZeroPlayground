@@ -19,7 +19,7 @@ is the drift that produced Coven's and Albescent's since-corrected false claims
 from dataclasses import replace
 
 from game_config import _ANY_PERK_FIELDS, ERA_1
-from services.praxis import multi_membership_faction_slugs
+from services.signup_eligibility import multi_membership_faction_slugs
 
 # Albescent holds every other faction's perk (#1871), so "only faction X has
 # perk P" is now a claim about the factions that DECLARE P. Read the inheritors

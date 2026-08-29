@@ -27,7 +27,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { listPraxes, deletePraxisMedia, uploadPraxisMedia, uploadPraxisMediaBatch } from '../praxis'
 import { getDuelDetail } from '../duel'
-import { __resetCastTallies } from '../../components/vote/castTallies'
+import { __resetCastTallies } from '../../utils/castTallies'
 
 const wire = vi.hoisted(() => {
   const sent: Request[] = []

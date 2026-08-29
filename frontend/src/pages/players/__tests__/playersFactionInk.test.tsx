@@ -38,8 +38,6 @@
  * follows that. Which is why this file did not become redundant when the rule
  * landed, and why both now read one shared `utils/__tests__/inkSeam.ts`.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -63,6 +61,7 @@ vi.mock('../../../hooks/useTheme', () => ({
 import DesktopPlayers from '../DesktopPlayers'
 import MobilePlayers from '../MobilePlayers'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
+import { readIndexCss } from '../../../test/indexCss'
 
 // ── The two grounds ────────────────────────────────────────────────────────
 //
@@ -79,8 +78,7 @@ import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../players
 //                        rendered, and it is the layer this repo has now missed
 //                        three times (#1715, #1579, and the declaration comment
 //                        at `--faction-ua-on-fill`).
-const CSS_PATH = fileURLToPath(new URL('../../../index.css', import.meta.url))
-const THEMES = readThemes(readFileSync(CSS_PATH, 'utf8'))
+const THEMES = readThemes(readIndexCss())
 
 function token(name: string, theme: Theme): Rgba {
   const raw = resolveVar(name, theme, THEMES)

@@ -32,7 +32,8 @@
  *  - **`pending` / `active`** — the run-up, which belongs to the composer. Note
  *    it is still REACHABLE here: a duel side that has cast is `submitted` with
  *    the duel `active`, so ADR-0062's published-only redirect does not catch it,
- *    and `_duel_side_hidden_condition` (`services/praxis.py`) leaves the AUTHOR
+ *    and `duel_side_hidden_condition` (`services/praxis_visibility.py`) leaves
+ *    the AUTHOR
  *    able to load their own live side. They get the composer's waiting surface
  *    at `/praxis/{id}/edit`, which narrates the wait properly; a second, thinner
  *    account of the same beat here is the one-state-two-owners problem ADR-0062
@@ -112,7 +113,7 @@ const AVATAR_SIZE = 30
  * the guard only reads inks and grounds. Nothing else about this comment is
  * advisory any more.
  */
-export interface DuelCardInk {
+interface DuelCardInk {
   /** The duellist's name. Default `--faction-default-card-text`. */
   name?: string
   /** A side's total, and the em-dash standing in for an absent one. Default `--faction-default-card-text`. */
@@ -282,7 +283,7 @@ function sidesForPraxis(
     : { mine: duel.challenger, rival: duel.opponent }
 }
 
-export interface DuelCardProps {
+interface DuelCardProps {
   state: PraxisDetailState
   /** The archetype's panel chrome, so a faction skin dresses the card as its own. */
   style?: CSSProperties

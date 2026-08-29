@@ -19,13 +19,12 @@
  * No DOM and no layout here, and none is needed: the defect is entirely in
  * which selector declares what.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { declarationsIn, ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../test/indexCss'
 
 const css = stripComments(
-  readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8'),
+  readIndexCss(),
 )
 const dark = declarationsIn(ruleBodies(css, '[data-theme="dark"]'))
 const light = declarationsIn(ruleBodies(css, ':root'))

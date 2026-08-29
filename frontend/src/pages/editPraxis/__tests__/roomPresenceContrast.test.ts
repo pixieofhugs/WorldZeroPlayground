@@ -42,9 +42,10 @@ import { readThemes, resolveVar, type Theme } from "../../../utils/__tests__/css
 import { paintedAwareness, type AwarenessLike } from "../roomPresence";
 import { BODY_EDITOR_BASE_THEME } from "../archetypes/bodyEditorTheme";
 import { resolveRoleReads } from "../../../test/sourceScan";
+import { readIndexCss } from "../../../test/indexCss";
 
 const THEMES = readThemes(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 const BOTH_THEMES: Theme[] = ["light", "dark"];
 

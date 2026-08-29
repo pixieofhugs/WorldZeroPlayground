@@ -24,13 +24,12 @@
  * (#2000): a faction wordmark is a MARK and must never carry this. It belongs
  * on prose the player typed, which is exactly what this class dresses.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 describe(".markdown-preview", () => {

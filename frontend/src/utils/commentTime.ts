@@ -18,7 +18,7 @@ import { hasOwnKey } from './hasOwnKey'
  * and that is deliberate: see DIALECTS below for why #783 requires it.
  */
 
-export interface TimeDelta {
+interface TimeDelta {
   minutes: number
   hours: number
   days: number

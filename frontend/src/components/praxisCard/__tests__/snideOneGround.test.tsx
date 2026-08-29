@@ -22,8 +22,6 @@
  * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
  * are assertions about markup given props — never interaction.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
@@ -31,6 +29,7 @@ import "../../../i18n";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 import type { PraxisCardOut } from "../../../api/praxis";
 import SnidePraxisCard from "../desktop/SnidePraxisCard";
+import { readIndexCss } from "../../../test/indexCss";
 
 // `useTheme()` throws outside a `ThemeProvider` by design (#701) and the score
 // stamp reaches for it. Mocked rather than wrapped, the shape `covenSlipSheet`
@@ -43,7 +42,7 @@ vi.mock("../../../hooks/useTheme", () => ({
 /** Comments stripped: this file reads RULES, and every claim below is also
  *  spelt out in prose beside the rules it is about. */
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 function praxis(overrides: Partial<PraxisCardOut> = {}): PraxisCardOut {

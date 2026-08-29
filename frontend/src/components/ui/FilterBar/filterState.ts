@@ -11,7 +11,7 @@
 import type { ReactNode } from 'react'
 
 /** One choice on a rail. `value` is what the page stores and puts in the URL. */
-export interface FilterSegment {
+interface FilterSegment {
   value: string
   label: string
 }
@@ -75,7 +75,7 @@ export interface FilterFacet {
 }
 
 /** A removable statement of one applied filter. */
-export interface AppliedChip {
+interface AppliedChip {
   key: string
   label: string
   /** Set only when the chip's facet draws one — see `FilterFacet`. */
@@ -125,7 +125,7 @@ export interface SegmentBox {
 }
 
 /** Inline geometry for the sliding thumb. */
-export interface ThumbGeometry {
+interface ThumbGeometry {
   left: string
   top: string
   width: string

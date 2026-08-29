@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 /** Decorative disclosure caret. An expression, so it is not user-facing copy. */
 const CARET_GLYPH = '▾'
 
-export interface SectionHeadingProps {
+interface SectionHeadingProps {
   title: string
   /** The "{{count}} players" chip the roster heading carries. */
   meta?: ReactNode

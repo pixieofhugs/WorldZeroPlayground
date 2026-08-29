@@ -51,6 +51,7 @@ import { describe, it, expect } from "vitest";
 
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
 import { resolveRoleReads } from '../../../test/sourceScan'
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -59,107 +60,17 @@ const read = (relative: string): string =>
 const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../EverymenSelectCard.tsx";
-const TASK_CARD = "../../taskCard/EverymenTaskCard.tsx";
-const BANDS = "../../cardMasthead/factionBands.tsx";
-/**
- * The card's sign-up paint, which stopped being spelt in the card in #2642: one
- * constant per faction, spread by the card AND by the task detail, so the two
- * can no longer drift. It is the same reach the band already needed — the card
- * AS RENDERED, not the one file — and `cardCta.ts` holds all nine, so only
- * `EVERYMEN_CARD_CTA`'s own binding counts.
- */
-const CARD_CTA = "../../taskCard/cardCta.ts";
 
-/** Every top-level binding in a module, mapped to its own declaration text. */
-function declarations(source: string): Map<string, string> {
-  const heads = [...source.matchAll(/^(?:export (?:default )?)?(?:const|function) ([A-Za-z_$][\w$]*)/gm)];
-  return new Map(
-    heads.map((head, i) => [
-      head[1],
-      source.slice(head.index!, i + 1 < heads.length ? heads[i + 1].index! : source.length),
-    ]),
-  );
-}
+const themes = readThemes(readIndexCss());
 
 /**
- * The custom properties a binding paints with, following the module's own
- * aliases. One level of grep misses `EverymenBand`'s face: the band spells
- * `POSTER`, and `POSTER` is a sibling binding holding
- * `--faction-everymen-card-font`.
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no token its own task card does not" (#2321) — now live
+ * in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all nine
+ * kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to Everymen.
  */
-function propsBehind(
-  decls: Map<string, string>,
-  names: readonly string[],
-  seen = new Set<string>(),
-): Set<string> {
-  const found = new Set<string>();
-  for (const name of names) {
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const declaration = decls.get(name);
-    if (!declaration) continue;
-    for (const [, prop] of declaration.matchAll(/(--[a-z0-9-]+)/g)) found.add(prop);
-    const onward = [...decls.keys()].filter(
-      (other) => other !== name && new RegExp(`\\b${other}\\b`).test(declaration),
-    );
-    for (const prop of propsBehind(decls, onward, seen)) found.add(prop);
-  }
-  return found;
-}
-
-/**
- * Faction paint and faces. Everymen's kit is spelt under the BARE
- * `--everymen-*` prefix as well as `--faction-everymen-*`, which is why this
- * predicate is wider than S.N.I.D.E.'s or Singularity's — a filter that only
- * knew `--faction-` would have reported the field register clean.
- *
- * House tokens — `--space-*`, the `--text-*` ramp, `--color-*` — are every
- * tile's and are not a faction family.
- */
-const isFactionPaint = (prop: string): boolean =>
-  prop.startsWith("--faction-") || prop.startsWith("--font-") || prop.startsWith("--everymen-");
-
-const propsIn = (source: string): Set<string> =>
-  new Set([...source.matchAll(/--[a-z0-9-]+/g)].map((match) => match[0]).filter(isFactionPaint));
-
-function registerTokens(): Set<string> {
-  const bandDecls = declarations(code(BANDS));
-  expect(
-    [...bandDecls.keys()],
-    "no `EverymenBand` in cardMasthead/factionBands.tsx",
-  ).toContain("EverymenBand");
-  const props = propsIn(code(TASK_CARD));
-  for (const prop of propsBehind(bandDecls, ["EverymenBand"])) {
-    if (isFactionPaint(prop)) props.add(prop);
-  }
-  const ctaDecls = declarations(code(CARD_CTA));
-  expect([...ctaDecls.keys()], "no `EVERYMEN_CARD_CTA` in taskCard/cardCta.ts").toContain(
-    "EVERYMEN_CARD_CTA",
-  );
-  for (const prop of propsBehind(ctaDecls, ["EVERYMEN_CARD_CTA"])) {
-    if (isFactionPaint(prop)) props.add(prop);
-  }
-  return props;
-}
-
-const themes = readThemes(read("../../../index.css"));
-
 describe("the Everymen tile wears the bill's register (#2327)", () => {
-  it("names no token its own task card does not", () => {
-    const register = registerTokens();
-    const strays = [...propsIn(code(TILE))].filter((prop) => !register.has(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with and the TASK CARD
-never names — the shape #2321 calls a forked family. Both halves are real
-tokens, so no lint, census or contrast sweep can see it, and in LIGHT the two
-grounds are even the same hex. Fix it by finding the role on the bill that
-answers the same question, or by saying in the PR that the task card has no
-answer — not by widening this test.`,
-    ).toEqual([]);
-  });
-
   it("leaves the poster FIELD register off the tile for good", () => {
     // The specific fork, named, so a failure says WHICH one came back. The
     // sweep above would also go quiet if the task card ever gained one of
@@ -229,15 +140,5 @@ answer — not by widening this test.`,
     expect(source, "the identity mark is the canonical `EverymenSigil`").toContain("EverymenSigil");
     expect(source, "the furniture cog is the one drawing from #2121").toContain("EverymenCog");
     expect(source, "a surface that spells the cog's path is drawing it twice").not.toContain("EVERYMEN_COG_PATH");
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });

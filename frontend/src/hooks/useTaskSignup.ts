@@ -24,7 +24,7 @@ import { extractError } from '../utils/errors'
  * `{ id, msg, ok }` on `/tasks` alone and no caller ever set `ok: true` nor
  * read `id`, so it reconciles down to the string the other two already used.
  */
-export interface TaskSignup {
+interface TaskSignup {
   /** Why the last sign-up failed, or `null`. Cleared at the start of each try. */
   signupMsg: string | null
   handleSignup: (id: number) => Promise<void>

@@ -22,8 +22,15 @@ Design choices:
 from dataclasses import dataclass
 
 from game_config import CURRENT_ERA, EraConfig
+from services.era_gates import (
+    may_apply_metatask,
+    may_comment,
+    may_propose_metatask,
+    may_propose_task,
+    may_see_pending_tasks,
+    may_see_retired_tasks,
+)
 from services.level_jump import available_level_reach, faction_level_jump_reach
-from services.meta_task import faction_bypasses_metatask_level
 
 
 @dataclass(frozen=True)
@@ -72,13 +79,6 @@ def compute_capabilities(
     level_jump_used_at_level: int | None = None,
 ) -> CharacterCapabilities:
     granted_reach = faction_level_jump_reach(faction_slug, era)
-    # Stated once, before the three returns, because it is the same answer in
-    # all of them: the faction bypass alone is enough, so an Albescent member
-    # below the level still gets True (#1973).
-    can_apply_metatask = character_level is not None and (
-        faction_bypasses_metatask_level(faction_slug, era)
-        or character_level >= era.metatask_apply_level
-    )
     # Level 0 is the tutorial state, and it has precisely one thing to do: a
     # character reaches level 1 *by* signing up for the game-wide level-0
     # onboarding task and posting a praxis for it (era_1.py, level profiles).
@@ -97,53 +97,36 @@ def compute_capabilities(
             > 0
         )
 
-    if is_admin:
-        return CharacterCapabilities(
-            can_propose_task=True,
-            can_propose_metatask=True,
-            can_see_retired_tasks=True,
-            can_see_pending_tasks=True,
-            can_comment=True,
-            can_apply_metatask=can_apply_metatask,
-            level_jump_reach=granted_reach,
-            level_jump_available=jump_available,
-            task_browse_defaults_to_eligible=browse_defaults_to_eligible,
-        )
-
-    if character_level is None:
-        return CharacterCapabilities(
-            can_propose_task=False,
-            can_propose_metatask=False,
-            can_see_retired_tasks=False,
-            can_see_pending_tasks=False,
-            can_comment=False,
-            can_apply_metatask=False,
-            level_jump_reach=granted_reach,
-            level_jump_available=False,
-            task_browse_defaults_to_eligible=browse_defaults_to_eligible,
-        )
-
+    # Every threshold comparison below is stated exactly once, in
+    # ``services.era_gates`` — this function only wires character state onto
+    # the named predicate for each unlock (#2867). ``is_admin`` and
+    # ``character_level is None`` are each predicate's own concern (see that
+    # module's docstrings for which gates admin bypasses and which it does
+    # not — ``may_apply_metatask`` deliberately does not).
     return CharacterCapabilities(
-        can_propose_task=character_level >= era.level_to_propose_task,
-        can_propose_metatask=character_level >= era.level_to_propose_metatask,
-        # Both thresholds are enforced by ``services.task.list_tasks``, which is
-        # what makes these two flags honest. They were not: retired was gated
-        # here and by nothing there (anonymous callers could read the archive),
-        # and pending was gated here by level but there by ``is_admin`` alone
-        # (#1672), so a level-3 player was offered a filter tab that always
-        # answered nothing.
-        #
-        # The faction clause mirrors the same clause in ``list_tasks`` — a
-        # faction the era lets work retired tasks can reach them from level 0,
-        # so the tab must be offered from level 0 too, or the flag is lying
-        # again in the other direction.
-        can_see_retired_tasks=(
-            character_level >= era.level_to_see_retired_tasks
-            or faction_slug in era.allow_praxis_on_retired_task_factions
+        can_propose_task=may_propose_task(
+            character_level, faction_slug, is_admin, era
         ),
-        can_see_pending_tasks=character_level >= era.level_to_see_pending_tasks,
-        can_comment=character_level >= era.comment_level_required,
-        can_apply_metatask=can_apply_metatask,
+        can_propose_metatask=may_propose_metatask(
+            character_level, faction_slug, is_admin, era
+        ),
+        # Enforced by ``services.task.list_tasks``, which is what makes these
+        # two flags honest. They were not: retired was gated here and by
+        # nothing there (anonymous callers could read the archive), and
+        # pending was gated here by level but there by ``is_admin`` alone
+        # (#1672), so a level-3 player was offered a filter tab that always
+        # answered nothing. The two enforcement sites still restate these
+        # clauses today — #2868 repoints them onto the same predicates.
+        can_see_retired_tasks=may_see_retired_tasks(
+            character_level, faction_slug, is_admin, era
+        ),
+        can_see_pending_tasks=may_see_pending_tasks(
+            character_level, faction_slug, is_admin, era
+        ),
+        can_comment=may_comment(character_level, faction_slug, is_admin, era),
+        can_apply_metatask=may_apply_metatask(
+            character_level, faction_slug, is_admin, era
+        ),
         level_jump_reach=granted_reach,
         level_jump_available=jump_available,
         task_browse_defaults_to_eligible=browse_defaults_to_eligible,

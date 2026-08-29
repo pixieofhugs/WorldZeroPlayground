@@ -130,7 +130,7 @@ export default function WowFactionHero({
               margin: "0 0 var(--space-lg)",
             }}
           >
-            {i18n.t("feed:factionHero.wow.motto")}
+            {i18n.t("feed:factionSelect.wow.tagline")}
           </p>
 
 

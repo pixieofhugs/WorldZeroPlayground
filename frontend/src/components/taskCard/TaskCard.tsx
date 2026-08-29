@@ -48,7 +48,7 @@ export interface CardProps {
  * `inProgressCount` is a plain read off the task. Defaulting once here beats
  * spelling both out at every call site — and keeps the skin contract total.
  */
-export type TaskCardProps =
+type TaskCardProps =
   Omit<CardProps, 'multiplier' | 'inProgressCount'>
   & Partial<Pick<CardProps, 'multiplier' | 'inProgressCount'>>
 

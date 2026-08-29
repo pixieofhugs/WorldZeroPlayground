@@ -43,7 +43,7 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 
 /** The costume knobs a faction fills in. Everything is a CSS var reference or
  *  faction-appropriate copy — no literal hex, no per-theme branching. */
-export interface ProfileKit {
+interface ProfileKit {
   /** faction_slug this kit skins (drives the shared CredentialCard skin). */
   slug: string
   /** Fixed theme for always-dark/always-light factions; scoped to the

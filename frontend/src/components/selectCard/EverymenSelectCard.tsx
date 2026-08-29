@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { EverymenSigil } from "../sigil/EverymenSigil";
 import { EverymenCog } from "../factionMarks/everymenCogs";
@@ -216,7 +217,7 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
         </div>
 
         <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
-          <div style={{ ...LABEL, fontSize: "var(--text-title)", lineHeight: 1.05 }}>{i18n.t("feed:factionSelect.everymen.name")}</div>
+          <div style={{ ...LABEL, fontSize: "var(--text-title)", lineHeight: 1.05 }}>{redactableText("factions:names.everymen")}</div>
           <div style={{ fontFamily: TYPED, fontSize: "var(--text-content)", color: "var(--everymen-muted)", marginBottom: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.everymen.tagline")}</div>
           <div style={{ ...LABEL, fontSize: "var(--text-display)", letterSpacing: "0.01em", lineHeight: 0.96 }}>
             {i18n.t("feed:factionSelect.everymen.headline")}

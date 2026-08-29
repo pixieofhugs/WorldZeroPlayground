@@ -181,7 +181,7 @@ export function orderedMembers(praxis: PraxisOut): PraxisMemberOut[] {
 }
 
 /** One face in the byline's stack of discs/plates/octagons. */
-export interface BylineFace {
+interface BylineFace {
   id: number
   name: string
   /**
@@ -585,7 +585,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
  *    member's `has_submitted` clears, not just the viewer's.
  *  - `solo` — the original copy, unchanged.
  */
-export type UnsubmitCase = 'solo' | 'collabGroup' | 'collabOwnPart' | 'duelLive'
+type UnsubmitCase = 'solo' | 'collabGroup' | 'collabOwnPart' | 'duelLive'
 
 export function unsubmitCase(
   praxis: PraxisOut,

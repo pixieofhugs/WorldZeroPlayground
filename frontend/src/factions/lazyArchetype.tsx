@@ -52,7 +52,7 @@ import { useEffect, useState, type ComponentProps, type ComponentType } from 're
 type AnyArchetype = ComponentType<any>
 
 /** A deferred archetype that can be forced to resolve ahead of render. */
-export type LazyArchetype<C extends AnyArchetype> = C & {
+type LazyArchetype<C extends AnyArchetype> = C & {
   preload: () => Promise<void>
   /** The component this resolved to, or undefined before `preload()` has run. */
   resolved: () => C | undefined

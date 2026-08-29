@@ -173,7 +173,7 @@ export default function EverymenFactionHero({
                 padding: "4px 14px",
               }}
             >
-              {i18n.t("feed:factionHero.everymen.motto")}
+              {i18n.t("feed:factionSelect.everymen.tagline")}
             </div>
           </div>
         </div>

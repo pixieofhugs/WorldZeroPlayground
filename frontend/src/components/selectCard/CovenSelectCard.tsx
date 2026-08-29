@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { CovenSigil } from "../sigil/CovenSigil";
 import {
@@ -134,7 +135,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-xl) 0" }}>
         <CovenSigil size={34} color={DEEP} />
         <div style={{ fontFamily: HAND, fontSize: "var(--text-title)", lineHeight: 1, textTransform: "lowercase", color: INK, whiteSpace: "nowrap" }}>
-          {i18n.t("feed:factionSelect.coven.name")}
+          {redactableText("factions:names.coven")}
         </div>
       </div>
       <div style={{ padding: "var(--space-xs) var(--space-xl) 0", fontFamily: READING, fontStyle: "italic", fontSize: "var(--text-content)", color: SOFT }}>{i18n.t("feed:factionSelect.coven.tagline")}</div>

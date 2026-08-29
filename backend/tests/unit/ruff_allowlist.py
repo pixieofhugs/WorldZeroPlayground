@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 641
+RUFF_FINDING_TOTAL = 637
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -148,7 +148,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "scripts/era_reset.py::E501": 8,
     "scripts/reset_e2e_db.py::E501": 3,
     "scripts/reset_render_db.py::E501": 5,
-    "scripts/seed_demo_praxes.py::E501": 11,
+    "scripts/seed_demo_praxes.py::E501": 10,
     "scripts/seed_demo_praxes.py::I001": 1,
     "scripts/sweep_orphan_media.py::E501": 11,
     "seed.py::E501": 3,
@@ -164,7 +164,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/character_stats.py::E501": 4,
     "services/character_stats.py::I001": 1,
     "services/collab_consensus.py::E501": 3,
-    "services/duel.py::E501": 5,
+    "services/duel.py::E501": 4,
     "services/duel.py::I001": 1,
     "services/era.py::E501": 1,
     "services/era.py::I001": 1,
@@ -173,8 +173,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/media.py::I001": 1,
     "services/media_sweep.py::E501": 5,
     "services/media_sweep.py::I001": 1,
-    "services/praxis.py::E501": 21,
-    "services/praxis.py::I001": 1,
+    "services/praxis.py::E501": 18,
     "services/praxis_metatask.py::E501": 1,
     "services/praxis_out.py::E501": 8,
     "services/praxis_out.py::I001": 1,
@@ -183,8 +182,8 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/relationship_service.py::E501": 1,
     "services/relationship_service.py::I001": 1,
     "services/scoring.py::E501": 1,
+    "services/signup_eligibility.py::E501": 3,
     "services/task.py::E501": 6,
-    "services/task.py::I001": 1,
     "services/vote.py::E501": 3,
     "tests/integration/conftest.py::E501": 6,
     "tests/integration/factories.py::E501": 3,

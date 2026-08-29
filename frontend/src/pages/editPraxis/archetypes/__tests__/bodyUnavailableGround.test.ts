@@ -78,9 +78,9 @@ import {
   stripComments,
   type Theme,
 } from '../../../../utils/__tests__/cssVars'
+import { readIndexCss } from '../../../../test/indexCss'
 
-const CSS_PATH = fileURLToPath(new URL('../../../../index.css', import.meta.url))
-const CSS = readFileSync(CSS_PATH, 'utf8')
+const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
@@ -131,8 +131,9 @@ const UNAVAILABLE = '[data-composer-body][aria-disabled="true"]'
  * Eight rows, not nine — `na` and `albescent` both resolve to `default`
  * (ADR-0039), the same split `roomPresenceContrast.test.ts` makes one directory
  * up. `placeholder` is `--label-ink` as it resolves inside that skin: the
- * global unset everywhere but the Ephemerists plate, which re-points the seam
- * on its own root (#1819).
+ * global unset everywhere but the two near-black composers, which re-point the
+ * seam on their own root (#1819) — the Ephemerists plate (#1800) and, since
+ * #2831, the Singularity terminal.
  *
  * `source` is the parity guard's anchor. These rows are hand-written and can rot
  * the moment an archetype repoints its field, so the last block below checks
@@ -145,7 +146,7 @@ const SKINS = [
   { key: 'coven', field: '--faction-coven-ward-page', sheet: '--faction-coven-ward-card', placeholder: '--color-text-tertiary', source: 'CovenEditPraxis.tsx' },
   { key: 'snide', field: '--faction-snide-composer-field', sheet: '--faction-snide-composer-sheet', placeholder: '--color-text-tertiary', source: 'SnideEditPraxis.tsx' },
   { key: 'ephemerists', field: '--faction-ephemerists-plate-inner', sheet: '--faction-ephemerists-plate-bg', placeholder: '--faction-ephemerists-plate-quiet', source: 'EphemeristsEditPraxis.tsx' },
-  { key: 'singularity', field: '--faction-singularity-term-panel', sheet: '--faction-singularity-term-bg', placeholder: '--color-text-tertiary', source: 'SingularityEditPraxis.tsx' },
+  { key: 'singularity', field: '--faction-singularity-term-panel', sheet: '--faction-singularity-term-bg', placeholder: '--faction-singularity-term-dim', source: 'SingularityEditPraxis.tsx' },
   { key: 'everymen', field: '--faction-everymen-sheet-panel', sheet: '--everymen-paper', placeholder: '--color-text-tertiary', source: 'EverymenEditPraxis.tsx' },
 ] as const
 

@@ -132,7 +132,7 @@ export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribeReducedMotion, readReducedMotion, readReducedMotion)
 }
 
-export interface MotionState {
+interface MotionState {
   /** What the reader chose. Not necessarily what is in effect — see `motion`. */
   readonly chosen: Motion
   /** What is actually in effect, after the OS has had its say. */

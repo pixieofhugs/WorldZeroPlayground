@@ -208,18 +208,24 @@ describe("Albescent's name is masked, and two surfaces redact instead (#2409)", 
     expect(factionDescription("albescent")).not.toBe(REDACTED);
 
     // A SURFACE THAT IS ABOUT THE SOCIETY — the `/factions` select tile and the
-    // leaderboard's eighth lane. They ask, and get the mark.
-    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
+    // leaderboard's eighth lane. They ask, and get the mark. The tile reads the
+    // CANONICAL name key since #2806, which is the same key `factionName`
+    // reads one line above — so the two halves of the ruling now sit on ONE
+    // string, and the split is purely in which function asks for it.
+    expect(redactableText("factions:names.albescent")).toBe(REDACTED);
     expect(isFactionRedacted("albescent")).toBe(true);
   });
 
   it("redacts every Albescent-scoped key, not just the name", () => {
     setAlbescentRevealed(false);
     // The generalisation #2409 asks for. The select tile draws its slots off
-    // `feed:factionSelect.albescent.*`; one gate has to cover all of them or
-    // each is a place a future slot can be forgotten.
+    // `feed:factionSelect.albescent.*` — and, since #2806, its NAME off
+    // `factions:names.albescent` in a second namespace. One gate has to cover
+    // all of them or each is a place a future slot can be forgotten, and the
+    // two namespaces below are what makes "matches the segment, not the
+    // prefix" a tested property rather than a docblock claim.
     for (const key of [
-      "feed:factionSelect.albescent.name",
+      "factions:names.albescent",
       "feed:factionSelect.albescent.blurb",
       "feed:factionSelect.albescent.status.locked",
       "feed:factionSelect.albescent.cta",
@@ -248,7 +254,7 @@ describe("Albescent's name is masked, and two surfaces redact instead (#2409)", 
     // extra frame costs nothing, a name leaked once cannot be taken back.
     expect(factionName("albescent")).toBe(factionName("na"));
     expect(isFactionRedacted("albescent")).toBe(true);
-    expect(redactableText("feed:factionSelect.albescent.name")).toBe(REDACTED);
+    expect(redactableText("factions:names.albescent")).toBe(REDACTED);
   });
 
   it("paints and disables off the SAME answer the words redact on", () => {

@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import { factionRoleVars } from "../../utils/factionRoles";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
@@ -106,8 +107,10 @@ import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
  * plaque, unit". Gathering a register inherits its measurements, and that no new
  * row was needed is the evidence the register was gathered rather than invented.
  *
- * The wordmark is `feed:factionSelect.wow.name`. #2332 set `descriptions.wow`
- * and `factionHero.wow.motto` to the literal PLACEHOLDER deliberately; this tile
+ * The wordmark is the CANONICAL `factions:names.wow`, read through
+ * `redactableText` like the other eight tiles (#2806) — this surface kept its
+ * own byte-identical copy of the name until then. #2332 set `descriptions.wow`
+ * and the hero's motto to the literal PLACEHOLDER deliberately; this tile
  * renders neither, so no copy here is touched by that.
  */
 export default function WowSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
@@ -153,7 +156,7 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
           <WowSigil size={88} />
         </div>
         <div style={{ fontFamily: "var(--wow-select-card-face)", fontSize: "var(--text-title)", lineHeight: 1.1, color: "var(--wow-select-card-ink)" }}>
-          {i18n.t("feed:factionSelect.wow.name")}
+          {redactableText("factions:names.wow")}
         </div>
         <p className="content-text" style={{ fontStyle: "italic", color: "var(--wow-select-card-accent)", margin: "var(--space-xs) 0 var(--space-md)", lineHeight: 1.4 }}>
           {i18n.t("feed:factionSelect.wow.tagline")}

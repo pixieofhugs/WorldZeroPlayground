@@ -39,7 +39,7 @@ import { factionRoleVars } from "../../utils/factionRoles";
 
 const MONO = "var(--sg-readout-face)"; /* Share Tech Mono */
 
-export interface SingularityReadoutProps {
+interface SingularityReadoutProps {
   /**
    * The figure. Pre-formatted by the caller — the task card prints an integer
    * point value and the stamp prints `formatPoints(total)`, and neither

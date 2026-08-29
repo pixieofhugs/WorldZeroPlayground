@@ -34,6 +34,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 import UaTaskCard from '../UaTaskCard'
 import UaMandala from '../../factionMarks/UaMandala'
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from '../../../test/indexCss'
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',
@@ -258,10 +259,7 @@ describe('the flanking mandalas pop and cycle hue (#2072)', () => {
     }
     // Both halves of every stop are declared, so the ramp is not a dark-only
     // palette leaking onto the light card.
-    const css = readFileSync(
-      fileURLToPath(new URL('../../../index.css', import.meta.url)),
-      'utf8',
-    )
+    const css = readIndexCss()
     const stops = new Set(
       ['ua-hue-outer', 'ua-hue-mid', 'ua-hue-inner']
         .flatMap((name) => [...keyframes(name).matchAll(/var\((--[\w-]+)\)/g)])

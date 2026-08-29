@@ -32,14 +32,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 }))
 
 // Imported after the mock is registered.
-import CovenTaskCard from '../CovenTaskCard'
-import EphemeristsTaskCard from '../EphemeristsTaskCard'
-import EverymenTaskCard from '../EverymenTaskCard'
 import AlbescentTaskCard from '../AlbescentTaskCard'
-import SingularityTaskCard from '../SingularityTaskCard'
 import SnideTaskCard from '../SnideTaskCard'
-import UaTaskCard from '../UaTaskCard'
-import WowTaskCard from '../WowTaskCard'
 import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
@@ -63,16 +57,24 @@ interface Skin {
  */
 const SIGNUP = i18n.t('feed:taskCard.signup')
 
-const SKINS: Skin[] = [
-  { slug: 'coven', Card: CovenTaskCard },
-  { slug: 'ephemerists', Card: EphemeristsTaskCard },
-  { slug: 'everymen', Card: EverymenTaskCard },
-  { slug: 'albescent', Card: AlbescentTaskCard },
-  { slug: 'singularity', Card: SingularityTaskCard },
-  { slug: 'snide', Card: SnideTaskCard },
-  { slug: 'ua', Card: UaTaskCard },
-  { slug: 'wow', Card: WowTaskCard },
-]
+/**
+ * Every skin the taskCard surface dispatches to, read off the registry rather
+ * than listed here (#2815).
+ *
+ * The table used to name eight components by hand, which made the range
+ * something someone had to remember: a tenth kit could register a card and
+ * never be rendered by this file. `surfaceMap('taskCard')` IS the dispatch, so
+ * the loop now covers whatever the app can actually reach — including `na`,
+ * whose `DefaultTaskCard` answers the same {@link CardProps} contract and had
+ * simply been left off.
+ *
+ * The wrappers render synchronously here because `src/test/preloadArchetypes.ts`
+ * warms every archetype before the suite runs; see `factions/lazyArchetype.tsx`.
+ */
+const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) => ({
+  slug,
+  Card,
+}))
 
 /**
  * Every value of `services/praxis.py`'s `SignupDenialReason`, with the copy the
@@ -254,10 +256,13 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
   })
 })
 
-describe.each(SKINS)('$slug renders through the taskCard manifest surface', (skin) => {
-  it('is the registered skin for its slug', () => {
-    expect(surfaceMap('taskCard')[skin.slug]).toBeDefined()
-  })
+// `$slug renders through the taskCard manifest surface` stood here and asserted
+// `surfaceMap('taskCard')[skin.slug]` was defined. Once SKINS comes from that
+// very map (#2815) it asserts the map equals itself, so it is gone rather than
+// left to read like coverage. What it was really guarding — which slugs are
+// registered on which surface — is `factions/__tests__/surfaceDispatch.test.ts`.
+it('covers every skin the app can dispatch taskCard to', () => {
+  expect(SKINS).toHaveLength(9)
 })
 
 /* -------------------------------------------------------------------------- */

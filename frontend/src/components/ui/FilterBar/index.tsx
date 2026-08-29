@@ -13,7 +13,7 @@ export { default as OptionPicker } from './OptionPicker'
 const REMOVE_GLYPH = '×'
 const CARET_GLYPH = '▾'
 
-export interface FilterBarProps {
+interface FilterBarProps {
   /** 2–6 segments each, one value per rail, one `ORDER BY` per rail. */
   rails: FilterRail[]
   /**

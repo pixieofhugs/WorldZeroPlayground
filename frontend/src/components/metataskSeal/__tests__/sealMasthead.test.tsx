@@ -26,7 +26,8 @@
  * decoration: the band is a `<Link>`, so mounting it drags a router requirement
  * into every host that renders a seal.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { basename } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -35,22 +36,14 @@ import type { ReactElement } from 'react'
 import MetataskSeal from '../MetataskSeal'
 import { PraxisBody } from '../../praxisCard/desktop/shared'
 import praxisCopy from '../../../locales/en/praxis.json'
+import { FACTION_MANIFESTS } from '../../../factions'
 import { factionName } from '../../../utils/factions'
+import { sourceFiles } from '../../../test/sourceScan'
 import type { PraxisCardOut } from '../../../api/praxis'
 import type { TaskOut } from '../../../api/tasks'
 
 /** Every faction that can issue a metatask — all nine mount a band (#2648). */
-const SLUGS = [
-  'albescent',
-  'coven',
-  'ephemerists',
-  'everymen',
-  'na',
-  'singularity',
-  'snide',
-  'ua',
-  'wow',
-] as const
+const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).sort()
 
 function metatask(slug: string): TaskOut {
   return {
@@ -160,7 +153,7 @@ describe('the band names the ISSUING faction, not the host card (#2648)', () => 
 })
 
 describe('no seal skin draws a faction label of its own (#2648)', () => {
-  const skins = readdirSync(SKINS).filter((file) => file.endsWith('.tsx'))
+  const skins = sourceFiles({ dir: SKINS, match: /\.tsx$/ }).map((path) => basename(path))
 
   it('finds all nine skins', () => {
     expect(skins).toHaveLength(9)
@@ -222,7 +215,7 @@ describe('every seal captions itself with the word the band cannot say', () => {
     })
   }
 
-  const skins = readdirSync(SKINS).filter((file) => file.endsWith('.tsx'))
+  const skins = sourceFiles({ dir: SKINS, match: /\.tsx$/ }).map((path) => basename(path))
 
   for (const file of skins) {
     it(`${file} draws the caption in its own hand`, () => {

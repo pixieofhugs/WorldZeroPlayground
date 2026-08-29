@@ -371,7 +371,7 @@ function MobileLevelUpCard({
   )
 }
 
-export interface LevelUpPopupProps {
+interface LevelUpPopupProps {
   level: number
   /** ADR-0031: a progression.json rank key, resolved to prose here. */
   rankKey: string

@@ -27,9 +27,7 @@
  * nowhere else a CTA suite would look: #2144's chart net at 0.10 held the mount
  * until #2195 ruled one ornament per faction, and the gravity field took it.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
@@ -39,11 +37,12 @@ vi.mock("../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" 
 
 import EphemeristsTaskCard from "../../taskCard/EphemeristsTaskCard";
 import { aTask } from "../../../test/fixtures";
+import { sourceFiles, toRelative } from "../../../test/sourceScan";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
-const SRC = fileURLToPath(new URL("../../..", import.meta.url));
 const CSS = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 const TASK = aTask({ description: "Chart the pole nobody has fixed." });
@@ -185,16 +184,7 @@ describe("the CTA block is ONE column, rule and runes alike (#2724)", () => {
 });
 
 describe("every bordered plate CTA wears it, and the list is the assertion", () => {
-  const files: [string, string][] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === "__tests__") continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(entry.name)) files.push([full, readFileSync(full, "utf8")]);
-    }
-  };
-  walk(SRC);
+  const files: [string, string][] = sourceFiles().map((path) => [path, readFileSync(path, "utf8")]);
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
@@ -222,7 +212,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     // kit names this class in prose, and a census a comment can join is a
     // census nobody keeps.
       .filter(([, source]) => WEARS.test(source))
-      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+      .map(([path]) => toRelative(path));
     expect(mounts.sort()).toEqual([
       "components/selectCard/EphemeristsSelectCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
@@ -243,7 +233,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
       /border: (`2px solid \$\{BRASS\}`|"2px solid var\(--faction-ephemerists-plate-brass\)")/;
     const restating = files
       .filter(([, source]) => RESTATEMENT.test(source))
-      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+      .map(([path]) => toRelative(path));
     expect(restating).toEqual([]);
   });
 });

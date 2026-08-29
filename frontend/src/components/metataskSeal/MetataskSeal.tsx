@@ -4,7 +4,7 @@ import type { TaskOut } from '../../api/tasks'
 import { surfaceMap } from '../../factions'
 import { resolveVariant } from '../../utils/factionDispatch'
 
-export interface MetataskSealProps {
+interface MetataskSealProps {
   /**
    * The praxis's applied metatasks (`PraxisOut.applied_metatasks`). One seal is
    * rendered per entry, stacked in order.

@@ -20,15 +20,14 @@
  *      issue asked to remove rather than the symptom. Pinned the way #1638 and
  *      #1654 pinned the Ephemerists plate: against the source tree.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import SingularityFeedFrame from "../../feed/SingularityFeedFrame";
+import { sourceFiles, stripComments, toRelative } from "../../../test/sourceScan";
 
-const SRC = fileURLToPath(new URL("../../..", import.meta.url));
 const KIT = fileURLToPath(new URL("../SingularityLamps.tsx", import.meta.url));
 
 /** The one palette. */
@@ -39,29 +38,14 @@ const TRIO = [
 ] as const;
 
 /**
- * Every shipped `.ts`/`.tsx` under `src/`, comments stripped and tests skipped.
- * Both exclusions matter: this file names the retired constants in prose, and a
+ * Every shipped `.ts`/`.tsx` under `src/`, comments stripped and tests skipped
+ * (the shared walk — `sourceFiles()` skips `__tests__` by default; nothing
+ * under `src/` is `node_modules`, so that former exclusion was never live).
+ * The test-skip matters: this file names the retired constants in prose, and a
  * docblock explaining what was deleted must not answer for a live copy.
  */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === "__tests__" || entry.name === "node_modules") continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({
-          path: full,
-          source: readFileSync(full, "utf8")
-            .replace(/\/\*[\s\S]*?\*\//g, "")
-            .replace(/^\s*\/\/.*$/gm, ""),
-        });
-      }
-    }
-  };
-  walk(SRC);
-  return found;
+  return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, "utf8")) }));
 }
 
 describe("the feed frame's window bar wears the same lamps as every other (#1979)", () => {
@@ -138,9 +122,8 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
     // this list further should check they are removing a mount and not a
     // SURFACE: a card that stopped drawing the bar at all is the regression this
     // roll-call exists to catch, and it looks identical to this edit from here.
-    const rel = (path: string) => path.slice(SRC.length).replace(/\\/g, "/");
     const mounts = sources().filter(({ source }) => source.includes("<SingularityLamps"));
-    expect(mounts.map((file) => rel(file.path)).sort()).toEqual([
+    expect(mounts.map((file) => toRelative(file.path)).sort()).toEqual([
       "components/cardMasthead/factionBands.tsx",
       "components/feed/SingularityFeedFrame.tsx",
       // The sixth window bar (#2353): character creation, dressed as a terminal

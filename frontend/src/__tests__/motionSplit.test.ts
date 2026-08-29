@@ -47,12 +47,13 @@ import { describe, expect, it } from 'vitest'
 
 import { ruleBodies, stripComments } from '../utils/__tests__/cssVars'
 import { readStripped, sourceFiles, toRelative } from '../test/sourceScan'
+import { readIndexCss } from '../test/indexCss'
 
 const read = (name: string): string =>
   readFileSync(fileURLToPath(new URL(`../${name}`, import.meta.url)), 'utf8')
 
 const SHEET = stripComments(read('motion.ornament.css'))
-const INDEX = stripComments(read('index.css'))
+const INDEX = stripComments(readIndexCss())
 
 const GATE = '@media (prefers-reduced-motion: no-preference)'
 

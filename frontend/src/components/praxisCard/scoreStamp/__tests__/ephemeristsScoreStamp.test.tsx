@@ -105,9 +105,10 @@ describe('the stamp reads working-then-total (#2145)', () => {
   it('puts every working row ABOVE the rose', () => {
     const html = render()
     const rose = html.indexOf(NORTH)
-    // `card.stamp.mult` left this list with #2634: the ratio is a bare chip on
-    // the base line now and carries no word, exactly as it never did on the
-    // three stamps that already drew one. The subtotal takes its place.
+    // The multiplier left this list with #2634: the ratio is a bare chip on the
+    // base line now and carries no word, exactly as it never did on the three
+    // stamps that already drew one. The subtotal takes its place. Its catalog
+    // key went with it in #2821, once nothing read it.
     const rows = [
       i18n.t('praxis:card.stamp.base'),
       i18n.t('praxis:card.stamp.subtotal'),
@@ -226,7 +227,15 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     const inner = html.slice(figureAt).replace(/^<span style="[^"]*"[^>]*>/, '')
     // The cell's own text, up to whatever it wraps — the chip, or nothing.
     const figureText = inner.slice(0, inner.search(/</))
-    return { figure: { style: figureStyle, text: figureText }, label: { style, text: label } }
+    // THE WHOLE CELL, tags stripped — the figure AND whatever it wraps. The cell
+    // runs from its own opening tag to the label cell's, so any word added
+    // inside it (a chip label above all) lands in this string. #2821's guard
+    // reads it; nothing else does.
+    const figureAll = html.slice(figureAt, cellAt).replace(/<[^>]*>/g, '')
+    return {
+      figure: { style: figureStyle, text: figureText, all: figureAll },
+      label: { style, text: label },
+    }
   }
 
   /** Base, the multiplier's two terms aside, and the three lines added to it. */
@@ -285,7 +294,20 @@ describe('every line of the working reads figure-then-word (#2285)', () => {
     const cells = row(html, 'base')
     expect(cells.figure.text, 'the base figure still opens its own cell').toBe('18')
     expect(html, 'the ratio, in the number column').toContain('×1.50')
-    expect(html, 'and no word for it').not.toContain(i18n.t('praxis:card.stamp.mult'))
+    // AND NO WORD FOR IT — read off the cell's SHAPE since #2821, not off the
+    // catalog. This line used to ask `i18n.t` for the multiplier's own catalog
+    // entry under `card.stamp` and assert the result absent. #2821 deleted that
+    // orphaned entry, and a missing key makes `i18n.t` hand back the key PATH,
+    // so the assertion would have degraded to "the markup does not contain that
+    // dotted path" — true of every markup ever rendered. The whole base figure
+    // cell, tags stripped, is the figure and the ratio and nothing else, so ANY
+    // word put back in the chip fails this — not just the one word the deleted
+    // key happened to spell.
+    //
+    // (The path is not spelled in full anywhere here on purpose: the #1911 scan
+    // in `locales/__tests__/factionCopyCollapse.test.ts` reads source RAW and
+    // would take a quoted `ns:a.b.c` out of a COMMENT as a live lookup.)
+    expect(cells.figure.all, 'the base cell is its figure and the ratio, no word').toBe('18×1.50')
     // The subtotal's brass rule is the one thing that spans both columns now.
     expect(html).toContain('grid-column:1 / -1')
   })

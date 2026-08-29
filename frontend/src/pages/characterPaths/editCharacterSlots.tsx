@@ -85,7 +85,7 @@ export function FactionRow({ slug }: { slug: string | null | undefined }) {
   )
 }
 
-export interface DeleteCharacterProps {
+interface DeleteCharacterProps {
   /** The EDITED character's faction, which is what paints the alarm ink. */
   slug: string | null | undefined
   deleting: boolean

@@ -62,9 +62,24 @@ import { AuthContext } from '../../auth/AuthContext'
 import InvitationLetterPopup from '../InvitationLetterPopup'
 import AlbescentInvitation from '../AlbescentInvitation'
 import type { CharacterOut, CurrentUser } from '../../api/auth'
+import { FACTION_MANIFESTS } from '../../factions'
 
-/** The seven slugs with an `invitation` block — the shared popup's whole range. */
-const SLUGS = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua', 'wow'] as const
+/**
+ * The shared popup's whole range: every registered kit whose catalog entry
+ * carries an `invitation` block.
+ *
+ * Derived, not typed (#2815) — the kits come from the manifest, so a tenth joins
+ * this loop the moment it ships a letter, and the filter states its own
+ * exclusions rather than hiding them in a written-out list. Two kits fall out
+ * of it today, both on purpose: `na` is a state rather than a faction and has
+ * no catalog block at all, and `albescent` keeps its letter under
+ * `albescent.letter` on its own component — the describe block below is that
+ * letter's test, so it is covered, just not here.
+ */
+const CATALOG = factions as unknown as Record<string, { invitation?: unknown }>
+const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter(
+  (slug) => CATALOG[slug]?.invitation !== undefined,
+)
 
 /** Where the mechanic sits in every letter (`MECHANIC_INDEX`). */
 const MECHANIC = 1
@@ -75,7 +90,7 @@ interface Perk {
   desc: string
 }
 
-function perksOf(slug: (typeof SLUGS)[number]): Perk[] {
+function perksOf(slug: string): Perk[] {
   return (factions as unknown as Record<string, { invitation: { perks: Perk[] } }>)[slug]
     .invitation.perks
 }
@@ -125,6 +140,12 @@ function albescentLetter(): string {
   } as unknown as CharacterOut
   return withAuth(<AlbescentInvitation lives={[life]} onJoined={() => {}} />)
 }
+
+// A filtered derivation can go quietly EMPTY, and `describe.each([])` reports a
+// perfect board when it does. Seven of the nine kits ship a shared letter.
+it('resolves to every kit that ships a shared letter', () => {
+  expect(SLUGS).toHaveLength(7)
+})
 
 describe.each(SLUGS)('the %s letter spends its one box on the perks (#2298)', (slug) => {
   it('prints the mechanic as a name over a description, and the flavour rows as description alone (#2774)', () => {
@@ -268,26 +289,32 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   ]
 
   it.each(MECHANICS)('%s states its mechanic in the middle slot', (slug, name, desc) => {
-    const perk = perksOf(slug as (typeof SLUGS)[number])[MECHANIC]
+    const perk = perksOf(slug)[MECHANIC]
     expect(perk.name).toBe(name)
     expect(perk.desc).toBe(desc)
   })
 
-  it("Albescent's mechanic is named, and its description is owed back", () => {
-    // It was `perks.duties`, named "Enlightenment", until the owner's copy pass
-    // cut `duties` and `witnessed` and put the name she wrote on `record` — the
-    // only perk the letter carries now. The description that travelled with it
-    // stopped mid-clause ("You know how to task"), so on her call it went back
-    // to a placeholder rather than ship unfinished. This is the ONE Albescent
-    // row still owed, and it is owed a desc, not a name.
+  it("Albescent's mechanic is named and written, and says nothing about levels", () => {
+    // It was `perks.duties`, named "Enlightenment", until #2782's copy pass cut
+    // `duties` and `witnessed` and left `record` the only perk the letter
+    // carries. That pass also sent this description back to a placeholder, for
+    // stopping mid-clause ("You know how to task").
+    //
+    // OWNER, 2026-08-28 (#2828): the description is RESTORED VERBATIM, ending
+    // and all. Shown the mid-clause objection and #2782's own diff, she
+    // re-affirmed it and renamed the perk "Transcendence" — the pitch's word for
+    // those who have "transcended the factional competition". THE ENDING IS
+    // DELIBERATE: do not finish the clause, and do not send it back to a
+    // placeholder. That round trip has now happened once.
     const perk = factions.albescent.letter.perks.record as unknown as Perk
-    expect(perk.name).toBe('Abilities')
-    expect(perk.desc).toMatch(/^PLACEHOLDER — /)
+    expect(perk.name).toBe('Transcendence')
+    expect(perk.desc).not.toMatch(/^PLACEHOLDER/)
+    expect(perk.desc).toMatch(/^You see the value in working together,/)
+    expect(perk.desc).toMatch(/You know how to task$/)
     // The owner's draft opened "From levels 1-7…" and closed on level 8. Both
     // sentences were cut deliberately: `inherits_faction_perks` carries no
     // level condition, and `albescent_level_required` is the door in, not a
-    // point where what you hold changes. Nothing about levels may come back —
-    // including in whatever fills this placeholder.
+    // point where what you hold changes. Nothing about levels may come back.
     expect(perk.desc).not.toMatch(/\blevel/i)
   })
 })
@@ -303,7 +330,7 @@ describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
  * where a placeholder is still the honest state, because a description is copy
  * and the letter would say nothing there without it.
  * -------------------------------------------------------------------------- */
-describe('one perk slot is still owed, and nothing else is (#2298 §4, #2774)', () => {
+describe('no perk slot is owed any more (#2298 §4, #2774, #2828)', () => {
   function allPerks(): Array<[string, Perk]> {
     const shared = SLUGS.flatMap((slug) =>
       perksOf(slug).map((perk, idx) => [`${slug}.invitation.perks.${idx}`, perk] as [string, Perk]),
@@ -314,16 +341,19 @@ describe('one perk slot is still owed, and nothing else is (#2298 §4, #2774)', 
     return [...shared, ...alb]
   }
 
-  it("leaves exactly one owed slot — Albescent's mechanic description", () => {
+  it('leaves no owed slot: every perk name and description is written', () => {
     const owed = allPerks().flatMap(([id, perk]) =>
       (['name', 'desc'] as const)
         .filter((field) => perk[field]?.startsWith('PLACEHOLDER'))
         .map((field) => `${id}.${field}`),
     )
-    expect(owed).toEqual(['albescent.letter.perks.record.desc'])
+    expect(owed).toEqual([])
   })
 
-  it('hints that placeholder, so the file says what it wants', () => {
+  // Vacuous today by design — nothing is owed. It is a forward guard: it costs
+  // nothing while the ledger is empty and bites the moment a bare PLACEHOLDER
+  // is added back.
+  it('hints any placeholder, so the file says what it wants', () => {
     for (const [id, perk] of allPerks()) {
       for (const field of ['name', 'desc'] as const) {
         if (!perk[field]?.startsWith('PLACEHOLDER')) continue

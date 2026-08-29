@@ -40,6 +40,7 @@ import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
 import type { TaskDetailState } from "../useTaskDetail";
 import { aTask } from '../../../test/fixtures'
+import { readIndexCss } from "../../../test/indexCss";
 
 const TASK = aTask({
   id: 305,
@@ -223,7 +224,7 @@ describe("Ephemerists task detail — the Valley plate", () => {
 
 describe("the Valley plate's tokens", () => {
   const themes = readThemes(
-    readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+    readIndexCss(),
   );
   const source = readFileSync(
     fileURLToPath(new URL("../archetypes/EphemeristsTaskDetail.tsx", import.meta.url)),

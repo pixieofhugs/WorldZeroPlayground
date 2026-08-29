@@ -44,7 +44,6 @@
     "votedBy": "voted by {{name}}",
     "stamp": {
       "base": "base",
-      "mult": "mult",
       "meta": "meta",
       "habit": "habit",
       "votes": "votes",

@@ -32,8 +32,7 @@
  *    generator, which a copy must carry however it is renamed, inlined or split
  *    up, and the mount census is a separate, looser thing.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -44,12 +43,13 @@ import {
   type NotationSide,
 } from "../EphemeristsNotationBand";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
+import { sourceFiles, toRelative } from "../../../test/sourceScan";
+import { readIndexCss } from "../../../test/indexCss";
 
-const SRC = fileURLToPath(new URL("../../..", import.meta.url));
 const BAND = fileURLToPath(new URL("../EphemeristsNotationBand.tsx", import.meta.url));
 const sheet = (name: string): string =>
   stripComments(readFileSync(fileURLToPath(new URL(`../../../${name}`, import.meta.url)), "utf8"));
-const CSS = sheet("index.css");
+const CSS = stripComments(readIndexCss());
 const MOTION = sheet("motion.ornament.css");
 const GATE = "@media (prefers-reduced-motion: no-preference)";
 
@@ -334,16 +334,7 @@ describe("the two sheets: resting frame here, motion over there", () => {
 
 describe("it is drawn ONCE — keyed on the drawing, not the name (#2230, #2341)", () => {
   /** Every source file under `src/`, tests excluded. */
-  const files: [string, string][] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === "__tests__") continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(entry.name)) files.push([full, readFileSync(full, "utf8")]);
-    }
-  };
-  walk(SRC);
+  const files: [string, string][] = sourceFiles().map((path) => [path, readFileSync(path, "utf8")]);
 
   it("declares the mark pool in exactly one file", () => {
     // THE guard #2230 asks for. `DRIFT` was a 32-mark array on `.epg-glyph` in
@@ -359,7 +350,7 @@ describe("it is drawn ONCE — keyed on the drawing, not the name (#2230, #2341)
     // invisible — both rows still look random.
     const found = files
       .filter(([, source]) => source.includes("0x6d2b79f5"))
-      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+      .map(([path]) => toRelative(path));
     expect(found).toEqual(["components/factionMarks/ephemeristsPlate.tsx"]);
   });
 
@@ -369,7 +360,7 @@ describe("it is drawn ONCE — keyed on the drawing, not the name (#2230, #2341)
     // clock, and both are worth failing on.
     const found = files
       .filter(([path, source]) => path !== BAND && /--epg-(op|delay)/.test(source))
-      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+      .map(([path]) => toRelative(path));
     expect(found).toEqual([]);
   });
 
@@ -389,7 +380,7 @@ describe("it is drawn ONCE — keyed on the drawing, not the name (#2230, #2341)
     // stamping itself on content that is not its own.
     const mounts = files
       .filter(([, source]) => source.includes("<EphemeristsNotationBand"))
-      .map(([path]) => path.slice(SRC.length).replace(/\\/g, "/"));
+      .map(([path]) => toRelative(path));
     expect(mounts.sort()).toEqual([
       "components/factionHero/EphemeristsFactionHero.tsx",
       "components/factionMarks/EphemeristsMasthead.tsx",

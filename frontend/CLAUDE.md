@@ -1,6 +1,28 @@
 # Frontend conventions
 - Read `WORLD_ZERO_STYLE.md` before any UI work
-- Color values live only in `index.css` (CSS vars). Never hardcode hex.
+- **Dependency direction (#2893): `api/` and `utils/` do not import from
+  `components/`, `pages/` or `hooks/`.** Those two are the adapter/logic
+  layers everything else is built on — a route added later, or a test that
+  isolates one, should never have to reason about which components happen to
+  be mounted. When something under `api/`/`utils/` needs logic that was
+  accidentally filed under `components/` or `hooks/` because it has no React
+  in it (a module-scope store, a pure cache), move the non-React part down —
+  see `utils/castTallies.ts` and `utils/resourceCache.ts`, both split out of a
+  `components/`/`hooks/` file that mixed a plain store with a thin React
+  wrapper. `components/vote/pendingCasts.ts` is the older precedent for the
+  shape (`utils/requestsBus.ts`'s pub-sub, called into from the api layer).
+  - **Accepted exception:** `utils/praxis.ts` imports
+    `ScoredPraxis`/`scoreBreakdown` from
+    `components/praxisCard/scoreStamp/scoreBreakdown.ts`. That module is pure
+    (no React) but its real home is the score-stamp component family — ADR-0049
+    /ADR-0053 name it the one shared row-selection authority for all nine
+    faction stamps, and nine sibling `*ScoreStamp.tsx` files plus `ScoreStamp.tsx`
+    already import it by relative path. Relocating it to satisfy one `utils/`
+    caller would pull it out of the component tree that owns its contract to
+    fix a single import direction. Left in place, named here as the recorded
+    exception rather than silently drifted past.
+- Color values live only in the `index.css` tree — `src/css/*.css`, ordered by
+  the `src/index.css` import map (#2891). CSS vars only; never hardcode hex.
 - Faction config: `factions.ts`.
 - **A surface reads a ROLE, not a token.** Spread `factionRoleVars(slug, prefix)` on the
   root you own and read `var(--<prefix>-<role>)` below it — nine roles (`paper`, `ink`,

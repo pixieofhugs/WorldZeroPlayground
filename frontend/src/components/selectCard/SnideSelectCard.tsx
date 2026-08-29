@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { redactableText } from "../../utils/factions";
 import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { SnideSigil } from "../sigil/SnideSigil";
 import { WALL } from "../factionMarks/snideAtoms";
@@ -112,7 +113,7 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
         <SnideSigil size={40} color={ACID} />
         <div>
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
-          <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.snide.name")}</div>
+          <div style={{ fontFamily: IMPACT, fontSize: 34, lineHeight: 0.85, color: ACID, letterSpacing: "0.02em" }}>{redactableText("factions:names.snide")}</div>
           <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           <div style={{ fontSize: "var(--text-base)", fontStyle: "italic", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.snide.tagline")}</div>
         </div>

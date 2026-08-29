@@ -40,8 +40,6 @@
  * above the wash is what excludes it. Hence the z-index floor below is derived
  * from the overlays' own declared values rather than typed in twice.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
@@ -49,6 +47,7 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import { ruleBodies, stripComments } from "../../../utils/__tests__/cssVars";
 import { aPraxis, aPraxisCard } from "../../../test/fixtures";
+import { stripResourceHints } from "../../../test/ssrMarkup";
 import type { AdminProps } from "../shared";
 import type { CharacterOut } from "../../../api/auth";
 import type { MediaItemOut, PraxisCardOut } from "../../../api/praxis";
@@ -60,9 +59,10 @@ import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
 import AlbescentPraxisDetail from "../../../pages/praxisDetail/archetypes/AlbescentPraxisDetail";
 import AlbescentScoreStamp from "../scoreStamp/AlbescentScoreStamp";
 import type { StampablePraxis } from "../scoreStamp/ScoreStamp";
+import { readIndexCss } from "../../../test/indexCss";
 
 const css = stripComments(
-  readFileSync(fileURLToPath(new URL("../../../index.css", import.meta.url)), "utf8"),
+  readIndexCss(),
 );
 
 /** The highest `z-index` declared across a set of rule bodies. */
@@ -95,7 +95,7 @@ function admin(praxis: PraxisCardOut): AdminProps {
 }
 
 const render = (node: ReactElement) =>
-  renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
+  stripResourceHints(renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>));
 
 /** Minimal read-only detail state; `aPraxis` already carries one image. */
 function detailState(): PraxisDetailState {

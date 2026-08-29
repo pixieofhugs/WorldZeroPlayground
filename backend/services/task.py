@@ -17,30 +17,27 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from seed import ONBOARDING_TASK_TITLE
+from services.albescent_reveal import is_albescent_revealed
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
     get_or_create_stats,
 )
-from services.albescent_reveal import is_albescent_revealed
 from services.faction_service import hidden_faction_slugs
+from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
-from services.praxis import (
-    # Private, but the bank-cap count has exactly one correct implementation and
-    # services.duel already imports it the same way. A second COUNT here is how
-    # the filter and the sign-up predicate would start disagreeing.
-    _count_in_progress_praxes,
+from services.signup_eligibility import (
+    SignupFacts,
     active_member_task_ids_subquery,
     allowed_praxis_modes,
+    count_in_progress_praxes,
     evaluate_signup,
-    in_progress_praxis_ids,
     gather_signup_facts,
+    in_progress_praxis_ids,
     is_task_eligible_for_character,
     signup_reason,
     submitted_praxis_ids,
-    SignupFacts,
 )
-from services.level_jump import available_level_reach
 
 
 async def propose_task(
@@ -323,7 +320,7 @@ async def build_task_out_for_viewer(
     every viewer-relative flag below reads the era row, the viewer's stats,
     their bank count and their membership on this task, and all four are
     identical for every task on a page. List routes gather them once via
-    :func:`services.praxis.gather_signup_facts` for the whole page — without
+    :func:`services.signup_eligibility.gather_signup_facts` for the whole page — without
     that, a 50-row page paid six queries per row. Single-task routes may leave
     the default and let this builder gather facts for the one task.
     """
@@ -681,7 +678,7 @@ async def list_tasks(
     no special interaction with ``exclude_character_id``, faction, or status.
 
     ``can_sign_up`` (#1130) narrows the list to the tasks ``viewer`` could claim
-    right now — the SQL half of :func:`services.praxis.evaluate_signup`, the
+    right now — the SQL half of :func:`services.signup_eligibility.evaluate_signup`, the
     single sign-up predicate (ADR-0008). A plain level filter cannot express
     either of the faction abilities that bend the level bar (WOW's once-a-level
     jump, Ephemerists' retired-task access), which is why the whole predicate is
@@ -844,7 +841,7 @@ async def list_tasks(
         # Gate 6 — the bank cap is a gate on the character, not on any task, so
         # it cannot be a predicate. When it is what emptied the list, EVERY row
         # is ineligible and the honest answer is nothing at all.
-        in_progress_count = await _count_in_progress_praxes(viewer.id, session)
+        in_progress_count = await count_in_progress_praxes(viewer.id, session)
         if in_progress_count >= era.max_task_signups:
             return []
         # Gate 1 — metatasks are applied to a praxis, never signed up for.

@@ -24,8 +24,6 @@
  * and nothing on this plate is text; what the plate owes is 1.4.11 on the
  * reached state, and index.css records the walk that buys it.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
@@ -50,6 +48,7 @@ vi.mock('../../../hooks/useTheme', () => ({
 }))
 
 import CovenVote from '../CovenVote'
+import { readIndexCss } from '../../../test/indexCss'
 
 /** No hex may reach the markup — every colour is a token. */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -182,7 +181,7 @@ describe('CovenVote picks a motif from the theme (#2020)', () => {
   })
 })
 
-const CSS = readFileSync(fileURLToPath(new URL('../../../index.css', import.meta.url)), 'utf8')
+const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const ink = (name: string): string => {
   const value = resolveVar(name, 'light', THEMES)

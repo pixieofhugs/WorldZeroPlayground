@@ -67,6 +67,7 @@ import { describe, it, expect } from "vitest";
 
 import { FACTION_ROLES, factionRoleVar } from "../../../utils/factionRoles";
 import { readThemes, resolveVar, stripComments } from "../../../utils/__tests__/cssVars";
+import { readIndexCss } from "../../../test/indexCss";
 
 const read = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -83,46 +84,6 @@ function ctaSource(name: string): string {
 }
 
 const TILE = "../WowSelectCard.tsx";
-const TASK_CARD = "../../taskCard/WowTaskCard.tsx";
-const BANDS = "../../cardMasthead/factionBands.tsx";
-const CSS = "../../../index.css";
-
-/** Every top-level binding in a module, mapped to its own declaration text. */
-function declarations(source: string): Map<string, string> {
-  const heads = [...source.matchAll(/^(?:export (?:default )?)?(?:const|function) ([A-Za-z_$][\w$]*)/gm)];
-  return new Map(
-    heads.map((head, i) => [
-      head[1],
-      source.slice(head.index!, i + 1 < heads.length ? heads[i + 1].index! : source.length),
-    ]),
-  );
-}
-
-/**
- * The custom properties a binding paints with, following the module's own
- * aliases. `WowBand` spells none itself — its plum, its gilt and its face all
- * arrive through `GILT_MID` and `MED`, module-level bindings that sit beside it.
- */
-function propsBehind(
-  decls: Map<string, string>,
-  names: readonly string[],
-  seen = new Set<string>(),
-): Set<string> {
-  const found = new Set<string>();
-  for (const name of names) {
-    if (seen.has(name)) continue;
-    seen.add(name);
-    const declaration = decls.get(name);
-    if (!declaration) continue;
-    for (const [, prop] of declaration.matchAll(/(--[a-z0-9-]+)/g)) found.add(prop);
-    const onward = [...decls.keys()].filter(
-      (other) => other !== name && new RegExp(`\\b${other}\\b`).test(declaration),
-    );
-    for (const prop of propsBehind(decls, onward, seen)) found.add(prop);
-  }
-  return found;
-}
-
 /**
  * Rider 2's one genuine case: `utils/factionRoles` DOES hand a file paint, and
  * a text scan cannot see it (#2674).
@@ -152,32 +113,61 @@ function tokensPainting(relative: string): Set<string> {
   return new Set([...props].filter(isFactionPaint));
 }
 
-function registerTokens(): Set<string> {
-  const bandDecls = declarations(code(BANDS));
-  expect([...bandDecls.keys()], "no `WowBand` in cardMasthead/factionBands.tsx").toContain("WowBand");
-  const props = tokensPainting(TASK_CARD);
-  for (const prop of propsBehind(bandDecls, ["WowBand"])) {
-    if (isFactionPaint(prop)) props.add(prop);
-  }
-  return props;
+/** One import statement: the module it reads, and the names taken from it. */
+interface TileImport {
+  from: string;
+  names: string[];
 }
 
+/**
+ * The tile's imports, read per BINDING. A default or namespace clause yields its
+ * own single name (`i18n`, `* as factions`), so neither can wear a named
+ * import's clothes to slip past the allowlist below.
+ */
+function importsOf(source: string): TileImport[] {
+  return [...source.matchAll(/^import (?:type )?(.*?) from "([^"]+)";$/gm)].map((match) => ({
+    from: match[2],
+    names: match[1]
+      .replace(/^\{|\}$/g, " ")
+      .split(",")
+      .map((name) => name.replace(/^type /, "").trim())
+      .filter(Boolean),
+  }));
+}
+
+/**
+ * Rider 2's pin. A bare string admits the module wholesale; an entry carrying
+ * `bindings` admits ONLY those names from it (#2841) — because a module's string
+ * helpers and its paint helpers sit side by side, so a path-grained allowlist
+ * admitted every export of a file the moment one safe name was taken from it.
+ */
+const ALLOWED_IMPORTS: readonly (string | { from: string; bindings: readonly string[] })[] = [
+  "../../i18n",
+  // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
+  // one declares by interpolation to every scan (#2674).
+  "../../utils/factionRoles",
+  // Resolved, not waived, and pinned to the BINDING: `redactableText` reads the
+  // copy catalog through the Albescent gate (#2806). It returns a STRING and
+  // names no token. The module's paint helpers — `factionFill`, `factionCssVar`,
+  // `factionSpectrumSheet` — are NOT admitted alongside it, which is the whole
+  // reason this entry names the binding rather than the path (#2841).
+  { from: "../../utils/factions", bindings: ["redactableText"] },
+  "../sigil/WowSigil",
+  // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
+  // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
+  // call is still pinned to a face and a size, one module further along.
+  "../taskCard/cardCta",
+  "./FactionSelectCard",
+];
+
+/**
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no TOKEN its own task card does not" (#2321) — now live
+ * in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all nine
+ * kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to WOW.
+ */
 describe("the WOW tile wears the quest decree's register (#2328)", () => {
-  it("names no TOKEN its own task card does not", () => {
-    const register = registerTokens();
-    const strays = [...tokensPainting(TILE)].filter((prop) => !register.has(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with and the TASK CARD
-never names. Asked per FAMILY this tile passed while wearing the avatar's gilt
-button and the faction page's tag plate, which is why #2321's five finished
-children sharpened the question to the token. Fix it by finding the decree's
-own answer to the same role, or by saying in the PR that the task card has no
-answer — not by widening this test.`,
-    ).toEqual([]);
-  });
-
   it("takes the page kit's and the avatar's plates off the tile for good", () => {
     // The specific strays, named. The sweep above would also pass if one of
     // these were ever added to the task card; this says the tile does not want
@@ -195,7 +185,7 @@ answer — not by widening this test.`,
     // and the PR says that repaints zero pixels. That is a claim about
     // index.css, so it is measured there — in BOTH cascades, because an alias
     // may be restated under `[data-theme="dark"]` and quietly stop being one.
-    const themes = readThemes(read(CSS));
+    const themes = readThemes(readIndexCss());
     for (const theme of ["light", "dark"] as const) {
       expect(
         resolveVar("--faction-wow-chronicle-border", theme, themes),
@@ -210,19 +200,35 @@ answer — not by widening this test.`,
     // in the broken state AND the fixed one. This tile spells its names inline,
     // which is what makes the text scan above the transitive answer; pin the
     // import list so that stays true rather than merely being true today.
-    const imports = [...code(TILE).matchAll(/^import .*?from "([^"]+)";$/gm)].map((m) => m[1]);
-    expect(imports.sort(), "a new import here needs `propsBehind` resolving it, the way #2325 resolves `covenSlip`").toEqual([
-      "../../i18n",
-      // Resolved, not waived: `ROLE_MAP_PROPS` above adds the nine names this
-      // one declares by interpolation to every scan (#2674).
-      "../../utils/factionRoles",
-      "../sigil/WowSigil",
-      // The CTA's paint, which is the TASK CARD's since #2818 and is resolved
-      // the same way: the case below reads `WOW_CARD_CTA`'s own body, so the
-      // call is still pinned to a face and a size, one module further along.
-      "../taskCard/cardCta",
-      "./FactionSelectCard",
-    ]);
+    // Asked per BINDING since #2841: `utils/factions` exports paint helpers
+    // beside the one string helper this tile takes, so a path-grained answer
+    // admitted `factionFill` the moment `redactableText` was let in.
+    const source = code(TILE);
+    const imports = importsOf(source);
+
+    expect(
+      imports.length,
+      "an import split over several lines would slip this scan entirely",
+    ).toBe((source.match(/^import /gm) ?? []).length);
+
+    expect(
+      imports.map((entry) => entry.from).sort(),
+      "a new import here needs `propsBehind` resolving it, the way #2325 resolves `covenSlip`",
+    ).toEqual(
+      ALLOWED_IMPORTS.map((entry) => (typeof entry === "string" ? entry : entry.from)).sort(),
+    );
+
+    for (const entry of ALLOWED_IMPORTS) {
+      if (typeof entry === "string") continue;
+      const taken = imports.filter((i) => i.from === entry.from).flatMap((i) => i.names);
+      expect(
+        taken.filter((name) => !entry.bindings.includes(name)),
+        `\`${entry.from}\` is admitted for { ${entry.bindings.join(", ")} } and nothing
+else: each of those names is resolved above, and every other export of that module
+is unresolved paint as far as this sweep is concerned. Widen the binding set only
+with the same proof the listed ones carry — never because the path is on the list.`,
+      ).toEqual([]);
+    }
   });
 
   it("badges itself with the canonical crest, never a re-drawn one", () => {
@@ -253,15 +259,5 @@ answer — not by widening this test.`,
       code(TILE),
       "the raw 16 was a `no-raw-style-values` exemption arguing a label token would flatten the placard; the decree's CTA IS `--text-content`, so the exemption went with it",
     ).not.toContain("local/no-raw-style-values -- ornament: the CTA");
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });

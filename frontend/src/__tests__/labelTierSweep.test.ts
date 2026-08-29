@@ -34,29 +34,21 @@
  * site to reach for it — and the two-tier split (`.label-heading` /
  * `.label-caption`) would be a third option rather than the only one.
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 
-const SRC = fileURLToPath(new URL('..', import.meta.url))
-const CSS = fileURLToPath(new URL('../index.css', import.meta.url))
+import { sourceFiles } from '../test/sourceScan'
+import { readIndexCss } from '../test/indexCss'
 
+const SRC = fileURLToPath(new URL('..', import.meta.url))
 /** Every shipped `.ts`/`.tsx` under `src/`, tests included — a test fixture may
  *  not resurrect the class either, and this file names it only in prose. */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({ path: full, source: readFileSync(full, 'utf8') })
-      }
-    }
-  }
-  walk(SRC)
-  return found
+  return sourceFiles({ dir: SRC, includeTests: true, match: /\.tsx?$/ }).map((path) => ({
+    path,
+    source: readFileSync(path, 'utf8'),
+  }))
 }
 
 /**
@@ -101,7 +93,7 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
   })
 
   it('no longer declares the rule, so nothing can reach for it again', () => {
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(css).not.toMatch(/^\s*\.eyebrow\s*\{/m)
   })
 
@@ -112,7 +104,7 @@ describe('the label tier is two classes, and `.eyebrow` is not one of them (#130
     // the only file quoting `.label-heading`; asserting the declarations here
     // means a rename that misses one shows up as a failure and not as a rule
     // that silently stops shipping.
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(css).toMatch(/^\s*\.label-heading\s*\{/m)
     expect(css).toMatch(/^\s*\.label-caption\s*\{/m)
   })
@@ -154,7 +146,7 @@ function declaredFontSize(css: string, selector: string): string | undefined {
 
 describe('button and card-meta chrome sits on the label-tier floor (#1783)', () => {
   it('declares all three at the floor, in one place, so none of them can fork', () => {
-    const css = readFileSync(CSS, 'utf8')
+    const css = readIndexCss()
     expect(CHROME_RULES.map((selector) => [selector, declaredFontSize(css, selector)])).toEqual(
       CHROME_RULES.map((selector) => [selector, LABEL_TIER_FLOOR]),
     )

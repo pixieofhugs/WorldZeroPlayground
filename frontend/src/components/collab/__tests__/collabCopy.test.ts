@@ -13,19 +13,18 @@ import i18n from '../../../i18n'
 import { collabCopy } from '../collabCopy'
 import type { CollabCopyKey } from '../collabCopy'
 import forms from '../../../locales/en/forms.json'
+import { FACTION_MANIFESTS } from '../../../factions'
 
-/** Every slug a task can carry, including the ninth (WoW) and `na`. */
-const FACTION_SLUGS = [
-  'na',
-  'ephemerists',
-  'everymen',
-  'snide',
-  'singularity',
-  'ua',
-  'coven',
-  'albescent',
-  'wow',
-] as const
+/**
+ * Every slug a task can carry, `na` included.
+ *
+ * Derived from the manifest rather than typed (#2815). The describe block below
+ * says its first assertion is "written against the catalog's SHAPE rather than a
+ * slug list, so a tenth faction is caught without editing it" — that was true of
+ * the shape assertion and false of the two loops under it, which are the ones a
+ * tenth faction would actually have had to be added to. Both halves derive now.
+ */
+const FACTION_SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug)
 
 const SHARED_KEYS = Object.keys(forms.editPraxis.collab) as CollabCopyKey[]
 
