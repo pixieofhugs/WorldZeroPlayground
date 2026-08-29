@@ -98,17 +98,14 @@ describe('a list driving per-kit iteration is derived from the manifest', () => 
   // The tripwire. This guard's whole output is a list of things that are WRONG,
   // so a scanner that silently stopped matching would report a perfect board.
   it('still finds the typed lists it is meant to be watching', () => {
-    // THE FLOOR IS ONE CONVERSION AWAY. `GRANDFATHERED` is down to sixteen, so
-    // the next #2815 pass makes this fail on a correct change. That is the
-    // signal to swap the count for a fixed anchor — the survivor named below —
-    // and NOT to relax the number: a scanner that stopped matching would report
-    // a perfect board, which is the only thing this line exists to catch.
-    expect(TYPED.length, 'the scan matched nothing — the regexes have drifted').toBeGreaterThan(15)
-    // homeTrackBand (the issue's worked example) converted in #2815 and its
-    // GRANDFATHERED entry came off with it. Any still-typed survivor works as
-    // the tripwire; equalHeightRow is one #2815 left for a later pass.
+    // A NAMED ANCHOR, NOT A COUNT. This used to read `toBeGreaterThan(15)`,
+    // which is a floor on a list that is supposed to reach zero — it fails on a
+    // correct conversion and says nothing a drifted regex would not also say.
+    // Naming a survivor is strictly stronger: it fails just as loudly if the
+    // scan matches nothing, and it keeps working down to the last entry. When
+    // the last typed list is converted, this whole `it()` goes with it.
     expect(TYPED, 'the scan must still see a known typed list').toContain(
-      'pages/tasks/__tests__/equalHeightRow.test.tsx|SKINS',
+      'components/__tests__/invitationPerks.test.tsx|MECHANICS',
     )
   })
 
