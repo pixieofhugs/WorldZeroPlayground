@@ -2114,6 +2114,62 @@ const ARCHETYPE_PAIRS: Pair[] = [
 ];
 
 /**
+ * #2698 stage 1 — the codex colours whose ONLY reader was a row above.
+ *
+ * The Ephemerists' `--eph-*` family stopped painting at #1208 and was thinned
+ * at #1661, and what survived that cull survived it for one reason: the
+ * `ephemerists …` rows in `ARCHETYPE_PAIRS` named these five, so a dead-token
+ * sweep read them as alive. They were coverage of nothing — zero `var()` reads
+ * in the sheet, zero references in any non-test source file — and a row that
+ * measures a colour nothing prints is the authored half's failure mode running
+ * in the other direction.
+ *
+ * The rows and the declarations came out together, which is the only order that
+ * works: cutting the rows alone leaves five orphan declarations for the next
+ * sweep to re-discover, and cutting the declarations alone reds the rows. This
+ * guard is what stops either half coming back on its own — if a row is re-added
+ * it fails on the missing declaration, and if a declaration is re-added it fails
+ * here.
+ *
+ * NOT in this list, deliberately: `--eph-vellum` (five component references),
+ * `--eph-muted` and `--eph-rubric` (still measured by the two `ephemerists
+ * vellum, …` rows above, and `dark | ephemerists vellum, rubric` still spends a
+ * #651 BASELINE entry), and the faces `--eph-display` / `--eph-serif`, which the
+ * §3 `--faction-ephemerists-card-font` / `-body-font` contract aliases.
+ */
+const RETIRED_CODEX_COLOURS = [
+  "--eph-field",
+  "--eph-gold",
+  "--eph-ink",
+  "--eph-parchment",
+  "--eph-vellum-text",
+];
+
+describe("the retired codex colours are gone from both cascades (#2698 stage 1)", () => {
+  it.each(RETIRED_CODEX_COLOURS)("%s is declared in neither theme", (name) => {
+    expect(THEMES.light.has(name), `light declares ${name}`).toBe(false);
+    expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(false);
+  });
+
+  it("no row measures one, so nothing makes them look alive again", () => {
+    expect(
+      PAIRS.filter(
+        (pair) =>
+          RETIRED_CODEX_COLOURS.includes(pair.surface) ||
+          RETIRED_CODEX_COLOURS.includes(pair.text),
+      ).map((pair) => pair.what),
+    ).toEqual([]);
+  });
+
+  it("the live siblings the cull spared are still declared (sanity check)", () => {
+    for (const name of ["--eph-vellum", "--eph-muted", "--eph-rubric"]) {
+      expect(THEMES.light.has(name), `light declares ${name}`).toBe(true);
+      expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(true);
+    }
+  });
+});
+
+/**
  * #2852 — the "answer a calling" chip on `/characters/create`, SELECTED.
  *
  * Six of the seven archetypes that draw this chip (na's picker ground never
