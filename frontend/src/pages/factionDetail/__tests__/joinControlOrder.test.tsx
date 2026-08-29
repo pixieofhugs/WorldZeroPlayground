@@ -41,15 +41,17 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { join, sep } from 'node:path'
+import { join } from 'node:path'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import { FACTION_MANIFESTS } from '../../../factions'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
 import type { CharacterOut } from '../../../api/auth'
 import { JoinConfirm, type JoinControlSkin } from '../../../components/JoinControl'
+import { sourceFiles as walkSource, toRelative } from '../../../test/sourceScan'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
@@ -225,7 +227,7 @@ describe('the join pair keeps #646 order on every faction', () => {
 })
 
 describe('no faction body writes the trio itself', () => {
-  const bodies = readdirSync(ARCHETYPES).filter((name) => name.endsWith('.tsx'))
+  const bodies = walkSource({ dir: ARCHETYPES, match: /\.tsx$/ }).map((path) => basename(path))
 
   it('finds the archetypes it means to scan', () => {
     expect(bodies.length).toBeGreaterThanOrEqual(9)
@@ -253,9 +255,7 @@ const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 
 /** Every `.ts`/`.tsx` under `src`, src-relative and slash-separated. */
 function sourceFiles(): string[] {
-  return readdirSync(SRC, { recursive: true, encoding: 'utf8' })
-    .map((name) => name.split(sep).join('/'))
-    .filter((name) => /\.tsx?$/.test(name))
+  return walkSource({ dir: SRC, includeTests: true }).map((path) => toRelative(path))
 }
 
 function read(name: string): string {

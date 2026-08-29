@@ -3,15 +3,17 @@
  *
  * A parameterised test looks exhaustive. Whether it is depends entirely on the
  * list it loops, and a hand-typed list is a population someone has to remember
- * to update. `pages/fieldDesk/__tests__/homeTrackBand.test.tsx` types eight
- * slugs under a comment reading "so all eight are checked" — there are nine, and
- * `AlbescentFieldDesk` is registered on `mobileFieldDesk`. The claim outlived the
- * list, which is worse than no claim at all.
+ * to update. `pages/fieldDesk/__tests__/homeTrackBand.test.tsx` USED TO type
+ * eight slugs under a comment reading "so all eight are checked" — there were
+ * nine, and `AlbescentFieldDesk` is registered on `mobileFieldDesk`. The claim
+ * outlived the list, which is worse than no claim at all; #2815 converted it,
+ * so it is gone from GRANDFATHERED below and the tripwire now watches a
+ * different survivor.
  *
  * WHAT THIS GUARD DOES NOT SAY. Not every slug array is wrong. A fixture, a
  * contrast pair table, an expected-order assertion — those name slugs because
  * the slugs ARE the subject. Sixty-one test files hold a slug array; only the
- * twenty-five below drive a `.each`, and only those are making a completeness
+ * ones below drive a `.each`, and only those are making a completeness
  * claim. This guard is narrow on purpose.
  *
  * TYPING IS SOMETIMES RIGHT, AND THE EXCEPTION MATTERS.
@@ -22,10 +24,10 @@
  * own subject proves nothing. So the rule is not "always derive" — it is
  * "derive, or be on this list having said why".
  *
- * THIS IS A RATCHET. The twenty-five entries below are grandfathered: they exist
- * today and #2815 converts them. The guard's job is that the twenty-sixth cannot
- * appear quietly. Removing an entry as it is converted is the intended direction;
- * adding one needs a reason in the review, not just a green suite.
+ * THIS IS A RATCHET. The entries below are grandfathered: they exist today and
+ * #2815 is converting them, a few per PR. The guard's job is that a new one
+ * cannot appear quietly. Removing an entry as it is converted is the intended
+ * direction; adding one needs a reason in the review, not just a green suite.
  */
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -66,7 +68,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'pages/editPraxis/archetypes/__tests__/collabSignals.test.tsx|SLUGS',
   'pages/editPraxis/archetypes/__tests__/composerDispatch.test.tsx|SLUGS',
   'pages/editPraxis/archetypes/__tests__/taskSlipLink.test.tsx|SLUGS',
-  'pages/fieldDesk/__tests__/homeTrackBand.test.tsx|SKINS',
   'pages/praxisDetail/__tests__/detailWallAlarmInk.test.tsx|WALL_ALARM',
   'pages/tasks/__tests__/equalHeightRow.test.tsx|SKINS',
 ])
@@ -101,8 +102,11 @@ describe('a list driving per-kit iteration is derived from the manifest', () => 
   // so a scanner that silently stopped matching would report a perfect board.
   it('still finds the typed lists it is meant to be watching', () => {
     expect(TYPED.length, 'the scan matched nothing — the regexes have drifted').toBeGreaterThan(15)
-    expect(TYPED, 'the known worst case must still be visible to the scan').toContain(
-      'pages/fieldDesk/__tests__/homeTrackBand.test.tsx|SKINS',
+    // homeTrackBand (the issue's worked example) converted in #2815 and its
+    // GRANDFATHERED entry came off with it. Any still-typed survivor works as
+    // the tripwire; equalHeightRow is one #2815 left for a later pass.
+    expect(TYPED, 'the scan must still see a known typed list').toContain(
+      'pages/tasks/__tests__/equalHeightRow.test.tsx|SKINS',
     )
   })
 

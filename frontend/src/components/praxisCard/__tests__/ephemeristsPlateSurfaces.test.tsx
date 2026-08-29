@@ -11,8 +11,7 @@
  * SSR-only harness (renderToStaticMarkup, no DOM, effects never run), so these
  * are assertions about markup given props — never interaction.
  */
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -26,6 +25,7 @@ import EphemeristsPraxisCard from '../desktop/EphemeristsPraxisCard'
 import { GLYPHS } from '../../factionMarks/ephemeristsPlate'
 import MetataskSeal from '../../metataskSeal/MetataskSeal'
 import { factionName } from '../../../utils/factions'
+import { sourceFiles, stripComments } from '../../../test/sourceScan'
 
 /** The retired illuminated-codex family. None of it may reach a plate surface. */
 const CODEX = /--eph-[a-z]/
@@ -323,34 +323,17 @@ describe('one card, both form factors (ADR-0067)', () => {
  * ornament; grepping the tree costs nothing and catches the case rendering
  * cannot see, which is a NEW hand-copy appearing later.
  */
-const SKINS = fileURLToPath(new URL('../../..', import.meta.url))
 const KIT = fileURLToPath(new URL('../../factionMarks/ephemeristsPlate.tsx', import.meta.url))
 
 /**
  * Every shipped `.ts`/`.tsx` under `src/`, with comments stripped and tests
- * skipped. Both exclusions matter: the files that RETIRED a mark name it in
- * prose so the next reader knows it was deleted rather than mislaid, and this
- * very file names them in the assertions below.
+ * skipped (the shared walk — `sourceFiles()` skips `__tests__` by default).
+ * Both exclusions matter: the files that RETIRED a mark name it in prose so
+ * the next reader knows it was deleted rather than mislaid, and this very
+ * file names them in the assertions below.
  */
 function sources(): { path: string; source: string }[] {
-  const found: { path: string; source: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === '__tests__') continue
-      const full = join(dir, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/\.tsx?$/.test(entry.name)) {
-        found.push({
-          path: full,
-          source: readFileSync(full, 'utf8')
-            .replace(/\/\*[\s\S]*?\*\//g, '')
-            .replace(/^\s*\/\/.*$/gm, ''),
-        })
-      }
-    }
-  }
-  walk(SKINS)
-  return found
+  return sourceFiles().map((path) => ({ path, source: stripComments(readFileSync(path, 'utf8')) }))
 }
 
 describe('one ornament vocabulary, and it is the notation band (#2210)', () => {
