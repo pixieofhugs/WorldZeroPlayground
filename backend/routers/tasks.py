@@ -15,7 +15,7 @@ from models.account import Account
 from models.character import Character
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
-from services.praxis import gather_signup_facts
+from services.signup_eligibility import gather_signup_facts
 from services.task import (
     UNKNOWN_TASK_AUTHOR,
     authors_for_tasks,

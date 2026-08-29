@@ -2954,15 +2954,15 @@ async def test_pending_collab_counts_against_bank_cap(
     db_session: AsyncSession,
 ):
     """A pending (mid-consensus) collab is still an open, slot-consuming membership."""
-    from services.praxis import _count_in_progress_praxes
+    from services.signup_eligibility import count_in_progress_praxes
 
     praxis_id = await _two_member_collab(
         client, active_task, auth_headers2, character.id, auth_headers
     )
     resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
     assert resp.json()["status"] == "pending"
-    assert await _count_in_progress_praxes(character2.id, db_session) == 1
-    assert await _count_in_progress_praxes(character.id, db_session) == 1
+    assert await count_in_progress_praxes(character2.id, db_session) == 1
+    assert await count_in_progress_praxes(character.id, db_session) == 1
 
 
 @pytest.mark.asyncio

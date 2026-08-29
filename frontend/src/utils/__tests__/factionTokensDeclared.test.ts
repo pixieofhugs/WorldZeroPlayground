@@ -1,9 +1,10 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { FACTION_ROLES, factionRoleProperty } from "../factionRoles";
+import { sourceFiles } from "../../test/sourceScan";
 import { readThemes, stripComments } from "./cssVars";
 
 /**
@@ -24,7 +25,6 @@ import { readThemes, stripComments } from "./cssVars";
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css"];
 
 /**
  * A custom property declared by a CSS rule — ANY rule, not just the `:root` /
@@ -51,20 +51,10 @@ const DECLARED_IN_STYLE_OBJECT =
  */
 const REFERENCE = /var\(\s*(--[A-Za-z0-9_-]+)\s*[,)]/g;
 
-function collectSourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    // Tests never render; they quote token names as prose and fixtures.
-    // (This file's own docstring trips the guard otherwise — which is a
-    // pleasant demonstration that the guard works.)
-    if (entry.isDirectory()) {
-      return entry.name === "__tests__" ? [] : collectSourceFiles(path);
-    }
-    return SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))
-      ? [path]
-      : [];
-  });
-}
+// Tests never render; they quote token names as prose and fixtures.
+// (This file's own docstring trips the guard otherwise — which is a
+// pleasant demonstration that the guard works.) `sourceFiles()` excludes
+// `__tests__` by default, which is exactly that exemption.
 
 /** Comments quote token names as prose; a mention is not a declaration. */
 // `stripComments` comes from `cssVars` — the CSS-only stripper, which leaves
@@ -74,7 +64,7 @@ function matchAll(text: string, pattern: RegExp): string[] {
   return [...text.matchAll(pattern)].map((match) => match[1]);
 }
 
-const sources = collectSourceFiles(SRC_DIR).map((path) => ({
+const sources = sourceFiles({ dir: SRC_DIR, match: /\.(?:tsx?|jsx?|css)$/ }).map((path) => ({
   path,
   text: stripComments(readFileSync(path, "utf-8")),
 }));

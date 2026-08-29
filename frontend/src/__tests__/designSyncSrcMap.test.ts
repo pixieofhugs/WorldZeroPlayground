@@ -54,27 +54,28 @@
  * outside every CI net) but not a fix: this guard resolves paths and
  * typechecks nothing, so it would not catch a preview whose props drifted.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
+
+import { sourceFiles } from '../test/sourceScan'
 
 const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url))
 const FRONTEND_DIR = join(REPO_ROOT, 'frontend')
 const CONFIG_PATH = join(REPO_ROOT, '.design-sync', 'config.json')
 
-function filesUnder(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry: string) => {
-    const path = join(dir, entry)
-    return statSync(path).isDirectory() ? filesUnder(path) : [path]
-  })
-}
-
 /** Map values are relative to `frontend/`, POSIX-separated. */
 const toMapPath = (path: string) => relative(FRONTEND_DIR, path).split('\\').join('/')
 
-/** Real on-disk casing — see the case-exactness note above. */
-const realPaths = new Set(filesUnder(join(FRONTEND_DIR, 'src')).map(toMapPath))
+/**
+ * Real on-disk casing — see the case-exactness note above. Every file, of
+ * every extension, `__tests__` included: the map can pin any of them, so the
+ * walk must not pre-filter by name the way the default does.
+ */
+const realPaths = new Set(
+  sourceFiles({ dir: join(FRONTEND_DIR, 'src'), includeTests: true, match: /./ }).map(toMapPath),
+)
 
 const componentSrcMap: Record<string, string | null> = JSON.parse(
   readFileSync(CONFIG_PATH, 'utf8'),
