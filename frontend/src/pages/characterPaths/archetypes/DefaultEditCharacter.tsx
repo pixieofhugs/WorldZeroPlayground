@@ -52,7 +52,7 @@
  * `__tests__/createCharacterContrast.test.ts` is the measurement, and
  * `eslint.config.js` names both files in the one paired exemption.
  */
-import { useRef, type CSSProperties } from 'react'
+import { useId, useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../../utils/media'
@@ -397,6 +397,11 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
+  // One id per field, so each label names its own control (#2834) — the same
+  // shape `DefaultCreateCharacter` already uses; these three drew a sibling
+  // <label> with no `htmlFor` and no `id`, so neither the desktop plate's
+  // implicit (wrapping) association nor an explicit one existed.
+  const fieldId = useId()
   const {
     id,
     character,
@@ -479,8 +484,9 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
 
       {/* Name */}
       <div>
-        <label style={label}>{t('editCharacter.displayNameLabel')}</label>
+        <label htmlFor={`${fieldId}-name`} style={label}>{t('editCharacter.displayNameLabel')}</label>
         <input
+          id={`${fieldId}-name`}
           data-composer-field
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
@@ -496,8 +502,9 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
           takes the desktop label so both surfaces call the same field the same
           thing. */}
       <div>
-        <label style={label}>{t('editCharacter.storyLabel')}</label>
+        <label htmlFor={`${fieldId}-story`} style={label}>{t('editCharacter.storyLabel')}</label>
         <input
+          id={`${fieldId}-story`}
           data-composer-field
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -510,8 +517,9 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
 
       {/* Tagline — the slogan line (#1628), capped far below the bio above it. */}
       <div>
-        <label style={label}>{t('editCharacter.taglineLabel')}</label>
+        <label htmlFor={`${fieldId}-tagline`} style={label}>{t('editCharacter.taglineLabel')}</label>
         <input
+          id={`${fieldId}-tagline`}
           data-composer-field
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
