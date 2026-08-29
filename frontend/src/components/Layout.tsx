@@ -10,6 +10,7 @@ import InvitationWatcher from './InvitationWatcher'
 import TheArray from './TheArray'
 import NavBar from './NavBar'
 import { flushPendingCasts } from './vote/pendingCasts'
+import { needsCharacterRedirect } from './layout/characterOnboardingGate'
 import MobileHeader from './layout/MobileHeader'
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
@@ -51,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   useEffect(() => {
-    if (!loading && user && !user.character && pathname !== '/characters/create') {
+    if (needsCharacterRedirect(loading, Boolean(user), Boolean(user?.character), pathname)) {
       navigate('/characters/create')
     }
   }, [user, loading, pathname, navigate])
