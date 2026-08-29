@@ -66,6 +66,8 @@ const list = () => renderToStaticMarkup(<StorageInventory id="sec-cookies-invent
 const text = (markup: string) => markup.replace(/<[^>]*>/g, '')
 const control = (markup: string, testId: string) =>
   new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>`).exec(markup)?.[0] ?? ''
+const controlWithChildren = (markup: string, testId: string) =>
+  new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>[\\s\\S]*?</button>`).exec(markup)?.[0] ?? ''
 
 const names = STORED_ENTRIES.map((entry) => entry.name)
 
@@ -225,6 +227,39 @@ describe('all three switches render, all three inert, all three say why', () => 
       expect(button).toMatch(/aria-describedby="sec-cookies-[a-z]+-note"/)
     },
   )
+})
+
+/**
+ * #2844 — the locked-ON switch (`Essential`) now carries a lock glyph, so it
+ * no longer renders byte-identically to a live, changeable switch. The
+ * locked-OFF switches (`Analytics`, `Marketing`) do NOT get the glyph — see
+ * the rationale on `SettingsSwitch`: the flat, non-rainbow edge already reads
+ * as "off" there, so only "locked on" was ever ambiguous.
+ */
+describe('the locked-on switch carries a lock glyph; the locked-off ones do not', () => {
+  it('draws a glyph on the locked-and-checked Essential switch', () => {
+    const button = controlWithChildren(html(), 'settings-cookies-essential')
+    expect(button).toContain('<svg')
+  })
+
+  it.each(['settings-cookies-analytics', 'settings-cookies-marketing'])(
+    'draws no glyph on the locked-and-unchecked %s switch',
+    (testId) => {
+      const button = controlWithChildren(html(), testId)
+      expect(button).not.toContain('<svg')
+    },
+  )
+
+  it('never adds opacity to the track — the dim was rejected on measurement, not lost', () => {
+    for (const testId of [
+      'settings-cookies-essential',
+      'settings-cookies-analytics',
+      'settings-cookies-marketing',
+    ]) {
+      const button = controlWithChildren(html(), testId)
+      expect(button).not.toContain('opacity')
+    }
+  })
 })
 
 /**

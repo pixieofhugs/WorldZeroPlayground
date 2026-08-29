@@ -18,6 +18,7 @@ from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from models.praxis import MediaItem
 from models.task import Task
 from services import collab_consensus
 from services import media as media_service
@@ -422,3 +423,45 @@ async def test_deleting_one_same_named_file_leaves_the_other_readable(
     with open(survivor, "rb") as handle:
         assert handle.read() == second_bytes
     assert not os.path.exists(os.path.join(str(media_root), first_item["file_path"]))
+
+
+@pytest.mark.asyncio
+async def test_deleting_media_with_unresolvable_path_is_a_noop_not_a_500(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    media_root,
+):
+    """#2876: `resolve_stored_media_path` returning None must stay a no-op.
+
+    Before the fix, the second cleanup step called
+    ``os.rmdir(os.path.dirname(abs_path))`` unconditionally — with
+    ``abs_path is None`` that is ``os.path.dirname(None)``, a ``TypeError``
+    the surrounding ``except OSError`` does not catch, turning a delete of a
+    media item this process doesn't own into a 500 instead of the intended
+    no-op.
+    """
+    praxis_id = await _in_progress_solo(client, active_task, auth_headers)
+
+    upload = await client.post(
+        f"/praxes/{praxis_id}/media/batch",
+        files=[_image_part("proof.jpg")],
+        headers=auth_headers,
+    )
+    assert upload.status_code == 201, upload.text
+    item = upload.json()[0]["media_item"]
+
+    # Force the stored column into something `resolve_stored_media_path`
+    # refuses to resolve (a `..` escape) -- the same shape as a row an import
+    # or admin editor wrote, which the gate's own docstring calls out as the
+    # reason this predicate exists.
+    media_item = await db_session.get(MediaItem, item["id"])
+    media_item.file_path = "../outside.jpg"
+    await db_session.commit()
+
+    deletion = await client.delete(
+        f"/praxes/{praxis_id}/media/{item['id']}", headers=auth_headers
+    )
+    assert deletion.status_code == 204, deletion.text
