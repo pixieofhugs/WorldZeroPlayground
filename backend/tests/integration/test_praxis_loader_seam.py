@@ -139,7 +139,9 @@ async def test_approving_a_lapsed_collab_seals_it_exactly_once(
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
     await _lapse_the_open_window(praxis_collab.id, db_session)
 
-    resp = await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers2)
+    resp = await client.post(
+        f"/praxes/{praxis_collab.id}/submit", headers=auth_headers2
+    )
 
     assert resp.status_code == 200, resp.text
     assert resp.json()["status"] == "submitted"
