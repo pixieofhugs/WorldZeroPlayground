@@ -872,14 +872,15 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
   { what: "everymen poster field, cream", surface: "--everymen-field", text: "--everymen-cream" },
 
-  // Ephemerists — "the VELLUM surface + its text FLIP in dark"; --eph-ink
-  // "stays dark in both themes"; --eph-parchment is "bright text on dark elements".
-  { what: "ephemerists vellum", surface: "--eph-vellum", text: "--eph-vellum-text" },
+  // Ephemerists — the vellum still flips light→dark, and these two rows are
+  // what is left of the codex here. #2698 stage 1 cut the other four with the
+  // colours they were the only reader of: `ephemerists vellum` (the
+  // `--eph-vellum-text` flip), `gold element, ink`, `parchment element, ink`
+  // and `lapis field, parchment` measured five tokens no component and no rule
+  // ever read, so they were coverage of nothing — see the retirement guard
+  // below `ARCHETYPE_PAIRS` for the list and why these two are not in it.
   { what: "ephemerists vellum, muted", surface: "--eph-vellum", text: "--eph-muted" },
   { what: "ephemerists vellum, rubric", surface: "--eph-vellum", text: "--eph-rubric" },
-  { what: "ephemerists gold element, ink", surface: "--eph-gold", text: "--eph-ink" },
-  { what: "ephemerists parchment element, ink", surface: "--eph-parchment", text: "--eph-ink" },
-  { what: "ephemerists lapis field, parchment", surface: "--eph-field", text: "--eph-parchment" },
 
   // S.N.I.D.E. — the flyposted wall is the one SNIDE surface that flips.
   { what: "snide flyposted wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-text" },

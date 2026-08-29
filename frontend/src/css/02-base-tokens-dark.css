@@ -551,15 +551,14 @@
      to aged tobacco and its text flips ink→parchment. The card contract used to
      inherit these through the :root var() rebind; since #1627 it rebinds to the
      Valley plate instead and this half has no reader either. ══ */
-  --eph-gold: #cda24a;
   --eph-rubric: #c0533a; /* rubric brightens on dark vellum */
-  --eph-ink: #0c0a06; /* element ink stays dark */
   --eph-vellum: #211a10; /* aged tobacco — a surface on the dark page */
-  --eph-vellum-text: #efe3c6; /* text FLIPS to parchment */
   --eph-muted: #b6a079;
-  --eph-parchment: #efe3c6;
-  --eph-field: #102a3a; /* celestial field deepens */
-  /* The night halves of the ten codex colours #1661 deleted went with them. */
+  /* The night halves of the ten codex colours #1661 deleted went with them, and
+     so did the night halves of the five #2698 stage 1 took — gold, ink,
+     parchment, field and vellum-text, none of which had a reader outside a
+     factionContrast.test.ts row. The three left are the two inks and the
+     surface they are measured on. */
 
   /* ══ Ephemerists — THE VALLEY PLATE, night half (#2141) ══
      The note that stood here said the register declared NOTHING in this block
