@@ -14,12 +14,13 @@
  * across two parts would be a different sheet even with every byte preserved.
  * Both are asserted here because neither is visible in a source diff.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { stripComments } from '../../utils/__tests__/cssVars'
 import { INDEX_CSS_MAP, indexCssParts, readIndexCss } from '../indexCss'
+import { sourceFiles } from '../sourceScan'
 
 const CSS_DIR = join(INDEX_CSS_MAP, '..', 'css')
 const MAP = readFileSync(INDEX_CSS_MAP, 'utf8')
@@ -72,7 +73,12 @@ describe('the import map', () => {
   })
 
   it('imports every part in `src/css/`, exactly once, in filename order', () => {
-    const onDisk = readdirSync(CSS_DIR).filter((name) => name.endsWith('.css')).sort()
+    // Through the shared walk, not a private one (#2887) — `src/css/` is flat,
+    // and a part hidden in a subdirectory would show up here as an unimported
+    // file, which is exactly the answer this assertion wants.
+    const onDisk = sourceFiles({ dir: CSS_DIR, match: /\.css$/ })
+      .map((path) => basename(path))
+      .sort()
     expect(onDisk.length).toBeGreaterThan(1)
     // The numeric prefixes ARE the cascade: filename order must be import order,
     // or a reader sorting by name gets a different sheet than the browser paints.
