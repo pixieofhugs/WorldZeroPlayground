@@ -34,27 +34,6 @@ const code = (relative: string): string => stripComments(read(relative));
 
 const TILE = "../UaSelectCard.tsx";
 
-/**
- * THE REGISTER IS THE TASK CARD AS RENDERED, not the one file. `UaTaskCard`
- * mounts its two faces and its ensō from `factionMarks/uaAtoms` and its
- * masthead from `cardMasthead/factionBands`, so `--faction-ua-card-font` and
- * `--faction-ua-body-font` are spelt in the atoms and never in the card.
- * Slicing the card alone would report them as inventions.
- *
- * `factionBands` holds all nine factions' bands, so only `UaBand`'s own body
- * counts; S.N.I.D.E.'s acid is not UA's register.
- */
-function registerSource(): string {
-  const bands = code("../../cardMasthead/factionBands.tsx");
-  const at = bands.indexOf("function UaBand()");
-  expect(at, "no `UaBand` in cardMasthead/factionBands.tsx").toBeGreaterThan(-1);
-  return [
-    code("../../taskCard/UaTaskCard.tsx"),
-    code("../../factionMarks/uaAtoms.tsx"),
-    bands.slice(at, bands.indexOf("\n}", at)),
-  ].join("\n");
-}
-
 /** One faction's CTA constant, sliced out of the module that holds all eight. */
 function ctaSource(name: string): string {
   const module = code("../../taskCard/cardCta.ts");
@@ -62,11 +41,6 @@ function ctaSource(name: string): string {
   expect(at, `no \`${name}\` in taskCard/cardCta.ts`).toBeGreaterThan(-1);
   return module.slice(at, module.indexOf("\n};", at));
 }
-
-/** Every custom property named in a source, in document order, deduplicated. */
-const propsIn = (source: string): string[] => [
-  ...new Set([...source.matchAll(/--[a-z0-9-]+/g)].map((match) => match[0])),
-];
 
 /**
  * The one SYNONYM, and it is proven below rather than waived.
@@ -87,26 +61,14 @@ function declaration(css: string, name: string): string {
   return css.slice(at + name.length + 3, css.indexOf(";", at)).replace(/\s+/g, " ").trim();
 }
 
+/**
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no token its own task card does not" (#2321) — now live
+ * in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all nine
+ * kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to UA.
+ */
 describe("the UA tile wears the vellum leaf's register (#2324)", () => {
-  it("names no token its own task card does not", () => {
-    const register = registerSource();
-    const strays = propsIn(code(TILE))
-      // House tokens — spacing, the type ramp, radii, the shared cast — are not
-      // a faction register and are worn by every tile in the directory.
-      .filter((prop) => prop.startsWith("--faction-") || prop.startsWith("--font-"))
-      .filter((prop) => prop !== GROUND_SYNONYM[0])
-      .filter((prop) => !register.includes(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with and the TASK CARD
-never names — the drift #2321 is about. Both halves are real tokens, so no
-lint, census or contrast sweep can see it; only this can. Fix it by finding
-the role on \`UaTaskCard.tsx\` that answers the same question, not by
-widening this test.`,
-    ).toEqual([]);
-  });
-
   it("grounds on the leaf's own paper stock, under the name every UA surface may read", () => {
     const css = read("../../../index.css");
     const [publicName, cardName] = GROUND_SYNONYM;
@@ -146,16 +108,6 @@ widening this test.`,
     expect(code(TILE), "the bare fill / on-fill pair is the retired CTA").not.toMatch(
       /var\(--faction-ua\)|--faction-ua-on-fill/,
     );
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 
   it("draws the wordmark, not the faction name (#2332)", () => {

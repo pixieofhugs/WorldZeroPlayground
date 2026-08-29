@@ -35,68 +35,13 @@ const code = (relative: string): string => stripComments(read(relative));
 const TILE = "../SingularitySelectCard.tsx";
 
 /**
- * THE REGISTER IS THE TASK CARD AS RENDERED, not the one file — the same call
- * #2322 had to make. `SingularityTaskCard` mounts its window chrome from
- * `cardMasthead/factionBands` and its points well and process light from
- * `factionMarks/`, and several of the register's inks are spelt only in those:
- * the chrome ground and the hairline rule in the band, and `-term-blue` in
- * {@link SingularityReadout}, which is where #2042 moved it when the well
- * became a shared mark. The card's own file still names it — in a COMMENT,
- * saying it left. Slicing the card alone reports those as inventions.
- *
- * `factionBands` holds all nine factions' bands, so only `SingularityBand`'s own
- * body counts: S.N.I.D.E.'s acid is not Singularity's register.
+ * The two invariants this file used to assert here — the fluid 360x300 box
+ * (#732) and "names no token family its own task card does not" (#2321) — now
+ * live in `everySelectTileWearsItsCardsRegister.test.ts`, derived over all
+ * nine kits including the `Default`-backed tile this suite could not reach
+ * (#2816). This file keeps everything bespoke to Singularity.
  */
-function registerSource(): string {
-  const bands = code("../../cardMasthead/factionBands.tsx");
-  const at = bands.indexOf("function SingularityBand()");
-  expect(at, "no `SingularityBand` in cardMasthead/factionBands.tsx").toBeGreaterThan(-1);
-  return [
-    code("../../taskCard/SingularityTaskCard.tsx"),
-    code("../../factionMarks/SingularityReadout.tsx"),
-    code("../../factionMarks/SingularityProcessLight.tsx"),
-    bands.slice(at, bands.indexOf("\n}", at)),
-    // The lit key, which stopped being spelt in the card in #2642: one CTA
-    // constant per faction, spread by the card AND by the task detail so the
-    // two can no longer drift. Same reach as the band above — the card AS
-    // RENDERED — and `cardCta.ts` holds all nine, so only this one's body
-    // counts.
-    ctaSource("SINGULARITY_CARD_CTA"),
-  ].join("\n");
-}
-
-/** One faction's CTA constant, sliced out of the module that holds all eight. */
-function ctaSource(name: string): string {
-  const module = code("../../taskCard/cardCta.ts");
-  const at = module.indexOf(`export const ${name}`);
-  expect(at, `no \`${name}\` in taskCard/cardCta.ts`).toBeGreaterThan(-1);
-  return module.slice(at, module.indexOf("\n};", at));
-}
-
-/** Every custom property named in a source, in document order, deduplicated. */
-const propsIn = (source: string): string[] => [
-  ...new Set([...source.matchAll(/--[a-z0-9-]+/g)].map((match) => match[0])),
-];
-
 describe("the Singularity tile wears the terminal's register (#2326)", () => {
-  it("names no token family its own task card does not", () => {
-    const register = registerSource();
-    const strays = propsIn(code(TILE))
-      // House tokens — spacing, the type ramp, radii — are not a faction family
-      // and are shared by every tile in the directory.
-      .filter((prop) => prop.startsWith("--faction-") || prop.startsWith("--font-"))
-      .filter((prop) => !register.includes(prop));
-
-    expect(
-      strays,
-      `Each name is a token the DIRECTORY TILE paints with and the TASK CARD
-never names — the shape #2321 calls a forked family. Both halves are real
-tokens, so no lint, census or contrast sweep can see it; only this can.
-Fix it by finding the \`--faction-singularity-term-*\` role that answers the
-same question, not by widening this test.`,
-    ).toEqual([]);
-  });
-
   it("leaves no theme-INVARIANT Singularity family on the tile", () => {
     // The named half of the assertion above, spelt out so a failure says WHICH
     // fork returned. These five are the exact names the tile carried before
@@ -125,15 +70,5 @@ same question, not by widening this test.`,
     const source = resolveRoleReads(code(TILE));
     expect(source, "--font-faction-terminal is the raw family").not.toContain("--font-faction-terminal");
     expect(source).toContain("--faction-singularity-card-font");
-  });
-
-  it("keeps the fluid 360x300 box the directory grid is built on (#732)", () => {
-    // Not a colour question, and the one geometry the epic promised not to move:
-    // the 375px single-column mobile directory depends on all three.
-    const source = code(TILE);
-    expect(source).toContain('width: "100%"');
-    expect(source).toContain("maxWidth: 360");
-    expect(source).toContain("minHeight: 300");
-    expect(source, "a fixed height would break the phone column").not.toMatch(/\bheight: 300\b/);
   });
 });
