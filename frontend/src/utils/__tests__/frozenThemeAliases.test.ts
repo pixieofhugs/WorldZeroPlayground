@@ -165,6 +165,10 @@ const KNOWN_ROOT_ONLY_ALIASES = [
   "--label-ink",
   "--link-ink",
   "--link-ink-hover",
+  // The switch ring's compliant edge (#2845) — aliased straight to
+  // `--color-text-tertiary`, which the dark block rebinds, so it flips on its
+  // own. Same composed-neutral shape as the rest of the `--switch-*` family.
+  "--switch-ring-hairline",
   "--switch-thumb",
   "--switch-thumb-edge",
   // The two-state switch's OFF thumb (#2154), minted beside its ON twin above
