@@ -302,3 +302,38 @@ describe('the focus ring survives every skin, at both widths (#2825)', () => {
     )
   }
 })
+
+describe('the phone column names every control it draws a <label> for (#2834)', () => {
+  /* `createCharacterFields.test.tsx`'s "a label that names no control is not
+     drawn as a <label>" guard sweeps the createCharacter registry only — the
+     `na` create archetype used to draw orphan <label>s, got fixed, and the
+     guard was scoped to the surface it was fixed on. The edit registry carried
+     the same shape (`MobileColumn`'s three phone-column fields: a <label>
+     sibling of its <input>, no `htmlFor`, no `id`) and was never swept, so it
+     shipped unnoticed until #2834. This extends the sweep here rather than
+     standing up a third file, using the same `renderFor` this file already
+     drives the registry through.
+
+     MOBILE ONLY, on purpose. `DesktopPlate` associates by WRAPPING its
+     <input> in the <label> (valid implicit association, no `for` needed) —
+     a shape a bare "every <label> needs `for`" regex cannot tell from an
+     orphan one, so the check below only counts a label an orphan when it
+     neither carries `for` nor wraps the field it names. */
+  function orphanLabels(html: string): string[] {
+    const found: string[] = []
+    for (const [whole, attrs, inner] of html.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g)) {
+      const hasFor = /\bfor="[^"]*"/.test(attrs)
+      const wrapsControl = /<(?:input|textarea)\b/.test(inner)
+      if (!hasFor && !wrapsControl) found.push(whole.trim())
+    }
+    return found
+  }
+
+  it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+    'slug "%s" draws no orphan <label> on mobile',
+    (slug) => {
+      const html = renderFor(slug, 'mobile')
+      expect(orphanLabels(html), 'a <label> with nothing to point at').toEqual([])
+    },
+  )
+})
