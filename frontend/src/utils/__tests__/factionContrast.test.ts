@@ -2225,6 +2225,85 @@ const ARCHETYPE_PAIRS: Pair[] = [
 ];
 
 /**
+ * #2852 — the "answer a calling" chip on `/characters/create`, SELECTED.
+ *
+ * Six of the seven archetypes that draw this chip (na's picker ground never
+ * changes on selection, so it is not in this list; Albescent offers no
+ * calling at all) repaint the chip's ground to the HOST kit's own fill when
+ * it is selected. `FactionSigil` now receives that same host's `onFill` ink
+ * on the selected branch — the label beside it already did — so this is the
+ * SITE that pairing has to hold at, not a restatement of a ratio measured
+ * elsewhere. Every token below is one already declared and already gated by
+ * name for its own site (WOW's decree CTA, S.N.I.D.E.'s motto sticker, the
+ * Ephemerists' plate CTA band, Everymen's bill CTA bar, Coven's slip CTA
+ * band, Singularity's terminal CTA) — this is the SAME pair read again at the
+ * picker, per #2661's own "the ratio is not the fact at risk, the SITE is."
+ *
+ * UA IS NOT HERE. Its picker's ground and ink are `factionRoleVars('ua',
+ * 'leaf-create-character')`'s `fill`/`onFill` — the bare vocabulary pairing,
+ * unwalked by any ground override — which resolves to the exact tokens
+ * `ROLE_PAIRS` already measures as `ua/sheet onFill on fill`. Naming it again
+ * here would be the same two token names a second time, not a second site.
+ *
+ * 1.4.11's 3:1 floor, not 1.4.3's 4.5 — the sigil is a drawn mark, not
+ * lettering, the same call every other graphical-object row in this file
+ * makes.
+ */
+const CALLING_CHIP_PAIRS: Pair[] = [
+  {
+    what: "wow calling chip, selected sigil",
+    surface: "--faction-wow-plum-surface",
+    text: "--faction-wow-on-plum",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  {
+    what: "snide calling chip, selected sigil",
+    surface: "--faction-snide-acid",
+    text: "--faction-snide-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  {
+    what: "ephemerists calling chip, selected sigil",
+    surface: "--faction-ephemerists-plate-cta-bg",
+    text: "--faction-ephemerists-plate-cta-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  {
+    what: "everymen calling chip, selected sigil",
+    surface: "--faction-everymen-bill-cta-bg",
+    text: "--faction-everymen-bill-cta-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  // Coven's ground is the slip CTA's two-stop gradient, so both stops carry
+  // the row — same shape as "coven slip CTA band top/foot" above.
+  {
+    what: "coven calling chip, selected sigil (band top)",
+    surface: "--faction-coven-slip-cta-from",
+    text: "--faction-coven-slip-cta-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  {
+    what: "coven calling chip, selected sigil (band foot)",
+    surface: "--faction-coven-slip-cta-to",
+    text: "--faction-coven-slip-cta-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+  {
+    what: "singularity calling chip, selected sigil",
+    surface: "--faction-singularity-term-cta-bg",
+    text: "--faction-singularity-term-cta-ink",
+    floor: AA_LARGE,
+    nonText: "the calling chip's sigil is a drawn mark — 1.4.11's 3:1",
+  },
+];
+
+/**
  * A `SKY_PAIRS` block stood here (#1792): seven rows measuring each faction's
  * `-on-night` ink against `--sky-bg`, the Constellation's own night canvas.
  *
@@ -2405,6 +2484,7 @@ const PAIRS: Pair[] = [
   ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
   ...RAIL_PAIRS,
+  ...CALLING_CHIP_PAIRS,
 ];
 
 /**
