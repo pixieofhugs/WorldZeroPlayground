@@ -9,7 +9,7 @@ import { describe, it, expect } from "vitest";
 import "../../../i18n";
 import FactionSigil from "../FactionSigil";
 import { resolveVariant } from "../../../utils/factionDispatch";
-import { surfaceMap } from "../../../factions";
+import { FACTION_MANIFESTS, surfaceMap } from "../../../factions";
 import UaMandala from "../../factionMarks/UaMandala";
 
 describe("FactionSigil dispatcher (#659)", () => {
@@ -207,22 +207,20 @@ describe("Albescent's labyrinth (Sigil Studies v2)", () => {
  * inline style, where the size is the only thing that varies.
  */
 describe("every sigil the dispatcher draws comes out of the manifest (#2529)", () => {
-  // Every game slug, plus the two fall-through cases. `na` is a state rather
-  // than a faction and deliberately has no manifest, so it must resolve exactly
-  // the way an unknown slug does.
-  const SLUGS = [
-    "coven",
-    "snide",
-    "ephemerists",
-    "singularity",
-    "everymen",
-    "ua",
-    "wow",
-    "albescent",
-    "na",
+  // Every registered slug, plus the two fall-through cases. Read off the
+  // manifest index rather than typed (#2815): the claim is that the dispatcher
+  // and the map agree for EVERY row, and a row this list had not heard of would
+  // be the one place they could disagree.
+  //
+  // `na` is in there because since #2530 it is a manifest row like the other
+  // eight — a state rather than a faction everywhere else, but reached by the
+  // registry the same way. `not_a_faction` and `null` are the two slugs that
+  // are deliberately NOT rows, which is why they stay written out.
+  const SLUGS: ReadonlyArray<string | null> = [
+    ...FACTION_MANIFESTS.map((manifest) => manifest.slug),
     "not_a_faction",
     null,
-  ] as const;
+  ];
 
   // The mounts in the tree, plus the 64px step the avatar's ring gates on.
   const SIZES = [15, 18, 22, 26, 34, 40, 42, 44, 64, 84];
