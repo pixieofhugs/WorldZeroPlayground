@@ -35,6 +35,7 @@ import {
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
+  type MediaItemOut,
   type PraxisOut,
   type PraxisType,
 } from "../../api/praxis";
@@ -60,7 +61,7 @@ import {
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
-import { useComposerMedia } from "./useComposerMedia";
+import { useComposerMedia, type MediaOutcome } from "./useComposerMedia";
 import { useMetataskApply } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
 import { useComposerDuel, type DuelOutcome } from "./useComposerDuel";
@@ -136,13 +137,41 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     media,
     setMedia,
     fileError,
-    handleFileChange,
-    removeMedia,
+    handleFileChange: handleFileChangeSide,
+    removeMedia: removeMediaSide,
     pendingImage,
-    confirmImageEdit,
+    confirmImageEdit: confirmImageEditSide,
     cancelImageEdit,
     reportImageError,
-  } = useComposerMedia(idParam, setError);
+  } = useComposerMedia(idParam);
+
+  // The tray owns its tiles and its own `fileError`; the shared error line is
+  // ours, so an upload or a delete that fails reports it and we print it
+  // (#2878). It never clears the line — it never did.
+  const reportMedia = useCallback((outcome: MediaOutcome) => {
+    if (outcome.kind === "failed") setError(outcome.message);
+  }, []);
+
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      reportMedia(await handleFileChangeSide(event));
+    },
+    [handleFileChangeSide, reportMedia],
+  );
+
+  const removeMedia = useCallback(
+    async (item: MediaItemOut) => {
+      reportMedia(await removeMediaSide(item));
+    },
+    [removeMediaSide, reportMedia],
+  );
+
+  const confirmImageEdit = useCallback(
+    async (blob: Blob) => {
+      reportMedia(await confirmImageEditSide(blob));
+    },
+    [confirmImageEditSide, reportMedia],
+  );
 
   // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
   // stays here beside the composer's other loads. The APPLIED set is the other
