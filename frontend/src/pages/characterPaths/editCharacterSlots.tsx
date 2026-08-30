@@ -99,7 +99,7 @@ interface DeleteCharacterProps {
  * `useEditCharacter` would give eight archetypes a field they all ignore.
  */
 export function DeleteCharacter({ slug, deleting, onDelete }: DeleteCharacterProps) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const [confirming, setConfirming] = useState(false)
   const alarm = factionCssVar(slug ?? UNAFFILIATED_FACTION_SLUG, 'card-alarm')
 
@@ -122,7 +122,7 @@ export function DeleteCharacter({ slug, deleting, onDelete }: DeleteCharacterPro
       </span>
       <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
         <button type="button" onClick={() => setConfirming(false)} style={confirmCancel}>
-          {t('editCharacter.cancel')}
+          {t('common:actions.cancel')}
         </button>
         <button type="button" onClick={onDelete} disabled={deleting} style={confirmDelete}>
           {deleting ? t('editCharacter.deleteBusy') : t('editCharacter.deleteConfirmYes')}

@@ -109,8 +109,17 @@
  * `useAvatarPicker`, and THE PICKER STAYS VISIBLE in this skin — a player must
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
+ *
+ * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
+ * placeholder-only: the name, bio and catchphrase boxes carry their own words
+ * ("Character name", "Character bio", "Character Catchphrase"), shared with
+ * Edit Character so the two surfaces speak one vocabulary. `namedField()` sets
+ * `aria-label` from that same string, because here the visible label WAS the
+ * accessible name and deleting it without one is a regression, not a
+ * simplification. `ComposerSection` draws no heading row when no `label` is
+ * passed, so the field sections are bare frames around their controls.
  */
-import { useId, useRef, type CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -119,6 +128,7 @@ import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
+import { namedField } from '../characterFields'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -185,7 +195,7 @@ const STAGE_COG = { desktop: 40, mobile: 32 }
 const PICKER_SIGIL = 18
 
 export default function EverymenCreateCharacter({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation('forms')
+  const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const sizes = useComposerSizes()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -215,9 +225,6 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
     handle,
     showPicker,
   } = state
-
-  /** One id per field, so each label names its own control (#2488). */
-  const fieldId = useId()
 
   /**
    * Bebas, struck in tracked caps — every label and headline on the paper.
@@ -371,14 +378,13 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           </div>
 
           {/* Chosen name */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-name`} label={t('createCharacter.nameLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <input
-              id={`${fieldId}-name`}
               data-composer-field
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               maxLength={NAME_MAX}
-              placeholder={t('createCharacter.namePlaceholder')}
+              {...namedField(t('character.namePlaceholder'))}
               autoFocus
               style={{ ...fieldBox, fontFamily: BEBAS, letterSpacing: '0.02em' }}
             />
@@ -391,14 +397,13 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           </ComposerSection>
 
           {/* About */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-about`} label={t('createCharacter.aboutLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <textarea
-              id={`${fieldId}-about`}
               data-composer-field
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={BIO_MAX}
-              placeholder={t('createCharacter.aboutPlaceholder')}
+              {...namedField(t('character.bioPlaceholder'))}
               rows={3}
               style={{ ...fieldBox, resize: 'vertical', lineHeight: 1.6 }}
             />
@@ -409,14 +414,13 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
               alarm on the cap the way the name field's does: this is the field
               the profile header's identity slot is laid out against, so running
               out of room is worth seeing before the text stops appearing. */}
-          <ComposerSection rule={false} htmlFor={`${fieldId}-tagline`} label={t('createCharacter.taglineLabel')} labelStyle={sectionLabel}>
+          <ComposerSection rule={false}>
             <textarea
-              id={`${fieldId}-tagline`}
               data-composer-field
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               maxLength={TAGLINE_MAX}
-              placeholder={t('createCharacter.taglinePlaceholder')}
+              {...namedField(t('character.taglinePlaceholder'))}
               rows={2}
               style={{ ...fieldBox, resize: 'vertical', lineHeight: 1.6 }}
             />
@@ -434,7 +438,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
             rule={false}
             label={
               <>
-                {t('createCharacter.portraitLabel')}{' '}
+                {t('character.portrait')}{' '}
                 <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span>
               </>
             }
@@ -558,7 +562,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                     textDecoration: 'underline',
                   })}
                 >
-                  {t('createCharacter.cancel')}
+                  {t('common:actions.cancel')}
                 </button>
                 <span style={{ fontFamily: COURIER, fontSize: 'var(--text-content)', color: QUIET }}>
                   {t('createCharacter.startsAt')}
