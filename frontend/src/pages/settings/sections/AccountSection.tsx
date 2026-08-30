@@ -215,8 +215,7 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
         </button>
       </SettingsRow>
     </SettingsCard>
-
-      <DeleteAccountCard sectionId={`${sectionId}-danger`} />
+    <DeleteAccountCard sectionId={`${sectionId}-danger`} />
     </>
   )
 }
