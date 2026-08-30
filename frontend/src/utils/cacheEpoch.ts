@@ -103,6 +103,20 @@ export const CACHE_EPOCH: CacheEpoch = createCacheEpoch()
  * Call from every api client whose payload carries `era_name` — `/auth/me` and
  * `/game-config` today. Cheap and idempotent: the common case is a string
  * compare against the era already held.
+ *
+ * WHY THIS IS HAND-FIRED (#2892). `api/client.ts` invalidates automatically off
+ * one bit it already has: `mutates`, set per HTTP method. This fires on a READ,
+ * and on a fact that lives in the response BODY, so there is no flag to hang it
+ * on — the transport would have to duck-type every payload it returns, in a
+ * layer whose whole premise is that shapes are known at compile time.
+ *
+ * And the sniff would be wrong, not merely ugly. `era_name` is not a synonym
+ * for "the live era": `EraAnnouncementPayload` carries the era an activity-feed
+ * announcement is ABOUT, which for a scrolled-back feed is a past one. A
+ * body-shape check is one nesting level away from feeding this function a
+ * historical era and dropping every cache in the app on every feed page. Two
+ * explicit call sites, at the two endpoints whose top-level payload really does
+ * describe the live era, are the honest form.
  */
 export function noteEraStamp(eraName: string): void {
   CACHE_EPOCH.noteEraStamp(eraName)
@@ -115,6 +129,18 @@ export function noteEraStamp(eraName: string): void {
  * viewer* — joining Albescent reveals a faction that `/factions` was previously
  * hiding — and for sign-out, which must not leave the next viewer of this tab
  * holding the last one's directory.
+ *
+ * WHY THIS IS HAND-FIRED (#2892). This is the one mechanism that CANNOT be
+ * folded into the transport even in principle: firing it on every mutating
+ * request would evict the Class A caches on every write, and surviving writes is
+ * the entire definition of Class A (ADR-0072). `dropCachesAfterWrite` exists
+ * precisely because the automatic drop has to stop short of this one —
+ * `utils/resourceCache.ts` spells out the same asymmetry from the other side.
+ *
+ * Its two call sites are not writes-in-general anyway. They are the two events
+ * that change WHO IS ASKING: joining a faction (the viewer is now revealed to
+ * Albescent) and signing out (the next viewer of this tab is a different
+ * person). Neither is staleness, so neither is reachable from a staleness seam.
  */
 export function dropAllCaches(): void {
   CACHE_EPOCH.dropAll()
