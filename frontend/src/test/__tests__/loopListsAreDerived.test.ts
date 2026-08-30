@@ -57,7 +57,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'components/factionHero/__tests__/factionWordmarkWrap.test.tsx|HEROES',
   'components/feed/__tests__/feedRowInk.test.tsx|CASES',
   'components/praxisCard/__tests__/bylineDivider.test.tsx|DASHED',
-  'components/praxisCard/__tests__/praxisMasthead.test.tsx|BANDED',
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   'components/sigil/__tests__/factionSigil.test.tsx|SLUGS',
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
