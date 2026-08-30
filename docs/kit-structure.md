@@ -23,9 +23,9 @@ Do not maintain those two numbers here. Count them with
 `SURFACE_KEYS.length` and `FACTION_MANIFESTS.length`; this section exists to
 say what the numbers *mean*, not to cache them. (They were 21 and 9 when this
 file was written, which is worth stating only because the epic that commissioned
-it went in believing the second number was 10. The first is 20 since ADR-0078
-retired `mobileFactionPage` — a surface count falls when a collapse lands, and
-that is the only reason it may fall.)
+it went in believing the second number was 10. The first fell to 20 when ADR-0078
+retired `mobileFactionPage`, and has risen since — a surface count falls when a
+collapse lands, and that is the only reason it may fall.)
 
 ## Why a bespoke component per faction, and not a props-driven skin
 
@@ -49,7 +49,7 @@ renders correctly everywhere, including on surfaces that do not exist yet. An
 undeclared surface is not a hole: the surface map simply has no row under that
 slug, and `resolveSlug` reads `na`'s row instead. **That is a lookup in the
 ninth manifest, not a fallback mechanism behind the manifests** — `na` declares
-all twenty surfaces itself (`frontend/src/factions/default.ts`), which is why
+all twenty-two surfaces itself (`frontend/src/factions/default.ts`), which is why
 there is only one way a surface gets drawn.
 
 ## `Default` ≡ `na` ≡ Unaffiliated is one identity
@@ -69,7 +69,7 @@ lookup fails".
 `na` used to be the one faction with no manifest, reached instead by a second
 mechanism — a `Default*` handed to `pickVariant` as a third argument, spelled
 out by hand at ~20 dispatchers. **#2530 retired that.** `frontend/src/factions/default.ts`
-declares all twenty na surfaces the way the other eight declare theirs, and
+declares all twenty-two na surfaces the way the other eight declare theirs, and
 `defaultManifest.test.tsx` fails the build if a key is missing.
 
 `Default*` still names an **archetype, not necessarily a module of that name**.
@@ -100,7 +100,7 @@ not — read `default.ts`, which is now the one place that answers the question.
 
 ## Albescent's partial coverage is the steady state, not a gap
 
-Albescent declares a minority of the 21 surfaces, and that is correct and
+Albescent declares a minority of the 22 surfaces, and that is correct and
 deliberate. It is a secret society hiding in plain sight (ADR-0027), so it must
 be indistinguishable from an unaffiliated player unless you already know what you
 are looking at.
@@ -112,7 +112,7 @@ are looking at.
   prism ring), never a repaint in its own colours. A repaint would put it back in
   the spectrum and un-hide it.
 
-So the count rises one design at a time and is never expected to reach 21. **This
+So the count rises one design at a time and is never expected to reach 22. **This
 has been re-derived as a coverage gap at least twice.** It is not one. The
 per-surface reasoning is in the docblocks in `frontend/src/factions/albescent.ts`,
 which is the only place that stays current.
