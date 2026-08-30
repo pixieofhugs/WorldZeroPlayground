@@ -32,31 +32,34 @@ import type { CommentProps } from '../shared'
 const authState = vi.hoisted(() => ({ user: null as unknown }))
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => authState }))
 
-import { DefaultComment } from '../CommentThread'
-import AlbescentComment from '../voices/AlbescentComment'
-import CovenComment from '../voices/CovenComment'
-import EphemeristsComment from '../voices/EphemeristsComment'
-import EverymenComment from '../voices/EverymenComment'
-import SingularityComment from '../voices/SingularityComment'
-import SnideComment from '../voices/SnideComment'
-import UaComment from '../voices/UaComment'
-import WowComment from '../voices/WowComment'
+import { surfaceMap } from '../../../factions'
 
-/** Nine voices, nine bespoke dresses — each names its own rule. */
-const VOICES: [string, ComponentType<CommentProps>, RegExp][] = [
-  ['na / default', DefaultComment, /border-top:1px solid var\(--faction-default-composer-hair\)/],
+/**
+ * Each voice's own dress, by slug. TYPED ON PURPOSE: a rule read back out of
+ * the component it is asserting about would be the tautology this repo already
+ * paid for once (see `factions/__tests__/defaultManifest.test.tsx`). What is NOT
+ * typed is the population — that comes off the registry below (#2815), so a
+ * tenth kit arrives here with no dress and says so.
+ */
+const FOOT_RULE: Record<string, RegExp> = {
+  na: /border-top:1px solid var\(--faction-default-composer-hair\)/,
   // A pass-through to na's sheet: it inherits the fix and is listed to prove it.
-  ['albescent', AlbescentComment, /border-top:1px solid var\(--faction-default-composer-hair\)/],
-  ['coven', CovenComment, /class="cvn-braid"/],
-  ['ephemerists', EphemeristsComment, /border-top:1px solid/],
-  ['everymen', EverymenComment, /border-top:1px solid var\(--faction-everymen-sheet-hair\)/],
-  ['singularity', SingularityComment, /border-top:1px dashed/],
-  ['snide', SnideComment, /border-top:1px solid var\(--faction-snide-slip-rule\)/],
-  ['ua', UaComment, /border-top:1px solid var\(--faction-ua-hair\)/],
+  albescent: /border-top:1px solid var\(--faction-default-composer-hair\)/,
+  coven: /class="cvn-braid"/,
+  ephemerists: /border-top:1px solid/,
+  everymen: /border-top:1px solid var\(--faction-everymen-sheet-hair\)/,
+  singularity: /border-top:1px dashed/,
+  snide: /border-top:1px solid var\(--faction-snide-slip-rule\)/,
+  ua: /border-top:1px solid var\(--faction-ua-hair\)/,
   // The crown at the top of the WOW sheet paints the same ribbon, so the rule is
   // named by RibbonRule's own held-back opacity, not by the pigment alone.
-  ['wow', WowComment, /height:3px;background:var\(--faction-wow-quest-ribbon\);opacity:0\.75/],
-]
+  wow: /height:3px;background:var\(--faction-wow-quest-ribbon\);opacity:0\.75/,
+}
+
+/** Every registered voice, paired with the dress above. */
+const VOICES: [string, ComponentType<CommentProps>, RegExp][] = Object.entries(
+  surfaceMap('comment'),
+).map(([slug, Voice]) => [slug, Voice, FOOT_RULE[slug]])
 
 const AUTHOR_ID = 42
 
@@ -135,6 +138,14 @@ function subtreeOf(html: string, matches: RegExp): string | null {
 }
 
 describe('your own comment keeps its foot rule while the controls fade (#2733)', () => {
+  it.each(VOICES)('%s: has a declared foot rule at all', (slug, _Voice, RULE) => {
+    // The population is derived and the dresses are not, so this is where the
+    // two meet: a newly registered voice with no row in FOOT_RULE would
+    // otherwise sail through every `toMatch(undefined)` below as a type error
+    // at runtime rather than as a finding.
+    expect(RULE, `${slug} is a registered voice with no rule in FOOT_RULE`).toBeInstanceOf(RegExp)
+  })
+
   it.each(VOICES)('%s: the rule is drawn with the pointer elsewhere', (_name, Voice, RULE) => {
     authState.user = { character: { id: AUTHOR_ID } }
     expect(row(Voice)).toMatch(RULE)

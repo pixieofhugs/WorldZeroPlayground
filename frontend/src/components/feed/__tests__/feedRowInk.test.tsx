@@ -23,14 +23,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-import UaFeedFrame from '../UaFeedFrame'
-import WowFeedFrame from '../WowFeedFrame'
-import SingularityFeedFrame from '../SingularityFeedFrame'
-import SnideFeedFrame from '../SnideFeedFrame'
-import CovenFeedFrame from '../CovenFeedFrame'
-import EphemeristsFeedFrame from '../EphemeristsFeedFrame'
-import EverymenFeedFrame from '../EverymenFeedFrame'
 import FeedRowContent from '../FeedRowContent'
+import { surfaceMap } from '../../../factions'
+import { ALBESCENT_FACTION_SLUG } from '../../../utils/factions'
 import { resolveFeedRowInk } from '../feedRowSkin'
 import { normalizeFeedItem } from '../normalizeFeedItem'
 import { AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from '../../../utils/contrast'
@@ -84,47 +79,68 @@ function veiledGround(stop: string, veil: string | null, theme: Theme) {
   return wash ? compositeOver(wash, surface!) : surface!
 }
 
-const CASES = [
-  { slug: 'ua', Frame: UaFeedFrame, ink: '--faction-ua-card-accent', ground: '--faction-ua-parchment', veil: null },
-  { slug: 'wow', Frame: WowFeedFrame, ink: '--faction-wow-card-accent', ground: '--faction-wow-card-bg', veil: null },
-  {
-    slug: 'singularity',
-    Frame: SingularityFeedFrame,
+/** What one chassis publishes and what it publishes it onto. */
+interface Measured {
+  ink: string
+  ground: string
+  veil: string | null
+}
+
+/**
+ * The pairing each chassis was measured at, by slug. TYPED ON PURPOSE: these
+ * token names ARE the subject — read back off the component they would only
+ * assert that it equals itself. The POPULATION is not typed (#2815); it comes
+ * off the feedFrame registry below.
+ */
+const MEASURED: Record<string, Measured> = {
+  ua: { ink: '--faction-ua-card-accent', ground: '--faction-ua-parchment', veil: null },
+  wow: { ink: '--faction-wow-card-accent', ground: '--faction-wow-card-bg', veil: null },
+  singularity: {
     ink: '--faction-singularity-card-accent',
     ground: '--faction-singularity-term-bg',
     veil: null,
   },
   // The four #1252 left, fixed by #1341. Three repoint to an ink their own
   // family already declares for type on this exact stock; only Everymen mints.
-  {
-    slug: 'snide',
-    Frame: SnideFeedFrame,
+  snide: {
     ink: '--faction-snide-slip-acid-ink',
     ground: '--faction-snide-slip-paper',
     veil: null,
   },
-  {
-    slug: 'coven',
-    Frame: CovenFeedFrame,
-    ink: '--faction-coven-slip-deep',
-    ground: '--faction-coven-ward-card',
-    veil: null,
-  },
-  {
-    slug: 'ephemerists',
-    Frame: EphemeristsFeedFrame,
+  coven: { ink: '--faction-coven-slip-deep', ground: '--faction-coven-ward-card', veil: null },
+  ephemerists: {
     ink: '--faction-ephemerists-plate-brass-light',
     ground: '--faction-ephemerists-plate-bg',
     veil: '--faction-ephemerists-plate-wash',
   },
-  {
-    slug: 'everymen',
-    Frame: EverymenFeedFrame,
-    ink: '--everymen-paper-accent',
-    ground: '--everymen-paper',
-    veil: null,
-  },
-] as const
+  everymen: { ink: '--everymen-paper-accent', ground: '--everymen-paper', veil: null },
+}
+
+/**
+ * The two chassis that publish NO ink of their own, so there is no pairing to
+ * measure: they are the fallback seam, and it has its own describe block at the
+ * foot of this file (#2108). The exclusion is named rather than expressed by
+ * writing out the seven that survive.
+ */
+const PUBLISHES_NO_INK: ReadonlySet<string> = new Set(['na', ALBESCENT_FACTION_SLUG])
+
+const FEED_FRAMES = surfaceMap('feedFrame')
+
+const CASES = Object.entries(FEED_FRAMES)
+  .filter(([slug]) => !PUBLISHES_NO_INK.has(slug))
+  .map(([slug, Frame]) => ({ slug, Frame, ...MEASURED[slug] }))
+
+describe('every chassis that publishes an ink has one measured', () => {
+  it('leaves no registered feed frame unaccounted for', () => {
+    const unaccounted = Object.keys(FEED_FRAMES).filter(
+      (slug) => !PUBLISHES_NO_INK.has(slug) && !(slug in MEASURED),
+    )
+    expect(
+      unaccounted,
+      'measure the ink/ground pair, or name the chassis in PUBLISHES_NO_INK',
+    ).toEqual([])
+  })
+})
 
 /**
  * Fold `var(--<surface-prefix>-<role>, <today's token>)` back to the token

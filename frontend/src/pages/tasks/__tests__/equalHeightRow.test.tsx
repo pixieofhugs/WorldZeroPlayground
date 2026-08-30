@@ -38,15 +38,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 // Imported after the mock is registered.
 import Tasks from '../../Tasks'
 import TaskCard from '../../../components/taskCard/TaskCard'
-import AlbescentTaskCard from '../../../components/taskCard/AlbescentTaskCard'
-import CovenTaskCard from '../../../components/taskCard/CovenTaskCard'
-import DefaultTaskCard from '../../../components/taskCard/DefaultTaskCard'
-import EphemeristsTaskCard from '../../../components/taskCard/EphemeristsTaskCard'
-import EverymenTaskCard from '../../../components/taskCard/EverymenTaskCard'
-import SingularityTaskCard from '../../../components/taskCard/SingularityTaskCard'
-import SnideTaskCard from '../../../components/taskCard/SnideTaskCard'
-import UaTaskCard from '../../../components/taskCard/UaTaskCard'
-import WowTaskCard from '../../../components/taskCard/WowTaskCard'
+import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
 import { readIndexCss } from '../../../test/indexCss'
 
@@ -140,21 +132,13 @@ describe('the tasks board mounts the equal-height row (#1945)', () => {
 })
 
 /**
- * Nine skins, one shape. Albescent is deliberately in the table twice over:
- * once as itself, where the assertions must still pass THROUGH its extra
- * wrapper, and by inheritance because it renders the na card verbatim.
+ * Every skin, one shape — read off the registry rather than typed out (#2815),
+ * so a tenth kit is held to the chain the day its manifest row lands instead of
+ * the day someone remembers this file. Albescent is in the table twice over as
+ * a consequence: once as itself, where the assertions must still pass THROUGH
+ * its extra wrapper, and by inheritance because it renders the na card verbatim.
  */
-const SKINS: [string, ComponentType<CardProps>][] = [
-  ['default (na)', DefaultTaskCard],
-  ['albescent', AlbescentTaskCard],
-  ['coven', CovenTaskCard],
-  ['ephemerists', EphemeristsTaskCard],
-  ['everymen', EverymenTaskCard],
-  ['singularity', SingularityTaskCard],
-  ['snide', SnideTaskCard],
-  ['ua', UaTaskCard],
-  ['wow', WowTaskCard],
-]
+const SKINS: [string, ComponentType<CardProps>][] = Object.entries(surfaceMap('taskCard'))
 
 describe('every skin honours the chain the row hands its height down', () => {
   it.each(SKINS)('%s: the frame is the skin root\'s own <article>', (_name, Card) => {

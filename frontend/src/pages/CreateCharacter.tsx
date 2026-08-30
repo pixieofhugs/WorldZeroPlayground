@@ -12,7 +12,8 @@
  * slug is `state.factionSlug`: the calling being chosen RIGHT NOW, held in
  * `useCreateCharacter`. The page therefore RESKINS LIVE as the pick changes and
  * returns to Default the moment it is cleared, which is what its own heading
- * already asks ("Who are you becoming?"). No route change, no new plumbing —
+ * already asks ("Who is your character" — reworded by #2793, which took the
+ * pronoun out of it along with every field label). No route change, no new plumbing —
  * the preview card was already reading this same value.
  *
  * `''` (born unaffiliated) and any unregistered slug resolve to

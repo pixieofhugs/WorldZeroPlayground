@@ -173,13 +173,19 @@ describe('the page keeps the contract the archetype is only a dress on', () => {
     expect(html).toContain('aria-pressed="false"')
   })
 
-  it.each(WIDTHS)('%s — every field is named by the label already on screen', (width) => {
+  it.each(WIDTHS)('%s — every field is named by the words inside it', (width) => {
     const html = render(width)
-    const forAttributes = [...html.matchAll(/<label[^>]*\bfor="([^"]+)"/g)].map((m) => m[1])
-    expect(forAttributes.length, 'three labelled fields').toBe(3)
-    for (const id of forAttributes) {
-      expect(html, `nothing carries id="${id}"`).toContain(`id="${id}"`)
-    }
+    // This row used to count three `<label for>`s. #2793's ruling deletes every
+    // visible label on both character forms, so the accessible name is now the
+    // placeholder, said once and set on both attributes. The registry-wide
+    // sweep is `createCharacterFields.test.tsx`; what is pinned here is that
+    // THIS plate's three fields are the three that got it — a terminal chassis
+    // dropping one would still render.
+    const names = [...html.matchAll(/aria-label="([^"]+)"/g)].map((m) => m[1])
+    expect(names, 'the three character fields, named').toEqual(
+      expect.arrayContaining(['Character name', 'Character bio', 'Character Catchphrase']),
+    )
+    expect(html, 'and no label survives to name them twice').not.toContain('<label')
   })
 
   it('submits through a real form, so Enter commits from a text field', () => {
