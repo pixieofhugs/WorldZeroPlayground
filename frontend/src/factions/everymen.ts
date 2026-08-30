@@ -17,6 +17,7 @@ const EverymenBackdrop = lazyArchetype(() => import('../components/backdrop/Ever
 const EverymenComment = lazyArchetype(() => import('../components/comments/voices/EverymenComment'))
 const EverymenCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EverymenCreateCharacter'))
 const EverymenDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenDuelSealConfirm'))
+const EverymenEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EverymenEditCharacter'))
 const EverymenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EverymenEditPraxis'))
 const EverymenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EverymenFactionBody'))
 const EverymenFactionHero = lazyArchetype(() => import('../components/factionHero/EverymenFactionHero'))
@@ -54,6 +55,10 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   // being PICKED, not a loaded record, so the page reskins to this bill live and
   // returns to the Default the moment the pick is cleared.
   createCharacter: () => EverymenCreateCharacter,
+  // The same bill, filed again to correct the record (#2537). Here the slug is
+  // the EDITED CHARACTER's and not a live pick, so this page cannot reskin
+  // under the player mid-edit the way its create twin does.
+  editCharacter: () => EverymenEditCharacter,
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,
   profileBody: () => EverymenProfileBody,
