@@ -350,8 +350,8 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
   // the "+" glyph, or to the portrait's alt text once one was picked. Naming it
   // with the caption is what makes what is announced and what is on screen agree.
   const photoAction = avatarPreview
-    ? t('createCharacter.mobile.changePhoto')
-    : t('createCharacter.mobile.addPhoto')
+    ? t('character.changePhoto')
+    : t('character.addPhoto')
 
   return (
     <form data-skin="default" data-testid="mobile-create-character" onSubmit={handleSubmit} style={page}>

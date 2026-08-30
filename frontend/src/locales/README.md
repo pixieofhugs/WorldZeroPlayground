@@ -97,9 +97,11 @@ Create Character and Edit Character are the same form twice, and their copy used
 to disagree on every shared field — `Chosen name` against `Display name`, a
 placeholder in the third person against one in the second. **`forms:character.*`
 is the one block both pages read**, so a reword lands on both at once
-(#2793). It holds the five field words and `portrait`, which used to be
-`createCharacter.portraitLabel` and `editCharacter.portraitHeading` with the
-same value.
+(#2793). It holds the five field words plus the three that were the same
+sentence twice: `portrait` (was `createCharacter.portraitLabel` and
+`editCharacter.portraitHeading`) and the photo-well caption pair
+`addPhoto` / `changePhoto`. `Cancel` went further out still, to
+`common:actions.cancel`, since it is nobody's field.
 
 Two things about it are decisions rather than tidying, and are worth knowing
 before you reword:

@@ -466,7 +466,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          aria-label={t('editCharacter.changePhoto')}
+          aria-label={t('character.changePhoto')}
           className="spectrum-dial"
           style={ringBtn}
         >
@@ -490,7 +490,7 @@ function MobileColumn({ state }: { state: EditCharacterState }) {
           </span>
         </button>
         <div className="label-caption" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
-          {t('editCharacter.changePhoto')}
+          {t('character.changePhoto')}
         </div>
         {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}
       </div>

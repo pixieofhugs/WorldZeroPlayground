@@ -9,7 +9,9 @@
     "taglinePlaceholder": "Character Catchphrase",
     "locationPlaceholder": "Location (SFO, PDX, YYZ)",
     "handlePlaceholder": "Handle",
-    "portrait": "Portrait"
+    "portrait": "Portrait",
+    "addPhoto": "Add photo",
+    "changePhoto": "Change photo"
   },
   "createCharacter": {
     "back": "‹ back to your lives",
@@ -26,8 +28,6 @@
     "mobile": {
       "title": "New character",
       "step": "Step 1 of 2 · Identity",
-      "addPhoto": "Add photo",
-      "changePhoto": "Change photo",
       "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you.",
       "submit": "Create character"
     }
@@ -48,7 +48,6 @@
     "basedCount": "{{count}}/100",
     "saveBusy": "Saving…",
     "saveIdle": "Save Changes",
-    "changePhoto": "Change photo",
     "factionLabel": "Faction",
     "unaffiliated": "Unaffiliated",
     "factionHelp": "Join a faction from the Factions tab. It re-skins your whole app.",
