@@ -47,7 +47,9 @@ def _count_selects(db_connection):
     selects: list[str] = []
     sync_connection = db_connection.sync_connection
 
-    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    def before_cursor_execute(
+        conn, cursor, statement, parameters, context, executemany
+    ):
         if statement.lstrip().upper().startswith("SELECT"):
             selects.append(statement)
 
