@@ -83,9 +83,12 @@
  * order and its join flow when #1611 derived that body, so nothing was left in
  * the phone skin that the body did not say better.)
  * The shared vocabulary lives in `components/factionMarks/wowMobile.tsx`.
- * Edit-character, the factions directory and the players directory are NOT
- * skinned here on purpose — nothing in the kit describes them — and no other
- * faction skins them either, so those pages render their `Default*` skin.
+ * The factions directory and the players directory are NOT skinned here on
+ * purpose — nothing in the kit describes them — and no other faction skins them
+ * either, so those pages render their `Default*` skin. (Edit-character stood in
+ * that sentence until #2537: it is dressed now, derived from the charter rather
+ * than drawn, and the surface it used to name — `mobileEditCharacter` — is
+ * retired rather than filled.)
  *
  * Override-only, like every manifest — WOW simply overrides all of it now: it
  * claims every key in `SURFACE_KEYS`, and `surfaceDispatch.test.ts` holds it
@@ -117,6 +120,7 @@ const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes
 const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
 const WowCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowCreateCharacter'))
+const WowEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowEditCharacter'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -179,4 +183,16 @@ export const WOW_MANIFEST: FactionManifest = {
   // balloons) over the writ's chassis (gilt sheet, parchment fields, one zigzag,
   // the full-bleed gold cast band). ONE responsive component.
   createCharacter: () => WowCreateCharacter,
+
+  // #2537 — THE AMENDED CHARTER: the charter's own dress on the page that edits
+  // a life rather than opening one. Derived, per the owner's rulings of
+  // 2026-08-27 and 2026-08-28 — no sheet was drawn and none was commissioned.
+  // Edit is the SUPERSET, so it is the charter plus the four groups creation has
+  // no treatment for: where you're based, the handle, the faction row and the
+  // delete danger zone. The last two are `characterPaths/editCharacterSlots`'
+  // shared slots, MOUNTED rather than redrawn (#2788), and this archetype
+  // decides only where they sit: a codicil below the charter, outside the form.
+  // ONE responsive component; the line above the mobile-surface block still
+  // holds, because `mobileEditCharacter` stays retired.
+  editCharacter: () => WowEditCharacter,
 }
