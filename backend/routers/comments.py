@@ -21,7 +21,7 @@ from services.comment import (
     list_comments,
     withdraw_comment,
 )
-from services.praxis import can_view_praxis, get_praxis
+from services.praxis import can_view_praxis, get_praxis_settling_consensus
 
 router = APIRouter()
 
@@ -33,8 +33,11 @@ async def list_praxis_comments(
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     # A draft's discussion is member-only too (ADR-0024): mirror the detail 404
-    # so the comments on an in_progress praxis don't leak to non-members.
-    praxis = await get_praxis(praxis_id, session)
+    # so the comments on an in_progress praxis don't leak to non-members — which
+    # is why this settles (#2874): the visibility answer *is* the praxis's
+    # published-ness, so a collab that silence has carried must open its
+    # discussion here too, not only once someone opens the detail view.
+    praxis = await get_praxis_settling_consensus(praxis_id, session)
     if not await can_view_praxis(viewer, praxis, session):
         raise HTTPException(status_code=404, detail="Praxis not found.")
     comments = await list_comments(praxis_id=praxis_id, session=session)

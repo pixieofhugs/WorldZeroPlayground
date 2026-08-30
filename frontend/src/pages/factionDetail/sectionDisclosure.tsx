@@ -38,6 +38,21 @@
  * tests render with no DOM), and a write on every change. What is deliberately
  * NOT reused is `SidebarPanelId` — these are not sidebar panels and registering
  * them there would put them in the rail's blob and in its collapsible ruling.
+ *
+ * WHY THE DECISIONS BELOW ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM. A
+ * dead-export audit (#2693) listed `FACTION_SECTION_IDS`,
+ * `factionSectionStorageKey`, `factionSectionBodyId`,
+ * `resolveCollapsedSections`, `serializeCollapsedSections` and
+ * `toggleCollapsedSection` as reachable only from `__tests__`. True, and not a
+ * defect — they are the only seam this harness can reach. `vite.config.ts`
+ * declares vitest with no `environment`, so tests run in node: no jsdom, no
+ * click events, no `localStorage`, effects never run, and every test is one
+ * `renderToStaticMarkup` pass. `useFactionSections` cannot be mounted and
+ * toggled here, so what a stored blob is allowed to be, what junk it tolerates,
+ * and the `aria-controls` id that must match the panel it names are asserted on
+ * these or not at all. Owner ruling 2026-08-28 on #2693: keep them, note why —
+ * if the harness ever gains a DOM they become re-examinable, and until then an
+ * audit that lists them again is measuring the harness, not this module.
  */
 import { useCallback, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";

@@ -126,7 +126,6 @@ export interface EditPraxisState {
   /** The applied metatasks as full rows, rendered as the editable seal stack. */
   appliedMetataskList: TaskOut[];
   applyingMetatask: number | null;
-  toggleMetatask: (mt: TaskOut) => Promise<void>;
   /** Seal a not-yet-applied metatask onto the praxis; closes the picker. */
   addMetatask: (mt: TaskOut) => Promise<void>;
 
@@ -303,7 +302,6 @@ export interface EditPraxisState {
   modeIsLocked: boolean;
   /** Show the invite/challenge box: collab members, or an open duel pane. */
   showInviteBox: boolean;
-  showMetatasks: boolean;
   /** The viewer can add/remove seals (eligible + solo + still editable). */
   canSealMetatask: boolean;
   /** Render the seal stack at all: can seal, or read-only applied seals exist. */
