@@ -344,7 +344,7 @@ async def build_task_out_for_viewer(
     eligibility = await evaluate_signup(viewer, task, session, era, facts=signup_facts)
     base.can_sign_up = eligibility.allowed
     base.signup_reason = await signup_reason(
-        viewer, task, eligibility, session, facts=signup_facts
+        viewer, task, eligibility, session, era, facts=signup_facts
     )
     # The viewer's own open draft on this task, so a card can OFFER it instead of
     # announcing it (#2359) — and its filed twin, so the same card can offer the
