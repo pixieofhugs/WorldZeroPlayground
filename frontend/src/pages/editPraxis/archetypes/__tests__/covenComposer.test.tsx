@@ -30,9 +30,8 @@ import "../../../../i18n";
 import i18n from "../../../../i18n";
 import forms from "../../../../locales/en/forms.json";
 import { factionName } from "../../../../utils/factions";
+import { anEditPraxisState, aPraxis, aTask } from "../../../../test/fixtures";
 import type { EditPraxisState } from "../../useEditPraxis";
-import type { PraxisOut } from "../../../../api/praxis";
-import type { TaskOut } from "../../../../api/tasks";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "mobile" | "desktop" }));
 vi.mock("../../../../hooks/useFormFactor", () => ({
@@ -41,75 +40,45 @@ vi.mock("../../../../hooks/useFormFactor", () => ({
 
 import CovenEditPraxis from "../CovenEditPraxis";
 
-const task = {
-  id: 7,
+const task = aTask({
   title: "Bless the work",
   description: "Do a small honest thing.",
   point_value: 20,
   level_required: 1,
-  status: "active",
-  task_type: "standard",
   primary_faction_slug: "coven",
   allowed_modes: ["solo", "collab", "duel"],
-} as unknown as TaskOut;
+});
 
-const praxis = {
+const TITLE = "I helped a stranger";
+
+const praxis = aPraxis({
   id: 55,
-  task_id: 7,
   task_title: "Bless the work",
   task_faction_slug: "coven",
-  type: "solo",
   status: "in_progress",
-  title: "I helped a stranger",
+  title: TITLE,
   body_text: "## What I did\n\nCaught the papers.",
-  moderation_status: "visible",
-  duel_id: null,
-  created_by_id: 3,
   members: [],
-  invites: [],
   media_items: [],
-} as unknown as PraxisOut;
+});
 
+/**
+ * No `as unknown as` (#2877) — the first suite off the cast.
+ *
+ * The 79-member state is the fixture's problem now, so what is left here is
+ * only what these claims actually rest on: a Coven task, a draft on it, and a
+ * duel chip, which is what puts a mode picker on the page for the locked-state
+ * claim to watch disappear.
+ */
 function baseState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
-  return {
-    loading: false,
-    phase: "composing",
+  return anEditPraxisState({
     praxis,
     task,
-    error: "",
-    title: praxis.title,
-    setTitle: () => {},
+    title: TITLE,
     body: "Caught the papers.",
-    setBody: () => {},
-    media: [],
-    fileError: "",
-    handleFileChange: () => {},
-    removeMedia: async () => {},
-    switchingMode: null,
-    changeMode: async () => {},
-    inviteQuery: "",
-    setInviteQuery: () => {},
-    inviteResults: [],
-    inviteOpen: false,
-    setInviteOpen: () => {},
-    inviting: false,
-    submitting: false,
-    publish: async () => {},
-    saveDraft: async () => {},
-    pullBack: async () => {},
-    cancel: async () => {},
-    autosaveAt: null,
-    autoSubmitDays: 10,
-    isPublished: false,
-    controlsLocked: false,
-    modeIsLocked: false,
-    showInviteBox: false,
-    showSealStack: false,
-    duelMode: false,
     duelChipVisible: true,
-    currentCharacterId: 3,
     ...overrides,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(

@@ -1780,28 +1780,29 @@
      #2141, where its consumers were all along. What survives the repoint is
      `--eph-display` and `--eph-serif`, both FACES, both still aliased by
      `-card-font` / `-body-font` below. #1661 deleted the ten colours nothing
-     read at all, plus `--eph-script`. The EIGHT that remain are still dead as
-     PAINT and alive only as MEASUREMENTS: the six `ephemerists vellum …` rows in
-     `factionContrast.test.ts` name them, so retiring the rows is what retires
-     the colours — one of those rows is spending a #651 BASELINE entry on a
-     vermilion nothing prints. That is a judgement for a human, not a byte-shed.
-     CONSTANTS (gold/rubric/ink) kept their role in both themes; the VELLUM
-     surface + its text FLIPPED in dark (see [data-theme="dark"]). */
-  --eph-gold: #b0863a; /* gold leaf / ochre */
+     read at all, plus `--eph-script`. #2698 stage 1 took FIVE of the eight that
+     survived that cull — `--eph-gold`, `--eph-ink`, `--eph-parchment`,
+     `--eph-field` and `--eph-vellum-text` — because their only reader in the
+     whole repo was a row in `factionContrast.test.ts`: zero `var()` reads in
+     this sheet, zero references in any non-test source. The rows were the only
+     thing making five dead colours look alive, so the rows went with them.
+     THE THREE THAT REMAIN are not in that class. `--eph-vellum` has five real
+     component references; the two surviving `ephemerists vellum, …` rows measure
+     `--eph-muted` and `--eph-rubric` as ink ON it, and the rubric pairing still
+     spends a #651 BASELINE entry in dark. The two inks keep their role in both
+     themes; the VELLUM surface FLIPS in dark (see [data-theme="dark"]) — its
+     text used to flip with it, which is what `--eph-vellum-text` was for. */
   --eph-rubric: #9c3622; /* vermilion rubrication red */
-  --eph-ink: #2a1d12; /* iron-gall ink — stays dark in both themes */
   --eph-vellum: #e9dcbf; /* aged manuscript stock */
-  --eph-vellum-text: #2a1d12; /* primary text on vellum */
   --eph-muted: #6f5c3e; /* faded marginalia ink */
-  --eph-parchment: #f1e8cf; /* bright text on dark elements */
-  --eph-field: #1d4f6e; /* lapis celestial-diagram field */
   /* #1661 took the ten codex colours nothing measured or painted: the -light /
      -deep sub-tones (gold, rubric, lapis, vellum, field), --eph-lapis,
      --eph-verdigris, the gilt --eph-frame, the --eph-stamp-bg score leaf, and
      the third face --eph-script (Cormorant Garamond, reader-less since #841's
-     chrome went). The EIGHT above survive only because the six
-     `ephemerists vellum …` rows in factionContrast.test.ts still measure them;
-     retiring those rows retires these too, and is a decision for a human. */
+     chrome went). #2698 took the next five — gold, ink, parchment, field and
+     vellum-text — whose only reader anywhere was a factionContrast.test.ts row.
+     The THREE above survive on `--eph-vellum`'s component references and the
+     two rows that measure ink on it. */
   /* Ephemerist faces — Cinzel display caps, EB Garamond body */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
