@@ -193,9 +193,9 @@ function MemberDisc({
             width: '100%',
             height: '100%',
             borderRadius: '50%',
-            background: 'var(--na-praxis-detail-paper, var(--faction-default-card-bg))',
+            background: 'var(--na-praxis-detail-paper)',
             fontSize: 'var(--text-lg)',
-            color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+            color: 'var(--na-praxis-detail-ink)',
           }}
         >
           {initials(name)}
@@ -268,7 +268,7 @@ export default function DefaultPraxisDetail({
     border: '1px solid var(--faction-default-card-line)',
     borderRadius: 12,
     background: 'var(--faction-default-stamp-bg)',
-    color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+    color: 'var(--na-praxis-detail-ink)',
     padding: 'var(--space-lg)',
   }
 
@@ -352,11 +352,11 @@ export default function DefaultPraxisDetail({
             linkClassName="font-display italic"
             linkStyle={{
               fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
-              color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+              color: 'var(--na-praxis-detail-ink)',
               textDecoration: 'none',
             }}
           />
-          <div className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet, var(--faction-default-card-muted))' }}>
+          <div className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
             {t('detail.filed', {
               date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
             })}
@@ -371,7 +371,7 @@ export default function DefaultPraxisDetail({
           fontSize: desktop ? 'var(--text-display)' : 'var(--text-heading)',
           lineHeight: 1.08,
           margin: '0 0 var(--space-md)',
-          color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+          color: 'var(--na-praxis-detail-ink)',
           overflowWrap: 'anywhere',
         }}
       >
@@ -393,17 +393,17 @@ export default function DefaultPraxisDetail({
           marginBottom: 'var(--space-xl)',
         }}
       >
-        <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet, var(--faction-default-card-muted))' }}>
+        <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
           {t('detail.taskRef.label')}
         </span>
         <Link
           to={`/tasks/${praxis.task_id}`}
           className="font-display italic content-text"
-          style={{ color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))', textDecoration: 'none' }}
+          style={{ color: 'var(--na-praxis-detail-ink)', textDecoration: 'none' }}
         >
           {praxis.task_title}
         </Link>
-        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--na-praxis-detail-quiet, var(--faction-default-card-muted))' }}>
+        <span className="label-caption" style={{ marginLeft: 'auto', color: 'var(--na-praxis-detail-quiet)' }}>
           {taskRefMeta(praxis, t)}
         </span>
       </div>
@@ -465,7 +465,7 @@ export default function DefaultPraxisDetail({
       {sectionHead(t('detail.vote.heading'))}
       <p
         className="font-display italic content-text"
-        style={{ margin: '0 0 var(--space-md)', color: 'var(--na-praxis-detail-quiet, var(--faction-default-card-muted))' }}
+        style={{ margin: '0 0 var(--space-md)', color: 'var(--na-praxis-detail-quiet)' }}
       >
         {t('detail.vote.prompt')}
       </p>
@@ -502,7 +502,7 @@ export default function DefaultPraxisDetail({
     <section style={panel}>
       {sectionHead(
         t('detail.voters.heading'),
-        <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet, var(--faction-default-card-muted))' }}>
+        <span className="label-caption" style={{ color: 'var(--na-praxis-detail-quiet)' }}>
           {t('detail.voters.count', { count: voters.length })}
         </span>,
       )}
@@ -522,7 +522,7 @@ export default function DefaultPraxisDetail({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 fontSize: 'var(--text-content)',
-                color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+                color: 'var(--na-praxis-detail-ink)',
                 textDecoration: 'none',
               }}
             >
@@ -598,7 +598,7 @@ export default function DefaultPraxisDetail({
       <MarkdownPreview
         source={praxis.body_text}
         className="font-body markdown-preview content-text"
-        style={{ lineHeight: 1.85, color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))' }}
+        style={{ lineHeight: 1.85, color: 'var(--na-praxis-detail-ink)' }}
       />
     </section>
   )
@@ -662,7 +662,7 @@ export default function DefaultPraxisDetail({
           // COLUMN rather than the viewport — the site background must still
           // show around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
           ...factionSheet(),
-          color: 'var(--na-praxis-detail-ink, var(--faction-default-card-text))',
+          color: 'var(--na-praxis-detail-ink)',
           border: '1px solid var(--faction-default-border)',
           borderRadius: 18,
           padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',

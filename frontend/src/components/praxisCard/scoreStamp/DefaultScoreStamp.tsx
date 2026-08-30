@@ -208,7 +208,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         border: "1px solid var(--faction-default-card-line)",
         borderRadius: 10,
         background: "var(--faction-default-stamp-bg)",
-        color: "var(--na-score-stamp-ink, var(--faction-default-card-text))",
+        color: "var(--na-score-stamp-ink)",
         boxShadow: "0 2px 6px var(--color-cast-shadow-soft)",
         padding: "var(--space-md)",
       }}
@@ -275,7 +275,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
                 fontSize: "var(--text-base)",
                 textTransform: "uppercase",
                 letterSpacing: "0.16em",
-                color: "var(--na-score-stamp-quiet, var(--faction-default-card-muted))",
+                color: "var(--na-score-stamp-quiet)",
                 whiteSpace: "nowrap",
               }}
             >
@@ -284,7 +284,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             <span
               style={{
                 marginLeft: "auto",
-                fontFamily: "var(--na-score-stamp-face, var(--faction-default-card-font))",
+                fontFamily: "var(--na-score-stamp-face)",
                 fontSize: "var(--text-lg)",
                 whiteSpace: "nowrap",
               }}
@@ -300,9 +300,9 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             {row.chip && (
               <span
                 style={{
-                  fontFamily: "var(--na-score-stamp-face, var(--faction-default-card-font))",
+                  fontFamily: "var(--na-score-stamp-face)",
                   fontSize: "var(--text-base)",
-                  color: "var(--na-score-stamp-quiet, var(--faction-default-card-muted))",
+                  color: "var(--na-score-stamp-quiet)",
                   whiteSpace: "nowrap",
                 }}
               >

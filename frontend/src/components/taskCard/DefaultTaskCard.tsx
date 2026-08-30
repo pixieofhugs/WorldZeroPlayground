@@ -81,7 +81,7 @@ const CAPTION: CSSProperties = {
   fontFamily: MONO,
   letterSpacing: "0.2em",
   textTransform: "uppercase",
-  color: "var(--na-task-card-quiet, var(--faction-default-card-muted))",
+  color: "var(--na-task-card-quiet)",
 };
 
 export default function DefaultTaskCard({
@@ -134,7 +134,7 @@ export default function DefaultTaskCard({
           borderRadius: 14,
           ...factionSpectrumSheet(),
           boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
-          color: "var(--na-task-card-ink, var(--faction-default-card-text))",
+          color: "var(--na-task-card-ink)",
           fontFamily: MONO,
           padding: size.pad,
         }}
@@ -224,8 +224,8 @@ export default function DefaultTaskCard({
                     lineHeight: 1,
                     borderRadius: 5,
                     padding: "var(--space-xs) var(--space-sm)",
-                    background: "var(--na-task-card-ink, var(--faction-default-card-text))",
-                    color: "var(--na-task-card-paper, var(--faction-default-card-bg))",
+                    background: "var(--na-task-card-ink)",
+                    color: "var(--na-task-card-paper)",
                   }}
                 >
                   {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
@@ -257,7 +257,7 @@ export default function DefaultTaskCard({
               style={{
                 fontFamily: MONO,
                 lineHeight: 1.55,
-                color: "var(--na-task-card-quiet, var(--faction-default-card-muted))",
+                color: "var(--na-task-card-quiet)",
                 margin: "0 0 var(--space-lg)",
               }}
             >
@@ -290,7 +290,7 @@ export default function DefaultTaskCard({
                   fontFamily: MONO,
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.04em",
-                  color: "var(--na-task-card-quiet, var(--faction-default-card-muted))",
+                  color: "var(--na-task-card-quiet)",
                 }}
               >
                 {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}

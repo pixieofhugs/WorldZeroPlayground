@@ -53,10 +53,10 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
         // the short ones rather than padding them.
         border: '3px solid transparent',
         ...factionSpectrumSheet(),
-        color: 'var(--na-seal-ink, var(--faction-default-card-text))',
+        color: 'var(--na-seal-ink)',
         // The corner is the ROLE MAP's, not this file's (#2729) — the picker's
         // selection ring reads the token behind it, so the two cannot disagree.
-        borderRadius: 'var(--na-seal-radius, var(--faction-default-card-radius))',
+        borderRadius: 'var(--na-seal-radius)',
         overflow: 'hidden',
       }}
     >
@@ -77,7 +77,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
               right: 'var(--space-sm)',
               background: 'transparent',
               border: 'none',
-              color: 'var(--na-seal-quiet, var(--faction-default-card-muted))',
+              color: 'var(--na-seal-quiet)',
               fontSize: 'var(--text-xl)',
               cursor: 'pointer',
             }}
@@ -94,7 +94,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
             fontSize: 'var(--text-md)',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
-            color: 'var(--na-seal-quiet, var(--faction-default-card-muted))',
+            color: 'var(--na-seal-quiet)',
             marginBottom: 'var(--space-xs)',
           }}
         >
@@ -105,7 +105,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           className="font-body block"
           style={{
             fontSize: 'var(--text-content)',
-            color: 'var(--na-seal-ink, var(--faction-default-card-text))',
+            color: 'var(--na-seal-ink)',
             textTransform: 'uppercase',
             letterSpacing: '0.03em',
           }}
@@ -117,7 +117,7 @@ export default function DefaultSeal({ metatask, removable, onRemove }: SealSkinP
           className="font-display block"
           style={{
             fontSize: 'var(--text-title)',
-            color: 'var(--na-seal-accent, var(--faction-default-card-accent))',
+            color: 'var(--na-seal-accent)',
             marginTop: 'var(--space-xs)',
           }}
         >
