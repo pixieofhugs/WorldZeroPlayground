@@ -24,10 +24,11 @@
  * own subject proves nothing. So the rule is not "always derive" — it is
  * "derive, or be on this list having said why".
  *
- * THIS IS A RATCHET. The entries below are grandfathered: they exist today and
- * #2815 is converting them, a few per PR. The guard's job is that a new one
- * cannot appear quietly. Removing an entry as it is converted is the intended
- * direction; adding one needs a reason in the review, not just a green suite.
+ * THIS IS A RATCHET, AND #2815 HAS RUN IT DOWN. It started at 25 pending
+ * conversions. Every one that was a completeness claim about the kits is now
+ * derived; what is left below is four DELIBERATE keeps, each carrying its own
+ * reason. The guard's job from here is that a new typed list cannot appear
+ * quietly — adding an entry needs a reason in the review, not just a green suite.
  */
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -42,18 +43,35 @@ const DERIVED =
   /surfaceMap|FACTION_MANIFESTS|FACTION_RAINBOW_ORDER|Object\.(?:keys|entries)|CSS_KEY|KIT_MODULES|SURFACE_KEYS|MANIFESTS/
 
 /**
- * `<path from src/>|<const name>` for every typed list driving a `.each` today.
- * Shrinks as #2815 converts them; it must never grow without a reason.
+ * `<path from src/>|<const name>` for every typed list driving a `.each`.
+ *
+ * All four are DELIBERATE keeps — none is pending conversion. Each says why in
+ * place, and the shape of the reason is always the same: the list is not a
+ * claim about which kits exist. It must never grow without one.
  */
 const GRANDFATHERED: ReadonlySet<string> = new Set([
-  // DELIBERATE, not pending: `MECHANICS` is a copy DECISION RECORD — seven
-  // [slug, name, desc] triples pinning the owner's finished mechanic copy by
-  // value. The slugs are the subject beside the strings, not the iteration
-  // range, and the range question (does every letter still have a written
-  // mechanic?) is answered by the derived SLUGS loop in the same file.
+  // A copy DECISION RECORD — seven [slug, name, desc] triples pinning the
+  // owner's finished mechanic copy by value. The slugs are the subject beside
+  // the strings, not the iteration range, and the range question (does every
+  // letter still have a written mechanic?) is answered by the derived SLUGS
+  // loop in the same file.
   'components/__tests__/invitationPerks.test.tsx|MECHANICS',
+  // A record of the three factions #2042 unified, naming SOURCE FILE PATHS and
+  // the declarations each surface retired. The subject is those three
+  // unifications; the manifest does not know which kits unified their points
+  // mark, so a derived range here would be a range over the wrong thing.
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
+  // A CONTRAST PAIR TABLE: each row names a field's ground STACK, outermost
+  // last, and the ink `currentColor` resolves to. Nothing derives a ground
+  // stack — the table is the only place that mapping exists — and its two `na`
+  // rows are two different fields rather than one kit. The file's own header
+  // carries the range instruction ("if a ninth plate ever paints a field, add
+  // its row").
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
+  // A RENDERER census, not a kit census: four code paths reach the shared About
+  // block, and `coven` and `wow` are named as SAMPLES that reach two of them
+  // (WOW's phone stack is bespoke — the fourth renderer #1626 missed). Deriving
+  // over the nine kits would quietly replace the question this file asks.
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
 ])
 
