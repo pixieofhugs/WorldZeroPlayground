@@ -188,7 +188,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
-  it("is mounted on the seven surfaces that draw one, and no others", () => {
+  it("is mounted on the eight surfaces that draw one, and no others", () => {
     // The issue names three (card, task detail, composer). The grep found two
     // more painting the identical button — the faction page's join/leave pair
     // and the phone's field desk — and #2067's own note that the field desk
@@ -207,6 +207,12 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     // control is the same full-bleed band the composer casts from — so it wears
     // this class for the reason the list exists, and does not restate the
     // ground or the ink the class already carries.
+    //
+    // The EIGHTH is character EDITING (#2537's fan-out), added the same way and
+    // for the same reason: the edit archetype is derived from the create plate
+    // above, so its Save is the same full-bleed cast band the create page's
+    // Create is. A derived dress that repainted the commit control would be
+    // deriving everything except the one control the ruling is about.
     const mounts = files
     // Matched at the `className`, not on the bare string: half the Ephemerists
     // kit names this class in prose, and a census a comment can join is a
@@ -217,6 +223,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
       "components/selectCard/EphemeristsSelectCard.tsx",
       "components/taskCard/EphemeristsTaskCard.tsx",
       "pages/characterPaths/archetypes/EphemeristsCreateCharacter.tsx",
+      "pages/characterPaths/archetypes/EphemeristsEditCharacter.tsx",
       "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
       "pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
       "pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",
