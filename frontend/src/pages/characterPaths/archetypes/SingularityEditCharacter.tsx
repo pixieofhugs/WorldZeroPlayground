@@ -145,8 +145,13 @@ const HALO_GREEN = 'var(--faction-singularity-term-halo-green)'
 const SHADOW = 'var(--faction-singularity-term-shadow)'
 const ALARM = 'var(--faction-singularity-card-alarm)'
 
-/** One face for the whole surface, through the faction's own accessor (§4). */
-const FACE = 'var(--sg-path-face)'
+/* One face for the whole surface, through the faction's own accessor (§4).
+
+   ITS OWN PREFIX, not the create plate's `sg-path` (#2659). A role map is
+   per-SURFACE and `factionRoleFallbacks.test.ts` enforces that a prefix is
+   never shared — two surfaces on one map is how a repoint for one of them
+   silently moves the other. */
+const FACE = 'var(--sg-edit-path-face)'
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2
@@ -352,7 +357,7 @@ export default function SingularityEditCharacter({ state }: { state: EditCharact
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars(SLUG, 'sg-path'), fontFamily: FACE, color: INK }}
+      style={{ ...factionRoleVars(SLUG, 'sg-edit-path'), fontFamily: FACE, color: INK }}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}

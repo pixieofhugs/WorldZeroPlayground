@@ -131,6 +131,11 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
       // bar it wears is this frame's and the card band's rather than the
       // composer's, because a page with no session has no process to light.
       "pages/characterPaths/archetypes/SingularityCreateCharacter.tsx",
+      // And the seventh (#2537): editing that character, derived from the
+      // create plate above and wearing the same bar for the same reason — the
+      // process name on it reads `character.edit` rather than `character.new`,
+      // which is the whole delta.
+      "pages/characterPaths/archetypes/SingularityEditCharacter.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
