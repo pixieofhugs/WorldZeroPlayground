@@ -173,8 +173,8 @@ export default function DefaultTaskDetail({
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
   const sheet: CSSProperties = {
-    background: "var(--na-task-detail-paper, var(--faction-default-card-bg))",
-    color: "var(--na-task-detail-ink, var(--faction-default-card-text))",
+    background: "var(--na-task-detail-paper)",
+    color: "var(--na-task-detail-ink)",
   };
   const innerBox: CSSProperties = {
     background: "var(--color-bg-page)",
@@ -769,7 +769,7 @@ export default function DefaultTaskDetail({
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "var(--na-task-detail-accent, var(--faction-default-card-accent))",
+                color: "var(--na-task-detail-accent)",
               }}
             >
               {showAllPraxis
@@ -825,7 +825,7 @@ export default function DefaultTaskDetail({
           // surface and padding), but the stated reason was false; do not cite
           // it as precedent for "a class with no CSS".
           ...factionSheet(),
-          color: "var(--na-task-detail-ink, var(--faction-default-card-text))",
+          color: "var(--na-task-detail-ink)",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,
           padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",

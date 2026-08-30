@@ -28,23 +28,16 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import { factionName } from '../../../utils/factions'
 import type { FactionHeroProps } from '../../../pages/FactionDetail'
-import CovenFactionHero from '../CovenFactionHero'
-import EphemeristsFactionHero from '../EphemeristsFactionHero'
-import EverymenFactionHero from '../EverymenFactionHero'
-import SingularityFactionHero from '../SingularityFactionHero'
-import SnideFactionHero from '../SnideFactionHero'
-import UaFactionHero from '../UaFactionHero'
-import WowFactionHero from '../WowFactionHero'
+import { surfaceMap } from '../../../factions'
 
-const HEROES: ReadonlyArray<[slug: string, Hero: ComponentType<FactionHeroProps>]> = [
-  ['coven', CovenFactionHero],
-  ['ephemerists', EphemeristsFactionHero],
-  ['everymen', EverymenFactionHero],
-  ['singularity', SingularityFactionHero],
-  ['snide', SnideFactionHero],
-  ['ua', UaFactionHero],
-  ['wow', WowFactionHero],
-]
+/**
+ * Every registered hero, read off the manifest rather than typed (#2815). It
+ * used to be seven rows; na's and albescent's heroes exist and had never been
+ * walked, and a tenth kit would have been missed the same way.
+ */
+const FACTION_HEROES = surfaceMap('factionHero')
+const HEROES: ReadonlyArray<[slug: string, Hero: ComponentType<FactionHeroProps>]> =
+  Object.entries(FACTION_HEROES)
 
 const routed = (el: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{el}</MemoryRouter>)
@@ -99,7 +92,7 @@ describe('a faction wordmark never breaks mid-word', () => {
    * 76px mark in a 222px track.
    */
   it('gives the Everymen wordmark a track it fits in', () => {
-    const html = render(EverymenFactionHero, 'everymen')
+    const html = render(FACTION_HEROES.everymen, 'everymen')
     // The identity column is the only div carrying the 300px floor; the OUTER
     // row already wraps, so a bare `toContain('flex-wrap:wrap')` would pass on
     // main. Read the declaration off that column specifically.
@@ -135,7 +128,7 @@ describe('a faction wordmark never breaks mid-word', () => {
    * what keeps the poster size on a wide screen.
    */
   it('scales the Singularity wordmark to its own column, not the viewport', () => {
-    const html = render(SingularityFactionHero, 'singularity')
+    const html = render(FACTION_HEROES.singularity, 'singularity')
     expect(html, "the wordmark's column is its own inline-size container").toContain(
       'container-type:inline-size',
     )

@@ -63,7 +63,7 @@ import { useComposerDraft } from "./useComposerDraft";
 import { useComposerMedia } from "./useComposerMedia";
 import { useMetataskApply } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
-import { useComposerDuel } from "./useComposerDuel";
+import { useComposerDuel, type DuelOutcome } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listMetatasks } from "../../api/metatasks";
@@ -183,9 +183,25 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setDuelSealOpen,
     requestDuelSeal,
     cancelDuelSeal,
-    cancelDuel,
-    dissolveDuel,
-  } = useComposerDuel({ praxis, setPraxis, askConfirm, setError });
+    cancelDuel: cancelDuelSide,
+    dissolveDuel: dissolveDuelSide,
+  } = useComposerDuel({ praxis, askConfirm });
+
+  // The pane owns the duel; the praxis and the error line are ours, so it
+  // reports what it changed and we write it (#2879).
+  const applyDuelOutcome = useCallback((outcome: DuelOutcome) => {
+    if (outcome.kind === "unchanged") return;
+    setError(outcome.kind === "failed" ? outcome.message : "");
+    if (outcome.kind === "cancelled") setPraxis(outcome.praxis);
+  }, []);
+
+  const cancelDuel = useCallback(async () => {
+    applyDuelOutcome(await cancelDuelSide());
+  }, [cancelDuelSide, applyDuelOutcome]);
+
+  const dissolveDuel = useCallback(async () => {
+    applyDuelOutcome(await dissolveDuelSide());
+  }, [dissolveDuelSide, applyDuelOutcome]);
 
   // The duel gate and the ADR-0012 window length (#1164) are two era values off
   // one payload — since #1141 the app-wide cached one, rather than a third

@@ -91,6 +91,32 @@ voice for the same seven or eight slots — ring label, level unit, next-level
 line, praxis eyebrow and empty state, badge heading (#1858). A slot a faction
 does not override simply has no key, and the shared `profile.*` one is used.
 
+### One vocabulary for the character forms (`forms.json` → `character.*`)
+
+Create Character and Edit Character are the same form twice, and their copy used
+to disagree on every shared field — `Chosen name` against `Display name`, a
+placeholder in the third person against one in the second. **`forms:character.*`
+is the one block both pages read**, so a reword lands on both at once
+(#2793). It holds the five field words plus the three that were the same
+sentence twice: `portrait` (was `createCharacter.portraitLabel` and
+`editCharacter.portraitHeading`) and the photo-well caption pair
+`addPhoto` / `changePhoto`. `Cancel` went further out still, to
+`common:actions.cancel`, since it is nobody's field.
+
+Two things about it are decisions rather than tidying, and are worth knowing
+before you reword:
+
+- **The words name the CHARACTER and carry no pronoun.** Not "your story", not
+  "who they are" — `Character bio`. That is what settled a second-person heading
+  sitting above a third-person placeholder.
+- **Both forms are placeholder-only**: there is no visible label anywhere on
+  either page, so these strings are also each field's *accessible name*
+  (`aria-label`). Reword them freely, but keep them saying what the field is —
+  a screen-reader user hears nothing else about that box. `location` is
+  deliberately an **airport code** (`Location (SFO, PDX, YYZ)`): close enough to
+  find a neighbour, too coarse to track anyone, and nothing but this placeholder
+  says so.
+
 ## Plurals
 
 i18next native plural suffixes — two sibling keys, `_one` and `_other`:

@@ -239,9 +239,12 @@ describe('DefaultEditCharacter mobile skin', () => {
   it('renders name, story, tagline, faction link-out, delete and sticky Save', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
     expect(html, 'name input').toContain('value="Molly"')
-    expect(text, 'story label').toContain('Your story')
+    // The three fields are named by the words inside them, not by a label above
+    // them (#2793) — and on an edit form, which opens full, that name is the
+    // only thing that says which box is which to a screen reader.
+    expect(html, 'story field').toContain('aria-label="Character bio"')
     expect(html, 'story value is the bio').toContain('value="Doing very human things."')
-    expect(text, 'tagline label').toContain('Tagline')
+    expect(html, 'tagline field').toContain('aria-label="Character Catchphrase"')
     expect(html, 'tagline value is the tagline').toContain('value="Slow spells, strong tea."')
     // Faction is read-only and links out — but an unaffiliated life goes to the
     // DIRECTORY, not to `/factions/na`.

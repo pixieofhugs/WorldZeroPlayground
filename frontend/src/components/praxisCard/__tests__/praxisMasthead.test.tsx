@@ -48,26 +48,9 @@ vi.mock("../../../hooks/useTheme", () => ({
 }));
 
 // Imported after the mocks are registered.
-import CovenTaskCard from "../../taskCard/CovenTaskCard";
-import EphemeristsTaskCard from "../../taskCard/EphemeristsTaskCard";
-import EverymenTaskCard from "../../taskCard/EverymenTaskCard";
-import SingularityTaskCard from "../../taskCard/SingularityTaskCard";
-import SnideTaskCard from "../../taskCard/SnideTaskCard";
-import UaTaskCard from "../../taskCard/UaTaskCard";
-import WowTaskCard from "../../taskCard/WowTaskCard";
-
-import AlbescentPraxisCard from "../desktop/AlbescentPraxisCard";
-import CovenPraxisCard from "../desktop/CovenPraxisCard";
-import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
-import EphemeristsPraxisCard from "../desktop/EphemeristsPraxisCard";
-import EverymenPraxisCard from "../desktop/EverymenPraxisCard";
-import SingularityPraxisCard from "../desktop/SingularityPraxisCard";
-import SnidePraxisCard from "../desktop/SnidePraxisCard";
-import UaPraxisCard from "../desktop/UaPraxisCard";
-import WowPraxisCard from "../desktop/WowPraxisCard";
-
+import { surfaceMap } from "../../../factions";
 import { aTask, aPraxisCard } from "../../../test/fixtures";
-import { factionName } from "../../../utils/factions";
+import { ALBESCENT_FACTION_SLUG, factionName } from "../../../utils/factions";
 
 interface Skin {
   slug: string;
@@ -75,22 +58,23 @@ interface Skin {
   Task?: ComponentType<CardProps>;
 }
 
-/** The seven bands. */
-const BANDED: Skin[] = [
-  { slug: "coven", Praxis: CovenPraxisCard, Task: CovenTaskCard },
-  { slug: "ephemerists", Praxis: EphemeristsPraxisCard, Task: EphemeristsTaskCard },
-  { slug: "everymen", Praxis: EverymenPraxisCard, Task: EverymenTaskCard },
-  { slug: "singularity", Praxis: SingularityPraxisCard, Task: SingularityTaskCard },
-  { slug: "snide", Praxis: SnidePraxisCard, Task: SnideTaskCard },
-  { slug: "ua", Praxis: UaPraxisCard, Task: UaTaskCard },
-  { slug: "wow", Praxis: WowPraxisCard, Task: WowTaskCard },
-];
+/**
+ * The two that mount no band, and must not grow one — the only thing typed
+ * here (#2815). Both populations below come off the two registries and are
+ * split on this set, which pairs each praxis skin with its OWN task skin
+ * without a second table to keep in step: the band-for-band identity claim is
+ * only as good as that pairing.
+ */
+const BANDLESS_SLUGS: ReadonlySet<string> = new Set(["na", ALBESCENT_FACTION_SLUG]);
 
-/** The two that mount no band, and must not grow one. */
-const BANDLESS: Skin[] = [
-  { slug: "na", Praxis: DefaultPraxisCard },
-  { slug: "albescent", Praxis: AlbescentPraxisCard },
-];
+const TASK_CARDS = surfaceMap("taskCard");
+const SKINS: Skin[] = Object.entries(surfaceMap("praxisCard")).map(([slug, Praxis]) => ({
+  slug,
+  Praxis,
+  Task: TASK_CARDS[slug],
+}));
+const BANDED: Skin[] = SKINS.filter(({ slug }) => !BANDLESS_SLUGS.has(slug));
+const BANDLESS: Skin[] = SKINS.filter(({ slug }) => BANDLESS_SLUGS.has(slug));
 
 const adminProps = {
   showAdminControls: false,
@@ -171,6 +155,14 @@ describe.each(BANDED)("$slug praxis card wears its task card's band (#2185)", (s
     const opened = (before.match(/<a[\s>]/g) ?? []).length;
     const closed = (before.match(/<\/a>/g) ?? []).length;
     expect(opened, "no anchor is still open where the band starts").toBe(closed);
+  });
+});
+
+describe("the bandless half is still a half", () => {
+  // A filter matching nothing leaves `describe.each` an empty array — zero
+  // suites, and a silent green on the disclosure claim below.
+  it("names exclusions that are still registered praxis skins", () => {
+    expect(BANDLESS.map(({ slug }) => slug).sort()).toEqual([...BANDLESS_SLUGS].sort());
   });
 });
 

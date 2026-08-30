@@ -10,6 +10,16 @@
  * into duel mode, which is why the pane and the detail setters are handed back:
  * `changeMode` opens the pane, and clears both when the player picks solo or
  * collab instead.
+ *
+ * It borrowed the assembler's `setPraxis` and `setError` until #2879. It no
+ * longer does: the praxis and the composer's error line are not this pane's
+ * state, so an action that changes either one *reports* it as a `DuelOutcome`
+ * and `useEditPraxis` writes what it owns. That is what lets the pane be driven
+ * on its own — see `__tests__/composerDuelStandsAlone.test.tsx`.
+ *
+ * `askConfirm` stays injected, which is not the same borrowing: it is a
+ * collaborator that raises a dialog somebody else draws and answers, not a
+ * setter for state this hook is describing.
  */
 import { useCallback, useEffect, useState } from "react";
 import { getPraxis, type PraxisOut } from "../../api/praxis";
@@ -23,6 +33,18 @@ import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
+/**
+ * What a duel action leaves for the composer around this pane to apply.
+ *
+ * `unchanged` means nothing was attempted — there was no duel to end, or the
+ * player answered no to the dissolve — so the error line must be left exactly
+ * as it was found.
+ */
+export type DuelOutcome =
+  | { kind: "unchanged" }
+  | { kind: "cancelled"; praxis: PraxisOut }
+  | { kind: "failed"; message: string };
+
 interface ComposerDuel {
   duel: DuelDetailOut | null;
   setDuel: (duel: DuelDetailOut | null) => void;
@@ -33,17 +55,16 @@ interface ComposerDuel {
   setDuelSealOpen: (open: boolean) => void;
   requestDuelSeal: () => void;
   cancelDuelSeal: () => void;
-  cancelDuel: () => Promise<void>;
-  dissolveDuel: () => Promise<void>;
+  /** Ends a pending challenge. The caller applies the outcome. */
+  cancelDuel: () => Promise<DuelOutcome>;
+  dissolveDuel: () => Promise<DuelOutcome>;
 }
 
 export function useComposerDuel(options: {
   praxis: PraxisOut | null;
-  setPraxis: (praxis: PraxisOut) => void;
   askConfirm: (request: ConfirmRequest) => Promise<boolean>;
-  setError: (message: string) => void;
 }): ComposerDuel {
-  const { praxis, setPraxis, askConfirm, setError } = options;
+  const { praxis, askConfirm } = options;
 
   const [duelPaneOpen, setDuelPaneOpen] = useState(false);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
@@ -70,28 +91,31 @@ export function useComposerDuel(options: {
     };
   }, [praxis?.duel_id]);
 
-  const cancelDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    setError("");
+  const cancelDuel = useCallback(async (): Promise<DuelOutcome> => {
+    if (!praxis?.duel_id) return { kind: "unchanged" };
     try {
       await cancelChallenge(praxis.duel_id);
       const refreshed = await getPraxis(praxis.id);
-      setPraxis(refreshed);
       setDuel(null);
       setDuelPaneOpen(false);
+      return { kind: "cancelled", praxis: refreshed };
     } catch (err) {
-      setError(
-        extractError(err, i18n.t("forms:editPraxis.errors.cancelChallenge")),
-      );
+      return {
+        kind: "failed",
+        message: extractError(
+          err,
+          i18n.t("forms:editPraxis.errors.cancelChallenge"),
+        ),
+      };
     }
-  }, [praxis, setPraxis, setError]);
+  }, [praxis]);
 
   // Dissolve an *active* duel (#956). Same neutral cancel as `cancelDuel`, but
   // gated behind a confirm because it ends an accepted duel for both sides.
-  const dissolveDuel = useCallback(async () => {
-    if (!praxis?.duel_id) return;
-    if (!(await askConfirm(dissolveDuelConfirm()))) return;
-    await cancelDuel();
+  const dissolveDuel = useCallback(async (): Promise<DuelOutcome> => {
+    if (!praxis?.duel_id) return { kind: "unchanged" };
+    if (!(await askConfirm(dissolveDuelConfirm()))) return { kind: "unchanged" };
+    return await cancelDuel();
   }, [praxis?.duel_id, cancelDuel, askConfirm]);
 
   const requestDuelSeal = useCallback(() => setDuelSealOpen(true), []);

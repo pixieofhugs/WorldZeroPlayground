@@ -96,9 +96,11 @@ function cornerToken(style: string): string | null {
   const read = declaration?.match(/^var\((--[\w-]+)/);
   if (!read) return null;
   if (read[1].startsWith("--faction-")) return read[1];
-  // A role read. Either the map declared it here, or — for na, albescent and
-  // any unknown slug, where `factionRoleVars` emits nothing — the fallback is
-  // what renders, and clause 3 of the standing rule pins it to the same token.
+  // A role read. Since #2690 the map declares the property for every slug —
+  // na and Albescent included, on the neutral family — so the declaration on
+  // this element is normally what answers. The fallback branch stays for the one
+  // surface that withholds the map from itself (`Sidebar.tsx`), where clause 3
+  // of the standing rule pins the fallback to the same token anyway.
   const declared = style.match(
     new RegExp(`${read[1]}:\\s*var\\((--faction-[\\w-]+)\\)`),
   );

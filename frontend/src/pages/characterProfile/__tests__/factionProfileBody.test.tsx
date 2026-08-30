@@ -24,7 +24,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
 import FactionProfileBody, {
   type ProfileBodyProps,
 } from "../FactionProfileBody";
-import { surfaceMap } from "../../../factions";
+import { FACTION_MANIFESTS, surfaceMap } from "../../../factions";
 import i18n from "../../../i18n";
 import { factionName } from "../../../utils/factions";
 import { readIndexCss } from "../../../test/indexCss";
@@ -219,18 +219,12 @@ describe("FactionProfileBody dispatch", () => {
  * per skin, so the next bespoke body is covered the moment its manifest row
  * lands; the form-factor axis is here because the phone stack is a separate
  * component, not the same layout at a narrower width.
+ *
+ * That "the moment its manifest row lands" was only true of the sweep's SHAPE
+ * until #2815 — the range under it was nine slugs typed out. It is the manifest
+ * index now, so the claim and the list say the same thing.
  */
-const SLUGS = [
-  "na",
-  "albescent",
-  "ua",
-  "coven",
-  "snide",
-  "ephemerists",
-  "singularity",
-  "everymen",
-  "wow",
-];
+const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug);
 
 /** Every wording the deleted `playerEyebrow` knob ever produced. A skin that
  *  grows the line back reads as one of these, whatever it calls it. */
