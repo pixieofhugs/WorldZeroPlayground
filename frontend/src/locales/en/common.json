@@ -425,7 +425,7 @@
     "signOutHelp": "Ends this session on this device.",
     "danger": {
       "title": "Delete account",
-      "lead": "This removes your characters, your praxes, your votes, and your comments. Points you awarded to other players stay with them. It cannot be undone.",
+      "lead": "This removes your characters, your praxis, your votes, and your comments. Points you awarded to other players stay with them. It cannot be undone.",
       "action": "Delete my account",
       "dialogTitle": "Delete your account",
       "dialogBody": "Type {{email}} below to confirm. This is permanent, and there is no grace period.",
@@ -441,7 +441,7 @@
   },
   "accountDeleted": {
     "title": "Your account is deleted",
-    "gone": "Your characters, your praxes, your votes and your comments are gone. Nothing carries over.",
+    "gone": "Your characters, your praxis, your votes and your comments are gone. Nothing carries over.",
     "kept": "Points you awarded to other players stay with them.",
     "again": "If you sign in again with the same Google or Discord account, World Zero will offer to start you fresh as a new player.",
     "home": "Back to the front page"
