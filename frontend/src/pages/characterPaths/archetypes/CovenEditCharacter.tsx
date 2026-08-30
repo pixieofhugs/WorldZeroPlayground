@@ -216,6 +216,13 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
 
   /** Quicksand, the slip's chrome voice, over the layout's own tracking. */
   const sectionLabel: CSSProperties = { fontFamily: CHROME, color: LABEL }
+  /* The inset `ComposerSheet` puts between the viewport and its centred column.
+     ponytail: it is restated here because that block owns the figure privately
+     and this is the first region on any composer page to sit OUTSIDE the sheet
+     and still need to line up with it. The upgrade path is a `pageInset` field
+     on `ComposerSizes` when a second surface wants it — not a copy in each of
+     the seven archetypes this fan-out lands. */
+  const pageInset = sizes.isMobile ? 'var(--space-md)' : 'var(--space-lg)'
   /** Radius 10, 1.5px in `-slip-border`, on the ward PAGE — the composer's row. */
   const fieldBox = {
     width: '100%',
@@ -524,18 +531,12 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
            same weight as Save"; the treatment half is `editCharacterSlots`'.
            On the app's own page ground, which is the register those two slots
            were measured in — see the header. ── */}
-      <div
-        data-skin={SLUG}
-        style={{
-          ...tailColumn,
-          maxWidth: sizes.maxWidth,
-          paddingLeft: sizes.padX,
-          paddingRight: sizes.padX,
-        }}
-      >
-        <div style={tail}>
-          <FactionRow slug={character.faction_slug} />
-          <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+      <div data-skin={SLUG} style={{ ...tailPage, paddingLeft: pageInset, paddingRight: pageInset }}>
+        <div style={{ maxWidth: sizes.maxWidth, margin: '0 auto' }}>
+          <div style={tail}>
+            <FactionRow slug={character.faction_slug} />
+            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+          </div>
         </div>
       </div>
 
@@ -554,11 +555,12 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
   )
 }
 
-/* The sheet's own column, restated for the region that sits under it —
-   `ComposerSheet` owns that geometry for its own child and nothing else, so the
-   tail aligns with the slip by running the same two figures off `sizes`. */
-const tailColumn: CSSProperties = {
-  margin: '0 auto',
+/* The region under the sheet, aligned to the SLIP'S OWN EDGE: the hairline runs
+   the paper's width, so the tail reads as what follows the slip rather than as a
+   second column beside it. `maxWidth` is `sizes.maxWidth` — the same figure
+   `ComposerSheet` centres its column on — and the horizontal inset is
+   `pageInset` below. */
+const tailPage: CSSProperties = {
   paddingBottom: 'var(--space-4xl)',
 }
 const tail: CSSProperties = {
