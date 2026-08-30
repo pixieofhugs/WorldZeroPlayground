@@ -126,9 +126,9 @@ class SignupFacts:
     instead of 50 times (#1377).
 
     ``task_ids`` is the page these facts were gathered for. Both membership sets
-    are only meaningful within it, so :func:`evaluate_signup` and
-    :func:`signup_reason` fall back to their own query for a task outside the set
-    rather than reading absence as "not a member".
+    are only meaningful within it, so :func:`_facts_for_task` gathers a fresh set
+    for a task outside it rather than letting either reader take absence as "not
+    a member".
 
     The two membership sets answer different questions and differ by exactly the
     Double Dipper ability: ``active_member_task_ids`` is what *blocks* a fresh
@@ -193,6 +193,31 @@ async def gather_signup_facts(
     )
 
 
+async def _facts_for_task(
+    character: Character,
+    task: Task,
+    session: AsyncSession,
+    era: EraConfig,
+    facts: Optional[SignupFacts],
+) -> SignupFacts:
+    """``facts`` if they can answer for ``task``, else a fresh set for it alone.
+
+    The single place either reader below decides whether the caller's precompute
+    applies, so neither carries a ``facts is not None`` mode through its gates
+    (#2873). Both conditions are one question — *can these facts answer about
+    this task* — and both must gather when the answer is no:
+
+    * ``None`` is the ordinary single-task caller (``create_praxis``), which has
+      no page to precompute for.
+    * an id outside ``task_ids`` is #1377's fallback. Absence in a set gathered
+      for some other page is "not asked about", never "not a member"; reading it
+      as the latter would open the very gate the membership fact exists to close.
+    """
+    if facts is not None and task.id in facts.task_ids:
+        return facts
+    return await gather_signup_facts(character, [task.id], session, era)
+
+
 async def evaluate_signup(
     character: Optional[Character],
     task: Task,
@@ -213,23 +238,27 @@ async def evaluate_signup(
 
     ``facts`` is the page-wide precompute (:func:`gather_signup_facts`) a list
     route passes in so this predicate is not an N+1 (#1377). It must have been
-    gathered for ``character``; omitting it makes every read here instead. It
-    changes no answer — only how many queries the answer costs.
+    gathered for ``character``; omitting it makes this gather one for this task
+    alone. It changes no answer — only how many queries the answer costs.
+
+    Every gate below reads ``facts`` and nothing else, because the branch on
+    whether they were supplied is taken once, above them (#2873). It used to be
+    taken separately by three of the gates, so this predicate could resolve the
+    era row and the stats for itself and hand its caller nothing — which is why
+    ``create_praxis`` read the same two rows twice more.
     """
     if character is None:
         return SignupEligibility(allowed=False)
 
     # Metatasks are stickers applied to a praxis (edit-praxis seal stack), never
-    # signup targets — reject before any level/status work (#1001).
+    # signup targets — reject before any level/status work (#1001). Before the
+    # gather below, so a metatask still costs no queries at all.
     if task.task_type == TaskType.metatask:
         return SignupEligibility(False, SignupDenialReason.is_metatask)
 
-    if facts is not None:
-        stats = facts.stats
-    else:
-        era_row = await get_current_era_row(session)
-        stats = await get_or_create_stats(session, character.id, era_row.id)
+    facts = await _facts_for_task(character, task, session, era, facts)
 
+    stats = facts.stats
     level_reach = available_level_reach(
         character.faction_slug, stats.level, stats.level_jump_used_at_level, era
     )
@@ -241,19 +270,10 @@ async def evaluate_signup(
     if task.status == TaskStatus.pending and character.faction_slug not in era.allow_praxis_on_pending_task_factions:
         return SignupEligibility(False, SignupDenialReason.task_status_closed)
 
-    if facts is not None and task.id in facts.task_ids:
-        already_member = task.id in facts.active_member_task_ids
-    else:
-        already_member = await is_active_member_of_task(character, task, session, era)
-    if already_member:
+    if task.id in facts.active_member_task_ids:
         return SignupEligibility(False, SignupDenialReason.already_active_member)
 
-    in_progress_count = (
-        facts.in_progress_praxis_count
-        if facts is not None
-        else await count_in_progress_praxes(character.id, session)
-    )
-    if in_progress_count >= era.max_task_signups:
+    if facts.in_progress_praxis_count >= era.max_task_signups:
         return SignupEligibility(False, SignupDenialReason.bank_full)
 
     return SignupEligibility(allowed=True)
@@ -264,6 +284,7 @@ async def signup_reason(
     task: Task,
     eligibility: SignupEligibility,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
     *,
     facts: Optional[SignupFacts] = None,
 ) -> Optional[str]:
@@ -281,21 +302,19 @@ async def signup_reason(
     That is why this reads the raw membership set rather than
     ``active_member_task_ids``, which the ability empties by construction.
 
-    ``facts`` is the page-wide precompute and carries #1377's property: an id
-    outside ``facts.task_ids`` falls back to its own read instead of taking the
-    absence as "not a member".
+    ``facts`` is the page-wide precompute and carries #1377's property through
+    :func:`_facts_for_task`: facts that cannot answer about this task are
+    replaced by facts that can, rather than read as "not a member". ``era`` is
+    reached only on that gather — the raw membership fact this reads is
+    era-invariant, as :func:`held_membership_task_ids` says.
     """
     if eligibility.reason is not None:
         return eligibility.reason.value
     if not eligibility.allowed or character is None:
         return None
 
-    if facts is not None and task.id in facts.task_ids:
-        holds_membership = task.id in facts.held_membership_task_ids
-    else:
-        holds_membership = task.id in await held_membership_task_ids(
-            character, [task.id], session
-        )
+    facts = await _facts_for_task(character, task, session, era, facts)
+    holds_membership = task.id in facts.held_membership_task_ids
     return SIGNUP_REASON_MULTI_MEMBERSHIP if holds_membership else None
 
 

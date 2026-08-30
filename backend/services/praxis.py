@@ -24,6 +24,7 @@ from faction_slugs import faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.duel import DuelStatus
 from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import (
@@ -74,15 +75,15 @@ from services.praxis_visibility import (
     praxis_visibility_condition,
 )
 from services.signup_eligibility import (
-    # Re-exported for existing `from services.praxis import ...` call sites
-    # (SIGNUP_REASON_MULTI_MEMBERSHIP, gather_signup_facts) that this module
-    # does not call itself — the definitions live in signup_eligibility now.
+    # SIGNUP_REASON_MULTI_MEMBERSHIP is re-exported for existing
+    # `from services.praxis import ...` call sites that this module does not use
+    # itself — the definitions live in signup_eligibility now.
     SIGNUP_REASON_MULTI_MEMBERSHIP,  # noqa: F401 - re-export, see comment above
     SignupDenialReason,
     allowed_praxis_modes,
     count_in_progress_praxes,
     evaluate_signup,
-    gather_signup_facts,  # noqa: F401 - re-export, see comment above
+    gather_signup_facts,
     is_active_member_of_task,
     meets_task_level,
 )
@@ -600,8 +601,14 @@ async def _check_create_preconditions(
     character_id: int,
     session: AsyncSession,
     era: EraConfig,
-) -> Task:
-    """Raise HTTPException unless this character may create ``praxis_type`` for ``task_id``."""
+) -> tuple[Task, CharacterStats]:
+    """Raise HTTPException unless this character may create ``praxis_type`` for ``task_id``.
+
+    Returns the task **and the stats row the gates were judged against**. Both
+    are already in hand here, and the caller needs both — returning them is what
+    stops ``create_praxis`` re-reading the era row and the stats to ask a second
+    question of rows this function has already fetched (#2873).
+    """
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
@@ -610,9 +617,18 @@ async def _check_create_preconditions(
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
+    # One read of this character's sign-up facts for the whole call — the era
+    # row, their stats, their bank count and their membership on this task. The
+    # predicate below judges against these, the mode gate reads the level off
+    # them, and `create_praxis` stamps the level jump on this same stats object
+    # (#2873). Gathered here rather than in `create_praxis` because this is where
+    # `character` has already been fetched and 404'd, and after the advisory lock
+    # its caller took, so the membership fact is still read under that lock.
+    facts = await gather_signup_facts(character, [task_id], session, era)
+
     # Type-agnostic gates: level, retired/pending, active-member, bank cap — one
     # predicate, so the can_sign_up flag can't drift from enforcement.
-    eligibility = await evaluate_signup(character, task, session, era)
+    eligibility = await evaluate_signup(character, task, session, era, facts=facts)
     if not eligibility.allowed:
         raise _signup_denial_to_http(eligibility.reason, task, era)
 
@@ -623,9 +639,7 @@ async def _check_create_preconditions(
             detail="Duels are issued via the challenge endpoint, not direct praxis creation (ADR-0011).",
         )
 
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, character_id, era_row.id)
-    allowed = allowed_praxis_modes(character, stats.level, era)
+    allowed = allowed_praxis_modes(character, facts.stats.level, era)
     if praxis_type not in allowed:
         # Only collab has prose of its own; anything else is a mode the era does
         # not offer this character at all, and says so generically (#1401 keeps
@@ -641,7 +655,7 @@ async def _check_create_preconditions(
             403, ErrorCode.praxis_mode_unavailable, "Praxis mode not available."
         )
 
-    return task
+    return task, facts.stats
 
 
 #: Namespace for :func:`_lock_signups_for_character`'s advisory lock. Postgres
@@ -712,7 +726,7 @@ async def create_praxis(
     """
     await _lock_signups_for_character(character_id, session)
 
-    task = await _check_create_preconditions(
+    task, stats = await _check_create_preconditions(
         task_id, praxis_type, character_id, session, era
     )
 
@@ -721,8 +735,10 @@ async def create_praxis(
     # the level jump — stamp it spent. Deliberately never refunded: withdrawing
     # or deleting the praxis does not give it back, or it could be farmed by
     # claiming and backing out.
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, character_id, era_row.id)
+    #
+    # ``stats`` is the row the gates were judged against, handed back rather than
+    # re-read (#2873): the level compared here is by construction the level that
+    # let the claim through, and the object stamped is the one the predicate saw.
     if task.level_required > stats.level:
         consume_level_jump(stats)
         await session.flush()
