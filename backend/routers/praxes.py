@@ -78,7 +78,6 @@ from schemas.vote import VoteCastOut, VoteOut, VoteTallyOut, ViewerStatsOut
 from services.collab_consensus import on_member_edit
 from services.scoring import compute_votes_available
 from services.praxis import (
-    _require_member,
     add_media_batch,
     can_view_praxis,
     cancel_invite,
@@ -88,6 +87,7 @@ from services.praxis import (
     delete_praxis,
     flag_praxis,
     get_praxis_settling_consensus,
+    get_praxis_settling_consensus_for_member,
     invite_to_praxis,
     kick_member,
     leave_praxis,
@@ -371,10 +371,9 @@ async def upload_media_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
-    _require_member(praxis, character.id, "add media to")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character.id, "add media to", session, CURRENT_ERA
+    )
     media_item = await process_and_save_media(
         file, praxis_id, character.id, display_order
     )
@@ -428,10 +427,9 @@ async def upload_media_batch_route(
       selection into several batched requests rather than assume any single
       figure holds.
     """
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
-    _require_member(praxis, character.id, "add media to")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character.id, "add media to", session, CURRENT_ERA
+    )
     return await add_media_batch(
         praxis=praxis,
         uploads=files,
@@ -448,10 +446,9 @@ async def delete_media_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
-    _require_member(praxis, character.id, "delete media from")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character.id, "delete media from", session, CURRENT_ERA
+    )
     media_item = await session.get(MediaItem, media_id)
     if media_item is None or media_item.praxis_id != praxis_id:
         raise_coded(404, ErrorCode.media_item_not_found, "Media item not found.")
