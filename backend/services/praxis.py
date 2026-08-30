@@ -108,10 +108,19 @@ def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def get_praxis(
-    praxis_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
-) -> Praxis:
-    """Get a praxis by id with detail-view relationships eager-loaded.
+async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
+    """Get a praxis by id with detail-view relationships eager-loaded. **A read.**
+
+    It moves no state, which is the whole point of it being separate from
+    :func:`get_praxis_settling_consensus` (#2874): this used to run ADR-0012's
+    lazy seal on the way out, so a name that promised a read could publish a
+    collab, and the seven paths that loaded the aggregate two or three times ran
+    that transition two or three times. Take this one unless the request's answer
+    depends on whether the pending-publish window has lapsed — and take it for
+    every ``return await get_praxis(...)`` tail, where the work is already done.
+
+    No ``era`` parameter: a read has no rule to look up. The window length that
+    the settle needs lives on the settling loader instead.
 
     Loads ``invites`` and ``media_items`` (in addition to the always-loaded
     ``task``/``created_by``/``members``) because every service consumer of
@@ -134,6 +143,28 @@ async def get_praxis(
     praxis = result.scalar_one_or_none()
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis not found.")
+    return praxis
+
+
+async def get_praxis_settling_consensus(
+    praxis_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> Praxis:
+    """:func:`get_praxis`, then ADR-0012's lazy-on-access seal. **This one writes.**
+
+    The long name is the feature: with no scheduler, a lapsed pending-publish
+    window is only noticed when someone touches the praxis, and this is the
+    touch. Every call site that uses it is a place where the request's own answer
+    depends on the praxis's real published-ness — a status guard, a scoring
+    recalculation, or a response that shows a stranger whether the collab is
+    Live. ``services.praxis.list_praxes`` runs the same settle per row for the
+    feed; these two are the only doors it has.
+
+    Call it **once** per request, at the head of the path. Nothing downstream
+    needs to repeat it: the seal clears ``submit_proposed_at``, so a second call
+    in the same request could only ever be a no-op that costs two more
+    ``selectinload``s.
+    """
+    praxis = await get_praxis(praxis_id, session)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxis
 
@@ -699,7 +730,10 @@ async def unsubmit_praxis(
       drafting. Pending praxes are unscored, so no stat recalc.
     - ``in_progress``: 422 — there is nothing to withdraw and nothing to reopen.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: the three doors above are told apart by ``status``, so a collab
+    # whose window has lapsed must arrive here as ``submitted`` (reopen) rather
+    # than as ``pending`` (withdraw the proposal it has already won).
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     _require_member(praxis, character_id, "reopen")
 
     # Withdraw: a group action, for a member who has read the draft and has no
@@ -783,7 +817,9 @@ async def change_praxis_type(
             status_code=400, detail="Can only switch between solo and collab."
         )
 
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: the 422 below is a status guard, and a collab whose window has
+    # lapsed is published — it must not be retyped or taken over.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     _require_member(praxis, character_id, "change the mode of")
     if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
         raise HTTPException(
@@ -828,6 +864,7 @@ async def delete_praxis(
     praxis_id: int,
     character_id: int,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> None:
     """Delete a praxis. Creator only. Must be in_progress.
 
@@ -838,7 +875,9 @@ async def delete_praxis(
     :func:`services.praxis_duel.discard_dissolved_duels_for_praxis`, which owns
     the predicate.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: "cannot delete a submitted praxis" is a status guard, and a collab
+    # whose window has lapsed is submitted.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     if praxis.created_by_id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character's praxis.")
     if praxis.status == PraxisStatus.submitted:
@@ -1095,7 +1134,10 @@ async def flag_praxis(
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """Flag a praxis for moderation review. Requires ``era.flag_level_required`` or above."""
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: nothing here branches on ``status``, but the flagger is handed the
+    # praxis back as a ``PraxisOut``, and this is the only load on the path — so
+    # it is the one that owes ADR-0012's "seal on access".
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     # Account-scoped anti-self-flag (#328): no account can flag its own work
     # across lives — mirror the account-level anti-self-vote shape. Own message
@@ -1165,7 +1207,10 @@ async def invite_to_praxis(
     membership on the task. That is a data-integrity rule (one live praxis per
     character per task), not an eligibility one.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: "cannot invite to a submitted praxis" is a status guard, and a
+    # collab whose window has lapsed is submitted — without the settle it would
+    # still read ``pending`` and let a new member onto a published praxis.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     if praxis.type != PraxisType.collab:
         raise HTTPException(
@@ -1358,6 +1403,9 @@ async def cancel_invite(
     themselves, still gets 403. Declining is the invitee's verb
     (:func:`respond_to_invite`), and it keeps the row.
     """
+    # A plain read: nothing here consults ``status`` — a pending invite is
+    # rescindable whether or not the collab has published — and the route
+    # answers 204, so no praxis state is shown to anyone.
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, requester_id, "rescind an invite to")
 
@@ -1383,6 +1431,7 @@ async def kick_member(
     member_id: int,
     requester_id: int,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> None:
     """Remove a member. Any member may kick another (incl. the creator); not self (ADR-0013).
 
@@ -1392,7 +1441,9 @@ async def kick_member(
     kick. Leaving is deliberately not restricted this way (ADR-0012): a member may
     walk away from a published collab without dragging it back into editing.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: the 422 below is a status guard, and a kick on a collab whose
+    # window has lapsed would unpublish it and wipe every cast.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     _require_member(praxis, requester_id, "kick from")
 
@@ -1441,7 +1492,11 @@ async def leave_praxis(
     praxis out of scoring). Unlike a kick, leaving does **not** reset the remaining
     members' submissions: if everyone still here has submitted, the collab goes Live.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: on a lapsed window the departure lands on an *already published*
+    # collab. Without the seal, ``on_member_leave`` would convert a deserted
+    # collab to solo and, through ``on_member_edit``, cancel the proposal that
+    # silence had already carried — destroying a consensus instead of honouring it.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     if praxis.type != PraxisType.collab:
         raise HTTPException(status_code=400, detail="Only collab memberships can be left.")
     _require_member(praxis, character_id, "leave")
@@ -1469,6 +1524,7 @@ async def set_member_done(
     character_id: int,
     is_done: bool,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """**Done** — "my part is finished" (ADR-0079). Per member, and reversible.
 
@@ -1480,7 +1536,9 @@ async def set_member_done(
     ``ponytail:`` if a solo surface ever grows a Done control by accident, the
     upgrade is a coded 422 here rather than a second rule somewhere else.
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: Done itself gates nothing, but this is the only load on the path
+    # and the actor is handed the praxis back — so it carries the seal-on-access.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
     _require_member(praxis, character_id, "mark done on")
     await collab_consensus.mark_done(praxis, character_id, is_done, session)
     return await get_praxis(praxis_id, session)
@@ -1503,6 +1561,14 @@ async def submit_praxis(
     See ``services.collab_consensus.on_submit`` for why one entry point carries
     both signals.
     """
+    # A **plain** read, and the one call site where that is a behaviour change
+    # (#2874). Settling here would publish the praxis and mark every member
+    # approved *before* ``on_submit`` records this member's approval — which then
+    # finds ``all(has_submitted)`` and seals a second time, firing every member's
+    # ``praxis_complete`` taunt twice, re-stamping the habit bonus and rewriting
+    # ``submitted_at``. The lapse still seals, on the settling read below: this
+    # request's own transition gets to run first, and whichever of the two
+    # publishes it, the response says Live.
     praxis = await get_praxis(praxis_id, session)
 
     member_ids = {m.character_id for m in praxis.members}
@@ -1516,7 +1582,7 @@ async def submit_praxis(
         # duel side effect of a submit reads in one place.
         await maybe_settle_duel(praxis_id, session)
         await recalculate_members_stats(praxis, session, era)
-    return await get_praxis(praxis_id, session)
+    return await get_praxis_settling_consensus(praxis_id, session, era)
 
 
 async def moderate_praxis(
@@ -1546,7 +1612,10 @@ async def moderate_praxis(
     It is also the one place a praxis enters or leaves ``hidden``, so it is where
     :func:`_apply_media_publication` keeps the disk in step (#1593).
     """
-    praxis = await get_praxis(praxis_id, session)
+    # Settles: this path *writes scores* for every member (and the duel
+    # opponent), so it must price a collab that silence has already published as
+    # published, rather than write a number that self-heals on someone's next read.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     try:
         mod_enum = ModerationStatus(new_status)

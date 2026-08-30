@@ -409,7 +409,7 @@ function DesktopProfile({
               style={{
                 fontFamily: 'var(--font-display)',
                 fontStyle: 'italic',
-                color: 'var(--na-profile-body-ink, var(--faction-default-card-text))',
+                color: 'var(--na-profile-body-ink)',
               }}
             />
 
@@ -705,7 +705,7 @@ function MobileProfile({
                 textAlign: 'center',
                 margin: '0 auto',
                 color: isUnaffiliated
-                  ? 'var(--na-profile-body-ink, var(--faction-default-card-text))'
+                  ? 'var(--na-profile-body-ink)'
                   : 'var(--color-text-primary)',
               }}
             />

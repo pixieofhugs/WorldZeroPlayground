@@ -1,12 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
+import { seedDuelChallenge } from '../src/utils/duelScenario'
 import {
-  DUEL_LEVEL,
   RUN,
-  login,
-  pickDuelTask,
-  createSoloDraft,
+  scenarioFor,
   challengeViaUi,
   acceptDuelViaUi,
   waitForDuelAttached,
@@ -87,13 +85,13 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
   test.fixme(
     'D3: a resolved duel freezes its points + declares a winner (needs the era-reset script run under run-e2e.sh)',
     async ({ browser }) => {
-      const alice = await login(browser, `ra-${RUN}`, `RA-${RUN}`, DUEL_LEVEL)
-      const bob = await login(browser, `rb-${RUN}`, `RB-${RUN}`, DUEL_LEVEL)
+      // Its own role codes ('ra'/'rb'): this spec runs in its own Playwright
+      // worker, so its run id and login sequence are its own, and the role code
+      // is what keeps its fixtures apart from duel.spec.ts's if the two run ids
+      // ever agree. Same flow as the happy path, up to the reset.
+      const seed = await seedDuelChallenge(scenarioFor(browser), ['ra', 'rb'], `Duel resolved ${RUN}`)
+      const { challenger: alice, opponent: bob, challengerPraxisId: alicePraxisId } = seed
       try {
-        // Reach `settled` through the UI (same flow as the happy path).
-        const task = await pickDuelTask(alice)
-        const alicePraxisId = await createSoloDraft(alice, task.id, `Duel resolved ${RUN}`)
-
         const alicePage = await alice.ctx.newPage()
         await alicePage.goto(`/praxis/${alicePraxisId}/edit`)
         await challengeViaUi(alicePage, bob.name)

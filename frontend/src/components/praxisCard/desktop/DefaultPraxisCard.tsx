@@ -72,7 +72,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         borderRadius: 10, // plain cream sheet
         border: "3px solid transparent",
         ...factionSpectrumSheet(),
-        color: "var(--na-praxis-card-ink, var(--faction-default-card-text))",
+        color: "var(--na-praxis-card-ink)",
         boxShadow: "0 3px 14px var(--color-cast-shadow-soft)",
         padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
       }}
@@ -80,21 +80,21 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
-        tint="var(--na-praxis-card-accent, var(--faction-default-card-accent))"
-        muted="var(--na-praxis-card-quiet, var(--faction-default-card-muted))"
-        paper="var(--na-praxis-card-paper, var(--faction-default-card-bg))"
+        tint="var(--na-praxis-card-accent)"
+        muted="var(--na-praxis-card-quiet)"
+        paper="var(--na-praxis-card-paper)"
         showCrown={showCrown}
         // Bebas Neue carries the sheet's identity; Courier Prime reads the
         // proof. The quiet sheet keeps the house body face on purpose (#888).
         fonts={{
-          display: "var(--na-praxis-card-face, var(--faction-default-card-font))",
+          display: "var(--na-praxis-card-face)",
           body: "var(--font-body)",
         }}
         titleStyle={{
-          fontFamily: "var(--na-praxis-card-face, var(--faction-default-card-font))",
+          fontFamily: "var(--na-praxis-card-face)",
           letterSpacing: "0.02em",
           lineHeight: 1,
-          color: "var(--na-praxis-card-ink, var(--faction-default-card-text))",
+          color: "var(--na-praxis-card-ink)",
         }}
         voteRule={
           <div

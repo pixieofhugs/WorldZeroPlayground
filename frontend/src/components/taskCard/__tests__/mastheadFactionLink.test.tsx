@@ -29,17 +29,9 @@ import type { CardProps } from '../TaskCard'
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 
 // Imported after the mock is registered.
-import AlbescentTaskCard from '../AlbescentTaskCard'
-import CovenTaskCard from '../CovenTaskCard'
-import DefaultTaskCard from '../DefaultTaskCard'
-import EphemeristsTaskCard from '../EphemeristsTaskCard'
-import EverymenTaskCard from '../EverymenTaskCard'
-import SingularityTaskCard from '../SingularityTaskCard'
-import SnideTaskCard from '../SnideTaskCard'
-import UaTaskCard from '../UaTaskCard'
-import WowTaskCard from '../WowTaskCard'
+import { surfaceMap } from '../../../factions'
 import { aTask } from '../../../test/fixtures'
-import { factionName } from '../../../utils/factions'
+import { ALBESCENT_FACTION_SLUG, factionName } from '../../../utils/factions'
 
 const TASK = aTask({ description: 'Leave something small where a stranger will find it.' })
 
@@ -48,27 +40,21 @@ interface Skin {
   Card: ComponentType<CardProps>
 }
 
-/** The seven bands. */
-const MASTHEADED: Skin[] = [
-  { slug: 'coven', Card: CovenTaskCard },
-  { slug: 'ephemerists', Card: EphemeristsTaskCard },
-  { slug: 'everymen', Card: EverymenTaskCard },
-  { slug: 'singularity', Card: SingularityTaskCard },
-  { slug: 'snide', Card: SnideTaskCard },
-  { slug: 'ua', Card: UaTaskCard },
-  { slug: 'wow', Card: WowTaskCard },
-]
-
 /**
  * The two that mount no band, and must not grow one. ADR-0048 makes that a rule
  * rather than a gap: `AlbescentTaskCard` IS `DefaultTaskCard`, and a band would
  * hand the secret society both a name and a link to `/factions/albescent` —
  * which is an in-world dead end, not a faction page.
+ *
+ * This is the only thing typed here (#2815): the POPULATION comes off the
+ * registry below and is split on this set, so a tenth kit lands in one half or
+ * the other by existing rather than by being remembered.
  */
-const BANDLESS: Skin[] = [
-  { slug: 'na', Card: DefaultTaskCard },
-  { slug: 'albescent', Card: AlbescentTaskCard },
-]
+const BANDLESS_SLUGS: ReadonlySet<string> = new Set(['na', ALBESCENT_FACTION_SLUG])
+
+const SKINS: Skin[] = Object.entries(surfaceMap('taskCard')).map(([slug, Card]) => ({ slug, Card }))
+const MASTHEADED: Skin[] = SKINS.filter(({ slug }) => !BANDLESS_SLUGS.has(slug))
+const BANDLESS: Skin[] = SKINS.filter(({ slug }) => BANDLESS_SLUGS.has(slug))
 
 function render({ Card }: Skin): string {
   return renderToStaticMarkup(
@@ -125,6 +111,14 @@ describe.each(MASTHEADED)('$slug masthead reads the faction (#2167)', (skin) => 
     expect(body, 'the body still reads the task').toBeGreaterThan(-1)
     expect(band, 'the band comes first').toBeLessThan(body)
     expect(html.slice(band, body), 'the band anchor is closed by then').toContain('</a>')
+  })
+})
+
+describe('the bandless half is still a half', () => {
+  // A filter that matched nothing would leave `describe.each` an empty array —
+  // zero suites, and a silent green where the strongest claim in this file is.
+  it('names exclusions that are still registered skins', () => {
+    expect(BANDLESS.map(({ slug }) => slug).sort()).toEqual([...BANDLESS_SLUGS].sort())
   })
 })
 

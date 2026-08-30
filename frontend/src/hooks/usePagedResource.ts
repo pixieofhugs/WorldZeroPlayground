@@ -4,6 +4,24 @@ import type { KeyedResourceCache } from './cachedResource'
 import { CACHE_EPOCH } from '../utils/cacheEpoch'
 import type { CurrentUser } from '../api/auth'
 
+/**
+ * WHY `DEFAULT_PAGE_SIZE`, `pageHasMore`, `growLimit`, `pageCacheKey` AND
+ * `loadPage` ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM
+ * ---------------------------------------------------------------------
+ * A dead-export audit (#2693) listed all five as reachable only from
+ * `__tests__`. True, and not a defect. `vite.config.ts` declares vitest with
+ * no `environment`, so tests run in node: no jsdom, effects never run, and
+ * every frontend test is one `renderToStaticMarkup` pass. `usePagedResource`
+ * cannot be mounted and grown here, so the load-more contract (grow iff the
+ * page came back full), the cache key's collision-safety, and "page 2 is never
+ * cached" are asserted on these functions or nowhere. Each is also pure and
+ * stands alone, which is the shape the audit's own carve-out calls a good seam.
+ *
+ * Owner ruling 2026-08-28 on #2693: keep them, note why. If the harness ever
+ * gains a DOM they become re-examinable; until then an audit that lists them
+ * again is measuring the harness, not this module.
+ */
+
 /** Default page size — one "load more" grows the window by this step. */
 export const DEFAULT_PAGE_SIZE = 50
 

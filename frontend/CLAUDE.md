@@ -34,11 +34,15 @@
   (`ev-task`, `sg-desk`, `leaf-task-detail`, `na-avatar`) and keep it out of
   `--faction-*`, which is the token families' namespace. The only hard rule is that no
   two surfaces share a prefix, and the gate below enforces it.
-  - A fallback arm is **banned** where the slug is a literal identified faction —
-    `factionRoleVars` always emits there, so it can never be reached — and **required**
-    where the slug is `na`, `albescent` or a runtime value, because the map returns `{}`
-    and the fallback is the whole paint. `utils/__tests__/factionRoleFallbacks.test.ts`
-    holds both, derived from source: there is no table to add your surface to.
+  - A fallback arm is **banned**, full stop: since #2690 the map answers for all nine
+    slugs — `na`, Albescent and an unknown slug get the neutral `--faction-default-*`
+    family — so it always emits and an arm can never be reached (ADR-0089). The one
+    exception is a surface that withholds the map from itself: `layout/Sidebar.tsx`
+    guards its own call so an unaffiliated viewer keeps the app's three neutral ink
+    tiers rather than the `default` family's two, and its reads therefore **require**
+    a fallback. `utils/__tests__/factionRoleFallbacks.test.ts` holds all of it, derived
+    from source and checking that exception against the guard that justifies it: there
+    is no table to add your surface to.
   - `factionRoleVar()` (singular) for a surface composing something local out of one
     role; `factionCssVar()` still for a token no role names, and for a runtime slug you
     cannot spread a map for.

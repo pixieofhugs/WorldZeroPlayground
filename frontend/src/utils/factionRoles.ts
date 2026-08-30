@@ -42,7 +42,7 @@
  */
 import type { CSSProperties } from "react";
 
-import { factionCssVar, isKnownFaction } from "./factions";
+import { factionCssVar } from "./factions";
 import { hasOwnKey } from "./hasOwnKey";
 
 /**
@@ -276,9 +276,11 @@ export function factionRoleProperty(prefix: string, role: FactionRole): string {
  * decision 07's other half: the core map is faction-owned, and a surface with
  * genuine extra needs builds its extras locally out of these.
  *
- * Unlike {@link factionRoleVars} this answers for `na` and Albescent too, with
- * the neutral `--faction-default-*` family — the same answer `factionCssVar`
- * gives, because a single role read has no all-or-nothing seam to protect.
+ * It answers for every slug with the neutral `--faction-default-*` family where
+ * the faction is `na`, Albescent or unrecognised — the same answer
+ * `factionCssVar` gives. It always did, on the grounds that a single role read
+ * has no all-or-nothing seam to protect; since #2690 {@link factionRoleVars}
+ * agrees with it, and the two are one answer rather than two.
  */
 export function factionRoleVar(
   slug: string | null | undefined,
@@ -300,23 +302,39 @@ export function factionRoleVar(
  * question #2539 is still open on). A surface-scoped name cannot leak into a
  * surface that did not ask for it.
  *
- * AN UNAFFILIATED VIEWER IS PIXEL-IDENTICAL BY CONSTRUCTION. For `na`, for
- * `albescent`, for null and for a slug the server invents tomorrow this returns
- * `{}` — not one property is declared, so every `var(--x, <today's token>)` at
- * every read site is the value that already shipped, byte for byte. There is no
- * second render path to keep in step and nothing to measure twice. That is
- * #2361's acceptance criterion and it is inherited here unchanged.
+ * IT ANSWERS FOR ALL NINE SLUGS, AND THE UNAFFILIATED VIEWER IS PIXEL-IDENTICAL
+ * BY PROOF (#2690, ADR-0089). It used to return `{}` for `na`, for `albescent`,
+ * for null and for a slug the server invents tomorrow — #2361's acceptance
+ * criterion, bought by CONSTRUCTION: nothing declared, so every
+ * `var(--x, <today's token>)` rendered the value that already shipped. It now
+ * declares the same nine properties for those slugs as for any other, pointing
+ * at the neutral `--faction-default-*` family — which is the family those
+ * fallbacks named. The identity is now mechanical rather than structural:
+ * `__tests__/factionRoleFallbacks.test.ts` pinned every one of the 65 arms to
+ * this map's own answer before they came off, and bans a new one from appearing.
  *
- * Albescent taking the neutral rail is ADR-0048 and is the design, not a gap: a
- * colour family minted for it would put a society that hides in plain sight back
- * into the spectrum.
+ * A SINGLE `chrome` CALLER KEEPS THE OLD GUARANTEE, ON PURPOSE.
+ * `components/layout/Sidebar.tsx` guards its own call — `railFaceVars` returns
+ * `{}` for an unidentified slug before it ever asks this map — and keeps a
+ * fallback at all 25 of its reads. That is not a straggler. The rail is the app's
+ * own FURNITURE, and the owner ruled on 2026-08-28 that an unaffiliated viewer
+ * sees the app rather than a neutral faction family standing in for one: the app
+ * has three neutral ink tiers and the `default` family has two, so declaring
+ * `--rail-*` there would collapse a heading and a timestamp onto one colour and
+ * turn a translucent rail opaque. That is exactly the per-SITE fallback
+ * behaviour {@link FACTION_ROLES} documents for `quiet`. The guard belongs to
+ * the surface that wants it, not to this resolver.
+ *
+ * Albescent taking the neutral family is ADR-0048 and ADR-0083 and is the
+ * design, not a gap: a colour family minted for it would put a society that
+ * hides in plain sight back into the spectrum. This change alters how that
+ * family is DELIVERED, never which family it is.
  */
 export function factionRoleVars(
   slug: string | null | undefined,
   prefix: string,
   ground: FactionGround = "sheet",
 ): CSSProperties {
-  if (!isKnownFaction(slug)) return {};
   const roles = rolesFor(slug, ground);
   const vars: Record<string, string> = {};
   for (const role of FACTION_ROLES) {

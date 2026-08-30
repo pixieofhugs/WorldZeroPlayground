@@ -51,6 +51,7 @@ import {
   type Rgba,
 } from "../../../../utils/contrast";
 import { readThemes, resolveVar, type Theme } from "../../../../utils/__tests__/cssVars";
+import { resolveRoleReads } from "../../../../test/sourceScan";
 
 vi.mock("../../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
@@ -323,7 +324,18 @@ describe("each mount overrides what its ground demands (#2042)", () => {
     // The disc inside the annulus is the score plate showing through, so the mark
     // reads as struck into this surface rather than as a patch laid on it.
     expect(sheet).toContain("background:var(--faction-default-stamp-bg)");
-    expect(sheet).not.toContain("var(--faction-default-card-bg)");
+    // A DECLARATION IS NOT A PAINT (#2690). The role map answers for `na` now,
+    // so this root carries `--na-score-stamp-paper:var(--faction-default-card-bg)`
+    // whether or not anything reads it — this surface deliberately does not, its
+    // ground being the stamp plate. What must stay true is that nothing USES the
+    // card's sheet here, so the map's own declarations come out and the role
+    // reads are folded back to their tokens first, which covers the other
+    // spelling: `background:var(--na-score-stamp-paper)`.
+    const painted = resolveRoleReads(sheet).replace(
+      /--na-score-stamp-[\w-]+:var\(--faction-[\w-]+\);/g,
+      "",
+    );
+    expect(painted).not.toContain("var(--faction-default-card-bg)");
   });
 
   /**

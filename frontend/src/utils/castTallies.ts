@@ -67,7 +67,24 @@ export function recordCastTally(praxisId: number, tally: VoteTallyOut): void {
   emit()
 }
 
-/** Drop entries for praxes the server has just told us the truth about. */
+/**
+ * Drop entries for praxes the server has just told us the truth about.
+ *
+ * WHY THIS IS HAND-FIRED (#2892). It is not an invalidation triggered by a
+ * write at all — it is a READ reconciling an optimistic overlay against server
+ * truth, and it is keyed on the praxis ids inside the response body. The
+ * transport's automatic hook (`dropCachesAfterWrite`, `api/client.ts`) fires off
+ * the one bit it has, `mutates`, which is per HTTP method and says nothing about
+ * what came back. To do this centrally `api/client.ts` would have to duck-type
+ * every GET payload for praxis ids, in a layer whose premise is that shapes are
+ * known at compile time.
+ *
+ * There are exactly three callers, and they are the three reads that return a
+ * praxis's own vote numbers: `listPraxes`, `getPraxis` and `getDuelDetail`. A
+ * fourth would be a fourth endpoint that serves `points_from_votes` — at which
+ * point the honest move is a shared `reconcileTallies(payload)` in `api/`, not a
+ * sniff in the transport.
+ */
 export function clearCastTallies(praxisIds: Iterable<number>): void {
   let dropped = false
   for (const praxisId of praxisIds) {

@@ -1,16 +1,48 @@
 import { test, expect, type Browser, type BrowserContext } from '@playwright/test'
 
+import {
+  COLLAB_CREATOR_LEVEL,
+  COLLAB_INVITEE_LEVEL,
+  bothSubmit,
+  seedCollabDraft,
+  seedPendingInvites,
+  selectOpenTask,
+  type CollabDraft,
+} from '../src/utils/collabScenario'
+import {
+  createPraxis,
+  fetchPraxis,
+  fetchTasks,
+  loginPlayer,
+  submitPraxis,
+  type Scenario,
+} from '../src/utils/e2eScenario'
+
 /**
  * Collaboration praxis lifecycle — two real logged-in characters on one task.
  *
- * Auth: the dev-only bot-login (POST /auth/dev-login) is extended with query
- * params so one call mints a distinct account + a leveled character:
- *   ?key=<id>&name=<display>&level=<n>
- * Collab CREATION requires level >= era.collaboration_level_required (1 in Era 1),
- * so the creator ("Alice") is seeded at level 1; the invitee ("Bob") needs no level.
+ * THIS FILE DECIDES NOTHING (#2888, finishing #1780 — Molly's ruling of
+ * 2026-08-18: *"move `e2e/`'s logic into plain modules under the app's build
+ * graph, keep the spec as a thin Playwright driver"*). It acquires pages,
+ * presses buttons and asserts. Everything it used to embed — how a fixture
+ * account is minted and named, which task a collab is seeded on, what "a draft
+ * two people have joined" consists of, what a member's submit does — lives in
+ * `src/utils/collabScenario.ts` and `src/utils/e2eScenario.ts`, under the app's
+ * own build graph, where `tsc --noEmit`, `eslint src` and vitest reach it in a
+ * PR rather than a browser reaching it at 3am. Read those two before changing
+ * anything here.
  *
- * Mechanics (create / invite / accept / edit / submit) run against the real API
- * with each character's own cookies; the assertions the user cares about are made
+ * That move also killed the `t: any` this file drove the API with: every
+ * response is now read as the app's own generated contract (`TaskOut`,
+ * `PraxisOut`), so a schema regen reds the PR typecheck instead of a nightly.
+ *
+ * Auth: the dev-only bot-login (POST /auth/dev-login) mints a distinct account
+ * plus a levelled character per call. Collab CREATION requires level >=
+ * era.collaboration_level_required, so the creator is seeded at
+ * COLLAB_CREATOR_LEVEL; the invitee needs none.
+ *
+ * Mechanics (create / invite / accept / submit) run against the real API with
+ * each character's own cookies; the assertions the user cares about are made
  * against the real PAGES (praxis detail, FieldDesk sidebar).
  *
  * Prereqs: backend on :8000 (seeded dev DB at head), frontend on :5173.
@@ -21,83 +53,16 @@ const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 // (a character that already holds a praxis on the task can't create/join another).
 const RUN = Date.now().toString(36)
 
-interface Player {
-  ctx: BrowserContext
-  characterId: number
-  name: string
-}
+/** The acquired half of a fixture: the test's browser, the backend, this run. */
+const scenarioFor = (browser: Browser): Scenario<BrowserContext> => ({
+  browser,
+  api: API,
+  run: RUN,
+})
 
-/** Bot-login in a fresh browser context; returns the context + seeded character. */
-async function login(browser: Browser, key: string, name: string, level: number): Promise<Player> {
-  const ctx = await browser.newContext()
-  const res = await ctx.request.post(
-    `${API}/auth/dev-login?key=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&level=${level}`,
-  )
-  expect(res.ok(), `dev-login failed for ${key} — is the backend up on ${API}?`).toBeTruthy()
-  const body = await res.json()
-  return { ctx, characterId: body.character_id, name }
-}
-
-/** First active task that any level-0 character may attempt. */
-async function pickOpenTask(player: Player): Promise<{ id: number; title: string }> {
-  const res = await player.ctx.request.get(`${API}/tasks`)
-  const tasks = await res.json()
-  const task = tasks.find((t: any) => (t.level_required ?? 0) === 0)
-  expect(task, 'no level-0 task in the seeded DB — run backend/seed.py').toBeTruthy()
-  return { id: task.id, title: task.title }
-}
-
-/**
- * Seed a collab draft: Alice (creator, L1) creates a collab praxis on a fresh
- * task, invites Bob (L0), Bob accepts. Returns both players + the draft, still
- * in_progress. `suffix` keeps this test's accounts distinct from other tests'.
- */
-let pairSeq = 0
-
-async function seedCollabDraft(browser: Browser, suffix: string) {
-  // Short, unique names: the derived @handle truncates to 14 chars, so the
-  // distinguishing token must come first (role letter + seq) to avoid collisions
-  // between concurrently-created characters.
-  const s = pairSeq++
-  const alice = await login(browser, `a-${RUN}-${s}`, `A${s}-${RUN}`, 1)
-  const bob = await login(browser, `b-${RUN}-${s}`, `B${s}-${RUN}`, 0)
-  const task = await pickOpenTask(alice)
-
-  const created = await alice.ctx.request.post(`${API}/praxes`, {
-    data: { task_id: task.id, type: 'collab', title: `Collab ${suffix}`, body_text: 'draft' },
-  })
-  expect(created.ok(), `collab create failed: ${await created.text()}`).toBeTruthy()
-  const praxis = await created.json()
-
-  const invited = await alice.ctx.request.post(`${API}/praxes/${praxis.id}/invite`, {
-    data: { invitee_id: bob.characterId },
-  })
-  expect(invited.ok(), `invite failed: ${await invited.text()}`).toBeTruthy()
-  const invite = await invited.json()
-
-  const accepted = await bob.ctx.request.post(
-    `${API}/praxes/${praxis.id}/invite/${invite.id}/respond`,
-    { data: { accept: true } },
-  )
-  expect(accepted.ok(), `accept failed: ${await accepted.text()}`).toBeTruthy()
-
-  return { alice, bob, task, praxisId: praxis.id as number }
-}
-
-/**
- * Both members submit; consensus seals to `submitted` on the last submit.
- *
- * It used to write a contribution each with `PUT /praxes/{id}` first. That
- * endpoint is gone (#1743) — a praxis body is written in its room, over a
- * WebSocket CRDT this suite has no way to drive — and no assertion downstream
- * ever read the text it wrote. `seedCollabDraft` gives the praxis a body at
- * create time, which is the part these tests actually depend on.
- */
-async function bothSubmit(seed: Awaited<ReturnType<typeof seedCollabDraft>>) {
-  const { alice, bob, praxisId } = seed
-  await alice.ctx.request.post(`${API}/praxes/${praxisId}/submit`)
-  const last = await bob.ctx.request.post(`${API}/praxes/${praxisId}/submit`)
-  return (await last.json()).status as string
+const closeDraft = async (draft: CollabDraft<BrowserContext>): Promise<void> => {
+  await draft.creator.ctx.close()
+  await draft.invitee.ctx.close()
 }
 
 // Serial: these tests mutate one shared dev DB with interdependent gates
@@ -107,34 +72,31 @@ test.describe.configure({ mode: 'serial' })
 
 test.describe('collaboration lifecycle', () => {
   test('full lifecycle publishes the praxis with both players as members', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'life')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'life')
     try {
-      const status = await bothSubmit(seed)
-      expect(status).toBe('submitted')
+      expect(await bothSubmit(draft)).toBe('submitted')
 
       // Data: the published praxis records BOTH collaborators as members.
-      const detail = await seed.alice.ctx.request.get(`${API}/praxes/${seed.praxisId}`)
-      const praxis = await detail.json()
-      const names = praxis.members.map((m: any) => m.character_display_name).sort()
-      expect(names).toEqual([seed.alice.name, seed.bob.name].sort())
-      expect(praxis.members.every((m: any) => m.has_submitted)).toBe(true)
+      const praxis = await fetchPraxis(draft.creator, draft.praxisId)
+      const names = praxis.members.map((member) => member.character_display_name).sort()
+      expect(names).toEqual([draft.creator.name, draft.invitee.name].sort())
+      expect(praxis.members.every((member) => member.has_submitted)).toBe(true)
 
       // Page: the published praxis renders on its detail page.
-      const page = await seed.alice.ctx.newPage()
-      await page.goto(`/praxis/${seed.praxisId}`)
+      const page = await draft.creator.ctx.newPage()
+      await page.goto(`/praxis/${draft.praxisId}`)
       await expect(page.getByRole('heading', { name: `Collab life` })).toBeVisible()
       // Creator byline (scope to main — the name also appears in nav + sidebar card).
-      await expect(page.getByRole('main').getByRole('link', { name: seed.alice.name })).toBeVisible()
+      await expect(page.getByRole('main').getByRole('link', { name: draft.creator.name })).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
   test('the creator sees the shared draft in their active-tasks sidebar', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'side-a')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'side-a')
     try {
-      const page = await seed.alice.ctx.newPage()
+      const page = await draft.creator.ctx.newPage()
       await page.goto('/')
       // Scoped to the panel, not the whole <aside> (#1676). The sidebar names
       // one task in two places — the draft under "In progress tasks"
@@ -146,26 +108,24 @@ test.describe('collaboration lifecycle', () => {
       // which is the whole claim of this test. `exact` keeps the panel's own
       // collapse control ("Collapse In progress tasks") out of the match.
       const inProgress = page.getByLabel('In progress tasks', { exact: true })
-      await expect(inProgress.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
-      await expect(inProgress.getByText(seed.task.title)).toBeVisible()
+      await expect(inProgress.locator(`a[href="/praxis/${draft.praxisId}/edit"]`)).toBeVisible()
+      await expect(inProgress.getByText(draft.task.title)).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
   // Fixed (#344/#349): useMyActiveTasks now filters by membership
   // (GET /praxes?member_id=), so an invitee who JOINED the draft sees it too.
   test('the invitee ALSO sees the shared draft in their active-tasks sidebar', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'side-b')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'side-b')
     try {
-      const page = await seed.bob.ctx.newPage()
+      const page = await draft.invitee.ctx.newPage()
       await page.goto('/')
       const sidebar = page.locator('aside')
-      await expect(sidebar.locator(`a[href="/praxis/${seed.praxisId}/edit"]`)).toBeVisible()
+      await expect(sidebar.locator(`a[href="/praxis/${draft.praxisId}/edit"]`)).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
@@ -176,18 +136,17 @@ test.describe('collaboration lifecycle', () => {
   // archetype renders the member list.
   test('the published praxis page credits both collaborators', async ({ browser }) => {
     test.fail()
-    const seed = await seedCollabDraft(browser, 'credit')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'credit')
     try {
-      await bothSubmit(seed)
-      const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxis/${seed.praxisId}`)
+      await bothSubmit(draft)
+      const page = await draft.invitee.ctx.newPage()
+      await page.goto(`/praxis/${draft.praxisId}`)
       // Scope to main: the collaborator's name must appear in the praxis CONTENT,
       // not merely in the nav/sidebar chrome (where the logged-in viewer's own
       // name shows regardless).
-      await expect(page.getByRole('main').getByText(seed.bob.name)).toBeVisible()
+      await expect(page.getByRole('main').getByText(draft.invitee.name)).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 })
@@ -201,7 +160,7 @@ test.describe('collaboration lifecycle', () => {
  * used to quote three Snide-voiced strings — /PULL THIS JOB/i, /THE GANG/i and
  * a cast label — on the reasoning that the seed's only level-0 task is
  * Snide-faction. Two of those strings are in no catalog anywhere in this repo
- * and have not been for weeks, and `pickOpenTask` never guaranteed the faction
+ * and have not been for weeks, and `selectOpenTask` never guaranteed the faction
  * in the first place: it returns whichever level-0 task the API lists first, so
  * a seed edit silently re-skins every control this spec presses. The `Collab`
  * mode chip is the one label kept, because every archetype builds its chips from
@@ -218,37 +177,14 @@ test.describe('collaboration lifecycle', () => {
 // the block comment above for why this one stays a label.
 const COLLAB_MODE = 'Collab'
 
-/** First `count` distinct-titled tasks any high-level character may attempt. */
-async function pickTasks(
-  player: Player,
-  count: number,
-): Promise<Array<{ id: number; title: string }>> {
-  const res = await player.ctx.request.get(`${API}/tasks`)
-  const tasks = await res.json()
-  const seen = new Set<string>()
-  const usable: Array<{ id: number; title: string }> = []
-  for (const task of tasks as any[]) {
-    if ((task.level_required ?? 0) > 8) continue
-    if (seen.has(task.title)) continue
-    seen.add(task.title)
-    usable.push({ id: task.id, title: task.title })
-    if (usable.length === count) break
-  }
-  expect(
-    usable.length,
-    `need ${count} distinct seeded tasks for the >5-invite test`,
-  ).toBe(count)
-  return usable
-}
-
 test.describe('collaboration UI (clicked buttons)', () => {
   // The happy path drives create → invite → accept → cast → publish entirely
   // through real buttons. It stays green: every control on this path ships today.
   test('create via ModePicker, invite, accept, cast, and publish', async ({ browser }) => {
-    const s = pairSeq++
-    const alice = await login(browser, `ua-${RUN}-${s}`, `UA${s}-${RUN}`, 1)
-    const bob = await login(browser, `ub-${RUN}-${s}`, `UB${s}-${RUN}`, 0)
-    const task = await pickOpenTask(alice)
+    const scenario = scenarioFor(browser)
+    const alice = await loginPlayer(scenario, 'ua', COLLAB_CREATOR_LEVEL)
+    const bob = await loginPlayer(scenario, 'ub', COLLAB_INVITEE_LEVEL)
+    const task = selectOpenTask(await fetchTasks(alice))
     try {
       // 1. Alice signs up on the task → lands on the (solo) composer. By slot:
       //    all eight task-detail archetypes render one sign-up control, and
@@ -295,7 +231,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // refuses an untitled praxis client-side (`errors.titleRequired`) — after
       // the propose confirm has already been dismissed, so the refusal was
       // invisible and Alice's proposal simply never existed (#2453).
-      await aPage.getByTestId('praxis-title').fill(`Collab ${RUN}-${s}`)
+      await aPage.getByTestId('praxis-title').fill(`Collab ui-${RUN}`)
       await aPage.locator('.cm-content').first().fill('Alice weaves her part')
 
       // Let the room's debounced flush land BEFORE proposing. The document is
@@ -306,13 +242,10 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // arrives to find no proposal to approve. `body_text` reaching the record
       // is the flush; there is no other observable for it.
       await expect
-        .poll(
-          async () => {
-            const res = await alice.ctx.request.get(`${API}/praxes/${praxisId}`)
-            return (await res.json()).body_text as string
-          },
-          { timeout: 15_000, message: 'the praxis room never flushed to the record' },
-        )
+        .poll(async () => (await fetchPraxis(alice, praxisId)).body_text, {
+          timeout: 15_000,
+          message: 'the praxis room never flushed to the record',
+        })
         .toContain('Alice weaves her part')
 
       // 6. Alice proposes publishing. `data-collab-signal` says which of the two
@@ -354,18 +287,17 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // CollabRoster renders member pills but ships NO kick affordance, so
   // POST /praxes/{id}/kick/{member_id} is unreachable from the UI.
   test('C1: a member can kick a co-author from the roster pill', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'ui-kick')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'ui-kick')
     try {
-      const page = await seed.alice.ctx.newPage()
-      await page.goto(`/praxis/${seed.praxisId}/edit`)
+      const page = await draft.creator.ctx.newPage()
+      await page.goto(`/praxis/${draft.praxisId}/edit`)
       await expect(
         page.getByRole('button', {
-          name: new RegExp(`(kick|remove).*${seed.bob.name}`, 'i'),
+          name: new RegExp(`(kick|remove).*${draft.invitee.name}`, 'i'),
         }),
       ).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
@@ -373,14 +305,13 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // only way to leave is via the bank-full drop-to-accept modal, so a member
   // who simply wants out has no button.
   test('C2: a member can leave the collab from a standalone control', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'ui-leave')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'ui-leave')
     try {
-      const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxis/${seed.praxisId}/edit`)
+      const page = await draft.invitee.ctx.newPage()
+      await page.goto(`/praxis/${draft.praxisId}/edit`)
       await expect(page.getByRole('button', { name: /leave/i })).toBeVisible()
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
@@ -388,12 +319,13 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // detail page should see a CAST control. Today the page falls through to the
   // owner "unsubmit" control, which 422s because the holdout never submitted.
   test('C3: a holdout on a pending collab is not shown the unsubmit control', async ({ browser }) => {
-    const seed = await seedCollabDraft(browser, 'ui-holdout')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'ui-holdout')
     try {
-      // Alice casts (API) → the collab enters `pending`; Bob is the holdout.
-      await seed.alice.ctx.request.post(`${API}/praxes/${seed.praxisId}/submit`)
-      const page = await seed.bob.ctx.newPage()
-      await page.goto(`/praxis/${seed.praxisId}`)
+      // The creator casts (API) → the collab enters `pending`; the invitee is
+      // the holdout.
+      await submitPraxis(draft.creator, draft.praxisId)
+      const page = await draft.invitee.ctx.newPage()
+      await page.goto(`/praxis/${draft.praxisId}`)
       // The unsubmit control must NOT be offered to a member who never cast.
       //
       // KNOWN VACUOUS, DELIBERATELY LEFT (#2453 → #1795). `exact: true` against
@@ -408,8 +340,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
         page.getByRole('button', { name: 'unsubmit', exact: true }),
       ).toHaveCount(0)
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
@@ -417,32 +348,17 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // accept-reachable. The requests inbox (usePendingRequests) caps its fetch at
   // 5, so the sixth-oldest invite silently falls off with no other surface.
   test('C4: the oldest of six pending invites is still reachable', async ({ browser }) => {
-    const s = pairSeq++
-    const inviter = await login(browser, `ci-${RUN}-${s}`, `CI${s}-${RUN}`, 8)
-    const bob = await login(browser, `cb-${RUN}-${s}`, `CB${s}-${RUN}`, 0)
-    const tasks = await pickTasks(inviter, 6)
+    const seeded = await seedPendingInvites(scenarioFor(browser), 6)
     try {
-      // Six collabs, one per task, oldest first — all invite the same Bob.
-      const oldestTaskTitle = tasks[0].title
-      for (const task of tasks) {
-        const created = await inviter.ctx.request.post(`${API}/praxes`, {
-          data: { task_id: task.id, type: 'collab', title: `C4 ${task.id}`, body_text: 'x' },
-        })
-        expect(created.ok(), `collab create failed: ${await created.text()}`).toBeTruthy()
-        const praxis = await created.json()
-        const invited = await inviter.ctx.request.post(`${API}/praxes/${praxis.id}/invite`, {
-          data: { invitee_id: bob.characterId },
-        })
-        expect(invited.ok(), `invite failed: ${await invited.text()}`).toBeTruthy()
-      }
-      const page = await bob.ctx.newPage()
+      const page = await seeded.invitee.ctx.newPage()
       await page.goto('/')
-      // Bob's pending-requests inbox lives in the sidebar; the oldest invite's
-      // task must still show there (it's dropped by the limit-5 fetch today).
-      await expect(page.locator('aside').getByText(oldestTaskTitle)).toBeVisible()
+      // The invitee's pending-requests inbox lives in the sidebar; the oldest
+      // invite's task must still show there (it's dropped by the limit-5 fetch
+      // today).
+      await expect(page.locator('aside').getByText(seeded.tasks[0].title)).toBeVisible()
     } finally {
-      await inviter.ctx.close()
-      await bob.ctx.close()
+      await seeded.inviter.ctx.close()
+      await seeded.invitee.ctx.close()
     }
   })
 })
@@ -461,21 +377,17 @@ test.describe('collaboration UI (clicked buttons)', () => {
  * widget span, `.cm-ySelectionInfo` the hover label carrying the name. Each
  * page sees only the OTHER player's caret — `y-codemirror.next` skips the local
  * client id, which is also why a solo author alone in their room draws nothing.
- *
- * A block rather than a new file: `login` / `seedCollabDraft` are module-local
- * helpers, and exporting them to reuse them elsewhere would be a wider change
- * than the tests are worth.
  */
 test.describe('presence: carets and the roster dot', () => {
   test('P1: each member sees the other caret, and it goes when they leave', async ({
     browser,
   }) => {
-    const seed = await seedCollabDraft(browser, 'presence')
+    const draft = await seedCollabDraft(scenarioFor(browser), 'presence')
     try {
-      const aPage = await seed.alice.ctx.newPage()
-      const bPage = await seed.bob.ctx.newPage()
-      await aPage.goto(`/praxis/${seed.praxisId}/edit`)
-      await bPage.goto(`/praxis/${seed.praxisId}/edit`)
+      const aPage = await draft.creator.ctx.newPage()
+      const bPage = await draft.invitee.ctx.newPage()
+      await aPage.goto(`/praxis/${draft.praxisId}/edit`)
+      await bPage.goto(`/praxis/${draft.praxisId}/edit`)
 
       // A caret exists only once its owner's cursor is IN the document, so both
       // have to put a selection there. `fill` auto-waits on the editor becoming
@@ -483,14 +395,15 @@ test.describe('presence: carets and the roster dot', () => {
       await aPage.locator('.cm-content').first().fill('Alice is typing')
       await bPage.locator('.cm-content').first().fill('Bob is typing')
 
-      // Alice sees exactly one remote caret: Bob's, labelled with his name.
+      // The creator sees exactly one remote caret: the invitee's, labelled with
+      // their name.
       await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(1)
-      await expect(aPage.locator('.cm-ySelectionInfo')).toHaveText(seed.bob.name)
-      await expect(bPage.locator('.cm-ySelectionInfo')).toHaveText(seed.alice.name)
+      await expect(aPage.locator('.cm-ySelectionInfo')).toHaveText(draft.invitee.name)
+      await expect(bPage.locator('.cm-ySelectionInfo')).toHaveText(draft.creator.name)
 
-      // The roster's live dot names the same fact in words, on Bob's row.
+      // The roster's live dot names the same fact in words, on the invitee's row.
       await expect(
-        aPage.getByRole('img', { name: `${seed.bob.name} is here now` }),
+        aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toBeVisible()
 
       // Presence is ephemeral: closing the tab closes the socket, and the caret
@@ -499,11 +412,10 @@ test.describe('presence: carets and the roster dot', () => {
       await bPage.close()
       await expect(aPage.locator('.cm-ySelectionCaret')).toHaveCount(0)
       await expect(
-        aPage.getByRole('img', { name: `${seed.bob.name} is here now` }),
+        aPage.getByRole('img', { name: `${draft.invitee.name} is here now` }),
       ).toHaveCount(0)
     } finally {
-      await seed.alice.ctx.close()
-      await seed.bob.ctx.close()
+      await closeDraft(draft)
     }
   })
 
@@ -511,15 +423,16 @@ test.describe('presence: carets and the roster dot', () => {
   // gates on the praxis type: the plugin skips the local client, so a solo
   // author is alone in a room that draws nobody.
   test('P2: a solo author alone in their room draws no caret', async ({ browser }) => {
-    const s = pairSeq++
-    const solo = await login(browser, `p-${RUN}-${s}`, `P${s}-${RUN}`, 0)
-    const task = await pickOpenTask(solo)
+    const scenario = scenarioFor(browser)
+    const solo = await loginPlayer(scenario, 'p', COLLAB_INVITEE_LEVEL)
+    const task = selectOpenTask(await fetchTasks(solo))
     try {
-      const created = await solo.ctx.request.post(`${API}/praxes`, {
-        data: { task_id: task.id, type: 'solo', title: `Solo ${s}`, body_text: 'draft' },
+      const praxis = await createPraxis(solo, {
+        task_id: task.id,
+        type: 'solo',
+        title: `Solo ${RUN}`,
+        body_text: 'draft',
       })
-      expect(created.ok(), `solo create failed: ${await created.text()}`).toBeTruthy()
-      const praxis = await created.json()
 
       const page = await solo.ctx.newPage()
       await page.goto(`/praxis/${praxis.id}/edit`)
