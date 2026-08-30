@@ -60,7 +60,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'components/praxisCard/__tests__/praxisMasthead.test.tsx|BANDED',
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   'components/sigil/__tests__/factionSigil.test.tsx|SLUGS',
-  'components/taskCard/__tests__/mastheadFactionLink.test.tsx|MASTHEADED',
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
   'pages/characterPaths/__tests__/singularityCreateCharacterRegister.test.tsx|WIDTHS',
   'pages/characterProfile/__tests__/factionProfileBody.test.tsx|SLUGS',
