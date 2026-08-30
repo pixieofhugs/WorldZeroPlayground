@@ -10,7 +10,7 @@
  * can render.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { emailAuthorises, runDeleteAccount } from '../deleteAccount'
+import { emailAuthorises, livesEnding, runDeleteAccount } from '../deleteAccount'
 
 const EMAIL = 'pilgrim@example.com'
 
@@ -35,6 +35,24 @@ describe('the confirm gate is the account email', () => {
   it('can never be armed when the account has no email to type', () => {
     expect(emailAuthorises('', '')).toBe(false)
     expect(emailAuthorises('   ', '  ')).toBe(false)
+  })
+})
+
+describe('the lives the dialog has to name', () => {
+  it('names the one life on a single-life account', () => {
+    expect(livesEnding(['WZ Pilgrim'])).toEqual({ kind: 'only', name: 'WZ Pilgrim' })
+  })
+
+  it('names the carried life and keeps the rest so they can be listed', () => {
+    expect(livesEnding(['WZ Pilgrim', 'Bramble', 'Ninefold'])).toEqual({
+      kind: 'more',
+      name: 'WZ Pilgrim',
+      others: ['Bramble', 'Ninefold'],
+    })
+  })
+
+  it('says so rather than naming nobody when the account carries none', () => {
+    expect(livesEnding([])).toEqual({ kind: 'none' })
   })
 })
 

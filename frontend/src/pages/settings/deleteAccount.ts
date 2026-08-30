@@ -34,6 +34,33 @@ export function emailAuthorises(typed: string, email: string): boolean {
 }
 
 /**
+ * What the dialog has to say about the lives this ends (#2161 correction 2).
+ *
+ * NOTHING ON THE DRAWN SHEET TOLD YOU THIS. Deleting an account takes
+ * characters a player may not have thought about in months, and the design's
+ * dialog never mentioned them. So the sentence names the carried life and
+ * counts the rest, and the caller lists the rest by name underneath — "how many
+ * end, by name" matters more here than the confirm string does.
+ *
+ * A shape rather than a rendered string: the component maps each `kind` to a
+ * catalog key written out literally, which is the repo's rule for keys (a typo
+ * fails the build, and a locale grep can see them).
+ *
+ * The roster arrives carried-life-first from `GET /me/characters`, so `name` is
+ * the life the player is holding right now — the one they will recognise.
+ */
+export type LivesEnding =
+  | { kind: 'none' }
+  | { kind: 'only'; name: string }
+  | { kind: 'more'; name: string; others: readonly string[] }
+
+export function livesEnding(names: readonly string[]): LivesEnding {
+  if (names.length === 0) return { kind: 'none' }
+  if (names.length === 1) return { kind: 'only', name: names[0] }
+  return { kind: 'more', name: names[0], others: names.slice(1) }
+}
+
+/**
  * The delete → land → sign out sequence.
  *
  * ORDER IS LOAD-BEARING. `/settings` is a `ProtectedRoute`, so dropping the

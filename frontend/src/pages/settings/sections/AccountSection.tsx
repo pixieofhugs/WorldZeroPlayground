@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../auth/AuthContext'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import DeleteAccountCard from '../DeleteAccountCard'
 import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
 
@@ -29,6 +30,13 @@ import SettingsRow from '../SettingsRow'
  * the deleted `mobileArchetypes/DefaultSettings.tsx` (`6ddde148^`) — the
  * spectrum ring around the avatar, the faction·level line, and the
  * `edit`-or-`create` href are that file's working code.
+ *
+ * THE DESIGN'S `#sec-account` IS THE DANGER ZONE, AND IT IS NOW HERE (#2161).
+ * `DeleteAccountCard` is the drawn half of this section: a second card under
+ * this one, anchored `sec-account-danger`, NOT a second entry in
+ * `SETTINGS_SECTIONS` — the rail lists one Account item and both cards sit
+ * under it. It renders nothing at all for an account with no email on the wire,
+ * because the email is what confirms the deletion.
  *
  * PROVIDER IS DISPLAY ONLY AND THAT IS A RULING, NOT AN OMISSION. There is no
  * button beside it because the link-a-second-provider flow (ADR-0075) does not
@@ -90,6 +98,7 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
   // asserts one anchor per registered section, and a section that returns
   // `null` is a rail item pointing at nothing.
   return (
+    <>
     <SettingsCard
       sectionId={sectionId}
       title={t('settings.account.eyebrow')}
@@ -206,5 +215,8 @@ export default function AccountSection({ sectionId }: { readonly sectionId: stri
         </button>
       </SettingsRow>
     </SettingsCard>
+
+      <DeleteAccountCard sectionId={`${sectionId}-danger`} />
+    </>
   )
 }

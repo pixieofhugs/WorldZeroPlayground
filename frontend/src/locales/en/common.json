@@ -422,6 +422,28 @@
       }
     },
     "signOut": "Sign out",
-    "signOutHelp": "Ends this session on this device."
+    "signOutHelp": "Ends this session on this device.",
+    "danger": {
+      "title": "Delete account",
+      "lead": "This removes your characters, your praxes, your votes, and your comments. Points you awarded to other players stay with them. It cannot be undone.",
+      "action": "Delete my account",
+      "dialogTitle": "Delete your account",
+      "dialogBody": "Type {{email}} below to confirm. This is permanent, and there is no grace period.",
+      "livesLoading": "Reading the lives on this account…",
+      "livesNone": "This account carries no lives.",
+      "livesOnly": "This ends {{name}}.",
+      "livesMore_one": "This ends {{name}}, and {{count}} other life.",
+      "livesMore_other": "This ends {{name}}, and {{count}} other lives.",
+      "livesAlso": "The other lives that end",
+      "fieldLabel": "Type your email address to confirm",
+      "confirm": "Delete account"
+    }
+  },
+  "accountDeleted": {
+    "title": "Your account is deleted",
+    "gone": "Your characters, your praxes, your votes and your comments are gone. Nothing carries over.",
+    "kept": "Points you awarded to other players stay with them.",
+    "again": "If you sign in again with the same Google or Discord account, World Zero will offer to start you fresh as a new player.",
+    "home": "Back to the front page"
   }
 }
