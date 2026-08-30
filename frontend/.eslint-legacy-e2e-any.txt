@@ -1,0 +1,15 @@
+# Spec files still carrying an `any` annotation (#2889).
+#
+# `any` is banned in `e2e/**`. These two files predate the ban; #2888 is
+# rewriting both onto the app's own generated response types, and its PR body
+# already names this issue as what lands next. This list only ever SHRINKS —
+# typing a file means deleting its line here, not adding one. New files may
+# never be added to it, and when the last line goes the file goes with it
+# (the `.eslint-legacy-faction-hue-ink.txt` precedent, #2108: an empty list
+# left behind reads like debt nobody has looked at).
+#
+# Five annotations across the two, as reported on the day the rule landed:
+#   collaboration.spec.ts  4   (`t: any`, two `m: any`, `tasks as any[]`)
+#   duel.helpers.ts        1   (`t: any`)
+e2e/collaboration.spec.ts
+e2e/duel.helpers.ts
