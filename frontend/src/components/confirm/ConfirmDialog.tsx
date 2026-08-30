@@ -109,21 +109,27 @@ export default function ConfirmDialog({
   const panelRef = useRef<HTMLDivElement>(null)
   const dismissRef = useRef<HTMLButtonElement>(null)
 
-  // Focus the safe action, not the destructive one. Keyed on `kind` so a second
-  // confirm opening in place of a first re-focuses.
-  useEffect(() => {
-    dismissRef.current?.focus()
-  }, [request.kind])
-
   // Put focus back where it came from when the dialog goes away (#2161).
   // Mount-scoped, not keyed on `kind`: a second request replacing a first never
   // left the panel, so the opener is still the right destination.
+  //
+  // DECLARED BEFORE THE AUTO-FOCUS EFFECT BELOW, AND THAT ORDER IS THE WHOLE
+  // FEATURE. React runs effects in declaration order, so reading
+  // `document.activeElement` after the focus-the-dismiss-button effect would
+  // capture this dialog's OWN button — and focusing that on unmount is a no-op
+  // against a detached node, dropping the reader to `<body>`.
   useEffect(() => {
     const opener = document.activeElement
     return () => {
       if (opener instanceof HTMLElement) opener.focus()
     }
   }, [])
+
+  // Focus the safe action, not the destructive one. Keyed on `kind` so a second
+  // confirm opening in place of a first re-focuses.
+  useEffect(() => {
+    dismissRef.current?.focus()
+  }, [request.kind])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
