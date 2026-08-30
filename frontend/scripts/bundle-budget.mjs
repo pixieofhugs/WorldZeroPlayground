@@ -242,7 +242,7 @@ const BUDGETS = {
  * failure `src/test/indexCss.ts` was written to prevent and it applies twice over
  * here, because this file is plain Node and cannot import that TypeScript helper —
  * it re-implements the map read. So the total is floored as well as Albescent's
- * share being capped, and `src/css/__tests__/albescentAllowance.test.ts` asserts
+ * share being capped, and `src/__tests__/albescentCssAllowance.test.ts` asserts
  * that this file's reading of the sheet and `readIndexCss()`'s agree.
  */
 const ALBESCENT_ALLOWANCE = 50
@@ -282,7 +282,7 @@ function gzippedSize(relativePath) {
  * Mirrors `src/test/indexCss.ts` on purpose: the parts are read through the
  * import map so the order is the cascade, and the map's own `@import` regex is
  * copied verbatim rather than loosened, so the two readers rot together and
- * `albescentAllowance.test.ts` sees it when they do.
+ * `albescentCssAllowance.test.ts` sees it when they do.
  */
 function topLevelClassSelectors() {
   const src = join(dirname(fileURLToPath(import.meta.url)), '..', 'src')

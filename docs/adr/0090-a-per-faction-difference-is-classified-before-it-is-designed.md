@@ -166,11 +166,17 @@ cut no lines and no CSS — `index.css` was byte-identical across all five, and 
 moved −16 bytes gzipped — because the rows exist to make the columns possible, not to do the
 cutting themselves.
 
-**Two censuses in this repo already carry the fix**, and they are the shape to copy: the
-migration gate's `familyOf()` (a straggler sweep hunting `--faction-${slug}` passed vacuously
-for `na` and `albescent`, whose family is `default`), and the carve-out guards' non-vacuity
-shape, where each carve-out must *still* name its faction directly so an empty row is a
-failure rather than a pass.
+**Two censuses in this repo already carry the fix**, and they are the shape to copy.
+
+`factionRoleFallbacks.test.ts`'s `stragglers` sweep derives the token family from
+`factionCssVar(surface.slug)` rather than from the slug. Hunting `--faction-${slug}` directly
+would pass vacuously for `na` and `albescent`, whose family is `default` — it would have
+cleared every surface whatever they said.
+
+`singularityRoleReads.test.ts`'s `CARVED_OUT` list is the non-vacuity half: each carved-out
+file must *still* name its faction directly (`"%s still names this faction directly"`), so a
+row that goes newly empty is a failure rather than a pass. `components/sigil/FactionSigil.tsx`
+is on that list.
 
 **The checklist is the other half.** A tenth faction is a documentation goal, not an
 architecture goal; `docs/spec/SPEC-faction-ui-profile.md` §4 is where that is written down, and
