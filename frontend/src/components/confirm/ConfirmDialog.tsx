@@ -27,14 +27,24 @@
  *   - Escape dismisses, from a document-level listener, so it works even if the
  *     click that opened it left focus outside the panel.
  *   - Focus moves to the DISMISS button on open — the safe half of a dialog
- *     whose other half is usually destructive — and Tab cycles between the two
- *     buttons instead of walking the page behind the overlay.
+ *     whose other half is usually destructive — and Tab cycles through the
+ *     panel's focusable nodes instead of walking the page behind the overlay.
+ *   - Focus returns to whatever opened the dialog when it closes (#2161), so a
+ *     keyboard reader who cancels is put back on the button they pressed rather
+ *     than at the top of the document.
  *   - Clicking the backdrop dismisses, same as Escape.
  * Every one of those behaviours needs a DOM and effects; the test harness here
  * has neither, so they are verified by hand, and only the static contract
  * (roles, names, rendered copy) is asserted in tests.
+ *
+ * IT IS NO LONGER THE COMPOSER'S ALONE (#2161). Settings' delete-account
+ * confirm mounts it with `children` (the type-your-email field and the lives
+ * that end) and `confirmDisabled`. Those two props are the whole of the
+ * generalisation: everything else — the request, the chrome, the a11y — is
+ * unchanged, and a caller passing neither gets exactly the dialog the composer
+ * has always had.
  */
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../hooks/useFormFactor'
@@ -63,17 +73,34 @@ export interface ConfirmRequest {
   danger?: boolean
 }
 
+/** Everything inside the panel that can take focus, minus what cannot take it
+ *  right now. The disabled half of a type-to-confirm dialog is in the markup
+ *  and must stay out of the Tab cycle, or the wrap lands on a dead node and
+ *  focus falls to the body. */
+const FOCUSABLE =
+  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+
 export default function ConfirmDialog({
   request,
   factionSlug,
   onConfirm,
   onDismiss,
+  confirmDisabled = false,
+  children,
 }: {
   request: ConfirmRequest
   /** The task's faction — the dialog wears the surface it interrupts. */
   factionSlug: string | null | undefined
   onConfirm: () => void
   onDismiss: () => void
+  /** Hold the affirmative button until the caller says it may fire — the
+   *  type-the-confirm-string gate (#2161). Default off: a confirm whose only
+   *  question is "are you sure" is armed the moment it opens. */
+  confirmDisabled?: boolean
+  /** Extra content between the consequence and the footer: a field, a list of
+   *  what is about to end. Rendered inside the panel, so it is inside the
+   *  focus trap and inside the described region. */
+  children?: ReactNode
 }) {
   const { t } = useTranslation('forms')
   const isMobile = useFormFactor() === 'mobile'
@@ -88,6 +115,16 @@ export default function ConfirmDialog({
     dismissRef.current?.focus()
   }, [request.kind])
 
+  // Put focus back where it came from when the dialog goes away (#2161).
+  // Mount-scoped, not keyed on `kind`: a second request replacing a first never
+  // left the panel, so the opener is still the right destination.
+  useEffect(() => {
+    const opener = document.activeElement
+    return () => {
+      if (opener instanceof HTMLElement) opener.focus()
+    }
+  }, [])
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onDismiss()
@@ -96,11 +133,12 @@ export default function ConfirmDialog({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onDismiss])
 
-  // Keep Tab inside the panel. Two buttons, so the "trap" is just wrapping the
-  // ends — no need for a general focusable-node walk.
+  // Keep Tab inside the panel: wrap the ends of whatever is focusable in it.
+  // It was a `button` query while two buttons were the whole panel; a `children`
+  // slot can add a field, and a disabled confirm can take one away.
   const keepTabInside = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab') return
-    const buttons = panelRef.current?.querySelectorAll<HTMLElement>('button')
+    const buttons = panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
     if (!buttons || buttons.length === 0) return
     const first = buttons[0]
     const last = buttons[buttons.length - 1]
@@ -182,6 +220,7 @@ export default function ConfirmDialog({
             {request.note}
           </p>
         )}
+        {children}
         {/* [dismiss] … [affirmative] — the global footer order (#646). */}
         <div
           className="flex items-center"
@@ -208,7 +247,12 @@ export default function ConfirmDialog({
             type="button"
             data-testid="confirm-accept"
             onClick={onConfirm}
-            className="font-body"
+            disabled={confirmDisabled}
+            // `.control-off` is the repo's disabled paint (6.31:1 / 6.49:1) and
+            // it overrides the inline fill and ink below with `!important` — so
+            // a held destructive button stops looking like a live one without
+            // this call site having to branch on the flag itself.
+            className="font-body control-off"
             style={{
               fontSize: 'var(--text-md)',
               padding: 'var(--space-sm) var(--space-lg)',
