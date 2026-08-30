@@ -52,7 +52,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   // range, and the range question (does every letter still have a written
   // mechanic?) is answered by the derived SLUGS loop in the same file.
   'components/__tests__/invitationPerks.test.tsx|MECHANICS',
-  'components/feed/__tests__/feedRowInk.test.tsx|CASES',
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
   'pages/characterPaths/__tests__/singularityCreateCharacterRegister.test.tsx|WIDTHS',
