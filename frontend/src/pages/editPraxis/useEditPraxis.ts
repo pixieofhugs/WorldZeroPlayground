@@ -23,6 +23,13 @@
  * The split is pure restructuring — the interface, the request count and the
  * mount-time request ORDER are all unchanged, and the existing suite that
  * proves it was not edited to accommodate it.
+ *
+ * Four of the six were handed `praxis`, `setPraxis` and `setError` to write
+ * through, which is a shared mutable cell rather than an interface. #2879 and
+ * #2878 turned three of them around: the duel pane, the media tray and the seal
+ * stack now *report* an outcome and this file writes the praxis and the error
+ * line, which it owns. Each of those wrappers is the same three lines, so a
+ * reader who has met one has met all of them. `useComposerRoster` is #2880.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
