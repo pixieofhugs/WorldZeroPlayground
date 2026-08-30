@@ -70,7 +70,7 @@ from __future__ import annotations
 
 #: The headline number. Asserted against the sum of the entries below, so it
 #: cannot drift into being a separate claim about the code.
-RUFF_FINDING_TOTAL = 637
+RUFF_FINDING_TOTAL = 636
 
 #: ``<path relative to backend/>::<rule code>`` -> how many that file is still
 #: allowed. Sorted by path; keep it sorted so diffs stay readable.
@@ -173,7 +173,7 @@ RUFF_ALLOWLIST: dict[str, int] = {
     "services/media.py::I001": 1,
     "services/media_sweep.py::E501": 5,
     "services/media_sweep.py::I001": 1,
-    "services/praxis.py::E501": 18,
+    "services/praxis.py::E501": 17,
     "services/praxis_metatask.py::E501": 1,
     "services/praxis_out.py::E501": 8,
     "services/praxis_out.py::I001": 1,

@@ -43,9 +43,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.character import Character
-from models.praxis import Praxis
+from models.era import Era
+from models.flag import FlagReason
+from models.praxis import ModerationStatus, Praxis
 from services import media as media_service
 from services import praxis as praxis_service
+from services.era import get_or_create_stats
 
 
 @pytest.fixture(autouse=True)
@@ -245,10 +248,9 @@ async def test_submit_refuses_a_non_member_in_the_shared_wording(
 
 @pytest.mark.asyncio
 async def test_flag_evaluates_each_eligibility_rule_once(
-    client: AsyncClient,
     praxis_solo: Praxis,
     character2: Character,
-    auth_headers2: dict,
+    era: Era,
     db_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -258,7 +260,16 @@ async def test_flag_evaluates_each_eligibility_rule_once(
     and *then* called ``can_flag_praxis``, which checked both again — two extra
     queries per flag, and a docstring promising a mirror that only maintenance
     kept true.
+
+    Driven at the service rather than through ``POST /praxes/{id}/flag`` on
+    purpose: that route answers a ``PraxisOut``, whose ``can_flag`` field asks
+    the same question again about the *post*-flag state. That evaluation is the
+    serializer's, it has a different answer, and it is not what #2875 is about.
     """
+    stats = await get_or_create_stats(db_session, character2.id, era.id)
+    stats.level = CURRENT_ERA.flag_level_required
+    await db_session.flush()
+
     counts = {"author": 0, "flagged": 0}
     real_author = praxis_service._praxis_author_account_id
     real_flagged = praxis_service.account_already_flagged
@@ -278,16 +289,14 @@ async def test_flag_evaluates_each_eligibility_rule_once(
         praxis_service, "account_already_flagged", counting_flagged
     )
 
-    response = await client.post(
-        f"/praxes/{praxis_solo.id}/flag",
-        json={"reason": "spam"},
-        headers=auth_headers2,
+    flagged = await praxis_service.flag_praxis(
+        praxis_id=praxis_solo.id,
+        flagged_by=character2,
+        reason=FlagReason.spam,
+        session=db_session,
     )
 
-    # The level gate is the fourth rule and may well refuse this flagger — which
-    # is beside the point. The first two rules are asked before it either way,
-    # and today they are asked twice.
-    assert response.status_code in (200, 403), response.text
+    assert flagged.moderation_status == ModerationStatus.flagged
     assert counts["author"] == 1, (
         f"_praxis_author_account_id ran {counts['author']} times for one flag"
     )

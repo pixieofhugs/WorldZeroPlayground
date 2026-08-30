@@ -98,6 +98,13 @@ def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
 
     A collab is co-owned by every member; solo/duel praxes have exactly one
     member (the creator), so this is equivalent to creator-only for those types.
+
+    **The one wording** for "not a member" since #2875. ``submit_praxis`` and
+    ``invite_to_praxis`` used to write the check out by hand with their own
+    prose, so one operation had three refusals a player could tell apart by
+    reading. Private on purpose: callers outside this module take one of the two
+    ``*_for_member`` loaders below, which is the whole prologue rather than half
+    of it.
     """
     if character_id not in {m.character_id for m in praxis.members}:
         raise HTTPException(status_code=403, detail=f"Only a member can {action} this praxis.")
@@ -142,7 +149,11 @@ async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
     )
     praxis = result.scalar_one_or_none()
     if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        # Coded (#2875): the three media routes raised ``PRAXIS_NOT_FOUND`` by
+        # hand before they were folded onto this loader, and a consolidation
+        # that dropped the code off the wire would be a silent regression for
+        # any client branching on it.
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return praxis
 
 
@@ -166,6 +177,49 @@ async def get_praxis_settling_consensus(
     """
     praxis = await get_praxis(praxis_id, session)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
+    return praxis
+
+
+async def get_praxis_for_member(
+    praxis_id: int, character_id: int, action: str, session: AsyncSession
+) -> Praxis:
+    """:func:`get_praxis`, then ADR-0013's membership gate. **A read.**
+
+    The prologue every praxis mutation opens with — fetch the aggregate, then
+    authorise the actor — as one call instead of two lines a caller could get
+    half right (#2875). Three media routes in ``routers/praxes.py`` had their own
+    version of those two lines (``session.get`` + a hand-written 404 + this
+    module's private ``_require_member``), which skipped both the eager loads and
+    the settle and was indistinguishable at the call site from the real thing.
+
+    ``action`` completes "Only a member can ``…`` this praxis." — a verb phrase
+    naming what was refused, not a noun.
+
+    Take this one where :func:`get_praxis` is the right loader, and
+    :func:`get_praxis_settling_consensus_for_member` where the request's own
+    answer depends on whether the pending-publish window has lapsed. The choice
+    is the same one #2874 classified every call site against, and it is spelled
+    out in the name here for the same reason it is there.
+    """
+    praxis = await get_praxis(praxis_id, session)
+    _require_member(praxis, character_id, action)
+    return praxis
+
+
+async def get_praxis_settling_consensus_for_member(
+    praxis_id: int,
+    character_id: int,
+    action: str,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Praxis:
+    """:func:`get_praxis_settling_consensus`, then the membership gate. **Writes.**
+
+    The settling half of the prologue. Same "call it once, at the head of the
+    path" contract as the loader it wraps: nothing downstream needs to repeat it.
+    """
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
+    _require_member(praxis, character_id, action)
     return praxis
 
 
@@ -733,8 +787,9 @@ async def unsubmit_praxis(
     # Settles: the three doors above are told apart by ``status``, so a collab
     # whose window has lapsed must arrive here as ``submitted`` (reopen) rather
     # than as ``pending`` (withdraw the proposal it has already won).
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
-    _require_member(praxis, character_id, "reopen")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character_id, "reopen", session, era
+    )
 
     # Withdraw: a group action, for a member who has read the draft and has no
     # edit to make yet (ADR-0079). It is not a per-member pull-back — there is no
@@ -819,8 +874,9 @@ async def change_praxis_type(
 
     # Settles: the 422 below is a status guard, and a collab whose window has
     # lapsed is published — it must not be retyped or taken over.
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
-    _require_member(praxis, character_id, "change the mode of")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character_id, "change the mode of", session, era
+    )
     if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
         raise HTTPException(
             status_code=422, detail="Can only change mode while the praxis is in editing."
@@ -917,9 +973,10 @@ async def add_media_batch(
 ) -> List[MediaUploadResultOut]:
     """Save N uploads onto one praxis, returning a per-file outcome per upload.
 
-    Caller contract: the praxis has been fetched and ``_require_member`` has
-    already passed — those are batch-wide verdicts and must be settled before a
-    single byte is written.
+    Caller contract: the praxis arrived through
+    ``get_praxis_settling_consensus_for_member`` — the 404 and the membership 403
+    are batch-wide verdicts and must be settled before a single byte is written,
+    and so is the pending-publish window this batch is about to hard-reset.
 
     **Partial success is the point.** Each upload is validated and stored on its
     own; a file the pipeline rejects (unsupported type, over the byte cap,
@@ -993,9 +1050,10 @@ async def delete_media_item(
 ) -> None:
     """Remove one media item from a live praxis: DB row authoritative, disk best-effort.
 
-    Caller contract: the praxis has been fetched, ``_require_member`` has
-    passed, and ``media_item`` has been confirmed to belong to ``praxis`` —
-    same batch-wide-verdicts-first contract as :func:`add_media_batch`.
+    Caller contract: the praxis arrived through
+    ``get_praxis_settling_consensus_for_member`` and ``media_item`` has been
+    confirmed to belong to it — same verdicts-first contract as
+    :func:`add_media_batch`.
 
     Through the shared predicate, not a bare join. ``resolve_stored_media_path``
     is the one "is this a file we own?" gate every column-value-to-filesystem
@@ -1098,6 +1156,46 @@ async def account_already_flagged(
     return result.scalar_one_or_none() is not None
 
 
+class FlagDenialReason(str, Enum):
+    """Why a viewer may not flag a praxis (#328). The four rules, one each."""
+
+    own_praxis = "own_praxis"
+    already_flagged = "already_flagged"
+    below_level = "below_level"
+
+
+async def _flag_denial(
+    viewer: Character,
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig,
+) -> Optional[FlagDenialReason]:
+    """The one evaluation of #328's rules; ``None`` means the flag is allowed.
+
+    Both :func:`can_flag_praxis` (which wants a yes/no for the UI) and
+    :func:`flag_praxis` (which wants to know *which* rule refused, so it can say
+    so) read the answer from here. Before #2875 they each ran the rules
+    themselves and ``flag_praxis`` called ``can_flag_praxis`` afterwards as well,
+    so the first two rules — and their two queries — executed twice per flag, and
+    "mirrors the rules enforced in ``flag_praxis``" was a promise kept by
+    maintenance rather than by construction.
+
+    Order is the order the refusals are worded in: the self-flag and anti-gang
+    answers are specific, and a player must not read "you are not high enough
+    level" when the real reason is that they wrote the thing.
+    """
+    author_account_id = await _praxis_author_account_id(praxis, session)
+    if author_account_id is not None and author_account_id == viewer.account_id:
+        return FlagDenialReason.own_praxis
+    if await account_already_flagged(viewer.account_id, session, praxis_id=praxis.id):
+        return FlagDenialReason.already_flagged
+    era_row = await get_current_era_row(session)
+    stats = await get_or_create_stats(session, viewer.id, era_row.id)
+    if stats.level < era.flag_level_required:
+        return FlagDenialReason.below_level
+    return None
+
+
 async def can_flag_praxis(
     viewer: Optional[Character],
     praxis: Praxis,
@@ -1106,23 +1204,20 @@ async def can_flag_praxis(
 ) -> bool:
     """Return True if ``viewer`` may flag ``praxis``.
 
-    Mirrors the rules enforced in :func:`flag_praxis` so the ``can_flag`` UI flag
+    Mirrors the rules enforced in :func:`flag_praxis` — by construction since
+    #2875, because both read :func:`_flag_denial` — so the ``can_flag`` UI flag
     hides the control exactly when the action would 403/409 (#328):
     - Viewer must be authenticated (anonymous viewers cannot flag).
     - Viewer's **account** cannot own the praxis author (account-scoped anti-self-flag).
     - Viewer's **account** must not already have a flag on this praxis (anti-gang).
     - Viewer must be at or above ``era.flag_level_required`` in the current era.
+
+    The anonymous rule is the one that stays here: ``flag_praxis`` takes a
+    ``Character``, so it cannot be reached by a viewer who has none.
     """
     if viewer is None:
         return False
-    author_account_id = await _praxis_author_account_id(praxis, session)
-    if author_account_id is not None and author_account_id == viewer.account_id:
-        return False
-    if await account_already_flagged(viewer.account_id, session, praxis_id=praxis.id):
-        return False
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, viewer.id, era_row.id)
-    return stats.level >= era.flag_level_required
+    return await _flag_denial(viewer, praxis, session, era) is None
 
 
 async def flag_praxis(
@@ -1139,23 +1234,22 @@ async def flag_praxis(
     # it is the one that owes ADR-0012's "seal on access".
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
-    # Account-scoped anti-self-flag (#328): no account can flag its own work
-    # across lives — mirror the account-level anti-self-vote shape. Own message
-    # so the caller sees a clearer reason than a generic level failure.
-    author_account_id = await _praxis_author_account_id(praxis, session)
-    if author_account_id is not None and author_account_id == flagged_by.account_id:
+    # Asked once (#2875), and raised on the answer. The three refusals below are
+    # the same three rules :func:`can_flag_praxis` reports to the UI, so the
+    # control cannot be drawn for an action that would fail.
+    denial = await _flag_denial(flagged_by, praxis, session, era)
+    if denial is FlagDenialReason.own_praxis:
+        # Account-scoped anti-self-flag (#328): no account can flag its own work
+        # across lives — mirror the account-level anti-self-vote shape. Own
+        # message so the caller sees a clearer reason than a generic level failure.
         raise HTTPException(status_code=403, detail="Cannot flag your own praxis.")
-
-    # Account-scoped uniqueness (#328): one flag per account per praxis — a second
-    # life can't stack a second flag to gang up on a third-party praxis.
-    if await account_already_flagged(
-        flagged_by.account_id, session, praxis_id=praxis.id
-    ):
+    if denial is FlagDenialReason.already_flagged:
+        # Account-scoped uniqueness (#328): one flag per account per praxis — a
+        # second life can't stack a second flag to gang up on a third-party praxis.
         raise HTTPException(
             status_code=409, detail="Your account has already flagged this praxis."
         )
-
-    if not await can_flag_praxis(flagged_by, praxis, session, era):
+    if denial is FlagDenialReason.below_level:
         raise_coded(
             403,
             ErrorCode.flag_level_too_low,
@@ -1225,13 +1319,14 @@ async def invite_to_praxis(
             {DETAIL_CONTEXT_PARAM: "invite"},
         )
 
-    member_ids = {m.character_id for m in praxis.members}
-    if inviter_id not in member_ids:
-        raise HTTPException(status_code=403, detail="Only members can send invites.")
+    # Not the prologue loader: the two guards above are type/status answers this
+    # route gives before it asks who is calling, and reordering them would change
+    # which refusal an outsider reads. Same wording as every other mutator now.
+    _require_member(praxis, inviter_id, "invite to")
 
     if invitee_id == inviter_id:
         raise_coded(400, ErrorCode.invite_self, "Cannot invite yourself.")
-    if invitee_id in member_ids:
+    if invitee_id in {member.character_id for member in praxis.members}:
         raise_coded(
             409, ErrorCode.invite_already_member, "Player is already a member."
         )
@@ -1406,8 +1501,9 @@ async def cancel_invite(
     # A plain read: nothing here consults ``status`` — a pending invite is
     # rescindable whether or not the collab has published — and the route
     # answers 204, so no praxis state is shown to anyone.
-    praxis = await get_praxis(praxis_id, session)
-    _require_member(praxis, requester_id, "rescind an invite to")
+    praxis = await get_praxis_for_member(
+        praxis_id, requester_id, "rescind an invite to", session
+    )
 
     invite = next(
         (candidate for candidate in praxis.invites if candidate.id == invite_id), None
@@ -1443,9 +1539,9 @@ async def kick_member(
     """
     # Settles: the 422 below is a status guard, and a kick on a collab whose
     # window has lapsed would unpublish it and wipe every cast.
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
-
-    _require_member(praxis, requester_id, "kick from")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, requester_id, "kick from", session, era
+    )
 
     if member_id == requester_id:
         raise HTTPException(status_code=400, detail="Cannot kick yourself.")
@@ -1497,6 +1593,9 @@ async def leave_praxis(
     # collab to solo and, through ``on_member_edit``, cancel the proposal that
     # silence had already carried — destroying a consensus instead of honouring it.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
+    # Not the prologue loader, for the same reason as ``invite_to_praxis``: "this
+    # is not a collab" is answered before "you are not on it", and folding the
+    # two lines into one call would swap that order.
     if praxis.type != PraxisType.collab:
         raise HTTPException(status_code=400, detail="Only collab memberships can be left.")
     _require_member(praxis, character_id, "leave")
@@ -1538,8 +1637,9 @@ async def set_member_done(
     """
     # Settles: Done itself gates nothing, but this is the only load on the path
     # and the actor is handed the praxis back — so it carries the seal-on-access.
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
-    _require_member(praxis, character_id, "mark done on")
+    praxis = await get_praxis_settling_consensus_for_member(
+        praxis_id, character_id, "mark done on", session, era
+    )
     await collab_consensus.mark_done(praxis, character_id, is_done, session)
     return await get_praxis(praxis_id, session)
 
@@ -1569,11 +1669,7 @@ async def submit_praxis(
     # ``submitted_at``. The lapse still seals, on the settling read below: this
     # request's own transition gets to run first, and whichever of the two
     # publishes it, the response says Live.
-    praxis = await get_praxis(praxis_id, session)
-
-    member_ids = {m.character_id for m in praxis.members}
-    if character_id not in member_ids:
-        raise HTTPException(status_code=403, detail="You are not a member of this praxis.")
+    praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
