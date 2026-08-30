@@ -108,9 +108,9 @@ export const CARD_CTA_ROW: CSSProperties = {
  * the card (`frontend/CLAUDE.md`: the prefix is the SURFACE's). A constant
  * spread on two surfaces has to reach the token itself, so it does:
  * `factionRoleVar(slug, 'face')` is the same value the card's own
- * `factionRoleVars` declares, one hop earlier. `--na-task-card-*` keeps its
- * fallback arm for the reason it always had one — for `na` the map is empty and
- * the fallback is the whole paint.
+ * `factionRoleVars` declares, one hop earlier — and since #2690 that holds for
+ * `na` too, where the map used to be empty and the card's fallback arm was the
+ * whole paint.
  *
  * WHAT IS DELIBERATELY NOT IN A CONSTANT: `cursor`, which is affordance and
  * belongs to `CardCtaControl`; and the size delta, which is

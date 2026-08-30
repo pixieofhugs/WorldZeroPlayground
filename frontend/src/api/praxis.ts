@@ -230,6 +230,25 @@ export async function getPraxis(id: number): Promise<PraxisOut> {
 // Create / update / delete
 // ---------------------------------------------------------------------------
 
+// INVALIDATION IN THIS FILE — WHAT IS AUTOMATIC AND WHAT IS NOT (#2892)
+//
+// Automatic, nothing below does it by hand:
+//   - the cached task browse and praxis feed. `api/client.ts` calls
+//     `dropCachesAfterWrite()` on every succeeding POST/PUT/PATCH/DELETE, so a
+//     write added here cannot forget it (ADR-0072).
+//
+// By hand, and each one for a reason recorded at its own definition:
+//   - `notifyRequestsChanged()` — `utils/requestsBus`. Firing it is a fan-out of
+//     immediate refetches, not a free `Map.clear()`, so it is NOT fired on every
+//     write. One rule decides membership: ring iff the write moves a row into or
+//     out of THIS viewer's pending-requests queue or their in-progress bank.
+//     Every mutating export below is partitioned by that rule in `PRAXIS_WRITES`
+//     (`utils/__tests__/requestsBusWiring.test.ts`), which fails CI if a new
+//     write is left unclassified — so "silent" here is a recorded verdict, never
+//     an omission. Read the table before adding a call or leaving one out.
+//   - `clearCastTallies()` — `utils/castTallies`. Fired by the two READS above
+//     that return server truth for a praxis's vote numbers.
+
 /**
  * The praxis a signup just created, held for the composer it is about to land
  * on (#1379).

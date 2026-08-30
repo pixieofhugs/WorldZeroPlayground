@@ -44,15 +44,7 @@ vi.mock("../../../hooks/useTheme", () => ({
 }));
 
 // Imported after the mocks are registered.
-import AlbescentPraxisCard from "../desktop/AlbescentPraxisCard";
-import CovenPraxisCard from "../desktop/CovenPraxisCard";
-import DefaultPraxisCard from "../desktop/DefaultPraxisCard";
-import EphemeristsPraxisCard from "../desktop/EphemeristsPraxisCard";
-import EverymenPraxisCard from "../desktop/EverymenPraxisCard";
-import SingularityPraxisCard from "../desktop/SingularityPraxisCard";
-import SnidePraxisCard from "../desktop/SnidePraxisCard";
-import UaPraxisCard from "../desktop/UaPraxisCard";
-import WowPraxisCard from "../desktop/WowPraxisCard";
+import { surfaceMap } from "../../../factions";
 
 import { drawNotation } from "../../factionMarks/EphemeristsNotationBand";
 
@@ -64,17 +56,23 @@ import { aPraxisCard } from "../../../test/fixtures";
 const DASHED_RULE =
   "border-top:1px dashed color-mix(in srgb, currentColor 30%, transparent)";
 
-/** The eight that keep the dashed rule. Ephemerists is the ninth, below. */
-const DASHED: [string, ComponentType<ArchetypeProps>][] = [
-  ["albescent", AlbescentPraxisCard],
-  ["coven", CovenPraxisCard],
-  ["na", DefaultPraxisCard],
-  ["everymen", EverymenPraxisCard],
-  ["singularity", SingularityPraxisCard],
-  ["snide", SnidePraxisCard],
-  ["ua", UaPraxisCard],
-  ["wow", WowPraxisCard],
-];
+/**
+ * The one kit that rules its byline with runes instead — the owner's ruling at
+ * the top of this file, and the only thing typed here (#2815). Everything else
+ * is the praxis-card registry with that one slug filtered out, so a tenth kit
+ * is held to the shared slot the day its manifest row lands.
+ */
+const RUNED_SLUG = "ephemerists";
+
+const PRAXIS_CARDS = surfaceMap("praxisCard");
+
+/** Every card that keeps the dashed rule. Ephemerists is the exception, below. */
+const DASHED: [string, ComponentType<ArchetypeProps>][] = Object.entries(PRAXIS_CARDS).filter(
+  ([slug]) => slug !== RUNED_SLUG,
+);
+
+/** Rendering `undefined` throws, so a de-registered row fails loudly below. */
+const EphemeristsPraxisCard = PRAXIS_CARDS[RUNED_SLUG];
 
 const adminProps = {
   showAdminControls: false,
@@ -113,7 +111,7 @@ describe.each(DASHED)("the %s card keeps the dashed byline rule (#2312)", (slug,
 });
 
 describe("one slot, not nine copies (#2312)", () => {
-  it("emits the same byline row on all eight, apart from the sheet's own ink", () => {
+  it("emits the same byline row on every one, apart from the sheet's own ink", () => {
     // The ink is the frame's `muted` prop and is per-faction by design; strip it
     // and what is left is the slot itself. If a future edit forks the rule for
     // one faction, these stop matching and this fails rather than drifting.

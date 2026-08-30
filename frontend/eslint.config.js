@@ -827,6 +827,30 @@ const LEGACY_FACTION_INK_FILES = fs
   .filter(Boolean)
 
 /**
+ * #2889: no `any` in `e2e/**`.
+ *
+ * Expressed as `no-restricted-syntax` rather than
+ * `@typescript-eslint/no-explicit-any` because this repo installs the
+ * typescript-eslint PARSER and not its plugin. `TSAnyKeyword` is the node the
+ * parser already emits for every spelling that matters — the annotation, the
+ * cast, the array element — so the ban costs one core rule instead of a new
+ * dependency and a whole recommended set arriving with it.
+ *
+ * Why it is worth banning HERE specifically: `e2e/` drives the real API, so an
+ * `any` on a response is the one place where a schema change produces a GREEN
+ * spec asserting on a field the server stopped sending. `tsconfig.e2e.json`
+ * (#2306) typechecks this tree; `any` is how a file opts back out of that.
+ */
+const NO_ANY = [
+  'error',
+  {
+    selector: 'TSAnyKeyword',
+    message:
+      '`any` is banned in e2e/ (#2889) — read the response through the generated API types so a schema change fails the spec instead of passing it.',
+  },
+]
+
+/**
  * #1400: axios is gone. An import of it would install a SECOND transport that
  * misses everything `api/client.ts` carries — the JWT cookie, the 401→landing
  * rule, the array-param serialization FastAPI actually reads — and every one of
@@ -856,12 +880,21 @@ export default [
    * `GET /auth/me` by swapping `api.defaults.adapter`, and nothing but
    * `typecheck:design-sync` ever looked at it — `npm run lint` was `eslint src`.
    *
-   * These directories get the import ban and nothing else. Widening the whole
-   * rule set to them would surface a backlog that has nothing to do with #1400,
-   * so this block is deliberately one rule wide.
+   * This block was two directories wide and one rule wide, on the grounds that
+   * widening the rule set "would surface a backlog that has nothing to do with
+   * #1400". #2889 measured that backlog for `e2e/**` and it was EMPTY: the five
+   * local style rules and `sonarjs/no-identical-functions` report zero across
+   * the whole spec suite. So e2e moved to the real rule set below and only
+   * `.ds-kit/**` is left here.
+   *
+   * `.ds-kit/**` reports zero as well and would be free to move. It has not,
+   * because #2889 scoped itself to `e2e/**` and a glob widened on the grounds
+   * that it happens to be quiet today is a glob nobody decided on. That is a
+   * one-line change for whoever wants it, pinned by `e2eLintScope.test.ts` so
+   * it has to be an explicit edit.
    */
   {
-    files: ['.ds-kit/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
+    files: ['.ds-kit/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: { ecmaFeatures: { jsx: true } },
@@ -871,7 +904,19 @@ export default [
     },
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    /**
+     * `e2e/**` joined this block in #2889 — the other half of #1780, whose own
+     * audit comment recorded it as still open. `npm run lint` has been
+     * `eslint src .ds-kit e2e` since #1400, so the specs were always VISITED;
+     * they were simply never judged, because every rule worth having lived
+     * under a `src/**` glob. A green lint run over an unjudged directory looks
+     * exactly like a green lint run over a clean one.
+     *
+     * `i18next/no-literal-string` is turned back off for `e2e/**` by the last
+     * block in this file. That is deliberate and load-bearing: a spec is made
+     * of selectors, URLs and typed input, none of which is copy.
+     */
+    files: ['src/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -903,6 +948,22 @@ export default [
       'local/no-faction-hue-as-ink': 'error',
       'sonarjs/no-identical-functions': 'error',
       'no-restricted-imports': NO_AXIOS_IMPORT,
+    },
+  },
+  {
+    // The `any` ban is e2e-only, so it registers here rather than in the block
+    // above: `src/**` has its own `any` population and its own argument to
+    // have, and #2889 is not it.
+    //
+    // UNCONDITIONAL, and there is no `.eslint-legacy-e2e-any.txt`. This shipped
+    // as a two-file shrink-only ratchet because #2888 was still in flight; it
+    // merged (#2933) and typed all five annotations off the list, so the list
+    // went with them rather than being left behind as an empty file that reads
+    // like debt nobody has looked at (the #2108 precedent). Re-measured on the
+    // merged tree before deleting: eight spec files, zero reports.
+    files: ['e2e/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': NO_ANY,
     },
   },
   // Ratchet: existing violations are grandfathered until migrated. Spread

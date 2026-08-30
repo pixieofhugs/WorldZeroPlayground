@@ -331,7 +331,7 @@ export default function DefaultFieldDesk({
           <Link
             to="/tasks"
             className="label-caption"
-            style={{ color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))', textDecoration: 'none' }}
+            style={{ color: 'var(--na-field-desk-quiet)', textDecoration: 'none' }}
           >
             {t('fieldDesk.home.viewAll')}
           </Link>
@@ -384,7 +384,7 @@ export default function DefaultFieldDesk({
                 <span
                   className="shrink-0 label-caption"
                   style={{
-                    color: 'var(--na-field-desk-quiet, var(--faction-default-card-muted))',
+                    color: 'var(--na-field-desk-quiet)',
                     padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,

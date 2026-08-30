@@ -28,7 +28,7 @@ from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.faction_service import faction_permits
 from services.meta_task import faction_bypasses_metatask_level, metatask_cap_for_level
-from services.praxis import get_praxis
+from services.praxis import get_praxis, get_praxis_settling_consensus
 
 
 def _check_metatask_eligibility(
@@ -75,6 +75,10 @@ async def apply_metatask(
     - Quantity cap: at most ``metatask_cap_for_level(level, era)`` metatasks on
       one praxis (else 422).
     """
+    # A plain read (#2874): the 422 below admits ``in_progress`` only, which is
+    # precisely the state in which no pending-publish window exists — so the
+    # settle is a no-op on every praxis this path accepts, and every praxis it
+    # rejects is rejected either way.
     praxis = await get_praxis(praxis_id, session)
     task = await session.get(Task, task_id)
     if task is None:
@@ -155,7 +159,10 @@ async def remove_metatask(
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """Remove a metatask from a praxis. Any praxis member can remove."""
-    praxis = await get_praxis(praxis_id, session)
+    # Settles, unlike :func:`apply_metatask`: removal carries no status guard, so
+    # it *can* run on a collab whose window has lapsed, and it recalculates every
+    # member's score — which must be priced against the published praxis.
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     member_ids = {member.character_id for member in praxis.members}
     if character_id not in member_ids:

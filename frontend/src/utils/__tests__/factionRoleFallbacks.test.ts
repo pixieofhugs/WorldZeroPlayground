@@ -32,24 +32,31 @@ import { sourceFiles } from "../../test/sourceScan";
  * had to remember to add one. A gate nobody remembers to extend is not covering
  * the surface it appears to cover, and every lane paid the bookkeeping anyway.
  *
- * THE THREE CLAUSES, and a file's slug decides which it gets:
+ * THE RULE, SINCE #2690 (ADR-0089). `factionRoleVars` answers for all nine
+ * slugs: `na`, Albescent, null and a slug the server invents tomorrow now get
+ * the same nine properties as `ua`, pointing at the neutral
+ * `--faction-default-*` family. So the map ALWAYS emits, and the only thing that
+ * can keep a declaration from reaching a read is the calling surface withholding
+ * it on purpose.
  *
- *  1. BAN. A file whose map is declared with a literal slug naming an IDENTIFIED
- *     faction may carry no fallback. `factionRoleVars` always emits there, so
- *     the property always reaches the read and a fallback is unreachable code —
- *     it cannot drift, because nothing renders it, and it cannot be verified,
- *     because nothing renders it.
+ *  1. BAN, everywhere the surface does not withhold. A fallback there is
+ *     unreachable code — it cannot drift, because nothing renders it, and it
+ *     cannot be verified, because nothing renders it. Before #2690 this clause
+ *     was narrowed to files naming an IDENTIFIED faction, because `na` and
+ *     Albescent were the propertyless case; they are not any more, so the
+ *     narrowing is gone and the literal-vs-dynamic slug test with it.
  *
- *  2. REQUIRE. A file whose slug is literal `na`, literal `albescent`, or not a
- *     literal at all must carry a fallback at every read. For those
- *     `factionRoleVars` returns `{}` — not one property is declared — so a bare
- *     read renders nothing at all. Pixel identity for the unaffiliated viewer is
- *     a property of the SHAPE, and this is where the shape is held.
+ *  2. REQUIRE, in a surface that withholds the map from itself. There is exactly
+ *     one, `components/layout/Sidebar.tsx`, and it is not an allowlist entry
+ *     with an empty seat behind it — see {@link SELF_GUARDED}, which holds the
+ *     reason, and the two assertions that check the guard is really there and
+ *     that no second file has grown one quietly. In such a file a bare read
+ *     renders nothing at all, so a fallback at every read is REQUIRED.
  *
- *  3. PIN, where that fallback names a faction token. Then it must be the token
- *     the role map resolves to. When it is, the read is provably a no-op: the
- *     declared value and the fallback are the same string, so it renders the
- *     same whether the custom property reaches it or not. When it is not,
+ *  3. PIN, where that required fallback names a faction token. Then it must be
+ *     the token the role map resolves to for an unaffiliated viewer — the case
+ *     the fallback is actually reached in. When it is, the read is provably a
+ *     no-op: declared value and fallback are the same string. When it is not,
  *     something has repainted a surface while calling it a refactor — the
  *     failure mode #2649 names by name.
  *
@@ -57,10 +64,8 @@ import { sourceFiles } from "../../test/sourceScan";
  * NEUTRAL tier instead, and for `quiet` that is the documented design: it is
  * per-SITE, so `--x-quiet` unset reads `--color-text-secondary` at a heading and
  * `--color-text-tertiary` at a timestamp, and three neutral tiers survive a
- * faction family that has two. `Sidebar.tsx` is where this lives — 24 of its 26
- * fallbacks are app tokens, because the rail is the app's own furniture
- * (`chrome`) and an unaffiliated viewer should see the app rather than the
- * neutral FACTION family. Pinning those to `--faction-default-*` would assert
+ * faction family that has two. `Sidebar.tsx` is where this lives — 23 of its 25
+ * fallbacks are app tokens. Pinning those to `--faction-default-*` would assert
  * the opposite of what they are for.
  *
  * A ROLE READ IS IDENTIFIED BY ITS PREFIX, NEVER BY THE ROLE WORD. A read counts
@@ -95,6 +100,37 @@ const DYNAMIC_DECLARATION =
   /factionRoleVars\(\s*([A-Za-z_$][\w$]*(?:[.?]\w+)*)\s*,\s*["'`]([\w-]+)["'`]\s*(?:,\s*["'`](\w+)["'`]\s*)?\)/g;
 
 const UNAFFILIATED = "na";
+
+/**
+ * THE ONE SURFACE THAT WITHHOLDS THE MAP FROM ITSELF, AND WHY (owner ruling,
+ * 2026-08-28, on #2690; ADR-0089).
+ *
+ * The rail is `chrome` — the app's own FURNITURE wearing a faction, not a
+ * content card — and an unaffiliated viewer is a viewer with no faction, so what
+ * they should see is the app rather than a neutral faction family standing in
+ * for one. Rendered side by side from the real `index.css`, the cost of the
+ * other answer was concrete: the app has three neutral ink tiers and the
+ * `default` family has two, so `--color-text-secondary` at a heading and
+ * `--color-text-tertiary` at a timestamp collapse onto one colour, and a
+ * translucent rail (`rgba(255,255,255,0.72)` light, `rgba(255,255,255,0.04)`
+ * dark) turns opaque. That is exactly the per-SITE fallback behaviour
+ * `factionRoles.ts` documents for `quiet`, and the ruling keeps it.
+ *
+ * So `Sidebar.tsx` guards its OWN call — `railFaceVars` returns `{}` for an
+ * unidentified slug before it ever reaches `factionRoleVars` — and its reads
+ * keep their fallbacks. This is a named exception carrying its reason, not a
+ * bare entry: the guard is asserted from source below, and a second file growing
+ * one without appearing here is a failure too. An exemption nobody re-checks is
+ * the thing that rots.
+ */
+const SELF_GUARDED = ["components/layout/Sidebar.tsx"];
+
+/**
+ * The withholding shape, as written: `if (!isKnownFaction(slug)) return {}`
+ * ahead of the spread. Deliberately narrow — `DefaultProfileBody.tsx` calls
+ * `isKnownFaction` to branch its CONTENT and must not read as a guarded surface.
+ */
+const WITHHOLDING_GUARD = /if\s*\(\s*!\s*isKnownFaction\([^)]*\)\s*\)\s*return\s*\{\s*\}/;
 
 /**
  * The eight core suffixes a role now owns. A file that declares a map and still
@@ -172,8 +208,12 @@ interface Surface {
   ground: FactionGround;
   /** Whether the slug was written out — a dynamic one has no single answer. */
   literal: boolean;
-  /** Whether `factionRoleVars` always emits here: clause 1 vs clauses 2-3. */
-  identified: boolean;
+  /**
+   * Whether this surface keeps the map from reaching its own reads: clauses 2-3
+   * vs clause 1. Since #2690 the resolver always emits, so this is the only way
+   * a read can go unanswered.
+   */
+  withheld: boolean;
   text: string;
   reads: RoleRead[];
 }
@@ -196,7 +236,7 @@ function harvest(): Surface[] {
       // A dynamic slug reaches its fallback only when the viewer is
       // unaffiliated, so that is the value to expect there.
       const answersFor = literal ? slug : UNAFFILIATED;
-      const identified = literal && isKnownFaction(slug);
+      const withheld = SELF_GUARDED.includes(file);
       const byProperty = new Map<string, { role: FactionRole; expected: string }>();
       for (const role of FACTION_ROLES) {
         byProperty.set(factionRoleProperty(prefix, role), {
@@ -228,7 +268,7 @@ function harvest(): Surface[] {
         slug,
         ground: ground as FactionGround,
         literal,
-        identified,
+        withheld,
         text,
         reads,
       });
@@ -243,8 +283,8 @@ const readsOf = (surfaces: Surface[]) =>
     surface.reads.map((read) => ({ ...read, slug: surface.slug })),
   );
 const READS = readsOf(SURFACES);
-const BANNED = readsOf(SURFACES.filter((surface) => surface.identified));
-const REQUIRED = readsOf(SURFACES.filter((surface) => !surface.identified));
+const BANNED = readsOf(SURFACES.filter((surface) => !surface.withheld));
+const REQUIRED = readsOf(SURFACES.filter((surface) => surface.withheld));
 
 describe("a surface reads the role map, and the map answers (#2659, #2689)", () => {
   it("harvests surfaces of both kinds", () => {
@@ -268,20 +308,45 @@ describe("a surface reads the role map, and the map answers (#2659, #2689)", () 
     }
   });
 
-  it.each(BANNED)("$file reads $property bare — $slug always declares it", ({ property, fallback }) => {
+  it("keeps the one exemption honest: the guard it names is really there", () => {
+    // A named exception whose reason has quietly stopped being true is worse
+    // than no exception, because the file keeps its licence. Both halves are
+    // checked: the exempt file must withhold, and nothing else may.
+    for (const file of SELF_GUARDED) {
+      const surface = SURFACES.find((candidate) => candidate.file === file);
+      expect(surface, `${file} is exempt from clause 1 but declares no role map`).toBeDefined();
+      expect(
+        WITHHOLDING_GUARD.test(surface!.text),
+        `${file} is exempt because it withholds the map from its own reads, and it no ` +
+          `longer does. Either restore the guard or move the file to clause 1 and drop ` +
+          `its fallbacks — the exemption may not outlive its reason.`,
+      ).toBe(true);
+    }
+
+    const unlisted = SURFACES.filter(
+      (surface) => !surface.withheld && WITHHOLDING_GUARD.test(surface.text),
+    ).map((surface) => surface.file);
+    expect(
+      unlisted,
+      `withholds the map from its own reads but is not in SELF_GUARDED, so its reads ` +
+        `are banned from carrying the fallback they need and render nothing`,
+    ).toEqual([]);
+  });
+
+  it.each(BANNED)("$file reads $property bare — the map always declares it", ({ property, fallback }) => {
     expect(
       fallback,
-      `${property} carries a fallback that can never be reached: ` +
-        `factionRoleVars always emits for an identified faction, so the property ` +
-        `always wins. Drop the fallback.`,
+      `${property} carries a fallback that can never be reached: since #2690 ` +
+        `factionRoleVars emits for every slug, so the property always wins. ` +
+        `Drop the fallback.`,
     ).toBeNull();
   });
 
   it.each(REQUIRED)("$file reads $property with a token behind it", ({ property, fallback }) => {
     expect(
       fallback,
-      `${property} must carry today's token as a fallback — ` +
-        `factionRoleVars returns {} for na, for Albescent and for an unknown slug`,
+      `${property} must carry today's token as a fallback — this surface guards its ` +
+        `own call and declares nothing for an unaffiliated viewer`,
     ).not.toBeNull();
   });
 

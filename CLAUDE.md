@@ -38,6 +38,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
 | Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
 | Kit shape: how many surfaces, which faction identities, responsive-vs-split | `docs/kit-structure.md` |
+| Adding a faction — what it must supply, what it inherits, what it may never author | `docs/spec/SPEC-faction-ui-profile.md` §4 (the checklist); ADR-0090 (which of paint/tree/behaviour/content a difference is) |
 | Shipping a surface without slowing the site down (payload budget, what makes a surface free, asset + font rules) | `docs/agents/load-time.md` |
 | CSS variables (colors, type, themes) | `frontend/src/css/*.css` (`index.css` is the import map that orders them; #2891) |
 | JS faction config | `frontend/src/utils/factions.ts` |

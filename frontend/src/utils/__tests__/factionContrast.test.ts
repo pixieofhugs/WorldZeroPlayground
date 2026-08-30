@@ -872,14 +872,15 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
   { what: "everymen poster field, cream", surface: "--everymen-field", text: "--everymen-cream" },
 
-  // Ephemerists — "the VELLUM surface + its text FLIP in dark"; --eph-ink
-  // "stays dark in both themes"; --eph-parchment is "bright text on dark elements".
-  { what: "ephemerists vellum", surface: "--eph-vellum", text: "--eph-vellum-text" },
+  // Ephemerists — the vellum still flips light→dark, and these two rows are
+  // what is left of the codex here. #2698 stage 1 cut the other four with the
+  // colours they were the only reader of: `ephemerists vellum` (the
+  // `--eph-vellum-text` flip), `gold element, ink`, `parchment element, ink`
+  // and `lapis field, parchment` measured five tokens no component and no rule
+  // ever read, so they were coverage of nothing — see the retirement guard
+  // below `ARCHETYPE_PAIRS` for the list and why these two are not in it.
   { what: "ephemerists vellum, muted", surface: "--eph-vellum", text: "--eph-muted" },
   { what: "ephemerists vellum, rubric", surface: "--eph-vellum", text: "--eph-rubric" },
-  { what: "ephemerists gold element, ink", surface: "--eph-gold", text: "--eph-ink" },
-  { what: "ephemerists parchment element, ink", surface: "--eph-parchment", text: "--eph-ink" },
-  { what: "ephemerists lapis field, parchment", surface: "--eph-field", text: "--eph-parchment" },
 
   // S.N.I.D.E. — the flyposted wall is the one SNIDE surface that flips.
   { what: "snide flyposted wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-text" },
@@ -2112,6 +2113,62 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-mast-ink",
   },
 ];
+
+/**
+ * #2698 stage 1 — the codex colours whose ONLY reader was a row above.
+ *
+ * The Ephemerists' `--eph-*` family stopped painting at #1208 and was thinned
+ * at #1661, and what survived that cull survived it for one reason: the
+ * `ephemerists …` rows in `ARCHETYPE_PAIRS` named these five, so a dead-token
+ * sweep read them as alive. They were coverage of nothing — zero `var()` reads
+ * in the sheet, zero references in any non-test source file — and a row that
+ * measures a colour nothing prints is the authored half's failure mode running
+ * in the other direction.
+ *
+ * The rows and the declarations came out together, which is the only order that
+ * works: cutting the rows alone leaves five orphan declarations for the next
+ * sweep to re-discover, and cutting the declarations alone reds the rows. This
+ * guard is what stops either half coming back on its own — if a row is re-added
+ * it fails on the missing declaration, and if a declaration is re-added it fails
+ * here.
+ *
+ * NOT in this list, deliberately: `--eph-vellum` (five component references),
+ * `--eph-muted` and `--eph-rubric` (still measured by the two `ephemerists
+ * vellum, …` rows above, and `dark | ephemerists vellum, rubric` still spends a
+ * #651 BASELINE entry), and the faces `--eph-display` / `--eph-serif`, which the
+ * §3 `--faction-ephemerists-card-font` / `-body-font` contract aliases.
+ */
+const RETIRED_CODEX_COLOURS = [
+  "--eph-field",
+  "--eph-gold",
+  "--eph-ink",
+  "--eph-parchment",
+  "--eph-vellum-text",
+];
+
+describe("the retired codex colours are gone from both cascades (#2698 stage 1)", () => {
+  it.each(RETIRED_CODEX_COLOURS)("%s is declared in neither theme", (name) => {
+    expect(THEMES.light.has(name), `light declares ${name}`).toBe(false);
+    expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(false);
+  });
+
+  it("no row measures one, so nothing makes them look alive again", () => {
+    expect(
+      PAIRS.filter(
+        (pair) =>
+          RETIRED_CODEX_COLOURS.includes(pair.surface) ||
+          RETIRED_CODEX_COLOURS.includes(pair.text),
+      ).map((pair) => pair.what),
+    ).toEqual([]);
+  });
+
+  it("the live siblings the cull spared are still declared (sanity check)", () => {
+    for (const name of ["--eph-vellum", "--eph-muted", "--eph-rubric"]) {
+      expect(THEMES.light.has(name), `light declares ${name}`).toBe(true);
+      expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(true);
+    }
+  });
+});
 
 /**
  * #2852 — the "answer a calling" chip on `/characters/create`, SELECTED.

@@ -115,9 +115,9 @@ export default function DefaultAvatar({
             style={{
               width: '100%',
               height: '100%',
-              background: 'var(--na-avatar-paper, var(--faction-default-card-bg))',
-              color: 'var(--na-avatar-ink, var(--faction-default-card-text))',
-              fontFamily: 'var(--na-avatar-face, var(--faction-default-card-font))',
+              background: 'var(--na-avatar-paper)',
+              color: 'var(--na-avatar-ink)',
+              fontFamily: 'var(--na-avatar-face)',
               fontSize: Math.round(dim * 0.44),
               lineHeight: 1,
             }}
@@ -137,8 +137,8 @@ export default function DefaultAvatar({
             width: badge,
             height: badge,
             borderRadius: '50%',
-            background: 'var(--na-avatar-paper, var(--faction-default-card-bg))',
-            boxShadow: '0 0 0 1.5px var(--na-avatar-paper, var(--faction-default-card-bg))',
+            background: 'var(--na-avatar-paper)',
+            boxShadow: '0 0 0 1.5px var(--na-avatar-paper)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

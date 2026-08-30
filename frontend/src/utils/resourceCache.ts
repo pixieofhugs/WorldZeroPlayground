@@ -40,6 +40,44 @@ import { CACHE_EPOCH, type CacheEpoch } from './cacheEpoch'
  * Orthogonal to all three: the global epoch in `utils/cacheEpoch` drops
  * everything held here when a response reports a new era. A TTL cannot express
  * "everything is wrong now"; a version key can.
+ *
+ * IS THIS RIGHT-SIZED FOR FOUR CONSUMERS? (#2892 — ADR-0072's open question,
+ * answered here because this is where the next reviewer asking it will be.)
+ *
+ * The consumers are four and are likely to stay few: `useFactions`,
+ * `useGameConfig`, `usePraxes`, `useTasks`. **Yes, keep it**, on three counts.
+ *
+ * 1. **The line count is mostly this.** Strip the comments and the three files
+ *    come to under 200 lines of code — 105 here, 50 in `cacheEpoch`, 38 in
+ *    `hooks/cachedResource`. Everything else is prose, and it is the prose
+ *    ADR-0072 exists to make unavoidable: "name your staleness class" is only
+ *    load-bearing if the next author reads it at the moment they add a cache. A
+ *    census that counts it as machinery is measuring the documentation.
+ *
+ * 2. **The cost does not scale with consumers.** Two factories and two
+ *    constants serve all four, each in one line at its own module scope. The
+ *    number that would indict this is machinery *per* consumer, and a fifth
+ *    costs one line. Four hand-rolled module caches instead would be four
+ *    policies, which is the drift #1284 and ADR-0072 were both about.
+ *
+ * 3. **Only ~50 lines are "extra", and they buy the thing a TTL cannot.** Cache
+ *    two endpoints on a timer and you need roughly the singleton. The epoch is
+ *    the surplus, and it is what makes an era rollover (ADR-0042) correct by
+ *    construction with no push channel from the server. Delete it and the
+ *    fallback is a TTL short enough to hide a rollover, which is the bound
+ *    ADR-0072 rejected.
+ *
+ * The alternative is a query library, which is #1347 and closed `wontfix`: the
+ * three classes and the epoch are statements about the *data* and would have to
+ * be configured into any library exactly as they are configured here, so the
+ * lines move into a config object and a dependency arrives with them.
+ *
+ * **Revisit when** either the consumer count passes ~10 (at which point the
+ * config surface starts to justify a library), or a score-derived Class B
+ * resource is cached — at which point `era_name` stops being a sufficient epoch
+ * key and the honest one is `Era.id` (ADR-0072, "Consequences";
+ * `utils/cacheEpoch.ts` states the same ceiling). That second one is a change to
+ * the epoch's KEY, not to this taxonomy.
  */
 
 /**

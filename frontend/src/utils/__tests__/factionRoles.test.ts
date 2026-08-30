@@ -230,16 +230,56 @@ describe("a ground cannot move `fill` and leave its paired ink behind", () => {
   }
 });
 
-describe("a viewer with no faction is pixel-identical by construction", () => {
-  // The hardest half of #2361's acceptance criterion, and the reason the
-  // resolver returns an EMPTY object rather than the `default` family: not one
-  // custom property is declared, so every `var(--x, <today's token>)` fallback
-  // at every read site is the value that already shipped, byte for byte.
-  for (const slug of ["na", "albescent", null, undefined, "a-slug-the-server-invented"]) {
+describe("a viewer with no faction is pixel-identical by PROOF (#2690, ADR-0089)", () => {
+  // #2361 bought that identity by CONSTRUCTION: the resolver returned `{}` for
+  // an unidentified slug, so not one custom property was declared and every
+  // `var(--x, <today's token>)` rendered its fallback. ADR-0089 replaces the
+  // construction with a mechanical proof — the map answers for all nine slugs
+  // with the neutral `--faction-default-*` family, which is the same family
+  // those fallbacks named (`factionRoleFallbacks.test.ts` clause 3 pinned every
+  // one of them before they came off), so the pixels are unchanged and the
+  // resolver no longer has a second, propertyless render path.
+  //
+  // WHAT IS NOT COVERED HERE: the rail. `Sidebar.tsx` keeps the construction
+  // guarantee at its OWN boundary — `railFaceVars` returns `{}` before it ever
+  // asks the map — because the rail is `chrome`, the app's own furniture, and
+  // the owner ruled on 2026-08-28 that an unaffiliated viewer sees the app's
+  // three neutral tiers rather than the two-tier neutral FACTION family. That
+  // guard is asserted from source in `factionRoleFallbacks.test.ts`, which is
+  // where the exception has to hold for the standing rule to stay honest.
+  const UNIDENTIFIED = ["na", "albescent", null, undefined, "a-slug-the-server-invented"];
+
+  for (const slug of UNIDENTIFIED) {
     for (const ground of FACTION_GROUNDS) {
-      it(`declares nothing for ${String(slug)} on ${ground}`, () => {
-        expect(factionRoleVars(slug, "rail", ground)).toEqual({});
+      it(`answers with all nine roles for ${String(slug)} on ${ground}`, () => {
+        const vars = factionRoleVars(slug, "rail", ground) as Record<string, string>;
+        expect(Object.keys(vars).sort()).toEqual(
+          FACTION_ROLES.map((role) => factionRoleProperty("rail", role)).sort(),
+        );
+        for (const role of FACTION_ROLES) {
+          expect(vars[factionRoleProperty("rail", role)]).toBe(
+            factionRoleVar(slug, role, ground),
+          );
+        }
+      });
+
+      it(`gives ${String(slug)} the neutral family on ${ground}, not a hue of its own`, () => {
+        // ADR-0048 / ADR-0083: Albescent takes the neutral family because a
+        // colour minted for a society that hides in plain sight would put it
+        // back in the spectrum. This change alters how that family is
+        // DELIVERED, never which family it is.
+        const vars = factionRoleVars(slug, "rail", ground) as Record<string, string>;
+        for (const value of Object.values(vars)) {
+          expect(value).toMatch(/^var\(--faction-default(-|\))/);
+        }
       });
     }
   }
+
+  it("gives every unidentified slug byte-identical values", () => {
+    // na, Albescent, null and a slug the server invents tomorrow are one
+    // answer, not four that happen to agree today.
+    const answers = UNIDENTIFIED.map((slug) => factionRoleVars(slug, "rail"));
+    for (const answer of answers) expect(answer).toEqual(answers[0]);
+  });
 });

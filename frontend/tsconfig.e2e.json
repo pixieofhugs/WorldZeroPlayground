@@ -28,10 +28,17 @@
 // nightly-only on purpose (see `e2e.yml`'s header). Only the compiler runs here.
 {
   "extends": "./tsconfig.json",
-  // `e2e` only. Files under `src` still arrive — the specs import the contrast
-  // modules — but they arrive as dependencies, checked with the same options
-  // `npm run typecheck` already applies to them.
-  "include": ["e2e"],
+  // `e2e`, plus the one ambient declaration the app's own modules need.
+  //
+  // Files under `src` arrive as DEPENDENCIES — the specs import the contrast
+  // modules and, since #2888, the scenario builders — and are checked with the
+  // same options `npm run typecheck` already applies to them. But an ambient
+  // `.d.ts` is not imported by anybody: `src/vite-env.d.ts` is in the program
+  // under `tsconfig.json` only because `include: ["src"]` sweeps it up. Without
+  // it here, every `import.meta.env` in the app graph (`api/baseUrl.ts`,
+  // `i18n.ts`) fails as `Property 'env' does not exist on type 'ImportMeta'` —
+  // an error about the app, raised by the spec config, fixable in neither.
+  "include": ["e2e", "src/vite-env.d.ts"],
   // `tsconfig.json` references `tsconfig.node.json`, which is `composite` and
   // owns `vite.config.ts`. Nothing under `e2e` needs it, and inheriting the
   // reference makes this config depend on a build artifact it never reads.

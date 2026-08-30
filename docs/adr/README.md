@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-88 records, of which **81 still state a rule**.
+90 records, of which **83 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -103,3 +103,5 @@
 | [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |
 | [0087](0087-structural-faction-slugs-are-not-era-owned.md) | Structural faction slugs are not era-owned; a dropped faction is retired, not deleted | Accepted | — |
 | [0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md) | Albescent wears its own mark for a revealed viewer | Accepted | — |
+| [0089](0089-the-role-map-answers-for-every-slug-and-the-rail-keeps-its-guard.md) | The role map answers for every slug; the rail keeps its own guard | Accepted | — |
+| [0090](0090-a-per-faction-difference-is-classified-before-it-is-designed.md) | A per-faction difference is classified before it is designed: paint, tree, behaviour, or content | Accepted | — |
