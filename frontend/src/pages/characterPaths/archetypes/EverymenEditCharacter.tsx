@@ -157,7 +157,17 @@ const SHADOW = 'var(--faction-everymen-bill-shadow)'
 /** #1449's alarm rung, measured on this paper. Not the neutral `--color-danger`. */
 const ALARM = 'var(--faction-everymen-card-alarm)'
 
-const BEBAS = 'var(--ev-path-face)' /* Bebas Neue */
+/**
+ * Bebas Neue, through this surface's OWN role-map namespace.
+ *
+ * `ev-amend` and not the create plate's `ev-path`: a prefix may not be shared
+ * (#2659, pinned by `utils/__tests__/factionRoleFallbacks.test.ts`). Two
+ * surfaces declaring one namespace is a single `--ev-path-*` block that two
+ * files then both claim to own, and repointing it for one silently repaints the
+ * other. The MAP behind both is identical — same faction, same nine roles — so
+ * nothing about the paint differs; only the name it is emitted under.
+ */
+const BEBAS = 'var(--ev-amend-face)' /* Bebas Neue */
 const COURIER = 'var(--font-body)' /* Courier Prime */
 
 /** The cogs' period, the work order's own 22s. Ornament timing. */
@@ -314,7 +324,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
   return (
     <ComposerPage
       sizes={sizes}
-      style={{ ...factionRoleVars('everymen', 'ev-path'), fontFamily: COURIER, color: INK }}
+      style={{ ...factionRoleVars('everymen', 'ev-amend'), fontFamily: COURIER, color: INK }}
     >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
