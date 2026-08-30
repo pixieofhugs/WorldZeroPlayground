@@ -23,6 +23,13 @@
  * The split is pure restructuring — the interface, the request count and the
  * mount-time request ORDER are all unchanged, and the existing suite that
  * proves it was not edited to accommodate it.
+ *
+ * Four of the six were handed `praxis`, `setPraxis` and `setError` to write
+ * through, which is a shared mutable cell rather than an interface. #2879 and
+ * #2878 turned three of them around: the duel pane, the media tray and the seal
+ * stack now *report* an outcome and this file writes the praxis and the error
+ * line, which it owns. Each of those wrappers is the same three lines, so a
+ * reader who has met one has met all of them. `useComposerRoster` is #2880.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +42,7 @@ import {
   submitPraxis,
   takeJustCreatedPraxis,
   unsubmitPraxis,
+  type MediaItemOut,
   type PraxisOut,
   type PraxisType,
 } from "../../api/praxis";
@@ -60,8 +68,8 @@ import {
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
-import { useComposerMedia } from "./useComposerMedia";
-import { useMetataskApply } from "./useMetataskApply";
+import { useComposerMedia, type MediaOutcome } from "./useComposerMedia";
+import { useMetataskApply, type SealOutcome } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
 import { useComposerDuel, type DuelOutcome } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
@@ -136,13 +144,41 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     media,
     setMedia,
     fileError,
-    handleFileChange,
-    removeMedia,
+    handleFileChange: handleFileChangeSide,
+    removeMedia: removeMediaSide,
     pendingImage,
-    confirmImageEdit,
+    confirmImageEdit: confirmImageEditSide,
     cancelImageEdit,
     reportImageError,
-  } = useComposerMedia(idParam, setError);
+  } = useComposerMedia(idParam);
+
+  // The tray owns its tiles and its own `fileError`; the shared error line is
+  // ours, so an upload or a delete that fails reports it and we print it
+  // (#2878). It never clears the line — it never did.
+  const reportMedia = useCallback((outcome: MediaOutcome) => {
+    if (outcome.kind === "failed") setError(outcome.message);
+  }, []);
+
+  const handleFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      reportMedia(await handleFileChangeSide(event));
+    },
+    [handleFileChangeSide, reportMedia],
+  );
+
+  const removeMedia = useCallback(
+    async (item: MediaItemOut) => {
+      reportMedia(await removeMediaSide(item));
+    },
+    [removeMediaSide, reportMedia],
+  );
+
+  const confirmImageEdit = useCallback(
+    async (blob: Blob) => {
+      reportMedia(await confirmImageEditSide(blob));
+    },
+    [confirmImageEditSide, reportMedia],
+  );
 
   // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
   // stays here beside the composer's other loads. The APPLIED set is the other
@@ -154,16 +190,42 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,
-    addMetatask,
+    addMetatask: addMetataskSide,
     metataskPickerOpen,
-    openMetataskPicker,
+    openMetataskPicker: openMetataskPickerSide,
     closeMetataskPicker,
     metataskRemovalTarget,
     requestRemoveMetatask,
-    confirmRemoveMetatask,
+    confirmRemoveMetatask: confirmRemoveMetataskSide,
     cancelRemoveMetatask,
     seedApplied: seedAppliedMetatasks,
-  } = useMetataskApply({ praxis, setPraxis, setError });
+  } = useMetataskApply({ praxis });
+
+  // The stack owns which seals are on; the re-scored praxis and the error line
+  // are ours, so a mutation reports what it changed and we write it (#2878).
+  const applySealOutcome = useCallback((outcome: SealOutcome) => {
+    if (outcome.kind === "unchanged") return;
+    setError(outcome.kind === "failed" ? outcome.message : "");
+    if (outcome.kind === "applied") setPraxis(outcome.praxis);
+  }, []);
+
+  const addMetatask = useCallback(
+    async (mt: TaskOut) => {
+      applySealOutcome(await addMetataskSide(mt));
+    },
+    [addMetataskSide, applySealOutcome],
+  );
+
+  const confirmRemoveMetatask = useCallback(async () => {
+    applySealOutcome(await confirmRemoveMetataskSide());
+  }, [confirmRemoveMetataskSide, applySealOutcome]);
+
+  // The sheet opens onto a clear line: it prints `error` itself (#2382), so a
+  // failure from publish or a duel must not greet the author on the way in.
+  const openMetataskPicker = useCallback(() => {
+    setError("");
+    openMetataskPickerSide();
+  }, [openMetataskPickerSide]);
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
   // One-shot post-publish beat for the member whose cast closed the gate (#591).

@@ -12,10 +12,10 @@ import i18n from '../../i18n'
  */
 
 /**
- * The kicker key for each of the 16 backend feed types, written out rather than
+ * The kicker key for each of the 17 backend feed types, written out rather than
  * interpolated. The catalog is a TYPED resource here, so `` i18n.t(`feed:kicker.
  * ${type}`) `` on an unconstrained string does not compile — and a literal map
- * is the better shape anyway: it is the checklist of the 16, and an unnamed type
+ * is the better shape anyway: it is the checklist of the 17, and an unnamed type
  * lands on the fallback instead of printing a raw key at the player.
  */
 const KICKER_KEY = {
@@ -35,6 +35,7 @@ const KICKER_KEY = {
   duel_challenge: 'feed:kicker.duel_challenge',
   collab_invite: 'feed:kicker.collab_invite',
   comment_mention: 'feed:kicker.comment_mention',
+  comment_on_mine: 'feed:kicker.comment_on_mine',
 } as const
 
 /** The two request types the archive can tag "still waiting". The tag is NOT a

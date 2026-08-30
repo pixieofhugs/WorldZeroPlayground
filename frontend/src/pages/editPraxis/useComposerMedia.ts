@@ -9,6 +9,13 @@
  * Split out of `useEditPraxis.ts` (#1392). It keys on `idParam` rather than on
  * the loaded praxis, exactly as before: uploading is possible as soon as the
  * route has an id.
+ *
+ * It borrowed the assembler's `setError` until #2878. It no longer does: the
+ * composer's shared error line is not the tray's state, so an action that fails
+ * *reports* it as a `MediaOutcome` and `useEditPraxis` writes the line it owns.
+ * That is what lets the tray be driven on its own — see
+ * `__tests__/composerMediaStandsAlone.test.tsx`. The tray's own `fileError`
+ * stays here: a rejected pick never reached the shared line and still doesn't.
  */
 import { useCallback, useState } from "react";
 import {
@@ -48,16 +55,33 @@ export function imageEditFailureMessage(
   });
 }
 
+/**
+ * What a tray action leaves for the composer's shared error line.
+ *
+ * `unchanged` means there is nothing to print — the tray only ever wrote
+ * failures to that line and never cleared it, so it must be left exactly as it
+ * was found. A rejected pick is not reported here: that is `fileError`, which
+ * is the tray's own.
+ */
+export type MediaOutcome =
+  | { kind: "unchanged" }
+  | { kind: "failed"; message: string };
+
+const NOTHING_TO_REPORT: MediaOutcome = { kind: "unchanged" };
+
 interface ComposerMedia {
   media: MediaItemOut[];
   /** Seed the tray from a freshly loaded praxis, or from a mode switch. */
   setMedia: (items: MediaItemOut[]) => void;
   fileError: string;
-  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  removeMedia: (item: MediaItemOut) => Promise<void>;
+  /** Picks, validates and uploads. The caller applies the outcome. */
+  handleFileChange: (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => Promise<MediaOutcome>;
+  removeMedia: (item: MediaItemOut) => Promise<MediaOutcome>;
   /** The file the edit modal is holding, or null when the queue is empty. */
   pendingImage: File | null;
-  confirmImageEdit: (blob: Blob) => Promise<void>;
+  confirmImageEdit: (blob: Blob) => Promise<MediaOutcome>;
   cancelImageEdit: () => void;
   /**
    * The edit stage could not process the pending image (#1545). A narrow
@@ -67,18 +91,17 @@ interface ComposerMedia {
   reportImageError: (reason: string) => void;
 }
 
-export function useComposerMedia(
-  idParam: string | undefined,
-  setError: (message: string) => void,
-): ComposerMedia {
+export function useComposerMedia(idParam: string | undefined): ComposerMedia {
   const [media, setMedia] = useState<MediaItemOut[]>([]);
   const [fileError, setFileError] = useState("");
   // Picked images awaiting the edit modal, oldest first (#514).
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.files) return;
+    async (
+      event: React.ChangeEvent<HTMLInputElement>,
+    ): Promise<MediaOutcome> => {
+      if (!event.target.files) return NOTHING_TO_REPORT;
       const incoming = Array.from(event.target.files);
       const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
       if (tooLarge.length > 0) {
@@ -93,12 +116,13 @@ export function useComposerMedia(
       }
       const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
       event.target.value = "";
-      if (!idParam || valid.length === 0) return;
+      if (!idParam || valid.length === 0) return NOTHING_TO_REPORT;
       // Images get the crop/rotate edit stage first (#514); video/audio upload
       // straight through. Uploading immediately keeps a draft's media persisted
       // without a manual save (autosave covers title/body only; #297).
       const { toEdit, toUploadDirect } = partitionByEditability(valid);
       const praxisId = parseInt(idParam, 10);
+      let outcome: MediaOutcome = NOTHING_TO_REPORT;
       if (toUploadDirect.length > 0) {
         // One request for the whole selection instead of one per file (#1286).
         // Tiles now appear together rather than trickling in — that is the
@@ -112,40 +136,45 @@ export function useComposerMedia(
         }
         // One error slot, so the last failure wins — exactly what the old
         // per-file loop left on screen when several files failed.
-        if (errors.length > 0) setError(errors[errors.length - 1]);
+        if (errors.length > 0) {
+          outcome = { kind: "failed", message: errors[errors.length - 1] };
+        }
       }
       // Queue images for the modal; they're edited + uploaded one at a time.
       if (toEdit.length > 0) {
         setImageEditQueue((previous) => [...previous, ...toEdit]);
       }
+      return outcome;
     },
-    [idParam, setError],
+    [idParam],
   );
 
   // ---- Image edit stage (#514): edit → upload → advance the queue ----
   const pendingImage = imageEditQueue[0] ?? null;
 
   const confirmImageEdit = useCallback(
-    async (blob: Blob) => {
+    async (blob: Blob): Promise<MediaOutcome> => {
       const current = imageEditQueue[0];
-      if (!idParam || !current) return;
+      if (!idParam || !current) return NOTHING_TO_REPORT;
       const praxisId = parseInt(idParam, 10);
       const file = blobToFile(blob, current.name);
       try {
         const uploaded = await uploadPraxisMedia(praxisId, file);
         setMedia((previous) => [...previous, uploaded]);
+        return NOTHING_TO_REPORT;
       } catch (err) {
-        setError(
-          extractError(
+        return {
+          kind: "failed",
+          message: extractError(
             err,
             i18n.t("forms:editPraxis.errors.upload", { name: current.name }),
           ),
-        );
+        };
       } finally {
         setImageEditQueue((previous) => previous.slice(1));
       }
     },
-    [idParam, imageEditQueue, setError],
+    [idParam, imageEditQueue],
   );
 
   const cancelImageEdit = useCallback(() => {
@@ -163,18 +192,23 @@ export function useComposerMedia(
   );
 
   const removeMedia = useCallback(
-    async (item: MediaItemOut) => {
-      if (!idParam) return;
+    async (item: MediaItemOut): Promise<MediaOutcome> => {
+      if (!idParam) return NOTHING_TO_REPORT;
       try {
         await deletePraxisMedia(parseInt(idParam, 10), item.id);
         setMedia((previous) => previous.filter((m) => m.id !== item.id));
+        return NOTHING_TO_REPORT;
       } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.removeMedia")),
-        );
+        return {
+          kind: "failed",
+          message: extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.removeMedia"),
+          ),
+        };
       }
     },
-    [idParam, setError],
+    [idParam],
   );
 
   return {
