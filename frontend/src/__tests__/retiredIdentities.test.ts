@@ -74,13 +74,15 @@ const RETIREMENTS: readonly Retirement[] = [
     // (#1120) and the praxis card / score stamp / vote / seal (#1207). THE CODEX
     // — the `--eph-*` illuminated-manuscript family — painted everything else.
     //
-    // #1661 thinned those declarations without touching this guard. What is left
-    // is `--eph-display` / `--eph-serif`, still aliased by the
+    // #1661 thinned those declarations without touching this guard, and #2698
+    // stage 1 thinned them again — five colours whose only reader in the repo
+    // was a `factionContrast.test.ts` row went with the rows. What is left is
+    // `--eph-display` / `--eph-serif`, still aliased by the
     // `--faction-ephemerists-card-font` / `-body-font` half of the §3 contract,
-    // and eight colours that are dead as PAINT and alive only as MEASUREMENTS —
-    // `factionContrast.test.ts` still runs six `ephemerists vellum …` rows
-    // against them. Retiring those rows is what retires the last eight, and that
-    // is a decision about a #651 baseline rather than a byte-shed.
+    // and THREE colours that are dead as PAINT and alive as MEASUREMENTS: two
+    // `ephemerists vellum, …` rows measure `--eph-muted` and `--eph-rubric` on
+    // `--eph-vellum`, and the rubric pairing still holds a #651 baseline entry.
+    // Retiring those two rows is what would retire the last three.
     name: 'the Ephemerists wear one identity (#1208)',
     retired: /--eph-/,
     live: /--faction-ephemerists-plate-|factionMarks\/ephemeristsPlate/,

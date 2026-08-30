@@ -78,7 +78,7 @@ import FactionSigil from "../sigil/FactionSigil";
 
 const MONO = "var(--font-body)";
 /** Bebas Neue — the unaffiliated display face, as on the Default praxis card. */
-const DISPLAY = "var(--na-select-card-face, var(--faction-default-card-font))";
+const DISPLAY = "var(--na-select-card-face)";
 
 interface DefaultSelectCardProps
   extends Omit<FactionSelectCardProps, "faction"> {
@@ -134,7 +134,7 @@ export default function DefaultSelectCard({
         border: "2px solid transparent",
         ...factionSpectrumSheet(),
         borderRadius: 14,
-        color: "var(--na-select-card-ink, var(--faction-default-card-text))",
+        color: "var(--na-select-card-ink)",
         fontFamily: MONO,
         boxShadow: "0 12px 32px -14px var(--color-cast-shadow)",
       }}
@@ -166,7 +166,7 @@ export default function DefaultSelectCard({
               (ADR-0082 §2) and would silently reverse this tile. */}
           {redactableText(`factions:names.${slug}`)}
         </div>
-        <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}>
+        <div className="content-text" style={{ fontStyle: "italic", marginTop: "var(--space-xs)", color: "var(--na-select-card-quiet)" }}>
           {say("tagline")}
         </div>
 
@@ -189,7 +189,7 @@ export default function DefaultSelectCard({
 
         <p
           className="content-text"
-          style={{ margin: 0, lineHeight: 1.55, color: "var(--na-select-card-quiet, var(--faction-default-card-muted))" }}
+          style={{ margin: 0, lineHeight: 1.55, color: "var(--na-select-card-quiet)" }}
         >
           {say("blurb")}
         </p>
@@ -199,7 +199,7 @@ export default function DefaultSelectCard({
         <div
           style={{
             fontSize: "var(--text-content)",
-            color: "var(--na-select-card-quiet, var(--faction-default-card-muted))",
+            color: "var(--na-select-card-quiet)",
             marginBottom: "var(--space-md)",
           }}
         >

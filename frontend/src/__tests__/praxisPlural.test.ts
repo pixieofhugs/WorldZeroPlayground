@@ -57,6 +57,29 @@ const FIXTURE_FILES = new Set([
   '__tests__/measureLoadRoutes.test.ts',
 ])
 
+/**
+ * The e2e scenario builders (#2888) and the fake backend their unit tests drive
+ * them against. Every `/praxes` in these is an API ENDPOINT, exactly like
+ * `api/`'s — they issue real requests, through a Playwright request context.
+ * They do not live under `api/` because they are not shipped client modules:
+ * nothing in the app imports them, and their transport is a browser context
+ * rather than axios.
+ *
+ * So they are RECLASSIFIED, not excused. They come out of the "no /praxes
+ * outside api/" sweep below and go into the `apiFiles` set above, which holds
+ * them to the rule that actually governs an API caller: never request
+ * `/praxis`, the frontend ROUTE, which the backend does not serve.
+ */
+const E2E_API_CALLERS = [
+  'utils/e2eScenario.ts',
+  'utils/collabScenario.ts',
+  'utils/duelScenario.ts',
+  'utils/__tests__/e2eScenario.test.ts',
+  'utils/__tests__/collabScenario.test.ts',
+  'utils/__tests__/duelScenario.test.ts',
+  'utils/__tests__/fakeScenario.ts',
+]
+
 describe('the API keeps saying /praxes (#1136)', () => {
   /**
    * Shipped client modules only. `api/__tests__/sessionRedirect.test.ts` holds
@@ -65,9 +88,12 @@ describe('the API keeps saying /praxes (#1136)', () => {
    * there is correct, not a regression. Nothing under `__tests__` issues a
    * request, which is what this rule is about.
    */
-  const apiFiles = sourceFiles({ dir: join(SRC_DIR, 'api'), includeTests: true }).filter(
-    (path) => !toRelative(path).startsWith('api/__tests__/'),
-  )
+  const apiFiles = [
+    ...sourceFiles({ dir: join(SRC_DIR, 'api'), includeTests: true }).filter(
+      (path) => !toRelative(path).startsWith('api/__tests__/'),
+    ),
+    ...E2E_API_CALLERS.map((relative) => join(SRC_DIR, relative)),
+  ]
 
   it('never requests the frontend route path /praxis', () => {
     // If this fails, a rename crossed the seam: the client is now calling an
@@ -92,7 +118,10 @@ describe('no router path says /praxes (#1136)', () => {
   it('has no /praxes left outside api/', () => {
     const offenders = allSource()
       .filter(
-        (path) => !toRelative(path).startsWith('api/') && !FIXTURE_FILES.has(toRelative(path)),
+        (path) =>
+          !toRelative(path).startsWith('api/') &&
+          !FIXTURE_FILES.has(toRelative(path)) &&
+          !E2E_API_CALLERS.includes(toRelative(path)),
       )
       .filter((path) => /\/praxes/.test(routePaths(readFileSync(path, 'utf8'))))
       .map(toRelative)
