@@ -17,8 +17,9 @@
  *
  * It runs over every voice rather than the four that were broken: the report
  * that opened #1255 named one surface and four were affected, because these
- * cards copy idioms from each other. A voice added later is covered by adding
- * one line to VOICES.
+ * cards copy idioms from each other. VOICES is read off the comment registry
+ * (#2815), so a voice added later is covered the day its manifest row lands —
+ * it used to be eight typed rows with albescent missing.
  */
 import type { ComponentType } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -27,25 +28,9 @@ import { describe, it, expect } from 'vitest'
 import '../../../i18n'
 import type { CharacterOut } from '../../../api/auth'
 import type { CommentProps } from '../shared'
-import { DefaultComment } from '../CommentThread'
-import CovenComment from '../voices/CovenComment'
-import EphemeristsComment from '../voices/EphemeristsComment'
-import EverymenComment from '../voices/EverymenComment'
-import SingularityComment from '../voices/SingularityComment'
-import SnideComment from '../voices/SnideComment'
-import UaComment from '../voices/UaComment'
-import WowComment from '../voices/WowComment'
+import { surfaceMap } from '../../../factions'
 
-const VOICES: [string, ComponentType<CommentProps>][] = [
-  ['na / default', DefaultComment],
-  ['coven', CovenComment],
-  ['ephemerists', EphemeristsComment],
-  ['everymen', EverymenComment],
-  ['singularity', SingularityComment],
-  ['snide', SnideComment],
-  ['ua', UaComment],
-  ['wow', WowComment],
-]
+const VOICES: [string, ComponentType<CommentProps>][] = Object.entries(surfaceMap('comment'))
 
 function character(slug: string): CharacterOut {
   return {
