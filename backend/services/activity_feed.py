@@ -24,8 +24,10 @@ from sqlalchemy import (
     String,
     and_,
     delete,
+    exists,
     func,
     literal,
+    or_,
     select,
     union_all,
 )
@@ -56,7 +58,7 @@ from schemas.activity_feed import (
     AwaitingSubmissionPayload,
     CollabInvitePayload,
     CollaboratorSubmittedPayload,
-    CommentMentionPayload,
+    CommentPayload,
     CompletionPayload,
     DuelChallengePayload,
     EraAnnouncementPayload,
@@ -133,6 +135,7 @@ FEED_ITEM_TYPE_INVITATION_LETTER = "invitation_letter"
 FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
 FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
 FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
+FEED_ITEM_TYPE_COMMENT_ON_MINE = "comment_on_mine"
 FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
 FEED_ITEM_TYPE_AWAITING_SUBMISSION = "awaiting_submission"
 FEED_ITEM_TYPE_NUDGE = "nudge"
@@ -911,20 +914,41 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
+#: What both comment sources select. The two rows carry the same six facts
+#: about the same ``comment`` row (they share ``CommentPayload``); only the
+#: WHERE differs, so the projection is authored once.
+_COMMENT_COLUMNS = (
+    Comment.id,
+    Comment.body_text,
+    Comment.created_at,
+    Comment.praxis_id,
+    Comment.task_id,
+    Character.id.label("author_character_id"),
+    Character.display_name.label("author_display_name"),
+    Character.faction_slug.label("author_faction_slug"),
+    Character.avatar_url.label("author_avatar_url"),
+)
+
+
+def _mentions_the_viewer(ctx: FeedContext):
+    """Does this comment name the viewer? Correlated on ``Comment.id``.
+
+    Used in both directions: the mention source requires it, the on-mine source
+    refuses it. Authored once so the two can never disagree about what a mention
+    is — which is exactly how the double would come back.
+    """
+    return exists().where(
+        and_(
+            CommentMention.comment_id == Comment.id,
+            CommentMention.mentioned_character_id == ctx.character_id,
+        )
+    )
+
+
 def _comment_mentions_query(ctx: FeedContext) -> Select:
     """Comments that @mention the current character (visible, non-withdrawn)."""
     query = (
-        select(
-            Comment.id,
-            Comment.body_text,
-            Comment.created_at,
-            Comment.praxis_id,
-            Comment.task_id,
-            Character.id.label("author_character_id"),
-            Character.display_name.label("author_display_name"),
-            Character.faction_slug.label("author_faction_slug"),
-            Character.avatar_url.label("author_avatar_url"),
-        )
+        select(*_COMMENT_COLUMNS)
         .join(CommentMention, CommentMention.comment_id == Comment.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
@@ -938,30 +962,97 @@ def _comment_mentions_query(ctx: FeedContext) -> Select:
     return query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
-    return ActivityFeedItemDC(
-        type=FEED_ITEM_TYPE_COMMENT_MENTION,
-        item_key=build_item_key(FEED_ITEM_TYPE_COMMENT_MENTION, row.id),
-        timestamp=row.created_at,
-        actor_display_name=row.author_display_name,
-        actor_faction_slug=row.author_faction_slug,
-        actor_avatar_url=row.author_avatar_url,
-        payload=CommentMentionPayload(
-            comment_id=row.id,
-            # The commenter, so the card's actor can link to their character page
-            # like every other actor-bearing type (#1196). Keyed "character_id"
-            # to match friend_completion / friend_signup / friend_defection /
-            # collaborator_submitted — the frontend reads one payload key for
-            # "whose name is this", not a per-type spelling.
-            character_id=row.author_character_id,
-            # Exactly one of these is set: num_nonnulls(praxis_id, task_id) = 1 is
-            # a DB CHECK (migration 0005), so the client can read them in order
-            # without a tie-break.
-            praxis_id=row.praxis_id,
-            task_id=row.task_id,
-            excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
-        ),
+def _comments_on_mine_query(ctx: FeedContext) -> Select:
+    """Somebody else commented on a praxis that is the viewer's (#2159).
+
+    "Theirs" is authorship OR membership, as an ``or_`` of the two rather than
+    membership alone: a solo praxis does get its author a ``PraxisMember`` row
+    today, but that is a convention of the create path and not an invariant the
+    schema holds, and the rule this source states is the issue's own — a praxis
+    you authored, or are a member of, for collabs. The membership half is an
+    ``EXISTS`` and not a join, so a praxis with several members still yields one
+    row per comment rather than one per member.
+
+    NO TASK COMMENTS. The join to ``Praxis`` is what scopes this to praxis
+    comments, and that is the whole of the reason: a task has no author, so
+    there is nobody a comment on one is "on the praxis of". Comments on tasks
+    reach people through ``comment_mention`` alone, as they always have.
+
+    SUPPRESSING THE DOUBLE is the ``~_mentions_the_viewer`` clause. A comment
+    that both names the viewer and sits on their praxis matches this source AND
+    the mention source, and would print twice for one comment. Being named is
+    the stronger signal, so the mention row is the one that stands and this
+    source withholds. The suppression lives HERE, on the weaker of the two,
+    because it is the one that can drop a row with nothing going unreported.
+
+    Visibility mirrors the mention query exactly: a withdrawn or moderated
+    comment loses its card at the moment it leaves the public thread, or the
+    feed would republish text its author had retracted.
+    """
+    query = (
+        select(*_COMMENT_COLUMNS)
+        .join(Praxis, Comment.praxis_id == Praxis.id)
+        .join(Character, Comment.created_by_id == Character.id)
+        .where(
+            # You are not news to yourself.
+            Comment.created_by_id != ctx.character_id,
+            or_(
+                Praxis.created_by_id == ctx.character_id,
+                exists().where(
+                    and_(
+                        PraxisMember.praxis_id == Praxis.id,
+                        PraxisMember.character_id == ctx.character_id,
+                    )
+                ),
+            ),
+            ~_mentions_the_viewer(ctx),
+            Comment.is_withdrawn.is_(False),
+            Comment.moderation_status == ModerationStatus.visible,
+        )
     )
+    if ctx.before is not None:
+        query = query.where(Comment.created_at < ctx.before)
+    return query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
+    """The row builder for both comment types — same payload, different tag.
+
+    ``CommentPayload`` is shared for the reason ``CompletionPayload`` is: the two
+    rows report the same facts about the same comment and differ only in why the
+    viewer is being told. The item KEY carries the type, so one comment
+    surfacing under both tags would still be two distinct keys — which is why
+    the suppression is a WHERE clause and not a de-duplication here.
+    """
+
+    def to_item(row: Any) -> ActivityFeedItemDC:
+        return ActivityFeedItemDC(
+            type=item_type,
+            item_key=build_item_key(item_type, row.id),
+            timestamp=row.created_at,
+            actor_display_name=row.author_display_name,
+            actor_faction_slug=row.author_faction_slug,
+            actor_avatar_url=row.author_avatar_url,
+            payload=CommentPayload(
+                comment_id=row.id,
+                # The commenter, so the card's actor can link to their character
+                # page like every other actor-bearing type (#1196). Keyed
+                # "character_id" to match friend_completion / friend_signup /
+                # friend_defection / collaborator_submitted — the frontend reads
+                # one payload key for "whose name is this", not a per-type
+                # spelling.
+                character_id=row.author_character_id,
+                # Exactly one of these is set: num_nonnulls(praxis_id, task_id)
+                # = 1 is a DB CHECK (migration 0005), so the client can read
+                # them in order without a tie-break. On ``comment_on_mine`` it is
+                # always the praxis — that source joins Praxis.
+                praxis_id=row.praxis_id,
+                task_id=row.task_id,
+                excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
+            ),
+        )
+
+    return to_item
 
 
 def _collaborator_submitted_query(ctx: FeedContext) -> Select:
@@ -1364,7 +1455,22 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
         needs=frozenset(),
         query=_comment_mentions_query,
-        to_item=_comment_mention_item,
+        to_item=_comment_item_factory(FEED_ITEM_TYPE_COMMENT_MENTION),
+        source_id_column=Comment.id,
+    ),
+    FeedSource(
+        # Someone commented on your praxis (#2159) — the parent issue's "if
+        # someone comments on a thing", which had no event at all.
+        #
+        # Same two tabs as the mention it sits beside, and deliberately NOT
+        # FILTER_REQUESTS: a comment asks nothing of you. The codebase already
+        # ruled that for the mention ("news about you, not a request of you")
+        # and a plain reply is if anything the weaker claim on your attention.
+        item_type=FEED_ITEM_TYPE_COMMENT_ON_MINE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_comments_on_mine_query,
+        to_item=_comment_item_factory(FEED_ITEM_TYPE_COMMENT_ON_MINE),
         source_id_column=Comment.id,
     ),
 )

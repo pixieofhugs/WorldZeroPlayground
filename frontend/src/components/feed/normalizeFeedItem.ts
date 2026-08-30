@@ -36,6 +36,7 @@ export const FACTION_ROW_TYPES = new Set([
   'awaiting_submission',
   'nudge',
   'comment_mention',
+  'comment_on_mine',
 ])
 
 /**
@@ -142,8 +143,10 @@ function commentTargetHref(payload: Record<string, any>): string | null {
 }
 
 /**
- * The mention row's CTA: "Reply", a navigation to the page the comment sits on —
- * which is where its thread and the composer both are.
+ * A comment row's CTA: "Reply", a navigation to the page the comment sits on —
+ * which is where its thread and the composer both are. Shared by both comment
+ * types (#2159): the answer to "someone replied to me" is the same navigation
+ * as the answer to "someone named me".
  *
  * ONE control, not the two the Snide sheet draws. The sheet's pair is "open the
  * composer on the target page" and "open the thread", and in this app those are
@@ -156,7 +159,7 @@ function commentTargetHref(payload: Record<string, any>): string | null {
  * ground on which #1194 struck "Nudge back" and the sheets' answer buttons: a
  * drawn state with nothing behind it is not built.
  */
-function buildMentionActions(payload: Record<string, any>): FeedRowAction[] {
+function buildCommentActions(payload: Record<string, any>): FeedRowAction[] {
   const href = commentTargetHref(payload)
   if (href == null) return []
   return [{ id: 'reply', label: i18n.t('feed:rowAction.reply'), tone: 'primary', href }]
@@ -323,25 +326,40 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             : [],
       }
     case 'comment_mention':
-      // Someone @mentioned you in a comment (#1196). This case is the whole of
-      // that fix: the backend has emitted the type with a complete payload since
-      // it shipped, and the router already reaches it — but there was no case
-      // here, so `normalizeFeedItem` returned null, the router fell through to
+    case 'comment_on_mine':
+      // Someone @mentioned you in a comment (#1196), or commented on a praxis
+      // that is yours (#2159). The #1196 case was the whole of that fix: the
+      // backend had emitted the type with a complete payload since it shipped,
+      // and the router already reached it — but there was no case here, so
+      // `normalizeFeedItem` returned null, the router fell through to
       // `return null`, and EVERY mention anyone ever received rendered as
       // nothing at all.
       //
-      // Badged `your_stuff`, matching where the backend files it
-      // (`FILTER_ALL | FILTER_YOUR_STUFF`): a mention is news about you, not a
+      // ONE branch for both, and the only thing that differs is the sentence.
+      // They share a payload (`CommentPayload`) because they report the same
+      // facts about the same comment row, and every slot below reads the same
+      // key for both — so a second branch would be a copy free to drift while
+      // claiming to be the same card. What separates them is WHICH comments
+      // each is told about, and that is settled server-side: a comment that is
+      // both a mention and on your praxis arrives as one row, the mention,
+      // because being named is the stronger signal.
+      //
+      // Badged `your_stuff`, matching where the backend files them both
+      // (`FILTER_ALL | FILTER_YOUR_STUFF`): a comment is news about you, not a
       // request of you — nothing is being asked, so it is not a Request.
       //
       // Framed in the COMMENTER's voice: `context_faction_slug` resolves to the
-      // actor's faction, and a mention is something a named person did to you
-      // (the same reasoning as `nudge`).
+      // actor's faction, and both are something a named person did to you (the
+      // same reasoning as `nudge`).
       return {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
-        action: i18n.t('feed:row.action.mentionedYou'),
+        action: i18n.t(
+          item.type === 'comment_mention'
+            ? 'feed:row.action.mentionedYou'
+            : 'feed:row.action.commentedOnYours',
+        ),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         // The comment's own words, quoted rather than titled — the excerpt is
         // speech, so it borrows `foe_taunt`'s quoted headline. The backend caps
@@ -351,7 +369,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: true,
         points: null,
         level: null,
-        actions: buildMentionActions(p),
+        actions: buildCommentActions(p),
       }
     case 'vote_on_mine':
     case 'vote_changed_on_mine':

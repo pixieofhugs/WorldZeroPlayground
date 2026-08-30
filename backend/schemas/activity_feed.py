@@ -172,12 +172,24 @@ class FriendDefectionPayload(FeedPayloadBase):
     new_faction_slug: str
 
 
-class CommentMentionPayload(FeedPayloadBase):
-    """A comment @mentioned the viewer.
+class CommentPayload(FeedPayloadBase):
+    """Somebody commented, and it concerns the viewer.
+
+    ONE shape for TWO feed types, on the same ground as ``CompletionPayload``.
+    ``comment_mention`` fires when the comment names the viewer;
+    ``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer
+    authored or is a member of. Both rows say the same six things about the same
+    ``comment`` row and the frontend renders them from one branch, so a second
+    model would be a copy-paste pair free to drift while claiming to be the same
+    card. What differs between them is *which comments match*, and that lives in
+    the two queries.
 
     Exactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``
     is a DB CHECK (migration 0005), so both are Optional here and the client
-    reads them in order without a tie-break.
+    reads them in order without a tie-break. ``comment_on_mine`` is praxis-only
+    (a task has no author to be commented at), so on that type ``task_id`` is
+    always None — the field stays because the shape is shared, and the client
+    already reads the two in order.
     """
 
     comment_id: int
@@ -241,8 +253,8 @@ class NudgePayload(FeedPayloadBase):
     task_faction_slug: str
 
 
-#: Every payload shape the feed can carry. Fourteen models for fifteen types —
-#: see ``CompletionPayload``.
+#: Every payload shape the feed can carry. Fourteen models for seventeen types —
+#: see ``CompletionPayload`` and ``CommentPayload``.
 FeedPayload = Union[
     VoteOnMinePayload,
     CompletionPayload,
@@ -254,7 +266,7 @@ FeedPayload = Union[
     FriendSignupPayload,
     InvitationLetterPayload,
     FriendDefectionPayload,
-    CommentMentionPayload,
+    CommentPayload,
     CollaboratorSubmittedPayload,
     AwaitingSubmissionPayload,
     NudgePayload,
@@ -379,7 +391,24 @@ class FriendDefectionItem(FeedItemBase):
 
 class CommentMentionItem(FeedItemBase):
     type: Literal["comment_mention"]
-    payload: CommentMentionPayload
+    payload: CommentPayload
+
+
+class CommentOnMineItem(FeedItemBase):
+    """Somebody commented on a praxis the viewer authored or belongs to (#2159).
+
+    Distinct from ``comment_mention`` rather than a flag on it, for the reason
+    ``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has
+    to differ or the two would share a ``FeedDismissal`` row. It also lets the
+    player filter and archive "someone replied to me" separately from "someone
+    named me", which is the whole point of the type facet.
+
+    A comment that is BOTH is one row, not two — see ``_comments_on_mine_query``
+    in the service, which withholds where a mention already speaks.
+    """
+
+    type: Literal["comment_on_mine"]
+    payload: CommentPayload
 
 
 class CollaboratorSubmittedItem(FeedItemBase):
@@ -422,6 +451,7 @@ ActivityFeedItem = Annotated[
         InvitationLetterItem,
         FriendDefectionItem,
         CommentMentionItem,
+        CommentOnMineItem,
         CollaboratorSubmittedItem,
         AwaitingSubmissionItem,
         NudgeItem,
