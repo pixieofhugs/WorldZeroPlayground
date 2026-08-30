@@ -475,18 +475,23 @@ export default function UaEditCharacter({ state }: { state: EditCharacterState }
            cannot be undone. OFF the leaf and below Save — the na desktop
            branch's placement, and here also the ground both slots are measured
            on (see the header). Outside the <form> for the same reason. ── */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-xl)',
-          maxWidth: sizes.maxWidth,
-          margin: '0 auto',
-          padding: `var(--space-2xl) ${sizes.padX} var(--space-3xl)`,
-        }}
-      >
-        <FactionRow slug={character.faction_slug} />
-        <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+      <div style={{ padding: `0 var(--space-lg) var(--space-3xl)` }}>
+        {/* The leaf's own column, so the tail's rows line up with the fields
+            above them rather than with the viewport. `ComposerSheet` nests the
+            same two divs for the same reason. */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-xl)',
+            maxWidth: sizes.maxWidth,
+            margin: '0 auto',
+            padding: `var(--space-2xl) ${sizes.padX} 0`,
+          }}
+        >
+          <FactionRow slug={character.faction_slug} />
+          <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+        </div>
       </div>
 
       {/* Portrait crop/rotate — locked square (#514). */}
