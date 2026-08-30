@@ -23,9 +23,11 @@ looks for ``comment_mention`` passes while the duplicate sits right beside it.
 """
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 
@@ -107,9 +109,6 @@ async def test_my_own_comment_on_my_own_praxis_is_not_a_row(
     auth_headers: dict,
 ):
     """You are not news to yourself."""
-    from models.character_stats import CharacterStats
-    from sqlalchemy import select
-
     stats = (
         await db_session.execute(
             select(CharacterStats).where(
