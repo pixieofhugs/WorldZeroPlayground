@@ -2,7 +2,7 @@
 
 **The seam under test** is ``GET /activity-feed`` →
 :func:`services.activity_feed.get_activity_feed`. That call fans out over the
-sixteen-entry ``FEED_SOURCES`` registry twice: once to fetch rows, once to count
+seventeen-entry ``FEED_SOURCES`` registry twice: once to fetch rows, once to count
 badges. Every one of those sub-queries takes its **own session** from
 ``session_factory``, so the statement count is also, in production, the number of
 pooled connections one page load asks for at the same time.
@@ -79,7 +79,12 @@ from services.activity_feed import (
 #: post-pass is gone, not made conditional. The fixture below still seeds a
 #: vote: the two vote sources are part of the fan-out this number pins, and a
 #: scoring pass creeping back onto them would show up here first.
-EXPECTED_FEED_LOAD_STATEMENTS = 21
+#:
+#: 21 -> 22 in #2159: ``comment_on_mine`` is a seventeenth registry source, so
+#: the fetch fan-out costs one more statement. The badge counts do not — they
+#: stay one ``UNION ALL`` however many sources there are, which is the property
+#: the two constants below exist to hold, and the reason this is +1 and not +2.
+EXPECTED_FEED_LOAD_STATEMENTS = 22
 
 #: Round trips the six tab badges cost. One ``UNION ALL`` over the same windowed
 #: Selects the fetch fan-out runs, whatever the registry's size (#1532). Was 15.
