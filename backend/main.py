@@ -138,6 +138,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    # The frontend runs on a different origin, so a response header is invisible
+    # to it unless it is named here. `GET /me/export` (#2158) is the only route
+    # whose answer is a FILE rather than a body, and its filename lives in
+    # `Content-Disposition` — without this the download saves as the route's
+    # last path segment.
+    expose_headers=["Content-Disposition"],
 )
 
 @app.middleware("http")
