@@ -59,6 +59,7 @@
     "duel_challenge": "Duel challenge",
     "collab_invite": "Collaboration invite",
     "comment_mention": "Mention",
+    "comment_on_mine": "Comment",
     "fallback": "Update"
   },
   "archive": {
@@ -107,7 +108,8 @@
       "defected": "defected from {{oldFaction}} to {{newFaction}}",
       "globalTaskActivated": "A new task has been activated",
       "awaitingSubmission": "Waiting on your submission",
-      "mentionedYou": "mentioned you in a comment"
+      "mentionedYou": "mentioned you in a comment",
+      "commentedOnYours": "commented on your praxis"
     },
     "points_one": "{{points}} point",
     "points_other": "{{points}} points",

@@ -1948,7 +1948,7 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -2452,7 +2452,7 @@ export interface components {
             readonly context_faction_slug: string | null;
             /** Item Key */
             item_key: string;
-            payload: components["schemas"]["CommentMentionPayload"];
+            payload: components["schemas"]["CommentPayload"];
             /**
              * Timestamp
              * Format: date-time
@@ -2476,26 +2476,6 @@ export interface components {
             /** Username */
             username: string;
         };
-        /**
-         * CommentMentionPayload
-         * @description A comment @mentioned the viewer.
-         *
-         *     Exactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``
-         *     is a DB CHECK (migration 0005), so both are Optional here and the client
-         *     reads them in order without a tie-break.
-         */
-        CommentMentionPayload: {
-            /** Character Id */
-            character_id: number;
-            /** Comment Id */
-            comment_id: number;
-            /** Excerpt */
-            excerpt: string;
-            /** Praxis Id */
-            praxis_id: number | null;
-            /** Task Id */
-            task_id: number | null;
-        };
         /** CommentModerationIn */
         CommentModerationIn: {
             /**
@@ -2503,6 +2483,54 @@ export interface components {
              * @enum {string}
              */
             status: "visible" | "hidden" | "deleted";
+        };
+        /**
+         * CommentOnMineItem
+         * @description Somebody commented on a praxis the viewer authored or belongs to (#2159).
+         *
+         *     Distinct from ``comment_mention`` rather than a flag on it, for the reason
+         *     ``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has
+         *     to differ or the two would share a ``FeedDismissal`` row. It also lets the
+         *     player filter and archive "someone replied to me" separately from "someone
+         *     named me", which is the whole point of the type facet.
+         *
+         *     A comment that is BOTH is one row, not two — see ``_comments_on_mine_query``
+         *     in the service, which withholds where a mention already speaks.
+         */
+        CommentOnMineItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description The faction this card's frame themes to (per-faction feed surface #12).
+             *
+             *     Resolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the
+             *     frontend frame dispatches on a single value: the actor's member faction,
+             *     else the task's faction (task-context events like ``global_task`` carry no
+             *     actor), else None — a neutral card (e.g. ``era_announcement``).
+             *
+             *     ``getattr`` rather than a field, because only eight of the fourteen
+             *     payloads carry a task: it is the typed spelling of the ``payload.get()``
+             *     this used to be, and the six without a task still resolve to None.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["CommentPayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "comment_on_mine";
         };
         /** CommentOut */
         CommentOut: {
@@ -2532,6 +2560,38 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * CommentPayload
+         * @description Somebody commented, and it concerns the viewer.
+         *
+         *     ONE shape for TWO feed types, on the same ground as ``CompletionPayload``.
+         *     ``comment_mention`` fires when the comment names the viewer;
+         *     ``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer
+         *     authored or is a member of. Both rows say the same six things about the same
+         *     ``comment`` row and the frontend renders them from one branch, so a second
+         *     model would be a copy-paste pair free to drift while claiming to be the same
+         *     card. What differs between them is *which comments match*, and that lives in
+         *     the two queries.
+         *
+         *     Exactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``
+         *     is a DB CHECK (migration 0005), so both are Optional here and the client
+         *     reads them in order without a tie-break. ``comment_on_mine`` is praxis-only
+         *     (a task has no author to be commented at), so on that type ``task_id`` is
+         *     always None — the field stays because the shape is shared, and the client
+         *     already reads the two in order.
+         */
+        CommentPayload: {
+            /** Character Id */
+            character_id: number;
+            /** Comment Id */
+            comment_id: number;
+            /** Excerpt */
+            excerpt: string;
+            /** Praxis Id */
+            praxis_id: number | null;
+            /** Task Id */
+            task_id: number | null;
         };
         /**
          * CompletionPayload
@@ -4373,7 +4433,7 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
             /** Pending Requests Count */

@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client'
+import { apiDelete, apiGet, apiPost } from './client'
 import type { CharacterOut, CurrentUser } from './auth'
 
 /** The account's own roster — every life but the banned ones, carried life
@@ -18,6 +18,20 @@ export async function setActiveCharacter(characterId: number): Promise<CurrentUs
 export async function getInvitedFactions(): Promise<string[]> {
   const { data } = await apiGet('/me/invited-factions')
   return data
+}
+
+/**
+ * End this account for good (#2160/#2161): every row tombstoned, every media
+ * item unlinked (ADR-0081). 204, no body, and no undo.
+ *
+ * The JWT the browser still holds is inert the moment this returns —
+ * `get_current_account` refuses an account that is not `active` — so the caller
+ * still owes a `POST /auth/logout` to clear the cookie, exactly like any other
+ * sign-out. The confirmation is the client's: see
+ * `pages/settings/deleteAccount.ts`.
+ */
+export async function deleteMyAccount(): Promise<void> {
+  await apiDelete('/me/account')
 }
 
 /** Fallback name when the server's own `Content-Disposition` is unreadable. */

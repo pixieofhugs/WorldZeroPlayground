@@ -274,8 +274,15 @@ describe('the type facet', () => {
     expect(typeFacet({}, [], () => {}).label).toBe('Type')
   })
 
-  it('covers all sixteen feed types', () => {
-    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(16)
+  it('covers all seventeen feed types', () => {
+    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(17)
+  })
+
+  it('gives the two comment types DISTINCT labels', () => {
+    // They share a payload and a row branch, but as two checkbox rows reading
+    // "Mention" twice they would be unfilterable — the same defect the two
+    // completion types have their own assertion for, just below.
+    expect(feedTypeLabel('comment_mention')).not.toBe(feedTypeLabel('comment_on_mine'))
   })
 
   it('gives the two completion types DISTINCT labels', () => {

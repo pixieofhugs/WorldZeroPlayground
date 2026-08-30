@@ -56,6 +56,7 @@ const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
+const AccountDeleted = lazy(() => import('./pages/AccountDeleted'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
 
@@ -204,6 +205,10 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* Where the danger zone lands a deleted account (#2161). No
+              `ProtectedRoute`: it is reached with the session already dropped,
+              and a guard would bounce the one reader it exists for. */}
+          <Route path="/goodbye" element={<AccountDeleted />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />
           <Route path="/donate" element={<Donate />} />

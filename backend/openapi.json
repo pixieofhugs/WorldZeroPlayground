@@ -94,6 +94,7 @@
                   "collab_invite": "#/components/schemas/CollabInviteItem",
                   "collaborator_submitted": "#/components/schemas/CollaboratorSubmittedItem",
                   "comment_mention": "#/components/schemas/CommentMentionItem",
+                  "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
@@ -148,6 +149,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/CommentMentionItem"
+                },
+                {
+                  "$ref": "#/components/schemas/CommentOnMineItem"
                 },
                 {
                   "$ref": "#/components/schemas/CollaboratorSubmittedItem"
@@ -1327,7 +1331,7 @@
             "type": "string"
           },
           "payload": {
-            "$ref": "#/components/schemas/CommentMentionPayload"
+            "$ref": "#/components/schemas/CommentPayload"
           },
           "timestamp": {
             "format": "date-time",
@@ -1377,55 +1381,6 @@
         "title": "CommentMentionOut",
         "type": "object"
       },
-      "CommentMentionPayload": {
-        "additionalProperties": false,
-        "description": "A comment @mentioned the viewer.\n\nExactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``\nis a DB CHECK (migration 0005), so both are Optional here and the client\nreads them in order without a tie-break.",
-        "properties": {
-          "character_id": {
-            "title": "Character Id",
-            "type": "integer"
-          },
-          "comment_id": {
-            "title": "Comment Id",
-            "type": "integer"
-          },
-          "excerpt": {
-            "title": "Excerpt",
-            "type": "string"
-          },
-          "praxis_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Praxis Id"
-          },
-          "task_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Task Id"
-          }
-        },
-        "required": [
-          "comment_id",
-          "character_id",
-          "praxis_id",
-          "task_id",
-          "excerpt"
-        ],
-        "title": "CommentMentionPayload",
-        "type": "object"
-      },
       "CommentModerationIn": {
         "properties": {
           "status": {
@@ -1442,6 +1397,86 @@
           "status"
         ],
         "title": "CommentModerationIn",
+        "type": "object"
+      },
+      "CommentOnMineItem": {
+        "description": "Somebody commented on a praxis the viewer authored or belongs to (#2159).\n\nDistinct from ``comment_mention`` rather than a flag on it, for the reason\n``vote_changed_on_mine`` is distinct from ``vote_on_mine``: the item KEY has\nto differ or the two would share a ``FeedDismissal`` row. It also lets the\nplayer filter and archive \"someone replied to me\" separately from \"someone\nnamed me\", which is the whole point of the type facet.\n\nA comment that is BOTH is one row, not two — see ``_comments_on_mine_query``\nin the service, which withholds where a mention already speaks.",
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The faction this card's frame themes to (per-faction feed surface #12).\n\nResolves the SPEC-faction-ui-profile.md §2 rule once, server-side, so the\nfrontend frame dispatches on a single value: the actor's member faction,\nelse the task's faction (task-context events like ``global_task`` carry no\nactor), else None — a neutral card (e.g. ``era_announcement``).\n\n``getattr`` rather than a field, because only eight of the fourteen\npayloads carry a task: it is the typed spelling of the ``payload.get()``\nthis used to be, and the six without a task still resolve to None.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/CommentPayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "comment_on_mine",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "CommentOnMineItem",
         "type": "object"
       },
       "CommentOut": {
@@ -1514,6 +1549,55 @@
           "mentions"
         ],
         "title": "CommentOut",
+        "type": "object"
+      },
+      "CommentPayload": {
+        "additionalProperties": false,
+        "description": "Somebody commented, and it concerns the viewer.\n\nONE shape for TWO feed types, on the same ground as ``CompletionPayload``.\n``comment_mention`` fires when the comment names the viewer;\n``comment_on_mine`` (#2159) fires when it sits on a praxis the viewer\nauthored or is a member of. Both rows say the same six things about the same\n``comment`` row and the frontend renders them from one branch, so a second\nmodel would be a copy-paste pair free to drift while claiming to be the same\ncard. What differs between them is *which comments match*, and that lives in\nthe two queries.\n\nExactly one of ``praxis_id`` / ``task_id`` is set — ``num_nonnulls(...) = 1``\nis a DB CHECK (migration 0005), so both are Optional here and the client\nreads them in order without a tie-break. ``comment_on_mine`` is praxis-only\n(a task has no author to be commented at), so on that type ``task_id`` is\nalways None — the field stays because the shape is shared, and the client\nalready reads the two in order.",
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "comment_id": {
+            "title": "Comment Id",
+            "type": "integer"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Praxis Id"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "comment_id",
+          "character_id",
+          "praxis_id",
+          "task_id",
+          "excerpt"
+        ],
+        "title": "CommentPayload",
         "type": "object"
       },
       "CompletionPayload": {
@@ -5428,6 +5512,7 @@
                   "collab_invite": "#/components/schemas/CollabInviteItem",
                   "collaborator_submitted": "#/components/schemas/CollaboratorSubmittedItem",
                   "comment_mention": "#/components/schemas/CommentMentionItem",
+                  "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
@@ -5482,6 +5567,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/CommentMentionItem"
+                },
+                {
+                  "$ref": "#/components/schemas/CommentOnMineItem"
                 },
                 {
                   "$ref": "#/components/schemas/CollaboratorSubmittedItem"
