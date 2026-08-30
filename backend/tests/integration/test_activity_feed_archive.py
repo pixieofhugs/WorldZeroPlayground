@@ -82,11 +82,13 @@ REQUESTS_FILTER = "requests"
 # but leave the *live* stream, so those two tabs read four short of their
 # registry membership. Archived is unaffected — see
 # ``test_archived_still_shows_the_requests_the_stream_hides``.
+# 12 -> 13 and 5 -> 6 in #2159: ``comment_on_mine`` is a seventeenth registry
+# source, filed on ALL + YOUR_STUFF beside the mention it sits next to.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 12,
+    ALL_FILTER: 13,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
-    YOUR_STUFF_FILTER: 5,
+    YOUR_STUFF_FILTER: 6,
     GLOBAL_FILTER: 2,
     REQUESTS_FILTER: 4,
 }
@@ -113,7 +115,7 @@ async def full_feed(
     active_task: Task,
     some_faction,
 ) -> dict:
-    """Seed exactly one feed item of every one of the 16 types for ``character``.
+    """Seed exactly one feed item of every one of the 17 types for ``character``.
 
     Returns a handful of the seeded rows the tests need to assert against.
     """
@@ -188,6 +190,20 @@ async def full_feed(
     db_session.add(
         CommentMention(
             comment_id=mention_comment.id, mentioned_character_id=character.id
+        )
+    )
+    # --- comment_on_mine: a PLAIN comment on the same praxis (#2159) --------
+    # No CommentMention row, which is the whole difference. It has to be its own
+    # comment rather than a second reading of the one above: a comment that is
+    # both is deliberately ONE row (the mention), so seeding only the mentioning
+    # comment would leave this type absent from the feed and the registry-
+    # coverage assertion would be the thing that told us.
+    db_session.add(
+        Comment(
+            praxis_id=my_praxis.id,
+            created_by_id=character2.id,
+            body_text="No handle in this one",
+            moderation_status=ModerationStatus.visible,
         )
     )
 
@@ -363,9 +379,9 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 16 types are present, keyed, and identical across two requests.
+    """All 17 types are present, keyed, and identical across two requests.
 
-    ADR-0070 split the live surface in two: the twelve news types live in the
+    ADR-0070 split the live surface in two: the thirteen news types live in the
     stream, the four request types live in the queue. Between them the registry
     is still fully covered.
     """
@@ -1083,9 +1099,9 @@ async def test_selecting_one_type_does_not_shrink_the_other_types_counts(
 ):
     """The classic facet trap, and the whole reason for epic #1419 decision 19.
 
-    ``full_feed`` puts one item of eleven types in the live stream. If the type
-    axis were applied to its own counts, ticking ``nudge`` would zero the other
-    ten and the player would have no way back.
+    ``full_feed`` puts one item of thirteen types in the live stream. If the
+    type axis were applied to its own counts, ticking ``nudge`` would zero the
+    other twelve and the player would have no way back.
     """
     unfiltered = await _feed(client, auth_headers)
     assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER]

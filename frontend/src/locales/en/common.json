@@ -421,6 +421,20 @@
         "hash": "One thing is kept: which provider you signed in with, and a one-way hash of the ID that provider gave us. The hash cannot be turned back into the ID. It exists so that if you come back we can tell you what happened to your old account, and it is deleted the next time that sign-in returns, once it is more than about ninety days old. Nothing sweeps for one that never returns, so a hash you never come back to can outlive that."
       }
     },
+    "language": {
+      "eyebrow": "Language and region",
+      "lead": "English is the only interface language today. Player-written content stays in the language it was written in.",
+      "current": "Language",
+      "currentHelp": "Applies to menus and labels.",
+      "currentValue": "English",
+      "request": "Request another language",
+      "requestHelp": "Tell us which language you would use. Requests decide what we translate next.",
+      "requestField": "Which language?",
+      "requestSubmit": "Request a language",
+      "requestSending": "Sending…",
+      "requestSent": "Thanks — we'll let you know if enough players ask for the same one.",
+      "requestError": "That did not send. Try again in a moment."
+    },
     "signOut": "Sign out",
     "signOutHelp": "Ends this session on this device.",
     "danger": {

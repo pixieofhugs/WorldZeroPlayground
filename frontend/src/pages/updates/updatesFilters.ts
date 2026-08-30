@@ -273,6 +273,7 @@ export const FEED_TYPE_LABEL_KEY = {
   collaborator_submitted: 'feed:kicker.collaborator_submitted',
   nudge: 'feed:kicker.nudge',
   comment_mention: 'feed:kicker.comment_mention',
+  comment_on_mine: 'feed:kicker.comment_on_mine',
   foe_taunt: 'feed:kicker.foe_taunt',
   friend_defection: 'feed:kicker.friend_defection',
   global_task: 'feed:kicker.global_task',
