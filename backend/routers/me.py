@@ -7,6 +7,7 @@ from dataclasses import asdict
 from typing import Callable
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db, get_session_factory
@@ -27,6 +28,8 @@ from services.character import (
     set_active_character,
 )
 from services.current_user import build_current_user
+from services.data_export import build_account_export
+from services.data_export import stream as export_stream
 from services.praxis import list_praxes
 from services.praxis_out import build_praxis_cards
 
@@ -86,6 +89,48 @@ async def my_invited_factions(
     Walking out burns the door for *that* character, not for the account.
     """
     return await get_account_invited_faction_slugs(account.id, session)
+
+
+@router.get(
+    "/export",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "description": "A zip archive of everything on the account.",
+            "content": {
+                "application/zip": {"schema": {"type": "string", "format": "binary"}}
+            },
+        }
+    },
+)
+async def export_my_data(
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db),
+):
+    """Download everything tied to your account, as a zip, right now (#2158).
+
+    The archive holds a README explaining what the values mean, an
+    ``export.json`` with your account email, every character and its stats, the
+    praxes you created or joined, the votes you cast, your comments and your
+    faction history — and the photos and videos you uploaded, as the original
+    files rather than as links, so the download stays readable whatever happens
+    to this site.
+
+    **If your uploads add up to more than 200 MB**, they are too large to build
+    into one download. The archive is then written without them: ``export.json``
+    lists a web address for each file so you can save them yourself, and the
+    README says which of the two forms you received. Nothing is left out of the
+    export except the media itself.
+
+    The file is built while you wait and is never stored, so no copy of it
+    exists for anyone else to be given.
+    """
+    archive_file, filename = await build_account_export(account, session)
+    return StreamingResponse(
+        export_stream(archive_file),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/sidebar", response_model=SidebarOut)
