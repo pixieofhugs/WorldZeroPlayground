@@ -26,6 +26,7 @@ import type { CharacterOut, CurrentUser } from '../api/auth'
 import type { DuelDetailOut, DuelSideOut } from '../api/duel'
 import type { PraxisCardOut, PraxisMemberOut, PraxisOut } from '../api/praxis'
 import type { TaskOut } from '../api/tasks'
+import type { EditPraxisState } from '../pages/editPraxis/editPraxisState'
 
 /** The praxis author, and the viewer most detail suites sign in as. */
 export const AUTHOR = { id: 3, name: 'Ada' } as const
@@ -332,4 +333,144 @@ export const forFaction = (slug: string) => ({
   task: aTask({ primary_faction_slug: slug }),
   praxis: aPraxis({ task_faction_slug: slug, created_by_faction_slug: slug }),
   card: aPraxisCard({ task_faction_slug: slug }),
+})
+
+/** Every handler on the state is a no-op unless a suite hands over its own. */
+const noop = () => {}
+/** Same, for the async half. Fewer parameters is assignable to more. */
+const asyncNoop = async () => {}
+
+/**
+ * The composer's UI state — the ONE shape the docstring at the top of this file
+ * left out (#2877).
+ *
+ * `EditPraxisState` has 79 members, so twenty-seven suites reached for
+ * `as unknown as EditPraxisState` instead of building one: a type that must be
+ * defeated to be tested is the reason `covenComposer` is two `it()` blocks
+ * against `wowEditPraxis`'s nine. This carries the boring 79 so a suite states
+ * only its premise:
+ *
+ *     const state = anEditPraxisState({ controlsLocked: true })
+ *
+ * The defaults are the **quietest composer that renders**: a draft solo praxis
+ * on a task, nothing loading, nothing open, no confirm pending and every
+ * capability flag false — the same rule `aCurrentUser` follows, so a suite that
+ * asserts on a control has to say which flag put it there. There is no
+ * `showMetatasks` and no `toggleMetatask`: both were deleted with this builder
+ * (#2877, and #2693 for the second one's census).
+ *
+ * `autoSubmitDays` defaults to **null**, not to today's number. It is an
+ * `EraConfig` value that arrives from `/game-config`, and null is the honest
+ * pre-arrival state; a suite asserting on the ADR-0012 deadline passes its own.
+ */
+export const anEditPraxisState = (
+  over: Partial<EditPraxisState> = {},
+): EditPraxisState => ({
+  loading: false,
+  phase: 'composing',
+  // A draft, not `aPraxis()`'s submitted default: the composer proper is what a
+  // player sees BEFORE casting, and a submitted praxis is a different phase.
+  // Nothing has been cast, so nothing has been voted on — 12 base × 1.0 + 0.
+  praxis: aPraxis({
+    status: 'in_progress',
+    submitted_at: null,
+    media_items: [],
+    score: 12,
+    points_from_votes: 0,
+    voter_count: 0,
+    viewer_can_vote: false,
+  }),
+  task: aTask(),
+  error: '',
+  setError: noop,
+
+  title: 'The Long Way Round',
+  setTitle: noop,
+  body: 'Walked the whole ridge before dark.',
+  setBody: noop,
+
+  media: [],
+  fileError: '',
+  handleFileChange: noop,
+  removeMedia: asyncNoop,
+
+  pendingImage: null,
+  confirmImageEdit: asyncNoop,
+  cancelImageEdit: noop,
+  reportImageError: noop,
+
+  switchingMode: null,
+  changeMode: asyncNoop,
+
+  inviteQuery: '',
+  setInviteQuery: noop,
+  inviteResults: [],
+  inviteOpen: false,
+  setInviteOpen: noop,
+  inviting: false,
+  sendInvite: asyncNoop,
+  cancelInvite: asyncNoop,
+  kickMember: asyncNoop,
+  nudge: asyncNoop,
+  nudgeCrew: asyncNoop,
+  crewNudge: null,
+
+  duel: null,
+  sendChallenge: asyncNoop,
+  cancelDuel: asyncNoop,
+  dissolveDuel: asyncNoop,
+
+  metatasks: [],
+  appliedMetatasks: new Set<number>(),
+  appliedMetataskList: [],
+  applyingMetatask: null,
+  addMetatask: asyncNoop,
+  metataskPickerOpen: false,
+  openMetataskPicker: noop,
+  closeMetataskPicker: noop,
+  metataskRemovalTarget: null,
+  requestRemoveMetatask: noop,
+  confirmRemoveMetatask: asyncNoop,
+  cancelRemoveMetatask: noop,
+
+  submitting: false,
+  publish: asyncNoop,
+  markDone: asyncNoop,
+  propose: asyncNoop,
+  saveDraft: asyncNoop,
+  pullBack: asyncNoop,
+  reopenForEdit: asyncNoop,
+  leaveCollab: asyncNoop,
+  cancel: asyncNoop,
+
+  collabSuccess: false,
+  continueFromCollabSuccess: noop,
+
+  duelSealOpen: false,
+  requestDuelSeal: noop,
+  cancelDuelSeal: noop,
+
+  pendingConfirm: null,
+  acceptConfirm: noop,
+  dismissConfirm: noop,
+
+  autosaveAt: null,
+  setAutosaveAt: noop,
+
+  autoSubmitDays: null,
+
+  proposalConfirmArmed: false,
+  confirmProposalEdit: noop,
+
+  isPublished: false,
+  controlsLocked: false,
+  modeIsLocked: false,
+  showInviteBox: false,
+  canSealMetatask: false,
+  showSealStack: false,
+  duelMode: false,
+  duelChipVisible: false,
+
+  currentCharacterId: AUTHOR.id,
+  ...over,
 })

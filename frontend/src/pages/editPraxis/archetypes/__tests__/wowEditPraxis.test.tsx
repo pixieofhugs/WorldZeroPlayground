@@ -125,7 +125,6 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     controlsLocked: false,
     modeIsLocked: false,
     showInviteBox: false,
-    showMetatasks: false,
     showSealStack: false,
     duelMode: false,
     duelChipVisible: false,
