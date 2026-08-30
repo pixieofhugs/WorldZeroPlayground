@@ -9683,6 +9683,62 @@
         ]
       }
     },
+    "/me/export": {
+      "get": {
+        "description": "Download everything tied to your account, as a zip, right now (#2158).\n\nThe archive holds a README explaining what the values mean, an\n``export.json`` with your account email, every character and its stats, the\npraxes you created or joined, the votes you cast, your comments and your\nfaction history — and the photos and videos you uploaded, as the original\nfiles rather than as links, so the download stays readable whatever happens\nto this site.\n\n**If your uploads add up to more than 200 MB**, they are too large to build\ninto one download. The archive is then written without them: ``export.json``\nlists a web address for each file so you can save them yourself, and the\nREADME says which of the two forms you received. Nothing is left out of the\nexport except the media itself.\n\nThe file is built while you wait and is never stored, so no copy of it\nexists for anyone else to be given.",
+        "operationId": "export_my_data_me_export_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "A zip archive of everything on the account."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export My Data",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/me/invited-factions": {
       "get": {
         "description": "Faction slugs a new life on this account may be born into (ADR-0019).\n\nNot just live invitation letters: since #2385 this also counts any faction\nan existing life on the account currently holds or has ever held this era.\nWalking out burns the door for *that* character, not for the account.",
