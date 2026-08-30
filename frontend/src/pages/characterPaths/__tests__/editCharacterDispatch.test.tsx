@@ -129,6 +129,17 @@ function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState 
   }
 }
 
+/** Every `<input>`/`<textarea>` a caret can land in, with its attributes. File
+ *  inputs are out of scope for the same reason they are on create: each is
+ *  hidden behind a button that takes the focus itself. Shared by the focus-ring
+ *  sweep and the accessible-name sweep — they ask different questions of the
+ *  same set of fields. */
+function textFields(html: string): string[] {
+  return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
+    .map(([, attrs]) => attrs)
+    .filter((attrs) => !/type="(?:file|hidden)"/.test(attrs))
+}
+
 function archetypeFor(slug: string | null | undefined) {
   // Unwrapped: every archetype is code-split, so the map hands back
   // `lazyArchetype`'s wrapper and an identity comparison needs the module.
@@ -264,15 +275,6 @@ describe('the focus ring survives every skin, at both widths (#2825)', () => {
      works — so what is asserted is the markup that DECIDES the ring, not a
      computed style. The painted pixel is visual QA. */
 
-  /** Every `<input>`/`<textarea>` a caret can land in, with its attributes.
-   *  File inputs are out of scope for the same reason they are on create: each
-   *  is hidden behind a button that takes the focus itself. */
-  function textFields(html: string): string[] {
-    return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
-      .map(([, attrs]) => attrs)
-      .filter((attrs) => !/type="(?:file|hidden)"/.test(attrs))
-  }
-
   for (const width of ['desktop', 'mobile'] as const) {
     it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
       `slug "%s" suppresses no field's outline on ${width}`,
@@ -314,12 +316,6 @@ describe('every field on the edit form names itself (#2793)', () => {
 
      Both widths, because the `na` kit mounts every field twice (a desktop plate
      and a phone column) and a fan-out archetype may mount it twice again. */
-  function textFields(html: string): string[] {
-    return [...html.matchAll(/<(?:input|textarea)\b([^>]*)>/g)]
-      .map(([, attrs]) => attrs)
-      .filter((attrs) => !/type="(?:file|hidden)"/.test(attrs))
-  }
-
   function attr(attrs: string, name: string): string | null {
     return new RegExp(`${name}="([^"]*)"`).exec(attrs)?.[1] ?? null
   }

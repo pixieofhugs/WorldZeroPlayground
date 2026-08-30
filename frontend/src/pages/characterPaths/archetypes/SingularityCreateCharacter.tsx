@@ -91,10 +91,12 @@
  *   one does not, because the ring is the only focus indicator a keyboard
  *   reaches these six controls with. The frame is on the readout box, so the
  *   ring has room to draw inside it.
- * - **The labels are real `<label for>`s.** `ComposerSection` has taken an
- *   `htmlFor` since #1742 and nothing on this page was using it, so each field
- *   gets an accessible name from the label already on screen rather than from a
- *   placeholder.
+ * - **There are no field labels, and that is ruled rather than missed.** #2793
+ *   deletes every visible label on both character forms: the fields carry their
+ *   own words instead, and `namedField()` puts that same string on `aria-label`
+ *   so the accessible name the `<label for>` used to supply survives the
+ *   deletion. `ComposerSection` draws no heading row when no `label` is passed,
+ *   so the three sections are now bare frames around their controls.
  *
  * ## Presentation only
  *

@@ -21,6 +21,18 @@
  * eight archetypes; nothing here touches the submit path, the payload, the
  * portrait picker or the avatar hook.
  *
+ * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
+ * placeholder-only: the name, bio and catchphrase boxes carry their own words,
+ * shared with Edit Character so the two surfaces speak one vocabulary — around
+ * the CHARACTER, with no pronouns, which is what took the second person out of
+ * this page's heading too. `namedField()` sets `aria-label` from that same
+ * string, because here the visible label WAS the accessible name and deleting
+ * it without one is a regression rather than a simplification. The portrait key
+ * and the calling grid keep their spans: those head groups of BUTTONS, are
+ * section headings rather than field labels, and were explicitly excluded.
+ * Where a deleted label was also carrying the gap above its field, the gap
+ * moves onto the field.
+ *
  * THE PHONE BRANCH CARRIES NO PROSE FIELDS, deliberately and unchanged: it is
  * "Step 1 of 2 · Identity" and has never offered `bio`, which mobile players
  * write on the edit screen instead. `tagline` (#1628) follows `bio` for exactly

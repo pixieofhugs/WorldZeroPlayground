@@ -83,6 +83,15 @@
  * `useAvatarPicker`, and THE PICKER STAYS VISIBLE in this skin — a player must
  * be able to change their mind, or clear the pick and be born unaffiliated,
  * which returns the page to the Default archetype.
+ *
+ * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
+ * placeholder-only: the name, bio and catchphrase boxes carry their own words
+ * ("Character name", "Character bio", "Character Catchphrase"), shared with
+ * Edit Character so the two surfaces speak one vocabulary. `namedField()` sets
+ * `aria-label` from that same string, because here the visible label WAS the
+ * accessible name and deleting it without one is a regression, not a
+ * simplification. `ComposerSection` draws no heading row when no `label` is
+ * passed, so the field sections are bare frames around their controls.
  */
 import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
