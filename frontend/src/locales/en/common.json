@@ -423,7 +423,7 @@
     },
     "data": {
       "eyebrow": "Your data",
-      "lead": "Download everything tied to your account: your characters, the praxes you posted, the votes you cast, your comments, and the files you uploaded.",
+      "lead": "Download everything tied to your account: your characters, the praxis you posted, the votes you cast, your comments, and the files you uploaded.",
       "export": {
         "title": "Export my data",
         "help": "A zip file, built while you wait — nothing is queued and nothing is emailed. Your photos and videos are inside it rather than linked, so the download still makes sense if World Zero is not around.",

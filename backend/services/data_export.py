@@ -76,8 +76,8 @@ WHAT IS IN HERE
 READING export.json
   characters       Every life on this account, with its per-era stats: score is
                    the current era's, all_time_score is every era added up.
-  praxes           The proof you posted, with the task it answered. Praxes you
-                   created and praxes you joined as a collaborator are both
+  praxes           The proof you posted, with the task it answered. Praxis
+                   you created and praxis you joined as a collaborator are both
                    here.
   votes you cast   The star ratings YOU gave to OTHER players' praxes — not the
                    votes you received. Each one is points you awarded to someone

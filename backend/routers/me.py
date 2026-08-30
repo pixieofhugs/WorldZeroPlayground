@@ -111,7 +111,7 @@ async def export_my_data(
 
     The archive holds a README explaining what the values mean, an
     ``export.json`` with your account email, every character and its stats, the
-    praxes you created or joined, the votes you cast, your comments and your
+    praxis you created or joined, the votes you cast, your comments and your
     faction history — and the photos and videos you uploaded, as the original
     files rather than as links, so the download stays readable whatever happens
     to this site.
