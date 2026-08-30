@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
+import { FACTION_MANIFESTS } from '../../../factions'
 import {
   PraxisStatusBanners,
   PraxisOwnerActions,
@@ -46,19 +47,32 @@ const SHARED_SOURCE = readFileSync(
  * slug → the alarm token the wall under it was measured with. Seven reuse the
  * card family; S.N.I.D.E. is the mint. `albescent` renders
  * `DefaultPraxisDetail` plus an ornament layer (#1140), so it shares na's wall
- * and must therefore share na's ink — `null` is the unaffiliated task.
+ * and must therefore share na's ink.
+ *
+ * TYPED ON PURPOSE — the token is the thing this file asserts, and reading it
+ * back off the surface it is asserting about would prove only that the surface
+ * equals itself. The POPULATION is not typed (#2815): it is the manifest index
+ * below, so a tenth kit's wall is measured the day its row lands.
  */
+const ALARM_TOKEN: Record<string, string> = {
+  na: '--faction-default-card-alarm',
+  albescent: '--faction-default-card-alarm',
+  coven: '--faction-coven-card-alarm',
+  ephemerists: '--faction-ephemerists-card-alarm',
+  everymen: '--faction-everymen-card-alarm',
+  singularity: '--faction-singularity-card-alarm',
+  snide: '--faction-snide-wall-alarm',
+  ua: '--faction-ua-card-alarm',
+  wow: '--faction-wow-card-alarm',
+}
+
+/** `null` is the unaffiliated task, which takes na's wall and so na's ink. */
 const WALL_ALARM: [string | null, string][] = [
-  [null, '--faction-default-card-alarm'],
-  ['na', '--faction-default-card-alarm'],
-  ['albescent', '--faction-default-card-alarm'],
-  ['coven', '--faction-coven-card-alarm'],
-  ['ephemerists', '--faction-ephemerists-card-alarm'],
-  ['everymen', '--faction-everymen-card-alarm'],
-  ['singularity', '--faction-singularity-card-alarm'],
-  ['snide', '--faction-snide-wall-alarm'],
-  ['ua', '--faction-ua-card-alarm'],
-  ['wow', '--faction-wow-card-alarm'],
+  [null, ALARM_TOKEN.na],
+  ...FACTION_MANIFESTS.map((manifest): [string, string] => [
+    manifest.slug,
+    ALARM_TOKEN[manifest.slug],
+  ]),
 ]
 
 function praxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
@@ -110,6 +124,14 @@ const html = (element: ReactElement): string => markup(element).html
 
 
 describe('the praxis detail wall carries its own alarm ink (#1451)', () => {
+  it.each(WALL_ALARM)('%s: has a measured alarm ink at all', (slug, token) => {
+    // Where the derived population meets the typed tokens. A kit registered
+    // without a row in ALARM_TOKEN would otherwise assert
+    // `toContain('color:var(undefined)')` — a failure, but one that reads as a
+    // paint bug rather than as "nobody measured this wall".
+    expect(token, `${slug} is a registered kit with no row in ALARM_TOKEN`).toBeTypeOf('string')
+  })
+
   it.each(WALL_ALARM)('%s: the failed banner reads its wall', (slug, token) => {
     const markup = html(
       <PraxisStatusBanners
