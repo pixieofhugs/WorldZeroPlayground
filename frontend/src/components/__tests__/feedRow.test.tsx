@@ -303,6 +303,44 @@ describe('normalizeFeedItem', () => {
     expect(row.headlineHref).toBeNull()
   })
 
+  // ── comment_on_mine (#2159) ───────────────────────────────────────────────
+  //
+  // Someone commented on a praxis that is yours. It shares the mention's branch
+  // and its payload, so the tests that matter are the two things that are NOT
+  // shared: it must be a registered row type at all (the #1196 failure mode is
+  // silent — an unregistered type renders as nothing), and it must not speak the
+  // mention's sentence.
+
+  it('renders the comment-on-mine row rather than dropping it', () => {
+    expect(FACTION_ROW_TYPES.has('comment_on_mine')).toBe(true)
+  })
+
+  it('says someone commented, not that they named you', () => {
+    const row = normalizeFeedItem(
+      item('comment_on_mine', {
+        comment_id: 21,
+        character_id: 8,
+        praxis_id: 12,
+        task_id: null,
+        excerpt: 'the render came out beautifully',
+      }),
+    )!
+    expect(row.action).toBe('commented on your praxis')
+    expect(row.action).not.toBe(
+      normalizeFeedItem(item('comment_mention', { comment_id: 21, praxis_id: 12, excerpt: 'x' }))!
+        .action,
+    )
+    // Everything else is the mention's row, deliberately: same slots, same
+    // quoted excerpt, same single CTA into the page holding the thread.
+    expect(row.actorHref).toBe('/characters/8')
+    expect(row.badge?.label).toBe('Your Stuff')
+    expect(row.headline).toBe('the render came out beautifully')
+    expect(row.headlineQuoted).toBe(true)
+    expect(row.headlineHref).toBe('/praxis/12')
+    expect(row.actions.map((action) => action.id)).toEqual(['reply'])
+    expect(row.actions[0].href).toBe('/praxis/12')
+  })
+
   it('has an actorless system row for a global task', () => {
     const row = normalizeFeedItem(item('global_task', { task_id: 5, task_title: 'New job', task_point_value: 10, task_level_required: 2 }))!
     expect(row.actor).toBeNull()
