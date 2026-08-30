@@ -154,7 +154,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,
-    toggleMetatask,
     addMetatask,
     metataskPickerOpen,
     openMetataskPicker,
@@ -778,8 +777,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     !duelMode &&
     !!user?.can_apply_metatask &&
     metatasks.length > 0;
-  // Legacy name, unchanged meaning (still gates the old per-archetype block).
-  const showMetatasks = canSealMetatask;
   // Show the stack when the viewer can seal, OR when an ineligible viewer still
   // has seals to display read-only (no add slot, no ×).
   const showSealStack =
@@ -841,7 +838,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,
-    toggleMetatask,
     addMetatask,
 
     metataskPickerOpen,
@@ -883,7 +879,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     controlsLocked,
     modeIsLocked,
     showInviteBox,
-    showMetatasks,
     canSealMetatask,
     showSealStack,
     duelMode,

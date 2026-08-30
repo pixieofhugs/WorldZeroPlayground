@@ -47,13 +47,13 @@ function mutationCallLines(): string[] {
 
 describe("useMetataskApply keeps the praxis each mutation returns", () => {
   /**
-   * Four, not three: `toggleMetatask` has an apply branch AND a remove branch,
-   * and the remove branch is the one a test is most likely to skip. `>=` rather
-   * than `===` so a fifth path is held to the rule below rather than failing
-   * here for existing.
+   * Two, not four, since #2877 deleted the dead `toggleMetatask` and its apply
+   * and remove branches with it: `addMetatask` seals and `confirmRemoveMetatask`
+   * peels, one call each. `>=` rather than `===` so a third path is held to the
+   * rule below rather than failing here for existing.
    */
-  it("still has all four mutation call sites", () => {
-    expect(mutationCallLines().length).toBeGreaterThanOrEqual(4);
+  it("still has both mutation call sites", () => {
+    expect(mutationCallLines().length).toBeGreaterThanOrEqual(2);
   });
 
   it("writes every one of them back through setPraxis", () => {
