@@ -13,10 +13,14 @@
  * That gap is invisible to a `npm run lint` exit code, which is why it survived
  * from #1780 to here: the run was green because the rules were absent, not
  * because the code was clean. So these fixtures lint real source text through
- * the real `eslint.config.js` — same plugin registration, same ratchet, same
- * exemptions CI runs — judged as if it lived at an `e2e/` path, and assert on
- * what comes back. Same shape as `rawColourRule.test.ts` and
- * `factionInkRule.test.ts`.
+ * the real `eslint.config.js` — same plugin registration, same exemptions CI
+ * runs — judged as if it lived at an `e2e/` path, and assert on what comes
+ * back. Same shape as `rawColourRule.test.ts` and `factionInkRule.test.ts`.
+ *
+ * The `any` ban is UNCONDITIONAL and there is no legacy list. It shipped with a
+ * two-file one, because #2888 was still in flight; #2888 merged (#2933) and
+ * typed all five annotations away, so the list went with them. `the ban is
+ * unconditional` below is what keeps it that way.
  *
  * WHAT IS DELIBERATELY *NOT* ENFORCED HERE
  * ----------------------------------------
@@ -32,10 +36,13 @@
  * human. The `.ds-kit` cases below pin the CURRENT state so that widening it is
  * an explicit edit rather than a side effect.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { relative, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { ESLint } from 'eslint'
 import { beforeAll, describe, expect, it } from 'vitest'
+
+import { sourceFiles } from '../test/sourceScan'
 
 const ANY_RULE = 'no-restricted-syntax'
 
@@ -54,12 +61,19 @@ const rulesFor = async (code: string, filePath: string): Promise<string[]> => {
 const reports = async (rule: string, code: string, filePath: string): Promise<boolean> =>
   (await rulesFor(code, filePath)).includes(rule)
 
-/** The un-migrated spec files on the shrink-only list, comments stripped. */
-const legacyEntries = (): string[] =>
-  readFileSync(new URL('../../.eslint-legacy-e2e-any.txt', import.meta.url), 'utf8')
-    .split('\n')
-    .map((line) => line.split('#')[0].trim())
-    .filter(Boolean)
+/**
+ * Every real spec/helper module under `e2e/`, as repo-relative paths.
+ *
+ * Walked with `sourceFiles()` rather than a private `readdirSync`, which #2887
+ * bans anywhere under `src/` — it takes a `dir`, so pointing it at a sibling
+ * tree costs nothing. `includeTests` is irrelevant here: `e2e/` has no
+ * `__tests__` directory, the specs ARE the tests. Paths are rejoined on `sep`
+ * so the ids match the `e2e/...` form ESLint resolves against on Windows too.
+ */
+const E2E_DIR = fileURLToPath(new URL('../../e2e', import.meta.url))
+
+const e2eSources = (): string[] =>
+  sourceFiles({ dir: E2E_DIR }).map((path) => `e2e/${relative(E2E_DIR, path).split(sep).join('/')}`)
 
 describe('`any` is banned in e2e/', () => {
   it('flags an `any` annotation in a spec — the collaboration.spec.ts shape', async () => {
@@ -99,22 +113,32 @@ describe('`any` is banned in e2e/', () => {
   })
 })
 
-describe('the shrink-only allowlist', () => {
-  it('silences the rule for a file still on it', async () => {
-    const [grandfathered] = legacyEntries()
-    expect(grandfathered).toBeTruthy()
-    expect(await reports(ANY_RULE, 'export const pick = (t: any) => t', grandfathered)).toBe(false)
-  })
+describe('the ban is unconditional', () => {
+  /**
+   * This shipped WITH a two-file shrink-only allowlist, because #2888 was
+   * still in flight and a big-bang ban would have redded `main` if it merged
+   * second. #2888 merged (#2933), typed all five annotations away, and the
+   * allowlist went with them — an empty legacy list left behind reads like
+   * debt nobody has looked at (#2108).
+   *
+   * This case is what stops one coming back by the side door. The `lintText`
+   * fixtures above only prove the rule fires at a path nobody has exempted;
+   * they say nothing about a `'no-restricted-syntax': 'off'` block added
+   * LATER in the config, which in flat config is the one that wins. So ask
+   * ESLint what it actually RESOLVED for every file that exists, and require
+   * `error` for all of them.
+   */
+  it('resolves to error for every real file under e2e/', async () => {
+    const sources = e2eSources()
+    expect(sources.length).toBeGreaterThan(4)
 
-  it('lists only files that exist — an entry for a deleted file is dead weight', () => {
-    for (const entry of legacyEntries()) {
-      expect(existsSync(new URL(`../../${entry}`, import.meta.url))).toBe(true)
-    }
-  })
-
-  it('lists only e2e paths — it may never grandfather anything else', () => {
-    for (const entry of legacyEntries()) {
-      expect(entry.startsWith('e2e/')).toBe(true)
+    for (const file of sources) {
+      const config = await eslint.calculateConfigForFile(file)
+      // `calculateConfigForFile` normalises severity to the numeric form, so 2
+      // is 'error' and the value to watch for is 0 — a later block switching the
+      // rule back off for some path is exactly what this case exists to catch.
+      const [severity] = config.rules[ANY_RULE] ?? []
+      expect(`${file}: ${severity}`).toBe(`${file}: 2`)
     }
   })
 })

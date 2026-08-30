@@ -826,15 +826,6 @@ const LEGACY_FACTION_INK_FILES = fs
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
 
-// Spec files that still carry an `any` (#2889). Same shrink-only contract and
-// same empty-list guard as the lists above: migrating a file means deleting its
-// line, and when the last one goes the .txt goes with it.
-const LEGACY_E2E_ANY_FILES = fs
-  .readFileSync(new URL('./.eslint-legacy-e2e-any.txt', import.meta.url), 'utf8')
-  .split('\n')
-  .map((line) => line.split('#')[0].trim())
-  .filter(Boolean)
-
 /**
  * #2889: no `any` in `e2e/**`.
  *
@@ -963,24 +954,18 @@ export default [
     // The `any` ban is e2e-only, so it registers here rather than in the block
     // above: `src/**` has its own `any` population and its own argument to
     // have, and #2889 is not it.
+    //
+    // UNCONDITIONAL, and there is no `.eslint-legacy-e2e-any.txt`. This shipped
+    // as a two-file shrink-only ratchet because #2888 was still in flight; it
+    // merged (#2933) and typed all five annotations off the list, so the list
+    // went with them rather than being left behind as an empty file that reads
+    // like debt nobody has looked at (the #2108 precedent). Re-measured on the
+    // merged tree before deleting: eight spec files, zero reports.
     files: ['e2e/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': NO_ANY,
     },
   },
-  // Same shrink-only ratchet and same empty-list guard as the style arms (#750):
-  // ESLint rejects `files: []` outright, so finishing the migration must not be
-  // the thing that breaks the build. #2888 is typing both of these off the list.
-  ...(LEGACY_E2E_ANY_FILES.length > 0
-    ? [
-        {
-          files: LEGACY_E2E_ANY_FILES,
-          rules: {
-            'no-restricted-syntax': 'off',
-          },
-        },
-      ]
-    : []),
   // Ratchet: existing violations are grandfathered until migrated. Spread
   // conditionally — ESLint rejects `files: []` outright ("Expected value to be
   // a non-empty array"), so an empty list crashed the whole lint run. That made
