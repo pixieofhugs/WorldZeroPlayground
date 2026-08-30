@@ -87,8 +87,8 @@
  * purpose — nothing in the kit describes them — and no other faction skins them
  * either, so those pages render their `Default*` skin. (Edit-character stood in
  * that sentence until #2537: it is dressed now, derived from the charter rather
- * than drawn, and the surface it used to name — `mobileEditCharacter` — is
- * retired rather than filled.)
+ * than drawn — and as ONE responsive archetype, since the phone-only edit
+ * surface this sentence used to name is retired rather than filled.)
  *
  * Override-only, like every manifest — WOW simply overrides all of it now: it
  * claims every key in `SURFACE_KEYS`, and `surfaceDispatch.test.ts` holds it
@@ -192,7 +192,7 @@ export const WOW_MANIFEST: FactionManifest = {
   // delete danger zone. The last two are `characterPaths/editCharacterSlots`'
   // shared slots, MOUNTED rather than redrawn (#2788), and this archetype
   // decides only where they sit: a codicil below the charter, outside the form.
-  // ONE responsive component; the line above the mobile-surface block still
-  // holds, because `mobileEditCharacter` stays retired.
+  // ONE responsive component — there is no phone twin row beneath this one, and
+  // the surface that would have carried it stays retired.
   editCharacter: () => WowEditCharacter,
 }
