@@ -62,7 +62,7 @@ import {
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
 import { useComposerMedia, type MediaOutcome } from "./useComposerMedia";
-import { useMetataskApply } from "./useMetataskApply";
+import { useMetataskApply, type SealOutcome } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
 import { useComposerDuel, type DuelOutcome } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
@@ -183,16 +183,42 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     appliedMetatasks,
     appliedMetataskList,
     applyingMetatask,
-    addMetatask,
+    addMetatask: addMetataskSide,
     metataskPickerOpen,
-    openMetataskPicker,
+    openMetataskPicker: openMetataskPickerSide,
     closeMetataskPicker,
     metataskRemovalTarget,
     requestRemoveMetatask,
-    confirmRemoveMetatask,
+    confirmRemoveMetatask: confirmRemoveMetataskSide,
     cancelRemoveMetatask,
     seedApplied: seedAppliedMetatasks,
-  } = useMetataskApply({ praxis, setPraxis, setError });
+  } = useMetataskApply({ praxis });
+
+  // The stack owns which seals are on; the re-scored praxis and the error line
+  // are ours, so a mutation reports what it changed and we write it (#2878).
+  const applySealOutcome = useCallback((outcome: SealOutcome) => {
+    if (outcome.kind === "unchanged") return;
+    setError(outcome.kind === "failed" ? outcome.message : "");
+    if (outcome.kind === "applied") setPraxis(outcome.praxis);
+  }, []);
+
+  const addMetatask = useCallback(
+    async (mt: TaskOut) => {
+      applySealOutcome(await addMetataskSide(mt));
+    },
+    [addMetataskSide, applySealOutcome],
+  );
+
+  const confirmRemoveMetatask = useCallback(async () => {
+    applySealOutcome(await confirmRemoveMetataskSide());
+  }, [confirmRemoveMetataskSide, applySealOutcome]);
+
+  // The sheet opens onto a clear line: it prints `error` itself (#2382), so a
+  // failure from publish or a duel must not greet the author on the way in.
+  const openMetataskPicker = useCallback(() => {
+    setError("");
+    openMetataskPickerSide();
+  }, [openMetataskPickerSide]);
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
   // One-shot post-publish beat for the member whose cast closed the gate (#591).
