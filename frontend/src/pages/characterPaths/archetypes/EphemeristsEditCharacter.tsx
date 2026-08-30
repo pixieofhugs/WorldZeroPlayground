@@ -142,9 +142,11 @@ const SLUG = 'ephemerists'
 const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 const ALARM = 'var(--faction-ephemerists-card-alarm)'
 
-/* The caps the save path enforces, restated at the fields so the counters and
-   the browser agree. `useEditCharacter` is the authority; these are its mirror
-   at the same numbers the na kit writes. */
+/* The edit-side caps, at the same numbers `DefaultEditCharacter` writes.
+   DELIBERATELY NOT `useCreateCharacter`'s `NAME_MAX` / `BIO_MAX`: that file's
+   own note records that the edit twins are different numbers (50 and 500 against
+   22 and 160), and only `TAGLINE_MAX` is one cap shared by both surfaces — which
+   is why that one is imported and these two are not. */
 const NAME_MAX = 50
 const BIO_MAX = 500
 const LOCATION_MAX = 100
