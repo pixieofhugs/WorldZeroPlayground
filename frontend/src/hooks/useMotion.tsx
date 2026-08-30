@@ -50,6 +50,29 @@ import {
  * `useMotionTick` below and schedule nothing while motion is off. Anything else
  * that animates from JS belongs on the same clock for the same reason.
  */
+/**
+ * WHY THE PARTS BELOW ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM
+ * --------------------------------------------------------------
+ * A dead-export audit (#2693) reference-counted every export under `src` and
+ * listed `MOTION_ATTRIBUTE`, `DEFAULT_MOTION`, `nextMotion`,
+ * `resolveInitialMotion`, `effectiveMotion`, `applyMotion` and
+ * `readReducedMotion` as reachable only from `__tests__`. That is true and it
+ * is not a defect. They are not internals somebody reached past a seam to
+ * grab — they ARE the seam, because it is the only one this harness can reach.
+ *
+ * `vite.config.ts` declares the vitest block with no `environment`, so tests
+ * run in node: no jsdom, no happy-dom, no `@testing-library/*`. Every frontend
+ * test is a single `renderToStaticMarkup` pass — no effects, no state
+ * transitions, no `matchMedia`. `MotionProvider` therefore cannot be mounted
+ * and driven here at all, and the thing this file exists to guarantee (the OS
+ * ask outranks the stored choice, so the switch can only ever subtract) is
+ * assertable on these functions or nowhere.
+ *
+ * Owner ruling 2026-08-28 on #2693: keep them, note why. Deleting them drops
+ * live coverage of the reduced-motion gate and buys nothing. If the harness
+ * ever gains a DOM they become re-examinable; until then an audit that lists
+ * them again is measuring the harness, not this module.
+ */
 export type Motion = 'on' | 'off'
 
 export const MOTION_STORAGE_KEY = 'wz-motion'

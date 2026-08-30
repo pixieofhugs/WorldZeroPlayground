@@ -24,6 +24,25 @@ import { useCallback, useMemo, useState } from 'react'
  * The storage idiom is `useSidebarCollapsed`'s, unchanged: a pure resolver, a
  * lazy `useState` initializer that wraps the browser read in try/catch (the
  * repo's tests render with no DOM), and a write on every change.
+ *
+ * WHY THE DECISIONS BELOW ARE EXPORTED WHEN ONLY A TEST IMPORTS THEM
+ * ------------------------------------------------------------------
+ * A dead-export audit (#2693) listed `DEFAULT_PANEL_ORDER`,
+ * `DEFAULT_PANEL_LAYOUT`, `sidebarPanelLayoutStorageKey`,
+ * `serializePanelLayout`, `movePanelTo` and `movePanelBy` as reachable only
+ * from `__tests__`. True, and not a defect — they are the only seam this
+ * harness can reach. `vite.config.ts` declares vitest with no `environment`,
+ * so tests run in node: no jsdom, no DOM events, no `localStorage`, effects
+ * never run, and every test is one `renderToStaticMarkup` pass. Neither the
+ * pointer drag nor the round trip through storage can be exercised through
+ * `useSidebarPanelLayout` itself, so the reorder rules — the keyboard path's
+ * no-op at the ends, the drop-on-itself identity return, the per-ACCOUNT key
+ * the 2026-08-02 ruling above requires — are asserted on these or not at all.
+ * `useSidebarPanelLayout.test.ts` states the same constraint in its header.
+ *
+ * Owner ruling 2026-08-28 on #2693: keep them, note why. If the harness ever
+ * gains a DOM they become re-examinable; until then an audit that lists them
+ * again is measuring the harness, not this module.
  */
 
 /** Panel ids, in the order a player who has never reordered anything sees. */
