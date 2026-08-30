@@ -54,7 +54,6 @@ const GRANDFATHERED: ReadonlySet<string> = new Set([
   'components/__tests__/invitationPerks.test.tsx|MECHANICS',
   'components/praxisCard/scoreStamp/__tests__/pointsMarkUnification.test.tsx|UNIFIED',
   'pages/characterPaths/__tests__/placeholderInk.test.ts|FIELDS',
-  'pages/characterPaths/__tests__/singularityCreateCharacterRegister.test.tsx|WIDTHS',
   'pages/characterProfile/__tests__/profileAbout.test.tsx|BRANCHES',
 ])
 
@@ -69,8 +68,17 @@ function typedLoopLists(): string[] {
       [...source.matchAll(/(?:it|describe|test)\.each\(\s*([A-Za-z_]\w*)/g)].map((m) => m[1]),
     )
     for (const name of looped) {
+      // A ONE-LINE array is tried FIRST, and it may not contain a newline. The
+      // multi-line alternative stops at the first `\n]`, so on
+      // `const WIDTHS = ['desktop', 'mobile'] as const` — whose `]` is on the
+      // declaring line — it ran on past the declaration and swallowed the next
+      // function body, reporting a two-element form-factor list as a typed slug
+      // list. #2815 found it grandfathered on that basis. Ordering the
+      // alternation this way costs nothing: an array whose contents start with a
+      // newline cannot match the first branch, so nested lists still fall
+      // through to the second.
       const decl = new RegExp(
-        `const\\s+${name}\\b[^=]*=\\s*(\\[[\\s\\S]*?\\n\\s*\\]|\\[[^\\]]*\\])`,
+        `const\\s+${name}\\b[^=]*=\\s*(\\[[^\\]\\n]*\\]|\\[[\\s\\S]*?\\n\\s*\\])`,
       ).exec(source)
       if (!decl) continue
       const body = decl[1]
