@@ -75,8 +75,12 @@ export function languageRequestBody(
   user: CurrentUser | null,
   language: string,
 ): ContactMessageIn | null {
-  const name = user?.character?.display_name.trim() ?? ''
-  const email = user?.email.trim() ?? ''
+  // `?.` on two fields the schema types as required, because this runs on every
+  // Settings mount and a throw here white-screens the whole page. `email`
+  // defaults to "" server-side, so a body missing it is what a partial answer
+  // looks like — and there is exactly one honest reading of that: no identity.
+  const name = user?.character?.display_name?.trim() ?? ''
+  const email = user?.email?.trim() ?? ''
   const wanted = language.trim().slice(0, LANGUAGE_REQUEST_MAX)
   if (!name || !email || !wanted) return null
   return { name, email, message: `${MESSAGE_PREFIX}${wanted}` }

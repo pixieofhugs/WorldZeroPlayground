@@ -141,6 +141,18 @@ describe('the request body', () => {
     expect(languageRequestBody(viewer({ email: '' }), 'Welsh')).toBeNull()
     expect(languageRequestBody(viewer({ character: null }), 'Welsh')).toBeNull()
   })
+
+  /**
+   * A regression, caught by `settingsChassis.test.tsx` rather than by this
+   * file: the builder runs on every Settings mount, so reading `.trim()`
+   * straight off a field the schema types as required THREW on a viewer whose
+   * answer simply did not carry it — and a throw in a section white-screens the
+   * whole page, not just the card.
+   */
+  it('survives a viewer carrying neither field', () => {
+    const partial = { character: { id: 7 } } as unknown as CurrentUser
+    expect(languageRequestBody(partial, 'Welsh')).toBeNull()
+  })
 })
 
 describe('the card', () => {
