@@ -266,6 +266,9 @@ async def issue_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    # A plain read (#2874): the guards below refuse anything that is not a
+    # ``solo`` praxis, and the consensus window only ever opens on a collab, so
+    # settling here could not change a single outcome.
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
         raise_coded(403, ErrorCode.praxis_not_owner, "You do not own this praxis.")
@@ -454,6 +457,8 @@ async def respond_to_duel_challenge(
     duel.accepted_at = now
     await session.flush()
 
+    # A plain read: this praxis was created three statements ago, so it has no
+    # window to settle.
     loaded_praxis = await get_praxis(opponent_praxis.id, session)
     return loaded_praxis, duel
 
