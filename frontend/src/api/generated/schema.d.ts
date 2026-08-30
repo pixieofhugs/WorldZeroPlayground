@@ -1114,6 +1114,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export My Data
+         * @description Download everything tied to your account, as a zip, right now (#2158).
+         *
+         *     The archive holds a README explaining what the values mean, an
+         *     ``export.json`` with your account email, every character and its stats, the
+         *     praxis you created or joined, the votes you cast, your comments and your
+         *     faction history — and the photos and videos you uploaded, as the original
+         *     files rather than as links, so the download stays readable whatever happens
+         *     to this site.
+         *
+         *     **If your uploads add up to more than 200 MB**, they are too large to build
+         *     into one download. The archive is then written without them: ``export.json``
+         *     lists a web address for each file so you can save them yourself, and the
+         *     README says which of the two forms you received. Nothing is left out of the
+         *     export except the media itself.
+         *
+         *     The file is built while you wait and is never stored, so no copy of it
+         *     exists for anyone else to be given.
+         */
+        get: operations["export_my_data_me_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/invited-factions": {
         parameters: {
             query?: never;
@@ -6609,6 +6645,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CharacterOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_my_data_me_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A zip archive of everything on the account. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
                 };
             };
             /** @description Validation Error */
