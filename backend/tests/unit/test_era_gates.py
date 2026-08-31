@@ -1,4 +1,4 @@
-"""Unit tests for services.era_gates — the nine level-gate predicates (#2867).
+"""Unit tests for services.era_gates — the nine level-gate predicates (#2867/#2868).
 
 Pure functions, no DB, no fixtures. Era passed explicitly (``ERA_1``), never
 ``CURRENT_ERA``, per the per-era rules pattern (#2709, ``CONTEXT.md``). No
@@ -20,6 +20,7 @@ from services.era_gates import (
     may_propose_task,
     may_see_pending_tasks,
     may_see_retired_tasks,
+    meets_albescent_level,
 )
 
 # Era 1 thresholds exercised below: propose_task=3, propose_metatask=5,
@@ -120,7 +121,7 @@ def test_apply_metatask_unknown_faction_slug_gets_no_bypass() -> None:
     assert may_apply_metatask(0, "not-a-real-faction", False, ERA_1) is False
 
 
-# --- collaboration / duel: flat floors, unwired but included for #2868 -----
+# --- collaboration / duel: flat floors, both sites repointed in #2868 ------
 
 def test_collab_meets_and_misses_the_threshold() -> None:
     threshold = ERA_1.collaboration_level_required
@@ -142,6 +143,33 @@ def test_duel_no_character_is_false() -> None:
     assert may_create_duel(None, None, False, ERA_1) is False
 
 
+# --- albescent: one level fact read as a floor AND as a ceiling (#2868) -----
+
+def test_albescent_level_meets_and_misses_the_threshold() -> None:
+    threshold = ERA_1.albescent_level_required
+    assert meets_albescent_level(threshold - 1, None, False, ERA_1) is False
+    assert meets_albescent_level(threshold, None, False, ERA_1) is True
+    assert meets_albescent_level(threshold + 1, None, False, ERA_1) is True
+
+
+def test_albescent_level_no_stats_row_is_false() -> None:
+    """``character_earns_albescent`` reads the level with a scalar query that
+    answers ``None`` when this life has no stats row for the era; that life has
+    not climbed, which is what its old ``(level or 0)`` meant."""
+    assert meets_albescent_level(None, None, False, ERA_1) is False
+
+
+def test_albescent_level_admin_does_not_bypass() -> None:
+    """Neither site has an admin escape hatch, and the ceiling at
+    ``faction_service.defect_to_faction`` is a maximum — an admin who bypassed
+    it would be *let into* Albescent by being an admin, not kept out."""
+    assert meets_albescent_level(0, None, True, ERA_1) is False
+    assert (
+        meets_albescent_level(ERA_1.albescent_level_required, None, True, ERA_1)
+        is True
+    )
+
+
 # --- reads era.*, never a hardcoded threshold -------------------------------
 
 def test_reads_thresholds_off_the_era_argument() -> None:
@@ -151,9 +179,11 @@ def test_reads_thresholds_off_the_era_argument() -> None:
         level_to_propose_task=10,
         collaboration_level_required=10,
         duel_level_required=10,
+        albescent_level_required=10,
     )
     assert may_propose_task(9, None, False, strict_era) is False
     assert may_create_collab_praxis(9, None, False, strict_era) is False
     assert may_create_duel(9, None, False, strict_era) is False
+    assert meets_albescent_level(9, None, False, strict_era) is False
     # Untouched fields keep ERA_1's values.
     assert may_comment(2, None, False, strict_era) is True
