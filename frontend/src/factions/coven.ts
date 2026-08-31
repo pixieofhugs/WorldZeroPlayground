@@ -24,6 +24,7 @@ const CovenFactionHero = lazyArchetype(() => import('../components/factionHero/C
 const CovenFeedFrame = lazyArchetype(() => import('../components/feed/CovenFeedFrame'))
 const CovenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/CovenFieldDesk'))
 const CovenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/CovenPraxisDetail'))
+const CovenProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/CovenProposeTask'))
 const CovenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/CovenProfileBody'))
 const CovenTaskCard = lazyArchetype(() => import('../components/taskCard/CovenTaskCard'))
 const CovenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/CovenTaskDetail'))
@@ -59,6 +60,11 @@ export const COVEN_MANIFEST: FactionManifest = {
   // an existing life has. Unlike create, this dispatches on the EDITED
   // character's slug, which is a loaded record and not a live pick.
   editCharacter: () => CovenEditCharacter,
+  // The third page derived from that same slip (#2538). It dispatches on the
+  // faction the TASK is being proposed for — a live pick like create's, not a
+  // loaded record — so this row is on screen exactly while the coven chip is
+  // held, and the page returns to the na kit when it is let go.
+  proposeTask: () => CovenProposeTask,
   factionHero: () => CovenFactionHero,
   factionBody: () => CovenFactionBody,
   profileBody: () => CovenProfileBody,
