@@ -194,17 +194,17 @@ describe('the rendered card', () => {
 
   it('draws two switches for each of the nine rows, plus the master pair', () => {
     for (const row of NOTIFICATION_ROWS) {
-      expect(html).toContain(`data-testid="settings-notifications-${row.key}-page"`)
-      expect(html).toContain(`data-testid="settings-notifications-${row.key}-email"`)
+      expect(html).toContain(`data-testid="settings-notifications-${row.key}-on_updates"`)
+      expect(html).toContain(`data-testid="settings-notifications-${row.key}-by_email"`)
     }
-    expect(html).toContain('data-testid="settings-notifications-all-page"')
-    expect(html).toContain('data-testid="settings-notifications-all-email"')
+    expect(html).toContain('data-testid="settings-notifications-all-on_updates"')
+    expect(html).toContain('data-testid="settings-notifications-all-by_email"')
     expect(html.match(/role="switch"/g)).toHaveLength(20)
   })
 
   it('renders the three requests page switches ON, unmovable, and explaining themselves', () => {
     for (const key of ['duel_challenge', 'collab_invite', 'invitation_letter']) {
-      const cell = switchFor(html, `settings-notifications-${key}-page`)
+      const cell = switchFor(html, `settings-notifications-${key}-on_updates`)
       expect(cell).toContain('aria-checked="true"')
       expect(cell).toContain('aria-disabled="true"')
       expect(cell).toContain(`aria-describedby="settings-notifications-${key}-note"`)
@@ -214,19 +214,19 @@ describe('the rendered card', () => {
   })
 
   it("renders level up's page switch OFF, unmovable, with its own reason", () => {
-    const cell = switchFor(html, 'settings-notifications-level_up-page')
+    const cell = switchFor(html, 'settings-notifications-level_up-on_updates')
     expect(cell).toContain('aria-checked="false"')
     expect(cell).toContain('aria-disabled="true"')
     expect(html).toContain('Not an Updates row')
     // Its email switch is the row's whole point and is free.
-    expect(switchFor(html, 'settings-notifications-level_up-email')).not.toContain(
+    expect(switchFor(html, 'settings-notifications-level_up-by_email')).not.toContain(
       'aria-disabled',
     )
   })
 
   it('leaves every email switch operable, requests rows included', () => {
     for (const row of NOTIFICATION_ROWS) {
-      expect(switchFor(html, `settings-notifications-${row.key}-email`)).not.toContain(
+      expect(switchFor(html, `settings-notifications-${row.key}-by_email`)).not.toContain(
         'aria-disabled',
       )
     }

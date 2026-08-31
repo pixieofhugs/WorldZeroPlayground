@@ -34,6 +34,10 @@ import NotificationsSection from './settings/sections/NotificationsSection'
  * `SETTINGS_SECTIONS` below. Nothing else in this file moves, and no two
  * siblings need to edit the same row. The nav rail, the anchors, the scroll
  * offset and the pane rhythm are all derived from that one entry.
+ *
+ * All six have now landed, so the list above is the record of a contract that
+ * held rather than a plan — six sections, six one-line entries, and this file
+ * unchanged apart from them.
  */
 
 /** The props every section takes. The shell owns the anchor id, so a nav item
