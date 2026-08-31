@@ -17,6 +17,7 @@ const EphemeristsBackdrop = lazyArchetype(() => import('../components/backdrop/E
 const EphemeristsComment = lazyArchetype(() => import('../components/comments/voices/EphemeristsComment'))
 const EphemeristsCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EphemeristsCreateCharacter'))
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
+const EphemeristsEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/EphemeristsEditCharacter'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
 const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
 const EphemeristsFactionHero = lazyArchetype(() => import('../components/factionHero/EphemeristsFactionHero'))
@@ -62,6 +63,12 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   // loaded record, so the page reskins to this plate live and returns to the
   // Default the moment the pick is cleared.
   createCharacter: () => EphemeristsCreateCharacter,
+  // The edit half of the same page family (#2537's fan-out). DERIVED from the
+  // create plate above — same chassis, same ground, same field furniture — and
+  // extended to the four groups a create dress has no slot for: location,
+  // handle, the faction row and the delete danger zone. The last two are
+  // MOUNTED from `characterPaths/editCharacterSlots`, never re-drawn.
+  editCharacter: () => EphemeristsEditCharacter,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFieldDesk: () => EphemeristsFieldDesk,
 }
