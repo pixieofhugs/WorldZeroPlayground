@@ -16,6 +16,7 @@ import type { FactionDetailState } from '../../frontend/src/pages/factionDetail/
 import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/useFactionsDirectory'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
+import type { ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
 import type { ProfileBodyProps } from '../../frontend/src/pages/characterProfile/FactionProfileBody'
 import type { PlayersViewProps } from '../../frontend/src/pages/players/playersData'
 import { NO_RELATIONSHIPS, rankPlayers } from '../../frontend/src/pages/players/playersData'
@@ -452,4 +453,47 @@ export const playersProps: PlayersViewProps = {
   latest: {
     7: { taskTitle: 'Left a jar of soup on a stranger’s step', submittedAt: '2026-08-10T09:00:00Z' },
   },
+}
+
+// ── proposeTask ───────────────────────────────────────────────────────────────
+/**
+ * A complete, eligible proposer mid-compose — the shape
+ * `src/pages/proposeTask/__tests__/proposeTaskState.ts` builds for the suites,
+ * with the form FILLED rather than at its opening position. The test fixture
+ * opens empty (that is the page's first paint); a preview card wants the
+ * populated form, which is the state a reader learns the surface from.
+ *
+ * `slug` is the task's TARGET faction, which is what picks the archetype — the
+ * one case an Albescent dress would ever be seen (#2538).
+ */
+export function proposeTaskState(slug: string): ProposeTaskState {
+  return {
+    isLoggedIn: true,
+    canProposeTask: true,
+    canProposeMetatask: false,
+    currentLevel: 6,
+    success: false,
+    factions: factionOuts,
+    title: 'Walk a neighbour’s dog while they are in hospital',
+    setTitle: noop,
+    description:
+      'Two weeks, once a day. Photograph the dog somewhere it has never been, and write down what it did there.',
+    setDescription: noop,
+    pointValue: '25',
+    setPointValue: noop,
+    levelRequired: 3,
+    setLevelRequired: noop,
+    factionSlug: slug,
+    setFactionSlug: noop,
+    notes: 'Proposed after the ward asked twice.',
+    setNotes: noop,
+    isMetatask: false,
+    setIsMetatask: noop,
+    metaBonusValue: '10',
+    setMetaBonusValue: noop,
+    submitting: false,
+    error: null,
+    handleSubmit: anoop,
+    handleCancel: noop,
+  }
 }
