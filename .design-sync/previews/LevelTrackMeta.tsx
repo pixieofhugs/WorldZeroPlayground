@@ -17,11 +17,10 @@
 // `style` is the mounting kit's caption voice, and the doc is explicit that you
 // pass the site's existing constant rather than re-deriving it — this is
 // `identityMetaStyle` from `components/layout/Sidebar.tsx`, ported verbatim.
-import type { CSSProperties } from 'react'
 import { LevelTrackMeta } from 'worldzero-frontend'
 import type { LevelTrack } from '../../frontend/src/utils/levelTrack'
 
-const identityMetaStyle: CSSProperties = {
+const identityMetaStyle: React.CSSProperties = {
   fontFamily: 'var(--font-body)',
   fontSize: 'var(--text-base)',
   letterSpacing: '0.12em',

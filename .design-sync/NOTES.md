@@ -1154,6 +1154,37 @@ CreateCharacter — Default + Albescent + the seven themed slugs. Map: 311 → *
 
 Barrel canary after regenerating ds-types: **318 components / 318 typed re-exports.**
 
+### A PREVIEW THAT IMPORTS BARE `'react'` PASSES LOCALLY AND REDS CI
+Cost this round a CI cycle. `LevelTrackMeta.tsx` was authored with
+
+    import type { CSSProperties } from 'react'
+
+which typechecks fine on a dev box and fails in CI with
+`error TS2307: Cannot find module 'react' or its corresponding type declarations.`
+
+**Why the asymmetry.** `.design-sync/previews/` sits OUTSIDE `frontend/`, and TypeScript
+resolves bare imports by walking UP from the importing file. Locally that walk finds
+`.design-sync/node_modules` — the fork symlink into `.ds-sync/node_modules`, which has
+`@types/react` installed. CI has neither: `.ds-sync/` and `.design-sync/node_modules` are
+both gitignored and never checked out. So the only install CI sees is
+`frontend/node_modules`, which the walk-up from `.design-sync/previews/` never reaches.
+
+**The house rule, and every other preview already follows it:** use the `React.` global
+namespace — `React.CSSProperties`, `React.ReactNode` — and **never `import … from 'react'`**.
+The global namespace resolves through the tsconfig, not through module resolution, so it
+works in both places. Relative type imports (`import type { X } from '../../frontend/src/…'`)
+are fine and are the established pattern for repo types.
+
+**Reproduce CI's resolution locally before pushing** — this is the check that would have
+caught it, and it is two commands:
+
+    mv .design-sync/node_modules .design-sync/_aside
+    (cd frontend && npm run typecheck:design-sync)   # now sees exactly what CI sees
+    mv .design-sync/_aside .design-sync/node_modules
+
+`mv` on a symlink renames the LINK, never the target, so this is safe. Do it whenever a
+preview gains a new import that is not relative and not `'worldzero-frontend'`.
+
 ## Re-sync risks (2026-08-31)
 - **Regenerate `ds-types` before `gen-barrel`, and check N components == N typed
   re-exports.** This is the single highest-value check in the whole pre-build sequence.
