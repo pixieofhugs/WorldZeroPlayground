@@ -993,7 +993,7 @@ stale), #2686 re-cut S.N.I.D.E. chrome contrast 1.03:1 -> 7.71:1, #2528 touched
 ds-types + both barrels, re-ran the whole chain. **Re-check `origin/main` immediately
 before `finalize_plan`, every single time** — this is now five for five.
 
-## [2026-08-31] Sixth round — 305 → 318, a FULL re-verify, and the canary that fired
+## [2026-08-31] Sixth round — 305 → 319, a FULL re-verify, and the canary that fired
 
 140 commits of drift since 08-25 — the largest gap yet. The owner asked for **author all
 six new previews + full re-verify of everything**, so this round graded 130 components
@@ -1113,7 +1113,7 @@ Full re-verify, not the anchored default: the driver ran WITHOUT `--remote` (no
 authorization to fetch the anchor — see below), so every component landed in `added` and
 130 needed grading (137 with the mid-run EditCharacter fan-out below). All 20 contact sheets read for systemic problems first, then all 130
 review sheets read individually and graded per cell. Final full capture:
-**197 carried forward, 0 captured, 0 errors, 0 grade cleared**, 121 on the floor card (318 total).
+**198 carried forward, 0 captured, 0 errors, 0 grade cleared**, 121 on the floor card (319 total).
 Zero cleared on a no-change run is the proof the next sync is fast.
 
 ### THE UPLOAD DID NOT HAPPEN — no design authorization in this session
@@ -1152,7 +1152,16 @@ and `AlbescentEditCharacter`, so each preview is the same four-line file passing
 `editCharacterState('<slug>')`. **The EditCharacter family is now NINE**, matching
 CreateCharacter — Default + Albescent + the seven themed slugs. Map: 311 → **318**.
 
-Barrel canary after regenerating ds-types: **318 components / 318 typed re-exports.**
+**And then it happened AGAIN, on the same branch.** While CI was running, the owner
+merged main into the branch, bringing #2960 — , a real 849-line dress
+(not a pass-through like the Albescent one) in the OTHER family this round had touched.
+Mapped and previewed as well: **319**. The propose-task fan-out (#2538) is clearly still
+landing, so the next round should expect more  siblings and check that
+directory specifically.  is also the clean contrast case for the
+Albescent slug trap above:  IS selectable in the picker, so its chip renders NAMED
+and selected, exactly where  fell back to the unaffiliated label.
+
+Barrel canary after regenerating ds-types: **319 components / 319 typed re-exports.**
 
 ### A PREVIEW THAT IMPORTS BARE `'react'` PASSES LOCALLY AND REDS CI
 Cost this round a CI cycle. `LevelTrackMeta.tsx` was authored with
