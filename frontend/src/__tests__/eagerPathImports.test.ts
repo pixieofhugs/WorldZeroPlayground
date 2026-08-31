@@ -161,6 +161,26 @@ describe('the faction ornament stays off the eager path (#2779)', () => {
   })
 })
 
+describe('the event popups stay off the eager path (#2843)', () => {
+  it('reaches the watchers from the entry, and never the popup behind one', () => {
+    // `LevelUpWatcher` and `InvitationWatcher` are mounted once in `Layout`, so
+    // they ARE blocking and should be — they are the localStorage diff that
+    // decides whether anything fires. What is not blocking is the popup each
+    // one renders on the rare turn the diff is non-empty. Both were reached by
+    // a static import, so every visitor on every page paid for a Field Stamp
+    // and a recruitment prospectus they will see a handful of times ever.
+    //
+    // The budget CAN see this one (unlike the `api/admin` row above): it is
+    // entry-chunk weight. It cannot HOLD it, for the reason the ornament row
+    // gives — JS is over WARN and WARN exits 0, so the number drifts back up
+    // printing the same block and nothing goes red. This assertion is the
+    // ratchet.
+    expect(
+      eagerModules().filter((path) => /Popup\.tsx$/.test(path)),
+    ).toEqual([])
+  })
+})
+
 describe('the scan sees the codebase', () => {
   // The "reads a non-empty file set" half now lives once, with the shared walk,
   // in `src/test/__tests__/sourceScan.test.ts`. What stays here is the part
