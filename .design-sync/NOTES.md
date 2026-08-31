@@ -992,3 +992,180 @@ stale), #2686 re-cut S.N.I.D.E. chrome contrast 1.03:1 -> 7.71:1, #2528 touched
 `DefaultSettings` line this round had flagged). Merged, regenerated kit.css +
 ds-types + both barrels, re-ran the whole chain. **Re-check `origin/main` immediately
 before `finalize_plan`, every single time** — this is now five for five.
+
+## [2026-08-31] Sixth round — 305 → 318, a FULL re-verify, and the canary that fired
+
+140 commits of drift since 08-25 — the largest gap yet. The owner asked for **author all
+six new previews + full re-verify of everything**, so this round graded 130 components
+from their review sheets rather than trusting carried-forward grades.
+
+### THE ds-types TREE GOES STALE AND `gen-barrel` SILENTLY UNDER-EMITS
+This is the 08-17 canary firing for real, and it is now two-for-two. Running
+`gen-barrel.mjs` against a stale `frontend/ds-types/` emitted **304 typed re-exports for
+311 components** and printed `no .d.ts emitted for: <7 names>` — six genuinely new
+components plus `DefaultEditCharacter`, which had been mapped for months. The
+`DefaultEditCharacter` entry is the tell: a component that obviously exists appearing in
+that list means the TREE is stale, not the map.
+
+**The order is not optional.** Regenerate ds-types FIRST, every single time:
+
+    cd frontend && rm -rf ds-types && node_modules/.bin/tsc -p tsconfig.json \
+      --declaration --emitDeclarationOnly --noEmit false --outDir ds-types --skipLibCheck
+    cd .. && node .design-sync/gen-barrel.mjs   # must print N components / N typed re-exports
+
+After regenerating: **311 components, 311 typed re-exports, zero shortfall.** If those two
+numbers ever disagree, stop — every mismatched component ships `[key: string]: unknown`
+and no API contract at all.
+
+Also note the tree SHAPE moved again: this round emitted no `ds-types/e2e/` dir, so
+declarations land at `ds-types/<stem>.d.ts` (rootDir = `src/`). `gen-barrel` probes both
+layouts, so this is informational, not a fix.
+
+### The whole-tree scan found 6, and the 33 it skipped are all correct
+39 unmapped PascalCase default-export `.tsx`. The classifier that settles it is
+**"does this directory have ANY mapped sibling?"**:
+
+- `src/pages/*.tsx` (top level) — **0 mapped**. Route containers, deliberately out.
+- `src/pages/admin/*` — **0 mapped**. Admin UI, deliberately out.
+- `TheArray`, `App.tsx`, `auth/ProtectedRoute.tsx` — excluded on purpose / infra.
+
+The six real gaps were all NEW siblings in families that ARE mapped (added 08-27→08-30):
+`LevelTrackMeta` (#2767), `DataSection` (#2158), `LanguageSection`, `DeleteAccountCard`
+(#2161), `AlbescentEditCharacter`, `AlbescentProposeTask` (#2538). All six authored,
+graded good.
+
+### `proposeTaskState` added to `_state.tsx`
+There was no propose-task builder. The repo already had one at
+`frontend/src/pages/proposeTask/__tests__/proposeTaskState.ts` — the new builder is
+modelled on it but with the form FILLED (the test fixture opens empty, which is the
+page's first paint, not a preview-worthy card).
+
+### DO NOT pin `factionSlug: 'albescent'` on a propose-task preview
+The first cut of `AlbescentProposeTask` passed `'albescent'` — the archetype's own slug —
+and the card came out with **two chips both reading UNAFFILIATED**. Albescent is
+deliberately absent from the propose-task picker (ADR-0027), so pinning it renders a
+SELECTED chip for a faction the list does not contain and the label falls back to the
+unaffiliated string. Use `'na'`: it is the page's real opening position, it is what the
+repo's own test fixture defaults to, and the archetype is a byte-identical pass-through
+of `DefaultProposeTask` either way, so nothing goes unshown. A trailing unnamed chip
+still appears in the picker — that is Albescent's redaction, and it is correct.
+
+### `--rail-face` is NEW in `[TOKENS_MISSING]` (34 → 35) and it is BENIGN
+The standing note says "34 `--tw-*`". It is 35 now and the new one is not a `--tw-`:
+`--rail-face` is set at RUNTIME by `utils/factionRoles.ts` (the rail declares
+`--rail-paper` … `--rail-face` inline; `factionRoles.test.ts` asserts the exact strings),
+so it is the same class as the `--tw-*` set — referenced in CSS, never declared there.
+Arrived with #2659/#2663. **The standing count is now 35.**
+
+### Known render warns — still exactly 19, and the composition is unchanged
+3 blank-threshold (`MediaArt`, `SingularityLamps`, `SidebarHandle` — all tiny: maxHeight
+8px and 28px for the latter two), the 14-strong `[RENDER_THIN]` set (the 13 sigil/mark
+components plus `MediaArt`, which is both), `CommentThread` variants-identical,
+`[TOKENS_MISSING]`, `[FONT_MISSING]` (the same 4 system families). **No `[GRID_OVERFLOW]`,
+no `[SYNC_STALE]`.** Grep `^! \[` — a pattern guess still misses `[GRID_OVERFLOW]`.
+
+### The `Busy` cell of a CENTRED-MODAL duel skin crops low — capture artifact, not a defect
+`DuelSealConfirm`, `UaDuelSealConfirm` and `EphemeristsDuelSealConfirm` show their `Busy`
+cell pushed to the bottom edge of the review crop. The other five duel skins do not.
+The discriminator is the SKIN, not the story: Coven/Everymen/Singularity/Snide/Wow fill
+the 620px stage, while the default/Ua and Ephemerists skins centre a `position:fixed`
+overlay inside it. All three cells are structurally identical in the preview source —
+only the `busy` / `mode` prop differs — and the shipped CARD renders correctly (verified
+directly from `_screenshots/duel__DuelSealConfirm.png`: full dialog, LOCK IT greyed).
+**Do not "fix" this by editing the preview.** Confirm the card screenshot and move on.
+
+### Two standing re-sync risks are now RESOLVED and should stop being carried
+- **`AlbescentInvitation` renders REAL copy.** The duplicate `albescent.invitation` key in
+  `factions.json` has been fixed upstream; the wordmark/letterhead/terms slots no longer
+  show raw i18n keys. The 07-15 risk entry is retired.
+- **`AuthCard` no longer shows PLACEHOLDER copy** — it reads "Login Logistics" with real
+  body text and three real sign-in controls. The 08-17 note is retired.
+
+### The rail cluster renders pale-on-light IN ISOLATION (unauthored, worth a look)
+`Sidebar`, `SidebarColumn`, and to a lesser degree `DesktopPlayers` and
+`FactionsDirectoryView` render light text on a light ground in their cards. Root cause is
+NOT the 08-25 body-ground fix (that still works — `data-theme` is on `documentElement`,
+`DEFAULT_THEME` is `'dark'`, and every other card is dark). The rail paints its own
+**theme-invariant** paper from `--rail-paper`, which `factionRoles.ts` sets at runtime;
+with no faction context only the fallback applies, so dark-theme ink lands on light
+paper. Same category as `FactionBackdrop` showing the neutral default. All four are
+UNAUTHORED — authoring their previews with a faction/character context is the fix, and is
+the standing offer for a future round.
+
+### Cosmetic observations, filed nowhere, deliberately
+- `EverymenSeal`'s circular PTS stamp is dark-on-dark and barely legible at card size.
+- The `hide` admin chip on `CovenPraxisCard` / `WowPraxisCard` is present in the rendered
+  text but visually very faint against those grounds.
+- `DefaultProposeTask` still ships a floor card while its own pass-through wrapper
+  `AlbescentProposeTask` has an authored preview. Authoring it is now nearly free — the
+  `proposeTaskState` builder exists and the component takes only `state`.
+
+### conventions.md — validated, ZERO drift
+37 enumerated components (all present in `components/<group>/<Name>/` or the bundle), 8
+faction token families (the 7 themed slugs + `default`), 11 semantic tokens and 7 Tailwind
+utilities all verify against the fresh build. The file's claim that **albescent has no
+palette of its own** is TRUE — `grep -c -- "--faction-albescent"` over the shipped CSS is
+**0**. A validator that puts albescent in the palette slug list will report a false drift;
+it is not one. Not rewritten (existing files never are).
+
+### Grading basis this round
+Full re-verify, not the anchored default: the driver ran WITHOUT `--remote` (no
+authorization to fetch the anchor — see below), so every component landed in `added` and
+130 needed grading (137 with the mid-run EditCharacter fan-out below). All 20 contact sheets read for systemic problems first, then all 130
+review sheets read individually and graded per cell. Final full capture:
+**197 carried forward, 0 captured, 0 errors, 0 grade cleared**, 121 on the floor card (318 total).
+Zero cleared on a no-change run is the proof the next sync is fast.
+
+### THE UPLOAD DID NOT HAPPEN — no design authorization in this session
+`DesignSync` returned "needs design-system authorization" on every call. The owner ran
+`/design-consent` and it failed with **403** ("check your claude.ai login with /login").
+The tool's own guidance asks for **`/design-login`** from an interactive Claude Code
+session on this machine. Consequences for the next run:
+
+- The project's `_ds_sync.json` was never fetched, so this round has **no anchor** and the
+  diff could not compute `upload.deletePaths`. A future run that uploads must review the
+  project's `list_files` for paths this build does not produce (§5, no-anchor branch).
+- The project is **unchanged** — still whatever 08-25 left. `ds-bundle/` on disk is the
+  fully verified 311-component build; it is ready to upload as-is once auth works.
+- Everything durable (config, previews, `_state.tsx`, this file) IS updated, so a
+  re-run only needs to rebuild and upload, not re-grade.
+
+### MAIN MOVED 7 COMMITS MID-RUN — the SIXTH round in a row, and this time it was MY family
+The 08-25 note said "five for five" on main moving mid-run. It is six for six, and this
+round it mattered more than usual: the seven commits were the **EditCharacter fan-out
+(#2537)** — `CovenEditCharacter`, `EphemeristsEditCharacter`, `EverymenEditCharacter`,
+`SingularityEditCharacter`, `SnideEditCharacter`, `UaEditCharacter`, `WowEditCharacter` —
+landing in the exact family this round had just extended with `AlbescentEditCharacter`.
+
+Committing without them would have shipped a kit that was **seven short in the one family
+the round had just touched**, which is precisely the "family a sibling short" defect the
+07-15 and 08-11 notes describe. Folded in instead: merged `origin/main`, re-ran the
+whole-tree scan, mapped all seven, authored all seven previews.
+
+**The check that catches this is `git fetch origin main && git rev-list --count HEAD..origin/main`
+immediately before committing, not just before `finalize_plan`.** The map is built from a
+snapshot of the tree; any commit landing after the scan is invisible to everything
+downstream, and nothing in the pipeline will tell you.
+
+All seven take the identical `{ state: EditCharacterState }` prop as `DefaultEditCharacter`
+and `AlbescentEditCharacter`, so each preview is the same four-line file passing
+`editCharacterState('<slug>')`. **The EditCharacter family is now NINE**, matching
+CreateCharacter — Default + Albescent + the seven themed slugs. Map: 311 → **318**.
+
+Barrel canary after regenerating ds-types: **318 components / 318 typed re-exports.**
+
+## Re-sync risks (2026-08-31)
+- **Regenerate `ds-types` before `gen-barrel`, and check N components == N typed
+  re-exports.** This is the single highest-value check in the whole pre-build sequence.
+- The four rail-cluster components above will keep rendering pale-on-light until someone
+  authors previews that supply rail/faction context. They are not flagged `bad`, so
+  nothing will remind you.
+- `TOKENS_MISSING` is **35** now, not 34. A 36th means a genuinely new undeclared token —
+  check whether it is runtime-set before chasing it.
+- The 137 grades written this round are in the gitignored `.cache/`. Because the upload
+  never happened, **they are not anchored anywhere durable** — a fresh clone or a
+  `.cache/` wipe loses them and the next run re-grades all 137. Uploading is what makes
+  them durable.
+- `LevelUpPopup`'s `SurveyorManyUnlocks` cell still clips CONTINUE at 460x800, and
+  `EphemeristsSelectCard`'s header still overlaps at 360x300. Both unchanged, both still
+  unfiled.
