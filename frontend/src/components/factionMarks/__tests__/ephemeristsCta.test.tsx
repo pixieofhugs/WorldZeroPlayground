@@ -188,7 +188,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
 
   const WEARS = /className[=:]\s*[{`"']?[^"'`]*eph-cta/;
 
-  it("is mounted on the eight surfaces that draw one, and no others", () => {
+  it("is mounted on the nine surfaces that draw one, and no others", () => {
     // The issue names three (card, task detail, composer). The grep found two
     // more painting the identical button — the faction page's join/leave pair
     // and the phone's field desk — and #2067's own note that the field desk
@@ -213,6 +213,14 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
     // above, so its Save is the same full-bleed cast band the create page's
     // Create is. A derived dress that repainted the commit control would be
     // deriving everything except the one control the ruling is about.
+    //
+    // The NINTH is PROPOSING A TASK (#2538's fan-out), and it is the third
+    // added by a new surface rather than by a grep. Same derivation as the
+    // eighth: the propose archetype is drawn from the create plate, so its
+    // Submit is the same full-bleed cast band. Note the surface it is on wears
+    // the TARGET faction rather than the viewer's — the button is still this
+    // control, because what the class answers for is the plate, and the page is
+    // only ever mounted when the plate is the one being worn.
     const mounts = files
     // Matched at the `className`, not on the bare string: half the Ephemerists
     // kit names this class in prose, and a census a comment can join is a
@@ -227,6 +235,7 @@ describe("every bordered plate CTA wears it, and the list is the assertion", () 
       "pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx",
       "pages/factionDetail/archetypes/EphemeristsFactionBody.tsx",
       "pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx",
+      "pages/proposeTask/archetypes/EphemeristsProposeTask.tsx",
       "pages/taskDetail/archetypes/EphemeristsTaskDetail.tsx",
     ]);
   });
