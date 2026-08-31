@@ -55,9 +55,16 @@
  *
  * It sits OUTSIDE the sheet, on the site's own ground, and *"a breadcrumb is
  * neutral SITE CHROME, not part of the faction surface"* (`components/nav/
- * Breadcrumb`). That component is task-scoped (`taskId` / `taskTitle`) and no
- * task exists yet on this page, so the na kit's own two-crumb trail is carried
- * over unchanged rather than re-tinted.
+ * Breadcrumb`). So the trail below takes that component's own shape and its own
+ * ink tier rather than the charter's: an `<ol>`, `›` separators, the current
+ * page marked by weight and `aria-current` instead of a second colour, and
+ * `--label-ink` — whose root value is the app's tertiary tier on the app's own
+ * ground, which is the one pairing a crumb is ever measured on. The na kit's
+ * inline crumb tinted its last item with `--color-text-primary`; that is a
+ * global ink inside a faction-dispatched surface, which `local/no-global-ink-on-
+ * faction-surface` refuses, and weight says the same thing without the token.
+ * `components/nav/Breadcrumb` itself is task-scoped (`taskId` / `taskTitle`) and
+ * no task exists yet on this page — see the `ponytail:` note at the call site.
  *
  * ## Two WOW rules that are load-bearing, not taste (§3)
  *
@@ -330,15 +337,39 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
     color: INK,
   }
 
-  /* The breadcrumb is neutral site chrome and sits above the sheet, on the
-     site's own ground — the na kit's trail, carried over unchanged. */
+  /* THE BREADCRUMB STAYS NEUTRAL SITE CHROME, and it is the site's own crumb
+     rather than this skin's: the trail reads `--label-ink`, whose root value is
+     the app's tertiary tier, and the page you are on is distinguished by weight
+     and `aria-current`, never by a second colour. That is exactly what
+     `components/nav/Breadcrumb` does, down to the `<ol>` and the `›`.
+
+     ponytail: it is restated here rather than mounted because that component is
+     task-scoped (`taskId` / `taskTitle`) and no task exists yet on this page.
+     The upgrade path is generalising it onto a `crumbs` prop, which is a change
+     to a component seventeen surfaces mount and is not this lane's to make. */
   const breadcrumb = (
-    <nav className="font-body" style={{ fontSize: 'var(--text-md)', letterSpacing: '0.1em', color: 'var(--color-text-tertiary)' }}>
-      <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-        {t('breadcrumb.tasks')}
-      </Link>
-      {' › '}
-      <span style={{ color: 'var(--color-text-primary)' }}>{t('proposeTask.pageTitle')}</span>
+    <nav
+      aria-label={t('common:breadcrumb.label')}
+      className="font-body"
+      style={{
+        fontSize: 'var(--text-md)',
+        letterSpacing: '0.1em',
+        color: 'var(--label-ink)',
+      }}
+    >
+      <ol style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
+        <li>
+          <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
+            {t('common:breadcrumb.tasks')}
+          </Link>
+        </li>
+        <li style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
+          <span aria-hidden="true">&rsaquo;</span>
+          <span aria-current="page" style={{ color: 'inherit', fontWeight: 700 }}>
+            {t('proposeTask.pageTitle')}
+          </span>
+        </li>
+      </ol>
     </nav>
   )
 
