@@ -115,8 +115,9 @@ def compute_capabilities(
         # nothing there (anonymous callers could read the archive), and
         # pending was gated here by level but there by ``is_admin`` alone
         # (#1672), so a level-3 player was offered a filter tab that always
-        # answered nothing. The two enforcement sites still restate these
-        # clauses today — #2868 repoints them onto the same predicates.
+        # answered nothing. Since #2868 ``list_tasks`` makes these same two
+        # calls rather than restating the clauses, so there is nothing left to
+        # keep in step by hand.
         can_see_retired_tasks=may_see_retired_tasks(
             character_level, faction_slug, is_admin, era
         ),
