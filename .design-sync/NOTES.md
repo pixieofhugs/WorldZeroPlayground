@@ -1153,13 +1153,13 @@ and `AlbescentEditCharacter`, so each preview is the same four-line file passing
 CreateCharacter — Default + Albescent + the seven themed slugs. Map: 311 → **318**.
 
 **And then it happened AGAIN, on the same branch.** While CI was running, the owner
-merged main into the branch, bringing #2960 — , a real 849-line dress
+merged main into the branch, bringing #2960 — `CovenProposeTask`, a real 849-line dress
 (not a pass-through like the Albescent one) in the OTHER family this round had touched.
 Mapped and previewed as well: **319**. The propose-task fan-out (#2538) is clearly still
-landing, so the next round should expect more  siblings and check that
-directory specifically.  is also the clean contrast case for the
-Albescent slug trap above:  IS selectable in the picker, so its chip renders NAMED
-and selected, exactly where  fell back to the unaffiliated label.
+landing, so the next round should expect more `*ProposeTask` siblings and check that
+directory specifically. `CovenProposeTask` is also the clean contrast case for the
+Albescent slug trap above: `coven` IS selectable in the picker, so its chip renders NAMED
+and selected, exactly where `albescent` fell back to the unaffiliated label.
 
 Barrel canary after regenerating ds-types: **319 components / 319 typed re-exports.**
 
