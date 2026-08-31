@@ -16,6 +16,7 @@ const CovenAvatar = lazyArchetype(() => import('../components/avatar/CovenAvatar
 const CovenBackdrop = lazyArchetype(() => import('../components/backdrop/CovenBackdrop'))
 const CovenComment = lazyArchetype(() => import('../components/comments/voices/CovenComment'))
 const CovenCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/CovenCreateCharacter'))
+const CovenEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/CovenEditCharacter'))
 const CovenDuelSealConfirm = lazyArchetype(() => import('../components/duel/CovenDuelSealConfirm'))
 const CovenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/CovenEditPraxis'))
 const CovenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/CovenFactionBody'))
@@ -54,6 +55,10 @@ export const COVEN_MANIFEST: FactionManifest = {
   // record, so the page reskins to this slip live and returns to the Default
   // the moment the pick is cleared (#2351).
   createCharacter: () => CovenCreateCharacter,
+  // Its twin, DERIVED from it (#2537): the same slip re-opened over the fields
+  // an existing life has. Unlike create, this dispatches on the EDITED
+  // character's slug, which is a loaded record and not a live pick.
+  editCharacter: () => CovenEditCharacter,
   factionHero: () => CovenFactionHero,
   factionBody: () => CovenFactionBody,
   profileBody: () => CovenProfileBody,
