@@ -1,7 +1,16 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { useGameConfig } from '../hooks/useGameConfig'
-import LevelUpPopup from './LevelUpPopup'
+
+/**
+ * The watcher is blocking and should be — it is the localStorage diff that
+ * decides whether anything fires, and it is mounted in `Layout` on every page.
+ * The Field Stamp it renders is not: `queue` is empty on effectively every
+ * load, and a player crosses a level a handful of times in an era. Static, it
+ * cost every visitor of every page the popup's markup and copy on first paint
+ * (#2843). Guarded by `eagerPathImports.test.ts`.
+ */
+const LevelUpPopup = lazy(() => import('./LevelUpPopup'))
 
 export const LAST_SEEN_LEVEL_KEY_PREFIX = 'wz:lastSeenLevel:'
 
@@ -54,11 +63,16 @@ export default function LevelUpWatcher() {
   if (!profile) return null
 
   return (
-    <LevelUpPopup
-      level={level}
-      rankKey={profile.rank_key}
-      abilities={profile.unlocks}
-      onContinue={() => setQueue((prev) => prev.slice(1))}
-    />
+    // `null` rather than a spinner: the popup is an interruption the player did
+    // not ask for, so arriving one chunk-fetch late is invisible, while a
+    // loading state flashed over the page would not be.
+    <Suspense fallback={null}>
+      <LevelUpPopup
+        level={level}
+        rankKey={profile.rank_key}
+        abilities={profile.unlocks}
+        onContinue={() => setQueue((prev) => prev.slice(1))}
+      />
+    </Suspense>
   )
 }
