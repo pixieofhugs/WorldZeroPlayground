@@ -43,6 +43,46 @@ export default defineConfig({
      * It also forfeits the immutable cache headers render.yaml gives /assets.
      */
     assetsInlineLimit: (filePath) => (filePath.endsWith('.woff2') ? false : undefined),
+    /**
+     * REACT'S RUNTIME GETS A CHUNK BY DECISION, NOT BY HEURISTIC (#2843).
+     *
+     * This file declared no `manualChunks` until now, so the ~41 KB
+     * `react-dom-*.js` chunk `main` shipped for months was Rollup's AUTOMATIC
+     * split of a module shared across dynamic-import chunks. React 19 (#2920)
+     * changed the module graph's shape, the heuristic stopped firing, and
+     * react-dom's runtime folded into the entry chunk — `react-dom-*.js`
+     * survived as a 1.3 KB re-export shim.
+     *
+     * WHAT THAT COST IS NOT MOSTLY BYTES. Restoring the split takes initial-load
+     * JS 152,680 -> 152,046 gzipped, and that 634 bytes is only the chunk
+     * wrappers of the three shims collapsing into one. The real regression was
+     * invisible to a byte count, because a byte count measures a COLD first
+     * load and moving code between two blocking chunks is neutral there. It is
+     * the SECOND visit that changed: a content-hashed vendor chunk survives an
+     * app-code deploy and the entry chunk does not, so a returning visitor
+     * re-fetched 58.8 KB gzipped of unchanged React runtime on every deploy —
+     * and `main` auto-deploys.
+     *
+     * THE MATCH IS ON THE PACKAGE DIRECTORY, deliberately. A bare `react` test
+     * also matches `react-i18next`, `react-router` and `@vitejs/plugin-react`;
+     * grouping those would put most of the dependency tree behind one hash and
+     * turn the cache win into a cache miss on every route. `scheduler` is in
+     * because react-dom requires it and nothing else does, so it rehashes on
+     * exactly the same cadence.
+     *
+     * `src/__tests__/reactVendorChunk.test.ts` is the ratchet, for the reason
+     * the CSS split entries in `scripts/bundle-budget.mjs` give: delete this and
+     * the budget prints the same WARN block it already prints, every test
+     * passes, and the cache regression is quietly back.
+     */
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (/node_modules[/\\](react|react-dom|scheduler)[/\\]/.test(id)) return 'react-vendor'
+          return undefined
+        },
+      },
+    },
   },
   // renderToStaticMarkup needs no DOM, so the default 'node' environment is fine.
   test: {
