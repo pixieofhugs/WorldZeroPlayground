@@ -409,7 +409,6 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                     role="radio"
                     aria-checked={selected}
                     onClick={() => setFactionSlug(slug)}
-                    disabled={submitting}
                     /* NOT `punkLabel` — it forces `uppercase` and its own
                        tracking, and both would be inherited by the name. A
                        faction wears its OWN card face at its own case, which is
@@ -576,7 +575,6 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                         key={level}
                         type="button"
                         aria-pressed={active}
-                        disabled={submitting}
                         onClick={() => setLevelRequired(active ? '' : level)}
                         style={{
                           width: NODE,
