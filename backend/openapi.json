@@ -4120,18 +4120,18 @@
       "NotificationPrefIn": {
         "description": "One row's two switches as a client sends them.\n\nBoth required: this is a whole-row write, not a patch, so a client that\nsends half a row is a client that has lost track of the other switch.\n``page`` on a locked row is accepted and then ignored — see ``apply_update``.",
         "properties": {
-          "email": {
-            "title": "Email",
+          "by_email": {
+            "title": "By Email",
             "type": "boolean"
           },
-          "page": {
-            "title": "Page",
+          "on_updates": {
+            "title": "On Updates",
             "type": "boolean"
           }
         },
         "required": [
-          "page",
-          "email"
+          "on_updates",
+          "by_email"
         ],
         "title": "NotificationPrefIn",
         "type": "object"
@@ -4139,22 +4139,22 @@
       "NotificationPrefOut": {
         "description": "One row's two switches, resolved — never the raw stored object.\n\n``locked`` is sent rather than re-derived client-side. The rule behind it\nis \"is this type in the requests section\", and that set lives in\n``FEED_SOURCES``; a client deriving it would be a second copy of a rule\nwhose whole point (owner ruling 2026-08-19) is that a *tenth* request type\ncannot be silently unlocked.",
         "properties": {
-          "email": {
-            "title": "Email",
+          "by_email": {
+            "title": "By Email",
             "type": "boolean"
           },
           "locked": {
             "title": "Locked",
             "type": "boolean"
           },
-          "page": {
-            "title": "Page",
+          "on_updates": {
+            "title": "On Updates",
             "type": "boolean"
           }
         },
         "required": [
-          "page",
-          "email",
+          "on_updates",
+          "by_email",
           "locked"
         ],
         "title": "NotificationPrefOut",
@@ -9965,7 +9965,7 @@
     },
     "/me/notification-prefs": {
       "get": {
-        "description": "This account's notification switches, resolved (#1047).\n\nAlways all nine rows: an account whose column is still ``{}`` gets every\ndefault, so a client never has to know what a default is. Per ACCOUNT, not\nper character — no character is resolved here at all.\n\n``email`` is stored intent. Nothing in ``backend/`` sends email; #2164\nhonours these values when the channel goes live, and the settings card\nsays so in copy. ``page`` is live behaviour — see ``/activity-feed``.",
+        "description": "This account's notification switches, resolved (#1047).\n\nAlways all nine rows: an account whose column is still ``{}`` gets every\ndefault, so a client never has to know what a default is. Per ACCOUNT, not\nper character — no character is resolved here at all.\n\n``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164\nhonours these values when the channel goes live, and the settings card says\nso in copy. ``on_updates`` is live behaviour — see the activity feed.",
         "operationId": "my_notification_prefs_me_notification_prefs_get",
         "parameters": [
           {
@@ -10018,7 +10018,7 @@
         ]
       },
       "put": {
-        "description": "Save some or all of the switches; answer with the resolved result.\n\nPartial by ROW and whole by row: send the rows that changed, each with both\nof its switches. Unknown event keys are dropped and a locked row's ``page``\nis ignored (``apply_update``), so the answer is the authority on what was\nactually stored — a client that sent a locked ``page: false`` sees it come\nback ``true`` rather than believing it landed.\n\nThe whole dict is reassigned rather than mutated in place: SQLAlchemy does\nnot track mutation *inside* a JSON value, so an in-place edit would flush\nnothing and the save would silently do nothing.",
+        "description": "Save some or all of the switches; answer with the resolved result.\n\nPartial by ROW and whole by row: send the rows that changed, each with both\nof its switches. Unknown event keys are dropped and a locked row's\n``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority\non what was actually stored — a client that sent a locked\n``on_updates: false`` sees it come back ``true`` rather than believing the\nwrite landed.\n\nThe whole dict is reassigned rather than mutated in place: SQLAlchemy does\nnot track mutation *inside* a JSON value, so an in-place edit would flush\nnothing and the save would silently do nothing.",
         "operationId": "save_my_notification_prefs_me_notification_prefs_put",
         "parameters": [
           {

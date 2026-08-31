@@ -83,6 +83,22 @@ async def delete_my_account(
     await delete_account(account.id, session)
 
 
+def _prefs_out(raw: object) -> NotificationPrefsOut:
+    """The stored column as the wire shape.
+
+    Both routes answer through this, so a save can never report a different
+    resolution from the read beside it.
+    """
+    return NotificationPrefsOut(
+        events={
+            key: NotificationPrefOut(
+                on_updates=pref.on_updates, by_email=pref.by_email, locked=pref.locked
+            )
+            for key, pref in resolve_prefs(raw).items()
+        }
+    )
+
+
 @router.get("/notification-prefs", response_model=NotificationPrefsOut)
 async def my_notification_prefs(
     account: Account = Depends(get_current_account),
@@ -93,16 +109,11 @@ async def my_notification_prefs(
     default, so a client never has to know what a default is. Per ACCOUNT, not
     per character — no character is resolved here at all.
 
-    ``email`` is stored intent. Nothing in ``backend/`` sends email; #2164
-    honours these values when the channel goes live, and the settings card
-    says so in copy. ``page`` is live behaviour — see ``/activity-feed``.
+    ``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164
+    honours these values when the channel goes live, and the settings card says
+    so in copy. ``on_updates`` is live behaviour — see the activity feed.
     """
-    return NotificationPrefsOut(
-        events={
-            key: NotificationPrefOut(page=pref.page, email=pref.email, locked=pref.locked)
-            for key, pref in resolve_prefs(account.notification_prefs).items()
-        }
-    )
+    return _prefs_out(account.notification_prefs)
 
 
 @router.put("/notification-prefs", response_model=NotificationPrefsOut)
@@ -114,10 +125,11 @@ async def save_my_notification_prefs(
     """Save some or all of the switches; answer with the resolved result.
 
     Partial by ROW and whole by row: send the rows that changed, each with both
-    of its switches. Unknown event keys are dropped and a locked row's ``page``
-    is ignored (``apply_update``), so the answer is the authority on what was
-    actually stored — a client that sent a locked ``page: false`` sees it come
-    back ``true`` rather than believing it landed.
+    of its switches. Unknown event keys are dropped and a locked row's
+    ``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority
+    on what was actually stored — a client that sent a locked
+    ``on_updates: false`` sees it come back ``true`` rather than believing the
+    write landed.
 
     The whole dict is reassigned rather than mutated in place: SQLAlchemy does
     not track mutation *inside* a JSON value, so an in-place edit would flush
@@ -125,15 +137,13 @@ async def save_my_notification_prefs(
     """
     account.notification_prefs = apply_update(
         account.notification_prefs,
-        {key: {"page": row.page, "email": row.email} for key, row in body.events.items()},
+        {
+            key: {"on_updates": row.on_updates, "by_email": row.by_email}
+            for key, row in body.events.items()
+        },
     )
     await session.commit()
-    return NotificationPrefsOut(
-        events={
-            key: NotificationPrefOut(page=pref.page, email=pref.email, locked=pref.locked)
-            for key, pref in resolve_prefs(account.notification_prefs).items()
-        }
-    )
+    return _prefs_out(account.notification_prefs)
 
 
 @router.get("/invited-factions", response_model=list[str])

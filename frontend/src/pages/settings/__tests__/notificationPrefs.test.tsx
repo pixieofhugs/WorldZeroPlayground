@@ -55,15 +55,15 @@ const REGISTRY = new URL(
 
 /** A server answer at the ruled defaults — what a fresh account gets. */
 const DEFAULTS: NotificationPrefs = {
-  duel_challenge: { page: true, email: true, locked: true },
-  collab_invite: { page: true, email: true, locked: true },
-  invitation_letter: { page: true, email: true, locked: true },
-  comment_on_mine: { page: true, email: true, locked: false },
-  comment_mention: { page: true, email: true, locked: false },
-  vote_on_mine: { page: true, email: false, locked: false },
-  level_up: { page: false, email: false, locked: true },
-  era_announcement: { page: true, email: false, locked: false },
-  global_task: { page: true, email: false, locked: false },
+  duel_challenge: { on_updates: true, by_email: true, locked: true },
+  collab_invite: { on_updates: true, by_email: true, locked: true },
+  invitation_letter: { on_updates: true, by_email: true, locked: true },
+  comment_on_mine: { on_updates: true, by_email: true, locked: false },
+  comment_mention: { on_updates: true, by_email: true, locked: false },
+  vote_on_mine: { on_updates: true, by_email: false, locked: false },
+  level_up: { on_updates: false, by_email: false, locked: true },
+  era_announcement: { on_updates: true, by_email: false, locked: false },
+  global_task: { on_updates: true, by_email: false, locked: false },
 }
 
 describe('the row list', () => {
@@ -104,18 +104,18 @@ describe('the row list', () => {
 describe('the locks', () => {
   it('locks only the page axis — email is free on every row, requests included', () => {
     for (const row of NOTIFICATION_ROWS) {
-      expect(isLocked(DEFAULTS[row.key], 'email')).toBe(false)
+      expect(isLocked(DEFAULTS[row.key], 'by_email')).toBe(false)
     }
     // "You should be able to turn off email notifications on collaboration"
     // while the invite still lands on Updates — the whole reason the exclusive
     // one-channel control was replaced.
-    expect(isLocked(DEFAULTS.collab_invite, 'page')).toBe(true)
-    expect(isLocked(DEFAULTS.collab_invite, 'email')).toBe(false)
+    expect(isLocked(DEFAULTS.collab_invite, 'on_updates')).toBe(true)
+    expect(isLocked(DEFAULTS.collab_invite, 'by_email')).toBe(false)
   })
 
   it('leaves mentions and comments-on-my-praxis free — they are not requests', () => {
-    expect(isLocked(DEFAULTS.comment_mention, 'page')).toBe(false)
-    expect(isLocked(DEFAULTS.comment_on_mine, 'page')).toBe(false)
+    expect(isLocked(DEFAULTS.comment_mention, 'on_updates')).toBe(false)
+    expect(isLocked(DEFAULTS.comment_on_mine, 'on_updates')).toBe(false)
   })
 
   it('gives the two kinds of lock two different reasons', () => {
@@ -125,44 +125,44 @@ describe('the locks', () => {
   })
 
   it('refuses to flip a locked cell', () => {
-    expect(toggleCell(DEFAULTS, 'duel_challenge', 'page')).toBe(DEFAULTS)
-    expect(toggleCell(DEFAULTS, 'level_up', 'page')).toBe(DEFAULTS)
+    expect(toggleCell(DEFAULTS, 'duel_challenge', 'on_updates')).toBe(DEFAULTS)
+    expect(toggleCell(DEFAULTS, 'level_up', 'on_updates')).toBe(DEFAULTS)
     // The email half of the same row is fully operable.
-    expect(toggleCell(DEFAULTS, 'duel_challenge', 'email').duel_challenge.email).toBe(false)
+    expect(toggleCell(DEFAULTS, 'duel_challenge', 'by_email').duel_challenge.by_email).toBe(false)
   })
 })
 
 describe('the master row', () => {
   it('shows its thumb only when every row it governs agrees', () => {
     // Email: all nine free, and the defaults disagree — five on, four off.
-    expect(masterChecked(DEFAULTS, 'email')).toBe(false)
-    expect(governedRows(DEFAULTS, 'email')).toHaveLength(9)
+    expect(masterChecked(DEFAULTS, 'by_email')).toBe(false)
+    expect(governedRows(DEFAULTS, 'by_email')).toHaveLength(9)
 
-    const allEmail = setAll(DEFAULTS, 'email')
-    expect(masterChecked(allEmail, 'email')).toBe(true)
-    expect(Object.values(allEmail).every((p) => p.email)).toBe(true)
+    const allEmail = setAll(DEFAULTS, 'by_email')
+    expect(masterChecked(allEmail, 'by_email')).toBe(true)
+    expect(Object.values(allEmail).every((p) => p.by_email)).toBe(true)
 
     // And back off again — it is a switch, not two buttons.
-    expect(masterChecked(setAll(allEmail, 'email'), 'email')).toBe(false)
+    expect(masterChecked(setAll(allEmail, 'by_email'), 'by_email')).toBe(false)
   })
 
   it('governs only the page rows it can actually set', () => {
     // Four of the nine page switches are not the reader's, so a cell claiming
     // all nine would either lie or do nothing.
-    expect(governedRows(DEFAULTS, 'page').map((r) => r.key)).toEqual([
+    expect(governedRows(DEFAULTS, 'on_updates').map((r) => r.key)).toEqual([
       'comment_on_mine',
       'comment_mention',
       'vote_on_mine',
       'era_announcement',
       'global_task',
     ])
-    expect(masterChecked(DEFAULTS, 'page')).toBe(true)
+    expect(masterChecked(DEFAULTS, 'on_updates')).toBe(true)
 
-    const noPage = setAll(DEFAULTS, 'page')
-    expect(masterChecked(noPage, 'page')).toBe(false)
+    const noPage = setAll(DEFAULTS, 'on_updates')
+    expect(masterChecked(noPage, 'on_updates')).toBe(false)
     // The locked rows did not move.
-    expect(noPage.duel_challenge.page).toBe(true)
-    expect(noPage.level_up.page).toBe(false)
+    expect(noPage.duel_challenge.on_updates).toBe(true)
+    expect(noPage.level_up.on_updates).toBe(false)
   })
 
   it('stores nothing of its own', () => {
@@ -175,8 +175,8 @@ describe('the master row', () => {
 
 describe('the save body', () => {
   it('sends both switches for every known row and nothing else', () => {
-    const body = saveBody(toggleCell(DEFAULTS, 'vote_on_mine', 'page'))
-    expect(body.events.vote_on_mine).toEqual({ page: false, email: false })
+    const body = saveBody(toggleCell(DEFAULTS, 'vote_on_mine', 'on_updates'))
+    expect(body.events.vote_on_mine).toEqual({ on_updates: false, by_email: false })
     expect(Object.keys(body.events)).toHaveLength(9)
   })
 

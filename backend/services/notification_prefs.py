@@ -3,14 +3,14 @@
 Nine rows, two independent switches each (owner ruling 2026-08-19, which
 supersedes #2153's exclusive three-segment control):
 
-``page``
+``on_updates``
     "Show on Updates" — whether this event may appear in the activity feed.
     **Wired and honoured for real** (owner ruling 2026-08-31):
     :func:`muted_feed_types` feeds ``activity_feed._visible_types``, so the
     list, the tab badges and the sidebar panel all drop the type together.
 
-``email``
-    "Email me" — **stored intent only.** Nothing in ``backend/`` sends email:
+``by_email``
+    "Email me" — **stored intent only.** Nothing in ``backend/`` sends by_email:
     no provider, no sender, no queue, no template layer. This value is written
     and read back and does nothing else; #2164 honours it when the channel
     goes live, and the settings card says so in copy. Do NOT add a sender here.
@@ -159,8 +159,8 @@ EVENTS_BY_KEY: dict[str, NotificationEvent] = {
 class ResolvedPref:
     """One row's two switches, after defaults and locks have been applied."""
 
-    page: bool
-    email: bool
+    on_updates: bool
+    by_email: bool
     locked: bool
 
 
@@ -191,12 +191,12 @@ def resolve_prefs(raw: Any) -> dict[str, ResolvedPref]:
     for event in NOTIFICATION_EVENTS:
         row = stored.get(event.key)
         resolved[event.key] = ResolvedPref(
-            page=(
+            on_updates=(
                 event.page_default
                 if event.page_locked
-                else _stored_bool(row, "page", event.page_default)
+                else _stored_bool(row, "on_updates", event.page_default)
             ),
-            email=_stored_bool(row, "email", event.email_default),
+            by_email=_stored_bool(row, "by_email", event.email_default),
             locked=event.page_locked,
         )
     return resolved
@@ -213,7 +213,7 @@ def muted_feed_types(raw: Any) -> frozenset[str]:
     return frozenset(
         feed_type
         for event in NOTIFICATION_EVENTS
-        if not resolved[event.key].page
+        if not resolved[event.key].on_updates
         for feed_type in event.feed_types
     )
 
@@ -242,13 +242,19 @@ def apply_update(raw: Any, incoming: Mapping[str, Mapping[str, bool]]) -> dict:
             continue
         current = stored.get(key)
         stored[key] = {
-            "page": (
+            "on_updates": (
                 event.page_default
                 if event.page_locked
-                else _stored_bool(values, "page", _stored_bool(current, "page", event.page_default))
+                else _stored_bool(
+                    values,
+                    "on_updates",
+                    _stored_bool(current, "on_updates", event.page_default),
+                )
             ),
-            "email": _stored_bool(
-                values, "email", _stored_bool(current, "email", event.email_default)
+            "by_email": _stored_bool(
+                values,
+                "by_email",
+                _stored_bool(current, "by_email", event.email_default),
             ),
         }
     return stored

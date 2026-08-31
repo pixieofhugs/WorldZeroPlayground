@@ -68,7 +68,8 @@ def test_empty_column_resolves_to_every_default():
     resolved = resolve_prefs({})
     assert set(resolved) == set(RULED_DEFAULTS)
     assert {
-        key: (pref.page, pref.email, pref.locked) for key, pref in resolved.items()
+        key: (pref.on_updates, pref.by_email, pref.locked)
+        for key, pref in resolved.items()
     } == RULED_DEFAULTS
 
 
@@ -77,7 +78,8 @@ def test_junk_in_the_column_resolves_to_defaults(raw):
     """Nothing a malformed column holds can produce a fourth answer."""
     resolved = resolve_prefs(raw)
     assert {
-        key: (pref.page, pref.email, pref.locked) for key, pref in resolved.items()
+        key: (pref.on_updates, pref.by_email, pref.locked)
+        for key, pref in resolved.items()
     } == RULED_DEFAULTS
 
 
@@ -123,7 +125,7 @@ def test_mentions_and_comments_on_mine_are_not_locked():
 
 def test_turning_a_row_off_mutes_both_of_its_feed_types():
     """One row can own more than one type — a vote landing and a vote changing."""
-    muted = muted_feed_types({FEED_ITEM_TYPE_VOTE_ON_MINE: {"page": False}})
+    muted = muted_feed_types({FEED_ITEM_TYPE_VOTE_ON_MINE: {"on_updates": False}})
     assert muted == {FEED_ITEM_TYPE_VOTE_ON_MINE, FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE}
 
 
@@ -134,37 +136,54 @@ def test_a_request_type_can_never_be_muted_however_the_column_was_written():
     this would leak, so ``resolve_prefs`` pins a locked row's page value rather
     than reading it.
     """
-    hostile = {t: {"page": False, "email": False} for t in REQUEST_ITEM_TYPES}
+    hostile = {t: {"on_updates": False, "by_email": False} for t in REQUEST_ITEM_TYPES}
     assert muted_feed_types(hostile) & REQUEST_ITEM_TYPES == set()
-    assert all(resolve_prefs(hostile)[t].page for t in REQUEST_ITEM_TYPES if t in RULED_DEFAULTS)
+    assert all(
+        resolve_prefs(hostile)[t].on_updates
+        for t in REQUEST_ITEM_TYPES
+        if t in RULED_DEFAULTS
+    )
 
 
 def test_level_up_mutes_nothing_because_it_has_no_feed_type():
     """Its email switch is the row's whole point; its page switch is inert."""
-    assert muted_feed_types({LEVEL_UP: {"page": False, "email": True}}) == frozenset()
-    assert resolve_prefs({LEVEL_UP: {"email": True}})[LEVEL_UP].email is True
+    assert (
+        muted_feed_types({LEVEL_UP: {"on_updates": False, "by_email": True}})
+        == frozenset()
+    )
+    assert resolve_prefs({LEVEL_UP: {"by_email": True}})[LEVEL_UP].by_email is True
 
 
 def test_apply_update_drops_unknown_keys():
     """The trust boundary: a hostile client cannot grow this column."""
-    stored = apply_update({}, {"not_an_event": {"page": False, "email": False}})
+    stored = apply_update(
+        {}, {"not_an_event": {"on_updates": False, "by_email": False}}
+    )
     assert stored == {}
 
 
 def test_apply_update_ignores_a_locked_rows_page_value():
     """Storing it would be a lie: ``resolve_prefs`` overrides it on the way out."""
     stored = apply_update(
-        {}, {FEED_ITEM_TYPE_DUEL_CHALLENGE: {"page": False, "email": False}}
+        {}, {FEED_ITEM_TYPE_DUEL_CHALLENGE: {"on_updates": False, "by_email": False}}
     )
-    assert stored[FEED_ITEM_TYPE_DUEL_CHALLENGE] == {"page": True, "email": False}
+    assert stored[FEED_ITEM_TYPE_DUEL_CHALLENGE] == {
+        "on_updates": True,
+        "by_email": False,
+    }
 
 
 def test_apply_update_writes_one_row_without_disturbing_the_others():
-    stored = apply_update({}, {FEED_ITEM_TYPE_GLOBAL_TASK: {"page": False, "email": True}})
+    stored = apply_update(
+        {}, {FEED_ITEM_TYPE_GLOBAL_TASK: {"on_updates": False, "by_email": True}}
+    )
     resolved = resolve_prefs(stored)
-    assert (resolved[FEED_ITEM_TYPE_GLOBAL_TASK].page, resolved[FEED_ITEM_TYPE_GLOBAL_TASK].email) == (
+    assert (
+        resolved[FEED_ITEM_TYPE_GLOBAL_TASK].on_updates,
+        resolved[FEED_ITEM_TYPE_GLOBAL_TASK].by_email,
+    ) == (
         False,
         True,
     )
-    assert resolved[FEED_ITEM_TYPE_ERA_ANNOUNCEMENT].page is True
-    assert resolved[FEED_ITEM_TYPE_ERA_ANNOUNCEMENT].email is False
+    assert resolved[FEED_ITEM_TYPE_ERA_ANNOUNCEMENT].on_updates is True
+    assert resolved[FEED_ITEM_TYPE_ERA_ANNOUNCEMENT].by_email is False

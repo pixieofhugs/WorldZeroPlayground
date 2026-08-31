@@ -1189,9 +1189,9 @@ export interface paths {
          *     default, so a client never has to know what a default is. Per ACCOUNT, not
          *     per character — no character is resolved here at all.
          *
-         *     ``email`` is stored intent. Nothing in ``backend/`` sends email; #2164
-         *     honours these values when the channel goes live, and the settings card
-         *     says so in copy. ``page`` is live behaviour — see ``/activity-feed``.
+         *     ``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164
+         *     honours these values when the channel goes live, and the settings card says
+         *     so in copy. ``on_updates`` is live behaviour — see the activity feed.
          */
         get: operations["my_notification_prefs_me_notification_prefs_get"];
         /**
@@ -1199,10 +1199,11 @@ export interface paths {
          * @description Save some or all of the switches; answer with the resolved result.
          *
          *     Partial by ROW and whole by row: send the rows that changed, each with both
-         *     of its switches. Unknown event keys are dropped and a locked row's ``page``
-         *     is ignored (``apply_update``), so the answer is the authority on what was
-         *     actually stored — a client that sent a locked ``page: false`` sees it come
-         *     back ``true`` rather than believing it landed.
+         *     of its switches. Unknown event keys are dropped and a locked row's
+         *     ``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority
+         *     on what was actually stored — a client that sent a locked
+         *     ``on_updates: false`` sees it come back ``true`` rather than believing the
+         *     write landed.
          *
          *     The whole dict is reassigned rather than mutated in place: SQLAlchemy does
          *     not track mutation *inside* a JSON value, so an in-place edit would flush
@@ -3843,10 +3844,10 @@ export interface components {
          *     ``page`` on a locked row is accepted and then ignored — see ``apply_update``.
          */
         NotificationPrefIn: {
-            /** Email */
-            email: boolean;
-            /** Page */
-            page: boolean;
+            /** By Email */
+            by_email: boolean;
+            /** On Updates */
+            on_updates: boolean;
         };
         /**
          * NotificationPrefOut
@@ -3859,12 +3860,12 @@ export interface components {
          *     cannot be silently unlocked.
          */
         NotificationPrefOut: {
-            /** Email */
-            email: boolean;
+            /** By Email */
+            by_email: boolean;
             /** Locked */
             locked: boolean;
-            /** Page */
-            page: boolean;
+            /** On Updates */
+            on_updates: boolean;
         };
         /**
          * NotificationPrefsIn

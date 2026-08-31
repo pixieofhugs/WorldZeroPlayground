@@ -16,10 +16,10 @@ class NotificationPrefOut(WireModel):
     """
 
     #: "Show on Updates". Honoured for real — see ``muted_feed_types``.
-    page: bool
+    on_updates: bool
     #: "Email me". STORED INTENT ONLY: nothing in ``backend/`` sends email.
     #: #2164 honours this when the channel exists. Do not add a sender.
-    email: bool
+    by_email: bool
     #: Whether ``page`` is the reader's to change. Locked ON for the three
     #: requests rows, locked OFF for ``level_up``, which has no feed row.
     locked: bool
@@ -39,8 +39,8 @@ class NotificationPrefIn(BaseModel):
     ``page`` on a locked row is accepted and then ignored — see ``apply_update``.
     """
 
-    page: bool
-    email: bool
+    on_updates: bool
+    by_email: bool
 
 
 class NotificationPrefsIn(BaseModel):

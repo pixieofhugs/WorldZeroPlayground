@@ -93,7 +93,7 @@ const STATUS_LINE: CSSProperties = {
   color: 'var(--color-text-secondary)',
 }
 
-const AXES: readonly PrefAxis[] = ['page', 'email']
+const AXES: readonly PrefAxis[] = ['on_updates', 'by_email']
 
 /**
  * The card's rows, given state — the seam the DOM-less harness renders.
@@ -126,7 +126,7 @@ export function NotificationRows({
             <div key={axis}>
               <span style={CAPTION} aria-hidden>
                 {t(
-                  axis === 'page'
+                  axis === 'on_updates'
                     ? 'settings.notifications.columnPage'
                     : 'settings.notifications.columnEmail',
                 )}
@@ -135,7 +135,7 @@ export function NotificationRows({
                 <SettingsSwitch
                   checked={masterChecked(prefs, axis)}
                   label={t(
-                    axis === 'page'
+                    axis === 'on_updates'
                       ? 'settings.notifications.allPageName'
                       : 'settings.notifications.allEmailName',
                   )}
@@ -179,7 +179,7 @@ export function NotificationRows({
                         locked && noteKey
                           ? `${t(row.titleKey)} — ${t(noteKey)}`
                           : t(
-                              axis === 'page'
+                              axis === 'on_updates'
                                 ? 'settings.notifications.rowPageName'
                                 : 'settings.notifications.rowEmailName',
                               { event: t(row.titleKey) },

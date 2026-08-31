@@ -41,10 +41,22 @@ async def test_a_fresh_account_reads_every_default(
     events = resp.json()["events"]
 
     assert len(events) == 9
-    assert events["duel_challenge"] == {"page": True, "email": True, "locked": True}
-    assert events["comment_on_mine"] == {"page": True, "email": True, "locked": False}
-    assert events["vote_on_mine"] == {"page": True, "email": False, "locked": False}
-    assert events[LEVEL_UP] == {"page": False, "email": False, "locked": True}
+    assert events["duel_challenge"] == {
+        "on_updates": True,
+        "by_email": True,
+        "locked": True,
+    }
+    assert events["comment_on_mine"] == {
+        "on_updates": True,
+        "by_email": True,
+        "locked": False,
+    }
+    assert events["vote_on_mine"] == {
+        "on_updates": True,
+        "by_email": False,
+        "locked": False,
+    }
+    assert events[LEVEL_UP] == {"on_updates": False, "by_email": False, "locked": True}
 
 
 @pytest.mark.asyncio
@@ -53,20 +65,20 @@ async def test_a_save_round_trips_and_answers_with_what_was_stored(
 ):
     save = await client.put(
         "/me/notification-prefs",
-        json={"events": {"vote_on_mine": {"page": False, "email": True}}},
+        json={"events": {"vote_on_mine": {"on_updates": False, "by_email": True}}},
         headers=auth_headers,
     )
     assert save.status_code == 200
     assert save.json()["events"]["vote_on_mine"] == {
-        "page": False,
-        "email": True,
+        "on_updates": False,
+        "by_email": True,
         "locked": False,
     }
     # Untouched rows keep their defaults rather than being flattened by the save.
-    assert save.json()["events"]["era_announcement"]["page"] is True
+    assert save.json()["events"]["era_announcement"]["on_updates"] is True
 
     reread = await client.get("/me/notification-prefs", headers=auth_headers)
-    assert reread.json()["events"]["vote_on_mine"]["page"] is False
+    assert reread.json()["events"]["vote_on_mine"]["on_updates"] is False
 
 
 @pytest.mark.asyncio
@@ -75,28 +87,28 @@ async def test_a_locked_row_comes_back_on_however_hard_a_client_pushes(
 ):
     """The requests section may never be suppressed — checked at the wire.
 
-    The response is the authority: a client that sent ``page: false`` sees
+    The response is the authority: a client that sent ``on_updates: false`` sees
     ``true`` come back rather than believing the write landed.
     """
     save = await client.put(
         "/me/notification-prefs",
         json={
             "events": {
-                "duel_challenge": {"page": False, "email": False},
-                "collab_invite": {"page": False, "email": False},
-                "invitation_letter": {"page": False, "email": False},
-                "made_up_event": {"page": False, "email": False},
+                "duel_challenge": {"on_updates": False, "by_email": False},
+                "collab_invite": {"on_updates": False, "by_email": False},
+                "invitation_letter": {"on_updates": False, "by_email": False},
+                "made_up_event": {"on_updates": False, "by_email": False},
             }
         },
         headers=auth_headers,
     )
     assert save.status_code == 200
     events = save.json()["events"]
-    assert events["duel_challenge"]["page"] is True
-    assert events["collab_invite"]["page"] is True
-    assert events["invitation_letter"]["page"] is True
+    assert events["duel_challenge"]["on_updates"] is True
+    assert events["collab_invite"]["on_updates"] is True
+    assert events["invitation_letter"]["on_updates"] is True
     # The email half of a locked row IS the reader's, and it stored.
-    assert events["duel_challenge"]["email"] is False
+    assert events["duel_challenge"]["by_email"] is False
     # An unknown key is dropped, not 400'd, and does not appear in the answer.
     assert "made_up_event" not in events
 
@@ -137,7 +149,7 @@ async def test_switching_a_row_off_empties_the_list_and_the_badge_together(
 
     off = await client.put(
         "/me/notification-prefs",
-        json={"events": {"vote_on_mine": {"page": False, "email": False}}},
+        json={"events": {"vote_on_mine": {"on_updates": False, "by_email": False}}},
         headers=auth_headers,
     )
     assert off.status_code == 200
@@ -181,7 +193,9 @@ async def test_a_muted_row_is_still_in_the_archive(
         "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
     )
     item_key = next(
-        item["item_key"] for item in live.json()["items"] if item["type"] == "vote_on_mine"
+        item["item_key"]
+        for item in live.json()["items"]
+        if item["type"] == "vote_on_mine"
     )
     archived = await client.post(
         "/activity-feed/dismiss", json={"item_key": item_key}, headers=auth_headers
@@ -190,7 +204,7 @@ async def test_a_muted_row_is_still_in_the_archive(
 
     await client.put(
         "/me/notification-prefs",
-        json={"events": {"vote_on_mine": {"page": False, "email": False}}},
+        json={"events": {"vote_on_mine": {"on_updates": False, "by_email": False}}},
         headers=auth_headers,
     )
 
@@ -201,9 +215,7 @@ async def test_a_muted_row_is_still_in_the_archive(
 
 
 @pytest.mark.asyncio
-async def test_muting_never_reaches_the_bell(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_muting_never_reaches_the_bell(client: AsyncClient, auth_headers: dict):
     """The requests count is beyond the settings page's reach by construction.
 
     Asserted through the SIDEBAR, which is the other consumer of the muting
@@ -216,7 +228,7 @@ async def test_muting_never_reaches_the_bell(
         "/me/notification-prefs",
         json={
             "events": {
-                key: {"page": False, "email": False}
+                key: {"on_updates": False, "by_email": False}
                 for key in (
                     "duel_challenge",
                     "collab_invite",

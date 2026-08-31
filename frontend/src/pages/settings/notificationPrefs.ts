@@ -13,11 +13,11 @@ import type { components } from '../../api/generated/schema'
  *
  * ## Two switches per row, and they are not the same kind of thing
  *
- * `page` ("show on Updates") is **live behaviour**: the server drops the type
+ * `on_updates` ("show on Updates") is **live behaviour**: the server drops the type
  * out of the feed, the tab counts and the sidebar panel together
  * (`services/notification_prefs.muted_feed_types`).
  *
- * `email` ("email me") is **stored intent only**. Nothing in `backend/` sends
+ * `by_email` ("email me") is **stored intent only**. Nothing in `backend/` sends
  * email — no provider, no sender, no queue, no template layer. The switch is
  * real, the value is stored, and #2164 honours it when the channel goes live;
  * the card says so in one line of copy, which is the only thing that makes a
@@ -33,7 +33,7 @@ import type { components } from '../../api/generated/schema'
 
 type NotificationPrefOut = components['schemas']['NotificationPrefOut']
 
-export type PrefAxis = 'page' | 'email'
+export type PrefAxis = 'on_updates' | 'by_email'
 
 /** The server's answer: every row, resolved, keyed by event. */
 export type NotificationPrefs = Readonly<Record<string, NotificationPrefOut>>
@@ -119,7 +119,7 @@ export function rowsFor(prefs: NotificationPrefs): NotificationRow[] {
  * collaboration"* while the invite still lands on your Updates page.
  */
 export function isLocked(pref: NotificationPrefOut, axis: PrefAxis): boolean {
-  return axis === 'page' && pref.locked
+  return axis === 'on_updates' && pref.locked
 }
 
 /**
@@ -141,7 +141,7 @@ export function isLocked(pref: NotificationPrefOut, axis: PrefAxis): boolean {
  */
 export function lockNoteKey(pref: NotificationPrefOut): ParseKeys<'common'> | undefined {
   if (!pref.locked) return undefined
-  return pref.page
+  return pref.on_updates
     ? 'settings.notifications.lockedRequest'
     : 'settings.notifications.lockedNoFeedRow'
 }
@@ -151,7 +151,7 @@ export function lockNoteKey(pref: NotificationPrefOut): ParseKeys<'common'> | un
  *
  * NOT always nine, and it cannot be. The master row is a bulk-set control, and
  * a cell that claimed to set a locked row would either lie or do nothing — so
- * it governs the rows it can set: all nine on `email`, and on `page` the five
+ * it governs the rows it can set: all nine on `by_email`, and on `on_updates` the five
  * whose switch is the reader's. This is the one place the 2026-08-19 ruling's
  * "writes it to all nine rows" is read as "all nine it can write", because the
  * same ruling introduced the locks that make the literal reading impossible.
@@ -204,16 +204,16 @@ export function setAll(prefs: NotificationPrefs, axis: PrefAxis): NotificationPr
  * The PUT body. Every known row, every time.
  *
  * No diffing against what was fetched: the server drops unknown keys and pins
- * a locked row's `page` itself, so a whole-state save is nine small objects
+ * a locked row's `on_updates` itself, so a whole-state save is nine small
  * and cannot go stale — and a diff would be a second model of "what changed"
  * for a card whose one write is already the whole card.
  */
 export function saveBody(prefs: NotificationPrefs): {
-  events: Record<string, { page: boolean; email: boolean }>
+  events: Record<string, { on_updates: boolean; by_email: boolean }>
 } {
-  const events: Record<string, { page: boolean; email: boolean }> = {}
+  const events: Record<string, { on_updates: boolean; by_email: boolean }> = {}
   for (const row of rowsFor(prefs)) {
-    events[row.key] = { page: prefs[row.key].page, email: prefs[row.key].email }
+    events[row.key] = { on_updates: prefs[row.key].on_updates, by_email: prefs[row.key].by_email }
   }
   return { events }
 }
