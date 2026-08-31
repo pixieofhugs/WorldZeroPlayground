@@ -66,6 +66,7 @@
     "CovenPraxisCard": "src/components/praxisCard/desktop/CovenPraxisCard.tsx",
     "CovenPraxisDetail": "src/pages/praxisDetail/archetypes/CovenPraxisDetail.tsx",
     "CovenProfileBody": "src/pages/characterProfile/archetypes/CovenProfileBody.tsx",
+    "CovenProposeTask": "src/pages/proposeTask/archetypes/CovenProposeTask.tsx",
     "CovenScoreStamp": "src/components/praxisCard/scoreStamp/CovenScoreStamp.tsx",
     "CovenSeal": "src/components/metataskSeal/skins/CovenSeal.tsx",
     "CovenSelectCard": "src/components/selectCard/CovenSelectCard.tsx",

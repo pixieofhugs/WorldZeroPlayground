@@ -58,6 +58,7 @@ export { default as CovenFieldDesk } from "../src/pages/fieldDesk/mobileArchetyp
 export { default as CovenPraxisCard } from "../src/components/praxisCard/desktop/CovenPraxisCard";
 export { default as CovenPraxisDetail } from "../src/pages/praxisDetail/archetypes/CovenPraxisDetail";
 export { default as CovenProfileBody } from "../src/pages/characterProfile/archetypes/CovenProfileBody";
+export { default as CovenProposeTask } from "../src/pages/proposeTask/archetypes/CovenProposeTask";
 export { default as CovenScoreStamp } from "../src/components/praxisCard/scoreStamp/CovenScoreStamp";
 export { default as CovenSeal } from "../src/components/metataskSeal/skins/CovenSeal";
 export { default as CovenSelectCard } from "../src/components/selectCard/CovenSelectCard";
