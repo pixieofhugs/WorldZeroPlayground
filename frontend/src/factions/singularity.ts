@@ -24,6 +24,7 @@ const SingularityFactionHero = lazyArchetype(() => import('../components/faction
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
 const SingularityFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityFieldDesk'))
 const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
+const SingularityProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/SingularityProposeTask'))
 const SingularityTaskCard = lazyArchetype(() => import('../components/taskCard/SingularityTaskCard'))
 const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
 const SingularityVote = lazyArchetype(() => import('../components/vote/SingularityVote'))
@@ -62,6 +63,12 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   // faction's alarm ink is cut for a near-black card. Unlike the row above,
   // the slug here is the EDITED CHARACTER's — a loaded record, not a pick.
   editCharacter: () => SingularityEditCharacter,
+  // And the same terminal for proposing a task (#2538). DERIVED from the create
+  // plate per the 2026-08-24 ruling; the slug is the pick in progress again —
+  // the faction the task is being proposed FOR — so the page reskins to this
+  // chassis live as the chips change and returns to the na kit when the pick
+  // moves off Singularity.
+  proposeTask: () => SingularityProposeTask,
   factionHero: () => SingularityFactionHero,
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
