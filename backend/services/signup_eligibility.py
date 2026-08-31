@@ -553,7 +553,7 @@ def allowed_praxis_modes(
     :class:`~schemas.task.TaskOut` both derive from this list.
 
     - Solo: always allowed once a viewer is authenticated.
-    - Collab: requires ``character_level >= era.collaboration_level_required``.
+    - Collab: :func:`services.era_gates.may_create_collab_praxis`.
     - Duel: issued via the challenge endpoint (ADR-0011), not direct creation.
 
     Anonymous viewers (``character is None``) receive an empty list so the
