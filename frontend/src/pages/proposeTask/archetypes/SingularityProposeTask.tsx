@@ -156,7 +156,7 @@ const ALARM = 'var(--faction-singularity-card-alarm)'
    --font-faction-terminal directly, which is what §4 asks for when the face IS
    the faction's. No `var(--x, fallback)` arm anywhere below: the map answers for
    all nine slugs, so a fallback there is unreachable code (ADR-0089, #2690). */
-const FACE = 'var(--sg-path-face)'
+const FACE = 'var(--sg-propose-face)'
 
 /** The design's geometry: radius 2, borderW 1. A terminal has square corners. */
 const RADIUS = 2
@@ -392,7 +392,11 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   }
 
   const pageStyle: CSSProperties = {
-    ...factionRoleVars(SLUG, 'sg-path'),
+    // The prefix is this SURFACE's, never shared with another (#2659): the
+    // create plate holds `sg-path` and the edit plate `sg-edit-path`, and one
+    // page wrapper declaring another's namespace is how a card belonging to a
+    // different faction gets silently repainted.
+    ...factionRoleVars(SLUG, 'sg-propose'),
     fontFamily: FACE,
     color: INK,
   }
