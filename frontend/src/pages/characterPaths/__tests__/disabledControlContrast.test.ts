@@ -82,6 +82,11 @@ const SITES = [
   'archetypes/UaCreateCharacter.tsx',
   'archetypes/WowCreateCharacter.tsx',
   'archetypes/DefaultEditCharacter.tsx',
+  // #2537's fan-out. An edit archetype's Save is gated on the same
+  // `canSubmitName` the create band is, so it is the same control and owes the
+  // same class; the rows below are the guard against the eleventh site spelling
+  // `opacity: 0.5` again, and a file that is not listed is not swept.
+  'archetypes/WowEditCharacter.tsx',
 ]
 
 function source(file: string): string {

@@ -17,6 +17,7 @@ const SnideDuelSealConfirm = lazyArchetype(() => import('../components/duel/Snid
 const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBackdrop'))
 const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
 const SnideCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/SnideCreateCharacter'))
+const SnideEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/SnideEditCharacter'))
 const SnideEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SnideEditPraxis'))
 const SnideFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SnideFactionBody'))
 const SnideFactionHero = lazyArchetype(() => import('../components/factionHero/SnideFactionHero'))
@@ -51,6 +52,7 @@ export const SNIDE_MANIFEST: FactionManifest = {
   praxisDetail: () => SnidePraxisDetail,
   editPraxis: () => SnideEditPraxis,
   createCharacter: () => SnideCreateCharacter,
+  editCharacter: () => SnideEditCharacter,
   factionHero: () => SnideFactionHero,
   factionBody: () => SnideFactionBody,
   profileBody: () => SnideProfileBody,

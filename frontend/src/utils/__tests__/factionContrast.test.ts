@@ -1682,6 +1682,24 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists cornice band, quiet ink", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-quiet" },
   { what: "ephemerists plate, links", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-brass-light" },
 
+  // Ephemerists — THE EDIT-CHARACTER TAIL PLATE (#2537's fan-out). The two
+  // edit-only slots in `characterPaths/editCharacterSlots` were designed once and
+  // measured once: on the `na` page's washed ground, "because that is the only
+  // ground an edit archetype draws on today". `EphemeristsEditCharacter` mounts
+  // them on a SECOND PLATE instead — below Save, outside the form, on
+  // `-plate-bg` — which is the case that file's own `ponytail:` note names, and
+  // it says the upgrade path is a row HERE rather than a change to the slot.
+  //
+  // Three inks land straight on that stock and none of them was measured on it.
+  // The alarm has a row below under the danger VEIL only (the composer banner);
+  // the slot draws it BARE, as an outline, its ink and the confirm panel's
+  // border. The other two are the faction row's own label and help tiers, which
+  // the slot writes as global neutrals — legitimate there, and this is the file
+  // that has to say they still clear on a faction sheet rather than assume it.
+  { what: "ephemerists edit-character delete slot, alarm ink bare on the plate", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-card-alarm" },
+  { what: "ephemerists edit-character faction row label, on the plate", surface: "--faction-ephemerists-plate-bg", text: "--color-text-secondary" },
+  { what: "ephemerists edit-character faction row help, on the plate", surface: "--faction-ephemerists-plate-bg", text: "--color-text-tertiary" },
+
   // Everymen — THE DISPATCH SLIP (#1200). The masthead band: red as a FILL with
   // the broadsheet's masthead ink on it. Its dark reading is the tightest in
   // this whole group, which is why the dateline and the tag chip on that band

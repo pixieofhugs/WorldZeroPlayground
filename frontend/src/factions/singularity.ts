@@ -16,6 +16,7 @@ const SingularityAvatar = lazyArchetype(() => import('../components/avatar/Singu
 const SingularityBackdrop = lazyArchetype(() => import('../components/backdrop/SingularityBackdrop'))
 const SingularityComment = lazyArchetype(() => import('../components/comments/voices/SingularityComment'))
 const SingularityCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/SingularityCreateCharacter'))
+const SingularityEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/SingularityEditCharacter'))
 const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
 const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
 const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
@@ -55,6 +56,12 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   // reskins to this chassis live and returns to the Default the moment the pick
   // is cleared.
   createCharacter: () => SingularityCreateCharacter,
+  // And the same terminal for editing it (#2537). DERIVED from the create
+  // plate per the 2026-08-28 ruling; the two edit-only slots are MOUNTED from
+  // `editCharacterSlots`, in a pane of this kit's own ground because the
+  // faction's alarm ink is cut for a near-black card. Unlike the row above,
+  // the slug here is the EDITED CHARACTER's — a loaded record, not a pick.
+  editCharacter: () => SingularityEditCharacter,
   factionHero: () => SingularityFactionHero,
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
