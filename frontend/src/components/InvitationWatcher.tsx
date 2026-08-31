@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import InvitationLetterPopup from './InvitationLetterPopup'
+
+/** Lazy for the same reason as `LevelUpWatcher`'s Field Stamp (#2843): the
+ * diff is blocking, the prospectus it occasionally renders is not. This one
+ * carried more with it — the letter pulls `JoinControl`'s confirm step and
+ * `api/factions` along. Guarded by `eagerPathImports.test.ts`. */
+const InvitationLetterPopup = lazy(() => import('./InvitationLetterPopup'))
 
 export const SEEN_INVITES_KEY_PREFIX = 'wz:seenInvites:'
 
@@ -81,10 +86,12 @@ export default function InvitationWatcher() {
   if (queue.length === 0) return null
 
   return (
-    <InvitationLetterPopup
-      key={queue[0]}
-      factionSlug={queue[0]}
-      onClose={() => setQueue((prev) => prev.slice(1))}
-    />
+    <Suspense fallback={null}>
+      <InvitationLetterPopup
+        key={queue[0]}
+        factionSlug={queue[0]}
+        onClose={() => setQueue((prev) => prev.slice(1))}
+      />
+    </Suspense>
   )
 }

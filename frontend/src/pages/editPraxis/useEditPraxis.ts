@@ -28,8 +28,11 @@
  * through, which is a shared mutable cell rather than an interface. #2879 and
  * #2878 turned three of them around: the duel pane, the media tray and the seal
  * stack now *report* an outcome and this file writes the praxis and the error
- * line, which it owns. Each of those wrappers is the same three lines, so a
- * reader who has met one has met all of them. `useComposerRoster` is #2880.
+ * line, which it owns. Each of those wrappers was the same three lines, so
+ * #2945 made them one — `reportOutcome` below, over the pure `applyOutcome` in
+ * `composerOutcome.ts`, which is where the write-back is guarded now that it
+ * lives in the module this suite cannot render. `useComposerRoster` is #2880:
+ * its wrapper reports through `reportOutcome` too.
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -68,10 +71,11 @@ import {
 } from "../../components/confirm/composerConfirms";
 import { useComposerConfirm } from "./useComposerConfirm";
 import { useComposerDraft } from "./useComposerDraft";
-import { useComposerMedia, type MediaOutcome } from "./useComposerMedia";
-import { useMetataskApply, type SealOutcome } from "./useMetataskApply";
+import { applyOutcome, type ComposerOutcome } from "./composerOutcome";
+import { useComposerMedia } from "./useComposerMedia";
+import { useMetataskApply } from "./useMetataskApply";
 import { useComposerRoster } from "./useComposerRoster";
-import { useComposerDuel, type DuelOutcome } from "./useComposerDuel";
+import { useComposerDuel } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listMetatasks } from "../../api/metatasks";
@@ -139,6 +143,15 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Every reporting sub-hook writes back through this one call (#2945): the
+  // praxis and the shared error line are ours, and `applyOutcome` is the pure
+  // function that decides which of them an outcome touches — guarded in
+  // `__tests__/composerOutcomeWriteBack.test.ts`, which this file cannot be
+  // (it needs the room, the auth context and the confirms to mount).
+  const reportOutcome = useCallback((outcome: ComposerOutcome) => {
+    applyOutcome(outcome, { setPraxis, setError });
+  }, []);
+
   // ---- Media tray (#297, #514, #1286) ----
   const {
     media,
@@ -154,30 +167,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // The tray owns its tiles and its own `fileError`; the shared error line is
   // ours, so an upload or a delete that fails reports it and we print it
-  // (#2878). It never clears the line — it never did.
-  const reportMedia = useCallback((outcome: MediaOutcome) => {
-    if (outcome.kind === "failed") setError(outcome.message);
-  }, []);
-
+  // (#2878). It never clears the line — it never did, and a `MediaOutcome`
+  // carries no success arm to clear it with.
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      reportMedia(await handleFileChangeSide(event));
+      reportOutcome(await handleFileChangeSide(event));
     },
-    [handleFileChangeSide, reportMedia],
+    [handleFileChangeSide, reportOutcome],
   );
 
   const removeMedia = useCallback(
     async (item: MediaItemOut) => {
-      reportMedia(await removeMediaSide(item));
+      reportOutcome(await removeMediaSide(item));
     },
-    [removeMediaSide, reportMedia],
+    [removeMediaSide, reportOutcome],
   );
 
   const confirmImageEdit = useCallback(
     async (blob: Blob) => {
-      reportMedia(await confirmImageEditSide(blob));
+      reportOutcome(await confirmImageEditSide(blob));
     },
-    [confirmImageEditSide, reportMedia],
+    [confirmImageEditSide, reportOutcome],
   );
 
   // The catalogue of seals this viewer may apply — a viewer-keyed LOAD, so it
@@ -203,22 +213,18 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // The stack owns which seals are on; the re-scored praxis and the error line
   // are ours, so a mutation reports what it changed and we write it (#2878).
-  const applySealOutcome = useCallback((outcome: SealOutcome) => {
-    if (outcome.kind === "unchanged") return;
-    setError(outcome.kind === "failed" ? outcome.message : "");
-    if (outcome.kind === "applied") setPraxis(outcome.praxis);
-  }, []);
-
+  // Dropping the praxis half of that write is #2464 — the score stamp keeps
+  // printing the pre-seal number until a reload.
   const addMetatask = useCallback(
     async (mt: TaskOut) => {
-      applySealOutcome(await addMetataskSide(mt));
+      reportOutcome(await addMetataskSide(mt));
     },
-    [addMetataskSide, applySealOutcome],
+    [addMetataskSide, reportOutcome],
   );
 
   const confirmRemoveMetatask = useCallback(async () => {
-    applySealOutcome(await confirmRemoveMetataskSide());
-  }, [confirmRemoveMetataskSide, applySealOutcome]);
+    reportOutcome(await confirmRemoveMetataskSide());
+  }, [confirmRemoveMetataskSide, reportOutcome]);
 
   // The sheet opens onto a clear line: it prints `error` itself (#2382), so a
   // failure from publish or a duel must not greet the author on the way in.
@@ -251,19 +257,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // The pane owns the duel; the praxis and the error line are ours, so it
   // reports what it changed and we write it (#2879).
-  const applyDuelOutcome = useCallback((outcome: DuelOutcome) => {
-    if (outcome.kind === "unchanged") return;
-    setError(outcome.kind === "failed" ? outcome.message : "");
-    if (outcome.kind === "cancelled") setPraxis(outcome.praxis);
-  }, []);
-
   const cancelDuel = useCallback(async () => {
-    applyDuelOutcome(await cancelDuelSide());
-  }, [cancelDuelSide, applyDuelOutcome]);
+    reportOutcome(await cancelDuelSide());
+  }, [cancelDuelSide, reportOutcome]);
 
   const dissolveDuel = useCallback(async () => {
-    applyDuelOutcome(await dissolveDuelSide());
-  }, [dissolveDuelSide, applyDuelOutcome]);
+    reportOutcome(await dissolveDuelSide());
+  }, [dissolveDuelSide, reportOutcome]);
 
   // The duel gate and the ADR-0012 window length (#1164) are two era values off
   // one payload — since #1141 the app-wide cached one, rather than a third
