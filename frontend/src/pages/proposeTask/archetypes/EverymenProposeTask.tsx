@@ -93,10 +93,24 @@
  *
  * ## Copy — none of its own
  *
- * Every string is an existing `forms:proposeTask.*` / `forms:breadcrumb.*` /
- * `common:filters.*` key, unchanged. The masthead's one word is the faction's
- * NAME out of `factions.json`, which is what every other Everymen surface puts
- * there under ADR-0057.
+ * Every string is an existing `forms:proposeTask.*` / `common:filters.*` key,
+ * unchanged. The masthead's one word is the faction's NAME out of
+ * `factions.json`, which is what every other Everymen surface puts there under
+ * ADR-0057.
+ *
+ * ONE na-KIT ELEMENT IS NOT DRAWN: its hand-rolled `Tasks › Propose a Task`
+ * breadcrumb. #2102 collapsed eighteen hand-rolled crumbs onto ONE shared
+ * component precisely so a faction surface would stop drawing its own, and the
+ * shared `components/nav/Breadcrumb` cannot express this trail — it takes a
+ * `taskId` and a `taskTitle` and builds `Tasks › <task>` from them, and no task
+ * exists yet. A nineteenth copy inside a faction archetype is the thing that
+ * issue deleted, and it would have to be inked either in the site's neutral
+ * tiers (which `local/no-global-ink-on-faction-surface` forbids here, correctly)
+ * or in this kit's paper inks on the app's own ground, which nothing measures.
+ * So the way back is the footer's Cancel, which is `navigate(-1)`. Both
+ * character plates this dress derives from draw no crumb either. Flagged on the
+ * PR: giving this page a task-less trail is a change to the SHARED component,
+ * not something an archetype may decide on its own.
  *
  * ## Presentation only
  *
@@ -105,7 +119,6 @@
  * `state.canProposeTask` — are answered in the dispatcher, above this file.
  */
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
@@ -435,16 +448,11 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
 
   return (
     <ComposerPage sizes={sizes} style={rootStyle}>
-      {/* The docket, above the sheet: the trail back to Tasks, and the pick the
-          sheet below is dressed by. Both are the na kit's own placement — its
-          breadcrumb is page chrome and its chips sit outside the framed card.
-
-          The site's shared `<Breadcrumb>` cannot serve this trail: it takes a
-          `taskId` and a `taskTitle` and builds Tasks › <task> from them, and no
-          task exists yet. So this is the na kit's two-crumb nav verbatim,
-          including its NEUTRAL inks — a breadcrumb is site chrome standing on
-          the site's own ground, never part of the faction surface (#2102), and
-          this one is outside the sheet where that ground is what it stands on. */}
+      {/* The docket, above the sheet: the pick the sheet below is dressed by.
+          That placement is the na kit's own — the chips live outside its framed
+          card, because the pick is what the card wears and cannot live inside
+          the thing it dresses. The column is `ComposerPage`'s own, so the row
+          lines up with the sheet's edge at both widths. */}
       <div
         style={{
           maxWidth: sizes.maxWidth,
@@ -452,24 +460,6 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
           padding: 'var(--space-lg) var(--space-lg) 0',
         }}
       >
-        <nav
-          style={{
-            fontFamily: COURIER,
-            fontSize: 'var(--text-md)',
-            letterSpacing: '0.1em',
-            color: 'var(--color-text-tertiary)',
-            marginBottom: 'var(--space-md)',
-          }}
-        >
-          <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-            {t('breadcrumb.tasks')}
-          </Link>
-          {' › '}
-          <span style={{ color: 'var(--color-text-primary)' }}>
-            {t('proposeTask.pageTitle')}
-          </span>
-        </nav>
-
         {/* One wrapping radiogroup, not `ChipRow`: its shell scrolls sideways
             and prints a visible inline label, which would bury three of the
             eight options. The chips are plates in this kit's stock — the create
