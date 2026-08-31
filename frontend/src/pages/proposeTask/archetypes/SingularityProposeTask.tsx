@@ -471,8 +471,25 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
 
   return (
     <ComposerPage sizes={sizes} style={pageStyle}>
-      {/* Site chrome, above the sheet and on the site's own ground — neutral by
-          rule (#2102), which is why it does not take the terminal's ink. */}
+      {/* Site chrome, above the sheet and on the site's own ground — NEUTRAL by
+          rule (#2102), which is why it does not take the terminal's ink: a
+          phosphor cut for a near-black chassis has nothing to do with the app's
+          own page.
+
+          THE INK COMES FROM `components/nav/Breadcrumb`, NOT FROM THE na KIT'S
+          HAND-ROLLED COPY, and the difference is the one thing the tier arm of
+          `no-raw-style-values` would not let through. The site's one breadcrumb
+          paints the trail `--label-ink` and gives the current crumb `inherit`
+          plus weight; `DefaultProposeTask` predates it and reaches the global
+          `--color-text-*` family directly, which is banned on a
+          faction-dispatched surface and correctly so. `--label-ink` is unset to
+          `--color-text-tertiary` on this ground — nothing here repoints it, the
+          one Singularity repoint being fenced to `[data-composer-body]` — so
+          this renders the na kit's own value while reading the seam rather than
+          painting over it.
+
+          The shared component itself cannot be mounted: its trail is built from
+          a `taskId` / `taskTitle`, and no task exists yet on this page. */}
       <nav
         className="font-body"
         style={{
@@ -481,14 +498,14 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
           padding: 'var(--space-lg) var(--space-lg) 0',
           fontSize: 'var(--text-md)',
           letterSpacing: '0.1em',
-          color: 'var(--color-text-tertiary)',
+          color: 'var(--label-ink)',
         }}
       >
         <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
           {t('breadcrumb.tasks')}
         </Link>
         {' › '}
-        <span style={{ color: 'var(--color-text-primary)' }}>
+        <span aria-current="page" style={{ color: 'inherit', fontWeight: 700 }}>
           {t('proposeTask.pageTitle')}
         </span>
       </nav>
