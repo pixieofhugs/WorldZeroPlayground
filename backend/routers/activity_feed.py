@@ -4,10 +4,12 @@ from datetime import datetime
 from typing import Callable, Optional
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db, get_session_factory
 from dependencies import get_current_character
+from models.account import Account
 from models.character import Character
 from schemas.activity_feed import (
     ActivityFeedResponse,
@@ -23,6 +25,7 @@ from services.activity_feed import (
     restore_feed_item,
     restore_feed_items_for_filter,
 )
+from services.notification_prefs import muted_feed_types
 
 router = APIRouter()
 
@@ -66,6 +69,19 @@ async def activity_feed(
         limit=limit,
         archived=archived,
         item_types=types,
+        # The account's "show on Updates" switches (#1047). ACCOUNT-scoped
+        # while the feed is character-scoped, which is the issue's founding
+        # sentence: someone who wants fewer rows wants fewer rows on every
+        # life they carry. One scalar select rather than loading the row —
+        # the six round trips in `_build_fetch_context` are the cost here,
+        # not this.
+        muted_types=muted_feed_types(
+            await session.scalar(
+                select(Account.notification_prefs).where(
+                    Account.id == character.account_id
+                )
+            )
+        ),
     )
     return ActivityFeedResponse.model_validate(asdict(dc_response))
 

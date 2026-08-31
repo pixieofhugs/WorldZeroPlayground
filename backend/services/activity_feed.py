@@ -1505,7 +1505,9 @@ REQUEST_ITEM_TYPES: frozenset[str] = frozenset(FILTER_QUERIES[FILTER_REQUESTS])
 STREAM_FILTERS: frozenset[str] = frozenset({FILTER_ALL, FILTER_YOUR_STUFF})
 
 
-def _visible_types(active_filter: str, archived: bool) -> set[str]:
+def _visible_types(
+    active_filter: str, archived: bool, muted: frozenset[str] = frozenset()
+) -> set[str]:
     """Which feed types this view may return — the one authority for both.
 
     ADR-0070: **an unanswered obligation lives in the queue, never in the
@@ -1522,14 +1524,30 @@ def _visible_types(active_filter: str, archived: bool) -> set[str]:
     before "fixing" this.
 
     Both the item fan-out and ``_sum_counts_for_tab`` call this, so the badge
-    over a list can never disagree with the list (ADR-0036).
+    over a list can never disagree with the list (ADR-0036). ``muted`` is the
+    third axis for the same reason: a type the reader has switched off must
+    leave the tab counts with the rows, or the badge promises items the list
+    will not show.
+
+    ``muted`` is the account's "show on Updates" switches (#1047,
+    ``services.notification_prefs.muted_feed_types``). Two guarantees are
+    enforced here rather than trusted from the caller:
+
+    * **A request type is never muted.** ``REQUEST_ITEM_TYPES`` is subtracted
+      out unconditionally, so the Requests queue and the bell's number are
+      beyond the reach of the settings page whatever anyone passes — which is
+      the owner's rule (2026-08-19) held at the seam that enforces it rather
+      than at the nine places that could forget it.
+    * **The ARCHIVE is never muted.** Switching a type off says "stop showing
+      me these", not "delete what I already put away" — the same reason this
+      function already ignores the friend/foe/global slicing when ``archived``.
     """
     if archived:
         return set(FILTER_QUERIES[FILTER_ALL])
     types = set(FILTER_QUERIES[active_filter])
     if active_filter in STREAM_FILTERS:
         types -= REQUEST_ITEM_TYPES
-    return types
+    return types - (muted - REQUEST_ITEM_TYPES)
 
 
 def _normalise_filter(feed_filter: Optional[str]) -> str:
@@ -1784,7 +1802,9 @@ async def _count_sources(
     return counts
 
 
-def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
+def _sum_counts_for_tab(
+    tab: str, counts_by_type: dict[str, int], muted: frozenset[str] = frozenset()
+) -> int:
     """Sum the per-source counts of every type the live ``tab`` would show.
 
     Membership comes from ``_visible_types``, the same function the item fan-out
@@ -1792,7 +1812,7 @@ def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
     """
     return sum(
         counts_by_type.get(item_type, 0)
-        for item_type in _visible_types(tab, archived=False)
+        for item_type in _visible_types(tab, archived=False, muted=muted)
     )
 
 
@@ -1810,6 +1830,7 @@ async def _compute_counts(
     archive_view: FeedArchiveView,
     session_factory: Callable,
     active_filter: str,
+    muted: frozenset[str] = frozenset(),
 ) -> FeedCountsDC:
     """Badge counts, each derived from its source's own query (ADR-0036).
 
@@ -1850,16 +1871,19 @@ async def _compute_counts(
         facet_counts = live_counts
 
     return FeedCountsDC(
-        all=_sum_counts_for_tab(FILTER_ALL, live_counts),
-        friends=_sum_counts_for_tab(FILTER_FRIENDS, live_counts),
-        foes=_sum_counts_for_tab(FILTER_FOES, live_counts),
-        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, live_counts),
-        global_count=_sum_counts_for_tab(FILTER_GLOBAL, live_counts),
-        requests=_sum_counts_for_tab(FILTER_REQUESTS, live_counts),
+        all=_sum_counts_for_tab(FILTER_ALL, live_counts, muted),
+        friends=_sum_counts_for_tab(FILTER_FRIENDS, live_counts, muted),
+        foes=_sum_counts_for_tab(FILTER_FOES, live_counts, muted),
+        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, live_counts, muted),
+        global_count=_sum_counts_for_tab(FILTER_GLOBAL, live_counts, muted),
+        # NOT muted, and it cannot be: `_visible_types` subtracts the request
+        # types back out of `muted` itself. The bell's number is the one count
+        # the settings page may never move (#1047, owner ruling 2026-08-19).
+        requests=_sum_counts_for_tab(FILTER_REQUESTS, live_counts, muted),
         by_type={
             item_type: facet_counts.get(item_type, 0)
             for item_type in sorted(
-                _visible_types(active_filter, archive_view.archived_only)
+                _visible_types(active_filter, archive_view.archived_only, muted)
             )
         },
     )
@@ -1936,6 +1960,7 @@ async def get_sidebar_feed(
     character_id: int,
     session: AsyncSession,
     session_factory: Callable,
+    muted: frozenset[str] = frozenset(),
 ) -> tuple[int, list[ActivityFeedItemDC], int]:
     """The rail's pending-request COUNT and its activity panel, in one pass.
 
@@ -2012,7 +2037,9 @@ async def get_sidebar_feed(
     )
 
     def sources_for(feed_filter: str) -> list[FeedSource]:
-        visible = _visible_types(feed_filter, archived=False)
+        # `muted` reaches the ACTIVITY panel and, by `_visible_types`' own
+        # subtraction, never the request count beside it (#1047).
+        visible = _visible_types(feed_filter, archived=False, muted=muted)
         return [source for source in FEED_SOURCES if source.item_type in visible]
 
     recent_activity = await _fetch_sources(
@@ -2039,6 +2066,7 @@ async def get_activity_feed(
     limit: int = 20,
     archived: bool = False,
     item_types: Optional[list[str]] = None,
+    muted_types: frozenset[str] = frozenset(),
 ) -> ActivityFeedResponseDC:
     """Fetch a unified activity feed for the given character.
 
@@ -2066,9 +2094,15 @@ async def get_activity_feed(
             projection, so a stale bookmark must degrade, never 4xx, and an
             empty multi-select can never mean "match nothing". Counts are
             computed without it (facet semantics — see ``_compute_counts``).
+        muted_types: Feed types this ACCOUNT has switched off on the Settings
+            page (#1047, ``services.notification_prefs.muted_feed_types``).
+            Unlike ``item_types`` this DOES move the counts: it is a standing
+            preference rather than a facet selection, so a badge that counted
+            muted rows would promise items the list will never show. Request
+            types in it are ignored — see ``_visible_types``.
     """
     active_filter = _normalise_filter(feed_filter)
-    allowed_types = _visible_types(active_filter, archived)
+    allowed_types = _visible_types(active_filter, archived, muted_types)
     requested_types = {
         item_type for item_type in (item_types or []) if item_type in FEED_ITEM_TYPES
     }
@@ -2088,7 +2122,7 @@ async def get_activity_feed(
     # the request session, and one AsyncSession is not safe under concurrent use.
     all_items = await _fetch_sources(allowed_sources, fetch_ctx, archive_view, session)
     counts = await _compute_counts(
-        fetch_ctx, archive_view, session_factory, active_filter
+        fetch_ctx, archive_view, session_factory, active_filter, muted_types
     )
 
     # Sort by timestamp descending, slice to limit
