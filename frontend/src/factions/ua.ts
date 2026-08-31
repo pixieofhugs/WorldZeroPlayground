@@ -16,6 +16,7 @@ const UaAvatar = lazyArchetype(() => import('../components/avatar/UaAvatar'))
 const UaBackdrop = lazyArchetype(() => import('../components/backdrop/UaBackdrop'))
 const UaComment = lazyArchetype(() => import('../components/comments/voices/UaComment'))
 const UaCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/UaCreateCharacter'))
+const UaEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/UaEditCharacter'))
 const UaDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaDuelSealConfirm'))
 const UaEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/UaEditPraxis'))
 const UaFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/UaFactionBody'))
@@ -52,6 +53,7 @@ export const UA_MANIFEST: FactionManifest = {
   praxisDetail: () => UaPraxisDetail,
   editPraxis: () => UaEditPraxis,
   createCharacter: () => UaCreateCharacter,
+  editCharacter: () => UaEditCharacter,
   factionHero: () => UaFactionHero,
   factionBody: () => UaFactionBody,
   profileBody: () => UaProfileBody,
