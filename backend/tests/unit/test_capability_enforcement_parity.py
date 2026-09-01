@@ -265,7 +265,15 @@ MATRIX = [
 
 @pytest.mark.parametrize("field", gate_fields())
 def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
-    predicate = getattr(era_gates, predicate_name_for(field))
+    predicate = getattr(era_gates, predicate_name_for(field), None)
+    if predicate is None:
+        # Reported properly by the derived-list test above; say so rather than
+        # letting an AttributeError stand in for the explanation.
+        pytest.fail(
+            f"No services.era_gates.{predicate_name_for(field)} to compare "
+            f"{field} against — see "
+            "test_every_capability_field_is_predicate_backed_or_registered."
+        )
     disagreements = [
         (level, slug, is_admin, advertised, enforced)
         for level, slug, is_admin in MATRIX
