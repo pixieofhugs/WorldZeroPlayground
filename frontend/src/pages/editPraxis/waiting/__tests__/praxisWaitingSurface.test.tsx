@@ -145,11 +145,27 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
  * one every unregistered slug falls through to. Using it keeps these assertions
  * about the surface's READING (which control applies to whom) while still
  * putting the dress seam every skin passes through in the path.
+ *
+ * The surface takes its sixteen fields by name since #2977, and the suite still
+ * states its premise as one built state (`anEditPraxisState`, #2877) and spreads
+ * it. Every case below reads the same, and the fields it does NOT name stay the
+ * fixture's quiet default — which is the point of `state()` above, and which a
+ * per-case list of sixteen props would have destroyed.
  */
-function render(props: Omit<PraxisWaitingSurfaceProps, "dress">) {
+function render({
+  state,
+  ...rest
+}: { state: EditPraxisState } & Pick<
+  PraxisWaitingSurfaceProps,
+  "autoSubmitDays" | "now"
+>) {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <PraxisWaitingSurface {...props} dress={DEFAULT_COMPOSER_DRESS} />
+      <PraxisWaitingSurface
+        {...state}
+        {...rest}
+        dress={DEFAULT_COMPOSER_DRESS}
+      />
     </MemoryRouter>,
   );
 }

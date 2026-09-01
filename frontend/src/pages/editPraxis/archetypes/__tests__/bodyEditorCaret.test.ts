@@ -32,6 +32,15 @@ const rules = EditorState.create({ extensions: [BODY_EDITOR_BASE_THEME] })
   .map((module) => module.getRules())
   .join("\n");
 
+// The caret rule this module mounts. style-mod prefixes it with the theme's
+// own generated class (`.ͼ5 .cm-cursor {…}`), which is the specificity the
+// comment in `bodyEditorTheme.ts` is about, so the selector is matched at its
+// tail rather than its head.
+const cursorRules = rules
+  .split("\n")
+  .filter((rule) => /\.cm-cursor\s*\{/.test(rule))
+  .join("\n");
+
 describe("the composer body editor's caret (#1852)", () => {
   it("registers drawSelection, so the caret is drawn rather than native", () => {
     // `drawSelection()`'s signature contribution, and the only extension in
@@ -45,7 +54,20 @@ describe("the composer body editor's caret (#1852)", () => {
   it("paints the drawn caret from the skin's ink, not the base theme's black", () => {
     // `.cm-cursor` base-themes to `1.2px solid black`, and the `&dark` override
     // never fires here. Half these skins draw a dark field.
-    expect(rules).toMatch(/\.cm-cursor \{border-left-color: currentColor;\}/);
+    expect(cursorRules).toContain("border-left-color: currentColor");
+  });
+
+  it("floors the drawn caret's height, so an empty document paints one", () => {
+    // #2970. `RectangleMarker.forRange` measures the TEXT NODE's box, and an
+    // empty line has no text node — only the placeholder widget — so the
+    // marker is built at ~zero height and paints nothing until the first
+    // keystroke. `min-height` loses to a larger inline `height`, so it acts
+    // only as a floor and a measured caret on a line with text is untouched.
+    // `1em` is `.cm-content`'s own font-size, i.e. text height — NOT the
+    // 1.6–1.85 line box #1852 moved away from. A `line-height` basis here
+    // would be that regression coming back.
+    expect(cursorRules).toContain("min-height: 1em");
+    expect(cursorRules).not.toContain("line-height");
   });
 
   it("paints the selection from currentColor, once, not eight literals", () => {

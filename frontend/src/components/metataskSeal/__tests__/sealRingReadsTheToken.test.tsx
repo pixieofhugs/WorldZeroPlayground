@@ -114,7 +114,7 @@ function skinCorner(element: React.ReactElement): string | null {
  * to match the card's.
  */
 function rowControlCorner(slug: string): string | null {
-  const html = render(<MetataskPicker state={pickerState([metatask(slug)])} />);
+  const html = render(<MetataskPicker {...pickerState([metatask(slug)])} />);
   const controls = [...html.matchAll(/<button[^>]*style="([^"]*)"/g)]
     .map((match) => match[1])
     .filter((style) => style.includes("z-index:3"));

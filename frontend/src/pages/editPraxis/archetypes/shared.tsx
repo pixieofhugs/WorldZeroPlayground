@@ -126,7 +126,9 @@ export function formatAutosave(date: Date | null): string {
  * `Submitted` rather than `Submitted by you`: a lapsed window publishes over a
  * holdout (ADR-0012), and that holdout reads this same line.
  */
-export function composerStageWord(state: EditPraxisState): string {
+export function composerStageWord(
+  state: Pick<EditPraxisState, "phase" | "praxis">,
+): string {
   if (!isWaitingStage(state.phase)) {
     return i18n.t("forms:editPraxis.composer.statusDraft");
   }
