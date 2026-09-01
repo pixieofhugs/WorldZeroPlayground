@@ -9,7 +9,9 @@ from sqlalchemy import (
     Identity,
     String,
     UniqueConstraint,
+    text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -127,6 +129,25 @@ class Account(TimestampMixin, Base):
     # here, so the two never drift.
     albescent_glimpsed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+
+    # Notification preferences (#1047) — nine events, two booleans each, in ONE
+    # JSONB. Per ACCOUNT and not per character: that is this issue's founding
+    # sentence, and a person who wants fewer emails wants fewer emails on every
+    # life they carry.
+    #
+    # NOT a table and not eighteen columns. Nothing queries across accounts — a
+    # send already knows its recipient — so there is no join to make cheap.
+    # `server_default '{}'` plus "unset keys resolve to their default in code"
+    # (`services/notification_prefs.py`) is what makes a TENTH event a code
+    # change with no migration and no backfill: every account still holding
+    # `{}` resolves to defaults invented after its row was written.
+    #
+    # Do not read this dict directly. `resolve_prefs` is its one reader, and it
+    # is the only thing that knows a locked row's page value is pinned rather
+    # than stored.
+    notification_prefs: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
 
     # foreign_keys pins this to character.account_id — active_character_id adds a

@@ -54,6 +54,7 @@ import {
   getDuelDetail,
   type DuelDetailOut,
 } from "../../api/duel";
+import type { CharacterOut } from "../../api/characters";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./roomStore";
@@ -75,7 +76,10 @@ import { useComposerDraft } from "./useComposerDraft";
 import { applyOutcome, type ComposerOutcome } from "./composerOutcome";
 import { useComposerMedia } from "./useComposerMedia";
 import { useMetataskApply } from "./useMetataskApply";
-import { useComposerRoster } from "./useComposerRoster";
+import {
+  useComposerRoster,
+  type RosterOutcome,
+} from "./useComposerRoster";
 import { useComposerDuel } from "./useComposerDuel";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { getTask, type TaskOut } from "../../api/tasks";
@@ -376,21 +380,71 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     inviteOpen,
     setInviteOpen,
     inviting,
-    sendInvite,
-    cancelInvite,
-    kickMember,
-    nudge,
-    nudgeCrew,
+    sendInvite: sendInviteSide,
+    cancelInvite: cancelInviteSide,
+    kickMember: kickMemberSide,
+    nudge: nudgeSide,
+    nudgeCrew: nudgeCrewSide,
     crewNudge,
-    sendChallenge,
+    sendChallenge: sendChallengeSide,
   } = useComposerRoster({
     praxis,
-    setPraxis,
-    duel,
-    setDuel,
-    duelPaneOpen,
-    setError,
+    // The pane's two facts, read-only: which job the one search box is doing,
+    // and where the rival's own side is. Not its setters (#2880).
+    duelPane: { duel, paneOpen: duelPaneOpen },
   });
+
+  // The roster owns its picker, its `inviting` flag and its crew counts; the
+  // praxis and the shared error line are ours, so every action reports what it
+  // changed and we write it (#2880). A nudge also re-reads the duel — the
+  // pane's own detail effect keys on `duel_id`, which a nudge never changes,
+  // and `nudged_at` on the rival's side is the only thing that button believes.
+  const reportRoster = useCallback(
+    (outcome: RosterOutcome) => {
+      reportOutcome(outcome);
+      if (outcome.kind === "applied" && outcome.duel) setDuel(outcome.duel);
+    },
+    [reportOutcome, setDuel],
+  );
+
+  const sendInvite = useCallback(
+    async (character: CharacterOut) => {
+      reportRoster(await sendInviteSide(character));
+    },
+    [sendInviteSide, reportRoster],
+  );
+
+  const cancelInvite = useCallback(
+    async (inviteId: number) => {
+      reportRoster(await cancelInviteSide(inviteId));
+    },
+    [cancelInviteSide, reportRoster],
+  );
+
+  const kickMember = useCallback(
+    async (memberId: number) => {
+      reportRoster(await kickMemberSide(memberId));
+    },
+    [kickMemberSide, reportRoster],
+  );
+
+  const nudge = useCallback(
+    async (characterId: number) => {
+      reportRoster(await nudgeSide(characterId));
+    },
+    [nudgeSide, reportRoster],
+  );
+
+  const nudgeCrew = useCallback(async () => {
+    reportRoster(await nudgeCrewSide());
+  }, [nudgeCrewSide, reportRoster]);
+
+  const sendChallenge = useCallback(
+    async (character: CharacterOut) => {
+      reportRoster(await sendChallengeSide(character));
+    },
+    [sendChallengeSide, reportRoster],
+  );
 
   // ---- Save / publish ----
   const publish = useCallback(async () => {
