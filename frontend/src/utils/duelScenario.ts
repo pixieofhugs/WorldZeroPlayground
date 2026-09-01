@@ -40,23 +40,16 @@ export const DUEL_LEVEL = 2
 const CROSS_FACTION_SLUG = 'na'
 
 /**
- * The one faction that overrides the duel-seal copy the specs assert on
- * ("Take the Field", `praxis.json` `duelSeal.wow`). Every other skin takes the
- * heading and confirm label from the shared `useDuelSealCopy`, so this is the
- * single slug a duel fixture must steer around — a property of the copy
- * catalog, and the only faction this module names for its own sake.
- */
-const SEAL_COPY_OVERRIDING_SLUG = 'wow'
-
-/**
  * The first task a duel-level challenger may attempt that drives a REAL
  * faction skin.
  *
  * Selects on properties, never on a slug (#2710): at or below the duel level,
- * so the challenger can sign up; belonging to some faction, so the composer,
- * the seal dialog and the duel rail each dispatch to a real archetype rather
- * than the Default fall-through; and not the one faction that rewrites the
- * seal copy the specs assert on.
+ * so the challenger can sign up, and belonging to some faction, so the
+ * composer, the seal dialog and the duel rail each dispatch to a real
+ * archetype rather than the Default fall-through. Every faction's seal
+ * dialog — WOW included — takes its heading and confirm label from the
+ * shared `useDuelSealCopy` (#1909 deleted the last per-faction override), so
+ * there is no faction this selector needs to steer around for copy reasons.
  *
  * The task itself is dev-seeded — `seed.py::ensure_duel_fixture_task`. Era 1
  * declares no tasks (#1398), so without that seeder this matches nothing and
@@ -67,8 +60,7 @@ export function selectDuelTask(tasks: readonly TaskOut[]): TaskOut {
     (candidate) =>
       candidate.level_required <= DUEL_LEVEL &&
       candidate.primary_faction_slug !== '' &&
-      candidate.primary_faction_slug !== CROSS_FACTION_SLUG &&
-      candidate.primary_faction_slug !== SEAL_COPY_OVERRIDING_SLUG,
+      candidate.primary_faction_slug !== CROSS_FACTION_SLUG,
   )
   if (!task) {
     throw new Error(
