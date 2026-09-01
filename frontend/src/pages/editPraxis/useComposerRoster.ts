@@ -8,9 +8,27 @@
  * together. The one viewer-keyed read the filter still depends on (active foes,
  * for ordering) comes with it.
  *
- * Split out of `useEditPraxis.ts` (#1392); behaviour unchanged. It reads
- * `useAuth()` directly rather than taking the viewer as a parameter, which is
- * what keeps its three effects inside the #1390 ratchet
+ * Split out of `useEditPraxis.ts` (#1392). It took six things from around it
+ * until #2880: `praxis`, the assembler's `setPraxis`/`setError`, and
+ * `duel`/`setDuel`/`duelPaneOpen` from a SIBLING hook. It now owns its own
+ * state and *reports*: every action answers with a {@link RosterOutcome} and
+ * `useEditPraxis` writes the praxis, the shared error line and the duel detail
+ * it owns. That is what lets the roster be driven alone — see
+ * `__tests__/composerRosterStandsAlone.test.tsx`, which was the first test the
+ * invite, kick and nudge flows have ever had.
+ *
+ * What it still takes from the pane beside it is {@link DuelPaneView}: two
+ * read-only facts, because the same box picks an opponent while that pane is
+ * open, and a nudge aimed at a rival has to reach THEIR side of the duel
+ * (ADR-0011). An input with a name, not a setter to write through.
+ *
+ * The `setError("")` each of these actions used to fire before its request is
+ * gone with the setter, exactly as in #2879: a success arm clears the line
+ * where it lands (`applyOutcome`), so a stale message now survives until the
+ * call that replaces it answers rather than until the button is pressed.
+ *
+ * It reads `useAuth()` directly rather than taking the viewer as a parameter,
+ * which is what keeps its three effects inside the #1390 ratchet
  * (`hooks/__tests__/authDepNarrowing.test.ts`): they key on
  * `user?.character?.id`, a value a `/auth/me` refetch cannot disturb, never on
  * the auth object itself — which that endpoint replaces on every answer,
@@ -28,7 +46,7 @@ import {
   type PraxisOut,
 } from "../../api/praxis";
 import { getDuelDetail, issueChallenge, type DuelDetailOut } from "../../api/duel";
-import { nudgeTheCrew, sendNudge } from "../../api/nudge";
+import { nudgeTheCrew, sendNudge, type NudgeResultOut } from "../../api/nudge";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
 import { useAuth } from "../../auth/AuthContext";
@@ -54,6 +72,61 @@ export interface CrewNudgeResult {
   skipped: number;
 }
 
+/**
+ * The counts behind the crew button, as a pure function.
+ *
+ * Exactly one of `nudge` / `error` is set on every entry (`api/nudge.ts`), so
+ * the presence of `nudge` is the whole test. It is a function rather than four
+ * lines inside the callback because the counts land in state written after
+ * render, which is the one thing this suite's SSR probe cannot read back.
+ */
+export function summariseCrewNudge(
+  results: NudgeResultOut[],
+): CrewNudgeResult {
+  return {
+    sent: results.filter((result) => result.nudge != null).length,
+    skipped: results.filter((result) => result.nudge == null).length,
+  };
+}
+
+/**
+ * What the roster needs to know about the duel pane beside it — and no more.
+ *
+ * Two reads, both of them facts about the pane rather than state the roster
+ * describes: `paneOpen` decides whether the one search box is picking an
+ * opponent or collab invitees (#311), and `duel` is how a nudge finds the
+ * rival's own praxis, since a duel is two linked solo praxes (ADR-0011).
+ *
+ * Handed in as one named value so the roster can be stood up on its own with a
+ * literal, and so that adding a third fact is a visible change to a contract
+ * rather than a seventh parameter.
+ */
+export interface DuelPaneView {
+  /** The attached duel, for aiming a nudge at the rival's own side. */
+  duel: DuelDetailOut | null;
+  /** The challenge pane is open, i.e. the box is picking an opponent. */
+  paneOpen: boolean;
+}
+
+/**
+ * What a roster action leaves for the composer around it to apply.
+ *
+ * Assignable to `ComposerOutcome` (`composerOutcome.ts`), which is what the
+ * assembler's one write-back takes. `duel` is the roster's one addition: a
+ * nudge re-reads the duel detail, because `nudged_at` on the rival's SIDE is
+ * the only thing that button believes and the pane's own detail effect keys on
+ * `duel_id`, which a nudge never changes. Absent means "leave the duel alone".
+ *
+ * `unchanged` means nothing was attempted — there is no praxis yet — so the
+ * error line is left exactly as it was found rather than cleared.
+ */
+export type RosterOutcome =
+  | { kind: "unchanged" }
+  | { kind: "failed"; message: string }
+  | { kind: "applied"; praxis: PraxisOut; duel?: DuelDetailOut };
+
+const NOTHING_TO_REPORT: RosterOutcome = { kind: "unchanged" };
+
 interface ComposerRoster {
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
@@ -61,26 +134,25 @@ interface ComposerRoster {
   inviteOpen: boolean;
   setInviteOpen: (value: boolean) => void;
   inviting: boolean;
-  sendInvite: (character: CharacterOut) => Promise<void>;
-  cancelInvite: (inviteId: number) => Promise<void>;
-  kickMember: (memberId: number) => Promise<void>;
-  nudge: (characterId: number) => Promise<void>;
-  nudgeCrew: () => Promise<void>;
+  /** Invites a collab member. The caller applies the outcome. */
+  sendInvite: (character: CharacterOut) => Promise<RosterOutcome>;
+  cancelInvite: (inviteId: number) => Promise<RosterOutcome>;
+  kickMember: (memberId: number) => Promise<RosterOutcome>;
+  nudge: (characterId: number) => Promise<RosterOutcome>;
+  nudgeCrew: () => Promise<RosterOutcome>;
   crewNudge: CrewNudgeResult | null;
-  sendChallenge: (character: CharacterOut) => Promise<void>;
+  sendChallenge: (character: CharacterOut) => Promise<RosterOutcome>;
 }
 
 export function useComposerRoster(options: {
   praxis: PraxisOut | null;
-  setPraxis: (praxis: PraxisOut) => void;
-  /** The attached duel, for aiming a nudge at the rival's own side. */
-  duel: DuelDetailOut | null;
-  setDuel: (duel: DuelDetailOut | null) => void;
-  /** The challenge pane is open, i.e. the box is picking an opponent. */
-  duelPaneOpen: boolean;
-  setError: (message: string) => void;
+  /** The pane beside this one, read-only — see {@link DuelPaneView}. */
+  duelPane: DuelPaneView;
 }): ComposerRoster {
-  const { praxis, setPraxis, duel, setDuel, duelPaneOpen, setError } = options;
+  const { praxis, duelPane } = options;
+  // Destructured so the effects below depend on the two facts rather than on
+  // the wrapper object, which a caller mints fresh on every render.
+  const { duel, paneOpen: duelPaneOpen } = duelPane;
   const { user } = useAuth();
 
   const [inviteQuery, setInviteQuery] = useState("");
@@ -172,75 +244,75 @@ export function useComposerRoster(options: {
   }, []);
 
   const sendInvite = useCallback(
-    async (character: CharacterOut) => {
-      if (!praxis) return;
+    async (character: CharacterOut): Promise<RosterOutcome> => {
+      if (!praxis) return NOTHING_TO_REPORT;
       setInviting(true);
-      setError("");
       clearPicker();
       try {
         await inviteToPraxis(praxis.id, character.id);
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
+        return { kind: "applied", praxis: await getPraxis(praxis.id) };
       } catch (err) {
-        setError(
-          extractError(
+        return {
+          kind: "failed",
+          message: extractError(
             err,
             i18n.t("forms:editPraxis.errors.invite", {
               name: character.display_name,
             }),
           ),
-        );
+        };
       } finally {
         setInviting(false);
       }
     },
-    [praxis, setPraxis, setError, clearPicker],
+    [praxis, clearPicker],
   );
 
   // Inviter rescinds a still-pending invite (#421).
   const cancelInvite = useCallback(
-    async (inviteId: number) => {
-      if (!praxis) return;
-      setError("");
+    async (inviteId: number): Promise<RosterOutcome> => {
+      if (!praxis) return NOTHING_TO_REPORT;
       try {
         await cancelInviteApi(praxis.id, inviteId);
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
+        return { kind: "applied", praxis: await getPraxis(praxis.id) };
       } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.rescindInvite")),
-        );
+        return {
+          kind: "failed",
+          message: extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.rescindInvite"),
+          ),
+        };
       }
     },
-    [praxis, setPraxis, setError],
+    [praxis],
   );
 
   // Remove another member from the collab (#959). Any member may kick any other
   // (mirrors the backend guard); the confirm step lives in CollabRoster, so this
-  // just fires the call and reloads — the kick resets the group to editing, so
-  // the refreshed praxis carries the reset roster + cast state (ADR-0013).
+  // just fires the call and reports — the kick resets the group to editing, so
+  // the answered praxis carries the reset roster + cast state (ADR-0013).
   const kickMember = useCallback(
-    async (memberId: number) => {
-      if (!praxis) return;
-      setError("");
+    async (memberId: number): Promise<RosterOutcome> => {
+      if (!praxis) return NOTHING_TO_REPORT;
       try {
-        const updated = await kickMemberApi(praxis.id, memberId);
-        setPraxis(updated);
+        return { kind: "applied", praxis: await kickMemberApi(praxis.id, memberId) };
       } catch (err) {
         const kicked = praxis.members.find(
           (member) => member.character_id === memberId,
         );
-        setError(
-          extractError(
+        return {
+          kind: "failed",
+          message: extractError(
             err,
             i18n.t("forms:editPraxis.errors.kick", {
               name: kicked?.character_display_name ?? "",
             }),
           ),
-        );
+        };
       }
     },
-    [praxis, setPraxis, setError],
+    [praxis],
   );
 
   // Poke whoever this praxis is waiting on (#1083). Every rule lives on the
@@ -250,9 +322,8 @@ export function useComposerRoster(options: {
   // and let a reload clear it. `nudged_at` on the refreshed roster row / duel
   // side is the only thing the button believes.
   const nudge = useCallback(
-    async (characterId: number) => {
-      if (!praxis) return;
-      setError("");
+    async (characterId: number): Promise<RosterOutcome> => {
+      if (!praxis) return NOTHING_TO_REPORT;
       // A duel is two linked solo praxes (ADR-0011): the praxis the rival owes
       // is THEIR side, not the one this composer is holding.
       const duelSide =
@@ -270,17 +341,30 @@ export function useComposerRoster(options: {
       try {
         await sendNudge(targetPraxisId, characterId);
         const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
-        if (refreshed.duel_id != null) {
-          setDuel(await getDuelDetail(refreshed.duel_id));
-        }
+        // ponytail: one outcome cannot say "praxis applied AND this line
+        // failed", so a duel-detail read that 500s after a successful nudge now
+        // reports only the failure, where it used to print the line over an
+        // already-refreshed roster. If that path ever matters, the arm gains a
+        // `message?` and `applyOutcome` writes both cells.
+        return {
+          kind: "applied",
+          praxis: refreshed,
+          duel:
+            refreshed.duel_id != null
+              ? await getDuelDetail(refreshed.duel_id)
+              : undefined,
+        };
       } catch (err) {
-        setError(
-          extractError(err, i18n.t("forms:editPraxis.errors.nudge", { name })),
-        );
+        return {
+          kind: "failed",
+          message: extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.nudge", { name }),
+          ),
+        };
       }
     },
-    [praxis, duel, setPraxis, setDuel, setError],
+    [praxis, duel],
   );
 
   // Poke everyone the collab is still waiting on, in ONE request (#1418).
@@ -295,51 +379,49 @@ export function useComposerRoster(options: {
   // handed to the surface to report. The refresh that follows is the same one
   // `nudge` does and for the same reason: `nudged_at` on the refreshed rows is
   // the only thing the per-row buttons believe.
-  const nudgeCrew = useCallback(async () => {
-    if (!praxis) return;
-    setError("");
+  const nudgeCrew = useCallback(async (): Promise<RosterOutcome> => {
+    if (!praxis) return NOTHING_TO_REPORT;
     setCrewNudge(null);
     try {
-      const results = await nudgeTheCrew(praxis.id);
-      setCrewNudge({
-        sent: results.filter((result) => result.nudge != null).length,
-        skipped: results.filter((result) => result.nudge == null).length,
-      });
-      setPraxis(await getPraxis(praxis.id));
+      setCrewNudge(summariseCrewNudge(await nudgeTheCrew(praxis.id)));
+      return { kind: "applied", praxis: await getPraxis(praxis.id) };
     } catch (err) {
-      setError(extractError(err, i18n.t("forms:editPraxis.errors.nudgeCrew")));
+      return {
+        kind: "failed",
+        message: extractError(err, i18n.t("forms:editPraxis.errors.nudgeCrew")),
+      };
     }
-  }, [praxis, setPraxis, setError]);
+  }, [praxis]);
 
   // ---- Duel challenge (#311): the same box, picking an opponent ----
   const sendChallenge = useCallback(
-    async (character: CharacterOut) => {
-      if (!praxis) return;
+    async (character: CharacterOut): Promise<RosterOutcome> => {
+      if (!praxis) return NOTHING_TO_REPORT;
       setInviting(true);
-      setError("");
       clearPicker();
       try {
         await issueChallenge({
           challenger_praxis_id: praxis.id,
           opponent_character_id: character.id,
         });
-        // Reload so the praxis carries its new duel_id; the effect fetches detail.
-        const refreshed = await getPraxis(praxis.id);
-        setPraxis(refreshed);
+        // Reload so the praxis carries its new duel_id; the pane's own effect
+        // fetches the detail off it.
+        return { kind: "applied", praxis: await getPraxis(praxis.id) };
       } catch (err) {
-        setError(
-          extractError(
+        return {
+          kind: "failed",
+          message: extractError(
             err,
             i18n.t("forms:editPraxis.errors.challenge", {
               name: character.display_name,
             }),
           ),
-        );
+        };
       } finally {
         setInviting(false);
       }
     },
-    [praxis, setPraxis, setError, clearPicker],
+    [praxis, clearPicker],
   );
 
   return {
