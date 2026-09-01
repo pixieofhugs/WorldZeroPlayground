@@ -48,13 +48,16 @@
  *    the wall — it is the one block that has to read as a separate object, and
  *    every ink it prints is already measured on that stock (below).
  *
- * ## The breadcrumb is hand-drawn, and that is not a slip
+ * ## The breadcrumb is the site's, and it was hand-drawn only because it had to be
  *
- * `components/nav/Breadcrumb` is the site's one trail (#2102) and it may not
- * serve here: it takes a `taskId` and a `taskTitle`, and on this page the task
- * does not exist yet. The na kit hand-rolls the same two crumbs for the same
- * reason, off the same `forms:breadcrumb.tasks` key. Ours is the same trail in
- * this skin's face — it sits ABOVE the sheet, which is rule 2 of that file.
+ * `components/nav/Breadcrumb` is the site's one trail (#2102) and it could not
+ * serve here: it took a `taskId` and a `taskTitle`, and on this page the task
+ * does not exist yet. The na kit hand-rolled the same two crumbs for the same
+ * reason, and so did five more archetypes — which is how #2102's drift restarted
+ * on the axes it had just deleted. #2973 gave the component a `current` label
+ * and every one of those copies came out, this one included. It is not in this
+ * skin's face any more, because a breadcrumb is not the skin's: it is neutral
+ * chrome standing above the sheet on the app's own ground.
  *
  * ## Colour, and the two families this faction keeps apart
  *
@@ -95,8 +98,8 @@
  * is what decides whether the tick exists at all.
  */
 import { type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
@@ -343,31 +346,14 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
   }
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
-      {/* The trail, above the sheet (#2102 rule 2). Hand-drawn for the reason in
-          this file's header: the shared component needs a task that does not
-          exist yet. */}
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: '0 auto',
-          padding: 'var(--space-lg) var(--space-lg) 0',
-        }}
-      >
-        <nav
-          aria-label={t('common:breadcrumb.label')}
-          style={{ fontFamily: BODY_FACE, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', color: MUTED }}
-        >
-          <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'underline' }}>
-            {t('breadcrumb.tasks')}
-          </Link>
-          {' › '}
-          <span aria-current="page" style={{ color: INK }}>
-            {t('proposeTask.pageTitle')}
-          </span>
-        </nav>
-      </div>
-
+    <ComposerPage
+      sizes={sizes}
+      style={{ fontFamily: BODY_FACE, color: INK }}
+      /* The trail, above the sheet (#2102 rule 2) and in the site's own hand
+         since #2973 — see this file's header. The slot draws the column the
+         hand-rolled wrapper used to. */
+      breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
