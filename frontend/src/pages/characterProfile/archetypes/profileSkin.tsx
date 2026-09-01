@@ -39,6 +39,12 @@ import CredentialCard from '../../../components/CredentialCard'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { mediaUrl } from '../../../utils/media'
+import {
+  PROFILE_SECTIONS,
+  SectionPanel,
+  SectionToggle,
+  useSectionDisclosures,
+} from '../../factionDetail/sectionDisclosure'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 
 /** The costume knobs a faction fills in. Everything is a CSS var reference or
@@ -135,8 +141,21 @@ interface ProfileKit {
   formatLevel?: (level: number) => string
 
   /* ── section headings ── */
-  /** Renders a section heading (⑤ praxis, proposed tasks). */
-  sectionHeading: (title: string, eyebrow: string) => ReactNode
+  /**
+   * Renders a section heading (⑤ praxis, proposed tasks, ② About).
+   *
+   * `title` IS A NODE, NOT A STRING, SINCE #2958. Praxis and Proposed tasks
+   * are disclosures now, and the ARIA pattern for one is a `<button>` — which
+   * has to sit INSIDE the kit's own heading element to inherit its face, size,
+   * tracking and ink (`sectionDisclosure`'s whole posture: button semantics
+   * and a marker, never paint). So the shell hands a `SectionToggle` down this
+   * seam where it used to hand a word, and every kit keeps rendering `{title}`
+   * exactly as it did. About still passes a plain string — `ReactNode` covers
+   * both, which is why one type change fixed six skins.
+   *
+   * A kit may therefore not do string work on this parameter.
+   */
+  sectionHeading: (title: ReactNode, eyebrow: string) => ReactNode
 
   /* ── praxis ── */
   /** Empty-state container style. */
@@ -419,6 +438,10 @@ export function ProfileSkin({
 }) {
   const { t } = useTranslation('common')
   const mobile = useFormFactor() === 'mobile'
+  // The two long galleries fold; About and Badges do not (#2958). One call
+  // here is every kit that mounts this shell, at both form factors — the phone
+  // pass restacks the same two sections rather than re-authoring them.
+  const sections = useSectionDisclosures(PROFILE_SECTIONS)
   /** Every quiet ink INSIDE `<header>` — see `ProfileKit.headerMuted`. */
   const headerMuted = kit.headerMuted ?? kit.muted
   const { character, submissions, proposedTasks, progression, identityActions, onSignup } = props
@@ -466,7 +489,11 @@ export function ProfileSkin({
             sentence wherever authorship is genuinely in question, and this
             mount is simply not one of them. An empty eyebrow is how the About
             block below already asks a kit for a bare heading. */}
-        {kit.sectionHeading(t('profile.praxisHeading'), '')}
+        {kit.sectionHeading(
+          <SectionToggle section={sections.praxis} label={t('profile.praxisHeading')} />,
+          '',
+        )}
+        <SectionPanel section={sections.praxis}>
         {submissions.length === 0 ? (
           <div style={kit.emptyStateStyle}>
             <div
@@ -504,11 +531,22 @@ export function ProfileSkin({
             ))}
           </div>
         )}
+        </SectionPanel>
       </section>
 
       {/* ── Proposed tasks (kept feature, #419) ── */}
       <section>
-        {kit.sectionHeading(t('profile.proposedTasksHeading'), t('profile.proposedTasksTotal', { count: proposedTasks.length }))}
+        {/* The count stays in the EYEBROW, outside the panel: a folded section
+            that still says how much is under it is the whole reason folding is
+            worth doing (#2311's ruling, and the faction suite pins it). */}
+        {kit.sectionHeading(
+          <SectionToggle
+            section={sections.proposed}
+            label={t('profile.proposedTasksHeading')}
+          />,
+          t('profile.proposedTasksTotal', { count: proposedTasks.length }),
+        )}
+        <SectionPanel section={sections.proposed}>
         {proposedTasks.length === 0 ? (
           <p style={{ fontFamily: kit.bodyFont ?? kit.eyebrowFont, color: kit.muted }}>
             {t('profile.proposedTasksEmpty')}
@@ -520,6 +558,7 @@ export function ProfileSkin({
             ))}
           </div>
         )}
+        </SectionPanel>
       </section>
     </div>
   )

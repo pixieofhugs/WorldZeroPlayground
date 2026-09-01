@@ -54,7 +54,7 @@ const PHOSPHOR_GROUND =
 const SCANLINES =
   `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(3)} 2px, ${phosphor(3)} 4px)`
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       {/* A prompt with no command is not a prompt (#2231). Six kits dress the

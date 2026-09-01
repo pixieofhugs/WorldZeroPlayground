@@ -126,7 +126,7 @@ function Watermark() {
 }
 
 /** Section heading — the display face, a braid, then the gloss. */
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)', flexWrap: 'wrap' }}>
       <span

@@ -273,12 +273,24 @@ describe('a folded gallery is still worth reading', () => {
       expect(html, slug).not.toContain(
         `id="${sectionBodyId(PROFILE_SECTIONS, 'proposed')}" hidden`,
       )
-      // The praxis cards really left the flow; the task cards did not.
-      const text = html.replace(/<[^>]*>/g, '')
-      expect(text, `${slug} still shows the folded praxis`).not.toContain(
-        PRAXIS[0].task_title,
+      // `hidden` is the rail's idiom and it KEEPS the markup — the gallery
+      // holds its state and its scroll position, and the browser takes it out
+      // of the flow. So the assertion is that the cards are INSIDE the folded
+      // panel rather than absent: the praxis cards fall between the praxis
+      // panel's opening tag and the proposed panel's, and the task cards after.
+      const praxisAt = html.indexOf(`id="${sectionBodyId(PROFILE_SECTIONS, 'praxis')}"`)
+      const proposedAt = html.indexOf(`id="${sectionBodyId(PROFILE_SECTIONS, 'proposed')}"`)
+      const praxisCardAt = html.indexOf(PRAXIS[0].task_title)
+      const taskCardAt = html.indexOf(TASKS[0].title)
+      expect(praxisCardAt, `${slug}: praxis outside the panel it folds`).toBeGreaterThan(
+        praxisAt,
       )
-      expect(text, `${slug} folded the wrong gallery`).toContain(TASKS[0].title)
+      expect(praxisCardAt, `${slug}: praxis outside the panel it folds`).toBeLessThan(
+        proposedAt,
+      )
+      expect(taskCardAt, `${slug}: tasks outside their own panel`).toBeGreaterThan(
+        proposedAt,
+      )
     }
   })
 })

@@ -46,6 +46,12 @@ import {
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
+import {
+  PROFILE_SECTIONS,
+  SectionPanel,
+  SectionToggle,
+  useSectionDisclosures,
+} from '../../factionDetail/sectionDisclosure'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 // The ② About block and the ① tagline slot are shared with every faction kit —
 // see profileSkin.tsx. This is the one profile that does NOT delegate to
@@ -75,8 +81,14 @@ const EYEBROW: CSSProperties = {
   color: 'var(--color-text-tertiary)',
 }
 
-/** Section heading: display-italic title + optional eyebrow + a soft rainbow rule. */
-function SectionHeading({ title, eyebrow }: { title: string; eyebrow?: string }) {
+/**
+ * Section heading: display-italic title + optional eyebrow + a soft rainbow rule.
+ *
+ * `title` is a NODE because the two gallery headings hand it a `SectionToggle`
+ * (#2958) — the disclosure button has to sit inside this `<h2>` to inherit the
+ * face, the size and the ink. About still passes a plain string.
+ */
+function SectionHeading({ title, eyebrow }: { title: ReactNode; eyebrow?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
       <h2
@@ -278,6 +290,11 @@ function DesktopProfile({
   onSignup,
 }: DefaultProfileBodyProps) {
   const { t } = useTranslation('common')
+  // The two long galleries fold; About and Badges do not (#2958). Only this
+  // branch: `MobileProfile` below draws the same two galleries behind a
+  // segmented switch, so one is on screen at a time and there is no section
+  // heading for a control to live in.
+  const sections = useSectionDisclosures(PROFILE_SECTIONS)
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
     month: 'short',
@@ -296,7 +313,10 @@ function DesktopProfile({
             the line could never not say. `common:profile.praxisEyebrow` stays
             in the catalog — it is the right sentence wherever authorship is
             genuinely in question; this mount is simply not one of them. */}
-        <SectionHeading title={t('profile.praxisHeading')} />
+        <SectionHeading
+          title={<SectionToggle section={sections.praxis} label={t('profile.praxisHeading')} />}
+        />
+        <SectionPanel section={sections.praxis}>
         {submissions.length === 0 ? (
           <div
             style={{
@@ -332,14 +352,24 @@ function DesktopProfile({
             ))}
           </div>
         )}
+        </SectionPanel>
       </section>
 
       {/* ── Proposed tasks (kept feature, #419) ── */}
       <section>
+        {/* The count stays in the EYEBROW, outside the panel: a folded section
+            that still says how much is under it is the whole reason folding is
+            worth doing (#2311's ruling). */}
         <SectionHeading
-          title={t('profile.proposedTasksHeading')}
+          title={
+            <SectionToggle
+              section={sections.proposed}
+              label={t('profile.proposedTasksHeading')}
+            />
+          }
           eyebrow={t('profile.proposedTasksTotal', { count: proposedTasks.length })}
         />
+        <SectionPanel section={sections.proposed}>
         {proposedTasks.length === 0 ? (
           <p className="font-body text-muted">{t('profile.proposedTasksEmpty')}</p>
         ) : (
@@ -349,6 +379,7 @@ function DesktopProfile({
             ))}
           </div>
         )}
+        </SectionPanel>
       </section>
     </div>
   )

@@ -104,7 +104,7 @@ const PLATE_BORDER = 'var(--faction-wow-plate-border)'
 const DISPLAY = 'var(--wow-profile-face)'
 const BODY = 'var(--faction-wow-body-font)'
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div

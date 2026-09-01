@@ -27,7 +27,7 @@ const PAPER = 'var(--everymen-paper)'
 const BEBAS = 'var(--font-accent)' // Bebas Neue
 const MONO = 'var(--font-body)' // Courier Prime
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
