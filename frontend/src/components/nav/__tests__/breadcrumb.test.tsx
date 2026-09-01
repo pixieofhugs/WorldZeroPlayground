@@ -109,3 +109,41 @@ describe("the trail", () => {
     expect(html).toContain("text-overflow:ellipsis");
   });
 });
+
+/**
+ * THE TASK-LESS TRAIL (#2973).
+ *
+ * `Propose a Task` is the one page in this family whose second step is not a
+ * task: no task exists yet — proposing it is the point. Seven archetypes each
+ * hit that wall independently and each hand-rolled a `<nav>` around it, which is
+ * verbatim the drift #2102 deleted. So the component has to be able to say
+ * `Tasks › <where you are>` with no id, and it is held to the same three rules
+ * as the task trail: the root is a real link, the page you are on is not, and it
+ * says so.
+ */
+describe("a trail with no task", () => {
+  it("still leads back to the task bank", () => {
+    const html = draw(<Breadcrumb current="Propose a Task" />);
+    expect(html, "the way back is the whole reason the crumb is there").toContain(
+      'href="/tasks"',
+    );
+    expect(html).toContain("Propose a Task");
+  });
+
+  it("does not link the page you are already on", () => {
+    const html = draw(<Breadcrumb current="Propose a Task" />);
+    expect(html).toContain('aria-current="page"');
+    // Two crumbs, one chevron — and no invented `/tasks/undefined` step.
+    expect(html.match(/›/g)).toHaveLength(1);
+    expect(html).not.toContain("/tasks/");
+  });
+
+  it("is the same chrome as every other trail — one nav, one ink", () => {
+    const html = draw(<Breadcrumb current="Propose a Task" />);
+    expect(html).toMatch(/<nav[^>]+aria-label="[^"]+"/);
+    expect(html, "the site's own tertiary ink, never a --faction-* token").toContain(
+      "color:var(--color-text-tertiary)",
+    );
+    expect(html).not.toContain("--faction-");
+  });
+});

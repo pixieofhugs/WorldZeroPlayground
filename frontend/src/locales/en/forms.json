@@ -61,9 +61,6 @@
     "seconds": "{{seconds}}s ago",
     "minutes": "{{minutes}}m ago"
   },
-  "breadcrumb": {
-    "tasks": "Tasks"
-  },
   "taskMeta": {
     "points_one": "{{points}} point",
     "points_other": "{{points}} points",

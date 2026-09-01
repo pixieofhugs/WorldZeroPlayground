@@ -19,6 +19,15 @@
  * that already behaved correctly, promoted out of
  * `pages/editPraxis/archetypes/shared.tsx` to a shared home.
  *
+ * AND IT HAS TO BE ABLE TO SAY EVERY TRAIL, or the rules below are unkeepable
+ * (#2973). The trail was built from a `taskId` + `taskTitle`, so `Propose a
+ * Task` — the one page under `Tasks` where no task exists yet — could not be
+ * expressed here at all. Eight propose surfaces each hit that wall separately
+ * and hand-rolled a `<nav>` apiece, drifting back onto the same axes within
+ * weeks: one inside the sheet, two on `--label-ink`, one on a `--faction-*`
+ * token. A rule a caller cannot obey is a rule that gets broken, so
+ * {@link CurrentTrailProps} closes it.
+ *
  * ### Three rules it enforces rather than offers
  *
  * 1. **Every level is a real link except the current page.** "Clicking Tasks
@@ -81,7 +90,8 @@ export function shrinkIndex(crumbs: readonly Crumb[]): number {
   return widest;
 }
 
-interface BreadcrumbProps {
+/** The three surfaces that hang off an existing task. */
+interface TaskTrailProps {
   /** The task all three of these surfaces hang off. */
   taskId: number;
   taskTitle: string;
@@ -89,7 +99,33 @@ interface BreadcrumbProps {
   praxisId?: number | string;
   /** The composer: the trail runs one step past the praxis. */
   editing?: boolean;
+  current?: never;
 }
+
+/**
+ * A PAGE UNDER `Tasks` THAT IS NOT A TASK (#2973).
+ *
+ * `Propose a Task` is one: the task does not exist yet — proposing it is the
+ * point — so there is no id to hang the second crumb on and no title to read.
+ * That is the whole reason eight propose surfaces hand-rolled a `<nav>` apiece
+ * and drifted straight back onto #2102's axes. The trail is `Tasks › <current>`,
+ * two crumbs, and the second is the page you are already on, so it is never a
+ * link and needs no destination.
+ *
+ * A UNION RATHER THAN THREE OPTIONAL PROPS: a caller supplies a task or a
+ * current label, never both and never neither, and `taskTitle` stays required on
+ * the seventeen surfaces that do have a task.
+ */
+interface CurrentTrailProps {
+  /** What this page is called — the last crumb, and the only one after `Tasks`. */
+  current: string;
+  taskId?: never;
+  taskTitle?: never;
+  praxisId?: never;
+  editing?: never;
+}
+
+type BreadcrumbProps = TaskTrailProps | CurrentTrailProps;
 
 /** Nothing in the trail may wrap — a wrapped breadcrumb never truncates. */
 const LIST_STYLE = {
@@ -107,22 +143,20 @@ const CLIPPED = {
   whiteSpace: "nowrap",
 } as const;
 
-export default function Breadcrumb({
-  taskId,
-  taskTitle,
-  praxisId,
-  editing,
-}: BreadcrumbProps) {
+export default function Breadcrumb(props: BreadcrumbProps) {
   const { t } = useTranslation("common");
 
-  const trail: Crumb[] = [
-    { label: t("breadcrumb.tasks"), to: "/tasks" },
-    { label: taskTitle, to: `/tasks/${taskId}` },
-  ];
-  if (praxisId !== undefined) {
-    trail.push({ label: t("breadcrumb.praxis"), to: `/praxis/${praxisId}` });
+  const trail: Crumb[] = [{ label: t("breadcrumb.tasks"), to: "/tasks" }];
+  if (props.current !== undefined) {
+    trail.push({ label: props.current });
+  } else {
+    const { taskId, taskTitle, praxisId, editing } = props;
+    trail.push({ label: taskTitle, to: `/tasks/${taskId}` });
+    if (praxisId !== undefined) {
+      trail.push({ label: t("breadcrumb.praxis"), to: `/praxis/${praxisId}` });
+    }
+    if (editing) trail.push({ label: t("breadcrumb.edit") });
   }
-  if (editing) trail.push({ label: t("breadcrumb.edit") });
   // The page you are on is not a link to itself.
   const crumbs = trail.map((crumb, index) =>
     index === trail.length - 1 ? { label: crumb.label } : crumb,

@@ -90,8 +90,8 @@
  * grid (SPEC-faction-ui-profile §1a).
  */
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
@@ -353,19 +353,11 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
     ['--label-ink' as string]: QUIET,
   } as CSSProperties
 
-  // The trail, in the plate's own voice. The site's shared `Breadcrumb` cannot
-  // serve it — its trail is keyed to a task id and this page has no task — so
-  // the na kit's two-crumb nav is redrawn here rather than a component reached
-  // for that would need a record to exist first.
-  const breadcrumb = (
-    <nav style={{ fontFamily: READING, fontSize: 'var(--text-lg)', color: QUIET }}>
-      <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-        {t('breadcrumb.tasks')}
-      </Link>
-      {' › '}
-      <span style={{ color: INK }}>{t('proposeTask.pageTitle')}</span>
-    </nav>
-  )
+  // The trail, in the SITE's voice rather than the plate's (#2973). It was
+  // redrawn here because the shared component was keyed to a task id and this
+  // page has no task; it now takes a `current` label, so the reason is gone and
+  // the copy goes with it.
+  const breadcrumb = <Breadcrumb current={t('proposeTask.pageTitle')} />
 
   if (success) {
     return (

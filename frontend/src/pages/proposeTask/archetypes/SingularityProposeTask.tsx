@@ -81,7 +81,8 @@
  *   and the create page has none, so the derivation would delete a navigation
  *   affordance. It keeps the site's neutral ink because it is site chrome
  *   standing on the site's own ground OUTSIDE the sheet (#2102), which is also
- *   the only ground it has ever been measured on.
+ *   the only ground it has ever been measured on — and since #2973 it is that
+ *   shared component rather than this file's restatement of it.
  * - **No `PageTitle`.** Its per-letter spectrum bars are the na kit's identity
  *   (ADR-0066); the heading here is the terminal's prompt line, as on the create
  *   plate.
@@ -97,8 +98,8 @@
  * keep sweeping it with the rest of the roster.
  */
 import type { CSSProperties, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import { useGameConfig } from '../../../hooks/useGameConfig'
@@ -474,46 +475,23 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   }
 
   return (
-    <ComposerPage sizes={sizes} style={pageStyle}>
-      {/* Site chrome, above the sheet and on the site's own ground — NEUTRAL by
-          rule (#2102), which is why it does not take the terminal's ink: a
-          phosphor cut for a near-black chassis has nothing to do with the app's
-          own page.
+    <ComposerPage
+      sizes={sizes}
+      style={pageStyle}
+      /* Site chrome, above the sheet and on the site's own ground — NEUTRAL by
+         rule (#2102), which is why it does not take the terminal's ink: a
+         phosphor cut for a near-black chassis has nothing to do with the app's
+         own page.
 
-          THE INK COMES FROM `components/nav/Breadcrumb`, NOT FROM THE na KIT'S
-          HAND-ROLLED COPY, and the difference is the one thing the tier arm of
-          `no-raw-style-values` would not let through. The site's one breadcrumb
-          paints the trail `--label-ink` and gives the current crumb `inherit`
-          plus weight; `DefaultProposeTask` predates it and reaches the global
-          `--color-text-*` family directly, which is banned on a
-          faction-dispatched surface and correctly so. `--label-ink` is unset to
-          `--color-text-tertiary` on this ground — nothing here repoints it, the
-          one Singularity repoint being fenced to `[data-composer-body]` — so
-          this renders the na kit's own value while reading the seam rather than
-          painting over it.
-
-          The shared component itself cannot be mounted: its trail is built from
-          a `taskId` / `taskTitle`, and no task exists yet on this page. */}
-      <nav
-        className="font-body"
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: '0 auto',
-          padding: 'var(--space-lg) var(--space-lg) 0',
-          fontSize: 'var(--text-md)',
-          letterSpacing: '0.1em',
-          color: 'var(--label-ink)',
-        }}
-      >
-        <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-          {t('breadcrumb.tasks')}
-        </Link>
-        {' › '}
-        <span aria-current="page" style={{ color: 'inherit', fontWeight: 700 }}>
-          {t('proposeTask.pageTitle')}
-        </span>
-      </nav>
-
+         IT IS NOW THE COMPONENT AND NOT A COPY OF IT (#2973). The shape here was
+         already `components/nav/Breadcrumb`'s, restated because that component
+         built its trail from a `taskId` / `taskTitle` and no task exists yet on
+         this page; it takes a `current` label now, so the copy has nothing left
+         to justify it. The one visible change is the ink: the component paints
+         `--color-text-tertiary` outright rather than reading `--label-ink`,
+         which on this ground is unset to exactly that value. */
+      breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
           Enter commit from a text field, and `handleSubmit` calls
           `preventDefault()` itself. */}

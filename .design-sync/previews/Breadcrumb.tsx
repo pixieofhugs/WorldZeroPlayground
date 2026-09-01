@@ -2,7 +2,8 @@
 // replacing eighteen hand-rolled trails. It derives the whole trail from the
 // task it hangs off: Tasks → <task title> → Praxis → (Edit). `praxisId` is
 // present on the two praxis surfaces and absent on a task detail; `editing`
-// runs the trail one step further, into the composer.
+// runs the trail one step further, into the composer. A page under Tasks that
+// has no task — Propose a Task — hands a `current` label instead (#2973).
 //
 // The last crumb carries aria-current="page" and is not a link. Long titles are
 // handled by shrinkIndex + flexbox rather than a breakpoint, so the cells below
@@ -40,6 +41,17 @@ export function Composer() {
   return (
     <div style={wrap}>
       <Breadcrumb taskId={412} taskTitle="Walk a mile before breakfast" praxisId={9021} editing />
+    </div>
+  )
+}
+
+/** A page under Tasks that is NOT a task (#2973): `Propose a Task` has no task
+ *  to hang the second crumb on, so it hands its own label instead. Two crumbs,
+ *  one chevron, and the last is where you are. */
+export function CurrentPage() {
+  return (
+    <div style={wrap}>
+      <Breadcrumb current="Propose a Task" />
     </div>
   )
 }
