@@ -64,34 +64,37 @@ import {
   type Theme,
 } from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
+import { sourceFiles, toRelative } from '../../../test/sourceScan'
 
 const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
-const ARCHETYPE_DIR = fileURLToPath(new URL('..', import.meta.url))
+const ARCHETYPE_DIR = fileURLToPath(new URL('../archetypes', import.meta.url))
 
-/** Every file in this tree that draws a control which starts out disabled. */
-const SITES = [
-  'archetypes/CovenCreateCharacter.tsx',
-  'archetypes/DefaultCreateCharacter.tsx',
-  'archetypes/EphemeristsCreateCharacter.tsx',
-  'archetypes/EverymenCreateCharacter.tsx',
-  'archetypes/SingularityCreateCharacter.tsx',
-  'archetypes/SnideCreateCharacter.tsx',
-  'archetypes/UaCreateCharacter.tsx',
-  'archetypes/WowCreateCharacter.tsx',
-  'archetypes/DefaultEditCharacter.tsx',
-  // #2537's fan-out. An edit archetype's Save is gated on the same
-  // `canSubmitName` the create band is, so it is the same control and owes the
-  // same class; the rows below are the guard against the eleventh site spelling
-  // `opacity: 0.5` again, and a file that is not listed is not swept.
-  'archetypes/WowEditCharacter.tsx',
-]
+/**
+ * Every character-path archetype, READ OFF THE DIRECTORY (#2955).
+ *
+ * This was a hand-typed array of ten, and its own comment said the consequence
+ * out loud: a file that is not listed is not swept. #2537's fan-out landed
+ * seven edit archetypes in seven isolated lanes; one of them found this list
+ * and added itself, and the other six had no way to know it existed. Eight of
+ * the eighteen files here were outside the sweep and nothing went red.
+ *
+ * So the *shape* of the name is the membership test. A new archetype is swept
+ * the moment it lands, with no edit to this file, which is the only version of
+ * this guard that does not decay every time the directory grows.
+ */
+const SITES = sourceFiles({ dir: ARCHETYPE_DIR, match: /(?:Create|Edit)Character\.tsx$/ })
 
-function source(file: string): string {
-  return readFileSync(`${ARCHETYPE_DIR}${file}`, 'utf8')
-}
+const source = (path: string): string => readFileSync(path, 'utf8')
+
+/**
+ * `disabled={!x}` is a control gated on a form's own state — the one that is
+ * disabled when the page OPENS. `disabled={deleting}` and friends are transient
+ * busy states and are deliberately not swept in here.
+ */
+const gatedControls = (text: string): number => text.match(/disabled=\{!/g)?.length ?? 0
 
 function resolve(token: string, theme: Theme): Rgba {
   const raw = resolveVar(token, theme, THEMES)
@@ -148,9 +151,36 @@ describe('a disabled primary action keeps a legible label', () => {
   }
 })
 
+/**
+ * THE FLOOR, moved off the file and onto the set (#2955).
+ *
+ * A source scan that reads nothing passes, so a derived list owes a number. Two
+ * of them: the walk found every archetype on disk, and the set it found still
+ * contains the ones that actually DRAW the control. The second is what the old
+ * per-file `gated > 0` was for — an archetype that quietly stopped drawing its
+ * gated control still has to be caught, and now a wrapper that never drew one
+ * does not have to be exempted by name to say so.
+ *
+ * Both are floors, never equalities: an archetype added tomorrow is swept
+ * without touching this file, which is the entire point.
+ */
+describe('the sweep reads the whole archetype directory', () => {
+  it('walks a set no smaller than the one on disk today', () => {
+    expect(SITES.length, 'archetypes found by the walk').toBeGreaterThanOrEqual(18)
+  })
+
+  it('still reaches the archetypes that draw a gated control', () => {
+    const drawing = SITES.filter(file => gatedControls(source(file)) > 0)
+    expect(drawing.length, 'archetypes drawing a start-disabled control').toBeGreaterThanOrEqual(
+      16,
+    )
+  })
+})
+
 describe('no character-path control fades itself out of legibility', () => {
   for (const file of SITES) {
-    it(`${file} dims through the class, not through opacity`, () => {
+    const name = toRelative(file)
+    it(`${name} dims through the class, not through opacity`, () => {
       const text = source(file)
       // The exact defect: an `opacity` keyed on the submit gate. Anything else
       // spelling `opacity` here is ornament (Coven's haze, the Ephemerists'
@@ -160,18 +190,19 @@ describe('no character-path control fades itself out of legibility', () => {
       )
     })
 
-    it(`${file} marks every start-disabled control .control-off`, () => {
+    it(`${name} marks every start-disabled control .control-off`, () => {
       const text = source(file)
-      // `disabled={!x}` is a control gated on a form's own state — the one that
-      // is disabled when the page OPENS. `disabled={deleting}` and friends are
-      // transient busy states and are deliberately not swept in here.
-      const gated = text.match(/disabled=\{!/g)?.length ?? 0
+      const gated = gatedControls(text)
       // Counted as CLASS LISTS, not as occurrences of the word: the Singularity
       // band carries `control-off sg-control-off`, which is one marked control
       // and two substring hits, and the prose around these sites names the
       // class too.
       const marked = text.match(/className="[^"]*\bcontrol-off\b[^"]*"/g)?.length ?? 0
-      expect(gated, 'the file still draws a gated control').toBeGreaterThan(0)
+      // No per-file floor on `gated`: a delegating wrapper draws no control of
+      // its own — the Albescent pair is a classed div around its Default twin —
+      // and 0 marked of 0 gated is the right answer for it, not a failure. The
+      // floor that catches a file which STOPPED drawing its control lives over
+      // the whole swept set instead, above.
       expect(marked, `${gated} gated control(s) carry the class`).toBe(gated)
     })
   }
