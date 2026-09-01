@@ -24,13 +24,24 @@
 import MetataskSeal from "./MetataskSeal";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
-export function MetataskSealStack({ state }: { state: EditPraxisState }) {
+export function MetataskSealStack({
+  appliedMetataskList,
+  canSealMetatask,
+  requestRemoveMetatask,
+  openMetataskPicker,
+}: Pick<
+  EditPraxisState,
+  | "appliedMetataskList"
+  | "canSealMetatask"
+  | "requestRemoveMetatask"
+  | "openMetataskPicker"
+>) {
   return (
     <MetataskSeal
-      metatasks={state.appliedMetataskList}
-      removable={state.canSealMetatask}
-      onRemove={state.canSealMetatask ? state.requestRemoveMetatask : undefined}
-      onAdd={state.canSealMetatask ? state.openMetataskPicker : undefined}
+      metatasks={appliedMetataskList}
+      removable={canSealMetatask}
+      onRemove={canSealMetatask ? requestRemoveMetatask : undefined}
+      onAdd={canSealMetatask ? openMetataskPicker : undefined}
     />
   );
 }

@@ -9,7 +9,7 @@
  * at a glance. A faction filter row and a title/description search narrow the
  * list; the footer confirms the pending choice before it attaches.
  *
- * One metatask attaches at a time (`state.addMetatask` → `applyMetatask`); the
+ * One metatask attaches at a time (`addMetatask` → `applyMetatask`); the
  * model still allows many total across the praxis. Rows already sealed render
  * inert with a "Sealed" tag.
  *
@@ -45,7 +45,22 @@ const ALL_FILTER = "all" as const;
  */
 const CHECK_GLYPH = "✓";
 
-export default function MetataskPicker({ state }: { state: EditPraxisState }) {
+export default function MetataskPicker({
+  metatasks,
+  appliedMetatasks,
+  applyingMetatask,
+  addMetatask,
+  closeMetataskPicker,
+  error,
+}: Pick<
+  EditPraxisState,
+  | "metatasks"
+  | "appliedMetatasks"
+  | "applyingMetatask"
+  | "addMetatask"
+  | "closeMetataskPicker"
+  | "error"
+>) {
   const { t } = useTranslation("forms");
   const isMobile = useFormFactor() === "mobile";
   const [query, setQuery] = useState("");
@@ -55,16 +70,16 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
   // Distinct issuing factions present in the eligible set — the filter chips.
   const factionSlugs = useMemo(() => {
     const seen: string[] = [];
-    for (const mt of state.metatasks) {
+    for (const mt of metatasks) {
       const slug = mt.metatask_faction_slug;
       if (slug && !seen.includes(slug)) seen.push(slug);
     }
     return seen;
-  }, [state.metatasks]);
+  }, [metatasks]);
 
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return state.metatasks.filter((mt) => {
+    return metatasks.filter((mt) => {
       if (factionFilter !== ALL_FILTER && mt.metatask_faction_slug !== factionFilter) {
         return false;
       }
@@ -72,7 +87,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
       const haystack = `${mt.title} ${mt.description ?? ""}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [state.metatasks, query, factionFilter]);
+  }, [metatasks, query, factionFilter]);
 
   const chipStyle = (active: boolean, slug: string | null) => ({
     padding: "var(--space-xs) var(--space-md)",
@@ -230,7 +245,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
             <PickerRow
               key={mt.id}
               metatask={mt}
-              sealed={state.appliedMetatasks.has(mt.id)}
+              sealed={appliedMetatasks.has(mt.id)}
               selected={pending?.id === mt.id}
               onPick={() => setPending(mt)}
             />
@@ -247,7 +262,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
          * rather than inside it so the buttons never reflow under a long
          * message.
          */}
-        <ErrorBanner message={state.error} />
+        <ErrorBanner message={error} />
 
         {/* Footer — confirms the pending choice */}
         <div
@@ -280,7 +295,7 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
           >
             <button
               type="button"
-              onClick={state.closeMetataskPicker}
+              onClick={closeMetataskPicker}
               className="font-body"
               style={{
                 fontSize: "var(--text-md)",
@@ -296,9 +311,9 @@ export default function MetataskPicker({ state }: { state: EditPraxisState }) {
             </button>
             <button
               type="button"
-              disabled={!pending || state.applyingMetatask !== null}
+              disabled={!pending || applyingMetatask !== null}
               onClick={() => {
-                if (pending) void state.addMetatask(pending);
+                if (pending) void addMetatask(pending);
               }}
               className="font-body"
               style={{

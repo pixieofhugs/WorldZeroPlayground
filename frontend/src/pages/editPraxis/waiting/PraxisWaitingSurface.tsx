@@ -494,8 +494,42 @@ function FooterAct({
 /* The surface                                                                */
 /* -------------------------------------------------------------------------- */
 
-export interface PraxisWaitingSurfaceProps {
-  state: EditPraxisState;
+/**
+ * WHAT THE SURFACE READS, NAMED (#2977, tail of #2882).
+ *
+ * This used to be `state: EditPraxisState` — all ~80 members, of which the
+ * sixteen below are ever touched. The `Pick` is the same answer #2882 gave the
+ * eleven controls in `archetypes/controls.tsx`, for the same reason: a
+ * whole-state prop makes "does this caller have what this surface reads?"
+ * trivially true at every mount, so the compiler stops answering the one
+ * question the boundary exists to ask.
+ *
+ * `praxis` stays NULLABLE here, unlike the controls that took a non-null
+ * `PraxisOut`: the surface's own `if (!praxis) return null` is its first line
+ * and is not an assertion lifted out of a caller. All eight archetype mounts
+ * happen to pass a local they have already asserted, so nothing downstream
+ * changes either way.
+ */
+export interface PraxisWaitingSurfaceProps
+  extends Pick<
+    EditPraxisState,
+    | "praxis"
+    | "task"
+    | "duel"
+    | "phase"
+    | "title"
+    | "body"
+    | "error"
+    | "submitting"
+    | "currentCharacterId"
+    | "crewNudge"
+    | "nudge"
+    | "nudgeCrew"
+    | "kickMember"
+    | "leaveCollab"
+    | "cancel"
+    | "reopenForEdit"
+  > {
   /**
    * The mounted archetype's ornament. Required: there is no undressed caller —
    * every path here goes through a faction's own composer, which is what stops
@@ -513,7 +547,24 @@ export interface PraxisWaitingSurfaceProps {
 }
 
 export default function PraxisWaitingSurface({
-  state,
+  praxis,
+  task,
+  duel,
+  phase,
+  title,
+  body,
+  error,
+  submitting,
+  currentCharacterId,
+  // Renamed at the signature only because the local below narrows it by
+  // reading, and both want the same name.
+  crewNudge: crewNudgeHandler,
+  nudge,
+  nudgeCrew,
+  kickMember,
+  leaveCollab,
+  cancel,
+  reopenForEdit,
   dress,
   autoSubmitDays,
   now,
@@ -521,15 +572,13 @@ export default function PraxisWaitingSurface({
   const { t } = useTranslation("forms");
   const sizes = useComposerSizes();
   const config = useGameConfig();
-  const praxis = state.praxis;
-  const duel = state.duel;
   if (!praxis) return null;
 
   const slug = praxis.task_faction_slug;
   const accent = dress.accent;
   // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
   const isDuel = praxis.duel_id != null && duel != null;
-  const sides = isDuel && duel ? duelSides(duel, state.currentCharacterId) : null;
+  const sides = isDuel && duel ? duelSides(duel, currentCharacterId) : null;
   // The only two shapes that ever reach this surface (ADR-0059). Naming the
   // collab positively rather than as "not a duel" keeps a solo praxis — which
   // `deriveEditPraxisPhase` never holds — from drawing collab exits if it ever
@@ -540,14 +589,14 @@ export default function PraxisWaitingSurface({
   // than off `status === 'submitted'` so the one authority on "which face is
   // this" stays `deriveEditPraxisPhase` — a submitted DUEL side is the waiting
   // reading, not this one, for as long as the duel is still live.
-  const completed = state.phase === "completed";
+  const completed = phase === "completed";
 
   // Deleting destroys the praxis with every member's part in it, so it stays the
   // creator's alone — the backend's `delete_praxis` is the authority and this
   // only declines to draw a control the viewer could never use. Leaving is
   // everyone's, the creator included (ADR-0013, #1074).
-  const isCreator = praxis.created_by_id === state.currentCharacterId;
-  const busy = state.submitting;
+  const isCreator = praxis.created_by_id === currentCharacterId;
+  const busy = submitting;
   /** The skin's divider, one instance per place it is drawn. */
   const rule = (key: string): ReactNode => dress.rule?.(key) ?? <ComposerRule />;
 
@@ -579,7 +628,7 @@ export default function PraxisWaitingSurface({
   // The crew press and its receipt are the ROSTER's now (#1952) — one verb, at
   // one weight, in the block whose rows already carry it. What is left here is
   // deciding whether they apply at all.
-  const crewNudge = isCollab && !completed ? state.crewNudge : null;
+  const crewNudge = isCollab && !completed ? crewNudgeHandler : null;
 
   const primaryClass = dress.primaryStyle ? undefined : "btn-primary";
   const quietButton = composerLabelStyle({
@@ -620,7 +669,7 @@ export default function PraxisWaitingSurface({
             not move or change size when you submit; the WORD beside it does,
             and that is the whole confirmation beat. */}
         <ComposerStatusRow
-          status={composerStageWord(state)}
+          status={composerStageWord({ phase, praxis })}
           meta={stamped}
           mark={dress.mark}
           statusStyle={dress.statusStyle}
@@ -641,7 +690,7 @@ export default function PraxisWaitingSurface({
             would be the less true number in the same place. */}
         <TaskSlip
           praxis={praxis}
-          task={state.task}
+          task={task}
           label={collabCopy(slug, isDuel ? "duelAwaitingTaskLabel" : "awaitingTaskLabel")}
           {...dress.slip}
         />
@@ -705,8 +754,8 @@ export default function PraxisWaitingSurface({
                 mine
                 factionSlug={slug}
                 dress={dress}
-                title={state.title}
-                body={state.body}
+                title={title}
+                body={body}
                 completed={completed}
               />
               {/* The rival's nudge, gated on `active` exactly as the backend is:
@@ -722,7 +771,7 @@ export default function PraxisWaitingSurface({
                 completed={completed}
                 onNudge={
                   duel?.status === "active"
-                    ? () => state.nudge(sides.foe.character_id)
+                    ? () => nudge(sides.foe.character_id)
                     : undefined
                 }
               />
@@ -737,16 +786,16 @@ export default function PraxisWaitingSurface({
               praxisType={praxis.type}
               members={praxis.members}
               invites={praxis.invites}
-              currentCharacterId={state.currentCharacterId}
+              currentCharacterId={currentCharacterId}
               factionSlug={slug}
               taskPointValue={praxis.task_point_value}
-              onKick={completed ? undefined : state.kickMember}
-              onNudge={completed ? undefined : state.nudge}
+              onKick={completed ? undefined : kickMember}
+              onNudge={completed ? undefined : nudge}
               // The bulk press and its receipt, in the block they act on
               // (#1952). The roster decides whether one press would reach
               // enough people to be worth a second control; this only says
               // whether the act applies to this reading at all.
-              onNudgeCrew={completed ? undefined : state.nudgeCrew}
+              onNudgeCrew={completed ? undefined : nudgeCrew}
               crewNudge={crewNudge}
             />
           )}
@@ -788,11 +837,11 @@ export default function PraxisWaitingSurface({
                 className="content-title"
                 style={{ fontWeight: 700, ...dress.headingStyle }}
               >
-                {state.title}
+                {title}
               </span>
-              {state.body.trim() ? (
+              {body.trim() ? (
                 <MarkdownPreview
-                  source={state.body}
+                  source={body}
                   className="content-text markdown-preview mt-2"
                 />
               ) : (
@@ -807,7 +856,7 @@ export default function PraxisWaitingSurface({
         {/* Same banner, same stock, same ink — the dress carries the alarm so
             the pairing cannot change the moment you press Submit (#1231). */}
         <ErrorBanner
-          message={state.error}
+          message={error}
           style={dress.alarm ? { color: dress.alarm } : undefined}
         />
 
@@ -858,7 +907,7 @@ export default function PraxisWaitingSurface({
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => void state.leaveCollab()}
+                      onClick={() => void leaveCollab()}
                       className="hover:underline"
                       style={quietButton}
                     >
@@ -873,7 +922,7 @@ export default function PraxisWaitingSurface({
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() => void state.cancel()}
+                        onClick={() => void cancel()}
                         className="hover:underline"
                         style={{ ...quietButton, color: "var(--color-danger)" }}
                       >
@@ -902,7 +951,7 @@ export default function PraxisWaitingSurface({
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => void state.reopenForEdit()}
+                  onClick={() => void reopenForEdit()}
                   className={primaryClass}
                   style={dress.primaryStyle}
                 >

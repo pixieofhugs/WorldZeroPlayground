@@ -148,8 +148,24 @@ export default function EditPraxis() {
           here, beside the duel seal — one mount covers all 16 composer surfaces
           and both form factors. The picker is faction-neutral; each row wears
           its own issuing faction's dress. */}
-      {state.metataskPickerOpen && <MetataskPicker state={state} />}
-      {state.metataskRemovalTarget && <MetataskRemoveConfirm state={state} />}
+      {state.metataskPickerOpen && (
+        <MetataskPicker
+          metatasks={state.metatasks}
+          appliedMetatasks={state.appliedMetatasks}
+          applyingMetatask={state.applyingMetatask}
+          addMetatask={state.addMetatask}
+          closeMetataskPicker={state.closeMetataskPicker}
+          error={state.error}
+        />
+      )}
+      {state.metataskRemovalTarget && (
+        <MetataskRemoveConfirm
+          metataskRemovalTarget={state.metataskRemovalTarget}
+          applyingMetatask={state.applyingMetatask}
+          confirmRemoveMetatask={state.confirmRemoveMetatask}
+          cancelRemoveMetatask={state.cancelRemoveMetatask}
+        />
+      )}
       {/* Drop / delete / leave / re-open / mode-switch / dissolve-duel (#1082).
           Six confirms, one dialog, mounted here beside the other three so it
           covers every archetype, the waiting surface and both form factors —

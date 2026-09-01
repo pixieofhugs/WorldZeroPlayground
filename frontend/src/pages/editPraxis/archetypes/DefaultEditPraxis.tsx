@@ -340,7 +340,27 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
   /* Your part is in, so the composer is not a composer any more (ADR-0059).
      Same page, same sheet, same ornament — a different stage. */
   if (isWaitingStage(state.phase)) {
-    return <PraxisWaitingSurface state={state} dress={DEFAULT_COMPOSER_DRESS} />;
+    return (
+      <PraxisWaitingSurface
+        praxis={praxis}
+        task={state.task}
+        duel={state.duel}
+        phase={state.phase}
+        title={state.title}
+        body={state.body}
+        error={state.error}
+        submitting={state.submitting}
+        currentCharacterId={state.currentCharacterId}
+        crewNudge={state.crewNudge}
+        nudge={state.nudge}
+        nudgeCrew={state.nudgeCrew}
+        kickMember={state.kickMember}
+        leaveCollab={state.leaveCollab}
+        cancel={state.cancel}
+        reopenForEdit={state.reopenForEdit}
+        dress={DEFAULT_COMPOSER_DRESS}
+      />
+    );
   }
 
   return (
@@ -513,7 +533,12 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             rule={false}
             labelStyle={labelStyle}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 
