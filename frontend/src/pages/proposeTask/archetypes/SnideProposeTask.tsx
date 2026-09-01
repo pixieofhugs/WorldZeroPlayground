@@ -53,8 +53,10 @@
  * `components/nav/Breadcrumb` is the site's one trail (#2102) and it could not
  * serve here: it took a `taskId` and a `taskTitle`, and on this page the task
  * does not exist yet. The na kit hand-rolled the same two crumbs for the same
- * reason, and so did five more archetypes — which is how #2102's drift restarted
- * on the axes it had just deleted. #2973 gave the component a `current` label
+ * reason — off `forms:breadcrumb.tasks`, a key that existed only to serve those
+ * copies and is deleted with them — and so did five more archetypes, which is
+ * how #2102's drift restarted on the axes it had just deleted, three inks and
+ * two placements in seven files. #2973 gave the component a `current` label
  * and every one of those copies came out, this one included. It is not in this
  * skin's face any more, because a breadcrumb is not the skin's: it is neutral
  * chrome standing above the sheet on the app's own ground.

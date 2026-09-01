@@ -44,7 +44,7 @@
  *
  * ## Copy — none of its own
  *
- * Every string is an existing `forms:proposeTask.*` / `forms:breadcrumb.*` /
+ * Every string is an existing `forms:proposeTask.*` / `common:breadcrumb.*` /
  * `common:filters.*` key, unchanged and un-reordered. WOW's knightly vocabulary
  * is NOT reintroduced; ADR-0065 §3 deleted `editPraxis.wow.*` outright and the
  * faction carries identity in dress alone. The fields are placeholder-only, as

@@ -17,6 +17,13 @@
  * own shape. A hand-rolled copy fails on the count, the ink, or both — which is
  * the drift stated as a failing assertion rather than as a convention.
  *
+ * IT IS A THIRD FAMILY, NOT A THIRD COPY. `pages/__tests__/
+ * breadcrumbAcrossSurfaces.test.tsx` walks the same claim over `taskDetail` and
+ * `praxisDetail`, whose trails end in a task and are keyed off ids and a title.
+ * This page's trail has neither, and its roster and state fixture already live
+ * here beside the other propose suites — so it is the propose family's row of
+ * the same consistency guard, kept where its fixture is.
+ *
  * The roster is DERIVED from `surfaceMap('proposeTask')`, so a future archetype
  * inherits this the moment it registers and no PR appends to a second list
  * (#1162). Nothing here proves a pixel: `renderToStaticMarkup`, no DOM
