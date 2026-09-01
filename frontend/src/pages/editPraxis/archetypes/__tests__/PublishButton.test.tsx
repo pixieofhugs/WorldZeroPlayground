@@ -22,6 +22,7 @@ import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { DuelDetailOut, DuelStatus } from "../../../../api/duel";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { deriveEditPraxisPhase } from "../../useEditPraxis";
+import { aPraxis, anEditPraxisState } from "../../../../test/fixtures";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 import {
   CollabSignals,
@@ -50,6 +51,27 @@ const SKIN: PublishButtonSkin = {
   busyLabel: "SOLO_BUSY",
 };
 
+/**
+ * The plain solo composer — one member, no duel, titled.
+ *
+ * Everything not named here or by a caller is `anEditPraxisState`'s quiet
+ * default (#2877): nothing submitting, no mode switch in flight, every handler
+ * a no-op.
+ */
+function soloState(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
+  return anEditPraxisState({
+    praxis: aPraxis({
+      type: "solo",
+      status: "in_progress",
+      submitted_at: null,
+      media_items: [],
+      members: [],
+    }),
+    title: "A title",
+    ...overrides,
+  });
+}
+
 function collabState(
   members: PraxisMemberOut[],
   overrides: {
@@ -74,20 +96,16 @@ function collabState(
     task_faction_slug: overrides.factionSlug ?? null,
     task_point_value: 20,
   } as unknown as PraxisOut;
-  return {
+  return anEditPraxisState({
     praxis,
-    duel: null,
     // Titled unless a case says otherwise: the title is a precondition of the
     // primary since #2484, so a fixture that omits it is describing the gated
     // composer rather than the ordinary one.
     title: overrides.title ?? "A title",
-    submitting: false,
-    switchingMode: null,
-    isPublished: false,
     currentCharacterId: overrides.currentCharacterId ?? 1,
     publish: overrides.publish ?? (async () => {}),
     pullBack: overrides.pullBack ?? (async () => {}),
-  } as unknown as EditPraxisState;
+  });
 }
 
 /** Invoke the (hookless) component directly to inspect its rendered button. */
@@ -158,19 +176,17 @@ function duelState(
     challenger_final_points: null,
     opponent_final_points: null,
   };
-  return {
+  return anEditPraxisState({
     praxis,
     duel,
     duelMode: true,
     title: overrides.title ?? "A title",
-    submitting: false,
-    switchingMode: null,
     isPublished: published,
     currentCharacterId: 1,
     publish: overrides.publish ?? (async () => {}),
     pullBack: overrides.pullBack ?? (async () => {}),
     requestDuelSeal: overrides.requestDuelSeal ?? (() => {}),
-  } as unknown as EditPraxisState;
+  });
 }
 
 /**
@@ -202,17 +218,9 @@ describe("PublishButton — a multi-member collab hands over to CollabSignals (#
   });
 
   it("keeps the archetype's own idle label for a solo praxis", () => {
-    const state = {
-      praxis: { id: 1, type: "solo", members: [] },
-      title: "A title",
-      submitting: false,
-      switchingMode: null,
-      isPublished: false,
-      currentCharacterId: 1,
-      publish: async () => {},
-      pullBack: async () => {},
-    } as unknown as EditPraxisState;
-    expect(renderToStaticMarkup(renderButton(state))).toContain("SOLO_IDLE");
+    expect(renderToStaticMarkup(renderButton(soloState({ currentCharacterId: 1 })))).toContain(
+      "SOLO_IDLE",
+    );
   });
 });
 
@@ -302,19 +310,9 @@ describe("PublishButton — duel pull-back on the moderated composer (#1077, #11
   });
 
   it("renders nothing for a plain published solo praxis", () => {
-    const state = {
-      praxis: { id: 1, type: "solo", members: [] },
-      duel: null,
-      duelMode: false,
-      title: "A title",
-      submitting: false,
-      switchingMode: null,
-      isPublished: true,
-      currentCharacterId: 1,
-      publish: async () => {},
-      pullBack: async () => {},
-    } as unknown as EditPraxisState;
-    expect(renderMaybe(state)).toBeNull();
+    expect(
+      renderMaybe(soloState({ isPublished: true, currentCharacterId: 1 })),
+    ).toBeNull();
   });
 
   it("still opens the seal confirmation on the cast that has not happened yet", () => {
@@ -363,16 +361,7 @@ describe("PublishButton — the primary is dead until the praxis has a title (#2
   }
 
   function untitledSolo(title: string): EditPraxisState {
-    return {
-      praxis: { id: 1, type: "solo", members: [] },
-      title,
-      submitting: false,
-      switchingMode: null,
-      isPublished: false,
-      currentCharacterId: 1,
-      publish: async () => {},
-      pullBack: async () => {},
-    } as unknown as EditPraxisState;
+    return soloState({ title, currentCharacterId: 1 });
   }
 
   it("disables the cast while the title box is empty", () => {
