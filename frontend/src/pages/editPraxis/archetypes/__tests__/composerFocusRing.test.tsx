@@ -90,12 +90,12 @@ describe("the composer's focus ring", () => {
 
   it("puts the hook the rule selects on the title input and the body's host", () => {
     const title = renderToStaticMarkup(
-      <TitleField state={state} skin={{ inputStyle: {} }} />,
+      <TitleField {...state} skin={{ inputStyle: {} }} />,
     );
     expect(title).toContain("data-composer-field");
 
     const body = renderToStaticMarkup(
-      <BodyTextarea state={state} skin={{ textareaStyle: {} }} />,
+      <BodyTextarea {...state} skin={{ textareaStyle: {} }} />,
     );
     expect(body).toContain("data-composer-body");
   });

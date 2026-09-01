@@ -87,7 +87,7 @@ function html(
   try {
     return renderToStaticMarkup(
       <BodyTextarea
-        state={state(options.proposalLive ?? false)}
+        {...state(options.proposalLive ?? false)}
         skin={{ textareaStyle: {} }}
       />,
     ).replace(/&#x27;|&#39;/g, "'");

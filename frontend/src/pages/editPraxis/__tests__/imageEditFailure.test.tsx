@@ -92,7 +92,8 @@ describe("the failure lands on a line the player can see", () => {
     const line = "sunset.heic — that image could not be processed";
     const markup = renderToStaticMarkup(
       <FilePicker
-        state={{ fileError: line, handleFileChange: () => {} } as unknown as EditPraxisState}
+        fileError={line}
+        handleFileChange={() => {}}
         skin={{ buttonStyle: {}, buttonLabel: "Add proof" }}
       />,
     );

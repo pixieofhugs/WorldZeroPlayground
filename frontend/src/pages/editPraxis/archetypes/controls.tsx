@@ -14,7 +14,7 @@ import { defaultKeymap } from "@codemirror/commands";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { useFormFactor } from "../../../hooks/useFormFactor";
-import type { PraxisType } from "../../../api/praxis";
+import type { PraxisOut, PraxisType } from "../../../api/praxis";
 import type { DuelSideOut } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
@@ -161,15 +161,17 @@ function DuelPairSide({
  * challenge back.
  */
 function DuelPair({
-  state,
+  praxis,
+  duel,
+  cancelDuel,
+  dissolveDuel,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<EditPraxisState, "duel" | "cancelDuel" | "dissolveDuel"> & {
+  /** Non-null: the pair only mounts once a challenge is attached. */
+  praxis: PraxisOut;
   skin: InviteSearchSkin;
 }) {
   const { t } = useTranslation("forms");
-  const praxis = state.praxis!;
-  const duel = state.duel;
   // The sides name the OTHER player, not the fixed `opponent` ROLE — accepting a
   // challenge puts the viewer's own praxis in that role, which is what used to
   // print the viewer's own name as the rival (#1226). `praxis.created_by_id` is
@@ -239,7 +241,7 @@ function DuelPair({
           {canRescind && (
             <button
               type="button"
-              onClick={() => void state.cancelDuel()}
+              onClick={() => void cancelDuel()}
               aria-label={t("editPraxis.invite.cancelChallengeAria")}
               style={{
                 background: "transparent",
@@ -257,11 +259,11 @@ function DuelPair({
           {/* Once accepted, either participant can still dissolve the duel
               neutrally (#956) — the backend recalculates both sides back to solo
               scoring, no forfeit. It's a heavier action than the ×, so it's a
-              labelled button behind a confirm (state.dissolveDuel). */}
+              labelled button behind a confirm (dissolveDuel). */}
           {accepted && (
             <button
               type="button"
-              onClick={() => void state.dissolveDuel()}
+              onClick={() => void dissolveDuel()}
               aria-label={t("editPraxis.invite.dissolveDuelAria")}
               className="label-caption"
               style={{
@@ -283,14 +285,50 @@ function DuelPair({
 }
 
 export function InviteSearch({
-  state,
+  praxis,
+  duel,
+  duelMode,
+  currentCharacterId,
+  autoSubmitDays,
+  inviteQuery,
+  setInviteQuery,
+  inviteResults,
+  inviteOpen,
+  setInviteOpen,
+  inviting,
+  sendInvite,
+  sendChallenge,
+  cancelInvite,
+  kickMember,
+  leaveCollab,
+  cancelDuel,
+  dissolveDuel,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  | "duel"
+  | "duelMode"
+  | "currentCharacterId"
+  | "autoSubmitDays"
+  | "inviteQuery"
+  | "setInviteQuery"
+  | "inviteResults"
+  | "inviteOpen"
+  | "setInviteOpen"
+  | "inviting"
+  | "sendInvite"
+  | "sendChallenge"
+  | "cancelInvite"
+  | "kickMember"
+  | "leaveCollab"
+  | "cancelDuel"
+  | "dissolveDuel"
+> & {
+  /** Non-null: every archetype mounts this below its own praxis guard. */
+  praxis: PraxisOut;
   skin: InviteSearchSkin;
 }) {
   const { t } = useTranslation("forms");
-  const praxis = state.praxis!;
   // The one roster mount that sits inside a room, and so the only one that can
   // say who is here (#1744). Every other mount — the eight detail pages, the
   // waiting surface — passes nothing and draws no dot at all.
@@ -302,9 +340,8 @@ export function InviteSearch({
   // Duel mode reuses this same box as a one-opponent challenge picker (#311):
   // picking issues a challenge; once attached, the pair replaces it and the
   // search input is hidden (a duel has exactly one opponent).
-  const duelMode = state.duelMode;
   const challengeAttached = duelMode && praxis.duel_id != null;
-  const onPick = duelMode ? state.sendChallenge : state.sendInvite;
+  const onPick = duelMode ? sendChallenge : sendInvite;
   // No chip in duel mode: choosing an opponent is the whole purpose of the pane
   // the player just opened, so hiding the picker behind a disclosure would put a
   // click in front of the one thing there is to do. The chip is the collab's,
@@ -323,7 +360,7 @@ export function InviteSearch({
   const canLeaveCollab =
     !duelMode &&
     praxis.type === "collab" &&
-    praxis.members.some((member) => member.character_id === state.currentCharacterId);
+    praxis.members.some((member) => member.character_id === currentCharacterId);
   // The face comes free from the field every skin already sets, so eight
   // archetypes do not restate it; `collab.fontFamily` stays as the override for
   // a skin whose roster speaks in a different voice from its invite box.
@@ -334,7 +371,15 @@ export function InviteSearch({
         style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap", marginBottom: "var(--space-sm)" }}
       >
         {duelMode
-          ? challengeAttached && <DuelPair state={state} skin={skin} />
+          ? challengeAttached && (
+              <DuelPair
+                praxis={praxis}
+                duel={duel}
+                cancelDuel={cancelDuel}
+                dissolveDuel={dissolveDuel}
+                skin={skin}
+              />
+            )
           : (
               // Live status roster replaces the flat member pills (#591) and,
               // since #1416, the pending-invite chips that used to sit beside
@@ -349,7 +394,7 @@ export function InviteSearch({
                   praxisType={praxis.type}
                   members={praxis.members}
                   invites={praxis.invites}
-                  currentCharacterId={state.currentCharacterId}
+                  currentCharacterId={currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
                   presentCharacterIds={room?.present}
@@ -358,8 +403,8 @@ export function InviteSearch({
                   // dress (#2269). The praxis-detail and waiting mounts pass
                   // none and keep the `card-*` family they are measured on.
                   skin={collabSkin}
-                  onKick={state.kickMember}
-                  onRescindInvite={state.cancelInvite}
+                  onKick={kickMember}
+                  onRescindInvite={cancelInvite}
                 />
                 {/* The ADR-0012 countdown, for the holdout only (#1164). It
                     renders itself to nothing for every other viewer and for a
@@ -368,10 +413,10 @@ export function InviteSearch({
                     skins, which is the same reason the roster sits here. */}
                 <HoldoutPublishNotice
                   members={praxis.members}
-                  currentCharacterId={state.currentCharacterId}
+                  currentCharacterId={currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   submitProposedAt={praxis.submit_proposed_at}
-                  autoSubmitDays={state.autoSubmitDays}
+                  autoSubmitDays={autoSubmitDays}
                 />
               </div>
             )}
@@ -433,8 +478,8 @@ export function InviteSearch({
           // Opened by the chip, so it takes the caret with it — the click that
           // asked for a search box is not also a request to go and find it.
           autoFocus={pickerOpen}
-          value={state.inviteQuery}
-          onChange={(event) => state.setInviteQuery(event.target.value)}
+          value={inviteQuery}
+          onChange={(event) => setInviteQuery(event.target.value)}
           placeholder={
             skin.placeholder ??
             (duelMode
@@ -456,11 +501,11 @@ export function InviteSearch({
             border: skin.inputBorder ?? "1px solid currentColor",
           }}
           onFocus={() => {
-            if (state.inviteResults.length > 0) state.setInviteOpen(true);
+            if (inviteResults.length > 0) setInviteOpen(true);
           }}
-          onBlur={() => setTimeout(() => state.setInviteOpen(false), 200)}
+          onBlur={() => setTimeout(() => setInviteOpen(false), 200)}
         />
-        {state.inviteOpen && state.inviteResults.length > 0 && (
+        {inviteOpen && inviteResults.length > 0 && (
           <div
             role="listbox"
             style={{
@@ -476,11 +521,11 @@ export function InviteSearch({
               overflowY: "auto",
             }}
           >
-            {state.inviteResults.map((character) => (
+            {inviteResults.map((character) => (
               <button
                 key={character.id}
                 type="button"
-                disabled={state.inviting}
+                disabled={inviting}
                 onMouseDown={() => {
                   // Back to the chip once somebody is asked: the roster below
                   // grows their row, and the next invite is another click on it.
@@ -495,7 +540,7 @@ export function InviteSearch({
                   padding: "var(--space-sm) var(--space-md)",
                   background: "transparent",
                   border: "none",
-                  cursor: state.inviting ? "wait" : "pointer",
+                  cursor: inviting ? "wait" : "pointer",
                   textAlign: "left",
                   fontFamily: skin.fontFamily,
                   fontSize: "var(--text-lg)",
@@ -548,7 +593,7 @@ export function InviteSearch({
       {canLeaveCollab && (
         <button
           type="button"
-          onClick={() => void state.leaveCollab()}
+          onClick={() => void leaveCollab()}
           // Spelling out the outcome next to a delete control that reads
           // superficially similar: this one only removes you (#1074).
           title={collabCopy(praxis.task_faction_slug, "leaveDescription")}
@@ -594,10 +639,10 @@ interface FilePickerSkin {
 }
 
 export function FilePicker({
-  state,
+  fileError,
+  handleFileChange,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<EditPraxisState, "fileError" | "handleFileChange"> & {
   skin: FilePickerSkin;
 }) {
   const { t } = useTranslation("forms");
@@ -622,11 +667,11 @@ export function FilePicker({
         type="file"
         multiple
         accept="image/*,video/*,audio/*"
-        onChange={state.handleFileChange}
+        onChange={handleFileChange}
         style={{ display: "none" }}
       />
       {skin.helperText && <div style={skin.helperStyle}>{skin.helperText}</div>}
-      {state.fileError && (
+      {fileError && (
         <p
           style={{
             fontSize: "var(--text-md)",
@@ -634,7 +679,7 @@ export function FilePicker({
             marginTop: "var(--space-sm)",
           }}
         >
-          {state.fileError}
+          {fileError}
         </p>
       )}
     </div>
@@ -648,20 +693,20 @@ interface DropButtonSkin {
 }
 
 export function DropButton({
-  state,
+  praxis,
+  currentCharacterId,
+  cancel,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<EditPraxisState, "praxis" | "currentCharacterId" | "cancel"> & {
   skin?: DropButtonSkin;
 }) {
   const { t } = useTranslation("forms");
-  const praxis = state.praxis;
   const isCollab = praxis?.type === "collab";
   // Deleting destroys the praxis for the whole crew, so it stays the creator's
   // alone — the backend is the authority (`delete_praxis`), this only declines to
   // draw a control the viewer could never use. Every other member's exit is
   // Leave, which is now theirs too (#1074, ADR-0013).
-  const isCreator = praxis?.created_by_id === state.currentCharacterId;
+  const isCreator = praxis?.created_by_id === currentCharacterId;
   if (isCollab && !isCreator) return null;
   // With other people's parts inside it, the archetype's "drop task" label
   // undersells what the button does. Both the label and the consequence come
@@ -674,7 +719,7 @@ export function DropButton({
   return (
     <button
       type="button"
-      onClick={() => void state.cancel()}
+      onClick={() => void cancel()}
       title={
         crewAtStake
           ? collabCopy(praxis.task_faction_slug, "deleteDescription")
@@ -712,24 +757,29 @@ interface SaveDraftButtonSkin {
 }
 
 export function SaveDraftButton({
-  state,
+  controlsLocked,
+  submitting,
+  switchingMode,
+  saveDraft,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  "controlsLocked" | "submitting" | "switchingMode" | "saveDraft"
+> & {
   skin?: SaveDraftButtonSkin;
 }) {
   const { t } = useTranslation("forms");
   // A cast or moderated praxis has no draft to keep — the room refuses a change
   // in the same states, and the archetype is read-only in them. Hide rather
   // than disable, as everywhere else.
-  if (state.controlsLocked) return null;
+  if (controlsLocked) return null;
   return (
     <button
       type="button"
-      onClick={() => void state.saveDraft()}
+      onClick={() => void saveDraft()}
       // Not while a publish or a mode switch is in flight: both end up writing
       // the same fields, and both change where the player should be sent.
-      disabled={state.submitting || state.switchingMode !== null}
+      disabled={submitting || switchingMode !== null}
       className={skin?.className ?? "font-body label-caption hover:underline"}
       style={{
         background: "none",
@@ -789,10 +839,10 @@ interface TitleFieldSkin {
 const TITLE_PUBLISH_DEBOUNCE_MS = 600;
 
 export function TitleField({
-  state,
+  title,
+  setTitle,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<EditPraxisState, "title" | "setTitle"> & {
   skin: TitleFieldSkin;
 }) {
   const { t } = useTranslation("forms");
@@ -802,10 +852,10 @@ export function TitleField({
   const publishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Read through refs so the observer below can be installed once per room
   // rather than re-subscribed on every keystroke.
-  const setTitleRef = useRef(state.setTitle);
-  setTitleRef.current = state.setTitle;
-  const titleRef = useRef(state.title);
-  titleRef.current = state.title;
+  const setTitleRef = useRef(setTitle);
+  setTitleRef.current = setTitle;
+  const titleRef = useRef(title);
+  titleRef.current = title;
 
   const publish = (value: string) => {
     if (publishTimerRef.current) clearTimeout(publishTimerRef.current);
@@ -884,10 +934,10 @@ export function TitleField({
       // no label of its own and `skin.ariaLabel` when one does, so there is no
       // one string to reach for.
       data-testid="praxis-title"
-      value={state.title}
+      value={title}
       onChange={(event) => {
         const next = event.target.value;
-        state.setTitle(next);
+        setTitle(next);
         if (publishTimerRef.current) clearTimeout(publishTimerRef.current);
         publishTimerRef.current = setTimeout(
           () => publish(next),
@@ -902,7 +952,7 @@ export function TitleField({
 }
 
 /* -------------------------------------------------------------------------- */
-/* BodyTextarea — the body textarea bound to state.body / state.setBody.       */
+/* BodyTextarea — the body editor, bound to `body` / `setBody`.               */
 /* Kept separate from BodyPreview so archetypes that wrap the textarea in      */
 /* bespoke chrome (line-number gutters, etc.) can still consume the shared     */
 /* binding.                                                                    */
@@ -1080,10 +1130,20 @@ const BODY_UNAVAILABLE_STYLE: CSSProperties = {
 };
 
 export function BodyTextarea({
-  state,
+  praxis,
+  controlsLocked,
+  setBody,
+  proposalConfirmArmed,
+  confirmProposalEdit,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  | "praxis"
+  | "controlsLocked"
+  | "setBody"
+  | "proposalConfirmArmed"
+  | "confirmProposalEdit"
+> & {
   skin: BodyTextareaSkin;
 }) {
   const { t } = useTranslation("forms");
@@ -1103,19 +1163,19 @@ export function BodyTextarea({
   // that still renders a composer read-only. #1745's freeze was a third, and it
   // is gone (ADR-0079): the room takes writes in every status a member can
   // reach. The rule is one line in `roomSeal.ts`, where the harness can call it.
-  const writable = composerWritable(seeded, state.controlsLocked);
-  const setBodyRef = useRef(state.setBody);
-  setBodyRef.current = state.setBody;
+  const writable = composerWritable(seeded, controlsLocked);
+  const setBodyRef = useRef(setBody);
+  setBodyRef.current = setBody;
   // The live proposal's guard (#1811, ADR-0079), read through a ref so the
   // editor is reconfigured by nothing and rebuilt by nothing when it flips.
   // The filter below runs at dispatch time and reads it then.
   const proposalGuardRef = useRef({
-    armed: state.proposalConfirmArmed,
-    ask: state.confirmProposalEdit,
+    armed: proposalConfirmArmed,
+    ask: confirmProposalEdit,
   });
   proposalGuardRef.current = {
-    armed: state.proposalConfirmArmed,
-    ask: state.confirmProposalEdit,
+    armed: proposalConfirmArmed,
+    ask: confirmProposalEdit,
   };
 
   const contentAttributes = useMemo(
@@ -1161,8 +1221,8 @@ export function BodyTextarea({
     if (!host || !ytext) return;
     const view = new EditorView({
       // The room's current text, which is empty until the server's seed lands.
-      // Deliberately not `state.body`: a client that writes the praxis body
-      // into the document ends up merging a second copy of it (ADR-0073).
+      // Deliberately not the composer's `body`: a client that writes the praxis
+      // body into the document ends up merging a second copy of it (ADR-0073).
       doc: ytext.toString(),
       parent: host,
       extensions: [
@@ -1247,13 +1307,13 @@ export function BodyTextarea({
     });
   }, [writable, editableSlot]);
 
-  // ---- The room's text → `state.body` ----
+  // ---- The room's text → `body` ----
   //
-  // One direction only, and now the ONLY direction: `state.body` feeds
+  // One direction only, and now the ONLY direction: `body` feeds
   // `BodyPreview`, and since #2086 took the word count out, nothing
   // else. Since #1743 no client
   // write exists to feed, so there is not even a reason to be tempted — and
-  // nothing may push `state.body` back into the document, or the praxis would
+  // nothing may push `body` back into the document, or the praxis would
   // seed the room it is supposed to be seeded BY.
   useEffect(() => {
     if (!ytext) return;
@@ -1309,7 +1369,7 @@ export function BodyTextarea({
 
   return (
     <div>
-      {skin.hideToolbar || awaitingRoom || state.controlsLocked ? null : (
+      {skin.hideToolbar || awaitingRoom || controlsLocked ? null : (
       <div
         role="toolbar"
         aria-label={t("editPraxis.toolbar.label")}
@@ -1405,7 +1465,7 @@ export function BodyTextarea({
           Gated on the PRAXIS, not on `proposalConfirmArmed`. The latch is about
           the dialog, which fires once; this line is about the state, which is
           still true afterwards and is what the member is deciding against. */}
-      {proposalIsLive(state.praxis) && (
+      {proposalIsLive(praxis) && (
         <div style={{ marginTop: "var(--space-xs)" }}>
           {/* The ink is the class's and only the class's (#1819): an inline
               `color` here beats `--label-ink`, and the three near-black sheets
@@ -1482,7 +1542,7 @@ export function WriteUpTabs({
 }
 
 /* -------------------------------------------------------------------------- */
-/* BodyPreview — the live markdown preview block. Owns the `state.body.trim()` */
+/* BodyPreview — the live markdown preview block. Owns the `body.trim()`      */
 /* guard (renders nothing until the body has content) and reuses the shared    */
 /* MarkdownPreview block component. The archetype supplies the bespoke wrapper, */
 /* eyebrow label, and markdown typography via the skin.                        */
@@ -1506,13 +1566,12 @@ interface BodyPreviewSkin {
 }
 
 export function BodyPreview({
-  state,
+  body,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<EditPraxisState, "body"> & {
   skin: BodyPreviewSkin;
 }) {
-  if (!state.body.trim()) {
+  if (!body.trim()) {
     return skin.emptyState == null ? null : (
       <div style={skin.wrapperStyle}>
         {skin.label}
@@ -1528,7 +1587,7 @@ export function BodyPreview({
           The literal class lives on TitleField/BodyTextarea so Tailwind emits
           it even though this one is assembled. */}
       <MarkdownPreview
-        source={state.body}
+        source={body}
         className={`content-text ${skin.markdownClassName ?? "markdown-preview"}`}
         style={skin.markdownStyle}
       />
@@ -1558,13 +1617,27 @@ interface ModePickerSkin<O extends { key: PraxisType }> {
 }
 
 export function ModePicker<O extends { key: PraxisType }>({
-  state,
+  praxis,
+  task,
+  duelMode,
+  duelChipVisible,
+  modeIsLocked,
+  switchingMode,
+  changeMode,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  | "task"
+  | "duelMode"
+  | "duelChipVisible"
+  | "modeIsLocked"
+  | "switchingMode"
+  | "changeMode"
+> & {
+  /** Non-null: every archetype mounts this below its own praxis guard. */
+  praxis: PraxisOut;
   skin: ModePickerSkin<O>;
 }) {
-  const praxis = state.praxis!;
   // The allowed modes are the TASK's, computed server-side against the viewer's
   // level (`allowed_praxis_modes`). An unknown task means unknown permission, so
   // this FAILS CLOSED (#1709): no options until the task lands. Each of the
@@ -1572,7 +1645,7 @@ export function ModePicker<O extends { key: PraxisType }>({
   // three modes, which handed a level-0 viewer the Collab the API would refuse.
   // Derived here, from the state the picker already holds, so there is one
   // statement of the rule and nothing left to drift.
-  const allowedModes = state.task?.allowed_modes ?? [];
+  const allowedModes = task?.allowed_modes ?? [];
   return (
     <div style={skin.containerStyle}>
       {skin.options
@@ -1580,7 +1653,7 @@ export function ModePicker<O extends { key: PraxisType }>({
           // Duel isn't in task.allowed_modes (it's issued via challenge, ADR-0011);
           // it's gated on the viewer's level instead (#311). Hide, don't disable.
           option.key === "duel"
-            ? state.duelChipVisible
+            ? duelChipVisible
             : allowedModes.includes(option.key),
         )
         .map((option, index) => {
@@ -1588,17 +1661,17 @@ export function ModePicker<O extends { key: PraxisType }>({
           // state is driven by duelMode, not praxis.type.
           const active =
             option.key === "duel"
-              ? state.duelMode
-              : praxis.type === option.key && !state.duelMode;
+              ? duelMode
+              : praxis.type === option.key && !duelMode;
           const disabled =
-            state.modeIsLocked || state.switchingMode !== null;
-          if (state.modeIsLocked && !active) return null;
+            modeIsLocked || switchingMode !== null;
+          if (modeIsLocked && !active) return null;
           return skin.renderOption(option, {
             active,
             disabled,
             index,
             onSelect: () => {
-              if (!disabled) void state.changeMode(option.key);
+              if (!disabled) void changeMode(option.key);
             },
           });
         })}
@@ -1624,7 +1697,7 @@ export function ModePicker<O extends { key: PraxisType }>({
  * was written for simply stops being reachable — and the server's own
  * `title.trim()` refusal stays too. This is an affordance, not a validation
  * move, and it is derived here rather than added to `EditPraxisState` because
- * `state.title` is already on it and nothing else needs to know.
+ * `title` is already on it and nothing else needs to know.
  *
  * Untitled is the NORMAL entry state, not a slip: `handleSignup` posts a task id
  * and a type, and `accept_duel` mints the opponent's side with no title at all.
@@ -1632,8 +1705,8 @@ export function ModePicker<O extends { key: PraxisType }>({
  * which is why the reason is drawn (below) rather than implied — a dead control
  * with no explanation is worse than the silent failure it replaces.
  */
-function publishNeedsTitle(state: EditPraxisState): boolean {
-  return !state.title.trim();
+function publishNeedsTitle(title: string): boolean {
+  return !title.trim();
 }
 
 /**
@@ -1721,13 +1794,38 @@ export interface PublishButtonSkin {
 }
 
 export function PublishButton({
-  state,
+  praxis,
+  currentCharacterId,
+  isPublished,
+  duel,
+  duelMode,
+  title,
+  submitting,
+  switchingMode,
+  publish,
+  propose,
+  pullBack,
+  markDone,
+  requestDuelSeal,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  | "praxis"
+  | "currentCharacterId"
+  | "isPublished"
+  | "duel"
+  | "duelMode"
+  | "title"
+  | "submitting"
+  | "switchingMode"
+  | "publish"
+  | "propose"
+  | "pullBack"
+  | "markDone"
+  | "requestDuelSeal"
+> & {
   skin: PublishButtonSkin;
 }) {
-  const praxis = state.praxis;
   // The one published state that keeps its footer button (#1077) — but NOT for
   // the reason #1077 wrote it, and #1177 is the record of that. DO NOT DELETE
   // THIS BRANCH as unreachable; read the next three paragraphs first.
@@ -1760,14 +1858,27 @@ export function PublishButton({
   // detail page, and a `declined` challenge leaves an ordinary published solo
   // praxis, which stays unpublishable-back.
   const duelPullBack =
-    state.isPublished &&
-    state.duelMode &&
-    (state.duel?.status === "active" || state.duel?.status === "pending");
-  if (state.isPublished && !duelPullBack) return null;
+    isPublished &&
+    duelMode &&
+    (duel?.status === "active" || duel?.status === "pending");
+  if (isPublished && !duelPullBack) return null;
   // A multi-member collab has three things to say, not one (ADR-0079), so it
   // gets its own control below rather than a fourth relabelling of this button.
   if (!duelPullBack && praxis?.type === "collab" && praxis.members.length > 1) {
-    return <CollabSignals state={state} skin={skin} />;
+    return (
+      <CollabSignals
+        praxis={praxis}
+        currentCharacterId={currentCharacterId}
+        title={title}
+        submitting={submitting}
+        switchingMode={switchingMode}
+        publish={publish}
+        propose={propose}
+        pullBack={pullBack}
+        markDone={markDone}
+        skin={skin}
+      />
+    );
   }
   // Neutral wording, deliberately: no forfeit language and no consequence
   // dialog before the duel settles (#718 rejected that framing once already;
@@ -1781,12 +1892,12 @@ export function PublishButton({
   // opponent is actually attached — duel mode with an empty opponent slot casts
   // as an ordinary solo praxis, so there is nothing to warn about. Once cast,
   // the same button reverses it through `pullBack` and asks nothing.
-  const sealsADuel = state.duelMode && state.duel != null;
+  const sealsADuel = duelMode && duel != null;
   const onClick = duelPullBack
-    ? state.pullBack
+    ? pullBack
     : sealsADuel
-      ? async () => state.requestDuelSeal()
-      : state.publish;
+      ? async () => requestDuelSeal()
+      : publish;
   // Every branch of this button but ONE publishes: the solo cast calls
   // `publish()` outright, and the duel's `requestDuelSeal()` opens the sheet
   // whose confirm is that same `publish()` — so the gate belongs on both, or the
@@ -1794,7 +1905,7 @@ export function PublishButton({
   // exception and stays live: reopening a side that is already cast has nothing
   // to do with the title, and it is the moderated composer's only way back into
   // the text a moderator just asked the author to fix (#1177).
-  const needsTitle = !duelPullBack && publishNeedsTitle(state);
+  const needsTitle = !duelPullBack && publishNeedsTitle(title);
   const button = (
     <button
       type="button"
@@ -1808,12 +1919,12 @@ export function PublishButton({
       // the reason is reachable without hunting the sheet for a caption.
       aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
       onClick={() => void onClick()}
-      disabled={needsTitle || state.submitting || state.switchingMode !== null}
+      disabled={needsTitle || submitting || switchingMode !== null}
       className={offClassName(skin.className, needsTitle)}
       style={skin.style}
     >
       {skin.ornament}
-      {state.submitting ? skin.busyLabel : idleLabel}
+      {submitting ? skin.busyLabel : idleLabel}
       {skin.trailingOrnament}
     </button>
   );
@@ -1887,22 +1998,39 @@ const SECONDARY_SIGNAL_STYLE: CSSProperties = {
  * {@link PublishButtonSkin} the single button wears.
  */
 export function CollabSignals({
-  state,
+  praxis,
+  currentCharacterId,
+  title,
+  submitting,
+  switchingMode,
+  publish,
+  propose,
+  pullBack,
+  markDone,
   skin,
-}: {
-  state: EditPraxisState;
+}: Pick<
+  EditPraxisState,
+  | "praxis"
+  | "currentCharacterId"
+  | "title"
+  | "submitting"
+  | "switchingMode"
+  | "publish"
+  | "propose"
+  | "pullBack"
+  | "markDone"
+> & {
   skin: PublishButtonSkin;
 }) {
-  const praxis = state.praxis;
   if (!praxis) return null;
   const slug = praxis.task_faction_slug;
-  const gate = deriveCollabGate(praxis.members, state.currentCharacterId);
+  const gate = deriveCollabGate(praxis.members, currentCharacterId);
   const proposalLive = proposalIsLive(praxis);
   const iAmDone = praxis.members.some(
     (member) =>
-      member.character_id === state.currentCharacterId && member.is_done,
+      member.character_id === currentCharacterId && member.is_done,
   );
-  const busy = state.submitting || state.switchingMode !== null;
+  const busy = submitting || switchingMode !== null;
   // The last approval outstanding, so the button can say what pressing it does
   // instead of leaving the player to count the roster.
   const finalApproval = gate.castCount === gate.memberCount - 1;
@@ -1914,14 +2042,14 @@ export function CollabSignals({
   // the server tells apart by state — so both need a title to send. **Done** is
   // a social toggle and **Withdraw proposal** takes one back; neither publishes,
   // and neither goes dead because the write-up has not been named yet.
-  const needsTitle = publishNeedsTitle(state);
+  const needsTitle = publishNeedsTitle(title);
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
         aria-pressed={iAmDone}
         title={collabCopy(slug, "doneDescription")}
-        onClick={() => void state.markDone(!iAmDone)}
+        onClick={() => void markDone(!iAmDone)}
         disabled={busy}
         className="label-caption"
         style={SECONDARY_SIGNAL_STYLE}
@@ -1949,13 +2077,13 @@ export function CollabSignals({
                 )
           }
           aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
-          onClick={() => void (proposalLive ? state.publish() : state.propose())}
+          onClick={() => void (proposalLive ? publish() : propose())}
           disabled={needsTitle || busy}
           className={offClassName(skin.className, needsTitle)}
           style={skin.style}
         >
           {skin.ornament}
-          {state.submitting ? skin.busyLabel : primaryLabel}
+          {submitting ? skin.busyLabel : primaryLabel}
           {skin.trailingOrnament}
         </button>
       )}
@@ -1963,7 +2091,7 @@ export function CollabSignals({
         <button
           type="button"
           title={collabCopy(slug, "withdrawDescription")}
-          onClick={() => void state.pullBack()}
+          onClick={() => void pullBack()}
           disabled={busy}
           className="label-caption"
           style={SECONDARY_SIGNAL_STYLE}

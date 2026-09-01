@@ -568,7 +568,8 @@ export default function CovenEditPraxis({ state }: Props) {
             `TitleField`, so there is nothing per-faction here. */}
         <ComposerSection rule={false}>
           <TitleField
-            state={state}
+            title={state.title}
+            setTitle={state.setTitle}
             skin={{
               placeholder: t("editPraxis.composer.titlePlaceholder"),
               inputStyle: { ...fieldBox, fontFamily: DISPLAY },
@@ -585,7 +586,13 @@ export default function CovenEditPraxis({ state }: Props) {
             labelStyle={labelStyle}
           >
             <ModePicker
-              state={state}
+              praxis={praxis}
+              task={task}
+              duelMode={state.duelMode}
+              duelChipVisible={state.duelChipVisible}
+              modeIsLocked={state.modeIsLocked}
+              switchingMode={state.switchingMode}
+              changeMode={state.changeMode}
               skin={{
                 containerStyle: {
                   display: "flex",
@@ -639,7 +646,24 @@ export default function CovenEditPraxis({ state }: Props) {
             labelStyle={labelStyle}
           >
             <InviteSearch
-              state={state}
+              praxis={praxis}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              currentCharacterId={state.currentCharacterId}
+              autoSubmitDays={state.autoSubmitDays}
+              inviteQuery={state.inviteQuery}
+              setInviteQuery={state.setInviteQuery}
+              inviteResults={state.inviteResults}
+              inviteOpen={state.inviteOpen}
+              setInviteOpen={state.setInviteOpen}
+              inviting={state.inviting}
+              sendInvite={state.sendInvite}
+              sendChallenge={state.sendChallenge}
+              cancelInvite={state.cancelInvite}
+              kickMember={state.kickMember}
+              leaveCollab={state.leaveCollab}
+              cancelDuel={state.cancelDuel}
+              dissolveDuel={state.dissolveDuel}
               skin={{
                 fontFamily: CHROME,
                 inputBg: FIELD,
@@ -720,7 +744,11 @@ export default function CovenEditPraxis({ state }: Props) {
               still be a tab stop and still be submitted by a form. */}
           {tab === "write" ? (
             <BodyTextarea
-              state={state}
+              praxis={praxis}
+              controlsLocked={state.controlsLocked}
+              setBody={state.setBody}
+              proposalConfirmArmed={state.proposalConfirmArmed}
+              confirmProposalEdit={state.confirmProposalEdit}
               skin={{
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
@@ -741,7 +769,7 @@ export default function CovenEditPraxis({ state }: Props) {
             />
           ) : (
             <BodyPreview
-              state={state}
+              body={state.body}
               skin={{
                 wrapperStyle: { ...fieldBox, minHeight: 180 },
                 markdownStyle: {
@@ -811,7 +839,8 @@ export default function CovenEditPraxis({ state }: Props) {
             })}
             {!state.controlsLocked && (
               <FilePicker
-                state={state}
+                fileError={state.fileError}
+                handleFileChange={state.handleFileChange}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     fontFamily: CHROME,
@@ -859,11 +888,16 @@ export default function CovenEditPraxis({ state }: Props) {
           start={
             <>
               <SaveDraftButton
-                state={state}
+                controlsLocked={state.controlsLocked}
+                submitting={state.submitting}
+                switchingMode={state.switchingMode}
+                saveDraft={state.saveDraft}
                 skin={{ style: { color: LABEL, fontFamily: CHROME } }}
               />
               <DropButton
-                state={state}
+                praxis={praxis}
+                currentCharacterId={state.currentCharacterId}
+                cancel={state.cancel}
                 skin={{
                   style: composerLabelStyle({
                     fontFamily: CHROME,
@@ -880,7 +914,19 @@ export default function CovenEditPraxis({ state }: Props) {
           }
           end={
             <PublishButton
-              state={state}
+              praxis={praxis}
+              currentCharacterId={state.currentCharacterId}
+              isPublished={state.isPublished}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              title={state.title}
+              submitting={state.submitting}
+              switchingMode={state.switchingMode}
+              publish={state.publish}
+              propose={state.propose}
+              pullBack={state.pullBack}
+              markDone={state.markDone}
+              requestDuelSeal={state.requestDuelSeal}
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),

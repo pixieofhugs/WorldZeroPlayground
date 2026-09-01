@@ -51,7 +51,7 @@ const TOOLBAR_ROSTER = [
 describe("markdown toolbar roster", () => {
   it("draws the design's seven commands, in order", () => {
     const markup = renderToStaticMarkup(
-      <BodyTextarea state={bodyState} skin={{ textareaStyle: {} }} />,
+      <BodyTextarea {...bodyState} skin={{ textareaStyle: {} }} />,
     );
     // Buttons only — the toolbar element carries an aria-label of its own.
     const labels = [...markup.matchAll(/<button[^>]*aria-label="([^"]+)"/g)].map(
