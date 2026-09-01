@@ -41,10 +41,10 @@ import '../../../i18n'
 import i18next from 'i18next'
 import type { FactionDetailState } from '../useFactionDetail'
 import {
-  FACTION_SECTION_IDS,
-  FACTION_SECTION_STORAGE_KEY,
-  factionSectionStorageKey,
-  factionSectionBodyId,
+  FACTION_SECTIONS,
+  PROFILE_SECTIONS,
+  sectionStorageKey,
+  sectionBodyId,
   resolveCollapsedSections,
   serializeCollapsedSections,
   toggleCollapsedSection,
@@ -115,7 +115,7 @@ const translate = i18next.t as unknown as (
 ) => string
 
 /** The visible heading of each section — the string the aria-label names. */
-const HEADING: Record<(typeof FACTION_SECTION_IDS)[number], string> = {
+const HEADING: Record<(typeof FACTION_SECTIONS.ids)[number], string> = {
   tasks: translate('factions:detail.default.tasksHeading', { total: TASKS.length }),
   praxis: translate('factions:detail.default.recentHeading'),
 }
@@ -134,10 +134,10 @@ function textOf(html: string): string {
 
 describe('every faction folds both galleries', () => {
   for (const slug of SLUGS) {
-    for (const section of FACTION_SECTION_IDS) {
+    for (const section of FACTION_SECTIONS.ids) {
       it(`${slug} · ${section} — the heading is a disclosure control`, () => {
         const html = page(slug)
-        const bodyId = factionSectionBodyId(section)
+        const bodyId = sectionBodyId(FACTION_SECTIONS, section)
         const tag = disclosureTag(html, bodyId)
 
         expect(tag, `${slug}'s ${section} heading draws no disclosure button`).toBeDefined()
@@ -191,9 +191,9 @@ describe('the disclosure marker is a hairline on every face', () => {
   }
 
   for (const slug of SLUGS) {
-    for (const section of FACTION_SECTION_IDS) {
+    for (const section of FACTION_SECTIONS.ids) {
       it(`${slug} · ${section} — 1px, butt cap, miter join`, () => {
-        const markup = disclosureMarkup(page(slug), factionSectionBodyId(section))
+        const markup = disclosureMarkup(page(slug), sectionBodyId(FACTION_SECTIONS, section))
         expect(markup, `${slug}'s ${section} disclosure never closes`).toBeDefined()
 
         expect(markup).toContain('stroke-width="1"')
@@ -215,8 +215,8 @@ describe('the disclosure marker is a hairline on every face', () => {
     // disclosure control, however tempting the one-line version looks.
     for (const slug of SLUGS) {
       const html = page(slug)
-      for (const section of FACTION_SECTION_IDS) {
-        const markup = disclosureMarkup(html, factionSectionBodyId(section))
+      for (const section of FACTION_SECTIONS.ids) {
+        const markup = disclosureMarkup(html, sectionBodyId(FACTION_SECTIONS, section))
         expect(markup, `${slug} · ${section}`).toContain('<svg')
         for (const glyph of ['\u203a', '\u276f', '\u3009', '\u00bb']) {
           expect(markup, `${slug} · ${section} draws a glyph marker`).not.toContain(
@@ -243,7 +243,7 @@ describe('a folded section is still worth reading', () => {
   }
 
   it('keeps the heading, the count and the control when collapsed', () => {
-    stubStorage(serializeCollapsedSections(['tasks', 'praxis']))
+    stubStorage(serializeCollapsedSections(FACTION_SECTIONS.ids, ['tasks', 'praxis']))
     for (const slug of SLUGS) {
       const html = page(slug)
       // The count is the whole reason a folded section still reads.
@@ -251,8 +251,8 @@ describe('a folded section is still worth reading', () => {
         HEADING.tasks,
       )
       expect(textOf(html)).toContain(HEADING.praxis)
-      for (const section of FACTION_SECTION_IDS) {
-        const tag = disclosureTag(html, factionSectionBodyId(section))
+      for (const section of FACTION_SECTIONS.ids) {
+        const tag = disclosureTag(html, sectionBodyId(FACTION_SECTIONS, section))
         expect(tag, `${slug} · ${section}`).toContain('aria-expanded="false"')
         expect(tag).toContain(
           `aria-label="${translate('common:sidebar.panel.expand', { panel: HEADING[section] })}"`,
@@ -262,11 +262,11 @@ describe('a folded section is still worth reading', () => {
   })
 
   it('hides the gallery itself, so the page actually gets shorter', () => {
-    stubStorage(serializeCollapsedSections(['tasks']))
+    stubStorage(serializeCollapsedSections(FACTION_SECTIONS.ids, ['tasks']))
     const html = page('albescent')
     // React writes a bare `hidden` on the body it folds, and only on that one.
-    expect(html).toContain(`id="${factionSectionBodyId('tasks')}" hidden`)
-    expect(html).not.toContain(`id="${factionSectionBodyId('praxis')}" hidden`)
+    expect(html).toContain(`id="${sectionBodyId(FACTION_SECTIONS, 'tasks')}" hidden`)
+    expect(html).not.toContain(`id="${sectionBodyId(FACTION_SECTIONS, 'praxis')}" hidden`)
   })
 })
 
@@ -278,38 +278,74 @@ describe('a folded section is still worth reading', () => {
  */
 describe('the fold follows the account, not the browser', () => {
   it('appends the account id to the base key, like the rail does', () => {
-    expect(factionSectionStorageKey(7)).toBe(`${FACTION_SECTION_STORAGE_KEY}:7`)
-    expect(factionSectionStorageKey(8)).not.toBe(factionSectionStorageKey(7))
+    expect(sectionStorageKey(FACTION_SECTIONS.storageKey, 7)).toBe(`${FACTION_SECTIONS.storageKey}:7`)
+    expect(sectionStorageKey(FACTION_SECTIONS.storageKey, 8)).not.toBe(sectionStorageKey(FACTION_SECTIONS.storageKey, 7))
   })
 
   it('falls back to the bare key before the account is known', () => {
     // A faction page renders while `/auth/me` is still in flight, and for a
     // signed-out visitor it never resolves at all.
-    expect(factionSectionStorageKey(null)).toBe(FACTION_SECTION_STORAGE_KEY)
-    expect(factionSectionStorageKey(undefined)).toBe(FACTION_SECTION_STORAGE_KEY)
+    expect(sectionStorageKey(FACTION_SECTIONS.storageKey, null)).toBe(FACTION_SECTIONS.storageKey)
+    expect(sectionStorageKey(FACTION_SECTIONS.storageKey, undefined)).toBe(FACTION_SECTIONS.storageKey)
   })
 
   it('opens everything rather than breaking on junk', () => {
     for (const stored of [null, '', 'not json', '{}', '[1,2]', '["nope"]']) {
-      expect(resolveCollapsedSections(stored)).toEqual([])
+      expect(resolveCollapsedSections(FACTION_SECTIONS.ids, stored)).toEqual([])
     }
   })
 
   it('round-trips a stored fold', () => {
-    expect(resolveCollapsedSections(serializeCollapsedSections(['praxis']))).toEqual([
+    expect(resolveCollapsedSections(FACTION_SECTIONS.ids, serializeCollapsedSections(FACTION_SECTIONS.ids, ['praxis']))).toEqual([
       'praxis',
     ])
   })
 
   it('serializes in a stable order, whatever order they were folded in', () => {
-    expect(serializeCollapsedSections(['praxis', 'tasks'])).toBe(
-      serializeCollapsedSections(['tasks', 'praxis']),
+    expect(serializeCollapsedSections(FACTION_SECTIONS.ids, ['praxis', 'tasks'])).toBe(
+      serializeCollapsedSections(FACTION_SECTIONS.ids, ['tasks', 'praxis']),
     )
   })
 
   it('toggles one section without disturbing the other', () => {
-    expect(toggleCollapsedSection([], 'tasks')).toEqual(['tasks'])
-    expect(toggleCollapsedSection(['tasks'], 'praxis')).toEqual(['tasks', 'praxis'])
-    expect(toggleCollapsedSection(['tasks', 'praxis'], 'tasks')).toEqual(['praxis'])
+    expect(toggleCollapsedSection(FACTION_SECTIONS.ids, [], 'tasks')).toEqual(['tasks'])
+    expect(toggleCollapsedSection(FACTION_SECTIONS.ids, ['tasks'], 'praxis')).toEqual(['tasks', 'praxis'])
+    expect(toggleCollapsedSection(FACTION_SECTIONS.ids, ['tasks', 'praxis'], 'tasks')).toEqual(['praxis'])
+  })
+})
+
+/**
+ * #2958 generalised this primitive so a character profile could reuse it. The
+ * ruling was explicit that the two surfaces get SEPARATE keys — folding Praxis
+ * on a faction page must not fold Praxis on every profile — and both surfaces
+ * happen to have a section called `praxis`, which is exactly the shape that
+ * makes a shared key look harmless and behave otherwise.
+ *
+ * This suite is what a "tidy it into one key" refactor has to argue with.
+ */
+describe('the two surfaces are kept apart', () => {
+  it('remembers each surface under its own key', () => {
+    expect(PROFILE_SECTIONS.storageKey).not.toBe(FACTION_SECTIONS.storageKey)
+    // Nor may one be a prefix of the other: the account id is appended, so a
+    // pair like `wz-faction-sections` / `wz-faction-sections-profile` would
+    // collide for anything that ever walks these keys by prefix.
+    expect(PROFILE_SECTIONS.storageKey.startsWith(FACTION_SECTIONS.storageKey)).toBe(false)
+    expect(FACTION_SECTIONS.storageKey.startsWith(PROFILE_SECTIONS.storageKey)).toBe(false)
+  })
+
+  it('names each panel apart, though both surfaces have a praxis', () => {
+    expect(FACTION_SECTIONS.ids).toContain('praxis')
+    expect(PROFILE_SECTIONS.ids).toContain('praxis')
+    expect(sectionBodyId(PROFILE_SECTIONS, 'praxis')).not.toBe(
+      sectionBodyId(FACTION_SECTIONS, 'praxis'),
+    )
+  })
+
+  it('ignores a blob written by the other surface', () => {
+    // Belt and braces on the ruling: even if the keys were ever shared by
+    // accident, a profile's fold cannot fold a faction's Tasks, because
+    // resolving filters against the ASKING surface's own ids.
+    const profileFold = serializeCollapsedSections(PROFILE_SECTIONS.ids, ['proposed'])
+    expect(resolveCollapsedSections(FACTION_SECTIONS.ids, profileFold)).toEqual([])
   })
 })

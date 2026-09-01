@@ -9,7 +9,12 @@ import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { CharacterOut } from "../../../api/auth";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
-import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
+import {
+  FACTION_SECTIONS,
+  SectionPanel,
+  SectionToggle,
+  useSectionDisclosures,
+} from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
@@ -230,7 +235,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
     onSignup,
     membership,
   } = state;
-  const sections = useFactionSections();
+  const sections = useSectionDisclosures(FACTION_SECTIONS);
 
   if (!faction) return null;
 

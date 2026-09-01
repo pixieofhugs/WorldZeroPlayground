@@ -39,7 +39,7 @@ const PANEL = 'var(--faction-ua-panel)'
 const RULE = 'var(--faction-ua-rule)'
 const HAIR = 'var(--faction-ua-hair)'
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div

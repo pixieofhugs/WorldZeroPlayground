@@ -9,7 +9,7 @@ import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
-import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
+import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import type { SettingsSectionProps } from '../../Settings'
 import SettingsCard from '../SettingsCard'
@@ -30,7 +30,7 @@ import SettingsSwitch from '../SettingsSwitch'
  *
  * WHY LOCAL STORAGE IS ON A CARD TITLED "COOKIES". It is not a cookie, but it
  * is the same category under ePrivacy and it is *most* of what World Zero
- * actually keeps — one cookie against ten storage entries. A cookies-only card
+ * actually keeps — one cookie against eleven storage entries. A cookies-only card
  * would make the site look like it stores less than it does.
  *
  * ALL THREE SWITCHES RENDER, ALL THREE ARE INERT (owner ruling, 2026-08-17).
@@ -50,7 +50,7 @@ import SettingsSwitch from '../SettingsSwitch'
  * three families whose keys are built at runtime.
  */
 
-/** The four keys the app builds by suffixing an id onto a base. */
+/** The five keys the app builds by suffixing an id onto a base. */
 type KeyFamily = 'account' | 'character'
 
 interface StoredEntry {
@@ -116,9 +116,19 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     whereKey: BROWSER_WHERE,
   },
   {
-    name: FACTION_SECTION_STORAGE_KEY,
+    name: FACTION_SECTIONS.storageKey,
     family: 'account',
     purposeKey: 'settings.cookies.entries.factionSections',
+    whereKey: BROWSER_WHERE,
+  },
+  {
+    // ONE writer, TWO keys (#2958). `sectionDisclosure` is the one module that
+    // writes both, so the census below — which finds writers by their
+    // `setItem` call — cannot tell them apart and would keep passing with this
+    // line missing. The second surface has to be disclosed by hand.
+    name: PROFILE_SECTIONS.storageKey,
+    family: 'account',
+    purposeKey: 'settings.cookies.entries.profileSections',
     whereKey: BROWSER_WHERE,
   },
   {

@@ -8,7 +8,12 @@ import { computeFactionMultiplier } from "../../../utils/points";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { MobileStickyBar } from "../MobileStickyBar";
 import { JoinControl, type JoinControlSkin } from "../../../components/JoinControl";
-import { SectionPanel, SectionToggle, useFactionSections } from "../sectionDisclosure";
+import {
+  FACTION_SECTIONS,
+  SectionPanel,
+  SectionToggle,
+  useSectionDisclosures,
+} from "../sectionDisclosure";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -143,7 +148,7 @@ export default function DefaultFactionBody({
     membership,
   } = state;
   const phone = useFormFactor() === "mobile";
-  const sections = useFactionSections();
+  const sections = useSectionDisclosures(FACTION_SECTIONS);
 
   // Guarded non-null by the dispatcher.
   if (!faction) return null;

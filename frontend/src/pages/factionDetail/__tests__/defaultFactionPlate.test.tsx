@@ -27,7 +27,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect, vi } from "vitest";
 import "../../../i18n";
 import type { FactionDetailState } from "../useFactionDetail";
-import { factionSectionBodyId } from "../sectionDisclosure";
+import { FACTION_SECTIONS, sectionBodyId } from "../sectionDisclosure";
 import { aTask, aPraxisCard } from "../../../test/fixtures";
 
 const mocks = vi.hoisted(() => ({
@@ -96,7 +96,7 @@ describe("the Default faction body draws real plates (#2497)", () => {
   it("keeps the plate OUTSIDE the disclosure, so a fold hides the gallery alone", () => {
     const html = page(DEFAULT_SLUG);
     for (const id of ["tasks", "praxis"] as const) {
-      const bodyAt = html.indexOf(`id="${factionSectionBodyId(id)}"`);
+      const bodyAt = html.indexOf(`id="${sectionBodyId(FACTION_SECTIONS, id)}"`);
       expect(bodyAt, `${id} has no disclosure body`).toBeGreaterThan(-1);
       const plateAt = html.lastIndexOf('class="faction-plate"', bodyAt);
       const kickerAt = html.lastIndexOf("faction-plate-kicker", bodyAt);

@@ -58,7 +58,7 @@ const IMPACT = 'var(--faction-snide-font-impact)' // Anton
 const TYPE = 'var(--faction-snide-font-type)' // Special Elite
 const MARKER = 'var(--faction-snide-font-marker)' // Permanent Marker
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div

@@ -45,7 +45,7 @@ import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileDress } from './prof
 /** Level 0 shows a mid-dot rather than a numeral — the codex's own convention. */
 const romanLevel = (value: number): string => (value > 0 ? toRoman(value) : '\u00b7')
 
-function heading(title: string, eyebrow: string): ReactNode {
+function heading(title: ReactNode, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div style={{ fontFamily: MARGINALIA, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: QUIET, marginBottom: 'var(--space-xs)' }}>
