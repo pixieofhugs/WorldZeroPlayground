@@ -1,331 +1,305 @@
-# Design brief — duel surfaces (issues #721–#726)
+# Design brief — duel surfaces
 
-Read this before designing any duel screen. It exists because the previous duel
-handoff (`HANDOFF-duel-composer.md`, Wow) asserted several things about how duels
-work that turned out to be **false**, and those errors got baked into the mock as
-visible copy. This brief gives you the mechanics and the exact strings so you don't
-have to guess.
+**Rewritten 2026-09-01.** Every claim below was verified against `origin/main` on that date; the
+"verified" notes say where. The previous version of this file was a spec for surfaces that were
+then built differently, and it accumulated a correction block that had itself gone stale — it
+still described a duel rail that no longer exists and still quoted copy that never shipped. Two
+designs were misled by it. It has been replaced rather than annotated again.
 
-**You are designing six factions:** Everymen (#721), Snide (#722), Singularity (#723),
-Ephemerists (#724), University of Asthmatics (#725), Albescent (#726). Wow (#720) is
-already designed and is a reference for *what the surfaces are*, not for how yours
-should look.
+**What is being asked for is in §7. Everything before it is context you need to get §7 right.**
 
 ---
 
-## CORRECTION — read this before anything below it
+## The state of play, in one paragraph
 
-**This brief was written as a spec for surfaces that were then built differently.**
-It described what was going to ship; #718, #1071 and #1090 shipped something else, and
-that something else is what is on main. The brief has already misled one design (the
-Singularity grill, #723). It is kept as a record of *intent* and of the game mechanics
-in §5, which are still true. It is not a spec.
-
-**Read the code before you design.** For every duel string:
-`frontend/src/locales/en/praxis.json` — the `duelBanner`, `duelCrossLink`, `duelForfeit`,
-`duelRoster`, `duelSeal` and `duelStakes` key families. For the components:
-`frontend/src/components/duel/` (the seal dialog and its skins) and
-`frontend/src/pages/praxisDetail/DuelCard.tsx`.
-
-**Mocks are visual references.** Design the chrome; never transcribe the words. A skin
-mounts the shared slots and calls typed `t()` keys, so a mock's copy cannot reach the
-screen either way.
-
-### What is stale, section by section
-
-- **§0 — the "never verbal" rule has one shipped exception.** WOW skins its duel copy:
-  `duelSeal.wow.*` gives it *Take the Field*, *Yield the Field*, *The Roster*, *The
-  Stakes* and a ribbon line, mounted by `components/duel/wowLists.tsx`. Faction-neutral
-  is still the default for the other six; it is not the absolute §0 claims.
-- **§2 — there are five states, not four.** `DuelStatus` is
-  `pending | active | settled | declined | resolved`. The brief's "live" is `settled`.
-  `resolved` is new: at era close the pair freezes, so §2's and §6's "nothing is ever
-  final" is now true only *before* era close.
-- **§3 — the duel rail no longer exists.** See the marker on that section.
-- **§4 — the copy was never built.** See the marker on that section.
-- **§5 — still true.** Verified against `backend/eras/era_1.py`: per-faction
-  `duel_win_modifier` / `duel_loss_modifier`, Snide at 2.0× / **0.0×**, figures are base
-  points before crowd votes.
-
-### Three things the Singularity mock got wrong
-
-1. **Skins dispatch on the *task's* faction, not the viewer's.** "The Everymen skin"
-   means duels on Everymen tasks —
-   `resolveVariant(surfaceMap('duelSeal'), taskFactionSlug)`. Only the figures follow the
-   viewer, off their own multipliers. The brief itself had this backwards.
-2. **`pending` shows no stakes tiles.** `StakesTiles` emits the single
-   `duelStakes.soloFallback` sentence instead, so a pending mock drawing a win/lose pair
-   is unbuildable.
-3. **The seal dialog is one responsive component** (#1313), not a desktop file and a
-   phone file. `DuelSealSheet` owns the only form-factor branch.
+**The duel seal dialog is finished.** Nine faction skins ship, the shared anatomy is settled, and
+`Duel Seal Architecture.dc.html` (Claude Design project `302eb519-1838-4d03-a0ff-8155b5845313`)
+is a live harness of the real components — not a drawing. **Do not redesign it.** The one duel
+surface still owed a design is the **settled-duel side-by-side reader** (#1084), and §7 asks for
+exactly that.
 
 ---
 
 ## 0. The one rule
 
-> **§0 is not absolute — WOW ships per-faction duel copy. See the CORRECTION above.**
-
 > **Faction identity is visual. It is never verbal.**
 
-Every other World Zero surface gives each faction its own voice — Snide's composer
-button says `FILE IT & RUN`, Albescent's says `✦ SEAL & ENTER ✦`, Everymen's says
-`tack it up →`. **Duel surfaces do not do this.** All duel copy is faction-neutral and
-identical across all seven factions.
+Every other World Zero surface gives each faction its own voice — Snide's composer button says
+`FILE IT & RUN`, Albescent's says `✦ SEAL & ENTER ✦`, Everymen's says `tack it up →`. **Duel
+surfaces do not do this.** All duel copy is faction-neutral and identical across all nine skins.
 
-This is a deliberate ruling, not an oversight. Duel rules are asymmetric, permanent,
-and easy to misread; a player learning them through seven different metaphors learns
-them seven times, badly. The stakes need one vocabulary.
+This is a deliberate ruling. Duel rules are asymmetric, permanent, and easy to misread; a player
+learning them through nine different metaphors learns them nine times, badly. The stakes need one
+vocabulary.
 
-So: express Everymen-ness or Snide-ness entirely through **chrome** — frame, palette,
-type, texture, ornament, layout rhythm. Do not rewrite a single string. If your mock
-needs a word that isn't in §4, the answer is that you're designing a component that
-shouldn't exist.
+**This rule now holds without exception.** WOW briefly shipped its own duel voice through
+`duelSeal.wow.*`; **#1909 deleted those keys on 2026-08-16**. Verified: `praxis.json` carries
+exactly six `duelSeal` keys and none is faction-scoped, and `components/duel/wowLists.tsx` — which
+used to hold the resolver — now exports only CSS variables, its own header recording that it was
+*"the seal's voice resolver"* **until #1909**. The old brief called this rule "broken"; it is not.
 
-**Boundary:** this covers strings that only appear in a duel context. The composer's
-own publish button keeps its existing per-faction voice — it isn't duel-specific.
+Express faction-ness entirely through **chrome** — frame, palette, type, texture, ornament,
+layout rhythm. If your mock needs a word that isn't in §4, you are designing a component that
+should not exist.
 
----
-
-## 1. What a duel actually is
-
-Two characters, one task, **two separate entries**. Each writes their own praxis with
-their own body, own photos, own votes. They are joined by a link that records the
-pairing and who is winning.
-
-A duel is **not** a shared document. Do not design anything that implies the two
-duelists write in the same place, see each other's work-in-progress, or share a
-gallery. Until both have submitted, neither can read the other's entry at all.
+**Boundary:** this covers strings that appear only in a duel context. The composer's own publish
+button keeps its per-faction voice — it is not duel-specific.
 
 ---
 
-## 2. The four states — this is where the last mock went wrong
+## 1. What a duel is
 
-> **There are five.** `DuelStatus` is `pending | active | settled | declined | resolved`;
-> "live" below is `settled`, and `resolved` freezes the pair at era close. See the
-> CORRECTION at the top of this file.
+Two characters, one task, **two separate entries**. Each writes their own praxis with their own
+body, own photos, own votes. They are joined by a link that records the pairing and who is ahead.
+
+A duel is **not** a shared document. Never design anything implying the two duelists write in the
+same place, see each other's work-in-progress, or share a gallery. Until both have submitted,
+neither can read the other's entry at all — `_duel_side_hidden_condition` (#999) enforces it.
+
+Governing decisions: ADR-0011 (a duel is two linked praxes), ADR-0051 (acceptance bypasses the
+task-level gate), ADR-0052 (duels resolve at era close).
+
+---
+
+## 2. The five states
+
+Verified against `backend/models/duel.py` — `DuelStatus` is
+`pending | active | settled | declined | resolved`.
 
 | State | What's true | Can I back out? |
 |---|---|---|
-| **pending** | Challenge sent. Opponent hasn't answered. Only your entry exists. | **Yes, freely.** |
+| **pending** | Challenge sent, opponent hasn't answered. Only your entry exists. | **Yes, freely.** |
 | **active** | Opponent accepted. One or both of you may have submitted. | **Yes, freely.** No penalty. |
-| **live** | **Both** have submitted. Voting is open. | **No — backing out now forfeits.** |
+| **settled** | **Both** have submitted. Voting is open. | **No — backing out now forfeits.** |
 | **declined** | Opponent said no. There is no duel. | n/a |
+| **resolved** | Era closed. The pair is frozen permanently. | n/a |
 
-### The three errors to avoid
+### Four errors to avoid
 
-1. **Submitting is not the point of no return.** The previous mock said "sealed —
-   can't edit while the duel runs" on a screen that depicts the `active` state. Wrong.
-   In `active` you can unsubmit and edit freely, as many times as you like, with no
-   penalty at all. The trapdoor closes only when your **opponent** submits — an event
-   you don't control and can't predict. Design the confirm dialog to say this
-   honestly: *not yet final, and here's what will make it final.*
+1. **Submitting is not the point of no return.** In `active` you can unsubmit and edit freely,
+   as often as you like, with no penalty. The trapdoor closes when your **opponent** submits — an
+   event you do not control and cannot predict. The confirm dialog says this honestly.
 
-2. **`live` does not mean decided.** It means voting just **opened**. There is no
-   moment where someone wins a duel — the winner floats with the votes until the era
-   resets, weeks later. Do not design a victory screen, a result banner, a trophy, a
-   final score, or an "X won" state. (A separate issue, #719, tracks whether the game
-   should even have a resolution moment. Today it does not.)
+2. **`settled` does not mean decided.** It means voting just **opened**. The winner floats with
+   the votes until the era resets, weeks later. No victory screen, no trophy, no final score, no
+   "X won" state — until `resolved`.
 
-3. **Declined isn't a loss.** If your opponent declines, your entry quietly becomes an
-   ordinary solo praxis and scores at normal rates. It is not a forfeit, not a
-   penalty, not a defeat. Design it as a shrug, not a wound.
+3. **`resolved` is the only frozen state.** At era close the pair freezes and every unresolved
+   duel becomes a permanent result. This is the one place a final figure is honest.
+
+4. **Declined isn't a loss.** Your entry quietly becomes an ordinary solo praxis and scores at
+   normal rates. Not a forfeit, not a penalty, not a defeat. Design it as a shrug, not a wound.
 
 ---
 
-## 3. The two surfaces
+## 3. The surfaces that exist today
 
-> **SUPERSEDED — the rail was retired (#1090) and the run-up moved off detail (#1071,
-> ADR-0059).** What exists today:
->
-> - **The seal dialog** — `components/duel/DuelSealConfirm.tsx` plus a skin per faction,
->   dispatched on the **task's** faction through `surfaceMap('duelSeal')`. Its shared
->   slots are `StakesTiles`, `RaceRoster` and `SealActions` from
->   `components/duel/shared.tsx`. There is no `NextStepLine` and no `SubmitActions`;
->   `NextStepLine` was deleted with the rail.
-> - **The praxis-detail duel card** — `pages/praxisDetail/DuelCard.tsx`. It is *not* a
->   dispatched duel surface: it is one card mounted by the praxis-detail archetype, which
->   dresses it through three seams (`style`, `heading`, `ink`). It draws only `settled`
->   and `resolved` — outcomes. `declined`, `pending` and `active` draw nothing here.
-> - **The run-up** — `pages/editPraxis/waiting/PraxisWaitingSurface.tsx` narrates waiting
->   for the opponent. That beat belongs to the composer now, not to detail.
->
-> **The accent rule below is inverted.** The card may never carry the opponent's faction
-> hue as an ink or a ground; only as an edge or a ring (`DuelCardInk`, guarded by
-> `praxisDetail/__tests__/duelCardOpponentInk.test.tsx`). Design the *frame* as your
-> faction and do not plan for a foreign palette in your text colours.
+**Verified by listing `frontend/src/components/duel/` and `git ls-tree` over `origin/main`.**
 
-### A. Submit confirm — `DuelSubmitConfirm`
+### A. The seal dialog — **finished, do not redesign**
 
-The dialog shown when a duelist submits an entry that has a duel attached. Mobile is a
-full-screen sheet; desktop is a centred panel over the dimmed composer.
+`components/duel/DuelSealConfirm.tsx` plus a skin per faction, dispatched on the **task's**
+faction through `resolveVariant(surfaceMap('duelSeal'), taskFactionSlug)`. Nine registrations:
+`albescent`, `coven`, `default`/na, `ephemerists`, `everymen`, `singularity`, `snide`, `ua`, `wow`.
 
-Must carry, in this order of prominence:
+- **One responsive component.** `DuelSealSheet` owns the only form-factor branch — phone is a
+  full-screen sheet at the document root, desktop a 460px-max panel over a radial scrim (#1313).
+  A skin passes ground, card, scrim and children; never its own layout or breakpoint.
+- **Three shared slots**, from `components/duel/shared.tsx`: `StakesTiles`, `RaceRoster`,
+  `SealActions`. Order is heading → opponent line → tiles → roster → actions.
+- **`pending` draws no tiles** — `StakesTiles` prints the single `duelStakes.soloFallback`
+  sentence instead, so a pending mock drawing a win/lose pair is unbuildable.
+- **Albescent is a deliberate pass-through.** `AlbescentDuelSealConfirm` renders
+  `DefaultDuelSealConfirm` byte-identically and #726 is closed **wontfix**. Its header gives two
+  reasons and both still hold: the dialog is skinned by the **task's** faction, so this row is
+  reached by a **non-member** looking at an Albescent-owned task, where a tell is an *un-hiding*
+  rather than a reveal (ADR-0027); and forfeit mode is the one duel moment that cannot be undone,
+  where a tell buys identity and spends legibility. **Dressing it is a reversal, not a gap — it
+  needs an owner ruling and #726 reopened, not a mock.**
 
-1. **Who you're up against** — name + their faction
-2. **The two outcomes** — win figure and lose figure, side by side
-3. **The tie line** — one line of copy, not a third tile
-4. **What's still reversible** — the honest finality warning for the current state
-5. **Confirm / cancel**
+### B. The praxis-detail duel card
 
-### B. Duel rail — `DuelRail`
+`pages/praxisDetail/DuelCard.tsx`. **Not** a dispatched duel surface: one card mounted by the
+praxis-detail archetype, which dresses it through three seams (`style`, `heading`, `ink`).
 
-The persistent strip on the praxis detail page, above the faction archetype. Replaces
-and extends today's single-line `⚔ Dueling Rax Vandal`.
+It draws **only `settled` and `resolved`** — outcomes. `declined`, `pending` and `active` draw
+nothing here. It may never carry the opponent's faction hue as an ink or a ground; only as an edge
+or a ring (`DuelCardInk`, guarded by `praxisDetail/__tests__/duelCardOpponentInk.test.tsx`).
 
-Must carry:
+### C. The run-up
 
-1. **Per-side submit status** — has each of you entered yet
-2. **What you're waiting for** — one line, changes per state
-3. **The stakes**, still visible
-4. **A link to their entry** — only once both are in
+`pages/editPraxis/waiting/PraxisWaitingSurface.tsx` narrates waiting for the opponent. That beat
+belongs to the composer now, not to detail (#1071, ADR-0059).
 
-**The rail takes the *opponent's* faction accent, not the viewer's.** Deliberate: the
-opponent is the foreign element on your page and should look foreign. So your Everymen
-rail design needs to survive having, say, Snide's palette dropped into its accent
-slots. Design the *frame* as Everymen; let the accent be a variable.
+### D. The rail — **gone. Do not design for it.**
 
-Both surfaces compose four fixed content slots — `StakesTiles`, `RaceRoster`,
-`NextStepLine`, `SubmitActions`. You may rearrange them, resize them, or restyle them
-completely. You may not drop one, merge two, or add a fifth.
+`DuelRail` was retired by #1090 and the run-up moved to the composer by #1071. **Verified: zero
+files matching `*DuelRail` exist on `origin/main`,** and `NextStepLine` and `SubmitActions` are
+gone with it — the only surviving trace is one prose line in `shared.tsx` explaining why.
+
+Anything you read that references "the twelve `*DuelRail` files", "the rail dress", or a
+`NextStepLine` slot is stale. **This includes #1084's own body and its 2026-08-26 comment.**
 
 ---
 
-## 4. The exact copy
+## 4. The copy
 
-> **SUPERSEDED — none of these strings were built.** #718 shipped a different vocabulary.
-> Read `frontend/src/locales/en/praxis.json` — `duelBanner`, `duelCrossLink`,
-> `duelForfeit`, `duelRoster`, `duelSeal`, `duelStakes` — and use those. This section is
-> kept as a record of intent, not as an instruction.
->
-> **The "words that are wrong" table is the wrong half.** The shipped copy says *Seal the
-> duel?*, *sealed ✓*, *Casting now seals the duel*, *Won by default*, *{{name}} won*,
-> *final — frozen at era close*, and WOW's cancel is *Withdraw*. The words are correct;
-> the table banning them is not.
+**Read the catalog, never this file, and never a mock.** All duel strings live in
+`frontend/src/locales/en/praxis.json` under `duelSeal`, `duelStakes`, `duelRoster`, `duelForfeit`,
+`duelBanner` and `duelCrossLink`. A skin mounts shared slots and calls typed `t()` keys, so a
+mock's words cannot reach the screen either way.
 
-Use these strings verbatim in your mocks. `{{name}}` etc. are runtime substitutions —
-render them with a plausible example (`Rax Vandal`, `Snide`) but keep the surrounding
-words exactly as written.
-
-Already shipped and correct — reuse as-is:
+The full shipped set, verified 2026-09-01 — reproduced so you can see the register, not so you can
+transcribe it:
 
 ```
-⚔ Duel                              ⚔ Dueling {{name}}
-vs                                  · {{faction}}
-their entry                         Tied / You're ahead / You're behind
-⚔ Won by default                    — {{name}} forfeited
-You forfeited this duel.
-{{standing}} · live — the winner floats with the votes until era reset.
+duelSeal.heading       Lock the duel?
+duelSeal.confirm       Lock it
+duelSeal.cancel        Not yet
+duelSeal.bodyActive    {{name}} has accepted. Casting now locks the duel — once you have
+                       both cast, pulling back is a permanent forfeit.
+duelSeal.bodyPending   {{name}} hasn't accepted yet. You can cast now; if they decline,
+                       this scores as an ordinary praxis.
+duelSeal.reopenNote    Until {{name}} casts, you can still pull this back for free — no forfeit.
+
+duelStakes.heading     What's at stake
+duelStakes.winLabel    If you win
+duelStakes.loseLabel   If you lose
+duelStakes.tieLine     A tie pays {{points}}.
+duelStakes.beforeVotes Base points, before crowd votes — stars add on top.
+duelStakes.soloFallback  Nothing is at stake yet. If {{name}} declines, this scores as an
+                         ordinary praxis worth {{points}}.
+
+duelRoster.you         You
+duelRoster.sealed      submitted ✓
+duelRoster.walking     still walking…
+
+duelForfeit.confirmPrompt  Pulling back now FORFEITS the duel.
+duelForfeit.cost           {{name}} wins by default and you keep {{points}} instead of {{win}}.
+duelForfeit.action         Forfeit
 ```
 
-New strings for these surfaces:
-
-**Submit confirm**
-
-```
-Title            Submit your entry?
-Opponent         You're dueling {{name}} · {{faction}}
-Win tile         If you win        +{{points}}
-Lose tile        If you lose       +{{points}}
-Tile footnote    Base points, before the crowd votes.
-Tie line         A tie leaves you both at your base points.
-Tie (Snide)      You take the win rate on a tie.
-Tie (vs Snide)   {{name}} takes the win rate on a tie.
-
-Warning — pending    {{name}} hasn't accepted yet. You can change your entry
-                     freely until they do. If they decline, this scores as an
-                     ordinary praxis.
-Warning — active     You can still edit or pull this back. The moment {{name}}
-                     submits, the duel goes live and backing out forfeits it.
-
-Confirm          Submit entry
-Cancel           Not yet
-```
-
-**Duel rail**
-
-```
-Roster — you in         You're in
-Roster — you out        You haven't entered yet
-Roster — them in        {{name}} is in
-Roster — them out       {{name}} hasn't entered yet
-
-Next step — pending     Waiting on {{name}} to accept the challenge.
-Next step — active      Waiting on {{name}} to enter. You can still edit.
-Next step — active/you  {{name}} is in. Enter to make it live.
-Next step — live        Both in — voting is open.
-Next step — declined    {{name}} declined. This scores as an ordinary praxis.
-```
-
-**Forfeit confirm** — shown when unsubmitting a `live` duel:
-
-```
-Title       Forfeit this duel?
-Body        {{name}} has already entered. Pulling back now forfeits the duel —
-            they win by default, and resubmitting won't undo it.
-Confirm     Forfeit
-Cancel      Keep my entry
-```
-
-### Words that are wrong
-
-| Don't write | Write | Why |
-|---|---|---|
-| seal, sealed | submit, entered, in | "Seal" is Albescent's private voice |
-| cast | submit | "Cast" is Wow's |
-| settled | live | "Settled" reads as decided; it means voting *opened* |
-| withdraw *(on a live duel)* | forfeit | Withdraw is reversible; this isn't |
-| won, victory, final score | ahead, leading | Nothing is final until era reset |
-| opponent *(meaning "not me")* | their name | "Opponent" is a fixed role, not a viewpoint |
-| shared, together, both of you | your entry, their entry | Duelists never share anything |
-| stars | points | The tally compares points, not raw stars |
+**If §7's surface needs a string that is not here, say so and ask.** Do not invent one — the
+previous brief invented a whole vocabulary and none of it shipped.
 
 ---
 
 ## 5. The numbers
 
-**Every figure in your mock is computed live. Do not hardcode a ratio.**
+**Every figure in your mock is computed live. Never hardcode a ratio.**
 
-Each faction has its own win and lose multipliers, and one faction is wildly different:
+Verified against `backend/eras/era_1.py`. Each faction row carries its own `duel_win_modifier` and
+`duel_loss_modifier`:
 
 | Faction | Win | Lose |
 |---|---|---|
-| Six of seven | 1.5× | 0.5× |
+| Eight of the nine rows | 1.5× | 0.5× |
 | **Snide** | **2.0×** | **0.0×** |
 
-**A Snide duelist who loses gets nothing.** Their lose tile shows `+0`. This is
-intended drama, not a bug — but it means your Snide mock (#722) has to make a zero
-look deliberate. A `+0` that reads as an empty state or a loading skeleton is a
-failure. It should read as a threat.
+**A Snide duelist who loses gets nothing.** Their lose tile shows `+0`. Intended drama, not a bug —
+so a Snide mock has to make a zero look *deliberate*. A `+0` that reads as an empty state or a
+loading skeleton is a failure; it should read as a threat.
 
-Snide also **wins ties** against any non-Snide opponent. That's why there are two tie
-strings.
+The shipped `StakesTiles` already knows: at `lose === 0` the figure switches from the muted ink to
+the skin's notice colour while keeping the win tile's size and typesetting. **The failure mode is a
+skin that softens it** — greying the tile, shrinking the numeral, dropping the border, or letting
+the label do the work. Keep the pair symmetrical and let the notice colour carry the threat.
 
-The figures shown are **base points before crowd votes** — the vote total doesn't
-exist yet at submit time. The footnote saying so is not optional; without it the
-numbers are a lie. The faction multiplier is deliberately excluded from this display.
+**Snide also wins ties** against any non-Snide opponent (#748, `sole_tie_taker_id` →
+`duel_outcome.py`). It is a faction ability resolved server-side, not a display rule.
+
+Figures shown are **base points before crowd votes** — the vote total does not exist at submit
+time. The footnote saying so is not optional; without it the numbers are a lie.
 
 ---
 
 ## 6. Hard nos
 
-- **No victory screen.** No resolution moment exists. (Panels 1d / 2d of the Wow
-  design are unbuildable for this reason — ignore them.)
-- **No two-pane workspace.** The Wow mock's 2c has a left column re-rendering the
-  title, body and media that the detail page already owns. No two-column layout exists
-  anywhere in the app's detail pages, and mobile forbids it. Take the Wow mock's *rail
-  content*, not its page layout.
-- **No opponent picker.** Already built and shipped. Out of scope.
+- **No victory screen** before `resolved`. Nothing is decided while voting is open.
+- **No two-pane workspace** that re-renders the title, body and media the detail page already owns.
+- **No opponent picker.** Built and shipped. Out of scope.
 - **No per-faction strings.** See §0.
 - **No fixed-pixel grids on mobile.** Mobile stacks single-column.
-- **No invented copy.** If §4 doesn't have the string, ask — don't write one.
+- **No invented copy.** If §4 does not have the string, ask.
+- **No redesign of the seal dialog.** See §3A.
+- **No Albescent dress** on any duel surface without an owner ruling first. See §3A.
 
 ---
 
-## 7. Deliverable per issue
+## 7. What is actually being asked for
 
-Four screens: submit-confirm desktop, submit-confirm mobile, rail desktop, rail
-mobile. Built from the kit's tokens and Tailwind utilities per `conventions.md` — no
-invented colors, no hardcoded hex, dark mode via the `[data-theme="dark"]` cascade.
+**One surface: the settled-duel side-by-side reader — issue #1084.**
 
-Remember the rail inherits the **opponent's** accent: show it in your mock with a
-foreign faction's color so the reviewer can see it works.
+Today, reading a duel means two page loads: each side is its own praxis with its own detail page,
+cross-linked by `DuelCrossLink`. This design draws **both entries in one frame** — title, body and
+vote standing per side.
+
+### The file we need
+
+`Unaffiliated Duel Flow.dc.html`, `stage="sealed"` — stage 3 of the duel flow design. **It is not
+vendored and cannot be fetched.** It lives in an ordinary Claude Design project, and `DesignSync`'s
+`list_projects` enumerates only design-*system* projects, so there is no `projectId` to read it
+with. This is not an authorization problem — authorization works.
+
+**To unblock it, send that canvas over** ("Send to Claude Code Web"), or export it into
+`.design-sync/duel-1084/` the way `Settings.dc.html` was vendored. A share link carrying the
+project's UUID also works — `get_project`/`get_file` accept an explicit id even when
+`list_projects` will not list it.
+
+### The ruling that already constrains it
+
+**Owner ruling, 2026-08-27 — one ground, two sigils. Rendered before asking; ruled on pixels.**
+
+The side-by-side view takes the ground of **the praxis whose page hosts it** — one faction dress
+for the whole frame. Each duellist's own faction is carried by their `FactionSigil`, so the two
+players still read as two factions.
+
+The open question the issue records — *"does this inherit the rail dress or ship neutral?"* — is
+**moot twice over**: there is no rail (§3D), and this ruling settled the ground anyway. Do not
+re-open it.
+
+### What the design must carry
+
+1. **Both entries in one frame** — title, body, and vote standing per side.
+2. **A live standing, not a verdict** — unless the duel is `resolved` or forfeited. ADR-0011 /
+   ADR-0052: the winner floats with the votes until era close.
+3. **One ground, the host's**, with each duellist's faction on their own sigil.
+4. **Both form factors.** Mobile stacks single-column; there is no two-column layout anywhere in
+   this app's detail pages.
+5. **Both themes**, via the `[data-theme="dark"]` cascade. No hardcoded hex.
+
+### Two hazards to design around
+
+- **An Albescent duellist is a disclosure.** A sigil is as identifying as a faction name, so it
+  must route through the same redaction path (ADR-0088). Show in the mock what a redacted side
+  looks like.
+- **The 64px gate is the AVATAR's, not the sigil's.** Corrected 2026-09-01 — an earlier version of
+  this brief and #1084's thread both put it on the sigil. Verified: `FactionSigil` and
+  `AlbescentSigil` carry **no size gate at all** and scale to any size; `RING_TURNS_AT = 64` lives
+  in `components/avatar/AlbescentAvatar.tsx`, where the turning ring is *absent* below 64 rather
+  than stilled. The gate ships **dormant** by owner ruling (2026-08-23) — deliberately above every
+  mount in the app, the largest being the roster lead card at 54.
+
+  **This matters for any duel surface that draws a large disc.** `AlbescentAvatar`'s own header
+  names *"a duel banner"* as one of the surfaces that would light the ring the moment a mount
+  passes 64 — and lighting it announces membership to a viewer who was only reading. If your
+  design puts a duellist's disc at 64 or above, say so explicitly; it is a reveal decision, not a
+  sizing one. (`Duel Side-by-Side Reader.dc.html` tops out at 44px and is clear of it.)
+
+### Constraints the build inherits — design around them, do not solve them
+
+- `get_duel_detail` (`backend/services/duel.py`) returns name, avatar, faction,
+  `points_from_votes` and `is_submitted` per side, and **deliberately never a praxis body.** A
+  side-by-side reader needs bodies, so the build either fetches both praxes under `can_view_praxis`
+  or grows a body field under the same guard. Either way the payload changes — do not design a
+  layout that assumes a field that does not exist yet without flagging it.
+- **Settled and resolved only.** `_duel_side_hidden_condition` (#999) keeps a live-incomplete side
+  author-only.
+- **Reuse `components/duel/shared.tsx`.** `StakesTiles` and `RaceRoster` already exist and are
+  already themed per faction. Do not re-derive them.
+
+### Deliverable
+
+Four artboards: **desktop settled, desktop resolved, phone settled, phone resolved** — plus the
+redacted-Albescent variant of whichever one shows it best. Built from the kit's tokens per
+`conventions.md`: no invented colours, no hardcoded hex, dark mode through the cascade.

@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.css">
+<script src="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: #f2f0ec; }
+  a { color: var(--color-accent-primary); }
+  a:hover { color: var(--color-text-primary); }
+</style>
+</helmet>
+
+<section style="display:flex; flex-direction:column; gap:56px; padding:56px; font-family:var(--font-body); background:#f2f0ec;">
+
+  <header style="max-width:960px; display:flex; flex-direction:column; gap:14px;">
+    <div style="font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#6b6560;">#1084 · turn 2 · the blueprint · two views</div>
+    <h1 style="margin:0; font-family:var(--font-display); font-style:italic; font-size:38px; line-height:1.15; color:#1c1a18;">One side, or both sides</h1>
+    <p style="margin:0; font-size:16px; line-height:1.6; color:#4a4540; text-wrap:pretty;">Turn 1 put both bodies on one duellist's page, under that duellist's vote. That reads as a page that can't decide whose it is. Splitting it fixes the confusion and gives the other eight factions a shape to inherit.</p>
+    <ul style="margin:6px 0 0; padding-left:18px; font-size:16px; line-height:1.7; color:#4a4540;">
+      <li><strong>The side view</strong> (<a href="#2a">2a</a>, <a href="#2b">2b</a>) — Wren's praxis, almost exactly as it is today. One body, one vote, one score. The duel block in the aside carries the standing and two ways out: the rival's page, or both sides together.</li>
+      <li><strong>The combined view</strong> (<a href="#2c">2c</a>, <a href="#2d">2d</a>, <a href="#2e">2e</a>) — genuinely two-up. Each entry carries its own vote control at the foot of its own column and its own link out. Nothing belongs to one duellist more than the other.</li>
+    </ul>
+    <p style="margin:0; font-size:14px; line-height:1.6; color:#6b6560;">Also here: <a href="#2f">2f</a> the redacted Albescent duellist. Turn 1's artboards are kept below, superseded.</p>
+  </header>
+
+  <div style="max-width:960px; background:#fff8ea; border:1px solid #d9c99b; padding:22px 24px;">
+    <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">What this needs that does not exist yet</h3>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540;"><strong>One new string</strong>, and only one: the link from a side view to the combined view. Everything else on both views is shipped catalog copy. Drawn below as <code>⟨duelCrossLink.readBothSides⟩</code> — the name is a proposal, the words are yours.</p>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540;"><strong>A route.</strong> The combined view is not a block on a praxis page; it is its own page for the duel. It takes the ground of whichever side you came from, per the 2026-08-27 ruling, and each duellist's faction stays on their sigil.</p>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540;"><strong>Bodies on the wire.</strong> <code>get_duel_detail</code> returns no praxis body by construction. The combined view needs both, fetched under <code>can_view_praxis</code> or added to the payload under the same guard.</p>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start;">
+
+    <!-- ── 2a : the side view, desktop ─────────────────────────────────── -->
+    <div id="2a" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2a</span>
+        <span style="font-size:13px; color:#6b6560;">The side view · Wren's praxis · desktop · settled</span>
+      </div>
+
+      <div data-screen-label="Side view desktop" style="width:1264px; background:var(--color-bg-page); padding:32px;">
+        <div class="label-caption" style="margin-bottom:14px; color:var(--color-text-tertiary);">Tasks › Climb the north wall six times › Praxis</div>
+
+        <div style="position:relative; max-width:1200px; margin:0 auto; background:var(--faction-default-card-bg, var(--color-bg-surface)); color:var(--faction-default-card-text, var(--color-text-primary)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); box-sizing:border-box; overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; flex-direction:row; align-items:stretch; gap:var(--space-2xl);">
+            <div style="flex:1 1 auto; min-width:0;">
+              <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:44px; height:44px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div style="min-width:0; flex:1;">
+                  <div class="font-display" style="font-style:italic; font-size:var(--text-title); color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                  <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+                </div>
+              </div>
+
+              <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-display); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+              <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-xl);">
+                <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+                <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+                <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+              </div>
+
+              <section style="margin-bottom:var(--space-2xl);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Proof</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="spectrum-rule" style="border-radius:10px; padding:var(--space-xs);">
+                  <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm); display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+                    <span style="display:block; height:180px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                    <span style="display:block; height:180px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Write-up</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <p class="font-body content-text markdown-preview" style="margin:0 0 var(--space-md); line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways. On the third morning I stopped trying to climb it and stood under it reading the holds instead.</p>
+                <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">What changed was the feet. Once I trusted the smear on the sloping edge the whole upper section came free, and on the last morning I topped out twice before anyone else arrived.</p>
+              </section>
+            </div>
+
+            <aside style="flex:0 0 330px; width:330px; display:flex; flex-direction:column; gap:var(--space-lg);">
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Score</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="text-align:center; color:var(--faction-default-card-muted, var(--color-text-secondary));">ScoreStamp — unchanged</div>
+              </section>
+
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:var(--space-md);">
+                  <span aria-hidden="true" class="spectrum-dial" style="display:block; width:30px; height:30px; border-radius:50%; padding:2px; flex-shrink:0;">
+                    <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-stamp-bg, var(--color-bg-page));"></span>
+                  </span>
+                  <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+                  <span class="content-title" style="font-weight:700; flex-shrink:0; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+                </div>
+
+                <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); margin-top:var(--space-md); padding-top:var(--space-md);">
+                  <a href="#2a" style="display:flex; align-items:center; gap:var(--space-sm); text-decoration:none;">
+                    <div style="flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:var(--space-md);">
+                      <span aria-hidden="true" style="display:block; width:30px; height:30px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                      <div style="flex:1 1 auto; min-width:0;">
+                        <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                        <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Read their praxis</div>
+                      </div>
+                      <span class="content-title" style="font-weight:700; flex-shrink:0; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+                    </div>
+                    <span aria-hidden="true" class="content-text" style="flex-shrink:0; color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+                  </a>
+                </div>
+
+                <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); margin-top:var(--space-md); padding-top:var(--space-md);">
+                  <p class="font-body content-text" style="margin:0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+                </div>
+
+                <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); margin-top:var(--space-md); padding-top:var(--space-md);">
+                  <a href="#2c" style="display:flex; align-items:center; gap:var(--space-sm); text-decoration:none;">
+                    <span style="flex:1 1 auto; display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap;"><span class="font-body content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Read both sides</span><span class="label-caption" style="color:var(--color-warning);">new key</span></span>
+                    <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+                  </a>
+                </div>
+              </section>
+
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Cast your vote</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <p class="font-display content-text" style="margin:0 0 var(--space-md); font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary));">How much did this move you?</p>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — Wren's entry only</div>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:340px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">2a · almost nothing changes</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">This is <code>DefaultPraxisDetail</code> as it ships. One body, one Proof, one Write-up, one vote — Wren's. The rival's entry is a link, not a column, so there is never a question about which entry the vote panel belongs to.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The only addition is the last row of the duel panel: a fourth hairline and one line out to the combined view. <code>DuelCard</code> grows a link; nothing else moves.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">It stays an aside block at 330px, which it fits — the standing is two names and two figures, and that was never the part that needed room.</p>
+      </div>
+    </div>
+
+    <!-- ── 2b : the side view, phone ───────────────────────────────────── -->
+    <div id="2b" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2b</span>
+        <span style="font-size:13px; color:#6b6560;">The side view · phone</span>
+      </div>
+      <div data-screen-label="Side view phone" style="width:390px; background:var(--color-bg-page); padding:12px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-lg); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+            <span aria-hidden="true" class="spectrum-dial" style="display:block; width:38px; height:38px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+              <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+            </span>
+            <div style="min-width:0; flex:1;">
+              <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+              <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+            </div>
+          </div>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+          <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-lg);">
+            <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+            <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+          </div>
+
+          <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg); margin-bottom:var(--space-lg);">
+            <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+              <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+              <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--space-md);">
+              <span class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+              <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+            </div>
+            <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); margin-top:var(--space-md); padding-top:var(--space-md); display:flex; align-items:center; gap:var(--space-md);">
+              <span class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+              <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+              <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+            </div>
+            <p class="font-body content-text" style="margin:var(--space-md) 0 0; padding-top:var(--space-md); border-top:1px solid var(--faction-default-card-line, var(--color-border)); color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+            <a href="#2d" style="display:flex; align-items:center; gap:var(--space-sm); margin-top:var(--space-md); padding-top:var(--space-md); border-top:1px solid var(--faction-default-card-line, var(--color-border)); text-decoration:none;">
+              <span style="flex:1 1 auto; display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap;"><span class="font-body content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Read both sides</span><span class="label-caption" style="color:var(--color-warning);">new key</span></span>
+              <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+            </a>
+          </section>
+
+          <section>
+            <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+              <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Write-up</span>
+              <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+            </div>
+            <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2c : the combined view, desktop ─────────────────────────────── -->
+    <div id="2c" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2c</span>
+        <span style="font-size:13px; color:#6b6560;">The combined view · desktop · settled · a vote per side</span>
+      </div>
+
+      <div data-screen-label="Combined desktop settled" style="width:1264px; background:var(--color-bg-page); padding:32px;">
+        <div class="label-caption" style="margin-bottom:14px; color:var(--color-text-tertiary);">Tasks › Climb the north wall six times › The duel</div>
+
+        <div style="position:relative; max-width:1200px; margin:0 auto; background:var(--faction-default-card-bg, var(--color-bg-surface)); color:var(--faction-default-card-text, var(--color-text-primary)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); box-sizing:border-box; overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-display); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">The duel</h1>
+
+          <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-xl);">
+            <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+            <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:var(--space-lg); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+            </div>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary)); padding-bottom:2px;">vs.</span>
+            <div style="display:flex; flex-direction:column; gap:2px; align-items:flex-end;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+            </div>
+          </div>
+          <p class="font-body content-text" style="margin:var(--space-md) 0 var(--space-xl); color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+
+          <div style="display:grid; grid-template-columns:1fr 1px 1fr; gap:0;">
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-right:var(--space-xl);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:38px; height:38px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="26" hint-size="26px,26px"></x-import>
+              </div>
+
+              <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h2>
+              <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+
+              <div class="spectrum-rule" style="border-radius:10px; padding:var(--space-xs);">
+                <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm); display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+                  <span style="display:block; height:120px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                  <span style="display:block; height:120px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                </div>
+              </div>
+
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways. On the third morning I stopped trying to climb it and stood under it reading the holds instead.</p>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">What changed was the feet. Once I trusted the smear on the sloping edge the whole upper section came free.</p>
+
+              <section style="margin-top:auto; border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Cast your vote</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <p class="font-display content-text" style="margin:0 0 var(--space-md); font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary));">How much did this move you?</p>
+                <div class="label-caption" style="margin-bottom:var(--space-md); color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — Wren's entry</div>
+                <a href="#2a" style="display:flex; align-items:center; gap:var(--space-sm); border-top:1px solid var(--faction-default-card-line, var(--color-border)); padding-top:var(--space-md); text-decoration:none;">
+                  <span class="font-body content-text" style="flex:1 1 auto; color:var(--faction-default-card-text, var(--color-text-primary));">Read their praxis</span>
+                  <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+                </a>
+              </section>
+            </div>
+
+            <div style="background:var(--faction-default-card-line, var(--color-border));"></div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-left:var(--space-xl);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" style="display:block; width:38px; height:38px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="26" hint-size="26px,26px"></x-import>
+              </div>
+
+              <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</h2>
+              <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 15 Aug 2026</div>
+
+              <div class="spectrum-rule" style="border-radius:10px; padding:var(--space-xs);">
+                <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm);">
+                  <span style="display:block; height:120px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                </div>
+              </div>
+
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why. The point was never the climb; it was finding out whether I fail the same way twice.</p>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I do. Thirty-one of the forty-one came off the same left-hand crimp, and every one of those was an attempt I started on under four minutes of rest.</p>
+
+              <section style="margin-top:auto; border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Cast your vote</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <p class="font-display content-text" style="margin:0 0 var(--space-md); font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary));">How much did this move you?</p>
+                <div class="label-caption" style="margin-bottom:var(--space-md); color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — Otho's entry</div>
+                <a href="#2a" style="display:flex; align-items:center; gap:var(--space-sm); border-top:1px solid var(--faction-default-card-line, var(--color-border)); padding-top:var(--space-md); text-decoration:none;">
+                  <span class="font-body content-text" style="flex:1 1 auto; color:var(--faction-default-card-text, var(--color-text-primary));">Read their praxis</span>
+                  <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">›</span>
+                </a>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:340px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">2c · symmetry is the point</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Both columns are now identical in kind: disc, name, sealed mark, sigil, title, date, proof, body, vote, link out. Neither is the host's. The page title is the duel, not a praxis.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Each vote panel is a separate <code>VoteUI</code> against its own praxis id, dispatched on the task's faction. It hides itself on the entry you wrote — an author can never vote on their own — so a duellist reading this page sees one caster, not two.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The panels are pinned to the foot of both columns with <code>margin-top:auto</code>, so unequal bodies still leave the two casters level.</p>
+      </div>
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">Ground</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">One ground, the side you arrived from — the 2026-08-27 ruling, unchanged by the split. Drawn here in na. Arriving from Otho's page would dress the same frame in his faction, with both sigils where they are now.</p>
+      </div>
+    </div>
+
+    <!-- ── 2d : the combined view, phone, collapsible ──────────────────── -->
+    <div id="2d" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2d</span>
+        <span style="font-size:13px; color:#6b6560;">The combined view · phone · stacked and collapsible — tap a name</span>
+      </div>
+
+      <div data-screen-label="Combined phone" style="width:390px; background:var(--color-bg-page); padding:12px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-lg); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">The duel</h1>
+
+          <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-lg);">
+            <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+            <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+          </div>
+
+          <p class="font-body content-text" style="margin:0 0 var(--space-lg); color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+
+          <!-- side one -->
+          <div style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; overflow:hidden; margin-bottom:var(--space-md);">
+            <button type="button" onClick="{{ openWren }}" style="width:100%; display:flex; align-items:center; gap:var(--space-md); padding:var(--space-md); background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:0; text-align:left; cursor:pointer; min-height:44px;">
+              <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+              </span>
+              <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+              <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+              <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="22" hint-size="22px,22px"></x-import>
+              <sc-if value="{{ wrenOpen }}" hint-placeholder-val="{{ true }}">
+                <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">⌃</span>
+              </sc-if>
+              <sc-if value="{{ othoOpen }}">
+                <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">⌄</span>
+              </sc-if>
+            </button>
+
+            <sc-if value="{{ wrenOpen }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-md); border-top:1px solid var(--faction-default-card-line, var(--color-border));">
+                <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-title); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h2>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+                <div class="spectrum-rule" style="border-radius:10px; padding:var(--space-xs);">
+                  <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm);">
+                    <span style="display:block; height:150px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                  </div>
+                </div>
+                <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways. On the third morning I stopped trying to climb it and stood under it reading the holds instead.</p>
+                <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); padding-top:var(--space-md);">
+                  <div class="label-heading" style="letter-spacing:.22em; margin-bottom:var(--space-sm); color:var(--color-text-primary);">Cast your vote</div>
+                  <div class="label-caption" style="margin-bottom:var(--space-md); color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — Wren's entry</div>
+                  <a href="#2b" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- side two -->
+          <div style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; overflow:hidden;">
+            <button type="button" onClick="{{ openOtho }}" style="width:100%; display:flex; align-items:center; gap:var(--space-md); padding:var(--space-md); background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:0; text-align:left; cursor:pointer; min-height:44px;">
+              <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+              <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+              <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+              <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="22" hint-size="22px,22px"></x-import>
+              <sc-if value="{{ othoOpen }}">
+                <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">⌃</span>
+              </sc-if>
+              <sc-if value="{{ wrenOpen }}" hint-placeholder-val="{{ true }}">
+                <span aria-hidden="true" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">⌄</span>
+              </sc-if>
+            </button>
+
+            <sc-if value="{{ othoOpen }}">
+              <div style="padding:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-md); border-top:1px solid var(--faction-default-card-line, var(--color-border));">
+                <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-title); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</h2>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 15 Aug 2026</div>
+                <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why. The point was never the climb; it was finding out whether I fail the same way twice.</p>
+                <div style="border-top:1px solid var(--faction-default-card-line, var(--color-border)); padding-top:var(--space-md);">
+                  <div class="label-heading" style="letter-spacing:.22em; margin-bottom:var(--space-sm); color:var(--color-text-primary);">Cast your vote</div>
+                  <div class="label-caption" style="margin-bottom:var(--space-md); color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — Otho's entry</div>
+                  <a href="#2b" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:340px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">2d · live — tap a name</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">One open at a time. You land on Wren expanded and Otho as a header; tapping Otho collapses Wren and opens him, so the two entries are never half-read at once and the standing stays in view above both.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Each header stays a full row of information while collapsed — disc, name, live figure, sigil — so the comparison survives the collapse. The vote lives inside the open panel, against that entry alone.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Headers are 44px minimum. The chevron is the only affordance; there is no word for “collapse” in the catalog and this does not need one.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Open question for you: should the side you arrived from be the one that starts open, or always the challenger? Drawn as arrived-from.</p>
+      </div>
+    </div>
+
+    <!-- ── 2e : combined, resolved, dark ───────────────────────────────── -->
+    <div id="2e" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2e</span>
+        <span style="font-size:13px; color:#6b6560;">The combined view · resolved · dark cascade · no casters</span>
+      </div>
+
+      <div data-theme="dark" data-screen-label="Combined resolved" style="width:1000px; background:var(--color-bg-page); padding:32px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-display); line-height:1.08; margin:0 0 var(--space-xl); color:var(--faction-default-card-text, var(--color-text-primary));">The duel</h1>
+
+          <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:var(--space-lg); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">final</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">60</span>
+            </div>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary)); padding-bottom:2px;">vs.</span>
+            <div style="display:flex; flex-direction:column; gap:2px; align-items:flex-end;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">final</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">20</span>
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1px 1fr; gap:0;">
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md) var(--space-xl) 0 0; border-top:2px solid transparent; border-image:var(--faction-default-rainbow) 1;">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <span class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="26" hint-size="26px,26px"></x-import>
+              </div>
+              <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-title); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h2>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. What changed was the feet — once I trusted the smear on the sloping edge the upper section came free.</p>
+              <a href="#2a" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+            </div>
+
+            <div style="background:var(--faction-default-card-line, var(--color-border));"></div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md) 0 0 var(--space-xl); border-top:2px solid transparent;">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                <span class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="26" hint-size="26px,26px"></x-import>
+              </div>
+              <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-title); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</h2>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Thirty-one of forty-one attempts came off the same left-hand crimp, and every one of those started on under four minutes of rest.</p>
+              <a href="#2a" class="content-text" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:340px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">2e · resolved drops both casters</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The era has closed, the figures are the frozen <code>*_final_points</code>, and there is nothing left to vote on — so both vote panels are gone rather than disabled. The winner takes one spectrum rule; no trophy.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">A forfeit reads on this same frame: the forfeiter's column dims, their figure becomes an em-dash, and the line is <code>duelCrossLink.wonByDefault</code>. A no-contest drops both figures for <code>finalNoContest</code>.</p>
+      </div>
+    </div>
+
+    <!-- ── 2f : redacted Albescent duellist ────────────────────────────── -->
+    <div id="2f" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">2f</span>
+        <span style="font-size:13px; color:#6b6560;">One column · the duellist is Albescent, the viewer unrevealed</span>
+      </div>
+      <div data-screen-label="Redacted Albescent column" style="width:480px; background:var(--color-bg-page); padding:24px;">
+        <div style="background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-lg); display:flex; flex-direction:column; gap:var(--space-md);">
+          <div style="display:flex; align-items:center; gap:var(--space-md);">
+            <span aria-hidden="true" style="display:block; width:38px; height:38px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+            <span class="font-display content-text" style="flex:1 1 auto; min-width:0; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Ilse Marren</span>
+            <span aria-hidden="true" style="display:block; width:26px; height:26px; flex:none; background:var(--faction-default-rainbow-conic, var(--faction-default-rainbow)); mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='9' stroke-linecap='butt'%3E%3Ccircle cx='50' cy='50' r='42' stroke-dasharray='226 38' transform='rotate(-104 50 50)'/%3E%3Ccircle cx='50' cy='50' r='28' stroke-dasharray='148 28' transform='rotate(58 50 50)'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-dasharray='70 18' transform='rotate(196 50 50)'/%3E%3C/g%3E%3C/svg%3E"); -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='9' stroke-linecap='butt'%3E%3Ccircle cx='50' cy='50' r='42' stroke-dasharray='226 38' transform='rotate(-104 50 50)'/%3E%3Ccircle cx='50' cy='50' r='28' stroke-dasharray='148 28' transform='rotate(58 50 50)'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-dasharray='70 18' transform='rotate(196 50 50)'/%3E%3C/g%3E%3C/svg%3E"); mask-size:contain; -webkit-mask-size:contain; mask-repeat:no-repeat; -webkit-mask-repeat:no-repeat; mask-position:center; -webkit-mask-position:center;"></span>
+          </div>
+          <h2 class="font-display" style="margin:0; font-style:italic; font-weight:700; font-size:var(--text-title); line-height:1.15; color:var(--faction-default-card-text, var(--color-text-primary));">What the third repetition changed</h2>
+          <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Nothing about the route was new by the third week. What was new was that I stopped narrating it to myself while I climbed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:340px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">2f · nothing here needs redacting</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">§0 forbids naming a faction verbally anywhere in a duel, so no duel surface prints <code>factionName()</code> — the string <code>isFactionRedacted()</code> masks is not on the page to begin with.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">And the mark is not a livery: <code>AlbescentSigil</code> is the labyrinth — three nested rings, each a band that turns back on itself — painted through a mask from <code>--faction-default-rainbow-conic</code>, the same spectrum an unaffiliated player wears, reinstated by owner ruling on exactly that ground. Drawn here to that description, painted from the same token. The shipped stencil is <code>/factionMarks/labyrinth.svg</code>, an absolute <code>public/</code> path that the kit does not vendor, so <code>FactionSigil slug="albescent"</code> renders an empty span in this document and only in this document — in the app it is the real mark at any size.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The 64px threshold is <code>AlbescentAvatar</code>'s <code>RING_TURNS_AT</code>, not the sigil's. The sigil scales to any size; the avatar's turning ring is simply absent below 64, which its own test says is above every mount in the app.</p>
+      </div>
+    </div>
+
+    <div style="width:640px; background:#fff; border:1px solid #d8d2c8; padding:22px 24px;">
+      <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">Copy — one new key, everything else shipped</h3>
+      <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">New: one key, proposed as <code>duelCrossLink.readBothSides</code> — “Read both sides”. Faction-neutral like the rest of the duel set, and shaped after <code>readTheirPraxis</code> so the two links in the same panel read as a pair. Alternatives if that is too flat: “Read them side by side”, or “Both entries”.</p>
+      <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Reused verbatim: <code>duelCrossLink.label</code> · <code>.live</code> + <code>standing.*</code> · <code>.final</code> + <code>finalStanding.*</code> · <code>.finalNoContest</code> · <code>.wonByDefault</code> · <code>.readTheirPraxis</code> · <code>duelBanner.versus</code> · <code>detail.vote.heading</code> and <code>detail.vote.prompt</code> for both casters · <code>detail.taskRef.*</code> · <code>detail.filed</code>.</p>
+      <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The combined view's own page title is <code>duelCrossLink.label</code> — “The duel”, the same key the side view's aside panel already heads itself with.</p>
+    </div>
+
+  </div>
+</section>
+
+<section style="display:flex; flex-direction:column; gap:56px; padding:56px; font-family:var(--font-body); background:#e9e5dd;">
+
+  <header style="max-width:920px; display:flex; flex-direction:column; gap:14px;">
+    <div style="font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#6b6560;">Turn 1 · superseded by turn 2 · one page, both bodies, one vote</div>
+    <h1 style="margin:0; font-family:var(--font-display); font-style:italic; font-size:38px; line-height:1.15; color:#1c1a18;">Both entries in one frame</h1>
+    <p style="margin:0; font-size:16px; line-height:1.6; color:#4a4540; text-wrap:pretty;">Drawn on <code>DefaultPraxisDetail</code>'s real anatomy: the 18px sheet with its spectrum band, the byline / title / task-ref header, the 330px aside, the <code>.spectrum-rule</code> section heads and the 12px panel chrome. One ground — the host praxis's — with each duellist's faction carried only by their sigil. Every string is shipped catalog copy.</p>
+    <p style="margin:0; font-size:14px; line-height:1.6; color:#6b6560;">Artboards <a href="#1a">1a</a> desktop settled · <a href="#1b">1b</a> desktop resolved (dark) · <a href="#1c">1c</a> phone settled · <a href="#1d">1d</a> phone resolved (dark) · <a href="#1e">1e</a> redacted Albescent duellist.</p>
+  </header>
+
+  <div style="max-width:920px; background:#fff8ea; border:1px solid #d9c99b; padding:22px 24px;">
+    <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">One ruling this needs before it can be built</h3>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540; text-wrap:pretty;"><code>DuelCard</code> is an <strong>aside</strong> block — <code>flex: 0 0 330px</code> on desktop, above the proof on mobile. Two praxis bodies cannot read side by side in 330px, so this reader cannot be a bigger <code>DuelCard</code>.</p>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540; text-wrap:pretty;">What these artboards propose: on a <strong>settled or resolved duel side</strong>, the reader is a full-sheet-width region in the main flow, and it <strong>subsumes the host's own Proof and Write-up sections</strong> rather than sitting beside them. The host's title, body and media are drawn exactly once — inside its own column of the reader — which is what keeps §6's "no two-pane workspace that re-renders what the detail page already owns" satisfied. The aside's duel panel is dropped on those two statuses; one duel block per page, as today.</p>
+    <p style="margin:10px 0 0; font-size:15px; line-height:1.65; color:#4a4540; text-wrap:pretty;">Everything above and below is untouched: breadcrumb, byline, h1, owner actions, task reference, the score / vote / voters / flag rail, and comments beneath both columns.</p>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start;">
+
+    <!-- ── 1a ───────────────────────────────────────────────────────────── -->
+    <div id="1a" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">1a</span>
+        <span style="font-size:13px; color:#6b6560;">Desktop · settled · light · sheet 1200</span>
+      </div>
+
+      <div data-screen-label="Desktop settled" style="width:1264px; background:var(--color-bg-page); padding:32px;">
+        <div class="label-caption" style="margin-bottom:14px; font-size:13px; color:var(--color-text-tertiary);">Tasks › Climb the north wall six times › Praxis</div>
+
+        <div style="position:relative; max-width:1200px; margin:0 auto; background:var(--faction-default-card-bg, var(--color-bg-surface)); color:var(--faction-default-card-text, var(--color-text-primary)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); box-sizing:border-box; overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; flex-direction:row; align-items:stretch; gap:var(--space-2xl);">
+            <div style="flex:1 1 auto; min-width:0;">
+
+              <!-- byline -->
+              <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:44px; height:44px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div style="min-width:0; flex:1;">
+                  <div class="font-display" style="font-style:italic; font-size:var(--text-title); color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                  <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+                </div>
+              </div>
+
+              <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-display); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+              <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-xl);">
+                <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+                <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+                <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+              </div>
+
+              <!-- THE DUEL REGION -->
+              <section style="margin-bottom:var(--space-2xl);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:var(--space-lg); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+                    <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+                  </div>
+                  <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary)); padding-bottom:2px;">vs.</span>
+                  <div style="display:flex; flex-direction:column; gap:2px; align-items:flex-end;">
+                    <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+                    <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+                  </div>
+                </div>
+                <p class="font-body content-text" style="margin:var(--space-md) 0 0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+
+                <div style="margin-top:var(--space-xl); display:grid; grid-template-columns:1fr 1px 1fr; gap:0;">
+
+                  <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-right:var(--space-xl);">
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                      <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                        <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                      </span>
+                      <div style="flex:1 1 auto; min-width:0;">
+                        <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                      </div>
+                      <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="26" hint-size="26px,26px"></x-import>
+                    </div>
+
+                    <div style="border-radius:10px; padding:var(--space-xs);" class="spectrum-rule">
+                      <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm); display:grid; grid-template-columns:1fr 1fr; gap:var(--space-sm);">
+                        <span style="display:block; height:104px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                        <span style="display:block; height:104px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                      </div>
+                    </div>
+
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways. On the third morning I stopped trying to climb it and stood under it reading the holds instead.</p>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">What changed was the feet. Once I trusted the smear on the sloping edge the whole upper section came free, and on the last morning I topped out twice before anyone else arrived.</p>
+                  </div>
+
+                  <div style="background:var(--faction-default-card-line, var(--color-border));"></div>
+
+                  <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-left:var(--space-xl);">
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                      <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                      <div style="flex:1 1 auto; min-width:0;">
+                        <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                      </div>
+                      <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="26" hint-size="26px,26px"></x-import>
+                    </div>
+
+                    <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap;">
+                      <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</span>
+                      <a href="#1a" class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+                    </div>
+
+                    <div style="border-radius:10px; padding:var(--space-xs);" class="spectrum-rule">
+                      <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm);">
+                        <span style="display:block; height:104px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                      </div>
+                    </div>
+
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why. The point was never the climb; it was finding out whether I fail the same way twice.</p>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I do. Thirty-one of the forty-one came off the same left-hand crimp, and every one of those was an attempt I started on under four minutes of rest.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Discussion</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">unchanged — comments sit beneath both columns</div>
+              </section>
+            </div>
+
+            <aside style="flex:0 0 330px; width:330px; display:flex; flex-direction:column; gap:var(--space-lg);">
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Score</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="text-align:center; color:var(--faction-default-card-muted, var(--color-text-secondary));">ScoreStamp — unchanged</div>
+              </section>
+              <section style="border:1px dashed var(--faction-default-card-line, var(--color-border)); border-radius:12px; padding:var(--space-lg);">
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">DuelCard — not mounted here on settled / resolved. The reader in the main column is the page's one duel block.</div>
+              </section>
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Cast your vote</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">VoteUI — unchanged, dispatched on the task's faction</div>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:360px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">1a · anatomy</div>
+        <ol style="margin:10px 0 0; padding-left:18px; font-size:14px; line-height:1.65; color:#4a4540;">
+          <li>Sheet, byline, title, task reference — <code>DefaultPraxisDetail</code>'s, untouched.</li>
+          <li><em>The duel</em> section head, spectrum rule and all.</li>
+          <li>Standing band: two figures, <em>vs.</em>, then the live sentence.</li>
+          <li>Two entries under one hairline spine. The host's is on the left, unlabelled and un-cross-linked — you are already on its page.</li>
+          <li>Comments beneath, as today.</li>
+        </ol>
+      </div>
+      <div style="background:#fff; border:1px dashed #b4453c; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#b4453c;">Payload flag</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;"><code>DuelSideOut</code> carries praxis_id, character_id, display_name, faction_slug, avatar_url, points_from_votes, is_submitted and nudged_at — and its docstring says "never the praxis body". The right-hand column's title, body and media need a second fetch of that praxis under <code>can_view_praxis</code>, or a body field added under the same guard.</p>
+      </div>
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">Asymmetry, on purpose</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The two columns are not mirror images. The host's entry keeps the page's own h1 and byline above the fold and shows its media at full section width; the rival's carries its title inline and its cross-link. One ground, one host — the frame should not pretend the page belongs to both.</p>
+      </div>
+    </div>
+
+    <!-- ── 1b ───────────────────────────────────────────────────────────── -->
+    <div id="1b" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">1b</span>
+        <span style="font-size:13px; color:#6b6560;">Desktop · resolved · dark cascade · sheet 1200</span>
+      </div>
+
+      <div data-theme="dark" data-screen-label="Desktop resolved" style="width:1264px; background:var(--color-bg-page); padding:32px;">
+        <div class="label-caption" style="margin-bottom:14px; font-size:13px; color:var(--color-text-tertiary);">Tasks › Climb the north wall six times › Praxis</div>
+
+        <div style="position:relative; max-width:1200px; margin:0 auto; background:var(--faction-default-card-bg, var(--color-bg-surface)); color:var(--faction-default-card-text, var(--color-text-primary)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); box-sizing:border-box; overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; flex-direction:row; align-items:stretch; gap:var(--space-2xl);">
+            <div style="flex:1 1 auto; min-width:0;">
+              <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:44px; height:44px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div style="min-width:0; flex:1;">
+                  <div class="font-display" style="font-style:italic; font-size:var(--text-title); color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                  <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+                </div>
+              </div>
+
+              <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-display); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+              <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-xl);">
+                <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+                <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+                <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+              </div>
+
+              <section style="margin-bottom:var(--space-2xl);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:var(--space-lg); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">final</span>
+                    <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">60</span>
+                  </div>
+                  <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary)); padding-bottom:2px;">vs.</span>
+                  <div style="display:flex; flex-direction:column; gap:2px; align-items:flex-end;">
+                    <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">final</span>
+                    <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">20</span>
+                  </div>
+                </div>
+                <p class="font-body content-text" style="margin:var(--space-md) 0 0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove won · final — frozen at era close.</p>
+
+                <div style="margin-top:var(--space-xl); display:grid; grid-template-columns:1fr 1px 1fr; gap:0;">
+                  <div style="display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md) var(--space-xl) 0 0; border-top:2px solid transparent; border-image:var(--faction-default-rainbow) 1;">
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                      <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                        <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                      </span>
+                      <div style="flex:1 1 auto; min-width:0;">
+                        <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                      </div>
+                      <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="26" hint-size="26px,26px"></x-import>
+                    </div>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways. On the third morning I stopped trying to climb it and stood under it reading the holds instead.</p>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">What changed was the feet. Once I trusted the smear on the sloping edge the whole upper section came free.</p>
+                  </div>
+
+                  <div style="background:var(--faction-default-card-line, var(--color-border));"></div>
+
+                  <div style="display:flex; flex-direction:column; gap:var(--space-md); padding:var(--space-md) 0 0 var(--space-xl); border-top:2px solid transparent;">
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                      <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                      <div style="flex:1 1 auto; min-width:0;">
+                        <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                      </div>
+                      <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="26" hint-size="26px,26px"></x-import>
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap;">
+                      <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</span>
+                      <a href="#1b" class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+                    </div>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why. The point was never the climb; it was finding out whether I fail the same way twice.</p>
+                    <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I do. Thirty-one of the forty-one came off the same left-hand crimp.</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <aside style="flex:0 0 330px; width:330px; display:flex; flex-direction:column; gap:var(--space-lg);">
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Score</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="text-align:center; color:var(--faction-default-card-muted, var(--color-text-secondary));">ScoreStamp — unchanged</div>
+              </section>
+              <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+                <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md);">
+                  <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">Who voted</span>
+                  <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+                </div>
+                <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">unchanged</div>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:360px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">1b · what resolved changes</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Figures switch from <code>points_from_votes</code> to the frozen <code>*_final_points</code>, the caption reads <em>final</em>, and the sentence is <code>duelCrossLink.final</code>. The winner is marked by one spectrum rule over their column — na's tell, legible on all nine grounds, and never the opponent's hue, which is what <code>duelCardOpponentInk.test.tsx</code> guards.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">No trophy, no delta badge, no victory screen. Resolved is the only frozen state, so it is the only place a final figure is honest.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Two readings share this artboard's chrome: a forfeit dims the forfeiter's column and prints an em-dash for their figure under <code>duelCrossLink.wonByDefault</code>; a no-contest drops both figures and prints <code>finalNoContest</code>.</p>
+      </div>
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">Dark mode</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">This artboard is the same markup as 1a under <code>[data-theme="dark"]</code>. Every colour is a token, so nothing branches on theme.</p>
+      </div>
+    </div>
+
+    <!-- ── 1c ───────────────────────────────────────────────────────────── -->
+    <div id="1c" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">1c</span>
+        <span style="font-size:13px; color:#6b6560;">Phone · settled · light · 390</span>
+      </div>
+      <div data-screen-label="Phone settled" style="width:390px; background:var(--color-bg-page); padding:12px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-lg); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+            <span aria-hidden="true" class="spectrum-dial" style="display:block; width:38px; height:38px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+              <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+            </span>
+            <div style="min-width:0; flex:1;">
+              <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+              <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+            </div>
+          </div>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.08; margin:0 0 var(--space-md); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+          <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap; border-top:1px solid var(--faction-default-card-line, var(--color-border)); border-bottom:1px solid var(--faction-default-card-line, var(--color-border)); padding:var(--space-md) 0; margin-bottom:var(--space-xl);">
+            <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Completing task</span>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Climb the north wall six times</span>
+            <span class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary));">Level 2 · 40 points</span>
+          </div>
+
+          <section>
+            <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+              <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+              <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-sm); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-md);">
+                <span class="content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+                <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">7.4</span>
+              </div>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-md);">
+                <span class="content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+                <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">4.8</span>
+              </div>
+            </div>
+            <p class="font-body content-text" style="margin:var(--space-md) 0 0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove leads by 2.6 · live — the winner floats with the votes until era reset.</p>
+
+            <div style="margin-top:var(--space-xl); display:flex; flex-direction:column; gap:var(--space-md);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                  </div>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="24" hint-size="24px,24px"></x-import>
+              </div>
+              <div class="spectrum-rule" style="border-radius:10px; padding:var(--space-xs);">
+                <div style="border-radius:6px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-sm); display:flex; flex-direction:column; gap:var(--space-sm);">
+                  <span style="display:block; height:150px; border-radius:4px; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-card-line, var(--color-border));"></span>
+                </div>
+              </div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">I went up before the light six days running. The first two were bad — cold hands, no rhythm, the same three moves failed the same three ways.</p>
+            </div>
+
+            <div style="margin:var(--space-xl) 0; display:flex; align-items:center; gap:var(--space-md);">
+              <span style="flex:1 1 auto; height:1px; background:var(--faction-default-card-line, var(--color-border));"></span>
+              <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary));">vs.</span>
+              <span style="flex:1 1 auto; height:1px; background:var(--faction-default-card-line, var(--color-border));"></span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                  </div>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="24" hint-size="24px,24px"></x-import>
+              </div>
+              <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Logged every attempt, then read the log</div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why. The point was never the climb.</p>
+              <a href="#1c" class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+            </div>
+          </section>
+
+          <div style="margin-top:var(--space-xl); display:flex; flex-direction:column; gap:var(--space-lg);">
+            <section style="border:1px solid var(--faction-default-card-line, var(--color-border)); border-radius:12px; background:var(--faction-default-stamp-bg, var(--color-bg-page)); padding:var(--space-lg);">
+              <div class="label-caption" style="text-align:center; color:var(--faction-default-card-muted, var(--color-text-secondary));">Score · Vote · Who voted — stacked, as today</div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 1d ───────────────────────────────────────────────────────────── -->
+    <div id="1d" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">1d</span>
+        <span style="font-size:13px; color:#6b6560;">Phone · resolved · dark cascade · 390</span>
+      </div>
+      <div data-theme="dark" data-screen-label="Phone resolved" style="width:390px; background:var(--color-bg-page); padding:12px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-lg); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; align-items:center; gap:var(--space-md); margin-bottom:var(--space-md);">
+            <span aria-hidden="true" class="spectrum-dial" style="display:block; width:38px; height:38px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+              <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+            </span>
+            <div style="min-width:0; flex:1;">
+              <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+              <div class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">Submitted 14 Aug 2026</div>
+            </div>
+          </div>
+
+          <h1 class="font-display" style="font-style:italic; font-weight:700; font-size:var(--text-heading); line-height:1.08; margin:0 0 var(--space-xl); color:var(--faction-default-card-text, var(--color-text-primary));">Six mornings on the north wall</h1>
+
+          <section>
+            <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+              <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+              <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-sm); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-md); padding-left:var(--space-sm); border-left:2px solid transparent; border-image:var(--faction-default-rainbow) 1;">
+                <span class="content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</span>
+                <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">60</span>
+              </div>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:var(--space-md); padding-left:calc(var(--space-sm) + 2px);">
+                <span class="content-text" style="color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</span>
+                <span class="content-title" style="font-weight:700; color:var(--faction-default-card-text, var(--color-text-primary));">20</span>
+              </div>
+            </div>
+            <p class="font-body content-text" style="margin:var(--space-md) 0 0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Wren Ashgrove won · final — frozen at era close.</p>
+
+            <div style="margin-top:var(--space-xl); display:flex; flex-direction:column; gap:var(--space-md);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Wren Ashgrove</div>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="coven" size="24" hint-size="24px,24px"></x-import>
+              </div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">What changed was the feet. Once I trusted the smear on the sloping edge the whole upper section came free.</p>
+            </div>
+
+            <div style="margin:var(--space-xl) 0; display:flex; align-items:center; gap:var(--space-md);">
+              <span style="flex:1 1 auto; height:1px; background:var(--faction-default-card-line, var(--color-border));"></span>
+              <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary));">vs.</span>
+              <span style="flex:1 1 auto; height:1px; background:var(--faction-default-card-line, var(--color-border));"></span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                <div class="font-display content-text" style="flex:1 1 auto; font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="24" hint-size="24px,24px"></x-import>
+              </div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Thirty-one of forty-one attempts came off the same left-hand crimp, and every one of those started on under four minutes of rest.</p>
+              <a href="#1d" class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:360px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">1c / 1d · the phone</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Single column, flow, no fixed-px grid. The standing band becomes a two-row list — the same two figures, still no bar — and the spine becomes a ruled <em>vs.</em> divider between the entries.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Reading order is standing, host entry, rival entry, then the rail. Both entries are always full; there is no collapse-by-default, because a reader that hides one side is the two page loads this issue exists to remove.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">On resolved the winner's row takes the spectrum edge and the loser's row is indented to match — a rule, never a hue.</p>
+      </div>
+    </div>
+
+    <!-- ── 1e ───────────────────────────────────────────────────────────── -->
+    <div id="1e" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border:1px solid #c9c2b8; color:#4a4540;">1e</span>
+        <span style="font-size:13px; color:#6b6560;">Desktop settled · the rival is Albescent, the viewer unrevealed</span>
+      </div>
+
+      <div data-screen-label="Redacted Albescent side" style="width:900px; background:var(--color-bg-page); padding:32px;">
+        <div style="position:relative; background:var(--faction-default-card-bg, var(--color-bg-surface)); border:1px solid var(--faction-default-border, var(--color-border)); border-radius:18px; padding:var(--space-2xl); overflow:hidden;">
+          <span aria-hidden="true" class="spectrum-rule" style="position:absolute; top:0; left:0; right:0; height:4px;"></span>
+
+          <div style="display:flex; align-items:baseline; gap:var(--space-sm); margin-bottom:var(--space-md); flex-wrap:wrap;">
+            <span class="label-heading" style="letter-spacing:.22em; color:var(--color-text-primary);">The duel</span>
+            <span aria-hidden="true" class="spectrum-rule" style="flex:1 1 20%; min-width:20px; height:2px; border-radius:2px;"></span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:var(--space-lg); padding-bottom:var(--space-md); border-bottom:1px solid var(--faction-default-card-line, var(--color-border));">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">5.1</span>
+            </div>
+            <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-muted, var(--color-text-secondary)); padding-bottom:2px;">vs.</span>
+            <div style="display:flex; flex-direction:column; gap:2px; align-items:flex-end;">
+              <span class="label-caption" style="color:var(--faction-default-card-muted, var(--color-text-secondary));">votes</span>
+              <span class="content-title" style="font-weight:700; line-height:1; color:var(--faction-default-card-text, var(--color-text-primary));">5.1</span>
+            </div>
+          </div>
+          <p class="font-body content-text" style="margin:var(--space-md) 0 0; color:var(--faction-default-card-muted, var(--color-text-secondary));">Tied · live — the winner floats with the votes until era reset.</p>
+
+          <div style="margin-top:var(--space-xl); display:grid; grid-template-columns:1fr 1px 1fr; gap:0;">
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-right:var(--space-xl);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" class="spectrum-dial" style="display:block; width:34px; height:34px; border-radius:50%; padding:var(--space-xs); flex-shrink:0;">
+                  <span style="display:block; width:100%; height:100%; border-radius:50%; background:var(--faction-default-card-bg, var(--color-bg-surface));"></span>
+                </span>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Otho Vane</div>
+                  </div>
+                <x-import component-from-global-scope="WZ.FactionSigil" slug="singularity" size="26" hint-size="26px,26px"></x-import>
+              </div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Forty-one attempts across nine sessions, each one timestamped with the hold I came off and why.</p>
+            </div>
+
+            <div style="background:var(--faction-default-card-line, var(--color-border));"></div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); padding-left:var(--space-xl);">
+              <div style="display:flex; align-items:center; gap:var(--space-md);">
+                <span aria-hidden="true" style="display:block; width:34px; height:34px; border-radius:50%; flex-shrink:0; background:var(--faction-default-stamp-bg, var(--color-bg-page)); border:1px solid var(--faction-default-card-line, var(--color-border)); box-sizing:border-box;"></span>
+                <div style="flex:1 1 auto; min-width:0;">
+                  <div class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">Ilse Marren</div>
+                  </div>
+                <span aria-hidden="true" style="display:block; width:26px; height:26px; flex:none; border-radius:50%; background:var(--faction-default-rainbow-conic, var(--faction-default-rainbow)); mask-image:radial-gradient(circle, transparent 20%, #000 22%, #000 34%, transparent 36%, transparent 50%, #000 52%, #000 64%, transparent 66%, transparent 80%, #000 82%); -webkit-mask-image:radial-gradient(circle, transparent 20%, #000 22%, #000 34%, transparent 36%, transparent 50%, #000 52%, #000 64%, transparent 66%, transparent 80%, #000 82%);"></span>
+              </div>
+              <div style="display:flex; align-items:baseline; gap:var(--space-sm); flex-wrap:wrap;">
+                <span class="font-display content-text" style="font-style:italic; color:var(--faction-default-card-text, var(--color-text-primary));">What the third repetition changed</span>
+                <a href="#1e" class="label-caption" style="margin-left:auto; color:var(--faction-default-card-muted, var(--color-text-secondary)); text-decoration:none;">Read their praxis ›</a>
+              </div>
+              <p class="font-body content-text markdown-preview" style="margin:0; line-height:1.85; color:var(--faction-default-card-text, var(--color-text-primary)); text-wrap:pretty;">Nothing about the route was new by the third week. What was new was that I stopped narrating it to myself while I climbed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:360px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">1e · nothing here needs redacting</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">§0 forbids naming a faction verbally anywhere in a duel, so no duel surface prints <code>factionName()</code> — the string <code>isFactionRedacted()</code> masks is not on the page to begin with.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">And the mark is not a livery. <code>AlbescentSigil</code> is the labyrinth painted through a mask from <code>--faction-default-rainbow-conic</code> — the same spectrum an unaffiliated player wears — reinstated by owner ruling on exactly that ground. A stranger meets a shape they do not recognise, which is the accepted consequence, not a leak.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Drawn as an approximation here: the real mark is <code>/factionMarks/labyrinth.svg</code>, not vendored into the kit.</p>
+      </div>
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:20px 22px;">
+        <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#6b6560;">The 64px gate, corrected</div>
+        <p style="margin:8px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The gate is not on the sigil. <code>FactionSigil</code> takes any size and the labyrinth is a mask at <code>contain</code>, so one drawing serves 22px as well as 84px — every mark on these artboards is 24–26px and renders whole.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">64 is <code>AlbescentAvatar</code>'s <code>RING_TURNS_AT</code>: the turning ring is absent below it, and its own test records that 64 sits above every mount in the app on purpose. These discs are 34px, so the ring does not turn — and nothing is missing, because an Albescent disc below the gate is <code>DefaultAvatar</code>'s disc exactly.</p>
+      </div>
+    </div>
+
+    <!-- notes -->
+    <div style="width:640px; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:22px 24px;">
+        <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">Copy audit — zero new strings</h3>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Every word on these artboards is shipped catalog copy, faction-neutral in all nine skins:</p>
+        <ul style="margin:10px 0 0; padding-left:18px; font-size:14px; line-height:1.75; color:#4a4540;">
+          <li><code>duelCrossLink.label</code> — the section head, “The duel”. The same key <code>DefaultPraxisDetail</code> already passes as <code>DuelCard</code>'s heading.</li>
+          <li><code>duelBanner.versus</code> — the spine mark, “vs.”</li>
+          <li><code>duelCrossLink.live</code> + <code>standing.leads</code> / <code>standing.tied</code> — the settled sentence, whole and untrimmed.</li>
+          <li><code>duelCrossLink.final</code> + <code>finalStanding.won</code> / <code>.tied</code>, with <code>finalNoContest</code> and <code>wonByDefault</code> for the other two readings.</li>
+                    <li><code>duelCrossLink.readTheirPraxis</code> — the rival column's link out.</li>
+          <li><code>detail.taskRef.*</code>, <code>detail.filed</code>, <code>detail.sections.comments</code> — the host page's own furniture, unchanged.</li>
+        </ul>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">The one gap I expected — a votes-are-still-open footnote — is already inside <code>duelCrossLink.live</code>, which is why that sentence is reused whole rather than split into a leader line and a caveat.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;">Two <code>detail.sections.*</code> keys go unused on a duel side: <em>Proof</em> and <em>Write-up</em>. The reader's columns carry that content under <em>The duel</em> instead, so those two heads do not draw. If you would rather keep them, the columns can each carry their own pair — but that is four section heads in one region, and it reads as four sections rather than two entries.</p>
+      </div>
+
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:22px 24px;">
+        <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">Decisions I made, since the form came back unanswered</h3>
+        <ul style="margin:10px 0 0; padding-left:18px; font-size:14px; line-height:1.75; color:#4a4540;">
+          <li><strong>Ground:</strong> na / Unaffiliated — the host's dress, and the one <code>DuelCard</code>'s default ink already paints. Any of the nine hosts substitutes by repointing the same tokens; nothing in the layout is na-specific except the spectrum, which is na's own tell.</li>
+          <li><strong>Bodies:</strong> full, both sides, one page scroll. No independent column scrolling — the app has no two-pane detail page and the phone stacks.</li>
+          <li><strong>Standing:</strong> two figures with the catalog sentence beneath. No bar, no delta badge, no leader crown.</li>
+          <li><strong>Proof:</strong> in-column, in <code>MediaGallery</code>'s own spectrum-edged frame — grid on desktop, column on phone, exactly as the archetype mounts it.</li>
+          <li><strong>Winner mark on resolved:</strong> one spectrum rule and the sentence.</li>
+        </ul>
+      </div>
+
+      <div style="background:#fff; border:1px solid #d8d2c8; padding:22px 24px;">
+        <h3 style="margin:0; font-family:var(--font-display); font-style:italic; font-weight:400; font-size:22px; color:#1c1a18;">Two things in the brief the code contradicts</h3>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;"><strong>The 64px gate is the avatar's, not the sigil's.</strong> See 1e — the sigil renders at any size; <code>RING_TURNS_AT = 64</code> belongs to <code>AlbescentAvatar</code>, and its test says 64 is deliberately above every mount that exists.</p>
+        <p style="margin:10px 0 0; font-size:14px; line-height:1.6; color:#4a4540;"><strong>A stale comment survives §0's cleanup.</strong> <code>frontend/src/utils/duelScenario.ts</code> still names wow as “the one faction that overrides the duel-seal copy (<code>praxis.json</code> <code>duelSeal.wow</code>)” and steers duel fixtures around it. Those keys were deleted in #1909; the constant now excludes a faction for a reason that no longer exists. Worth a separate issue — I have not touched it.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">class Component extends DCLogic {
+  state = { open: 'wren' }
+  renderVals() {
+    const open = this.state.open
+    return {
+      wrenOpen: open === 'wren',
+      othoOpen: open === 'otho',
+      openWren: () => this.setState({ open: 'wren' }),
+      openOtho: () => this.setState({ open: 'otho' }),
+    }
+  }
+}</script>
+</body>
+</html>
