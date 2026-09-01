@@ -19,6 +19,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from eras.era_2 import ERA_2
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
@@ -40,14 +41,20 @@ from services.praxis import list_praxes
 async def _board(
     db_session: AsyncSession, author: Character, era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Every era faction plus one task per faction `seed()` needs.
+    """Every era faction, plus one task per faction the **era** carries.
 
-    Covers the per-faction `DEMOS` slugs, the score-fixture slugs
-    (`fixture_faction_slugs`, which `seed()` also drives) and every joinable
-    faction the era declares. The last one is not redundant with the first: it
-    is what stops the coverage guard below being fed by the very dict it is
-    checking, so a faction `DEMOS` has forgotten still gets a task on the board
-    and the guard fails on the missing *praxis* rather than on a missing task.
+    The board is derived from `era` alone — every joinable slug
+    (`real_faction_slugs`) plus the score-fixture slugs
+    (`fixture_faction_slugs`, which `seed()` also drives). `DEMOS` is
+    deliberately *not* an input, for two reasons:
+
+    * the coverage guard below would otherwise be fed by the very dict it is
+      checking — a faction `DEMOS` has forgotten would also be missing from the
+      board, so the guard would fail on a missing task rather than on the
+      missing praxis it is actually about;
+    * it makes `_board(..., ERA_2)` the board a dev database under that era
+      would really have, which is the only way to exercise the skip path a
+      `DEMOS` key the era dropped has to take (#2710).
     """
     for slug in era.factions:
         existing = (
@@ -56,8 +63,7 @@ async def _board(
         if existing is None:
             db_session.add(Faction(slug=slug, status=FactionStatus.visible))
     await db_session.flush()
-    slugs = set(DEMOS) | set(fixture_faction_slugs(era)) | set(real_faction_slugs(era))
-    for slug in slugs:
+    for slug in set(real_faction_slugs(era)) | set(fixture_faction_slugs(era)):
         db_session.add(Task(
             title=f"Board task ({slug})",
             description="fixture",
@@ -265,3 +271,43 @@ async def test_every_joinable_faction_has_a_praxis_in_the_submitted_feed(
             f"no submitted praxis renders for {slug!r}, so that faction's "
             f"praxis card archetype cannot be seen on a seeded dev DB (#2895)"
         )
+
+
+@pytest.mark.asyncio
+async def test_a_demos_faction_the_era_dropped_is_skipped_not_crashed(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    capsys,
+):
+    """#2710's crash class, exercised rather than guarded against twice.
+
+    `DEMOS` names factions; an era decides which of them exist. Era 2 carries
+    neither `coven` nor `ua`, and the seed's answer to that is already written
+    — no task on the board for that slug, so the loop prints a skip and moves
+    on. Nothing new is needed for the `coven` entry #2895 adds; what is needed
+    is a test that the existing path really is the one it takes, because the
+    last time a fixture named a faction an era had dropped it was a `KeyError`
+    on a fresh dev database, not a skipped line.
+
+    The board here is Era 2's own, so the `DEMOS` keys it dropped genuinely
+    have nothing to point at. The era is passed explicitly; `CURRENT_ERA` is
+    untouched.
+    """
+    dropped = [slug for slug in DEMOS if slug not in ERA_2.factions]
+    assert dropped, "ERA_2 carries every DEMOS faction — this proves nothing"
+
+    await _board(db_session, character, ERA_2)
+    await seed(db_session, ERA_2)
+
+    printed = capsys.readouterr().out
+    for slug in dropped:
+        assert f"! {slug}: no task on the board" in printed
+
+    # The factions Era 2 *does* carry still reach the feed, so the skip is a
+    # skip and not a bail-out part-way through the loop.
+    for slug in real_faction_slugs(ERA_2):
+        visible = await list_praxes(
+            db_session, status=PraxisStatus.submitted, faction=[slug]
+        )
+        assert visible, f"{slug!r} renders nothing under its own era"
