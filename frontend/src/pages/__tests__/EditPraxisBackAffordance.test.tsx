@@ -35,6 +35,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../i18n";
 import type { EditPraxisState } from "../editPraxis/useEditPraxis";
+import { anEditPraxisState } from "../../test/fixtures";
 
 const formFactor = vi.hoisted(() => ({ value: "mobile" as "mobile" | "desktop" }));
 const editState = vi.hoisted(() => ({ current: null as EditPraxisState | null }));
@@ -58,19 +59,16 @@ vi.mock("../editPraxis/waiting/PraxisWaitingSurface", () => ({
 import EditPraxis from "../EditPraxis";
 
 /**
- * Sparse state — EditPraxis reads only these fields; the skin (which reads the
- * rest) is mocked to null. slug 'na' falls through to the Default archetype.
+ * The phase and what follows from it are the premise; the rest is the fixture's
+ * quiet default (#2877), and the skin (which reads it) is mocked to null. The
+ * fixture's task carries slug `na`, which falls through to the Default
+ * archetype.
  */
 function stateAt(phase: EditPraxisState["phase"]): EditPraxisState {
-  return {
-    loading: false,
+  return anEditPraxisState({
     phase,
     isPublished: phase !== "composing",
-    pendingImage: null,
-    error: "",
-    praxis: { id: 55, task_id: 7, task_title: "A Very Human Thing" },
-    task: { primary_faction_slug: "na" },
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(
@@ -87,7 +85,10 @@ function render(
 }
 
 const WIDTHS = ["mobile", "desktop"] as const;
-const BACK_LINK = 'href="/praxis/55"';
+// Derived from the fixture rather than spelled: every assertion below is a
+// `not.toContain`, so a hand-written id that drifted from the state's praxis
+// would pass vacuously forever.
+const BACK_LINK = `href="/praxis/${anEditPraxisState().praxis!.id}"`;
 
 const DRAWN_STATES = ["composing", "waiting", "completed"] as const;
 

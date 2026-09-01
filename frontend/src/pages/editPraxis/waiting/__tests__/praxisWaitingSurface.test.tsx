@@ -16,6 +16,7 @@ import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import { DEFAULT_COMPOSER_DRESS } from "../../archetypes/DefaultEditPraxis";
 import PraxisWaitingSurface, {
   type PraxisWaitingSurfaceProps,
@@ -121,27 +122,19 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
   };
 }
 
+// Everything not named here is the fixture's quiet default (#2877) — which
+// includes `nudgeCrew`, whose PRESENCE is load-bearing (#1952): the roster
+// draws the bulk press only where a caller supplied one, so an absent handler
+// is the praxis-detail mount's reading, not this one's.
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
-  return {
+  return anEditPraxisState({
     praxis: praxis(),
     task: TASK,
-    duel: null,
     currentCharacterId: ME,
     title: "The long way",
     body: "I took the road east.",
-    error: "",
-    submitting: false,
-    leaveCollab: async () => {},
-    cancel: async () => {},
-    reopenForEdit: async () => {},
-    kickMember: async () => {},
-    nudge: async () => {},
-    // Wired in the fixture because its PRESENCE is now load-bearing (#1952):
-    // the roster draws the bulk press only where a caller supplied one, so an
-    // absent handler is the praxis-detail mount's reading, not this one's.
-    nudgeCrew: async () => {},
     ...overrides,
-  } as unknown as EditPraxisState;
+  });
 }
 
 /**

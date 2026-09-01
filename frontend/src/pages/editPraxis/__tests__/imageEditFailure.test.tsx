@@ -27,6 +27,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../../../i18n";
 import i18n from "../../../i18n";
 import type { EditPraxisState } from "../useEditPraxis";
+import { anEditPraxisState } from "../../../test/fixtures";
 import { imageEditFailureMessage } from "../useComposerMedia";
 import { FilePicker } from "../archetypes/controls";
 import type { ImageEditModalProps } from "../../../components/imageEdit/ImageEditModal";
@@ -101,22 +102,18 @@ describe("the failure lands on a line the player can see", () => {
   });
 });
 
-/** Only the fields the dispatcher itself reads; the skin is mocked to null. */
+/**
+ * The pending image and its error sink — the only two facts this file's claim
+ * turns on. Everything else is the fixture's quiet default (#2877), and the
+ * skin is mocked to null.
+ */
 function stateWithPendingImage(
   reportImageError: (reason: string) => void,
 ): EditPraxisState {
-  return {
-    loading: false,
-    phase: "composing",
-    isPublished: false,
-    error: "",
-    praxis: { id: 55, task_id: 7, task_title: "A Very Human Thing" },
-    task: { primary_faction_slug: "na" },
+  return anEditPraxisState({
     pendingImage: new File(["x"], FILE_NAME, { type: "image/heic" }),
-    confirmImageEdit: async () => {},
-    cancelImageEdit: () => {},
     reportImageError,
-  } as unknown as EditPraxisState;
+  });
 }
 
 /** Mount the dispatcher over a pending image and hand back the modal's props. */
