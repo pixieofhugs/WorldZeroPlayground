@@ -9,6 +9,7 @@ import AppearanceSection from './settings/sections/AppearanceSection'
 import CookiesSection from './settings/sections/CookiesSection'
 import DataSection from './settings/sections/DataSection'
 import LanguageSection from './settings/sections/LanguageSection'
+import NotificationsSection from './settings/sections/NotificationsSection'
 
 /**
  * Settings — the responsive chassis (#2154), one component for both form
@@ -33,6 +34,10 @@ import LanguageSection from './settings/sections/LanguageSection'
  * `SETTINGS_SECTIONS` below. Nothing else in this file moves, and no two
  * siblings need to edit the same row. The nav rail, the anchors, the scroll
  * offset and the pane rhythm are all derived from that one entry.
+ *
+ * All six have now landed, so the list above is the record of a contract that
+ * held rather than a plan — six sections, six one-line entries, and this file
+ * unchanged apart from them.
  */
 
 /** The props every section takes. The shell owns the anchor id, so a nav item
@@ -59,6 +64,11 @@ interface SettingsSection {
  */
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   { key: 'appearance', labelKey: 'settings.appearance.eyebrow', Component: AppearanceSection },
+  {
+    key: 'notifications',
+    labelKey: 'settings.notifications.eyebrow',
+    Component: NotificationsSection,
+  },
   { key: 'cookies', labelKey: 'settings.cookies.eyebrow', Component: CookiesSection },
   { key: 'language', labelKey: 'settings.language.eyebrow', Component: LanguageSection },
   { key: 'data', labelKey: 'settings.data.eyebrow', Component: DataSection },
