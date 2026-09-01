@@ -33,7 +33,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import "../../../../i18n";
 import i18n from "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisRoom } from "../../praxisRoom";
 
 // Same rig as `composerQuietInk.test.tsx`: `PraxisRoomContext` is deliberately
@@ -47,11 +47,9 @@ vi.mock("../../praxisRoom", async (importOriginal) => ({
 
 const { BodyTextarea, ROOM_SEED_GRACE_MS } = await import("../controls");
 
-const state = {
-  body: "## What I did",
-  setBody: () => {},
-  controlsLocked: false,
-} as unknown as EditPraxisState;
+// The dress under test is the room's, not the praxis's: `controlsLocked: false`
+// is the fixture's default and everything else here is scenery.
+const state = anEditPraxisState();
 
 function fakeRoom(seeded: boolean, unreachable = false): PraxisRoom {
   return {

@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import { BodyTextarea, TitleField } from "../controls";
 import { sourceFiles } from "../../../../test/sourceScan";
 import { stripComments } from "../../../../utils/__tests__/cssVars";
@@ -48,13 +48,9 @@ function composerSources(): Array<{ name: string; source: string }> {
 /** An `outline: "none"` in an inline style object, in any spacing. */
 const SUPPRESSION = /outline:\s*["']none["']/;
 
-// The controls only read the handful of state fields they bind to.
-const state = {
-  title: "Caught the papers",
-  setTitle: () => {},
-  body: "## What I did",
-  setBody: () => {},
-} as unknown as EditPraxisState;
+// Only the title is asserted on below; the rest of the composer's state is the
+// fixture's quiet default (#2877).
+const state = anEditPraxisState({ title: "Caught the papers" });
 
 describe("the composer's focus ring", () => {
   it("leaves no unpaired outline suppression in any faction skin", () => {
