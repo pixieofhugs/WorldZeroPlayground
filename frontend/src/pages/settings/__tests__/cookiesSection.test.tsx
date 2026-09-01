@@ -48,7 +48,7 @@ import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
-import { FACTION_SECTION_STORAGE_KEY } from '../../factionDetail/sectionDisclosure'
+import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
 import { sourceFiles } from '../../../test/sourceScan'
@@ -113,8 +113,8 @@ describe('nothing writes to a browser store without being disclosed', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all ten storage entries and the one cookie', () => {
-    expect(names).toHaveLength(11)
+  it('discloses all eleven storage entries and the one cookie', () => {
+    expect(names).toHaveLength(12)
   })
 
   it.each([
@@ -124,7 +124,10 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     ['admin mode', ADMIN_MODE_STORAGE_KEY],
     ['sidebar collapse', SIDEBAR_COLLAPSED_STORAGE_KEY],
     ['sidebar panels', SIDEBAR_PANEL_LAYOUT_STORAGE_KEY],
-    ['faction sections', FACTION_SECTION_STORAGE_KEY],
+    ['faction sections', FACTION_SECTIONS.storageKey],
+    // #2958: one module writes both, so the census above sees one writer and
+    // would stay green with this key undisclosed. Named here on purpose.
+    ['profile sections', PROFILE_SECTIONS.storageKey],
     ['seen invites', SEEN_INVITES_KEY_PREFIX],
     ['last seen level', LAST_SEEN_LEVEL_KEY_PREFIX],
     ['onboarding handoff', ONBOARDING_HANDOFF_KEY],
@@ -132,11 +135,12 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     expect(names).toContain(key)
   })
 
-  it('marks the four families as families, not as single values', () => {
+  it('marks the five families as families, not as single values', () => {
     const families = STORED_ENTRIES.filter((entry) => entry.family).map((entry) => entry.name)
     expect(families).toEqual([
       SIDEBAR_PANEL_LAYOUT_STORAGE_KEY,
-      FACTION_SECTION_STORAGE_KEY,
+      FACTION_SECTIONS.storageKey,
+      PROFILE_SECTIONS.storageKey,
       SEEN_INVITES_KEY_PREFIX,
       LAST_SEEN_LEVEL_KEY_PREFIX,
     ])
@@ -266,7 +270,8 @@ describe('the disclosed list, once opened', () => {
     expect(body).toContain(`${SEEN_INVITES_KEY_PREFIX}[character id]`)
     expect(body).toContain(`${LAST_SEEN_LEVEL_KEY_PREFIX}[character id]`)
     expect(body).toContain(`${SIDEBAR_PANEL_LAYOUT_STORAGE_KEY}[:account id]`)
-    expect(body).toContain(`${FACTION_SECTION_STORAGE_KEY}[:account id]`)
+    expect(body).toContain(`${FACTION_SECTIONS.storageKey}[:account id]`)
+    expect(body).toContain(`${PROFILE_SECTIONS.storageKey}[:account id]`)
   })
 
   it('prints resolved copy beside each key, never a raw catalog path', () => {

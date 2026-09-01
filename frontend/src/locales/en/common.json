@@ -449,6 +449,7 @@
         "sidebarCollapsed": "Whether the side rail is folded away.",
         "sidebarPanels": "The order of the side rail's panels and which are folded. One entry for each account signed in on this browser.",
         "factionSections": "Which galleries on a faction page you left folded. One entry for each account signed in on this browser.",
+        "profileSections": "Which galleries on a character profile you left folded. One entry for each account signed in on this browser.",
         "seenInvites": "Which invitation letters a character has already been shown, so none is announced twice. One entry for each of your characters.",
         "lastSeenLevel": "The last level a character was congratulated on, so the celebration does not repeat. One entry for each of your characters.",
         "onboardingHandoff": "A mark that this tab left for Google or Discord partway through signing up, so you come back where you were."
