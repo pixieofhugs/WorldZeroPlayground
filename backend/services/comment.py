@@ -21,8 +21,8 @@ from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
-from services.character_capabilities import compute_capabilities
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import may_comment
 from services.praxis import account_already_flagged, can_view_praxis
 
 # @handle mentions: word chars matching Character.username. Unresolved handles
@@ -51,13 +51,19 @@ async def can_comment(
     """Whether ``viewer`` may post a comment — the enforcement half of the
     ``can_comment`` flag ``/auth/me`` carries.
 
-    Derived from :func:`services.character_capabilities.compute_capabilities`
-    rather than restated, because restating it is what broke. This used to read
-    the level alone, while the flag the frontend gates the composer on
-    short-circuits to True for admins. An admin below
-    ``era.comment_level_required`` was therefore shown a comment box and got a
-    403 from every submit — which is how a production database reached zero
-    comments with an admin repeatedly trying to leave one.
+    Calls :func:`services.era_gates.may_comment` rather than restating it,
+    because restating it is what broke. This used to read the level alone,
+    while the flag the frontend gates the composer on short-circuits to True
+    for admins. An admin below ``era.comment_level_required`` was therefore
+    shown a comment box and got a 403 from every submit — which is how a
+    production database reached zero comments with an admin repeatedly trying
+    to leave one.
+
+    It used to reach the rule through
+    :func:`services.character_capabilities.compute_capabilities`, which since
+    #2867 only wires character state onto this same predicate. #2868 drops that
+    hop: the flag and this call are now literally the same function, not two
+    readings of one, and this stops computing eight other flags to read one.
 
     That is the same trap :func:`services.praxis.evaluate_signup` is built to
     avoid: one predicate, so the ``can_sign_up`` flag can't drift from
@@ -65,12 +71,12 @@ async def can_comment(
     """
     if viewer is None:
         return False
-    capabilities = compute_capabilities(
+    return may_comment(
         await _character_level(viewer.id, session),
+        viewer.faction_slug,
         await account_has_admin_role(viewer.account_id, session),
         era,
     )
-    return capabilities.can_comment
 
 
 async def get_comment(comment_id: int, session: AsyncSession) -> Comment:

@@ -26,6 +26,7 @@ from models.praxis import Praxis, PraxisStatus
 from models.task import Task, TaskType
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import may_apply_metatask
 from services.faction_service import faction_permits
 from services.meta_task import faction_bypasses_metatask_level, metatask_cap_for_level
 from services.praxis import get_praxis, get_praxis_settling_consensus
@@ -39,18 +40,25 @@ def _check_metatask_eligibility(
 ) -> Optional[str]:
     """Return a 403 reason string if this character can't apply ``task``, else None."""
     # A faction may grant the level bypass (Albescent's charter in both eras);
-    # everyone else must meet metatask_apply_level. Read off `era` via a
-    # purpose-named seam, never branched on a slug (#1871). Metatasks are
-    # faction-open, so the seam `faction_permits` (ADR-0029, #171) currently
-    # permits every faction — the call is retained so a future faction rule is
-    # inherited here automatically.
-    if faction_bypasses_metatask_level(character.faction_slug, era):
-        return None
-    if character_level < era.metatask_apply_level:
+    # everyone else must meet metatask_apply_level. Both halves are one call
+    # (#2868) — :func:`services.era_gates.may_apply_metatask`, the same
+    # predicate behind the ``can_apply_metatask`` flag on ``/auth/me``, which
+    # reads the perk off `era` rather than branching on a slug (#1871). It takes
+    # ``is_admin=False`` because this op has no admin escape hatch: True there
+    # would offer an admin a control this function answers 403 to (#1973).
+    if not may_apply_metatask(
+        character_level, character.faction_slug, False, era
+    ):
         return (
             f"Must be level {era.metatask_apply_level} or above "
             "to apply metatasks."
         )
+    # The bypass factions skip the faction match as well as the level. Metatasks
+    # are faction-open, so the seam `faction_permits` (ADR-0029, #171) currently
+    # permits every faction — the call is retained so a future faction rule is
+    # inherited here automatically.
+    if faction_bypasses_metatask_level(character.faction_slug, era):
+        return None
     if not faction_permits(character, task, era):
         return "This metatask belongs to a different faction."
     return None

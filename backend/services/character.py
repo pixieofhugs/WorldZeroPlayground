@@ -24,6 +24,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.albescent_reveal import is_albescent_revealed
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
+from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
 
 # Status set for the account-scoped roster: a player's own lives, excluding
@@ -206,7 +207,13 @@ async def character_earns_albescent(
             CharacterStats.era_id == era_id,
         )
     )
-    if (level or 0) < era.albescent_level_required:
+    # The level half only — :func:`services.era_gates.meets_albescent_level`
+    # (#2868), the one statement this floor shares with the ceiling at
+    # :func:`services.faction_service.defect_to_faction`, so the two cannot come
+    # to mean different numbers. ``None`` (no stats row for this era) is below
+    # it, which is what ``(level or 0)`` said. The covers-every-faction half
+    # below is session-backed and stays here.
+    if not meets_albescent_level(level, character.faction_slug, False, era):
         return False
     return await _character_covers_every_faction(character, era_id, session, era)
 

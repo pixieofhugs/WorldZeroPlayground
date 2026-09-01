@@ -39,6 +39,7 @@ from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import may_create_duel
 from services.praxis import get_praxis
 from services.praxis_duel import get_duel_for_praxis
 from services.signup_eligibility import (
@@ -311,10 +312,13 @@ async def issue_duel_challenge(
             "The opponent already has an active praxis for this task.",
         )
 
-    # Challenger must meet duel level requirement.
+    # Challenger must meet duel level requirement — one statement of it, in
+    # ``services.era_gates`` (#2868), shared with the accept site below. No
+    # admin or faction bypass exists for duels, so ``is_admin`` is False and
+    # ``faction_slug`` is None (the predicate reads neither).
     era_row = await get_current_era_row(session)
     challenger_stats = await get_or_create_stats(session, challenger_character_id, era_row.id)
-    if challenger_stats.level < era.duel_level_required:
+    if not may_create_duel(challenger_stats.level, None, False, era):
         raise_coded(
             403,
             ErrorCode.duel_level_too_low,
@@ -424,7 +428,7 @@ async def respond_to_duel_challenge(
     # (#292). Do not add a task-level check here without revisiting ADR-0051.
     era_row = await get_current_era_row(session)
     opponent_stats = await get_or_create_stats(session, character_id, era_row.id)
-    if opponent_stats.level < era.duel_level_required:
+    if not may_create_duel(opponent_stats.level, None, False, era):
         raise_coded(
             403,
             ErrorCode.duel_level_too_low,

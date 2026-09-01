@@ -23,6 +23,12 @@ from services.era import (
     get_current_era_row_safe,
     get_or_create_stats,
 )
+from services.era_gates import (
+    may_propose_metatask,
+    may_propose_task,
+    may_see_pending_tasks,
+    may_see_retired_tasks,
+)
 from services.faction_service import hidden_faction_slugs
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
@@ -67,8 +73,14 @@ async def propose_task(
                 detail=f"Invalid task_type: {data.task_type}",
             )
 
+    # ``skip_level_check`` is the admin bypass these two gates take, and it is
+    # what ``era_gates`` calls ``is_admin`` (#2868). The predicates state the
+    # whole gate — bypass included — so there is no ``not skip_level_check and``
+    # left here to fall out of step with the ``/auth/me`` flag.
     if task_type == TaskType.metatask:
-        if not skip_level_check and stats.level < era.level_to_propose_metatask:
+        if not may_propose_metatask(
+            stats.level, character.faction_slug, skip_level_check, era
+        ):
             raise_coded(
                 403,
                 ErrorCode.metatask_proposal_level_too_low,
@@ -81,7 +93,9 @@ async def propose_task(
                 detail="metatask_faction_slug is required for metatask proposals.",
             )
     else:
-        if not skip_level_check and stats.level < era.level_to_propose_task:
+        if not may_propose_task(
+            stats.level, character.faction_slug, skip_level_check, era
+        ):
             raise_coded(
                 403,
                 ErrorCode.task_proposal_level_too_low,
@@ -495,20 +509,6 @@ class TaskSort(str, Enum):
     level = "level"
 
 
-def viewer_sees_pending_tasks(
-    viewer_level: int, is_admin: bool, era: EraConfig = CURRENT_ERA
-) -> bool:
-    """WHO may watch the review queue — the level-3 unlock, admins exempt.
-
-    ``viewer_level`` is ``-1`` for an anonymous caller, who sits below every
-    gate by construction: this is an ability a *character* earns, so there is no
-    level to read. ``is_admin`` bypasses it because the pending queue is the
-    moderation queue (`is_admin` and `skip_level_check` answer different
-    questions — see :func:`list_tasks`).
-    """
-    return is_admin or viewer_level >= era.level_to_see_pending_tasks
-
-
 def pending_visibility_clause(
     viewer_level: int,
     is_admin: bool,
@@ -560,7 +560,13 @@ def pending_visibility_clause(
     # one person who knows better. This is a per-ROW carve-out, not a level, so it
     # rides in the clause with the window rather than becoming another boolean.
     own = false() if viewer_id is None else Task.created_by == viewer_id
-    if viewer_sees_pending_tasks(viewer_level, is_admin, era):
+    # WHO may watch the review queue is :func:`services.era_gates.may_see_pending_tasks`
+    # and nothing else (#2868) — the same call the ``/auth/me`` capability flag
+    # makes, which is what stops a tab being offered that answers nothing
+    # (#1672). ``faction_slug`` is ``None`` because that gate does not read one
+    # (#2863); ``viewer_level`` is ``-1`` for an anonymous caller, which sits
+    # below every floor exactly as the predicate's ``None`` does.
+    if may_see_pending_tasks(viewer_level, None, is_admin, era):
         return or_(
             Task.status != TaskStatus.pending,
             Task.created_at
@@ -731,21 +737,22 @@ async def list_tasks(
     # account and real investment, so pre-moderation proposals stay withheld
     # from the anonymous web while established players see them before an admin
     # has ruled on them.
-    # The faction clause is not an exception to the archive gate, it is the only
-    # way the perk means anything: a faction the era lets work retired tasks
-    # cannot be forbidden from finding them. Without it an Ephemerist below level
-    # 2 lost their faction's entire reason for existing, and the ``can_sign_up``
-    # parity suite catches it. ``services.era.retire_all_tasks`` already names
-    # this interaction — "an era listing a faction in
-    # allow_praxis_on_retired_task_factions leaks a second way, for that faction
-    # only" — so it is stated here rather than left to be rediscovered.
-    viewer_sees_retired = (
-        skip_level_check
-        or viewer_level >= era.level_to_see_retired_tasks
-        or (viewer is not None
-            and viewer.faction_slug in era.allow_praxis_on_retired_task_factions)
+    #
+    # Both are asked of ``services.era_gates`` rather than restated here
+    # (#2868), which is the same call ``/auth/me`` makes for the two capability
+    # flags the UI gates its filter tabs on — so an offered tab and the query
+    # behind it cannot answer differently (#1672). The archive gate's faction
+    # clause lives in the predicate for the same reason: it is not an exception
+    # to the level gate, it is the only way the perk means anything (an
+    # Ephemerist below level 2 otherwise loses their faction's entire reason for
+    # existing, and the ``can_sign_up`` parity suite catches it).
+    viewer_sees_retired = may_see_retired_tasks(
+        viewer_level,
+        viewer.faction_slug if viewer is not None else None,
+        skip_level_check,
+        era,
     )
-    viewer_sees_pending = viewer_sees_pending_tasks(viewer_level, is_admin, era)
+    viewer_sees_pending = may_see_pending_tasks(viewer_level, None, is_admin, era)
 
     # Applied unconditionally here, which is the whole reason the pending rule is
     # a clause: every branch of the status logic below is downstream of this

@@ -37,6 +37,7 @@ from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
 from services.level_jump import available_level_reach
 
@@ -552,16 +553,21 @@ def allowed_praxis_modes(
     :class:`~schemas.task.TaskOut` both derive from this list.
 
     - Solo: always allowed once a viewer is authenticated.
-    - Collab: requires ``character_level >= era.collaboration_level_required``.
+    - Collab: :func:`services.era_gates.may_create_collab_praxis`.
     - Duel: issued via the challenge endpoint (ADR-0011), not direct creation.
 
     Anonymous viewers (``character is None``) receive an empty list so the
     UI can hide the mode picker entirely.
+
+    The collab threshold is asked of :func:`services.era_gates.may_create_collab_praxis`
+    rather than restated (#2868), so this list and the re-ask in
+    :func:`services.praxis.change_praxis_type` cannot come to mean different
+    levels. That gate has no admin or faction bypass, hence ``False``/``None``.
     """
     if character is None:
         return []
     modes: list[PraxisType] = [PraxisType.solo]
-    if character_level >= era.collaboration_level_required:
+    if may_create_collab_praxis(character_level, character.faction_slug, False, era):
         modes.append(PraxisType.collab)
     return modes
 
