@@ -38,6 +38,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../i18n'
 import type { EditPraxisState } from '../../pages/editPraxis/useEditPraxis'
+import { anEditPraxisState } from '../../test/fixtures'
 import type { TaskOut } from '../../api/tasks'
 import type { PraxisMemberOut } from '../../api/praxis'
 
@@ -101,23 +102,15 @@ function metatask(id: number, slug: string, title: string): TaskOut {
 
 const ROW = metatask(1, 'wow', 'Googly Eyes')
 
+// One row, the seal open and offered. Everything else is the fixture's quiet
+// default (#2877).
 function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
-  return {
+  return anEditPraxisState({
     metatasks: [ROW],
-    appliedMetatasks: new Set<number>(),
-    appliedMetataskList: [],
-    applyingMetatask: null,
     canSealMetatask: true,
     metataskPickerOpen: true,
-    metataskRemovalTarget: null,
-    addMetatask: async () => {},
-    openMetataskPicker: () => {},
-    closeMetataskPicker: () => {},
-    requestRemoveMetatask: () => {},
-    confirmRemoveMetatask: async () => {},
-    cancelRemoveMetatask: () => {},
     ...partial,
-  } as unknown as EditPraxisState
+  })
 }
 
 const MEMBERS: PraxisMemberOut[] = [
