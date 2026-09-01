@@ -3,9 +3,10 @@
  *
  * `selectDuelTask` has been wrong twice and both times the failure surfaced as
  * something else: once as a missing task with nothing in it about eras (#2710,
- * it pinned a faction slug the era no longer carried), and once as a seal
- * dialog whose copy did not match (`wow` overrides it). It is three predicates
- * and it decides which three archetypes the whole duel suite drives.
+ * it pinned a faction slug the era no longer carried), and once as an
+ * exclusion that steered every fixture away from WOW for a seal-copy override
+ * #1909 had already deleted (#2999). It selects on properties, never a slug
+ * (#2710): at or below the duel level, and belonging to some faction.
  */
 import { describe, it, expect } from 'vitest'
 import { aTask } from '../../test/fixtures'
@@ -22,7 +23,6 @@ describe('selectDuelTask', () => {
       selectDuelTask([
         faction({ id: 1, level_required: DUEL_LEVEL + 1 }),
         faction({ id: 2, primary_faction_slug: 'na' }),
-        faction({ id: 3, primary_faction_slug: 'wow' }),
         wanted,
       ]),
     ).toBe(wanted)
@@ -34,8 +34,12 @@ describe('selectDuelTask', () => {
     expect(() => selectDuelTask([faction({ primary_faction_slug: 'na' })])).toThrow(/seed\.py/)
   })
 
-  it('skips the one faction that rewrites the seal copy the specs assert on', () => {
-    expect(() => selectDuelTask([faction({ primary_faction_slug: 'wow' })])).toThrow(/seed\.py/)
+  it('selects a WOW-skinned task like any other faction (#2999)', () => {
+    // WOW no longer overrides the duel-seal copy — #1909 deleted the last
+    // per-faction override, so WOW takes `useDuelSealCopy` like every other
+    // skin and is not an exclusion here.
+    const wanted = faction({ primary_faction_slug: 'wow' })
+    expect(selectDuelTask([wanted])).toBe(wanted)
   })
 
   it('skips a task above the duel level, which the challenger cannot attempt', () => {
