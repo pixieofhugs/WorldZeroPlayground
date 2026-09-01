@@ -1174,6 +1174,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/notification-prefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Notification Prefs
+         * @description This account's notification switches, resolved (#1047).
+         *
+         *     Always all nine rows: an account whose column is still ``{}`` gets every
+         *     default, so a client never has to know what a default is. Per ACCOUNT, not
+         *     per character — no character is resolved here at all.
+         *
+         *     ``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164
+         *     honours these values when the channel goes live, and the settings card says
+         *     so in copy. ``on_updates`` is live behaviour — see the activity feed.
+         */
+        get: operations["my_notification_prefs_me_notification_prefs_get"];
+        /**
+         * Save My Notification Prefs
+         * @description Save some or all of the switches; answer with the resolved result.
+         *
+         *     Partial by ROW and whole by row: send the rows that changed, each with both
+         *     of its switches. Unknown event keys are dropped and a locked row's
+         *     ``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority
+         *     on what was actually stored — a client that sent a locked
+         *     ``on_updates: false`` sees it come back ``true`` rather than believing the
+         *     write landed.
+         *
+         *     The whole dict is reassigned rather than mutated in place: SQLAlchemy does
+         *     not track mutation *inside* a JSON value, so an in-place edit would flush
+         *     nothing and the save would silently do nothing.
+         */
+        put: operations["save_my_notification_prefs_me_notification_prefs_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/sidebar": {
         parameters: {
             query?: never;
@@ -3792,6 +3835,62 @@ export interface components {
          * @enum {string}
          */
         ModerationStatus: "visible" | "flagged" | "hidden" | "failed" | "deleted";
+        /**
+         * NotificationPrefIn
+         * @description One row's two switches as a client sends them.
+         *
+         *     Both required: this is a whole-row write, not a patch, so a client that
+         *     sends half a row is a client that has lost track of the other switch.
+         *     ``page`` on a locked row is accepted and then ignored — see ``apply_update``.
+         */
+        NotificationPrefIn: {
+            /** By Email */
+            by_email: boolean;
+            /** On Updates */
+            on_updates: boolean;
+        };
+        /**
+         * NotificationPrefOut
+         * @description One row's two switches, resolved — never the raw stored object.
+         *
+         *     ``locked`` is sent rather than re-derived client-side. The rule behind it
+         *     is "is this type in the requests section", and that set lives in
+         *     ``FEED_SOURCES``; a client deriving it would be a second copy of a rule
+         *     whose whole point (owner ruling 2026-08-19) is that a *tenth* request type
+         *     cannot be silently unlocked.
+         */
+        NotificationPrefOut: {
+            /** By Email */
+            by_email: boolean;
+            /** Locked */
+            locked: boolean;
+            /** On Updates */
+            on_updates: boolean;
+        };
+        /**
+         * NotificationPrefsIn
+         * @description A save. Partial by row — a client may send one row or all nine.
+         *
+         *     Keys the registry does not know are DROPPED rather than rejected: it keeps
+         *     a hostile client from growing the column without bound, and it keeps a
+         *     stale client naming a retired event from failing a preferences save.
+         */
+        NotificationPrefsIn: {
+            /** Events */
+            events: {
+                [key: string]: components["schemas"]["NotificationPrefIn"];
+            };
+        };
+        /**
+         * NotificationPrefsOut
+         * @description Every row, keyed by event. Unset keys have already become defaults.
+         */
+        NotificationPrefsOut: {
+            /** Events */
+            events: {
+                [key: string]: components["schemas"]["NotificationPrefOut"];
+            };
+        };
         /** NudgeItem */
         NudgeItem: {
             /** Actor Avatar Url */
@@ -6707,6 +6806,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_notification_prefs_me_notification_prefs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPrefsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_my_notification_prefs_me_notification_prefs_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPrefsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPrefsOut"];
                 };
             };
             /** @description Validation Error */

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db, get_session_factory
 from dependencies import get_current_character
+from models.account import Account
 from models.character import Character
 from schemas.activity_feed import (
     ActivityFeedResponse,
@@ -23,6 +24,8 @@ from services.activity_feed import (
     restore_feed_item,
     restore_feed_items_for_filter,
 )
+from services.auth import get_current_account
+from services.notification_prefs import muted_feed_types
 
 router = APIRouter()
 
@@ -35,6 +38,13 @@ async def activity_feed(
     limit: int = Query(20, ge=1, le=100),
     archived: bool = Query(False),
     character: Character = Depends(get_current_character),
+    # FREE. `get_current_character` already depends on this, and FastAPI caches
+    # a dependency's result per request — so the account arrives without a
+    # second statement. The feed load is pinned to an exact statement count by
+    # `test_activity_feed_query_count.py`; a `select(Account.notification_prefs)`
+    # here would have been a real extra round trip on every Updates page load,
+    # for a column the request has already read.
+    account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db),
     session_factory: Callable = Depends(get_session_factory),
 ) -> ActivityFeedResponse:
@@ -66,6 +76,11 @@ async def activity_feed(
         limit=limit,
         archived=archived,
         item_types=types,
+        # The account's "show on Updates" switches (#1047). ACCOUNT-scoped
+        # while the feed is character-scoped, which is the issue's founding
+        # sentence: someone who wants fewer rows wants fewer rows on every
+        # life they carry.
+        muted_types=muted_feed_types(account.notification_prefs),
     )
     return ActivityFeedResponse.model_validate(asdict(dc_response))
 

@@ -16,6 +16,11 @@ from models.praxis import PraxisStatus
 from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
 from schemas.auth import CurrentUser
 from schemas.character import ActiveCharacterIn, CharacterOut
+from schemas.notification_prefs import (
+    NotificationPrefOut,
+    NotificationPrefsIn,
+    NotificationPrefsOut,
+)
 from schemas.sidebar import SidebarOut
 from services.account_deletion import delete_account
 from services.activity_feed import get_sidebar_feed
@@ -30,6 +35,7 @@ from services.character import (
 from services.current_user import build_current_user
 from services.data_export import build_account_export
 from services.data_export import stream as export_stream
+from services.notification_prefs import apply_update, muted_feed_types, resolve_prefs
 from services.praxis import list_praxes
 from services.praxis_out import build_praxis_cards
 
@@ -75,6 +81,69 @@ async def delete_my_account(
     flags stay stated in exactly one place.
     """
     await delete_account(account.id, session)
+
+
+def _prefs_out(raw: object) -> NotificationPrefsOut:
+    """The stored column as the wire shape.
+
+    Both routes answer through this, so a save can never report a different
+    resolution from the read beside it.
+    """
+    return NotificationPrefsOut(
+        events={
+            key: NotificationPrefOut(
+                on_updates=pref.on_updates, by_email=pref.by_email, locked=pref.locked
+            )
+            for key, pref in resolve_prefs(raw).items()
+        }
+    )
+
+
+@router.get("/notification-prefs", response_model=NotificationPrefsOut)
+async def my_notification_prefs(
+    account: Account = Depends(get_current_account),
+) -> NotificationPrefsOut:
+    """This account's notification switches, resolved (#1047).
+
+    Always all nine rows: an account whose column is still ``{}`` gets every
+    default, so a client never has to know what a default is. Per ACCOUNT, not
+    per character — no character is resolved here at all.
+
+    ``by_email`` is stored INTENT. Nothing in ``backend/`` sends email; #2164
+    honours these values when the channel goes live, and the settings card says
+    so in copy. ``on_updates`` is live behaviour — see the activity feed.
+    """
+    return _prefs_out(account.notification_prefs)
+
+
+@router.put("/notification-prefs", response_model=NotificationPrefsOut)
+async def save_my_notification_prefs(
+    body: NotificationPrefsIn,
+    account: Account = Depends(get_current_account),
+    session: AsyncSession = Depends(get_db),
+) -> NotificationPrefsOut:
+    """Save some or all of the switches; answer with the resolved result.
+
+    Partial by ROW and whole by row: send the rows that changed, each with both
+    of its switches. Unknown event keys are dropped and a locked row's
+    ``on_updates`` is ignored (``apply_update``), so the ANSWER is the authority
+    on what was actually stored — a client that sent a locked
+    ``on_updates: false`` sees it come back ``true`` rather than believing the
+    write landed.
+
+    The whole dict is reassigned rather than mutated in place: SQLAlchemy does
+    not track mutation *inside* a JSON value, so an in-place edit would flush
+    nothing and the save would silently do nothing.
+    """
+    account.notification_prefs = apply_update(
+        account.notification_prefs,
+        {
+            key: {"on_updates": row.on_updates, "by_email": row.by_email}
+            for key, row in body.events.items()
+        },
+    )
+    await session.commit()
+    return _prefs_out(account.notification_prefs)
 
 
 @router.get("/invited-factions", response_model=list[str])
@@ -169,6 +238,10 @@ async def my_sidebar(
         character_id=character.id,
         session=session,
         session_factory=session_factory,
+        # The rail's activity panel is a window onto the same feed, so it
+        # honours the same switches (#1047). The request COUNT beside it is
+        # untouchable by them — `_visible_types` enforces that, not this call.
+        muted=muted_feed_types(account.notification_prefs),
     )
     # Membership-scoped, not authorship: an accepted collab invite is in-flight
     # work too, and the slot count it sits under counts memberships.
