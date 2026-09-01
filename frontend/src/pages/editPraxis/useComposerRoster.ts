@@ -22,6 +22,11 @@
  * open, and a nudge aimed at a rival has to reach THEIR side of the duel
  * (ADR-0011). An input with a name, not a setter to write through.
  *
+ * The `setError("")` each of these actions used to fire before its request is
+ * gone with the setter, exactly as in #2879: a success arm clears the line
+ * where it lands (`applyOutcome`), so a stale message now survives until the
+ * call that replaces it answers rather than until the button is pressed.
+ *
  * It reads `useAuth()` directly rather than taking the viewer as a parameter,
  * which is what keeps its three effects inside the #1390 ratchet
  * (`hooks/__tests__/authDepNarrowing.test.ts`): they key on
