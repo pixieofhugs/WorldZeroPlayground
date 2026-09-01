@@ -122,8 +122,8 @@
  * `proposalNotes.test.tsx` still owns that seam.
  */
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { CovenSigil } from '../../../components/sigil/CovenSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
@@ -414,28 +414,24 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   ]
 
   return (
-    <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
+    <ComposerPage
+      sizes={sizes}
+      style={{ fontFamily: CHROME, color: INK }}
+      /* THE CRUMB LEFT THE SHEET (#2973). It rode inside, in the slip's own
+         label ink, on the argument that the slot above sits on the app's
+         `--color-bg-page` and no Coven ink is measured there. That is true of
+         Coven ink and beside the point: a breadcrumb is not Coven's, it is
+         neutral site chrome measured on exactly that ground, and #2102 rule 2
+         says so in terms. The trail a player follows between a Coven task and a
+         Singularity one may not move house on the way. */
+      breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
+    >
       {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
           Enter commit from a text field, and what gives the browser's own
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
-          {/* The crumb rides INSIDE the sheet rather than in `ComposerPage`'s
-              breadcrumb slot. That slot sits above the sheet on the app's own
-              `--color-bg-page`, which is a ground no Coven ink is measured on —
-              the finding `CovenEditCharacter` made from the other direction when
-              it moved its tail OFF the slip to reach the register its neutral
-              slots were priced in. Here the type is the faction's, so the sheet
-              is the ground that is already answered. */}
-          <nav style={{ fontFamily: CHROME, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', color: LABEL }}>
-            <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-              {t('breadcrumb.tasks')}
-            </Link>
-            {' › '}
-            <span style={{ color: INK }}>{t('proposeTask.pageTitle')}</span>
-          </nav>
-
           <h1
             style={{
               fontFamily: DISPLAY,

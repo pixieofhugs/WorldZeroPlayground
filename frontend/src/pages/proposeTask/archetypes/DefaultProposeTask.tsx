@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Breadcrumb from "../../../components/nav/Breadcrumb";
 import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
 import { Chip } from "../../../components/ui/ChipRow";
@@ -26,12 +26,6 @@ import {
 } from "../useProposeTask";
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-
-const breadcrumbStyle: CSSProperties = {
-  fontSize: "var(--text-md)",
-  letterSpacing: "0.1em",
-  color: "var(--color-text-tertiary)",
-};
 
 const descriptionTextareaStyle: CSSProperties = {
   width: "100%",
@@ -234,19 +228,10 @@ export default function DefaultProposeTask({
 
   return (
     <div className="py-8">
-      {/* Breadcrumb */}
-      <nav
-        className="font-body mb-4"
-        style={breadcrumbStyle}
-      >
-        <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
-          {t("breadcrumb.tasks")}
-        </Link>
-        {" › "}
-        <span style={{ color: "var(--color-text-primary)" }}>
-          {t("proposeTask.pageTitle")}
-        </span>
-      </nav>
+      {/* The site's one trail (#2102), first child of the page root. This was
+          the original hand-rolled hold-out — the shared component could not
+          say a trail with no task until #2973 gave it one. */}
+      <Breadcrumb current={t("proposeTask.pageTitle")} />
 
       <PageTitle title={t("proposeTask.pageTitle")} />
       <div aria-hidden="true" style={titleRuleStyle} />
