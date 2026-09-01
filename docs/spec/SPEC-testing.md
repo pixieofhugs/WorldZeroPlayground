@@ -36,6 +36,113 @@ def test_level_1_threshold():
 For live examples read `backend/tests/unit/` (`test_scoring.py`, `test_era_config.py`, …)
 rather than trusting inlined snippets, which drift from the real service signatures.
 
+## The frontend unit suite
+
+The largest body of test code in the repo, and the one with the tightest constraint.
+
+### The harness — stated once
+
+Vitest runs in the **`node` environment**: `frontend/vite.config.ts` declares no
+`environment`, so there is no DOM — no `document`, no layout, no browser APIs.
+Components are rendered with `renderToStaticMarkup` and asserted against the resulting
+HTML string, usually with `toContain()`. **Effects never run**, so nothing in this suite
+exercises a fetch, a subscription, a focus move, or a cleanup-on-unmount.
+
+That is the whole constraint. A test file that needs to explain why it cannot watch a
+component *do* something should cite this section rather than restate it.
+
+### The three classes of invariant
+
+Ruled in #2864. Every frontend invariant is one of three classes, and each has one home:
+
+| class | what it is | home |
+|---|---|---|
+| **structure** | markup — what renders, with what text, in what order | the `renderToStaticMarkup` + `toContain()` harness above. It is the right tool for this. |
+| **behaviour** | effects, request plans, ordering, conditional fetches | **extracted as a value** and asserted directly — see below |
+| **geometry** | layout, computed style, contrast ratios, pixel measurement | the rendered sweep / Playwright (#2888) |
+
+### Behaviour is reached by extracting a value, not by reaching for a DOM
+
+Where a component's behaviour is only observable by running an effect, the effect's
+*decision* — which requests, in what order, under what condition — becomes a plain value
+the component consumes. That value is directly assertable in the harness that already
+exists.
+
+`pages/editPraxis/initialLoadPlan.ts` is the reference implementation (#2881): the
+composer's mount-time load became `planInitialLoad`, and
+`pages/editPraxis/__tests__/composerWaterfall.test.ts` drives it directly. The next such
+extraction copies that shape rather than inventing one.
+
+**Source-text assertion is banned as a way of reaching runtime behaviour.** Slicing a
+hook's source between a comment banner and a dependency-array prefix makes a comment
+load-bearing: rename either boundary and the slice silently empties, and every assertion
+passes on air. `composerWaterfall.test.ts` did exactly that before #2881; its docblock
+records the before and the after. Where a test wants such an invariant, the fix is to
+extract the plan — not to write a guard-the-guard test around the slice.
+
+What the ban does **not** cover:
+
+- It is a rule for **new** tests. The files that already read their own source are not
+  swept; the ones in scope convert as their surface is touched.
+- It does not touch the **source-scan repo rules** — `rawColourRule`, `factionInkRule`,
+  the `src/test/sourceScan.ts` guards. Those are *structure* rules about the shape of the
+  tree, not behaviour, and they stay.
+- Where a behavioural claim has no value seam at all, the residue stays source-reading
+  and says so loudly. `pages/editPraxis/__tests__/composerMountSourceScan.test.ts` is
+  what the #2881 conversion left behind: two claims with no plan to extract, kept with
+  the comment-bounded slice removed and the guard-the-guard retained.
+
+### `src/test/sourceScan.ts` is the only walk
+
+A source-scanning guard answers a question no render can: *does any file, anywhere under
+`frontend/src`, still reach for X?* The offending line usually sits in a branch no
+fixture reaches, so one scan covers every surface, present and future, without
+instantiating any of them.
+
+**Do not re-derive that walk.** `src/test/sourceScan.ts` owns the directory traversal,
+the comment stripper, the path relativiser and `resolveRoleReads()`. A new guard supplies
+only its *predicate*, which is the only part that was ever different.
+(See #2885, #2886, #2887.)
+
+### ESLint rule, or vitest guard?
+
+Both mechanisms are load-bearing. They answer different shapes of question:
+
+- Reach for an **ESLint rule** when the invariant is a property of **one file, visible in
+  that file's AST**, and you want it enforced in the editor as it is typed — and
+  especially when an existing population has to be migrated off it. `eslint.config.js` is
+  where the shrink-only ratchet machinery lives (`.eslint-legacy-raw-styles.txt`,
+  `.eslint-legacy-raw-colours.txt`, `.eslint-legacy-faction-ink.txt`); note that a ratchet
+  entry turns a whole *rule* off for a file, so two arms must never share a rule id.
+- Reach for a **vitest source-scan guard** when the question is about **the tree as a
+  whole** — "does anything, anywhere, still do X", a relationship between files, or a
+  comparison against rendered output. That is not expressible per-file, so it is not an
+  ESLint rule.
+
+### No DOM environment — and the trigger that would change that
+
+`jsdom`/`happy-dom` is **deferred, not refused** (#2864). It does no layout, so it
+catches none of the geometry failures that are actually shipping green; the suite mocks
+`useFormFactor` in enough files that a real DOM is not opt-in-per-file in practice; and it
+is a new dependency and an environment split, bought for a capability — clicks, focus,
+cleanup-on-unmount — that nothing is currently blocked on.
+
+The named trigger for revisiting it:
+
+> Revisit the DOM environment when a bug ships that a value-extraction test structurally
+> could not have caught — one whose root cause is a click, a focus move, a subscription
+> or a cleanup-on-unmount, rather than a request plan or a piece of markup.
+
+**The ceiling, stated plainly.** Value-extraction does not test interaction. Nothing in
+the unit harness will exercise a click. That gap is accepted and named, and Playwright
+owns it — with the standing caveat that the e2e suite is currently red (#2453, #2463,
+epic #1674), so "Playwright owns it" only becomes true when the nightly goes green.
+
+### Faction architecture
+
+Adding or changing a faction has its own procedure and its own checklist; it is not
+repeated here. Read `docs/spec/SPEC-faction-ui-profile.md` §4 (#2719).
+
 ## Running e2e (Playwright lifecycle suites)
 
 Browser end-to-end tests live in `frontend/e2e/` (`playwright.config.ts` next to
