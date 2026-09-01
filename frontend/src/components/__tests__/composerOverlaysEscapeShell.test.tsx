@@ -130,7 +130,7 @@ const OVERLAYS: [name: string, render: () => string][] = [
     () =>
       renderToStaticMarkup(
         <MemoryRouter>
-          <MetataskPicker state={mkState({})} />
+          <MetataskPicker {...mkState({})} />
         </MemoryRouter>,
       ),
   ],
@@ -138,7 +138,7 @@ const OVERLAYS: [name: string, render: () => string][] = [
     'MetataskRemoveConfirm',
     () =>
       renderToStaticMarkup(
-        <MetataskRemoveConfirm state={mkState({ metataskRemovalTarget: ROW })} />,
+        <MetataskRemoveConfirm {...mkState({ metataskRemovalTarget: ROW })} />,
       ),
   ],
   [
@@ -197,7 +197,7 @@ describe('MetataskPicker on a phone', () => {
     // home indicator on every notched phone.
     const html = renderToStaticMarkup(
       <MemoryRouter>
-        <MetataskPicker state={mkState({})} />
+        <MetataskPicker {...mkState({})} />
       </MemoryRouter>,
     )
     expect(html).toContain('env(safe-area-inset-bottom)')

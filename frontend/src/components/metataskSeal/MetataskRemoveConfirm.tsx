@@ -5,11 +5,11 @@
  * Removing a seal is always allowed pre-submit, so this is a gentle guard, not a
  * consequence dialog like the duel seal. Desktop gets a small centred card;
  * mobile gets a bottom confirm sheet (`useFormFactor()`). Confirming calls
- * `state.confirmRemoveMetatask()` (→ `removeMetatask`), returning the praxis to
+ * `confirmRemoveMetatask()` (→ `removeMetatask`), returning the praxis to
  * the empty-slot "+ Add" state.
  *
  * Mounted once from the EditPraxis dispatcher, so every composer surface shares
- * it. The target faction/points come from `state.metataskRemovalTarget`.
+ * it. The target faction/points come from `metataskRemovalTarget`.
  */
 import { useTranslation } from "react-i18next";
 import { drawAtRoot } from "../ui/drawAtRoot";
@@ -18,17 +18,24 @@ import { factionName } from "../../utils/factions";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 export default function MetataskRemoveConfirm({
-  state,
-}: {
-  state: EditPraxisState;
-}) {
+  metataskRemovalTarget,
+  applyingMetatask,
+  confirmRemoveMetatask,
+  cancelRemoveMetatask,
+}: Pick<
+  EditPraxisState,
+  | "metataskRemovalTarget"
+  | "applyingMetatask"
+  | "confirmRemoveMetatask"
+  | "cancelRemoveMetatask"
+>) {
   const { t } = useTranslation("forms");
   const isMobile = useFormFactor() === "mobile";
-  const target = state.metataskRemovalTarget;
+  const target = metataskRemovalTarget;
   if (!target) return null;
 
   const faction = factionName(target.metatask_faction_slug);
-  const busy = state.applyingMetatask === target.id;
+  const busy = applyingMetatask === target.id;
 
   // Drawn at the root (#2244): a bottom sheet under a fixed tab bar is a sheet
   // whose confirm button cannot be pressed. See `drawAtRoot`.
@@ -84,7 +91,7 @@ export default function MetataskRemoveConfirm({
         >
           <button
             type="button"
-            onClick={state.cancelRemoveMetatask}
+            onClick={cancelRemoveMetatask}
             className="font-body"
             style={{
               fontSize: "var(--text-md)",
@@ -101,7 +108,7 @@ export default function MetataskRemoveConfirm({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void state.confirmRemoveMetatask()}
+            onClick={() => void confirmRemoveMetatask()}
             className="font-body"
             style={{
               fontSize: "var(--text-md)",

@@ -162,7 +162,17 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
   // `EditorView.theme` rule and a base-theme rule of equal specificity are
   // separated only by mount order, and this module mounts after the base theme.
   // (0,2,0) here therefore beats the base theme's (0,2,0).
-  ".cm-cursor": { borderLeftColor: "currentColor" },
+  //
+  // `minHeight` is the empty-document floor (#2970). The drawn cursor is sized
+  // from the TEXT NODE's box (see the docblock on `BODY_EDITOR_SELECTION`), and
+  // an empty write-up has no text node — the line holds only the placeholder
+  // widget — so `RectangleMarker` builds the marker at ~zero height and it
+  // paints nothing until the first keystroke. `min-height` only ever raises the
+  // inline `height` the marker writes, so it is a floor: a measured caret on a
+  // line with text is untouched. `1em` resolves against `.cm-content`'s own
+  // font-size, i.e. the text height this whole mechanism is about — a
+  // line-height basis here would be the #1852 regression coming back.
+  ".cm-cursor": { borderLeftColor: "currentColor", minHeight: "1em" },
 
   // The selection background base-themes to `#d9d9d9`/`#222` unfocused and
   // `#d7d4f0`/`#233` focused — code-editor greys and an indigo, on eight
@@ -244,6 +254,14 @@ const BODY_EDITOR_SKIN_THEME = EditorView.theme({
  * it is text-height by construction. No magic number, and nothing to re-tune
  * when a skin's line-height moves. The skins' line-heights are the body copy's
  * reading measure and were not the bug.
+ *
+ * That basis has one edge case, found on prod (#2970): a text node is a thing
+ * an EMPTY document does not have. The composer opens empty and the line holds
+ * only the placeholder widget, so `coordsAtPos` measures ~nothing, the marker
+ * is built at ~zero height, and clicking into the box put no visible caret in
+ * it until the first keystroke created a text node. The measurement stays the
+ * basis; the `min-height: 1em` floor on `.cm-cursor` above only catches the
+ * case where there is nothing to measure.
  *
  * Shipped WITH the theme rather than beside it in the extension list, because
  * the two halves are inert apart: `drawSelection()` alone drops CodeMirror's

@@ -69,7 +69,7 @@ describe("MetataskSealStack", () => {
   it("shows the '+ Add a metatask' slot for an eligible, empty praxis", () => {
     const html = render(
       <MetataskSealStack
-        state={mkState({ canSealMetatask: true, appliedMetataskList: [] })}
+        {...mkState({ canSealMetatask: true, appliedMetataskList: [] })}
       />,
     );
     expect(html).toContain(addLabel);
@@ -81,7 +81,7 @@ describe("MetataskSealStack", () => {
     const applied = metatask(9, "na", "Cite a source", 50);
     const html = render(
       <MetataskSealStack
-        state={mkState({
+        {...mkState({
           canSealMetatask: false,
           appliedMetataskList: [applied],
         })}
@@ -98,7 +98,7 @@ describe("MetataskSealStack", () => {
     const applied = metatask(9, "snide", "Cite a source", 50);
     const html = render(
       <MetataskSealStack
-        state={mkState({
+        {...mkState({
           canSealMetatask: true,
           appliedMetataskList: [applied],
         })}
@@ -117,7 +117,7 @@ describe("MetataskPicker", () => {
   it("renders the neutral header, both eligible rows, and the All filter", () => {
     const html = render(
       <MetataskPicker
-        state={mkState({ metatasks: rows, metataskPickerOpen: true })}
+        {...mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
     );
     expect(html).toContain(i18n.t("editPraxis.attach.pickerTitle", { ns: "forms" }));
@@ -129,7 +129,7 @@ describe("MetataskPicker", () => {
   it("marks an already-sealed row as Sealed", () => {
     const html = render(
       <MetataskPicker
-        state={mkState({
+        {...mkState({
           metatasks: rows,
           appliedMetatasks: new Set([1]),
           metataskPickerOpen: true,
@@ -145,7 +145,7 @@ describe("MetataskPicker", () => {
   it("prints a refused attach inside the sheet", () => {
     const html = render(
       <MetataskPicker
-        state={mkState({
+        {...mkState({
           metatasks: rows,
           metataskPickerOpen: true,
           error: "You can only apply 3 metatasks.",
@@ -159,7 +159,7 @@ describe("MetataskPicker", () => {
   it("draws no banner when nothing has been refused", () => {
     const html = render(
       <MetataskPicker
-        state={mkState({ metatasks: rows, metataskPickerOpen: true })}
+        {...mkState({ metatasks: rows, metataskPickerOpen: true })}
       />,
     );
     expect(html).not.toContain('role="alert"');
@@ -169,7 +169,7 @@ describe("MetataskPicker", () => {
 describe("MetataskRemoveConfirm", () => {
   it("renders nothing when there is no removal target", () => {
     const html = render(
-      <MetataskRemoveConfirm state={mkState({ metataskRemovalTarget: null })} />,
+      <MetataskRemoveConfirm {...mkState({ metataskRemovalTarget: null })} />,
     );
     expect(html).toBe("");
   });
@@ -178,7 +178,7 @@ describe("MetataskRemoveConfirm", () => {
     const target = metatask(7, "coven", "Bless the work", 60);
     const html = render(
       <MetataskRemoveConfirm
-        state={mkState({ metataskRemovalTarget: target })}
+        {...mkState({ metataskRemovalTarget: target })}
       />,
     );
     expect(html).toContain(i18n.t("editPraxis.attach.removeTitle", { ns: "forms" }));

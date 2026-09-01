@@ -464,10 +464,22 @@ const PULL_FALLOFF = 620;
  * flattest where a field or a panel covers the ground, so what you see of the
  * field is exactly what the layout does not use.
  *
- * `width` is the sheet's nominal width — the well's position is measured from
- * its right edge. The canvas is anchored to that edge (`xMaxYMin slice`), so a
- * viewport wider than the nominal keeps the well where it belongs and scales
- * the rows up rather than stranding them mid-sheet.
+ * `width` is the sheet's NOMINAL width, and only that: it sets the viewBox span
+ * and measures the well in from the canvas's right edge. It is not the width
+ * the element renders at — `width: calc(100% + WELL_MARGIN)` takes that from
+ * the container, so the canvas is anchored to the sheet's right edge
+ * (`xMaxYMin slice`) and a sheet wider than the nominal keeps the well where it
+ * belongs and scales the rows up rather than stranding them mid-sheet.
+ *
+ * THAT EXPLICIT WIDTH IS LOAD-BEARING (#2957), and it is one declaration you
+ * cannot drop back to an offset pair. An `<svg>` is a REPLACED element, so
+ * `width: auto` resolves to its INTRINSIC width — the viewBox span — rather
+ * than from `left`/`right`, which are then over-constrained and `right` is
+ * dropped. This element used to be laid out that way, and every consequence
+ * above failed silently: measured in prod a 394-nominal field drew 434px wide
+ * on a 624px card (0.696 of it, the rest bare ground), `slice` never scaled
+ * anything because the element always matched its own viewBox, and on a card
+ * narrower than the span the well was cropped off entirely.
  *
  * DEVIATION, named: the design's canvas stops at 1500px because its own preview
  * sheet does. A composer's sheet grows with what you write, and a field that
@@ -500,7 +512,7 @@ export function GravityField({ width, height }: { width: number; height: number 
         position: "absolute",
         top: 0,
         left: 0,
-        right: -WELL_MARGIN,
+        width: `calc(100% + ${WELL_MARGIN}px)`,
         height,
         pointerEvents: "none",
       }}
