@@ -91,6 +91,12 @@ PLAYERS = [
     # is an own-faction one and `collab_own_modifier` is the multiplier read.
     ("demo_kettle", "Kettle", None),
     ("demo_thimble", "Thimble", None),
+    # Appended for the same reason, after the collab pair (#2895): Coven had no
+    # DEMOS author. Its coverage used to come from the collab fixture, which was
+    # pinned to `coven` until #2710 de-pinned it onto the era's third real slug
+    # — `wow` for Era 1, which DEMOS already covered — so Coven went to zero
+    # without anything failing.
+    ("demo_hazel", "Hazel", "coven"),
 ]
 
 # faction -> (author_username, title, body, type, [stars from other players])
@@ -104,6 +110,10 @@ DEMOS = {
     "wow": ("demo_marigold", "Threw a stranger a parade",
                 "Confetti, a kazoo, one very confused commuter. The bus stop will never recover.",
                 PraxisType.solo, [5, 4, 5]),
+    "coven": ("demo_hazel", "Left a tin on every landing",
+              "Baked all afternoon, wrote nine notes. Three tins came back "
+              "with notes already in them.",
+              PraxisType.solo, [5, 4, 5]),
     "snide": ("demo_riot", "Flyposted the quiet block",
               "Stuck it where they said not to. Allegedly.",
               PraxisType.solo, [3, 4, 2]),
