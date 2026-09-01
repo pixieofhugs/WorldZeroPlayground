@@ -13,24 +13,26 @@
  * second name for one measurement, which that file spends a paragraph warning
  * against.
  *
- * What is left is the delta, and it is three rows:
+ * What is left is the delta, and it is two rows:
  *
- *  1. THE TRAIL, which stands on the SITE's page rather than on the leaf. The na
- *     kit draws it in the app's own tertiary ink; this kit draws it in its own
- *     quiet tier, and the tier arm's whole point is that a faction ink on a
- *     ground it was not measured against is where this goes wrong. The route
- *     declares no faction backdrop — `useFactionBackdrop` has exactly one caller
- *     and it is `CharacterProfile` — so the ground is `--color-bg-page` under
- *     the neutral spectrum wash, the same composite the na kit's own tails are
- *     measured on.
+ * THE TRAIL WAS THE THIRD AND IS GONE (#2973). It measured this kit's quiet tier
+ * on the SITE's washed page, because the archetype drew the crumb in
+ * `--faction-ua-card-body` — a faction ink on a ground it was never priced
+ * against, which is the tier arm's whole subject. The archetype now mounts
+ * `components/nav/Breadcrumb`, so the ink is the app's own tertiary and the
+ * pairing is already measured, on this exact composite and in both themes, by
+ * `characterPaths/__tests__/createCharacterContrast.test.ts`. Keeping a row here
+ * would be the second name for one measurement this file's second paragraph
+ * warns against. If the crumb ever takes a faction ink again, that is a new
+ * pairing and this is where it comes back.
  *
- *  2. THE PREVIEW'S CREDIT LINE. A bonus is a credit and the kit has a name for
+ *  1. THE PREVIEW'S CREDIT LINE. A bonus is a credit and the kit has a name for
  *     that rung, so the strip reads `--faction-ua-card-credit` where the na kit
  *     reads the global `--color-success`. That is a new pairing: the panel
  *     carries this family's ink / prose / muted / accent rows already and has
  *     never carried its credit.
  *
- *  3. THE LEVEL ROW, which is the load-bearing one — it measures the control
+ *  2. THE LEVEL ROW, which is the load-bearing one — it measures the control
  *     this archetype did NOT mount. `FilterLevelNodes` is site chrome standing
  *     on `--color-bg-surface`, a TRANSLUCENT token in both cascades, so on this
  *     leaf it takes the warm stock underneath rather than the app's own. The
@@ -40,8 +42,8 @@
  *     in the kit's inks, and if the shared control ever clears this ground the
  *     redraw is dead weight — which is what the failing row below would say.
  *
- * THE WASH IS READ FROM THE STYLESHEET, NOT TRANSCRIBED, for the reason the
- * sibling file records: repaint a stop and this file measures the new one.
+ * THE LEAF'S WASH IS READ FROM THE STYLESHEET, NOT TRANSCRIBED, for the reason
+ * the sibling file records: repaint a stop and this file measures the new one.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -69,30 +71,6 @@ function resolve(token: string, theme: Theme): Rgba {
   return parsed!
 }
 
-/**
- * The spectrum wash's stops for one theme, read out of the rule that paints
- * them. Light is the bare `.na-backdrop` block; dark is the
- * `[data-theme="dark"]` override, which repaints every stop. Each stop is its
- * own corner-anchored radial, so they do not stack — every one is composited
- * alone and all of them must clear.
- */
-function washStops(theme: Theme): string[] {
-  const marker = theme === 'dark' ? '[data-theme="dark"] .na-backdrop {' : '\n.na-backdrop {'
-  const start = INDEX_CSS.indexOf(marker)
-  expect(start, `the ${theme} .na-backdrop rule exists`).toBeGreaterThan(-1)
-  const block = INDEX_CSS.slice(start, INDEX_CSS.indexOf('}', start))
-  const stops = [...block.matchAll(/rgba\([^)]*\)/g)].map(([whole]) => whole)
-  expect(stops.length, `the ${theme} wash still paints its stops`).toBe(5)
-  return stops
-}
-
-/** The page stock with one wash stop over it — the ground the trail stands on. */
-function pageUnderWash(theme: Theme, stop: string): Rgba {
-  const wash = parseColor(stop)
-  expect(wash, `${stop} parses`).not.toBeNull()
-  return compositeOver(wash!, resolve('--color-bg-page', theme))
-}
-
 /** The sheet under the ornament layer — what a mark on the leaf really sits on. */
 function washedLeaf(theme: Theme): Rgba {
   const alpha = Number(resolveVar('--faction-ua-card-lotus-opacity', theme, THEMES))
@@ -102,25 +80,6 @@ function washedLeaf(theme: Theme): Rgba {
     resolve('--faction-ua-card-bg', theme),
   )
 }
-
-describe('the trail above the leaf carries the kit ink on the SITE ground', () => {
-  const TRAIL_INKS: Array<{ what: string; token: string }> = [
-    { what: 'the Tasks crumb', token: '--faction-ua-card-body' },
-    { what: 'the current page', token: '--faction-ua-card-text' },
-  ]
-  for (const theme of BOTH_THEMES) {
-    for (const { what, token } of TRAIL_INKS) {
-      it(`${what} — ${theme}`, () => {
-        for (const stop of washStops(theme)) {
-          const ratio = contrastRatio(resolve(token, theme), pageUnderWash(theme, stop))
-          expect(ratio, `${token} over ${stop} is ${formatRatio(ratio)}`).toBeGreaterThanOrEqual(
-            AA_NORMAL,
-          )
-        }
-      })
-    }
-  }
-})
 
 describe("the preview's bonus line reads the kit's own credit rung", () => {
   it.each(BOTH_THEMES)('%s', (theme) => {

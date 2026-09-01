@@ -92,8 +92,8 @@
  * shared ring (#2266).
  */
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
@@ -337,27 +337,17 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
   }
 
   return (
-    <ComposerPage sizes={sizes} style={pageStyle}>
-      {/* The trail the na kit draws, kept rather than dropped — a reskin may not
-          cost a page its way back — in the leaf's own quiet ink. */}
-      <nav
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: '0 auto',
-          padding: 'var(--space-lg) var(--space-lg) 0',
-          fontFamily: UA_TEXT,
-          fontSize: 'var(--text-lg)',
-          letterSpacing: '0.1em',
-          color: BODY,
-        }}
-      >
-        <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-          {t('breadcrumb.tasks')}
-        </Link>
-        {' › '}
-        <span style={{ color: INK }}>{t('proposeTask.pageTitle')}</span>
-      </nav>
-
+    <ComposerPage
+      sizes={sizes}
+      style={pageStyle}
+      /* The trail the na kit draws, kept rather than dropped — a reskin may not
+         cost a page its way back — but NOT in the leaf's quiet ink any more
+         (#2973). That was a `--faction-*` token on a control #2102 rule 1 holds
+         to the site's own tertiary, and the ground it stands on is the app's
+         page rather than this skin's, so the leaf ink was never measured where
+         the crumb is read. */
+      breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
+    >
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>

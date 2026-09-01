@@ -44,7 +44,7 @@
  *
  * ## Copy — none of its own
  *
- * Every string is an existing `forms:proposeTask.*` / `forms:breadcrumb.*` /
+ * Every string is an existing `forms:proposeTask.*` / `common:breadcrumb.*` /
  * `common:filters.*` key, unchanged and un-reordered. WOW's knightly vocabulary
  * is NOT reintroduced; ADR-0065 §3 deleted `editPraxis.wow.*` outright and the
  * faction carries identity in dress alone. The fields are placeholder-only, as
@@ -55,16 +55,14 @@
  *
  * It sits OUTSIDE the sheet, on the site's own ground, and *"a breadcrumb is
  * neutral SITE CHROME, not part of the faction surface"* (`components/nav/
- * Breadcrumb`). So the trail below takes that component's own shape and its own
- * ink tier rather than the charter's: an `<ol>`, `›` separators, the current
- * page marked by weight and `aria-current` instead of a second colour, and
- * `--label-ink` — whose root value is the app's tertiary tier on the app's own
- * ground, which is the one pairing a crumb is ever measured on. The na kit's
- * inline crumb tinted its last item with `--color-text-primary`; that is a
- * global ink inside a faction-dispatched surface, which `local/no-global-ink-on-
- * faction-surface` refuses, and weight says the same thing without the token.
- * `components/nav/Breadcrumb` itself is task-scoped (`taskId` / `taskTitle`) and
- * no task exists yet on this page — see the `ponytail:` note at the call site.
+ * Breadcrumb`). This file used to restate that component's shape — an `<ol>`,
+ * `›` separators, the current page marked by weight and `aria-current` instead
+ * of a second colour — because the component was task-scoped (`taskId` /
+ * `taskTitle`) and no task exists yet on this page. #2973 took the `ponytail:`
+ * upgrade path that note named and gave it a `current` label, so the restatement
+ * is gone and the component is mounted. The one difference the swap makes is
+ * that the ink is `--color-text-tertiary` outright rather than `--label-ink`,
+ * which is unset to that value on this ground.
  *
  * ## Two WOW rules that are load-bearing, not taste (§3)
  *
@@ -111,8 +109,8 @@
  * file — an archetype only ever draws the happy path or its success screen.
  */
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { WowSpark } from '../../../components/factionMarks/wowMobile'
@@ -337,41 +335,11 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
     color: INK,
   }
 
-  /* THE BREADCRUMB STAYS NEUTRAL SITE CHROME, and it is the site's own crumb
-     rather than this skin's: the trail reads `--label-ink`, whose root value is
-     the app's tertiary tier, and the page you are on is distinguished by weight
-     and `aria-current`, never by a second colour. That is exactly what
-     `components/nav/Breadcrumb` does, down to the `<ol>` and the `›`.
-
-     ponytail: it is restated here rather than mounted because that component is
-     task-scoped (`taskId` / `taskTitle`) and no task exists yet on this page.
-     The upgrade path is generalising it onto a `crumbs` prop, which is a change
-     to a component seventeen surfaces mount and is not this lane's to make. */
-  const breadcrumb = (
-    <nav
-      aria-label={t('common:breadcrumb.label')}
-      className="font-body"
-      style={{
-        fontSize: 'var(--text-md)',
-        letterSpacing: '0.1em',
-        color: 'var(--label-ink)',
-      }}
-    >
-      <ol style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
-        <li>
-          <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
-            {t('common:breadcrumb.tasks')}
-          </Link>
-        </li>
-        <li style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
-          <span aria-hidden="true">&rsaquo;</span>
-          <span aria-current="page" style={{ color: 'inherit', fontWeight: 700 }}>
-            {t('proposeTask.pageTitle')}
-          </span>
-        </li>
-      </ol>
-    </nav>
-  )
+  /* THE BREADCRUMB IS NEUTRAL SITE CHROME, and since #2973 it is the site's own
+     component rather than this file's copy of it — the `ponytail:` note that
+     stood here named exactly that upgrade. Both stages mount it: the success
+     stage is still a page under `Tasks` and still needs a way back. */
+  const breadcrumb = <Breadcrumb current={t('proposeTask.pageTitle')} />
 
   /** The sheet's head: ✦, the page's own words, a wavy rule, one bunch. */
   const head = (heading: string) => (
