@@ -18,6 +18,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 
@@ -79,82 +80,17 @@ function praxis(slug: string | null): PraxisOut {
   } as unknown as PraxisOut;
 }
 
+// The phase and the two wire shapes are this file's premise; everything else is
+// the fixture's quiet default (#2877).
 function state(slug: string | null, phase: "composing" | "waiting"): EditPraxisState {
-  return {
-    loading: false,
+  return anEditPraxisState({
     phase,
     praxis: praxis(slug),
     task: task(slug),
-    error: "",
-    setError: () => {},
     title: "I helped a stranger",
-    setTitle: () => {},
     body: "## What I did",
-    setBody: () => {},
-    media: [],
-    fileError: "",
-    handleFileChange: () => {},
-    removeMedia: async () => {},
-    pendingImage: null,
-    confirmImageEdit: async () => {},
-    cancelImageEdit: () => {},
-    reportImageError: () => {},
-    switchingMode: null,
-    changeMode: async () => {},
-    inviteQuery: "",
-    setInviteQuery: () => {},
-    inviteResults: [],
-    inviteOpen: false,
-    setInviteOpen: () => {},
-    inviting: false,
-    sendInvite: async () => {},
-    cancelInvite: async () => {},
-    kickMember: async () => {},
-    nudge: async () => {},
-    duel: null,
-    sendChallenge: async () => {},
-    cancelDuel: async () => {},
-    dissolveDuel: async () => {},
-    metatasks: [],
-    appliedMetatasks: new Set(),
-    applyingMetatask: null,
-    appliedMetataskList: [],
-    addMetatask: async () => {},
-    metataskPickerOpen: false,
-    openMetataskPicker: () => {},
-    closeMetataskPicker: () => {},
-    metataskRemovalTarget: null,
-    requestRemoveMetatask: () => {},
-    confirmRemoveMetatask: async () => {},
-    cancelRemoveMetatask: () => {},
-    submitting: false,
-    publish: async () => {},
-    saveDraft: async () => {},
-    pullBack: async () => {},
-    reopenForEdit: async () => {},
-    leaveCollab: async () => {},
-    collabSuccess: false,
-    continueFromCollabSuccess: () => {},
-    duelSealOpen: false,
-    requestDuelSeal: () => {},
-    cancelDuelSeal: () => {},
-    pendingConfirm: null,
-    acceptConfirm: () => {},
-    dismissConfirm: () => {},
-    cancel: async () => {},
-    autosaveAt: null,
-    setAutosaveAt: () => {},
     autoSubmitDays: 10,
-    isPublished: false,
-    controlsLocked: false,
-    modeIsLocked: false,
-    showInviteBox: false,
-    canSealMetatask: false,
-    showSealStack: false,
-    duelMode: false,
-    duelChipVisible: false,
-    currentCharacterId: 3,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(slug: string | null, phase: "composing" | "waiting"): string {
