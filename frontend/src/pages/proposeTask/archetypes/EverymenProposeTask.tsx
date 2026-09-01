@@ -98,19 +98,18 @@
  * `factions.json`, which is what every other Everymen surface puts there under
  * ADR-0057.
  *
- * ONE na-KIT ELEMENT IS NOT DRAWN: its hand-rolled `Tasks › Propose a Task`
- * breadcrumb. #2102 collapsed eighteen hand-rolled crumbs onto ONE shared
- * component precisely so a faction surface would stop drawing its own, and the
- * shared `components/nav/Breadcrumb` cannot express this trail — it takes a
- * `taskId` and a `taskTitle` and builds `Tasks › <task>` from them, and no task
- * exists yet. A nineteenth copy inside a faction archetype is the thing that
- * issue deleted, and it would have to be inked either in the site's neutral
- * tiers (which `local/no-global-ink-on-faction-surface` forbids here, correctly)
- * or in this kit's paper inks on the app's own ground, which nothing measures.
- * So the way back is the footer's Cancel, which is `navigate(-1)`. Both
- * character plates this dress derives from draw no crumb either. Flagged on the
- * PR: giving this page a task-less trail is a change to the SHARED component,
- * not something an archetype may decide on its own.
+ * THE TRAIL IS THE SITE'S, AND IT ARRIVED LATE ON PURPOSE (#2973). This dress
+ * shipped without one: #2102 collapsed eighteen hand-rolled crumbs onto ONE
+ * shared component precisely so a faction surface would stop drawing its own,
+ * and that component could not express this trail — it took a `taskId` and a
+ * `taskTitle` and built `Tasks › <task>`, and no task exists yet. A nineteenth
+ * copy inside a faction archetype was the thing that issue deleted, so this file
+ * drew none and flagged it: giving the page a task-less trail is a change to the
+ * SHARED component, not an archetype's call. Six sibling archetypes hand-rolled
+ * one anyway and drifted onto three different inks and two placements, which is
+ * how the issue got filed. The component takes a `current` label now, so the
+ * page has a real way back rather than only the footer's Cancel — and it is the
+ * same crumb, in the same place, as every other propose surface.
  *
  * ## Presentation only
  *
@@ -120,6 +119,7 @@
  */
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import Breadcrumb from '../../../components/nav/Breadcrumb'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
@@ -447,7 +447,12 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
   ]
 
   return (
-    <ComposerPage sizes={sizes} style={rootStyle}>
+    <ComposerPage
+      sizes={sizes}
+      style={rootStyle}
+      /* The way back, and this page's first (#2973) — see the header. */
+      breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
+    >
       {/* The docket, above the sheet: the pick the sheet below is dressed by.
           That placement is the na kit's own — the chips live outside its framed
           card, because the pick is what the card wears and cannot live inside
