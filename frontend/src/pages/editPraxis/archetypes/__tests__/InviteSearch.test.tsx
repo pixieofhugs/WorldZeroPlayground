@@ -85,7 +85,11 @@ function duelState(
 }
 
 function chipHtml(state: EditPraxisState): string {
-  return renderToStaticMarkup(<InviteSearch state={state} skin={SKIN} />);
+  // `praxis!` because the control now asks for a loaded praxis rather than
+  // asserting one itself (#2882); every fixture below builds one.
+  return renderToStaticMarkup(
+    <InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />,
+  );
 }
 
 describe("InviteSearch — the duel pair names the other side (#1226, #1417)", () => {

@@ -440,7 +440,8 @@ export default function WowEditPraxis({ state }: Props) {
             `TitleField`, so there is nothing per-faction here. */}
         <ComposerSection rule={false}>
           <TitleField
-            state={state}
+            title={state.title}
+            setTitle={state.setTitle}
             skin={{
               placeholder: t("editPraxis.composer.titlePlaceholder"),
               inputStyle: { ...fieldBox, fontFamily: MED },
@@ -457,7 +458,13 @@ export default function WowEditPraxis({ state }: Props) {
             labelStyle={LABEL_STYLE}
           >
             <ModePicker
-              state={state}
+              praxis={praxis}
+              task={task}
+              duelMode={state.duelMode}
+              duelChipVisible={state.duelChipVisible}
+              modeIsLocked={state.modeIsLocked}
+              switchingMode={state.switchingMode}
+              changeMode={state.changeMode}
               skin={{
                 containerStyle: {
                   display: "flex",
@@ -510,7 +517,24 @@ export default function WowEditPraxis({ state }: Props) {
             labelStyle={LABEL_STYLE}
           >
             <InviteSearch
-              state={state}
+              praxis={praxis}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              currentCharacterId={state.currentCharacterId}
+              autoSubmitDays={state.autoSubmitDays}
+              inviteQuery={state.inviteQuery}
+              setInviteQuery={state.setInviteQuery}
+              inviteResults={state.inviteResults}
+              inviteOpen={state.inviteOpen}
+              setInviteOpen={state.setInviteOpen}
+              inviting={state.inviting}
+              sendInvite={state.sendInvite}
+              sendChallenge={state.sendChallenge}
+              cancelInvite={state.cancelInvite}
+              kickMember={state.kickMember}
+              leaveCollab={state.leaveCollab}
+              cancelDuel={state.cancelDuel}
+              dissolveDuel={state.dissolveDuel}
               skin={{
                 fontFamily: LORA,
                 inputBg: FIELD,
@@ -579,7 +603,11 @@ export default function WowEditPraxis({ state }: Props) {
               still submits, and drawing both puts the body in the DOM twice. */}
           {tab === "write" ? (
             <BodyTextarea
-              state={state}
+              praxis={praxis}
+              controlsLocked={state.controlsLocked}
+              setBody={state.setBody}
+              proposalConfirmArmed={state.proposalConfirmArmed}
+              confirmProposalEdit={state.confirmProposalEdit}
               skin={{
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 toolbarButtonStyle: {
@@ -600,7 +628,7 @@ export default function WowEditPraxis({ state }: Props) {
             />
           ) : (
             <BodyPreview
-              state={state}
+              body={state.body}
               skin={{
                 wrapperStyle: {
                   ...fieldBox,
@@ -677,7 +705,8 @@ export default function WowEditPraxis({ state }: Props) {
             })}
             {!state.controlsLocked && (
               <FilePicker
-                state={state}
+                fileError={state.fileError}
+                handleFileChange={state.handleFileChange}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     fontFamily: MED,
@@ -720,11 +749,16 @@ export default function WowEditPraxis({ state }: Props) {
           start={
             <>
               <SaveDraftButton
-                state={state}
+                controlsLocked={state.controlsLocked}
+                submitting={state.submitting}
+                switchingMode={state.switchingMode}
+                saveDraft={state.saveDraft}
                 skin={{ style: { fontFamily: LORA, color: LABEL } }}
               />
               <DropButton
-                state={state}
+                praxis={praxis}
+                currentCharacterId={state.currentCharacterId}
+                cancel={state.cancel}
                 skin={{
                   style: composerLabelStyle({
                     fontFamily: LORA,
@@ -741,7 +775,19 @@ export default function WowEditPraxis({ state }: Props) {
           }
           end={
             <PublishButton
-              state={state}
+              praxis={praxis}
+              currentCharacterId={state.currentCharacterId}
+              isPublished={state.isPublished}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              title={state.title}
+              submitting={state.submitting}
+              switchingMode={state.switchingMode}
+              publish={state.publish}
+              propose={state.propose}
+              pullBack={state.pullBack}
+              markDone={state.markDone}
+              requestDuelSeal={state.requestDuelSeal}
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),

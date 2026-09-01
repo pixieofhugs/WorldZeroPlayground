@@ -66,7 +66,7 @@ function html(current: PraxisRoom | null): string {
   room.current = current;
   try {
     return renderToStaticMarkup(
-      <BodyTextarea state={state} skin={{ textareaStyle: {} }} />,
+      <BodyTextarea {...state} skin={{ textareaStyle: {} }} />,
     ).replace(/&#x27;|&#39;/g, "'");
   } finally {
     room.current = null;

@@ -28,7 +28,7 @@ const state = {
 
 function html(): string {
   return renderToStaticMarkup(
-    <BodyTextarea state={state} skin={{ textareaStyle: {} }} />,
+    <BodyTextarea {...state} skin={{ textareaStyle: {} }} />,
   );
 }
 

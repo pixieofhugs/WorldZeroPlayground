@@ -63,7 +63,7 @@ function html(proposalConfirmArmed: boolean, controlsLocked = false): string {
   // the same decode the confirm-copy and praxis-detail suites carry.
   return renderToStaticMarkup(
     <BodyTextarea
-      state={state(proposalConfirmArmed, controlsLocked)}
+      {...state(proposalConfirmArmed, controlsLocked)}
       skin={{ textareaStyle: {} }}
     />,
   ).replace(/&#x27;|&#39;/g, "'");
@@ -91,7 +91,7 @@ describe("a live proposal, at the write-up", () => {
     } as unknown as EditPraxisState;
     expect(
       renderToStaticMarkup(
-        <BodyTextarea state={agreedAlready} skin={{ textareaStyle: {} }} />,
+        <BodyTextarea {...agreedAlready} skin={{ textareaStyle: {} }} />,
       ).replace(/&#x27;|&#39;/g, "'"),
     ).toContain(liveLine);
   });

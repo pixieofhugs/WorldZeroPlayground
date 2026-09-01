@@ -45,7 +45,9 @@ function praxisState({
   currentCharacterId: number;
   memberIds?: number[];
   type?: string;
-}): EditPraxisState {
+  // The two controls under test now ask for a loaded praxis rather than
+  // asserting one themselves (#2882), so the fixture says it has one.
+}): EditPraxisState & { praxis: PraxisOut } {
   const praxis = {
     id: 1,
     type,
@@ -73,7 +75,7 @@ function praxisState({
     cancelInvite: async () => {},
     leaveCollab: async () => {},
     cancel: async () => {},
-  } as unknown as EditPraxisState;
+  } as unknown as EditPraxisState & { praxis: PraxisOut };
 }
 
 const LEAVE_LABEL = i18n.t("forms:editPraxis.leaveAction");
@@ -82,28 +84,28 @@ const DROP_SKIN = { label: "ARCHETYPE_DROP", style: {} };
 describe("Leave — every member's exit, the creator included (#1074)", () => {
   it("offers Leave to the member who started the collab", () => {
     const html = renderToStaticMarkup(
-      <InviteSearch state={praxisState({ currentCharacterId: CREATOR_ID })} skin={{}} />,
+      <InviteSearch {...praxisState({ currentCharacterId: CREATOR_ID })} skin={{}} />,
     );
     expect(html).toContain(LEAVE_LABEL);
   });
 
   it("still offers Leave to a member who joined", () => {
     const html = renderToStaticMarkup(
-      <InviteSearch state={praxisState({ currentCharacterId: JOINER_ID })} skin={{}} />,
+      <InviteSearch {...praxisState({ currentCharacterId: JOINER_ID })} skin={{}} />,
     );
     expect(html).toContain(LEAVE_LABEL);
   });
 
   it("says what leaving does — the crew keeps the praxis", () => {
     const html = renderToStaticMarkup(
-      <InviteSearch state={praxisState({ currentCharacterId: CREATOR_ID })} skin={{}} />,
+      <InviteSearch {...praxisState({ currentCharacterId: CREATOR_ID })} skin={{}} />,
     );
     expect(html).toContain(collabCopy(null, "leaveDescription"));
   });
 
   it("offers nothing to leave to someone who is not a member", () => {
     const html = renderToStaticMarkup(
-      <InviteSearch state={praxisState({ currentCharacterId: 99 })} skin={{}} />,
+      <InviteSearch {...praxisState({ currentCharacterId: 99 })} skin={{}} />,
     );
     expect(html).not.toContain(LEAVE_LABEL);
   });
@@ -111,7 +113,7 @@ describe("Leave — every member's exit, the creator included (#1074)", () => {
   it("offers nothing to leave on a solo praxis", () => {
     const html = renderToStaticMarkup(
       <InviteSearch
-        state={praxisState({
+        {...praxisState({
           currentCharacterId: CREATOR_ID,
           memberIds: [CREATOR_ID],
           type: "solo",
@@ -127,7 +129,7 @@ describe("Delete — the creator's alone, and it names its cost (#1074)", () => 
   it("names the consequence when other members' parts are at stake", () => {
     const html = renderToStaticMarkup(
       <DropButton
-        state={praxisState({ currentCharacterId: CREATOR_ID })}
+        {...praxisState({ currentCharacterId: CREATOR_ID })}
         skin={DROP_SKIN}
       />,
     );
@@ -142,7 +144,7 @@ describe("Delete — the creator's alone, and it names its cost (#1074)", () => 
   it("is not drawn at all for a member who did not start the collab", () => {
     const html = renderToStaticMarkup(
       <DropButton
-        state={praxisState({ currentCharacterId: JOINER_ID })}
+        {...praxisState({ currentCharacterId: JOINER_ID })}
         skin={DROP_SKIN}
       />,
     );
@@ -152,7 +154,7 @@ describe("Delete — the creator's alone, and it names its cost (#1074)", () => 
   it("keeps the archetype's own label on a solo praxis", () => {
     const html = renderToStaticMarkup(
       <DropButton
-        state={praxisState({
+        {...praxisState({
           currentCharacterId: CREATOR_ID,
           memberIds: [CREATOR_ID],
           type: "solo",
@@ -167,7 +169,7 @@ describe("Delete — the creator's alone, and it names its cost (#1074)", () => 
   it("keeps the archetype's own label on a collab with nobody else in it", () => {
     const html = renderToStaticMarkup(
       <DropButton
-        state={praxisState({
+        {...praxisState({
           currentCharacterId: CREATOR_ID,
           memberIds: [CREATOR_ID],
         })}

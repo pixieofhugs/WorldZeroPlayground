@@ -94,14 +94,14 @@ function collabState(
 function renderButton(state: EditPraxisState): ReactElement<{
   onClick: () => void;
 }> {
-  return PublishButton({ state, skin: SKIN }) as ReactElement<{
+  return PublishButton({ ...state, skin: SKIN }) as ReactElement<{
     onClick: () => void;
   }>;
 }
 
 /** Same, for the states where the button is expected to render nothing. */
 function renderMaybe(state: EditPraxisState): ReactElement | null {
-  return PublishButton({ state, skin: SKIN }) as ReactElement | null;
+  return PublishButton({ ...state, skin: SKIN }) as ReactElement | null;
 }
 
 function duelSide(characterId: number, submitted: boolean) {

@@ -48,7 +48,7 @@ function renderThroughProbe(state: EditPraxisState): ReactElement<{
 }> | null {
   let captured: ReactElement | null = null;
   function Probe() {
-    captured = SaveDraftButton({ state });
+    captured = SaveDraftButton({ ...state });
     return null;
   }
   renderToStaticMarkup(<Probe />);
@@ -60,7 +60,7 @@ function renderThroughProbe(state: EditPraxisState): ReactElement<{
 
 describe("SaveDraftButton — the third exit (#1081)", () => {
   it("offers the neutral shared label on an open draft", () => {
-    const html = renderToStaticMarkup(<SaveDraftButton state={draftState()} />);
+    const html = renderToStaticMarkup(<SaveDraftButton {...draftState()} />);
     expect(html).toContain(LABEL);
   });
 
@@ -75,7 +75,7 @@ describe("SaveDraftButton — the third exit (#1081)", () => {
   it("is not drawn once the praxis is cast or moderated — there is no draft left", () => {
     const html = renderToStaticMarkup(
       <SaveDraftButton
-        state={draftState({ controlsLocked: true, isPublished: true })}
+        {...draftState({ controlsLocked: true, isPublished: true })}
       />,
     );
     expect(html).toBe("");
@@ -93,7 +93,7 @@ describe("SaveDraftButton — the third exit (#1081)", () => {
 
   it("takes a faction's own voice when an archetype supplies one", () => {
     const html = renderToStaticMarkup(
-      <SaveDraftButton state={draftState()} skin={{ label: "PARK IT" }} />,
+      <SaveDraftButton {...draftState()} skin={{ label: "PARK IT" }} />,
     );
     expect(html).toContain("PARK IT");
     expect(html).not.toContain(LABEL);

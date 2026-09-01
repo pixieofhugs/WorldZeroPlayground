@@ -388,7 +388,8 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             `TitleField`, so there is nothing per-faction here. */}
         <ComposerSection rule={false}>
           <TitleField
-            state={state}
+            title={state.title}
+            setTitle={state.setTitle}
             skin={{
               placeholder: t("editPraxis.composer.titlePlaceholder"),
               inputStyle: {
@@ -409,7 +410,13 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             labelStyle={labelStyle}
           >
             <ModePicker
-              state={state}
+              praxis={praxis}
+              task={task}
+              duelMode={state.duelMode}
+              duelChipVisible={state.duelChipVisible}
+              modeIsLocked={state.modeIsLocked}
+              switchingMode={state.switchingMode}
+              changeMode={state.changeMode}
               skin={{
                 containerStyle: {
                   display: "flex",
@@ -459,7 +466,24 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             labelStyle={labelStyle}
           >
             <InviteSearch
-              state={state}
+              praxis={praxis}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              currentCharacterId={state.currentCharacterId}
+              autoSubmitDays={state.autoSubmitDays}
+              inviteQuery={state.inviteQuery}
+              setInviteQuery={state.setInviteQuery}
+              inviteResults={state.inviteResults}
+              inviteOpen={state.inviteOpen}
+              setInviteOpen={state.setInviteOpen}
+              inviting={state.inviting}
+              sendInvite={state.sendInvite}
+              sendChallenge={state.sendChallenge}
+              cancelInvite={state.cancelInvite}
+              kickMember={state.kickMember}
+              leaveCollab={state.leaveCollab}
+              cancelDuel={state.cancelDuel}
+              dissolveDuel={state.dissolveDuel}
               skin={{
                 fontFamily: TITLE_FACE,
                 inputBg: FIELD,
@@ -534,7 +558,11 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
               both would put the body in the DOM twice. */}
           {tab === "write" ? (
             <BodyTextarea
-              state={state}
+              praxis={praxis}
+              controlsLocked={state.controlsLocked}
+              setBody={state.setBody}
+              proposalConfirmArmed={state.proposalConfirmArmed}
+              confirmProposalEdit={state.confirmProposalEdit}
               skin={{
                 placeholder: t("editPraxis.composer.bodyPlaceholder"),
                 textareaStyle: {
@@ -548,7 +576,7 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             />
           ) : (
             <BodyPreview
-              state={state}
+              body={state.body}
               skin={{
                 wrapperStyle: {
                   ...fieldBox,
@@ -618,7 +646,8 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             })}
             {!state.controlsLocked && (
               <FilePicker
-                state={state}
+                fileError={state.fileError}
+                handleFileChange={state.handleFileChange}
                 skin={{
                   buttonStyle: composerLabelStyle({
                     cursor: "pointer",
@@ -660,9 +689,17 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
         <ComposerFooter
           start={
             <>
-              <SaveDraftButton state={state} skin={{ style: { color: FAINT } }} />
+              <SaveDraftButton
+                controlsLocked={state.controlsLocked}
+                submitting={state.submitting}
+                switchingMode={state.switchingMode}
+                saveDraft={state.saveDraft}
+                skin={{ style: { color: FAINT } }}
+              />
               <DropButton
-                state={state}
+                praxis={praxis}
+                currentCharacterId={state.currentCharacterId}
+                cancel={state.cancel}
                 skin={{
                   style: composerLabelStyle({
                     background: "transparent",
@@ -678,7 +715,19 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
           }
           end={
             <PublishButton
-              state={state}
+              praxis={praxis}
+              currentCharacterId={state.currentCharacterId}
+              isPublished={state.isPublished}
+              duel={state.duel}
+              duelMode={state.duelMode}
+              title={state.title}
+              submitting={state.submitting}
+              switchingMode={state.switchingMode}
+              publish={state.publish}
+              propose={state.propose}
+              pullBack={state.pullBack}
+              markDone={state.markDone}
+              requestDuelSeal={state.requestDuelSeal}
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),

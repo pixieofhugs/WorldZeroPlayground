@@ -252,7 +252,7 @@ interface TestButton {
 
 /** The group on its own, so a click can be fired without a DOM. */
 function signals(scenario: Scenario): TestButton[] {
-  const element = CollabSignals({ state: state(scenario), skin: SKIN }) as {
+  const element = CollabSignals({ ...state(scenario), skin: SKIN }) as {
     props: { children: unknown };
   };
   const children = Array.isArray(element.props.children)
