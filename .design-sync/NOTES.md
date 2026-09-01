@@ -1209,3 +1209,167 @@ preview gains a new import that is not relative and not `'worldzero-frontend'`.
 - `LevelUpPopup`'s `SurveyorManyUnlocks` cell still clips CONTINUE at 460x800, and
   `EphemeristsSelectCard`'s header still overlaps at 360x300. Both unchanged, both still
   unfiled.
+
+## [2026-09-01] Seventh round — 319 → 327, and the upload 08-31 never made
+
+The 08-31 round ended with a fully verified 319-component build and **no upload** (design
+auth 403'd). Auth worked this session, so this round's job was: fold in the drift, close
+the two families that were a sibling short, and finally ship. **It shipped.**
+
+### SALVAGING A DEAD RUN'S WORKTREE IS WORTH ~14 RE-GRADES
+The 08-31 worktree still existed at `.claude/worktrees/design-sync-437d47` with its
+`.design-sync/.cache/` (198 grade files), `.ds-sync/node_modules`, and `ds-bundle/`. It was
+on a *git-reaper* branch and one sweep from deletion. Copying `.cache/` + `.ds-sync/node_modules`
+into the fresh worktree meant: no npm install, no chromium download, and **28 of the 33
+components the final capture touched carried their grades forward for free**
+(`28 carried forward, 5 captured, 0 grade cleared`).
+
+**Do this first on any round that follows a run which died before uploading:**
+
+    for d in .claude/worktrees/*/; do ls "$d.design-sync/.cache/review/"*.grade.json 2>/dev/null | wc -l; done
+
+Grades are gitignored, so a wiped worktree loses them permanently. Salvage before `/git-reaper` runs.
+
+### `gen-barrel.mjs` SHIPPED THE WRONG COMPONENT UNDER A RIGHT-LOOKING NAME
+The real find of this round, and the canary could not see it. Line 68 was:
+
+    if (/^export\s+default\s/m.test(src))  ->  `export { default as <Name> }`
+
+It tested whether the FILE has any default export — not whether the mapped name IS that
+default. `NotificationRows` is a *named* export living in `NotificationsSection.tsx`
+(default = the section). The barrel emitted `export { default as NotificationRows }`, i.e.
+**the section aliased under the rows' name**, and `327 components / 327 typed re-exports`
+still read clean. A count canary cannot catch an identity error.
+
+Fixed by testing the same-named export FIRST and falling back to the default:
+
+    const hasNamed = /^export\s+(?:const|function|class)\s+<Name>\b/m
+                  || /^export\s*\{[^}]*\b<Name>\b/m
+    if (hasNamed) -> `export { <Name> }`   else if default -> `export { default as <Name> }`
+
+**Verify the fix the same way: diff the barrel before/after.** 16 lines moved; 15 were files
+with BOTH `export function X` and `export default X` (same binding — a no-op, and arguably
+better for ts-morph, which now reads a real declaration). Only `NotificationRows` changed
+meaning. `export default function X()` matches neither pattern, so default-only components
+are untouched.
+
+**The standing lesson:** any file contributing TWO map names is a candidate. Today that is
+`NotificationsSection.tsx` (section + rows) and `VoteShell.tsx` (`VoteError`, `VoteLoginGate`).
+
+### The propose-task fan-out closed — the family is NINE
+08-31 predicted "more `*ProposeTask` siblings; check that directory specifically." Correct:
+#2538 landed Ephemerists/Everymen/Singularity/Snide/Ua/Wow. With Default + Albescent +
+Coven the family is **nine**, matching CreateCharacter and EditCharacter. Each preview is
+the same four-line file passing `proposeTaskState('<slug>')`. Every one renders its own
+dress with its chip NAMED and selected — the clean contrast to the Albescent slug trap.
+**`NotificationsSection` (#2971) also landed** in the already-mapped settings-section family.
+Map 319 -> **327** (the 8th being `NotificationRows`, below).
+
+### A FETCHING SECTION NEEDS ITS PRESENTATIONAL TWIN MAPPED, OR THE CARD IS A STATUS LINE
+`NotificationsSection` fetches `/me/notification-prefs`; the harness has no network, so its
+card can only ever show eyebrow + lead + the email-pending line + the **error** status
+("Unable to reach the server" — offline the fetch REJECTS rather than hanging, so it is not
+the loading copy). The nine rows — the substance — are unreachable.
+
+The component is already split for exactly this reason and says so in its own docstring
+(*"an effect never runs under `renderToStaticMarkup`"*), so **`NotificationRows` was mapped
+as a second name onto the same file** (the `VoteShell` precedent) and its preview ports the
+repo's own `DEFAULTS` fixture from `pages/settings/__tests__/notificationPrefs.test.tsx`
+verbatim. That card shows all nine rows, both switch columns, the padlocks on the three
+locked request rows, and both lock notes. **Look for this shape on any other self-fetching
+section.**
+
+### THE REVIEW SHEET CROPS WHERE THE SHIPPED CARD DOES NOT — confirmed for solo captures generally
+08-31 recorded this for the duel `Busy` cell. It is broader: `package-capture.mjs` renders
+each cell solo at **900x700** (`package-capture.mjs:101`), while the CARD renders at the
+declared/grid width. Three separate "defects" this round were all this artifact:
+
+- every `*ProposeTask` review sheet cuts off mid-form — the cards render whole through
+  SUBMIT PROPOSAL (checked `_screenshots/proposetask__CovenProposeTask.png` and `…Default…`);
+- `NotificationRows`' sheet loses the 9th row — the card shows through "New tasks";
+- **`SidebarColumn`'s sheet is entirely BLANK** — the wrapper is `hidden lg:block`, and 900
+  is below Tailwind's `lg` (1024), so the solo capture renders nothing while the card is
+  perfect (handle + full UA rail).
+
+**Always confirm `_screenshots/<group>__<Name>.png` before "fixing" a crop.** Overrides were
+deliberately NOT changed for these — the cards are correct, and re-keying would re-grade for
+a nicer screenshot. `viewport` IS honoured with `cardMode: column` (`lib/emit.mjs:487`,
+default `900x700`) if a future round decides the blank sheet is worth the re-grade.
+
+### The 08-31 rail-cluster diagnosis was WRONG — and authoring fixed all four
+08-31 said `Sidebar` / `SidebarColumn` / `DesktopPlayers` / `FactionsDirectoryView` render
+pale-on-light because "with no faction context only the fallback applies." Not so: the
+provider's mock character is sworn to **ua**, `isKnownFaction('ua')` is true, so
+`railFaceVars` returns the full ua chrome roles. They were pale-on-light because they were
+**UNAUTHORED** — the floor card gave the rail no width and no ground. Authored previews
+(a 320px wrapper on `--color-bg-page`) render the rail correctly dressed in copper. All four
+now grade `good`. **The standing offer is closed.**
+
+Two authoring notes worth keeping:
+- The rail is `w-full` and lives in a FIXED **320px** column
+  (`lg:grid-cols-[320px_minmax(0,1fr)]`, #1562). Rendered card-wide it stretches and every
+  panel's measure goes wrong.
+- `FactionsDirectoryView`'s card shows `unaffiliated` — the one state its container's card
+  CANNOT reach, because the container derives it from the UA mock. Rendering the affiliated
+  case would just be `DefaultFactionsDirectory`'s card twice. Its `error` prop is
+  `string | null` while the hook types it `unknown`; pass `null`, don't spread the fixture.
+
+### Known render warns — still EXACTLY 19, composition unchanged
+3 blank-threshold (`MediaArt`, `SingularityLamps`, `SidebarHandle`), the 14-strong
+`[RENDER_THIN]` set (13 marks/frames + `MediaArt`), `CommentThread` variants-identical,
+`[TOKENS_MISSING]` (**35** — `--rail-face` plus the 34 `--tw-*`), `[FONT_MISSING]` (the same
+4 system families). No `[GRID_OVERFLOW]`, no `[SYNC_STALE]`. The `*FeedFrame` / `ChipRow`
+entries in that 13 are NOT new — grep `^! \[` and count, don't pattern-guess.
+
+### conventions.md — validated, ZERO drift (and validate by EXTRACTION, not a hardcoded list)
+41 backticked components, 56 family tokens and every named token/utility verify against the
+fresh build. The albescent claim holds: `--faction-albescent` appears **0** times in the
+shipped CSS. The salvaged `.cache/validate-conventions.mjs` is STALE (it still names
+`DefaultSettings`, deleted 08-25, and puts albescent in the palette slugs — a guaranteed
+false drift). This round wrote `.cache/validate-conv-2026-09-01.mjs`, which parses the names
+out of `conventions.md` itself. Two classes of false positive are expected and benign:
+prose fragments (`--faction-`, `--color-`) and the four `*State` TYPE names
+(`TaskDetailState`, `EditPraxisState`, `FieldDeskHomeState`, `CreateCharacterState`) — types
+are erased from the bundle; they verify in the emitted `.d.ts` (9 files each).
+
+**Not rewritten** (existing files never are). One gap reported to the owner, not applied:
+the file enumerates which surfaces are faction-dispatched and **never mentions propose-task**,
+which is now nine skins. Adding it is a content edit for its authors.
+
+### Upload record (2026-09-01) — THE ONE 08-31 OWED
+Atomic path, FULL writes. **1,572 content files in 12 `write_files` calls** (bundle 5.2MB and
+`_ds_bundle.css` 2.9MB each alone; fonts in two 24/23 batches; previews 211; components in
+six <=248 batches), sentinel fenced at both ends, anchor absolutely last. **Deletes: 0** —
+`upload.deletePaths` was empty and the anchor was healthy.
+
+Post-upload `list_files`: **0 missing**, 2,016 remote entries (dirs included) against 1,574
+files. The **64 extras are the same hand-uploaded handoffs as every round** (`mobile-system/`,
+`templates/`, `screenshots/`, `design_handoff_*`, `uploads/`, `WZ Mobile Faction Treatments
+(offline).html`) plus app-generated `_ds_manifest.json` and `_adherence.oxlintrc.json`.
+**Leave those alone.**
+
+Token note: `write_files` needs every path twice and there is no way around that, but do NOT
+print chunk payloads to read them back — print the compact `group: Name Name …` map ONCE and
+GENERATE the four paths per component. Doing it the other way cost ~15k tokens for nothing.
+
+### main did NOT move mid-run — the first time in seven rounds
+Checked at dispatch and again immediately before `finalize_plan`; `HEAD..origin/main` was 0
+both times. The streak was six. **Keep checking** — it costs one command.
+
+## Re-sync risks (2026-09-01)
+- **Regenerate `ds-types` before `gen-barrel`, and check N components == N typed re-exports.**
+  Still the highest-value pre-build check — but note it CANNOT catch a wrong-identity
+  re-export (see the `gen-barrel` entry). Any file contributing two map names needs its
+  barrel line READ, not just counted.
+- The three `bad` render-check entries are the standing blank-threshold trio and are
+  triaged, not new. `bad` will never be empty on this kit.
+- `TOKENS_MISSING` is **35**. A 36th means a genuinely new undeclared token — check whether
+  it is runtime-set (`utils/factionRoles.ts`) before chasing it.
+- `SidebarColumn`'s review sheet will be blank on EVERY future round until someone adds
+  `viewport` to its override. The card is fine. Do not treat the blank sheet as a defect.
+- `EphemeristsSelectCard`'s header still overlaps at 360x300; `LevelUpPopup`'s
+  `SurveyorManyUnlocks` still clips CONTINUE at 460x800. Both unchanged, both still unfiled.
+- Floor cards are **73** of 327. `DefaultProposeTask` came off the floor this round; the
+  remaining offer is the `filterbar` / `updates` / feed-atom families.
+- The grades for this round ARE anchored now (the upload happened), so a fresh clone or a
+  `.cache/` wipe costs nothing. That was not true a week ago.
