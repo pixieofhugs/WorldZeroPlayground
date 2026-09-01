@@ -90,12 +90,28 @@ describe("the Ephemerists gravity field", () => {
   });
 
   it("anchors its canvas to the right edge so the well cannot drift", () => {
-    // A phone wider than the nominal 360 scales the rows up rather than
-    // stranding the well mid-sheet.
+    // A card wider than the nominal scales the rows up rather than stranding
+    // the well mid-sheet.
     const markup = field();
     expect(markup).toContain('preserveAspectRatio="xMaxYMin slice"');
     expect(markup).toContain(`viewBox="0 0 ${WIDTH + 40} ${HEIGHT}"`);
-    expect(markup).toContain("right:-40px");
+  });
+
+  it("takes its width from the container, not from the viewBox (#2957)", () => {
+    // THE SEAM. An `<svg>` is a REPLACED element: with `width: auto` the used
+    // width is the INTRINSIC one — the viewBox span — so `left` and `right`
+    // are over-constrained and `right` is dropped. Measured in prod, the field
+    // was 434px (394 + 40) on a 624px card: 0.696 coverage, and `slice` never
+    // scaled anything because the element always matched its own viewBox.
+    //
+    // An explicit width is what stops the intrinsic size winning, and it is
+    // the ONE declaration that makes the docblock above true. `100%` is the
+    // container; the `+40` is `WELL_MARGIN`, the overhang the well is drawn in.
+    const markup = field();
+    expect(markup).toContain("width:calc(100% + 40px)");
+    // And the offset pair is no longer set at all, so nothing can be dropped:
+    // the box is `left` + `width`, which is never over-constrained.
+    expect(markup).not.toContain("right:");
   });
 
   it("is inert: decorative, unreachable and unable to eat a click", () => {
