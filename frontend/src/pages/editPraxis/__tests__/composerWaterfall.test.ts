@@ -1,102 +1,93 @@
 /**
- * #1379 — waterfall guard for the composer.
+ * #1379 — the composer's mount-time load, guarded as a value (#2881).
  *
- * The seam is the SHAPE OF THE LOAD: which requests wait on which. The composer
- * is the page every task signup lands on, and its chain ran
- * `getPraxis → getTask → the faction archetype's chunk` with `listMetatasks`
- * hanging off the first link for no reason. Three of those edges were false.
+ * WHAT THIS PROTECTS. The composer is the page every task signup lands on, and
+ * its chain ran `getPraxis → getTask → the faction archetype's chunk` with the
+ * seal catalogue hanging off the first link for no reason. The fix that matters
+ * here is the hand-off: the signup was already answered with the whole row
+ * (`api/praxis.ts`, `takeJustCreatedPraxis`), so reading it back is a round trip
+ * spent on a payload the client held milliseconds earlier — on the deepest
+ * waterfall in the app.
  *
- * WHAT THIS CANNOT DO. There is no jsdom in this repo — vitest runs in `node`
- * and every render goes through `renderToStaticMarkup`, so effects never run
- * and nothing here can observe "three requests instead of six". Two of the
- * three fixes are removals of a WAIT, not of a call, and a wait is invisible to
- * a test that cannot run the effect that does the waiting.
+ * WHY IT READS NO SOURCE. There is no jsdom in this repo — vitest runs in
+ * `node` (`vite.config.ts` declares no `environment`) and every render goes
+ * through `renderToStaticMarkup`, so effects never run and nothing here can
+ * watch `useEditPraxis` choose. This file used to answer that by slicing the
+ * hook's SOURCE between `// ---- Initial load ----` and `}, [idParam,` — which
+ * made a comment load-bearing, and needed a guard-the-guard test because
+ * renaming either boundary would silently empty the slice and pass every
+ * assertion on air. #2881 moved the decision into `planInitialLoad`, so it is
+ * driven directly below and the slice, and its guard, are gone.
  *
- * So this reads the source, the posture `searchQueryParamAdoption.test.ts` set
- * for exactly this reason. It proves the false edges are not spelled in the
- * file; it does not prove the page is fast. The number belongs in the PR, off
- * `scripts/measure-load.mjs`. What it is worth is that all three regressions
- * are silent ones: re-nesting `listMetatasks` inside the praxis `.then()`, or
- * dropping the handoff for a plain `getPraxis`, would type-check, pass every
- * other test, and quietly restore the round trips.
+ * WHAT IT STILL CANNOT SEE. That the effect routes through the plan; that is
+ * the ceiling `composerOutcome.ts` accepted for the same reason (#2945), and it
+ * is a review question rather than a silent green. Two claims about the same
+ * waterfall have no value seam at all and still read source — the dispatcher's
+ * chunk warm and the seal list's own viewer-keyed effect — and they live in
+ * `composerMountSourceScan.test.ts` next door, loudly.
  */
-import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
+import { describe, it, expect, vi } from "vitest";
+import {
+  planInitialLoad,
+  loadPlannedPraxis,
+  type InitialLoadPlan,
+} from "../initialLoadPlan";
+import { aPraxis } from "../../../test/fixtures";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url))
+/** The row a signup was handed on the way to `/praxis/7/edit`. */
+const CARRIED = aPraxis({ id: 7 });
+/** The same row as the read would answer with, for the fallback. */
+const READ_BACK = aPraxis({ id: 7 });
 
-function read(relativePath: string): string {
-  return readFileSync(path.join(HERE, relativePath), 'utf8')
-}
+describe("the composer does not re-read the praxis a signup just created", () => {
+  it("plans no request at all when the signup carried the row", () => {
+    const plan = planInitialLoad(7, () => CARRIED);
 
-const hookSource = read('../useEditPraxis.ts')
-const dispatcherSource = read('../../EditPraxis.tsx')
+    // The whole plan: a row in hand, and nothing named to fetch. An arm that
+    // read anyway — or a seal catalogue re-nested into this load — would not
+    // equal this.
+    expect(plan).toEqual({ kind: "carried", praxis: CARRIED });
+  });
 
-/**
- * The body of the initial-load effect, from its banner to its dependency list.
- * Sliced rather than searched whole-file, because "the file mentions
- * `listMetatasks`" is true either way — the question is whether the call sits
- * INSIDE this effect, waiting on a payload it reads nothing from.
- */
-const loadEffect = hookSource.slice(
-  hookSource.indexOf('// ---- Initial load ----'),
-  hookSource.indexOf('}, [idParam,'),
-)
+  it("asks the hand-off for the praxis it is actually loading", () => {
+    const takeCarried = vi.fn(() => null);
 
-describe('the composer does not re-read the praxis a signup just created', () => {
-  it('slices the load effect it means to inspect', () => {
-    // Guard the guard: if the banner or the dep list is renamed, this slice
-    // would silently become empty and every assertion below would pass on air.
-    expect(loadEffect).toContain('getPraxis')
-    expect(loadEffect.length).toBeGreaterThan(200)
-  })
+    planInitialLoad(7, takeCarried);
 
-  it('takes the carried row before deciding to fetch', () => {
-    expect(loadEffect).toContain('takeJustCreatedPraxis(praxisId)')
-  })
+    // Asking for the wrong id is how a stale carried row gets replayed onto a
+    // composer the player came Back to; the slot only answers on a match.
+    expect(takeCarried).toHaveBeenCalledWith(7);
+  });
 
-  it('still falls back to the read when nothing was carried', () => {
-    // The handoff is an optimisation, never a requirement: a bookmark, a
+  it("takes the carried row without spending the read", async () => {
+    const read = vi.fn(() => Promise.resolve(READ_BACK));
+
+    const loaded = await loadPlannedPraxis(
+      { kind: "carried", praxis: CARRIED },
+      read,
+    );
+
+    expect(loaded).toBe(CARRIED);
+    expect(read).not.toHaveBeenCalled();
+  });
+});
+
+describe("the composer still reads the praxis when nothing was carried", () => {
+  it("plans the read on a miss", () => {
+    // The hand-off is an optimisation, never a requirement: a bookmark, a
     // reload, a co-author's link and a Back all arrive with an empty slot.
-    expect(loadEffect).toMatch(/carried[\s\S]*getPraxis\(praxisId\)/)
-  })
-})
+    const plan = planInitialLoad(7, () => null);
 
-describe('the seal list does not wait on the praxis', () => {
-  it('is not fetched inside the initial-load effect', () => {
-    expect(loadEffect).not.toContain('listMetatasks')
-  })
+    expect(plan).toEqual({ kind: "read", praxisId: 7 });
+  });
 
-  it('is fetched from its own viewer-keyed effect', () => {
-    expect(hookSource).toMatch(
-      /listMetatasks\(\)[\s\S]{0,400}?\}, \[user\?\.character\?\.id\]\)/,
-    )
-  })
-})
+  it("executes that read exactly once, for that praxis", async () => {
+    const read = vi.fn(() => Promise.resolve(READ_BACK));
+    const plan: InitialLoadPlan = { kind: "read", praxisId: 7 };
 
-describe('the faction archetype chunk does not wait on getTask', () => {
-  /** Everything the dispatcher does while `state.loading` is still true. */
-  const loadingBranch = dispatcherSource.slice(
-    dispatcherSource.indexOf('if (state.loading) {'),
-    dispatcherSource.indexOf('if (!state.praxis) {'),
-  )
+    const loaded = await loadPlannedPraxis(plan, read);
 
-  it('slices the loading branch it means to inspect', () => {
-    expect(loadingBranch).toContain('editPraxis.loadingPageTitle')
-  })
-
-  it('warms the chunk from the praxis, which lands a round trip earlier', () => {
-    expect(loadingBranch).toContain('preloadArchetype')
-    // `task_faction_slug` IS `Task.primary_faction_slug` — one builder,
-    // server-side — so the warm and the dispatch below can never disagree.
-    expect(loadingBranch).toContain('task_faction_slug')
-  })
-
-  it('still dispatches on the task, so the warm cannot change what renders', () => {
-    expect(dispatcherSource).toContain(
-      'const slug = state.task?.primary_faction_slug ?? null;',
-    )
-  })
-})
+    expect(read).toHaveBeenCalledExactlyOnceWith(7);
+    expect(loaded).toBe(READ_BACK);
+  });
+});

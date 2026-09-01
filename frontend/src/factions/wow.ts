@@ -121,6 +121,7 @@ const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archet
 const WowFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/WowFactionBody'))
 const WowCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowCreateCharacter'))
 const WowEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/WowEditCharacter'))
+const WowProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/WowProposeTask'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -195,4 +196,11 @@ export const WOW_MANIFEST: FactionManifest = {
   // ONE responsive component — there is no phone twin row beneath this one, and
   // the surface that would have carried it stays retired.
   editCharacter: () => WowEditCharacter,
+
+  // #2538 — THE PETITION: the charter's own dress on the page a quest is
+  // proposed from. Derived, per the owner's ruling of 2026-08-24 — no sheet was
+  // drawn and none was commissioned. The slug this page wears is the TARGET
+  // faction, the live chip pick, so this row is reached the moment a proposer
+  // picks WOW and left the moment they clear it. ONE responsive component.
+  proposeTask: () => WowProposeTask,
 }

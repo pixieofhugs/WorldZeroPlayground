@@ -24,6 +24,7 @@ const EverymenFactionHero = lazyArchetype(() => import('../components/factionHer
 const EverymenFeedFrame = lazyArchetype(() => import('../components/feed/EverymenFeedFrame'))
 const EverymenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EverymenFieldDesk'))
 const EverymenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EverymenProfileBody'))
+const EverymenProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/EverymenProposeTask'))
 const EverymenTaskCard = lazyArchetype(() => import('../components/taskCard/EverymenTaskCard'))
 const EverymenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EverymenTaskDetail'))
 const EverymenVote = lazyArchetype(() => import('../components/vote/EverymenVote'))
@@ -59,6 +60,10 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   // the EDITED CHARACTER's and not a live pick, so this page cannot reskin
   // under the player mid-edit the way its create twin does.
   editCharacter: () => EverymenEditCharacter,
+  // The work order, requested (#2538). The slug is the faction the task is
+  // being proposed FOR — a live pick, like the enlistment paper's — so this
+  // page reskins to the union's sheet the moment its chip is chosen.
+  proposeTask: () => EverymenProposeTask,
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,
   profileBody: () => EverymenProfileBody,

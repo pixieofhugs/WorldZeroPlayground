@@ -24,6 +24,7 @@ const EphemeristsFactionHero = lazyArchetype(() => import('../components/faction
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
 const EphemeristsFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
+const EphemeristsProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/EphemeristsProposeTask'))
 const EphemeristsTaskCard = lazyArchetype(() => import('../components/taskCard/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
 const EphemeristsVote = lazyArchetype(() => import('../components/vote/EphemeristsVote'))
@@ -69,6 +70,12 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   // handle, the faction row and the delete danger zone. The last two are
   // MOUNTED from `characterPaths/editCharacterSlots`, never re-drawn.
   editCharacter: () => EphemeristsEditCharacter,
+  // Proposing a task FOR this faction (#2538's fan-out). DERIVED from the create
+  // plate above — same chassis, same ground, same field furniture — over the
+  // proposal form's own fields. The slug this dispatches on is the TARGET
+  // faction the chips pick, so the page wears this plate live and returns to the
+  // Default the moment the pick is cleared or "unaffiliated" is chosen.
+  proposeTask: () => EphemeristsProposeTask,
   duelSeal: () => EphemeristsDuelSealConfirm,
   mobileFieldDesk: () => EphemeristsFieldDesk,
 }
