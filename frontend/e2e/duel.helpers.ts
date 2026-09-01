@@ -25,10 +25,11 @@ import type { Scenario } from '../src/utils/e2eScenario'
  * clicked button below, so a missing or unreachable control fails the test
  * instead of passing silently.
  *
- * The one faction this suite must steer around (`wow` rewrites the seal copy)
- * and the reason a faction-skinned task is picked at all are documented on
+ * Why a faction-skinned task is picked at all is documented on
  * `selectDuelTask`; the seeder that creates that task is
- * `seed.py::ensure_duel_fixture_task`.
+ * `seed.py::ensure_duel_fixture_task`. This suite steers around no faction's
+ * copy — #1909 deleted the last per-faction seal override, so every skin, WOW
+ * included, renders the shared `useDuelSealCopy` (#2999).
  *
  * Prereqs: backend (seeded dev DB at head) + frontend, via frontend/e2e/run-e2e.sh.
  */
