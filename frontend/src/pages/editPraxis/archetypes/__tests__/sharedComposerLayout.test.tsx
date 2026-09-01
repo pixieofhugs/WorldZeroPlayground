@@ -20,7 +20,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 import { BodyTextarea } from "../controls";
@@ -28,11 +28,9 @@ import { TaskSlip } from "../shared";
 
 /* ── the toolbar roster ─────────────────────────────────────────────────── */
 
-// BodyTextarea reads only `body` / `setBody` off the state.
-const bodyState = {
-  body: "## What I did\n\nCaught the papers.",
-  setBody: () => {},
-} as unknown as EditPraxisState;
+// The roster is the same in every composer state, so the fixture's quiet
+// default is the premise.
+const bodyState = anEditPraxisState();
 
 /**
  * The design's seven, in order. Named by their accessible names rather than

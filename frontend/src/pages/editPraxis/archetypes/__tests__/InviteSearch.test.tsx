@@ -20,6 +20,7 @@ import type { PraxisInviteOut, PraxisMemberOut, PraxisOut } from "../../../../ap
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../../api/duel";
 import type { CharacterOut } from "../../../../api/characters";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import { InviteSearch, type InviteSearchSkin } from "../controls";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 
@@ -76,12 +77,13 @@ function duelState(
     members: [],
     invites: [],
   } as unknown as PraxisOut;
-  return {
+  // Everything not named here is the fixture's quiet default (#2877).
+  return anEditPraxisState({
     praxis,
     duel: options.detailMissing ? null : duel,
     duelMode: true,
     currentCharacterId: viewerCharacterId,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function chipHtml(state: EditPraxisState): string {
@@ -237,17 +239,13 @@ function collabState(
     members,
     invites,
   } as unknown as PraxisOut;
-  return {
+  // Everything not named here is the fixture's quiet default (#2877) — an
+  // empty query, no results, the box shut, and every handler a no-op.
+  return anEditPraxisState({
     praxis,
-    duel: null,
-    duelMode: false,
     currentCharacterId: 1,
-    inviteQuery: "",
-    inviteResults: [],
-    inviteOpen: false,
     autoSubmitDays: 3,
-    cancelInvite: () => {},
-  } as unknown as EditPraxisState;
+  });
 }
 
 describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
@@ -354,17 +352,15 @@ function searchState(results: CharacterOut[]): EditPraxisState {
     members: [],
     invites: [],
   } as unknown as PraxisOut;
-  return {
+  // Everything not named here is the fixture's quiet default (#2877).
+  return anEditPraxisState({
     praxis,
-    duel: null,
     duelMode: true,
     currentCharacterId: 1,
     inviteQuery: "pixie",
     inviteResults: results,
     inviteOpen: true,
-    inviting: false,
-    sendChallenge: () => {},
-  } as unknown as EditPraxisState;
+  });
 }
 
 describe("InviteSearch — a result row names the person (#1962)", () => {

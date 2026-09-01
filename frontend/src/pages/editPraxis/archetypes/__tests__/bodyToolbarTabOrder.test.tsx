@@ -17,14 +17,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import { BodyTextarea } from "../controls";
 
-// BodyTextarea only reads `body` / `setBody` off the state.
-const state = {
-  body: "## What I did\n\nCaught the papers.",
-  setBody: () => {},
-} as unknown as EditPraxisState;
+// Nothing here turns on a particular composer state: the toolbar draws the
+// same buttons in every one, so the fixture's quiet default IS the premise.
+// (The old literal claimed `BodyTextarea` reads only `body`/`setBody`, which
+// #2882 made false — it reads neither `body` nor a `body` prop at all.)
+const state = anEditPraxisState();
 
 function html(): string {
   return renderToStaticMarkup(

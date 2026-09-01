@@ -38,6 +38,7 @@ import UaSeal from "../skins/UaSeal";
 import WowSeal from "../skins/WowSeal";
 import type { SealSkinProps } from "../types";
 import type { EditPraxisState } from "../../../pages/editPraxis/useEditPraxis";
+import { anEditPraxisState } from "../../../test/fixtures";
 import type { TaskOut } from "../../../api/tasks";
 
 function metatask(slug: string): TaskOut {
@@ -67,17 +68,10 @@ function metatask(slug: string): TaskOut {
   } as TaskOut;
 }
 
+// The open picker and its rows are the premise; everything else is the
+// fixture's quiet default (#2877).
 function pickerState(rows: TaskOut[]): EditPraxisState {
-  return {
-    metatasks: rows,
-    appliedMetatasks: new Set<number>(),
-    appliedMetataskList: [],
-    applyingMetatask: null,
-    metataskPickerOpen: true,
-    metataskRemovalTarget: null,
-    addMetatask: async () => {},
-    closeMetataskPicker: () => {},
-  } as unknown as EditPraxisState;
+  return anEditPraxisState({ metatasks: rows, metataskPickerOpen: true });
 }
 
 /** Every seal mounts a band, and a band is a `<Link>` (#2648). */

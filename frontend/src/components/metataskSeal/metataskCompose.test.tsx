@@ -10,7 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
 import "../../i18n";
 import i18n from "../../i18n";
-import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
+import { anEditPraxisState } from "../../test/fixtures";
 import type { TaskOut } from "../../api/tasks";
 import { MetataskSealStack } from "./MetataskSealStack";
 import MetataskPicker from "./MetataskPicker";
@@ -57,27 +57,10 @@ function metatask(
 const render = (node: ReactElement) =>
   renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
 
-const noop = () => {};
-const asyncNoop = async () => {};
-
-function mkState(partial: Partial<EditPraxisState>): EditPraxisState {
-  return {
-    metatasks: [],
-    appliedMetatasks: new Set<number>(),
-    appliedMetataskList: [],
-    applyingMetatask: null,
-    canSealMetatask: false,
-    metataskPickerOpen: false,
-    metataskRemovalTarget: null,
-    addMetatask: asyncNoop,
-    openMetataskPicker: noop,
-    closeMetataskPicker: noop,
-    requestRemoveMetatask: noop,
-    confirmRemoveMetatask: asyncNoop,
-    cancelRemoveMetatask: noop,
-    ...partial,
-  } as unknown as EditPraxisState;
-}
+// The seal fields this file names are all the fixture's quiet default (#2877):
+// no metatasks, none applied, none applying, the picker shut, nothing pending
+// removal, and every handler a no-op.
+const mkState = anEditPraxisState;
 
 describe("MetataskSealStack", () => {
   const addLabel = i18n.t("detail.seal.add", { ns: "praxis" });

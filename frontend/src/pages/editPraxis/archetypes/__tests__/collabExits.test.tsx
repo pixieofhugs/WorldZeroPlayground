@@ -16,6 +16,7 @@ import "../../../../i18n";
 import i18n from "../../../../i18n";
 import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 import { DropButton, InviteSearch } from "../controls";
 
@@ -58,24 +59,10 @@ function praxisState({
     task_faction_slug: null,
     task_point_value: 20,
   } as unknown as PraxisOut;
-  return {
-    praxis,
-    duelMode: false,
-    currentCharacterId,
-    inviteQuery: "",
-    inviteResults: [],
-    inviteOpen: false,
-    inviting: false,
-    setInviteQuery: () => {},
-    setInviteOpen: () => {},
-    sendInvite: async () => {},
-    sendChallenge: async () => {},
-    kickMember: async () => {},
-    nudge: async () => {},
-    cancelInvite: async () => {},
-    leaveCollab: async () => {},
-    cancel: async () => {},
-  } as unknown as EditPraxisState & { praxis: PraxisOut };
+  // Everything not named here is the fixture's quiet default (#2877). The
+  // second spread of `praxis` is what narrows the state's `PraxisOut | null`
+  // back to the loaded praxis this return type promises.
+  return { ...anEditPraxisState({ praxis, currentCharacterId }), praxis };
 }
 
 const LEAVE_LABEL = i18n.t("forms:editPraxis.leaveAction");

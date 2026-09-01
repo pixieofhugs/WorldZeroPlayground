@@ -42,7 +42,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 
@@ -88,44 +88,17 @@ const praxis = {
   media_items: [],
 } as unknown as PraxisOut;
 
-const state = {
-  loading: false,
-  phase: "composing",
+// Everything not named here is the fixture's quiet default (#2877).
+const state = anEditPraxisState({
   praxis,
   task,
-  error: "",
-  title: praxis.title,
-  setTitle: () => {},
+  // Spelled, not `praxis.title`: that is `string | null` on the wire and the
+  // composer's draft title is not — a mismatch the old cast hid.
+  title: "I helped a stranger",
   body: "Caught the papers.",
-  setBody: () => {},
-  media: [],
-  fileError: "",
-  handleFileChange: () => {},
-  removeMedia: async () => {},
-  switchingMode: null,
-  changeMode: async () => {},
-  inviteQuery: "",
-  setInviteQuery: () => {},
-  inviteResults: [],
-  inviteOpen: false,
-  setInviteOpen: () => {},
-  inviting: false,
-  submitting: false,
-  publish: async () => {},
-  saveDraft: async () => {},
-  pullBack: async () => {},
-  cancel: async () => {},
-  autosaveAt: null,
   autoSubmitDays: 10,
-  isPublished: false,
-  controlsLocked: false,
-  modeIsLocked: false,
-  showInviteBox: false,
-  showSealStack: false,
-  duelMode: false,
   duelChipVisible: true,
-  currentCharacterId: 3,
-} as unknown as EditPraxisState;
+});
 
 /** The twinkle band is the one svg on the page drawn in a 480×72 viewBox. */
 function twinklePaths(formFactor: "mobile" | "desktop"): string[] {

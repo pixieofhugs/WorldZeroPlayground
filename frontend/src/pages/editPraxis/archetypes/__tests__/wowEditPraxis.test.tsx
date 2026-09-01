@@ -29,6 +29,7 @@ import i18n from "../../../../i18n";
 import { surfaceMap } from "../../../../factions";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 
@@ -82,55 +83,20 @@ const PRAXIS = {
   score: 20,
 } as unknown as PraxisOut;
 
+// Everything this suite does NOT name is the fixture's quiet default (#2877):
+// nothing loading, nothing open, no confirm pending, every capability false.
+// Only the four lines below are this page's premise.
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
-  return {
-    loading: false,
-    phase: "composing",
+  return anEditPraxisState({
     praxis: PRAXIS,
     task: TASK,
-    error: "",
-    title: PRAXIS.title,
-    setTitle: () => {},
+    // Spelled, not `PRAXIS.title`: that is `string | null` on the wire and the
+    // composer's draft title is not — a mismatch the old cast hid.
+    title: "Two crates and a wobbly trolley",
     body: "## What I did\n\nWheeled them down.",
-    setBody: () => {},
-    media: [],
-    fileError: "",
-    handleFileChange: () => {},
-    removeMedia: async () => {},
-    switchingMode: null,
-    changeMode: async () => {},
-    inviteQuery: "",
-    setInviteQuery: () => {},
-    inviteResults: [],
-    inviteOpen: false,
-    setInviteOpen: () => {},
-    inviting: false,
-    sendInvite: async () => {},
-    cancelInvite: async () => {},
-    kickMember: async () => {},
-    duel: null,
-    sendChallenge: async () => {},
-    cancelDuel: async () => {},
-    dissolveDuel: async () => {},
-    submitting: false,
-    publish: async () => {},
-    saveDraft: async () => {},
-    pullBack: async () => {},
-    leaveCollab: async () => {},
-    cancel: async () => {},
-    autosaveAt: null,
-    setAutosaveAt: () => {},
     autoSubmitDays: 10,
-    isPublished: false,
-    controlsLocked: false,
-    modeIsLocked: false,
-    showInviteBox: false,
-    showSealStack: false,
-    duelMode: false,
-    duelChipVisible: false,
-    currentCharacterId: 3,
     ...overrides,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(

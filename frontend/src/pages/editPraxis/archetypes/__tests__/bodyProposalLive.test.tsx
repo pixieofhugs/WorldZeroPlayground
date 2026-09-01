@@ -19,43 +19,38 @@ import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
+import type { PraxisOut } from "../../../../api/praxis";
+import { aMember, aPraxis, anEditPraxisState } from "../../../../test/fixtures";
 import { BodyTextarea } from "../controls";
 
 /** A crew of two — the smallest praxis a proposal can exist on. */
-function praxis(proposalLive: boolean) {
-  const member = (id: number) => ({
-    id,
-    praxis_id: 1,
-    character_id: id,
-    character_display_name: `M${id}`,
-    has_submitted: false,
-    is_done: false,
-    joined_at: "2026-01-01T00:00:00Z",
-    nudged_at: null,
-    submitted_at: null,
-  });
-  return {
-    id: 1,
+function praxis(proposalLive: boolean): PraxisOut {
+  return aPraxis({
     type: "collab",
+    // `pending` is "a proposal is live" since ADR-0079; the timestamp is what
+    // identifies the proposal.
     status: proposalLive ? "pending" : "in_progress",
+    submitted_at: null,
     submit_proposed_at: proposalLive ? "2026-08-17T10:00:00Z" : null,
-    members: [member(1), member(2)],
-  };
+    media_items: [],
+    members: [
+      aMember({ id: 1, character_id: 1, has_submitted: false }),
+      aMember({ id: 2, character_id: 2, has_submitted: false }),
+    ],
+  });
 }
 
+// Everything not named here is the fixture's quiet default (#2877).
 function state(
   proposalLive: boolean,
   controlsLocked = false,
 ): EditPraxisState {
-  return {
+  return anEditPraxisState({
     body: "## What I did\n\nCaught the papers.",
-    setBody: () => {},
     praxis: praxis(proposalLive),
     proposalConfirmArmed: proposalLive,
-    confirmProposalEdit: () => {},
     controlsLocked,
-    submitting: false,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function html(proposalConfirmArmed: boolean, controlsLocked = false): string {
@@ -85,10 +80,10 @@ describe("a live proposal, at the write-up", () => {
     // Gated on the praxis rather than on `proposalConfirmArmed`: the confirm
     // fires once and gets out of the way, but the window is still open and is
     // still what the member is deciding against on their next keystroke.
-    const agreedAlready = {
-      ...(state(true) as unknown as Record<string, unknown>),
+    const agreedAlready: EditPraxisState = {
+      ...state(true),
       proposalConfirmArmed: false,
-    } as unknown as EditPraxisState;
+    };
     expect(
       renderToStaticMarkup(
         <BodyTextarea {...agreedAlready} skin={{ textareaStyle: {} }} />,
