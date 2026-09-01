@@ -123,9 +123,11 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
   },
   {
     // ONE writer, TWO keys (#2958). `sectionDisclosure` is the one module that
-    // writes both, so the census below — which finds writers by their
-    // `setItem` call — cannot tell them apart and would keep passing with this
-    // line missing. The second surface has to be disclosed by hand.
+    // writes both. The writer census cannot tell them apart — it asks who
+    // writes, not what — so this line once stood on hand-discipline alone.
+    // #2989 closed that: a second arm extracts the KEYS out of each writer and
+    // holds them against this list, and its guard-the-guard pins both of this
+    // module's keys by name. Delete this entry and the suite goes red.
     name: PROFILE_SECTIONS.storageKey,
     family: 'account',
     purposeKey: 'settings.cookies.entries.profileSections',

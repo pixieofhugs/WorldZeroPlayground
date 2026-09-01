@@ -19,6 +19,13 @@
  *      the census — it greps for the two `setItem` calls, which is the sound
  *      question ("who writes?") rather than the unsound one ("what literals
  *      look like keys?").
+ *   1b. A NEW KEY inside a module that ALREADY writes one (#2989). The census
+ *      above answers "who writes?" and nothing else, so once a module is on
+ *      the list it is free forever to add a second undeclared key — which is
+ *      exactly what #2958 did, adding `wz-profile-sections` beside
+ *      `wz-faction-sections` in one file while the file set never moved. The
+ *      second arm therefore extracts the KEYS out of the writers the first arm
+ *      found and holds them against the card's own disclosure.
  *   2. A RENAMED KEY. Nothing here retypes one: the section imports each from
  *      its writer, and this file imports the same constants and checks they
  *      are all disclosed.
@@ -51,7 +58,7 @@ import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
 import { ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
-import { sourceFiles } from '../../../test/sourceScan'
+import { readStripped, sourceFiles, stripComments } from '../../../test/sourceScan'
 import CookiesSection, {
   SESSION_COOKIE_DAYS,
   STORED_ENTRIES,
@@ -101,14 +108,112 @@ const KNOWN_WRITERS = [
   'utils/onboardingResume.ts',
 ]
 
+/**
+ * Every file under `src/` holding a write call, read RAW — a `setItem` inside a
+ * comment still means somebody is thinking about storing something, and this
+ * arm is the acknowledgement list, so a false positive here costs one line and
+ * a real miss costs a lie on the privacy card.
+ */
+const writerFiles = (): string[] =>
+  sourceFiles({ dir: SRC }).filter((file) =>
+    /(?:local|session)Storage\.setItem\(/.test(readFileSync(file, 'utf8')),
+  )
+
 describe('nothing writes to a browser store without being disclosed', () => {
   it('finds exactly the writers this card knows about', () => {
-    const writers = sourceFiles({ dir: SRC })
-      .filter((file) => /(?:local|session)Storage\.setItem\(/.test(readFileSync(file, 'utf8')))
+    const writers = writerFiles()
       .map((file) => relative(SRC, file).split('\\').join('/'))
       .sort()
 
     expect(writers, 'an undisclosed storage writer').toEqual([...KNOWN_WRITERS].sort())
+  })
+})
+
+/**
+ * #2989 — the same question asked of KEYS, because the arm above cannot ask it.
+ *
+ * A key is a string literal in this repo, always: even the five families whose
+ * full key is assembled at runtime assemble it from a literal BASE, and the
+ * base is what the card discloses. So the extraction is source-level, and it
+ * takes a literal from a writer file three ways — no resolver, no dataflow:
+ *
+ *   - handed straight to the store, `setItem('k', …)`;
+ *   - bound to something NAMED like a key — `const X_STORAGE_KEY = 'k'`,
+ *     `storageKey: 'k'`. This is the one that catches #2958;
+ *   - spelled in the app's `wz` storage namespace, wherever it sits.
+ *
+ * READ WITH COMMENTS STRIPPED, deliberately and unlike the arm above: these
+ * modules explain in prose which key they write and why, and a docblock naming
+ * a key is not a key being written.
+ *
+ * ponytail: it reads the WRITER FILES, so a key literal declared in a module
+ * that does not itself call `setItem` is invisible to it — the writer set is
+ * the anchor, and widening the walk to all of `src/` drags in every `wz-`
+ * prefixed DOM id and CSS class in the tree. If keys ever move out of their
+ * writers, scan `src/` and grow {@link NOT_STORAGE} instead.
+ */
+/** One string literal, of any quote, holding no interpolation. `\x60` is a backtick. */
+const QUOTED = String.raw`(?<q>['"\x60])(?<key>[^'"\x60\n$]*)\k<q>`
+
+/** Literals the extraction sees that are not storage. Fails CLOSED: a new one is red until classified. */
+const NOT_STORAGE = new Set([
+  // `sectionDisclosure`'s two DOM id prefixes, which share the `wz` namespace
+  // with its two storage keys and are stored nowhere.
+  'wz-faction-section',
+  'wz-profile-section',
+])
+
+/** Every literal in already-stripped `source` that could be a storage key. */
+function storageKeyLiterals(source: string): string[] {
+  const found = new Set<string>()
+
+  const inline = new RegExp(String.raw`(?:local|session)Storage\.setItem\(\s*${QUOTED}`, 'g')
+  for (const { groups } of source.matchAll(inline)) found.add(groups!.key)
+
+  const bound = new RegExp(String.raw`(?<name>[A-Za-z_$][\w$]*)\s*[=:]\s*${QUOTED}`, 'g')
+  for (const { groups } of source.matchAll(bound)) {
+    if (/key/i.test(groups!.name)) found.add(groups!.key)
+  }
+
+  const namespaced = new RegExp(QUOTED, 'g')
+  for (const { groups } of source.matchAll(namespaced)) {
+    if (/^wz[-_:]/.test(groups!.key)) found.add(groups!.key)
+  }
+
+  return [...found].filter((key) => !NOT_STORAGE.has(key))
+}
+
+describe('no writer holds a key the card does not disclose', () => {
+  /** The one entry the frontend never writes — the backend sets it, pinned below. */
+  const disclosed = STORED_ENTRIES.map((entry) => entry.name).filter((name) => name !== 'access_token')
+
+  it('finds exactly the keys this card discloses', () => {
+    const keys = new Set(writerFiles().flatMap((file) => storageKeyLiterals(readStripped(file))))
+
+    expect([...keys].sort(), 'an undisclosed storage key').toEqual([...disclosed].sort())
+  })
+
+  /* The guard-the-guard: a scan that matches nothing passes, so prove the
+     extraction really does fire on the call site that motivated #2989. */
+  it('pulls BOTH of one module\u2019s keys out of it \u2014 the #2958 case', () => {
+    const keys = storageKeyLiterals(
+      readStripped(join(SRC, 'pages', 'factionDetail', 'sectionDisclosure.tsx')),
+    )
+
+    expect(keys).toEqual(
+      expect.arrayContaining([FACTION_SECTIONS.storageKey, PROFILE_SECTIONS.storageKey]),
+    )
+  })
+
+  it('does not lean on the wz namespace alone', () => {
+    expect(storageKeyLiterals("localStorage.setItem('plain-inline', '1')")).toContain('plain-inline')
+    expect(storageKeyLiterals("const SOMETHING_KEY = 'not-namespaced'")).toContain('not-namespaced')
+  })
+
+  it('reads no key out of prose or commented-out code', () => {
+    expect(
+      storageKeyLiterals(stripComments("// localStorage.setItem('wz-ghost', '1')")),
+    ).toEqual([])
   })
 })
 
