@@ -76,8 +76,8 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { mediaUrl } from '../../utils/media'
-import { formatPoints } from '../../utils/points'
 import { factionRoleVar } from '../../utils/factionRoles'
+import { duelScoreFor, duelVerdict } from '../../components/duel/standing'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
 import type { PraxisDetailState } from './usePraxisDetail'
 
@@ -165,9 +165,6 @@ function resolveInk(ink?: DuelCardInk): Required<DuelCardInk> {
     plate: ink?.plate ?? DEFAULT_INK.plate,
   }
 }
-
-/** The dash a side with no total wears. Ornament, not copy. */
-const NO_SCORE = '—'
 
 /**
  * One duellist's disc. `ringed` is the page's own side — a spectrum ring, the na
@@ -311,64 +308,19 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
   const { mine, rival } = sidesForPraxis(duel, praxis.id)
   const forfeitedBy = duel.forfeited_by_character_id
 
-  // The FROZEN pair, once the era closed (ADR-0052). Either figure may be null
-  // on a no-contest — a duel that never became votable — in which case there is
-  // no pair to print and the footer says so.
-  const resolved = duel.status === 'resolved'
-  const mineIsChallenger = mine.character_id === duel.challenger.character_id
-  const mineFinal = mineIsChallenger ? duel.challenger_final_points : duel.opponent_final_points
-  const rivalFinal = mineIsChallenger ? duel.opponent_final_points : duel.challenger_final_points
-  const frozenPair = resolved && mineFinal != null && rivalFinal != null
-
   /**
-   * A side's total, or the em-dash where it has none. A forfeiter's total is
-   * absent by rule (see the header), which is checked before the frozen pair
-   * because a forfeit survives era close.
+   * The figures and the verdict now come from `components/duel/standing.ts`,
+   * shared with #1084's side-by-side reader. Both surfaces read the same settled
+   * duel over the same `duelCrossLink.*` keys, and #2814's thesis is that a rule
+   * written twice drifts — so it is written once and the READING ORDER is the
+   * argument. This card is viewer-relative and passes `mine, rival`; the reader
+   * is deliberately not, and passes `challenger, opponent`.
    *
-   * `formatPoints` rather than a local `toFixed`: this figure sits on the same
-   * page as `ScoreStamp`'s total and has to read the same way (#1866). A duel
-   * margin is the difference of two such figures, so it takes the same shape.
+   * The verdict line sits at the CONTENT tier, not the design's 10px: it is a
+   * status explanation, which WORLD_ZERO_STYLE §4's role vocabulary puts on the
+   * 18px floor, and duel narration sinking below that floor is what #769 was.
    */
-  const scoreFor = (side: DuelSideOut, frozen: number | null): string => {
-    if (forfeitedBy != null && side.character_id === forfeitedBy) return NO_SCORE
-    if (resolved) return frozen != null ? formatPoints(frozen) : NO_SCORE
-    return formatPoints(side.points_from_votes)
-  }
-
-  // ── The one footer verdict line ───────────────────────────────────────────
-  // Every reading is one sentence from the shipped `duelCrossLink.*` catalog.
-  // It sits at the CONTENT tier, not the design's 10px: it is a status
-  // explanation, which WORLD_ZERO_STYLE §4's role vocabulary puts on the 18px
-  // floor, and duel narration sinking below that floor is exactly what #769 was.
-  let verdict: string
-  if (forfeitedBy != null) {
-    verdict = t('duelCrossLink.wonByDefault')
-  } else if (resolved) {
-    verdict = frozenPair
-      ? t('duelCrossLink.final', {
-          standing:
-            duel.winner_character_id == null
-              ? t('duelCrossLink.finalStanding.tied')
-              : t('duelCrossLink.finalStanding.won', {
-                  name:
-                    duel.winner_character_id === mine.character_id
-                      ? mine.display_name
-                      : rival.display_name,
-                }),
-        })
-      : t('duelCrossLink.finalNoContest')
-  } else {
-    const margin = mine.points_from_votes - rival.points_from_votes
-    verdict = t('duelCrossLink.live', {
-      standing:
-        margin === 0
-          ? t('duelCrossLink.standing.tied')
-          : t('duelCrossLink.standing.leads', {
-              name: margin > 0 ? mine.display_name : rival.display_name,
-              margin: formatPoints(Math.abs(margin)),
-            }),
-    })
-  }
+  const verdict = duelVerdict(duel, mine, rival, t)
 
   const hairline = `1px solid ${paint.line}`
 
@@ -378,7 +330,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
   const rivalRow = (
     <DuelRow
       side={rival}
-      score={scoreFor(rival, rivalFinal)}
+      score={duelScoreFor(duel, rival)}
       ringed={false}
       dimmed={forfeitedBy != null && rival.character_id === forfeitedBy}
       ink={paint}
@@ -398,7 +350,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
 
       <DuelRow
         side={mine}
-        score={scoreFor(mine, mineFinal)}
+        score={duelScoreFor(duel, mine)}
         ringed
         dimmed={forfeitedBy != null && mine.character_id === forfeitedBy}
         ink={paint}
@@ -439,6 +391,33 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
           {verdict}
         </p>
       </div>
+
+      {/*
+        The fourth hairline — the way out to the side-by-side reader (#1084).
+        The design's whole change to THIS card: "DuelCard grows a link; nothing
+        else moves." It stays an aside block at 330px, which it fits, because the
+        standing is two names and two figures and that was never the part that
+        needed room.
+
+        Gated on the rival having cast, for the same reason the rival row's link
+        is: until both entries exist there is no second side to read, and the
+        reader would open on half a duel. `readBothSides` is faction-neutral like
+        every other duel string (§0) — one key, all nine skins.
+
+        SPIKE: the `/duel/:id` route this points at does not exist yet.
+      */}
+      {rival.praxis_id != null && (
+        <div style={{ borderTop: hairline, marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
+          <Link
+            to={`/duel/${duel.id}?from=${praxis.id}`}
+            className="content-text"
+            style={{ color: paint.muted, display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}
+          >
+            {t('duelCrossLink.readBothSides')}
+            <span aria-hidden style={{ flexShrink: 0 }}>›</span>
+          </Link>
+        </div>
+      )}
     </section>
   )
 }
