@@ -122,6 +122,7 @@
     "EphemeristsPraxisCard": "src/components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
     "EphemeristsPraxisDetail": "src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail.tsx",
     "EphemeristsProfileBody": "src/pages/characterProfile/archetypes/EphemeristsProfileBody.tsx",
+    "EphemeristsProposeTask": "src/pages/proposeTask/archetypes/EphemeristsProposeTask.tsx",
     "EphemeristsScoreStamp": "src/components/praxisCard/scoreStamp/EphemeristsScoreStamp.tsx",
     "EphemeristsSeal": "src/components/metataskSeal/skins/EphemeristsSeal.tsx",
     "EphemeristsSelectCard": "src/components/selectCard/EphemeristsSelectCard.tsx",
@@ -143,6 +144,7 @@
     "EverymenPraxisCard": "src/components/praxisCard/desktop/EverymenPraxisCard.tsx",
     "EverymenPraxisDetail": "src/pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx",
     "EverymenProfileBody": "src/pages/characterProfile/archetypes/EverymenProfileBody.tsx",
+    "EverymenProposeTask": "src/pages/proposeTask/archetypes/EverymenProposeTask.tsx",
     "EverymenScoreStamp": "src/components/praxisCard/scoreStamp/EverymenScoreStamp.tsx",
     "EverymenSeal": "src/components/metataskSeal/skins/EverymenSeal.tsx",
     "EverymenSelectCard": "src/components/selectCard/EverymenSelectCard.tsx",
@@ -200,6 +202,8 @@
     "MobileStickyBar": "src/pages/factionDetail/MobileStickyBar.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
     "NavBar": "src/components/NavBar.tsx",
+    "NotificationRows": "src/pages/settings/sections/NotificationsSection.tsx",
+    "NotificationsSection": "src/pages/settings/sections/NotificationsSection.tsx",
     "OnboardingCard": "src/pages/onboarding/OnboardingCard.tsx",
     "OptionPicker": "src/components/ui/FilterBar/OptionPicker.tsx",
     "OwnerControls": "src/components/comments/OwnerControls.tsx",
@@ -246,6 +250,7 @@
     "SingularityPraxisDetail": "src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
     "SingularityProcessLight": "src/components/factionMarks/SingularityProcessLight.tsx",
     "SingularityProfileBody": "src/pages/characterProfile/archetypes/SingularityProfileBody.tsx",
+    "SingularityProposeTask": "src/pages/proposeTask/archetypes/SingularityProposeTask.tsx",
     "SingularityReadout": "src/components/factionMarks/SingularityReadout.tsx",
     "SingularityScoreStamp": "src/components/praxisCard/scoreStamp/SingularityScoreStamp.tsx",
     "SingularitySeal": "src/components/metataskSeal/skins/SingularitySeal.tsx",
@@ -269,6 +274,7 @@
     "SnidePraxisCard": "src/components/praxisCard/desktop/SnidePraxisCard.tsx",
     "SnidePraxisDetail": "src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx",
     "SnideProfileBody": "src/pages/characterProfile/archetypes/SnideProfileBody.tsx",
+    "SnideProposeTask": "src/pages/proposeTask/archetypes/SnideProposeTask.tsx",
     "SnideScoreStamp": "src/components/praxisCard/scoreStamp/SnideScoreStamp.tsx",
     "SnideSeal": "src/components/metataskSeal/skins/SnideSeal.tsx",
     "SnideSelectCard": "src/components/selectCard/SnideSelectCard.tsx",
@@ -296,6 +302,7 @@
     "UaPraxisCard": "src/components/praxisCard/desktop/UaPraxisCard.tsx",
     "UaPraxisDetail": "src/pages/praxisDetail/archetypes/UaPraxisDetail.tsx",
     "UaProfileBody": "src/pages/characterProfile/archetypes/UaProfileBody.tsx",
+    "UaProposeTask": "src/pages/proposeTask/archetypes/UaProposeTask.tsx",
     "UaScoreStamp": "src/components/praxisCard/scoreStamp/UaScoreStamp.tsx",
     "UaSeal": "src/components/metataskSeal/skins/UaSeal.tsx",
     "UaSelectCard": "src/components/selectCard/UaSelectCard.tsx",
@@ -322,6 +329,7 @@
     "WowPraxisCard": "src/components/praxisCard/desktop/WowPraxisCard.tsx",
     "WowPraxisDetail": "src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx",
     "WowProfileBody": "src/pages/characterProfile/archetypes/WowProfileBody.tsx",
+    "WowProposeTask": "src/pages/proposeTask/archetypes/WowProposeTask.tsx",
     "WowScoreStamp": "src/components/praxisCard/scoreStamp/WowScoreStamp.tsx",
     "WowSeal": "src/components/metataskSeal/skins/WowSeal.tsx",
     "WowSelectCard": "src/components/selectCard/WowSelectCard.tsx",
@@ -644,6 +652,11 @@
     },
     "NavBar": {
       "cardMode": "column"
+    },
+    "NotificationRows": {
+      "cardMode": "single",
+      "viewport": "820x1200",
+      "primaryStory": "Default"
     },
     "PlayersFilterBar": {
       "cardMode": "column"

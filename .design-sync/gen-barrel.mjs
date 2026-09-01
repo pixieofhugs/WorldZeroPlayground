@@ -65,16 +65,23 @@ for (const name of Object.keys(cfg.componentSrcMap).sort()) {
   const dtsSpec = './ds-types/' + (stem ?? bare);
   if (!hasTypes) noTypes.push(name);
 
-  if (/^export\s+default\s/m.test(src)) {
-    lines.push(`export { default as ${name} } from "${spec}";`);
-    if (hasTypes) dts.push(`export { default as ${name} } from "${dtsSpec}";`);
-  } else if (
+  // A same-named export WINS over the file's default. Two map names can share
+  // one file (NotificationsSection + NotificationRows; VoteShell's two gates),
+  // and testing only "does this file have a default" aliased the named one onto
+  // the default — shipping the WRONG component under a right-looking name while
+  // the N/N barrel canary still reads clean. `export default function <Name>`
+  // matches neither pattern below, so default-only components are unaffected.
+  const hasNamed =
     new RegExp(`^export\\s+(?:const|function|class)\\s+${name}\\b`, 'm').test(src) ||
-    new RegExp(`^export\\s*\\{[^}]*\\b${name}\\b`, 'm').test(src)
-  ) {
+    new RegExp(`^export\\s*\\{[^}]*\\b${name}\\b`, 'm').test(src);
+
+  if (hasNamed) {
     lines.push(`export { ${name} } from "${spec}";`);
     if (hasTypes) dts.push(`export { ${name} } from "${dtsSpec}";`);
     named++;
+  } else if (/^export\s+default\s/m.test(src)) {
+    lines.push(`export { default as ${name} } from "${spec}";`);
+    if (hasTypes) dts.push(`export { default as ${name} } from "${dtsSpec}";`);
   } else {
     skipped.push(name + '  ' + rel);
   }
