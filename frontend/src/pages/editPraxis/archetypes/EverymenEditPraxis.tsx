@@ -560,7 +560,12 @@ export default function EverymenEditPraxis({ state }: Props) {
             rule={false}
             labelStyle={stencil({ color: INK })}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 

@@ -643,7 +643,12 @@ export default function SingularityEditPraxis({ state }: Props) {
             rule={false}
             labelStyle={{ fontFamily: FACE, color: INK }}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 

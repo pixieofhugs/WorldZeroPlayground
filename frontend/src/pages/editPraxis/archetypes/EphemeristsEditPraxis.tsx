@@ -631,7 +631,12 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             label={t("editPraxis.composer.metatasksLabel")}
             labelStyle={sectionLabel}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 

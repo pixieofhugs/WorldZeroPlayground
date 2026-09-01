@@ -513,7 +513,12 @@ export default function DefaultEditPraxis({ state, ornament }: Props) {
             rule={false}
             labelStyle={labelStyle}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 

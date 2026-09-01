@@ -575,7 +575,12 @@ export default function SnideEditPraxis({ state }: Props) {
             rule={false}
             labelStyle={{ color: MUTED }}
           >
-            <MetataskSealStack state={state} />
+            <MetataskSealStack
+              appliedMetataskList={state.appliedMetataskList}
+              canSealMetatask={state.canSealMetatask}
+              requestRemoveMetatask={state.requestRemoveMetatask}
+              openMetataskPicker={state.openMetataskPicker}
+            />
           </ComposerSection>
         )}
 
