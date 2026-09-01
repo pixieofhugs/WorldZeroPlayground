@@ -25,6 +25,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { aPraxis, aTask, anEditPraxisState } from "../../../../test/fixtures";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "mobile" | "desktop" }));
 
@@ -36,54 +37,35 @@ vi.mock("../../../../hooks/useFormFactor", () => ({
 import EverymenEditPraxis from "../EverymenEditPraxis";
 
 /**
- * Only the state this archetype reads. The composer's full contract is ~70
- * fields and is exercised by `composerDispatch.test.tsx`; a second copy of it
- * here would be a fixture to maintain rather than a claim to make.
+ * Only the state this archetype reads. The composer's full contract is ~80
+ * fields and is carried by `anEditPraxisState` (#2877); everything not named
+ * below is that fixture's quiet default — nothing loading, nothing open, no
+ * confirm pending, every capability false.
  */
-function state(overrides: Record<string, unknown> = {}): EditPraxisState {
-  return {
-    praxis: {
+function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
+  return anEditPraxisState({
+    praxis: aPraxis({
       id: 55,
-      task_id: 7,
       task_title: "A Very Human Thing",
       task_faction_slug: "everymen",
-      type: "solo",
-      created_by_id: 3,
+      // A draft, matching the fixture's own default praxis: this suite renders
+      // the composer proper, which is what a member sees BEFORE casting.
+      status: "in_progress",
+      submitted_at: null,
       members: [],
-      invites: [],
-      duel_id: null,
-    },
-    task: {
-      id: 7,
+      media_items: [],
+    }),
+    task: aTask({
       description: "Do a small honest thing.",
       point_value: 20,
       level_required: 1,
       primary_faction_slug: "everymen",
       allowed_modes: ["solo", "collab"],
-    },
+    }),
     title: "I helped a stranger",
-    setTitle: () => {},
     body: "## What I did\n\nCaught the papers.",
-    setBody: () => {},
-    media: [],
-    fileError: "",
-    error: "",
-    handleFileChange: () => {},
-    removeMedia: async () => {},
-    autosaveAt: null,
-    submitting: false,
-    switchingMode: null,
-    isPublished: false,
-    controlsLocked: false,
-    modeIsLocked: false,
-    showInviteBox: false,
-    showSealStack: false,
-    duelMode: false,
-    duelChipVisible: false,
-    duel: null,
-    currentCharacterId: 3,
     ...overrides,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(formFactor: "mobile" | "desktop"): string {

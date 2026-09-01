@@ -26,7 +26,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
-import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 
@@ -63,35 +63,14 @@ const praxis = {
   media_items: [],
 } as unknown as PraxisOut;
 
-const state = {
+// Everything not named here is the fixture's quiet default (#2877).
+const state = anEditPraxisState({
   praxis,
   task,
-  error: "",
   title: "I helped a stranger",
-  setTitle: () => {},
   body: "Caught the papers.",
-  setBody: () => {},
-  media: [],
-  fileError: "",
-  handleFileChange: () => {},
-  removeMedia: async () => {},
-  inviteQuery: "",
-  setInviteQuery: () => {},
-  inviteResults: [],
-  inviteOpen: false,
-  setInviteOpen: () => {},
-  submitting: false,
-  switchingMode: null,
-  autosaveAt: null,
-  isPublished: false,
-  controlsLocked: false,
-  modeIsLocked: false,
-  showInviteBox: false,
-  showSealStack: false,
-  duelMode: false,
   duelChipVisible: true,
-  currentCharacterId: 3,
-} as unknown as EditPraxisState;
+});
 
 function render(formFactor: "mobile" | "desktop"): string {
   mocks.formFactor = formFactor;

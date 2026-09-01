@@ -22,6 +22,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import i18n from "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
+import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 
@@ -64,39 +65,17 @@ const praxis = {
   score: 20,
 } as unknown as PraxisOut;
 
+// Everything not named here is the fixture's quiet default (#2877).
 function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
-  return {
+  return anEditPraxisState({
     praxis,
     task,
-    error: "",
     title: "I helped a stranger",
     body: "## What I did",
-    setTitle: () => {},
-    setBody: () => {},
-    media: [],
-    fileError: "",
-    handleFileChange: () => {},
-    removeMedia: async () => {},
-    inviteQuery: "",
-    setInviteQuery: () => {},
-    inviteResults: [],
-    inviteOpen: false,
-    setInviteOpen: () => {},
-    duel: null,
-    submitting: false,
-    autosaveAt: null,
-    setAutosaveAt: () => {},
-    isPublished: false,
-    controlsLocked: false,
-    modeIsLocked: false,
-    showInviteBox: false,
-    showSealStack: false,
-    duelMode: false,
     duelChipVisible: true,
-    currentCharacterId: 3,
     autoSubmitDays: 10,
     ...overrides,
-  } as unknown as EditPraxisState;
+  });
 }
 
 function render(width: "mobile" | "desktop", s: EditPraxisState): string {
