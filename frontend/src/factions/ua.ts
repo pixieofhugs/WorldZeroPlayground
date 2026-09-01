@@ -24,6 +24,7 @@ const UaFactionHero = lazyArchetype(() => import('../components/factionHero/UaFa
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaFieldDesk'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
+const UaProposeTask = lazyArchetype(() => import('../pages/proposeTask/archetypes/UaProposeTask'))
 const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
 const UaSeal = lazyArchetype(() => import('../components/metataskSeal/skins/UaSeal'))
 const UaTaskCard = lazyArchetype(() => import('../components/taskCard/UaTaskCard'))
@@ -58,4 +59,5 @@ export const UA_MANIFEST: FactionManifest = {
   factionBody: () => UaFactionBody,
   profileBody: () => UaProfileBody,
   mobileFieldDesk: () => UaFieldDesk,
+  proposeTask: () => UaProposeTask,
 }

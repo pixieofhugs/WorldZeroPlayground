@@ -138,6 +138,12 @@ describe("the lamp cluster is declared once, and in the kit (#1979)", () => {
       "pages/characterPaths/archetypes/SingularityEditCharacter.tsx",
       "pages/editPraxis/archetypes/SingularityEditPraxis.tsx",
       "pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx",
+      // And the eighth (#2538): proposing a task, derived from the same create
+      // plate and wearing the same bar for the same reason — the process name
+      // reads `task.propose`. This roll-call is Singularity-private, so
+      // appending to it is not the shared-registry hazard the faction fan-outs
+      // contend on; only a lane that mounts THIS cluster can move it.
+      "pages/proposeTask/archetypes/SingularityProposeTask.tsx",
       "pages/taskDetail/archetypes/SingularityTaskDetail.tsx",
     ]);
   });

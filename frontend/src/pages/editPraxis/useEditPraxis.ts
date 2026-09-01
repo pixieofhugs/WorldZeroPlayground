@@ -58,6 +58,7 @@ import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore } from "./roomStore";
 import { editNeedsProposalConfirm } from "./proposalGuard";
+import { planInitialLoad, loadPlannedPraxis } from "./initialLoadPlan";
 import {
   deleteCollabConfirm,
   dropDuelSideConfirm,
@@ -306,11 +307,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // rather than spending a round trip reading it back (#1379). Same builder,
     // same viewer, server-side — see `takeJustCreatedPraxis`. A miss (any other
     // way of arriving here) falls through to the read.
-    const carried = takeJustCreatedPraxis(praxisId);
-    const loadPraxis = carried
-      ? Promise.resolve(carried)
-      : getPraxis(praxisId);
-    loadPraxis
+    //
+    // That choice is `planInitialLoad`, a value, so it can be guarded without a
+    // DOM (#2881) — this effect only executes what it returns.
+    loadPlannedPraxis(planInitialLoad(praxisId, takeJustCreatedPraxis), getPraxis)
       .then(async (loaded) => {
         // A collab is co-owned — any member may edit (ADR-0013), not just the
         // creator. Gating on created_by_id looped non-creator members between

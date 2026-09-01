@@ -15,6 +15,7 @@ from models.invitation_letter import InvitationLetter
 from models.task import Task
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import get_current_era_row, get_or_create_stats
+from services.era_gates import meets_albescent_level
 
 # UNAFFILIATED_FACTION_SLUG is imported above from faction_slugs, which owns it
 # (#1559). It used to be re-declared here and again in services/scoring.py.
@@ -244,8 +245,14 @@ async def defect_to_faction(
         # sibling who starts over, never by the one who finished.
         #
         # Character creation needs no twin of this check: a new life is level 0.
+        #
+        # Read through :func:`services.era_gates.meets_albescent_level` (#2868)
+        # — the same call :func:`services.character.character_earns_albescent`
+        # makes as a floor, deliberately NOT negated into a "may join" predicate
+        # here: the level that earns the door is exactly the level that closes
+        # it, and one statement is what keeps those two the same number.
         stats = await get_or_create_stats(session, character.id, era_row.id)
-        if stats.level >= era.albescent_level_required:
+        if meets_albescent_level(stats.level, character.faction_slug, False, era):
             raise_coded(
                 403,
                 ErrorCode.faction_albescent_new_game_plus_only,

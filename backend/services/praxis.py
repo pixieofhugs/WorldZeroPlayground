@@ -55,6 +55,7 @@ from services.era import (
     get_era_row_for_praxis,
     get_or_create_stats,
 )
+from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
 from services.level_jump import consume_level_jump
 from services.media import (
@@ -909,7 +910,11 @@ async def change_praxis_type(
     if new_type == PraxisType.collab:
         era_row = await get_current_era_row(session)
         stats = await get_or_create_stats(session, character_id, era_row.id)
-        if stats.level < era.collaboration_level_required:
+        # The same gate ``allowed_praxis_modes`` uses to offer ``collab`` at
+        # creation, asked once in ``services.era_gates`` (#2868): a level that
+        # could not create a collab must not reach one by flipping a solo.
+        # No admin or faction bypass, hence ``False``/``None``.
+        if not may_create_collab_praxis(stats.level, None, False, era):
             raise_coded(
                 403,
                 ErrorCode.collaboration_level_too_low,
