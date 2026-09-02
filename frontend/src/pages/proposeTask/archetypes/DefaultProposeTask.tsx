@@ -598,12 +598,21 @@ export default function DefaultProposeTask({
               <button
                 type="submit"
                 disabled={submitting}
+                // `.control-off` rather than `opacity: 0.6` (#2486, #2994):
+                // this pill's enabled paint is the spectrum FRAME for `na` — a
+                // gradient with an opaque interior — so a fade folded the ramp,
+                // the paper and the label together and there was never one
+                // colour to measure. The class swaps the whole fill for the
+                // house neutral and hands the label a ratio that is measured
+                // once, in `disabledControlContrast.test.ts`. The seven faction
+                // propose kits reached this answer separately in #2538; this
+                // row is the one they were copied from and it kept the fade.
+                className="control-off"
                 style={{
                   // The selected chip's treatment at CTA size: the faction's
                   // tint, or the spectrum frame for `na` (factionSurfaces.ts).
                   ...submitButtonStyle(factionSlug),
                   cursor: submitting ? "wait" : "pointer",
-                  opacity: submitting ? 0.6 : 1,
                 }}
               >
                 {submitting
