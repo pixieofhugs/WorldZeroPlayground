@@ -5,10 +5,13 @@ import ModerationTab from './admin/ModerationTab'
 import TasksTab from './admin/TasksTab'
 import AccountsTab from './admin/AccountsTab'
 import OverviewTab from './admin/OverviewTab'
+import EraTab from './admin/EraTab'
 
-type Tab = 'moderation' | 'tasks' | 'accounts' | 'overview'
+type Tab = 'moderation' | 'tasks' | 'accounts' | 'overview' | 'era'
 
-const TABS: Tab[] = ['moderation', 'tasks', 'accounts', 'overview']
+// Era goes last, and stays last: it is the one tab whose button cannot be
+// undone, so it does not sit next to the ones a mod clicks all day (#827).
+const TABS: Tab[] = ['moderation', 'tasks', 'accounts', 'overview', 'era']
 
 function getInitialTab(): Tab {
   const hash = window.location.hash.replace('#', '')
@@ -63,6 +66,7 @@ export default function Admin() {
       {activeTab === 'tasks' && <TasksTab />}
       {activeTab === 'accounts' && <AccountsTab />}
       {activeTab === 'overview' && <OverviewTab />}
+      {activeTab === 'era' && <EraTab />}
     </div>
   )
 }
