@@ -1,10 +1,18 @@
 """
 Single source of truth for all game rules.
 
-Services import EraConfig instances from this file. The database stores
-config_key to record which ruleset was active during each era, but never
-owns the rules themselves. Changing CURRENT_ERA is the one lever that
-switches all live game mechanics.
+Services import EraConfig instances from this file, which owns the *rules*. The
+database owns the **choice**: the latest ``Era`` row's ``config_key`` names which
+of these rulesets is live, and ``services.era.rebind_live_era`` resolves it at
+start-up and again the moment a rollover writes a new row (ADR-0091, #827).
+
+That reverses the older invariant this docstring used to state — "the database
+never owns the rules; changing CURRENT_ERA is the one lever". A mod now ends an
+era from the admin console instead of an owner editing this file and deploying.
+CURRENT_ERA is still the one lever; the hand on it moved.
+
+See "The live era binding" at the foot of this file for why CURRENT_ERA is a
+stable object identity rather than a name that gets reassigned.
 """
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -512,24 +520,26 @@ def __getattr__(name: str):
     one.
     """
     if name == "CURRENT_ERA":
-        # The ONE line a rollover moves. Deliberately its own branch: resolving
-        # ERA_1 must not also (re)bind CURRENT_ERA, or the flip is undone by a
-        # side effect. `services.activity_feed` calls `era_config_for_key` on a
-        # stored row's key to label a PAST era, and with the two folded together
-        # the first such call after the flip would rebind CURRENT_ERA to Era 1
-        # for the life of the process — while every module that imported it at
-        # start-up kept the new one. Found rehearsing the flip in #2708.
-        from eras.era_1 import ERA_1 as _era_1
-        globals()["CURRENT_ERA"] = _era_1
-        return _era_1
+        # Deliberately its own branch: resolving ERA_1 must not also (re)bind
+        # CURRENT_ERA, or a flip is undone by a side effect.
+        # `services.activity_feed` calls `era_config_for_key` on a stored row's
+        # key to label a PAST era, and with the two folded together the first
+        # such call after a flip would put the process back on Era 1's rules for
+        # the life of it — while every module that imported CURRENT_ERA at
+        # start-up kept the new one. Found rehearsing the flip in #2708, and
+        # still the reason these are two branches now that #827 makes the
+        # rebinding deliberate.
+        live = _new_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+        globals()["CURRENT_ERA"] = live
+        return live
     if name in ("ERA_1", "ERA_1_FACTIONS"):
         from eras.era_1 import ERA_1 as _era_1
         globals()["ERA_1"] = _era_1
         globals()["ERA_1_FACTIONS"] = _era_1.factions
         return globals()[name]
     if name in ("ERA_2", "ERA_2_FACTIONS"):
-        # Era 2 (Metamorphosis) is authored, not activated: CURRENT_ERA stays
-        # Era 1 above.
+        # Resolving Era 2's config does not make Era 2 live. Only the database
+        # decides that, through `bind_live_era` below (ADR-0091).
         from eras.era_2 import ERA_2 as _era_2
         globals()["ERA_2"] = _era_2
         globals()["ERA_2_FACTIONS"] = _era_2.factions
@@ -546,10 +556,28 @@ def __getattr__(name: str):
 # the config_key off an era file means importing every era file at module load,
 # which is exactly the eager import the __getattr__ above exists to avoid. The
 # duplication is one string per era, and a unit test asserts the two agree.
+#
+# Insertion order is authoring order, which is era order — the admin selector
+# lists the eras in it, so a new era is appended, never inserted (#827).
 _ERA_ATTRIBUTE_BY_CONFIG_KEY: dict[str, str] = {
     "era_1": "ERA_1",
     "era_2": "ERA_2",
 }
+
+#: The era the process compiles against, and the ONLY thing the live binding
+#: falls back to: a fresh database has no ``Era`` row at all, and startup must
+#: not crash on that (ADR-0091). It is not "the live era" — the database is.
+COMPILE_TIME_ERA_CONFIG_KEY = "era_1"
+
+
+def registered_era_config_keys() -> tuple[str, ...]:
+    """Every ``config_key`` an ``Era`` row may name, in era order.
+
+    The admin era selector's option list, and the validation behind it: a
+    ``config_key`` outside this tuple names no ruleset, so no row may be written
+    with it.
+    """
+    return tuple(_ERA_ATTRIBUTE_BY_CONFIG_KEY)
 
 
 def era_config_for_key(config_key: str) -> EraConfig | None:
@@ -563,3 +591,65 @@ def era_config_for_key(config_key: str) -> EraConfig | None:
     if attribute_name is None:
         return None
     return globals().get(attribute_name) or __getattr__(attribute_name)
+
+
+# ---------------------------------------------------------------------------
+# The live era binding (ADR-0091, #827)
+# ---------------------------------------------------------------------------
+#
+# ``CURRENT_ERA`` is a **stable object identity**, not a name that gets
+# reassigned, and this is the whole trick — so it is worth the paragraph.
+#
+# 157 sites under ``backend/`` are written ``era: EraConfig = CURRENT_ERA``. A
+# default argument is evaluated once, when the ``def`` executes, so each of
+# those functions holds the *object* for the life of the process. Four more read
+# ``CURRENT_ERA`` as a module global inside a function body — which is the
+# *importing* module's global, not this one's. Assigning
+# ``game_config.CURRENT_ERA = other`` moves neither: it rebinds one name in one
+# module while every holder keeps what it captured. A process flipped that way
+# is half-flipped, which is worse than either era.
+#
+# So the flip refreshes the fields of the one instance every holder already
+# points at. All 157 call sites stay untouched and become correct at once — and
+# the alternative, threading ``era=`` through 157 signatures where an omitted
+# argument silently serves the compile-time era, is the refactor the #827 ruling
+# declined for exactly that reason.
+#
+# Writing through a frozen dataclass is the same move ``__post_init__`` already
+# makes above. The wall exists to stop *callers* mutating a config, not to stop
+# this module owning one.
+
+
+def _new_live_era(source: EraConfig) -> EraConfig:
+    """A distinct ``EraConfig`` carrying ``source``'s fields.
+
+    Distinct is the point. ``bind_live_era`` refreshes this object in place, so
+    if the live era *were* ``ERA_1`` the first flip would overwrite the era
+    file's own config and Era 1 would stop existing in the process.
+
+    ``object.__new__`` skips ``__init__`` and ``__post_init__`` deliberately:
+    the fields being copied have already been through them, and perk inheritance
+    (#1871) is not idempotent.
+    """
+    live = object.__new__(EraConfig)
+    live.__dict__.update(source.__dict__)
+    return live
+
+
+def bind_live_era(era: EraConfig) -> EraConfig:
+    """Point the live ruleset at ``era``. THE one lever (ADR-0091).
+
+    Call it through :func:`services.era.rebind_live_era`, which is the only
+    thing that knows *which* era the database says is live;
+    ``tests/unit/test_live_era_binding.py`` keeps that to one caller.
+
+    Returns the live instance — the same object every time, by design.
+    """
+    live = globals().get("CURRENT_ERA") or __getattr__("CURRENT_ERA")
+    if era is live:
+        # Already live. Guarded because the refresh below clears the dict it is
+        # about to read from, so aliasing would empty the live era instead.
+        return live
+    live.__dict__.clear()
+    live.__dict__.update(era.__dict__)
+    return live
