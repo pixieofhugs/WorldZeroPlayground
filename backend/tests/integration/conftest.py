@@ -116,9 +116,13 @@ async def db_session(db_connection):
 class _ReuseSessionContext:
     """Null context manager that yields the shared test session without closing it.
 
-    Used by the test session_factory override so that concurrent sub-query sessions
-    (created by ``asyncio.gather`` in the activity-feed service) reuse the same
-    SAVEPOINT-backed session and therefore see uncommitted fixture data.
+    Used by the test session_factory override so that the activity feed's badge
+    ``UNION ALL`` — the one caller that takes a session from the factory — reuses
+    the same SAVEPOINT-backed session and therefore sees uncommitted fixture data.
+
+    Handing the same session back is also why nothing in that service may be
+    gathered: one ``AsyncSession`` is not safe under concurrent use, so the
+    passes that share this factory run sequentially (#1532, ADR-0036).
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -143,9 +147,9 @@ async def client(db_session: AsyncSession):
     Isolation is preserved by the outer test transaction, which rolls back
     unconditionally at the end of the test.
 
-    Also overrides ``get_session_factory`` so concurrent sub-queries (used by
-    the activity-feed service under ``asyncio.gather``) reuse ``db_session``
-    rather than opening new connections that cannot see uncommitted test data.
+    Also overrides ``get_session_factory`` so the activity feed's badge count
+    pass reuses ``db_session`` rather than opening a second connection that
+    cannot see uncommitted test data.
     """
 
     async def _override_get_db():

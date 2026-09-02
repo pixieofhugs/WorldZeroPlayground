@@ -2074,10 +2074,16 @@ async def get_activity_feed(
         character_id: The character requesting the feed.
         session: Database session for the pre-fetch phase (friend/foe/task IDs).
         session_factory: Callable that returns an async session context manager.
-            Each concurrent sub-query gets its own session from this factory.
+            One caller: ``_count_sources`` runs the badge ``UNION ALL`` on a
+            session of its own, so a page costs two connections rather than the
+            ~31 that made Updates slow (#1532). It is NOT a fan-out seam —
+            nothing here is gathered, and the row fetches run sequentially on
+            ``session`` above.
             Injected via FastAPI's Depends(get_session_factory); tests override
-            it to reuse the test-transaction session. (ADR-0036: a deliberate
-            test seam, kept even though the router only passes it back down.)
+            it to reuse the test-transaction session. That override is load-
+            bearing in both directions: it is what lets an integration test see
+            uncommitted fixture data, and it is *why* the two passes may never
+            be gathered — one ``AsyncSession`` is not safe under concurrent use.
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
         before_cursor: ISO datetime cursor for pagination (items before this time).
         limit: Max items to return.
