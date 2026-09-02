@@ -62,7 +62,25 @@
  *     delete outline + confirm frame / cream      7.57    9.56
  *     faction label + confirm prompt / cream      7.78    8.13
  *     faction help / cream                        7.83    8.72
- *     the row's own plate ink, plate over cream   7.31    6.99
+ *     the row's own plate ink, plate over cream   6.93    7.05
+ *     the row's chevron, on that same plate       6.98    7.57
+ *     the cancel key's ink, on that same plate   15.02   12.69
+ *
+ * ## The NON-TEXT half, which the first pass did not take (#2987)
+ *
+ * All six rows above are TYPE, and a text-only reading cannot see a plate. The
+ * two slots' shared plate is `--color-bg-surface-alt` behind a
+ * `--color-border-strong` hairline, and on this cream that is 1.06:1 of fill
+ * and 1.41 / 1.56 of edge where 1.4.11 asks 3:1 of a boundary that carries
+ * meaning. {@link codicilPlate} is the repaint — the charter's own plate, cut
+ * with the charter's own deep edge, handed through #2956's dress seam:
+ *
+ *     what                                       light   dark
+ *     the codicil plate's edge / cream            5.32    8.83
+ *     the codicil plate's edge / its own well     4.74    7.66
+ *
+ * The FILL is 1.12 / 1.15 and stays there on purpose; the docblock at
+ * {@link codicilPlate} says why an edge and not a well carries this.
  *
  * The charter's own eight pairings are unchanged and are already rows in
  * `utils/__tests__/factionContrast.test.ts`; restating them would be a second
@@ -244,6 +262,34 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
       <span style={{ color: spent ? ALARM : MUTED }}>{text}</span>
     </div>
   )
+
+  /* ── THE CODICIL'S PLATE (#2987) ──
+     The two shared slots draw an app-neutral plate: `--color-bg-surface-alt`
+     behind a `--color-border-strong` hairline. On the na page they were
+     measured on, that reads. On this cream it is 1.06:1 of fill and 1.41:1 of
+     edge, and a plate delimiting a control region is a graphical boundary that
+     carries meaning — 1.4.11 asks 3:1 of it, so the pair misses by better than
+     half. The four TEXT rows on this sheet all cleared AA, which is why the
+     shortfall shipped green.
+
+     What clears it is the EDGE, not the fill: 1.4.11 asks 3:1 of the
+     information that identifies the component against adjacent colour, and no
+     in-family stock can be a 3:1 FILL here — the chronicle panel is 1.12 / 1.15
+     on its own cream, and a well that did clear would read as a hole punched in
+     the parchment. So the plate is the charter's own inset {@link FIELD}, cut
+     with {@link LABEL} rather than gilt: the deep olive-gold measured on BOTH
+     chronicle grounds (5.32 / 8.83 on the cream, 4.74 / 7.66 on the plate),
+     where {@link GOLD} is 2.24:1 on the cream and could not carry a boundary
+     any more than it can carry type.
+
+     Handed in through #2956's dress seam. `editCharacterSlots.tsx` is untouched
+     — its defaults still stand for every mount that passes nothing, and
+     `__tests__/wowEditCharacterContrast.test.ts` keeps both readings. */
+  const codicilPlate: CSSProperties = {
+    background: FIELD,
+    border: `1.5px solid ${LABEL}`,
+    borderRadius: RADIUS,
+  }
 
   const sheetStyle = {
     background: SHEET,
@@ -528,8 +574,18 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
            the re-measurement that buys. ── */}
       <ComposerSheet sizes={sizes} style={sheetStyle} pageStyle={{ paddingTop: 0 }}>
         <Zig id="amend-codicil" />
-        <FactionRow slug={character.faction_slug} />
-        <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+        <FactionRow slug={character.faction_slug} rowStyle={codicilPlate} />
+        <DeleteCharacter
+          slug={character.faction_slug}
+          deleting={deleting}
+          onDelete={handleDelete}
+          // The confirm's CANCEL key is the codicil's other plate, and it shipped
+          // with the same neutral pair — 1.07:1 of well and 1.41:1 of hairline on
+          // this cream. Same plate, same edge. The DELETE key beside it keeps
+          // `--color-danger` / `--color-on-danger`: a ground and its ink, not
+          // type on a wash (2026-08-27 ruling), and the seam does not reach it.
+          cancelStyle={codicilPlate}
+        />
       </ComposerSheet>
 
       {/* Portrait crop/rotate — locked square (#514). */}
