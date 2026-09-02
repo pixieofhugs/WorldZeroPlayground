@@ -232,6 +232,17 @@ const bareName = (name) => (name.startsWith('.') ? name.slice(1) : name)
 const REASONING = /\b(because|reason|wrong|instead|ruling|do not|don't|never|retired|deliberat|invit|mistake|tried|would|cannot|beware|measured|contrast|ratio)\b/i
 
 /**
+ * This detector's OWN test, which is not a retirement guard.
+ *
+ * It pins `--color-level-inactive`, `.eph-vote-star` and the rest of #3001's
+ * verified samples as fixtures — asserting that they are FOUND. Counting that
+ * as "a guard already holds this name" is the detector marking its own
+ * homework: adding the test silently moved two blocks out of the cut list and
+ * into KEEP-guard, with a citation pointing back at itself.
+ */
+const SELF_TEST = '__tests__/cssTombstones.test.ts'
+
+/**
  * `name` → the test files that hold it as a string literal.
  *
  * `retiredSurfaces.test.ts` exists to keep deleted names out of shipped
@@ -246,7 +257,7 @@ const REASONING = /\b(because|reason|wrong|instead|ruling|do not|don't|never|ret
 function guardedNames() {
   const names = new Map()
   for (const path of filesUnder(join(FRONTEND_DIR, 'src'), /\.tsx?$/)) {
-    if (!isTest(path)) continue
+    if (!isTest(path) || toRelative(path).endsWith(SELF_TEST)) continue
     const source = stripComments(readFileSync(path, 'utf8'), false)
     for (const [, word] of source.matchAll(/['"`]\.?(--?[\w-]+|[a-z][\w-]*-[\w-]+)['"`]/g)) {
       names.set(word, [...new Set([...(names.get(word) ?? []), toRelative(path)])])
@@ -369,9 +380,37 @@ function markdown({ findings, filtered }) {
   out.push('# CSS tombstone report (#3001)')
   out.push('')
   out.push(
+    'Generated in full by `node frontend/scripts/css-tombstones.mjs`. To refresh it:',
+    '`node frontend/scripts/css-tombstones.mjs > docs/research/css-tombstones.md`. Nothing here is',
+    'hand-written, so a re-run after the cascade changes costs one command and loses no annotation',
+    'that is not in this file\'s git history.',
+    '',
     'A **tombstone** is a comment whose subject no longer exists anywhere in the tree except in the',
-    'comment announcing its removal. This report is the detector\'s output; **nothing has been deleted.**',
-    'The classification below is *proposed*, and the deletion pass is gated on a human ratifying it.',
+    'comment announcing its removal. **Nothing has been deleted**; the classification below is',
+    '*proposed*, and the deletion pass is gated on a human ratifying it.',
+    '',
+  )
+
+  const cut = findings.filter((f) => f.verdict === 'CUT-candidate')
+  const cutLines = cut.reduce((n, f) => n + f.blockLines, 0)
+  out.push('## The answer, first', '')
+  out.push(
+    `The mechanical half is worth **${cutLines} lines**.`,
+    '',
+    `${findings.length} comment blocks in the cascade name at least one name that exists nowhere else`,
+    `in the tree. **${cut.length} of them can be cut**, for ${cutLines} lines. Every one of the other`,
+    `${findings.length - cut.length} resists deletion for a stated reason: a test already holds the name, a live`,
+    'declaration sits underneath the block, or the block argues its own case.',
+    '',
+    '#3001 asked what the mechanical half is worth before committing to the judgement pass — "if',
+    `tombstones remove 800 lines, the judgement pass may not be worth its risk". They remove ${cutLines}.`,
+    '',
+    'The reason the number is small is the most useful thing in this report. Reading the first run\'s',
+    'proposals one by one, most "plain removal record" blocks turned out to be the HEADER of a live',
+    'rule — `--rank-silver`, `.em-broadsheet`, `--faction-wow-gilt-mid` — carrying a measured ratio or',
+    'an owner QA ruling in the same block as the dead name. "Records only a removal" is true of a',
+    'SENTENCE and false of the block it sits in. A sweep that cut by block would have taken live',
+    'documentation with it, and would have looked entirely correct while doing so.',
     '',
   )
 
@@ -406,6 +445,24 @@ function markdown({ findings, filtered }) {
   out.push('')
   out.push('The eleven `SECTION — …` headers are excluded outright and can never be proposed.')
   out.push('')
+
+  out.push('## What counted as alive', '')
+  out.push(
+    `A name survives if it appears in **comment-free** source under \`${LIVE_DIRS.join('`, `')}\`, matching`,
+    `\`${LIVE_MATCH.source}\`. Two choices are worth ratifying:`,
+    '',
+    '- **`__tests__/` does not count as liveness.** That is `test/sourceScan.ts`\'s own default, and',
+    '  here it is load-bearing: a retirement guard holds a dead name as a string literal on purpose,',
+    '  so counting tests would hide the best-documented tombstones in the cascade — `#3001`\'s own',
+    '  `.alb-praxis-aurora` example among them. Those literals are read as the KEEP-guard signal',
+    '  instead, and each KEEP-guard row below names the file that holds it.',
+    '- **`.ds-kit` and `e2e` DO count**, though #3001 said "`src/`". They are consumers of the same',
+    '  tokens, and widening the liveness corpus can only remove a candidate, never add one.',
+    '',
+    'Not modelled: a token assembled at runtime (`--faction-${slug}-card-text`). Nothing in the list',
+    'below is of that shape, but a future candidate might be — check before cutting a `--faction-*`.',
+    '',
+  )
 
   for (const verdict of VERDICT_ORDER) {
     const rows = findings.filter((f) => f.verdict === verdict)
