@@ -24,9 +24,16 @@ route did. Re-runnability here means "the plan-only run changes nothing", not
 the rollover's audit trail: a not-null FK recording *who* opened the era. This
 script refuses a username whose account is not an admin, which is the one thing
 ``PUT /admin/era/reset`` guaranteed that a shell prompt otherwise would not.
-That route was this operation's only entry point and is being deleted (#1667) —
+That route was this operation's only entry point and was deleted in #1667 —
 unreachable from the UI, and a destructive rollover behind any authenticated
 admin session is a blast radius nothing was using.
+
+**This is no longer the primary door (#827, ADR-0091).** ``PUT /admin/eras/live``
+and the admin page's era selector are, because a mod can reach them and they can
+*choose* which era to open — the two things #1667's route lacked. This script
+re-opens whichever era the database already says is live, which is what it always
+did back when the compile-time era and the live era were the same thing. It stays
+for the shell: a rollover when the site is down, or when nobody can sign in.
 """
 
 import argparse
@@ -51,7 +58,11 @@ from models.character import Character  # noqa: E402
 from models.era import Era  # noqa: E402
 from script_utils import add_env_argument, get_settings  # noqa: E402
 from services.admin_service import list_active_characters  # noqa: E402
-from services.era import apply_era_reset, get_current_era_row_safe  # noqa: E402
+from services.era import (  # noqa: E402
+    apply_era_reset,
+    get_current_era_row_safe,
+    rebind_live_era,
+)
 
 
 def print_plan(current_era_row: Era, character_count: int) -> None:
@@ -100,6 +111,14 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     if current_era_row is None:
         print("ERROR: no era row for the current config - run seed.py before a rollover.")
         return 1
+
+    # Point CURRENT_ERA at whatever the DATABASE says is live before printing a
+    # plan about it (ADR-0091, #827). Without this the script would re-open the
+    # *compile-time* era, so running it after a mod has rolled the game forward
+    # from the admin page would silently roll it back. This one call is why
+    # `print_plan` and the row built below need no edit: the live era is one
+    # object refreshed in place, not a name each of them re-reads.
+    await rebind_live_era(session)
 
     characters = await list_active_characters(session)
     print_plan(current_era_row, len(characters))
