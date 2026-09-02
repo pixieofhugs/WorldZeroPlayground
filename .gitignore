@@ -18,7 +18,7 @@ dist/
 !/.claude/skills/
 !/.claude/settings.json
 !/.claude/launch.json
-frontend/node_modules/
+frontend/node_modules
 frontend/dist/
 frontend/.env.local
 frontend/playwright/.auth/
