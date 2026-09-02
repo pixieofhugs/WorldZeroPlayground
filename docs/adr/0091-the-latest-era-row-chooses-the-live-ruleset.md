@@ -80,9 +80,23 @@ in one module while every holder keeps what it captured. A process flipped that 
 either era, and is the same failure mode #2708 found from the other direction.
 
 So the live era is one `EraConfig` instance, distinct from every era file's own config,
-whose `__dict__` is replaced when the era changes. Every holder — default argument, module
-global, closure — sees the new ruleset at once, and the "157 call sites untouched and
-correct" the ruling asked for is actually true rather than merely stated.
+whose fields are overwritten **per key** when the era changes. Every holder — default
+argument, module global, closure — sees the new ruleset at once, and the "157 call sites
+untouched and correct" the ruling asked for is actually true rather than merely stated.
+
+Per key, and never `clear()`-then-refill. That distinction is the whole safety of the
+mechanism, so it is a decision and not an implementation detail: an empty-then-fill refresh
+leaves the live era with **no attributes** between two statements, and every one of the 157
+holders points at that object. FastAPI runs sync dependencies and sync route handlers in a
+threadpool and the GIL is released between bytecodes, so a worker thread can read the object
+mid-refresh and raise `AttributeError` on a field that exists — under load, during the one
+operation this mechanism exists to enable. Overwriting key by key means a concurrent reader
+sees the closing era's value or the opening era's for any given field, never a missing one,
+which is exactly the straddling this record already accepts under *Consequences* and nothing
+worse. A clear also buys nothing: `EraConfig` is a frozen dataclass with a fixed field list
+and no `__slots__`, and both sides of every call carry all 43 declared fields, so there is
+never a stale key to remove. `bind_live_era` prunes unexpected extras after the update
+instead, which keeps that defensiveness without the empty state.
 
 Consequences taken knowingly:
 
@@ -90,9 +104,9 @@ Consequences taken knowingly:
   Correct on the merits — `CURRENT_ERA` means "the live binding", not "era 1" — but it
   broke one assertion, in `test_era_2_is_authored_not_activated`, which is updated in the
   same commit.
-- **The live instance must never *be* an era file's config.** `bind_live_era` clears and
-  refills the object it is given custody of; doing that to `ERA_1` would destroy Era 1 in
-  the process. Pinned by a test.
+- **The live instance must never *be* an era file's config.** `bind_live_era` overwrites
+  the fields of the object it is given custody of; doing that to `ERA_1` would leave Era 1
+  carrying Era 2's rules for the life of the process. Pinned by a test.
 - **Writing through a frozen dataclass** is the same move `EraConfig.__post_init__`
   already makes. The frozen wall stops *callers* mutating a config; it is not a claim that
   the module cannot own one instance.

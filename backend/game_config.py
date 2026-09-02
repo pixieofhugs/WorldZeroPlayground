@@ -644,12 +644,35 @@ def bind_live_era(era: EraConfig) -> EraConfig:
     ``tests/unit/test_live_era_binding.py`` keeps that to one caller.
 
     Returns the live instance — the same object every time, by design.
+
+    **Per-key overwrite, never empty-then-fill.** The refresh below must not be
+    ``clear()`` followed by ``update()``: between those two statements the live
+    era would be an ``EraConfig`` with no attributes at all, and every one of the
+    157 default arguments points at that object. FastAPI runs sync dependencies
+    and sync route handlers in a threadpool and the GIL is released between
+    bytecodes, so a worker thread can read the object mid-refresh and raise
+    ``AttributeError`` on a field that exists — an inexplicable failure under
+    load, during the one operation this whole mechanism exists to enable.
+
+    ``update()`` alone is also sufficient, which is why the clear was pure cost:
+    ``EraConfig`` is a frozen dataclass with a fixed field list and no
+    ``__slots__``, both sides of every call are fully-constructed era configs,
+    and all 43 declared fields are present on each — so there is never a stale
+    key for a clear to remove. The prune below keeps that defensiveness for an
+    era config that somehow carries an extra attribute, without the empty state.
+
+    A concurrent reader therefore sees either the closing era's value or the
+    opening era's for any given field, never a missing one. That is exactly the
+    "a request in flight can straddle the change" the #827 ruling accepted, and
+    nothing worse.
     """
     live = globals().get("CURRENT_ERA") or __getattr__("CURRENT_ERA")
     if era is live:
-        # Already live. Guarded because the refresh below clears the dict it is
-        # about to read from, so aliasing would empty the live era instead.
+        # Already live, so there is nothing to copy. A cheap no-op rather than a
+        # correctness guard: the per-key overwrite below is harmless when source
+        # and target alias, since every write would set a key to its own value.
         return live
-    live.__dict__.clear()
     live.__dict__.update(era.__dict__)
+    for stale in set(live.__dict__) - set(era.__dict__):
+        del live.__dict__[stale]
     return live

@@ -22,5 +22,10 @@ def restore_live_era():
     yield
     live = game_config.CURRENT_ERA
     if live.__dict__ != before:
-        live.__dict__.clear()
+        # Per-key, matching ``game_config.bind_live_era``. Nothing reads the live
+        # era between tests, so a clear-then-fill would be safe here — but this is
+        # the shape a reader will copy, and in the shipped path an empty window is
+        # an AttributeError in a threadpool worker.
         live.__dict__.update(before)
+        for stale in set(live.__dict__) - set(before):
+            del live.__dict__[stale]

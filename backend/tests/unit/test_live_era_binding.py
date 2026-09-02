@@ -95,10 +95,75 @@ def test_resolving_a_past_era_does_not_move_the_live_one(flip_to_era_2):
 
 
 def test_binding_the_live_era_to_itself_is_a_no_op():
-    """The refresh clears and refills one ``__dict__``; aliasing would empty it."""
+    """Source and target aliasing must leave the live era intact."""
     bind_live_era(CURRENT_ERA)
     assert CURRENT_ERA.config_key == COMPILE_TIME_ERA_CONFIG_KEY
     assert CURRENT_ERA.factions
+
+
+# ---------------------------------------------------------------------------
+# The refresh is a per-key overwrite, never empty-then-fill
+# ---------------------------------------------------------------------------
+#
+# ``bind_live_era`` must not ``clear()`` the live ``__dict__`` and then refill
+# it. Between those two statements the live era is an ``EraConfig`` with no
+# attributes, and all 157 default arguments point at that object — so a reader
+# that touches it in the window gets ``AttributeError`` on a field that exists.
+# FastAPI runs sync dependencies and sync handlers in a threadpool and the GIL
+# is released between bytecodes, so that reader is a real one.
+#
+# The race itself is not worth chasing in a test. What IS assertable is the
+# property that makes the race impossible: the live object carries a complete
+# field set at every point a caller could observe it, and a bind only ever
+# overwrites keys in place.
+
+
+def test_a_bind_leaves_the_complete_field_set(flip_to_era_2):
+    era_2 = era_config_for_key("era_2")
+    assert set(CURRENT_ERA.__dict__) == set(era_2.__dict__)
+    assert {field.name for field in dataclasses.fields(EraConfig)} <= set(
+        CURRENT_ERA.__dict__
+    )
+
+
+def test_a_bind_never_reduces_the_key_count():
+    """The empty window would show up here as a bind that shrank the object."""
+    before = set(CURRENT_ERA.__dict__)
+    for key in registered_era_config_keys():
+        bind_live_era(era_config_for_key(key))
+        assert set(CURRENT_ERA.__dict__) == before, key
+    bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+
+def test_the_refresh_overwrites_keys_rather_than_emptying_the_object():
+    """Watches the live ``__dict__`` itself while a real flip runs.
+
+    A ``clear()`` shows up as a ``__delitem__`` on the mapping every holder is
+    pointing at; a per-key overwrite never deletes anything. Asserted by swapping
+    in a dict subclass that records deletions, which is the closest a
+    single-threaded test can get to standing where the threadpool reader stands.
+    """
+    deletions = []
+
+    class WatchedDict(dict):
+        def __delitem__(self, key):
+            deletions.append(key)
+            super().__delitem__(key)
+
+        def clear(self):
+            deletions.append("<clear>")
+            super().clear()
+
+    live = CURRENT_ERA
+    original = live.__dict__
+    object.__setattr__(live, "__dict__", WatchedDict(original))
+    try:
+        bind_live_era(era_config_for_key("era_2"))
+        assert live.config_key == "era_2", "the flip still has to happen"
+        assert deletions == [], f"the refresh removed keys: {deletions}"
+        assert set(live.__dict__) == set(original)
+    finally:
+        object.__setattr__(live, "__dict__", dict(original))
 
 
 def test_the_live_era_is_still_a_real_era_config():
