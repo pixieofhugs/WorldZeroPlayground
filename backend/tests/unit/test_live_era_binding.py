@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 
-import game_config
 from game_config import (
     COMPILE_TIME_ERA_CONFIG_KEY,
     CURRENT_ERA,

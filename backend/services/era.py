@@ -1,10 +1,17 @@
+import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from game_config import CURRENT_ERA, EraConfig
+from game_config import (
+    COMPILE_TIME_ERA_CONFIG_KEY,
+    CURRENT_ERA,
+    EraConfig,
+    bind_live_era,
+    era_config_for_key,
+)
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
@@ -19,6 +26,60 @@ from seed import ONBOARDING_TASK_TITLE
 from services.duel_outcome import duel_winner
 from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
+
+logger = logging.getLogger(__name__)
+
+
+async def rebind_live_era(session: AsyncSession) -> EraConfig:
+    """Resolve the live ruleset from the latest ``Era`` row and bind it.
+
+    The **only** caller of :func:`game_config.bind_live_era` in the shipped
+    backend (ADR-0091); ``tests/unit/test_live_era_binding.py`` keeps it that
+    way. Two moments call this one, and there is no third:
+
+    * process start-up, from the app's lifespan, and
+    * :func:`apply_era_reset`, the instant a rollover appends the new row.
+
+    Total by construction — it binds *something* on every path, because a
+    start-up that raises here takes the whole app down over a row that a fresh
+    install has not written yet:
+
+    * **No ``Era`` row at all.** A fresh database. ``bootstrap_admin`` writes the
+      first row only on an un-bootstrapped database, so start-up can legitimately
+      find nothing. Fall back to the compile-time era and say so; do not invent
+      a row, because ``Era.started_by`` is a not-null audit trail with nobody to
+      put in it.
+    * **A row naming a ``config_key`` no era file claims.** A deleted era file,
+      or a row written by a newer version of the app and then rolled back. Same
+      fallback, louder — this one is a deployment mistake, not a fresh install.
+    """
+    era_row = await get_current_era_row_safe(session)
+    if era_row is None:
+        logger.info(
+            "No Era row yet — the live ruleset falls back to the compile-time "
+            "era %r. Expected on a fresh database, before the first seed.",
+            COMPILE_TIME_ERA_CONFIG_KEY,
+        )
+        return bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+    era_config = era_config_for_key(era_row.config_key)
+    if era_config is None:
+        logger.warning(
+            "Era row id=%s names config_key %r, which no era file registers — "
+            "the live ruleset falls back to the compile-time era %r. The game is "
+            "NOT playing by the rules that row records.",
+            era_row.id,
+            era_row.config_key,
+            COMPILE_TIME_ERA_CONFIG_KEY,
+        )
+        return bind_live_era(era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY))
+
+    logger.info(
+        "Live ruleset bound to %r from Era row id=%s.",
+        era_config.config_key,
+        era_row.id,
+    )
+    return bind_live_era(era_config)
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:
@@ -414,3 +475,13 @@ async def apply_era_reset(
             character.faction_slug = era.reset_faction_slug
 
     await session.flush()
+
+    # The rules change here, not at the next deploy. ``new_era_row`` is now the
+    # latest row, so this resolves to the era just opened (ADR-0091, #827).
+    #
+    # Accepted with the ruling: a request already in flight straddles the change
+    # — it began under the closing era's rules and finishes under the opening
+    # one's. The hand-flip this replaces had the same effect, arriving via a
+    # deploy that restarted the process. If it ever matters, the answer is
+    # draining or rebinding behind the rollover's own lock.
+    await rebind_live_era(session)

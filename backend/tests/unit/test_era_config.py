@@ -4,11 +4,12 @@ import pytest
 
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import (
+    _ERA_ATTRIBUTE_BY_CONFIG_KEY,
+    COMPILE_TIME_ERA_CONFIG_KEY,
     CURRENT_ERA,
     ERA_1,
     ERA_2,
     EraConfig,
-    _ERA_ATTRIBUTE_BY_CONFIG_KEY,
     era_config_for_key,
 )
 
@@ -227,9 +228,21 @@ def test_era1_level_profiles_use_slug_keys():
 
 
 def test_era_2_is_authored_not_activated():
+    """Which era is live is a database question now (ADR-0091, #827).
+
+    This used to assert ``CURRENT_ERA is ERA_1``. Under the live binding that
+    identity is deliberately false — ``CURRENT_ERA`` is a distinct instance
+    refreshed in place, so that a flip reaches the 157 ``= CURRENT_ERA``
+    defaults. What "not activated" means here is the code half of it: Era 2 is
+    not what a process with no ``Era`` row falls back to, and merely resolving
+    its config does not make it live.
+    """
     assert ERA_2.name == "Metamorphosis"
     assert ERA_2.config_key == "era_2"
-    assert CURRENT_ERA is ERA_1, "Metamorphosis is authored, not activated"
+    assert COMPILE_TIME_ERA_CONFIG_KEY == "era_1"
+    assert CURRENT_ERA == ERA_1, "Metamorphosis is authored, not activated"
+    assert era_config_for_key("era_2") is ERA_2
+    assert CURRENT_ERA.config_key == "era_1"
 
 
 def test_era_2_roster_is_five_factions_and_no_ua():
@@ -335,24 +348,25 @@ def test_resolving_a_past_era_does_not_rebind_the_live_one():
     that imported ``CURRENT_ERA`` at start-up kept the new era's. A half-flipped
     process is worse than either era.
 
-    Asserted through a stand-in flip rather than by flipping anything: the
-    module attribute is rebound here, exactly as a rollover edit would, and the
-    lookup must leave it alone.
+    Flipped through the real lever now (#827): the rollover is an operation the
+    mods run, not an edit an owner deploys, so the flip under test is the one
+    ``services.era.rebind_live_era`` performs. ``tests/unit/test_live_era_binding.py``
+    holds the rest of that seam; this one stays here because the hazard belongs
+    to ``era_config_for_key``, which lives in this file's subject.
     """
-    import game_config
+    from game_config import CURRENT_ERA as live
+    from game_config import bind_live_era
 
-    live = game_config.CURRENT_ERA
     other = next(
         era_config_for_key(key)
         for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY
-        if era_config_for_key(key) is not live
+        if era_config_for_key(key).config_key != live.config_key
     )
-    game_config.CURRENT_ERA = other
-    try:
-        era_config_for_key(live.config_key)
-        assert game_config.CURRENT_ERA is other
-    finally:
-        game_config.CURRENT_ERA = live
+    bind_live_era(other)
+    era_config_for_key("era_1")
+    assert live.config_key == other.config_key, (
+        "resolving a past era for display moved the live one"
+    )
 
 
 def test_registry_returns_none_for_an_unknown_key():
