@@ -56,6 +56,19 @@ Model each feed type as one **`FeedSource`**, held in a module-level
   > connection. **Nothing above this note changes** — counts still derive from
   > each source's own windowed query, which is what this ADR is actually about.
 
+  > Amended 2026-09-02 (#2866): an architecture review read the bullet without
+  > the note above it and reached the opposite conclusion — that the factory is
+  > a production *fan-out* requirement and the test seam is vestigial. It is
+  > neither. Nothing in the feed is gathered, and both halves of the bullet are
+  > load-bearing at once. **Production:** `_count_sources` runs the badge
+  > `UNION ALL` on a session of its own, which is what holds a page to two
+  > connections. **Tests:** the injected factory hands back the request's own
+  > session — that is how an integration test sees uncommitted fixture data,
+  > and it is *why* the two passes may never be gathered, one `AsyncSession`
+  > not being safe under concurrent use. The seam is exercised, not merely
+  > declared: `test_activity_feed_query_count.py` swaps the factory for a
+  > counting one to assert that connection budget.
+
 ## Consequences
 
 - Pure refactor: the `/activity-feed` payload and pagination are byte-identical
