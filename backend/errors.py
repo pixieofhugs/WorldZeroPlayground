@@ -245,6 +245,16 @@ class ErrorCode(str, enum.Enum):
     #: is no sign-in. The player starts one.
     returning_player_consent_expired = "RETURNING_PLAYER_CONSENT_EXPIRED"
 
+    # -- Era rollover (#827, ADR-0091) --------------------------------------
+    #: A rollover naming a ``config_key`` no era file registers. Coded despite
+    #: ``routers/admin.py`` being an otherwise-uncoded staff surface, for the
+    #: same reason as :attr:`character_departed_not_restorable`: this raise is
+    #: new and the uncoded-raise allowlist only shrinks. It is also the one
+    #: refusal standing between a typo and an ``Era`` row that names no
+    #: ruleset — a row whose rules the process cannot resolve, on the most
+    #: destructive operation in the system.
+    era_config_unknown = "ERA_CONFIG_UNKNOWN"
+
 
 #: The keys of a coded ``detail`` body. Named so the frontend contract is
 #: greppable from Python and no raise site spells them as bare literals.

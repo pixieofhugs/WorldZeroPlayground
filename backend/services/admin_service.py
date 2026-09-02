@@ -5,10 +5,16 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
-from game_config import CURRENT_ERA, EraConfig
+from game_config import (
+    CURRENT_ERA,
+    EraConfig,
+    era_config_for_key,
+    registered_era_config_keys,
+)
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
+from models.era import Era
 from models.roles import AccountRole, Role
 from models.contact import ContactMessage
 from models.flag import Flag, normalize_flag_reason
@@ -22,11 +28,13 @@ from schemas.admin import (
     CharacterBrief,
     CharacterStatsPatch,
     CharacterSummary,
+    EraOption,
+    EraRollOut,
     FlagOut,
     OverviewStats,
 )
 from services.duel import forfeit_settled_duels_for_character
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import apply_era_reset, get_current_era_row, get_or_create_stats
 from services.scoring import compute_vote_budget, compute_votes_available
 
 
@@ -487,3 +495,71 @@ async def admin_edit_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+# ---------------------------------------------------------------------------
+# Era rollover — the control that ends an era (#827, ADR-0091)
+# ---------------------------------------------------------------------------
+
+
+def list_registered_eras(era: EraConfig = CURRENT_ERA) -> list[EraOption]:
+    """Every era a mod may roll into, in era order.
+
+    Read off the registry, never off ``Era`` rows: an era that has never run has
+    no row, and it is precisely the ones that have never run that a mod wants to
+    pick. ``is_live`` compares against the era in hand — the live binding — so
+    the selector marks where the game actually is, not where the newest era file
+    is.
+    """
+    return [
+        EraOption(
+            config_key=config_key,
+            name=era_config_for_key(config_key).name,
+            is_live=config_key == era.config_key,
+        )
+        for config_key in registered_era_config_keys()
+    ]
+
+
+async def roll_into_era(
+    config_key: str, operator: Account, session: AsyncSession
+) -> EraRollOut:
+    """End the live era and open ``config_key``. The most destructive operation
+    in the system, and there is no undo.
+
+    Everything it does, it does through the pieces that already own it: the
+    ``Era`` row is the append-only record of which ruleset governs from now
+    (ADR-0042), ``apply_era_reset`` performs the resets the **incoming** era's
+    flags declare, freezes every unresolved duel into a permanent result (#824)
+    and retires the board, and ``rebind_live_era`` — which ``apply_era_reset``
+    calls — points the process at the new rules.
+
+    ``operator`` lands in ``Era.started_by``, the not-null audit trail recording
+    who opened the era. The route's ``require_admin`` is what fills it, which is
+    the guarantee ``scripts/era_reset.py`` has to re-derive by hand.
+    """
+    era_config = era_config_for_key(config_key)
+    if era_config is None:
+        raise_coded(
+            422,
+            ErrorCode.era_config_unknown,
+            f"Unknown era: {config_key}.",
+        )
+
+    characters = await list_active_characters(session)
+    new_era_row = Era(
+        # Written, not read on the happy path — the historical fallback for a
+        # row whose config file is later deleted. See models/era.py.
+        name=era_config.name,
+        config_key=era_config.config_key,
+        started_by=operator.id,
+    )
+    session.add(new_era_row)
+    await session.flush()
+    await apply_era_reset(characters, new_era_row, session, era=era_config)
+    return EraRollOut(
+        era_id=new_era_row.id,
+        config_key=era_config.config_key,
+        name=era_config.name,
+        characters_reset=len(characters),
+    )

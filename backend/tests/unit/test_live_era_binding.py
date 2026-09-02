@@ -18,6 +18,7 @@ sees the new ruleset at once, and no call site changes. These tests are what
 makes that claim checkable rather than asserted.
 """
 import dataclasses
+import re
 from pathlib import Path
 
 import pytest
@@ -136,13 +137,17 @@ def test_only_services_era_rebinds_the_live_era():
     one function that decides *which* era the database says is live. A second
     caller is how a process ends up half-flipped.
     """
+    # \b so `rebind_live_era(` — the resolver, which every legitimate caller
+    # goes through and which main.py's lifespan calls — is not counted as a call
+    # to the primitive it wraps.
+    call = re.compile(r"\bbind_live_era\(")
     allowed = {"game_config.py", "services/era.py"}
     callers = set()
     for path in BACKEND_ROOT.rglob("*.py"):
         relative = path.relative_to(BACKEND_ROOT).as_posix()
         if relative.startswith((".venv/", "tests/", "scripts/")):
             continue
-        if "bind_live_era(" in path.read_text(encoding="utf-8"):
+        if call.search(path.read_text(encoding="utf-8")):
             callers.add(relative)
     assert callers == allowed, (
         "A new site rebinds the live era. Route it through "

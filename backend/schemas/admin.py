@@ -202,3 +202,41 @@ class BanActionOut(WireModel):
 
 class CliTokenResponse(WireModel):
     access_token: str
+
+
+# ---------------------------------------------------------------------------
+# Era rollover (#827, ADR-0091)
+# ---------------------------------------------------------------------------
+
+
+class EraOption(WireModel):
+    """One row in the admin era selector.
+
+    ``config_key`` is the identity a mod picks and ``Era.config_key`` stores;
+    ``name`` is the era's player-visible name, read off the config rather than
+    off any row, because an era that has never run has no row to read.
+    """
+
+    config_key: str
+    name: str
+    is_live: bool
+
+
+class EraRollIn(WireModel):
+    """``POST /admin/eras/roll`` — the era to roll the game into.
+
+    Deliberately just the key. A rollover has no options: the resets it performs
+    are the *incoming* era's flags (ADR-0042), so anything else this body could
+    carry would be a second place to state a rule the era file already owns.
+    """
+
+    config_key: str
+
+
+class EraRollOut(WireModel):
+    """What the rollover did, read back rather than echoed."""
+
+    era_id: int
+    config_key: str
+    name: str
+    characters_reset: int

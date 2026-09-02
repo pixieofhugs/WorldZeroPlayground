@@ -280,6 +280,67 @@ export interface paths {
         patch: operations["admin_moderate_comment_admin_comments__comment_id__moderate_patch"];
         trace?: never;
     };
+    "/admin/eras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Eras
+         * @description Admin-only: the eras a rollover may target, and which one is live.
+         *
+         *     No session: which rulesets exist is a code fact, and which is live is the
+         *     binding this process is already holding (ADR-0091).
+         */
+        get: operations["admin_list_eras_admin_eras_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/eras/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Admin Roll Into Era
+         * @description Admin-only: end the live era and open the one named. **No undo.**
+         *
+         *     Everyone's score, level, vote budget and faction reset per the incoming
+         *     era's flags; every unresolved duel freezes into a permanent result (#824);
+         *     the whole board retires; and the process starts playing by the new rules
+         *     before this response is written.
+         *
+         *     ``PUT`` rather than ``POST`` because the resource is "the live era" and this
+         *     sets it. It is emphatically **not** idempotent all the same — opening an era
+         *     is an append, so a second call opens a second one. The confirmation that
+         *     stops that is the mod's, on the admin page; the equivalent gate on
+         *     ``scripts/era_reset.py`` is its ``--yes``.
+         *
+         *     This route restores an entry point #1667 deleted, deliberately and on the
+         *     other side of the argument that deleted it: ``PUT /admin/era/reset`` went
+         *     because it was unreachable from any UI and re-instantiated the same era, so
+         *     a destructive rollover sat behind any admin session for no gain. It comes
+         *     back because #827 gives it the two things it lacked — a target to choose,
+         *     and a mod control that chooses it.
+         */
+        put: operations["admin_roll_into_era_admin_eras_live_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/messages": {
         parameters: {
             query?: never;
@@ -2987,6 +3048,48 @@ export interface components {
             /** Era Notes */
             era_notes: string;
         };
+        /**
+         * EraOption
+         * @description One row in the admin era selector.
+         *
+         *     ``config_key`` is the identity a mod picks and ``Era.config_key`` stores;
+         *     ``name`` is the era's player-visible name, read off the config rather than
+         *     off any row, because an era that has never run has no row to read.
+         */
+        EraOption: {
+            /** Config Key */
+            config_key: string;
+            /** Is Live */
+            is_live: boolean;
+            /** Name */
+            name: string;
+        };
+        /**
+         * EraRollIn
+         * @description ``POST /admin/eras/roll`` — the era to roll the game into.
+         *
+         *     Deliberately just the key. A rollover has no options: the resets it performs
+         *     are the *incoming* era's flags (ADR-0042), so anything else this body could
+         *     carry would be a second place to state a rule the era file already owns.
+         */
+        EraRollIn: {
+            /** Config Key */
+            config_key: string;
+        };
+        /**
+         * EraRollOut
+         * @description What the rollover did, read back rather than echoed.
+         */
+        EraRollOut: {
+            /** Characters Reset */
+            characters_reset: number;
+            /** Config Key */
+            config_key: string;
+            /** Era Id */
+            era_id: number;
+            /** Name */
+            name: string;
+        };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
             /** Faction Slug */
@@ -5490,6 +5593,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_eras_admin_eras_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraOption"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_roll_into_era_admin_eras_live_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraRollIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraRollOut"];
                 };
             };
             /** @description Validation Error */
