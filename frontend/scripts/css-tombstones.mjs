@@ -256,14 +256,82 @@ const SELF_TEST = '__tests__/cssTombstones.test.ts'
  */
 function guardedNames() {
   const names = new Map()
-  for (const path of filesUnder(join(FRONTEND_DIR, 'src'), /\.tsx?$/)) {
-    if (!isTest(path) || toRelative(path).endsWith(SELF_TEST)) continue
-    const source = stripComments(readFileSync(path, 'utf8'), false)
+  for (const [path, source] of testSources()) {
     for (const [, word] of source.matchAll(/['"`]\.?(--?[\w-]+|[a-z][\w-]*-[\w-]+)['"`]/g)) {
-      names.set(word, [...new Set([...(names.get(word) ?? []), toRelative(path)])])
+      names.set(word, [...new Set([...(names.get(word) ?? []), path])])
     }
   }
   return names
+}
+
+/**
+ * `[relative path, comment-free source]` for every test that could be a guard.
+ *
+ * Read once and shared by both guard arms, so the corpus they judge against —
+ * `__tests__` only, this detector's own test excluded, comments stripped —
+ * cannot drift between "a guard holds the name" and "a guard holds the
+ * colour".
+ */
+function testSources() {
+  const sources = []
+  for (const path of filesUnder(join(FRONTEND_DIR, 'src'), /\.tsx?$/)) {
+    const relative = toRelative(path)
+    if (!isTest(path) || relative.endsWith(SELF_TEST)) continue
+    sources.push([relative, stripComments(readFileSync(path, 'utf8'), false)])
+  }
+  return sources
+}
+
+/**
+ * A raw colour value, in the two notations this cascade's prose quotes.
+ *
+ * Colours ONLY, deliberately, and this is the boundary to argue with. A block
+ * can point at a guard through any pinned value — a measured `4.83:1` would
+ * qualify on the same reasoning — but a ratio appears in these comments
+ * unquoted and by the dozen, and `factionContrast.test.ts` holds hundreds of
+ * them, so widening to ratios would sweep most of the cascade into KEEP-guard
+ * and say nothing. A colour is the narrow case that earns its keep: this repo
+ * has a guard whose entire subject is raw colour literals
+ * (`rawColourRule.test.ts`), and #3001's own landmine names exactly that
+ * relationship.
+ */
+const COLOUR_LITERAL = /^(#[0-9a-f]{3,8}|(?:rgba?|hsla?|oklch|color-mix)\([^)]*\))$/i
+
+/** The same, unanchored, for harvesting out of a test file's code. */
+const COLOUR_IN_CODE = /#[0-9a-f]{3,8}\b|(?:rgba?|hsla?|oklch|color-mix)\([^)]*\)/gi
+
+/** `rgba(10, 26, 14)` and `rgba(10,26,14)` are the same pin. */
+const normaliseColour = (literal) => literal.replace(/\s+/g, '').toLowerCase()
+
+/**
+ * What a comment block QUOTES — in backticks, or single or double quotes.
+ *
+ * The quoting requirement is the whole narrowing, and it does real work: the
+ * `--faction-snide-pink-deep` block writes "held #be185d" bare, as a fact
+ * about a value, while the punch-hole block writes "an inline
+ * `rgba(10,26,14)`" — citing the literal AS a literal. Only the second is a
+ * pointer at the thing a guard holds.
+ */
+const quotedSpans = (text) =>
+  [...text.matchAll(/[`'"]([^`'"\n]+)[`'"]/g)].map((match) => match[1].trim())
+
+/**
+ * A normalised colour literal → the test files whose CODE pins it.
+ *
+ * Read from the same comment-stripped test sources as `guardedNames`, for the
+ * same reason: `rawColourRule.test.ts` writes `rgba(10,26,14)` in its own
+ * docblock at line 67 AND in two assertions at 84–85, and only the assertions
+ * are a guard.
+ */
+function guardedColours() {
+  const colours = new Map()
+  for (const [path, source] of testSources()) {
+    for (const [literal] of source.matchAll(COLOUR_IN_CODE)) {
+      const key = normaliseColour(literal)
+      colours.set(key, [...new Set([...(colours.get(key) ?? []), path])])
+    }
+  }
+  return colours
 }
 
 /**
@@ -277,15 +345,22 @@ function guardedNames() {
  * verdict has to be able to say so or the report invites the wrong edit.
  *
  * Precedence is by how the block resists deletion, strongest first: a guard
- * names it, a live rule sits under it, or it argues its own case.
+ * pins something the block cites, a live rule sits under it, or it argues its
+ * own case.
  */
-function classify(block, names, guarded) {
-  const guards = [...new Set(names.flatMap((name) => guarded.get(bareName(name)) ?? []))]
-  if (guards.length > 0) {
+function classify(block, names, guarded, colours) {
+  const pointers = [
+    ...names.flatMap((name) => (guarded.get(bareName(name)) ?? []).map((file) => [file, name])),
+    ...quotedSpans(block.text)
+      .filter((span) => COLOUR_LITERAL.test(span))
+      .flatMap((span) => (colours.get(normaliseColour(span)) ?? []).map((file) => [file, span])),
+  ]
+  if (pointers.length > 0) {
     return {
       verdict: 'KEEP-guard',
-      why: 'A retirement guard already holds this name; this block is its readable half, and should point at the guard rather than be deleted.',
-      guards,
+      why: 'A guard already pins something this block cites — its dead name, or a colour its prose quotes. The block is that guard\'s readable half, and should point at it rather than be deleted.',
+      guards: [...new Set(pointers.map(([file]) => file))],
+      guardedVia: [...new Set(pointers.map(([, via]) => via))],
     }
   }
   if (block.attached !== null) {
@@ -320,6 +395,7 @@ function classify(block, names, guarded) {
 export function tombstones() {
   const live = liveNames()
   const guarded = guardedNames()
+  const colours = guardedColours()
   const findings = []
   const filtered = []
 
@@ -348,7 +424,7 @@ export function tombstones() {
         blockLines: block.lines,
         names: dead.sort(),
         attached: block.attached,
-        ...classify(block, dead, guarded),
+        ...classify(block, dead, guarded, colours),
         excerpt: excerpt(block.text),
         text: block.text,
       })
@@ -399,18 +475,27 @@ function markdown({ findings, filtered }) {
     '',
     `${findings.length} comment blocks in the cascade name at least one name that exists nowhere else`,
     `in the tree. **${cut.length} of them can be cut**, for ${cutLines} lines. Every one of the other`,
-    `${findings.length - cut.length} resists deletion for a stated reason: a test already holds the name, a live`,
-    'declaration sits underneath the block, or the block argues its own case.',
+    `${findings.length - cut.length} resists deletion for a stated reason: a guard already pins something the block`,
+    'cites, a live declaration sits underneath it, or it argues its own case.',
     '',
     '#3001 asked what the mechanical half is worth before committing to the judgement pass — "if',
     `tombstones remove 800 lines, the judgement pass may not be worth its risk". They remove ${cutLines}.`,
     '',
-    'The reason the number is small is the most useful thing in this report. Reading the first run\'s',
-    'proposals one by one, most "plain removal record" blocks turned out to be the HEADER of a live',
-    'rule — `--rank-silver`, `.em-broadsheet`, `--faction-wow-gilt-mid` — carrying a measured ratio or',
-    'an owner QA ruling in the same block as the dead name. "Records only a removal" is true of a',
-    'SENTENCE and false of the block it sits in. A sweep that cut by block would have taken live',
-    'documentation with it, and would have looked entirely correct while doing so.',
+    'The reason the number is small is the most useful thing in this report, and it came out of',
+    'reading proposals one at a time rather than trusting the sweep. Two rounds of that shrank the',
+    'cut list from five blocks to one:',
+    '',
+    '- most "plain removal record" blocks are the HEADER of a live rule — `--rank-silver`,',
+    '  `.em-broadsheet`, `--faction-wow-gilt-mid` — carrying a measured ratio or an owner QA ruling in',
+    '  the same block as the dead name. "Records only a removal" is true of a SENTENCE and false of',
+    '  the block it sits in;',
+    '- and a block can point at a guard by something OTHER than its dead name. The largest remaining',
+    '  proposal cited `rgba(10,26,14)` in prose, which `rawColourRule.test.ts` pins as its worked',
+    '  example under the same issue the block cites (#1912). Nothing keyed on the dead name could see',
+    '  that, because the dead name really does appear nowhere else.',
+    '',
+    'A sweep that cut by block would have taken live documentation with it in both cases, and would',
+    'have looked entirely correct while doing so.',
     '',
   )
 
@@ -464,16 +549,45 @@ function markdown({ findings, filtered }) {
     '',
   )
 
+  out.push('## What counts as pointing at a guard', '')
+  out.push(
+    'A KEEP-guard row means a test already pins something the block cites, so the block is that',
+    'guard\'s readable half. Each row below names the guard file and what routed to it. There are two',
+    'routes, and the second is the narrower and more arguable:',
+    '',
+    '- **the dead name itself**, held as a string literal in a test;',
+    '- **a colour literal the prose QUOTES** — in backticks or quotes — that a test pins in code.',
+    '  `--faction-singularity-punch-hole` exists nowhere else in the tree, so nothing keyed on the',
+    '  name can see that its block is `rawColourRule.test.ts`\'s worked example; the link is carried by',
+    '  the backticked `rgba(10,26,14)`, under the same issue (#1912) both cite. Whitespace is',
+    '  normalised, so `rgba(10, 26, 14)` and `rgba(10,26,14)` are one pin.',
+    '',
+    '**Colours only, and quoted only — that is the boundary to argue with.** A block can in principle',
+    'point at a guard through any pinned value, and a measured `4.83:1` would qualify on the same',
+    'reasoning. Ratios are excluded because this cascade writes them unquoted and by the dozen while',
+    '`factionContrast.test.ts` holds hundreds, so admitting them would sweep most of the cascade into',
+    'KEEP-guard and say nothing. The quoting requirement does the rest of the narrowing: one block',
+    'writes "held #be185d" as a fact about a value, another writes "an inline `rgba(10,26,14)`" as a',
+    'citation, and only the second is a pointer. As it stands the colour route moves exactly ONE',
+    'block — widen either half and check that number before trusting the result.',
+    '',
+  )
+
   for (const verdict of VERDICT_ORDER) {
     const rows = findings.filter((f) => f.verdict === verdict)
-    out.push(`## ${verdict} — ${rows.length} blocks`, '')
+    out.push(`## ${verdict} — ${rows.length} block${rows.length === 1 ? '' : 's'}`, '')
     if (rows.length > 0) out.push(`> ${rows[0].why}`, '')
     for (const row of rows) {
       out.push(
         `- **\`${row.file}:${row.line}\`** (${row.blockLines} lines) — ${row.names.map((n) => `\`${n}\``).join(', ')}`,
       )
       if (row.attached !== null) out.push(`  <br>heads the live \`${row.attached}\``)
-      if (row.guards !== undefined) out.push(`  <br>guarded by ${row.guards.map((g) => `\`${g}\``).join(', ')}`)
+      if (row.guards !== undefined) {
+        out.push(
+          `  <br>guarded by ${row.guards.map((g) => `\`${g}\``).join(', ')}` +
+            ` — via ${row.guardedVia.map((v) => `\`${v}\``).join(', ')}`,
+        )
+      }
       if (verdict === 'CUT-candidate') {
         out.push('', '  ```css', ...row.text.split('\n').map((line) => `  ${line}`), '  ```', '')
       } else {

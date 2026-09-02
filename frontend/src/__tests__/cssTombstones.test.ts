@@ -43,6 +43,7 @@ interface Finding {
   attached: string | null
   verdict: string
   guards?: string[]
+  guardedVia?: string[]
   text: string
 }
 
@@ -51,6 +52,13 @@ const report: { findings: Finding[]; filtered: { name: string; rule: string }[] 
 )
 
 const named = (name: string) => report.findings.filter((finding) => finding.names.includes(name))
+
+/**
+ * A raw colour value, in the two notations the cascade's prose quotes. Stated
+ * here as well as in the script because this test's job is to hold the guard
+ * pointer rule NARROW, and a copy that drifted wider would stop doing that.
+ */
+const COLOUR_LITERAL = /^(#[0-9a-f]{3,8}|(?:rgba?|hsla?|oklch|color-mix)\([^)]*\))$/i
 
 /**
  * #3001's own worked examples, each verified in the issue as occurring exactly
@@ -132,6 +140,41 @@ describe('every finding carries the evidence its verdict rests on', () => {
       (finding.guards ?? []).some((guard) => guard.endsWith('cssTombstones.test.ts')),
     )
     expect(selfCited).toEqual([])
+  })
+
+  /**
+   * A block can point at a guard by something OTHER than its dead name.
+   *
+   * `--faction-singularity-punch-hole` genuinely appears nowhere else in the
+   * tree, so a name-keyed liveness check reads its block as a plain removal
+   * record and proposes it for deletion — it was 7 of the first report's 10
+   * cuttable lines. But the block's last sentence says "the rawColourRule test
+   * still carries the literal as its example", and that is true: the
+   * BACKTICKED `rgba(10,26,14)` in the prose is what `rawColourRule.test.ts`
+   * pins, under the same issue number (#1912) the CSS block cites. The block
+   * is the readable half of a machine guard, reached by the colour and not by
+   * the name — #3001's landmine 1, second bullet.
+   */
+  it('sees a guard pointer carried by a quoted colour, not by the dead name', () => {
+    const punchHole = named('--faction-singularity-punch-hole')
+    expect(punchHole.map((finding) => finding.verdict)).toEqual(['KEEP-guard'])
+    expect(punchHole[0].guards).toContain('src/__tests__/rawColourRule.test.ts')
+    expect(punchHole[0].guardedVia).toContain('rgba(10,26,14)')
+  })
+
+  it('cites only evidence the block actually carries', () => {
+    // Narrowness, which is the whole risk in the rule above. Every citation is
+    // either one of the block's own dead names or a colour literal its prose
+    // quoted — never a bare word that happened to collide with a fixture. And
+    // whatever is cited is quoted verbatim from the block, so the owner can
+    // find it by searching the file.
+    for (const finding of report.findings) {
+      for (const via of finding.guardedVia ?? []) {
+        const shape = finding.names.includes(via) || COLOUR_LITERAL.test(via)
+        expect([finding.file, finding.line, via, shape]).toEqual([finding.file, finding.line, via, true])
+        expect(finding.text).toContain(via)
+      }
+    }
   })
 
   it("routes #3001's aurora to KEEP-guard, not to the cut list", () => {
