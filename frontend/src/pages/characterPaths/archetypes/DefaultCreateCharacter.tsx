@@ -78,7 +78,7 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName, factionSpectrumSheet } from '../../../utils/factions'
+import { factionCssVar, factionName } from '../../../utils/factions'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -87,7 +87,6 @@ import PortraitPicker from '../PortraitPicker'
 import { namedField } from '../characterFields'
 import {
   ComposerFooter,
-  ComposerGround,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -97,14 +96,32 @@ import {
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
 import {
+  ALARM,
+  EDGE,
+  FAINT,
+  FIELD,
+  HAIR,
+  INK,
+  MUTED,
+  TITLE_FACE,
+  composerGround,
+  fieldBox,
+  labelStyle,
+  primaryStyle,
+  sheetStyle,
+} from '../../editPraxis/archetypes/defaultComposerDress'
+import {
   NAME_MAX,
   BIO_MAX,
   TAGLINE_MAX,
   type CreateCharacterState,
 } from '../useCreateCharacter'
 
-/* The na kit's inks and grounds, named once — the same set
- * `DefaultEditPraxis` reads, because this page now stands on the same stock.
+/* THE DRESS IS THE SHARED ONE (#2993). Every ink, the sheet's spectrum frame,
+ * the aurora and the field box come from
+ * `editPraxis/archetypes/defaultComposerDress` — the same set
+ * `DefaultEditCharacter` and `DefaultProposeTask` read, because all three stand
+ * on the same stock.
  *
  * THE APP'S NEUTRAL TIERS ARE GONE, AND SO IS THE LINT EXEMPTION THEY BOUGHT
  * (#2992). `--color-text-secondary` / `-tertiary` were right here while the page
@@ -117,76 +134,14 @@ import {
  * with the ground it was measured on; `__tests__/createCharacterContrast.test.ts`
  * carries the sheet-ground rows.
  *
- * THE TIER SPLIT IS BY GROUND, NOT BY LOUDNESS (#2485), and the names read
- * backwards because of it: FAINT is the ink for the aurora-WASHED sheet and
- * MUTED is the ink for the opaque field laid on top of it. If you are choosing
- * between them, ask what is behind the type. */
-const INK = 'var(--faction-default-card-text)'
-const MUTED = 'var(--faction-default-card-muted)'
-const FAINT = 'var(--faction-default-composer-faint)'
-/* NOT `--color-danger`, and this is a fix rather than a preference (#2346,
- * #1302): a shared functional ink inside a faction frame takes that faction's
- * own card family, measured on the frame's ground. */
-const ALARM = 'var(--faction-default-card-alarm)'
-const FIELD = 'var(--faction-default-composer-field)'
-const BORDER = 'var(--faction-default-border)'
-const HAIR = 'var(--faction-default-composer-hair)'
-const ON_ACCENT = 'var(--faction-default-on-accent)'
-
-/* The design's title face is Lora (--font-display); the label face is Courier
- * Prime (--font-body), which is what `composerLabelStyle` already defaults to.
- * The token names read backwards here and that is not a mistake. */
-const TITLE_FACE = 'var(--font-display)'
-
-const labelStyle = { color: FAINT }
-
-/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
-   ramp painted into the border box under it, the same `border-box` idiom
-   `DefaultTaskCard`, `DefaultPraxisCard`, `DefaultSeal` and `DefaultEditPraxis`
-   all wear. Only the width is stated here; the composition belongs to the
-   helper, because the ramp has to be appended to all three of the sheet's
-   background lists. */
-const sheetStyle = {
-  border: '3px solid transparent',
-  ...factionSpectrumSheet(),
-  boxShadow: '0 16px 40px -24px var(--color-cast-shadow)',
-}
-
-/* na's drifting aurora, clipped to the sheet by `ComposerSheet`'s own
-   `overflow: hidden` (#1028). */
-const ground = (
-  <ComposerGround
-    background="var(--faction-default-aurora)"
-    opacity="var(--faction-default-aurora-opacity)"
-    filter="var(--faction-default-aurora-filter)"
-    mixBlendMode="var(--faction-default-aurora-blend)"
-    animated
-  />
-)
-
-const fieldBox = {
-  width: '100%',
-  background: FIELD,
-  color: INK,
-  border: `1px solid ${BORDER}`,
-  borderRadius: 10,
-  padding: 'var(--space-md)',
-  boxSizing: 'border-box',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-content)',
-  lineHeight: 1.6,
-  resize: 'vertical',
-} as const
-
-/** The commit button's paint, minus the busy cursor the form adds. */
-const primaryStyle = composerLabelStyle({
-  border: 'none',
-  borderRadius: 10,
-  padding: 'var(--space-md) var(--space-xl)',
-  color: ON_ACCENT,
-  background: INK,
-  fontWeight: 700,
-})
+ * THE FIELD EDGE CHANGED WITH THE IMPORT, and that is #3023's open half closing
+ * rather than a repaint. This file drew `--faction-default-border`, which is
+ * 1.31:1 against a well that is byte-identical to the sheet it lies on; the
+ * other two na forms drew the measured `--faction-default-card-muted`. One
+ * defect, three copies of one idea, and the copy that had it was the one whose
+ * lane could not be edited from where the finding was made.
+ * `pages/editPraxis/archetypes/__tests__/defaultComposerDressEdges.test.tsx`
+ * holds the rows for all three consumers now. */
 
 export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
@@ -241,7 +196,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
           <h1
             style={{
               fontFamily: TITLE_FACE,
@@ -340,7 +295,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                 padding: 'var(--space-sm) var(--space-lg)',
                 background: FIELD,
                 color: INK,
-                border: `1px solid ${BORDER}`,
+                border: `1px solid ${EDGE}`,
               })}
               statusStyle={{ color: FAINT }}
               errorStyle={{ color: ALARM }}
@@ -376,7 +331,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                         cursor: 'pointer',
                         textAlign: 'left',
                         background: FIELD,
-                        border: `1px solid ${BORDER}`,
+                        border: `1px solid ${EDGE}`,
                         borderRadius: 10,
                         padding: 'var(--space-md) var(--space-lg)',
                         // The faction's own hue as a RING, never as ink (§3).

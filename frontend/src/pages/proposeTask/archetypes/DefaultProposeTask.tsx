@@ -47,15 +47,19 @@
  * that shell scrolls horizontally behind a hidden scrollbar and would bury
  * three of the eight options (S.N.I.D.E.'s and WoW's headers record the same).
  *
- * ## The furniture survives, in its existing role (#2993)
+ * ## The furniture survives, in its existing role — with one exception (#2993)
  *
  * `Breadcrumb` (the shared trail, #2102/#2973, in `ComposerPage`'s one slot),
- * `PageTitle` (the site's spectrum-underlined display heading — na's own idiom,
- * and now the sheet's heading rather than a page header above a card),
  * `FilterLevelNodes`, `Chip` + `FactionSigil`, the metatask proposal block, the
  * unaffiliated target option, base points and the notes field. Each is a shared
  * component and none of them was re-drawn: `metataskProposal`, `proposalNotes`,
  * `proposeTaskBreadcrumb` and `unaffiliatedOption` are the suites that say so.
+ *
+ * **`PageTitle` is the exception, and the reasons are at its call site.** The
+ * issue's census listed it as furniture to keep; the chassis' own rhythm
+ * contract and this sheet's ground say otherwise, and the six kits that draw an
+ * inline `h1` at `sizes.titleSize` are what this page draws now. No propose kit
+ * mounts `PageTitle` and neither na character form does.
  *
  * **The 240px rainbow bar under the title is GONE, and that is #2520's ruling
  * rather than a trim.** na's spectrum is the SHEET's static 3px frame now — the
@@ -65,7 +69,7 @@
  * The one hairline on the page is `ComposerRule`, immediately above the footer
  * (#1707).
  *
- * ## Two wells, and they are a CONTRAST fix rather than a decoration
+ * ## Three wells, and two of them are a CONTRAST fix rather than a decoration
  *
  * `Chip` and `FilterLevelNodes` are app chrome: they paint `--color-bg-surface`
  * with `--color-text-primary` / `--color-text-secondary`, and `Chip` fades an
@@ -81,6 +85,13 @@
  * unselected chip label lands at 6.11 / 5.46 and the inactive node at 8.51 /
  * 6.59. `__tests__/naProposeTaskContrast.test.ts` carries every row, in both
  * cascades, modelled per aurora stop.
+ *
+ * **The third well is the live preview chit, and it is one plate rather than
+ * two idioms.** It needs the opaque stock on its own account — its bonus line
+ * is `--color-success`, the quietest ink on this page, which reads 8.97 / 9.42
+ * on the field against 6.36 / 5.89 bare on the washed sheet — and drawing it in
+ * a different frame from the two rows above it would put two plate treatments
+ * on one sheet. `wellStyle` is declared once and spread three times.
  *
  * ## The inks are na's family, because the GROUND changed
  *
@@ -99,10 +110,21 @@
  *    entry was an argument about a GROUND (see `eslint.config.js`), and this
  *    file has left it.
  *
- * THE TIER SPLIT IS BY GROUND, NOT BY LOUDNESS (#2485), and the names read
- * backwards because of it: FAINT is the ink for the aurora-WASHED sheet and
- * MUTED is the ink for the opaque field laid on top of it. If you are choosing
- * between them, ask what is behind the type, not how quiet it should sound.
+ * The tokens themselves are not declared here. They are the na composer dress
+ * (`editPraxis/archetypes/defaultComposerDress`), which the two na character
+ * forms read as well — three files had been keeping three copies of one set,
+ * and the copies had drifted on the one value that is an accessibility floor.
+ * THE TIER SPLIT IS BY GROUND, NOT BY LOUDNESS (#2485): FAINT is the ink for
+ * the aurora-WASHED sheet and MUTED the ink for the opaque well on top of it.
+ *
+ * ## Focus is the sheet's, and this file may not switch it off (#2266)
+ *
+ * Every field carries `data-composer-field` and none of them declares
+ * `outline`. The ring is one rule in `index.css` drawn in `currentColor`, so it
+ * inherits the measurement each field's own ink already has — and an inline
+ * `outline: none` beats any stylesheet, which is how eight create plates
+ * shipped with no focus indicator at all. A suppression with nothing in its
+ * place is the defect (`WORLD_ZERO_STYLE.md`).
  *
  * ## This kit is only ever na's own dress now
  *
@@ -140,7 +162,6 @@
  */
 import { useTranslation } from "react-i18next";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
-import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
 import { Chip } from "../../../components/ui/ChipRow";
 import FactionSigil from "../../../components/sigil/FactionSigil";
@@ -149,14 +170,12 @@ import {
   factionCssVar,
   factionFill,
   factionName,
-  factionSpectrumSheet,
   getAllFactions,
   isKnownFaction,
   sortFactionsByRainbowOrder,
 } from "../../../utils/factions";
 import {
   ComposerFooter,
-  ComposerGround,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -165,6 +184,21 @@ import {
   composerLabelStyle,
   useComposerSizes,
 } from "../../editPraxis/archetypes/shared";
+import {
+  ALARM,
+  EDGE,
+  FAINT,
+  FIELD,
+  HAIR,
+  INK,
+  MUTED,
+  TITLE_FACE,
+  composerGround,
+  fieldBox,
+  labelStyle,
+  primaryStyle,
+  sheetStyle,
+} from "../../editPraxis/archetypes/defaultComposerDress";
 import {
   UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
@@ -182,95 +216,31 @@ const NOTES_MAX = 2000;
 const TITLE_NOTICE = 180;
 const DESCRIPTION_NOTICE = 4500;
 
-/* na's inks and grounds, named once — the set `DefaultEditPraxis` and both na
-   character forms read, because this page now stands on the same stock. */
-const INK = "var(--faction-default-card-text)";
-/* Prose on the OPAQUE field: 6.05 light / 5.23 dark. Sub-AA on the washed sheet
-   (4.30 / 3.27), which is the tier split the header states. */
-const MUTED = "var(--faction-default-card-muted)";
-/* Labels and quiet type straight on the washed sheet: 4.72 / 4.71. */
-const FAINT = "var(--faction-default-composer-faint)";
-/* The counter APPROACHING its cap (#1609). Not `--color-warning`, which is
-   3.51:1 here — see the header. */
+/* THE DRESS IS THE SHARED ONE (#2993). Every ink, the sheet's spectrum frame,
+   the aurora and the field box come from
+   `editPraxis/archetypes/defaultComposerDress` — the same set
+   `DefaultCreateCharacter` and `DefaultEditCharacter` read, because all three
+   stand on the same stock. Three copies of it had already drifted apart on the
+   one value that is an accessibility floor; see that module's header.
+
+   THE COUNTER'S APPROACH RUNG IS THIS SURFACE'S ALONE and stays here: no other
+   na form has a field that warns before it stops accepting text (#1609), so
+   exporting the token would be a shared name with one reader. Not
+   `--color-warning`, which measures 3.51:1 on this sheet — the rows are in
+   `__tests__/naProposeTaskContrast.test.ts`. */
 const NOTICE = "var(--faction-default-card-notice)";
-/* The counter AT its cap, the over-length message and the error banner. Not
-   `--color-danger`, which is 3.37:1 here. */
-const ALARM = "var(--faction-default-card-alarm)";
-const FIELD = "var(--faction-default-composer-field)";
-/* EVERY PLATE EDGE ON THIS SHEET, and it is NOT `--faction-default-border`
-   (#2991's finding, reused here as ruled). In light
-   `--faction-default-composer-field` is `#fffdf9` and so is
-   `--faction-default-card-bg`, byte for byte — the well has no fill of its own
-   to be seen by, so the hairline IS the boundary, and `-border` draws it at
-   1.31:1. `-card-muted` is the quiet MARK rung of the same family: 4.30 / 3.27
-   against the sheet and 6.05 / 5.23 against the well, clearing 1.4.11's 3:1 on
-   both sides in both cascades with nothing minted. */
-const EDGE = MUTED;
-const HAIR = "var(--faction-default-composer-hair)";
-const ON_ACCENT = "var(--faction-default-on-accent)";
 
-/* The design's title + body face is Lora (--font-display); its label face is
-   Courier Prime (--font-body), which is what `composerLabelStyle` already
-   defaults to. The token names read backwards here and that is not a mistake. */
-const TITLE_FACE = "var(--font-display)";
-
-const labelStyle = { color: FAINT };
-
-/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
-   ramp painted into the border box under it. Only the width is stated here; the
-   composition belongs to the helper, because the ramp has to be appended to all
-   three of the sheet's background lists and saying that at a fourth call site is
-   how one of them gets the arity wrong. */
-const sheetStyle = {
-  border: "3px solid transparent",
-  ...factionSpectrumSheet(),
-  boxShadow: "0 16px 40px -24px var(--color-cast-shadow)",
-};
-
-/* na's drifting aurora, clipped to the sheet by `ComposerSheet`'s own
-   `overflow: hidden` (#1028). */
-const ground = (
-  <ComposerGround
-    background="var(--faction-default-aurora)"
-    opacity="var(--faction-default-aurora-opacity)"
-    filter="var(--faction-default-aurora-filter)"
-    mixBlendMode="var(--faction-default-aurora-blend)"
-    animated
-  />
-);
-
-const fieldBox = {
-  width: "100%",
-  background: FIELD,
-  color: INK,
-  border: `1px solid ${EDGE}`,
-  borderRadius: 10,
-  padding: "var(--space-md)",
-  boxSizing: "border-box",
-  fontFamily: "var(--font-body)",
-  fontSize: "var(--text-content)",
-  lineHeight: 1.6,
-  outline: "none",
-} as const;
-
-/* The well the two app-chrome control rows stand on — see the header. Same
-   stock and same edge as a field box, because it is the same plate. */
+/* THE WELL THE THREE APP-CHROME BLOCKS STAND ON — the chip row, the level row
+   and the live preview chit. Same stock and same edge as a field box, because
+   it is the same plate: the two control rows need it for contrast (see the
+   header) and the chit takes it so the three plates on this sheet read as one
+   idiom rather than as two. */
 const wellStyle = {
   background: FIELD,
   border: `1px solid ${EDGE}`,
   borderRadius: 10,
   padding: "var(--space-md)",
 } as const;
-
-/** The submit button's paint, minus the busy cursor the form adds. */
-const primaryStyle = composerLabelStyle({
-  border: "none",
-  borderRadius: 10,
-  padding: "var(--space-md) var(--space-xl)",
-  color: ON_ACCENT,
-  background: INK,
-  fontWeight: 700,
-});
 
 export default function DefaultProposeTask({
   state,
@@ -364,16 +334,15 @@ export default function DefaultProposeTask({
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: TITLE_FACE, color: INK }}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
-          {/* The page keeps its title through the filing: a proposer who has
-              just filed should be told so on the same sheet they wrote on,
-              rather than handed back to site chrome (the call `CovenProposeTask`
-              makes for its own success screen). */}
-          <PageTitle title={t("proposeTask.pageTitle")} />
-          <p
+        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+          {/* The filing is told on the same sheet it was written on, rather
+              than handing the proposer back to site chrome — the call
+              `CovenProposeTask` makes for its own success screen. */}
+          <h1
             style={{
               fontFamily: TITLE_FACE,
               fontStyle: "italic",
+              fontWeight: 700,
               fontSize: sizes.titleSize,
               lineHeight: 1.1,
               color: INK,
@@ -383,7 +352,7 @@ export default function DefaultProposeTask({
             {isMetatask
               ? t("proposeTask.successMeta.heading")
               : t("proposeTask.successTask.heading")}
-          </p>
+          </h1>
           {adminReviewHours !== null && (
             <p
               style={{
@@ -423,12 +392,38 @@ export default function DefaultProposeTask({
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
-          {/* The site's own display heading, spectrum-underlined per letter
-              (#1220) — which for the unaffiliated kit IS the faction mark. No
-              masthead band above it: na's band came off in #2520 and the sheet's
-              3px spectrum frame is the whole of it. */}
-          <PageTitle title={t("proposeTask.pageTitle")} />
+        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+          {/* The heading the six chassis kits spell, in na's own face — NOT
+              `PageTitle`, and that is a reversal of this issue's "the furniture
+              survives" line for two reasons the chassis states itself.
+
+              Its `mb-6` is a region setting its own bottom margin, which
+              `ComposerSheet`'s docblock forbids in as many words: the content
+              column owns the vertical rhythm, so a margin here stacks on the
+              column's `gap` and this sheet's rhythm stops matching its
+              siblings'. And it is app chrome — a `--color-text-primary` h1 over
+              a seven-stop underline drawn in the aurora's own scalars — landing
+              on the washed faction sheet with neither a well nor a measurement,
+              which is the third instance of the finding the chip row and the
+              level row are on wells for.
+
+              No propose kit mounts it (`SingularityProposeTask`'s header
+              refuses it by name) and neither na character form does. Same copy
+              key, same tier, one less ornament: na's spectrum on this page is
+              the sheet's own frame (#2520). */}
+          <h1
+            style={{
+              fontFamily: TITLE_FACE,
+              fontStyle: "italic",
+              fontWeight: 700,
+              fontSize: sizes.titleSize,
+              lineHeight: 1.1,
+              color: INK,
+              margin: 0,
+            }}
+          >
+            {t("proposeTask.pageTitle")}
+          </h1>
 
           {/* Who the task is for — and the control this page is dispatched by,
               so picking a real faction reskins the whole page to that kit. */}
@@ -483,6 +478,7 @@ export default function DefaultProposeTask({
               visible label back is a design question, and it is on the issue. */}
           <ComposerSection rule={false}>
             <input
+              data-composer-field
               type="text"
               required
               maxLength={TITLE_MAX}
@@ -505,6 +501,7 @@ export default function DefaultProposeTask({
 
           <ComposerSection rule={false}>
             <textarea
+              data-composer-field
               rows={6}
               maxLength={DESCRIPTION_MAX}
               value={description}
@@ -512,7 +509,7 @@ export default function DefaultProposeTask({
               disabled={submitting}
               aria-label={t("proposeTask.fields.description.label")}
               placeholder={t("proposeTask.fields.description.placeholder")}
-              style={{ ...fieldBox, lineHeight: 1.7, resize: "vertical" }}
+              style={{ ...fieldBox, lineHeight: 1.7 }}
             />
             {counter(description.length, DESCRIPTION_NOTICE, DESCRIPTION_MAX)}
             {description.length >= DESCRIPTION_MAX &&
@@ -543,6 +540,7 @@ export default function DefaultProposeTask({
                     : t("proposeTask.fields.basePoints.label")}
                 </span>
                 <input
+                  data-composer-field
                   type="text"
                   inputMode="numeric"
                   value={isMetatask ? metaBonusValue : pointValue}
@@ -660,6 +658,7 @@ export default function DefaultProposeTask({
           {!isMetatask && (
             <ComposerSection rule={false}>
               <textarea
+                data-composer-field
                 rows={3}
                 maxLength={NOTES_MAX}
                 value={notes}
@@ -667,15 +666,18 @@ export default function DefaultProposeTask({
                 disabled={submitting}
                 aria-label={t("proposeTask.fields.notes.label")}
                 placeholder={t("proposeTask.fields.notes.label")}
-                style={{ ...fieldBox, lineHeight: 1.7, resize: "vertical" }}
+                style={{ ...fieldBox, lineHeight: 1.7 }}
               />
             </ComposerSection>
           )}
 
-          {/* The task being written, live. A chit on the sheet's own stock: the
-              spectrum frame it used to wear is the SHEET's now (#2520), and a
-              second one around a panel inside it would be the same rainbow
-              twice. */}
+          {/* The task being written, live. A chit on the same WELL the two
+              control rows stand on, not on the sheet: the spectrum frame it
+              used to wear is the SHEET's now (#2520), and a second one around a
+              panel inside it would be the same rainbow twice. The well is also
+              what the bonus line needs — `--color-success` reads 8.97 / 9.42 on
+              the opaque field and 6.36 / 5.89 bare on the washed sheet, and it
+              is the ink with the least room on this page. */}
           {title && (
             <div
               style={{

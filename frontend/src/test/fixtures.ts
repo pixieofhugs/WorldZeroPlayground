@@ -26,6 +26,7 @@ import type { CharacterOut, CurrentUser } from '../api/auth'
 import type { DuelDetailOut, DuelSideOut } from '../api/duel'
 import type { PraxisCardOut, PraxisMemberOut, PraxisOut } from '../api/praxis'
 import type { TaskOut } from '../api/tasks'
+import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 import type { EditPraxisState } from '../pages/editPraxis/editPraxisState'
 
@@ -546,3 +547,54 @@ export const anEditCharacterState = (
     ...over,
   }
 }
+
+/**
+ * Create Character's UI state — the other half of the character pair (#2993).
+ *
+ * TWO FILES HAD BUILT THIS BY HAND, byte for byte: `characterPaths.test.tsx`
+ * and `createCharacterCalling.test.tsx`, twenty-two keys each. A third copy was
+ * about to arrive with the na composer dress's edge guard, which is the point at
+ * which the arithmetic this file exists to stop starts being paid — a field
+ * added to `useCreateCharacter` was two edits and would have been three.
+ *
+ * The defaults are the **quietest create form that renders**: a name typed,
+ * nothing else filled, no invitations and so no calling picker, nothing
+ * submitting, no error. `canSubmit` is TRUE for the same reason
+ * {@link anEditCharacterState}'s is — a suite asserting on the gate says
+ * `canSubmit: false` itself, rather than every other suite having to open it.
+ *
+ * `handle` is the derived one (ADR-0019), and it matches {@link aCharacter}'s
+ * username so a suite can render the form and the credential card from one
+ * fixture and get one name.
+ */
+export const aCreateCharacterState = (
+  over: Partial<CreateCharacterState> = {},
+): CreateCharacterState => ({
+  displayName: 'Molly',
+  setDisplayName: noop,
+  bio: '',
+  setBio: noop,
+  tagline: '',
+  setTagline: noop,
+  factionSlug: '',
+  setFactionSlug: noop,
+
+  invited: [],
+  showPicker: false,
+
+  avatarFile: null,
+  avatarPreview: null,
+  avatarSource: null,
+  setAvatarSource: noop,
+  avatarError: '',
+  setAvatarError: noop,
+  handleAvatarChange: noop,
+  handleAvatarConfirm: noop,
+
+  error: null,
+  submitting: false,
+  canSubmit: true,
+  handleSubmit: noop,
+  handle: 'molly',
+  ...over,
+})

@@ -39,7 +39,8 @@
  * its own measurement — `everymenEditCharacterContrast.test.ts` and
  * `wowEditCharacterContrast.test.ts` are two, and the na kit's own dress is in
  * `DefaultEditCharacter` since #2991, measured by
- * `defaultEditCharacterEdges.test.ts` and `composerGround.test.ts`.
+ * `editPraxis/archetypes/__tests__/defaultComposerDressEdges.test.tsx` and
+ * `composerGround.test.ts`.
  *
  * ponytail: the wash model belongs beside the surface that mounts it, which is
  * `pages/characterProfile/`. It is not moved here because that directory is
@@ -82,7 +83,12 @@ import {
   parseColor,
   type Rgba,
 } from '../../../utils/contrast'
-import { readThemes, resolveVar, type Theme } from '../../../utils/__tests__/cssVars'
+import {
+  naWashedSheet,
+  readThemes,
+  resolveVar,
+  type Theme,
+} from '../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../test/indexCss'
 
 const THEMES = readThemes(readIndexCss())
@@ -257,51 +263,18 @@ describe('keeps the wash list in step with the stylesheet', () => {
 
 const AURORA_SHEET = '--faction-default-card-bg'
 
-function number(token: string, theme: Theme): number {
-  const raw = resolveVar(token, theme, THEMES)
-  const value = Number(raw)
-  expect(Number.isFinite(value), `${token} is a number in ${theme}`).toBe(true)
-  return value
-}
-
-/** `saturate()` as `filter` applies it, sRGB, from the SVG colour matrix. */
-function saturate(colour: Rgba, s: number): Rgba {
-  const channel = (r: number, g: number, b: number) =>
-    r * colour.r + g * colour.g + b * colour.b
-  return {
-    r: channel(0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s),
-    g: channel(0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s),
-    b: channel(0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s),
-    a: colour.a,
-  }
-}
-
-/** `mix-blend-mode: screen`, which is how the aurora lifts off the night sheet. */
-function screenOver(top: Rgba, back: Rgba): Rgba {
-  const lift = (x: number, y: number) => 255 - ((255 - x) * (255 - y)) / 255
-  return { r: lift(top.r, back.r), g: lift(top.g, back.g), b: lift(top.b, back.b), a: top.a }
-}
-
-/** The sheet with one aurora stop at its own peak — one ground per stop. */
-function sheetGrounds(theme: Theme): Rgba[] {
-  const sheet = resolve(AURORA_SHEET, theme)
-  const alpha = number('--faction-default-aurora-opacity', theme)
-  const filter = resolveVar('--faction-default-aurora-filter', theme, THEMES)
-  const blend = resolveVar('--faction-default-aurora-blend', theme, THEMES)
-  const aurora = resolveVar('--faction-default-aurora', theme, THEMES)
-  expect(aurora, `the aurora resolves in ${theme}`).not.toBeNull()
-  const amount = /saturate\(([\d.]+)\)/.exec(filter ?? '')
-  expect(amount, `the aurora filter names a saturate() in ${theme}`).not.toBeNull()
-  const stops = [...aurora!.matchAll(/#[0-9a-f]{3,8}|rgba?\([^)]*\)/gi)]
-    .map((match) => parseColor(match[0]))
-    .filter((stop): stop is Rgba => stop !== null)
-  expect(stops.length, `the aurora is a ramp in ${theme}`).toBeGreaterThan(1)
-  return stops.map((stop) => {
-    const filtered = saturate(stop, Number(amount![1]))
-    const painted = blend?.trim() === 'screen' ? screenOver(filtered, sheet) : filtered
-    return compositeOver({ ...painted, a: alpha }, sheet)
-  })
-}
+/**
+ * The sheet with one aurora stop at its own peak — one ground per stop.
+ *
+ * THE MODEL IS `naWashedSheet`, and it is imported rather than spelled again
+ * (#2993). This file used to carry its own `saturate` / `screenOver` /
+ * `sheetGrounds` trio under a note explaining that "a test file exports
+ * nothing" — which is true of a test file and was never true of
+ * `utils/__tests__/cssVars.ts`, the module this one already imports its
+ * resolver from. Four files had the same three functions; they live beside the
+ * resolver now, so re-tuning the wash re-runs every sum instead of four.
+ */
+const sheetGrounds = (theme: Theme): Rgba[] => naWashedSheet(theme, THEMES)
 
 const worstOn = (ink: Rgba, grounds: Rgba[]): number =>
   Math.min(...grounds.map((ground) => contrastRatio(ink, ground)))

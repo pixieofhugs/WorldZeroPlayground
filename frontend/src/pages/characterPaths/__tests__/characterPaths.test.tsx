@@ -12,13 +12,13 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
-import { buildCreatePayload, canSubmitName, type CreateCharacterState } from '../useCreateCharacter'
+import { buildCreatePayload, canSubmitName } from '../useCreateCharacter'
 import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
 import DefaultCreateCharacter from '../archetypes/DefaultCreateCharacter'
 import DefaultEditCharacter from '../archetypes/DefaultEditCharacter'
 import { CharacterSwitcherRows } from '../../../components/CharacterSwitcherSheet'
-import { aCharacter, anEditCharacterState } from '../../../test/fixtures'
+import { aCharacter, aCreateCharacterState, anEditCharacterState } from '../../../test/fixtures'
 import type { CharacterOut } from '../../../api/auth'
 
 /**
@@ -62,35 +62,6 @@ const character = (overrides: Partial<CharacterOut>): CharacterOut =>
     all_time_score: 340,
     ...overrides,
   })
-
-function createState(overrides: Partial<CreateCharacterState>): CreateCharacterState {
-  return {
-    displayName: 'Molly',
-    setDisplayName: () => {},
-    bio: '',
-    setBio: () => {},
-    tagline: '',
-    setTagline: () => {},
-    factionSlug: '',
-    setFactionSlug: () => {},
-    invited: [],
-    avatarFile: null,
-    avatarPreview: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
-    error: null,
-    submitting: false,
-    canSubmit: true,
-    handleSubmit: () => {},
-    handle: 'molly',
-    showPicker: false,
-    ...overrides,
-  }
-}
 
 /**
  * `canSubmit` is DERIVED here, through the same rule the hook calls, so a test
@@ -217,7 +188,7 @@ describe('DefaultCreateCharacter — the na kit’s slots, identical at both wid
 
   const at = (width: (typeof WIDTHS)[number]) => {
     factor.value = width
-    return render(<DefaultCreateCharacter state={createState({})} />)
+    return render(<DefaultCreateCharacter state={aCreateCharacterState({})} />)
   }
 
   it.each(WIDTHS)('renders the name field, the commit and the explainer — %s', (width) => {

@@ -131,12 +131,12 @@ describe('the na kit wears na, on the sheet it moved to', () => {
   it('stands its fields on na’s own composer stock, not the app’s', () => {
     // The whole of the ground move: an opaque well in the na family, with the
     // measured edge rather than the 12% hairline. `naProposeTaskContrast` and
-    // `defaultEditCharacterEdges` carry the ratios, and that file is also where
+    // `defaultComposerDressEdges` carry the ratios, and that file is also where
     // the archetype's OWN code is checked for a global tier — the paired proof
     // for the `.eslint-legacy-faction-ink.txt` line #2993 deleted. It cannot be
-    // asserted on the markup: `PageTitle`, `Chip` and `FilterLevelNodes` are
-    // shared components that bring their own neutrals with them, which is why
-    // the two control rows are measured on a well over there.
+    // asserted on the markup: `Chip` and `FilterLevelNodes` are shared
+    // components that bring their own neutrals with them, which is why the two
+    // control rows are measured on a well over there.
     const markup = render({ title: 'Bake something' })
     expect(markup).toContain('var(--faction-default-composer-field)')
     expect(markup).toContain('var(--faction-default-card-muted)')
