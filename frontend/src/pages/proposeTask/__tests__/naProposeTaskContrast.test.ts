@@ -267,6 +267,24 @@ describe('the app-chrome rows stand on a well, and it is load-bearing', () => {
  * na's own family, because both of the app's functional inks miss on this sheet.
  * ========================================================================== */
 
+describe('the ground move is why the lint exemption could go', () => {
+  it('the archetype writes no global ink tier of its own', () => {
+    // THE PAIRED PROOF FOR A DELETED EXEMPTION. This file's line in
+    // `.eslint-legacy-faction-ink.txt` came off with the rebuild, and the rule
+    // is a ratchet: the list only ever shrinks, so nothing stops a later edit
+    // reintroducing a tier here except the rule itself — which is exactly what
+    // this asserts is still true.
+    //
+    // It is about the archetype's OWN declarations. `PageTitle`, `Chip` and
+    // `FilterLevelNodes` are shared components mounted by it and they carry the
+    // app's tiers inside themselves; that is not a thing this file can lint
+    // away, and it is why the two control rows above are measured on a well.
+    expect(ARCHETYPE, 'the loud tier').not.toContain('--color-text-primary')
+    expect(ARCHETYPE, 'the quiet tier').not.toContain('--color-text-secondary')
+    expect(ARCHETYPE, 'the faint tier').not.toContain('--color-text-tertiary')
+  })
+})
+
 describe('the counter keeps both of #1609’s rungs, in na’s family', () => {
   it('the archetype draws the notice rung and no `.warning-text`', () => {
     expect(ARCHETYPE, 'the approach rung').toContain('--faction-default-card-notice')
