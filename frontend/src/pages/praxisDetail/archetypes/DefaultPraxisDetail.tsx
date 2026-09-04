@@ -230,11 +230,6 @@ export default function DefaultPraxisDetail({
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
   const isCollab = praxis.type === 'collab'
-  // The shared banners already draw the roster while a collab is still
-  // resolving (`in_progress` / `pending`). The Members section below is the
-  // PUBLISHED half of that same fact, so it takes the complement — one roster
-  // on the page, never two.
-  const rosterInBanners = praxis.status === 'in_progress' || praxis.status === 'pending'
 
   /** A spectrum hairline running out from a label — the page's only rule. */
   const sectionHead = (label: ReactNode, trailing?: ReactNode) => (
@@ -571,7 +566,14 @@ export default function DefaultPraxisDetail({
     </section>
   )
 
-  const crew = isCollab && !rosterInBanners && (
+  // No status guard on the roster, and there has not been one to write since
+  // #1089. This file complemented a roster the shared banners drew for a
+  // still-resolving collab, and that complement is dead TWICE over:
+  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
+  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
+  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
+  // both to the composer before dispatching (ADR-0062). One roster, always.
+  const crew = isCollab && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.sections.members'))}
       <CollabRoster
@@ -653,7 +655,6 @@ export default function DefaultPraxisDetail({
         crew,
         metatasksHeading: sectionHead(t('detail.metatasks.heading')),
         commentsHeading: sectionHead(t('detail.sections.comments')),
-        sectionGap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
       }}
     />
   )

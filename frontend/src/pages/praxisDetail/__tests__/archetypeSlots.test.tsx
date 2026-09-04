@@ -498,8 +498,23 @@ describe("praxis-read duel card (#2718)", () => {
 // The list of mounts is hand-authored, which is what keeps this from being a
 // tautology (`kitInvariants.test.tsx` records the same reasoning: a denominator
 // derived from its own subject asserts only that the subject equals itself).
-// The non-vacuity half is asserted directly — every name below must appear in
-// the skin, or the guard is forbidding something nothing does.
+// The non-vacuity half is asserted directly — every name below must be MOUNTED
+// in the skin, not merely imported by it, or the guard forbids something nothing
+// does.
+//
+// IT IS SCOPED TO THE ARCHETYPES THAT DELEGATE, and that scoping is the rule
+// rather than a convenience. `PraxisDetailSkin`'s own docblock keeps the option
+// open for an archetype whose page is genuinely its own shape to keep its own
+// tree — three of nine profile kits still do, and ADR-0061 says an archetype may
+// ARRANGE freely. A tenth faction that wrote its own spine would be doing
+// something permitted, and reporting it here as spine drift would make this
+// guard an argument against the very escape hatch the skin documents. So
+// delegation is DERIVED from the source (does the file import the skin?) and
+// only delegating archetypes are held to it.
+//
+// That leaves an obvious hole — every archetype could stop delegating and the
+// forbidden list would hold vacuously — so the population is asserted too: the
+// count that delegates today is pinned, and the ones that do not are named.
 
 /**
  * The mounts the skin owns. Each is a piece no faction dresses — the platform
@@ -553,28 +568,69 @@ function archetypeSources(): Record<string, string> {
   return found;
 }
 
-describe("no archetype re-mounts what the skin owns (#2718)", () => {
+/**
+ * Every registered archetype's stripped source, split on whether it delegates.
+ *
+ * Delegation is read off the IMPORT rather than declared anywhere: a file that
+ * pulls in `praxisDetailSkin` is on the shared spine and is held to it. The
+ * `ownTree` bucket is not a failure — see the block comment above — and today
+ * its only member is the Albescent WRAPPER, which reaches the spine the long
+ * way, through the `DefaultPraxisDetail` it forwards to whole (ADR-0048/0083).
+ */
+function delegation(): {
+  delegates: Record<string, string>;
+  ownTree: string[];
+} {
+  const sources = archetypeSources();
+  const delegates: Record<string, string> = {};
+  const ownTree: string[] = [];
+  for (const slug of Object.keys(surfaceMap("praxisDetail"))) {
+    const file = sources[slug];
+    expect(file, `no manifest declares a praxisDetail archetype for ${slug}`).toBeTruthy();
+    const source = readStripped(file);
+    if (/from\s*["'][^"']*praxisDetailSkin["']/.test(source)) delegates[slug] = source;
+    else ownTree.push(slug);
+  }
+  return { delegates, ownTree };
+}
+
+describe("no delegating archetype re-mounts what the skin owns (#2718)", () => {
   const skin = readStripped(
     join(SRC_DIR, "pages/praxisDetail/praxisDetailSkin.tsx"),
   );
+  const { delegates, ownTree } = delegation();
 
-  // The tripwire. A forbidden list that has drifted out of the shared layer
-  // forbids nothing and reports green — the vacuous pass #2814's audit kept
-  // finding from the other side.
-  it.each(SKIN_OWNED)(
-    "%s is mounted by the skin, so forbidding it means something",
-    (name) => {
-      expect(skin, `${name} is not in praxisDetailSkin.tsx`).toContain(name);
-    },
-  );
+  // The tripwire, and it asks for a MOUNT. `toContain(name)` was satisfied by
+  // the skin's own import list, which would have kept reporting green through a
+  // refactor that imported a piece and then stopped drawing it — the forbidden
+  // list would forbid a mount that no longer existed. `<Name` or `Name(` is the
+  // draw call; an import is neither.
+  it.each(SKIN_OWNED)("%s is mounted by the skin, not merely imported", (name) => {
+    expect(
+      new RegExp(`<${name}[\\s/>]|\\b${name}\\(`).test(skin),
+      `${name} is imported by praxisDetailSkin.tsx but never mounted there — ` +
+        "so forbidding it in the archetypes forbids nothing",
+    ).toBe(true);
+  });
 
-  const sources = archetypeSources();
+  // The population, so the forbidden list cannot hold vacuously by everyone
+  // quietly leaving the spine. Eight of the nine registered archetypes delegate
+  // today; the ninth is the Albescent wrapper. A tenth faction writing its own
+  // tree moves this number DOWN legitimately and should say so in its PR — that
+  // is the conversation this assertion exists to force, not a rule against it.
+  it("eight of the nine registered archetypes are on the shared spine", () => {
+    expect(
+      Object.keys(delegates).length,
+      `only ${Object.keys(delegates).length} archetype(s) import the skin; ` +
+        `these do not: ${ownTree.join(", ") || "(none)"}`,
+    ).toBeGreaterThanOrEqual(8);
+    expect(ownTree, "the wrapper is the only archetype off the spine").toEqual([
+      "albescent",
+    ]);
+  });
 
-  for (const slug of Object.keys(surfaceMap("praxisDetail"))) {
+  for (const [slug, source] of Object.entries(delegates)) {
     it(`${slug} supplies a kit and nothing the skin already mounts`, () => {
-      const file = sources[slug];
-      expect(file, `no manifest declares a praxisDetail archetype for ${slug}`).toBeTruthy();
-      const source = readStripped(file);
       for (const name of SKIN_OWNED) {
         expect(source, `${slug} re-mounts ${name}`).not.toContain(name);
       }

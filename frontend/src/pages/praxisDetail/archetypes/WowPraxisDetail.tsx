@@ -11,7 +11,7 @@ import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { mediaUrl } from '../../../utils/media'
-import { PraxisDetailSkin } from '../praxisDetailSkin'
+import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
   PraxisOwnerActions,
@@ -83,9 +83,11 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * - **The crown renders at both form factors.** It is not form-factor gated: it
  *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
  *   score block is in both layouts (#1710 retired the hero banner).
- * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
- *   dispatcher mounts (ADR-0064). Nothing is rendered around the archetype any
- *   more, so a skin that forgets one simply loses it.
+ * - The duel panel and the comment thread are not dispatcher mounts (ADR-0064).
+ *   Since #2718 they are not this page's own slots either: the SKIN draws both
+ *   and no kit can forget one. This kit hands over the plate chrome, the two
+ *   section heads and the duel's inks; the balloon bunch rides the comments
+ *   heading, and the bunting is a `sheetPrelude`.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
  *   wearing none of the plate chrome the score, vote and voters blocks wear.
@@ -117,6 +119,18 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * 422) · `DuelCard`, which owns all three duel readings and draws nothing on a
  * declined challenge · `CommentThread` via `PraxisDetailComments`, with the
  * heading suppressed so one list carries one heading (#1029).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 
 /**
@@ -498,7 +512,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // and the verdict, the chronicle rule on the hairlines, the media inset behind
   // an avatarless disc. The gilt is absent by the same standing rule: it
   // measures 2.24:1 on the cream and nothing legible is painted in it.
-  const duelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }
+  const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   //
@@ -710,7 +724,6 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           t('detail.sections.comments'),
           <BalloonBunch size={34} />,
         ),
-        sectionGap: size.sectionGap,
       }}
     />
   )

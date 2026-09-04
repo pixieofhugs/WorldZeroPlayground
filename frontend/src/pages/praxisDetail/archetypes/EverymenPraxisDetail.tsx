@@ -22,7 +22,8 @@
  * and are NOT re-derived:
  *
  * - the desktop aside track is **330px** (the Unaffiliated design's 340 is the
- *   outlier);
+ *   outlier) — a number this file no longer writes, because `PraxisDetailSkin`
+ *   draws the aside for every kit since #2718;
  * - the **crown renders at both form factors**, always. It arrives in the score
  *   stamp's corner, keyed only on `is_top_for_task` (#1710 retired the hero
  *   banner it used to arrive in). This faction's
@@ -79,6 +80,18 @@
  * goes through `--faction-everymen-sheet-accent`, and `--everymen-paper` appears
  * here only as a FILL (the voter bars' track), never as a ground for text — it
  * pays 4.49:1 with the accent in light, which is the wrong side of AA.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -93,7 +106,7 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
-import { PraxisDetailSkin } from "../praxisDetailSkin";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
   PraxisOwnerActions,
   MemberByline,
@@ -216,10 +229,6 @@ export default function EverymenPraxisDetail({
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
   const isCollab = praxis.type === "collab";
-  // The shared banners draw the roster while a collab is still resolving, so the
-  // Members section takes the complement — one roster on the page, never two.
-  const rosterInBanners =
-    praxis.status === "in_progress" || praxis.status === "pending";
 
   // ── Shared dress ──
   /** Bebas, tracked out and struck in caps — every label on the sheet. */
@@ -474,7 +483,7 @@ export default function EverymenPraxisDetail({
   // stock, over the printed hairline. `TRACK` is legal as `plate` and ONLY as
   // `plate` — there it is a fill behind a duellist's disc, never a ground for
   // text. No rival faction hue enters: red stays a rule and a fill here.
-  const duelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
+  const duelInk: DuelInk = { name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -633,7 +642,14 @@ export default function EverymenPraxisDetail({
   // field, so that column is invented data and is not built (owner ruling on
   // #1123). `CollabRoster` already prints the ruled replacement in that slot:
   // each member's FILED / NOT FILED pill, off `has_submitted`.
-  const crew = isCollab && !rosterInBanners && (
+  // No status guard on the roster, and there has not been one to write since
+  // #1089. This file complemented a roster the shared banners drew for a
+  // still-resolving collab, and that complement is dead TWICE over:
+  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
+  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
+  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
+  // both to the composer before dispatching (ADR-0062). One roster, always.
+  const crew = isCollab && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
     >
@@ -692,7 +708,6 @@ export default function EverymenPraxisDetail({
         crew,
         metatasksHeading: sectionHead(t("detail.metatasks.heading")),
         commentsHeading: sectionHead(t("detail.sections.comments")),
-        sectionGap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
       }}
     />
   );

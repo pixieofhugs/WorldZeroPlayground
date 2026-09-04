@@ -19,7 +19,7 @@ import {
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
-import { PraxisDetailSkin } from "../praxisDetailSkin";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
   PraxisOwnerActions,
   MemberByline,
@@ -106,8 +106,10 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  *   comes from `ScoreStamp`'s corner, keyed only on `is_top_for_task`, and the
  *   score block is in both layouts (#1710 retired the hero banner it used to
  *   come from). Where a design hides it on a phone, it shows anyway.
- * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
- *   dispatcher mounts (ADR-0064) — a skin that forgets one simply loses it.
+ * - The duel panel and the comment thread are not dispatcher mounts (ADR-0064)
+ *   and never were. Since #2718 they are not this file's either: the SKIN draws
+ *   both, this kit hands over the panel chrome and the two section heads, and
+ *   no kit can forget one.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare, on
  *   their own neutral `.sidebar-card` + `--color-*` tokens, wearing none of the
@@ -144,6 +146,18 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * nine skins rather than worked around here · `CommentThread` via
  * `PraxisDetailComments` with the heading suppressed, so one list carries one
  * heading (#1029).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 
 /* The aside track is the SKIN's now — 330px across all eight faction designs
@@ -516,7 +530,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   // avatar. No sienna on the numerals: `card-accent` is this page's LINK ink and
   // a duel total is not a link. And no rival faction hue anywhere — the foreign
   // side reads as foreign through its outline, not through a colour.
-  const duelInk = {
+  const duelInk: DuelInk = {
     name: "var(--leaf-praxis-detail-ink)",
     total: "var(--leaf-praxis-detail-ink)",
     muted: "var(--leaf-praxis-detail-quiet)",
@@ -792,7 +806,6 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         crew,
         metatasksHeading: sectionHead(t("detail.metatasks.heading")),
         commentsHeading: sectionHead(t("detail.sections.comments")),
-        sectionGap: size.sectionGap,
       }}
     />
   );

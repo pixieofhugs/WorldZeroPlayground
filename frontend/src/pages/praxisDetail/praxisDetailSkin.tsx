@@ -73,12 +73,33 @@ import {
 } from './shared'
 import type { PraxisDetailState } from './usePraxisDetail'
 
-/** The duel card's ink seam, borrowed rather than re-declared — `DuelCardInk`
- *  is private to `DuelCard.tsx` and that file is not this lane's to change. */
-type DuelInk = ComponentProps<typeof DuelCard>['ink']
+/**
+ * The duel card's ink seam, borrowed rather than re-declared — `DuelCardInk` is
+ * private to `DuelCard.tsx` and that file is not this lane's to change.
+ *
+ * EXPORTED, and a kit must ANNOTATE with it. Six kits hoisted their `ink`
+ * object out of the `<DuelCard>` mount when they became kits, and an
+ * un-annotated `const` is inferred rather than checked: TypeScript's
+ * excess-property check fires on an object LITERAL assigned to a typed
+ * position, not on a wider object flowing into one later. So `mutd:` for
+ * `muted:` would have compiled, and `resolveInk` would have quietly painted the
+ * na default grey on a faction plate — a real repaint that no type error and no
+ * markup hash would catch, because the fixtures the gate renders have no duel
+ * ink of their own to compare against.
+ */
+export type DuelInk = ComponentProps<typeof DuelCard>['ink']
 
-/** The desktop aside's track, in px. The one measurement the whole surface
- *  agrees on (ADR-0061); a kit overrides it only if its own design does. */
+/**
+ * The desktop aside's track, in px. The ONE measurement the whole surface
+ * agrees on — 330, corrected from 340 by #1129 against the eight designs, and
+ * ADR-0061's contract.
+ *
+ * Not a kit knob. It was one for exactly as long as it took to migrate the
+ * kits: all eight passed nothing, so the `?? 330` arm had no consumer and no
+ * test, and eight kit comments existed to say a faction did not override a
+ * number it had never overridden. A design that genuinely wants a different
+ * track can add the knob back with a caller and a case.
+ */
 const ASIDE_TRACK = 330
 
 /**
@@ -121,8 +142,6 @@ export interface PraxisDetailKit {
   /** Mounted as the split row's first child, before the main column: a
    *  watermark whose anchor is the row rather than the sheet. */
   splitPrelude?: ReactNode
-  /** The desktop aside's track in px. Defaults to {@link ASIDE_TRACK}. */
-  asideTrack?: number
   /** Mounted under the comments, inside the sheet body — a colophon. */
   footer?: ReactNode
 
@@ -162,9 +181,6 @@ export interface PraxisDetailKit {
   metatasksHeading: ReactNode
   /** The comments region's label, so the thread does not draw a second one. */
   commentsHeading: ReactNode
-  /** The gap between the main column's sections, and above the comments.
-   *  One value: every kit used the same string in both places. */
-  sectionGap: string
 }
 
 /**
@@ -185,8 +201,13 @@ export function PraxisDetailSkin({
   const { praxis } = state
   if (!praxis) return null
 
-  const track = kit.asideTrack ?? ASIDE_TRACK
   const sheetBody = kit.sheetBody ?? ((body: ReactNode) => body)
+  // The gap under the main column's sections and above the comments. It was a
+  // kit field until all eight kits turned out to pass this same expression —
+  // indirection around a constant, which `ProfileDress`'s own docstring names
+  // as the thing that happened to seven copy knobs (#1911). The skin already
+  // knows the form factor, so it can just say it.
+  const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
 
   // ── Moderation banners ────────────────────────────────────────────────────
   // Invariant, and mounted bare: the failed mark, the flagged notice and the
@@ -235,7 +256,7 @@ export function PraxisDetailSkin({
   // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
   // wears its ISSUING faction's dress (#927/#933).
   const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: kit.sectionGap }}>
+    <section style={{ marginBottom: sectionGap }}>
       {kit.metatasksHeading}
       <MetataskSeal metatasks={praxis.applied_metatasks} />
     </section>
@@ -285,8 +306,8 @@ export function PraxisDetailSkin({
       {desktop && (
         <aside
           style={{
-            flex: `0 0 ${track}px`,
-            width: track,
+            flex: `0 0 ${ASIDE_TRACK}px`,
+            width: ASIDE_TRACK,
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-lg)',
@@ -324,7 +345,7 @@ export function PraxisDetailSkin({
             <PraxisDetailComments
               state={state}
               heading={kit.commentsHeading}
-              style={{ marginTop: kit.sectionGap }}
+              style={{ marginTop: sectionGap }}
             />
             {kit.footer}
           </>,

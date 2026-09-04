@@ -19,6 +19,10 @@
  *   breadcrumb, score and duel moved above the proof.
  * - Main: banners · byline · title · owner actions · task reference · proof ·
  *   write-up · crew · metatasks. Aside: score · duel · vote · voters · flag.
+ *   That ORDER is the skin's since #2718 — this file names the blocks, the skin
+ *   arranges them. Its one arrangement knob is `pageStyle`: the role map goes on
+ *   the page box rather than the sheet, because this kit's ink reaches the
+ *   breadcrumb.
  * - **The crown renders at both form factors.** It is never form-factor gated —
  *   `ScoreStamp` draws it in the score block's corner off `is_top_for_task`,
  *   and that block is in both layouts (#1710 retired the hero banner).
@@ -113,6 +117,18 @@
  * The ground belongs to the COLUMN, not the viewport (§5, the #1028 ruling): the
  * site background still shows around the page, which is why `.snide-backdrop`'s
  * `position: fixed` mount is not the one used here.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -125,7 +141,7 @@ import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
-import { PraxisDetailSkin } from "../praxisDetailSkin";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
   PraxisOwnerActions,
   MemberByline,
@@ -561,7 +577,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   //
   // The rival's own faction hue still never reaches the card — the foreign side
   // is a disc and an outline.
-  const duelInk = {
+  const duelInk: DuelInk = {
     name: PLATE_TEXT,
     total: PLATE_TEXT,
     muted: PLATE_MUTED,
@@ -793,7 +809,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         metatasksHeading: sectionHead(t("detail.metatasks.heading"), { big: true }),
         /* The comment ROWS stay dispatched on each author's own faction. */
         commentsHeading: sectionHead(t("detail.sections.comments"), { big: true }),
-        sectionGap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
       }}
     />
   );

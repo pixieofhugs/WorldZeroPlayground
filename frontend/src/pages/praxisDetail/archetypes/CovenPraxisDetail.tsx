@@ -33,6 +33,10 @@
  * - Mobile: one stacked column; the score and duel blocks move ABOVE the proof.
  *   ONE responsive component (ADR-0063) — `useFormFactor()` picks the size set;
  *   there is no mobile twin, and no block is drawn twice and hidden.
+ * - Both of those are the SKIN's arrangement now, not this file's (#2718). What
+ *   is still this file's is the pair of knobs its ground needs: `sheetBody` for
+ *   the positioned stacking layer inside the slip, and `splitPrelude` +
+ *   `splitStyle` for the cat, whose anchor is the columns ROW (#2135).
  * - The crown renders at **both** form factors. It is not this file's decision:
  *   `ScoreStamp` draws it off `is_top_for_task` in the score block's corner,
  *   and that block is in both layouts (#1710 retired the hero banner above).
@@ -75,6 +79,18 @@
  *
  * The score ARITHMETIC is not built either: the design invents its own, and
  * `scoreBreakdown()` (ADR-0053) is the single authority the mounted stamp reads.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -88,7 +104,7 @@ import { CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
-import { PraxisDetailSkin } from '../praxisDetailSkin'
+import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
   PraxisOwnerActions,
@@ -461,7 +477,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // `slip-soft` are both gated on `--faction-coven-ward-card` in
   // `factionContrast.test.ts`. Nothing here carries the RIVAL's faction hue: the
   // duel's foreign side is a disc and an outline, never a colour.
-  const duelInk = { name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }
+  const duelInk: DuelInk = { name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -705,7 +721,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         crew,
         metatasksHeading: sectionHead(t('detail.metatasks.heading')),
         commentsHeading: sectionHead(t('detail.sections.comments')),
-        sectionGap,
       }}
     />
   )

@@ -23,8 +23,9 @@
  * ## The contract this dresses (verified in code, #1129 — not re-derived)
  *
  * - Desktop: main column + a **330px** aside, comments spanning beneath both.
- *   The duel panel (aside) and the comments region are the page's own slots,
- *   not dispatcher mounts (ADR-0064).
+ *   The duel panel (aside) and the comments region are not dispatcher mounts
+ *   (ADR-0064); since #2718 they are not this file's own slots either — the
+ *   SKIN draws both, and this kit hands them their dress.
  * - Mobile: one stacked column, with score and duel moved above the proof. ONE
  *   responsive component — `useFormFactor()` internally, no mobile twin
  *   (ADR-0063; `mobilePraxisDetail` was retired outright by #1089). Score and
@@ -85,6 +86,18 @@
  * page ground, the plate AND the panel cells (see index.css). The page surface
  * is carried by the COLUMN, not the viewport — the site background still shows
  * around the component (WORLD_ZERO_STYLE §5, the #1028 ruling).
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -127,7 +140,7 @@ import { EphemeristsColophon, EphemeristsMasthead } from "../../../components/fa
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
-import { PraxisDetailSkin } from "../praxisDetailSkin";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
   PraxisOwnerActions,
   MemberByline,
@@ -614,7 +627,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // every other block on this surface reads, with `QUIET` already walked down
   // until it clears on all three of this page's grounds (#1028). Nothing takes
   // the rival's faction hue: brass and lapis are structure here, not ink.
-  const duelInk = { name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER };
+  const duelInk: DuelInk = { name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER };
 
   // ── Vote · voters · flag ─────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -886,7 +899,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         crew,
         metatasksHeading: sectionHead(t("detail.metatasks.heading")),
         commentsHeading: sectionHead(t("detail.sections.comments")),
-        sectionGap: size.sectionGap,
         /* The plate's provenance, at the foot of the sheet (#2143) — the
            masthead's old datum row, labelled. #2124's requirement is about
            PLACEMENT as much as wording, and this page is where it bites: the

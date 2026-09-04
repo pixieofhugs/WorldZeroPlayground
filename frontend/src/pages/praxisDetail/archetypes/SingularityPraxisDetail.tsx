@@ -17,7 +17,7 @@ import {
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import { PraxisDetailSkin } from "../praxisDetailSkin";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
@@ -39,6 +39,9 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * - Mobile: one stacked column; the score and duel blocks move above the proof.
  *   They are built ONCE and moved by where they are mounted — never drawn twice
  *   and hidden. The 330px TRACK is desktop-only; its contents are not.
+ * - All of that is drawn by the SKIN since #2718. This file's share of it is two
+ *   knobs its chassis needs: the raster, the sweep and the chrome bar as a
+ *   `sheetPrelude`, and the padded z-layer under them as a `sheetBody`.
  * - **The crown renders at BOTH form factors**, never gated. It arrives in the
  *   score stamp's corner, keyed only on `is_top_for_task`, and the score block
  *   is in both layouts (ADR-0054 — one canonical `TaskCrown`, unrestyled; #1710
@@ -101,6 +104,18 @@ import { factionRoleVars } from "../../../utils/factionRoles";
  * scoped to the mounts that need it and never to the column, because a
  * column-wide re-point would drag the deliberately-neutral report card and
  * steward bar into the costume.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 
 const MONO = "var(--sg-praxis-detail-face)"; /* Share Tech Mono */
@@ -280,9 +295,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // POSITIVELY: a duel side is `type='solo'` + a `duel_id` (ADR-0011), so
   // `!== 'solo'` would put a roster on every duel (#992).
   const isCollab = praxis.type === "collab";
-  // The shared banners draw the roster while a collab is still resolving, so the
-  // Members section takes the complement — one roster on the page, never two.
-  const rosterInBanners = praxis.status === "in_progress" || praxis.status === "pending";
 
   /** A dashed terminal rule. */
   const rule = (style?: CSSProperties) => (
@@ -497,7 +509,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // card-muted, card-line, stamp-bg — are now named props, so the phosphor
   // arrives by contract instead of by cascade. Same four values, and the
   // `--color-*` half of that object was never read by this component anyway.
-  const duelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
+  const duelInk: DuelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -626,7 +638,14 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  const crew = isCollab && !rosterInBanners && (
+  // No status guard on the roster, and there has not been one to write since
+  // #1089. This file complemented a roster the shared banners drew for a
+  // still-resolving collab, and that complement is dead TWICE over:
+  // `PraxisStatusBanners` no longer draws a roster at all (#1089 deleted it —
+  // its own note in `shared.tsx` records that), and `in_progress` / `pending`
+  // cannot reach an archetype anyway, because `pages/PraxisDetail.tsx` redirects
+  // both to the composer before dispatching (ADR-0062). One roster, always.
+  const crew = isCollab && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.members"))}
       <div style={{ ...CREW_INK, color: INK }}>
@@ -735,7 +754,6 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
            deliberately NOT token-repointed, so a row reaches the reader in the
            voice that wrote it. */
         commentsHeading: sectionHead(t("detail.sections.comments")),
-        sectionGap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
       }}
     />
   );
