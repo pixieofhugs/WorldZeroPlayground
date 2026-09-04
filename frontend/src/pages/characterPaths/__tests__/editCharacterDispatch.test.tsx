@@ -49,6 +49,7 @@ import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { UNAFFILIATED_FACTION_SLUG } from '../../../utils/factions'
 import { surfaceMap } from '../../../factions'
 import { factionDetailHref } from '../editCharacterSlots'
+import { aCharacter, anEditCharacterState } from '../../../test/fixtures'
 import type { EditCharacterState } from '../useEditCharacter'
 import type { CharacterOut } from '../../../api/auth'
 
@@ -76,58 +77,32 @@ const REGISTERED = Object.keys(surfaceMap('editCharacter')).filter(
   (slug) => slug !== UNAFFILIATED_FACTION_SLUG,
 )
 
-function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
-  return {
+/**
+ * This file's own character, on the SHARED builder (#2991).
+ *
+ * It used to hand-build all fifteen wire fields and all thirty state keys, and
+ * so did `characterPaths.test.tsx` and the structure guard — three verbatim
+ * copies, which is the arithmetic `src/test/fixtures.ts` exists to stop. What is
+ * kept here is only what this file's assertions read: the handle and the display
+ * name are substring-asserted on, and `UNAFFILIATED_FACTION_SLUG` is the premise
+ * of every "the na kit is the fallback" row below.
+ */
+const character = (overrides: Partial<CharacterOut> = {}): CharacterOut =>
+  aCharacter({
     id: 1,
     username: 'molly',
     display_name: 'Molly',
     bio: 'Doing very human things.',
     tagline: 'Slow spells, strong tea.',
-    avatar_url: '',
-    location: '',
     level: 4,
     score: 340,
     all_time_score: 340,
     faction_slug: UNAFFILIATED_FACTION_SLUG,
-    status: 'active',
-    created_at: '2026-01-01T00:00:00Z',
-    badges: [],
-    invitations: [],
     ...overrides,
-  }
-}
+  })
 
-function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState {
-  return {
-    id: '1',
-    character: character(),
-    loading: false,
-    isOwner: true,
-    displayName: 'Molly',
-    setDisplayName: () => {},
-    bio: 'Doing very human things.',
-    setBio: () => {},
-    tagline: 'Slow spells, strong tea.',
-    setTagline: () => {},
-    location: '',
-    setLocation: () => {},
-    avatarFile: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarPreview: null,
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
-    saving: false,
-    canSubmit: true,
-    error: '',
-    handleSubmit: () => {},
-    deleting: false,
-    handleDelete: () => {},
-    ...overrides,
-  }
-}
+const state = (overrides: Partial<EditCharacterState> = {}): EditCharacterState =>
+  anEditCharacterState({ character: character(), ...overrides })
 
 /** Every `<input>`/`<textarea>` a caret can land in, with its attributes. File
  *  inputs are out of scope for the same reason they are on create: each is
@@ -314,8 +289,11 @@ describe('every field on the edit form names itself (#2793)', () => {
      only protects the surface it was written on. That is the mechanism #2834
      already caught once here.
 
-     Both widths, because the `na` kit mounts every field twice (a desktop plate
-     and a phone column) and a fan-out archetype may mount it twice again. */
+     Both widths, because a kit may still draw a different tree at each — the
+     `na` kit's desktop plate and phone column were the live case until #2991
+     put it on one responsive tree, and the sweep outlives the branch it was
+     written for: every archetype here reads `useFormFactor()` itself, so what
+     it renders at 375px is a claim nothing else in this file checks. */
   function attr(attrs: string, name: string): string | null {
     return new RegExp(`${name}="([^"]*)"`).exec(attrs)?.[1] ?? null
   }
@@ -344,22 +322,25 @@ describe('every field on the edit form names itself (#2793)', () => {
   }
 })
 
-describe('the phone column names every control it draws a <label> for (#2834)', () => {
+describe('no kit draws a <label> that names nothing (#2834)', () => {
   /* `createCharacterFields.test.tsx`'s "a label that names no control is not
      drawn as a <label>" guard sweeps the createCharacter registry only — the
      `na` create archetype used to draw orphan <label>s, got fixed, and the
      guard was scoped to the surface it was fixed on. The edit registry carried
-     the same shape (`MobileColumn`'s three phone-column fields: a <label>
-     sibling of its <input>, no `htmlFor`, no `id`) and was never swept, so it
-     shipped unnoticed until #2834. This extends the sweep here rather than
-     standing up a third file, using the same `renderFor` this file already
-     drives the registry through.
+     the same shape and was never swept, so it shipped unnoticed until #2834.
+     This extends the sweep here rather than standing up a third file, using the
+     same `renderFor` this file already drives the registry through.
 
-     MOBILE ONLY, on purpose. `DesktopPlate` associates by WRAPPING its
-     <input> in the <label> (valid implicit association, no `for` needed) —
-     a shape a bare "every <label> needs `for`" regex cannot tell from an
-     orphan one, so the check below only counts a label an orphan when it
-     neither carries `for` nor wraps the field it names. */
+     IT USED TO BE MOBILE-ONLY, and #2991 is why it is not any more. The shape
+     the counter below is careful about was `MobileColumn`'s — a <label> sibling
+     of its <input>, no `htmlFor`, no `id` — while `DesktopPlate` associated by
+     WRAPPING its <input> in the <label>, which is valid implicit association a
+     bare "every <label> needs `for`" regex cannot tell from an orphan. Both
+     branches retired with the chassis rebuild, but the counter keeps the
+     distinction: a wrapping <label> is still correct markup, and a guard that
+     failed one would be wrong about the next kit that writes one. What changed
+     is the width — the sweep runs at both now, because there is no longer a
+     branch for it to be scoped to. */
   function orphanLabels(html: string): string[] {
     const found: string[] = []
     for (const [whole, attrs, inner] of html.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g)) {
@@ -370,11 +351,13 @@ describe('the phone column names every control it draws a <label> for (#2834)', 
     return found
   }
 
-  it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
-    'slug "%s" draws no orphan <label> on mobile',
-    (slug) => {
-      const html = renderFor(slug, 'mobile')
-      expect(orphanLabels(html), 'a <label> with nothing to point at').toEqual([])
-    },
-  )
+  for (const width of ['desktop', 'mobile'] as const) {
+    it.each([...REGISTERED, UNAFFILIATED_FACTION_SLUG])(
+      `slug "%s" draws no orphan <label> on ${width}`,
+      (slug) => {
+        const html = renderFor(slug, width)
+        expect(orphanLabels(html), 'a <label> with nothing to point at').toEqual([])
+      },
+    )
+  }
 })

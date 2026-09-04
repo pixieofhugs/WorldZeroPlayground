@@ -26,6 +26,7 @@ import type { CharacterOut, CurrentUser } from '../api/auth'
 import type { DuelDetailOut, DuelSideOut } from '../api/duel'
 import type { PraxisCardOut, PraxisMemberOut, PraxisOut } from '../api/praxis'
 import type { TaskOut } from '../api/tasks'
+import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 import type { EditPraxisState } from '../pages/editPraxis/editPraxisState'
 
 /** The praxis author, and the viewer most detail suites sign in as. */
@@ -474,3 +475,74 @@ export const anEditPraxisState = (
   currentCharacterId: AUTHOR.id,
   ...over,
 })
+
+/**
+ * Edit Character's UI state — the composer's shape, one surface over (#2991).
+ *
+ * THREE FILES HAD BUILT THIS BY HAND, all thirty keys of it:
+ * `editCharacterDispatch.test.tsx`, `characterPaths.test.tsx` and the structure
+ * guard. Two of the three also carried their own `character()` literal, which is
+ * {@link aCharacter} with the fields renamed — so a wire column added to
+ * `CharacterOut` was three edits and a state field added to `useEditCharacter`
+ * was three more. That is the arithmetic the top of this file exists to stop,
+ * and this surface had quietly reproduced it.
+ *
+ * The defaults are the **quietest edit form that renders**: a loaded, owned
+ * character with every field already full, nothing saving, nothing deleting and
+ * no error — which is the state a returning player actually arrives in, and the
+ * one the surface's own guards (`loading`, `!character`, `!isOwner`) all fall
+ * through. `canSubmit` is TRUE here rather than false, and that is the one
+ * departure from `anEditPraxisState`'s "every flag false" rule: an edit form
+ * opens with a valid name in the box, so a closed Save is the exceptional state
+ * and a suite asserting on the #1697 gate says `canSubmit: false` itself.
+ *
+ * `character` and the four editable values are kept in step on purpose —
+ * `displayName` is `character.display_name`, `bio` is `character.bio`, and so on
+ * — because that is what `useEditCharacter` does on load. A suite that wants a
+ * dirty form overrides the value, not the character.
+ */
+export const anEditCharacterState = (
+  over: Partial<EditCharacterState> = {},
+): EditCharacterState => {
+  const character = over.character ?? aCharacter({
+    bio: 'Doing very human things.',
+    tagline: 'Slow spells, strong tea.',
+    location: 'PDX',
+    level: 4,
+    score: 340,
+    all_time_score: 340,
+  })
+  return {
+    id: String(character.id),
+    character,
+    loading: false,
+    isOwner: true,
+
+    displayName: character.display_name,
+    setDisplayName: noop,
+    bio: character.bio ?? '',
+    setBio: noop,
+    tagline: character.tagline ?? '',
+    setTagline: noop,
+    location: character.location ?? '',
+    setLocation: noop,
+
+    avatarFile: null,
+    avatarSource: null,
+    setAvatarSource: noop,
+    avatarPreview: null,
+    avatarError: '',
+    setAvatarError: noop,
+    handleAvatarChange: noop,
+    handleAvatarConfirm: noop,
+
+    saving: false,
+    canSubmit: true,
+    error: '',
+    handleSubmit: noop,
+
+    deleting: false,
+    handleDelete: noop,
+    ...over,
+  }
+}

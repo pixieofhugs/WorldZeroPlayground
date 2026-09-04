@@ -41,12 +41,21 @@
  * screen at 375px and at 1280px alike. The issue measured four archetypes in a
  * browser and read a caption as an absence.
  *
- * The handle is auto-derived, unique and permanent (ADR-0019). It is not an
- * editable field on any kit: five kits draw it as a `readOnly` input, two as a
- * caption under the name, and every kit draws it a second time in the credential
- * card's eyebrow. So what is asserted below is the pair of claims that are
- * actually true of it — it is VISIBLE at both widths, and it is NEVER EDITABLE —
- * and the ordered set is the four fields a caret can change.
+ * The handle is auto-derived, unique and permanent (ADR-0019), so it is not an
+ * editable field on ANY kit: five draw it as a `readOnly` input, two as a
+ * caption under the name. What the ruling turns on is that those two treatments
+ * are the same OFFER — the handle is legible, and reaching it costs a reader
+ * nothing — so the two rows below assert exactly that pair of claims:
+ *
+ *   - it is drawn by the FORM, not only by the credential card. Every kit mounts
+ *     `CredentialCard`, which prints `@handle` in its eyebrow unconditionally, so
+ *     a page-wide search for the string is a test that cannot fail. What is
+ *     asserted is the handle OUTSIDE that card.
+ *   - no focusable control holds it. That is the difference between the caption
+ *     and the box that matters to a keyboard: a `readOnly` input is still a tab
+ *     stop, a caption is not — and neither is a control a player can change. A
+ *     kit that made the handle a live `<input>` would fail here, which is the
+ *     regression the ruling is actually protecting against.
  *
  * ## What is deliberately not asserted
  *
@@ -57,14 +66,15 @@
  * `[Cancel] … [Save]` order (#646): that is the create surface's guard, and this
  * issue's AC 2 is about the DESTRUCTIVE action against the primary one.
  */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import i18n from '../../../i18n'
 import { resolveVariant } from '../../../utils/factionDispatch'
 import { surfaceMap } from '../../../factions'
-import type { EditCharacterState } from '../useEditCharacter'
-import type { CharacterOut } from '../../../api/auth'
+import { aCharacter, anEditCharacterState } from '../../../test/fixtures'
 
 const factor = vi.hoisted(() => ({ value: 'desktop' as 'mobile' | 'desktop' }))
 
@@ -99,68 +109,36 @@ const forms = i18n.getFixedT(null, 'forms')
 
 const HANDLE = 'molly'
 
-function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
-  return {
-    id: 1,
-    username: HANDLE,
-    display_name: 'Molly',
-    bio: 'Doing very human things.',
-    tagline: 'Slow spells, strong tea.',
-    avatar_url: '',
-    location: 'PDX',
-    level: 4,
-    score: 340,
-    all_time_score: 340,
-    faction_slug: '',
-    status: 'active',
-    created_at: '2026-01-01T00:00:00Z',
-    badges: [],
-    invitations: [],
-    ...overrides,
-  }
-}
-
-function state(overrides: Partial<EditCharacterState> = {}): EditCharacterState {
-  return {
-    id: '1',
-    character: character(),
-    loading: false,
-    isOwner: true,
-    displayName: 'Molly',
-    setDisplayName: () => {},
-    bio: 'Doing very human things.',
-    setBio: () => {},
-    tagline: 'Slow spells, strong tea.',
-    setTagline: () => {},
-    location: 'PDX',
-    setLocation: () => {},
-    avatarFile: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarPreview: null,
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
-    saving: false,
-    canSubmit: true,
-    error: '',
-    handleSubmit: () => {},
-    deleting: false,
-    handleDelete: () => {},
-    ...overrides,
-  }
-}
+/**
+ * One render per (slug, width), shared by all four tables.
+ *
+ * Four `it.each(CASES)` blocks over ten archetypes at two widths is eighty
+ * renders of the same twenty trees. Nothing below mutates the markup, and the
+ * archetypes are pure functions of the state — so the cache is a memo, not a
+ * fixture shortcut, and a suite that needed a DIFFERENT state would take its own
+ * `renderSkin` rather than a parameter on this one.
+ */
+const RENDERS = new Map<string, string>()
 
 function renderSkin(slug: string, width: 'desktop' | 'mobile'): string {
+  const key = `${slug}@${width}`
+  const cached = RENDERS.get(key)
+  if (cached !== undefined) return cached
+
   factor.value = width
   const Archetype = resolveVariant(surfaceMap('editCharacter'), slug)
   try {
-    return renderToStaticMarkup(
+    const html = renderToStaticMarkup(
       <MemoryRouter>
-        <Archetype state={state({ character: character({ faction_slug: slug }) })} />
+        <Archetype
+          state={anEditCharacterState({
+            character: aCharacter({ username: HANDLE, display_name: 'Molly', faction_slug: slug }),
+          })}
+        />
       </MemoryRouter>,
     )
+    RENDERS.set(key, html)
+    return html
   } finally {
     factor.value = 'desktop'
   }
@@ -186,6 +164,40 @@ function editableFields(html: string): string[] {
   return found
 }
 
+/**
+ * The markup with the credential card cut out of it.
+ *
+ * THE CARD IS WHY A PAGE-WIDE HANDLE SEARCH CANNOT FAIL. Every kit mounts
+ * `CredentialCard`, and its eyebrow prints `@handle` unconditionally — so
+ * `expect(html).toContain('@molly')` is green on a kit whose FORM drops the
+ * handle entirely, which is the defect #2991 was filed on for the na phone
+ * column. The assertion has to be about what the form draws.
+ *
+ * The cut is between two landmarks rather than a tag balance, because a
+ * substring scan is what every row here does anyway:
+ *
+ *   - the START is the card's root, found by `--fc-bg:`. That custom property is
+ *     DECLARED exactly once, on `CredentialCard`'s outermost div, and read as
+ *     `var(--fc-bg)` by its descendants — so the declaration with its colon is
+ *     the root and nothing else. The eyebrow is inside it, which is what the
+ *     first version of this helper got wrong by cutting from the portrait ring:
+ *     the handle is printed ABOVE the ring, so cutting from the ring left it in.
+ *   - the END is the name field's placeholder, which every kit draws after the
+ *     card. Nothing between the two is the form's: the five kits that spell the
+ *     handle as a `readOnly` box and the two that caption it both draw it AFTER
+ *     the name field, never between the card and it.
+ *
+ * The rows that use this assert the cut actually removed something, so a kit
+ * that stopped mounting the card would fail here rather than fall back to the
+ * un-failable search.
+ */
+function outsideTheCard(html: string): string {
+  const card = html.indexOf('--fc-bg:')
+  const firstField = html.indexOf(`placeholder="${forms('character.namePlaceholder')}"`)
+  if (card === -1 || firstField === -1 || firstField < card) return html
+  return html.slice(0, card) + html.slice(firstField)
+}
+
 describe('the field set is the same on every kit, at both widths (AC 1)', () => {
   it('the roster is the registry, not a list kept by hand', () => {
     // Not a count: the derivation is the point. A tenth kit is covered the day
@@ -198,18 +210,35 @@ describe('the field set is the same on every kit, at both widths (AC 1)', () => 
     expect(editableFields(renderSkin(slug, width))).toEqual(FIELD_ORDER.map((key) => forms(key)))
   })
 
-  it.each(CASES)('%s on %s: the handle is on the page and cannot be typed into', (_name, width, slug) => {
+  it.each(CASES)('%s on %s: the FORM draws the handle, not just the credential card', (_name, width, slug) => {
     const html = renderSkin(slug, width)
-    // Present — as a read-only box, as a caption, or as the credential card's
-    // eyebrow. Which of the three is the kit's dress; that it is legible on the
-    // form factor the player is on is not.
-    expect(html, 'the auto-derived handle is not shown at all').toContain(`@${HANDLE}`)
-    // And never editable: ADR-0019 derives it, so a caret in it would be a
-    // control that cannot change what it holds.
+    const form = outsideTheCard(html)
+    const count = (source: string) => source.split(`@${HANDLE}`).length - 1
+    // The cut's OWN premise, asserted per kit rather than trusted: if the card
+    // were not found the helper returns the page whole, and this row would be
+    // the un-failable page-wide search it exists to replace.
+    expect(
+      count(form),
+      'the credential card was not found, so nothing was cut and this row proves nothing',
+    ).toBeLessThan(count(html))
+    expect(
+      form,
+      'the handle is only on the credential card — the form itself drops it',
+    ).toContain(`@${HANDLE}`)
+  })
+
+  it.each(CASES)('%s on %s: and no focusable control holds it', (_name, width, slug) => {
+    const html = renderSkin(slug, width)
+    // A caption is not a tab stop and a `readOnly` input is one that cannot be
+    // changed; a live `<input>` would be neither, and that is the regression.
     expect(
       editableFields(html),
       'the handle is a readout, never a field',
     ).not.toContain(forms('character.handlePlaceholder'))
+    for (const [, attrs] of html.matchAll(/<input\b([^>]*)>/g)) {
+      if (!attrs.includes(`value="@${HANDLE}"`)) continue
+      expect(attrs, 'a box holding the handle must be readOnly').toMatch(/\breadonly\b/i)
+    }
   })
 })
 
@@ -219,20 +248,70 @@ describe('the destructive action follows the primary one, on every kit and both 
    * the same distinction the create-side guard draws for its cancel.
    * `DeleteCharacter` renders the label as the button's only child, and
    * `textTransform` is CSS, so the catalogue string is what lands in the markup.
+   *
+   * ESCAPED, because it is CATALOGUE COPY going into a regex. Today it reads
+   * "Delete this character" and every character in it is inert; a reword to
+   * "Delete this character?" or "Delete (permanently)" would turn a literal into
+   * a metacharacter and quietly change what this file matches. A guard whose
+   * meaning depends on nobody adding punctuation is not a guard.
    */
-  const DELETE = forms('editCharacter.delete')
-  const deleteAt = (html: string) => html.search(new RegExp(`>\\s*${DELETE}\\s*<`))
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const textAt = (html: string, word: string) =>
+    html.search(new RegExp(`>\\s*${escapeRegExp(word)}\\s*<`))
 
-  it.each(CASES)('%s on %s: save is drawn before delete', (_name, width, slug) => {
+  const DELETE = forms('editCharacter.delete')
+  const CONFIRM_YES = forms('editCharacter.deleteConfirmYes')
+
+  it.each(CASES)('%s on %s: save is drawn before the delete affordance', (_name, width, slug) => {
     const html = renderSkin(slug, width)
     const save = html.indexOf('type="submit"')
-    const remove = deleteAt(html)
+    const remove = textAt(html, DELETE)
     expect(save, 'no commit control on the page').toBeGreaterThan(-1)
     expect(remove, 'no delete control on the page').toBeGreaterThan(-1)
     expect(
       save,
       'the irreversible act may not be read before the ordinary one (#2991 AC 2)',
     ).toBeLessThan(remove)
+  })
+
+  /**
+   * The row above measures the AFFORDANCE. The control that actually spends the
+   * character is the confirm's own key, drawn only once `DeleteCharacter`'s
+   * local `confirming` is true — so "save before delete" has to hold for that
+   * node too, or the guard is pinning the safe half of a two-step.
+   *
+   * IT IS ASSERTED FROM SOURCE, AND THAT IS A LIMIT WORTH STATING. `confirming`
+   * is local state with no prop over it, this suite renders through
+   * `renderToStaticMarkup`, and the repo carries no DOM harness to click with —
+   * so the panel cannot be rendered open here. What CAN be established is the
+   * property that makes the rendered rows above carry to it: the confirm is an
+   * early return from the same component, in the same slot, with no portal. A
+   * panel that took the affordance's exact place inherits its position on every
+   * one of the ten kits at both widths, which is what the rows above measured.
+   *
+   * A portal is the specific thing that would break it — it would move the
+   * irreversible control out of the tail and out of the order entirely — so it
+   * is named rather than left to the shape match.
+   */
+  it('the confirm is an early return in the affordance’s own slot, never a portal', () => {
+    const slots = readFileSync(
+      fileURLToPath(new URL('../editCharacterSlots.tsx', import.meta.url)),
+      'utf8',
+    )
+    expect(
+      slots,
+      'the button and the panel are two returns from ONE component, so they share a slot',
+    ).toMatch(/if \(!confirming\) \{\s*return \(/)
+    expect(slots, 'and the panel is the other return').toContain(
+      "t('editCharacter.deleteConfirmYes')",
+    )
+    expect(
+      slots,
+      'a portal would lift the irreversible control out of the tail and out of the order',
+    ).not.toContain('createPortal')
+    // The confirm's own commit word exists and is not the affordance's, which is
+    // what makes them two different controls rather than one relabelled.
+    expect(CONFIRM_YES).not.toBe(DELETE)
   })
 
   it.each(CASES)('%s on %s: exactly one commit control', (_name, width, slug) => {
