@@ -1,13 +1,28 @@
 /**
  * Shared profile-skin scaffold (#460).
  *
- * Every faction player-profile renders the SAME locked section spine as
- * DefaultProfileBody — ① identity + progression, ③ badges (hidden when empty),
- * ⑤ praxis (faction PraxisCard, FDL laurel on the top entry), plus the kept
- * proposed-tasks and friend/foe features. Only the COSTUME differs. This module
- * factors the invariant structure into one skinnable renderer driven by a
- * per-faction `ProfileKit`; each `<Faction>ProfileBody.tsx` supplies only its
- * kit (tokens, fonts, copy, chrome slots) and delegates here.
+ * THE SPINE, STATED ON ITS OWN TERMS (#2996). Every faction player-profile
+ * renders the same locked sections in the same order: ① identity + progression
+ * (the shared CredentialCard, the tagline slot, the level readout and the
+ * points-into-level bar, plus friend/foe), ② About, ③ badges (hidden when
+ * empty), ⑤ praxis (faction PraxisCard, FDL laurel on the top entry) and the
+ * kept proposed-tasks feature. Only the COSTUME differs. This module factors
+ * that structure into one skinnable renderer driven by a per-faction
+ * `ProfileKit`; each `<Faction>ProfileBody.tsx` supplies only its kit (tokens,
+ * fonts, chrome slots) and delegates here.
+ *
+ * This paragraph used to define the spine by pointing at `DefaultProfileBody`.
+ * That sentence became circular when na became the ninth kit and started
+ * delegating here like the other eight — there is no longer a hand-authored
+ * profile for a shared one to be "structurally identical to".
+ *
+ * ALL NINE, BOTH WIDTHS (#2996). There is one renderer now, not three. na's
+ * `DesktopProfile`/`MobileProfile` pair and WOW's field pavilion were the other
+ * two; both are retired, and `src/__tests__/retiredSurfaces.test.ts` holds their
+ * names out of shipped source. What survived the retirement is their SHAPE: the
+ * phone puts the two long galleries behind a segmented Praxis/Tasks switch (see
+ * {@link SegTab}), which every kit now gets, while the laptop folds them both on
+ * `PROFILE_SECTIONS` (#2958, untouched).
  *
  * No hardcoded hex: kits reference the repo's `--faction-<slug>-*` CSS vars.
  * A faction whose identity is pinned to one theme scopes `dataTheme` to the skin
@@ -25,10 +40,9 @@
  * layout was sized for a wide viewport stack instead — a 300px badge rail and a
  * 300px identity floor do not fit beside a 266px credential card at 375px, and
  * would have scrolled sideways (CLAUDE.md: the mobile path stacks single-column,
- * never a fixed-px inline grid). Structure only: no kit token, font or copy
- * changes at either width, and the desktop rendering is byte-identical.
+ * never a fixed-px inline grid). The desktop rendering is byte-identical.
  */
-import type { CSSProperties, ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -99,6 +113,18 @@ interface ProfileKit {
   /* ── fonts ── */
   /** Display font for the big name + section headings. */
   displayFont: string
+  /**
+   * Anything else the kit's display face carries wherever THIS module sets it —
+   * the empty-state title, the level numeral, the badges heading (#2996).
+   *
+   * It exists for exactly one trait and one kit: na's display cut is italic,
+   * and na wrote `className="font-display italic"` at every one of those three
+   * sites while it owned its own renderer. `displayFont` is a `font-family` and
+   * cannot carry a style, so delegating without this would have un-italicised
+   * na's page. A kit may NOT set `fontFamily` or `fontSize` here — the family is
+   * `displayFont`'s and the size is the site's.
+   */
+  displayExtra?: CSSProperties
   /** Small mono/label eyebrow font. */
   eyebrowFont: string
   /** Body font for meta lines. */
@@ -109,6 +135,26 @@ interface ProfileKit {
   headerStyle: CSSProperties
   /** Optional absolutely-positioned decoration inside the header (grain, strip). */
   headerDecoration?: ReactNode
+  /**
+   * Optional chrome placed AROUND the whole identity band, on
+   * {@link ProfileKit.credentialFrame}'s pattern — and the one slot that also
+   * receives `ProfileSkin`'s `identityOrnament` (#2996).
+   *
+   * na is the kit that needs it: its band is a padded spectrum RAMP wrapped
+   * around an opaque sheet, which is two elements, and `headerStyle` can only
+   * dress one. The kit writes the ramp itself rather than passing a class name
+   * down, deliberately — `albescentSpectraMove`'s per-mount census reads the
+   * `spectrum-rule` class off a literal className in SOURCE, so a mount spelt
+   * as a kit field would be invisible to the guard that keeps this frame out of
+   * `.alb-moves .spectrum-rule:empty` (a travelling child would paint over the
+   * credential card the frame frames).
+   *
+   * `ornament` is Albescent's `.alb-profile-edge` and belongs ON the ramp, not
+   * inside the sheet: it is a four-pixel flourish on the band's own edge, and
+   * the sheet is inset from it and clips. A kit with no frame has no band to
+   * hang one on, which is why the ornament arrives here and nowhere else.
+   */
+  headerFrame?: (band: ReactNode, ornament: ReactNode) => ReactNode
   /** Optional wrapper chrome placed AROUND the shared CredentialCard. */
   credentialFrame?: (card: ReactNode) => ReactNode
   /** Ink, face and any transform for the identity column's display line — the
@@ -135,6 +181,16 @@ interface ProfileKit {
    *  with `headerMuted` — one ink, one ground, no knob. */
   /** Fill for the points-into-level bar. */
   barFill: string
+  /**
+   * The filled length itself, for a kit whose fill is a CLASS rather than a
+   * value — na's is `.spectrum-rule`, the ramp `barFill` cannot spell (#2996).
+   * Handed the percentage; owns nothing else. When it is set, `barFill` is not
+   * read, and the same source-census argument as {@link ProfileKit.headerFrame}
+   * is why the mount is JSX in the kit rather than a class name in a field:
+   * this is the level bar epic #2496 ruling 3 names, and it has to keep
+   * travelling under `.alb-moves`.
+   */
+  levelBar?: (percent: number) => ReactNode
   /** Track behind the progression bar. */
   barTrack: string
   /** Render the level number (default: the integer; e.g. roman for ephemerists). */
@@ -424,23 +480,111 @@ export function BadgeRow({
   )
 }
 
+/** Which gallery the phone has up. Nine kits, one switch, one state. */
+type Segment = 'praxis' | 'tasks'
+
+/**
+ * One half of the phone's Praxis/Tasks switch — ONE control for all nine
+ * (#2996), lifted from `DefaultProfileBody` rather than written a third time.
+ *
+ * The ON half INVERTS: it fills with the page's primary ink and prints the page
+ * itself, the same two lines every other inverted pill in the app carries
+ * (`.btn-primary`, `.chip-active`, `ScoreToggle`, `ProposeTaskLink`, the Field
+ * Desk's own browse switch).
+ *
+ * IT USED TO INK WITH `--color-text-on-accent` AND THAT WAS #2107. That neutral
+ * is `#ffffff` in `:root` alone and never flips, while `--color-text-primary`
+ * flips to a warm cream (`#f0e6d0`) in dark — so the dark pill was white on
+ * cream at **1.24:1**, the label all but gone, while light read a fine 18.51:1.
+ * `--color-bg-page` is the ground that neutral is measured against and flips
+ * with it: 16.86:1 light, 15.00:1 dark. Identical defect to the faction page's
+ * join button (#1819); the guard at the bottom of `factionContrast.test.ts` is
+ * what stops the third copy. The OFF half is `--color-text-secondary` over the
+ * rail's `--color-bg-surface-alt` composite: 7.31:1 / 7.21:1, the AAA pairing
+ * that file already gates as "app alt surface".
+ *
+ * ponytail: THE SWITCH IS NOT DRESSED BY THE KIT, and that is a decision rather
+ * than an omission. Ceiling: on Singularity's terminal and WOW's parchment this
+ * pill is app-neutral chrome sitting on faction ground. Two reasons it stays
+ * that way for now — the pairing above is measured and gated, where `kit.ink`
+ * on `kit.surface` is measured per kit but its INVERSE is not stated anywhere;
+ * and WOW's five `--wow-profile-*` reads have no declarer since its phone root
+ * retired, so a kit-dressed pill would paint WOW's ON half transparent. The
+ * theme scoping does travel: a kit that pins `dataTheme` on its container flips
+ * these neutrals with it. Upgrade path is a paint-lane issue with screenshots,
+ * two knobs (`segOn` / `segOff`) and a contrast row per kit.
+ */
+function SegTab({
+  on,
+  onClick,
+  children,
+}: {
+  on: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      // The state a screen reader is owed. Two mutually exclusive halves of one
+      // control, and the pressed one is the gallery on screen — the harness's
+      // only handle on the switch too, since it cannot press it.
+      aria-pressed={on}
+      style={{
+        flex: 1,
+        fontFamily: 'var(--font-body)',
+        fontSize: 'var(--text-lg)',
+        fontWeight: on ? 700 : 400,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: on ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
+        background: on ? 'var(--color-text-primary)' : 'transparent',
+        border: 'none',
+        borderRadius: 999,
+        padding: 'var(--space-sm) 0',
+        minHeight: 36,
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
 /**
  * The invariant profile renderer. Given the live props + a faction kit, lays
- * out the locked spine in the faction's costume. Structurally identical to
- * DefaultProfileBody — only the styling knobs move.
+ * out the locked spine in the faction's costume — the whole spine, for all nine
+ * slugs, at both form factors.
  */
 export function ProfileSkin({
   props,
   kit,
+  identityOrnament,
 }: {
   props: ProfileBodyProps
   kit: ProfileKit
+  /**
+   * An inert layer mounted on the identity band, reached through
+   * {@link ProfileKit.headerFrame}. Albescent's whole delta on this surface is
+   * one of these (`.alb-profile-edge`, #1630/ADR-0048): the na band drifting
+   * rather than standing still. It is a prop and not a kit field because it
+   * arrives per RENDER, from the wrapper archetype, where a kit is module
+   * scope — and it must reach the band, which no wrapper outside this renderer
+   * can aim at.
+   */
+  identityOrnament?: ReactNode
 }) {
   const { t } = useTranslation('common')
   const mobile = useFormFactor() === 'mobile'
-  // The two long galleries fold; About and Badges do not (#2958). One call
-  // here is every kit that mounts this shell, at both form factors — the phone
-  // pass restacks the same two sections rather than re-authoring them.
+  // The phone's switch. Declared unconditionally (hooks are), read only on the
+  // phone branch — the laptop stacks both galleries and folds them instead.
+  const [segment, setSegment] = useState<Segment>('praxis')
+  // The two long galleries fold; About and Badges do not (#2958). One call here
+  // is every kit that mounts this shell — which is all nine since #2996. Read
+  // on the LAPTOP branch only: the phone shows one gallery at a time behind the
+  // switch above, so there is no heading for a disclosure to live in. The
+  // preference itself is per account × surface and survives the width change.
   const sections = useSectionDisclosures(PROFILE_SECTIONS)
   /** Every quiet ink INSIDE `<header>` — see `ProfileKit.headerMuted`. */
   const headerMuted = kit.headerMuted ?? kit.muted
@@ -467,6 +611,14 @@ export function ProfileSkin({
     ? kit.formatLevel(character.level)
     : String(character.level)
 
+  /**
+   * The identity band inside the kit's own frame, when it declares one. A kit
+   * with no frame renders the band bare and never sees the ornament — see
+   * {@link ProfileKit.headerFrame} for why the two travel together.
+   */
+  const frameIdentity = (band: ReactNode) =>
+    kit.headerFrame ? kit.headerFrame(band, identityOrnament) : band
+
   const credential = (
     <CredentialCard
       displayName={character.display_name}
@@ -478,27 +630,14 @@ export function ProfileSkin({
     />
   )
 
-  const mainColumn = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
-      {/* ── ⑤ Praxis ── */}
-      <section>
-        {/* No byline (#2231). `submissions` is THIS character's own praxis, so
-            "Submitted by <them>" is the one thing that eyebrow could never not
-            say — the name already reads off the credential card overhead.
-            `common:profile.praxisEyebrow` stays in the catalog: it is the right
-            sentence wherever authorship is genuinely in question, and this
-            mount is simply not one of them. An empty eyebrow is how the About
-            block below already asks a kit for a bare heading. */}
-        {kit.sectionHeading(
-          <SectionToggle section={sections.praxis} label={t('profile.praxisHeading')} />,
-          '',
-        )}
-        <SectionPanel section={sections.praxis}>
+  const praxisGallery = (
+    <>
         {submissions.length === 0 ? (
           <div style={kit.emptyStateStyle}>
             <div
               style={{
                 fontFamily: kit.displayFont,
+                ...kit.displayExtra,
                 fontSize: 'var(--text-title)',
                 color: kit.ink,
               }}
@@ -531,22 +670,11 @@ export function ProfileSkin({
             ))}
           </div>
         )}
-        </SectionPanel>
-      </section>
+    </>
+  )
 
-      {/* ── Proposed tasks (kept feature, #419) ── */}
-      <section>
-        {/* The count stays in the EYEBROW, outside the panel: a folded section
-            that still says how much is under it is the whole reason folding is
-            worth doing (#2311's ruling, and the faction suite pins it). */}
-        {kit.sectionHeading(
-          <SectionToggle
-            section={sections.proposed}
-            label={t('profile.proposedTasksHeading')}
-          />,
-          t('profile.proposedTasksTotal', { count: proposedTasks.length }),
-        )}
-        <SectionPanel section={sections.proposed}>
+  const proposedGallery = (
+    <>
         {proposedTasks.length === 0 ? (
           <p style={{ fontFamily: kit.bodyFont ?? kit.eyebrowFont, color: kit.muted }}>
             {t('profile.proposedTasksEmpty')}
@@ -558,7 +686,76 @@ export function ProfileSkin({
             ))}
           </div>
         )}
-        </SectionPanel>
+    </>
+  )
+
+  /**
+   * THE TWO GALLERIES, AND THE TWO SHAPES THEY TAKE (#2996).
+   *
+   * A LAPTOP stacks them and folds each one (#2958): the heading is the kit's,
+   * the control inside it is `SectionToggle`, and the count beside Proposed
+   * tasks stays in the EYEBROW, outside the panel — a folded section that still
+   * says how much is under it is the whole reason folding is worth doing
+   * (#2311's ruling, and the faction suite pins it).
+   *
+   * A PHONE puts one gallery on screen at a time behind the switch. So there is
+   * no section heading for a disclosure to live in, and a fold on top of the
+   * switch would be a second mechanism answering the question it answers —
+   * which is the reasoning #2958's own test already recorded for the two kits
+   * that shipped this shape before all nine had it. The galleries themselves
+   * are the same nodes at both widths: `.task-card-row` gives its item the whole
+   * line below 768px (#2763) and a wrap row degrades to one card per line, so
+   * neither list is re-authored for the phone.
+   *
+   * No byline on Praxis (#2231). `submissions` is THIS character's own praxis,
+   * so "Submitted by <them>" is the one thing that eyebrow could never not say —
+   * the name already reads off the credential card overhead.
+   * `common:profile.praxisEyebrow` stays in the catalog: it is the right
+   * sentence wherever authorship is genuinely in question, and this mount is
+   * simply not one of them. An empty eyebrow is how the About block already
+   * asks a kit for a bare heading.
+   */
+  const mainColumn = mobile ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', minWidth: 0 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--space-xs)',
+          padding: 'var(--space-xs)',
+          borderRadius: 999,
+          background: 'var(--color-bg-surface-alt)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <SegTab on={segment === 'praxis'} onClick={() => setSegment('praxis')}>
+          {t('profile.mobile.tabPraxis')}
+        </SegTab>
+        <SegTab on={segment === 'tasks'} onClick={() => setSegment('tasks')}>
+          {t('profile.mobile.tabTasks')}
+        </SegTab>
+      </div>
+      {segment === 'praxis' ? praxisGallery : proposedGallery}
+    </div>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
+      <section>
+        {kit.sectionHeading(
+          <SectionToggle section={sections.praxis} label={t('profile.praxisHeading')} />,
+          '',
+        )}
+        <SectionPanel section={sections.praxis}>{praxisGallery}</SectionPanel>
+      </section>
+
+      {/* ── Proposed tasks (kept feature, #419) ── */}
+      <section>
+        {kit.sectionHeading(
+          <SectionToggle
+            section={sections.proposed}
+            label={t('profile.proposedTasksHeading')}
+          />,
+          t('profile.proposedTasksTotal', { count: proposedTasks.length }),
+        )}
+        <SectionPanel section={sections.proposed}>{proposedGallery}</SectionPanel>
       </section>
     </div>
   )
@@ -589,7 +786,9 @@ export function ProfileSkin({
         />
       )}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* ── ① Identity + progression ── */}
+        {/* ── ① Identity + progression, inside the kit's own frame if it has
+            one — which is also where `identityOrnament` lands (#2996). ── */}
+        {frameIdentity(
         <header style={{ ...kit.headerStyle, position: 'relative', overflow: 'hidden' }}>
           {kit.headerDecoration}
           <div
@@ -675,6 +874,7 @@ export function ProfileSkin({
                     <span
                       style={{
                         fontFamily: kit.displayFont,
+                        ...kit.displayExtra,
                         fontSize: 'var(--text-title)',
                         color: kit.accent,
                       }}
@@ -747,15 +947,19 @@ export function ProfileSkin({
                         overflow: 'hidden',
                       }}
                     >
-                      <div
-                        style={{
-                          height: '100%',
-                          borderRadius: 20,
-                          width: `${progression.progressPercent}%`,
-                          background: kit.barFill,
-                          transition: 'width 300ms',
-                        }}
-                      />
+                      {kit.levelBar ? (
+                        kit.levelBar(progression.progressPercent)
+                      ) : (
+                        <div
+                          style={{
+                            height: '100%',
+                            borderRadius: 20,
+                            width: `${progression.progressPercent}%`,
+                            background: kit.barFill,
+                            transition: 'width 300ms',
+                          }}
+                        />
+                      )}
                     </div>
                     {/* An absolute-score footnote ("> 1880 PTS LOGGED") hung
                         here, drawn only when a kit set `scoreFootnote`.
@@ -774,7 +978,8 @@ export function ProfileSkin({
               )}
             </div>
           </div>
-        </header>
+        </header>,
+        )}
 
         {/* ── ② About — the field arrived (#1626); the kit only dresses it ── */}
         <AboutBlock
@@ -807,7 +1012,15 @@ export function ProfileSkin({
                   marginBottom: 'var(--space-lg)',
                 }}
               >
-                <h2 style={{ fontFamily: kit.displayFont, fontSize: 'var(--text-title)', margin: 0, color: kit.ink }}>
+                <h2
+                  style={{
+                    fontFamily: kit.displayFont,
+                    ...kit.displayExtra,
+                    fontSize: 'var(--text-title)',
+                    margin: 0,
+                    color: kit.ink,
+                  }}
+                >
                   {t('profile.badgesHeading')}
                 </h2>
                 <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>
