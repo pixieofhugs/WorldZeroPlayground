@@ -96,6 +96,46 @@
   --font-display: 'Lora', serif;
   --font-body: 'Courier Prime', monospace;
   --font-accent: 'Bebas Neue', sans-serif;
+
+  /* THE SIZE SCALE IS PINNED BACK TO v3's LITERALS, AND THIS IS THE ONE ROW
+     GROUP THAT IS NOT A STRAIGHT PORT OF THE OLD CONFIG. It has to be here.
+
+     v3 emitted `.text-sm { font-size: .875rem }` — a literal, decided by
+     Tailwind and referring to nothing. v4 emits
+     `.text-sm { font-size: var(--text-sm) }`, and `--text-sm` IS ALREADY A
+     TOKEN IN THIS REPO: 03-faction-chrome-1.css:311 declares the LABEL tier at
+     `--text-xs: 8px` through `--text-xl: 14px`, unlayered, which beats
+     Tailwind's own `@layer theme` copy. So the five utilities below would have
+     silently started reading the label scale — `text-sm` at 9px instead of
+     14px, `text-base` at 10px instead of 16px — collapsing type across the
+     whole app. Nothing catches it: the build is green, all 509 test files
+     pass, and the sheet is a normal size. It is only visible in a browser,
+     which is where this migration has the least cover.
+
+     Declared `inline`, these substitute into the utility as literals and never
+     resolve a variable, so `.text-sm` comes out byte-identical to v3 while the
+     label tier keeps its own meaning for the hand-written CSS that reads it.
+     The two scales stay separate, exactly as they were; what changed is that
+     v4 made the NAMES collide, so the separation now has to be written down.
+
+     Only the five that collide are pinned. `--text-2xl` and `--text-3xl` are
+     not repo tokens, so they keep resolving to Tailwind's own values, and
+     `--text-content` / `-title` / `-heading` / `-display` are repo-only names
+     no utility reads. The line-heights are v3's, paired to each size.
+
+     ponytail: a name collision papered over at the theme. Ceiling — two
+     unrelated scales sharing the `--text-*` prefix. Upgrade path — rename the
+     label tier (`--label-xs`…) and delete these ten rows. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
