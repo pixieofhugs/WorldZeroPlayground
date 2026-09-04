@@ -24,9 +24,29 @@ route did. Re-runnability here means "the plan-only run changes nothing", not
 the rollover's audit trail: a not-null FK recording *who* opened the era. This
 script refuses a username whose account is not an admin, which is the one thing
 ``PUT /admin/era/reset`` guaranteed that a shell prompt otherwise would not.
-That route was this operation's only entry point and is being deleted (#1667) —
+That route was this operation's only entry point and was deleted in #1667 —
 unreachable from the UI, and a destructive rollover behind any authenticated
 admin session is a blast radius nothing was using.
+
+**This is no longer the primary door (#827, ADR-0091).** ``PUT /admin/eras/live``
+and the admin page's era selector are, because a mod can reach them and they can
+*choose* which era to open — the two things #1667's route lacked. This script
+re-opens whichever era **the database** says is live, which is what it always did
+back when the compile-time era and the live era were the same thing. It stays for
+the shell: a rollover when the site is down, or when nobody can sign in.
+
+It cannot choose a *different* era; that is the admin page's job. So if the live
+row names a ``config_key`` no era file registers, this script **refuses** rather
+than falling back to the compile-time era: "re-open the live era" and "roll the
+game back to Era 1" are not the same operation, and an operator reaching for a
+shell in an outage is owed the difference.
+
+**The route refuses what this script does, and that asymmetry is deliberate.**
+``PUT /admin/eras/live`` rejects the era that is already live (``ERA_ALREADY_LIVE``)
+because from the admin page it is a mis-click: a full destructive reset that lands
+on the ruleset the game was already on. From here it is the *only* thing on offer
+and it is the operation asked for by name — a new season under the same rules —
+behind ``--yes`` typed by someone with shell access to production.
 """
 
 import argparse
@@ -46,30 +66,42 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
 )
 
 from dependencies import account_has_admin_role  # noqa: E402
-from game_config import CURRENT_ERA  # noqa: E402
+from game_config import EraConfig, era_config_for_key  # noqa: E402
 from models.character import Character  # noqa: E402
 from models.era import Era  # noqa: E402
 from script_utils import add_env_argument, get_settings  # noqa: E402
 from services.admin_service import list_active_characters  # noqa: E402
-from services.era import apply_era_reset, get_current_era_row_safe  # noqa: E402
+from services.era import (  # noqa: E402
+    apply_era_reset,
+    commit_and_bind_live_era,
+    get_current_era_row_safe,
+    lock_era_rollover,
+)
 
 
-def print_plan(current_era_row: Era, character_count: int) -> None:
-    """Everything an operator needs before an irreversible decision."""
+def print_plan(
+    current_era_row: Era, opening: EraConfig, character_count: int
+) -> None:
+    """Everything an operator needs before an irreversible decision.
+
+    ``opening`` is passed rather than read off ``CURRENT_ERA`` so this prints
+    the era the row names even when nothing has bound it yet — the plan-only run
+    changes nothing, and that includes the process's live era.
+    """
     print(
         f"Closing     : era id={current_era_row.id} "
         f"config_key={current_era_row.config_key!r} (opened {current_era_row.started_at})"
     )
-    print(f"Opening     : {CURRENT_ERA.name!r} config_key={CURRENT_ERA.config_key!r}")
+    print(f"Opening     : {opening.name!r} config_key={opening.config_key!r}")
     print(f"Characters  : {character_count} active (banned characters are skipped)")
     # Read off the era, never restated here: the flags ARE the reset (ADR-0042).
     print(
         "Resets      : "
-        f"score={CURRENT_ERA.reset_score}, "
-        f"all_time_score={CURRENT_ERA.reset_all_time_score}, "
-        f"level={CURRENT_ERA.reset_level}, "
-        f"vote_budget={CURRENT_ERA.reset_vote_budget}, "
-        f"faction={CURRENT_ERA.reset_faction}"
+        f"score={opening.reset_score}, "
+        f"all_time_score={opening.reset_all_time_score}, "
+        f"level={opening.reset_level}, "
+        f"vote_budget={opening.reset_vote_budget}, "
+        f"faction={opening.reset_faction}"
     )
     print("Also        : every unresolved duel is frozen, and the board is retired")
 
@@ -96,26 +128,65 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
         )
         return 1
 
+    # The same lock `PUT /admin/eras/live` takes, and taken here for the same
+    # reason it is taken there: everything from the read below to the commit has
+    # to be one decision. The two doors are not each other's hypothetical — a
+    # mod confirming on the admin page while an operator runs this in a shell is
+    # exactly the outage-shaped moment this script exists for. Without it both
+    # read the same live row, both open an era, and the process is left bound to
+    # whichever finished last rather than to the latest row.
+    #
+    # Before the read, so the row below is already the locked-in answer and
+    # needs no second look. Held until this transaction ends, which on every
+    # refusal path is the rollback the session context manager performs.
+    await lock_era_rollover(session)
+
     current_era_row = await get_current_era_row_safe(session)
     if current_era_row is None:
         print("ERROR: no era row for the current config - run seed.py before a rollover.")
         return 1
 
+    # The era to re-open is whatever the DATABASE says is live (ADR-0091, #827),
+    # never the compile-time one — running this after a mod has rolled the game
+    # forward from the admin page must not silently roll it back.
+    #
+    # Refuse, rather than fall back, when that key resolves to nothing.
+    # `services.era.rebind_live_era` falls back to the compile-time era on this
+    # state because start-up has to survive it; a rollover does not. Falling
+    # back here would turn "re-open the live era" into "roll the game back to
+    # Era 1" without saying so, on the one operation with no undo.
+    opening = era_config_for_key(current_era_row.config_key)
+    if opening is None:
+        print(
+            f"ERROR: the live Era row (id={current_era_row.id}) names config_key "
+            f"{current_era_row.config_key!r}, which no era file registers.\n"
+            f"       This script re-opens the LIVE era, and it cannot resolve "
+            f"which one that is. Nothing was changed.\n"
+            f"       Restore the era file, or roll into a registered era from "
+            f"the admin page."
+        )
+        return 1
+
     characters = await list_active_characters(session)
-    print_plan(current_era_row, len(characters))
+    print_plan(current_era_row, opening, len(characters))
 
     if not confirmed:
+        # Nothing above bound anything: the live era of THIS process is exactly
+        # what it was when the script started, so the line below is true.
         print("\nNothing was changed. Re-run with --yes to perform the rollover.")
         return 1
 
     new_era_row = Era(
-        name=CURRENT_ERA.name,
-        config_key=CURRENT_ERA.config_key,
+        name=opening.name,
+        config_key=opening.config_key,
         started_by=operator.account_id,
     )
     session.add(new_era_row)
     await session.flush()
-    await apply_era_reset(characters, new_era_row, session)
+    await apply_era_reset(characters, new_era_row, session, era=opening)
+    # Commits, then binds — the same order the route takes, and the reason this
+    # process ends up on exactly what it just wrote.
+    await commit_and_bind_live_era(session, opening)
     print(f"\nEra {new_era_row.id} is open; {len(characters)} character(s) reset.")
     return 0
 
@@ -130,9 +201,11 @@ async def run(username: str, env: str, confirmed: bool) -> int:
     async_session = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with async_session() as session:
+            # `reset_era` owns its own commit on the success path, because the
+            # live-era binding has to land after it (`commit_and_bind_live_era`).
+            # Every refusal returns without committing and the session context
+            # rolls back.
             exit_code = await reset_era(session, username, confirmed)
-            if exit_code == 0:
-                await session.commit()
     finally:
         await engine.dispose()
     return exit_code

@@ -35,6 +35,14 @@ export type FlaggedPraxisOut = components['schemas']['FlaggedPraxisOut']
 
 export type FlaggedCommentOut = components['schemas']['FlaggedCommentOut']
 
+/** One era a rollover may target (#827). `config_key` is the identity a mod
+ *  picks and `Era.config_key` stores; `name` is read off the era config rather
+ *  than off any row, because an era that has never run has no row to read. */
+export type EraOption = components['schemas']['EraOption']
+
+/** What a rollover did, read back off the new era rather than echoed. */
+export type EraRollOut = components['schemas']['EraRollOut']
+
 // ---------------------------------------------------------------------------
 // Read / Inspect
 // ---------------------------------------------------------------------------
@@ -61,6 +69,12 @@ export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
 
 export async function getFlaggedComments(): Promise<FlaggedCommentOut[]> {
   const { data } = await apiGet('/admin/comments/flagged')
+  return data
+}
+
+/** Every registered era, in era order, flagged with which one is live (#827). */
+export async function getEras(): Promise<EraOption[]> {
+  const { data } = await apiGet('/admin/eras')
   return data
 }
 
@@ -222,4 +236,18 @@ export async function banCharacter(id: number, banned: boolean): Promise<void> {
     params: { path: { character_id: id } },
     body: { banned },
   })
+}
+
+/**
+ * End the live era and open the one named. **No undo** (#827).
+ *
+ * `PUT` because the resource is "the live era" and this sets it — but it is
+ * emphatically not idempotent: opening an era is an append, so a second call
+ * opens a second one. The caller owns the confirmation that stops that.
+ */
+export async function rollIntoEra(configKey: string): Promise<EraRollOut> {
+  const { data } = await apiPut('/admin/eras/live', {
+    body: { config_key: configKey },
+  })
+  return data
 }

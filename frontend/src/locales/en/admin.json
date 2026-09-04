@@ -4,7 +4,8 @@
     "moderation": "Moderation",
     "tasks": "Tasks",
     "accounts": "Accounts",
-    "overview": "Overview"
+    "overview": "Overview",
+    "era": "Era"
   },
   "flagReasons": {
     "spam": "Spam",
@@ -147,6 +148,34 @@
       "empty": "No messages.",
       "archive": "archive",
       "unarchive": "unarchive"
+    }
+  },
+  "era": {
+    "heading": "Roll the game into a new era",
+    "blurb": "An era is the ruleset the game runs on. Rolling ends the live one and opens the next, and everything below happens the moment you confirm it.",
+    "loadError": "Couldn't load eras.",
+    "rollError": "Could not roll the era over.",
+    "selectLabel": "Era to roll into",
+    "liveOption": "{{name}} — live now",
+    "noTarget": "Every era in the register is already live. There is nothing to roll into.",
+    "begin": "roll into a new era",
+    "confirm": {
+      "heading": "Read this before you confirm",
+      "lead": "Rolling into {{name}} will:",
+      "effects": {
+        "characters": "reset every character's score, level, vote budget and faction, by the incoming era's rules",
+        "duels": "freeze every unresolved duel into a permanent result",
+        "board": "retire the whole board"
+      },
+      "noUndo": "There is no undo. Nothing brings back the era you are leaving.",
+      "submit": "confirm — roll into {{name}}",
+      "working": "rolling over, don't leave this page…",
+      "cancel": "cancel, change nothing"
+    },
+    "done": {
+      "heading": "{{name}} is live.",
+      "charactersReset_one": "{{count}} character was reset.",
+      "charactersReset_other": "{{count}} characters were reset."
     }
   }
 }

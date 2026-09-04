@@ -18,7 +18,20 @@ class Era(Base):
     #: written by a newer version). That is the whole reason ``seed.py`` and
     #: ``routers/admin.py`` keep writing it. Not a dead field; do not sweep it.
     name: Mapped[str] = mapped_column(String, nullable=False)
-    #: Identity, not prose: the link to the EraConfig that governed this era.
+    #: Identity, not prose: the link to the EraConfig that governs this era.
+    #:
+    #: On the LATEST row this column is also the **choice** — it is what says
+    #: which ruleset the process plays by, resolved at start-up and again the
+    #: moment a rollover appends a row (ADR-0091, #827). That reverses what this
+    #: comment used to say, which was that the column "does not own the rules":
+    #: it still owns no *value* — every rule lives in ``eras/era_N.py`` — but it
+    #: decides which set of them is live, and an admin writes it. On every older
+    #: row it is history, exactly as before.
+    #:
+    #: So a key here that no era file registers is not a cosmetic problem: the
+    #: process cannot resolve the rules that row records and falls back, loudly,
+    #: to the compile-time era (``services.era.rebind_live_era``). The rollover
+    #: route validates against the registry before writing, for that reason.
     config_key: Mapped[str] = mapped_column(String, nullable=False)
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

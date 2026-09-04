@@ -26,12 +26,16 @@
  * field outwards and it is composited before anything is measured, which is the
  * mistake #2485 was open for.
  *
- * NOT MEASURED, deliberately: the `.na-backdrop` wash. The na name field is
- * transparent over the washed page, and the wash costs up to a full ratio point
- * (`createCharacterContrast.test.ts` transcribes the stops and owns that
- * measurement). Its row below is held to AAA on the flat page token instead, so
- * the wash has a point of room to spend before AA is at risk — a proxy, stated
- * as one, rather than a second copy of a five-gradient shorthand.
+ * NOT MEASURED, deliberately: the `.na-backdrop` wash. The na EDIT kit's name
+ * field is transparent over the washed page, and the wash costs up to a full
+ * ratio point (`createCharacterContrast.test.ts` transcribes the stops and owns
+ * that measurement). Its two rows below are held to AAA on the flat page token
+ * instead, so the wash has a point of room to spend before AA is at risk — a
+ * proxy, stated as one, rather than a second copy of a five-gradient shorthand.
+ *
+ * The na CREATE kit needs no proxy since #2992: it stands on the composer sheet
+ * and its fields are an OPAQUE box drawn above the aurora, so the ground is
+ * flat and its row takes the plain AA floor.
  */
 import { describe, it, expect } from 'vitest'
 import {
@@ -92,11 +96,17 @@ interface Row {
 }
 
 const FIELDS: Row[] = [
-  // The na kit's name field is transparent over the page, and the phone
-  // column's is the page token itself — both are the washed ground, so both
-  // take the AAA proxy. See the header.
-  { what: 'na, name field on the page', ground: ['--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
-  { what: 'na, prose fields', ground: ['--color-bg-surface', '--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
+  // THE na CREATE KIT MOVED TO THE COMPOSER SHEET (#2992). Its three fields are
+  // one opaque box on `--faction-default-composer-field`, laid over the sheet
+  // ABOVE the aurora — so this is the ground, flat, with no wash to proxy for,
+  // and it takes the plain AA floor like every faction row below it.
+  { what: 'na create, all three fields', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
+  // The na EDIT kit still stands on the washed app page, and #2992 did not touch
+  // it (#2991 is that lane). Its name field is transparent over the page and its
+  // prose fields sit on the translucent surface token, so both take the AAA
+  // proxy for the wash this file deliberately does not model. See the header.
+  { what: 'na edit, name field on the page', ground: ['--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
+  { what: 'na edit, prose fields', ground: ['--color-bg-surface', '--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
   { what: 'coven', ground: ['--faction-coven-ward-page', '--faction-coven-ward-card'], ink: '--faction-coven-slip-ink' },
   { what: 'ephemerists', ground: ['--faction-ephemerists-plate-inner', '--faction-ephemerists-plate-page'], ink: '--faction-ephemerists-plate-ink' },
   { what: 'everymen', ground: ['--faction-everymen-sheet-panel', '--everymen-paper'], ink: '--everymen-paper-text' },
