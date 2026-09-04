@@ -1,0 +1,203 @@
+/**
+ * THE COMPUTED-VALUE DIFF, MECHANISED (#2718).
+ *
+ * `ScoreStamp` is one of the frozen four — task card · praxis card · vote ·
+ * score stamp — whose APPEARANCE is frozen while the code under it stays free
+ * to change. A consolidation lane on this surface therefore has to prove it
+ * moved code and not pixels, and "I read the diff" is not that proof: the whole
+ * point of a lane that touches nine files at once is that a reviewer cannot
+ * hold nine trees in their head.
+ *
+ * So this is the proof, and it is a hash rather than an eyeball. Every
+ * archetype the dispatcher can reach — the real `surfaceMap('praxisDetail')`
+ * registry plus the `__default__` fall-through — is rendered across the fixture
+ * states the rest of this directory already builds, at BOTH form factors, and
+ * the SHA-256 of the resulting markup is snapshotted. Byte-identical markup
+ * from byte-identical input is the strongest claim available in a harness with
+ * no browser in it (SPEC-testing.md), and it is exactly the claim a
+ * "consolidation, not design" lane is making.
+ *
+ * ## Reading a failure
+ *
+ * A changed hash is not automatically a bug — it is a changed page, which is a
+ * thing you are allowed to do deliberately. The rule is only that you may not
+ * do it ACCIDENTALLY. If you meant it:
+ *
+ *     npx vitest run src/pages/praxisDetail/__tests__/markupStability.test.ts -u
+ *
+ * and the review sees a changed hash on a named archetype in a named state,
+ * which is the artefact this file exists to produce. If you did not mean it,
+ * the row names the archetype and the state, and `capture()` below will print
+ * the markup for both sides when you want to look.
+ *
+ * ## Why a hash and not the markup
+ *
+ * One page is ~30 KB of markup and there are 180 renders here; the golden files
+ * would be ~5 MB and no human would ever read a line of them. A hash is
+ * unreadable either way, so it may as well be short — and the diff that matters
+ * is "did this change", not "how".
+ *
+ * ## Why the registry rather than a list
+ *
+ * Same property `archetypeSlots.test.tsx` is built on and for the same reason:
+ * a tenth faction registering a praxis-detail archetype is picked up here with
+ * no edit to this file, and so is a faction dropping back to Default.
+ */
+import { createHash } from 'node:crypto'
+import { describe, it, expect, vi } from 'vitest'
+import type { ComponentType } from 'react'
+import { aMetatask, aDuel } from '../../../test/fixtures'
+import type { PraxisDetailState } from '../usePraxisDetail'
+
+const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
+vi.mock('../../../hooks/useFormFactor', () => ({
+  useFormFactor: () => mocks.formFactor,
+}))
+
+// Imported after the mock is registered, so the archetypes close over it.
+const { surfaceMap } = await import('../../../factions')
+const { default: DefaultPraxisDetail } = await import('../archetypes/DefaultPraxisDetail')
+const { aPraxisDetailState, aWalkedPraxis, anOwner, markup, RIVAL, VOTERS } =
+  await import('../../../test/praxisDetail')
+
+const PRAXIS = aWalkedPraxis()
+
+/**
+ * The states. Each one is the premise some existing suite in this directory
+ * already renders — named here so a failing row reads as a sentence rather than
+ * an index. `flagged` is the state this lane moved, so it is not optional.
+ */
+const STATES: Record<string, () => PraxisDetailState> = {
+  // The registry walks' own praxis: solo, submitted, voted, no media.
+  base: () => aPraxisDetailState({ praxis: PRAXIS }),
+  // `archetypeSlots.test.tsx` — exactly one TaskCrown, in the stamp's corner.
+  crowned: () => aPraxisDetailState({ praxis: { ...PRAXIS, is_top_for_task: true } }),
+  // #1538 — the public failed mark, with the steward's note written.
+  failed: () =>
+    aPraxisDetailState({
+      praxis: {
+        ...PRAXIS,
+        moderation_status: 'failed',
+        admin_note: 'The photo is of a different ridge.',
+      },
+    }),
+  // #1538 again — the same mark with the steward's box left empty.
+  failedNoteless: () =>
+    aPraxisDetailState({
+      praxis: { ...PRAXIS, moderation_status: 'failed', admin_note: '' },
+    }),
+  // THE STATE THIS LANE MOVES. The flagged notice was copied into all eight
+  // dressed archetypes; it is now the third branch of `PraxisStatusBanners`.
+  flagged: () => aPraxisDetailState({ praxis: { ...PRAXIS, moderation_status: 'flagged' } }),
+  // #932 — the read-only applied-metatask seal stack, issued by another faction.
+  sealed: () =>
+    aPraxisDetailState({
+      praxis: {
+        ...PRAXIS,
+        applied_metatasks: [aMetatask({ metatask_faction_slug: 'snide' })],
+      },
+    }),
+  // ADR-0053's non-neutral multiplier: base 10 × 1.1 + 14 = 25.
+  multiplier: () =>
+    aPraxisDetailState({
+      praxis: {
+        ...PRAXIS,
+        task_point_value: 10,
+        score: 25,
+        display_multiplier: 1.1,
+        points_from_votes: 14,
+      },
+    }),
+  // The owner's own page, with the who-voted panel populated.
+  owner: () =>
+    aPraxisDetailState({ praxis: PRAXIS, isOwner: true, user: anOwner(), voters: VOTERS }),
+  // The steward bar, which is mounted bare by every archetype.
+  steward: () => aPraxisDetailState({ praxis: PRAXIS, showAdminBar: true }),
+  // #1090 — the duel card's settled reading, which draws a card at all.
+  duel: () =>
+    aPraxisDetailState({
+      praxis: { ...PRAXIS, duel_id: 5 },
+      duel: aDuel({ id: 5, status: 'settled', challenger: RIVAL }),
+    }),
+}
+
+const FORM_FACTORS = ['desktop', 'mobile'] as const
+
+/** Default is a reachable renderable too — guarded alongside the registry. */
+function archetypes(): Record<string, ComponentType<{ state: PraxisDetailState }>> {
+  return {
+    ...(surfaceMap('praxisDetail') as Record<
+      string,
+      ComponentType<{ state: PraxisDetailState }>
+    >),
+    __default__: DefaultPraxisDetail,
+  }
+}
+
+/**
+ * The markup one archetype produces in one state at one form factor.
+ *
+ * Exported shape rather than inlined so that a failing row can be re-rendered
+ * by hand — `console.log(capture(...))` — without rebuilding the premise.
+ */
+function capture(
+  Archetype: ComponentType<{ state: PraxisDetailState }>,
+  build: () => PraxisDetailState,
+  formFactor: 'desktop' | 'mobile',
+): string {
+  mocks.formFactor = formFactor
+  return markup(<Archetype state={build()} />).html
+}
+
+function digest(html: string): string {
+  return createHash('sha256').update(html).digest('hex').slice(0, 16)
+}
+
+describe('praxis-detail markup is byte-stable across the registry', () => {
+  it('every archetype × state × form factor hashes to its recorded markup', () => {
+    const rows: string[] = []
+    for (const [slug, Archetype] of Object.entries(archetypes()).sort()) {
+      for (const [name, build] of Object.entries(STATES)) {
+        for (const formFactor of FORM_FACTORS) {
+          const html = capture(Archetype, build, formFactor)
+          // A blank page would hash stably and prove nothing — the non-vacuity
+          // half, in the shape `singularityRoleReads.test.ts` uses.
+          expect(html.length, `${slug}/${name}/${formFactor} rendered nothing`).toBeGreaterThan(
+            2000,
+          )
+          rows.push(`${slug} · ${name} · ${formFactor} → ${digest(html)}`)
+        }
+      }
+    }
+    expect(rows.join('\n')).toMatchSnapshot()
+  })
+})
+
+// ─── The frozen-four row: the score stamp on its own ─────────────────────────
+//
+// The page hashes above already contain the stamp, but a whole-page hash cannot
+// say WHICH subtree moved when it changes. `ScoreStamp` is the one piece of this
+// surface whose appearance is frozen by name, so it gets its own row: rendered
+// per faction task slug, because the stamp dispatches on the TASK's faction
+// (ADR-0053) and not on the host page's.
+
+const { default: ScoreStamp } = await import(
+  '../../../components/praxisCard/scoreStamp/ScoreStamp'
+)
+
+describe('ScoreStamp is byte-stable per task faction', () => {
+  it('hashes to its recorded markup for every dispatch slug', () => {
+    // `na` is appended because the stamp dispatches on the TASK's faction, and
+    // an unaffiliated task is a reading the registry does not have to carry —
+    // de-duplicated because the praxis-detail registry happens to hold it too.
+    const slugs = [...new Set([...Object.keys(surfaceMap('praxisDetail')), 'na'])].sort()
+    const rows = slugs.map((slug) => {
+      const html = markup(
+        <ScoreStamp praxis={{ ...PRAXIS, task_faction_slug: slug, is_top_for_task: true }} />,
+      ).html
+      expect(html.length, `ScoreStamp/${slug} rendered nothing`).toBeGreaterThan(200)
+      return `${slug} → ${digest(html)}`
+    })
+    expect(rows.join('\n')).toMatchSnapshot()
+  })
+})
