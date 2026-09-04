@@ -226,6 +226,16 @@ const ALLOWED: Record<string, { readonly hits: number; readonly why: string }> =
       'no-raw-style-values ratchet would take instead — so the assertion is what ' +
       'keeps the exemption from becoming a raw value later.',
   },
+  'test/__tests__/indexCss.test.ts': {
+    hits: 1,
+    why:
+      'Prose only, and about the OTHER scale (#2918). It quotes what Tailwind v4 ' +
+      'emits — `.text-sm{font-size:var(--text-sm)}` — to explain why the label ' +
+      'tier\'s `--text-sm` must be pinned in `@theme inline`: the two scales ' +
+      'collided on the NAME, and the utility silently started resolving to this ' +
+      'tier\'s 9px. Nothing here sets a size; the guard it introduces is what ' +
+      'keeps the collision from spreading further.',
+  },
 }
 
 describe('the label tier left its two smallest steps, objects included (#1608)', () => {
