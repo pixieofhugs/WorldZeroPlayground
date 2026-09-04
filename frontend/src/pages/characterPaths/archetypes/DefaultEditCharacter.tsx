@@ -114,7 +114,6 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionSpectrumSheet } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
@@ -124,7 +123,6 @@ import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import { namedField } from '../characterFields'
 import {
   ComposerFooter,
-  ComposerGround,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -133,6 +131,21 @@ import {
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import {
+  ALARM,
+  EDGE,
+  FAINT,
+  FIELD,
+  HAIR,
+  INK,
+  MUTED,
+  TITLE_FACE,
+  composerGround,
+  fieldBox,
+  labelStyle,
+  primaryStyle,
+  sheetStyle,
+} from '../../editPraxis/archetypes/defaultComposerDress'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 
@@ -144,106 +157,19 @@ const NAME_MAX = 50
 const BIO_MAX = 500
 const LOCATION_MAX = 100
 
-/* The na kit's inks and grounds, named once — the same set `DefaultEditPraxis`
- * and `DefaultCreateCharacter` read, because this page now stands on the same
- * stock. See the header on why none of them is a `--color-text-*`. */
-const INK = 'var(--faction-default-card-text)'
-const FAINT = 'var(--faction-default-composer-faint)'
-const MUTED = 'var(--faction-default-card-muted)'
-/* NOT `--color-danger`, and this is a fix rather than a preference (#2346,
- * #1302): a shared functional ink inside a faction frame takes that faction's
- * own card family, measured on the frame's ground. */
-const ALARM = 'var(--faction-default-card-alarm)'
-const FIELD = 'var(--faction-default-composer-field)'
-const HAIR = 'var(--faction-default-composer-hair)'
-const ON_ACCENT = 'var(--faction-default-on-accent)'
-
-/* EVERY CONTROL'S EDGE ON THIS WELL, and it is NOT `--faction-default-border`.
+/* THE DRESS IS THE SHARED ONE (#2993). Every ink, {@link EDGE}, the sheet's
+ * spectrum frame, the aurora and the field box come from
+ * `editPraxis/archetypes/defaultComposerDress` — the same set
+ * `DefaultCreateCharacter` and `DefaultProposeTask` read, because all three
+ * stand on the same stock. See the header on why none of them is a
+ * `--color-text-*`, and that module on why the edge is the mark rung rather
+ * than the 12% hairline.
  *
- * That token is `rgba(0,0,0,0.12)` by day and `rgba(255,255,255,0.12)` by
- * night, and on THIS ground it draws nothing a boundary can be read from. The
- * well is `--faction-default-composer-field`, which in light is `#fffdf9` —
- * byte for byte the sheet it is laid on, 1.00:1 — so the hairline is the ONLY
- * thing separating a control from its background, and it measures 1.31:1
- * against the well and 1.30:1 against the worst aurora stop (1.45 / 1.43 in
- * dark). WCAG 1.4.11 asks 3:1 of exactly that edge. It is the boundary defect
- * #3010 fixed on the WOW codicil, and this kit reproduced it the moment its
- * controls landed on a sheet whose stock its wells match.
- *
- * `--faction-default-card-muted` is the quiet MARK rung of the same family and
- * clears in both cascades against both adjacent grounds — 6.05 / 5.23 against
- * the well, 4.30 / 3.27 against the worst aurora stop. NOTHING WAS MINTED:
- * #2992 already certifies this exact token on this exact well one layer up, as
- * TEXT, at the same two numbers. `__tests__/defaultEditCharacterEdges.test.ts`
- * holds the rows.
- *
- * IT IS ONE TOKEN FOR ALL FOUR CONSUMERS on purpose — the five fields, the
- * portrait picker's button, the faction row's plate and the confirm's cancel
- * key are the same well with the same edge, and two different hairlines on one
- * sheet would read as a defect whichever of them was the accessible one. The
- * `-border` token keeps every other consumer it has elsewhere; what is written
- * here is that it is not an EDGE on this stock.
- *
- * ponytail: `DefaultCreateCharacter`'s `fieldBox` is this same pair on this same
- * sheet and still draws the hairline — one finding across two files, and the
- * create half is #2992's to close (it may not be edited from this lane). The
- * upgrade path is one line there and a fifth row here. */
-const EDGE = MUTED
-
-/* The design's title face is Lora (--font-display); the label face is Courier
- * Prime (--font-body), which is what `composerLabelStyle` already defaults to.
- * The token names read backwards here and that is not a mistake. */
-const TITLE_FACE = 'var(--font-display)'
-
-const labelStyle = { color: FAINT }
-
-/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
-   ramp painted into the border box under it, the same `border-box` idiom
-   `DefaultTaskCard`, `DefaultPraxisCard`, `DefaultSeal`, `DefaultEditPraxis` and
-   the create plate all wear. Only the width is stated here; the composition
-   belongs to the helper, because the ramp has to be appended to all three of the
-   sheet's background lists. */
-const sheetStyle = {
-  border: '3px solid transparent',
-  ...factionSpectrumSheet(),
-  boxShadow: '0 16px 40px -24px var(--color-cast-shadow)',
-}
-
-/* na's drifting aurora, clipped to the sheet by `ComposerSheet`'s own
-   `overflow: hidden` (#1028). */
-const ground = (
-  <ComposerGround
-    background="var(--faction-default-aurora)"
-    opacity="var(--faction-default-aurora-opacity)"
-    filter="var(--faction-default-aurora-filter)"
-    mixBlendMode="var(--faction-default-aurora-blend)"
-    animated
-  />
-)
-
-const fieldBox = {
-  width: '100%',
-  background: FIELD,
-  color: INK,
-  border: `1px solid ${EDGE}`,
-  borderRadius: 10,
-  padding: 'var(--space-md)',
-  boxSizing: 'border-box',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-content)',
-  lineHeight: 1.6,
-  resize: 'vertical',
-} as const
-
-/** The commit button's paint, minus the busy cursor the form adds. */
-const primaryStyle = composerLabelStyle({
-  border: 'none',
-  borderRadius: 10,
-  padding: 'var(--space-md) var(--space-xl)',
-  color: ON_ACCENT,
-  background: INK,
-  fontWeight: 700,
-})
+ * The ponytail this file used to carry — "the create form draws the hairline
+ * and I may not edit it" — is discharged: importing the same module is what
+ * closes #3023's open half, and
+ * `pages/editPraxis/archetypes/__tests__/defaultComposerDressEdges.test.tsx`
+ * holds the rows for all three consumers. */
 
 /* THE TWO SHARED SLOTS' DRESS (#2956's seam, used as intended — see the header).
  * na's composer tokens, so nothing global lands on the aurora sheet. The
@@ -327,7 +253,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
           <h1
             style={{
               fontFamily: TITLE_FACE,

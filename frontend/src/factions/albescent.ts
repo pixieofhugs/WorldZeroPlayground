@@ -457,12 +457,20 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
 
   /**
    * PASS-THROUGH, and the first registration of the propose-task chassis
-   * (#2538). na's spectrum is all over that page — the card's gradient frame,
-   * the metatask box, the submit pill — and not one of those marks is reachable
-   * from here: every one is an INLINE style computed from the slug in
-   * `pages/proposeTask/factionSurfaces.ts`, so `.alb-moves` has no
-   * `.spectrum-dial` or `.spectrum-rule` to set moving. That is the `comment`
-   * row's finding exactly (#2531), on a second surface.
+   * (#2538). na's spectrum was all over that page — the card's gradient frame,
+   * the metatask box, the submit pill — and not one of those marks was
+   * reachable from here: every one was an INLINE style computed from the slug
+   * in `pages/proposeTask/factionSurfaces.ts`. That is the `comment` row's
+   * finding exactly (#2531), on a second surface.
+   *
+   * **#2993 rebuilt the na page on the composer chassis and deleted that
+   * module, and the row stays a pass-through by DECISION.** The sheet's frame
+   * is the spectrum now — the same `factionSpectrumSheet()` border-box idiom
+   * `editPraxis` wears — but it is still an inline background list, and the
+   * page mounts neither `.spectrum-dial` nor `.spectrum-rule`, so `.alb-moves`
+   * still has nothing to grab. Nothing was mounted FOR it: a travelling rainbow
+   * frame around a form is a treatment someone has to design, for the one case
+   * where Albescent is a task's TARGET. See `AlbescentProposeTask`'s header.
    *
    * The dispatch slug is the TARGET faction — the one the task is proposed FOR
    * — so this row is reached when anyone, member or not, aims a task at

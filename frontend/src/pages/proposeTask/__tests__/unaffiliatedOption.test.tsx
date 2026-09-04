@@ -81,29 +81,67 @@ describe.each(EVERY_SLUG)('propose task — the faction chips (%s)', (slug) => {
   })
 })
 
-describe('the na kit reads the selected faction through the whole form', () => {
+/**
+ * THE na KIT'S DRESS — REWRITTEN FOR THE CHASSIS (#2993).
+ *
+ * This block used to assert that "the selected faction runs through the whole
+ * form": the card's gradient frame, the task-name face and the submit pill were
+ * four inline styles computed from the picked slug in
+ * `proposeTask/factionSurfaces.ts`, and a per-surface accent silently dropping
+ * out was the defect worth pinning. Both halves of that premise are gone.
+ *
+ * The MECHANISM went with #2538: every one of the seven known factions holds a
+ * `proposeTask` row, so picking one reskins the page to that faction's own
+ * archetype and this kit is on screen only for `na`, Albescent, a cleared pick
+ * and an unregistered slug. `isKnownFaction(state.factionSlug)` is false in
+ * every one of them, and #2993 deleted the dead arms that branched on it.
+ * `proposeTaskDispatch.test.tsx` is where "the pick runs through the whole
+ * page" lives now — one slug in, a different component out — and it is a
+ * stronger statement than a token scan ever was.
+ *
+ * The MODULE went with #2993, which rebuilt this kit on the composer chassis.
+ *
+ * So the rows below assert what is actually true of the rebuilt kit, and each
+ * would have failed on the file this replaced: it dresses itself in na's own
+ * `--faction-default-*` family on a `ComposerSheet`, its one spectrum is the
+ * sheet's frame, and the chip row still carries seven different factions'
+ * tints — which is the one place a slug is genuinely read per element, and it
+ * is each chip's own rather than the page's.
+ *
+ * They name `DefaultProposeTask` directly and deliberately: a faction archetype
+ * draws its own register and would fail them by doing its job.
+ */
+describe('the na kit wears na, on the sheet it moved to', () => {
   it('gives the unaffiliated chip the rainbow, never a borrowed faction hue', () => {
     // ADR-0039: `na` has no hue, so it takes the spectrum as a frame rather
     // than resolving to `default` grey or impersonating UA orange (#749).
     expect(render()).toContain('--faction-default-rainbow')
   })
 
-  it('keeps a real faction on its solid hue', () => {
-    expect(render({ factionSlug: 'ua' })).toContain('var(--faction-ua)')
+  it('draws that spectrum as the SHEET’s own frame (#2520)', () => {
+    // One rainbow on the page, and it is the border-box idiom `DefaultTaskCard`,
+    // `DefaultPraxisCard`, `DefaultSeal` and `DefaultEditPraxis` all wear. The
+    // 240px bar this kit used to draw under the page title is gone with it.
+    const markup = render()
+    expect(markup).toContain('border:3px solid transparent')
+    expect(markup).toContain('background-clip:')
+    expect(markup).toContain('var(--faction-default-card-bg)')
   })
 
-  it('runs the selected faction through the whole form, not just the chip', () => {
-    // The card frame, the task-name face, the level nodes and the submit pill
-    // all read the same slug (factionSurfaces.ts) — that is the point of the
-    // change, and a per-surface accent is exactly what silently drops out.
-    const markup = render({ factionSlug: 'coven', title: 'Bake something' })
-    expect(markup).toContain('var(--faction-coven-card-font)')
-    expect(markup).toContain('border:2px solid var(--faction-coven)')
-    expect(markup).toContain(
-      'color-mix(in srgb, var(--faction-coven) 18%, var(--color-bg-surface))',
+  it('stands its fields on na’s own composer stock, not the app’s', () => {
+    // The whole of the ground move: an opaque well in the na family, with the
+    // measured edge rather than the 12% hairline. `naProposeTaskContrast` and
+    // `defaultComposerDressEdges` carry the ratios, and that file is also where
+    // the archetype's OWN code is checked for a global tier — the paired proof
+    // for the `.eslint-legacy-faction-ink.txt` line #2993 deleted. It cannot be
+    // asserted on the markup: `Chip` and `FilterLevelNodes` are shared
+    // components that bring their own neutrals with them, which is why the two
+    // control rows are measured on a well over there.
+    const markup = render({ title: 'Bake something' })
+    expect(markup).toContain('var(--faction-default-composer-field)')
+    expect(markup).toContain('var(--faction-default-card-muted)')
+    expect(markup, 'the app’s functional red is not a na ink (#1302)').not.toContain(
+      'var(--color-danger)',
     )
-    // The card's own frame is the bevelled ramp, over an OPAQUE paper layer.
-    expect(markup).toContain('var(--faction-default-card-bg)')
-    expect(markup).toContain('background-clip:padding-box, border-box')
   })
 })

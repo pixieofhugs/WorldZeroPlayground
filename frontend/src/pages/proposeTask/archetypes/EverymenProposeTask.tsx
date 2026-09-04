@@ -24,12 +24,26 @@
  * life. Proposing a task is the request for the work order — the same sheet,
  * one rung earlier, filled in by whoever is asking.
  *
- * ## The chips are ABOVE the sheet, and that is the na kit's structure
+ * ## The chips are ABOVE the sheet, and #2995 OWNS MOVING THEM IN
  *
- * `DefaultProposeTask` puts the faction chips OUTSIDE the framed card, before
- * the `<form>`: the pick is what the card then wears, so it cannot live inside
- * the thing it dresses. That structure is kept exactly. What changes is the
- * chips' treatment, which is the create plate's calling picker — a plate in
+ * This paragraph used to read "that is the na kit's structure":
+ * `DefaultProposeTask` put the faction chips OUTSIDE the framed card, before
+ * the `<form>`, on the argument that the pick is what the card then wears and
+ * so cannot live inside the thing it dresses. **That precedent is gone.**
+ * #2993 rebuilt the na kit on the composer chassis and moved its row inside the
+ * sheet as the first `ComposerSection`, which is where six of the nine kits
+ * already drew it — so this placement is now this kit's alone, and the
+ * argument for it is disproved by seven shipping kits.
+ *
+ * It is not moved here because #2995 owns the move (and the reserved masthead
+ * head that lands every kit's first section at one offset); #2993 was not
+ * allowed to reach into this file for anything but this paragraph.
+ * `__tests__/proposeTaskStructure.test.tsx` pins the row still outside, so the
+ * day #2995 lands, that assertion goes red and the exception it names is
+ * deleted rather than outliving the defect.
+ *
+ * What changes below is the chips' treatment, which is the create plate's
+ * calling picker — a plate in
  * panel stock inside the printed frame, and a picked one taking this kit's own
  * CTA fill with the faction's hue struck behind it as a 3px offset shadow. A
  * hue is a FILL here and never an ink (#649): the row's type stays on this
@@ -454,9 +468,9 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
       breadcrumb={<Breadcrumb current={t('proposeTask.pageTitle')} />}
     >
       {/* The docket, above the sheet: the pick the sheet below is dressed by.
-          That placement is the na kit's own — the chips live outside its framed
-          card, because the pick is what the card wears and cannot live inside
-          the thing it dresses. The column is `ComposerPage`'s own, so the row
+          THIS PLACEMENT IS NOW THIS KIT'S ALONE — see the header. The na kit it
+          was copied from moved its row inside the sheet in #2993, and #2995
+          owns moving this one. The column is `ComposerPage`'s own, so the row
           lines up with the sheet's edge at both widths. */}
       <div
         style={{

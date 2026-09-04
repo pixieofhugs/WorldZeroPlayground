@@ -32,7 +32,9 @@
  *    is the axis: eight options wrap as a row here where one or two invitations
  *    stacked as a column, which is the na page's own chip geometry (#1824) in
  *    this kit's paint. `na` keeps the leaf's text face rather than its
- *    `card-font`, the same deviation `proposeTask/factionSurfaces.ts` records —
+ *    `card-font`, the same deviation the na kit records (it was
+ *    `proposeTask/factionSurfaces.ts`'s until #2993 deleted that module; the
+ *    call is now `DefaultProposeTask`'s own name field) —
  *    `factionCssVar('na', 'card-font')` is Bebas Neue, a display cut this form's
  *    opening state never asked for.
  *
@@ -399,7 +401,8 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                         // Each calling in its own card face, as the create leaf's
                         // picker sets it. `na` keeps the leaf's text face: its
                         // `card-font` is the neutral display cut this form's
-                        // opening state never asked for (factionSurfaces.ts).
+                        // opening state never asked for (the na kit's own call,
+                        // in `DefaultProposeTask` since #2993).
                         fontFamily: isKnownFaction(slug)
                           ? factionCssVar(slug, 'card-font')
                           : UA_TEXT,

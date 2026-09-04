@@ -44,10 +44,11 @@
  *  - `FilterLevelNodes` (the minimum-level row) paints
  *    `--color-bg-surface` / `--color-text-secondary`, and takes no style hook at
  *    all, so it cannot be dressed from here.
- *  - `proposeTask/factionSurfaces.ts`'s `proposeCardStyle` / `taskNameInputStyle`
- *    / `metaBoxStyle` / `submitButtonStyle` are the NA KIT's four surfaces —
- *    a `--faction-default-card-bg` frame, a `--color-border-strong` rule, a
- *    rounded pill CTA. They are that kit's dress, not a shared chassis, and
+ *  - the NA KIT's own four surfaces — the sheet's frame, the name field, the
+ *    metatask box and the CTA. They were `proposeTask/factionSurfaces.ts`'s
+ *    four inline builders until #2993 rebuilt that page on this same chassis
+ *    and deleted the module; they are `DefaultProposeTask`'s own dress now, and
+ *    they are still that kit's dress rather than a shared chassis.
  *    `unaffiliatedOption.test.tsx` says so in as many words: "a faction
  *    archetype draws its own register and would fail them by doing its job."
  *
@@ -360,10 +361,11 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     </>
   )
 
-  /* ── The success screen. The na kit draws it as a `.sidebar-card` on the app
-       page; here it is the same slip with the same masthead and the same wash,
-       because a proposer who has just filed for the coven should not be handed
-       back to site chrome to be told so. ── */
+  /* ── The success screen. The na kit drew it as a `.sidebar-card` on the app
+       page until #2993 put that kit on this chassis too; here it is the same
+       slip with the same masthead and the same wash, because a proposer who has
+       just filed for the coven should not be handed back to site chrome to be
+       told so. Both kits now answer that the same way. ── */
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>

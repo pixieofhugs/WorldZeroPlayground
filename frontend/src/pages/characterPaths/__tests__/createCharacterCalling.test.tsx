@@ -29,6 +29,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../../i18n'
 import type { CreateCharacterState } from '../useCreateCharacter'
+import { aCreateCharacterState } from '../../../test/fixtures'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import { factionName, setAlbescentRevealed } from '../../../utils/factions'
 
@@ -53,39 +54,10 @@ const DefaultCreateCharacter = (await import('../archetypes/DefaultCreateCharact
 /** The size both pickers draw the mark at — a disc's 12px is below the floor the marks read at. */
 const PICKER_SIGIL = 18
 
-function createState(overrides: Partial<CreateCharacterState>): CreateCharacterState {
-  return {
-    displayName: 'Molly',
-    setDisplayName: () => {},
-    bio: '',
-    setBio: () => {},
-    tagline: '',
-    setTagline: () => {},
-    factionSlug: '',
-    setFactionSlug: () => {},
-    invited: [],
-    avatarFile: null,
-    avatarPreview: null,
-    avatarSource: null,
-    setAvatarSource: () => {},
-    avatarError: '',
-    setAvatarError: () => {},
-    handleAvatarChange: () => {},
-    handleAvatarConfirm: () => {},
-    error: null,
-    submitting: false,
-    canSubmit: true,
-    handleSubmit: () => {},
-    handle: 'molly',
-    showPicker: false,
-    ...overrides,
-  }
-}
-
 const INVITED = ['coven', 'everymen', 'singularity']
 
 function invitedState(): CreateCharacterState {
-  return createState({ invited: INVITED, showPicker: true })
+  return aCreateCharacterState({ invited: INVITED, showPicker: true })
 }
 
 function render(element: ReactElement): { html: string; text: string } {
@@ -127,7 +99,7 @@ describe('the calling picker wears the faction sigils (#2223)', () => {
 describe('the calling copy asserts no precondition (#2223)', () => {
   it('no longer claims a task must be completed first', () => {
     // The literal defect the player reported, on the mount they reported it on.
-    for (const state of [invitedState(), createState({})]) {
+    for (const state of [invitedState(), aCreateCharacterState({})]) {
       expect(renderMobile(state).text).not.toMatch(/first task/i)
     }
   })
@@ -139,7 +111,7 @@ describe('the calling copy asserts no precondition (#2223)', () => {
   it('says nothing about "these" when there is no picker to point at', () => {
     // An account holding no invitations renders no options, so a hint that
     // deictically references them would point at an empty page.
-    const { text } = renderMobile(createState({}))
+    const { text } = renderMobile(aCreateCharacterState({}))
     expect(text).not.toContain('Some of these already know you.')
     expect(text, 'the born-unaffiliated explainer survives').toContain('Unaffiliated')
   })
@@ -171,7 +143,7 @@ describe('the Albescent tile is named once the account qualifies (#2518)', () =>
   afterEach(() => setAlbescentRevealed(false))
 
   function pickerWithAlbescent(): CreateCharacterState {
-    return createState({ invited: WITH_ALBESCENT, showPicker: true })
+    return aCreateCharacterState({ invited: WITH_ALBESCENT, showPicker: true })
   }
 
   for (const [mount, renderAt] of [['mobile', renderMobile], ['desktop', renderDesktop]] as const) {
