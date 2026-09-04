@@ -10,7 +10,6 @@
     "locationPlaceholder": "Location (SFO, PDX, YYZ)",
     "handlePlaceholder": "Handle",
     "portrait": "Portrait",
-    "addPhoto": "Add photo",
     "changePhoto": "Change photo"
   },
   "createCharacter": {
