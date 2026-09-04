@@ -222,14 +222,23 @@ def test_era1_level_profiles_use_slug_keys():
 
 
 # ---------------------------------------------------------------------------
-# Era 2 — Metamorphosis, authored but not activated (#1618)
+# Era 2 — Metamorphosis, the live era (#1618, activated in #2711)
 # ---------------------------------------------------------------------------
 
 
-def test_era_2_is_authored_not_activated():
+def test_era_2_is_the_live_era():
+    """The one pin on the rollover lever, kept in exactly one place.
+
+    Flipped rather than deleted at the rollover (#2711): this assertion is what
+    a revert of the one line in ``game_config.__getattr__`` reddens, so the
+    lever cannot move silently in either direction. Era 1 stays importable by
+    name — ``_ERA_ATTRIBUTE_BY_CONFIG_KEY`` is what lets a stored ``era_1`` row
+    keep being labelled with its own rules.
+    """
     assert ERA_2.name == "Metamorphosis"
     assert ERA_2.config_key == "era_2"
-    assert CURRENT_ERA is ERA_1, "Metamorphosis is authored, not activated"
+    assert CURRENT_ERA is ERA_2, "Metamorphosis is the live era"
+    assert ERA_1 is not ERA_2 and era_config_for_key("era_1") is ERA_1
 
 
 def test_era_2_roster_is_five_factions_and_no_ua():

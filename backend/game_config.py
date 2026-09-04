@@ -519,17 +519,18 @@ def __getattr__(name: str):
         # the first such call after the flip would rebind CURRENT_ERA to Era 1
         # for the life of the process — while every module that imported it at
         # start-up kept the new one. Found rehearsing the flip in #2708.
-        from eras.era_1 import ERA_1 as _era_1
-        globals()["CURRENT_ERA"] = _era_1
-        return _era_1
+        from eras.era_2 import ERA_2 as _era_2
+        globals()["CURRENT_ERA"] = _era_2
+        return _era_2
     if name in ("ERA_1", "ERA_1_FACTIONS"):
         from eras.era_1 import ERA_1 as _era_1
         globals()["ERA_1"] = _era_1
         globals()["ERA_1_FACTIONS"] = _era_1.factions
         return globals()[name]
     if name in ("ERA_2", "ERA_2_FACTIONS"):
-        # Era 2 (Metamorphosis) is authored, not activated: CURRENT_ERA stays
-        # Era 1 above.
+        # Era 2 (Metamorphosis) is the live era (#2711). This branch is still
+        # separate from the CURRENT_ERA one above for the reason given there:
+        # resolving an era BY NAME must never rebind the live one.
         from eras.era_2 import ERA_2 as _era_2
         globals()["ERA_2"] = _era_2
         globals()["ERA_2_FACTIONS"] = _era_2.factions
