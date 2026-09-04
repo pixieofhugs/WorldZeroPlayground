@@ -601,8 +601,24 @@ export function ProfileSkin({
   const frameIdentity = (band: ReactNode) =>
     kit.headerFrame ? kit.headerFrame(band, identityOrnament) : band
 
+  /**
+   * `stillRing` IS THIS SURFACE'S ONE DIFFERENCE FROM EVERY OTHER MOUNT OF THIS
+   * CARD (#3024). The header's card sits inside the identity band, and on
+   * Albescent that band is the page's carrier — `.alb-profile-edge`, a 9s
+   * travelling ramp reached through {@link ProfileKit.headerFrame}. The card's
+   * na portrait ring wears `.spectrum-dial` (#2992), which `.alb-moves` turns at
+   * 46s wherever it can reach it, so the two together were two spectra at two
+   * speeds on one object — the doubling #2519 undid and the reason
+   * `AlbescentProfileBody` keeps this band out of the moving set.
+   *
+   * One carrier per object, so the ring stands still HERE and nowhere else: the
+   * creation and edit previews keep turning, because nothing travels around
+   * them. The prop suppresses the class and keeps the ramp; the card's own
+   * comment says why those are one decision.
+   */
   const credential = (
     <CredentialCard
+      stillRing
       displayName={character.display_name}
       handle={character.username}
       factionSlug={character.faction_slug}
