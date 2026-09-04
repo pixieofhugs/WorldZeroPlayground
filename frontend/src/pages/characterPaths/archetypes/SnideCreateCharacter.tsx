@@ -121,6 +121,7 @@ import {
 } from '../useCreateCharacter'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -273,19 +274,23 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
-          <h1
-            style={{
-              fontFamily: TITLE_FACE,
-              fontSize: sizes.titleSize,
-              letterSpacing: '0.02em',
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-            }}
-          >
-            {t('createCharacter.heading')}
-          </h1>
+        {/* The chassis' two reserved heights (#2995) — the table of every kit's
+            masthead against the number is in `useComposerSizes`. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: TITLE_FACE,
+                fontSize: sizes.titleSize,
+                letterSpacing: '0.02em',
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </ComposerHeading>
 
           {/* The life being pasted up, live. The card dispatches its own faction
               dress, so it is already wearing this kit the moment the calling is

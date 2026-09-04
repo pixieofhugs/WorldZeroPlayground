@@ -138,6 +138,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -369,7 +370,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <h1
             style={{
               fontFamily: DISPLAY,
@@ -433,19 +434,27 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
-          <h1
-            style={{
-              fontFamily: DISPLAY,
-              fontWeight: 600,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-            }}
-          >
-            {t('proposeTask.pageTitle')}
-          </h1>
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('proposeTask.pageTitle')}
+            </h1>
+          </ComposerHeading>
 
           {/* Who the task is for — and the control this whole page is dispatched
               by, so the row wearing the cast band is the reason this file is on

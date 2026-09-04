@@ -5142,11 +5142,19 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
   const fileOf = (name: string) =>
     BAND_GROUNDS.find((row) => row.band === name)?.file ?? CARD_BANDS;
 
-  /** One band's body: `function XBand() {` up to the `\n}` that closes it. */
+  /**
+   * One band's body: `function XBand(` up to the `\n}` that closes it.
+   *
+   * The anchor takes no account of the SIGNATURE, and that is deliberate: this
+   * census reads which tokens a band paints with, which has nothing to do with
+   * whether it takes props. `UaBand` grew one in #2995 — an `inert` arm for the
+   * two composer surfaces that mount it inside a `<form>` — and an anchor
+   * spelling the empty parens failed four rows about paint that had not moved.
+   */
   function bandBody(name: string): string {
     const file = fileOf(name);
     const source = SOURCES.get(file)!;
-    const at = source.indexOf(`function ${name}()`);
+    const at = source.indexOf(`function ${name}(`);
     expect(at, `no \`${name}\` in ${file}`).toBeGreaterThan(-1);
     return source.slice(at, source.indexOf("\n}", at));
   }
@@ -5177,7 +5185,12 @@ describe("the nine masthead bands stand on their own ground (#2635, #2648)", () 
       // token and every row below would still pass, because none of them would
       // be looking at it. Per file, so the card kits' seven cannot quietly
       // become eight by way of the seal's exception.
-      const declared = [...SOURCES.get(file)!.matchAll(/function (\w+Band)\(\)/g)].map(
+      //
+      // `\(` and not `\(\)` for the reason {@link bandBody} gives: a band that
+      // takes a prop is still a band, and `UaBand` took one in #2995. Matching
+      // the empty parens dropped it from the census — which is the failure mode
+      // this row exists to prevent, arriving by way of the row itself.
+      const declared = [...SOURCES.get(file)!.matchAll(/function (\w+Band)\(/g)].map(
         (match) => match[1],
       );
       expect(

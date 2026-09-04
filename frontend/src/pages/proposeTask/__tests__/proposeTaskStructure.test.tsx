@@ -46,6 +46,8 @@ import i18n from '../../../i18n'
 import { resolveVariant } from '../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../factions'
+import DefaultEditPraxis from '../../editPraxis/archetypes/DefaultEditPraxis'
+import { anEditPraxisState } from '../../../test/fixtures'
 import { proposeTaskState } from './proposeTaskState'
 import type { ProposeTaskState } from '../useProposeTask'
 
@@ -178,32 +180,15 @@ describe('the form asks the same things in the same order (AC 1)', () => {
 })
 
 /**
- * The one kit that still draws the row outside its `<form>`, and it is NOT
- * grandfathered — it is #2995's, in as many words.
- *
- * `EverymenProposeTask`'s header argues the placement ("the pick is what the
- * card then wears, so it cannot live inside the thing it dresses"); six kits
- * disprove it by shipping, #2993 moved the na kit in, and #2995 moves Everymen
- * and rewrites that paragraph. Editing it here would be this lane reaching into
- * a file another issue owns.
- *
- * So the exception is asserted BOTH WAYS: the row below skips it, and the row
- * under that pins it still outside. The day #2995 lands, that second row goes
- * red and this set is deleted — which is the opposite of a skip list, where
- * fixing the defect changes nothing and the entry outlives it.
+ * THE EXCEPTION IS GONE (#2995). This set held `everymen` — the last kit that
+ * drew the row before its `<form>` — and pinned it outside BOTH ways, so that
+ * moving it in would turn a row red rather than let a skip outlive the defect.
+ * #2995 moved it in and rewrote the header paragraph that argued for the old
+ * placement, so the pin is deleted and every kit is measured by the one row
+ * below. Nine of nine, derived from the registry.
  */
-const OUTSIDE_THE_FORM = new Set(['everymen'])
-const inside = CASES.filter(([, , slug]) => !OUTSIDE_THE_FORM.has(slug))
-const outside = CASES.filter(([, , slug]) => OUTSIDE_THE_FORM.has(slug))
-
-describe('the target faction is the form’s FIRST question (AC 2, #2993)', () => {
-  it('the exception list names kits that exist', () => {
-    // A typo'd slug would silently exempt nothing and pin nothing, leaving both
-    // rows below green about a kit that was never measured.
-    for (const slug of OUTSIDE_THE_FORM) expect(ARCHETYPES).toContain(slug)
-  })
-
-  it.each(inside)('%s on %s: the radiogroup is inside the form', (_name, width, slug) => {
+describe('the target faction is the form’s FIRST question (AC 2, #2993, #2995)', () => {
+  it.each(CASES)('%s on %s: the radiogroup is inside the form', (_name, width, slug) => {
     // The defect this issue was filed on. Every kit wraps its sheet in the
     // page's one `<form>`, so — with no DOM to ask — "inside the sheet" is read
     // off the order of the markup the same way `proposeTaskBreadcrumb` reads
@@ -214,14 +199,6 @@ describe('the target faction is the form’s FIRST question (AC 2, #2993)', () =
     expect(form, 'the form is the sheet boundary this reads against').toBeGreaterThan(-1)
     expect(group, 'no target-faction radiogroup on the page').toBeGreaterThan(-1)
     expect(group, 'the pick belongs to the form it dresses').toBeGreaterThan(form)
-  })
-
-  it.each(outside)('%s on %s: is still outside it, and that is #2995’s', (_name, width, slug) => {
-    const html = skin(slug, width)
-    expect(
-      html.indexOf('role="radiogroup"'),
-      'this kit moved in — delete it from OUTSIDE_THE_FORM and let the row above cover it',
-    ).toBeLessThan(html.indexOf('<form'))
   })
 
   it.each(CASES)('%s on %s: and it comes before the first field', (_name, width, slug) => {
@@ -242,6 +219,93 @@ describe('the target faction is the form’s FIRST question (AC 2, #2993)', () =
     const html = skin(slug, width)
     expect(html.match(/role="radiogroup"/g)).toHaveLength(1)
     expect(html.match(/role="radio"/g)).toHaveLength(8)
+  })
+})
+
+/**
+ * The reserved masthead head, on every kit (#2995).
+ *
+ * The defect: this page dispatches on the pick in progress, so every click on a
+ * chip renders a DIFFERENT archetype — and each one started its content column
+ * wherever its own masthead happened to end (UA passed none at all; the
+ * Ephemerists' sky band plus its cornice is 96px). The row moved under the
+ * pointer, and the next click landed on a faction nobody aimed at.
+ *
+ * `ComposerSheet`'s `reserveHead` gives the masthead slot a floor out of
+ * `useComposerSizes()`, so the column starts at the same offset on all nine.
+ * The number is NOT written down here: what is asserted is that every kit reads
+ * the SAME one, which is the property that makes the row stand still. A literal
+ * would pass just as happily with nine kits reading nine numbers.
+ *
+ * WHAT THIS CANNOT PROVE, AND IT IS THE HALF THAT MATTERS. `renderToStaticMarkup`
+ * has no layout. "The reserved head is at least as tall as every kit's actual
+ * masthead" is the property the fix turns on, and it is a RENDERED SWEEP
+ * question — a kit whose band overflows the floor still starts its column lower,
+ * and every row here stays green. The numbers in `useComposerSizes` were derived
+ * by reading each masthead's own geometry, and the only thing that can confirm
+ * them is a browser. This file proves the floor exists, is spelled once, and is
+ * the same on every kit; the offset is checked by eye and that is stated on the
+ * PR.
+ */
+describe('the masthead slot is reserved, and by one number (#2995)', () => {
+  const boxes = (html: string, hook: 'head' | 'heading') =>
+    [...html.matchAll(new RegExp(`<div data-composer-${hook}="" style="([^"]*)"`, 'g'))].map(
+      ([, style]) => style,
+    )
+
+  it.each(CASES)('%s on %s: the sheet reserves its head', (_name, width, slug) => {
+    // One per page: the form's sheet. A kit that opted none in — or that opted
+    // a second sheet in — fails here rather than drifting quietly.
+    expect(boxes(skin(slug, width), 'head')).toHaveLength(1)
+  })
+
+  it.each(CASES)('%s on %s: and the heading block has its floor', (_name, width, slug) => {
+    // The second term. `ComposerHeading` is the only thing that spells it, so a
+    // kit that hand-rolled its own heading box has no floor and fails here —
+    // which is the drift the sixteen inline `minHeight`s could not catch.
+    expect(boxes(skin(slug, width), 'heading')).toHaveLength(1)
+  })
+
+  it.each(CASES)('%s on %s: the success sheet reserves one too', (_name, width, slug) => {
+    // Filing a proposal must not swap the reserved head for the kit's native
+    // one — 96px for 0 on na, and UA's band disappearing mid-flow.
+    const html = render(slug, width, { success: true })
+    expect(boxes(html, 'head'), 'the success sheet is the same sheet').toHaveLength(1)
+  })
+
+  it.each(WIDTHS)('every kit reserves the same head and floor on %s', (width) => {
+    for (const hook of ['head', 'heading'] as const) {
+      const found = ARCHETYPES.map(
+        (slug) => [slug || 'na', boxes(skin(slug, width), hook)[0]] as const,
+      )
+      const values = new Set(found.map(([, style]) => style))
+      expect(
+        values.size,
+        `nine kits, one ${hook} — got ${found.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
+      ).toBe(1)
+      expect([...values][0], `the ${hook} is a reserved height, not an empty box`).toMatch(
+        /min-height:\d+px/,
+      )
+    }
+  })
+
+  it('a surface that did NOT opt in reserves nothing', () => {
+    /* The prop defaults to OFF and roughly thirty archetypes across four
+     * surfaces rely on that — editPraxis and editCharacter do not reskin live
+     * and were never in this issue's scope. Without this row, "make it the
+     * default" is a one-word change to `ComposerSheet` that moves every composer
+     * in the app and turns nothing red.
+     *
+     * The na composer stands for the set: it is the reference implementation of
+     * the layout contract the seven skins inherit (ADR-0065), so if the default
+     * ever flips, it flips here first. */
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultEditPraxis state={anEditPraxisState()} />
+      </MemoryRouter>,
+    )
+    expect(html).not.toContain('data-composer-head')
+    expect(html).not.toContain('data-composer-heading')
   })
 })
 

@@ -186,9 +186,96 @@ interface ComposerSizes {
   gap: string;
   /** The composer's own heading tier. */
   titleSize: string;
+  /**
+   * THE RESERVED HEAD (#2995) — the floor under {@link ComposerSheet}'s masthead
+   * slot, for the surfaces that opt in with `reserveHead`.
+   *
+   * ONE NUMBER, because the whole point is that nine kits read the same one.
+   * Propose a Task and Create Character both dispatch on the pick IN PROGRESS,
+   * so every click on a chip renders a different archetype — and each archetype
+   * started its content column wherever its own masthead ended. Measured on the
+   * propose kits at this width: na and UA passed no masthead at all (0), WOW's
+   * ribbon plus its bunting is 29, Singularity's window bar 31, S.N.I.D.E.'s
+   * 36, Everymen's nameplate 45, Coven's sigil-and-braid band 78, and the
+   * Ephemerists' sky band plus its cornice 96. The chip row moved by up to 96px
+   * under the pointer.
+   *
+   * So the number is the TALLEST head any kit draws, and it cannot be smaller:
+   * a floor that a kit overflows leaves that kit starting lower, which is the
+   * defect again at reduced amplitude. Everything under it pads out; the
+   * Ephemerists' band meets it exactly. It is geometry, not spacing, so it is a
+   * raw number (WORLD_ZERO_STYLE §4a) — and it is a MIN, so a kit that grows a
+   * taller ornament is not clipped, it is the new ceiling and this number
+   * follows it.
+   */
+  headHeight: number;
+  /**
+   * THE HEADING FLOOR (#2995 part 2) — the second term in that same offset.
+   *
+   * Reserving the head equalizes what sits ABOVE the content column; on Propose
+   * a Task the chips are the column's first section, so the only thing left
+   * between them and the sheet's edge is the page heading. That block is
+   * archetype-authored and does not agree. Measured on the propose kits, tall
+   * ornament included, on desktop: five kits draw a bare `h1` at `titleSize`
+   * and 1.1 line-height (35.2px), Singularity's is 1.2 (38.4) and Everymen's
+   * 0.96 beside a 40px cog (40), the Ephemerists' is a flex row with a 44px
+   * stage mark (44), and WOW's is a row ending in a balloon bunch drawn 38 wide
+   * and 1.25× as tall (47.5). On the phone the bunch drops to 37.5 and the mark
+   * does not move, so the ceiling swaps kits: 44.
+   *
+   * THE FLOOR WAS MEASURED, NOT ASSUMED. The issue asked for it only if the
+   * Ephemerists' mark does NOT fit inside the h1's line box — 32px × 1.2 =
+   * 38.4px on desktop, 24px × 1.2 = 28.8 on mobile, against a mark that is 44px
+   * at both. It does not fit, so the heading term is real: 12.3px of spread on
+   * desktop and 21 on the phone, on a page whose chips sit directly under it.
+   *
+   * THE PHONE NUMBER IS NOT THE TALLEST ORNAMENT, IT IS THE TALLEST ROW. WOW's
+   * heading is a `flex-wrap: wrap` row — spark · h1 · rule · balloon bunch — and
+   * its own comment says it stacks on a phone rather than crushing the heading.
+   * It does: in a 319px column (375 − the page's 12px and the column's 16px, both
+   * sides) the bunch does not fit beside a heading of the length these two
+   * surfaces use, so it takes a second line. That row is 32 (the ✦ span's line
+   * box at `--text-heading`/1) + 12 (the wrapped row-gap) + 37.5 (the bunch at
+   * 30 × 1.25) = 81.5. So the phone floor is 82, and it also covers the other
+   * phone-width case a min-height has to survive — an h1 that wraps to two lines
+   * (2 × 28.8 = 57.6) beside a 44px mark.
+   *
+   * WHAT IS NOT KNOWABLE FROM THE SOURCE. Whether a given kit's title wraps at
+   * 319px is a function of the rendered text width in that kit's own face, which
+   * no node-side harness can measure — 82 is chosen to cover both the wrapped
+   * and the unwrapped case rather than derived from one of them. A THREE-line
+   * heading would exceed it, and that is an eyeball item.
+   *
+   * The floor is spent by {@link ComposerHeading}, which top-aligns the kit's
+   * row inside it. Read that block for what the floor does and does not
+   * equalize — it pins where the heading block ENDS, not where a kit's own
+   * centred row puts its title.
+   */
+  headingHeight: number;
   /** True on a phone — for conditional ornament, never for a second layout. */
   isMobile: boolean;
 }
+
+/**
+ * The two reserved heights, declared once per form factor (#2995).
+ *
+ * Both differ by width because the tallest thing they cover does. The
+ * Ephemerists' sky band is 84px on desktop and 68 on the phone and its cornice
+ * is 12 either way (96 / 80).
+ *
+ * `headingHeight` is WOW's heading row at both widths, for two different
+ * reasons. On desktop the row fits on one line and the balloon bunch sets its
+ * height at 38 × 1.25 = 47.5 → 48. On the phone the same row WRAPS — that is
+ * what its `flex-wrap` is there for — so the height is the ✦ span's 32px line
+ * box plus the 12px row-gap plus the bunch's 37.5 = 81.5 → 82. 82 also clears
+ * the other phone-width case: an h1 wrapped to two lines (57.6) beside the
+ * Ephemerists' 44px mark.
+ *
+ * Rounded UP to a whole pixel, never down: down is the defect back at half a
+ * pixel.
+ */
+const RESERVED_HEAD = { desktop: 96, mobile: 80 };
+const RESERVED_HEADING = { desktop: 48, mobile: 82 };
 
 /**
  * The design's SIZES table, as one responsive hook (ADR-0065 §2).
@@ -210,6 +297,8 @@ export function useComposerSizes(): ComposerSizes {
         gap: "var(--space-lg)",
         // design 23px → the 24px rung.
         titleSize: "var(--text-title)",
+        headHeight: RESERVED_HEAD.mobile,
+        headingHeight: RESERVED_HEADING.mobile,
         isMobile: true,
       }
     : {
@@ -221,6 +310,8 @@ export function useComposerSizes(): ComposerSizes {
         // design 29px → the 32px rung. A --text-* token names a TIER, and the
         // composer's heading is the same tier as every other page heading.
         titleSize: "var(--text-heading)",
+        headHeight: RESERVED_HEAD.desktop,
+        headingHeight: RESERVED_HEADING.desktop,
         isMobile: false,
       };
 }
@@ -396,6 +487,24 @@ export function composerBandStyle(
 interface ComposerSheetProps {
   /** Full-bleed top chrome. Drawn flush to the sheet's edges, above the ground. */
   masthead?: ReactNode;
+  /**
+   * Reserve `sizes.headHeight` for the masthead slot, so the content column
+   * starts at the same offset whatever the kit draws up there (#2995).
+   *
+   * OPT-IN, AND DEFAULTING TO OFF ON PURPOSE. Roughly thirty archetypes across
+   * four surfaces mount this sheet. The two that RESKIN LIVE — Propose a Task
+   * dispatches on the target faction and Create Character on the calling being
+   * chosen — are the two where a per-kit masthead height is a bug: the control
+   * you are using re-renders as a different kit's tree and walks out from under
+   * the pointer. On editPraxis and editCharacter the kit is fixed for the life
+   * of the page, nothing re-skins, and a reserved head would only move every
+   * surface in the app for a defect they do not have. Widening it there is a
+   * separate, visually-reviewed pass.
+   *
+   * Off, the masthead renders exactly as before — no wrapper, byte-identical
+   * markup — so the surfaces that do not opt in are untouched.
+   */
+  reserveHead?: boolean;
   /** Ambient backdrop. Clipped to the SHEET — see the overflow note below. */
   ground?: ReactNode;
   children: ReactNode;
@@ -424,6 +533,7 @@ interface ComposerSheetProps {
  */
 export function ComposerSheet({
   masthead,
+  reserveHead = false,
   ground,
   children,
   pageStyle,
@@ -450,7 +560,27 @@ export function ComposerSheet({
           }}
         >
           {ground}
-          {masthead}
+          {/* The reserved head (#2995). A wrapper only when it is asked for, and
+              it carries NOTHING BUT THE FLOOR.
+
+              It used to restate `position: relative; zIndex: 2`, which is what
+              `ComposerMasthead` and `CardMasthead` each already set on
+              themselves — two stacking contexts where one will do, and the outer
+              one would have trapped the inner z-indexes (the Ephemerists' cornice
+              sits at 3). Unpositioned, this box is a plain block and the band
+              inside it goes on stacking against the sheet exactly as it did
+              before the wrapper existed.
+
+              The slot is a MIN, so a taller ornament is never clipped. The
+              handle is in the markup because a DOM-less suite has nothing else
+              to read — the same reason `Bunting` carries `data-wow-bunting`. */}
+          {reserveHead ? (
+            <div data-composer-head="" style={{ minHeight: sizes.headHeight }}>
+              {masthead}
+            </div>
+          ) : (
+            masthead
+          )}
           <div
             style={{
               position: "relative",
@@ -466,6 +596,50 @@ export function ComposerSheet({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The heading block's floor — the second half of the reserved offset (#2995).
+ *
+ * A kit passes its own heading row as `children`; this box only says how far
+ * that block reaches before the next region starts. It is the companion to
+ * `ComposerSheet`'s `reserveHead` and is mounted by the same surfaces: on
+ * Propose a Task the chips are the section directly under it, so head + heading
+ * IS the whole offset the chip row sits at.
+ *
+ * WHY A BLOCK AND NOT A PROP. The floor was sixteen hand-spelled
+ * `minHeight: sizes.headingHeight`s before this existed — sixteen chances for a
+ * kit to forget one, spell it on the wrong box, or drift, with nothing to catch
+ * it. As a block there is one implementation, one `data-composer-heading`
+ * handle, and the derived guards on both surfaces read it the same way they read
+ * the head.
+ *
+ * WHAT IT DOES AND DOES NOT EQUALIZE. The content is TOP-ALIGNED inside the
+ * floor, so every kit's heading block starts and ENDS at the same y and so does
+ * the region under it. It does NOT equalize where the title sits inside that
+ * block: six kits draw their heading as a flex row with `alignItems: center`
+ * around an ornament of their own (the Ephemerists' 44px stage mark, Everymen's
+ * 40px cog, WOW's balloon bunch), and a centred row puts its own h1 a few
+ * pixels down — 2.8px on the Ephemerists' desktop row, more where the ornament
+ * is taller. That wobble is each kit's own row, it is dress, and flattening it
+ * would mean telling every kit how to align its ornament. What #2995 was filed
+ * on is where the ROW BELOW lands, and that is what this pins.
+ */
+export function ComposerHeading({
+  sizes,
+  style,
+  children,
+}: {
+  sizes: ComposerSizes;
+  /** The kit's own box, if its heading needs one — paint, never the floor. */
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return (
+    <div data-composer-heading="" style={{ minHeight: sizes.headingHeight, ...style }}>
+      {children}
     </div>
   );
 }

@@ -109,6 +109,7 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -118,6 +119,7 @@ import {
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { UaBand } from '../../../components/cardMasthead/factionBands'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
@@ -264,8 +266,34 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
     </div>
   )
 
-  /* NO masthead. UA is the one faction that draws no top band — the ground is
-     the identity, and it is the composer's own, element for element. */
+  /* THE BAND IS THE SHIPPED ONE (#2995, owner ruling 2026-09-01: "feel free to
+     use the task card header for UA the same way that singularity does").
+     `UaBand` out of `components/cardMasthead/factionBands` — the same band
+     `UaTaskCard`, `UaPraxisCard` and `UaSeal` already mount, no props, no copy.
+     Singularity's masthead on this page is that move one kit over: its window
+     bar is `SingularityLamps`, its card's own vocabulary rather than a private
+     redraw.
+
+     THIS REVERSES THE COMMENT THAT STOOD HERE, which said UA "is the one
+     faction that draws no top band". That was never true of the faction — the
+     band is exported beside the other six and mounted on three surfaces — only
+     of UA's four COMPOSER surfaces, and only while nothing reserved a head for
+     it. #2995 reserves one on this page, so a bandless sheet would open with
+     96px of empty ground where every other kit has its chrome. The other three
+     composer surfaces reserve nothing, get no band, and their comments stand.
+
+     IT IS MOUNTED `inert`, WHICH IS NOT A DETAIL. On a card the band is a LINK
+     to the faction (#2167) — a card is a place you leave from. This sheet is a
+     `<form>` holding an unsaved draft, so a live anchor here would be the first
+     focusable thing on it and a click on the wordmark would navigate away and
+     discard the draft with no confirm. Inert, it matches what every other
+     composer masthead already is: `ComposerMasthead` is `aria-hidden` and inert
+     by construction. Same paint, same anatomy, no anchor.
+
+     THE GROUND IS STILL THE IDENTITY. The lotus and the turning ensō below are
+     untouched; the band names the leaf at the top of it, where the reserved
+     head is. */
+  const masthead = <UaBand inert />
   const ground = (
     <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
       <Lotus
@@ -300,24 +328,26 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
   }
 
   const heading = (text: string) => (
-    <h1
-      style={{
-        fontFamily: UA_DISPLAY,
-        fontWeight: 600,
-        fontSize: sizes.titleSize,
-        color: INK,
-        lineHeight: 1.1,
-        margin: 0,
-      }}
-    >
-      {text}
-    </h1>
+    <ComposerHeading sizes={sizes}>
+      <h1
+        style={{
+          fontFamily: UA_DISPLAY,
+          fontWeight: 600,
+          fontSize: sizes.titleSize,
+          color: INK,
+          lineHeight: 1.1,
+          margin: 0,
+        }}
+      >
+        {text}
+      </h1>
+    </ComposerHeading>
   )
 
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={pageStyle}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           {heading(
             isMetatask
               ? t('proposeTask.successMeta.heading')
@@ -353,7 +383,18 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
       {/* A REAL `<form>`: it is what makes Enter commit from a text field, and
           `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+        {/* THE BAND AND THE SLOT ARRIVE TOGETHER (#2995). This is the kit the
+            owner named as good — its chips were the highest of the nine because
+            nothing at all stood above them — so a reserved head it did not fill
+            would read as the regression. The success sheet above takes both, so
+            filing a proposal does not swap the band for a bare edge mid-flow. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {heading(t('proposeTask.pageTitle'))}
 
           {/* Who the task is for — the pick this whole page reskins on. */}

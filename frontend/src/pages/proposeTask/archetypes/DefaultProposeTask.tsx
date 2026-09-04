@@ -176,6 +176,7 @@ import {
 } from "../../../utils/factions";
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -334,7 +335,7 @@ export default function DefaultProposeTask({
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: TITLE_FACE, color: INK }}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={composerGround}>
           {/* The filing is told on the same sheet it was written on, rather
               than handing the proposer back to site chrome — the call
               `CovenProposeTask` makes for its own success screen. */}
@@ -392,7 +393,12 @@ export default function DefaultProposeTask({
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+        {/* `reserveHead` (#2995): na draws no masthead, so what it reserves is
+            bare ground. That is the point rather than a cost — the row can only
+            stand still if the kit with no band starts its column where the kit
+            with the tallest one does. Every kit's masthead, measured against the
+            number, is tabled in `useComposerSizes`. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={composerGround}>
           {/* The heading the six chassis kits spell, in na's own face — NOT
               `PageTitle`, and that is a reversal of this issue's "the furniture
               survives" line for two reasons the chassis states itself.
@@ -411,19 +417,21 @@ export default function DefaultProposeTask({
               refuses it by name) and neither na character form does. Same copy
               key, same tier, one less ornament: na's spectrum on this page is
               the sheet's own frame (#2520). */}
-          <h1
-            style={{
-              fontFamily: TITLE_FACE,
-              fontStyle: "italic",
-              fontWeight: 700,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-            }}
-          >
-            {t("proposeTask.pageTitle")}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: TITLE_FACE,
+                fontStyle: "italic",
+                fontWeight: 700,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t("proposeTask.pageTitle")}
+            </h1>
+          </ComposerHeading>
 
           {/* Who the task is for — and the control this page is dispatched by,
               so picking a real faction reskins the whole page to that kit. */}
