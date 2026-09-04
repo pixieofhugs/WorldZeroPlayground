@@ -8,10 +8,23 @@ Steps:
   2. Rename all ERA_N references to match (e.g. ERA_2, ERA_2_FACTIONS, etc.)
   3. Fill in every section marked with TODO
   4. Update backend/game_config.py:
-       - Add: from eras.era_N import ERA_N
-       - Add the key to _ERA_ATTRIBUTE_BY_CONFIG_KEY ("era_N": "ERA_N") -- this
-         is the registry every era-aware tool walks, step 7 included
-       - Change: CURRENT_ERA = ERA_N
+       - Add an `if name in ("ERA_N", "ERA_N_FACTIONS"):` branch to `__getattr__`,
+         copying the ERA_2 one. The lazy import is what keeps eras/ out of a
+         circular import with game_config; never import the era file at module
+         scope here.
+       - APPEND the key to _ERA_ATTRIBUTE_BY_CONFIG_KEY ("era_N": "ERA_N") --
+         this is the registry every era-aware tool walks, step 7 included, and
+         its order is the order the admin era selector offers. Append, never
+         insert.
+       - Do NOT assign CURRENT_ERA. Which era is LIVE is a database fact now
+         (ADR-0091, #827): the latest `Era` row's config_key chooses it, and
+         `services.era.rebind_live_era` binds it at start-up. Reassigning the
+         name would move nothing anyway -- `era: EraConfig = CURRENT_ERA`
+         defaults bind at def time, so the process would end up half-flipped.
+         A mod opens the new era from the admin page (Admin > Era), or an
+         operator runs `python scripts/era_reset.py USERNAME --yes` from a
+         shell. Adding the era file makes it *offerable*; it does not make it
+         live, and nothing about this step touches production's ruleset.
   5. Run: python seed.py --env dev
   6. Run tests: pytest tests/unit/test_era_config.py
   7. Write this era's rules module (#2709). It is not optional:
