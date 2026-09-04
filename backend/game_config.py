@@ -354,11 +354,14 @@ class EraConfig:
     # era names must be a slug that era actually configures, since it is an FK
     # onto a Faction row — and, since ADR-0087, that slug can only be `na`.
     #
-    # Read from the era being *opened*: apply_era_reset takes `era: EraConfig =
-    # CURRENT_ERA` and scripts/era_reset.py leaves that default in place, the
-    # rollover procedure being "point CURRENT_ERA at the next era, then run the
-    # script". So this is the incoming era's answer to where the outgoing era's
+    # Read from the era being *opened*. Both doors pass it explicitly:
+    # `services.admin_service.roll_into_era` hands `apply_era_reset` the config a
+    # mod picked, and `scripts/era_reset.py` hands it the one the live `Era` row
+    # names. So this is the incoming era's answer to where the outgoing era's
     # players land — consistent with reset_score/reset_level/reset_faction.
+    # (Before #827 the procedure was "point CURRENT_ERA at the next era, then run
+    # the script", and the default argument was what carried it. The database
+    # chooses now; the default is only the fallback for callers that pass none.)
     reset_faction_slug: str = UNAFFILIATED_FACTION_SLUG
 
     # Metatask-per-praxis cap (defaulted so bare EraConfig constructions stay valid).
@@ -600,9 +603,12 @@ def era_config_for_key(config_key: str) -> EraConfig | None:
 # ``CURRENT_ERA`` is a **stable object identity**, not a name that gets
 # reassigned, and this is the whole trick — so it is worth the paragraph.
 #
-# 157 sites under ``backend/`` are written ``era: EraConfig = CURRENT_ERA``. A
-# default argument is evaluated once, when the ``def`` executes, so each of
-# those functions holds the *object* for the life of the process. Four more read
+# Every service that takes a ruleset is written ``era: EraConfig = CURRENT_ERA``
+# — 114 sites under ``backend/`` at the time of writing, countable with
+# ``grep -rn --include='*.py' "era: EraConfig = CURRENT_ERA" backend/``, and the
+# number is expected to drift. A default argument is evaluated once, when the
+# ``def`` executes, so each of those functions holds the *object* for the life
+# of the process. Four more read
 # ``CURRENT_ERA`` as a module global inside a function body — which is the
 # *importing* module's global, not this one's. Assigning
 # ``game_config.CURRENT_ERA = other`` moves neither: it rebinds one name in one
@@ -610,10 +616,10 @@ def era_config_for_key(config_key: str) -> EraConfig | None:
 # is half-flipped, which is worse than either era.
 #
 # So the flip refreshes the fields of the one instance every holder already
-# points at. All 157 call sites stay untouched and become correct at once — and
-# the alternative, threading ``era=`` through 157 signatures where an omitted
-# argument silently serves the compile-time era, is the refactor the #827 ruling
-# declined for exactly that reason.
+# points at. Every one of those call sites stays untouched and becomes correct
+# at once — and the alternative, threading ``era=`` through all of them where an
+# omitted argument silently serves the compile-time era, is the refactor the
+# #827 ruling declined for exactly that reason.
 #
 # Writing through a frozen dataclass is the same move ``__post_init__`` already
 # makes above. The wall exists to stop *callers* mutating a config, not to stop
@@ -647,8 +653,8 @@ def bind_live_era(era: EraConfig) -> EraConfig:
 
     **Per-key overwrite, never empty-then-fill.** The refresh below must not be
     ``clear()`` followed by ``update()``: between those two statements the live
-    era would be an ``EraConfig`` with no attributes at all, and every one of the
-    157 default arguments points at that object. FastAPI runs sync dependencies
+    era would be an ``EraConfig`` with no attributes at all, and every one of
+    those default arguments points at that object. FastAPI runs sync dependencies
     and sync route handlers in a threadpool and the GIL is released between
     bytecodes, so a worker thread can read the object mid-refresh and raise
     ``AttributeError`` on a field that exists — an inexplicable failure under

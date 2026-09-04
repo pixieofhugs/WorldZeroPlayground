@@ -43,9 +43,11 @@ selection.
 
 ### The measurement that settled the shape
 
-`era: EraConfig = CURRENT_ERA` appears **157** times under `backend/`. The rejected
-alternative — a request-scoped `Depends(get_current_era)` with `era=` threaded down
-explicitly — makes every one of those 157 a silent trap until it is stripped: a caller
+`era: EraConfig = CURRENT_ERA` appears **114** times under `backend/`
+(`grep -rn --include='*.py' "era: EraConfig = CURRENT_ERA" backend/`; the number drifts,
+the shape does not). The rejected alternative — a request-scoped
+`Depends(get_current_era)` with `era=` threaded down explicitly — makes every one of them
+a silent trap until it is stripped: a caller
 that omits `era=` quietly serves the compile-time era, and nothing fails. It buys
 correctness under a scale-out that ADR-0073 forbids, at the cost of the largest refactor
 on the board.
@@ -57,20 +59,28 @@ on the board.
 Resolved through the existing `era_config_for_key`. Bound at exactly two moments, and
 there is no third:
 
-- **process start-up**, from the app's lifespan, after the single-instance lock is held;
-- **the end of `apply_era_reset`**, the instant a rollover appends the new row.
+- **process start-up**, from the app's lifespan, after the single-instance lock is held —
+  and from `seed.py`, which `start.sh` runs on every deploy and whose faction mirror has
+  to reflect the era the database says is live. Both ask the database which era that is,
+  through `services.era.rebind_live_era`.
+- **immediately after a rollover's commit**, through
+  `services.era.commit_and_bind_live_era`, which takes the era config the rollover
+  already holds. Not before the commit and not inside `apply_era_reset`: that function
+  only flushes, and binding a process-wide object to a transaction that may still roll
+  back is how the process and the database end up disagreeing about which era the game is
+  in.
 
-`services.era.rebind_live_era` is the only function that performs it, and
-`tests/unit/test_live_era_binding.py` fails if a second site calls the primitive.
+`services/era.py` is the only module that reaches the primitive, and
+`tests/unit/test_live_era_binding.py` fails if a site outside it calls `bind_live_era`.
 
-Services keep taking `era: EraConfig`. Not one of the 157 call sites changes.
+Services keep taking `era: EraConfig`. Not one of those call sites changes.
 
 ### 2. `CURRENT_ERA` is a stable object identity whose fields are refreshed in place
 
 This is the part that is easy to get wrong, and the ruling's own phrasing — "rebind the
 name" — does not survive contact with Python.
 
-A default argument is evaluated **once, when the `def` executes**. Every one of those 157
+A default argument is evaluated **once, when the `def` executes**. Every one of those
 functions therefore holds the *object* `CURRENT_ERA` named at import time, for the life of
 the process. Four further sites read `CURRENT_ERA` as a module global inside a function
 body, which resolves against the *importing* module's globals, not `game_config`'s.
@@ -81,12 +91,12 @@ either era, and is the same failure mode #2708 found from the other direction.
 
 So the live era is one `EraConfig` instance, distinct from every era file's own config,
 whose fields are overwritten **per key** when the era changes. Every holder — default
-argument, module global, closure — sees the new ruleset at once, and the "157 call sites
+argument, module global, closure — sees the new ruleset at once, and the "call sites
 untouched and correct" the ruling asked for is actually true rather than merely stated.
 
 Per key, and never `clear()`-then-refill. That distinction is the whole safety of the
 mechanism, so it is a decision and not an implementation detail: an empty-then-fill refresh
-leaves the live era with **no attributes** between two statements, and every one of the 157
+leaves the live era with **no attributes** between two statements, and every one of those
 holders points at that object. FastAPI runs sync dependencies and sync route handlers in a
 threadpool and the GIL is released between bytecodes, so a worker thread can read the object
 mid-refresh and raise `AttributeError` on a field that exists — under load, during the one
@@ -161,9 +171,16 @@ a constraint the CRDT praxis rooms already pay for rather than adding a new one.
 constraint is ever lifted, this record must be revisited before the second worker starts —
 two workers would drift onto different eras with nothing to notice.
 
-**`scripts/era_reset.py` still works and is now the second-best door.** It rolls into
-whatever the compile-time era is, which is what it always did. The admin control is the one
-that can choose.
+**`scripts/era_reset.py` still works and is now the second-best door.** It re-opens
+whichever era **the latest `Era` row** names — a new season under the same ruleset — which
+is what it always did back when the compile-time era and the live era were the same thing.
+It cannot choose a different one; the admin control is the one that can choose. If that
+row's `config_key` resolves to no era file it refuses outright rather than falling back to
+the compile-time era, because "re-open the live era" and "roll the game back to Era 1" are
+not the same operation. Note the deliberate asymmetry: the route refuses the era that is
+already live (`ERA_ALREADY_LIVE`), because from the admin page that is a mis-click — a full
+destructive reset landing on the ruleset the game was already on — while from a shell,
+behind `--yes`, it is the operation asked for by name.
 
 **One more thing an era file must get right.** A new era is *appended* to
 `_ERA_ATTRIBUTE_BY_CONFIG_KEY`, never inserted: that dict's order is the order the selector

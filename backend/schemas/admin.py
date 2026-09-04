@@ -223,7 +223,7 @@ class EraOption(WireModel):
 
 
 class EraRollIn(WireModel):
-    """``POST /admin/eras/roll`` — the era to roll the game into.
+    """``PUT /admin/eras/live`` — the era to roll the game into.
 
     Deliberately just the key. A rollover has no options: the resets it performs
     are the *incoming* era's flags (ADR-0042), so anything else this body could

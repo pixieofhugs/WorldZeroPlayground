@@ -60,8 +60,8 @@ Read only what your task needs.
   lever; the hand on it moved off a code edit.
 - `CURRENT_ERA` is a stable **object identity**, refreshed in place. Never
   reassign `game_config.CURRENT_ERA` — a default argument binds at `def` time,
-  so that moves one name and leaves 157 call sites on the old era. The only
-  rebinding site is `services.era.rebind_live_era`, and a test keeps it at one.
+  so that moves one name and leaves every call site on the old era. The only
+  module that rebinds it is `services/era.py`, and a test keeps it there.
 - Services take `era: EraConfig = CURRENT_ERA`. Never import `CURRENT_ERA`
   inside a service body.
 - Never hardcode a value that lives in `EraConfig`. Read `era.*`.

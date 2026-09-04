@@ -2364,7 +2364,7 @@
         "type": "object"
       },
       "EraRollIn": {
-        "description": "``POST /admin/eras/roll`` — the era to roll the game into.\n\nDeliberately just the key. A rollover has no options: the resets it performs\nare the *incoming* era's flags (ADR-0042), so anything else this body could\ncarry would be a second place to state a rule the era file already owns.",
+        "description": "``PUT /admin/eras/live`` — the era to roll the game into.\n\nDeliberately just the key. A rollover has no options: the resets it performs\nare the *incoming* era's flags (ADR-0042), so anything else this body could\ncarry would be a second place to state a rule the era file already owns.",
         "properties": {
           "config_key": {
             "title": "Config Key",

@@ -3,8 +3,9 @@
 Seam under test: ``game_config.CURRENT_ERA`` as an *object identity* rather than
 a name, and ``game_config.bind_live_era`` as the one lever that moves it.
 
-Why the identity and not the name. 157 sites under ``backend/`` are written
-``era: EraConfig = CURRENT_ERA``. A default argument is evaluated once, when the
+Why the identity and not the name. Every service that takes a ruleset is written
+``era: EraConfig = CURRENT_ERA`` — 114 sites under ``backend/`` when this was
+written, and the number drifts. A default argument is evaluated once, when the
 ``def`` executes — so the function holds the **object**, not the name, for the
 life of the process. Four more sites read ``CURRENT_ERA`` as a module global
 inside a function body, which is the importing module's global, not
@@ -35,7 +36,7 @@ from game_config import (
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
-# A default argument bound at import time, exactly as the 157 real ones are.
+# A default argument bound at import time, exactly as the real ones are.
 # Module level on purpose: binding it inside a test would evaluate the default
 # *after* a flip and prove nothing.
 def _service_reading_the_default(era: EraConfig = CURRENT_ERA) -> str:
@@ -107,7 +108,8 @@ def test_binding_the_live_era_to_itself_is_a_no_op():
 #
 # ``bind_live_era`` must not ``clear()`` the live ``__dict__`` and then refill
 # it. Between those two statements the live era is an ``EraConfig`` with no
-# attributes, and all 157 default arguments point at that object — so a reader
+# attributes, and every one of those default arguments points at that object —
+# so a reader
 # that touches it in the window gets ``AttributeError`` on a field that exists.
 # FastAPI runs sync dependencies and sync handlers in a threadpool and the GIL
 # is released between bytecodes, so that reader is a real one.
@@ -168,8 +170,8 @@ def test_the_refresh_overwrites_keys_rather_than_emptying_the_object():
 
 def test_the_live_era_is_still_a_real_era_config():
     """It has to survive everything an ``EraConfig`` is put through — the type
-    annotation on 157 parameters, and ``dataclasses.replace`` in the tests that
-    build variant rulesets."""
+    annotation on every one of those parameters, and ``dataclasses.replace`` in
+    the tests that build variant rulesets."""
     assert isinstance(CURRENT_ERA, EraConfig)
     assert dataclasses.is_dataclass(CURRENT_ERA)
     variant = dataclasses.replace(CURRENT_ERA, max_task_signups=99)

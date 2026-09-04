@@ -110,9 +110,9 @@ async def commit_and_bind_live_era(
     first means the worst case is a durable rollover the process has not
     noticed yet, which the next restart fixes.
 
-    This is the one place a service owns its own commit, against the repo's
-    "services flush, the router's ``get_db`` commits" rule
-    (``SPEC-backend-architecture.md``). It is deliberate and it is narrow: the
+    This is the one place a service owns its own commit, against the rule
+    ``db.get_db`` states — services flush, the router's dependency owns the
+    single per-request commit. It is deliberate and it is narrow: the
     router cannot own this boundary without also owning *which* era to bind,
     which is the rollover's decision, and ``get_db``'s commit lands after the
     handler has already returned — too late for the handler to bind behind it.
