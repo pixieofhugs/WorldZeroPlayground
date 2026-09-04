@@ -138,6 +138,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -369,7 +370,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: CHROME, color: INK }}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <h1
             style={{
               fontFamily: DISPLAY,
@@ -440,24 +441,20 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
           reserveHead
           ground={ground}
         >
-          {/* The two reserved heights (#2995). This band is 78px and the
-              Ephemerists' is 96, so the chips sat lowest here and highest on the
-              two kits that draw no band — on a page that reskins live as they
-              are clicked. The band is untouched; the slot under it is the
-              chassis'. */}
-          <h1
-            style={{
-              fontFamily: DISPLAY,
-              fontWeight: 600,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            {t('proposeTask.pageTitle')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('proposeTask.pageTitle')}
+            </h1>
+          </ComposerHeading>
 
           {/* Who the task is for — and the control this whole page is dispatched
               by, so the row wearing the cast band is the reason this file is on

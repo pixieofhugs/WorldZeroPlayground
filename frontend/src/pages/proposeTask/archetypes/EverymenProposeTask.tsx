@@ -153,6 +153,7 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -382,39 +383,32 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
 
   /** The page's own heading, beside the union's turning cog. */
   const stage = (
-    /* `minHeight` is the chassis' heading floor (#2995): the chips are the
-       section directly under this block now, so its height is the last thing
-       between them and the sheet's edge. The cog is 40px on desktop and 32 on
-       the phone, both inside the floor. */
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-lg)',
-        minHeight: sizes.headingHeight,
-      }}
-    >
-      <EverymenCog
-        size={STAGE_COG[factor]}
-        fill={RED}
-        hub={PAPER}
-        spin="forward"
-        duration={COG_PERIOD}
-      />
-      <h1
-        style={{
-          fontFamily: BEBAS,
-          fontSize: sizes.titleSize,
-          textTransform: 'uppercase',
-          letterSpacing: '0.01em',
-          lineHeight: 0.96,
-          color: INK,
-          margin: 0,
-        }}
-      >
-        {t('proposeTask.pageTitle')}
-      </h1>
-    </div>
+    /* Inside the chassis' heading floor (#2995): the chips are the section
+       directly under this block now. */
+    <ComposerHeading sizes={sizes}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+        <EverymenCog
+          size={STAGE_COG[factor]}
+          fill={RED}
+          hub={PAPER}
+          spin="forward"
+          duration={COG_PERIOD}
+        />
+        <h1
+          style={{
+            fontFamily: BEBAS,
+            fontSize: sizes.titleSize,
+            textTransform: 'uppercase',
+            letterSpacing: '0.01em',
+            lineHeight: 0.96,
+            color: INK,
+            margin: 0,
+          }}
+        >
+          {t('proposeTask.pageTitle')}
+        </h1>
+      </div>
+    </ComposerHeading>
   )
 
   const rootStyle = {
@@ -428,7 +422,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={rootStyle}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           {stage}
           <p
             style={{

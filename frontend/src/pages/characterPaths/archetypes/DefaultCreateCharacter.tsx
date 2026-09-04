@@ -87,6 +87,7 @@ import PortraitPicker from '../PortraitPicker'
 import { namedField } from '../characterFields'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerPage,
   ComposerRule,
   ComposerSection,
@@ -197,26 +198,26 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
         {/* `reserveHead` (#2995): na draws no masthead, so what it reserves is
-            bare ground at the height the Ephemerists' plate takes. That is the
-            point rather than a cost — this page reskins live as a calling is
-            picked, and the picker can only stand still if the kit with no band
-            starts its column where the kit with the tallest one does. */}
+            bare ground. That is the point rather than a cost — this page reskins
+            live as a calling is picked, and the picker can only stand still if
+            the kit with no band starts its column where the kit with the tallest
+            one does. The numbers are in `useComposerSizes`. */}
         <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={composerGround}>
-          <h1
-            style={{
-              fontFamily: TITLE_FACE,
-              fontStyle: 'italic',
-              fontWeight: 700,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-              // The chassis' heading floor (#2995), the second shared term.
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            {t('createCharacter.heading')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: TITLE_FACE,
+                fontStyle: 'italic',
+                fontWeight: 700,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </ComposerHeading>
 
           {/* The life being written, live — FIRST in the sheet at both widths,
               which is the whole of defect 2. The card dispatches its own faction

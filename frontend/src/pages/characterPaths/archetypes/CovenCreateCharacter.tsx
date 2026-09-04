@@ -150,6 +150,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -367,9 +368,8 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
         {/* `reserveHead` (#2995). This page reskins live on the calling being
             chosen, so the picker moved under the cursor here for the same
             reason it did on Propose a Task: each kit started its column under a
-            masthead of its own height. This band — sigil, wordmark, braid — is
-            80px against the 96 the Ephemerists' plate takes. It is untouched;
-            only the slot it sits in has a floor now. */}
+            masthead of its own height. This band is untouched; only the slot it
+            sits in has a floor now, and the numbers are in `useComposerSizes`. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -381,21 +381,20 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
               status pentacle away for exactly this reason — it was "a second one
               under the sigil in the masthead directly above". The masthead is
               this sheet's one faction mark; the cat is a watermark, not a badge. */}
-          <h1
-            style={{
-              fontFamily: DISPLAY,
-              fontWeight: 600,
-              fontSize: sizes.titleSize,
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-              // The chassis' heading floor (#2995), the second shared term
-              // between the sheet's edge and the picker further down.
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            {t('createCharacter.heading')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: sizes.titleSize,
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </ComposerHeading>
 
           {/* The life being written, live. The card dispatches its own faction
               dress, so it is already wearing this slip the moment the calling is

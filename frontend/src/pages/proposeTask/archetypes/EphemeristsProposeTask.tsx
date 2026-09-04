@@ -105,6 +105,7 @@ import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeT
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -362,7 +363,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={pageStyle}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
             <StatusMark />
             <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
@@ -392,12 +393,8 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* THIS KIT IS THE CEILING BOTH TIMES (#2995). The sky band is 84px and
-            the cornice under it another 12, which is the tallest head any
-            propose kit draws and therefore the number `headHeight` reserves —
-            so nothing here pads out, and every other kit meets this. The stage
-            mark is 44px against a 38.4px line box, which is the arithmetic
-            `headingHeight` was measured on. Both bands are untouched. */}
+        {/* THIS KIT IS THE CEILING FOR THE RESERVED HEAD (#2995) — see the
+            table in `useComposerSizes`. Nothing here is shortened to reach it. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -405,19 +402,22 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
           reserveHead
           ground={ground}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-lg)',
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            <StatusMark />
-            <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
-              {t('proposeTask.pageTitle')}
-            </h1>
-          </div>
+          <ComposerHeading sizes={sizes}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+              <StatusMark />
+              <h1
+                style={{
+                  fontFamily: CAPS,
+                  fontSize: sizes.titleSize,
+                  color: INK,
+                  lineHeight: 1.2,
+                  margin: 0,
+                }}
+              >
+                {t('proposeTask.pageTitle')}
+              </h1>
+            </div>
+          </ComposerHeading>
 
           {/* Who the task is FOR — and the control this whole page reskins on.
               The create plate's calling picker, wrapped as one radiogroup so the

@@ -137,6 +137,7 @@ import {
 } from '../useCreateCharacter'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -336,9 +337,8 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           submits through one and so must this: it is what makes Enter commit
           from a text field. `handleSubmit` calls `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995): the nameplate is 45px on desktop and 37 on the
-            phone, against the 96/80 the tallest kit takes. The plate itself is
-            untouched — the reserved box says where the column starts. */}
+        {/* `reserveHead` (#2995): the nameplate is untouched — the reserved box
+            says where the column starts. Numbers in `useComposerSizes`. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}
@@ -347,37 +347,31 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
           ground={ground}
         >
           {/* The stage: the union's cog turning beside the page's own question,
-              which is the heading this surface has always asked. The floor is
-              the chassis' (#2995); the 40px cog sits inside it. */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-lg)',
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            <EverymenCog
-              size={STAGE_COG[factor]}
-              fill={RED}
-              hub={PAPER}
-              spin="forward"
-              duration={COG_PERIOD}
-            />
-            <h1
-              style={{
-                fontFamily: BEBAS,
-                fontSize: sizes.titleSize,
-                textTransform: 'uppercase',
-                letterSpacing: '0.01em',
-                lineHeight: 0.96,
-                color: INK,
-                margin: 0,
-              }}
-            >
-              {t('createCharacter.heading')}
-            </h1>
-          </div>
+              which is the heading this surface has always asked. */}
+          <ComposerHeading sizes={sizes}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+              <EverymenCog
+                size={STAGE_COG[factor]}
+                fill={RED}
+                hub={PAPER}
+                spin="forward"
+                duration={COG_PERIOD}
+              />
+              <h1
+                style={{
+                  fontFamily: BEBAS,
+                  fontSize: sizes.titleSize,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.01em',
+                  lineHeight: 0.96,
+                  color: INK,
+                  margin: 0,
+                }}
+              >
+                {t('createCharacter.heading')}
+              </h1>
+            </div>
+          </ComposerHeading>
 
           {/* The life being enlisted, live. The card dispatches its own faction
               dress, so it is already wearing this kit the moment the calling is

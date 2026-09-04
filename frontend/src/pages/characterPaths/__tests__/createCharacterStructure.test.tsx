@@ -157,33 +157,47 @@ describe('the field set is the same on every kit, at both widths', () => {
  * is that every kit reads the SAME one, which is the property that makes the
  * row stand still.
  *
- * WHAT THIS CANNOT PROVE, AND IT IS MORE HERE THAN ON THE PROPOSE PAGE. The
- * picker sits LATE on this surface — six blocks below the sheet's edge — so its
- * offset is the sum of everything above it, and the per-kit field metrics in
- * between (padding, `rows` on the prose boxes) are each kit's dress. This
- * proves the masthead term is reserved and shared; the residual is measured by
- * eye and reported on the PR rather than regularized away.
+ * WHAT THIS CANNOT PROVE, AND IT IS MORE HERE THAN ON THE PROPOSE PAGE. Two
+ * things. `renderToStaticMarkup` has no layout, so "the reserved head is at
+ * least as tall as every kit's actual masthead" — the property the fix turns on
+ * — is a RENDERED SWEEP question that stays green here whatever the number is.
+ * And the picker sits LATE on this surface, six blocks below the sheet's edge,
+ * so its offset is the sum of everything above it and the per-kit field metrics
+ * in between (border weight, the name field's tier, textarea line-height) are
+ * each kit's dress. This proves the two shared terms are reserved and spelled
+ * once; the residual is measured and reported on the PR rather than regularized
+ * away.
  */
 describe('the masthead slot is reserved, and by one number (#2995)', () => {
-  const headStyles = (html: string) =>
-    [...html.matchAll(/<div data-composer-head="" style="([^"]*)"/g)].map(([, style]) => style)
+  const boxes = (html: string, hook: 'head' | 'heading') =>
+    [...html.matchAll(new RegExp(`<div data-composer-${hook}="" style="([^"]*)"`, 'g'))].map(
+      ([, style]) => style,
+    )
 
   it.each(CASES)('%s on %s: the sheet reserves its head', (_name, slug, width) => {
-    expect(headStyles(renderSkin(slug, width))).toHaveLength(1)
+    expect(boxes(renderSkin(slug, width), 'head')).toHaveLength(1)
   })
 
-  it.each(WIDTHS)('every kit reserves the same head on %s', (width) => {
-    const heads = ARCHETYPES.map(
-      (slug) => [slug || 'na', headStyles(renderSkin(slug, width))[0]] as const,
-    )
-    const values = new Set(heads.map(([, style]) => style))
-    expect(
-      values.size,
-      `nine kits, one reserved head — got ${heads.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
-    ).toBe(1)
-    expect([...values][0], 'the head is a reserved height, not an empty box').toMatch(
-      /min-height:\d+px/,
-    )
+  it.each(CASES)('%s on %s: and the heading block has its floor', (_name, slug, width) => {
+    // `ComposerHeading` is the only thing that spells the floor, so a kit that
+    // hand-rolled its own heading box has none and fails here.
+    expect(boxes(renderSkin(slug, width), 'heading')).toHaveLength(1)
+  })
+
+  it.each(WIDTHS)('every kit reserves the same head and floor on %s', (width) => {
+    for (const hook of ['head', 'heading'] as const) {
+      const found = ARCHETYPES.map(
+        (slug) => [slug || 'na', boxes(renderSkin(slug, width), hook)[0]] as const,
+      )
+      const values = new Set(found.map(([, style]) => style))
+      expect(
+        values.size,
+        `nine kits, one ${hook} — got ${found.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
+      ).toBe(1)
+      expect([...values][0], `the ${hook} is a reserved height, not an empty box`).toMatch(
+        /min-height:\d+px/,
+      )
+    }
   })
 })
 

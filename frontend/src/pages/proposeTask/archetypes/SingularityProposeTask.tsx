@@ -112,6 +112,7 @@ import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -403,43 +404,37 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   }
 
   const heading = (text: string) => (
-    /* `minHeight` is the chassis' heading floor (#2995) — the second term in
-       the offset the chip row sits at, and the same number on all nine kits.
-       The prompt and the title keep their shared baseline; the floor only says
-       how far the block reaches before the next region starts. */
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        gap: 'var(--space-md)',
-        minHeight: sizes.headingHeight,
-      }}
-    >
-      <span
-        aria-hidden
-        style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}
-      >
-        {PROMPT}
-      </span>
-      <h1
-        style={{
-          fontFamily: FACE,
-          fontSize: sizes.titleSize,
-          color: BRIGHT,
-          textShadow: HALO_GREEN,
-          lineHeight: 1.2,
-          margin: 0,
-        }}
-      >
-        {text}
-      </h1>
-    </div>
+    /* Inside the chassis' heading floor (#2995). The prompt and the title keep
+       their shared baseline; the floor only says how far the block reaches
+       before the next region starts. */
+    <ComposerHeading sizes={sizes}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
+        <span
+          aria-hidden
+          style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}
+        >
+          {PROMPT}
+        </span>
+        <h1
+          style={{
+            fontFamily: FACE,
+            fontSize: sizes.titleSize,
+            color: BRIGHT,
+            textShadow: HALO_GREEN,
+            lineHeight: 1.2,
+            margin: 0,
+          }}
+        >
+          {text}
+        </h1>
+      </div>
+    </ComposerHeading>
   )
 
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={pageStyle}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead ground={ground}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
             <span
               aria-hidden
@@ -507,11 +502,9 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
           Enter commit from a text field, and `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995). The window bar is 31px; the tallest head on
-            this page is 96, so this sheet pads out to it and the key row stops
-            moving when the pick changes. The bar keeps its own height — the
-            reserved box says where the column STARTS, never how tall a kit's
-            chrome is. */}
+        {/* `reserveHead` (#2995). The bar keeps its own height — the reserved
+            box says where the column STARTS, never how tall a kit's chrome is.
+            The numbers are tabled in `useComposerSizes`. */}
         <ComposerSheet
           sizes={sizes}
           style={sheetStyle}

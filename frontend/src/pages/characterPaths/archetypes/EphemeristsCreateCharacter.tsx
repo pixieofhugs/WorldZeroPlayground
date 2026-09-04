@@ -97,6 +97,7 @@ import {
 import {
   ComposerFooter,
   ComposerGround,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -319,10 +320,8 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-      {/* THIS KIT IS THE CEILING (#2995): the sky band is 84px on desktop and
-          the cornice under it 12, which is the tallest head any kit on either
-          composer surface draws and therefore the number `headHeight` reserves.
-          Nothing here pads out; every other kit meets this. */}
+      {/* THIS KIT IS THE CEILING FOR THE RESERVED HEAD (#2995) — see the table
+          in `useComposerSizes`. Nothing here is shortened to reach it. */}
       <ComposerSheet
         sizes={sizes}
         style={sheetStyle}
@@ -331,22 +330,23 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
         ground={ground}
       >
         {/* The stage: the ankh cartouche beside the page's own question, which
-            is the heading this surface has always asked. The 44px mark does not
-            fit inside a 38.4px line box, which is the arithmetic the chassis'
-            `headingHeight` was measured on. */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-lg)',
-            minHeight: sizes.headingHeight,
-          }}
-        >
-          <StatusMark />
-          <h1 style={{ fontFamily: CAPS, fontSize: sizes.titleSize, color: INK, lineHeight: 1.2, margin: 0 }}>
-            {t('createCharacter.heading')}
-          </h1>
-        </div>
+            is the heading this surface has always asked. */}
+        <ComposerHeading sizes={sizes}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+            <StatusMark />
+            <h1
+              style={{
+                fontFamily: CAPS,
+                fontSize: sizes.titleSize,
+                color: INK,
+                lineHeight: 1.2,
+                margin: 0,
+              }}
+            >
+              {t('createCharacter.heading')}
+            </h1>
+          </div>
+        </ComposerHeading>
 
         {/* The life being inscribed, live. The card dispatches its own faction
             dress, so it is already wearing this plate the moment the calling is

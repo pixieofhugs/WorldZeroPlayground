@@ -124,6 +124,23 @@ interface CardMastheadProps {
   leading?: ReactNode;
   /** The band's own paint — ground, rule, ink, height. All of it the skin's. */
   style?: CSSProperties;
+  /**
+   * Draw the band as ORNAMENT: no link, no hover, `aria-hidden`, same paint.
+   *
+   * THE BAND IS A LINK ON A CARD BECAUSE A CARD IS A PLACE YOU LEAVE FROM
+   * (#2167) — three regions, three destinations. A COMPOSER is the opposite: it
+   * is a `<form>` holding a draft, and an anchor inside it is a way to lose that
+   * draft. Mounted live it would be the first focusable thing on the sheet, one
+   * Tab from the top, and a click on the wordmark would navigate to
+   * `/factions/<slug>` and discard whatever had been typed, with no confirm.
+   *
+   * So the composer mounts this arm instead, and it matches what every other
+   * composer masthead already is: `ComposerMasthead` is `aria-hidden` and inert
+   * by construction, and a faction's ornament may not announce itself ahead of
+   * the page's first real content. The paint, the anatomy and the centring are
+   * identical — only the anchor and its two hover handlers stand down.
+   */
+  inert?: boolean;
   /** The wordmark, in the faction's hand. */
   children: ReactNode;
 }
@@ -134,65 +151,14 @@ export default function CardMasthead({
   markSize = MARK,
   leading,
   style,
+  inert = false,
   children,
 }: CardMastheadProps) {
-  return (
-    <Link
-      to={`/factions/${slug}`}
-      /* The band's text IS the faction's name, so unlabelled this announces as
-         "Cozy Coven, link" — the name without the destination. The label keeps
-         the name and says where it goes; it names the faction, never the
-         furniture. */
-      aria-label={i18n.t("feed:taskCard.mastheadLink", { faction: factionName(slug) })}
-      /* The hover affordance, as an inline handler because the kit's paint is
-         inline and `index.css` has no hook for this band (a class would be a
-         style decision this component does not own). Underline is the platform's
-         own link tell and takes `currentColor`, so it costs no token and reads
-         in both themes.
-
-         ponytail: the ceiling is that a pointer is the only thing that lights
-         it — `:focus-visible` cannot be expressed inline, so keyboard users get
-         the user agent's focus ring instead (nothing in `index.css` suppresses
-         it). If the band ever wants a paint of its own on hover or focus, that
-         is a `frontend-style` change: one class in `index.css` replaces both
-         handlers. */
-      onMouseEnter={(e) => {
-        e.currentTarget.style.textDecoration = "underline";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.textDecoration = "none";
-      }}
-      data-card-masthead={slug}
-      style={{
-        position: "relative",
-        zIndex: 2,
-        display: "grid",
-        gridTemplateColumns: "1fr auto 1fr",
-        alignItems: "center",
-        gap: "var(--space-sm)",
-        padding: "var(--space-sm) var(--space-lg)",
-        /* Ahead of the skin's own `style`, so a band that sets its ink still
-           wins and one that does not inherits the card's — either way, never
-           the user agent's link blue over a hand-set wordmark. */
-        color: "inherit",
-        textDecoration: "none",
-        /* THE BAND DOES NOT TAKE THE ROW'S SLACK. `.task-card-row` hands a
-           card's spare height down a chain that ends at the one anchor marked
-           `data-card-link` (index.css, the equal-height row), and this band is
-           not it. That was not always the selector: the chain used to end at
-           `a[href]`, so the moment this element became an anchor (#2167) it
-           joined the chain and stretched beside the body link, splitting the
-           slack between them — this pin was the correction. #2380 moved the
-           chain onto the hook, so the pin now restates the initial value
-           instead. It stays as the belt: a band is as tall as its own content
-           whatever a later rule decides, and only `flex-grow` is pinned, so
-           shrink and basis keep the values the band had as a plain block.
-           `frontend/src/pages/tasks/__tests__/equalHeightRow.test.tsx` holds
-           the chain to a single anchor. */
-        flexGrow: 0,
-        ...style,
-      }}
-    >
+  /* The anatomy, drawn once for both arms: the mark's fixed slot, the centred
+     wordmark, the empty right gutter that keeps the centre column on the band's
+     own centreline. Only the ELEMENT around it changes. */
+  const anatomy = (
+    <>
       <span
         style={{
           justifySelf: "start",
@@ -226,6 +192,86 @@ export default function CardMasthead({
       {/* The right gutter. Empty by design — it is what makes the centre column
           land on the band's centreline rather than beside the mark. */}
       <span aria-hidden="true" />
+    </>
+  );
+
+  /* The band's geometry and the skin's paint, shared by both arms so the inert
+     one cannot drift from the linked one. `color: inherit` and the flex pin are
+     the linked arm's own notes, one block down. */
+  const band: CSSProperties = {
+    position: "relative",
+    zIndex: 2,
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: "var(--space-sm)",
+    /* Ahead of the skin's own `style`, so a band that sets its ink still wins
+       and one that does not inherits the card's — either way, never the user
+       agent's link blue over a hand-set wordmark. */
+    color: "inherit",
+    textDecoration: "none",
+    /* THE BAND DOES NOT TAKE THE ROW'S SLACK. `.task-card-row` hands a card's
+       spare height down a chain that ends at the one anchor marked
+       `data-card-link` (index.css, the equal-height row), and this band is not
+       it. That was not always the selector: the chain used to end at `a[href]`,
+       so the moment this element became an anchor (#2167) it joined the chain
+       and stretched beside the body link, splitting the slack between them —
+       this pin was the correction. #2380 moved the chain onto the hook, so the
+       pin now restates the initial value instead. It stays as the belt: a band
+       is as tall as its own content whatever a later rule decides, and only
+       `flex-grow` is pinned, so shrink and basis keep the values the band had as
+       a plain block. `frontend/src/pages/tasks/__tests__/equalHeightRow.test.tsx`
+       holds the chain to a single anchor. */
+    flexGrow: 0,
+    ...style,
+  };
+
+  if (inert) {
+    return (
+      /* No anchor, no hover handlers, `aria-hidden`: see the `inert` prop. The
+         padding is spelled here rather than in `band` for the one reason the
+         linked arm's is spelled at its own call — a skin's `style` must be able
+         to override it, and `band` is spread into both. */
+      <div
+        aria-hidden="true"
+        data-card-masthead={slug}
+        style={{ padding: "var(--space-sm) var(--space-lg)", ...band }}
+      >
+        {anatomy}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      to={`/factions/${slug}`}
+      /* The band's text IS the faction's name, so unlabelled this announces as
+         "Cozy Coven, link" — the name without the destination. The label keeps
+         the name and says where it goes; it names the faction, never the
+         furniture. */
+      aria-label={i18n.t("feed:taskCard.mastheadLink", { faction: factionName(slug) })}
+      /* The hover affordance, as an inline handler because the kit's paint is
+         inline and `index.css` has no hook for this band (a class would be a
+         style decision this component does not own). Underline is the platform's
+         own link tell and takes `currentColor`, so it costs no token and reads
+         in both themes.
+
+         ponytail: the ceiling is that a pointer is the only thing that lights
+         it — `:focus-visible` cannot be expressed inline, so keyboard users get
+         the user agent's focus ring instead (nothing in `index.css` suppresses
+         it). If the band ever wants a paint of its own on hover or focus, that
+         is a `frontend-style` change: one class in `index.css` replaces both
+         handlers. */
+      onMouseEnter={(e) => {
+        e.currentTarget.style.textDecoration = "underline";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.textDecoration = "none";
+      }}
+      data-card-masthead={slug}
+      style={{ padding: "var(--space-sm) var(--space-lg)", ...band }}
+    >
+      {anatomy}
     </Link>
   );
 }

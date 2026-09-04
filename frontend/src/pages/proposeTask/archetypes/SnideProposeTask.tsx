@@ -117,6 +117,7 @@ import {
 } from '../useProposeTask'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerRule,
@@ -308,7 +309,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
   if (success) {
     return (
       <ComposerPage sizes={sizes} style={{ fontFamily: BODY_FACE, color: INK }}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           <h1
             style={{
               fontFamily: TITLE_FACE,
@@ -360,23 +361,23 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
           Enter commit from a text field. `handleSubmit` calls `preventDefault()`
           itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* The two reserved heights (#2995): the acid bar is 36px against a
-            96px ceiling, so this sheet pads out to it rather than starting its
-            column where its own wordmark happened to end. */}
+        {/* The chassis' two reserved heights (#2995) — the table of every kit's
+            masthead against the number is in `useComposerSizes`. */}
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
-          <h1
-            style={{
-              fontFamily: TITLE_FACE,
-              fontSize: sizes.titleSize,
-              letterSpacing: '0.02em',
-              lineHeight: 1.1,
-              color: INK,
-              margin: 0,
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            {t('proposeTask.pageTitle')}
-          </h1>
+          <ComposerHeading sizes={sizes}>
+            <h1
+              style={{
+                fontFamily: TITLE_FACE,
+                fontSize: sizes.titleSize,
+                letterSpacing: '0.02em',
+                lineHeight: 1.1,
+                color: INK,
+                margin: 0,
+              }}
+            >
+              {t('proposeTask.pageTitle')}
+            </h1>
+          </ComposerHeading>
 
           {/* WHO IT IS FOR. The pick this whole page reskins on, so it leads —
               and it is the create page's calling picker at eight rows, wrapped.

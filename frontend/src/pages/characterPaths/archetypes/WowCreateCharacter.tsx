@@ -143,6 +143,7 @@ import {
 } from '../useCreateCharacter'
 import {
   ComposerFooter,
+  ComposerHeading,
   ComposerMasthead,
   ComposerPage,
   ComposerSection,
@@ -300,9 +301,8 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
           behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        {/* `reserveHead` (#2995): the ribbon is 7px and the bunting under it 22,
-            so 29 against a 96px ceiling — one of the sheets that pads out the
-            furthest. Neither device is touched. */}
+        {/* `reserveHead` (#2995): neither the ribbon nor the bunting is touched.
+            Numbers in `useComposerSizes`. */}
         <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           {/* The charter's head: the faction's ✦ device, the page's own
               question, a wavy gold→plum rule taking up the slack, and one bunch
@@ -310,36 +310,38 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
               hero row (mark · rule · device) and it WRAPS, so a phone stacks it
               rather than crushing the heading.
 
-              THE BUNCH IS WHAT SETS THE CHASSIS' HEADING FLOOR ON DESKTOP
-              (#2995): drawn 38 wide and 1.25× as tall, this row is 47.5px and
-              the tallest heading block of the nine, so `headingHeight` is 48
-              and this one pads out by half a pixel. */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-              flexWrap: 'wrap',
-              minHeight: sizes.headingHeight,
-            }}
-          >
-            <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>
-              <WowSpark />
-            </span>
-            <h1
+              THIS ROW IS THE CEILING THE CHASSIS' HEADING FLOOR IS MEASURED ON,
+              at both widths — see `useComposerSizes`. The floor is on the box
+              AROUND it, never on the row itself: a `min-height` on a wrapping
+              flex container distributes its own lines rather than reserving
+              space under them, and on a phone this row has two. */}
+          <ComposerHeading sizes={sizes}>
+            <div
               style={{
-                fontFamily: MED,
-                fontSize: sizes.titleSize,
-                lineHeight: 1.1,
-                color: INK,
-                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-md)',
+                flexWrap: 'wrap',
               }}
             >
-              {t('createCharacter.heading')}
-            </h1>
-            <Zig id="charter" style={{ flex: 1, minWidth: 0 }} />
-            <BalloonBunch size={BUNCH[factor]} />
-          </div>
+              <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>
+                <WowSpark />
+              </span>
+              <h1
+                style={{
+                  fontFamily: MED,
+                  fontSize: sizes.titleSize,
+                  lineHeight: 1.1,
+                  color: INK,
+                  margin: 0,
+                }}
+              >
+                {t('createCharacter.heading')}
+              </h1>
+              <Zig id="charter" style={{ flex: 1, minWidth: 0 }} />
+              <BalloonBunch size={BUNCH[factor]} />
+            </div>
+          </ComposerHeading>
 
           {/* The life being chartered, live. The card dispatches its own faction
               dress, so it is already wearing WOW's the moment the calling is
