@@ -149,14 +149,46 @@ const LOCATION_MAX = 100
  * stock. See the header on why none of them is a `--color-text-*`. */
 const INK = 'var(--faction-default-card-text)'
 const FAINT = 'var(--faction-default-composer-faint)'
+const MUTED = 'var(--faction-default-card-muted)'
 /* NOT `--color-danger`, and this is a fix rather than a preference (#2346,
  * #1302): a shared functional ink inside a faction frame takes that faction's
  * own card family, measured on the frame's ground. */
 const ALARM = 'var(--faction-default-card-alarm)'
 const FIELD = 'var(--faction-default-composer-field)'
-const BORDER = 'var(--faction-default-border)'
 const HAIR = 'var(--faction-default-composer-hair)'
 const ON_ACCENT = 'var(--faction-default-on-accent)'
+
+/* EVERY CONTROL'S EDGE ON THIS WELL, and it is NOT `--faction-default-border`.
+ *
+ * That token is `rgba(0,0,0,0.12)` by day and `rgba(255,255,255,0.12)` by
+ * night, and on THIS ground it draws nothing a boundary can be read from. The
+ * well is `--faction-default-composer-field`, which in light is `#fffdf9` —
+ * byte for byte the sheet it is laid on, 1.00:1 — so the hairline is the ONLY
+ * thing separating a control from its background, and it measures 1.31:1
+ * against the well and 1.30:1 against the worst aurora stop (1.45 / 1.43 in
+ * dark). WCAG 1.4.11 asks 3:1 of exactly that edge. It is the boundary defect
+ * #3010 fixed on the WOW codicil, and this kit reproduced it the moment its
+ * controls landed on a sheet whose stock its wells match.
+ *
+ * `--faction-default-card-muted` is the quiet MARK rung of the same family and
+ * clears in both cascades against both adjacent grounds — 6.05 / 5.23 against
+ * the well, 4.30 / 3.27 against the worst aurora stop. NOTHING WAS MINTED:
+ * #2992 already certifies this exact token on this exact well one layer up, as
+ * TEXT, at the same two numbers. `__tests__/defaultEditCharacterEdges.test.ts`
+ * holds the rows.
+ *
+ * IT IS ONE TOKEN FOR ALL FOUR CONSUMERS on purpose — the five fields, the
+ * portrait picker's button, the faction row's plate and the confirm's cancel
+ * key are the same well with the same edge, and two different hairlines on one
+ * sheet would read as a defect whichever of them was the accessible one. The
+ * `-border` token keeps every other consumer it has elsewhere; what is written
+ * here is that it is not an EDGE on this stock.
+ *
+ * ponytail: `DefaultCreateCharacter`'s `fieldBox` is this same pair on this same
+ * sheet and still draws the hairline — one finding across two files, and the
+ * create half is #2992's to close (it may not be edited from this lane). The
+ * upgrade path is one line there and a fifth row here. */
+const EDGE = MUTED
 
 /* The design's title face is Lora (--font-display); the label face is Courier
  * Prime (--font-body), which is what `composerLabelStyle` already defaults to.
@@ -193,7 +225,7 @@ const fieldBox = {
   width: '100%',
   background: FIELD,
   color: INK,
-  border: `1px solid ${BORDER}`,
+  border: `1px solid ${EDGE}`,
   borderRadius: 10,
   padding: 'var(--space-md)',
   boxSizing: 'border-box',
@@ -217,18 +249,22 @@ const primaryStyle = composerLabelStyle({
  * na's composer tokens, so nothing global lands on the aurora sheet. The
  * destructive ink is left to default: `factionCssVar(slug, 'card-alarm')`
  * resolves to `--faction-default-card-alarm` for this kit, which is the token
- * `createCharacterContrast.test.ts` measures bare on this exact composite. */
+ * `createCharacterContrast.test.ts` measures bare on this exact composite.
+ *
+ * Both plates are CONTROLS — the faction row is a `<Link>`, the confirm's cancel
+ * is a `<button>` — so their edge is 1.4.11's question and takes {@link EDGE}
+ * rather than the hairline token. See its note. */
 const slotLabel = { color: FAINT }
 const slotRow = {
   background: FIELD,
-  border: `1px solid ${BORDER}`,
+  border: `1px solid ${EDGE}`,
   borderRadius: 10,
   color: INK,
 }
 const slotQuiet = { color: FAINT }
 const slotCancel = {
   background: FIELD,
-  border: `1px solid ${BORDER}`,
+  border: `1px solid ${EDGE}`,
   borderRadius: 10,
   color: INK,
 }
@@ -365,7 +401,12 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
               readOnly
               value={`@${character.username}`}
               {...namedField(t('character.handlePlaceholder'))}
-              style={{ ...fieldBox, color: FAINT }}
+              /* MUTED, not FAINT. The tier split above is by GROUND, and what is
+                 behind this type is the OPAQUE well laid over the sheet rather
+                 than the aurora-washed sheet itself — so it takes the well's
+                 quiet rung. FAINT here was the rule's own file breaking it.
+                 #2992 measures this exact pair at 6.05:1 light / 5.23:1 dark. */
+              style={{ ...fieldBox, color: MUTED }}
             />
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', color: FAINT, margin: 0 }}>
               {t('editCharacter.handleHint')}
@@ -450,7 +491,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
                 padding: 'var(--space-sm) var(--space-lg)',
                 background: FIELD,
                 color: INK,
-                border: `1px solid ${BORDER}`,
+                border: `1px solid ${EDGE}`,
               })}
               statusStyle={{ color: FAINT }}
               errorStyle={{ color: ALARM }}
@@ -462,9 +503,11 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
           <ErrorBanner message={error} style={{ color: ALARM }} />
 
-          {/* THE ONE RULE (#1707). Every section passes `rule={false}` and the
-              regions are parted by the content column's own gap; the hairline
-              sits immediately above the footer. */}
+          {/* THE COMPOSER'S ONE RULE (#1707). Every section passes `rule={false}`
+              and the regions are parted by the content column's own gap; the
+              form's single hairline sits immediately above the footer. The tail
+              below draws a SECOND one, and that is not this rule twice — see
+              its own note. */}
           <ComposerRule style={{ background: HAIR }} />
 
           {/* [Cancel] … [Save] — the global order from #646. na keeps the INLINE
@@ -504,11 +547,18 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
           />
 
           {/* ── THE TAIL: the calling this life already has, and the one act that
-               cannot be undone — BELOW Save, behind a second hairline (#2991
-               AC 2). The intent the desktop plate stated is kept exactly, "the
-               irreversible act cannot be read as part of the form"; what changed
-               is that the phone no longer disagrees with it. The treatment is
-               `editCharacterSlots`'; the place, and the ink, are here. ── */}
+               cannot be undone — BELOW Save (#2991 AC 2). The intent the desktop
+               plate stated is kept exactly, "the irreversible act cannot be read
+               as part of the form"; what changed is that the phone no longer
+               disagrees with it. The treatment is `editCharacterSlots`'; the
+               place, and the ink, are here.
+
+               THE HAIRLINE IS THE TAIL'S OWN, not a second composer rule. The
+               retired desktop plate parted this region with a `borderTop` of its
+               own for exactly this reason, and #1707's rule is about the FORM's
+               regions — which are parted by the column gap, all the way down to
+               the one rule above the footer. This one says where the form stops.
+               Drop the tail and it goes with it. ── */}
           <ComposerRule style={{ background: HAIR }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
             <FactionRow

@@ -101,14 +101,24 @@ interface Row {
 const FIELDS: Row[] = [
   // BOTH na KITS MOVED TO THE COMPOSER SHEET — create in #2992, edit in #2991 —
   // so this is ONE row for two forms rather than three rows for two grounds.
-  // Every field on both is the same opaque box on
+  // Every field a caret lands in on either form is the same opaque box on
   // `--faction-default-composer-field`, laid over the sheet ABOVE the aurora, so
   // the ground is flat, there is no wash to proxy for, and the row takes the
   // plain AA floor like every faction row below it. The two page-ground rows
   // that used to sit here were the edit kit's name field (transparent over the
   // washed page) and its prose fields (on the translucent surface token); their
   // ground is not drawn on this surface any more.
-  { what: 'na, every field on both character forms', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
+  //
+  // "EVERY FIELD" IS THE EDITABLE ONES, and the qualifier is load-bearing rather
+  // than hedging. The edit form has a sixth box — the read-only `@handle` — and
+  // it deliberately draws the well's QUIET rung (`--faction-default-card-muted`)
+  // instead of this ink, because it is a readout rather than a caret target.
+  // That pair is measured, on this same well, by
+  // `createCharacterContrast.test.ts`'s `-card-muted` row (#2992): 6.05:1 light,
+  // 5.23:1 dark. Restating it here would be a second name for one measurement.
+  // It carries no visible placeholder either — it is never empty — so it is
+  // outside this file's question twice over.
+  { what: 'na, every editable field on both character forms', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
   { what: 'coven', ground: ['--faction-coven-ward-page', '--faction-coven-ward-card'], ink: '--faction-coven-slip-ink' },
   { what: 'ephemerists', ground: ['--faction-ephemerists-plate-inner', '--faction-ephemerists-plate-page'], ink: '--faction-ephemerists-plate-ink' },
   { what: 'everymen', ground: ['--faction-everymen-sheet-panel', '--everymen-paper'], ink: '--everymen-paper-text' },
