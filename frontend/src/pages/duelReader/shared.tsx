@@ -1,7 +1,9 @@
 /**
  * The settled-duel side-by-side reader's chassis (#1084; design
- * `.design-sync/duel-1084/Duel Side-by-Side Reader.dc.html`, turn 2 — vendored
- * for the life of the epic and deleted by this PR's last commit).
+ * `Duel Side-by-Side Reader.dc.html`, turn 2). The canvas was vendored at
+ * `.design-sync/duel-1084/` for the life of the epic and deleted by this
+ * issue's last commit, per `docs/agents/design-fidelity.md`. It is still
+ * readable at commit `dfdafcb4`.
  *
  * Reading a duel used to mean two page loads — each side its own praxis page,
  * joined by a cross-link. This is the one frame that holds both entries.

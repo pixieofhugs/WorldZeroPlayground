@@ -13,7 +13,8 @@ surface by surface. **ADR-0035 remains the counter-example** and is not touched.
 
 Issue: #1084 (part of #1071). Design:
 `Duel Side-by-Side Reader.dc.html`, turn 2, vendored at `.design-sync/duel-1084/`
-for the life of the epic and deleted by this issue's PR.
+for the life of the epic and deleted by this issue's PR — still readable at
+commit `dfdafcb4`.
 
 ## Context
 
