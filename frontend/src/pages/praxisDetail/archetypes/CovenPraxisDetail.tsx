@@ -305,37 +305,16 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // is the measured ink and no faction reading applies.
 
   // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061) ───
-  // The failed note is the shared banner — the crown hero that used to lead it
-  // went with #1710, and the mark is the score stamp's corner fleur now. The
-  // flagged
-  // notice has no shared slot, so it renders here — on the same `--color-*`
-  // warning tokens `DefaultPraxisDetail` uses, deliberately not on the ward's
+  // The failed note and the flagged notice are both the shared banner — the
+  // crown hero that used to lead it went with #1710, and the mark is the score
+  // stamp's corner fleur now. The notice was re-typed here until #2718 gave it
+  // a slot; this page names no ink for it, so it keeps the same `--color-*`
+  // warning tokens `DefaultPraxisDetail` uses, deliberately not the ward's
   // pinks. `PraxisAdminBar` is the steward bar, mounted bare for the same
   // reason as the report card.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === 'flagged' && (
-        <div
-          style={{
-            border: '2px solid var(--color-warning)',
-            borderRadius: 8,
-            padding: 'var(--space-sm) var(--space-lg)',
-            marginBottom: 'var(--space-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            flexWrap: 'wrap',
-          }}
-        >
-          <span className="label-caption" style={{ color: 'var(--color-warning)' }}>
-            {t('detail.banners.flaggedLabel')}
-          </span>
-          <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
-            {t('detail.banners.flaggedBody')}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   )

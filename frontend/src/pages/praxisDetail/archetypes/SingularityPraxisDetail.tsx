@@ -360,35 +360,21 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   );
 
   // ── Moderation banners ────────────────────────────────────────────────────
-  // Neutral by rule, mounted bare: the failed note comes from the shared
-  // banners (the crown hero went with #1710 — the mark is the score stamp's
-  // corner fleur now), the flagged notice has no shared slot so it renders
-  // here on the shared `--color-warning`, and `PraxisAdminBar` is the steward
+  // Neutral by rule, mounted bare: the failed note and the flagged notice both
+  // come from the shared banners (the crown hero went with #1710 — the mark is
+  // the score stamp's corner fleur now), and `PraxisAdminBar` is the steward
   // bar. Nothing in this block wears the costume (ADR-0061).
+  //
+  // ONE ink is named, and it is the only thing this page ever said about the
+  // notice: the BODY takes the warning hue rather than `--color-text-secondary`,
+  // so the sentence reads in the same colour as the label above it. #2718 moved
+  // the notice itself into the shared slot; this deviation predates it and is
+  // preserved rather than settled — see the measurement in
+  // `EphemeristsPraxisDetail`, which reads this precedent as "the banner MAY be
+  // dressed", not as a ruling on what to dress it in.
   const banners = (
     <>
-      <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: "2px solid var(--color-warning)",
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span className="font-body content-text" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
+      <PraxisStatusBanners state={state} flaggedBodyInk="var(--color-warning)" />
       <PraxisAdminBar state={state} />
     </>
   );
