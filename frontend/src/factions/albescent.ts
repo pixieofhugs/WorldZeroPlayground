@@ -409,20 +409,28 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
 
   /**
    * RE-CUT — the one of the four that changes pixels. na draws a single spectrum
-   * mark on this page, the rainbow ring around the phone branch's photo well,
-   * and this wrapper sets it TURNING: the mount now wears `.spectrum-dial`
+   * mark on this page, the rainbow ring around the live credential card's
+   * portrait, and this wrapper sets it TURNING: the mount wears `.spectrum-dial`
    * (#2497's class, which this file predated) and `.alb-moves` is the dresser it
    * was minted for. No markup added, no colour, no copy, no new keyframe — the
-   * mark is na's already. The desktop branch carries no na spectrum and is
-   * untouched; one row covers both widths because the archetype reads
+   * mark is na's already.
+   *
+   * THE MOUNT MOVED IN #2992. It was the phone branch's 104px photo well, so the
+   * desktop plate carried no na spectrum and this row only reached one width.
+   * That branch retired when the na kit went onto the composer chassis, and the
+   * credential card sits first in the sheet at both widths — so the ring turns at
+   * both now. One row still covers both, because the archetype reads
    * `useFormFactor()` itself.
    *
    * IT REVERSES ONE LINE OF `surfaceDispatch.test.ts`'s createCharacter note —
    * "Molly's ruling is that it gets no archetype anyway". That ruling was about a
    * SKIN, and it still holds: this is a wrapper over the na kit, which is what
-   * that note says Albescent renders. The dispatch slug here is the pick in
-   * progress, so the ring starts turning as the calling is chosen and stops the
-   * moment it is cleared.
+   * that note says Albescent renders. That note carries the #2992 correction
+   * above as well, so the two say the same thing about which mark is re-cut;
+   * they are the only two prose records of it and they move together.
+   *
+   * The dispatch slug here is the pick in progress, so the ring starts turning
+   * as the calling is chosen and stops the moment it is cleared.
    */
   createCharacter: () => AlbescentCreateCharacter,
 
