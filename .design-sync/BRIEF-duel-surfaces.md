@@ -228,6 +228,15 @@ time. The footnote saying so is not optional; without it the numbers are a lie.
 
 ## 7. What is actually being asked for
 
+> **LANDED, 2026-09-04.** This section is kept as the record of what was asked
+> for; it is no longer an open ask. `Duel Side-by-Side Reader.dc.html` was
+> vendored at `.design-sync/duel-1084/` on 2026-09-01 (turn 2, artboards
+> `2a`–`2f`), built, and the directory deleted by #1084's PR per the
+> vendor-build-delete rule in `docs/agents/design-fidelity.md` — the canvas is
+> still readable at commit `dfdafcb4`. **The shipped decisions are ADR-0092**,
+> which supersedes this section wherever the two disagree. The paragraph below
+> about the file being unreachable is history, not a live blocker.
+
 **One surface: the settled-duel side-by-side reader — issue #1084.**
 
 Today, reading a duel means two page loads: each side is its own praxis with its own detail page,
