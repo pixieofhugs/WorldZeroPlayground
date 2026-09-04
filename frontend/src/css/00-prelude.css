@@ -29,12 +29,18 @@
    `scripts/` would start contributing class names to the blocking stylesheet.
    Nothing renders those, so every utility they added would be dead weight
    inside a CSS budget with ~2.6 KB of headroom (scripts/bundle-budget.mjs).
-   The two lines below are the v3 config's `content: ["./index.html",
-   "./src/**/*.{ts,tsx}"]`, verbatim, relative to this file.
+   The three lines below are the v3 config's `content` pair — the entry HTML
+   and every .ts/.tsx under src/ — rewritten relative to this file. The pair
+   becomes three because the glob is spelled once per extension: a CSS COMMENT
+   CANNOT HOLD A RECURSIVE GLOB (the `*` and `/` of a `**` segment close the
+   comment, and the rest of the line is then parsed as CSS), and a braced
+   `{ts,tsx}` alternation does not survive Vite's own postcss-import pass,
+   which runs BEFORE this plugin and does not know `@source`.
    ────────────────────────────────────────────────────────────────────────── */
 @import 'tailwindcss' source(none);
 @source '../../index.html';
-@source '../**/*.{ts,tsx}';
+@source '../**/*.ts';
+@source '../**/*.tsx';
 
 /* ──────────────────────────────────────────────────────────────────────────
    THE THEME — nine colour keys and three family stacks, moved here from

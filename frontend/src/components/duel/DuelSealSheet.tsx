@@ -94,8 +94,17 @@ export default function DuelSealSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto${
-          phoneClassName ? ` ${phoneClassName}` : ''
+        // THE SPACE BEFORE `${` IS LOAD-BEARING (#2918). Tailwind v4's scanner
+        // drops a candidate that runs straight into an interpolation, where v3's
+        // regex extractor kept it — so `overflow-y-auto${...}` built fine, tested
+        // fine, and shipped a full-screen dialog that could not scroll, with no
+        // utility in the sheet and nothing red anywhere. Measured on a probe:
+        // glued, dropped; spaced, emitted.
+        // This was the only site in `src/` where a complete utility abutted a
+        // `${` — the other interpolations complete a token (`wz-roundel-${`,
+        // `--spectrum-glow-${`) rather than following one, and those are fine.
+        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto ${
+          phoneClassName ?? ''
         }`}
         style={{ background: 'var(--color-bg-page)', ...ground }}
       >
