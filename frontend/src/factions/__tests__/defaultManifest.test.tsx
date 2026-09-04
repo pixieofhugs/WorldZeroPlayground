@@ -53,6 +53,7 @@ import DefaultFactionBody from '../../pages/factionDetail/archetypes/DefaultFact
 import DefaultProfileBody from '../../pages/characterProfile/archetypes/DefaultProfileBody'
 import DefaultProposeTask from '../../pages/proposeTask/archetypes/DefaultProposeTask'
 import DefaultFieldDesk from '../../pages/fieldDesk/mobileArchetypes/DefaultFieldDesk'
+import DefaultDuelReader from '../../pages/duelReader/archetypes/DefaultDuelReader'
 
 /**
  * Every surface, and the component the dispatcher named by hand before #2530.
@@ -82,6 +83,13 @@ const WAS_THE_FALLBACK: Record<string, unknown> = {
   editCharacter: DefaultEditCharacter,
   proposeTask: DefaultProposeTask,
   duelSeal: DefaultDuelSealConfirm,
+  // #1084's surface is NEWER than #2530, so "what the dispatcher named by hand"
+  // is not a fact about it — it never had a hand-named fallback. The row is
+  // here because this table is walked by `it.each(SURFACE_KEYS)` and an absent
+  // one compares against `undefined`, and because the claim it makes is still
+  // the right one for a new surface: na's row is `DefaultDuelReader` and
+  // nothing is behind it.
+  duelReader: DefaultDuelReader,
   mobileFieldDesk: DefaultFieldDesk,
 }
 

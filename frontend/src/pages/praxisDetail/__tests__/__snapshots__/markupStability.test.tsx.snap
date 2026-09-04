@@ -31,8 +31,8 @@ albescent · owner · desktop → ae7c3655db36cc02
 albescent · owner · mobile → 320d7235caf37657
 albescent · steward · desktop → 9a261778902f9d58
 albescent · steward · mobile → 62c812a8258a634c
-albescent · duel · desktop → 7af1451272b812b5
-albescent · duel · mobile → 87d918ebd6458a57
+albescent · duel · desktop → 0b24b4ae6cdff559
+albescent · duel · mobile → ff058c51f595ee0b
 coven · base · desktop → d0a9ca07b334b460
 coven · base · mobile → 068edda7f8161185
 coven · crowned · desktop → e0ce6483e1f5aa3a
@@ -51,8 +51,8 @@ coven · owner · desktop → fb49375aada4b8ee
 coven · owner · mobile → 9221366f16c605a4
 coven · steward · desktop → 0bb5e4a91676db85
 coven · steward · mobile → 05cfea2fea633491
-coven · duel · desktop → b75520d1fd1048df
-coven · duel · mobile → 92608d93c38a1460
+coven · duel · desktop → a12eae7a5687fd4c
+coven · duel · mobile → 058973031a81034d
 ephemerists · base · desktop → 5070d813ce8f7ec3
 ephemerists · base · mobile → 9cbcb9b769bf5674
 ephemerists · crowned · desktop → 85041f7b387f2e32
@@ -71,8 +71,8 @@ ephemerists · owner · desktop → bef017b5a1de6e95
 ephemerists · owner · mobile → 7d4ac6c9dab46efc
 ephemerists · steward · desktop → 520d050450c1a2d1
 ephemerists · steward · mobile → 70bdd11e46fc63fa
-ephemerists · duel · desktop → eed353bb73d20578
-ephemerists · duel · mobile → 072d50cd46aa5fc8
+ephemerists · duel · desktop → bf1707701d7a4130
+ephemerists · duel · mobile → 2f08a189bf82e5da
 everymen · base · desktop → 0392c5fc3ebb2b1a
 everymen · base · mobile → a4d40eb2fbdc95dc
 everymen · crowned · desktop → ddd955ba85351220
@@ -91,8 +91,8 @@ everymen · owner · desktop → d8366010c074d206
 everymen · owner · mobile → caeb6e971f561e61
 everymen · steward · desktop → e8565a0116996d85
 everymen · steward · mobile → 433480694d0f6693
-everymen · duel · desktop → c87d0df0efeb30f3
-everymen · duel · mobile → 2f667cc0e131d043
+everymen · duel · desktop → c42739ef823f0900
+everymen · duel · mobile → c5c12871a08cd979
 na · base · desktop → efa49e20f90b21e8
 na · base · mobile → 8b776b5d6a8a1aae
 na · crowned · desktop → 23b751cfa64b5b90
@@ -111,8 +111,8 @@ na · owner · desktop → b61830bf3ecd7185
 na · owner · mobile → 1a7d9b5967461094
 na · steward · desktop → 513248df90f20de6
 na · steward · mobile → 9de2bc73f57e42aa
-na · duel · desktop → 897ef5720a9b5034
-na · duel · mobile → b731c0ca94834815
+na · duel · desktop → bb4fd50f78337531
+na · duel · mobile → 8ea9355dee852d86
 singularity · base · desktop → 41afb8f1d515933b
 singularity · base · mobile → 6e217737ce3c413c
 singularity · crowned · desktop → e3210fe575497ed5
@@ -131,8 +131,8 @@ singularity · owner · desktop → e00bc3f686f4f2fb
 singularity · owner · mobile → 4211a7581b7ca8f9
 singularity · steward · desktop → daf894c85adf4828
 singularity · steward · mobile → fde89081e59cae74
-singularity · duel · desktop → 12ceec3c33212715
-singularity · duel · mobile → 17c5bcfb9ae85951
+singularity · duel · desktop → 410d03026e0a33e4
+singularity · duel · mobile → 4ffcce949c2d1774
 snide · base · desktop → af0914fb1e78a545
 snide · base · mobile → 68cfc2488701d36c
 snide · crowned · desktop → cbb54d9cdc05fa97
@@ -151,8 +151,8 @@ snide · owner · desktop → 5ca9edd8ed33e00f
 snide · owner · mobile → 3ef422c51c7e0363
 snide · steward · desktop → 67da4fd10d5880ad
 snide · steward · mobile → 156564bc8db0b515
-snide · duel · desktop → 7ef34e4602ec0221
-snide · duel · mobile → cc58afe847e21c5d
+snide · duel · desktop → e9a964f6a89a1193
+snide · duel · mobile → da2cfd1ba6d765d1
 ua · base · desktop → ac085ef7de4d0dcf
 ua · base · mobile → f737d47dc3fafc46
 ua · crowned · desktop → db5459eaa670dbe6
@@ -171,8 +171,8 @@ ua · owner · desktop → bbf99c0c4d27a4a4
 ua · owner · mobile → 292fd907e6e01275
 ua · steward · desktop → 12ef894267b2fc48
 ua · steward · mobile → f254a63164cba2ee
-ua · duel · desktop → 4cfd2265aa10fd3f
-ua · duel · mobile → 29180c7f47b98890
+ua · duel · desktop → 3c1ff977c6502d79
+ua · duel · mobile → e933267d249f6da3
 wow · base · desktop → 66d05b266c0691c0
 wow · base · mobile → c18be2976f2c192b
 wow · crowned · desktop → 4f98a2b21be875b3
@@ -191,6 +191,6 @@ wow · owner · desktop → b405f46b0056959d
 wow · owner · mobile → 800abd3b832b2a3c
 wow · steward · desktop → 8626c172dfab5789
 wow · steward · mobile → e31b6391a61f0068
-wow · duel · desktop → 7970892658ebdfc4
-wow · duel · mobile → 7099c5e648f27c7d"
+wow · duel · desktop → ae0bbb6cfa45a834
+wow · duel · mobile → 670b3339fa38e3fb"
 `;
