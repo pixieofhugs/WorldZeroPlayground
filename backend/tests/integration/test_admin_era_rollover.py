@@ -45,8 +45,13 @@ async def test_rolling_requires_admin(client: AsyncClient, auth_headers: dict):
 
 
 async def test_lists_every_registered_era_and_marks_the_live_one(
-    client: AsyncClient, db_session: AsyncSession, account: Account, auth_headers: dict
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
 ):
+    """Every registered era in era order, with the ``Era`` row's one marked."""
     await make_admin(db_session, account)
 
     resp = await client.get("/admin/eras", headers=auth_headers)
@@ -59,6 +64,52 @@ async def test_lists_every_registered_era_and_marks_the_live_one(
         era_config_for_key("era_2").name,
     ]
     live = [row["config_key"] for row in rows if row["is_live"]]
+    assert live == [era.config_key]
+
+
+async def test_the_selector_marks_live_from_the_row_not_the_process(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+):
+    """The selector and the ``PUT``'s refusal must answer from the same source.
+
+    They can disagree — a row naming a ``config_key`` no era file registers
+    leaves the process on the compile-time fallback, and ``rebind_live_era``
+    logs exactly that. Reading ``is_live`` off the binding in that state would
+    have the selector offer an era the ``PUT`` then refuses with
+    ``ERA_ALREADY_LIVE``: a list whose disabled row disagrees with the server.
+
+    This is the same drift ``test_the_refusal_reads_the_row_not_the_process``
+    constructs, seen from the other end. ``restore_live_era``
+    (``tests/conftest.py``) puts the binding back afterwards.
+    """
+    await make_admin(db_session, account)
+    db_session.add(Era(name="whatever", config_key="era_2", started_by=account.id))
+    await db_session.commit()
+    assert game_config.CURRENT_ERA.config_key == "era_1", "the process has not moved"
+
+    resp = await client.get("/admin/eras", headers=auth_headers)
+
+    assert resp.status_code == 200
+    live = [row["config_key"] for row in resp.json() if row["is_live"]]
+    assert live == ["era_2"]
+
+
+async def test_the_selector_falls_back_to_the_process_with_no_era_row(
+    client: AsyncClient, db_session: AsyncSession, account: Account, auth_headers: dict
+):
+    """A fresh database. Nothing has run, so the compile-time era is genuinely
+    what the game would play by, and it is the one thing the row cannot say."""
+    await make_admin(db_session, account)
+    assert (await db_session.execute(select(Era))).scalar_one_or_none() is None
+
+    resp = await client.get("/admin/eras", headers=auth_headers)
+
+    assert resp.status_code == 200
+    live = [row["config_key"] for row in resp.json() if row["is_live"]]
     assert live == [game_config.CURRENT_ERA.config_key]
 
 

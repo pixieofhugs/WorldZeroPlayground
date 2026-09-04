@@ -7632,7 +7632,7 @@
     },
     "/admin/eras": {
       "get": {
-        "description": "Admin-only: the eras a rollover may target, and which one is live.\n\nNo session: which rulesets exist is a code fact, and which is live is the\nbinding this process is already holding (ADR-0091).",
+        "description": "Admin-only: the eras a rollover may target, and which one is live.\n\nWhich rulesets exist is a code fact; which one is **live** is a database one\n— the latest ``Era`` row (ADR-0091), which is also what ``PUT /eras/live``\nrefuses against. Reading it from the process binding instead would let the\nselector offer an era the ``PUT`` then rejects, in the one state where the\ntwo can disagree.",
         "operationId": "admin_list_eras_admin_eras_get",
         "parameters": [
           {
@@ -7691,7 +7691,7 @@
     },
     "/admin/eras/live": {
       "put": {
-        "description": "Admin-only: end the live era and open the one named. **No undo.**\n\nEveryone's score, level, vote budget and faction reset per the incoming\nera's flags; every unresolved duel freezes into a permanent result (#824);\nthe whole board retires; and the process starts playing by the new rules\nbefore this response is written.\n\n``PUT`` rather than ``POST`` because the resource is \"the live era\" and this\nsets it. It is emphatically **not** idempotent all the same — opening an era\nis an append, so a second call opens a second one. The confirmation that\nstops that is the mod's, on the admin page; the equivalent gate on\n``scripts/era_reset.py`` is its ``--yes``.\n\nThis route restores an entry point #1667 deleted, deliberately and on the\nother side of the argument that deleted it: ``PUT /admin/era/reset`` went\nbecause it was unreachable from any UI and re-instantiated the same era, so\na destructive rollover sat behind any admin session for no gain. It comes\nback because #827 gives it the two things it lacked — a target to choose,\nand a mod control that chooses it.",
+        "description": "Admin-only: end the live era and open the one named. **No undo.**\n\nEveryone's score, level, vote budget and faction reset per the incoming\nera's flags; every unresolved duel freezes into a permanent result (#824);\nthe whole board retires; and the process starts playing by the new rules\nbefore this response is written.\n\n``PUT`` rather than ``POST`` because the resource is \"the live era\" and this\nsets it — and unlike the append it wraps, the call itself settles: repeating\nit with the key that is now live is refused with **409\n``ERA_ALREADY_LIVE``** rather than opening a second era, and two calls that\noverlap are serialized by an advisory lock, so the second one sees the first\none's row and refuses on it. What is still not idempotent is rolling on:\nnaming a *different* era opens another one every time, and the only thing\nbetween a mod and that is the confirmation on the admin page — the\nequivalent gate on ``scripts/era_reset.py`` is its ``--yes``.\n\nThis route restores an entry point #1667 deleted, deliberately and on the\nother side of the argument that deleted it: ``PUT /admin/era/reset`` went\nbecause it was unreachable from any UI and re-instantiated the same era, so\na destructive rollover sat behind any admin session for no gain. It comes\nback because #827 gives it the two things it lacked — a target to choose,\nand a mod control that chooses it.",
         "operationId": "admin_roll_into_era_admin_eras_live_put",
         "parameters": [
           {

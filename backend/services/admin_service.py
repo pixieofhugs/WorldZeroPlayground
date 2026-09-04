@@ -46,6 +46,7 @@ from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
     get_or_create_stats,
+    lock_era_rollover,
 )
 from services.scoring import compute_vote_budget, compute_votes_available
 
@@ -514,34 +515,39 @@ async def admin_edit_task(
 # ---------------------------------------------------------------------------
 
 
-def list_registered_eras(era: EraConfig = CURRENT_ERA) -> list[EraOption]:
+async def list_registered_eras(
+    session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> list[EraOption]:
     """Every era a mod may roll into, in era order.
 
-    Read off the registry, never off ``Era`` rows: an era that has never run has
-    no row, and it is precisely the ones that have never run that a mod wants to
-    pick. ``is_live`` compares against the era in hand — the live binding — so
-    the selector marks where the game actually is, not where the newest era file
-    is.
+    *Which eras exist* is read off the registry, never off ``Era`` rows: an era
+    that has never run has no row, and it is precisely the ones that have never
+    run that a mod wants to pick.
+
+    *Which one is live* is read off the latest ``Era`` row — the same source
+    :func:`roll_into_era`'s refusal reads, and that agreement is the point. The
+    selector used to answer from the process binding instead, which is the same
+    fact only while the two agree. They can come apart: a row naming a
+    ``config_key`` no era file registers leaves the process on the compile-time
+    fallback (``rebind_live_era`` logs it loudly), and in that state the selector
+    would have offered an era the ``PUT`` then refused with
+    ``ERA_ALREADY_LIVE``. A list whose disabled row disagrees with the server is
+    worse than no list.
+
+    ``era`` — the process binding — is the fallback for the one case the row
+    cannot answer: a fresh database with no ``Era`` row at all, where nothing has
+    run and the compile-time era is genuinely what the game is playing by.
     """
+    live_row = await get_current_era_row_safe(session)
+    live_key = era.config_key if live_row is None else live_row.config_key
     return [
         EraOption(
             config_key=config_key,
             name=era_config_for_key(config_key).name,
-            is_live=config_key == era.config_key,
+            is_live=config_key == live_key,
         )
         for config_key in registered_era_config_keys()
     ]
-
-
-#: Serializes the rollover against itself. A transaction-scoped Postgres
-#: advisory lock, not a row lock: ``SELECT ... FOR UPDATE`` on the latest ``Era``
-#: row locks nothing on a database that has none, and under READ COMMITTED the
-#: waiter's locked row is re-checked but its ``ORDER BY id DESC LIMIT 1`` is
-#: not re-planned, so it would still be holding the *old* latest row after the
-#: winner inserted a new one — and would decide against it. Reads as the issue
-#: number in ``pg_locks``, the same convention as
-#: ``services.praxis_room._SINGLE_INSTANCE_LOCK_KEY``.
-_ERA_ROLLOVER_LOCK_KEY = 17400827
 
 
 async def roll_into_era(
@@ -578,14 +584,10 @@ async def roll_into_era(
             f"Unknown era: {config_key}.",
         )
 
-    # Take the lock BEFORE reading the live row, so the check below and the
-    # insert that follows it are one indivisible decision. Two mods confirming
-    # the same rollover within a second of each other is exactly the shape this
-    # exists for: without it both read the same live row, both pass the refusal,
-    # and the game takes two destructive resets.
-    await session.execute(
-        select(func.pg_advisory_xact_lock(_ERA_ROLLOVER_LOCK_KEY))
-    )
+    # Before the read below, so the read, the refusal it feeds and the insert
+    # that follows are one indivisible decision — against a second mod and
+    # against `scripts/era_reset.py`, which takes the same lock.
+    await lock_era_rollover(session)
 
     live_row = await get_current_era_row_safe(session)
     if live_row is not None and live_row.config_key == era_config.config_key:

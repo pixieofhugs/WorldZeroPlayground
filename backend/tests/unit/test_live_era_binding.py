@@ -4,8 +4,8 @@ Seam under test: ``game_config.CURRENT_ERA`` as an *object identity* rather than
 a name, and ``game_config.bind_live_era`` as the one lever that moves it.
 
 Why the identity and not the name. Every service that takes a ruleset is written
-``era: EraConfig = CURRENT_ERA`` — 114 sites under ``backend/`` when this was
-written, and the number drifts. A default argument is evaluated once, when the
+with the live era as a default argument — more than a hundred signatures under
+``backend/``, and the number drifts. A default argument is evaluated once, when the
 ``def`` executes — so the function holds the **object**, not the name, for the
 life of the process. Four more sites read ``CURRENT_ERA`` as a module global
 inside a function body, which is the importing module's global, not
@@ -282,9 +282,11 @@ def test_only_services_era_rebinds_the_live_era():
     """"Exactly one site rebinds it, and a guard keeps it at one" (#827 ruling).
 
     ``bind_live_era`` is the primitive and ``services/era.py`` is the only
-    shipped module allowed to call it, because that module is where "which era
-    is live" is decided — ``rebind_live_era`` for the callers that must ask the
-    database, ``commit_and_bind_live_era`` for the rollover, which already holds
+    module outside ``tests/`` allowed to call it — ``scripts/`` included, since
+    ``scripts/era_reset.py`` rolls production over — because that module is
+    where "which era is live" is decided — ``rebind_live_era`` for the callers
+    that must ask the database, ``commit_and_bind_live_era`` for the rollover,
+    which already holds
     the era it wrote and must not bind until the write is durable. A caller
     anywhere else is how a process ends up half-flipped, or ahead of its own
     database.
@@ -297,7 +299,14 @@ def test_only_services_era_rebinds_the_live_era():
     callers = set()
     for path in BACKEND_ROOT.rglob("*.py"):
         relative = path.relative_to(BACKEND_ROOT).as_posix()
-        if relative.startswith((".venv/", "tests/", "scripts/")):
+        # `scripts/` is IN scope. It used to be skipped as tooling, but
+        # `scripts/era_reset.py` is a real door onto the live era — it performs
+        # rollovers against production — so exempting it exempted exactly the
+        # file most able to get this wrong. It passes because it goes through
+        # `commit_and_bind_live_era` like the route does, which is the property
+        # worth pinning. `tests/` stays out: this file itself flips the live era
+        # on purpose, and so must anything testing a rollover.
+        if relative.startswith((".venv/", "tests/")):
             continue
         if call.search(path.read_text(encoding="utf-8")):
             callers.add(relative)

@@ -604,11 +604,11 @@ def era_config_for_key(config_key: str) -> EraConfig | None:
 # reassigned, and this is the whole trick — so it is worth the paragraph.
 #
 # Every service that takes a ruleset is written ``era: EraConfig = CURRENT_ERA``
-# — 114 sites under ``backend/`` at the time of writing, countable with
-# ``grep -rn --include='*.py' "era: EraConfig = CURRENT_ERA" backend/``, and the
-# number is expected to drift. A default argument is evaluated once, when the
-# ``def`` executes, so each of those functions holds the *object* for the life
-# of the process. Four more read
+# — more than a hundred signatures under ``backend/``, 108 of them in shipped
+# code at the time of writing (ADR-0091 carries the grep and the caveat that the
+# number drifts). A default argument is evaluated once, when the ``def``
+# executes, so each of those functions holds the *object* for the life of the
+# process. Four more read
 # ``CURRENT_ERA`` as a module global inside a function body — which is the
 # *importing* module's global, not this one's. Assigning
 # ``game_config.CURRENT_ERA = other`` moves neither: it rebinds one name in one

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import (
@@ -28,6 +28,37 @@ from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
 logger = logging.getLogger(__name__)
+
+
+#: Serializes the rollover against itself, across **both** doors — the admin
+#: route and ``scripts/era_reset.py``. Lives here rather than in
+#: ``services.admin_service`` because the script must take the same lock and
+#: importing it from the admin service would drag the whole admin surface into a
+#: CLI. Reads as the issue number in ``pg_locks``, the same convention as
+#: ``services.praxis_room._SINGLE_INSTANCE_LOCK_KEY``.
+_ERA_ROLLOVER_LOCK_KEY = 17400827
+
+
+async def lock_era_rollover(session: AsyncSession) -> None:
+    """Take the rollover lock. Held until the caller's transaction ends.
+
+    Call it **before** reading the live ``Era`` row, so that read, the decision
+    made on it and the insert that follows are one indivisible operation. Two
+    rollovers overlapping is not hypothetical: two mods confirming within a
+    second of each other, or — the case the route alone could not cover — an
+    operator running ``era_reset.py`` while a mod is confirming on the admin
+    page. Without this, both read the same live row, both pass their refusals,
+    the game takes two destructive resets, and the process is left bound to
+    whichever finished last rather than to the latest row.
+
+    A transaction-scoped advisory lock, not ``SELECT ... FOR UPDATE`` on the
+    latest row. The row lock locks nothing on a database that has none, and
+    under READ COMMITTED a waiter's locked row is re-checked but its
+    ``ORDER BY id DESC LIMIT 1`` is not re-planned — so after the winner
+    inserts a new latest row the waiter is still holding the old one, and would
+    decide against it.
+    """
+    await session.execute(select(func.pg_advisory_xact_lock(_ERA_ROLLOVER_LOCK_KEY)))
 
 
 async def rebind_live_era(session: AsyncSession) -> EraConfig:

@@ -43,11 +43,13 @@ selection.
 
 ### The measurement that settled the shape
 
-`era: EraConfig = CURRENT_ERA` appears **114** times under `backend/`
-(`grep -rn --include='*.py' "era: EraConfig = CURRENT_ERA" backend/`; the number drifts,
-the shape does not). The rejected alternative — a request-scoped
-`Depends(get_current_era)` with `era=` threaded down explicitly — makes every one of them
-a silent trap until it is stripped: a caller
+`era: EraConfig = CURRENT_ERA` is the default on **more than a hundred** function
+signatures under `backend/` — 108 in shipped code and 4 more in the test suite, as of this
+writing. `grep -rn --include='*.py' "era: EraConfig = CURRENT_ERA" backend/` finds them,
+along with a handful of prose lines (this one included) that only quote the pattern; the
+count drifts, the order of magnitude is what the argument rests on. The rejected
+alternative — a request-scoped `Depends(get_current_era)` with `era=` threaded down
+explicitly — makes every one of them a silent trap until it is stripped: a caller
 that omits `era=` quietly serves the compile-time era, and nothing fails. It buys
 correctness under a scale-out that ADR-0073 forbids, at the cost of the largest refactor
 on the board.

@@ -438,13 +438,17 @@ async def admin_import_tasks_csv(
 @router.get("/eras", response_model=list[EraOption])
 async def admin_list_eras(
     _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
 ) -> list[EraOption]:
     """Admin-only: the eras a rollover may target, and which one is live.
 
-    No session: which rulesets exist is a code fact, and which is live is the
-    binding this process is already holding (ADR-0091).
+    Which rulesets exist is a code fact; which one is **live** is a database one
+    — the latest ``Era`` row (ADR-0091), which is also what ``PUT /eras/live``
+    refuses against. Reading it from the process binding instead would let the
+    selector offer an era the ``PUT`` then rejects, in the one state where the
+    two can disagree.
     """
-    return list_registered_eras()
+    return await list_registered_eras(session)
 
 
 @router.put("/eras/live", response_model=EraRollOut)
@@ -461,10 +465,14 @@ async def admin_roll_into_era(
     before this response is written.
 
     ``PUT`` rather than ``POST`` because the resource is "the live era" and this
-    sets it. It is emphatically **not** idempotent all the same — opening an era
-    is an append, so a second call opens a second one. The confirmation that
-    stops that is the mod's, on the admin page; the equivalent gate on
-    ``scripts/era_reset.py`` is its ``--yes``.
+    sets it — and unlike the append it wraps, the call itself settles: repeating
+    it with the key that is now live is refused with **409
+    ``ERA_ALREADY_LIVE``** rather than opening a second era, and two calls that
+    overlap are serialized by an advisory lock, so the second one sees the first
+    one's row and refuses on it. What is still not idempotent is rolling on:
+    naming a *different* era opens another one every time, and the only thing
+    between a mod and that is the confirmation on the admin page — the
+    equivalent gate on ``scripts/era_reset.py`` is its ``--yes``.
 
     This route restores an entry point #1667 deleted, deliberately and on the
     other side of the argument that deleted it: ``PUT /admin/era/reset`` went

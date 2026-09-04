@@ -75,6 +75,7 @@ from services.era import (  # noqa: E402
     apply_era_reset,
     commit_and_bind_live_era,
     get_current_era_row_safe,
+    lock_era_rollover,
 )
 
 
@@ -126,6 +127,19 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
             f"opened the era. Run elevate_admin.py first, or name an admin."
         )
         return 1
+
+    # The same lock `PUT /admin/eras/live` takes, and taken here for the same
+    # reason it is taken there: everything from the read below to the commit has
+    # to be one decision. The two doors are not each other's hypothetical — a
+    # mod confirming on the admin page while an operator runs this in a shell is
+    # exactly the outage-shaped moment this script exists for. Without it both
+    # read the same live row, both open an era, and the process is left bound to
+    # whichever finished last rather than to the latest row.
+    #
+    # Before the read, so the row below is already the locked-in answer and
+    # needs no second look. Held until this transaction ends, which on every
+    # refusal path is the rollback the session context manager performs.
+    await lock_era_rollover(session)
 
     current_era_row = await get_current_era_row_safe(session)
     if current_era_row is None:
