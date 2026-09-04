@@ -44,7 +44,9 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 // Loaded after the mock, so every archetype picks it up.
 const FactionProfileBody = (await import('../FactionProfileBody')).default
 type ProfileBodyProps = import('../FactionProfileBody').ProfileBodyProps
-const { surfaceMap } = await import('../../../factions')
+const { surfaceMap, FACTION_MANIFESTS } = await import('../../../factions')
+const DefaultProfileBody = (await import('../archetypes/DefaultProfileBody')).default
+const { isKnownFaction } = await import('../../../utils/factions')
 
 /** Every slug the registry can dispatch a profile body for. */
 const SLUGS = Object.keys(surfaceMap('profileBody')).sort()
@@ -137,6 +139,14 @@ describe.each(['desktop', 'mobile'] as const)(
       expect(html, `${slug}: the tagline slot`).toContain('max-width:22ch')
       expect(text, `${slug}: friend/foe`).toContain('Friend')
       expect(count(html, 'transition:width 300ms'), `${slug}: level bars`).toBe(1)
+      // …and the caption UNDER that bar, which says where the band sits on the
+      // era's whole curve. It is the one readout the delegation silently
+      // dropped: na drew it in both retired branches, `ProfileSkin` had no slot
+      // for it, and every test in the repo stayed green — `profile.ptsToNext`
+      // was left resolving to nothing but a comment.
+      expect(text, `${slug}: the climb caption`).toContain(
+        translate('common:profile.ptsToNext', { score: 1880, threshold: 2000 }),
+      )
 
       // ② About and ③ Badges, on every renderer at both widths.
       expect(text, `${slug}: About`).toContain(translate('common:profile.aboutHeading'))
@@ -187,6 +197,24 @@ describe('the phone toggles instead, on all nine', () => {
     expect(count(html, 'aria-pressed="false"'), `${slug}: unpressed halves`).toBe(1)
   })
 
+  it.each(SLUGS)('%s puts the badge board ABOVE the switch', (slug) => {
+    // Both retired phone renderings did, and for the reason the laptop's
+    // right-hand rail encodes: a board of marks is a fixed few rows, where a
+    // gallery is unbounded. Below the switch it lands after a scroll as long as
+    // the player's praxis count. Asserted on DOM ORDER, which is what a screen
+    // reader meets — a CSS `order` would have passed a visual check and left
+    // the reading sequence wrong.
+    const html = page(slug)
+    expect(
+      html.indexOf(translate('common:profile.badgesHeading')),
+      `${slug}: no badge board`,
+    ).toBeGreaterThan(-1)
+    expect(
+      html.indexOf(translate('common:profile.badgesHeading')),
+      `${slug}: badges below the switch`,
+    ).toBeLessThan(html.indexOf('aria-pressed'))
+  })
+
   it.each(SLUGS)('%s folds nothing on a phone — one gallery is up at a time', (slug) => {
     // The reasoning #2958's own test recorded for the two kits that already
     // shipped the switch: with one gallery on screen there is no section
@@ -195,5 +223,91 @@ describe('the phone toggles instead, on all nine', () => {
     expect(page(slug), `${slug}: a half-built disclosure`).not.toContain(
       PROFILE_SECTIONS.bodyIdPrefix,
     )
+  })
+})
+
+/**
+ * THE FALL-THROUGH BODY IS NOT na's ALONE (ADR-0039, #749).
+ *
+ * `DefaultProfileBody` is what a faction with no `profileBody` row in its
+ * manifest lands on, and the spectrum is the UNAFFILIATED identity — so a
+ * THEMED slug reaching it must wear its own solid hue, never na's rainbow. That
+ * seam was phone-only before #2996 (the retired laptop branch painted the ramp
+ * for everyone) and the collapse nearly took the wrong half's answer with it.
+ *
+ * The subject is derived, never typed: any registered slug that is themed
+ * (`isKnownFaction`) and has no profile row. Today there are none — all nine
+ * register one — so that walk alone would be vacuous, and the second case is
+ * what stops it being: the body is rendered DIRECTLY with a themed slug, which
+ * is exactly the markup a deleted manifest row would produce.
+ */
+describe('a themed faction falling through wears its hue, not the spectrum', () => {
+  const THEMED_WITHOUT_A_ROW = FACTION_MANIFESTS.map((manifest) => manifest.slug)
+    .filter((slug) => isKnownFaction(slug))
+    .filter((slug) => !(slug in surfaceMap('profileBody')))
+
+  /** A themed slug to stand in for one, from the registry — never a literal. */
+  const THEMED = FACTION_MANIFESTS.map((manifest) => manifest.slug).filter((slug) =>
+    isKnownFaction(slug),
+  )[0]
+
+  /**
+   * EMPTY GALLERIES ON PURPOSE. A praxis card and a task card draw spectra of
+   * their OWN — the vote divider, the CTA rule — whenever the card's faction
+   * resolves to `default`, and those are censused in their own files. With no
+   * cards on the page every `.spectrum-rule` in this markup belongs to the
+   * profile kit, which is what makes the assertion below discriminate. The
+   * three mounts under test all render without content: two section heads, the
+   * identity band, the level bar.
+   */
+  const fallThrough = (slug: string): string =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultProfileBody
+          character={character(slug)}
+          submissions={[]}
+          proposedTasks={[]}
+          progression={{
+            nextLevel: 8,
+            currentThreshold: 1500,
+            nextThreshold: 2000,
+            pointsIntoLevel: 380,
+            levelSpan: 500,
+            progressPercent: 76,
+          }}
+          identityActions={null}
+        />
+      </MemoryRouter>,
+    )
+
+  it('has a themed slug to stand one up with', () => {
+    expect(THEMED, 'the registry lists no themed faction at all').toBeTruthy()
+    expect(isKnownFaction(THEMED)).toBe(true)
+    expect(isKnownFaction('na'), 'the sentinel is not a faction').toBe(false)
+  })
+
+  it.each(['desktop', 'mobile'] as const)('draws no spectrum rule at %s width', (formFactor) => {
+    mocks.formFactor = formFactor
+    const html = fallThrough(THEMED)
+    // All three of the kit's ramp mounts — the section heads' hairline, the
+    // identity band, the level bar's fill — take the hue instead.
+    expect(html, "na's ramp on a themed faction").not.toContain('spectrum-rule')
+    expect(html, "the faction's own hue").toContain(`var(--faction-${THEMED})`)
+  })
+
+  it.each(['desktop', 'mobile'] as const)(
+    'keeps the ramp for the sentinel at %s width',
+    (formFactor) => {
+      // The other half, or the assertion above would pass on a kit that had
+      // simply lost its spectrum.
+      mocks.formFactor = formFactor
+      expect(fallThrough('na'), 'the unaffiliated ramp').toContain('spectrum-rule')
+    },
+  )
+
+  it.each(THEMED_WITHOUT_A_ROW)('%s reaches the same answer through the dispatcher', (slug) => {
+    // Empty today and deliberately not skipped: the day a themed faction drops
+    // its row, this walk starts running rather than staying silent.
+    expect(fallThrough(slug)).not.toContain('spectrum-rule')
   })
 })

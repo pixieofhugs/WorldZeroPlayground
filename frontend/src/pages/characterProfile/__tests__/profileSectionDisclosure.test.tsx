@@ -54,19 +54,17 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 // Loaded after the mock, so the archetypes pick it up.
 const FactionProfileBody = (await import('../FactionProfileBody')).default
 type ProfileBodyProps = import('../FactionProfileBody').ProfileBodyProps
+const { surfaceMap } = await import('../../../factions')
 
-/** The seven bespoke bodies, plus `na` and `albescent` on the na kit. */
-const SLUGS = [
-  'na',
-  'albescent',
-  'coven',
-  'ephemerists',
-  'everymen',
-  'singularity',
-  'snide',
-  'ua',
-  'wow',
-] as const
+/**
+ * Every slug the registry dispatches a profile for — DERIVED, since #2996.
+ *
+ * It was the nine typed out, which is the shape #2955 is open for and which
+ * #2815 showed cannot notice a tenth kit. The walk this file exists for is
+ * "every archetype is really rendered", and a list that has to be edited to
+ * stay true of that is the one thing it cannot be.
+ */
+const SLUGS = Object.keys(surfaceMap('profileBody')).sort()
 
 const PRAXIS = [aPraxisCard({ id: 1 }), aPraxisCard({ id: 2 })]
 const TASKS = [aTask({ id: 1 }), aTask({ id: 2 })]
@@ -188,27 +186,19 @@ describe('every profile folds both galleries on a laptop', () => {
 })
 
 describe('the phone switches instead of folding — on all nine (#2996)', () => {
+  /**
+   * ONE ASSERTION HERE, NOT TEN. The per-slug "both tabs render and no panel
+   * id does" walk that stood here was `profileStructure.test.tsx`'s, spelt a
+   * second time — that file already derives the same slug list, renders every
+   * archetype at both widths and asserts the switch. Two copies of one claim
+   * is how they drift apart, and this file is about the DISCLOSURE.
+   *
+   * What is left is the half no other file can ask, because it is about the
+   * stored preference rather than about the markup.
+   */
   beforeEach(() => {
     mocks.formFactor = 'mobile'
   })
-
-  for (const slug of SLUGS) {
-    it(`${slug} — a segmented switch, so there is nothing to fold`, () => {
-      const html = page(slug)
-      // Both tabs are there and exactly one gallery is on screen, which is the
-      // bounding gesture a fold would otherwise supply. If any skin is ever
-      // redrawn into two stacked sections at this width, this goes red and the
-      // fold is owed on it again.
-      const text = html.replace(/<[^>]*>/g, '')
-      expect(text, `${slug} lost its segmented switch`).toContain(
-        translate('common:profile.mobile.tabPraxis'),
-      )
-      expect(text).toContain(translate('common:profile.mobile.tabTasks'))
-      expect(html, `${slug} grew a half-built disclosure`).not.toContain(
-        PROFILE_SECTIONS.bodyIdPrefix,
-      )
-    })
-  }
 
   it('carries no stored fold onto a phone either', () => {
     // The preference is per account × SURFACE and survives a width change, so a
@@ -226,10 +216,13 @@ describe('the phone switches instead of folding — on all nine (#2996)', () => 
     try {
       for (const slug of SLUGS) {
         const html = page(slug)
-        // A bare `hidden` ATTRIBUTE — React's own spelling for a folded panel.
-        // Matched as an attribute rather than as a word, so neither the
-        // `aria-hidden` chrome nor the six kits' `overflow:hidden` reads as one.
-        expect(html, `${slug} folded on a phone`).not.toMatch(/\shidden[>\s]/)
+        // `hidden=""` is what `renderToStaticMarkup` emits for React's boolean
+        // `hidden` — NOT a bare `hidden`, which is what this first reached for
+        // and which nothing in the document could ever have matched. Written as
+        // the attribute with its empty value, it discriminates three ways: the
+        // `aria-hidden="true"` chrome has a `-` where the leading space must be
+        // AND a value, and the six kits' `overflow:hidden` has a `:`.
+        expect(html, `${slug} folded on a phone`).not.toMatch(/\shidden=""/)
         expect(html.replace(/<[^>]*>/g, ''), `${slug} lost its praxis`).toContain(
           PRAXIS[0].task_title,
         )

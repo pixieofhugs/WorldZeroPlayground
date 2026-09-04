@@ -21,7 +21,8 @@
  * other two; both are retired, and `src/__tests__/retiredSurfaces.test.ts` holds
  * their names out of shipped source, which is why this paragraph does not spell
  * them. What survived the retirement is their SHAPE: the phone puts the two
- * long galleries behind a segmented Praxis/Tasks switch (see {@link SegTab}),
+ * long galleries behind a segmented Praxis/Tasks switch (see
+ * {@link GallerySwitch}),
  * which every kit now gets, while the laptop folds them both on
  * `PROFILE_SECTIONS` (#2958, untouched).
  *
@@ -51,6 +52,7 @@ import { useFormFactor } from '../../../hooks/useFormFactor'
 import type { BadgeOut } from '../../../api/auth'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
 import CredentialCard from '../../../components/CredentialCard'
+import SegmentedRail from '../../../components/ui/FilterBar/SegmentedRail'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
 import { mediaUrl } from '../../../utils/media'
@@ -115,17 +117,18 @@ interface ProfileKit {
   /** Display font for the big name + section headings. */
   displayFont: string
   /**
-   * Anything else the kit's display face carries wherever THIS module sets it —
-   * the empty-state title, the level numeral, the badges heading (#2996).
+   * The SLOPE of that face, wherever this module sets it — the empty-state
+   * title, the level numeral, the badges heading (#2996).
    *
-   * It exists for exactly one trait and one kit: na's display cut is italic,
-   * and na wrote `className="font-display italic"` at every one of those three
-   * sites while it owned its own renderer. `displayFont` is a `font-family` and
-   * cannot carry a style, so delegating without this would have un-italicised
-   * na's page. A kit may NOT set `fontFamily` or `fontSize` here — the family is
-   * `displayFont`'s and the size is the site's.
+   * One trait, one kit, and typed as the one trait rather than as a style
+   * object: na's display cut is italic, and na wrote
+   * `className="font-display italic"` at each of those three sites while it
+   * owned its own renderer, so delegating without this un-italicised its page.
+   * `displayFont` is a `font-family` and cannot carry a slope. A `CSSProperties`
+   * here would have taken `fontSize` and `fontFamily` too, under nothing but a
+   * comment asking a kit not to — this way the type is the rule.
    */
-  displayExtra?: CSSProperties
+  displayFontStyle?: CSSProperties['fontStyle']
   /** Small mono/label eyebrow font. */
   eyebrowFont: string
   /** Body font for meta lines. */
@@ -485,71 +488,49 @@ export function BadgeRow({
 type Segment = 'praxis' | 'tasks'
 
 /**
- * One half of the phone's Praxis/Tasks switch — ONE control for all nine
- * (#2996), lifted from `DefaultProfileBody` rather than written a third time.
+ * THE PHONE'S SWITCH IS THE APP'S OWN SEGMENTED RAIL (#2996).
  *
- * The ON half INVERTS: it fills with the page's primary ink and prints the page
- * itself, the same two lines every other inverted pill in the app carries
- * (`.btn-primary`, `.chip-active`, `ScoreToggle`, `ProposeTaskLink`, the Field
- * Desk's own browse switch).
+ * This was a bespoke `SegTab` pair for one commit, lifted out of the retired na
+ * phone branch — which was the wrong lift. `components/ui/FilterBar` already
+ * owns this control: the same two-value choice, the same `aria-pressed`, a
+ * `role="group"` with a name, a measured sliding thumb, and its selected ink as
+ * a `data-on` attribute in `07-layout-filter-bar.css` so the pairing flips with
+ * the theme in ONE place rather than through an inline ternary (STYLE §1.3).
+ * Three things the copy got wrong on its own: `flex: 1` (a 0 basis is the equal
+ * share `.filter-rail__segment` says in prose not to use), an inline
+ * `on ? … : …` for every painted property, and a 36px tap target under the
+ * repo's 44px floor — which the rail already meets at phone width.
  *
- * IT USED TO INK WITH `--color-text-on-accent` AND THAT WAS #2107. That neutral
- * is `#ffffff` in `:root` alone and never flips, while `--color-text-primary`
- * flips to a warm cream (`#f0e6d0`) in dark — so the dark pill was white on
- * cream at **1.24:1**, the label all but gone, while light read a fine 18.51:1.
- * `--color-bg-page` is the ground that neutral is measured against and flips
- * with it: 16.86:1 light, 15.00:1 dark. Identical defect to the faction page's
- * join button (#1819); the guard at the bottom of `factionContrast.test.ts` is
- * what stops the third copy. The OFF half is `--color-text-secondary` over the
- * rail's `--color-bg-surface-alt` composite: 7.31:1 / 7.21:1, the AAA pairing
- * that file already gates as "app alt surface".
- *
- * ponytail: THE SWITCH IS NOT DRESSED BY THE KIT, and that is a decision rather
- * than an omission. Ceiling: on Singularity's terminal and WOW's parchment this
- * pill is app-neutral chrome sitting on faction ground. Two reasons it stays
- * that way for now — the pairing above is measured and gated, where `kit.ink`
- * on `kit.surface` is measured per kit but its INVERSE is not stated anywhere;
- * and WOW's five `--wow-profile-*` reads have no declarer since its phone root
- * retired, so a kit-dressed pill would paint WOW's ON half transparent. The
- * theme scoping does travel: a kit that pins `dataTheme` on its container flips
- * these neutrals with it. Upgrade path is a paint-lane issue with screenshots,
- * two knobs (`segOn` / `segOff`) and a contrast row per kit.
+ * A rail wants a group NAME, not just two segment labels.
+ * ponytail: it borrows `leaderboard.roster.railLabel` ("Show"), the players
+ * roster's own rail label. Ceiling: a `leaderboard.*` key read on a profile,
+ * the same shape this repo already tolerates for `sidebar.characterCard.*` two
+ * files over. It is the right WORD — the rail chooses what is shown — and this
+ * issue was told to mint no new copy. Upgrade path: a `profile.mobile.tabsLabel`
+ * beside the two tab keys, the day someone owns profile copy.
  */
-function SegTab({
-  on,
-  onClick,
-  children,
+function GallerySwitch({
+  segment,
+  onChange,
 }: {
-  on: boolean
-  onClick: () => void
-  children: ReactNode
+  segment: Segment
+  onChange: (next: Segment) => void
 }) {
+  const { t } = useTranslation('common')
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      // The state a screen reader is owed. Two mutually exclusive halves of one
-      // control, and the pressed one is the gallery on screen — the harness's
-      // only handle on the switch too, since it cannot press it.
-      aria-pressed={on}
-      style={{
-        flex: 1,
-        fontFamily: 'var(--font-body)',
-        fontSize: 'var(--text-lg)',
-        fontWeight: on ? 700 : 400,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        color: on ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
-        background: on ? 'var(--color-text-primary)' : 'transparent',
-        border: 'none',
-        borderRadius: 999,
-        padding: 'var(--space-sm) 0',
-        minHeight: 36,
-        cursor: 'pointer',
+    <SegmentedRail
+      rail={{
+        key: 'profile-gallery',
+        label: t('leaderboard.roster.railLabel'),
+        value: segment,
+        defaultValue: 'praxis',
+        segments: [
+          { value: 'praxis', label: t('profile.mobile.tabPraxis') },
+          { value: 'tasks', label: t('profile.mobile.tabTasks') },
+        ],
+        onChange: (value) => onChange(value as Segment),
       }}
-    >
-      {children}
-    </button>
+    />
   )
 }
 
@@ -638,7 +619,7 @@ export function ProfileSkin({
             <div
               style={{
                 fontFamily: kit.displayFont,
-                ...kit.displayExtra,
+                fontStyle: kit.displayFontStyle,
                 fontSize: 'var(--text-title)',
                 color: kit.ink,
               }}
@@ -718,23 +699,7 @@ export function ProfileSkin({
    */
   const mainColumn = mobile ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', minWidth: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--space-xs)',
-          padding: 'var(--space-xs)',
-          borderRadius: 999,
-          background: 'var(--color-bg-surface-alt)',
-          border: '1px solid var(--color-border)',
-        }}
-      >
-        <SegTab on={segment === 'praxis'} onClick={() => setSegment('praxis')}>
-          {t('profile.mobile.tabPraxis')}
-        </SegTab>
-        <SegTab on={segment === 'tasks'} onClick={() => setSegment('tasks')}>
-          {t('profile.mobile.tabTasks')}
-        </SegTab>
-      </div>
+      <GallerySwitch segment={segment} onChange={setSegment} />
       {segment === 'praxis' ? praxisGallery : proposedGallery}
     </div>
   ) : (
@@ -759,6 +724,50 @@ export function ProfileSkin({
         <SectionPanel section={sections.proposed}>{proposedGallery}</SectionPanel>
       </section>
     </div>
+  )
+
+  /**
+   * ③ Badges — hidden entirely when empty, and ABOVE the galleries on a phone.
+   *
+   * The laptop lays it as a 300px rail beside the main column, so its DOM
+   * position is the right-hand one. A phone has no second column, and both
+   * retired phone renderings put the badge board above the segmented switch:
+   * a board of marks is a fixed few rows, where a gallery is unbounded, so
+   * below the switch it lands after a scroll whose length is the player's
+   * praxis count. Ordered in the DOM rather than by CSS `order`, so a screen
+   * reader and a sighted reader meet the sections in the same sequence.
+   */
+  const badgeRail = (
+    <aside>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          marginBottom: 'var(--space-lg)',
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: kit.displayFont,
+            fontStyle: kit.displayFontStyle,
+            fontSize: 'var(--text-title)',
+            margin: 0,
+            color: kit.ink,
+          }}
+        >
+          {t('profile.badgesHeading')}
+        </h2>
+        <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>
+      </div>
+      <div style={kit.badgeBoardStyle}>
+        {badges.map((badge, index) => (
+          <span key={badge.key}>
+            {kit.badgeRow(badge, index === badges.length - 1)}
+          </span>
+        ))}
+      </div>
+    </aside>
   )
 
   return (
@@ -875,7 +884,7 @@ export function ProfileSkin({
                     <span
                       style={{
                         fontFamily: kit.displayFont,
-                        ...kit.displayExtra,
+                        fontStyle: kit.displayFontStyle,
                         fontSize: 'var(--text-title)',
                         color: kit.accent,
                       }}
@@ -962,13 +971,46 @@ export function ProfileSkin({
                         />
                       )}
                     </div>
-                    {/* An absolute-score footnote ("> 1880 PTS LOGGED") hung
-                        here, drawn only when a kit set `scoreFootnote`.
-                        Singularity was the one kit that did, #1909 CUT its
-                        string, and #1911 took the knob: a slot no kit can fill
-                        draws nothing, which is what the other six already
-                        looked like. `common:profile.ptsToNext` still holds the
-                        neutral wording if the line is ever wanted back. */}
+                    {/* THE WHOLE CLIMB, at the caption tier (#2127) — and for
+                        all nine since #2996, where it was na's alone.
+
+                        na drew it in both of its retired branches and the
+                        shared skin had no slot for it, so delegating deleted a
+                        real readout from the page: the bar above says where you
+                        are INSIDE the band, and this is the only line that says
+                        where the band sits on the era's whole curve. It is the
+                        voice the home page's "185 all-time" caption uses, and
+                        `.label-caption` is the minted tier (#1307), so nothing
+                        new is invented for it.
+
+                        The ink is `--label-ink` repointed at `headerMuted` —
+                        the ink the two lines directly above it already use, in
+                        this same panel, on this same ground. Left at its app
+                        default it would put a neutral tertiary on eight
+                        factions' own stock, which is a pairing nothing has
+                        measured; taking the header's own quiet ink is the same
+                        pairing one row up.
+
+                        At the top of the curve there is no threshold for it to
+                        annotate and the line goes (#2383) — the era-points
+                        figure it carries is still on the credential beside this
+                        panel. An absolute-score footnote ("> 1880 PTS LOGGED")
+                        also hung here behind a `scoreFootnote` knob; #1909 cut
+                        its string and #1911 took the knob. That is not this. */}
+                    {progression.nextLevel !== null && (
+                      <div
+                        className="label-caption"
+                        style={{
+                          marginTop: 'var(--space-xs)',
+                          ['--label-ink' as string]: headerMuted,
+                        }}
+                      >
+                        {t('profile.ptsToNext', {
+                          score: character.score,
+                          threshold: progression.nextThreshold,
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1001,39 +1043,10 @@ export function ProfileSkin({
               alignItems: 'start',
             }}
           >
+            {/* On a phone the rail comes FIRST — see `badgeRail`. */}
+            {mobile && badgeRail}
             {mainColumn}
-
-            {/* ── ③ Badges — hidden entirely when empty ── */}
-            <aside>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-md)',
-                  marginBottom: 'var(--space-lg)',
-                }}
-              >
-                <h2
-                  style={{
-                    fontFamily: kit.displayFont,
-                    ...kit.displayExtra,
-                    fontSize: 'var(--text-title)',
-                    margin: 0,
-                    color: kit.ink,
-                  }}
-                >
-                  {t('profile.badgesHeading')}
-                </h2>
-                <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>
-              </div>
-              <div style={kit.badgeBoardStyle}>
-                {badges.map((badge, index) => (
-                  <span key={badge.key}>
-                    {kit.badgeRow(badge, index === badges.length - 1)}
-                  </span>
-                ))}
-              </div>
-            </aside>
+            {!mobile && badgeRail}
           </div>
         ) : (
           mainColumn

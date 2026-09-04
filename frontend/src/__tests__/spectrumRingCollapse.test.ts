@@ -203,11 +203,14 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
     // `inherit` reads the DIRECT parent. It replaced a hardcoded 16 that had to
     // track this, so the band's own corner is the pairing.
     //
-    // ONE BAND SINCE #2996, where this counted two: na drew the band in each of
-    // its two hand-authored branches, and the pair had to agree. na is the
-    // ninth kit now, so the band is written once — in the `headerFrame` slot of
-    // this file's dress, which is also where the ornament is mounted, so the
-    // parent `inherit` reads and the corner it reads are three lines apart.
+    // ONE DECLARATION SINCE #2996, where this counted two: na drew the band in
+    // each of its two hand-authored branches and the pair had to agree. na is
+    // the ninth kit now, and its `headerFrame` slot draws the band twice for a
+    // different reason — once per side of the ramp-or-hue seam — so the
+    // GEOMETRY is hoisted into one `BAND` const that both spread. That is what
+    // keeps this a count of one, and it is the stronger arrangement: the corner
+    // `.alb-profile-edge` inherits cannot drift between the two paints, because
+    // there is only one place to write it.
     expect(
       (PROFILE_BODY.match(/borderRadius: 16,/g) ?? []).length,
       "the na identity band lost the 16px corner `.alb-profile-edge` inherits",

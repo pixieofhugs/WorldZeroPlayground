@@ -12,9 +12,10 @@
  * laptop branch and a phone branch, dispatch between them on `useFormFactor()`,
  * and say so in a comment that never justified it. Both are retired, and
  * `src/__tests__/retiredSurfaces.test.ts` is what holds their names out of
- * shipped source — which is why they are not spelt out here. The cost was measurable rather than theoretical: the folding
- * galleries (#2958) landed in two files in one commit, `BadgeRow` existed twice,
- * and `SegTab` existed three times. What is left here is a `ProfileDress` — the
+ * shipped source — which is why they are not spelt out here. The cost of the
+ * two was measurable rather than theoretical: the folding galleries (#2958)
+ * landed in two files in one commit, `BadgeRow` existed twice, and the phone's
+ * segmented switch existed three times. What is left here is a `ProfileDress` — the
  * costume, and only the costume. The spine is `ProfileSkin`'s, stated there.
  *
  * WHAT THE PORT CHANGED, AND WHY EACH ONE IS DELIBERATE:
@@ -28,12 +29,46 @@
  *    `--color-text-secondary` at the points-into-level line beside them. The
  *    shared header has one `muted` role, so the four tertiary sites DARKEN by a
  *    tier — the safe direction, and the reading every other kit already gets.
- *  - The phone's band and bar were `factionFill(slug, 'bar')` — a per-slug seam
- *    for a themed faction with no `profileBody` row of its own. The laptop half
- *    never had it and painted the spectrum for everyone, so the collapse takes
- *    the laptop's answer. Every live slug but na and Albescent has its own row.
  *  - The phone stack's segmented switch is now `ProfileSkin`'s, drawn for all
- *    nine (#2996). Same two keys, same two words.
+ *    nine (#2996). Same two keys, same two words. It is the app's own
+ *    `SegmentedRail`, so it also gains that control's 44px tap target where na
+ *    hand-rolled 36.
+ *  - Two laptop measurements take the shared skin's value rather than na's, and
+ *    both are the same call: a shared spine may not fork for one kit over a
+ *    number neither design argues for. The badge rail is a hard `300px` column
+ *    where na wrote `fit-content(300px)`, so the rail no longer shrinks to a
+ *    short badge name and the main column no longer takes the slack; and the
+ *    identity column's floor is `300` where na wrote `280`, which moves the
+ *    header's wrap point 20px earlier. Both are on the PR's eyeball list. If
+ *    either turns out to be load-bearing for na, the fix is a kit knob, not a
+ *    second grid.
+ *  - The absolute-score caption under the level bar (`profile.ptsToNext`) is
+ *    unchanged in wording and position, but it is now drawn by the shared skin
+ *    for ALL NINE rather than by na alone. Delegating deleted it outright for a
+ *    commit — the skin had no slot — which is the one thing here that was a
+ *    silent regression rather than a stated change.
+ *
+ * THIS IS ALSO THE FALL-THROUGH BODY, AND THE SEAM THAT MAKES IT ONE IS
+ * `isKnownFaction` (ADR-0039, #749). A faction with no `profileBody` row in its
+ * manifest lands here, and it must not be handed na's rainbow: the spectrum is
+ * the UNAFFILIATED identity, so a themed slug reaching this file wears its own
+ * solid hue through `factionFill(slug, 'bar')` and na, Albescent and an
+ * unregistered string wear the ramp. The predicate reads the MAPPED css key, so
+ * Albescent resolves to `default` and keeps the spectrum without this file ever
+ * naming the society — which is the whole of ADR-0048's posture on this surface.
+ *
+ * It used to be a PHONE-ONLY seam, because the retired laptop branch painted the
+ * spectrum for everyone and only the retired phone branch asked the question.
+ * One renderer means one answer, and the phone's is the correct one: it is the
+ * half that had read ADR-0039. So the three mounts below take it at both widths,
+ * and each is written as two sibling mounts rather than a computed class —
+ * `albescentSpectraMove`'s census reads a literal className out of this source,
+ * and a `spectrum ? 'spectrum-rule' : undefined` would make all three invisible
+ * to the guard that keeps them travelling.
+ *
+ * The two `.spectrum-dial` mounts (the FDL laurel's ring, the badge medallions)
+ * are deliberately NOT on that seam: both retired branches drew them for every
+ * slug, and the dial is the top-praxis mark rather than an identity band.
  *
  * THREE SPECTRUM MOUNTS LIVE IN THIS FILE, and they must stay in it (#2500,
  * epic #2496 ruling 3): the section head's hairline, the identity band, and the
@@ -48,7 +83,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { factionSheet } from '../../../utils/factions'
+import { factionFill, factionSheet, isKnownFaction } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, type ProfileDress } from './profileSkin'
@@ -73,7 +108,9 @@ const EYEBROW: CSSProperties = {
 }
 
 /** na's display cut is italic. `displayFont` is a family and cannot say so, so
- *  the trait travels beside it — see `ProfileKit.displayExtra`. */
+ *  the slope travels beside it — see `ProfileKit.displayFontStyle`. The object
+ *  form is still what the two SLOT styles want (the tagline and the badge name
+ *  take a whole `CSSProperties`); the skin's own three sites take the value. */
 const ITALIC: CSSProperties = { fontStyle: 'italic' }
 
 /**
@@ -87,7 +124,38 @@ const ITALIC: CSSProperties = { fontStyle: 'italic' }
  * CHILDLESS, or `.alb-moves .spectrum-rule:empty` stops reaching it and an
  * Albescent member's section heads quietly stand still.
  */
-function SectionHeading({ title, eyebrow }: { title: ReactNode; eyebrow?: string }) {
+const HAIRLINE: CSSProperties = { flex: 1, height: 3, borderRadius: 3, opacity: 0.5 }
+
+/**
+ * The identity band's GEOMETRY, written once and spread by both sides of the
+ * ramp-or-hue seam. Only the paint differs between them, and the 16px corner in
+ * particular may not: `.alb-profile-edge` takes `border-radius: inherit` from
+ * whichever band it is mounted on (#2407), and `spectrumRingCollapse.test.ts`
+ * counts this one declaration to hold the pairing together.
+ */
+const BAND: CSSProperties = {
+  position: 'relative',
+  overflow: 'hidden',
+  borderRadius: 16,
+  padding: 'var(--space-xs)',
+  boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
+  marginBottom: 'var(--space-2xl)',
+}
+
+/** The level bar's filled length, likewise — the width is the only per-render
+ *  value and the paint is the only per-slug one. */
+const BAR: CSSProperties = { height: '100%', borderRadius: 20, transition: 'width 300ms' }
+
+function SectionHeading({
+  title,
+  eyebrow,
+  slug,
+}: {
+  title: ReactNode
+  eyebrow?: string
+  /** The viewer's faction, for the ramp-or-hue seam. */
+  slug: string
+}) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
       <h2
@@ -97,16 +165,11 @@ function SectionHeading({ title, eyebrow }: { title: ReactNode; eyebrow?: string
         {title}
       </h2>
       {eyebrow && <span style={{ ...EYEBROW, letterSpacing: '0.08em' }}>{eyebrow}</span>}
-      <span
-        aria-hidden
-        className="spectrum-rule"
-        style={{
-          flex: 1,
-          height: 3,
-          borderRadius: 3,
-          opacity: 0.5,
-        }}
-      />
+      {isKnownFaction(slug) ? (
+        <span aria-hidden style={{ ...HAIRLINE, ...factionFill(slug, 'bar') }} />
+      ) : (
+        <span aria-hidden className="spectrum-rule" style={HAIRLINE} />
+      )}
     </div>
   )
 }
@@ -174,7 +237,18 @@ function FdlLaurel() {
  * unaffiliated identity is a gradient, so it appears wherever a gradient can go,
  * and a `background` is somewhere it can. */
 
-const dress: ProfileDress = {
+/**
+ * The costume, per slug — see the fall-through paragraph in the file docblock.
+ *
+ * A function rather than a module constant because three of its mounts ask
+ * `isKnownFaction`, and a constant can only answer for one slug. Rebuilt each
+ * render, which costs an object literal: `ProfileSkin` reads the kit's fields
+ * during render and memoizes nothing on its identity, so there is nothing for a
+ * stable reference to buy.
+ */
+function naDress(slug: string): ProfileDress {
+  const spectrum = !isKnownFaction(slug)
+  return {
   slug: 'na',
   // No plate. na's ground is the `.na-backdrop` wash the wrapper mounts, which
   // is a full-VIEWPORT fixed layer and cannot be a page background value.
@@ -188,7 +262,7 @@ const dress: ProfileDress = {
   surface: 'var(--color-bg-surface-alt)',
   border: 'var(--color-border)',
   displayFont: 'var(--font-display)',
-  displayExtra: ITALIC,
+  displayFontStyle: 'italic',
   eyebrowFont: 'var(--font-body)',
   bodyFont: 'var(--font-body)',
 
@@ -203,30 +277,30 @@ const dress: ProfileDress = {
    * inherit` reads (#2407); `spectrumRingCollapse.test.ts` holds the two
    * together, and it is ONE mount now rather than one per form factor.
    */
-  headerFrame: (band, ornament) => (
-    <div
-      className="spectrum-rule"
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 16,
-        padding: 'var(--space-xs)',
-        boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
-        marginBottom: 'var(--space-2xl)',
-      }}
-    >
-      {ornament}
-      {band}
-    </div>
-  ),
+  headerFrame: (band, ornament) =>
+    spectrum ? (
+      <div className="spectrum-rule" style={BAND}>
+        {ornament}
+        {band}
+      </div>
+    ) : (
+      <div style={{ ...BAND, ...factionFill(slug, 'bar') }}>
+        {ornament}
+        {band}
+      </div>
+    ),
   // The sheet inside that ramp. `factionSheet()` with no slug is the neutral
-  // family — the same stock the phone stack painted for an unaffiliated player.
+  // family — na's own stock, so a themed slug takes the app's alt surface
+  // instead, exactly as the retired phone branch did.
   headerStyle: {
     borderRadius: 12,
-    ...factionSheet(),
+    ...(spectrum ? factionSheet() : { background: 'var(--color-bg-surface-alt)' }),
     padding: 'var(--space-xl)',
   },
-  taglineExtra: { ...ITALIC, color: 'var(--na-profile-body-ink)' },
+  taglineExtra: {
+    ...ITALIC,
+    color: spectrum ? 'var(--na-profile-body-ink)' : 'var(--color-text-primary)',
+  },
 
   progressionStyle: {
     marginTop: 'var(--space-xl)',
@@ -246,23 +320,20 @@ const dress: ProfileDress = {
    * `.spectrum-rule` is how the stylesheet reaches it, and how Albescent's
    * motion does.
    */
-  levelBar: (percent) => (
-    <div
-      className="spectrum-rule"
-      style={{
-        height: '100%',
-        borderRadius: 20,
-        width: `${percent}%`,
-        transition: 'width 300ms',
-      }}
-    />
-  ),
+  levelBar: (percent) =>
+    spectrum ? (
+      <div className="spectrum-rule" style={{ ...BAR, width: `${percent}%` }} />
+    ) : (
+      <div style={{ ...BAR, width: `${percent}%`, ...factionFill(slug, 'bar') }} />
+    ),
   // Unread while `levelBar` is set; declared because `ProfileDress` requires a
   // fill and because it is what the bar would be without the class.
   barFill: 'var(--faction-default-rainbow)',
   barTrack: 'var(--color-border)',
 
-  sectionHeading: (title, eyebrow) => <SectionHeading title={title} eyebrow={eyebrow} />,
+  sectionHeading: (title, eyebrow) => (
+    <SectionHeading title={title} eyebrow={eyebrow} slug={slug} />
+  ),
 
   emptyStateStyle: {
     border: '1.5px dashed var(--color-border-strong)',
@@ -328,6 +399,7 @@ const dress: ProfileDress = {
       )}
     />
   ),
+  }
 }
 
 /**
@@ -368,7 +440,11 @@ export default function DefaultProfileBody({
           scaffolding for nobody. */}
       <div className="na-backdrop" aria-hidden />
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <ProfileSkin props={props} kit={dress} identityOrnament={identityOrnament} />
+        <ProfileSkin
+          props={props}
+          kit={naDress(props.character.faction_slug)}
+          identityOrnament={identityOrnament}
+        />
       </div>
     </div>
   )

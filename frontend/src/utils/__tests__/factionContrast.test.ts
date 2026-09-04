@@ -963,6 +963,64 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-avatar-pill-text",
   },
 
+  // WOW — THE PROFILE PAGE'S OWN GROUND (#2996). Four readings that did not
+  // exist last week, and the reason they do is worth stating: the profile kit
+  // asks for `ink` and `quiet` by ROLE, and until this issue the prefix those
+  // reads named (`--wow-profile-*`) was declared only on the retired phone
+  // skin's root — so on the laptop they resolved to nothing and the type
+  // inherited. Retiring that root forced the reads onto `factionRoleVar`, which
+  // is the singular resolver every rootless WOW module already uses, and the
+  // two tokens started painting for the first time.
+  //
+  // The GROUND is not the cream card. `ProfileSkin` paints the page in the
+  // kit's `pageBackground`, a 165deg ramp between these two stops, and three
+  // pieces of real text stand directly on it: the ② About paragraph and the
+  // empty-proposed-tasks line in `quiet`, the ③ Badges heading in `ink`. That is
+  // blind spot 2 in this file's own docblock — an ink on a ground no role names
+  // — so it is a hand-written row, and it is measured against BOTH stops
+  // because a ramp has no single value and the type crosses the whole run.
+  {
+    what: "wow profile page ground (from), quiet ink",
+    surface: "--faction-wow-ground-from",
+    text: "--faction-wow-card-muted",
+  },
+  // ── THE FIFTH ROW IS MISSING ON PURPOSE, AND THIS IS THE FINDING ──
+  //
+  //   light | --faction-wow-card-muted (#7a6b45)
+  //           on --faction-wow-ground-to (#f1e3b8) = 4.09:1, needs 4.5:1
+  //
+  // The row above measures the ramp's OTHER stop and clears; dark clears at
+  // both. So WOW's quiet ink is legible across the top of its own page ramp and
+  // fails across the bottom of it, in light only — which is the two lines named
+  // above (the About paragraph, the empty-proposed-tasks line) at the foot of a
+  // long page, exactly where the ramp has run out.
+  //
+  // NOT BASELINED: this file's ratchet only ever shrinks and says in its own
+  // words never to add a line for new work. NOT REPAINTED EITHER — picking the
+  // replacement value is a paint decision with a screenshot behind it, and the
+  // tree lane that surfaced this may not take it. Reported on #2996's PR for a
+  // ruling; the two candidate shapes are walking `--faction-wow-card-muted`
+  // down the same hue (what #896 did for `-accent-deep` on the cream card, six
+  // rows up) or grounding those two lines on the kit's plate, which the row
+  // below shows is a measured surface. The row lands here when one is chosen.
+  {
+    what: "wow profile page ground (from), heading ink",
+    surface: "--faction-wow-ground-from",
+    text: "--faction-wow-card-text",
+  },
+  {
+    what: "wow profile page ground (to), heading ink",
+    surface: "--faction-wow-ground-to",
+    text: "--faction-wow-card-text",
+  },
+  // The fourth newly-resolving site, and it is NOT on the page: the praxis
+  // empty state is the kit's own plate, with `ink` on it.
+  {
+    what: "wow profile empty state, ink on plate",
+    surface: "--faction-wow-plate",
+    text: "--faction-wow-card-text",
+  },
+
   // WOW — THE LISTS (#895), the duel seal and the duel rail. The kit states its
   // own four `--faction-wow-duel-*` tokens and a contrast table, and the table
   // is wrong in BOTH directions: it claims 7.2:1 for champion/ink (measures
