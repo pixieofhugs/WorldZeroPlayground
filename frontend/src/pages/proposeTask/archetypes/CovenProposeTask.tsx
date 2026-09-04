@@ -44,10 +44,11 @@
  *  - `FilterLevelNodes` (the minimum-level row) paints
  *    `--color-bg-surface` / `--color-text-secondary`, and takes no style hook at
  *    all, so it cannot be dressed from here.
- *  - `proposeTask/factionSurfaces.ts`'s `proposeCardStyle` / `taskNameInputStyle`
- *    / `metaBoxStyle` / `submitButtonStyle` are the NA KIT's four surfaces —
- *    a `--faction-default-card-bg` frame, a `--color-border-strong` rule, a
- *    rounded pill CTA. They are that kit's dress, not a shared chassis, and
+ *  - the NA KIT's own four surfaces — the sheet's frame, the name field, the
+ *    metatask box and the CTA. They were `proposeTask/factionSurfaces.ts`'s
+ *    four inline builders until #2993 rebuilt that page on this same chassis
+ *    and deleted the module; they are `DefaultProposeTask`'s own dress now, and
+ *    they are still that kit's dress rather than a shared chassis.
  *    `unaffiliatedOption.test.tsx` says so in as many words: "a faction
  *    archetype draws its own register and would fail them by doing its job."
  *
