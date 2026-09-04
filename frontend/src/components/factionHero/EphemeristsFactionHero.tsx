@@ -3,7 +3,7 @@ import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 import {
   BAND,
   BAND_INK,
@@ -113,8 +113,9 @@ export default function EphemeristsFactionHero({
               color: GOLD,
               marginBottom: "var(--space-sm)",
             }}
-            text={i18n.t("feed:factionHero.ephemerists.eyebrow")}
-          />
+          >
+            {i18n.t("feed:factionHero.ephemerists.eyebrow")}
+          </HeroKicker>
           <HeroWordmark
             style={{
               fontFamily: DECO,
@@ -153,7 +154,8 @@ export default function EphemeristsFactionHero({
               itself — one stable string, so the row is the hero's own and comes
               back byte-identical on every render. */}
           <EphemeristsNotationBand seed="faction:ephemerists" side="band" />
-          <div
+          <HeroTagline
+            slug={slug}
             style={{
               display: "inline-block",
               marginTop: "var(--space-md)",
@@ -165,9 +167,7 @@ export default function EphemeristsFactionHero({
               padding: "5px 16px",
               border: `1px solid ${BRASS}`,
             }}
-          >
-            {heroTagline(slug)}
-          </div>
+          />
           <p
             className="content-text"
             style={{
@@ -207,7 +207,9 @@ export default function EphemeristsFactionHero({
         {/* Right column: emblem + a stat ledger on the side (standardization:
             stats sit beside the emblem, never a full-width band). */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)", alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
-          <EmblemOctagon size={112} />
+          <HeroMark>
+            <EmblemOctagon size={112} />
+          </HeroMark>
           {/* `eph-turn-scope` is WCAG 2.2.2's pause mechanism for the captions'
               turn: the stylesheet's rule is a descendant selector, so the ledger
               is the scope rather than each caption carrying a wrapper. */}

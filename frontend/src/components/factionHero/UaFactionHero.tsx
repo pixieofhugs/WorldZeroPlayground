@@ -4,7 +4,7 @@ import { UaSigil } from "../sigil/UaSigil";
 import UaMandala from "../factionMarks/UaMandala";
 import { UA_DISPLAY, UA_EYEBROW } from "../factionMarks/uaAtoms";
 import { factionRoleVars } from "../../utils/factionRoles";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * UA faction-page hero (kit §13, #851).
@@ -87,9 +87,11 @@ export default function UaFactionHero({
               gap: "var(--space-xl)",
             }}
           >
-            <UaSigil width={96} height={96} />
+            <HeroMark>
+              <UaSigil width={96} height={96} />
+            </HeroMark>
             <div style={{ flex: 1, minWidth: 260 }}>
-              <HeroKicker style={UA_EYEBROW} text={i18n.t("feed:factionHero.ua.eyebrow")} />
+              <HeroKicker style={UA_EYEBROW}>{i18n.t("feed:factionHero.ua.eyebrow")}</HeroKicker>
               {/* The wrap rule is the frame's (#2997). #2332 renamed the
                   faction from "UA" to "Unwavering Artisans", so this is no
                   longer two glyphs — but its longest unbreakable run,
@@ -120,7 +122,8 @@ export default function UaFactionHero({
                   `--text-title`, 0.02em) so it is the kit's existing step
                   rather than a new one. Same key as the select tile, which is
                   the whole of #2805. */}
-              <div
+              <HeroTagline
+                slug={slug}
                 style={{
                   fontFamily: UA_DISPLAY,
                   fontWeight: 600,
@@ -128,9 +131,7 @@ export default function UaFactionHero({
                   letterSpacing: "0.02em",
                   color: "var(--leaf-faction-hero-ink)",
                 }}
-              >
-                {heroTagline(slug)}
-              </div>
+              />
             </div>
           </div>
         </div>

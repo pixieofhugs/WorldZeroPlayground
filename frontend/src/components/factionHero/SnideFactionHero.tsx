@@ -2,7 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): faint
@@ -187,8 +187,9 @@ export default function SnideFactionHero({
               letterSpacing: "0.05em",
               transform: "rotate(-1.5deg)",
             }}
-            text={i18n.t("feed:factionHero.snide.eyebrow")}
-          />
+          >
+            {i18n.t("feed:factionHero.snide.eyebrow")}
+          </HeroKicker>
           {/* THE WORDMARK IS ACID, SO IT CARRIES THE PLATE (#2173, #2343). Acid
               on the light wall is 1.026:1 — the faction's own name, invisible —
               and there is no darker acid to reach for: the wall's luminance
@@ -287,7 +288,8 @@ export default function SnideFactionHero({
           </p>
           </hgroup>
           {/* motto */}
-          <div
+          <HeroTagline
+            slug={slug}
             style={{
               display: "inline-block",
               marginTop: "var(--space-lg)",
@@ -304,9 +306,7 @@ export default function SnideFactionHero({
               transform: "rotate(-2deg)",
               boxShadow: "2px 3px 0 var(--faction-snide-pink)",
             }}
-          >
-            {heroTagline(slug)}
-          </div>
+          />
         </div>
 
         {/* right: slapped sigil + acid stat chits stacked on the side */}
@@ -321,6 +321,7 @@ export default function SnideFactionHero({
           }}
         >
           {/* slapped sigil sticker, tilted */}
+          <HeroMark>
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: offset of the slapped sigil sticker; rounding reflows the tilted paste-up. */}
           <div style={{ position: "relative", transform: "rotate(9deg)", margin: "2px 10px 6px 0" }}>
             <div
@@ -389,6 +390,7 @@ export default function SnideFactionHero({
               <SnideSigil size={54} color={CHROME} />
             </div>
           </div>
+          </HeroMark>
 
           {/* Staggered acid stat chits — not a clean band. The frame's row is a
               real box here where the chits used to be loose siblings of the

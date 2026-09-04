@@ -52,6 +52,39 @@ const HEROES = Object.entries(surfaceMap("factionHero"));
  */
 const COUNTS = { members: 2147, tasks: 3391, praxes: 1489 };
 
+/**
+ * The markup of one slot, read by DIV DEPTH from its marker.
+ *
+ * Every assertion below has to be scoped to its own slot or it cannot fail. A
+ * faction hero is dense with ornament — a sunburst, a braid, survey grids, a
+ * confetti scatter, flyposted ghosts — and almost all of it is `<svg>`, so
+ * "does this hero draw a mark?" asked of the WHOLE document is answered yes by
+ * a hero with no mark at all. The counts are the same story: `2147` inside some
+ * unrelated inline style would satisfy a document-wide `toContain`.
+ *
+ * `HeroMark` and `HeroCounts` both render a `<div>`, so one scanner serves
+ * both. It counts `<div`/`</div>` from the marker's own tag to its close, which
+ * is exact for well-formed markup out of `renderToStaticMarkup` — and every
+ * void and foreign element in between (svg, span, p, br) is irrelevant to a
+ * div-only count.
+ */
+function slot(html: string, name: "mark" | "counts"): string {
+  const marker = `data-hero-slot="${name}"`;
+  const at = html.indexOf(marker);
+  expect(at, `the hero draws a ${name} slot`).toBeGreaterThan(-1);
+  const open = html.lastIndexOf("<div", at);
+  expect(open, `the ${name} slot's marker sits on no div`).toBeGreaterThan(-1);
+
+  let depth = 0;
+  for (let i = open; i < html.length; i++) {
+    if (html.startsWith("<div", i)) depth++;
+    else if (html.startsWith("</div>", i) && --depth === 0) {
+      return html.slice(open, i + "</div>".length);
+    }
+  }
+  throw new Error(`${name} slot is never closed`);
+}
+
 const render = (slug: string, lazy: ComponentType<FactionHeroProps>) => {
   const Hero = resolvedArchetype(lazy);
   // Not an `expect`: an unresolved archetype renders `null`, so every assertion
@@ -73,16 +106,20 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
   it.each(HEROES)("%s draws all five slots", (slug, Hero) => {
     const html = render(slug, Hero);
 
-    // ── mark ── every kit draws its own (#2997 ruling 2). The frame never
-    // renders one, so there is no slot marker to look for and the assertion is
-    // only that a DRAWING is there. All three forms are in use today and none
-    // is more correct than the others: the seven bespoke kits emit `<svg>`,
-    // na's swept ring is a `<div role="img">` holding a conic gradient, and
-    // Albescent's labyrinth is an `aria-hidden` span with the shape in a CSS
-    // `mask-image` — no markup at all. That last one is what `alb-spin` turns,
-    // so a narrower assertion here would go red on the one hero whose mark this
-    // issue was told not to touch.
-    expect(html, `${slug} draws a mark`).toMatch(/<svg|role="img"|mask-image/);
+    // ── mark ── every kit draws its own (#2997 ruling 2), so the frame supplies
+    // only the slot and the assertion is that a DRAWING is inside it. Scoped,
+    // because unscoped it could not fail: these heroes are full of `<svg>`
+    // ornament that is not a mark.
+    //
+    // All three forms are in use and none is more correct: the seven bespoke
+    // kits emit `<svg>`, na's swept ring is a `<div role="img">` holding a
+    // conic gradient, and Albescent's labyrinth is an `aria-hidden` span with
+    // the shape in a CSS `mask-image` — no markup at all. That last one is what
+    // `alb-spin` turns, so a narrower assertion would go red on the one mark
+    // this issue was told not to touch.
+    expect(slot(html, "mark"), `${slug} draws a mark in its mark slot`).toMatch(
+      /<svg|role="img"|mask-image/,
+    );
 
     // ── kicker ── the frame's element. Singularity had none until #2997:
     // its boot sequence was read as filling the slot, and the owner ruled that
@@ -106,10 +143,14 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
 
     // ── counts ── the row is the frame's, so a kit cannot quietly draw two of
     // the three. The figures are read back rather than the labels, because each
-    // faction names `members` in its own voice.
-    expect(html, `${slug} draws a counts row`).toContain('data-hero-slot="counts"');
+    // faction names `members` in its own voice — and read back INSIDE the row,
+    // so a figure drawn loose somewhere else on the hero cannot stand in for a
+    // count the row never rendered.
+    const counts = slot(html, "counts");
     for (const [name, value] of Object.entries(COUNTS)) {
-      expect(html, `${slug} draws its ${name} count`).toContain(String(value));
+      expect(counts, `${slug} draws its ${name} count in the counts row`).toContain(
+        String(value),
+      );
     }
   });
 

@@ -3,7 +3,7 @@ import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { WowBannerScatter } from "../factionMarks/wowOrnament";
 import { WowSigil } from "../sigil/WowSigil";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * WOW faction-page hero — the recruiting banner (kit §08, #900).
@@ -85,17 +85,19 @@ export default function WowFactionHero({
             textAlign: "center",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "var(--space-md)",
-              filter: "drop-shadow(0 6px 8px var(--faction-wow-stamp-shadow))",
-            }}
-          >
-            {/* well above the 56px motto floor, so the crest keeps its lettering */}
-            <WowSigil size={132} />
-          </div>
+          <HeroMark>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "var(--space-md)",
+                filter: "drop-shadow(0 6px 8px var(--faction-wow-stamp-shadow))",
+              }}
+            >
+              {/* well above the 56px motto floor, so the crest keeps its lettering */}
+              <WowSigil size={132} />
+            </div>
+          </HeroMark>
 
           {/* The kit draws no eyebrow on the banner; every other faction hero in
               the repo carries one, so WOW gets the house slot in its own display
@@ -106,8 +108,9 @@ export default function WowFactionHero({
               fontFamily: "var(--wow-hero-face)",
               color: "var(--faction-wow-accent-deep)",
             }}
-            text={i18n.t("feed:factionHero.wow.eyebrow")}
-          />
+          >
+            {i18n.t("feed:factionHero.wow.eyebrow")}
+          </HeroKicker>
 
           {/* The wrap rule is the frame's (#2997). The banner is full-width and
               centred, and "Warriors of Whimsy" sets at --text-heading with two
@@ -124,7 +127,9 @@ export default function WowFactionHero({
             {name}
           </HeroWordmark>
 
-          <p
+          <HeroTagline
+            slug={slug}
+            as="p"
             className="content-text"
             style={{
               fontFamily: "var(--faction-wow-body-font)",
@@ -132,9 +137,7 @@ export default function WowFactionHero({
               color: "var(--wow-hero-accent)",
               margin: "0 0 var(--space-lg)",
             }}
-          >
-            {heroTagline(slug)}
-          </p>
+          />
 
 
           {/* ── the muster ── */}

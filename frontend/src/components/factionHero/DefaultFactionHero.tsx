@@ -1,7 +1,7 @@
 import i18n from "../../i18n";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import FactionSigil from "../sigil/FactionSigil";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * The na frontispiece (#2504, epic #2496 ruling 11) — the fall-through
@@ -48,19 +48,20 @@ import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from ".
  * wait for JS to find that out.
  */
 export default function DefaultFactionHero({ slug, name, members, tasks, praxes }: FactionHeroProps) {
-  const tagline = heroTagline(slug);
   const counts = heroCounts(i18n.t("feed:factionHero.stats.members"), { members, tasks, praxes });
 
   return (
     <header className="faction-hero">
-      <span className="faction-hero-sigil">
-        <FactionSigil slug={slug} size={72} />
-      </span>
+      <HeroMark>
+        <span className="faction-hero-sigil">
+          <FactionSigil slug={slug} size={72} />
+        </span>
+      </HeroMark>
 
       <div>
-        <HeroKicker className="faction-hero-kicker" text={i18n.t("factions:detail.eyebrow")} />
+        <HeroKicker className="faction-hero-kicker">{i18n.t("factions:detail.eyebrow")}</HeroKicker>
         <HeroWordmark className="faction-hero-name">{name}</HeroWordmark>
-        {tagline && <p className="faction-hero-tagline">{tagline}</p>}
+        <HeroTagline slug={slug} as="p" className="faction-hero-tagline" />
       </div>
 
       <HeroCounts className="faction-hero-counts" counts={counts}>

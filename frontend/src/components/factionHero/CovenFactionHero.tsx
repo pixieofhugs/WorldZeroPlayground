@@ -16,7 +16,7 @@ import {
   Spark,
 } from "../factionMarks/covenSlip";
 import { CovenSigil } from "../sigil/CovenSigil";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * Cozy Coven faction-page hero — the spell slip, opened out (#1209).
@@ -85,10 +85,12 @@ export default function CovenFactionHero({
             keep a second identity alive at the other five. If this ONE mount
             later wants a setting, that is a follow-up; it is not a reason to
             re-draw the pentagram here. */}
-        <CovenSigil size={74} color={DEEP} />
+        <HeroMark>
+          <CovenSigil size={74} color={DEEP} />
+        </HeroMark>
 
         <div style={{ flex: 1, minWidth: 250 }}>
-          <HeroKicker style={CAPTION} text={i18n.t("feed:factionHero.coven.eyebrow")} />
+          <HeroKicker style={CAPTION}>{i18n.t("feed:factionHero.coven.eyebrow")}</HeroKicker>
           {/* The wrap rule is the frame's (#2997). The slip's 250px floor above
               already holds "Cozy Coven" hand-set at 52px, and a name that
               outgrew it wraps at its space. */}
@@ -106,7 +108,8 @@ export default function CovenFactionHero({
             {name}
           </HeroWordmark>
           <Braid style={{ margin: "var(--space-sm) 0" }} />
-          <div
+          <HeroTagline
+            slug={slug}
             style={{
               fontFamily: DISPLAY,
               fontWeight: 600,
@@ -114,9 +117,7 @@ export default function CovenFactionHero({
               letterSpacing: "0.02em",
               color: INK,
             }}
-          >
-            {heroTagline(slug)}
-          </div>
+          />
         </div>
 
         {/* counts on the side — candle-lit panels stacked in a side column */}

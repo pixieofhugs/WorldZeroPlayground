@@ -3,7 +3,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { SingularitySigil } from "../sigil/SingularitySigil";
 import { factionRoleVars } from "../../utils/factionRoles";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The
@@ -120,9 +120,9 @@ export default function SingularityFactionHero({
           `useFormFactor()` read — #1314 gave it one because a hard `1fr 240px`
           grid at 375px squeezed the boot lines to nothing, and left a note that
           the media query "belongs to index.css, which is not this PR's to
-          edit". `.faction-hero-split` in 06-faction-chrome-2.css is that query,
+          edit". `.sg-hero-split` in 06-faction-chrome-2.css is that query,
           on the same 767px breakpoint the hook was reading. */}
-      <div className="faction-hero-split" style={{ position: "relative", zIndex: 2 }}>
+      <div className="sg-hero-split" style={{ position: "relative", zIndex: 2 }}>
         {/* The identity column, and the wordmark's SIZING CONTAINER (#2222).
             `container-type: inline-size` earns its keep twice here. It gives the
             mark below a `cqw` to resolve against — the track's own width, which
@@ -164,9 +164,10 @@ export default function SingularityFactionHero({
               the readout title's — the terminal's label register — a step
               brighter than the boot lines so the two do not read as one block.
 
-              ponytail: the STRING is provisional. See
-              `factionHero.singularity.eyebrow` in feed.json; the owner has not
-              supplied the word. */}
+              ponytail: the STRING is provisional — see #3018, which tracks the
+              owner's word for it. `factionHero.singularity.eyebrow` in
+              feed.json holds a stand-in written in the faction's own voice
+              until then; it is deliberately not the shared "Faction". */}
           <HeroKicker
             style={{
               fontSize: "var(--text-md)",
@@ -175,8 +176,9 @@ export default function SingularityFactionHero({
               color: signal(70),
               marginBottom: "var(--space-md)",
             }}
-            text={i18n.t("feed:factionHero.singularity.eyebrow")}
-          />
+          >
+            {i18n.t("feed:factionHero.singularity.eyebrow")}
+          </HeroKicker>
 
           {/* name */}
           <HeroWordmark
@@ -218,7 +220,8 @@ export default function SingularityFactionHero({
           </HeroWordmark>
 
           {/* motto */}
-          <div
+          <HeroTagline
+            slug={slug}
             style={{
               fontSize: "var(--text-base)",
               letterSpacing: "0.28em",
@@ -226,9 +229,7 @@ export default function SingularityFactionHero({
               textTransform: "uppercase",
               marginBottom: "var(--space-lg)",
             }}
-          >
-            {heroTagline(slug)}
-          </div>
+          />
 
         </div>
 
@@ -241,6 +242,7 @@ export default function SingularityFactionHero({
             alignItems: "center",
           }}
         >
+          <HeroMark>
           <div style={{ position: "relative", flexShrink: 0, width: 120, height: 120 }}>
             <div
               aria-hidden="true"
@@ -269,6 +271,7 @@ export default function SingularityFactionHero({
               <SingularitySigil size={44} color={PHOSPHOR} />
             </div>
           </div>
+          </HeroMark>
 
           {/* system readout — stats stacked in a side panel */}
           <div

@@ -1,7 +1,7 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { EverymenSigil } from "../sigil/EverymenSigil";
-import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
+import { HeroCounts, HeroKicker, HeroMark, HeroTagline, HeroWordmark, heroCounts } from "./heroFrame";
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red
@@ -100,21 +100,23 @@ export default function EverymenFactionHero({
           }}
         >
           {/* cog seal */}
-          <div
-            style={{
-              flexShrink: 0,
-              width: 116,
-              height: 116,
-              borderRadius: "50%",
-              background: CREAM,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: `0 0 0 4px ${INK}, inset 0 0 0 6px ${RED}`,
-            }}
-          >
-            <EverymenSigil size={58} color={RED} />
-          </div>
+          <HeroMark>
+            <div
+              style={{
+                flexShrink: 0,
+                width: 116,
+                height: 116,
+                borderRadius: "50%",
+                background: CREAM,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: `0 0 0 4px ${INK}, inset 0 0 0 6px ${RED}`,
+              }}
+            >
+              <EverymenSigil size={58} color={RED} />
+            </div>
+          </HeroMark>
 
           {/* The wordmark's own column. `min(240px, 100%)` rather than the
               `minWidth: 0` this had: 0 let the track collapse next to the seal,
@@ -133,8 +135,9 @@ export default function EverymenFactionHero({
                 color: GOLD,
                 marginBottom: "var(--space-xs)",
               }}
-              text={i18n.t("feed:factionHero.everymen.eyebrow")}
-            />
+            >
+              {i18n.t("feed:factionHero.everymen.eyebrow")}
+            </HeroKicker>
             <HeroWordmark
               style={{
                 fontFamily: "var(--font-accent)",
@@ -161,7 +164,8 @@ export default function EverymenFactionHero({
             >
               {name}
             </HeroWordmark>
-            <div
+            <HeroTagline
+              slug={slug}
               style={{
                 display: "inline-block",
                 marginTop: "var(--space-md)",
@@ -174,9 +178,7 @@ export default function EverymenFactionHero({
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its struck ink plaque; rounding reflows the plaque.
                 padding: "4px 14px",
               }}
-            >
-              {heroTagline(slug)}
-            </div>
+            />
           </div>
         </div>
 
