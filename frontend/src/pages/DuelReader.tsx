@@ -36,8 +36,8 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
-import { useDuelReader } from './duelReader/useDuelReader'
-import { readerMountsDuel } from './duelReader/reader'
+import { duelReaderTask, useDuelReader } from './duelReader/useDuelReader'
+import { readablePraxisId, readerMountsDuel } from './duelReader/reader'
 
 export default function DuelReader() {
   const { t } = useTranslation(['praxis', 'common'])
@@ -63,10 +63,20 @@ export default function DuelReader() {
     return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
   }
 
-  // Outcomes only. A duel that is not readable side by side still has a side
-  // that IS readable, so this lands on it rather than on a dead end.
+  // Outcomes only. A duel that cannot be read side by side usually still has a
+  // side that can be read alone, so this lands on one rather than on a dead
+  // end — preferring a submitted side, which is the one that is public.
+  //
+  // This redirect is reachable only because the hook consults the same gate
+  // BEFORE it fetches any body. Fetching first would put a guaranteed 403 (the
+  // rival's side of a live duel, #999) into `fetchError` above, and the error
+  // box would answer where this was meant to.
   if (!readerMountsDuel(state.duel) || !state.praxes) {
-    const fallback = state.duel.challenger.praxis_id ?? state.duel.opponent.praxis_id
+    const fallback =
+      readablePraxisId(state.duel.challenger) ??
+      readablePraxisId(state.duel.opponent) ??
+      state.duel.challenger.praxis_id ??
+      state.duel.opponent.praxis_id
     if (fallback == null) {
       return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
     }
@@ -75,7 +85,7 @@ export default function DuelReader() {
 
   const Archetype = resolveVariant(
     surfaceMap('duelReader'),
-    state.praxes.challenger.task_faction_slug,
+    duelReaderTask(state.praxes)?.task_faction_slug,
   )
   return <Archetype state={state} />
 }

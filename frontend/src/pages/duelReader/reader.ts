@@ -28,17 +28,41 @@ import type { DuelSideKey } from './openSide'
  * The same pair `DuelCard` draws — outcomes only. `declined` has no duel to
  * read out (the praxis is an ordinary solo, ADR-0011); `pending` and `active`
  * are the run-up, which belongs to the composer (ADR-0059), and
- * `_duel_side_hidden_condition` (#999) keeps a live-incomplete side author-only
- * so one of the two columns would not load at all.
+ * `duel_side_hidden_condition` (#999) keeps a live-incomplete side author-only,
+ * so on those two statuses the rival's praxis is a GUARANTEED 403 for everyone
+ * but its author. This gate therefore has to be consulted **before** anything
+ * is fetched, or that 403 becomes an error page where a redirect was designed.
  *
- * The `praxis_id` half is the same gate `DuelCard`'s link out carries: until
- * both entries exist there is no second side, and the reader would open on half
- * a duel. A forfeiter's thrown side is back to `in_progress` and drops its
- * `praxis_id`, which is the shape this actually catches in production.
+ * `praxis_id` says a side was cast at all; at least one side must still be
+ * readable, or there is no entry on the page and nothing to compare.
  */
 export function readerMountsDuel(duel: DuelDetailOut): boolean {
   if (duel.status !== 'settled' && duel.status !== 'resolved') return false
-  return duel.challenger.praxis_id != null && duel.opponent.praxis_id != null
+  if (duel.challenger.praxis_id == null || duel.opponent.praxis_id == null) return false
+  return duel.challenger.is_submitted || duel.opponent.is_submitted
+}
+
+/**
+ * The praxis id this side's BODY can actually be fetched with, or `null` where
+ * the reader must render that column from the duel payload alone.
+ *
+ * A CORRECTION THIS SURFACE GOT WRONG FIRST TIME ROUND, worth stating plainly:
+ * `praxis_id` is not permission to read. Unsubmitting a *settled* duel side
+ * forfeits the contest (`services/praxis.py`, ADR-0011 §Forfeit) and the duel
+ * STAYS `settled` while that praxis drops back to `in_progress`. The duel keeps
+ * pointing at it, so `praxis_id` is still set — but `praxis_visibility_condition`
+ * shows an `in_progress` praxis to its members only, so fetching it 403s for
+ * every reader except the forfeiter.
+ *
+ * `is_submitted` is the field that answers the question, and
+ * `get_duel_detail`'s own docstring says so: *"a forfeited or unsubmitted side
+ * still renders name/avatar but `is_submitted` is False."* A side without a
+ * body is exactly the column the design already draws for a forfeit — dimmed,
+ * an em-dash for a figure, `wonByDefault` on the standing — so the payload the
+ * duel already carries is enough to render it.
+ */
+export function readablePraxisId(side: DuelDetailOut['challenger']): number | null {
+  return side.is_submitted ? side.praxis_id : null
 }
 
 /**
@@ -69,12 +93,22 @@ export function arrivedFromSide(
  *    disabling them (artboard 2e). The figures are the frozen finals and there
  *    is nothing left to vote on; a dead control is not the same statement as no
  *    control.
- *  - **The viewer wrote this entry.** That is `voteRegionVisible`'s rule,
+ *  - **The viewer may not vote here.** That is `voteRegionVisible`'s rule,
  *    inherited whole rather than restated: `viewer_can_vote` is false only for
  *    a logged-in viewer the backend says can never vote here — account
- *    ownership or duel participation, the two permanent blocks (#998). So a
- *    duellist reading this page sees ONE caster, and an anonymous viewer keeps
- *    the per-widget login gate on both (#855).
+ *    ownership or duel participation, the two permanent blocks (#998).
+ *
+ *    **A DUELLIST THEREFORE SEES ZERO CASTERS ON THIS PAGE, NOT ONE**, and the
+ *    design's note that they see "one caster, not two" is wrong about the
+ *    backend. `viewer_can_vote` is false on BOTH sides for either participant —
+ *    `backend/tests/integration/test_viewer_can_vote.py::test_duel_participant_cannot_vote_on_either_side`
+ *    pins it — because anti-self-voting is enforced at the ACCOUNT level
+ *    (ADR-0041) and a duel participant is blocked from the whole contest, not
+ *    just from their own entry. There is no payload in which exactly one side
+ *    is votable, so nothing here should be written as though there were.
+ *
+ *    A spectator sees two casters; a duellist sees none; an anonymous viewer
+ *    keeps the per-widget login gate on both (#855).
  */
 export function casterVisible(
   duel: DuelDetailOut,

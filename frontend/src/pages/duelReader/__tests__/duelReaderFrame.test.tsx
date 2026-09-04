@@ -247,17 +247,85 @@ describe('the caster, and the plate that may not outlive it', () => {
     expect(markup).toContain('Logged every attempt, then read the log')
   })
 
-  it('hides the caster on the entry the viewer wrote, and its plate with it', () => {
-    // #1429: the plate, its heading and its prompt are the promise of a
-    // control, so they may not outlive the control. One caster, one plate.
+  it('draws NO caster for a duellist, and no plate over the hole', () => {
+    // The payload the API actually emits for a participant: `viewer_can_vote`
+    // is false on BOTH sides, because anti-self-voting is enforced at the
+    // ACCOUNT level (ADR-0041) and blocks the whole contest —
+    // `test_duel_participant_cannot_vote_on_either_side` pins it. The design's
+    // "a duellist sees one caster, not two" is wrong about the backend; they
+    // see none.
+    //
+    // #1429 is the other half: the plate, its heading and its prompt are the
+    // promise of a control, so they may not outlive it.
     const markup = render({
       praxes: {
         challenger: praxis({ viewer_can_vote: false }),
-        opponent: OPPONENT_PRAXIS,
+        opponent: { ...OPPONENT_PRAXIS, viewer_can_vote: false },
       },
     })
-    expect(markup.match(/Cast your vote/g)).toHaveLength(1)
-    expect(markup.match(/How much did this move you\?/g)).toHaveLength(1)
+    expect(markup).not.toContain('Cast your vote')
+    expect(markup).not.toContain('How much did this move you?')
+    // Both entries still read in full — this removes a control, not a column.
+    expect(markup).toContain('Six mornings on the north wall')
+    expect(markup).toContain('Logged every attempt, then read the log')
+  })
+
+  it('draws two casters for a spectator', () => {
+    // The other half of the same payload rule: a non-participant may cast on
+    // either entry, so both columns carry a caster and a plate.
+    const markup = render({})
+    expect(markup.match(/Cast your vote/g)).toHaveLength(2)
+    expect(markup.match(/How much did this move you\?/g)).toHaveLength(2)
+  })
+})
+
+describe('a forfeited side has no body, and the page still draws', () => {
+  /**
+   * THE BUG THIS BLOCK EXISTS FOR. Throwing a settled duel drops that praxis to
+   * `in_progress` (`services/praxis.py`, ADR-0011 §Forfeit) while the duel stays
+   * `settled` and goes on pointing at it. So `praxis_id` is set, `is_submitted`
+   * is not, and fetching it 403s for every reader but the forfeiter — which,
+   * behind a `Promise.all` over both sides, turned every forfeited duel into an
+   * error page for everyone else.
+   */
+  const FORFEIT = {
+    duel: duel({
+      forfeited_by_character_id: 7,
+      challenger: { ...side(), is_submitted: false },
+    }),
+    praxes: { challenger: null, opponent: OPPONENT_PRAXIS },
+  }
+
+  it('draws the page rather than an error', () => {
+    const markup = render(FORFEIT)
+    expect(markup).toContain('The duel')
+    expect(markup).toContain('Won by default')
+  })
+
+  it('keeps the forfeiter on the page — name, and an em-dash for a figure', () => {
+    const markup = render(FORFEIT)
+    expect(markup).toContain('Wren Ashgrove')
+    // Their total is ABSENT, not losing: once a side forfeits the tally stops
+    // deciding the duel, so printing their points would print a number that no
+    // longer means anything.
+    expect(markup).not.toContain('7.4')
+  })
+
+  it('draws the surviving entry in full', () => {
+    const markup = render(FORFEIT)
+    expect(markup).toContain('Logged every attempt, then read the log')
+    expect(markup).toContain('Forty-one attempts across nine sessions.')
+  })
+
+  it('offers no link into the withdrawn side, which would 404', () => {
+    // One "Read their praxis" — the surviving column's. The thrown side is back
+    // to `in_progress` and its page is member-only.
+    expect(render(FORFEIT).match(/Read their praxis/g)).toHaveLength(1)
+    expect(render(FORFEIT)).not.toContain('href="/praxis/601"')
+  })
+
+  it('still reads at both widths', () => {
+    expect(render(FORFEIT, 'mobile')).toContain('Won by default')
   })
 })
 
@@ -308,6 +376,61 @@ describe('the standing reads out, and never as a verdict while voting is open', 
     // number that no longer means anything.
     expect(markup).not.toContain('7.4')
     expect(markup).toContain('4.8')
+  })
+})
+
+describe('what the design draws that the standing sentence does not say', () => {
+  it('names the task both entries were completing, with its level and worth', () => {
+    // Artboards 2c/2d: the reference band under the h1. `detail.taskRef.*` is
+    // on the design's reused-verbatim list, and `taskRefMeta` is the shared
+    // derivation `praxisDetail` mounts, so the figures cannot drift apart.
+    const markup = render({})
+    expect(markup).toContain('Completing task')
+    expect(markup).toContain('Climb the north wall six times')
+    expect(markup).toContain('Level 2')
+    expect(markup).toContain('href="/tasks/101"')
+  })
+
+  it('gives the winner one spectrum rule on a resolved duel, and only then', () => {
+    // Artboard 2e. No trophy and no copy — the standing has already said who
+    // won; this says which COLUMN it was.
+    const resolved = render({
+      duel: duel({
+        status: 'resolved',
+        winner_character_id: 7,
+        challenger_final_points: 60,
+        opponent_final_points: 20,
+      }),
+    })
+    const without = render({ duel: duel({ status: 'resolved' }) })
+    const before = (without.match(/class="spectrum-rule"/g) ?? []).length
+    const after = (resolved.match(/class="spectrum-rule"/g) ?? []).length
+    // Guards the guard: a selector that matched nothing would make the
+    // comparison below true for the wrong reason.
+    expect(before).toBeGreaterThan(0)
+    expect(after).toBe(before + 1)
+  })
+
+  it('draws no winner rule while voting is open', () => {
+    // A settled duel has no winner yet — the standing FLOATS with the votes
+    // until era close (ADR-0011 / ADR-0052), so a mark saying "this one won"
+    // would be the victory screen brief §6 forbids.
+    const settled = render({ duel: duel({ winner_character_id: 7 }) })
+    const noWinner = render({ duel: duel({ winner_character_id: null }) })
+    expect(settled.match(/class="spectrum-rule"/g)?.length).toBe(
+      noWinner.match(/class="spectrum-rule"/g)?.length,
+    )
+  })
+
+  it("hides 'Read their praxis' on the entry the viewer wrote", () => {
+    // The catalog string names the OTHER duellist; on your own column "their"
+    // is you. The surface adds no key to reword it, so the link is not drawn.
+    const asChallenger = render({
+      user: { id: 3, character: { id: 7 } } as unknown as CurrentUser,
+    })
+    expect(asChallenger.match(/Read their praxis/g)).toHaveLength(1)
+    expect(asChallenger).not.toContain('href="/praxis/601"')
+    expect(asChallenger).toContain('href="/praxis/602"')
   })
 })
 

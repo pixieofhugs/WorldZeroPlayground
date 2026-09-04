@@ -7,7 +7,12 @@
  * of one predicate were derived separately.
  */
 import { describe, it, expect } from 'vitest'
-import { arrivedFromSide, casterVisible, readerMountsDuel } from '../reader'
+import {
+  arrivedFromSide,
+  casterVisible,
+  readablePraxisId,
+  readerMountsDuel,
+} from '../reader'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 import type { CurrentUser } from '../../../api/auth'
 
@@ -61,6 +66,42 @@ describe('the reader draws OUTCOMES only — the same pair DuelCard draws', () =
     const half = duel({ opponent: side({ character_id: 19, praxis_id: null }) })
     expect(readerMountsDuel(half)).toBe(false)
   })
+
+  it('STILL mounts a forfeit, whose thrown side keeps its id and loses its body', () => {
+    // The bug this row exists for. Throwing a settled duel drops that praxis to
+    // `in_progress` while the duel stays `settled` and keeps pointing at it, so
+    // `praxis_id` is set and `is_submitted` is not. The page must draw — the
+    // design has a whole frame for a forfeit.
+    const forfeited = duel({
+      forfeited_by_character_id: 7,
+      challenger: side({ character_id: 7, praxis_id: 601, is_submitted: false }),
+    })
+    expect(readerMountsDuel(forfeited)).toBe(true)
+  })
+
+  it('refuses a duel with no readable body at all', () => {
+    // Both sides withdrawn: nothing to compare, and two empty columns is not a
+    // reading surface.
+    const gone = duel({
+      challenger: side({ character_id: 7, praxis_id: 601, is_submitted: false }),
+      opponent: side({ character_id: 19, praxis_id: 602, is_submitted: false }),
+    })
+    expect(readerMountsDuel(gone)).toBe(false)
+  })
+})
+
+describe('only a submitted side may be fetched', () => {
+  it('gives the id for a submitted side', () => {
+    expect(readablePraxisId(side({ praxis_id: 601, is_submitted: true }))).toBe(601)
+  })
+
+  it('withholds the id of a forfeited side, which would 403', () => {
+    // `praxis_id` is not permission to read: an `in_progress` praxis is visible
+    // to its members alone (`praxis_visibility_condition`), so asking for this
+    // one fails for every reader but its author — and a `Promise.all` over both
+    // sides turns that into an error page for the whole duel.
+    expect(readablePraxisId(side({ praxis_id: 601, is_submitted: false }))).toBeNull()
+  })
 })
 
 describe('the side you arrived from is resolved from the praxis, not the viewer', () => {
@@ -95,8 +136,15 @@ describe('the caster gate, written once and read by both halves', () => {
     expect(casterVisible(duel({ status: 'resolved' }), SOMEBODY, true)).toBe(false)
   })
 
-  it('hides on the entry the viewer wrote, so a duellist sees ONE caster', () => {
-    expect(casterVisible(duel(), SOMEBODY, false)).toBe(false)
+  it('hides for a duellist — who sees ZERO casters here, not one', () => {
+    // The backend sets `viewer_can_vote: false` on BOTH sides for either
+    // participant (`test_duel_participant_cannot_vote_on_either_side`), because
+    // anti-self-voting is enforced at the ACCOUNT level (ADR-0041) and blocks
+    // the whole contest rather than just your own entry. There is no payload in
+    // which exactly one side is votable, so both columns are asserted.
+    const live = duel()
+    expect(casterVisible(live, SOMEBODY, false)).toBe(false)
+    expect(casterVisible(live, SOMEBODY, false)).toBe(false)
   })
 
   it('leaves an anonymous viewer the login gate on both entries', () => {

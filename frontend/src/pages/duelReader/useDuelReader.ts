@@ -49,17 +49,42 @@ import {
 } from '../../components/vote/useVotedPraxis'
 import type { CurrentUser } from '../../api/auth'
 import type { DuelSideKey } from './openSide'
-import { arrivedFromSide } from './reader'
+import { arrivedFromSide, readablePraxisId, readerMountsDuel } from './reader'
 
-/** The two entries, keyed the way the payload names them. */
-export type DuelReaderPraxes = Record<DuelSideKey, PraxisOut>
+/**
+ * The two entries' BODIES, keyed the way the payload names them.
+ *
+ * A side is `null` when its praxis is not readable — which on this surface
+ * means exactly one thing, a forfeit: unsubmitting a settled duel side throws
+ * the contest and drops that praxis to `in_progress`, visible to its members
+ * alone. See {@link readablePraxisId}. That column renders from the duel
+ * payload, which is the frame the design already draws for a forfeit.
+ */
+export type DuelReaderPraxes = Record<DuelSideKey, PraxisOut | null>
+
+/**
+ * Whichever of the two bodies is readable — they answer the same questions
+ * about the TASK, which is the only thing this is used for.
+ *
+ * Both duellists complete ONE task, so `task_id`, `task_title`,
+ * `task_faction_slug`, `task_point_value` and `task_level_required` are equal
+ * across the pair by construction. On a forfeit only one body exists, and the
+ * three places that ask the task a question — the dispatch slug, the ground and
+ * the reference band — must not each pick a side and each break differently.
+ */
+export function duelReaderTask(praxes: DuelReaderPraxes | null): PraxisOut | null {
+  return praxes?.challenger ?? praxes?.opponent ?? null
+}
 
 export interface DuelReaderState {
   loading: boolean
   fetchError: string | null
   /** Null while in flight, and after a failed load. */
   duel: DuelDetailOut | null
-  /** Both praxes, or null until both have landed — this page never draws one. */
+  /**
+   * The two bodies, or null until the fetch settles. A SIDE may be null inside
+   * it even when this is not — see {@link DuelReaderPraxes}.
+   */
   praxes: DuelReaderPraxes | null
   /**
    * The side whose page the reader was opened from, or `null` on a deep link.
@@ -70,11 +95,15 @@ export interface DuelReaderState {
   user: CurrentUser | null
 }
 
-/** `?from=<praxis id>`, or null where it is absent or not a number. */
-function fromParam(raw: string | null): number | null {
-  if (raw == null) return null
-  const id = Number.parseInt(raw, 10)
-  return Number.isNaN(id) ? null : id
+/**
+ * A route or query id, or null where it is absent or not one.
+ *
+ * STRICT, not `parseInt`: `parseInt('12-and-a-half', 10)` is `12`, so a
+ * malformed id would silently address a real row. Digits or nothing.
+ */
+function numericId(raw: string | null | undefined): number | null {
+  if (raw == null || !/^\d+$/.test(raw)) return null
+  return Number(raw)
 }
 
 export function useDuelReader(idParam: string | undefined): DuelReaderState {
@@ -88,33 +117,49 @@ export function useDuelReader(idParam: string | undefined): DuelReaderState {
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!idParam) return
-    const duelId = Number.parseInt(idParam, 10)
-    if (Number.isNaN(duelId)) {
+    const duelId = numericId(idParam)
+
+    // Clear before anything else, on every id change. Leaving the previous
+    // duel's rows up while a new one loads — or worse, under a malformed id
+    // that never loads at all — shows one duel's bodies under another's
+    // heading, which is worse than an empty page and looks exactly like a
+    // stale render.
+    setDuel(null)
+    setPraxes(null)
+    setFetchError(null)
+
+    if (duelId == null) {
       setLoading(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
-    setFetchError(null)
 
     getDuelDetail(duelId)
       .then(async (payload) => {
-        const challengerId = payload.challenger.praxis_id
-        const opponentId = payload.opponent.praxis_id
-        // Half a duel is not a reading surface. The route's own guard states
-        // this too; here it is what keeps `praxes` from ever being partial.
-        if (challengerId == null || opponentId == null) {
-          if (!cancelled) setDuel(payload)
-          return
-        }
-        const [challenger, opponent] = await Promise.all([
-          getPraxis(challengerId),
-          getPraxis(opponentId),
-        ])
         if (cancelled) return
         setDuel(payload)
+
+        // THE GATE RUNS BEFORE ANY BODY IS FETCHED, and that ordering is the
+        // whole point of it being here rather than only in the route. On
+        // `pending` / `active` the rival's praxis is a guaranteed 403 for every
+        // reader but its author (`duel_side_hidden_condition`, #999), so a
+        // fetch-then-check would turn the route's designed redirect into an
+        // error page — the failure would arrive first and win.
+        if (!readerMountsDuel(payload)) return
+
+        // Only the sides that are actually readable. A forfeited side keeps its
+        // `praxis_id` and loses its visibility, so asking for it 403s and takes
+        // the whole page down with it; that column is drawn from the duel
+        // payload instead. See `readablePraxisId`.
+        const challengerId = readablePraxisId(payload.challenger)
+        const opponentId = readablePraxisId(payload.opponent)
+        const [challenger, opponent] = await Promise.all([
+          challengerId == null ? null : getPraxis(challengerId),
+          opponentId == null ? null : getPraxis(opponentId),
+        ])
+        if (cancelled) return
         setPraxes({ challenger, opponent })
       })
       .catch((err) => {
@@ -133,16 +178,17 @@ export function useDuelReader(idParam: string | undefined): DuelReaderState {
   // the figure (#1239) — this column's stamp AND that side's row in the
   // standing above it. `-1` is the "no praxis yet" id every caller of these
   // hooks uses; it can never collide with a real one.
-  const challengerTally = useCastTally(praxes?.challenger.id ?? -1)
-  const opponentTally = useCastTally(praxes?.opponent.id ?? -1)
+  const challengerTally = useCastTally(praxes?.challenger?.id ?? -1)
+  const opponentTally = useCastTally(praxes?.opponent?.id ?? -1)
+
+  const merge = (
+    praxis: PraxisOut | null,
+    tally: ReturnType<typeof useCastTally>,
+  ): PraxisOut | null => (praxis && tally ? applyCastTally(praxis, tally) : praxis)
 
   const displayPraxes: DuelReaderPraxes | null = praxes && {
-    challenger: challengerTally
-      ? applyCastTally(praxes.challenger, challengerTally)
-      : praxes.challenger,
-    opponent: opponentTally
-      ? applyCastTally(praxes.opponent, opponentTally)
-      : praxes.opponent,
+    challenger: merge(praxes.challenger, challengerTally),
+    opponent: merge(praxes.opponent, opponentTally),
   }
   const displayDuel = duel
     ? applyDuelCastTally(duel, {
@@ -156,7 +202,7 @@ export function useDuelReader(idParam: string | undefined): DuelReaderState {
     fetchError,
     duel: displayDuel,
     praxes: displayPraxes,
-    arrivedFrom: duel ? arrivedFromSide(duel, fromParam(search.get('from'))) : null,
+    arrivedFrom: duel ? arrivedFromSide(duel, numericId(search.get('from'))) : null,
     user,
   }
 }

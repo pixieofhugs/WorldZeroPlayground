@@ -56,7 +56,7 @@
  * Nine role reads and the shared `.spectrum-rule` ornament; no hex, no
  * `dark ? a : b`. Both themes come through the `[data-theme="dark"]` cascade.
  */
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Breadcrumb from '../../components/nav/Breadcrumb'
@@ -75,9 +75,10 @@ import {
 } from '../../components/duel/standing'
 import type { PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
+import { taskRefMeta } from '../praxisDetail/shared'
 import { openSideFor, type DuelSideKey } from './openSide'
 import { casterVisible } from './reader'
-import type { DuelReaderState } from './useDuelReader'
+import { duelReaderTask, type DuelReaderState } from './useDuelReader'
 
 /* -------------------------------------------------------------------------- */
 /* The nine roles, under this surface's own prefix                            */
@@ -148,11 +149,18 @@ function Disc({ side, dimmed }: { side: DuelSideOut; dimmed: boolean }) {
 /**
  * One entry, as {@link DuelReaderFrame} assembles it — a duel side paired with
  * the praxis body the duel payload does not carry.
+ *
+ * `praxis` is `null` when that side has no readable body, which on this surface
+ * means a FORFEIT: throwing a settled duel drops the praxis to `in_progress`
+ * and it stops being visible to anyone but its author, while the duel stays
+ * `settled` and keeps pointing at it. The column then draws from `side` alone —
+ * dimmed, with an em-dash where the figure was — which is the frame the design
+ * draws for a forfeit anyway. See `reader.ts`'s `readablePraxisId`.
  */
 export interface DuelReaderEntry {
   key: DuelSideKey
   side: DuelSideOut
-  praxis: PraxisOut
+  praxis: PraxisOut | null
 }
 
 /**
@@ -397,7 +405,16 @@ function Column({
   const dimmed = hasForfeited(duel, entry.side)
   const head = dress.sectionHead ?? defaultSectionHead
   // ONE predicate, read by the plate and by the widget below it (#1429).
-  const caster = casterVisible(duel, state.user, praxis.viewer_can_vote)
+  const caster = praxis != null && casterVisible(duel, state.user, praxis.viewer_can_vote)
+  // Whose entry this is. Duel praxes are solo, so authorship is membership.
+  const mine = praxis != null && praxis.created_by_id === state.user?.character?.id
+  // Artboard 2e: the winner takes one spectrum rule on a resolved duel. No
+  // trophy, no copy — the standing sentence has already said who won, and this
+  // is the mark that says which COLUMN it was.
+  const won =
+    duel.status === 'resolved' &&
+    duel.winner_character_id != null &&
+    duel.winner_character_id === entry.side.character_id
 
   return (
     <div
@@ -414,8 +431,25 @@ function Column({
         ...dress.columnStyle,
       }}
     >
+      {won && (
+        <span
+          aria-hidden="true"
+          className="spectrum-rule"
+          style={{ display: 'block', height: 2, borderRadius: 2 }}
+        />
+      )}
+
       {withByline && <Byline entry={entry} duel={duel} dress={dress} />}
 
+      {/*
+        A side with no readable body is a forfeit, and the column stops at the
+        byline: there is no title, no proof, no write-up and nothing to vote on,
+        because the entry has been withdrawn from the contest. Everything the
+        reader is owed here — who it was, that they threw it, and that the other
+        side won by default — is already on the byline and the standing above.
+      */}
+      {praxis == null ? null : (
+      <>
       <h2
         className="font-display italic"
         style={{
@@ -486,15 +520,27 @@ function Column({
             />
           </section>
         )}
-        <Link
-          to={`/praxis/${praxis.id}`}
-          className="content-text font-body"
-          style={{ color: ACCENT, display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}
-        >
-          {t('duelCrossLink.readTheirPraxis')}
-          <span aria-hidden="true">&rsaquo;</span>
-        </Link>
+        {/*
+          Hidden on the entry the viewer WROTE. The catalog string is
+          "Read their praxis", and on your own column "their" names you — the
+          copy would be wrong, and the link would point at the page you most
+          likely just came from. The surface adds no key to say it differently
+          (§0, and the one new key this issue spends is `readBothSides`), so the
+          honest move is not to draw a control the words do not fit.
+        */}
+        {!mine && (
+          <Link
+            to={`/praxis/${praxis.id}`}
+            className="content-text font-body"
+            style={{ color: ACCENT, display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}
+          >
+            {t('duelCrossLink.readTheirPraxis')}
+            <span aria-hidden="true">&rsaquo;</span>
+          </Link>
+        )}
       </div>
+      </>
+      )}
     </div>
   )
 }
@@ -523,9 +569,18 @@ export function DuelReaderFrame({ state, groundSlug, dress = {} }: DuelReaderFra
   const { t } = useTranslation('praxis')
   const mobile = useFormFactor() === 'mobile'
   const { duel, praxes, arrivedFrom } = state
-  // The open panel is seeded once, from the standing as it stood on arrival.
-  // Re-deriving it as votes land would reopen the panel under the reader's
-  // hands; the ruling is about which case you are shown FIRST.
+
+  // WHICH PANEL OPENS IS SEEDED ONCE, and this used to be a bug the comment
+  // denied. `open ?? openSideFor(duel, arrivedFrom)` re-ran the ruling on every
+  // render while nothing had been tapped — so the moment a cast moved a tally,
+  // "who is behind" could flip and the panel the reader was mid-way through
+  // would shut under their hands. The ruling is about which case you are shown
+  // FIRST; a ref freezes that answer at the first render that has a duel to ask
+  // about, whenever that arrives.
+  const seeded = useRef<DuelSideKey | null>(null)
+  if (seeded.current === null && duel) {
+    seeded.current = openSideFor(duel, arrivedFrom)
+  }
   const [open, setOpen] = useState<DuelSideKey | null>(null)
 
   if (!duel || !praxes) return null
@@ -534,18 +589,35 @@ export function DuelReaderFrame({ state, groundSlug, dress = {} }: DuelReaderFra
     { key: 'challenger', side: duel.challenger, praxis: praxes.challenger },
     { key: 'opponent', side: duel.opponent, praxis: praxes.opponent },
   ]
-  const openKey = open ?? openSideFor(duel, arrivedFrom)
+  const openKey = open ?? seeded.current ?? 'challenger'
+
+  // Both sides share ONE task, so either body answers for it — and on a forfeit
+  // only one of them exists. `readerMountsDuel` will not let the route mount
+  // this without at least one, so the guard below is a type narrowing rather
+  // than a state the page can actually be in.
+  const taskOf = duelReaderTask(praxes)
+  if (!taskOf) return null
 
   return (
     <div style={{ fontFamily: FACE, color: INK, ...dress.pageStyle }}>
       {/*
-        `Tasks › <task>`. The canvas draws a third crumb, `The duel`, and
-        `Breadcrumb`'s prop union has no shape for a page that hangs off a task
-        without being a praxis or the composer. Widening it is another lane's
-        file, so the trail stops one crumb short and the page title carries the
-        word instead. DEVIATION, per docs/agents/design-fidelity.md.
+        `Tasks › The duel`.
+
+        This page is NOT the task, and passing `taskId`/`taskTitle` alone said
+        it was: `Breadcrumb` strips the link off its last crumb and marks it
+        `aria-current="page"`, so the task title became the you-are-here label
+        on a page that is not the task — and lost its link to the task at the
+        same time. Naming the duel as the current crumb is truthful on both
+        counts.
+
+        The canvas draws three crumbs, `Tasks › <task> › The duel`, and
+        `Breadcrumb`'s prop union is a genuine either/or — `CurrentTrailProps`
+        declares `taskId?: never` — so the middle crumb needs a shape that union
+        does not have. Widening it is `components/nav/`'s call, not this lane's.
+        DEVIATION, per docs/agents/design-fidelity.md; the task is still named
+        one line below, in the reference band.
       */}
-      <Breadcrumb taskId={praxes.challenger.task_id} taskTitle={praxes.challenger.task_title} />
+      <Breadcrumb current={t('duelCrossLink.label')} />
 
       <div
         style={{
@@ -585,6 +657,40 @@ export function DuelReaderFrame({ state, groundSlug, dress = {} }: DuelReaderFra
         >
           {t('duelCrossLink.label')}
         </h1>
+
+        {/*
+          The task-reference band, as artboards 2c and 2d draw it — the one
+          thing on this page that says WHAT the two entries were both trying to
+          do. `detail.taskRef.*` is on the design's reused-verbatim list, and
+          `taskRefMeta` is the shared derivation `praxisDetail` already mounts,
+          so the level-and-points half cannot drift between the two surfaces.
+        */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-sm)',
+            flexWrap: 'wrap',
+            borderTop: `1px solid ${LINE}`,
+            borderBottom: `1px solid ${LINE}`,
+            padding: 'var(--space-md) 0',
+            marginBottom: 'var(--space-xl)',
+          }}
+        >
+          <span className="label-caption" style={{ color: QUIET }}>
+            {t('detail.taskRef.label')}
+          </span>
+          <Link
+            to={`/tasks/${taskOf.task_id}`}
+            className="font-display italic content-text"
+            style={{ color: INK }}
+          >
+            {taskOf.task_title}
+          </Link>
+          <span className="label-caption" style={{ marginLeft: 'auto', color: QUIET }}>
+            {taskRefMeta(taskOf, t)}
+          </span>
+        </div>
 
         <Standing duel={duel} entries={entries} />
 

@@ -17,13 +17,13 @@
  * absent: nothing is behind it (#2530).
  */
 import { DuelReaderFrame } from '../shared'
-import type { DuelReaderState } from '../useDuelReader'
+import { duelReaderTask, type DuelReaderState } from '../useDuelReader'
 
 export default function DefaultDuelReader({ state }: { state: DuelReaderState }) {
   return (
     <DuelReaderFrame
       state={state}
-      groundSlug={state.praxes?.challenger.task_faction_slug ?? null}
+      groundSlug={duelReaderTask(state.praxes)?.task_faction_slug ?? null}
     />
   )
 }
