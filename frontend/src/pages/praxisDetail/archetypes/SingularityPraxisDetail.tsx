@@ -5,26 +5,19 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
-import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
 import {
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
   bylineFaces,
-  scoreWasBanked,
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { PraxisDetailSkin } from "../praxisDetailSkin";
 import { factionRoleVars } from "../../../utils/factionRoles";
 
 /**
@@ -371,13 +364,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // the notice itself into the shared slot; this deviation predates it and is
   // preserved rather than settled — see the measurement in
   // `EphemeristsPraxisDetail`, which reads this precedent as "the banner MAY be
-  // dressed", not as a ruling on what to dress it in.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} flaggedBodyInk="var(--color-warning)" />
-      <PraxisAdminBar state={state} />
-    </>
-  );
+  // dressed", not as a ruling on what to dress it in. It rides the kit's
+  // `flaggedBodyInk` now — the same value, on the skin's ink seam rather than
+  // on a locally re-typed mount.
 
   // ── Byline · finding · owner actions · task reference ─────────────────────
   const header = (
@@ -481,7 +470,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // the struck well, the ruled register rows and the votes tally. No arithmetic
   // is restated here: `scoreBreakdown()` is the single authority (ADR-0053), and
   // the design's own multiplier-from-the-vote-average is not built.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={panel}>
       {sectionHead(t("detail.score.heading"))}
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -506,21 +497,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // card-muted, card-line, stamp-bg — are now named props, so the phosphor
   // arrives by contract instead of by cascade. Same four values, and the
   // `--color-*` half of that object was never read by this component anyway.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={sectionHead(t("duelCrossLink.label"))}
-      ink={{ name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL }}
-    />
-  );
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  );
+  const duelInk = { name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -616,17 +593,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      {/* Bare, by rule. No `panel`, no token re-point, no style seam — the
-          report card is outside the costume in all eight faction designs. */}
-      <PraxisFlagBlock state={state} />
-    </>
-  );
+  // The report card is mounted bare by the skin, last in the aside. Bare by
+  // rule: no `panel`, no token re-point, no style seam — it is outside the
+  // costume in all eight faction designs.
 
-  // ── Proof · write-up · members · metatasks ────────────────────────────────
+  // ── Proof · write-up · members ────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.proof"))}
@@ -672,30 +643,19 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
-  // READ-ONLY, by construction. `MetataskSeal` omits the peel control and the
-  // add slot when it gets neither `removable` nor `onAdd`, and each seal wears
-  // its ISSUING faction's dress (#927/#933). The design's "Available" chips are
-  // deliberately absent: `apply_metatask` requires `status == in_progress`, so
-  // every chip would 422 on tap.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {sectionHead(t("detail.metatasks.heading"))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  );
+  // The metatask section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction: the seal
+  // omits the peel control and the add slot when it gets neither `removable`
+  // nor `onAdd`, and each seal wears its ISSUING faction's dress (#927/#933).
+  // The design's "Available" chips are deliberately absent — `apply_metatask`
+  // requires `status == in_progress`, so every chip would 422 on tap.
 
   return (
-    <div className="py-8">
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      <div
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        flaggedBodyInk: "var(--color-warning)",
+        sheetStyle: {
           /* THE SESSION IS THE SURFACE, and the roles are declared on IT rather
              than on the `py-8` wrapper above (#2675). That wrapper also holds
              the breadcrumb, which is neutral shared site chrome measured on the
@@ -713,112 +673,70 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           border: `1px solid ${BORDER}`,
           borderRadius: 8,
           boxShadow: "var(--faction-singularity-term-shadow)",
-        }}
-      >
-        {/* The standing raster — a fixed scrim over the whole session. */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            zIndex: 4,
-            background:
-              "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
-          }}
-        />
-        {/* The scan sweep travelling down the page. `.sg-scan` owns both the
-            resting offset and the reduced-motion-guarded travel. */}
-        <div
-          aria-hidden
-          className="sg-scan"
-          style={{
-            position: "absolute",
-            left: "-30%",
-            right: "-30%",
-            height: 40,
-            pointerEvents: "none",
-            zIndex: 4,
-            background: "var(--faction-singularity-term-sweep)",
-          }}
-        />
+        },
+        sheetPrelude: (
+          <>
+            {/* The standing raster — a fixed scrim over the whole session. */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
+                zIndex: 4,
+                background:
+                  "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
+              }}
+            />
+            {/* The scan sweep travelling down the page. `.sg-scan` owns both the
+                resting offset and the reduced-motion-guarded travel. */}
+            <div
+              aria-hidden
+              className="sg-scan"
+              style={{
+                position: "absolute",
+                left: "-30%",
+                right: "-30%",
+                height: 40,
+                pointerEvents: "none",
+                zIndex: 4,
+                background: "var(--faction-singularity-term-sweep)",
+              }}
+            />
 
-        {chrome}
-
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            padding: desktop
-              ? "var(--space-2xl) var(--space-2xl) var(--space-3xl)"
-              : "var(--space-lg) var(--space-md) var(--space-xl)",
-          }}
-        >
-          {banners}
-
+            {chrome}
+          </>
+        ),
+        sheetBody: (body) => (
           <div
             style={{
-              display: "flex",
-              flexDirection: desktop ? "row" : "column",
-              alignItems: "stretch",
-              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+              position: "relative",
+              zIndex: 2,
+              padding: desktop
+                ? "var(--space-2xl) var(--space-2xl) var(--space-3xl)"
+                : "var(--space-lg) var(--space-md) var(--space-xl)",
             }}
           >
-            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-              {header}
-              {/* Mobile stacks the rail above the proof — one block each, moved,
-                  never a second copy hidden at the other breakpoint. */}
-              {!desktop && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-lg)",
-                    marginBottom: "var(--space-xl)",
-                  }}
-                >
-                  {rail}
-                </div>
-              )}
-              {proof}
-              {writeUp}
-              {crew}
-              {metatasks}
-              {!desktop && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
-                  {asideRest}
-                </div>
-              )}
-            </div>
-
-            {desktop && (
-              <aside
-                style={{
-                  flex: "0 0 330px",
-                  width: 330,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                }}
-              >
-                {rail}
-                {asideRest}
-              </aside>
-            )}
+            {body}
           </div>
-
-          {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-              beneath both columns, inside the page's own chassis, and the layout
-              draws the heading so the thread does not draw a second one.
-              Deliberately NOT token-repointed — each row dispatches on its
-              AUTHOR's faction and must reach the reader in that voice. */}
-          <PraxisDetailComments
-            state={state}
-            heading={sectionHead(t("detail.sections.comments"))}
-            style={{ marginTop: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-          />
-        </div>
-      </div>
-    </div>
+        ),
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: sectionHead(t("duelCrossLink.label")),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t("detail.metatasks.heading")),
+        /* The comment ROWS stay dispatched on each author's own faction —
+           deliberately NOT token-repointed, so a row reaches the reader in the
+           voice that wrote it. */
+        commentsHeading: sectionHead(t("detail.sections.comments")),
+        sectionGap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+      }}
+    />
   );
 }
