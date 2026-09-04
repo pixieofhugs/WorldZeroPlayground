@@ -155,6 +155,23 @@ const BESPOKE: Record<string, string[]> = {
   // `praxisCard` is what a phone renders too (ADR-0067): the praxis card is one
   // responsive component per faction, and all eight slugs register it.
   praxisCard: [...CORE_SIX, 'wow', 'albescent'],
+  // THE `duelReader` ROW IS NEW (#1084, ADR-0092) and it holds ONE slug, which
+  // is the whole state of the surface rather than an oversight. The reader is
+  // a chassis with a role map spread on its root, so every faction already
+  // wears its own ground there with no row at all — a registration adds DRESS,
+  // and no faction has a duel-reader design yet. This is the shape
+  // `praxisDetail` was in after #1089 and grew out of one skin at a time.
+  //
+  // `albescent` is here for the reason every Albescent row is: it must claim
+  // every key in `SURFACE_KEYS` so the map stops answering by silence (#2531).
+  // Its row is a PASS-THROUGH — brief §6 forbids an Albescent dress on any duel
+  // surface without an owner ruling, and there is none for this one.
+  //
+  // Note what a one-slug row buys the derived bar below: `duelReader` is NOT in
+  // `REQUIRED`, because the five reference factions do not all skin it, so
+  // Coven and WOW are not held to a design nobody has drawn. Append your slug
+  // when a design lands; the bar raises itself at five.
+  duelReader: ['albescent'],
 }
 
 for (const [surface, bespoke] of Object.entries(BESPOKE)) {

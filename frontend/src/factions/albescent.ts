@@ -104,6 +104,7 @@ const AlbescentComment = lazyArchetype(() => import('../components/comments/voic
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
 const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
+const AlbescentDuelReader = lazyArchetype(() => import('../pages/duelReader/archetypes/AlbescentDuelReader'))
 // #2538 — the propose-task chassis's first registration. Lazy like every
 // wrapper above: it renders the whole na page, which is weight the initial load
 // does not need.
@@ -466,4 +467,19 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * already made). ONE responsive component, both form factors (#1313).
    */
   duelSeal: () => AlbescentDuelSealConfirm,
+
+  /**
+   * PASS-THROUGH, and the first registration of the side-by-side duel reader
+   * (#1084, ADR-0092). It renders `DefaultDuelReader` and changes nothing.
+   *
+   * `.design-sync/BRIEF-duel-surfaces.md` §6 forbids an Albescent dress on any
+   * duel surface without an owner ruling first, and this surface has none. The
+   * `duelSeal` row's reason holds here unchanged: the reader is dressed by the
+   * TASK's faction, so this row is reached by anyone reading a duel fought on
+   * an Albescent-owned task — a non-member included, where a tell is an
+   * un-hiding rather than a reveal (ADR-0027). The one na mark on the page is
+   * the sheet's spectrum BAND, and a band keeps its linear ramp (#1127), so
+   * `.alb-moves` would have nothing to reach even with a ruling.
+   */
+  duelReader: () => AlbescentDuelReader,
 }
