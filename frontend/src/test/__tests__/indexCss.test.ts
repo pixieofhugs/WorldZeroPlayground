@@ -40,7 +40,12 @@ describe('the assembled stylesheet', () => {
   })
 
   it('still contains the landmarks the guards actually look for', () => {
-    const css = readIndexCss()
+    // COMMENTS STRIPPED FIRST, always. Every landmark here is a thing the sheet
+    // must DO, and prose about it satisfies a substring search just as well as
+    // the real declaration — so a guard read over comment-inclusive text can be
+    // held up by the comment that documents it. This file's whole job is to
+    // stop a check passing on something that is not there.
+    const css = stripComments(readIndexCss())
     for (const landmark of [
       // v4's single entry directive (#2918), which replaced `@tailwind base;`
       // / `components;` / `utilities;`. It is the one line that pulls in
@@ -66,8 +71,96 @@ describe('the assembled stylesheet', () => {
     // 00-prelude.css repaints every one of them to the element's text colour —
     // across nine faction kits, in both themes, with the build green and no
     // other test saying a word. This is that word.
-    const compat = readIndexCss().match(/border-color:\s*#e5e7eb/g) ?? []
-    expect(compat).toHaveLength(1)
+    //
+    // Read over comment-STRIPPED text and pinned to the SELECTOR LIST, not just
+    // the byte. Counting `#e5e7eb` in raw source meant a comment explaining the
+    // hex could satisfy this guard on its own, and a second comment mentioning
+    // it could break a build that was perfectly correct — a check that both
+    // lies and flaps. The selector list matters as much as the colour: drop
+    // `::before`/`::after` and every decorative pseudo-element loses the
+    // hairline while the plain elements keep theirs.
+    const css = stripComments(readIndexCss())
+    const rule = css.match(/([^{}]*)\{[^{}]*border-color:\s*#e5e7eb[^{}]*\}/)
+    expect(rule, 'the v3 border-colour compat block is gone from the sheet').not.toBeNull()
+    expect(css.match(/border-color:\s*#e5e7eb/g)).toHaveLength(1)
+    expect(
+      rule![1]
+        .split(',')
+        .map((selector) => selector.trim())
+        .filter(Boolean),
+    ).toEqual(['*', '::after', '::before', '::backdrop', '::file-selector-button'])
+  })
+
+  it('still gives 448 buttons a pointer cursor v4 stopped emitting (#2918)', () => {
+    // v3's preflight carried `button,[role="button"]{cursor:pointer}`; v4 drops
+    // it for the browser default, which is an arrow. Only `.btn-primary`,
+    // `.btn-outline`, `.chip`, one `cursor-pointer` utility and the filter-bar
+    // family set it by hand, so without this block most of the app's buttons
+    // stop looking clickable — on every page, in both themes, with nothing red.
+    const css = stripComments(readIndexCss())
+    const rule = css.match(/([^{}]*)\{[^{}]*cursor:\s*pointer[^{}]*\}/)
+    expect(rule, 'the pointer-cursor compat block is gone from the sheet').not.toBeNull()
+    // `:not(:disabled)` is deliberate: a disabled button promises no press.
+    expect(rule![1]).toContain('button:not(:disabled)')
+    expect(rule![1]).toContain("[role='button']:not(:disabled)")
+  })
+
+  it('pins every repo token whose NAME is one of Tailwind v4 theme keys (#2918)', () => {
+    // THE FAILURE THIS EXISTS FOR HAS ALREADY HAPPENED ONCE. v3 baked its scale
+    // into the utility (`.text-sm{font-size:.875rem}`); v4 emits
+    // `.text-sm{font-size:var(--text-sm)}` and reads whatever `--text-sm`
+    // resolves to. `03-faction-chrome-1.css` declares `--text-xs: 8px` through
+    // `--text-xl: 14px` — the LABEL tier — unlayered, which outranks Tailwind's
+    // own `@layer theme` copy. So five size utilities silently repointed at a
+    // scale half their size, and every check in CI stayed green: the class set
+    // was identical, because the collision is in what a class RESOLVES to.
+    //
+    // The defence is to pin the colliding name in `@theme inline`, where the
+    // value substitutes into the utility as a literal and no variable is read.
+    // This asserts that every such collision IS pinned, so the next one — a
+    // `--text-2xl`, a `--radius-xs`, a `--spacing` — goes red on the commit
+    // that introduces it rather than in a browser weeks later.
+    //
+    // Read from Tailwind's own `theme.css` rather than a list kept here, so the
+    // set cannot rot against an upgrade that adds a namespace.
+    const stockTheme = readFileSync(
+      join(INDEX_CSS_MAP, '..', '..', 'node_modules', 'tailwindcss', 'theme.css'),
+      'utf8',
+    )
+    const stock = new Set(
+      [...stockTheme.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gm)].map((match) => match[1]),
+    )
+    // Not blind, not passing: an unresolvable or empty theme would make every
+    // collision invisible and this guard vacuous.
+    expect(stock.size, 'Tailwind theme.css read as empty — this guard is blind').toBeGreaterThan(100)
+
+    const prelude = stripComments(
+      readFileSync(join(CSS_DIR, '00-prelude.css'), 'utf8'),
+    )
+    const themeBlock = prelude.match(/@theme\s+inline\s*\{([^{}]*)\}/)
+    expect(themeBlock, '`@theme inline` block is gone from 00-prelude.css').not.toBeNull()
+    const pinned = new Set(
+      [...themeBlock![1].matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]),
+    )
+
+    // Every part EXCEPT the prelude: the prelude's declarations are the pins.
+    const unpinned = indexCssParts()
+      .filter((path) => basename(path) !== '00-prelude.css')
+      .flatMap((path) => {
+        const text = stripComments(readFileSync(path, 'utf8'))
+        return [...text.matchAll(/(--[a-z0-9-]+)\s*:/g)]
+          .map((match) => match[1])
+          .filter((name) => stock.has(name) && !pinned.has(name))
+          .map((name) => `${basename(path)} declares ${name}`)
+      })
+
+    expect(
+      [...new Set(unpinned)].sort(),
+      `A token here shares its NAME with a Tailwind v4 theme key, so the matching
+utility resolves to the repo's value instead of Tailwind's. Pin it in
+00-prelude.css's \`@theme inline\` block with the value the utility should carry
+(and leave the repo token exactly as it is), or rename the repo token.`,
+    ).toEqual([])
   })
 
   it('leaves the shell font sheet as a literal import, the way callers saw it', () => {

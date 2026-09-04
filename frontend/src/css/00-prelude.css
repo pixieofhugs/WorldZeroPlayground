@@ -124,8 +124,9 @@
      no utility reads. The line-heights are v3's, paired to each size.
 
      ponytail: a name collision papered over at the theme. Ceiling — two
-     unrelated scales sharing the `--text-*` prefix. Upgrade path — rename the
-     label tier (`--label-xs`…) and delete these ten rows. */
+     unrelated scales sharing the `--text-*` prefix, and two more sharing
+     `--radius-*` below. Upgrade path — rename the repo's own tiers
+     (`--label-xs…`, `--corner-sm…`) and delete these fourteen rows. */
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.875rem;
@@ -136,6 +137,32 @@
   --text-lg--line-height: 1.75rem;
   --text-xl: 1.25rem;
   --text-xl--line-height: 1.75rem;
+
+  /* THE CORNER SCALE, PINNED FOR THE SAME REASON AND WITH NO LIVE SYMPTOM YET.
+     `01-base-tokens.css:3130` declares `--radius-sm: 4px` through
+     `--radius-xl: 14px`, unlayered — the app's own corner scale, in px, read by
+     hand-written rules like `.card`. Those four names are ALSO v4's border-
+     radius namespace, so `rounded-md` resolves `var(--radius-md)` and would
+     render the repo's 8px rather than Tailwind's 0.375rem.
+
+     Nothing renders wrong today, and that is exactly why it is pinned now:
+     only `rounded` and `rounded-full` are in use, and both carry literals, so
+     the collision is live but silent. The first `rounded-lg` anyone writes
+     inherits a bug with no author.
+
+     These are v4's OWN defaults, not v3's. v4 renamed the scale — v3's
+     `rounded-sm` was 0.125rem where `--radius-sm` is 0.25rem — and copying v3
+     forward would freeze a rename into a repo that has no `rounded-sm` to
+     preserve. A utility should mean what its documentation says it means.
+
+     The audit behind both groups is a test now, not a one-off: see
+     `src/test/__tests__/indexCss.test.ts`, which fails if any `--text-*` or
+     `--radius-*` the repo declares collides with Tailwind's stock theme and is
+     not pinned here. Today that set is exactly these nine. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -175,5 +202,32 @@
   ::backdrop,
   ::file-selector-button {
     border-color: #e5e7eb;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   THE POINTER CURSOR ON BUTTONS, KEPT (#2918). The upgrade guide's second
+   compat block, and the same kind of loss as the border colour above.
+
+   v3's preflight emitted `button, [role="button"] { cursor: pointer }`. v4
+   drops it to match the browser default, which for `<button>` is the ordinary
+   arrow. There are 448 `<button>` elements in `src/`, and the only rules that
+   set the cursor by hand are `.btn-primary`, `.btn-outline`, `.chip`, one
+   `cursor-pointer` utility and the filter-bar family — nowhere near all of
+   them. Every other button in the app would have stopped looking clickable,
+   on every page, in both themes.
+
+   `:not(:disabled)` is the guide's own refinement and is the better behaviour
+   rather than a faithful copy: v3 put the hand cursor on disabled buttons too,
+   which promises a press that will not happen. A disabled button now keeps the
+   default arrow.
+
+   Verified against both built sheets: v3 emitted `button,[role=button]
+   {cursor:pointer}` and v4 emitted no such rule anywhere.
+   ────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
   }
 }

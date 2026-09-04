@@ -100,9 +100,14 @@ export default function DuelSealSheet({
         // fine, and shipped a full-screen dialog that could not scroll, with no
         // utility in the sheet and nothing red anywhere. Measured on a probe:
         // glued, dropped; spaced, emitted.
-        // This was the only site in `src/` where a complete utility abutted a
-        // `${` — the other interpolations complete a token (`wz-roundel-${`,
-        // `--spectrum-glow-${`) rather than following one, and those are fine.
+        // It was the only site where the utility was LOST, not the only site of
+        // the shape: `PendingBadge.tsx` glued `font-body` and
+        // `DesktopPlayers.tsx` glued `font-display`, and both survived purely
+        // because those two classes are also written unglued elsewhere in the
+        // tree. That is luck, not correctness — delete the last unglued use and
+        // they break the same way this did — so both are fixed too.
+        // Interpolations that COMPLETE a token (`wz-roundel-${`,
+        // `--spectrum-glow-${`) are a different shape and are fine.
         className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto ${
           phoneClassName ?? ''
         }`}
