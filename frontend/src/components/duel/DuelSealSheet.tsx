@@ -94,8 +94,8 @@ export default function DuelSealSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto${
-          phoneClassName ? ` ${phoneClassName}` : ''
+        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto ${
+          phoneClassName ?? ''
         }`}
         style={{ background: 'var(--color-bg-page)', ...ground }}
       >

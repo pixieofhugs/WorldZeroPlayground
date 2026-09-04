@@ -23,6 +23,12 @@
     exception rather than silently drifted past.
 - Color values live only in the `index.css` tree — `src/css/*.css`, ordered by
   the `src/index.css` import map (#2891). CSS vars only; never hardcode hex.
+- **A class token gets a space before `${`.** Tailwind reads the source as text,
+  so `` `… overflow-y-auto${extra}` `` offers it no candidate and the utility
+  never reaches the stylesheet — while the build, the lint, the typecheck and
+  the suite all pass (#2918). Write `` `… overflow-y-auto ${extra}` ``, or lift
+  the branch out of the literal (`redacted ? 'a b' : 'a'`). Enforced by
+  `src/test/__tests__/noGluedClassInterpolation.test.ts`.
 - Faction config: `factions.ts`.
 - **A surface reads a ROLE, not a token.** Spread `factionRoleVars(slug, prefix)` on the
   root you own and read `var(--<prefix>-<role>)` below it — nine roles (`paper`, `ink`,
