@@ -237,7 +237,12 @@ async def some_faction(db_session: AsyncSession) -> Faction:
     from seed import upsert_era_factions
 
     configs = [era_config_for_key(key) for key in _ERA_ATTRIBUTE_BY_CONFIG_KEY]
-    for config in [c for c in configs if c is not None and c is not CURRENT_ERA]:
+    # By ``config_key``, not identity: ``CURRENT_ERA`` is a distinct instance
+    # refreshed in place rather than one of these objects (ADR-0091), so ``is
+    # not`` would run the live era's pass twice and stop meaning "the non-live
+    # ones first".
+    live_key = CURRENT_ERA.config_key
+    for config in [c for c in configs if c is not None and c.config_key != live_key]:
         await upsert_era_factions(db_session, config)
     await upsert_era_factions(db_session, CURRENT_ERA)
     await db_session.commit()

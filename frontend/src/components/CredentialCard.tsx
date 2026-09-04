@@ -145,13 +145,36 @@ export default function CredentialCard({
             padding: 'var(--space-xs)',
             boxSizing: 'border-box',
             // Unaffiliated wears the spectrum ring (all paths open, ADR-0039);
-            // themed factions keep their accent hoop. Conic ramp is the
-            // round-ring geometry — NOT --faction-default-rainbow (a bar ramp).
-            background: skinned ? 'var(--fc-accent)' : 'var(--faction-default-rainbow-conic)',
+            // themed factions keep their accent hoop. The unaffiliated half is
+            // `.spectrum-dial` below — the conic cut of the na spectrum, said
+            // once in index.css — so only the themed hoop is declared here.
+            background: skinned ? 'var(--fc-accent)' : undefined,
             border: 'none',
             cursor: onAvatarClick ? 'pointer' : 'default',
             boxShadow: '0 4px 14px var(--color-cast-shadow)',
           }
+          /* THE na RING IS CLASSED, NOT INLINED (#2992, the class #2497 minted).
+           * It was the last inline `var(--faction-default-rainbow-conic)` in the
+           * kit: #2497's sweep censused the `Default*` archetype files, and this
+           * card is not one — it is the shared component all nine of them mount,
+           * so no census row looked at it.
+           *
+           * The class is conditional and the ramp always was: this ring only
+           * takes the conic when `skinned` is false, which for Albescent it is —
+           * that slug is registered but deliberately unthemed, `CSS_KEY.albescent
+           * === "default"` (#783). So an Albescent credential takes the rainbow,
+           * and `.alb-moves .spectrum-dial` (two classes, so it wins from
+           * wherever it is written) sets it turning wherever an Albescent wrapper
+           * is the ancestor — the creation preview, the edit preview and the
+           * profile header. `.alb-moves .spectrum-dial > *` lifts the face back
+           * over the rim, so the portrait is not painted over. No new CSS: both
+           * halves already ship, the `::before` behind `motion.ornament.css`'s
+           * `prefers-reduced-motion` gate.
+           *
+           * The FieldDesk life-cards mount this card under `.alb-desk`, not
+           * `.alb-moves`, so that roster's rings stand still — the paint moved,
+           * nothing else. */
+          const ringClass = skinned ? undefined : 'spectrum-dial'
           const inner = (
             <div
               style={{
@@ -184,12 +207,13 @@ export default function CredentialCard({
               onClick={onAvatarClick}
               aria-label={uploadLabel}
               title={uploadLabel}
+              className={ringClass}
               style={ringStyle}
             >
               {inner}
             </button>
           ) : (
-            <div style={ringStyle}>{inner}</div>
+            <div className={ringClass} style={ringStyle}>{inner}</div>
           )
         })()}
       </div>

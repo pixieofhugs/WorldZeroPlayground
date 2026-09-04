@@ -2339,6 +2339,73 @@
         "title": "EraAnnouncementPayload",
         "type": "object"
       },
+      "EraOption": {
+        "description": "One row in the admin era selector.\n\n``config_key`` is the identity a mod picks and ``Era.config_key`` stores;\n``name`` is the era's player-visible name, read off the config rather than\noff any row, because an era that has never run has no row to read.",
+        "properties": {
+          "config_key": {
+            "title": "Config Key",
+            "type": "string"
+          },
+          "is_live": {
+            "title": "Is Live",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "config_key",
+          "name",
+          "is_live"
+        ],
+        "title": "EraOption",
+        "type": "object"
+      },
+      "EraRollIn": {
+        "description": "``PUT /admin/eras/live`` — the era to roll the game into.\n\nDeliberately just the key. A rollover has no options: the resets it performs\nare the *incoming* era's flags (ADR-0042), so anything else this body could\ncarry would be a second place to state a rule the era file already owns.",
+        "properties": {
+          "config_key": {
+            "title": "Config Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "config_key"
+        ],
+        "title": "EraRollIn",
+        "type": "object"
+      },
+      "EraRollOut": {
+        "description": "What the rollover did, read back rather than echoed.",
+        "properties": {
+          "characters_reset": {
+            "title": "Characters Reset",
+            "type": "integer"
+          },
+          "config_key": {
+            "title": "Config Key",
+            "type": "string"
+          },
+          "era_id": {
+            "title": "Era Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "era_id",
+          "config_key",
+          "name",
+          "characters_reset"
+        ],
+        "title": "EraRollOut",
+        "type": "object"
+      },
       "FactionChoiceRequest": {
         "properties": {
           "faction_slug": {
@@ -7558,6 +7625,130 @@
           }
         ],
         "summary": "Admin Moderate Comment",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/eras": {
+      "get": {
+        "description": "Admin-only: the eras a rollover may target, and which one is live.\n\nWhich rulesets exist is a code fact; which one is **live** is a database one\n— the latest ``Era`` row (ADR-0091), which is also what ``PUT /eras/live``\nrefuses against. Reading it from the process binding instead would let the\nselector offer an era the ``PUT`` then rejects, in the one state where the\ntwo can disagree.",
+        "operationId": "admin_list_eras_admin_eras_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EraOption"
+                  },
+                  "title": "Response Admin List Eras Admin Eras Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin List Eras",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/eras/live": {
+      "put": {
+        "description": "Admin-only: end the live era and open the one named. **No undo.**\n\nEveryone's score, level, vote budget and faction reset per the incoming\nera's flags; every unresolved duel freezes into a permanent result (#824);\nthe whole board retires; and the process starts playing by the new rules\nbefore this response is written.\n\n``PUT`` rather than ``POST`` because the resource is \"the live era\" and this\nsets it — and unlike the append it wraps, the call itself settles: repeating\nit with the key that is now live is refused with **409\n``ERA_ALREADY_LIVE``** rather than opening a second era, and two calls that\noverlap are serialized by an advisory lock, so the second one sees the first\none's row and refuses on it. What is still not idempotent is rolling on:\nnaming a *different* era opens another one every time, and the only thing\nbetween a mod and that is the confirmation on the admin page — the\nequivalent gate on ``scripts/era_reset.py`` is its ``--yes``.\n\nThis route restores an entry point #1667 deleted, deliberately and on the\nother side of the argument that deleted it: ``PUT /admin/era/reset`` went\nbecause it was unreachable from any UI and re-instantiated the same era, so\na destructive rollover sat behind any admin session for no gain. It comes\nback because #827 gives it the two things it lacked — a target to choose,\nand a mod control that chooses it.",
+        "operationId": "admin_roll_into_era_admin_eras_live_put",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EraRollIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EraRollOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Roll Into Era",
         "tags": [
           "admin"
         ]

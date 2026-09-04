@@ -33,9 +33,9 @@ from models.era import Era
 from models.faction import Faction
 from models.task import Task, TaskStatus, TaskType
 from seed import (
-    DUEL_FIXTURE_TASK_FACTION_SLUG,
     DUEL_FIXTURE_TASK_TITLE,
     ONBOARDING_TASK_TITLE,
+    duel_fixture_task_faction_slug,
     ensure_duel_fixture_task,
     ensure_onboarding_task,
     sync_era_tasks,
@@ -205,8 +205,9 @@ async def test_duel_fixture_slug_is_a_real_faction_of_the_live_era():
     This is the property that makes the no-op guard a backstop rather than the
     thing deciding whether the duel suite has a task at all (#2710).
     """
-    assert DUEL_FIXTURE_TASK_FACTION_SLUG in CURRENT_ERA.factions
-    assert DUEL_FIXTURE_TASK_FACTION_SLUG not in (
+    slug = duel_fixture_task_faction_slug()
+    assert slug in CURRENT_ERA.factions
+    assert slug not in (
         UNAFFILIATED_FACTION_SLUG,
         ALBESCENT_FACTION_SLUG,
     )
@@ -235,7 +236,7 @@ async def test_duel_fixture_task_is_reachable_at_the_duel_level(
     assert len(rows) == 1
     task = rows[0]
     # The two properties pickUaDuelTask filters on.
-    assert task.primary_faction_slug == DUEL_FIXTURE_TASK_FACTION_SLUG
+    assert task.primary_faction_slug == duel_fixture_task_faction_slug()
     assert task.level_required <= CURRENT_ERA.duel_level_required
     # ...and the two that make it pickable at all.
     assert task.status == TaskStatus.active
@@ -265,7 +266,9 @@ async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
     itself holds an FK to that row — so "the faction is absent" is only
     expressible from the seeder's side.
     """
-    monkeypatch.setattr("seed.DUEL_FIXTURE_TASK_FACTION_SLUG", "no_such_faction")
+    monkeypatch.setattr(
+        "seed.duel_fixture_task_faction_slug", lambda *_, **__: "no_such_faction"
+    )
 
     created = await ensure_duel_fixture_task(db_session, character.id)
     assert created is False

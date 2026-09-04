@@ -94,6 +94,8 @@
     "OAUTH_STATE_EXPIRED": "That sign-in took too long, so we let it lapse. Pick a way in and you'll go straight through.",
     "ACCOUNT_SUSPENDED": "That account is suspended, so we can't sign you in. Get in touch if you think that's wrong.",
     "ACCOUNT_DELETED": "That account was deleted and can't be signed into.",
-    "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one."
+    "RETURNING_PLAYER_CONSENT_EXPIRED": "There's no sign-in waiting on an answer. Pick a way in to start one.",
+    "ERA_CONFIG_UNKNOWN": "No era by that name. Pick one from the list — nothing was changed.",
+    "ERA_ALREADY_LIVE": "That era is already the live one. Nothing was changed — pick a different era to roll into."
   }
 }

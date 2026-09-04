@@ -280,33 +280,14 @@ export default function DefaultPraxisDetail({
   // ── Moderation banners ────────────────────────────────────────────────────
   // The failed note (with its `admin_note`) is shared invariant chrome; the
   // crown hero and the in-editing / pending-publish notice are both gone
-  // (#1710, ADR-0062). The flagged notice is
-  // the third moderation state the v2 contract asks for and has no shared slot,
-  // so it renders here. `PraxisAdminBar` is the steward bar.
+  // (#1710, ADR-0062). The flagged notice is the third moderation state the v2
+  // contract asks for, and it is shared chrome too now — this file's own note
+  // that it "has no shared slot, so it renders here" was the hole seven sibling
+  // archetypes copied the workaround for, and #2718 closed it.
+  // `PraxisAdminBar` is the steward bar.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === 'flagged' && (
-        <div
-          style={{
-            border: '2px solid var(--color-warning)',
-            borderRadius: 8,
-            padding: 'var(--space-sm) var(--space-lg)',
-            marginBottom: 'var(--space-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            flexWrap: 'wrap',
-          }}
-        >
-          <span className="label-caption" style={{ color: 'var(--color-warning)' }}>
-            {t('detail.banners.flaggedLabel')}
-          </span>
-          <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
-            {t('detail.banners.flaggedBody')}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   )

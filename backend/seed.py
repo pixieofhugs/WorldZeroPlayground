@@ -31,7 +31,7 @@ from faction_slugs import (
     UNAFFILIATED_FACTION_SLUG,
     real_faction_slugs,
 )
-from game_config import CURRENT_ERA
+from game_config import CURRENT_ERA, EraConfig, era_config_for_key
 from script_utils import add_env_argument, get_settings
 from models.account import Account, AuthProvider, OAuthProvider
 from models.character import Character
@@ -331,7 +331,20 @@ DUEL_FIXTURE_TASK_DESCRIPTION = (
 # faction_slugs.py in #2708, when the integration fixtures became its third
 # caller — the day this comment and `scripts/seed_demo_praxes.py` were both
 # waiting for.
-DUEL_FIXTURE_TASK_FACTION_SLUG = real_faction_slugs(CURRENT_ERA)[0]
+#
+# A FUNCTION, not a module constant, since #827: a constant here is read when
+# `seed` is imported, which is before `seed()` resolves the live era from the
+# database (ADR-0091). After a mod rolls the game forward from the admin page,
+# that frozen value is the *previous* era's slug — and the `Faction` row for it
+# still exists, because rows retire and never delete, so the guard below waves
+# it through and the fixture task lands in a faction the live era does not
+# carry. That is #2710's symptom again, reached by a different route. Reading it
+# at call time is what keeps the paragraph above true.
+def duel_fixture_task_faction_slug(era: EraConfig = CURRENT_ERA) -> str:
+    """The first real faction of the era in hand."""
+    return real_faction_slugs(era)[0]
+
+
 DUEL_FIXTURE_TASK_POINT_VALUE = 10
 
 
@@ -365,10 +378,9 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
     if existing is not None:
         return False
 
+    slug = duel_fixture_task_faction_slug()
     faction = (
-        await session.execute(
-            select(Faction).where(Faction.slug == DUEL_FIXTURE_TASK_FACTION_SLUG)
-        )
+        await session.execute(select(Faction).where(Faction.slug == slug))
     ).scalar_one_or_none()
     if faction is None:
         return False
@@ -381,7 +393,7 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
         status=TaskStatus.active,
         task_type=TaskType.standard,
         created_by=created_by_id,
-        primary_faction_slug=DUEL_FIXTURE_TASK_FACTION_SLUG,
+        primary_faction_slug=slug,
     ))
     await session.flush()
     return True
@@ -479,7 +491,7 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
     # database, which is exactly the case where this top-up matters.
     if await ensure_duel_fixture_task(session, created_by_id):
         print(
-            f"  >Duel e2e fixture task (1 {DUEL_FIXTURE_TASK_FACTION_SLUG} task "
+            f"  >Duel e2e fixture task (1 {duel_fixture_task_faction_slug()} task "
             f"at the duel level)"
         )
     await session.commit()
@@ -494,28 +506,46 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
 # ---------------------------------------------------------------------------
 
 async def stale_era_warning(session, era) -> str | None:
-    """What to tell the operator when the configured era has no Era row yet.
+    """What to tell the operator when the live ``Era`` row names no ruleset.
 
-    The seeder does not open an era for an unseen ``config_key`` — the rollover
-    does, because it is what stamps ``Era.started_by``. So a deploy that flips
-    ``CURRENT_ERA`` forward leaves the app running the new rules against the old
-    row, and since #2705 it does that *quietly*: the live era is the latest row
-    whatever its key, which is what keeps the rollover runnable instead of
-    500ing every character-stats read. This is where the noise went. ``start.sh``
-    runs the seeder on every deploy, so it lands in front of the one person who
-    can act on it.
+    Rewritten by #827/ADR-0091, and the *advice* is inverted. This used to warn
+    that the configured era had no row yet — "``CURRENT_ERA`` is era_2 but the
+    live row is era_1, run ``era_reset.py``" — because a rollover was an owner's
+    code edit and a deploy could legitimately arrive ahead of it. Under the live
+    binding that state cannot occur: the row **chooses**, so the row and the live
+    era agree by construction and warning about the compile-time era would be
+    telling an operator to undo a mod's rollover.
 
-    Returns None when the live row already matches; the caller prints.
+    What is left is the one state that is still genuinely wrong: a row naming a
+    ``config_key`` no era file registers. Then the process cannot resolve the
+    rules that row records and is falling back to the compile-time era — the
+    game is not playing by the era the database says it is in. ``start.sh`` runs
+    the seeder on every deploy, so this lands in front of the one person who can
+    put the era file back.
+
+    ``era`` is the era actually bound, which is what makes the message say what
+    the game is *doing* rather than only what it failed to do.
+
+    Returns None when the live row resolves; the caller prints.
     """
     live = (
         await session.execute(select(Era).order_by(Era.id.desc()).limit(1))
     ).scalar_one_or_none()
-    if live is not None and live.config_key == era.config_key:
+    if live is None:
+        return (
+            "\nWARNING: no Era row exists, so the game is running on the "
+            f"compile-time era {era.config_key}.\n         Phase 2 opens the "
+            "first row; if you see this after a successful seed, something "
+            "rolled it back."
+        )
+    if era_config_for_key(live.config_key) is not None:
         return None
-    live_key = live.config_key if live is not None else "absent"
     return (
-        f"\nWARNING: {era.config_key} is configured but the live Era row is "
-        f"{live_key}.\n         Run scripts/era_reset.py to open it."
+        f"\nWARNING: the live Era row (id={live.id}) names config_key "
+        f"{live.config_key!r}, which no era file\n         registers. The game "
+        f"has fallen back to {era.config_key} and is NOT playing by the rules "
+        "that row\n         records. Restore the era file, or roll into a "
+        "registered era from the admin page."
     )
 
 
@@ -524,13 +554,11 @@ async def stale_era_warning(session, era) -> str | None:
 # ---------------------------------------------------------------------------
 
 async def seed(env: str, yes: bool) -> None:
-    era = CURRENT_ERA
     settings = get_settings(env)
     db_host = settings.DATABASE_URL.split("@")[-1]
 
     print(f"Environment : {env}")
     print(f"Database    : {db_host}")
-    print(f"Era         : {era.name} ({era.config_key})\n")
 
     if env == "prod" and not yes:
         print("WARNING: You are about to seed a PRODUCTION database.")
@@ -544,6 +572,21 @@ async def seed(env: str, yes: bool) -> None:
     async_session = async_sessionmaker(engine, expire_on_commit=False)
 
     async with async_session() as session:
+        # The era the DATABASE says is live, not the compile-time one
+        # (ADR-0091, #827). Load-bearing: ``start.sh`` runs this seeder on every
+        # deploy, and Phase 1 below is a two-way mirror — it marks the era's
+        # roster ``visible`` and every other slug ``retired``. Seeding the
+        # compile-time era after a mod has rolled the game into a later one
+        # would silently un-do the roster half of their rollover on the next
+        # deploy, with the ``Era`` row still correctly naming the new era.
+        #
+        # Imported here rather than at module scope because ``services.era``
+        # imports this module for ``ONBOARDING_TASK_TITLE``; by the time this
+        # line runs, ``seed`` is fully loaded and there is no cycle to break.
+        from services.era import rebind_live_era
+
+        era = await rebind_live_era(session)
+        print(f"Era         : {era.name} ({era.config_key})\n")
 
         # Check what's already present
         pixie_result = await session.execute(

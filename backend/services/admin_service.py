@@ -5,10 +5,16 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
-from game_config import CURRENT_ERA, EraConfig
+from game_config import (
+    CURRENT_ERA,
+    EraConfig,
+    era_config_for_key,
+    registered_era_config_keys,
+)
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
+from models.era import Era
 from models.roles import AccountRole, Role
 from models.contact import ContactMessage
 from models.flag import Flag, normalize_flag_reason
@@ -22,11 +28,26 @@ from schemas.admin import (
     CharacterBrief,
     CharacterStatsPatch,
     CharacterSummary,
+    EraOption,
+    EraRollOut,
     FlagOut,
     OverviewStats,
 )
+# ``seed`` imports models, game_config and config, never a service, so the
+# roster mirror is reachable from here without a cycle — the same reason
+# ``services.era`` already imports it (for ``ONBOARDING_TASK_TITLE``). The
+# mirror stays in ``seed`` because the seeder is what runs it on every deploy;
+# the rollover is the second caller, not the owner.
+from seed import upsert_era_factions
 from services.duel import forfeit_settled_duels_for_character
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import (
+    apply_era_reset,
+    commit_and_bind_live_era,
+    get_current_era_row,
+    get_current_era_row_safe,
+    get_or_create_stats,
+    lock_era_rollover,
+)
 from services.scoring import compute_vote_budget, compute_votes_available
 
 
@@ -487,3 +508,124 @@ async def admin_edit_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+# ---------------------------------------------------------------------------
+# Era rollover — the control that ends an era (#827, ADR-0091)
+# ---------------------------------------------------------------------------
+
+
+async def list_registered_eras(
+    session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> list[EraOption]:
+    """Every era a mod may roll into, in era order.
+
+    *Which eras exist* is read off the registry, never off ``Era`` rows: an era
+    that has never run has no row, and it is precisely the ones that have never
+    run that a mod wants to pick.
+
+    *Which one is live* is read off the latest ``Era`` row — the same source
+    :func:`roll_into_era`'s refusal reads, and that agreement is the point. The
+    selector used to answer from the process binding instead, which is the same
+    fact only while the two agree. They can come apart: a row naming a
+    ``config_key`` no era file registers leaves the process on the compile-time
+    fallback (``rebind_live_era`` logs it loudly), and in that state the selector
+    would have offered an era the ``PUT`` then refused with
+    ``ERA_ALREADY_LIVE``. A list whose disabled row disagrees with the server is
+    worse than no list.
+
+    ``era`` — the process binding — is the fallback for the one case the row
+    cannot answer: a fresh database with no ``Era`` row at all, where nothing has
+    run and the compile-time era is genuinely what the game is playing by.
+    """
+    live_row = await get_current_era_row_safe(session)
+    live_key = era.config_key if live_row is None else live_row.config_key
+    return [
+        EraOption(
+            config_key=config_key,
+            name=era_config_for_key(config_key).name,
+            is_live=config_key == live_key,
+        )
+        for config_key in registered_era_config_keys()
+    ]
+
+
+async def roll_into_era(
+    config_key: str, operator: Account, session: AsyncSession
+) -> EraRollOut:
+    """End the live era and open ``config_key``. The most destructive operation
+    in the system, and there is no undo.
+
+    Everything it does, it does through the pieces that already own it: the
+    ``Era`` row is the append-only record of which ruleset governs from now
+    (ADR-0042), ``seed.upsert_era_factions`` re-mirrors the roster,
+    ``apply_era_reset`` performs the resets the **incoming** era's flags declare,
+    freezes every unresolved duel into a permanent result (#824) and retires the
+    board, and ``commit_and_bind_live_era`` makes the write durable and *then*
+    points the process at the new rules.
+
+    ``operator`` lands in ``Era.started_by``, the not-null audit trail recording
+    who opened the era. The route's ``require_admin`` is what fills it, which is
+    the guarantee ``scripts/era_reset.py`` has to re-derive by hand.
+
+    **Two refusals, and both matter more here than a validation usually does.**
+    An unregistered key would write a row whose rules nothing can resolve. The
+    era that is *already* live would be a second full destructive reset for no
+    change of ruleset — every score, level, budget and faction wiped, every duel
+    frozen, the board retired, to arrive where the game already was. Until now
+    the only thing stopping it was a ``disabled`` option in the admin page's
+    select, which is not a control.
+    """
+    era_config = era_config_for_key(config_key)
+    if era_config is None:
+        raise_coded(
+            422,
+            ErrorCode.era_config_unknown,
+            f"Unknown era: {config_key}.",
+        )
+
+    # Before the read below, so the read, the refusal it feeds and the insert
+    # that follows are one indivisible decision — against a second mod and
+    # against `scripts/era_reset.py`, which takes the same lock.
+    await lock_era_rollover(session)
+
+    live_row = await get_current_era_row_safe(session)
+    if live_row is not None and live_row.config_key == era_config.config_key:
+        raise_coded(
+            409,
+            ErrorCode.era_already_live,
+            f"{era_config.name} is already the live era.",
+        )
+
+    characters = await list_active_characters(session)
+    new_era_row = Era(
+        # Written, not read on the happy path — the historical fallback for a
+        # row whose config file is later deleted. See models/era.py.
+        name=era_config.name,
+        config_key=era_config.config_key,
+        started_by=operator.id,
+    )
+    session.add(new_era_row)
+    await session.flush()
+
+    # The roster is half the rollover, and it used to wait for the next deploy.
+    # `Faction` is a two-way display mirror of the live era (ADR-0087): the
+    # incoming era's slugs go `visible`, everything else `retired`. Skipping it
+    # left join tiles offering factions the new era does not carry, and — for an
+    # era that adds a slug — no `Faction` row for the FK a join would write.
+    # Before the reset, because `apply_era_reset` seats every character in
+    # `era.reset_faction_slug`, which is an FK onto this table.
+    await upsert_era_factions(session, era_config)
+
+    await apply_era_reset(characters, new_era_row, session, era=era_config)
+
+    # Durable first, live second. See `commit_and_bind_live_era` for why that
+    # order is the whole point.
+    await commit_and_bind_live_era(session, era_config)
+
+    return EraRollOut(
+        era_id=new_era_row.id,
+        config_key=era_config.config_key,
+        name=era_config.name,
+        characters_reset=len(characters),
+    )
