@@ -2,7 +2,8 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { Trans } from "react-i18next";
 import i18n from "../../i18n";
 import EphemeristsNotationBand from "../factionMarks/EphemeristsNotationBand";
-import EphemeristsGloss, { type GlossWord } from "../factionMarks/EphemeristsGloss";
+import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 import {
   BAND,
   BAND_INK,
@@ -72,20 +73,25 @@ function HeroGrids() {
 }
 
 export default function EphemeristsFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The faction labels its own counts — page passes raw numbers only.
-  /* THE CAPTIONS TRAVEL, THE COUNTS DO NOT (#2148). `gloss` names the catalog
-     entry each caption is cast through; the figure beside it stays a Western
-     numeral, always. */
-  const stats: { value: number; label: string; gloss: GlossWord }[] = [
-    { value: members, label: i18n.t("feed:factionHero.ephemerists.stats.members"), gloss: "members" },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks"), gloss: "tasks" },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes"), gloss: "praxes" },
-  ];
+  /* THE CAPTIONS TRAVEL, THE COUNTS DO NOT (#2148). Each caption is cast
+     through the catalog entry its count is NAMED for; the figure beside it
+     stays a Western numeral, always.
+
+     The gloss word was a fourth field on a hand-built array until #2997. It is
+     the frame's `key` now — the same three words, and the same three the frame
+     orders the row by — so the caption cannot be cast through one entry while
+     the figure beside it counts another. The faction names only `members`. */
+  const stats = heroCounts(i18n.t("feed:factionHero.ephemerists.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
   return (
     <header
       style={{
@@ -99,7 +105,7 @@ export default function EphemeristsFactionHero({
       <HeroGrids />
       <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-2xl)", padding: "var(--space-2xl)", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 300px", minWidth: 220 }}>
-          <div
+          <HeroKicker
             style={{
               ...SMALL_CAPS,
               fontSize: "var(--text-base)",
@@ -107,10 +113,9 @@ export default function EphemeristsFactionHero({
               color: GOLD,
               marginBottom: "var(--space-sm)",
             }}
-          >
-            {i18n.t("feed:factionHero.ephemerists.eyebrow")}
-          </div>
-          <h1
+            text={i18n.t("feed:factionHero.ephemerists.eyebrow")}
+          />
+          <HeroWordmark
             style={{
               fontFamily: DECO,
               // eslint-disable-next-line local/no-raw-style-values -- ornament: the masthead wordmark — Poiret One letterspaced until the width is the mark
@@ -123,7 +128,7 @@ export default function EphemeristsFactionHero({
             }}
           >
             {name}
-          </h1>
+          </HeroWordmark>
           {/* THE NOTATION BAND, the header's last line (#2367).
 
               The placement law is PAGE-VERSUS-CARD, not masthead-versus-no-
@@ -161,7 +166,7 @@ export default function EphemeristsFactionHero({
               border: `1px solid ${BRASS}`,
             }}
           >
-            {i18n.t("feed:factionSelect.ephemerists.tagline")}
+            {heroTagline(slug)}
           </div>
           <p
             className="content-text"
@@ -206,10 +211,13 @@ export default function EphemeristsFactionHero({
           {/* `eph-turn-scope` is WCAG 2.2.2's pause mechanism for the captions'
               turn: the stylesheet's rule is a descendant selector, so the ledger
               is the scope rather than each caption carrying a wrapper. */}
-          <div className="eph-turn-scope" style={{ alignSelf: "stretch", border: `1px solid ${BRASS}` }}>
-            {stats.map((s, i) => (
+          <HeroCounts
+            counts={stats}
+            className="eph-turn-scope"
+            style={{ alignSelf: "stretch", border: `1px solid ${BRASS}` }}
+          >
+            {(s, i) => (
               <div
-                key={s.gloss}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -220,14 +228,14 @@ export default function EphemeristsFactionHero({
                 }}
               >
                 <span style={{ ...SMALL_CAPS, fontSize: "var(--text-md)", letterSpacing: "0.14em", color: BAND_QUIET }}>
-                  <EphemeristsGloss word={s.gloss} english={s.label} ordinal={i} />
+                  <EphemeristsGloss word={s.key} english={s.label} ordinal={i} />
                 </span>
                 <span className="content-title" style={{ fontFamily: DECO, lineHeight: 0.85, color: GOLD }}>
                   {s.value}
                 </span>
               </div>
-            ))}
-          </div>
+            )}
+          </HeroCounts>
         </div>
       </div>
       <Cornice />

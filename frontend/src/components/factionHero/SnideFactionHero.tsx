@@ -2,6 +2,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import { SnideSigil } from "../sigil/SnideSigil";
 import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): faint
@@ -63,16 +64,19 @@ const HERO_GHOSTS = [
 const CHIT_ROT = [-3, 2.5, -2];
 
 export default function SnideFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.snide.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  // The wall names only `members`; the frame owns the other two labels and the
+  // order (#2997).
+  const stats = heroCounts(i18n.t("feed:factionHero.snide.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header
@@ -166,7 +170,7 @@ export default function SnideFactionHero({
             wherever there is room, so no desktop rendering moves. */}
         <div style={{ flex: 1, minWidth: "min(300px, 100%)" }}>
           {/* eyebrow, typed straight onto the wall (#1708 took the tape) */}
-          <div
+          <HeroKicker
             style={{
               display: "inline-block",
               width: "fit-content",
@@ -183,9 +187,8 @@ export default function SnideFactionHero({
               letterSpacing: "0.05em",
               transform: "rotate(-1.5deg)",
             }}
-          >
-            {i18n.t("feed:factionHero.snide.eyebrow")}
-          </div>
+            text={i18n.t("feed:factionHero.snide.eyebrow")}
+          />
           {/* THE WORDMARK IS ACID, SO IT CARRIES THE PLATE (#2173, #2343). Acid
               on the light wall is 1.026:1 — the faction's own name, invisible —
               and there is no darker acid to reach for: the wall's luminance
@@ -207,7 +210,7 @@ export default function SnideFactionHero({
               happens to sit underneath. The h1's own top margin collapses
               through this box, so nothing moves. */}
           <hgroup style={{ margin: 0 }}>
-          <h1
+          <HeroWordmark
             style={{
               fontFamily: "var(--faction-snide-font-impact)",
               // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
@@ -220,7 +223,7 @@ export default function SnideFactionHero({
             }}
           >
             <span style={{ color: ACID, background: PLATE, padding: "0 var(--space-md)" }}>{name}</span>
-          </h1>
+          </HeroWordmark>
           {/* THE EXPANSION IS A SUBHEAD, NOT A CAPTION (#2368).
               It was `var(--font-body)` — Courier Prime, the app's generic body
               face — at `--text-base` in the wall's QUIET tier, which is the
@@ -302,7 +305,7 @@ export default function SnideFactionHero({
               boxShadow: "2px 3px 0 var(--faction-snide-pink)",
             }}
           >
-            {i18n.t("feed:factionSelect.snide.tagline")}
+            {heroTagline(slug)}
           </div>
         </div>
 
@@ -387,10 +390,23 @@ export default function SnideFactionHero({
             </div>
           </div>
 
-          {/* staggered acid stat chits — not a clean band */}
-          {stats.map((s, i) => (
+          {/* Staggered acid stat chits — not a clean band. The frame's row is a
+              real box here where the chits used to be loose siblings of the
+              sigil above them, so it carries the column's own gap and stretch:
+              the chits set `alignSelf: stretch` against it instead of against
+              the outer column, and the spacing between sigil and first chit and
+              between chits is the same `--space-md` it always was. */}
+          <HeroCounts
+            counts={stats}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-md)",
+              alignSelf: "stretch",
+            }}
+          >
+            {(s, i) => (
             <div
-              key={s.label}
               style={{
                 alignSelf: "stretch",
                 textAlign: "right",
@@ -448,7 +464,8 @@ export default function SnideFactionHero({
                 {s.label}
               </div>
             </div>
-          ))}
+            )}
+          </HeroCounts>
         </div>
       </div>
     </header>
