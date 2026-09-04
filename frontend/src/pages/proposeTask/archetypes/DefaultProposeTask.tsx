@@ -392,7 +392,13 @@ export default function DefaultProposeTask({
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin="default">
-        <ComposerSheet sizes={sizes} style={sheetStyle} ground={composerGround}>
+        {/* `reserveHead` (#2995): na draws no masthead, so the head it reserves
+            is bare ground — the sheet's own wash, at the height the Ephemerists'
+            band takes. That is the point rather than a cost: this page reskins
+            live as the chips are clicked, and the row can only stand still if
+            the kit with no band starts its column where the kit with the tallest
+            one does. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} reserveHead ground={composerGround}>
           {/* The heading the six chassis kits spell, in na's own face — NOT
               `PageTitle`, and that is a reversal of this issue's "the furniture
               survives" line for two reasons the chassis states itself.
@@ -420,6 +426,10 @@ export default function DefaultProposeTask({
               lineHeight: 1.1,
               color: INK,
               margin: 0,
+              // The heading floor, the second half of #2995's offset: the chips
+              // are the section directly under this block, so its height is the
+              // last thing between them and the sheet's edge.
+              minHeight: sizes.headingHeight,
             }}
           >
             {t("proposeTask.pageTitle")}

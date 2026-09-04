@@ -215,16 +215,19 @@ interface ComposerSizes {
    * Reserving the head equalizes what sits ABOVE the content column; on Propose
    * a Task the chips are the column's first section, so the only thing left
    * between them and the sheet's edge is the page heading. That block is
-   * archetype-authored and does not agree: eight kits draw a bare `h1` at
-   * `titleSize` (0.96 to 1.2 line-height — 30.7px to 38.4px on desktop) and the
-   * Ephemerists draw a flex row with a 44px stage mark beside theirs.
+   * archetype-authored and does not agree. Measured on the propose kits, tall
+   * ornament included, on desktop: five kits draw a bare `h1` at `titleSize`
+   * and 1.1 line-height (35.2px), Singularity's is 1.2 (38.4) and Everymen's
+   * 0.96 beside a 40px cog (40), the Ephemerists' is a flex row with a 44px
+   * stage mark (44), and WOW's is a row ending in a balloon bunch drawn 38 wide
+   * and 1.25× as tall (47.5). On the phone the bunch drops to 37.5 and the mark
+   * does not move, so the ceiling swaps kits: 44.
    *
-   * 44 IS THAT MARK, AND IT WAS MEASURED RATHER THAN ASSUMED. The issue asked
-   * for this floor only if the mark does NOT fit inside the h1's line box:
-   * 32px × 1.2 = 38.4px on desktop and 24px × 1.2 = 28.8px on mobile, against a
-   * mark that is 44px at both. It does not fit, so the row is 5.6px taller than
-   * the six-kit baseline on desktop and 15.2px on mobile, and the floor lands.
-   * It is the same number at both widths because the mark is.
+   * THE FLOOR WAS MEASURED, NOT ASSUMED. The issue asked for it only if the
+   * Ephemerists' mark does NOT fit inside the h1's line box — 32px × 1.2 =
+   * 38.4px on desktop, 24px × 1.2 = 28.8 on mobile, against a mark that is 44px
+   * at both. It does not fit, so the heading term is real: 12.3px of spread on
+   * desktop and 21 on the phone, on a page whose chips sit directly under it.
    *
    * The floor adds air BELOW a short heading rather than centring it: every
    * kit's heading text then starts at the same y, and so does the row under it.
@@ -235,15 +238,20 @@ interface ComposerSizes {
 }
 
 /**
- * The two reserved heights, declared once for both form factors (#2995).
+ * The two reserved heights, declared once per form factor (#2995).
  *
- * `headHeight` differs by width because the tallest head does — the
- * Ephemerists' band is 84px on desktop and 68 on the phone, and its cornice is
- * 12 either way. `headingHeight` does not, because the mark that sets it is
- * 44px at both.
+ * Both differ by width because the tallest thing they cover does. The
+ * Ephemerists' sky band is 84px on desktop and 68 on the phone and its cornice
+ * is 12 either way (96 / 80); the tallest heading is WOW's balloon bunch at
+ * 38 × 1.25 = 47.5 on desktop, and on the phone the bunch shrinks to 37.5 and
+ * the Ephemerists' 44px stage mark — which does not shrink — takes the ceiling
+ * (48 / 44).
+ *
+ * Rounded UP to a whole pixel, never down: down is the defect back at half a
+ * pixel.
  */
 const RESERVED_HEAD = { desktop: 96, mobile: 80 };
-const RESERVED_HEADING = 44;
+const RESERVED_HEADING = { desktop: 48, mobile: 44 };
 
 /**
  * The design's SIZES table, as one responsive hook (ADR-0065 §2).
@@ -266,7 +274,7 @@ export function useComposerSizes(): ComposerSizes {
         // design 23px → the 24px rung.
         titleSize: "var(--text-title)",
         headHeight: RESERVED_HEAD.mobile,
-        headingHeight: RESERVED_HEADING,
+        headingHeight: RESERVED_HEADING.mobile,
         isMobile: true,
       }
     : {
@@ -279,7 +287,7 @@ export function useComposerSizes(): ComposerSizes {
         // composer's heading is the same tier as every other page heading.
         titleSize: "var(--text-heading)",
         headHeight: RESERVED_HEAD.desktop,
-        headingHeight: RESERVED_HEADING,
+        headingHeight: RESERVED_HEADING.desktop,
         isMobile: false,
       };
 }

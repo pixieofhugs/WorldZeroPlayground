@@ -403,7 +403,18 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   }
 
   const heading = (text: string) => (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-md)' }}>
+    /* `minHeight` is the chassis' heading floor (#2995) — the second term in
+       the offset the chip row sits at, and the same number on all nine kits.
+       The prompt and the title keep their shared baseline; the floor only says
+       how far the block reaches before the next region starts. */
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 'var(--space-md)',
+        minHeight: sizes.headingHeight,
+      }}
+    >
       <span
         aria-hidden
         style={{ fontFamily: FACE, fontSize: sizes.titleSize, color: BRIGHT, lineHeight: 1 }}
@@ -496,7 +507,18 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
           Enter commit from a text field, and `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        {/* `reserveHead` (#2995). The window bar is 31px; the tallest head on
+            this page is 96, so this sheet pads out to it and the key row stops
+            moving when the pick changes. The bar keeps its own height — the
+            reserved box says where the column STARTS, never how tall a kit's
+            chrome is. */}
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
           {heading(t('proposeTask.pageTitle'))}
 
           {/* The target faction — the value this whole page reskins on, so it

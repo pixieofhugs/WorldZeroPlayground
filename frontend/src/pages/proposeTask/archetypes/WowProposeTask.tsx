@@ -343,7 +343,21 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
 
   /** The sheet's head: ✦, the page's own words, a wavy rule, one bunch. */
   const head = (heading: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+    /* THE BUNCH IS THE CEILING THIS FLOOR WAS MEASURED ON (#2995). Drawn 38
+       wide and 1.25× as tall, it makes this the tallest heading block of the
+       nine on desktop at 47.5px — so `headingHeight` is 48 and this row pads
+       out by half a pixel, while the five kits whose heading is a bare h1 pad
+       out by 12.8. On the phone the bunch is 37.5 and the Ephemerists' stage
+       mark takes the ceiling instead. */
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        flexWrap: 'wrap',
+        minHeight: sizes.headingHeight,
+      }}
+    >
       <span style={{ fontFamily: MED, fontSize: 'var(--text-heading)', lineHeight: 1 }}>
         <WowSpark />
       </span>
@@ -403,7 +417,11 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead}>
+        {/* `reserveHead` (#2995): the ribbon is 7px and the bunting under it
+            22, so 29 against a 96px ceiling — this is one of the sheets that
+            pads out the furthest. Neither device is touched; they keep their
+            own heights inside a slot of a known one. */}
+        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} reserveHead>
           {head(t('proposeTask.pageTitle'))}
 
           {/* The banner the quest is petitioned UNDER — and the control that

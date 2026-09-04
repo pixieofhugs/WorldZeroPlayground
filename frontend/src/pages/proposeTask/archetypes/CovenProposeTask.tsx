@@ -433,7 +433,18 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
           required-field behaviour something to attach to. `handleSubmit` calls
           `preventDefault()` itself. */}
       <form onSubmit={handleSubmit} data-skin={SLUG}>
-        <ComposerSheet sizes={sizes} style={sheetStyle} masthead={masthead} ground={ground}>
+        <ComposerSheet
+          sizes={sizes}
+          style={sheetStyle}
+          masthead={masthead}
+          reserveHead
+          ground={ground}
+        >
+          {/* The two reserved heights (#2995). This band is 78px and the
+              Ephemerists' is 96, so the chips sat lowest here and highest on the
+              two kits that draw no band — on a page that reskins live as they
+              are clicked. The band is untouched; the slot under it is the
+              chassis'. */}
           <h1
             style={{
               fontFamily: DISPLAY,
@@ -442,6 +453,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
               lineHeight: 1.1,
               color: INK,
               margin: 0,
+              minHeight: sizes.headingHeight,
             }}
           >
             {t('proposeTask.pageTitle')}
