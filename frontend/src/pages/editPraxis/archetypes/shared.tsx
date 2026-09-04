@@ -186,9 +186,64 @@ interface ComposerSizes {
   gap: string;
   /** The composer's own heading tier. */
   titleSize: string;
+  /**
+   * THE RESERVED HEAD (#2995) — the floor under {@link ComposerSheet}'s masthead
+   * slot, for the surfaces that opt in with `reserveHead`.
+   *
+   * ONE NUMBER, because the whole point is that nine kits read the same one.
+   * Propose a Task and Create Character both dispatch on the pick IN PROGRESS,
+   * so every click on a chip renders a different archetype — and each archetype
+   * started its content column wherever its own masthead ended. Measured on the
+   * propose kits at this width: na and UA passed no masthead at all (0), WOW's
+   * ribbon plus its bunting is 29, Singularity's window bar 31, S.N.I.D.E.'s
+   * 36, Everymen's nameplate 45, Coven's sigil-and-braid band 78, and the
+   * Ephemerists' sky band plus its cornice 96. The chip row moved by up to 96px
+   * under the pointer.
+   *
+   * So the number is the TALLEST head any kit draws, and it cannot be smaller:
+   * a floor that a kit overflows leaves that kit starting lower, which is the
+   * defect again at reduced amplitude. Everything under it pads out; the
+   * Ephemerists' band meets it exactly. It is geometry, not spacing, so it is a
+   * raw number (WORLD_ZERO_STYLE §4a) — and it is a MIN, so a kit that grows a
+   * taller ornament is not clipped, it is the new ceiling and this number
+   * follows it.
+   */
+  headHeight: number;
+  /**
+   * THE HEADING FLOOR (#2995 part 2) — the second term in that same offset.
+   *
+   * Reserving the head equalizes what sits ABOVE the content column; on Propose
+   * a Task the chips are the column's first section, so the only thing left
+   * between them and the sheet's edge is the page heading. That block is
+   * archetype-authored and does not agree: eight kits draw a bare `h1` at
+   * `titleSize` (0.96 to 1.2 line-height — 30.7px to 38.4px on desktop) and the
+   * Ephemerists draw a flex row with a 44px stage mark beside theirs.
+   *
+   * 44 IS THAT MARK, AND IT WAS MEASURED RATHER THAN ASSUMED. The issue asked
+   * for this floor only if the mark does NOT fit inside the h1's line box:
+   * 32px × 1.2 = 38.4px on desktop and 24px × 1.2 = 28.8px on mobile, against a
+   * mark that is 44px at both. It does not fit, so the row is 5.6px taller than
+   * the six-kit baseline on desktop and 15.2px on mobile, and the floor lands.
+   * It is the same number at both widths because the mark is.
+   *
+   * The floor adds air BELOW a short heading rather than centring it: every
+   * kit's heading text then starts at the same y, and so does the row under it.
+   */
+  headingHeight: number;
   /** True on a phone — for conditional ornament, never for a second layout. */
   isMobile: boolean;
 }
+
+/**
+ * The two reserved heights, declared once for both form factors (#2995).
+ *
+ * `headHeight` differs by width because the tallest head does — the
+ * Ephemerists' band is 84px on desktop and 68 on the phone, and its cornice is
+ * 12 either way. `headingHeight` does not, because the mark that sets it is
+ * 44px at both.
+ */
+const RESERVED_HEAD = { desktop: 96, mobile: 80 };
+const RESERVED_HEADING = 44;
 
 /**
  * The design's SIZES table, as one responsive hook (ADR-0065 §2).
@@ -210,6 +265,8 @@ export function useComposerSizes(): ComposerSizes {
         gap: "var(--space-lg)",
         // design 23px → the 24px rung.
         titleSize: "var(--text-title)",
+        headHeight: RESERVED_HEAD.mobile,
+        headingHeight: RESERVED_HEADING,
         isMobile: true,
       }
     : {
@@ -221,6 +278,8 @@ export function useComposerSizes(): ComposerSizes {
         // design 29px → the 32px rung. A --text-* token names a TIER, and the
         // composer's heading is the same tier as every other page heading.
         titleSize: "var(--text-heading)",
+        headHeight: RESERVED_HEAD.desktop,
+        headingHeight: RESERVED_HEADING,
         isMobile: false,
       };
 }
@@ -396,6 +455,24 @@ export function composerBandStyle(
 interface ComposerSheetProps {
   /** Full-bleed top chrome. Drawn flush to the sheet's edges, above the ground. */
   masthead?: ReactNode;
+  /**
+   * Reserve `sizes.headHeight` for the masthead slot, so the content column
+   * starts at the same offset whatever the kit draws up there (#2995).
+   *
+   * OPT-IN, AND DEFAULTING TO OFF ON PURPOSE. Roughly thirty archetypes across
+   * four surfaces mount this sheet. The two that RESKIN LIVE — Propose a Task
+   * dispatches on the target faction and Create Character on the calling being
+   * chosen — are the two where a per-kit masthead height is a bug: the control
+   * you are using re-renders as a different kit's tree and walks out from under
+   * the pointer. On editPraxis and editCharacter the kit is fixed for the life
+   * of the page, nothing re-skins, and a reserved head would only move every
+   * surface in the app for a defect they do not have. Widening it there is a
+   * separate, visually-reviewed pass.
+   *
+   * Off, the masthead renders exactly as before — no wrapper, byte-identical
+   * markup — so the surfaces that do not opt in are untouched.
+   */
+  reserveHead?: boolean;
   /** Ambient backdrop. Clipped to the SHEET — see the overflow note below. */
   ground?: ReactNode;
   children: ReactNode;
@@ -424,6 +501,7 @@ interface ComposerSheetProps {
  */
 export function ComposerSheet({
   masthead,
+  reserveHead = false,
   ground,
   children,
   pageStyle,
@@ -450,7 +528,22 @@ export function ComposerSheet({
           }}
         >
           {ground}
-          {masthead}
+          {/* The reserved head (#2995). A wrapper only when it is asked for:
+              `position: relative; zIndex: 2` restates what `ComposerMasthead`
+              sets on itself, so the band still stands over the ground, and the
+              slot is a MIN so a taller ornament is never clipped. The handle is
+              in the markup because a DOM-less suite has nothing else to read —
+              the same reason `Bunting` carries `data-wow-bunting`. */}
+          {reserveHead ? (
+            <div
+              data-composer-head=""
+              style={{ position: "relative", zIndex: 2, minHeight: sizes.headHeight }}
+            >
+              {masthead}
+            </div>
+          ) : (
+            masthead
+          )}
           <div
             style={{
               position: "relative",

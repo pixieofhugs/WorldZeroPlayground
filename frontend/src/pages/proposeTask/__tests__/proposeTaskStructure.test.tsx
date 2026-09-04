@@ -178,32 +178,15 @@ describe('the form asks the same things in the same order (AC 1)', () => {
 })
 
 /**
- * The one kit that still draws the row outside its `<form>`, and it is NOT
- * grandfathered — it is #2995's, in as many words.
- *
- * `EverymenProposeTask`'s header argues the placement ("the pick is what the
- * card then wears, so it cannot live inside the thing it dresses"); six kits
- * disprove it by shipping, #2993 moved the na kit in, and #2995 moves Everymen
- * and rewrites that paragraph. Editing it here would be this lane reaching into
- * a file another issue owns.
- *
- * So the exception is asserted BOTH WAYS: the row below skips it, and the row
- * under that pins it still outside. The day #2995 lands, that second row goes
- * red and this set is deleted — which is the opposite of a skip list, where
- * fixing the defect changes nothing and the entry outlives it.
+ * THE EXCEPTION IS GONE (#2995). This set held `everymen` — the last kit that
+ * drew the row before its `<form>` — and pinned it outside BOTH ways, so that
+ * moving it in would turn a row red rather than let a skip outlive the defect.
+ * #2995 moved it in and rewrote the header paragraph that argued for the old
+ * placement, so the pin is deleted and every kit is measured by the one row
+ * below. Nine of nine, derived from the registry.
  */
-const OUTSIDE_THE_FORM = new Set(['everymen'])
-const inside = CASES.filter(([, , slug]) => !OUTSIDE_THE_FORM.has(slug))
-const outside = CASES.filter(([, , slug]) => OUTSIDE_THE_FORM.has(slug))
-
-describe('the target faction is the form’s FIRST question (AC 2, #2993)', () => {
-  it('the exception list names kits that exist', () => {
-    // A typo'd slug would silently exempt nothing and pin nothing, leaving both
-    // rows below green about a kit that was never measured.
-    for (const slug of OUTSIDE_THE_FORM) expect(ARCHETYPES).toContain(slug)
-  })
-
-  it.each(inside)('%s on %s: the radiogroup is inside the form', (_name, width, slug) => {
+describe('the target faction is the form’s FIRST question (AC 2, #2993, #2995)', () => {
+  it.each(CASES)('%s on %s: the radiogroup is inside the form', (_name, width, slug) => {
     // The defect this issue was filed on. Every kit wraps its sheet in the
     // page's one `<form>`, so — with no DOM to ask — "inside the sheet" is read
     // off the order of the markup the same way `proposeTaskBreadcrumb` reads
@@ -214,14 +197,6 @@ describe('the target faction is the form’s FIRST question (AC 2, #2993)', () =
     expect(form, 'the form is the sheet boundary this reads against').toBeGreaterThan(-1)
     expect(group, 'no target-faction radiogroup on the page').toBeGreaterThan(-1)
     expect(group, 'the pick belongs to the form it dresses').toBeGreaterThan(form)
-  })
-
-  it.each(outside)('%s on %s: is still outside it, and that is #2995’s', (_name, width, slug) => {
-    const html = skin(slug, width)
-    expect(
-      html.indexOf('role="radiogroup"'),
-      'this kit moved in — delete it from OUTSIDE_THE_FORM and let the row above cover it',
-    ).toBeLessThan(html.indexOf('<form'))
   })
 
   it.each(CASES)('%s on %s: and it comes before the first field', (_name, width, slug) => {
@@ -242,6 +217,51 @@ describe('the target faction is the form’s FIRST question (AC 2, #2993)', () =
     const html = skin(slug, width)
     expect(html.match(/role="radiogroup"/g)).toHaveLength(1)
     expect(html.match(/role="radio"/g)).toHaveLength(8)
+  })
+})
+
+/**
+ * The reserved masthead head, on every kit (#2995).
+ *
+ * The defect: this page dispatches on the pick in progress, so every click on a
+ * chip renders a DIFFERENT archetype — and each one started its content column
+ * wherever its own masthead happened to end (UA passed none at all; the
+ * Ephemerists' sky band plus its cornice is 96px). The row moved under the
+ * pointer, and the next click landed on a faction nobody aimed at.
+ *
+ * `ComposerSheet`'s `reserveHead` gives the masthead slot a floor out of
+ * `useComposerSizes()`, so the column starts at the same offset on all nine.
+ * The number is NOT written down here: what is asserted is that every kit reads
+ * the SAME one, which is the property that makes the row stand still. A literal
+ * would pass just as happily with nine kits reading nine numbers.
+ *
+ * WHAT THIS CANNOT PROVE. `renderToStaticMarkup` has no layout, so nothing here
+ * measures the row's actual y — a kit whose masthead OVERFLOWS the floor still
+ * starts lower and this stays green. It proves the floor is reserved and
+ * shared; the offset is checked by eye, and that is stated on the PR.
+ */
+describe('the masthead slot is reserved, and by one number (#2995)', () => {
+  const headStyles = (html: string) =>
+    [...html.matchAll(/<div data-composer-head="" style="([^"]*)"/g)].map(([, style]) => style)
+
+  it.each(CASES)('%s on %s: the sheet reserves its head', (_name, width, slug) => {
+    // One per page: the form's sheet. A kit that opted none in — or that opted
+    // a second sheet in — fails here rather than drifting quietly.
+    expect(headStyles(skin(slug, width))).toHaveLength(1)
+  })
+
+  it.each(WIDTHS)('every kit reserves the same head on %s', (width) => {
+    const heads = ARCHETYPES.map(
+      (slug) => [slug || 'na', headStyles(skin(slug, width))[0]] as const,
+    )
+    const values = new Set(heads.map(([, style]) => style))
+    expect(
+      values.size,
+      `nine kits, one reserved head — got ${heads.map(([k, v]) => `${k}: ${v}`).join(', ')}`,
+    ).toBe(1)
+    expect([...values][0], 'the head is a reserved height, not an empty box').toMatch(
+      /min-height:\d+px/,
+    )
   })
 })
 
