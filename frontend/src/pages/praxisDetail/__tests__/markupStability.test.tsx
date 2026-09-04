@@ -49,6 +49,30 @@ import type { ComponentType } from 'react'
 import { aMetatask, aDuel } from '../../../test/fixtures'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
+// ─── THE RENDER IS PINNED TO UTC, AND THIS LINE IS LOAD-BEARING ──────────────
+//
+// The first version of this file hashed the markup as the machine happened to
+// render it, and the machine that captured the baseline was on
+// `America/Los_Angeles`. CI runs in UTC, so all 200 rows differed on the first
+// push and none of them was a real change.
+//
+// The whole of the difference was ONE node. Every praxis-detail archetype draws
+// a byline timestamp through `formatTimestamp` (`utils/dates.ts`), which calls
+// `toLocaleString(undefined, ...)` — the ambient timezone AND the ambient
+// locale. The fixture's `submitted_at` is `2026-01-02T00:00:00Z`, which renders
+// as "Jan 2, 2026, 12:00 AM" in UTC and "Jan 1, 2026, 4:00 PM" seven hours west
+// of it. One line of markup, on every page, in every state, at both form
+// factors — which is exactly why it looked like a total mismatch rather than a
+// one-node one.
+//
+// Assigning `process.env.TZ` at runtime really does re-point `Intl` on Node 26
+// (verified, not assumed: `resolvedOptions().timeZone` moves with it, even
+// after `Intl` has already been used once). It is set before the dynamic
+// imports below so nothing can read a timezone first — and the guard case at
+// the bottom of this file asserts the pin actually took, because a pin that
+// silently no-ops would put us straight back to a 200-row mystery diff.
+process.env.TZ = 'UTC'
+
 const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
@@ -152,6 +176,39 @@ function capture(
 function digest(html: string): string {
   return createHash('sha256').update(html).digest('hex').slice(0, 16)
 }
+
+// ─── The pin, asserted before anything is hashed ─────────────────────────────
+//
+// Every hash below is only meaningful if the render is reproducible, and both
+// halves of that are ambient state this file does not own. If either drifts,
+// EVERY row moves at once and none of the movement means anything — which is a
+// failure mode that costs an afternoon to read backwards, because 200 changed
+// hashes look like a catastrophic regression and are in fact one `<div>`.
+//
+// So the environment is stated as its own case, and it fails by NAME. The
+// locale is asserted rather than pinned because Node offers no runtime lever
+// for it the way it does for `TZ`: if this row is what went red, the fix is to
+// run the suite under `LANG=en_US.UTF-8`, not to re-record the snapshot.
+describe('the render environment is pinned', () => {
+  it('renders in UTC, so a byline timestamp is the same string everywhere', () => {
+    expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe('UTC')
+  })
+
+  it('renders in en-US, which is the locale the snapshot was captured under', () => {
+    expect(Intl.DateTimeFormat().resolvedOptions().locale).toBe('en-US')
+  })
+
+  it('formats the fixture instant the way the snapshot expects', () => {
+    // The one node that broke this file the first time, asserted directly:
+    // `2026-01-02T00:00:00Z` is midnight UTC and is NOT the previous evening.
+    expect(
+      new Date(PRAXIS.submitted_at!).toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    ).toBe('Jan 2, 2026, 12:00 AM')
+  })
+})
 
 describe('praxis-detail markup is byte-stable across the registry', () => {
   it('every archetype × state × form factor hashes to its recorded markup', () => {
