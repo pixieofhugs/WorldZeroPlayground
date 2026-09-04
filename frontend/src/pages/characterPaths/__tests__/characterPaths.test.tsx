@@ -207,28 +207,58 @@ describe('canSubmitName — the shared submit gate', () => {
   })
 })
 
-describe('DefaultCreateCharacter mobile skin', () => {
-  beforeEach(() => { factor.value = 'mobile' })
+/**
+ * THE na CREATE KIT'S OWN SLOTS, AT BOTH WIDTHS (#2992).
+ *
+ * THIS BLOCK USED TO PIN `mobile` AND CALL ITSELF A PHONE TEST, and after #2992
+ * that was a name for a failure mode that no longer exists: the phone branch is
+ * gone — a sticky `Create character` bar, a 104px photo ring with its own
+ * caption, a `Step 1 of 2` framing, all retired with their copy keys — so there
+ * is one tree and pinning one width could only ever assert it twice under two
+ * names. Every case below runs at BOTH widths instead, which is what makes them
+ * able to fail for a width reason again: the two must not diverge.
+ *
+ * WHAT IS HERE AND WHAT IS NEXT DOOR. The field SET and the exit ORDER are
+ * `createCharacterStructure.test.tsx`'s, asked of all nine kits from the
+ * registry. These three are the na kit's own slots — the ones the retired branch
+ * got wrong from the phone's side, and which no registry sweep would name: the
+ * born-unaffiliated explainer only the phone used to carry, and the live
+ * credential preview the WIDE branch used to drop below the fold.
+ */
+describe('DefaultCreateCharacter — the na kit’s slots, identical at both widths', () => {
   afterEach(() => { factor.value = 'desktop' })
 
-  it('renders the name field and a sticky Create action', () => {
-    const { html, text } = render(<DefaultCreateCharacter state={createState({})} />)
+  const WIDTHS = ['mobile', 'desktop'] as const
+
+  const at = (width: (typeof WIDTHS)[number]) => {
+    factor.value = width
+    return render(<DefaultCreateCharacter state={createState({})} />)
+  }
+
+  it.each(WIDTHS)('renders the name field, the commit and the explainer — %s', (width) => {
+    const { html, text } = at(width)
     expect(html, 'name input').toContain('value="Molly"')
-    expect(text, 'sticky create').toContain('Create character')
+    // ONE commit label at either width — the phone's second one went with the
+    // sticky bar, and `createCharacterStructure` counts the controls.
+    expect(text, 'the commit').toContain('step out')
     expect(text, 'born-unaffiliated explainer').toContain('Unaffiliated')
   })
 
-  // #1149: the ring's accessible name used to fall through to the "+" glyph or,
-  // once a portrait existed, to its alt text. It now matches the caption drawn
-  // right beneath it, in both states.
-  it('names the photo ring with its own caption', () => {
-    const empty = render(<DefaultCreateCharacter state={createState({})} />)
-    expect(empty.html, 'empty ring').toContain('aria-label="Add photo"')
-    expect(empty.text, 'and the caption agrees').toContain('Add photo')
+  it.each(WIDTHS)('carries the live credential preview — %s', (width) => {
+    // Defect 2 of #2992 from both sides: the phone column had no preview at all,
+    // and the wide plate wrapped it below the fold under 634px. The card is
+    // inside the sheet now, first, at both.
+    const { html, text } = at(width)
+    expect(text, 'the preview shows the name being typed').toContain('Molly')
+    expect(html, 'the portrait ring is the upload affordance').toContain('aria-label="Click to upload a photo"')
+  })
 
-    const picked = render(<DefaultCreateCharacter state={createState({ avatarPreview: 'blob:p-1' })} />)
-    expect(picked.html, 'ring holding a portrait').toContain('aria-label="Change photo"')
-    expect(picked.text, 'and the caption agrees').toContain('Change photo')
+  // #1149: the portrait control names itself rather than falling through to a
+  // glyph or to an alt text. `PortraitPicker` is that control at both widths now.
+  it.each(WIDTHS)('names the portrait control, and reports what is chosen — %s', (width) => {
+    const { text } = at(width)
+    expect(text, 'the picker button').toContain('Choose a photo')
+    expect(text, 'and the status line beside it').toContain('No photo chosen yet')
   })
 })
 

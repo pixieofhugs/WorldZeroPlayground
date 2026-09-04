@@ -136,8 +136,17 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
     // Both draw the conic TWICE — the portrait hoop and the mark itself. That
     // the count no longer tells the two apart is the whole point: what differs
     // is the stencil the ramp is poured through, never the ramp.
+    //
+    // THE HOOP SAYS IT BY CLASS SINCE #2992, the mark still by value. That is
+    // #2497's split, not a change of paint: `.spectrum-dial` carries exactly
+    // `--faction-default-rainbow-conic` and nothing else (`spectrumClasses`
+    // asserts that from the stylesheet side), and classing it is what lets
+    // `.alb-moves .spectrum-dial` set an Albescent hoop turning without a copy
+    // of this component existing. The mark keeps its inline ramp on purpose: a
+    // sigil is never part of the wrapper (ADR-0083 §1), so it must NOT turn.
     for (const html of [albescent, unaffiliated]) {
-      expect(html.split('--faction-default-rainbow-conic').length - 1, 'hoop + mark').toBe(2)
+      expect(html.split('--faction-default-rainbow-conic').length - 1, 'the mark, by value').toBe(1)
+      expect(html.split('class="spectrum-dial"').length - 1, 'the hoop, by class').toBe(1)
     }
   })
 })

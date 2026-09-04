@@ -353,13 +353,20 @@ auto-starting another batch.
 1. Commit + push INCREMENTALLY. A concurrent `/git-reaper` sweep has twice emptied a live
    worktree — uncommitted work in one is not safe. `grep` each file on disk after editing to
    confirm the write landed. Never batch into one final commit.
-2. node_modules: the worktree lacks it. `mklink` is a **cmd.exe builtin and is NOT on
-   PATH** in Bash or PowerShell — it needs the call through `cmd`, or use `npm ci`:
-   Bash: `cmd //c mklink /J "$(pwd)/frontend/node_modules" "<ABSOLUTE Windows path to main>\frontend\node_modules"`
-   or `npm ci`. A WRONG relative depth silently makes the tsc binary absent, so `tsc | grep -c`
-   reports a FALSE 0-error pass — verify `tsc --version` actually runs. `Cannot find module
-   'node:fs'/'node:url'` is a known stale-junction false alarm (PR #675), not a real error.
-   Remove the junction before finishing — `git worktree remove` follows it and wipes main's node_modules.
+2. node_modules: the worktree lacks it. This machine is **Linux** — symlink it:
+   `ln -s /home/pixie/Projects/WorldZeroPlayground/frontend/node_modules "$(pwd)/frontend/node_modules"`
+   (absolute target, always — a WRONG relative depth silently makes the tsc binary absent, so
+   `tsc | grep -c` reports a FALSE 0-error pass; verify `tsc --version` actually runs). `npm ci`
+   also works and is slower. `Cannot find module 'node:fs'/'node:url'` is a known stale-link
+   false alarm (PR #675), not a real error.
+   **Remove the symlink before finishing** — `rm frontend/node_modules` (never `rm -r`, which
+   would follow it into main's copy). `git worktree remove` also follows a link and wipes
+   main's node_modules.
+2b. `python3` on this machine is a **mise shim that rewrites PATH**, which makes `gh` resolve
+   to a broken bootstrap shim at `~/.local/bin/gh` that HANGS FOREVER. Any repo script that
+   shells out to `gh` (`scripts/gh_issue_comments.py`, the merge-guard hook) must be run as
+   **`/usr/bin/python3`**, not `python3`/`python`. For backend work use the venv python at
+   `/home/pixie/Projects/WorldZeroPlayground/backend/.venv/bin/python` — worktrees carry no venv.
 3. CI: **any written list of jobs ROTS — read `.github/workflows/test.yml`.** It is the only
    authoritative list of jobs and steps, and it changes. `grep -E '^  [a-z-]+:$|- name:' .github/workflows/test.yml`
    prints them, and that output is the ONLY list to act on. Run every step it names,

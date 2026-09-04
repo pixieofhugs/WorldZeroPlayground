@@ -1,61 +1,101 @@
 /**
  * The Default (na) character-creation archetype — the unaffiliated kit, and the
- * fallback every unregistered slug lands on (#2346).
+ * fallback every unregistered slug lands on (#2346, rebuilt on the chassis in
+ * #2992).
  *
- * ONE RESPONSIVE COMPONENT, no mobile twin. It reads `useFormFactor()` itself,
- * the way `editPraxis` and the profile bodies do, and both branches below — the
- * desktop two-column form and the first-run phone column (#516) — are in this
- * one file. A second mobile path is the thing not to re-create.
+ * ## The chassis is the composer's, not a second one
  *
- * THE DEFAULT IS THE `na` KIT, NOT UA AND NOT THE VIEWER'S FACTION. An empty
- * `factionSlug` means born unaffiliated and renders this, full stop. The
- * precedent is `FactionSelectCard`, whose fallback used to be `UaSelectCard` and
- * so "dressed every unaffiliated and unknown slug in UA's costume" (#796, the
- * third instance of #418/#636). `albescent` reaches here too, and deliberately:
- * it is pickable at creation since #2399, and every Albescent registration is a
- * WRAPPER rather than a skin (ADR-0027), so the na kit is the floor that pattern
- * is built on rather than a gap. How an aurora should wash an `na` ground is
- * #2401, and is a design question.
+ * `ComposerPage` / `ComposerSheet` / `ComposerSection` / `ComposerFooter` out of
+ * `pages/editPraxis/archetypes/shared.tsx` — the same blocks the other eight
+ * create kits already mount. This file used to hand-author a `twoCol` flex
+ * plate plus a separate phone column, and four defects came with that
+ * (#2992): a footer with no `flexWrap` that broke `CREATE & STEP OUT`
+ * mid-phrase, a credential card that wrapped off the fold below 634px, a
+ * hardcoded `1fr 1fr` calling grid that went ragged, and an unclassed conic on
+ * the preview's portrait ring.
  *
- * PRESENTATION ONLY. `useCreateCharacter` is the single source of state for all
- * eight archetypes; nothing here touches the submit path, the payload, the
- * portrait picker or the avatar hook.
+ * **The dress is na's own and is not new.** `DefaultEditPraxis` has shipped this
+ * exact kit on this exact chassis since #1181 — ADR-0065 calls that file *"the
+ * REFERENCE implementation of the layout contract the seven faction skins
+ * inherit"* — so every token below is one that file already reads on this
+ * ground. NO DESIGN WAS DRAWN FOR THIS AND NONE WAS NEEDED, which is the same
+ * finding `CovenCreateCharacter`'s header records for its own kit.
+ *
+ * **This is not a merge.** One file per faction still stands (ADR-0065 §"What
+ * this ADR does not do", `frontend/CLAUDE.md`): what is forbidden is a single
+ * component with a runtime skin table rendering nine trees. This file keeps its
+ * own tree, its own dress, its own ground and its own role map, and stops
+ * re-authoring a sheet, a section and a footer from scratch.
+ *
+ * ## One responsive tree, no phone branch
+ *
+ * `useComposerSizes()` picks the size set and there is one tree at two widths.
+ * The first-run phone column retired with #2992 — with it went the "Step 1 of 2
+ * · Identity" framing, the 104px photo ring, the sticky Create bar, and the
+ * deliberate absence of `bio`/`tagline` on the phone (#516, #1628). na is the
+ * ninth kit offering the same fields at both widths; Coven and the Ephemerists
+ * already deviate this way on purpose and say so in their own headers. Nothing
+ * below is a fixed-px layout grid (SPEC-faction-ui-profile §1a).
+ *
+ * ## The order, and why it is not this file's to choose
+ *
+ * `heading → CredentialCard → name → bio → tagline → portrait → calling picker
+ * → footer` is the order all eight siblings already draw (#2995's census). The
+ * calling picker goes AFTER the portrait section for that reason and no other.
+ * The footer keeps the global `[Cancel] … [Create]` order settled in #646, and
+ * na keeps the INLINE commit button rather than the full-bleed band — that is
+ * the owner ruling on #1828 and the reason `composerBandStyle` is a per-skin
+ * style rather than something `ComposerFooter` does on its own.
+ *
+ * ## PRESENTATION ONLY
+ *
+ * `useCreateCharacter` is the single source of state for all nine archetypes.
+ * Nothing here touches the submit path, the payload, `PortraitPicker` or
+ * `useAvatarPicker`. THE DEFAULT IS THE `na` KIT, NOT UA AND NOT THE VIEWER'S
+ * FACTION: an empty `factionSlug` means born unaffiliated and renders this, full
+ * stop (#796, the third instance of #418/#636). `albescent` reaches here too and
+ * deliberately — it is pickable at creation since #2399, and every Albescent
+ * registration is a WRAPPER rather than a skin (ADR-0027).
  *
  * NO FIELD LABELS, AND THAT IS RULED RATHER THAN MISSING (#2793). This form is
  * placeholder-only: the name, bio and catchphrase boxes carry their own words,
  * shared with Edit Character so the two surfaces speak one vocabulary — around
- * the CHARACTER, with no pronouns, which is what took the second person out of
- * this page's heading too. `namedField()` sets `aria-label` from that same
- * string, because here the visible label WAS the accessible name and deleting
- * it without one is a regression rather than a simplification. The portrait key
- * and the calling grid keep their spans: those head groups of BUTTONS, are
- * section headings rather than field labels, and were explicitly excluded.
- * Where a deleted label was also carrying the gap above its field, the gap
- * moves onto the field.
+ * the CHARACTER, with no pronouns. `namedField()` sets `aria-label` from that
+ * same string, because here the visible label WAS the accessible name. The
+ * portrait key and the calling picker keep their headings: those head groups of
+ * BUTTONS, are section headings rather than field labels, and `ComposerSection`
+ * draws them as a `<span>` when no `htmlFor` is passed — which is the shared
+ * answer, not a local one.
  *
- * THE PHONE BRANCH CARRIES NO PROSE FIELDS, deliberately and unchanged: it is
- * "Step 1 of 2 · Identity" and has never offered `bio`, which mobile players
- * write on the edit screen instead. `tagline` (#1628) follows `bio` for exactly
- * that reason, so the two stay a pair rather than one of them quietly becoming
- * the phone's only first-run prose field.
+ * ## The one motion
  *
- * INKS ARE UNCHANGED FROM WHAT BOTH FILES SHIPPED — the app's own neutral
- * tiers, kept because they are what this page's real ground was measured
- * against. See the constant block below for the numbers and for the lint
- * exemption they justify. Layout is flex/relative single-column on the phone —
- * no fixed-px grid drives the page (SPEC-faction-ui-profile §1a).
+ * `ep-drift` wanders the aurora, and it is a CLASS: the keyframes live in
+ * `index.css` behind the shared `prefers-reduced-motion` guard, and an inline
+ * `animation:` would bypass that guard (#1003). Albescent's delta on this page
+ * is the credential card's portrait ring, which wears `.spectrum-dial` in
+ * `components/CredentialCard.tsx` — see `AlbescentCreateCharacter`.
  */
-import { useRef, type CSSProperties } from 'react'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName } from '../../../utils/factions'
+import { factionCssVar, factionName, factionSpectrumSheet } from '../../../utils/factions'
 import CredentialCard from '../../../components/CredentialCard'
 import FactionSigil from '../../../components/sigil/FactionSigil'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
-import { useFormFactor } from '../../../hooks/useFormFactor'
 import PortraitPicker from '../PortraitPicker'
 import { namedField } from '../characterFields'
+import {
+  ComposerFooter,
+  ComposerGround,
+  ComposerPage,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ErrorBanner,
+  composerLabelStyle,
+  useComposerSizes,
+} from '../../editPraxis/archetypes/shared'
 import {
   NAME_MAX,
   BIO_MAX,
@@ -63,72 +103,95 @@ import {
   type CreateCharacterState,
 } from '../useCreateCharacter'
 
-/* The na kit's inks and grounds, named once.
+/* The na kit's inks and grounds, named once — the same set
+ * `DefaultEditPraxis` reads, because this page now stands on the same stock.
  *
- * THE THREE TEXT TIERS ARE THE APP'S OWN NEUTRALS, AND THAT IS MEASURED RATHER
- * THAN INHERITED. `local/no-global-ink-on-faction-surface` bans `--color-text-*`
- * under an `archetypes/` directory, and this file carries the one documented
- * exemption from it (see `eslint.config.js`, and the paired measurement in
- * `__tests__/createCharacterContrast.test.ts` which is the other half of it).
+ * THE APP'S NEUTRAL TIERS ARE GONE, AND SO IS THE LINT EXEMPTION THEY BOUGHT
+ * (#2992). `--color-text-secondary` / `-tertiary` were right here while the page
+ * had no card: type sat on `--color-bg-page` under the `.na-backdrop` wash,
+ * where the neutrals clear AA and the na card family does not. On a
+ * `ComposerSheet` the ground is `--faction-default-card-bg` washed by the
+ * aurora, which is a different measurement with a different answer — the one
+ * `pages/editPraxis/archetypes/__tests__/composerGround.test.ts` already makes
+ * for this exact composite. The `eslint.config.js` exemption for this file went
+ * with the ground it was measured on; `__tests__/createCharacterContrast.test.ts`
+ * carries the sheet-ground rows.
  *
- * The reason is the GROUND. Every other `Default*` archetype draws on the na
- * CARD — `DefaultEditPraxis` sits on `--faction-default-card-bg` — where the na
- * card inks are the measured pair. This page has no card: it is bare app page,
- * so what is actually behind this type is `--color-bg-page` with the
- * `.na-backdrop` watercolour washed over it. Measured on that COMPOSITE in
- * light, the card family does not clear AA and the neutrals do:
- *
- *     ink                                 light   dark
- *     --color-text-secondary              6.06    6.68   ← used here
- *     --color-text-tertiary               6.10    7.17   ← used here
- *     --faction-default-card-muted        4.36    4.75
- *     --faction-default-composer-faint    3.50    4.18
- *
- * So the neutral tier is not "a real token at the wrong tier" here, which is
- * what the rule exists to catch on a faction SHEET; it is the tier this ground
- * was chosen against. #1932 recorded the same ruling for `pages/players/`:
- * widening that glob "would ban the global tiers on the surface they are right
- * for". Do not swap these for `--faction-default-*` without re-measuring over
- * the wash — the flat token reads 4.49 and the composite 3.50.
- */
-const INK = 'var(--color-text-primary)'
-const MUTED = 'var(--color-text-secondary)'
-const FAINT = 'var(--color-text-tertiary)'
-/* NOT `--color-danger`, and this is a fix rather than a preference (#2346).
- * The neutral functional red is 3.42:1 on this page's washed ground in light —
- * a fail, and it is what both source files shipped. `-card-alarm` exists for all
- * eight keys, is already measured, and reads 5.89 / 7.85 here. That is #1302's
- * shape, the same one every composer error banner follows: a shared functional
- * ink inside a faction frame takes the faction's own card family. */
+ * THE TIER SPLIT IS BY GROUND, NOT BY LOUDNESS (#2485), and the names read
+ * backwards because of it: FAINT is the ink for the aurora-WASHED sheet and
+ * MUTED is the ink for the opaque field laid on top of it. If you are choosing
+ * between them, ask what is behind the type. */
+const INK = 'var(--faction-default-card-text)'
+const MUTED = 'var(--faction-default-card-muted)'
+const FAINT = 'var(--faction-default-composer-faint)'
+/* NOT `--color-danger`, and this is a fix rather than a preference (#2346,
+ * #1302): a shared functional ink inside a faction frame takes that faction's
+ * own card family, measured on the frame's ground. */
 const ALARM = 'var(--faction-default-card-alarm)'
-const FIELD = 'var(--color-bg-surface)'
-const BORDER = 'var(--color-border-strong)'
-const ON_ACCENT = 'var(--color-bg-page)'
-/* `RING` USED TO BE HERE — `var(--faction-default-rainbow-conic)`, inlined onto
- * the phone's photo well. It is `.spectrum-dial` now (#2531), the class #2497
- * minted for exactly this: the conic cut of the na spectrum, said once in
- * index.css instead of privately at every mount. This mount was written after
- * that sweep and so was never in it — an eighteenth copy of the same value,
- * and the only one a stylesheet could not reach.
- *
- * Nothing about na changes. `.spectrum-dial` carries that ramp and nothing else,
- * so the ring is the same rainbow it has always been; what the class buys is
- * that a DRESSER can reach it (`.alb-moves .spectrum-dial`, two classes, so it
- * wins from wherever it is written), which is how `AlbescentCreateCharacter`
- * re-cuts this one mark without a copy of this file existing. */
+const FIELD = 'var(--faction-default-composer-field)'
+const BORDER = 'var(--faction-default-border)'
+const HAIR = 'var(--faction-default-composer-hair)'
+const ON_ACCENT = 'var(--faction-default-on-accent)'
 
-export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
-  const formFactor = useFormFactor()
-  return formFactor === 'mobile' ? <MobileColumn state={state} /> : <DesktopPlate state={state} />
+/* The design's title face is Lora (--font-display); the label face is Courier
+ * Prime (--font-body), which is what `composerLabelStyle` already defaults to.
+ * The token names read backwards here and that is not a mistake. */
+const TITLE_FACE = 'var(--font-display)'
+
+const labelStyle = { color: FAINT }
+
+/* THE SHEET'S FRAME IS THE SPECTRUM (#2520) — a 3px transparent border with the
+   ramp painted into the border box under it, the same `border-box` idiom
+   `DefaultTaskCard`, `DefaultPraxisCard`, `DefaultSeal` and `DefaultEditPraxis`
+   all wear. Only the width is stated here; the composition belongs to the
+   helper, because the ramp has to be appended to all three of the sheet's
+   background lists. */
+const sheetStyle = {
+  border: '3px solid transparent',
+  ...factionSpectrumSheet(),
+  boxShadow: '0 16px 40px -24px var(--color-cast-shadow)',
 }
 
-/* -------------------------------------------------------------------------- */
-/* Desktop — the two-column form, with the live credential preview beside it.   */
-/* -------------------------------------------------------------------------- */
+/* na's drifting aurora, clipped to the sheet by `ComposerSheet`'s own
+   `overflow: hidden` (#1028). */
+const ground = (
+  <ComposerGround
+    background="var(--faction-default-aurora)"
+    opacity="var(--faction-default-aurora-opacity)"
+    filter="var(--faction-default-aurora-filter)"
+    mixBlendMode="var(--faction-default-aurora-blend)"
+    animated
+  />
+)
 
-function DesktopPlate({ state }: { state: CreateCharacterState }) {
+const fieldBox = {
+  width: '100%',
+  background: FIELD,
+  color: INK,
+  border: `1px solid ${BORDER}`,
+  borderRadius: 10,
+  padding: 'var(--space-md)',
+  boxSizing: 'border-box',
+  fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-content)',
+  lineHeight: 1.6,
+  resize: 'vertical',
+} as const
+
+/** The commit button's paint, minus the busy cursor the form adds. */
+const primaryStyle = composerLabelStyle({
+  border: 'none',
+  borderRadius: 10,
+  padding: 'var(--space-md) var(--space-xl)',
+  color: ON_ACCENT,
+  background: INK,
+  fontWeight: 700,
+})
+
+export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
   const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
+  const sizes = useComposerSizes()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const {
     displayName,
@@ -156,93 +219,145 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
     showPicker,
   } = state
 
+  /** The counter row under a prose field: quiet, and alarmed on the cap. */
+  const counter = (used: number, max: number) => (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)' }}>
+      <span style={{ color: used >= max ? ALARM : FAINT }}>
+        {t('createCharacter.charsLeft', { count: max - used })}
+      </span>
+    </div>
+  )
+
+  /** A section heading with its `· optional` tail in sentence case. */
+  const optionalHead = (label: string, tail: string) => (
+    <>
+      {label} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{tail}</span>
+    </>
+  )
+
   return (
-    <div className="page" data-skin="default">
-      <button onClick={() => navigate('/')} style={backLink}>{t('createCharacter.back')}</button>
+    <ComposerPage sizes={sizes} style={{ fontFamily: TITLE_FACE, color: INK }}>
+      {/* A REAL `<form>`, not a bare button with an onClick: it is what makes
+          Enter commit from a text field. `handleSubmit` calls `preventDefault()`
+          itself. */}
+      <form onSubmit={handleSubmit} data-skin="default">
+        <ComposerSheet sizes={sizes} style={sheetStyle} ground={ground}>
+          <h1
+            style={{
+              fontFamily: TITLE_FACE,
+              fontStyle: 'italic',
+              fontWeight: 700,
+              fontSize: sizes.titleSize,
+              lineHeight: 1.1,
+              color: INK,
+              margin: 0,
+            }}
+          >
+            {t('createCharacter.heading')}
+          </h1>
 
-      <div style={twoCol}>
-        {/* Left — form */}
-        <form onSubmit={handleSubmit} style={{ flex: '1 1 320px', maxWidth: 440 }}>
-          <h1 style={titleStyle}>{t('createCharacter.heading')}</h1>
-
-          {/* Name */}
-          <input
-            data-composer-field
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={NAME_MAX}
-            {...namedField(t('character.namePlaceholder'))}
-            autoFocus
-            style={nameInput}
-          />
-          <div style={metaRow}>
-            <span style={{ color: FAINT }}>@{handle}</span>
-            <span style={{ color: displayName.length >= NAME_MAX ? ALARM : FAINT }}>
-              {t('createCharacter.charsLeft', { count: NAME_MAX - displayName.length })}
-            </span>
+          {/* The life being written, live — FIRST in the sheet at both widths,
+              which is the whole of defect 2. The card dispatches its own faction
+              dress, so it is already wearing the picked calling. */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <CredentialCard
+              displayName={displayName || t('createCharacter.previewFallbackName')}
+              handle={handle}
+              factionSlug={factionSlug || null}
+              level={1}
+              score={0}
+              avatarUrl={avatarPreview}
+              onAvatarClick={() => fileInputRef.current?.click()}
+            />
           </div>
 
-          {/* Bio. The gap the deleted label used to open above it moves onto the
-              field itself, so the stack keeps the rhythm it had (#2793). */}
-          <textarea
-            data-composer-field
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            maxLength={BIO_MAX}
-            {...namedField(t('character.bioPlaceholder'))}
-            rows={3}
-            style={{ ...bioInput, marginTop: 'var(--space-xl)' }}
-          />
-          <div style={metaRow}>
-            <span />
-            <span style={{ color: FAINT }}>{t('createCharacter.charsLeft', { count: BIO_MAX - bio.length })}</span>
-          </div>
+          {/* Chosen name */}
+          <ComposerSection rule={false}>
+            <input
+              data-composer-field
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={NAME_MAX}
+              {...namedField(t('character.namePlaceholder'))}
+              autoFocus
+              style={{ ...fieldBox, fontFamily: TITLE_FACE, fontStyle: 'italic', fontSize: 'var(--text-title)' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)' }}>
+              <span style={{ color: FAINT }}>@{handle}</span>
+              <span style={{ color: displayName.length >= NAME_MAX ? ALARM : FAINT }}>
+                {t('createCharacter.charsLeft', { count: NAME_MAX - displayName.length })}
+              </span>
+            </div>
+          </ComposerSection>
+
+          {/* About */}
+          <ComposerSection rule={false}>
+            <textarea
+              data-composer-field
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={BIO_MAX}
+              {...namedField(t('character.bioPlaceholder'))}
+              rows={3}
+              style={fieldBox}
+            />
+            {counter(bio.length, BIO_MAX)}
+          </ComposerSection>
 
           {/* Tagline — a slogan line, not a short bio (#1628). Its counter turns
-              danger on the cap the way the name field's does: this is the field
-              the profile header's identity slot is laid out against, so running
-              out of room is worth seeing before the text stops appearing. */}
-          <textarea
-            data-composer-field
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            maxLength={TAGLINE_MAX}
-            {...namedField(t('character.taglinePlaceholder'))}
-            rows={2}
-            style={{ ...bioInput, marginTop: 'var(--space-xl)' }}
-          />
-          <div style={metaRow}>
-            <span />
-            <span style={{ color: tagline.length >= TAGLINE_MAX ? ALARM : FAINT }}>
-              {t('createCharacter.charsLeft', { count: TAGLINE_MAX - tagline.length })}
-            </span>
-          </div>
+              alarm on the cap the way the name field's does: this is the field the
+              profile header's identity slot is laid out against, so running out of
+              room is worth seeing before the text stops appearing. */}
+          <ComposerSection rule={false}>
+            <textarea
+              data-composer-field
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              maxLength={TAGLINE_MAX}
+              {...namedField(t('character.taglinePlaceholder'))}
+              rows={2}
+              style={fieldBox}
+            />
+            {counter(tagline.length, TAGLINE_MAX)}
+          </ComposerSection>
 
-          {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar).
-              The picker owns the hidden input and the "what's chosen" readout (#1149);
-              the credential card on the right opens the same input through fileInputRef. */}
-          {/* A SPAN, not a <label>: the portrait key and the calling grid below
-              it head a group of BUTTONS, and a <label> with nothing to point at
-              is an accessible name attached to nothing (#2488). `ComposerSection`
-              draws these the same way on every faction plate — a heading when no
-              `htmlFor` is passed — so this is the shared answer, not a local one. */}
-          <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('character.portrait')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></span>
-          <PortraitPicker
-            inputRef={fileInputRef}
-            onChange={handleAvatarChange}
-            chosenFile={avatarFile}
-            error={avatarError}
-            errorStyle={{ color: ALARM }}
-            style={{ marginTop: 'var(--space-sm)' }}
-          />
+          {/* Portrait — the shared picker owns the hidden input and the "what's
+              chosen" readout (#1149); the credential card above opens the same
+              input through `fileInputRef`. */}
+          <ComposerSection
+            rule={false}
+            label={optionalHead(t('character.portrait'), t('createCharacter.optional'))}
+            labelStyle={labelStyle}
+          >
+            <PortraitPicker
+              inputRef={fileInputRef}
+              onChange={handleAvatarChange}
+              chosenFile={avatarFile}
+              error={avatarError}
+              buttonStyle={composerLabelStyle({
+                cursor: 'pointer',
+                borderRadius: 10,
+                padding: 'var(--space-sm) var(--space-lg)',
+                background: FIELD,
+                color: INK,
+                border: `1px solid ${BORDER}`,
+              })}
+              statusStyle={{ color: FAINT }}
+              errorStyle={{ color: ALARM }}
+            />
+          </ComposerSection>
 
-          {/* Faction picker — only when the account holds invitations (ADR-0019) */}
+          {/* Answer a calling — only when the account holds invitations
+              (ADR-0019). SINGLE COLUMN, which is defect 3: the `1fr 1fr` grid
+              this used to draw went ragged the moment one name wrapped, and the
+              eight siblings all stack. */}
           {showPicker && (
-            <>
-              <span style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>
-                {t('createCharacter.callingLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.callingOptional')}</span>
-              </span>
-              <div style={pickerGrid}>
+            <ComposerSection
+              rule={false}
+              label={optionalHead(t('createCharacter.callingLabel'), t('createCharacter.callingOptional'))}
+              labelStyle={labelStyle}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                 {invited.map((slug) => {
                   const selected = factionSlug === slug
                   return (
@@ -250,218 +365,105 @@ function DesktopPlate({ state }: { state: CreateCharacterState }) {
                       key={slug}
                       type="button"
                       onClick={() => setFactionSlug(selected ? '' : slug)}
+                      /* NOT `composerLabelStyle` — it forces uppercase and its
+                         own tracking, and the calling's own card face below
+                         would inherit both. */
                       style={{
-                        ...pickerCell,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--space-md)',
+                        width: '100%',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        background: FIELD,
+                        border: `1px solid ${BORDER}`,
+                        borderRadius: 10,
+                        padding: 'var(--space-md) var(--space-lg)',
+                        // The faction's own hue as a RING, never as ink (§3).
                         boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
                       }}
                     >
-                      {/* The faction's own mark, from the dispatcher every
-                          other chooser draws (#2223) — the 12px disc it
-                          replaces was a placeholder for a mark that exists. */}
+                      {/* The faction's own mark, from the dispatcher every other
+                          chooser draws (#2223). The row's ground is na's own
+                          field either way, so the mark keeps its default ink. */}
                       <FactionSigil slug={slug} size={18} />
-                      <span style={{ fontFamily: factionCssVar(slug, 'card-font'), fontSize: 'var(--text-content)', color: INK }}>
+                      <span
+                        style={{
+                          fontFamily: factionCssVar(slug, 'card-font'),
+                          fontSize: 'var(--text-content)',
+                          color: MUTED,
+                        }}
+                      >
                         {factionName(slug)}
                       </span>
                     </button>
                   )
                 })}
               </div>
-            </>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: FAINT, margin: 0, lineHeight: 1.6 }}>
+                {t('createCharacter.callingHint')}
+              </p>
+            </ComposerSection>
           )}
 
-          {error && <p style={errorBox}>{error}</p>}
+          {/* The born-unaffiliated explainer. It was `createCharacter.mobile.help`
+              and drawn on the phone only; the key moved out of the retired
+              `mobile.*` block rather than dying with it, because it is the one
+              sentence on this page that says what being born `na` means and the
+              wide branch never had it (#2992). */}
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: FAINT, margin: 0, lineHeight: 1.6 }}>
+            {t('createCharacter.help')}
+          </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', marginTop: 'var(--space-xl)' }}>
-            {/* The DESKTOP Create had the inverse of the phone bar's bug
-                (#2486): no disabled treatment at all, so a control the form
-                gates read exactly like a live one. `.control-off` gives the two
-                the same answer. */}
-            <button type="submit" disabled={!canSubmit} className="control-off" style={primaryBtn}>
-              {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
-            </button>
-            <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('common:actions.cancel')}</button>
-            <span style={{ fontSize: 'var(--text-content)', color: FAINT, letterSpacing: '0.06em' }}>
-              {t('createCharacter.startsAt')}
-            </span>
-          </div>
-        </form>
+          <ErrorBanner message={error ?? ''} style={{ color: ALARM }} />
 
-        {/* Right — live credential preview */}
-        <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center' }}>
-          <CredentialCard
-            displayName={displayName || t('createCharacter.previewFallbackName')}
-            handle={handle}
-            factionSlug={factionSlug || null}
-            level={1}
-            score={0}
-            avatarUrl={avatarPreview}
-            onAvatarClick={() => fileInputRef.current?.click()}
-          />
-        </div>
-      </div>
+          {/* THE ONE RULE (#1707). Every section passes `rule={false}` and the
+              regions are parted by the content column's own gap; the single
+              hairline on the page sits immediately above the footer. */}
+          <ComposerRule style={{ background: HAIR }} />
 
-      {/* Portrait crop/rotate — locked square (#514). */}
-      {avatarSource && (
-        <ImageEditModal
-          key={`${avatarSource.name}-${avatarSource.lastModified}`}
-          file={avatarSource}
-          aspect={AVATAR_ASPECT}
-          onConfirm={handleAvatarConfirm}
-          onCancel={() => setAvatarSource(null)}
-          onError={setAvatarError}
-        />
-      )}
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/* Phone — first-run single column, sticky Create reachable one-handed (#516).  */
-/* -------------------------------------------------------------------------- */
-
-function MobileColumn({ state }: { state: CreateCharacterState }) {
-  const { t } = useTranslation(['forms', 'common'])
-  const navigate = useNavigate()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const {
-    displayName,
-    setDisplayName,
-    factionSlug,
-    setFactionSlug,
-    invited,
-    avatarPreview,
-    avatarSource,
-    setAvatarSource,
-    avatarError,
-    setAvatarError,
-    handleAvatarChange,
-    handleAvatarConfirm,
-    error,
-    submitting,
-    canSubmit,
-    handleSubmit,
-    handle,
-    showPicker,
-  } = state
-
-  // One string for the ring's accessible name and its visible caption (#1149).
-  // The ring never showed the browser's "No file chosen" — its input has always
-  // been hidden — but it had no accessible name either: the name fell through to
-  // the "+" glyph, or to the portrait's alt text once one was picked. Naming it
-  // with the caption is what makes what is announced and what is on screen agree.
-  const photoAction = avatarPreview
-    ? t('character.changePhoto')
-    : t('character.addPhoto')
-
-  return (
-    <form data-skin="default" data-testid="mobile-create-character" onSubmit={handleSubmit} style={page}>
-      {/* Top row — back + title */}
-      <div style={topRow}>
-        <button type="button" onClick={() => navigate('/')} style={backBtn} aria-label={t('common:actions.cancel')}>
-          ‹
-        </button>
-        <span className="label-heading">{t('createCharacter.mobile.title')}</span>
-        <span style={{ width: 28 }} />
-      </div>
-
-      {/* Photo add */}
-      <div style={{ textAlign: 'center' }}>
-        {/* `.spectrum-dial` is the ring's paint (#2497 via #2531). Childless is
-            not required of a dial — the face below is lifted by
-            `.alb-moves .spectrum-dial > *`, the same shape `DefaultPointsRing`
-            wears — so the photo well keeps its span. */}
-        <button type="button" onClick={() => fileRef.current?.click()} aria-label={photoAction} className="spectrum-dial" style={ringBtn}>
-          <span style={ringInner}>
-            {avatarPreview ? (
-              <img src={avatarPreview} alt={handle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span
-                aria-hidden
-                style={{
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: "+" is a glyph-as-icon, sized to the 104px photo ring, not text
-                  fontSize: 26,
-                  color: MUTED,
-                }}
-              >
-                +
-              </span>
-            )}
-          </span>
-        </button>
-        <div className="label-caption" style={{ marginTop: 'var(--space-md)', color: MUTED }}>
-          {photoAction}
-        </div>
-        <div className="label-caption" style={{ marginTop: 'var(--space-sm)' }}>
-          {t('createCharacter.mobile.step')}
-        </div>
-        {avatarError && <p className="content-text" style={{ ...mobileErrorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}
-      </div>
-      <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
-
-      {/* Name */}
-      <div>
-        <input
-          data-composer-field
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          maxLength={NAME_MAX}
-          {...namedField(t('character.namePlaceholder'))}
-          autoFocus
-          className="content-text"
-          style={field}
-        />
-        <div style={mobileMetaRow}>
-          <span style={{ color: FAINT }}>@{handle}</span>
-          <span style={{ color: displayName.length >= NAME_MAX ? ALARM : FAINT }}>
-            {t('createCharacter.charsLeft', { count: NAME_MAX - displayName.length })}
-          </span>
-        </div>
-      </div>
-
-      {/* Faction picker — only when the account holds invitations (ADR-0019) */}
-      {showPicker && (
-        <div>
-          {/* A SPAN, not a <label> — see the desktop column's note. */}
-          <span style={label}>{t('createCharacter.callingLabel')}</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)' }}>
-            {invited.map((slug) => {
-              const selected = factionSlug === slug
-              return (
+          {/* [Cancel] … [Create] — the global order from #646. `ComposerFooter`
+              wraps, which is defect 1: the hand-rolled row this replaces was a
+              bare `display: flex` with no `flexWrap` inside a 440px column, so
+              the commit label broke mid-phrase. na keeps the INLINE button
+              rather than the full-bleed band (#1828). */}
+          <ComposerFooter
+            start={
+              <>
                 <button
-                  key={slug}
                   type="button"
-                  onClick={() => setFactionSlug(selected ? '' : slug)}
-                  style={{
-                    ...mobilePickerCell,
-                    boxShadow: selected ? `0 0 0 2px ${factionCssVar(slug)}` : 'none',
-                  }}
+                  onClick={() => navigate('/')}
+                  style={composerLabelStyle({
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: FAINT,
+                  })}
                 >
-                  {/* The faction's own mark, from the dispatcher every other
-                      chooser draws (#2223) — 18px, the size the propose-task
-                      chips use; the 12px disc it replaces was a placeholder. */}
-                  <FactionSigil slug={slug} size={18} />
-                  <span className="content-text" style={{ fontFamily: factionCssVar(slug, 'card-font'), color: INK }}>
-                    {factionName(slug)}
-                  </span>
+                  {t('common:actions.cancel')}
                 </button>
-              )
-            })}
-          </div>
-          <p className="content-text" style={{ ...help, marginTop: 'var(--space-sm)' }}>{t('createCharacter.callingHint')}</p>
-        </div>
-      )}
-
-      {/* Born-unaffiliated explainer */}
-      <p className="content-text" style={help}>{t('createCharacter.mobile.help')}</p>
-
-      {error && <p className="content-text" style={mobileErrorBox}>{error}</p>}
-
-      {/* Sticky Create bar */}
-      <div style={stickyBar}>
-        <button type="submit" disabled={!canSubmit} className="control-off" style={mobilePrimaryBtn}>
-          {submitting ? t('createCharacter.submitBusy') : t('createCharacter.mobile.submit')}
-        </button>
-      </div>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: FAINT }}>
+                  {t('createCharacter.startsAt')}
+                </span>
+              </>
+            }
+            end={
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                /* `.control-off` rather than an opacity fade (#2486): the form
+                   gates this control, and a gated control that reads like a live
+                   one is the inverse defect the phone bar used to have. */
+                className="control-off"
+                style={{ ...primaryStyle, cursor: submitting ? 'wait' : 'pointer' }}
+              >
+                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+              </button>
+            }
+          />
+        </ComposerSheet>
+      </form>
 
       {/* Portrait crop/rotate — locked square (#514). */}
       {avatarSource && (
@@ -474,132 +476,6 @@ function MobileColumn({ state }: { state: CreateCharacterState }) {
           onError={setAvatarError}
         />
       )}
-    </form>
+    </ComposerPage>
   )
-}
-
-// --- desktop styles (token-driven) ------------------------------------------
-
-const backLink: CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 'var(--text-lg)', color: MUTED, padding: 0, marginBottom: 'var(--space-lg)',
-}
-const twoCol: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4xl)', alignItems: 'flex-start' }
-const titleStyle: CSSProperties = {
-  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
-  fontSize: 'var(--text-heading)', lineHeight: 1.02, color: INK, margin: '0 0 var(--space-xl)',
-}
-const eyebrow: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
-  color: MUTED,
-}
-const nameInput: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 'var(--space-sm)', background: 'transparent', border: 'none',
-  borderBottom: `1.5px solid ${INK}`,
-  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-title)',
-  color: INK, padding: 'var(--space-xs) 0 var(--space-sm)',
-}
-const bioInput: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box', resize: 'none',
-  background: FIELD, border: `1px solid ${BORDER}`,
-  borderRadius: 5, fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
-  lineHeight: 1.6, color: INK, padding: 'var(--space-md)',
-}
-const pickerGrid: CSSProperties = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-md)',
-}
-const pickerCell: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', cursor: 'pointer',
-  background: FIELD, border: `1px solid ${BORDER}`,
-  borderRadius: 6, padding: 'var(--space-md)', textAlign: 'left',
-}
-const primaryBtn: CSSProperties = {
-  cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', letterSpacing: '0.12em',
-  textTransform: 'uppercase', color: ON_ACCENT, background: INK,
-  border: 'none', padding: 'var(--space-md) var(--space-xl)', borderRadius: 5,
-}
-const cancelBtn: CSSProperties = {
-  cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-body)',
-  fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED,
-}
-
-const metaRow: CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-sm)',
-  fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
-}
-const errorBox: CSSProperties = {
-  marginTop: 'var(--space-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: ALARM,
-  border: `1px solid ${ALARM}`, borderRadius: 4, padding: 'var(--space-sm) var(--space-md)',
-}
-
-// --- phone styles (single column, no hardcoded hex) -------------------------
-//
-// The counter row and the error box are NOT shared with the desktop pair above,
-// and that is deliberate rather than a missed de-duplication: the phone sets
-// them a rung apart (`--text-base` against `--text-lg`, a roomier box with no
-// top margin). Folding the two files into one archetype is a dispatch change,
-// not a redesign, so each branch keeps the metrics it shipped with.
-
-const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', paddingBottom: 'var(--space-6xl)' }
-const topRow: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
-const backBtn: CSSProperties = {
-  width: 28, height: 28, background: 'none', border: 'none', cursor: 'pointer',
-  // eslint-disable-next-line local/no-raw-style-values -- ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
-  fontSize: 24,
-  lineHeight: 1, color: INK, padding: 0,
-}
-const ringBtn: CSSProperties = {
-  width: 104, height: 104, borderRadius: '50%',
-  // eslint-disable-next-line local/no-raw-style-values -- ornament: rainbow ring thickness drawn around the 104px photo well; the nearest rung (4px) thickens the band by a third.
-  padding: 3,
-  cursor: 'pointer',
-  // The ramp is `.spectrum-dial`'s at the mount below, not a declaration here
-  // (#2531). Preflight already zeroes a button's own background, so the class is
-  // the only paint on this box — geometry stays at the call site, which is the
-  // split `.spectrum-dial`'s own note in index.css states.
-  border: 'none',
-}
-const ringInner: CSSProperties = {
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden',
-  background: 'var(--color-bg-surface-alt)',
-}
-const label: CSSProperties = {
-  display: 'block', fontSize: 'var(--text-md)', letterSpacing: '0.16em', textTransform: 'uppercase',
-  color: MUTED,
-}
-const field: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box',
-  background: 'var(--color-bg-page)', border: `1px solid ${BORDER}`,
-  borderRadius: 8, fontFamily: 'var(--font-body)',
-  color: INK, padding: 'var(--space-md)',
-}
-const mobileMetaRow: CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-sm)',
-  fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
-}
-const mobileErrorBox: CSSProperties = {
-  fontFamily: 'var(--font-body)', color: ALARM,
-  border: `1px solid ${ALARM}`, borderRadius: 6, padding: 'var(--space-md)', margin: 0,
-}
-const mobilePickerCell: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 'var(--space-md)', cursor: 'pointer', width: '100%',
-  background: FIELD, border: `1px solid ${BORDER}`,
-  borderRadius: 8, padding: 'var(--space-md) var(--space-lg)', textAlign: 'left',
-}
-const help: CSSProperties = {
-  fontFamily: 'var(--font-body)', lineHeight: 1.6,
-  color: FAINT, margin: 0,
-}
-const stickyBar: CSSProperties = {
-  position: 'sticky',
-  bottom: 'var(--tab-bar-clearance)',
-  marginTop: 'auto',
-  paddingTop: 'var(--space-sm)',
-}
-const mobilePrimaryBtn: CSSProperties = {
-  width: '100%', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xl)',
-  letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700,
-  color: ON_ACCENT, background: INK,
-  border: 'none', padding: 'var(--space-lg) var(--space-xl)', borderRadius: 12,
 }

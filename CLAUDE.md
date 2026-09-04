@@ -17,7 +17,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 
 | Need... | Go to |
 |---|---|
-| Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (live `ERA_1`; `CURRENT_ERA` resolves here) |
+| Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (`ERA_1`; which era is live is the latest DB `Era` row — ADR-0091) |
 | Factions, tasks, level ranks/unlocks + taunt structure for the live era | `backend/eras/era_1.py` |
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
 | Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
@@ -54,7 +54,14 @@ Read only what your task needs.
 
 ## Config architecture
 - `game_config.py` = dataclass shape. `eras/era_N.py` = values. `CURRENT_ERA` = active era.
-- DB `Era.config_key` records which era was active; it does not own rules.
+- **The latest DB `Era` row's `config_key` chooses which era is active** (ADR-0091).
+  It owns no rule *value* — those stay in `eras/` — but it decides which set is
+  live, and a mod sets it from the admin page. `CURRENT_ERA` is still the one
+  lever; the hand on it moved off a code edit.
+- `CURRENT_ERA` is a stable **object identity**, refreshed in place. Never
+  reassign `game_config.CURRENT_ERA` — a default argument binds at `def` time,
+  so that moves one name and leaves every call site on the old era. The only
+  module that rebinds it is `services/era.py`, and a test keeps it there.
 - Services take `era: EraConfig = CURRENT_ERA`. Never import `CURRENT_ERA`
   inside a service body.
 - Never hardcode a value that lives in `EraConfig`. Read `era.*`.

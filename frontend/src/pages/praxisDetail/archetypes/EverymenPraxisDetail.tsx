@@ -30,11 +30,18 @@
  *   canonical mark reading `--fdl-*` (ADR-0054), so a skin may not reposition or
  *   suppress it (owner ruling, 2026-07-28);
  * - the **report card and the steward bar stay outside the costume**.
- *   `PraxisFlagBlock` / `PraxisAdminBar` take `state` and nothing else — there is
- *   no seam to dress them through, by construction — and the flagged/failed
- *   banners keep their neutral `--color-*` tokens and neutral copy here for the
- *   same reason (ADR-0061: content slots carry a skin's
- *   voice, moderation and system chrome do not).
+ *   `PraxisFlagBlock` / `PraxisAdminBar` take `state` and nothing else — there
+ *   is no seam to dress them through, by construction. The flagged and failed
+ *   banners keep their neutral `--color-*` tokens and neutral copy here too,
+ *   but for a WEAKER reason, and #2718 is what made the difference visible:
+ *   the failed pair genuinely has no seam (`wallInk()` derives it and nothing
+ *   can override it), while the flagged notice now has one — two ink props on
+ *   `PraxisStatusBanners`. THIS PAGE PASSES NEITHER, so the notice renders
+ *   exactly as it always has; that is now a choice this file makes rather
+ *   than a fact of the architecture. Ephemerists and Singularity choose
+ *   otherwise. The rule underneath is unchanged (ADR-0061: content slots
+ *   carry a skin's voice, moderation and system chrome do not) — dress was
+ *   never what that rule was about.
  *
  * ## Copy is the shared neutral `detail.*` set
  *
@@ -328,36 +335,13 @@ export default function EverymenPraxisDetail({
   // ── Moderation banners — NEUTRAL, deliberately outside the costume ─────────
   // ADR-0061: the failed note, the flagged notice and the steward bar read the
   // shared neutral block in every faction's dress (the crown hero went with
-  // #1710). The
-  // design voices all of them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that
-  // vocabulary is recorded on the issue and not built.
+  // #1710), and since #2718 all three are MOUNTED from the shared layer too —
+  // the notice was the one this file used to re-type. The design voices all of
+  // them ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that vocabulary is
+  // recorded on the issue and not built.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: "2px solid var(--color-warning)",
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   );
