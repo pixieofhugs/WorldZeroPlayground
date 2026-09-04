@@ -26,21 +26,31 @@
  * field outwards and it is composited before anything is measured, which is the
  * mistake #2485 was open for.
  *
- * NOT MEASURED, deliberately: the `.na-backdrop` wash. The na EDIT kit's name
- * field is transparent over the washed page, and the wash costs up to a full
- * ratio point (`createCharacterContrast.test.ts` transcribes the stops and owns
- * that measurement). Its two rows below are held to AAA on the flat page token
- * instead, so the wash has a point of room to spend before AA is at risk — a
- * proxy, stated as one, rather than a second copy of a five-gradient shorthand.
+ * NO na ROW NEEDS THE WASH PROXY ANY MORE (#2992, #2991). Both na kits used to
+ * draw fields straight onto the app page — the name box transparent over it, the
+ * prose boxes on the translucent surface token — and their rows were held to AAA
+ * on the flat page token as a stated proxy, on the argument that a wash costs up
+ * to a full ratio point and this file declines to model one
+ * (`createCharacterContrast.test.ts` transcribes the `.na-backdrop` stops and
+ * owns that measurement). Both kits are on the composer sheet now, where a field
+ * is an OPAQUE box drawn ABOVE the aurora: the ground is flat, there is nothing
+ * to proxy for, and the one na row below takes the plain AA floor like every
+ * faction row.
  *
- * The na CREATE kit needs no proxy since #2992: it stands on the composer sheet
- * and its fields are an OPAQUE box drawn above the aurora, so the ground is
- * flat and its row takes the plain AA floor.
+ * The proxy was generous, and worth saying so on the way out: `.na-backdrop` is
+ * a `position: fixed` wash with ONE live mount in the tree, `DefaultProfileBody`
+ * — no character-path surface ever mounted it, so the ground those rows were
+ * hedging against was `--color-bg-page` flat and the AAA floor bought room
+ * against a wash that was never behind them.
+ *
+ * `AAA_NORMAL` went with them: no row left on this surface is a proxy for a
+ * ground this file declines to model, so the `floor` override has no caller and
+ * the import that served it is gone. The knob itself stays on {@link Row} —
+ * it is the shape the next translucent ground would need.
  */
 import { describe, it, expect } from 'vitest'
 import {
   AA_NORMAL,
-  AAA_NORMAL,
   compositeOver,
   contrastRatio,
   formatRatio,
@@ -96,17 +106,26 @@ interface Row {
 }
 
 const FIELDS: Row[] = [
-  // THE na CREATE KIT MOVED TO THE COMPOSER SHEET (#2992). Its three fields are
-  // one opaque box on `--faction-default-composer-field`, laid over the sheet
-  // ABOVE the aurora — so this is the ground, flat, with no wash to proxy for,
-  // and it takes the plain AA floor like every faction row below it.
-  { what: 'na create, all three fields', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
-  // The na EDIT kit still stands on the washed app page, and #2992 did not touch
-  // it (#2991 is that lane). Its name field is transparent over the page and its
-  // prose fields sit on the translucent surface token, so both take the AAA
-  // proxy for the wash this file deliberately does not model. See the header.
-  { what: 'na edit, name field on the page', ground: ['--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
-  { what: 'na edit, prose fields', ground: ['--color-bg-surface', '--color-bg-page'], ink: '--color-text-primary', floor: AAA_NORMAL },
+  // BOTH na KITS MOVED TO THE COMPOSER SHEET — create in #2992, edit in #2991 —
+  // so this is ONE row for two forms rather than three rows for two grounds.
+  // Every field a caret lands in on either form is the same opaque box on
+  // `--faction-default-composer-field`, laid over the sheet ABOVE the aurora, so
+  // the ground is flat, there is no wash to proxy for, and the row takes the
+  // plain AA floor like every faction row below it. The two page-ground rows
+  // that used to sit here were the edit kit's name field (transparent over the
+  // washed page) and its prose fields (on the translucent surface token); their
+  // ground is not drawn on this surface any more.
+  //
+  // "EVERY FIELD" IS THE EDITABLE ONES, and the qualifier is load-bearing rather
+  // than hedging. The edit form has a sixth box — the read-only `@handle` — and
+  // it deliberately draws the well's QUIET rung (`--faction-default-card-muted`)
+  // instead of this ink, because it is a readout rather than a caret target.
+  // That pair is measured, on this same well, by
+  // `createCharacterContrast.test.ts`'s `-card-muted` row (#2992): 6.05:1 light,
+  // 5.23:1 dark. Restating it here would be a second name for one measurement.
+  // It carries no visible placeholder either — it is never empty — so it is
+  // outside this file's question twice over.
+  { what: 'na, every editable field on both character forms', ground: ['--faction-default-composer-field', '--faction-default-card-bg'], ink: '--faction-default-card-text' },
   { what: 'coven', ground: ['--faction-coven-ward-page', '--faction-coven-ward-card'], ink: '--faction-coven-slip-ink' },
   { what: 'ephemerists', ground: ['--faction-ephemerists-plate-inner', '--faction-ephemerists-plate-page'], ink: '--faction-ephemerists-plate-ink' },
   { what: 'everymen', ground: ['--faction-everymen-sheet-panel', '--everymen-paper'], ink: '--everymen-paper-text' },

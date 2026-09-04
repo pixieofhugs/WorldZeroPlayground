@@ -32,18 +32,33 @@
  * is a per-archetype decision by design.
  *
  * The Everymen dress genuinely demands the difference. This kit's Save is
- * `composerBandStyle` — the FULL-BLEED report bar #1828 welded to the sheet's
- * bottom edge by negating the column's own insets. Nothing can be drawn under it
- * inside the sheet, and the only place left below it is the page, where the
- * slots would land on the site watercolour: an unmeasured ground, and the
- * undressed neutral chrome mid-page that the derived ruling exists to prevent.
+ * `composerBandStyle` — the FULL-BLEED report bar #1828 draws by negating the
+ * column's own insets — and the slots may not go off the paper onto the site
+ * watercolour, which is an unmeasured ground and the undressed neutral chrome
+ * mid-page that the derived ruling exists to prevent.
  *
  * So the slots stay on the paper, in the stub the union's own idiom already has
- * for them: a PERFORATION — this kit's dashed red rule, the one it already draws
- * above the footer — and then the two rows, below every field and above the bar
- * that files them. The weight split the gate approved is untouched: delete is an
- * outline in the faction's alarm ink, Save is the filled bleed, and no
- * treatment on either was rewritten to make this placement work.
+ * for them: a PERFORATION — this kit's dashed red rule — and then the two rows.
+ * The weight split the gate approved is untouched: delete is an outline in the
+ * faction's alarm ink, Save is the filled bleed, and no treatment on either was
+ * rewritten to make this placement work.
+ *
+ * ## The stub moved BELOW the bar (#2991)
+ *
+ * It sat above it until then, and that made this the ONE kit of eight reading
+ * `[Delete] … [Save]`; the other seven all put the irreversible act after the
+ * ordinary one, in four different containers. #2991's AC 2 fixes the ORDER and
+ * leaves every container alone, so the stub crossed the bar and stayed on the
+ * paper.
+ *
+ * What that cost, stated exactly: the bar's bleed was welded to the sheet's
+ * BOTTOM edge as well as its sides, and a negative bottom margin under a row
+ * that is no longer last would drag the stub up over it. So the band is asked
+ * for `weldBottom: false`, which keeps the side negation and drops the bottom
+ * one. That is the only line of this dress #2991 touched — same bar, same width,
+ * same frame, same ink, one rim fewer. It is a KEY rather than a `margin`
+ * override because an override would be a second copy of `composerBandStyle`'s
+ * own inset formula, which is the re-derivation that helper exists to stop.
  *
  * They sit inside the `<form>` rather than beside it (the na desktop plate's
  * other half), which costs nothing: `DeleteCharacter` renders `type="button"`
@@ -487,19 +502,6 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
 
           <ErrorBanner message={error} style={{ color: ALARM }} />
 
-          {/* ── THE STUB. The two slots a create dress has no room for, behind
-               the union's perforation: the chapter this life already belongs to,
-               and the one act that cannot be undone. Above the report bar
-               because that bar is welded to the sheet's bottom edge (#1828) and
-               the only place below it is off the paper entirely — see the
-               header. The treatment is `editCharacterSlots`'; only the place is
-               here. ── */}
-          {dashRule}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            <FactionRow slug={character.faction_slug} />
-            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
-          </div>
-
           {dashRule}
 
           {/* [Cancel] … [Save] — the global order from #646, with the commit
@@ -540,6 +542,14 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
                     frame: SHEET_FRAME,
                     color: BAR_INK,
                     background: BAR,
+                    /* THE BAR IS NO LONGER THE SHEET'S LAST ROW (#2991). The
+                       stub follows it now, so the bleed keeps its SIDE negation
+                       — the bar still runs edge to edge — and drops the BOTTOM
+                       one, which existed only to weld it to the sheet's lower
+                       rim. Left in place it would pull the stub up over the bar
+                       by a whole inset. This is the whole of the dress cost of
+                       the re-order; nothing else about this kit changed. */
+                    weldBottom: false,
                   }),
                   cursor: saving ? 'wait' : 'pointer',
                 }}
@@ -548,6 +558,24 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
               </button>
             }
           />
+
+          {/* ── THE STUB, torn off BELOW the bar (#2991 AC 2). The two slots a
+               create dress has no room for, behind the union's perforation: the
+               chapter this life already belongs to, and the one act that cannot
+               be undone. It sat above the bar until #2991 — the one kit of eight
+               that read `[Delete] … [Save]` — and the argument for that was the
+               weld, not the weight: the bar was flush to the sheet's bottom edge
+               and the only place left below it was off the paper. Un-welding the
+               bar (see its `margin` above) is what buys the position the other
+               seven already have, and it costs the dress nothing else: the stub
+               is still on the paper, still behind a perforation, still an
+               outline in the faction's alarm against a filled bar. The treatment
+               is `editCharacterSlots`'; only the place is here. ── */}
+          {dashRule}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            <FactionRow slug={character.faction_slug} />
+            <DeleteCharacter slug={character.faction_slug} deleting={deleting} onDelete={handleDelete} />
+          </div>
         </ComposerSheet>
       </form>
 

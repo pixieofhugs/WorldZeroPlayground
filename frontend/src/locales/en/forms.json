@@ -9,8 +9,7 @@
     "taglinePlaceholder": "Character Catchphrase",
     "locationPlaceholder": "Location (SFO, PDX, YYZ)",
     "handlePlaceholder": "Handle",
-    "portrait": "Portrait",
-    "changePhoto": "Change photo"
+    "portrait": "Portrait"
   },
   "createCharacter": {
     "heading": "Who is your character",
@@ -28,12 +27,9 @@
   "editCharacter": {
     "notFound": "Character not found.",
     "notOwner": "You can only edit your own character.",
-    "eyebrow": "Unaffiliated · this is who you are",
     "heading": "Edit character",
     "intro": "Your character is yours before any faction is. Set your portrait, name and story — it follows you onto every task and praxis you submit.",
-    "avatarLabel": "Avatar",
     "avatarHint": "Square image, at least 240px. Your monogram “{{initial}}” shows until you add one — framed in the full spectrum, since every path is still open to you.",
-    "identityHeading": "Identity",
     "displayNameCount": "{{count}}/50",
     "handleHint": "Auto-derived · permanent",
     "storyCount": "{{count}} / 500",

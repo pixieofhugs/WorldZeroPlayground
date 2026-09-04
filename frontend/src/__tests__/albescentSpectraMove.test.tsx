@@ -95,6 +95,14 @@ const WEARS_THE_MARKER: Record<string, string> = {
   // which #2497's sweep never reached because it censused the `Default*`
   // archetype files and the card is not one of them.
   '../pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx': 'character creation',
+  // The same card's ring on the EDIT half, and the row this census was missing:
+  // the surface has been in `ALBESCENT_MANIFEST` since #2537 and appeared in
+  // neither table, so the header's "every row" was one short. It belongs on THIS
+  // side rather than the other — na drew two rings here until #2991 (the phone
+  // column's photo well and the desktop plate's portrait ring), and when that
+  // pair retired onto the composer chassis the credential card's classed ring
+  // took both their places at both widths.
+  '../pages/characterPaths/archetypes/AlbescentEditCharacter.tsx': 'character editing',
   // The directory tile's one hairline. It moved sides in #2632: the tile used to
   // be bespoke vellum markup with no classed spectrum on it at all, and the
   // collapse onto `DefaultSelectCard` handed it na's rule — which the same pass
