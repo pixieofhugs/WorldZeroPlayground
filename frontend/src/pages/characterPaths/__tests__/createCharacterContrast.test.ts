@@ -266,6 +266,44 @@ const worstOn = (ink: Rgba, grounds: Rgba[]): number =>
   Math.min(...grounds.map((ground) => contrastRatio(ink, ground)))
 
 describe('the na create page clears AA on the sheet it moved to (#2992)', () => {
+  /**
+   * THE CALLING ROWS, AND WHY THIS ROW IS NOT A RESTATEMENT.
+   *
+   * The picker's faction names are `--faction-default-card-muted` on
+   * `--faction-default-composer-field` — and `composerGround.test.ts` certifies
+   * that same token as the REFUSED, sub-AA rung on the sheet one layer below it.
+   * Two grounds, two answers, six millimetres apart on screen: that is precisely
+   * the pairing a reader of this page will get wrong, and a refusal certified
+   * next door is not a licence to assume the neighbouring ground fails too.
+   *
+   * The field is opaque in both cascades, which is what makes the two grounds
+   * genuinely different rather than one wash apart — asserted below rather than
+   * asserted in prose, because if it ever gained an alpha the aurora would reach
+   * the calling names and this measurement would silently become the optimistic
+   * one.
+   *
+   * It clears comfortably — 6.05:1 by day and 5.23:1 by night, against the
+   * sheet's 3.27–4.30 for the same ink. The gap IS the finding: this token is
+   * not "too quiet for na", it is too quiet for na's WASHED ground, and the
+   * opaque field is where it was always right.
+   *
+   * `factionContrast.test.ts` carries this pairing under the COMPOSER's name
+   * ("na composer field, prose"). It is restated here, against the file's own
+   * rule about second names for one measurement, because the create page is the
+   * only surface that draws this ink beside its own refusal — and a reader who
+   * follows the refusal and repaints the calling rows has broken nothing that
+   * goes red.
+   */
+  it.each(BOTH_THEMES)('the calling names, on the opaque field — %s', (theme) => {
+    const field = resolve('--faction-default-composer-field', theme)
+    expect(field.a, 'the field grounds the calling rows opaquely').toBe(1)
+    const ratio = contrastRatio(resolve('--faction-default-card-muted', theme), field)
+    expect(
+      ratio,
+      `--faction-default-card-muted on --faction-default-composer-field is ${formatRatio(ratio)}`,
+    ).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
   it.each(BOTH_THEMES)('the alarm ink, bare on the aurora-washed sheet — %s', (theme) => {
     const ratio = worstOn(resolve('--faction-default-card-alarm', theme), sheetGrounds(theme))
     expect(

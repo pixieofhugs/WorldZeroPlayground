@@ -425,9 +425,12 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * IT REVERSES ONE LINE OF `surfaceDispatch.test.ts`'s createCharacter note —
    * "Molly's ruling is that it gets no archetype anyway". That ruling was about a
    * SKIN, and it still holds: this is a wrapper over the na kit, which is what
-   * that note says Albescent renders. The dispatch slug here is the pick in
-   * progress, so the ring starts turning as the calling is chosen and stops the
-   * moment it is cleared.
+   * that note says Albescent renders. That note carries the #2992 correction
+   * above as well, so the two say the same thing about which mark is re-cut;
+   * they are the only two prose records of it and they move together.
+   *
+   * The dispatch slug here is the pick in progress, so the ring starts turning
+   * as the calling is chosen and stops the moment it is cleared.
    */
   createCharacter: () => AlbescentCreateCharacter,
 
