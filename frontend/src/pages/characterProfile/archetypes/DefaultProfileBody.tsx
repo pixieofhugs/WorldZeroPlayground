@@ -1,77 +1,66 @@
 /**
- * DefaultProfileBody — the unaffiliated / no-faction player-profile skin
- * (#459), ported from the design system's `templates/default/Default
- * Profile.dc.html`: a clean sheet inside the thick spectrum band (all paths
- * open), and the fallback for every faction until its bespoke skin lands
- * (#460). All colours via `--faction-default-*` / global tokens (#418) — no
- * hardcoded hex; light/dark flips through the cascade.
+ * DefaultProfileBody — the unaffiliated / no-faction player-profile, and THE
+ * NINTH KIT (#459, ported from the design system's `templates/default/Default
+ * Profile.dc.html`; delegated by #2996).
  *
- * Locked section spine: ① identity + progression (shared CredentialCard as
- * the header), ② about — skipped in v1 (no field), ③ badges (hidden when
- * empty), ⑤ praxis (faction PraxisCard, FDL laurel on the top entry), plus
- * the kept proposed-tasks and friend/foe features.
+ * A clean sheet inside the thick spectrum band (all paths open), and the
+ * fallback for every faction until its bespoke skin lands (#460). All colours
+ * via `--faction-default-*` / global tokens (#418) — no hardcoded hex;
+ * light/dark flips through the cascade.
  *
- * ONE RESPONSIVE COMPONENT (#1319, the ADR-0056 / ADR-0058 / ADR-0067 shape).
- * The phone face is the `MobileProfile` branch below, in this file (#517,
- * redrawn for #969). `useFormFactor()` is read once, at the exported component,
- * which is the only dispatcher — the same call site `<Faction>TaskDetail` uses.
+ * IT DELEGATES NOW, LIKE THE OTHER EIGHT. This file used to hand-author a
+ * `DesktopProfile` and a `MobileProfile` and say so in a comment that never
+ * justified it. The cost was measurable rather than theoretical: the folding
+ * galleries (#2958) landed in two files in one commit, `BadgeRow` existed twice,
+ * and `SegTab` existed three times. What is left here is a `ProfileDress` — the
+ * costume, and only the costume. The spine is `ProfileSkin`'s, stated there.
  *
- * The two branches are separate components rather than one body full of
- * ternaries because they are not one layout at two sizes: the phone stacks a
- * centred credential over a SEGMENTED praxis/tasks toggle (which owns state),
- * where the desktop lays a two-column grid beside a badge aside. Sharing the
- * ornaments (laurel, badge row, eyebrow) is what the merge buys; sharing the
- * skeleton would have meant redrawing one of the two shipped designs.
+ * WHAT THE PORT CHANGED, AND WHY EACH ONE IS DELIBERATE:
  *
- * The na fidelity fix the phone branch carries (#749/ADR-0039): its identity
- * band, avatar hoop, progression bar and section dot reach the spectrum through
- * `factionFill(slug, …)` / CredentialCard, never `factionCssVar('na')`, which
- * resolves grey. Those seams stay per-faction — the branch is only reached by
- * na/albescent and by any faction with no `profileBody` row, so a themed slug
- * gets its solid hue and na gets the rainbow.
+ *  - The page gains the shared plate's horizontal inset (`--space-xl`, 24px).
+ *    na's `pageBackground` is transparent, so nothing new is painted; the
+ *    column is simply inset the way every other profile's is. Vertical padding
+ *    is unchanged — `--space-2xl` is exactly the `py-8` this wrapper had.
+ *  - One quiet ink in the header instead of two. na drew `--color-text-tertiary`
+ *    at the handle, the "lvl" label and the next-rung eyebrow, and
+ *    `--color-text-secondary` at the points-into-level line beside them. The
+ *    shared header has one `muted` role, so the four tertiary sites DARKEN by a
+ *    tier — the safe direction, and the reading every other kit already gets.
+ *  - The phone's band and bar were `factionFill(slug, 'bar')` — a per-slug seam
+ *    for a themed faction with no `profileBody` row of its own. The laptop half
+ *    never had it and painted the spectrum for everyone, so the collapse takes
+ *    the laptop's answer. Every live slug but na and Albescent has its own row.
+ *  - The phone stack's segmented switch is now `ProfileSkin`'s, drawn for all
+ *    nine (#2996). Same two keys, same two words.
+ *
+ * THREE SPECTRUM MOUNTS LIVE IN THIS FILE, and they must stay in it (#2500,
+ * epic #2496 ruling 3): the section head's hairline, the identity band, and the
+ * level bar's fill. `albescentSpectraMove.test.tsx`'s per-mount census reads
+ * them from this source and classifies each as ornament or FRAME — `:empty` is
+ * the difference, so a hairline that gains a child silently stops travelling.
+ * They are na's costume: written into `profileSkin.tsx` instead, they would give
+ * all nine factions a rainbow, which is why the shared skin takes them through
+ * kit slots (`sectionHeading`, `headerFrame`, `levelBar`) rather than drawing
+ * them itself.
  */
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { BadgeOut } from '../../../api/auth'
-import { badgeArtFor } from '../../../components/badges/badgeArt'
-import CredentialCard from '../../../components/CredentialCard'
-import PraxisCard from '../../../components/praxisCard/PraxisCard'
-import TaskCard from '../../../components/taskCard/TaskCard'
-import { useFormFactor } from '../../../hooks/useFormFactor'
-import {
-  factionFill,
-  factionSheet,
-  isKnownFaction,
-} from '../../../utils/factions'
+import { factionSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
-import { mediaUrl } from '../../../utils/media'
-import {
-  PROFILE_SECTIONS,
-  SectionPanel,
-  SectionToggle,
-  useSectionDisclosures,
-} from '../../factionDetail/sectionDisclosure'
 import type { ProfileBodyProps } from '../FactionProfileBody'
-// The ② About block and the ① tagline slot are shared with every faction kit —
-// see profileSkin.tsx. This is the one profile that does NOT delegate to
-// `ProfileSkin`, so it mounts those components itself rather than growing a
-// second copy of either rule.
-import { AboutBlock, ProfileNameHeading, TaglineSlot } from './profileSkin'
-
-type Segment = 'praxis' | 'tasks'
+import { BadgeRow, ProfileSkin, type ProfileDress } from './profileSkin'
 
 /**
- * The role map (#2672). Hoisted, because this file has TWO roots — the desktop
- * column and the `mobile-profile` one — and a surface's prefix is declared once
- * per root or the mobile half reads names nothing set.
+ * The role map (#2672). Spread on the wrapper below — the one root this file
+ * still owns, since `ProfileSkin` owns the page element all nine mount on.
  *
  * Pinned to na: the ground is `.na-backdrop` plus `factionSheet()`, neither of
  * which takes a slug, and an ink may not leave a ground that cannot follow it
- * (#2361, #2669). `{}` today; what the prefix buys is a name a dresser can
- * reach this one surface by — `identityOrnament` is the same motive.
+ * (#2361, #2669). What the prefix buys is a name a dresser can reach this one
+ * surface by — `identityOrnament` is the same motive.
  */
-const ROLES = factionRoleVars("na", 'na-profile-body')
+const ROLES = factionRoleVars('na', 'na-profile-body')
 
 const EYEBROW: CSSProperties = {
   fontFamily: 'var(--font-body)',
@@ -81,12 +70,20 @@ const EYEBROW: CSSProperties = {
   color: 'var(--color-text-tertiary)',
 }
 
+/** na's display cut is italic. `displayFont` is a family and cannot say so, so
+ *  the trait travels beside it — see `ProfileKit.displayExtra`. */
+const ITALIC: CSSProperties = { fontStyle: 'italic' }
+
 /**
  * Section heading: display-italic title + optional eyebrow + a soft rainbow rule.
  *
  * `title` is a NODE because the two gallery headings hand it a `SectionToggle`
  * (#2958) — the disclosure button has to sit inside this `<h2>` to inherit the
- * face, the size and the ink. About still passes a plain string.
+ * face, the size and the ink. About passes a plain string.
+ *
+ * ① of the three spectrum mounts: the hairline is an ORNAMENT and must stay
+ * CHILDLESS, or `.alb-moves .spectrum-rule:empty` stops reaching it and an
+ * Albescent member's section heads quietly stand still.
  */
 function SectionHeading({ title, eyebrow }: { title: ReactNode; eyebrow?: string }) {
   return (
@@ -113,7 +110,9 @@ function SectionHeading({ title, eyebrow }: { title: ReactNode; eyebrow?: string
 }
 
 /** The FDL laurel stamped on the character's top praxis (highest base+vote
- *  points — `praxis.score` is exactly that sum). Spectrum ring, ink glyph. */
+ *  points — `praxis.score` is exactly that sum). Spectrum ring, ink glyph.
+ *  Its own dial rather than the shared `SpectrumLaurel`: the ring is a CLASS
+ *  here, which is what carries it into Albescent's motion. */
 function FdlLaurel() {
   const { t } = useTranslation('common')
   return (
@@ -164,76 +163,6 @@ function FdlLaurel() {
   )
 }
 
-/** ③ One badge row: spectrum-ring medallion + name. `nameLineHeight` is the one
- *  thing the two form factors ever disagreed on, so it stays a knob rather than
- *  a second copy of the row. */
-function BadgeRow({
-  badge,
-  last,
-  nameLineHeight,
-}: {
-  badge: BadgeOut
-  last: boolean
-  nameLineHeight?: number
-}) {
-  const Art = badgeArtFor(badge.key)
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-md)',
-        padding: 'var(--space-md) 0',
-        borderBottom: last ? 'none' : '1px solid var(--color-border)',
-      }}
-    >
-      <span
-        className="spectrum-dial"
-        style={{
-          flexShrink: 0,
-          width: 34,
-          height: 34,
-          borderRadius: '50%',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
-          padding: 2.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxSizing: 'border-box',
-        }}
-      >
-        <span
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            background: 'var(--color-bg-surface-alt)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          <Art size={16} />
-        </span>
-      </span>
-      <div
-        className="font-display italic"
-        style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', lineHeight: nameLineHeight }}
-      >
-        {badge.name}
-      </div>
-    </div>
-  )
-}
-
-/** ⑤ FDL laurel target: highest earned points (task base + points from votes —
- *  `PraxisCardOut.score` is that sum); first entry wins a tie. */
-function laurelTarget(submissions: ProfileBodyProps['submissions']): number | null {
-  const topScore = submissions.reduce((max, praxis) => Math.max(max, praxis.score ?? 0), 0)
-  return submissions.find((praxis) => (praxis.score ?? 0) === topScore)?.id ?? null
-}
-
 /* A `spectrumRing(degrees, fill)` helper stood here: the level ring's filled
  * arc, cut in the SPECTRUM by a two-layer conic with the track masking the
  * unfilled sweep (#1630). It is deleted with the ring itself (#2213) — the arc
@@ -243,13 +172,160 @@ function laurelTarget(submissions: ProfileBodyProps['submissions']): number | nu
  * unaffiliated identity is a gradient, so it appears wherever a gradient can go,
  * and a `background` is somewhere it can. */
 
-/** ① progression numbers, shared by both branches (hidden until game config
- *  supplies thresholds). */
-function progressionFigures(progression: ProfileBodyProps['progression']) {
-  return {
-    pointsIntoLevel: progression?.pointsIntoLevel ?? 0,
-    levelSpan: progression?.levelSpan ?? 0,
-  }
+const dress: ProfileDress = {
+  slug: 'na',
+  // No plate. na's ground is the `.na-backdrop` wash the wrapper mounts, which
+  // is a full-VIEWPORT fixed layer and cannot be a page background value.
+  pageBackground: 'transparent',
+  ink: 'var(--color-text-primary)',
+  muted: 'var(--color-text-secondary)',
+  // The level numeral, and its only reader since #2213 deleted the ring. It
+  // sits on `--color-bg-surface-alt`, the progression panel's own ground, where
+  // the hub disc used to paint the same value.
+  accent: 'var(--color-text-primary)',
+  surface: 'var(--color-bg-surface-alt)',
+  border: 'var(--color-border)',
+  displayFont: 'var(--font-display)',
+  displayExtra: ITALIC,
+  eyebrowFont: 'var(--font-body)',
+  bodyFont: 'var(--font-body)',
+
+  /**
+   * ② of the three spectrum mounts: the identity band is a FRAME — a padded
+   * spectrum ramp around an opaque sheet — and must KEEP ITS CHILDREN, or
+   * `.alb-moves .spectrum-rule:empty` reaches it and a travelling child paints
+   * over the credential card it frames. `.alb-profile-edge` already travels on
+   * this object, which is the "one carrier per object" #2519 established.
+   *
+   * The 16px corner is the pairing `.alb-profile-edge`'s `border-radius:
+   * inherit` reads (#2407); `spectrumRingCollapse.test.ts` holds the two
+   * together, and it is ONE mount now rather than one per form factor.
+   */
+  headerFrame: (band, ornament) => (
+    <div
+      className="spectrum-rule"
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 16,
+        padding: 'var(--space-xs)',
+        boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
+        marginBottom: 'var(--space-2xl)',
+      }}
+    >
+      {ornament}
+      {band}
+    </div>
+  ),
+  // The sheet inside that ramp. `factionSheet()` with no slug is the neutral
+  // family — the same stock the phone stack painted for an unaffiliated player.
+  headerStyle: {
+    borderRadius: 12,
+    ...factionSheet(),
+    padding: 'var(--space-xl)',
+  },
+  taglineExtra: { ...ITALIC, color: 'var(--na-profile-body-ink)' },
+
+  progressionStyle: {
+    marginTop: 'var(--space-xl)',
+    border: '1px solid var(--color-border-strong)',
+    borderRadius: 12,
+    padding: 'var(--space-lg)',
+    background: 'var(--color-bg-surface-alt)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--space-lg)',
+    maxWidth: 440,
+  },
+  /**
+   * ③ of the three spectrum mounts, and the one epic #2496 ruling 3 names by
+   * hand: the level bar's fill is an ORNAMENT and must stay CHILDLESS. It is a
+   * `levelBar` slot rather than a `barFill` value because the ramp is a CLASS —
+   * `.spectrum-rule` is how the stylesheet reaches it, and how Albescent's
+   * motion does.
+   */
+  levelBar: (percent) => (
+    <div
+      className="spectrum-rule"
+      style={{
+        height: '100%',
+        borderRadius: 20,
+        width: `${percent}%`,
+        transition: 'width 300ms',
+      }}
+    />
+  ),
+  // Unread while `levelBar` is set; declared because `ProfileDress` requires a
+  // fill and because it is what the bar would be without the class.
+  barFill: 'var(--faction-default-rainbow)',
+  barTrack: 'var(--color-border)',
+
+  sectionHeading: (title, eyebrow) => <SectionHeading title={title} eyebrow={eyebrow} />,
+
+  emptyStateStyle: {
+    border: '1.5px dashed var(--color-border-strong)',
+    borderRadius: 12,
+    padding: 'var(--space-2xl)',
+    textAlign: 'center',
+    background: 'var(--color-bg-surface-alt)',
+  },
+  laurel: <FdlLaurel />,
+
+  badgeBoardStyle: {
+    border: '1px solid var(--color-border)',
+    borderRadius: 12,
+    background: 'var(--color-bg-surface-alt)',
+    padding: 'var(--space-xs) var(--space-lg)',
+  },
+  badgeChipStyle: {
+    ...EYEBROW,
+    fontSize: 'var(--text-md)',
+    letterSpacing: '0.1em',
+    marginLeft: 'auto',
+    border: '1px solid var(--color-border-strong)',
+    borderRadius: 20,
+    padding: 'var(--space-xs) var(--space-sm)',
+  },
+  badgeRow: (badge, last) => (
+    <BadgeRow
+      badge={badge}
+      last={last}
+      dividerColor="var(--color-border)"
+      nameStyle={{ fontFamily: 'var(--font-display)', ...ITALIC, color: 'var(--color-text-primary)', lineHeight: 1.15 }}
+      medallion={(glyph) => (
+        <span
+          className="spectrum-dial"
+          style={{
+            flexShrink: 0,
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
+            padding: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+          }}
+        >
+          <span
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: 'var(--color-bg-surface-alt)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            {glyph}
+          </span>
+        </span>
+      )}
+    />
+  ),
 }
 
 /**
@@ -264,6 +340,9 @@ function progressionFigures(progression: ProfileBodyProps['progression']) {
  * 'albescent'` branch in here would put the society's name in the very file
  * that exists to make it indistinguishable.
  *
+ * It reaches the band through `ProfileSkin`'s `identityOrnament` prop and this
+ * kit's `headerFrame` (#2996) — the two exist for each other.
+ *
  * Optional, so na and every unskinned slug render byte-identically — #1153's
  * rule, and the same shape `DefaultTaskDetail`'s `worthSlot` and
  * `DefaultPraxisDetail`'s `ornament` already take.
@@ -272,709 +351,23 @@ interface DefaultProfileBodyProps extends ProfileBodyProps {
   identityOrnament?: ReactNode
 }
 
-export default function DefaultProfileBody(props: DefaultProfileBodyProps) {
-  return useFormFactor() === 'mobile' ? (
-    <MobileProfile {...props} />
-  ) : (
-    <DesktopProfile {...props} />
-  )
-}
-
-function DesktopProfile({
-  character,
-  submissions,
-  proposedTasks,
-  progression,
-  identityActions,
+export default function DefaultProfileBody({
   identityOrnament,
-  onSignup,
+  ...props
 }: DefaultProfileBodyProps) {
-  const { t } = useTranslation('common')
-  // The two long galleries fold; About and Badges do not (#2958). Only this
-  // branch: `MobileProfile` below draws the same two galleries behind a
-  // segmented switch, so one is on screen at a time and there is no section
-  // heading for a control to live in.
-  const sections = useSectionDisclosures(PROFILE_SECTIONS)
-  const badges = character.badges ?? []
-  const joined = new Date(character.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    year: 'numeric',
-  })
-
-  const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan } = progressionFigures(progression)
-
-  const mainColumn = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
-      {/* ── ⑤ Praxis ── */}
-      <section>
-        {/* No byline (#2231). Everything under this heading is THIS
-            character's own praxis, so "Submitted by <them>" is the one thing
-            the line could never not say. `common:profile.praxisEyebrow` stays
-            in the catalog — it is the right sentence wherever authorship is
-            genuinely in question; this mount is simply not one of them. */}
-        <SectionHeading
-          title={<SectionToggle section={sections.praxis} label={t('profile.praxisHeading')} />}
-        />
-        <SectionPanel section={sections.praxis}>
-        {submissions.length === 0 ? (
-          <div
-            style={{
-              border: '1.5px dashed var(--color-border-strong)',
-              borderRadius: 12,
-              padding: 'var(--space-2xl)',
-              textAlign: 'center',
-              background: 'var(--color-bg-surface-alt)',
-            }}
-          >
-            <div
-              className="font-display italic"
-              style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
-            >
-              {t('profile.praxisEmptyTitle')}
-            </div>
-            <div
-              className="font-body"
-              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)' }}
-            >
-              {t('profile.praxisEmptyBody')}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-4 items-start">
-            {submissions.map((praxis) => (
-              <div key={praxis.id} style={{ position: 'relative' }}>
-                {praxis.id === laurelId && <FdlLaurel />}
-                {/* One fleur per corner: the laurel replaces the card's own
-                    Task Crown rather than stacking on it (#1960). */}
-                <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />
-              </div>
-            ))}
-          </div>
-        )}
-        </SectionPanel>
-      </section>
-
-      {/* ── Proposed tasks (kept feature, #419) ── */}
-      <section>
-        {/* The count stays in the EYEBROW, outside the panel: a folded section
-            that still says how much is under it is the whole reason folding is
-            worth doing (#2311's ruling). */}
-        <SectionHeading
-          title={
-            <SectionToggle
-              section={sections.proposed}
-              label={t('profile.proposedTasksHeading')}
-            />
-          }
-          eyebrow={t('profile.proposedTasksTotal', { count: proposedTasks.length })}
-        />
-        <SectionPanel section={sections.proposed}>
-        {proposedTasks.length === 0 ? (
-          <p className="font-body text-muted">{t('profile.proposedTasksEmpty')}</p>
-        ) : (
-          <div className="task-card-row gap-4">
-            {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
-            ))}
-          </div>
-        )}
-        </SectionPanel>
-      </section>
-    </div>
-  )
-
   return (
-    <div className="py-8" style={{ ...ROLES, position: 'relative' }}>
+    <div style={{ ...ROLES, position: 'relative' }}>
       {/* Full-page spectrum wash — the na "all paths open" backdrop. The
           `.na-backdrop` rule (raw radial-gradient rgba + a [data-theme="dark"]
-          brighten) lives in index.css and is owned by frontend-style; port it
-          from the vendored default.css. Inert until that class lands. */}
+          brighten) lives in index.css and is owned by frontend-style. It is
+          `position: fixed`, so it is the page's wash rather than this column's,
+          and it stays on this wrapper rather than becoming a kit slot: it is
+          the only page-level layer any kit has and a slot for one would be
+          scaffolding for nobody. */}
       <div className="na-backdrop" aria-hidden />
       <div style={{ position: 'relative', zIndex: 1 }}>
-      {/* ── ① Identity + progression — spectrum band, credential pinned ── */}
-      <div
-        className="spectrum-rule"
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          borderRadius: 16,
-          padding: 'var(--space-xs)',
-          boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
-          marginBottom: 'var(--space-2xl)',
-        }}
-      >
-        {identityOrnament}
-        <div
-          style={{
-            borderRadius: 12,
-            ...factionSheet(),
-            padding: 'var(--space-xl)',
-            display: 'flex',
-            gap: 'var(--space-2xl)',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ flexShrink: 0 }}>
-            <CredentialCard
-              displayName={character.display_name}
-              handle={character.username}
-              factionSlug={character.faction_slug}
-              level={character.level}
-              score={character.score}
-              avatarUrl={character.avatar_url ? mediaUrl(character.avatar_url) : null}
-            />
-          </div>
-
-          <div style={{ flex: 1, minWidth: 280 }}>
-            {/* ① The column's display line (#1629). The spectrum-ring eyebrow,
-                the display name and the "Unaffiliated · faction pending"
-                caption all stood here; the credential card to the left says the
-                name and the faction, so the column carries the player's own
-                line and nothing else. Blank until someone writes one. The name
-                stays as the page's <h1>, for the outline only. */}
-            <ProfileNameHeading name={character.display_name} />
-            <TaglineSlot
-              tagline={character.tagline}
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontStyle: 'italic',
-                color: 'var(--na-profile-body-ink)',
-              }}
-            />
-
-            <div
-              className="font-body"
-              style={{
-                fontSize: 'var(--text-content)',
-                color: 'var(--color-text-tertiary)',
-                marginTop: 'var(--space-md)',
-              }}
-            >
-              {t('profile.handleJoined', { username: character.username, joined })}
-            </div>
-
-            {/* progression panel */}
-            {progression && (
-              <div
-                style={{
-                  marginTop: 'var(--space-xl)',
-                  border: '1px solid var(--color-border-strong)',
-                  borderRadius: 12,
-                  padding: 'var(--space-lg)',
-                  background: 'var(--color-bg-surface-alt)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-lg)',
-                  maxWidth: 440,
-                }}
-              >
-                {/* Level readout — text, and DELIBERATELY not a ring (#2213).
-                    The spectrum-cut arc that drew this number and held the
-                    numeral in its hub is gone from all nine profiles and is not
-                    to be restored: it plotted the same percentage as the bar to
-                    its right. The numeral is the ring's second job and stays.
-                    Both inks are unchanged, because the hub disc was painted in
-                    the panel's own `--color-bg-surface-alt`. */}
-                <div
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'var(--space-xs)',
-                    lineHeight: 1,
-                  }}
-                >
-                  <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
-                  <span
-                    className="font-display italic"
-                    style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
-                  >
-                    {character.level}
-                  </span>
-                </div>
-
-                {/* points-into-level bar toward level+1 */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'baseline',
-                      marginBottom: 'var(--space-sm)',
-                    }}
-                  >
-                    {/* THE TOP OF THE CURVE IS ITS OWN LINE (#2383). There is
-                        no rung above the last one, so the band collapses to
-                        zero width and there is no level to name: both figures
-                        would print as noise ("0 / 0 pts this level", "next ·
-                        lvl 8"). The field desk has always drawn one sentence
-                        here instead, and this is the same string in the same
-                        body voice — the eyebrow's caps are for a two-word
-                        label, not for a sentence. The slot is the whole row,
-                        which is the point: the line is four times the length
-                        of the eyebrow it replaces. */}
-                    {progression.nextLevel === null ? (
-                      <span
-                        className="font-body"
-                        style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
-                      >
-                        {t('sidebar.characterCard.topLevel')}
-                      </span>
-                    ) : (
-                      <>
-                        <span
-                          className="font-body"
-                          style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
-                        >
-                          {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                        </span>
-                        <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
-                          {t('profile.nextLevel', { level: progression.nextLevel })}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      height: 10,
-                      borderRadius: 20,
-                      background: 'var(--color-border)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      className="spectrum-rule"
-                      style={{
-                        height: '100%',
-                        borderRadius: 20,
-                        width: `${progression.progressPercent}%`,
-                        transition: 'width 300ms',
-                      }}
-                    />
-                  </div>
-                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
-                      used to sit here at --text-content, the same weight as
-                      "15 / 160 pts this level" above the bar — two
-                      denominators beside one bar, with nothing saying which
-                      one the bar tracked. The bar reads the band; this line
-                      annotates it, in the voice the home page's "185 all-time"
-                      caption uses. `.label-caption` is the minted tier
-                      (#1307), so no new style is invented for it. At the top
-                      of the curve there is no threshold for it to annotate and
-                      the line goes (#2383) — the era-points figure it carried
-                      is still on the credential beside this panel. */}
-                  {progression.nextLevel !== null && (
-                    <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
-                      {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* friend/foe — kept feature, faction-skinned, folded into the header */}
-            {identityActions && (
-              <div style={{ marginTop: 'var(--space-lg)', maxWidth: 220 }}>{identityActions}</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── ② About — the long-form field arrived with #1626 ── */}
-      <AboutBlock bio={character.bio} heading={<SectionHeading title={t('profile.aboutHeading')} />} />
-
-      {badges.length > 0 ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) fit-content(300px)',
-            gap: 'var(--space-2xl)',
-            alignItems: 'start',
-          }}
-        >
-          {mainColumn}
-
-          {/* ── ③ Badges — hidden entirely when the character has none ── */}
-          <aside>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}
-            >
-              <h2
-                className="font-display italic"
-                style={{ fontSize: 'var(--text-title)', margin: 0, color: 'var(--color-text-primary)' }}
-              >
-                {t('profile.badgesHeading')}
-              </h2>
-              <span
-                style={{
-                  ...EYEBROW,
-                  fontSize: 'var(--text-md)',
-                  letterSpacing: '0.1em',
-                  marginLeft: 'auto',
-                  border: '1px solid var(--color-border-strong)',
-                  borderRadius: 20,
-                  padding: 'var(--space-xs) var(--space-sm)',
-                }}
-              >
-                {t('profile.badgesEarned', { count: badges.length })}
-              </span>
-            </div>
-            <div
-              style={{
-                border: '1px solid var(--color-border)',
-                borderRadius: 12,
-                background: 'var(--color-bg-surface-alt)',
-                padding: 'var(--space-xs) var(--space-lg)',
-              }}
-            >
-              {badges.map((badge, index) => (
-                <BadgeRow
-                  key={badge.key}
-                  badge={badge}
-                  last={index === badges.length - 1}
-                  nameLineHeight={1.15}
-                />
-              ))}
-            </div>
-          </aside>
-        </div>
-      ) : (
-        mainColumn
-      )}
+        <ProfileSkin props={props} kit={dress} identityOrnament={identityOrnament} />
       </div>
     </div>
-  )
-}
-
-/**
- * The phone reflow of the same #459 contract: centred credential on the
- * spectrum band, badges above, and a segmented Praxis/Tasks toggle over the
- * shared cards stacked single-column. Presentation only — it renders no field
- * the contract does not expose.
- */
-function MobileProfile({
-  character,
-  submissions,
-  proposedTasks,
-  progression,
-  identityActions,
-  identityOrnament,
-  onSignup,
-}: DefaultProfileBodyProps) {
-  const { t } = useTranslation('common')
-  const [segment, setSegment] = useState<Segment>('praxis')
-  const badges = character.badges ?? []
-  const isUnaffiliated = !isKnownFaction(character.faction_slug)
-
-  const joined = new Date(character.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    year: 'numeric',
-  })
-
-  const laurelId = laurelTarget(submissions)
-  const { pointsIntoLevel, levelSpan } = progressionFigures(progression)
-
-  return (
-    <div
-      className="py-4"
-      data-testid="mobile-profile"
-      style={{ ...ROLES, position: 'relative' }}
-    >
-      {/* Full-page spectrum wash — the na "all paths open" backdrop. The
-          `.na-backdrop` rule (raw radial-gradient rgba + a [data-theme="dark"]
-          brighten) lives in index.css and is owned by frontend-style; port it
-          from the vendored default.css. Inert until that class lands. */}
-      <div className="na-backdrop" aria-hidden />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* ── ① Identity — spectrum band, centred credential ── */}
-        <div
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 16,
-            padding: 'var(--space-xs)',
-            ...factionFill(character.faction_slug, 'bar'),
-            boxShadow: '0 20px 50px -26px var(--color-cast-shadow)',
-          }}
-        >
-          {identityOrnament}
-          <div
-            style={{
-              borderRadius: 12,
-              ...(isUnaffiliated ? factionSheet() : { background: 'var(--color-bg-surface-alt)' }),
-              padding: 'var(--space-lg)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 'var(--space-md)',
-            }}
-          >
-            {/* identity header — the shared credential card (its Unaffiliated
-                state wears the spectrum ring; themed slugs keep their accent).
-                The spectrum-dot "Player · Unaffiliated" eyebrow that sat above
-                it went with #1629, on the phone as on the laptop. */}
-            <CredentialCard
-              displayName={character.display_name}
-              handle={character.username}
-              factionSlug={character.faction_slug}
-              level={character.level}
-              score={character.score}
-              avatarUrl={character.avatar_url ? mediaUrl(character.avatar_url) : null}
-            />
-
-            {/* ① the column's display line, centred under the card — the same
-                shared slot the laptop mounts (#1629), over the same outline-only
-                <h1>. */}
-            <ProfileNameHeading name={character.display_name} />
-            <TaglineSlot
-              tagline={character.tagline}
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontStyle: 'italic',
-                textAlign: 'center',
-                margin: '0 auto',
-                color: isUnaffiliated
-                  ? 'var(--na-profile-body-ink)'
-                  : 'var(--color-text-primary)',
-              }}
-            />
-
-            {/* subtitle: handle / joined. The "Unaffiliated · faction pending"
-                caption that led this line is gone (#1629). */}
-            <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}>
-              {t('profile.handleJoined', { username: character.username, joined })}
-            </span>
-
-            {/* progression panel — level readout + points-into-level bar */}
-            {progression && (
-              <div
-                style={{
-                  width: '100%',
-                  border: '1px solid var(--color-border-strong)',
-                  borderRadius: 12,
-                  padding: 'var(--space-lg)',
-                  background: 'var(--color-bg-surface-alt)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-lg)',
-                }}
-              >
-                {/* The phone's half of the same deletion (#2213) — see the
-                    laptop branch above. The arc drew `factionFill(slug, 'dot')`
-                    where this branch is the fall-through for a themed slug with
-                    no `profileBody` row; the bar below still does, so that seam
-                    is intact and only the duplicate instrument went. */}
-                <div
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'var(--space-xs)',
-                    lineHeight: 1,
-                  }}
-                >
-                  <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
-                  <span
-                    className="font-display italic"
-                    style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
-                  >
-                    {character.level}
-                  </span>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'baseline',
-                      marginBottom: 'var(--space-sm)',
-                    }}
-                  >
-                    {/* The phone's half of the top-of-the-curve line (#2383) —
-                        see the laptop branch above. Narrower still here, which
-                        is exactly why the sentence gets the whole row rather
-                        than the right-hand eyebrow slot. */}
-                    {progression.nextLevel === null ? (
-                      <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
-                        {t('sidebar.characterCard.topLevel')}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
-                          {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                        </span>
-                        <span style={{ ...EYEBROW, fontSize: 'var(--text-md)', letterSpacing: '0.08em' }}>
-                          {t('profile.nextLevel', { level: progression.nextLevel })}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div style={{ height: 10, borderRadius: 20, background: 'var(--color-border)', overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        borderRadius: 20,
-                        width: `${progression.progressPercent}%`,
-                        ...factionFill(character.faction_slug, 'bar'),
-                        transition: 'width 300ms',
-                      }}
-                    />
-                  </div>
-                  {/* The whole climb, DEMOTED to the caption tier (#2127). It
-                      used to sit here at --text-content, the same weight as
-                      "15 / 160 pts this level" above the bar — two
-                      denominators beside one bar, with nothing saying which
-                      one the bar tracked. The bar reads the band; this line
-                      annotates it, in the voice the home page's "185 all-time"
-                      caption uses. `.label-caption` is the minted tier
-                      (#1307), so no new style is invented for it. At the top
-                      of the curve there is no threshold for it to annotate and
-                      the line goes (#2383) — the era-points figure it carried
-                      is still on the credential beside this panel. */}
-                  {progression.nextLevel !== null && (
-                    <div className="label-caption" style={{ marginTop: 'var(--space-xs)' }}>
-                      {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* friend/foe — kept feature (#459), folded under identity */}
-            {identityActions && (
-              <div style={{ marginTop: 'var(--space-xs)', maxWidth: 220, width: '100%' }}>{identityActions}</div>
-            )}
-          </div>
-        </div>
-
-        {/* ── ② About — same block as the desktop branch and every kit ── */}
-        <AboutBlock bio={character.bio} heading={<SectionHeading title={t('profile.aboutHeading')} />} />
-
-        {/* ── ③ Badges — hidden entirely when empty ── */}
-        {badges.length > 0 && (
-          <div style={{ marginTop: 'var(--space-lg)', marginBottom: 'var(--space-lg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-              <h2 className="font-display italic" style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}>
-                {t('profile.badgesHeading')}
-              </h2>
-              <span className="label-caption" style={{ marginLeft: 'auto' }}>
-                {t('profile.badgesEarned', { count: badges.length })}
-              </span>
-            </div>
-            <div
-              style={{
-                border: '1px solid var(--color-border)',
-                borderRadius: 12,
-                background: 'var(--color-bg-surface-alt)',
-                padding: 'var(--space-xs) var(--space-lg)',
-              }}
-            >
-              {badges.map((badge, index) => (
-                <BadgeRow key={badge.key} badge={badge} last={index === badges.length - 1} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Segmented Praxis / Tasks toggle ── */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 'var(--space-xs)',
-            padding: 'var(--space-xs)',
-            borderRadius: 999,
-            background: 'var(--color-bg-surface-alt)',
-            border: '1px solid var(--color-border)',
-            marginTop: 'var(--space-lg)',
-            marginBottom: 'var(--space-lg)',
-          }}
-        >
-          <SegTab on={segment === 'praxis'} onClick={() => setSegment('praxis')}>
-            {t('profile.mobile.tabPraxis')}
-          </SegTab>
-          <SegTab on={segment === 'tasks'} onClick={() => setSegment('tasks')}>
-            {t('profile.mobile.tabTasks')}
-          </SegTab>
-        </div>
-
-        {/* ── Content — reuse the existing cards, stacked single-column ── */}
-        {segment === 'praxis' ? (
-          submissions.length === 0 ? (
-            <p className="font-body text-muted">{t('profile.praxisEmptyTitle')}</p>
-          ) : (
-            <div className="flex flex-col gap-4 items-stretch">
-              {submissions.map((praxis) => (
-                <div key={praxis.id} style={{ position: 'relative' }}>
-                  {praxis.id === laurelId && <FdlLaurel />}
-                  {/* One fleur per corner — see the desktop branch (#1960). */}
-                  <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />
-                </div>
-              ))}
-            </div>
-          )
-        ) : proposedTasks.length === 0 ? (
-          <p className="font-body text-muted">{t('profile.proposedTasksEmpty')}</p>
-        ) : (
-          /* Stretched, like the praxis list beside it (#2763). This column
-             carried `items-center` because a phone task card drew at its own
-             340px and a stretch column left it flush left against a ragged
-             right (#1964); below 768px the card asks for the whole column now,
-             and centring a box that wants the full line shrinks it back to its
-             content. Both lists fill the tab again. */
-          <div className="flex flex-col gap-4">
-            {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} basePoints={task.point_value} onSignup={onSignup} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-/**
- * One segment of the Praxis/Tasks toggle. The ON half INVERTS — it fills with
- * the page's primary ink and prints the page itself, the same two lines every
- * other inverted pill in the app carries (`.btn-primary`, `.chip-active`,
- * `ScoreToggle`, `ProposeTaskLink`, the Field Desk's own browse switch).
- *
- * IT USED TO INK WITH `--color-text-on-accent` AND THAT WAS #2107. That neutral
- * is `#ffffff` in `:root` alone and never flips, while `--color-text-primary`
- * flips to a warm cream (`#f0e6d0`) in dark — so the dark pill was white on
- * cream at **1.24:1**, the label all but gone, while light read a fine 18.51:1.
- * `--color-bg-page` is the ground that neutral is measured against and flips
- * with it: 16.86:1 light, 15.00:1 dark. Identical defect to the faction page's
- * join button (#1819); the guard at the bottom of `factionContrast.test.ts` is
- * what stops the third copy.
- *
- * The OFF half is unchanged and was never in question: `--color-text-secondary`
- * over the rail's `--color-bg-surface-alt` composite is 7.31:1 / 7.21:1, the
- * AAA pairing `factionContrast.test.ts` already gates as "app alt surface".
- */
-function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 1,
-        fontFamily: 'var(--font-body)',
-        fontSize: 'var(--text-lg)',
-        fontWeight: on ? 700 : 400,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        color: on ? 'var(--color-bg-page)' : 'var(--color-text-secondary)',
-        background: on ? 'var(--color-text-primary)' : 'transparent',
-        border: 'none',
-        borderRadius: 999,
-        padding: 'var(--space-sm) 0',
-        minHeight: 36,
-        cursor: 'pointer',
-      }}
-    >
-      {children}
-    </button>
   )
 }
