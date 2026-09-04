@@ -124,7 +124,7 @@ import CredentialCard from '../../../components/CredentialCard'
 import ImageEditModal from '../../../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import PortraitPicker from '../PortraitPicker'
-import { namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import type { EditCharacterState } from '../useEditCharacter'
 import { TAGLINE_MAX } from '../useCreateCharacter'
@@ -464,7 +464,7 @@ export default function EverymenEditCharacter({ state }: { state: EditCharacterS
               onChange={(e) => setLocation(e.target.value)}
               maxLength={LOCATION_MAX}
               {...namedField(t('character.locationPlaceholder'))}
-              style={{ ...fieldBox, maxWidth: 280 }}
+              style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
             {counter(
               t('editCharacter.basedCount', { count: location.length }),

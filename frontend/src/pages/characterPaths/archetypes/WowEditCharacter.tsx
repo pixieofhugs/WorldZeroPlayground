@@ -127,7 +127,7 @@ import { AVATAR_ASPECT } from '../../../components/imageEdit/imageEditHelpers'
 import { BalloonBunch, Bunting, Zig } from '../../../components/factionMarks/wowOrnament'
 import { WowSpark } from '../../../components/factionMarks/wowMobile'
 import PortraitPicker from '../PortraitPicker'
-import { namedField } from '../characterFields'
+import { LOCATION_FIELD_MIN_WIDTH, namedField } from '../characterFields'
 import { DeleteCharacter, FactionRow } from '../editCharacterSlots'
 import { TAGLINE_MAX } from '../useCreateCharacter'
 import type { EditCharacterState } from '../useEditCharacter'
@@ -464,7 +464,7 @@ export default function WowEditCharacter({ state }: { state: EditCharacterState 
               onChange={(e) => setLocation(e.target.value)}
               maxLength={LOCATION_LIMIT}
               {...namedField(t('character.locationPlaceholder'))}
-              style={{ ...fieldBox, maxWidth: 280 }}
+              style={{ ...fieldBox, maxWidth: LOCATION_FIELD_MIN_WIDTH }}
             />
             {counter(
               t('editCharacter.basedCount', { count: location.length }),
