@@ -81,6 +81,19 @@ A token can repaint anything; it cannot move a node, add a node, or cross a prop
 an archetype file, and nine files stay nine files — `frontend/CLAUDE.md` forbids unifying
 them, and getting smaller by not repeating each other is not the same as merging.
 
+**Amended 2026-09-01 (#2992): the shared chassis is the expected substrate, not the
+exception.** The owner's ruling during `/bug-bot` — *"I do want to, in general, have all
+factions read from the same chassis … The 7 factions which use the chassis all do have
+distinct looks and look very good, while being consistent readable experiences. I want to
+bring NA and Albescent into that"* — settles which half of the sentence above governs.
+Nine files still stay nine files, and each still owns its own tree, dress, ground and
+ornament. What an archetype may **not** do is re-author the sheet, the section and the
+footer its eight siblings already mount out of
+`pages/editPraxis/archetypes/shared.tsx`; a kit that does drifts on information, which is
+what the ruling is about. The forbidden thing is unchanged and is narrower than it reads:
+**one component with a runtime skin table rendering nine trees.** A shared chassis is not
+that. See ADR-0065's scope paragraph, amended the same day and for the same reason.
+
 **3. Behaviour** — a capability or a rule. **Never slug-keyed.** Abilities belong to eras and
 move between factions, so they live in `FactionConfig` in `backend/game_config.py` and are
 read through a service, mirroring ADR-0042. #2660 and #2664 are the live violation history.

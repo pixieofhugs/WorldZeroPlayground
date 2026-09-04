@@ -4502,7 +4502,10 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
     const source = heroSource();
     const group = source.match(/<hgroup[\s\S]*?<\/hgroup>/);
     expect(group, "the wordmark and its expansion are not grouped as a heading and its subhead").not.toBeNull();
-    expect(group![0], "the h1 is not in the group").toContain("<h1");
+    // `<HeroWordmark>` since #2997 — the frame renders the `<h1>` now, and the
+    // hgroup's claim is about the two lines being ONE heading, which the
+    // element's name does not change.
+    expect(group![0], "the wordmark is not in the group").toMatch(/<h1|<HeroWordmark/);
     expect(group![0], "the expansion is not in the group").toContain("identity.snide.fullName");
     const ink = subhead().match(/color: ([^,\n]+),/);
     expect(ink, "the expansion line sets no colour").not.toBeNull();

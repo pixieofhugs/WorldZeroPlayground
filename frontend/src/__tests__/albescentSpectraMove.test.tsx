@@ -88,10 +88,12 @@ const WEARS_THE_MARKER: Record<string, string> = {
   '../pages/factionDetail/archetypes/AlbescentFactionBody.tsx': 'faction body',
   // the pale sheet's one strip — classed here, since the seal is Albescent's own
   '../components/metataskSeal/skins/AlbescentSeal.tsx': 'metatask seal',
-  // the phone branch's photo ring. The mount was written after #2497's sweep and
-  // so was never in it — an eighteenth inline copy of the conic, and the only
-  // one a stylesheet could not reach; #2531 classed it and this wrapper is what
-  // reaches it. The desktop branch draws no na spectrum at all.
+  // The live credential card's portrait ring, at BOTH widths since #2992. It
+  // used to be the phone branch's 104px photo well — one mount on one form
+  // factor — and that branch retired when the na kit went onto the composer
+  // chassis. The conic now lives in the shared `components/CredentialCard.tsx`,
+  // which #2497's sweep never reached because it censused the `Default*`
+  // archetype files and the card is not one of them.
   '../pages/characterPaths/archetypes/AlbescentCreateCharacter.tsx': 'character creation',
   // The directory tile's one hairline. It moved sides in #2632: the tile used to
   // be bespoke vellum markup with no classed spectrum on it at all, and the
@@ -222,6 +224,18 @@ const SPECTRUM_MOUNTS: Record<string, readonly Mount[]> = {
     ['ornament', "`SectionHeading`'s hairline, drawn three times"],
     ['frame', 'the identity band — `.alb-profile-edge` already travels on it'],
     ['ornament', 'the level-bar fill (epic #2496 ruling 3 names this one)'],
+  ],
+  // The side-by-side duel reader (#1084, ADR-0092). Its three are the same
+  // three `DefaultPraxisDetail` has, and for the same reasons — the reader is
+  // that page's anatomy drawn twice. Albescent's row on this surface is a
+  // PASS-THROUGH (brief §6 bars a dress without an owner ruling), so nothing
+  // here travels today; the census classifies the mounts so it cannot start
+  // travelling by accident the day one does.
+  '../pages/duelReader/shared.tsx': [
+    ['ornament', "`defaultSectionHead`'s trailing hairline"],
+    ['ornament', "the winner's rule on a resolved duel (artboard 2e)"],
+    ['frame', 'the proof panel, around the media gallery'],
+    ['ornament', 'the sheet-head band'],
   ],
   '../pages/factionDetail/archetypes/DefaultFactionBody.tsx': [
     ['ornament', "`PLATE_RULE`, the plate's hairline"],

@@ -6,9 +6,10 @@ new here is the only thing standing between an operator and it — a script that
 runs on invocation rather than on ``--yes`` is a different, much worse tool than
 the route it replaces, which at least required an admin session.
 
-So these tests assert the *refusals*: no ``--yes``, no admin, no such character —
-each leaves the database exactly as it found it. Plus the one positive case,
-that a confirmed run writes the same rows ``PUT /admin/era/reset`` did.
+So these tests assert the *refusals*: no ``--yes``, no admin, no such character,
+no era file for the key the live row names — each leaves the database exactly as
+it found it. Plus the positive cases: a confirmed run writes the same rows
+``PUT /admin/era/reset`` did, and leaves the process bound to what it wrote.
 """
 import pytest
 from sqlalchemy import func, select
@@ -21,7 +22,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from scripts.era_reset import reset_era
-from services.era import get_closing_era_id, get_current_era_row_safe
+from services.era import get_current_era_row_safe
 from tests.integration.factories import make_admin
 
 
@@ -111,29 +112,64 @@ async def test_an_unknown_operator_is_refused(
 
 
 @pytest.mark.asyncio
-async def test_a_rollover_into_a_new_config_key_opens_it_and_closes_the_old(
+async def test_a_live_row_naming_no_era_file_is_refused(
     db_session: AsyncSession,
     account: Account,
     character: Character,
     era: Era,
     some_faction: Faction,
 ):
-    """The rollover CURRENT_ERA exists for: the live row carries the *old* key (#2705).
+    """A key nothing registers stops the script rather than steering it (#3013).
 
-    Every other test here rolls Era N into Era N — the ``era`` fixture builds its
-    row from ``CURRENT_ERA.config_key``, so the keys always matched and the bug
-    hid. Re-keying the seeded row to the era it succeeded is the same shape as
-    flipping ``CURRENT_ERA`` forward, without re-binding the constant in two
-    modules: what matters is that the live row's key is not the configured one.
+    This test used to assert the opposite, and it was right to at the time: under
+    the pre-#827 procedure the live row legitimately carried the *previous* era's
+    key during the window between an owner's code flip and the hand rollover, and
+    rolling forward into the compile-time era was the whole job (#2705).
+
+    ADR-0091 abolishes that window — the row **chooses** the ruleset, so the row
+    and the live era agree by construction, and this script re-opens whatever the
+    row names. The one state left is a row whose ``config_key`` no era file
+    registers: a deleted era file, or a row from a newer build. The resolver
+    ``services.era.rebind_live_era`` falls back to the compile-time era there
+    because start-up must survive it. A rollover must not: falling back would
+    turn "re-open the live era" into "roll the game back to Era 1", silently, on
+    the operation with no undo.
     """
     await make_admin(db_session, account, commit=False)
     era.config_key = "era_0_previous"
     await db_session.commit()
+    eras_before = await _era_count(db_session)
 
-    # No 500 in the deploy window: the live era is the latest row, whatever key
-    # it carries. This is the read every character-stats path makes.
+    # The live era is still the latest row, whatever key it carries — the read
+    # every character-stats path makes, and it must not 500 (#2705).
     live = await get_current_era_row_safe(db_session)
     assert live is not None and live.id == era.id
+
+    exit_code = await reset_era(db_session, character.username, confirmed=True)
+
+    assert exit_code == 1
+    assert await _era_count(db_session) == eras_before
+    still_live = await get_current_era_row_safe(db_session)
+    assert still_live is not None and still_live.id == era.id
+
+
+@pytest.mark.asyncio
+async def test_a_confirmed_run_ends_bound_to_what_it_wrote(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    some_faction: Faction,
+):
+    """The script's half of ADR-0091's binding rule.
+
+    It re-opens the era the live row names, so the process must end on exactly
+    that — bound after the commit, not before it, through the same
+    ``commit_and_bind_live_era`` the route uses.
+    """
+    import game_config
+
+    await make_admin(db_session, account, commit=False)
 
     exit_code = await reset_era(db_session, character.username, confirmed=True)
 
@@ -141,17 +177,4 @@ async def test_a_rollover_into_a_new_config_key_opens_it_and_closes_the_old(
     new_era = (
         await db_session.execute(select(Era).order_by(Era.id.desc()).limit(1))
     ).scalar_one()
-    assert new_era.id != era.id
-    assert new_era.config_key == CURRENT_ERA.config_key
-    assert await get_closing_era_id(new_era, db_session) == era.id
-
-    # apply_era_reset ran against the era it opened.
-    stats = (
-        await db_session.execute(
-            select(CharacterStats).where(
-                CharacterStats.character_id == character.id,
-                CharacterStats.era_id == new_era.id,
-            )
-        )
-    ).scalar_one()
-    assert stats.era_id == new_era.id
+    assert game_config.CURRENT_ERA.config_key == new_era.config_key

@@ -104,6 +104,7 @@ const AlbescentComment = lazyArchetype(() => import('../components/comments/voic
 const AlbescentCreateCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentCreateCharacter'))
 const AlbescentEditCharacter = lazyArchetype(() => import('../pages/characterPaths/archetypes/AlbescentEditCharacter'))
 const AlbescentDuelSealConfirm = lazyArchetype(() => import('../components/duel/AlbescentDuelSealConfirm'))
+const AlbescentDuelReader = lazyArchetype(() => import('../pages/duelReader/archetypes/AlbescentDuelReader'))
 // #2538 — the propose-task chassis's first registration. Lazy like every
 // wrapper above: it renders the whole na page, which is weight the initial load
 // does not need.
@@ -409,20 +410,28 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
 
   /**
    * RE-CUT — the one of the four that changes pixels. na draws a single spectrum
-   * mark on this page, the rainbow ring around the phone branch's photo well,
-   * and this wrapper sets it TURNING: the mount now wears `.spectrum-dial`
+   * mark on this page, the rainbow ring around the live credential card's
+   * portrait, and this wrapper sets it TURNING: the mount wears `.spectrum-dial`
    * (#2497's class, which this file predated) and `.alb-moves` is the dresser it
    * was minted for. No markup added, no colour, no copy, no new keyframe — the
-   * mark is na's already. The desktop branch carries no na spectrum and is
-   * untouched; one row covers both widths because the archetype reads
+   * mark is na's already.
+   *
+   * THE MOUNT MOVED IN #2992. It was the phone branch's 104px photo well, so the
+   * desktop plate carried no na spectrum and this row only reached one width.
+   * That branch retired when the na kit went onto the composer chassis, and the
+   * credential card sits first in the sheet at both widths — so the ring turns at
+   * both now. One row still covers both, because the archetype reads
    * `useFormFactor()` itself.
    *
    * IT REVERSES ONE LINE OF `surfaceDispatch.test.ts`'s createCharacter note —
    * "Molly's ruling is that it gets no archetype anyway". That ruling was about a
    * SKIN, and it still holds: this is a wrapper over the na kit, which is what
-   * that note says Albescent renders. The dispatch slug here is the pick in
-   * progress, so the ring starts turning as the calling is chosen and stops the
-   * moment it is cleared.
+   * that note says Albescent renders. That note carries the #2992 correction
+   * above as well, so the two say the same thing about which mark is re-cut;
+   * they are the only two prose records of it and they move together.
+   *
+   * The dispatch slug here is the pick in progress, so the ring starts turning
+   * as the calling is chosen and stops the moment it is cleared.
    */
   createCharacter: () => AlbescentCreateCharacter,
 
@@ -466,4 +475,19 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * already made). ONE responsive component, both form factors (#1313).
    */
   duelSeal: () => AlbescentDuelSealConfirm,
+
+  /**
+   * PASS-THROUGH, and the first registration of the side-by-side duel reader
+   * (#1084, ADR-0092). It renders `DefaultDuelReader` and changes nothing.
+   *
+   * `.design-sync/BRIEF-duel-surfaces.md` §6 forbids an Albescent dress on any
+   * duel surface without an owner ruling first, and this surface has none. The
+   * `duelSeal` row's reason holds here unchanged: the reader is dressed by the
+   * TASK's faction, so this row is reached by anyone reading a duel fought on
+   * an Albescent-owned task — a non-member included, where a tell is an
+   * un-hiding rather than a reveal (ADR-0027). The one na mark on the page is
+   * the sheet's spectrum BAND, and a band keeps its linear ramp (#1127), so
+   * `.alb-moves` would have nothing to reach even with a ruling.
+   */
+  duelReader: () => AlbescentDuelReader,
 }

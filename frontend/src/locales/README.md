@@ -97,11 +97,18 @@ Create Character and Edit Character are the same form twice, and their copy used
 to disagree on every shared field — `Chosen name` against `Display name`, a
 placeholder in the third person against one in the second. **`forms:character.*`
 is the one block both pages read**, so a reword lands on both at once
-(#2793). It holds the five field words plus the three that were the same
-sentence twice: `portrait` (was `createCharacter.portraitLabel` and
-`editCharacter.portraitHeading`) and the photo-well caption pair
-`addPhoto` / `changePhoto`. `Cancel` went further out still, to
-`common:actions.cancel`, since it is nobody's field.
+(#2793). It holds the five field words plus `portrait`, which was the same
+sentence twice (`createCharacter.portraitLabel` and
+`editCharacter.portraitHeading`), and `changePhoto`, the photo-well caption.
+`Cancel` went further out still, to `common:actions.cancel`, since it is
+nobody's field.
+
+`changePhoto` USED TO BE HALF OF A PAIR. `addPhoto` was the empty-well caption
+beside it, and both wells were phone-only. #2992 put Create Character on the
+composer chassis, which retired its phone branch and with it the only reader
+`addPhoto` ever had — so the key is deleted rather than kept warm. The survivor
+is Edit Character's well, which always has a portrait to change; #2991 is the
+lane that decides whether it keeps one.
 
 Two things about it are decisions rather than tidying, and are worth knowing
 before you reword:

@@ -140,10 +140,19 @@ const BESPOKE: Record<string, string[]> = {
   // registration is a WRAPPER rather than a skin (ADR-0027) and a wrapper over
   // the na kit is the na kit. That ruling is intact and #2531 appended the slug
   // anyway: `AlbescentCreateCharacter` is exactly that wrapper — it renders
-  // `DefaultCreateCharacter` whole and re-cuts the one na mark on the page, the
-  // phone's rainbow photo ring, which starts turning. What the empty row could
-  // not say is WHICH of "na draws nothing to grab" and "nobody got to it" was
-  // meant, and it turned out to be neither.
+  // `DefaultCreateCharacter` whole and re-cuts the one na mark on the page,
+  // which starts turning. What the empty row could not say is WHICH of "na
+  // draws nothing to grab" and "nobody got to it" was meant, and it turned out
+  // to be neither.
+  //
+  // WHICH MARK THAT IS MOVED IN #2992, and the row did not. It was the phone
+  // branch's 104px rainbow photo ring — one mount, on one form factor, so the
+  // desktop plate carried no na spectrum and the re-cut reached one width. That
+  // branch retired when the na kit went onto the composer chassis: the delta is
+  // the live credential card's portrait ring now (`components/CredentialCard`,
+  // classed `.spectrum-dial`), it is first in the sheet at BOTH widths, and so
+  // Albescent's ring turns at both. One row still covers both, because the
+  // archetype reads `useFormFactor()` itself.
   createCharacter: ['ephemerists', 'snide', 'wow', 'ua', 'everymen', 'coven', 'singularity', 'albescent'],
   // `factionBody` is what a phone renders too (ADR-0078): faction detail is one
   // responsive component per faction, so this one row covers both widths.
@@ -155,6 +164,23 @@ const BESPOKE: Record<string, string[]> = {
   // `praxisCard` is what a phone renders too (ADR-0067): the praxis card is one
   // responsive component per faction, and all eight slugs register it.
   praxisCard: [...CORE_SIX, 'wow', 'albescent'],
+  // THE `duelReader` ROW IS NEW (#1084, ADR-0092) and it holds ONE slug, which
+  // is the whole state of the surface rather than an oversight. The reader is
+  // a chassis with a role map spread on its root, so every faction already
+  // wears its own ground there with no row at all — a registration adds DRESS,
+  // and no faction has a duel-reader design yet. This is the shape
+  // `praxisDetail` was in after #1089 and grew out of one skin at a time.
+  //
+  // `albescent` is here for the reason every Albescent row is: it must claim
+  // every key in `SURFACE_KEYS` so the map stops answering by silence (#2531).
+  // Its row is a PASS-THROUGH — brief §6 forbids an Albescent dress on any duel
+  // surface without an owner ruling, and there is none for this one.
+  //
+  // Note what a one-slug row buys the derived bar below: `duelReader` is NOT in
+  // `REQUIRED`, because the five reference factions do not all skin it, so
+  // Coven and WOW are not held to a design nobody has drawn. Append your slug
+  // when a design lands; the bar raises itself at five.
+  duelReader: ['albescent'],
 }
 
 for (const [surface, bespoke] of Object.entries(BESPOKE)) {

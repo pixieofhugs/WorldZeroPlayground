@@ -10,7 +10,7 @@
  * declares nothing renders correctly everywhere, including on surfaces that do
  * not exist yet.
  *
- * The exception is `./default.ts`, which IS na's row and must claim all twenty-two.
+ * The exception is `./default.ts`, which IS na's row and must claim all twenty-three.
  * Nothing is behind it: a dispatcher reads `map[resolveSlug(map, slug)]` and
  * names no `Default*` of its own, so an unclaimed na surface renders NOTHING
  * rather than falling further back.
@@ -62,6 +62,7 @@ import type { EditCharacterState } from '../pages/characterPaths/useEditCharacte
 import type { ProposeTaskState } from '../pages/proposeTask/useProposeTask'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
+import type { DuelReaderState } from '../pages/duelReader/useDuelReader'
 
 /**
  * A deferred reference to a component. See the thunk note above: manifest
@@ -183,16 +184,39 @@ export interface FactionManifest {
   readonly proposeTask?: Lazy<Stateful<ProposeTaskState>>
 
   // ─── Duel surfaces ─────────────────────────────────────────────────────────
-  // The duel SEAL is the only dispatched duel surface. ONE responsive component
-  // per faction, both form factors (#1313): the skins hang their interior in
-  // `components/duel/DuelSealSheet`, which is the single place the seal reads
-  // `useFormFactor()`.
+  // TWO of them are dispatched now, and this comment used to say one.
   //
-  // The duel ITSELF is not dispatched. It is a card inside the praxis-detail
-  // archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction dresses it by
-  // dressing its `praxisDetail`: the card takes `style`, `heading` and `ink`
-  // (#1153), which is every part of it an archetype can reach.
+  // The duel SEAL. ONE responsive component per faction, both form factors
+  // (#1313): the skins hang their interior in `components/duel/DuelSealSheet`,
+  // which is the single place the seal reads `useFormFactor()`.
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
+
+  /**
+   * The settled-duel SIDE-BY-SIDE READER (#1084, ADR-0092) — a page for the
+   * duel, where both entries are drawn in one frame and neither column is the
+   * host's. ONE responsive component per faction: the chassis
+   * (`pages/duelReader/shared.tsx`) owns the only `useFormFactor()` call and a
+   * skin passes dress, never a breakpoint.
+   *
+   * THE SLUG IS THE TASK'S FACTION, not either duellist's. Both duellists share
+   * one task, so this is what the one-ground ruling (2026-08-27) — *"the ground
+   * of the praxis whose page hosts it"* — resolves to here, and it is the same
+   * answer whichever side the reader arrived from. Each duellist's own faction
+   * rides on their `FactionSigil` and nowhere else.
+   *
+   * An archetype that overrides nothing still wears its faction: the chassis
+   * spreads `factionRoleVars(slug, 'duel-reader')` on the sheet, and since
+   * ADR-0089 that map answers for every slug. So a row here is dress ON a page
+   * that is already the right colour, and a slug still absent is a design not
+   * yet drawn — the shape `praxisDetail` grew back in after #1089.
+   */
+  readonly duelReader?: Lazy<Stateful<DuelReaderState>>
+
+  // The duel CARD is still not dispatched. It is a card inside the
+  // praxis-detail archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction
+  // dresses it by dressing its `praxisDetail`: the card takes `style`,
+  // `heading` and `ink` (#1153), which is every part of it an archetype can
+  // reach.
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
   // The field desk is the ONLY form-factor-dispatched surface. Everywhere else
@@ -246,6 +270,7 @@ export const SURFACE_KEYS = [
   'editCharacter',
   'proposeTask',
   'duelSeal',
+  'duelReader',
   'mobileFieldDesk',
 ] as const satisfies readonly FactionSurface[]
 
