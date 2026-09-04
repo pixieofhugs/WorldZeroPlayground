@@ -7,10 +7,11 @@ import pytest
 def restore_live_era():
     """Put the live era back after every test (ADR-0091, #827).
 
-    ``services.era.apply_era_reset`` rebinds the live ruleset in place, which is
-    the whole point of it — but the live era is one process-wide object, so a
-    test that rolls into Era 2 would otherwise hand Era 2 to every test after it
-    in the same session, in file order, silently.
+    A rollover rebinds the live ruleset in place (``services.era.
+    commit_and_bind_live_era``), which is the whole point of it — but the live
+    era is one process-wide object, so a test that rolls into Era 2 would
+    otherwise hand Era 2 to every test after it in the same session, in file
+    order, silently.
 
     Snapshots the *object* rather than the name because the name never moves;
     see ``game_config.bind_live_era``. The snapshot is a detached copy made the
