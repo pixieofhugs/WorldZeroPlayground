@@ -207,28 +207,46 @@ describe('canSubmitName — the shared submit gate', () => {
   })
 })
 
-describe('DefaultCreateCharacter mobile skin', () => {
+/**
+ * THE PHONE BRANCH IS GONE (#2992). `DefaultCreateCharacter` mounts the composer
+ * chassis as one responsive tree, so what used to be checked here — a sticky
+ * `Create character` bar, a 104px photo ring with its own caption, a `Step 1 of
+ * 2` framing — no longer exists at any width, and its copy keys retired with it.
+ *
+ * What is still worth asserting on a PHONE specifically is the half the retired
+ * branch got wrong: the same fields at both widths, the born-unaffiliated
+ * explainer that only the phone used to carry, and the live credential preview
+ * the wide branch used to drop below the fold. The field SET and the exits are
+ * `createCharacterStructure.test.tsx`'s, across all nine kits; these are the na
+ * kit's own three slots.
+ */
+describe('DefaultCreateCharacter on a phone', () => {
   beforeEach(() => { factor.value = 'mobile' })
   afterEach(() => { factor.value = 'desktop' })
 
-  it('renders the name field and a sticky Create action', () => {
+  it('renders the name field, the commit and the born-unaffiliated explainer', () => {
     const { html, text } = render(<DefaultCreateCharacter state={createState({})} />)
     expect(html, 'name input').toContain('value="Molly"')
-    expect(text, 'sticky create').toContain('Create character')
+    // The one commit label, at both widths — the phone's second one went with
+    // the sticky bar.
+    expect(text, 'the commit').toContain('step out')
     expect(text, 'born-unaffiliated explainer').toContain('Unaffiliated')
   })
 
-  // #1149: the ring's accessible name used to fall through to the "+" glyph or,
-  // once a portrait existed, to its alt text. It now matches the caption drawn
-  // right beneath it, in both states.
-  it('names the photo ring with its own caption', () => {
-    const empty = render(<DefaultCreateCharacter state={createState({})} />)
-    expect(empty.html, 'empty ring').toContain('aria-label="Add photo"')
-    expect(empty.text, 'and the caption agrees').toContain('Add photo')
+  it('carries the live credential preview, which the wide branch used to drop', () => {
+    // Defect 2 of #2992, from the side a phone sees it: the phone column had no
+    // preview at all. The card is inside the sheet now, at both widths.
+    const { html, text } = render(<DefaultCreateCharacter state={createState({})} />)
+    expect(text, "the preview shows the name being typed").toContain('Molly')
+    expect(html, 'the portrait ring is the upload affordance').toContain('aria-label="Click to upload a photo"')
+  })
 
-    const picked = render(<DefaultCreateCharacter state={createState({ avatarPreview: 'blob:p-1' })} />)
-    expect(picked.html, 'ring holding a portrait').toContain('aria-label="Change photo"')
-    expect(picked.text, 'and the caption agrees').toContain('Change photo')
+  // #1149: the portrait control names itself rather than falling through to a
+  // glyph or to an alt text. `PortraitPicker` is that control at both widths now.
+  it('names the portrait control, and reports what is chosen', () => {
+    const { text } = render(<DefaultCreateCharacter state={createState({})} />)
+    expect(text, 'the picker button').toContain('Choose a photo')
+    expect(text, 'and the status line beside it').toContain('No photo chosen yet')
   })
 })
 

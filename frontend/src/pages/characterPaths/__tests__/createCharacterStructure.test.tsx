@@ -61,7 +61,11 @@ const CASES = WIDTHS.flatMap((width) => ARCHETYPES.map((slug) => [slug || 'na', 
  * boxes are the words INSIDE them since #2793, so the expectation and the render
  * come from one string apiece and a reword cannot make this file lie.
  */
-const FIELD_ORDER = ['character.namePlaceholder', 'character.bioPlaceholder', 'character.taglinePlaceholder']
+const FIELD_ORDER = [
+  'character.namePlaceholder',
+  'character.bioPlaceholder',
+  'character.taglinePlaceholder',
+] as const
 
 const forms = i18n.getFixedT(null, 'forms')
 const common = i18n.getFixedT(null, 'common')

@@ -1037,19 +1037,25 @@ export default [
   },
   {
     /**
-     * THE TWO ARCHETYPES WHOSE GROUND IS THE APP'S OWN PAGE (#2346, #2537).
+     * THE ONE ARCHETYPE WHOSE GROUND IS THE APP'S OWN PAGE (#2346, #2537, #2992).
      *
-     * A deliberate exemption and NOT a legacy entry — nothing here is going to
-     * migrate, so a shrinking list would be lying about it.
+     * A deliberate exemption and NOT a legacy entry — it is an argument about a
+     * GROUND, so it lives or dies with the ground rather than shrinking on a
+     * schedule.
+     *
+     * IT WAS TWO FILES UNTIL #2992. `DefaultCreateCharacter` moved onto
+     * `ComposerSheet`, where the stock is `--faction-default-card-bg` under the
+     * aurora and the na composer tokens are the measured pair — so its row came
+     * off, and it reads no global tier at all now. The claim below is about the
+     * file that still stands on the page: the `na` EDIT-character kit.
      *
      * The tier arm bans the global `--color-text-*` family on a faction sheet,
      * and its message gives the measurements that justify it: 2.19:1 on
      * S.N.I.D.E., 2.27 on Singularity, 2.01 on the Ephemerists plate. Every one
-     * of those is a FACTION SHEET. `DefaultCreateCharacter` is the `na`
-     * archetype of a page that HAS no sheet: unlike `DefaultEditPraxis`, which
-     * draws on `--faction-default-card-bg`, character creation is bare app page,
-     * so what is behind its type is `--color-bg-page` with the `.na-backdrop`
-     * watercolour over it.
+     * of those is a FACTION SHEET. `DefaultEditCharacter` is the `na` archetype
+     * of a page that HAS no sheet: unlike `DefaultEditPraxis`, which draws on
+     * `--faction-default-card-bg`, this form is bare app page, so what is behind
+     * its type is `--color-bg-page` with the `.na-backdrop` watercolour over it.
      *
      * Measured on that composite in light, the swap the rule would force is the
      * REGRESSION and the neutral is the passing value:
@@ -1070,24 +1076,22 @@ export default [
      * directory names, and one na archetype landed inside it.
      *
      * THE EXEMPTION IS PAIRED, the way `roomPresence.ts`'s is. Its other half is
-     * `src/pages/characterPaths/__tests__/createCharacterContrast.test.ts`, which
-     * resolves these inks over the washed page ground in both themes. Do not
-     * delete that file while this entry exists: "the rule cannot judge this node"
-     * is never "this node needs no judging", and between them they are the whole
-     * guard.
+     * `src/pages/characterPaths/__tests__/createCharacterContrast.test.ts`, whose
+     * `THE WASHED PAGE GROUND` block resolves these inks over the washed page in
+     * both themes. Do not delete that file while this entry exists: "the rule
+     * cannot judge this node" is never "this node needs no judging", and between
+     * them they are the whole guard. (That file's second block measures the na
+     * CREATE kit on the sheet ground it moved to, which is what let this list
+     * lose a row without losing a measurement.)
      *
-     * #2537 ADDED THE SECOND FILE AND SHRANK THE LEGACY LIST BY ONE.
-     * `DefaultEditCharacter` is the same page family — create and edit are one
-     * character, one faction, one form, and the edit half drew on this ground
-     * from `mobileArchetypes/` where it sat on `.eslint-legacy-faction-ink.txt`
-     * with eleven un-argued hits. Folding it into one responsive archetype moved
-     * it under `archetypes/`, so it needed an answer rather than a grandfather
-     * clause: it reads the SAME three neutrals on the SAME washed page ground,
-     * which the paired test above already resolves. A measured exemption for a
+     * #2537 PUT `DefaultEditCharacter` HERE AND SHRANK THE LEGACY LIST BY ONE.
+     * It drew on this ground from `mobileArchetypes/`, where it sat on
+     * `.eslint-legacy-faction-ink.txt` with eleven un-argued hits; folding it
+     * into one responsive archetype moved it under `archetypes/`, so it needed
+     * an answer rather than a grandfather clause. A measured exemption for a
      * measured file, and one fewer line on a ratchet that only shrinks.
      */
     files: [
-      'src/pages/characterPaths/archetypes/DefaultCreateCharacter.tsx',
       'src/pages/characterPaths/archetypes/DefaultEditCharacter.tsx',
     ],
     rules: {
