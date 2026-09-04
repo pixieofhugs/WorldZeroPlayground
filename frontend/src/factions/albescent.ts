@@ -432,12 +432,19 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
   createCharacter: () => AlbescentCreateCharacter,
 
   /**
-   * RE-CUT, and the create row's twin (#2537). na draws the conic spectrum at
-   * two mounts on this page — the phone column's photo ring and the desktop
-   * portrait ring — and both wear `.spectrum-dial` now, so `.alb-moves` sets
-   * both turning. The desktop hero BAND keeps its linear ramp: a band is not a
-   * dial (#1127). No markup, no colour, no copy; strip the class and the page is
+   * RE-CUT, and the create row's twin (#2537). na draws the conic spectrum on
+   * this page at the live credential card's portrait ring, which wears
+   * `.spectrum-dial` in `components/CredentialCard.tsx` — so `.alb-moves` sets
+   * it turning. No markup, no colour, no copy; strip the class and the page is
    * na's byte for byte.
+   *
+   * THE MOUNTS COLLAPSED TO ONE IN #2991, exactly as the create row's did in
+   * #2992. There were two — the phone column's 96px photo well and the desktop
+   * plate's 82px portrait ring, plus a hero BAND that kept its linear ramp
+   * because a band is not a dial (#1127). Both branches and the band retired
+   * when the na kit went onto the composer chassis, and the credential card sits
+   * in the sheet at both widths. One row still covers both, because the
+   * archetype reads `useFormFactor()` itself.
    *
    * The slug here is the EDITED CHARACTER'S, not the viewer's — an Albescent
    * life edits itself in a turning frame, and nobody else's page moves.

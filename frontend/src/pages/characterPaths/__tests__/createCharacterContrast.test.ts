@@ -4,22 +4,35 @@
  *
  * ## What moved, and what did not
  *
- * `DefaultCreateCharacter` stood on bare app page under the `.na-backdrop` wash
- * until #2992 put it on `ComposerSheet`. Its ground is now
- * `--faction-default-card-bg` under the drifting aurora, and its inks moved with
- * it — so the first block below is no longer about that file. It is about
- * `DefaultEditCharacter`, which is the na kit's OTHER half and still stands on
- * the page. The second block is the create page on its new stock.
+ * Both na character forms stood on bare app page under the `.na-backdrop` wash
+ * until the chassis pass: #2992 put `DefaultCreateCharacter` on `ComposerSheet`
+ * and #2991 put `DefaultEditCharacter` there beside it. Their ground is
+ * `--faction-default-card-bg` under the drifting aurora now, and their inks
+ * moved with it — the second block at the foot of this file is that ground, and
+ * `pages/editPraxis/archetypes/__tests__/composerGround.test.ts` owns the two
+ * quiet rows both kits share on it.
  *
- * THE FIRST BLOCK IS ONE HALF OF A PAIR. The other is the `eslint.config.js`
- * block exempting `archetypes/DefaultEditCharacter.tsx` from
- * `local/no-global-ink-on-faction-surface`. That rule reads a DIRECTORY NAME and
- * cannot see a ground, so on that one archetype it would force a swap that makes
- * the page worse; the exemption says so and this file proves it. Deleting either
- * one leaves the other lying — "the rule cannot judge this node" is never "this
- * node needs no judging". #2992 took `DefaultCreateCharacter` off that list, and
- * the row below it deleted is the one this file's second block replaces: no
- * measurement was dropped, it was re-taken on the ground the type moved to.
+ * SO WHO IS THE FIRST BLOCK FOR? `editCharacterSlots`'s UNDRESSED DEFAULTS.
+ * That file draws the faction row's label, its ink and the confirm prompt in
+ * `--color-text-secondary`, its chevron and help line in `-tertiary`, the
+ * confirm's cancel key in `-primary`, and its destructive ink in
+ * `--faction-default-card-alarm` — the same four this block resolves — and its
+ * own ponytail names the ground they were measured on: *"the alarm ink is
+ * measured on the na page's washed ground only"*. Every kit that lands those
+ * slots on its own sheet hands them a dress and owes its own measurement
+ * (`everymenEditCharacterContrast.test.ts` is one; the na kit's dress is in
+ * `DefaultEditCharacter` itself since #2991). This block is the BASELINE those
+ * departures are measured against, and what a ninth kit falls back to on the day
+ * it passes no dress at all.
+ *
+ * THE ESLINT EXEMPTION THIS BLOCK WAS PAIRED WITH IS GONE, and that is the same
+ * fact rather than a second one. `local/no-global-ink-on-faction-surface` reads
+ * a DIRECTORY NAME and could not see this ground, so it was switched off for the
+ * two `na` archetypes while they stood on it; both moved, neither reads a global
+ * tier now, and #2991 deleted the block. NO MEASUREMENT WENT WITH IT — the rows
+ * are still here, and the comment left in `eslint.config.js` says so and points
+ * back. "The rule cannot judge this node" is never "this node needs no judging",
+ * and neither is "the rule has no node left to judge".
  *
  * WHY IT MEASURES THE COMPOSITE. `--color-bg-page` is not what is behind this
  * type. `.na-backdrop` paints that colour and then washes five radial gradients
@@ -79,27 +92,30 @@ const WASH: Record<Theme, string[]> = {
 }
 
 /**
- * Every ink the na EDIT-character archetype puts straight on the page, and what
- * draws it.
+ * Every ink `editCharacterSlots` puts straight on the app page when the
+ * archetype mounting it passes no dress, and what draws it.
  *
- * The three neutral tiers, unchanged since #2537 — `DefaultEditCharacter` reads
- * all three and is the file the eslint exemption now names alone. The create
- * half read the same three on this same ground until #2992 moved it to a sheet;
- * the rows did not change, only which file they are the proof for.
+ * The three neutral tiers plus the alarm, unchanged since #2537. What changed
+ * twice is which file they are the proof FOR: the na CREATE kit's until #2992,
+ * the na EDIT kit's until #2991, and the shared slots' defaults now that both
+ * kits are on the composer sheet. The rows themselves did not move, so nothing
+ * was re-derived to keep them passing.
  */
 const PAGE_INKS: Array<{ what: string; token: string }> = [
-  { what: 'heading, name field, the fields and the save bar', token: '--color-text-primary' },
-  // The middle tier is measured even though the archetype reads only the outer
-  // two, and that is not a stale row: the eslint block's own justification table
-  // quotes 6.06 for it, and `--label-ink` — which `PortraitPicker`'s status line
-  // reads on this page — is unset into this family. A number cited in prose that
-  // nothing re-runs is the drift this file exists to stop.
-  { what: 'the middle neutral tier the exemption table cites', token: '--color-text-secondary' },
-  { what: 'character counters, @handle and the faction help', token: '--color-text-tertiary' },
-  // NOT `--color-danger`, which is what this page used to draw and which fails
-  // here at 3.42:1 in light. See the archetype's own note: the functional red
-  // inside a faction frame takes that faction's card alarm (#1302).
-  { what: 'the error box and a counter at its cap', token: '--faction-default-card-alarm' },
+  { what: "the confirm panel's cancel key", token: '--color-text-primary' },
+  // The middle tier is the slots' busiest, and it is measured here rather than
+  // read off `--label-ink`: that seam is unset into this family at root, so the
+  // label, the row's ink and the confirm prompt are all one tier off it and
+  // would MOVE on every ground. `editCharacterSlots`'s header states that split
+  // in as many words; a number cited in prose that nothing re-runs is the drift
+  // this file exists to stop.
+  { what: 'the faction row label, its ink and the confirm prompt', token: '--color-text-secondary' },
+  { what: "the row's chevron and the faction help line", token: '--color-text-tertiary' },
+  // NOT `--color-danger`, which is what this slot used to draw and which fails
+  // here at 3.42:1 in light. See `editCharacterSlots`'s own note: the functional
+  // red inside a faction frame takes that faction's card alarm (#1302), and for
+  // an undressed mount `factionCssVar(slug, 'card-alarm')` resolves to this one.
+  { what: "the delete outline's hairline and label", token: '--faction-default-card-alarm' },
 ]
 
 function resolve(token: string, theme: Theme): Rgba {
@@ -115,7 +131,7 @@ function washedGround(theme: Theme, stop: string): Rgba {
   return compositeOver(parseColor(stop)!, resolve('--color-bg-page', theme))
 }
 
-describe('the na EDIT-character page clears AA on its washed ground', () => {
+describe('the shared edit slots clear AA on the washed page, undressed', () => {
   for (const theme of BOTH_THEMES) {
     for (const { what, token } of PAGE_INKS) {
       it(`${what} — ${theme}`, () => {
