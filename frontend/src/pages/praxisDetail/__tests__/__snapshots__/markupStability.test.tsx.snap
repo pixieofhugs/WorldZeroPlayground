@@ -13,27 +13,7 @@ wow → 772f2afbdb85ecc2"
 `;
 
 exports[`praxis-detail markup is byte-stable across the registry > every archetype × state × form factor hashes to its recorded markup 1`] = `
-"__default__ · base · desktop → efa49e20f90b21e8
-__default__ · base · mobile → 8b776b5d6a8a1aae
-__default__ · crowned · desktop → 23b751cfa64b5b90
-__default__ · crowned · mobile → 3a90cfcd88ff27b8
-__default__ · failed · desktop → aaf9f8479aea7531
-__default__ · failed · mobile → cac313b154340205
-__default__ · failedNoteless · desktop → 713b93dac4bbcfec
-__default__ · failedNoteless · mobile → 5370f2a19a1e1712
-__default__ · flagged · desktop → 3a1d3bdab8c9a9e8
-__default__ · flagged · mobile → d3d584adae104b5e
-__default__ · sealed · desktop → 04c93633d5902b07
-__default__ · sealed · mobile → 53be29cfb83e6d0d
-__default__ · multiplier · desktop → aaed862c4118683d
-__default__ · multiplier · mobile → b06206b825a4a4ca
-__default__ · owner · desktop → b61830bf3ecd7185
-__default__ · owner · mobile → 1a7d9b5967461094
-__default__ · steward · desktop → 513248df90f20de6
-__default__ · steward · mobile → 9de2bc73f57e42aa
-__default__ · duel · desktop → 897ef5720a9b5034
-__default__ · duel · mobile → b731c0ca94834815
-albescent · base · desktop → eb7de138279930a1
+"albescent · base · desktop → eb7de138279930a1
 albescent · base · mobile → 0bf6147ee7e199fc
 albescent · crowned · desktop → 5e53accc528c986e
 albescent · crowned · mobile → 3db0633b3d68ae95

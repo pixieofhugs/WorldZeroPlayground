@@ -20,22 +20,39 @@
  * ## Reading a failure
  *
  * A changed hash is not automatically a bug — it is a changed page, which is a
- * thing you are allowed to do deliberately. The rule is only that you may not
- * do it ACCIDENTALLY. If you meant it:
+ * thing you are allowed to do deliberately. The rule is that you may not do it
+ * ACCIDENTALLY, and that re-recording is the LAST step rather than the first.
  *
- *     npx vitest run src/pages/praxisDetail/__tests__/markupStability.test.ts -u
+ * **Explain the change before you take it.** A hash says something moved; it
+ * cannot say what, and `-u` will happily bank a regression as cheerfully as an
+ * improvement. So: diff the raw markup for one failing row, find the subtree
+ * that moved, and say in the PR — per subtree — what moved and why it was
+ * meant to. `capture()` below returns the markup for exactly that, and a
+ * `writeFileSync` on two sides of a change is a two-minute answer to a
+ * question a hash cannot answer at all.
+ *
+ * That is not ceremony. This gate has already caught itself once: the first
+ * baseline was recorded in the capturer's local timezone and CI read 200
+ * changed rows, of which the true count was one `<div>`. Re-recording would
+ * have "fixed" it and hidden the defect in the harness. When every row moves
+ * at once, suspect the harness; when a few move, suspect the change.
+ *
+ * Only then:
+ *
+ *     npx vitest run src/pages/praxisDetail/__tests__/markupStability.test.tsx -u
  *
  * and the review sees a changed hash on a named archetype in a named state,
- * which is the artefact this file exists to produce. If you did not mean it,
- * the row names the archetype and the state, and `capture()` below will print
- * the markup for both sides when you want to look.
+ * next to a written account of the subtree it belongs to.
  *
  * ## Why a hash and not the markup
  *
- * One page is ~30 KB of markup and there are 180 renders here; the golden files
- * would be ~5 MB and no human would ever read a line of them. A hash is
- * unreadable either way, so it may as well be short — and the diff that matters
- * is "did this change", not "how".
+ * One page is ~30 KB of markup and the walk below renders every registered
+ * archetype × every state × both form factors — 180 renders as this is
+ * written, and the number is nine registered archetypes times ten states times
+ * two, not a constant anyone has to maintain. The golden files would be ~5 MB
+ * and no human would ever read a line of them. A hash is unreadable either
+ * way, so it may as well be short — and the first question is always "did this
+ * change", with "how" answered by re-rendering the one row that moved.
  *
  * ## Why the registry rather than a list
  *
@@ -147,15 +164,30 @@ const STATES: Record<string, () => PraxisDetailState> = {
 
 const FORM_FACTORS = ['desktop', 'mobile'] as const
 
-/** Default is a reachable renderable too — guarded alongside the registry. */
+/**
+ * The archetypes a dispatcher can actually reach, each one ONCE.
+ *
+ * This used to append `__default__: DefaultPraxisDetail` to the registry, the
+ * way `archetypeSlots.test.tsx` does. For a slot-PRESENCE guard that is cheap
+ * belt-and-braces; for a byte-identity gate it was 20 of 200 rows restating 20
+ * others, because `factions/default.ts` registers that same component under
+ * `na` (`praxisDetail: () => DefaultPraxisDetail`). Twenty duplicate hashes
+ * assert nothing the twenty above them did not.
+ *
+ * The relationship they were standing in for is worth keeping, though, so it
+ * is asserted ONCE and by name in `na is the Default archetype` below —
+ * which is strictly more than the duplicate rows said, since it fails loudly
+ * if the two ever diverge instead of silently recording that they did.
+ *
+ * They cannot be de-duplicated by identity: the registry hands back the
+ * `lazyArchetype()` wrapper (`factions/lazyArchetype.tsx`), so `na`'s entry is
+ * not `===` the raw import even though it renders the same tree.
+ */
 function archetypes(): Record<string, ComponentType<{ state: PraxisDetailState }>> {
-  return {
-    ...(surfaceMap('praxisDetail') as Record<
-      string,
-      ComponentType<{ state: PraxisDetailState }>
-    >),
-    __default__: DefaultPraxisDetail,
-  }
+  return surfaceMap('praxisDetail') as Record<
+    string,
+    ComponentType<{ state: PraxisDetailState }>
+  >
 }
 
 /**
@@ -207,6 +239,23 @@ describe('the render environment is pinned', () => {
         timeStyle: 'short',
       }),
     ).toBe('Jan 2, 2026, 12:00 AM')
+  })
+})
+
+describe('na is the Default archetype', () => {
+  it('renders byte-identically through the registry and by direct import', () => {
+    // What the twenty `__default__` rows used to say, said once and as a
+    // relationship rather than as a coincidence of two hashes matching.
+    // `factions/default.ts` registers `DefaultPraxisDetail` under `na`; if that
+    // ever stops being true this fails here, naming the state it broke in,
+    // instead of quietly re-recording two columns that no longer agree.
+    for (const [name, build] of Object.entries(STATES)) {
+      for (const formFactor of FORM_FACTORS) {
+        const viaRegistry = capture(archetypes().na, build, formFactor)
+        const viaImport = capture(DefaultPraxisDetail, build, formFactor)
+        expect(viaImport, `${name}/${formFactor}`).toBe(viaRegistry)
+      }
+    }
   })
 })
 

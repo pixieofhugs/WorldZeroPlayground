@@ -312,6 +312,51 @@ const REPORT_TITLE = i18n.t("praxis:detail.flag.title");
 const COMMENTS_HEAD = i18n.t("praxis:detail.sections.comments");
 const DUEL_HEAD = i18n.t("praxis:duelCrossLink.label");
 
+/**
+ * The notice's own two marks, pulled back out of the markup.
+ *
+ * A presence check on the word "FLAGGED" is satisfied by a notice painted in
+ * the paper it sits on, which is the failure this surface has actually had
+ * (#1627: the neutral amber reads 3.68:1 on the Ephemerists night plate, and
+ * nothing in a text assertion can see that). So the walk below reads the ink
+ * back off the rendered notice and says three things about it that a text
+ * assertion cannot.
+ *
+ * This is the cheap half. The MEASURED half — which token each wall was
+ * contrast-tested with — is `detailWallAlarmInk.test.tsx` for the failed
+ * banner and `utils/__tests__/factionContrast.test.ts` for the ratios. What
+ * belongs here is the part that must hold for every archetype the registry can
+ * reach, including a tenth that lands tomorrow with no measurement of its own
+ * yet: the mark is drawn, it is drawn in a named token, and that token is an
+ * ink rather than a ground.
+ */
+function flaggedNoticeInks(html: string): { edge: string; label: string; body: string } {
+  const at = html.indexOf(`>${NOTICE_LABEL}<`);
+  expect(at, "the flagged notice is not in the markup at all").toBeGreaterThan(-1);
+  const notice = html.slice(Math.max(0, at - 400), at + 200);
+  const edge = /border:2px solid ([^;"]+);border-radius:8px/.exec(notice);
+  const label = new RegExp(
+    `class="label-caption" style="color:([^"]+)">${NOTICE_LABEL}<`,
+  ).exec(notice);
+  const body = /class="font-body content-text" style="color:([^"]+)"/.exec(notice);
+  expect(edge, "no border ink on the notice").not.toBeNull();
+  expect(label, "no label ink on the notice").not.toBeNull();
+  expect(body, "no body ink on the notice").not.toBeNull();
+  return { edge: edge![1], label: label![1], body: body![1] };
+}
+
+/** Suffixes that name a GROUND. An ink that ends in one of these is paper. */
+const GROUND_SUFFIXES = [
+  "-bg",
+  "-paper",
+  "-page",
+  "-ground",
+  "-surface",
+  "-wall",
+  "-plate",
+  "-stock",
+];
+
 describe("praxis-read moderation notice (#2718)", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} draws the flagged notice, and only when flagged`, () => {
@@ -322,6 +367,36 @@ describe("praxis-read moderation notice (#2718)", () => {
         render(<Archetype state={state()} />).text,
         "a visible praxis carries no notice",
       ).not.toContain(NOTICE_LABEL);
+    });
+
+    it(`${slug} paints the notice in a named ink, not in its own paper`, () => {
+      const flagged = state();
+      flagged.praxis = { ...PRAXIS, moderation_status: "flagged" };
+      const { edge, label, body } = flaggedNoticeInks(render(<Archetype state={flagged} />).html);
+
+      // 1. The mark and its rule are ONE colour (#1449). A label that drifts
+      //    off its own border is the shape that bug had.
+      expect(label, "the label and its rule are one colour").toBe(edge);
+
+      // 2. Every ink is a declared token. A literal cannot flip with the
+      //    cascade, so a hex here is a dark-mode bug that renders fine today.
+      for (const [role, ink] of [["edge", edge], ["label", label], ["body", body]] as const) {
+        expect(ink, `${role} is a declared token`).toMatch(/^var\(--[a-z0-9-]+\)$/);
+        expect(
+          ["currentColor", "inherit", "transparent"].includes(ink),
+          `${role} takes a real ink, not an inherited one`,
+        ).toBe(false);
+      }
+
+      // 3. And the token is an INK, not a GROUND. This is the assertion a text
+      //    check cannot make: a notice painted in the paper under it still
+      //    contains the word "FLAGGED" and is invisible.
+      for (const [role, ink] of [["edge", edge], ["label", label], ["body", body]] as const) {
+        const token = ink.slice(4, -1);
+        for (const suffix of GROUND_SUFFIXES) {
+          expect(token.endsWith(suffix), `${role} names a ground (${token})`).toBe(false);
+        }
+      }
     });
   }
 });

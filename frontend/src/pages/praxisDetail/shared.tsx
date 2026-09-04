@@ -4,9 +4,19 @@
  * and ADR-0064 (the page owns its chrome). ADR-0017 §2 set this module up and
  * is now marked **Superseded by ADR-0061** — do not cite it as live authority.
  *
- * These slots are faction-agnostic and must be rendered identically by
- * every archetype. They are extracted here so no archetype re-implements
- * the guards, handlers, or chrome — only the presentational slots differ.
+ * These slots are faction-agnostic: every archetype must RENDER each one,
+ * and none of them may drop one (ADR-0061 — arrange freely, drop nothing).
+ * They are extracted here so no archetype re-implements the guards, handlers
+ * or chrome.
+ *
+ * "Rendered IDENTICALLY" is what this used to say, and #2718 made it false.
+ * Most slots here still take `state` and nothing else and do render
+ * identically — but three take the archetype's dress through props
+ * (`MemberByline`'s `linkStyle`, `PraxisDetailComments`' `heading` and
+ * `style`), and `PraxisStatusBanners` joined them with two ink props for the
+ * flagged notice. The invariant is the SLOT, not the pixels: what may not
+ * vary is that the node exists, what it says, and when it is gated on. A skin
+ * may still bring dress, which is the whole of ADR-0061's bargain.
  *
  * Invariant slots owned here:
  *   - Admin moderation bar
@@ -106,11 +116,23 @@ export function taskRefMeta(praxis: PraxisOut, t: TFunction<'praxis'>): string {
 // archetype was dispatched on (`task_faction_slug`, see `pages/PraxisDetail`).
 //
 // THIS IS NOT A DRESS SEAM, which is why it does not reopen ADR-0061. No skin
-// supplies anything and no prop exists to supply it through; the ink is a
-// function of the ground, the ground is a function of the slug, and the slug is
-// already in `state`. The wash and the rule stay the neutral `--color-danger-*`
-// rungs (#1169) on every skin — danger is the platform speaking, and only the
-// paper under it is the faction's.
+// supplies these two and none can: the ink is a function of the ground, the
+// ground is a function of the slug, and the slug is already in `state`. The
+// wash and the rule stay the neutral `--color-danger-*` rungs (#1169) on every
+// skin — danger is the platform speaking, and only the paper under it is the
+// faction's.
+//
+// The line above used to read "no prop exists to supply it through", and #2718
+// falsified the general form of that: `PraxisStatusBanners` now takes two ink
+// props for the FLAGGED notice. The distinction is worth keeping straight,
+// because it is the whole reason one of them is a seam and the other is not.
+// The failed banner's pair is DERIVED — `wallInk()` computes it from the
+// praxis, so a prop could only ever restate what the function already knows,
+// and letting a skin override it would be letting a skin un-measure #1451.
+// The flagged notice's pair is CHOSEN: six skins want the neutral warning hue,
+// Ephemerists needs its own for a measured contrast reason (#1627) and
+// Singularity wants the hue on both halves. A value nobody chooses needs no
+// prop; a value three skins answer differently is a seam by definition.
 //
 // SEVEN SKINS MINT NOTHING: `--faction-{key}-card-alarm` (#1449) and
 // `-card-notice` (#694) already exist for all eight keys in both cascades and
@@ -476,6 +498,26 @@ export function PraxisDetailComments({
  * notice at it would repaint six factions that are on `--color-warning` today.
  * This lane ships a zero-row computed-value diff; re-measuring this notice
  * against each wall is a design question and belongs to whoever asks it.
+ *
+ * AND THE ONE PLACE THEY COINCIDE STILL KEEPS ITS LITERAL. Review spotted that
+ * Ephemerists' `NOTICE` — `var(--faction-ephemerists-card-notice)` — is
+ * byte-for-byte what `wallInk(praxis, 'notice')` returns on that page, because
+ * `PraxisDetail` dispatches on `task_faction_slug` and so that archetype only
+ * ever mounts for its own slug. True in production, and still not the
+ * substitution to make, for three reasons that are worth more than the six
+ * characters saved:
+ *
+ *   - `wallInk` is a function of the PRAXIS; the literal is a fact about the
+ *     FILE. They agree only while the dispatcher keys on the task's faction,
+ *     and a file that names its own token cannot be wrong if that ever changes.
+ *   - It would be a claim the tests cannot check. The registry walks mount
+ *     EVERY archetype against one fixture, whose `task_faction_slug` is `ua`
+ *     (`test/praxisDetail.tsx`) — so the derived form renders the *ua* notice
+ *     ink on the Ephemerists page and the byte-identity gate reds. Verified,
+ *     not predicted. Re-recording that would bank a snapshot describing
+ *     something that never ships.
+ *   - `wallInk` is module-private, and widening this module's API to hand a
+ *     file a value it already knows is the wrong direction of travel.
  */
 export function PraxisStatusBanners({
   state,
