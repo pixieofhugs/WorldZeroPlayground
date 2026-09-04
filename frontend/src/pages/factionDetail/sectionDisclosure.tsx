@@ -31,13 +31,14 @@
  * nothing, and neither About (a bio) nor Badges (a row of marks) is what pushes
  * a profile down; the two unbounded galleries are.
  *
- * WHAT IS NOT COLLAPSIBLE FOR A DIFFERENT REASON: the na and WOW phone skins.
- * Both draw Praxis and Proposed tasks behind a segmented Chronicles / Quests
- * switch rather than as two stacked sections, so exactly one gallery is ever on
- * screen and there is no section heading to hang a control in. A fold on top of
- * that is a second mechanism answering a question the switch already answers.
- * Every OTHER phone rendering does fold: `ProfileSkin` draws the same two
- * sections at both widths.
+ * WHAT IS NOT COLLAPSIBLE FOR A DIFFERENT REASON: a profile at PHONE width.
+ * `ProfileSkin` draws Praxis and Proposed tasks behind a segmented switch there
+ * rather than as two stacked sections, so exactly one gallery is ever on screen
+ * and there is no section heading to hang a control in. A fold on top of that is
+ * a second mechanism answering a question the switch already answers. This used
+ * to be true of the na and WOW phone skins alone and of nothing else; #2996
+ * retired both of those renderers and gave all nine the switch, so it is now the
+ * whole phone axis and the laptop is where a profile folds.
  *
  * WHY NOT `<details>` / `<summary>`. It was the first thing tried, and it loses
  * on two counts that are not stylistic. (1) `<details>` requires the folded

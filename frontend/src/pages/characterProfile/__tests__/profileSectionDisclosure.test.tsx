@@ -1,25 +1,26 @@
 /**
  * The seam: `FactionProfileBody` × the profile's two long galleries, walked by
- * SLUG and by FORM FACTOR (#2958).
+ * SLUG and by FORM FACTOR (#2958, inverted on the phone axis by #2996).
  *
- * WHY THE WALK IS BY SLUG AND NOT BY COMPONENT. Nine slugs reach three
- * renderers — six kits and WOW's laptop half go through `ProfileSkin`'s
- * `sectionHeading` seam, na and Albescent go through `DefaultProfileBody`, and
- * na and WOW each own a phone skin besides. A sweep that greps a heading
- * component name reaches one of those three and ships whole archetypes with no
- * disclosure, which is the failure `factionDetail/__tests__/sectionDisclosure`
- * was written predicting one surface over. `profile.praxisHeading` and
- * `profile.proposedTasksHeading` are the only thing every rendering has in
- * common, so the dispatch is driven and every archetype is really rendered.
+ * WHY THE WALK IS BY SLUG AND NOT BY COMPONENT. It was written when nine slugs
+ * reached THREE renderers, so that a sweep greping a heading component name
+ * could not reach one of them and ship whole archetypes with no disclosure —
+ * the failure `factionDetail/__tests__/sectionDisclosure` was written
+ * predicting one surface over. There is one renderer now (#2996), and the walk
+ * stays exactly as it was: a registry-driven dispatch is what would notice the
+ * next fork, and `profile.praxisHeading` / `profile.proposedTasksHeading` are
+ * still the only things every rendering has in common.
  *
- * THE PHONE IS NOT A UNIFORM ROW, AND THAT IS THE POINT OF SPLITTING THE WALK.
- * Six kits draw the same two sections at both widths — `ProfileSkin` restacks,
- * it does not re-author — so their phone rendering folds. The na and WOW phone
- * skins draw Praxis and Proposed tasks behind a segmented Chronicles / Quests
- * switch instead: one gallery is on screen at a time and there is no section
- * heading to hang a control in, so there is nothing to fold and no fold is
- * asserted. That asymmetry is pinned below rather than left to be rediscovered
- * as a hole.
+ * WHAT INVERTED. This file used to pin an ASYMMETRY: six kits folded on a phone
+ * and na and WOW switched instead, because those two owned phone skins. The
+ * owner's ruling collapsed the two shapes into the one that suits the width —
+ * all nine fold on a laptop, all nine switch on a phone — so the two lists below
+ * became one, and the axis they used to disagree on is now the axis they agree
+ * on. The reasoning is the one this file already recorded for the two: with one
+ * gallery on screen there is no section heading for a control to live in, and a
+ * fold on top of a switch is a second mechanism answering the same question.
+ * `profileStructure.test.tsx` is the derived guard on the same collapse; this
+ * one is about the DISCLOSURE and stays about it.
  *
  * THE HARNESS HAS NO DOM (`renderToStaticMarkup`, node env), so a press cannot
  * be simulated. What is reachable is the markup and the `aria-*` wiring, plus
@@ -54,7 +55,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 const FactionProfileBody = (await import('../FactionProfileBody')).default
 type ProfileBodyProps = import('../FactionProfileBody').ProfileBodyProps
 
-/** The seven bespoke bodies, plus `na` and `albescent` on Default. */
+/** The seven bespoke bodies, plus `na` and `albescent` on the na kit. */
 const SLUGS = [
   'na',
   'albescent',
@@ -66,12 +67,6 @@ const SLUGS = [
   'ua',
   'wow',
 ] as const
-
-/** The archetypes whose PHONE skin is `ProfileSkin` restacked — see the head. */
-const FOLDING_ON_A_PHONE = ['coven', 'ephemerists', 'everymen', 'singularity', 'snide', 'ua']
-
-/** The two that swap the sections for a segmented switch on a phone. */
-const SEGMENTED_ON_A_PHONE = ['na', 'albescent', 'wow']
 
 const PRAXIS = [aPraxisCard({ id: 1 }), aPraxisCard({ id: 2 })]
 const TASKS = [aTask({ id: 1 }), aTask({ id: 2 })]
@@ -192,30 +187,18 @@ describe('every profile folds both galleries on a laptop', () => {
   })
 })
 
-describe('the phone rendering folds wherever it draws the two sections', () => {
+describe('the phone switches instead of folding — on all nine (#2996)', () => {
   beforeEach(() => {
     mocks.formFactor = 'mobile'
   })
 
-  for (const slug of FOLDING_ON_A_PHONE) {
-    it(`${slug} — both galleries fold at 375px too`, () => {
-      const html = page(slug)
-      for (const section of PROFILE_SECTIONS.ids) {
-        const bodyId = sectionBodyId(PROFILE_SECTIONS, section)
-        expect(disclosureTag(html, bodyId), `${slug} · ${section}`).toContain(
-          'aria-expanded="true"',
-        )
-        expect(html).toContain(`id="${bodyId}"`)
-      }
-    })
-  }
-
-  for (const slug of SEGMENTED_ON_A_PHONE) {
-    it(`${slug} — a segmented switch instead, so there is nothing to fold`, () => {
+  for (const slug of SLUGS) {
+    it(`${slug} — a segmented switch, so there is nothing to fold`, () => {
       const html = page(slug)
       // Both tabs are there and exactly one gallery is on screen, which is the
-      // bounding gesture a fold would otherwise supply. If this skin is ever
-      // redrawn into two stacked sections, this goes red and the fold is owed.
+      // bounding gesture a fold would otherwise supply. If any skin is ever
+      // redrawn into two stacked sections at this width, this goes red and the
+      // fold is owed on it again.
       const text = html.replace(/<[^>]*>/g, '')
       expect(text, `${slug} lost its segmented switch`).toContain(
         translate('common:profile.mobile.tabPraxis'),
@@ -226,6 +209,35 @@ describe('the phone rendering folds wherever it draws the two sections', () => {
       )
     })
   }
+
+  it('carries no stored fold onto a phone either', () => {
+    // The preference is per account × SURFACE and survives a width change, so a
+    // player who folded Praxis on a laptop still has it folded in storage when
+    // they open the same profile on a phone. The phone must ignore it rather
+    // than hide the gallery its switch says is up — there is no control at this
+    // width to bring it back with.
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: () => serializeCollapsedSections(PROFILE_SECTIONS.ids, ['praxis', 'proposed']),
+        setItem: () => {},
+      },
+    })
+    try {
+      for (const slug of SLUGS) {
+        const html = page(slug)
+        // A bare `hidden` ATTRIBUTE — React's own spelling for a folded panel.
+        // Matched as an attribute rather than as a word, so neither the
+        // `aria-hidden` chrome nor the six kits' `overflow:hidden` reads as one.
+        expect(html, `${slug} folded on a phone`).not.toMatch(/\shidden[>\s]/)
+        expect(html.replace(/<[^>]*>/g, ''), `${slug} lost its praxis`).toContain(
+          PRAXIS[0].task_title,
+        )
+      }
+    } finally {
+      Reflect.deleteProperty(globalThis, 'localStorage')
+    }
+  })
 })
 
 describe('a folded gallery is still worth reading', () => {

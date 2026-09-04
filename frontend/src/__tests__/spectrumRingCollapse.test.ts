@@ -19,8 +19,9 @@
  *
  * `border-radius: inherit` is the one value that legitimately CHANGED text
  * (`.alb-profile-edge` had a hardcoded 16px), so the pairing it now depends on —
- * the identity band's own inline corner, in both of DefaultProfileBody's form
- * factors — is asserted here too. That coupling used to be a comment.
+ * the na identity band's own inline corner, written once in that kit's
+ * `headerFrame` since #2996 and twice before it — is asserted here too. That
+ * coupling used to be a comment.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -200,11 +201,17 @@ describe("the collapsed spectrum ring resolves to what each mount had (#2407)", 
 
   it("`.alb-profile-edge` inherits a corner the identity band actually has", () => {
     // `inherit` reads the DIRECT parent. It replaced a hardcoded 16 that had to
-    // track this, so the band's own corner is the pairing, in both form factors.
+    // track this, so the band's own corner is the pairing.
+    //
+    // ONE BAND SINCE #2996, where this counted two: na drew the band in each of
+    // its two hand-authored branches, and the pair had to agree. na is the
+    // ninth kit now, so the band is written once — in the `headerFrame` slot of
+    // this file's dress, which is also where the ornament is mounted, so the
+    // parent `inherit` reads and the corner it reads are three lines apart.
     expect(
       (PROFILE_BODY.match(/borderRadius: 16,/g) ?? []).length,
-      "DefaultProfileBody's identity band lost its 16px corner in one branch",
-    ).toBe(2);
+      "the na identity band lost the 16px corner `.alb-profile-edge` inherits",
+    ).toBe(1);
   });
 });
 

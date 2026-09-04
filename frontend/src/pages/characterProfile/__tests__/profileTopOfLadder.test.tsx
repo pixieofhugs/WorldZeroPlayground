@@ -37,14 +37,18 @@ const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', '
 const FORM_FACTORS = ['desktop', 'mobile'] as const
 
 /**
- * Where a level track is actually mounted. Every kit draws one on a laptop; on
- * a phone WOW alone does not — its mobile skin trades the track for a tally of
- * deeds. The exclusion is pinned by its own test at the bottom of this file so
- * it cannot quietly become a hole.
+ * Where a level track is actually mounted: EVERY KIT, BOTH WIDTHS.
+ *
+ * This was a table with a hole in it — on a phone WOW alone drew no track,
+ * because its bespoke pavilion (#901) traded the whole thing for a tally of
+ * deeds, and the exclusion had its own test at the bottom of this file so it
+ * could not quietly widen. #2996 retired that renderer, so the hole closes and
+ * the pinning test with it: WOW's phone reads the same climb as everyone's,
+ * which is the shape this file was always asking for.
  */
 const TRACK_MOUNTS: Record<(typeof FORM_FACTORS)[number], readonly string[]> = {
   desktop: SLUGS,
-  mobile: SLUGS.filter((slug) => slug !== 'wow'),
+  mobile: SLUGS,
 }
 
 /** Level 8 is the last rung of era 1's curve; `levelTrack` reports this shape. */
@@ -151,19 +155,14 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
     }
   }
 
-  // The one exclusion above, asserted rather than assumed: WOW's phone skin
-  // trades the whole track for a tally of deeds, so it has no climb readout to
-  // get wrong. If it ever grows one, this fails and the skin joins the loops.
-  it('wow/mobile draws no level track at all, in either state', () => {
+  // The exclusion this replaced asserted the opposite — that wow/mobile drew no
+  // climb readout at all — and it was true of the pavilion (#901), which had no
+  // track to get either state wrong. Retired (#2996), so the assertion is that
+  // WOW's phone is now IN the two loops above rather than exempt from them:
+  // both states, on the one renderer the other eight already used.
+  it('wow/mobile reads the climb like every other profile', () => {
     mocks.formFactor = 'mobile'
-    for (const [track, level] of [
-      [AT_THE_TOP, 8],
-      [MID_CLIMB, 7],
-    ] as const) {
-      const text = renderText('wow', track, level)
-      expect(text).not.toContain('pts this level')
-      expect(text).not.toContain('next · ')
-      expect(text).not.toContain(TOP_OF_LADDER)
-    }
+    expect(renderText('wow', AT_THE_TOP, 8)).toContain(TOP_OF_LADDER)
+    expect(renderText('wow', MID_CLIMB, 7)).toContain(NEXT_IS_SELF)
   })
 })
