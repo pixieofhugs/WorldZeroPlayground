@@ -19,6 +19,10 @@
  *   breadcrumb, score and duel moved above the proof.
  * - Main: banners · byline · title · owner actions · task reference · proof ·
  *   write-up · crew · metatasks. Aside: score · duel · vote · voters · flag.
+ *   That ORDER is the skin's since #2718 — this file names the blocks, the skin
+ *   arranges them. Its one arrangement knob is `pageStyle`: the role map goes on
+ *   the page box rather than the sheet, because this kit's ink reaches the
+ *   breadcrumb.
  * - **The crown renders at both form factors.** It is never form-factor gated —
  *   `ScoreStamp` draws it in the score block's corner off `is_top_for_task`,
  *   and that block is in both layouts (#1710 retired the hero banner).
@@ -113,6 +117,18 @@
  * The ground belongs to the COLUMN, not the viewport (§5, the #1028 ruling): the
  * site background still shows around the page, which is why `.snide-backdrop`'s
  * `position: fixed` mount is not the one used here.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -121,26 +137,19 @@ import MediaGallery from "../../../components/MediaGallery";
 import MarkdownPreview from "../../editPraxis/blocks/MarkdownPreview";
 import VoteUI, { voteRegionVisible } from "../../../components/vote/VoteUI";
 import ScoreStamp from "../../../components/praxisCard/scoreStamp/ScoreStamp";
-import MetataskSeal from "../../../components/metataskSeal/MetataskSeal";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
-import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
 import { mediaUrl } from "../../../utils/media";
+import { PraxisDetailSkin, type DuelInk } from "../praxisDetailSkin";
 import {
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
   bylineFaces,
   orderedMembers,
-  scoreWasBanked,
   taskRefMeta,
 } from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 import { factionRoleVars } from "../../../utils/factionRoles";
 
 const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
@@ -401,13 +410,9 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // notice comes from there too since #2718; it was drawn here for want of a
   // slot, and this page names no ink for it, so it keeps the same neutral
   // warning tokens and the same shared `detail.banners.*` copy every other skin
-  // reads. `PraxisAdminBar` is the steward bar, mounted bare.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  );
+  // reads. `PraxisAdminBar` is the steward bar, mounted bare. All three are
+  // MOUNTED from the shared layer too since #2718; this kit passes neither ink
+  // knob.
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -541,7 +546,9 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // foreign task keeps its own mark on this page. No term is restated here and
   // no arithmetic is invented: `scoreBreakdown()` is the only resolver
   // (ADR-0014/0047/0053).
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={plate}>
       {sectionHead(t("detail.score.heading"), { onPlate: true })}
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -570,27 +577,13 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   //
   // The rival's own faction hue still never reaches the card — the foreign side
   // is a disc and an outline.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={plate}
-      heading={sectionHead(t("duelCrossLink.label"), { onPlate: true })}
-      ink={{
-        name: PLATE_TEXT,
-        total: PLATE_TEXT,
-        muted: PLATE_MUTED,
-        line: PLATE_MUTED,
-        plate: PLATE,
-      }}
-    />
-  );
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  );
+  const duelInk: DuelInk = {
+    name: PLATE_TEXT,
+    total: PLATE_TEXT,
+    muted: PLATE_MUTED,
+    line: PLATE_MUTED,
+    plate: PLATE,
+  };
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   //
@@ -703,16 +696,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   );
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      {/* NEUTRAL, and deliberately bare — no clipping, no plate (ADR-0061). */}
-      <PraxisFlagBlock state={state} />
-    </>
-  );
+  // The report card is mounted bare by the skin, last in the aside: NEUTRAL,
+  // and deliberately bare — no clipping, no plate (ADR-0061).
 
-  // ── Proof · write-up · crew · metatasks ───────────────────────────────────
+  // ── Proof · write-up · crew ───────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
       {sectionHead(t("detail.sections.proof"), { big: true })}
@@ -781,39 +768,25 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   );
 
-  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
-  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
-  // wears its ISSUING faction's dress (#927/#933). The design's add chips are
-  // deliberately absent: `apply_metatask` requires `status == in_progress`, so
-  // every chip would 422 on tap.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {sectionHead(t("detail.metatasks.heading"), { big: true })}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  );
+  // The metatask section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction (#1093): the
+  // seal omits the peel control and the add slot when it gets neither
+  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
+  // (#927/#933). The design's add chips are deliberately absent —
+  // `apply_metatask` requires `status == in_progress`, so every chip would 422.
 
   return (
-    <div
-      className="py-8"
-      style={{
-        ...factionRoleVars("snide", "snd-read"),
-        position: "relative",
-        fontFamily: TYPE,
-        color: INK,
-      }}
-    >
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
-
-      <div
-        className="snd-detail-sheet"
-        style={{
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: {
+          ...factionRoleVars("snide", "snd-read"),
+          position: "relative",
+          fontFamily: TYPE,
+          color: INK,
+        },
+        sheetClassName: "snd-detail-sheet",
+        sheetStyle: {
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
@@ -822,71 +795,21 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
           overflow: "hidden",
           boxSizing: "border-box",
-        }}
-      >
-        {banners}
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: "stretch",
-            gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-          }}
-        >
-          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-            {header}
-            {/* Mobile stacks the rail above the proof — one block each, MOVED,
-                never a second copy hidden at the other breakpoint. */}
-            {!desktop && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "var(--space-lg)",
-                  marginBottom: "var(--space-xl)",
-                }}
-              >
-                {rail}
-              </div>
-            )}
-            {proof}
-            {writeUp}
-            {crew}
-            {metatasks}
-            {!desktop && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
-                {asideRest}
-              </div>
-            )}
-          </div>
-
-          {desktop && (
-            <aside
-              style={{
-                flex: "0 0 330px",
-                width: 330,
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-lg)",
-              }}
-            >
-              {rail}
-              {asideRest}
-            </aside>
-          )}
-        </div>
-
-        {/* The third layout region (ADR-0064, amending ADR-0006): comments sit
-            beneath both columns, inside the page's own sheet, and the layout
-            draws the heading so the thread does not draw a second one. The ROWS
-            stay dispatched on each author's own faction. */}
-        <PraxisDetailComments
-          state={state}
-          heading={sectionHead(t("detail.sections.comments"), { big: true })}
-          style={{ marginTop: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
-        />
-      </div>
-    </div>
+        },
+        header,
+        score: scoreBlock,
+        duelPanel: plate,
+        duelHeading: sectionHead(t("duelCrossLink.label"), { onPlate: true }),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t("detail.metatasks.heading"), { big: true }),
+        /* The comment ROWS stay dispatched on each author's own faction. */
+        commentsHeading: sectionHead(t("detail.sections.comments"), { big: true }),
+      }}
+    />
   );
 }

@@ -33,6 +33,10 @@
  * - Mobile: one stacked column; the score and duel blocks move ABOVE the proof.
  *   ONE responsive component (ADR-0063) — `useFormFactor()` picks the size set;
  *   there is no mobile twin, and no block is drawn twice and hidden.
+ * - Both of those are the SKIN's arrangement now, not this file's (#2718). What
+ *   is still this file's is the pair of knobs its ground needs: `sheetBody` for
+ *   the positioned stacking layer inside the slip, and `splitPrelude` +
+ *   `splitStyle` for the cat, whose anchor is the columns ROW (#2135).
  * - The crown renders at **both** form factors. It is not this file's decision:
  *   `ScoreStamp` draws it off `is_top_for_task` in the score block's corner,
  *   and that block is in both layouts (#1710 retired the hero banner above).
@@ -75,6 +79,18 @@
  *
  * The score ARITHMETIC is not built either: the design invents its own, and
  * `scoreBreakdown()` (ADR-0053) is the single authority the mounted stamp reads.
+ *
+ * ## This file delegates the spine and supplies the dress (#2718)
+ *
+ * The arrangement above is not drawn here. `PraxisDetailSkin` holds it once —
+ * the sheet, the split, the 330px aside, the comments region beneath both
+ * columns and the phone's rail/asideRest reflow — and it mounts the pieces no
+ * faction dresses: `PraxisStatusBanners`, `PraxisAdminBar`, the `scoreWasBanked`
+ * gate, `DuelCard`, `PraxisFlagBlock`, the `MetataskSeal` section and
+ * `PraxisDetailComments`. What this file is, is the KIT handed to it: the
+ * ground, the ornament, the face, the role map and the blocks it letters
+ * itself. `archetypeSlots.test.tsx` asserts both halves — that every slot still
+ * reaches the page, and that this file re-mounts none of what the skin draws.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -83,26 +99,19 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI, { voteRegionVisible } from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import MetataskSeal from '../../../components/metataskSeal/MetataskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip'
-import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
+import { PraxisDetailSkin, type DuelInk } from '../praxisDetailSkin'
 import {
   bylineFaces,
-  PraxisAdminBar,
-  PraxisStatusBanners,
   PraxisOwnerActions,
-  PraxisFlagBlock,
-  PraxisDetailComments,
   MemberByline,
-  scoreWasBanked,
   taskRefMeta,
 } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 /* The four faces, exactly as the spell slip and the ward page name them. */
 const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
@@ -120,8 +129,8 @@ const BORDER = 'var(--faction-coven-slip-border)'
 const CARD = 'var(--faction-coven-ward-card)'
 const PAGE = 'var(--faction-coven-ward-page)'
 
-/** The aside track, from the eight faction designs (#1129). Layout, not dress. */
-const ASIDE_TRACK = 330
+/* The aside track is the SKIN's now — 330px from the eight faction designs
+   (#1129). Layout, not dress, and one number rather than eight. */
 
 interface SizeSet {
   /** The byline's ringed disc. Ornament geometry (WORLD_ZERO_STYLE §4a). */
@@ -311,13 +320,8 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // a slot; this page names no ink for it, so it keeps the same `--color-*`
   // warning tokens `DefaultPraxisDetail` uses, deliberately not the ward's
   // pinks. `PraxisAdminBar` is the steward bar, mounted bare for the same
-  // reason as the report card.
-  const banners = (
-    <>
-      <PraxisStatusBanners state={state} />
-      <PraxisAdminBar state={state} />
-    </>
-  )
+  // reason as the report card. All three are MOUNTED from the shared layer too
+  // since #2718; this kit passes neither ink knob.
 
   // ── Byline · title · owner actions · task reference ───────────────────────
   const header = (
@@ -430,7 +434,9 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   //
   // The candle sits behind it: `.cvn-candle` carries the flicker and its
   // reduced-motion guard, so stilled it is simply a steady glow.
-  const scoreBlock = !scoreWasBanked(praxis) ? null : (
+  //
+  // Handed to the skin unconditionally — `scoreWasBanked` is the shared gate.
+  const scoreBlock = (
     <section style={{ ...panel, position: 'relative', overflow: 'hidden' }}>
       {sectionHead(t('detail.score.heading'))}
       <span
@@ -471,21 +477,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // `slip-soft` are both gated on `--faction-coven-ward-card` in
   // `factionContrast.test.ts`. Nothing here carries the RIVAL's faction hue: the
   // duel's foreign side is a disc and an outline, never a colour.
-  const duelBlock: ReactNode = (
-    <DuelCard
-      state={state}
-      style={panel}
-      heading={sectionHead(t('duelCrossLink.label'))}
-      ink={{ name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }}
-    />
-  )
-
-  const rail = (
-    <>
-      {scoreBlock}
-      {duelBlock}
-    </>
-  )
+  const duelInk: DuelInk = { name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }
 
   // ── Vote · voters · flag ──────────────────────────────────────────────────
   // Gated on the ONE predicate `VoteUI` gates ITSELF on (#1429): the plate,
@@ -588,16 +580,10 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   )
 
-  const asideRest = (
-    <>
-      {voteBlock}
-      {votersBlock}
-      {/* NOT dressed, by contract: the report card is the platform speaking. */}
-      <PraxisFlagBlock state={state} />
-    </>
-  )
+  // The report card follows the two ward panels in the aside, mounted bare by
+  // the skin — NOT dressed, by contract: it is the platform speaking.
 
-  // ── Proof · write-up · crew · charms ──────────────────────────────────────
+  // ── Proof · write-up · crew ───────────────────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: sectionGap }}>
       {sectionHead(t('detail.sections.proof'))}
@@ -645,54 +631,44 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     </section>
   )
 
-  // READ-ONLY, by construction (#1093). `MetataskSeal` omits the peel control
-  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
-  // wears its ISSUING faction's dress (#927/#933). The design's add chips are
-  // deliberately absent: `apply_metatask` requires `status == in_progress`, so
-  // every chip would 422 on tap.
-  const metatasks = praxis.applied_metatasks.length > 0 && (
-    <section style={{ marginBottom: sectionGap }}>
-      {sectionHead(t('detail.metatasks.heading'))}
-      <MetataskSeal metatasks={praxis.applied_metatasks} />
-    </section>
-  )
+  // The charms section is the SKIN's now — every archetype drew the same
+  // `<section>` + `MetataskSeal` pair. READ-ONLY, by construction (#1093): the
+  // seal omits the peel control and the add slot when it gets neither
+  // `removable` nor `onAdd`, and each seal wears its ISSUING faction's dress
+  // (#927/#933). The design's add chips are deliberately absent —
+  // `apply_metatask` requires `status == in_progress`, so every chip would 422.
 
   return (
-    <div className="py-8" style={{ position: 'relative', color: INK, fontFamily: CHROME }}>
-      {/* SITE CHROME, ABOVE THE SURFACE (#2102). Neutral, shared, and the
-          same trail at every width - see components/nav/Breadcrumb. */}
-      <Breadcrumb
-        taskId={praxis.task_id}
-        taskTitle={praxis.task_title}
-        praxisId={praxis.id}
-      />
+    <PraxisDetailSkin
+      state={state}
+      kit={{
+        pageStyle: { position: 'relative', color: INK, fontFamily: CHROME },
+        /* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
+           the near-black ward wash with four drifting blooms — until the owner
+           ruled that the sheet the task card wears is the iconic coven look and
+           the surfaces around it should wear it too. `SLIP_SHEET` is
+           `covenSlip`'s one copy of the four-stop ramp, so the sheet, the task
+           card and the praxis card cannot drift apart.
 
-      {/* THE COLUMN WEARS THE SLIP (#2135). It wore `.coven-candle-backdrop` —
-          the near-black ward wash with four drifting blooms — until the owner
-          ruled that the sheet the task card wears is the iconic coven look and
-          the surfaces around it should wear it too. `SLIP_SHEET` is `covenSlip`'s
-          one copy of the four-stop ramp, so the sheet, the task card and the
-          praxis card cannot drift apart.
+           The blooms and their drift go with the class; nothing here paints
+           them. The class itself STAYS in index.css — `CovenFieldDesk` still
+           grounds a whole mobile page on it — so this is a change of consumer,
+           not a deletion, and the test on this file pins the negative half.
 
-          The blooms and their drift go with the class; nothing here paints them.
-          The class itself STAYS in index.css — `CovenFieldDesk` still grounds a
-          whole mobile page on it — so this is a change of consumer, not a
-          deletion, and the test on this file pins the negative half.
+           The ground still belongs to the COLUMN, not the viewport: the site
+           background shows around the page (WORLD_ZERO_STYLE §5, the #1028
+           ruling).
 
-          The ground still belongs to the COLUMN, not the viewport: the site
-          background shows around the page (WORLD_ZERO_STYLE §5, the #1028
-          ruling).
-
-          THE CLIP IS NOT RESTORED, and that is deliberate. `.coven-candle-
-          backdrop` carried `overflow: hidden` for one reason — its `::before`
-          bloom is inset -25% and had to be cut to the column. No bloom, no clip
-          to owe: a background is cut by the element's OWN border-radius, and the
-          cat below sits wholly inside its container. #1255 is the reason not to
-          put it back on spec: this column wraps the comment composer, whose
-          @-mention listbox is an absolutely positioned child, and a clipping
-          ancestor cuts a descendant off whatever its stacking order. */}
-      <div
-        style={{
+           THE CLIP IS NOT RESTORED, and that is deliberate.
+           `.coven-candle-backdrop` carried `overflow: hidden` for one reason —
+           its `::before` bloom is inset -25% and had to be cut to the column. No
+           bloom, no clip to owe: a background is cut by the element's OWN
+           border-radius, and the cat below sits wholly inside its container.
+           #1255 is the reason not to put it back on spec: this column wraps the
+           comment composer, whose @-mention listbox is an absolutely positioned
+           child, and a clipping ancestor cuts a descendant off whatever its
+           stacking order. */
+        sheetStyle: {
           position: 'relative',
           zIndex: 1,
           maxWidth: 1200,
@@ -702,99 +678,50 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           borderRadius: 18,
           padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
           boxSizing: 'border-box',
-        }}
-      >
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          {banners}
+        },
+        sheetBody: (body) => <div style={{ position: 'relative', zIndex: 1 }}>{body}</div>,
+        splitStyle: { position: 'relative' },
+        /* The cat watermark, turning once every two minutes (#2041 — it was a
+           pentagram, and the drawing lives in `covenSlip` because five Coven
+           surfaces turn the same one). `.cvn-wheel` still carries the motion and
+           its reduced-motion guard (#911/#1023).
 
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              flexDirection: desktop ? 'row' : 'column',
-              alignItems: 'stretch',
-              gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
-            }}
-          >
-            {/* The cat watermark, turning once every two minutes (#2041 — it was
-                a pentagram, and the drawing lives in `covenSlip` because five
-                Coven surfaces turn the same one). `.cvn-wheel` still carries the
-                motion and its reduced-motion guard (#911/#1023).
+           IT COMES TO THE BOTTOM (#2135) — one placement rule across every
+           mount, which is #2041's "not two different drawings" one level up. It
+           was `right: 24, top: 140`.
 
-                IT COMES TO THE BOTTOM (#2135) — one placement rule across every
-                mount, which is #2041's "not two different drawings" one level up.
-                It was `right: 24, top: 140`.
+           THE ANCHOR IS THE COLUMNS ROW, not the sheet, and the owner's reason
+           is what pins it there: the sheet's true bottom-right sits behind the
+           comment composer, which paints an opaque `ward-card` panel and would
+           swallow the mark whole. "I want the cat where it can be seen, but in
+           general at the bottom." The row ends exactly where the discussion
+           begins, so `bottom: 0` here is the lowest point on the page the mark
+           is still visible at. `right: 24` is unchanged and is what keeps the
+           whole face on the sheet.
 
-                THE ANCHOR IS THE COLUMNS ROW, not the sheet, and the owner's
-                reason is what pins it there: the sheet's true bottom-right sits
-                behind the comment composer, which paints an opaque `ward-card`
-                panel and would swallow the mark whole. "I want the cat where it
-                can be seen, but in general at the bottom." The row ends exactly
-                where the discussion begins, so `bottom: 0` here is the lowest
-                point on the page the mark is still visible at. `right: 24` is
-                unchanged and is what keeps the whole face on the sheet.
-
-                `zIndex: -1` puts it back UNDER the copy. The row is positioned
-                but has no z-index, so it is not a stacking context; the negative
-                index lands in the wrapper above, which is — behind every in-flow
-                block there, and still over the sheet's own ground. */}
-            <CovenCat
-              size={size.wheel}
-              style={{ right: 24, bottom: 0, opacity: 0.09, zIndex: -1 }}
-            />
-            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-              {header}
-              {/* Mobile stacks the rail above the proof — one block each, moved,
-                  never a second copy hidden at the other breakpoint. */}
-              {!desktop && (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'var(--space-lg)',
-                    marginBottom: 'var(--space-xl)',
-                  }}
-                >
-                  {rail}
-                </div>
-              )}
-              {proof}
-              {writeUp}
-              {crew}
-              {metatasks}
-              {!desktop && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-                  {asideRest}
-                </div>
-              )}
-            </div>
-
-            {desktop && (
-              <aside
-                style={{
-                  flex: `0 0 ${ASIDE_TRACK}px`,
-                  width: ASIDE_TRACK,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--space-lg)',
-                }}
-              >
-                {rail}
-                {asideRest}
-              </aside>
-            )}
-          </div>
-
-          {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
-              beneath both columns, inside the page's own sheet, and the layout
-              draws the heading so the thread does not draw a second one. */}
-          <PraxisDetailComments
-            state={state}
-            heading={sectionHead(t('detail.sections.comments'))}
-            style={{ marginTop: sectionGap }}
+           `zIndex: -1` puts it back UNDER the copy. The row is positioned but
+           has no z-index, so it is not a stacking context; the negative index
+           lands in the wrapper above, which is — behind every in-flow block
+           there, and still over the sheet's own ground. */
+        splitPrelude: (
+          <CovenCat
+            size={size.wheel}
+            style={{ right: 24, bottom: 0, opacity: 0.09, zIndex: -1 }}
           />
-        </div>
-      </div>
-    </div>
+        ),
+        header,
+        score: scoreBlock,
+        duelPanel: panel,
+        duelHeading: sectionHead(t('duelCrossLink.label')),
+        duelInk,
+        vote: voteBlock,
+        voters: votersBlock,
+        proof,
+        writeUp,
+        crew,
+        metatasksHeading: sectionHead(t('detail.metatasks.heading')),
+        commentsHeading: sectionHead(t('detail.sections.comments')),
+      }}
+    />
   )
 }
