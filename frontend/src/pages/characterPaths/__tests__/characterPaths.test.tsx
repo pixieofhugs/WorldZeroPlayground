@@ -250,20 +250,35 @@ describe('DefaultCreateCharacter on a phone', () => {
   })
 })
 
-describe('DefaultEditCharacter mobile skin', () => {
+/**
+ * THE PHONE BRANCH IS GONE (#2991). `DefaultEditCharacter` mounts the composer
+ * chassis as one responsive tree, so the sticky `Save Changes` bar, the 96px
+ * photo ring with its own caption and the back chevron no longer exist at any
+ * width — and neither does the branch's real defect, a field list three long
+ * where the desktop plate's was five.
+ *
+ * What is still worth asserting on a PHONE specifically is the half the retired
+ * branch got wrong. The field SET and the tail ORDER across all nine kits are
+ * `editCharacterStructure.test.tsx`'s; these are the na kit's own slots, at the
+ * width that used to drop them.
+ */
+describe('DefaultEditCharacter on a phone', () => {
   beforeEach(() => { factor.value = 'mobile' })
   afterEach(() => { factor.value = 'desktop' })
 
-  it('renders name, story, tagline, faction link-out, delete and sticky Save', () => {
+  it('renders name, story, tagline, LOCATION, faction link-out, delete and Save', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
     expect(html, 'name input').toContain('value="Molly"')
-    // The three fields are named by the words inside them, not by a label above
-    // them (#2793) — and on an edit form, which opens full, that name is the
-    // only thing that says which box is which to a screen reader.
+    // The fields are named by the words inside them, not by a label above them
+    // (#2793) — and on an edit form, which opens full, that name is the only
+    // thing that says which box is which to a screen reader.
     expect(html, 'story field').toContain('aria-label="Character bio"')
-    expect(html, 'story value is the bio').toContain('value="Doing very human things."')
+    expect(html, 'story value is the bio').toContain('>Doing very human things.</textarea>')
     expect(html, 'tagline field').toContain('aria-label="Character Catchphrase"')
-    expect(html, 'tagline value is the tagline').toContain('value="Slow spells, strong tea."')
+    expect(html, 'tagline value is the tagline').toContain('>Slow spells, strong tea.</textarea>')
+    // The two the phone column did not have at all, which is defect 1 of #2991.
+    expect(html, 'the handle readout').toContain('value="@molly"')
+    expect(html, 'the location field').toContain('aria-label="Location (SFO, PDX, YYZ)"')
     // Faction is read-only and links out — but an unaffiliated life goes to the
     // DIRECTORY, not to `/factions/na`.
     //
@@ -278,7 +293,7 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(html, 'not the hidden na detail page').not.toContain('href="/factions/na"')
     expect(text, 'unaffiliated').toContain('Unaffiliated')
     expect(text, 'delete affordance').toContain('Delete this character')
-    expect(text, 'sticky save').toContain('Save Changes')
+    expect(text, 'the one commit').toContain('Save Changes')
   })
 
   // Until #1628 this skin labelled the 500-char `bio` input "Tagline". Now that
@@ -291,8 +306,10 @@ describe('DefaultEditCharacter mobile skin', () => {
     )
     expect(html, 'the long-form field is capped at bio length').toContain('maxLength="500"')
     expect(html, 'the slogan field is capped at 140').toContain('maxLength="140"')
-    expect(html, 'each input holds its own value').toContain(`value="${'B'.repeat(20)}"`)
-    expect(html).toContain(`value="${'T'.repeat(20)}"`)
+    // Both are <textarea>s on the chassis, so the value is the child rather
+    // than an attribute — the same shape the create kit renders.
+    expect(html, 'each field holds its own value').toContain(`>${'B'.repeat(20)}</textarea>`)
+    expect(html).toContain(`>${'T'.repeat(20)}</textarea>`)
   })
 
   it('counts the tagline against its cap', () => {
@@ -305,10 +322,15 @@ describe('DefaultEditCharacter mobile skin', () => {
     expect(html).toContain('href="/factions/wow"')
   })
 
-  it('names the photo ring with its own caption (#1149)', () => {
+  // #1149: the portrait control names itself rather than falling through to a
+  // glyph or to an alt text. The phone column's ring-plus-caption retired with
+  // the branch; the two controls that replace it are the credential card's
+  // portrait ring and `PortraitPicker`, and each carries its own name.
+  it('names both portrait controls, and reports what is chosen (#1149)', () => {
     const { html, text } = render(<DefaultEditCharacter state={editState({})} />)
-    expect(html).toContain('aria-label="Change photo"')
-    expect(text).toContain('Change photo')
+    expect(html, "the card's ring is an upload affordance").toContain('aria-label="Click to upload a photo"')
+    expect(text, 'the picker button').toContain('Choose a photo')
+    expect(text, 'and the status line beside it').toContain('No photo chosen yet')
   })
 
   /**
