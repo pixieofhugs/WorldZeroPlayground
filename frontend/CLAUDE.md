@@ -50,7 +50,14 @@
     `resolveRoleReads()` in `test/sourceScan.ts` first — a migrated surface no longer
     writes the token, and a guard matching the spelling silently narrows.
 - Dark mode via the `[data-theme="dark"]` cascade — no `dark ? '#a' : '#b'` ternaries
-- Each faction has its own card archetype; don't unify
+- Each faction has its own card archetype; don't unify. **The boundary (#2992): a
+  shared CHASSIS is not unifying; a runtime SKIN TABLE is.** Nine files stay nine
+  files, and each owns its own tree, dress, ground and ornament — but mounting the
+  blocks its siblings already mount (`ComposerPage`/`Sheet`/`Section`/`Footer` out
+  of `pages/editPraxis/archetypes/shared.tsx`) is how a kit stops re-authoring a
+  sheet, not how it merges. What is forbidden is one component branching on a slug
+  to render nine trees. Owner ruling, quoted in ADR-0090 §Tree and ADR-0065's
+  scope paragraph, both amended the same day.
 - Reuse `.card-meta`, `.card-description` for repeated patterns
 - Hide unusable controls; don't show them disabled
 - Form factor (#494): a new dispatched surface provides a `Default*` mobile skin and dispatches through a parallel `MOBILE_ARCHETYPE_BY_SLUG` on `useFormFactor() === 'mobile'`. The mobile path stacks single-column — never fixed-px inline grids for layout structure. See `docs/spec/SPEC-faction-ui-profile.md` §1a.
