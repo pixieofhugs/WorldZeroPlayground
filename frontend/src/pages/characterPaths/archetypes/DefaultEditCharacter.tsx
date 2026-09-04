@@ -453,10 +453,15 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
               validates the format — the column is free text to 100 chars — so
               the words in the box are the whole of the convention.
 
-              IT TAKES THE CHASSIS FIELD'S OWN WIDTH. The desktop plate pinned it
-              to `maxWidth: 280`, which is the clipping #2990 is open for; that
-              literal is not carried across, and #2990 re-measures on this field
-              rather than on the one it was filed against. */}
+              IT TAKES THE CHASSIS FIELD'S OWN WIDTH, AND THAT IS THE ANSWER TO
+              #2990. The retired desktop plate pinned `maxWidth: 280`, which
+              clipped the placeholder's closing parenthesis by 5px; the literal
+              was not carried across, and #2990 re-measured on this field. The
+              column is 720 less the sheet's 3px frame and its `--space-2xl`
+              inset each side — 650 — so the field's inner width is 624 against
+              259px of placeholder. It clears by 365px and is deliberately
+              uncapped: `LOCATION_FIELD_MIN_WIDTH` is a FLOOR for the kits that
+              cap this field, not a width this one owes. */}
           <ComposerSection rule={false}>
             <input
               data-composer-field
