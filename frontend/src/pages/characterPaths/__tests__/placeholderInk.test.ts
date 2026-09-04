@@ -27,14 +27,21 @@
  * mistake #2485 was open for.
  *
  * NO na ROW NEEDS THE WASH PROXY ANY MORE (#2992, #2991). Both na kits used to
- * draw fields straight onto the `.na-backdrop` watercolour — transparent over
- * the washed page, or on the translucent surface token — and a wash costs up to
- * a full ratio point, so their rows were held to AAA on the flat page token as a
- * stated proxy rather than as a second copy of a five-gradient shorthand
- * (`createCharacterContrast.test.ts` transcribes the stops and owns that
- * measurement). Both are on the composer sheet now, where a field is an OPAQUE
- * box drawn ABOVE the aurora: the ground is flat, there is nothing to proxy for,
- * and the one na row below takes the plain AA floor like every faction row.
+ * draw fields straight onto the app page — the name box transparent over it, the
+ * prose boxes on the translucent surface token — and their rows were held to AAA
+ * on the flat page token as a stated proxy, on the argument that a wash costs up
+ * to a full ratio point and this file declines to model one
+ * (`createCharacterContrast.test.ts` transcribes the `.na-backdrop` stops and
+ * owns that measurement). Both kits are on the composer sheet now, where a field
+ * is an OPAQUE box drawn ABOVE the aurora: the ground is flat, there is nothing
+ * to proxy for, and the one na row below takes the plain AA floor like every
+ * faction row.
+ *
+ * The proxy was generous, and worth saying so on the way out: `.na-backdrop` is
+ * a `position: fixed` wash with ONE live mount in the tree, `DefaultProfileBody`
+ * — no character-path surface ever mounted it, so the ground those rows were
+ * hedging against was `--color-bg-page` flat and the AAA floor bought room
+ * against a wash that was never behind them.
  *
  * `AAA_NORMAL` went with them: no row left on this surface is a proxy for a
  * ground this file declines to model, so the `floor` override has no caller and

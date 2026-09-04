@@ -398,36 +398,13 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // ── Moderation chrome — NEUTRAL, outside the costume ──────────────────────
   // The failed note comes from the shared banners — the crown hero went with
   // #1710 and the mark is the score stamp's corner fleur now. The flagged
-  // notice has no shared slot and is drawn here, on the same neutral warning
-  // tokens and the same shared `detail.banners.*` copy every other skin reads.
-  // `PraxisAdminBar` is the steward bar, mounted bare.
+  // notice comes from there too since #2718; it was drawn here for want of a
+  // slot, and this page names no ink for it, so it keeps the same neutral
+  // warning tokens and the same shared `detail.banners.*` copy every other skin
+  // reads. `PraxisAdminBar` is the steward bar, mounted bare.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: "2px solid var(--color-warning)",
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   );

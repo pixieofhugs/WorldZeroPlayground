@@ -361,40 +361,17 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
   // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
   //
-  // The failed note comes from the shared `PraxisStatusBanners` on its own
-  // neutral `--color-*` tokens — the crown hero went with #1710 and the mark is
-  // the score stamp's corner fleur now. The flagged notice has no shared
-  // slot, so it renders here in the SAME neutral vocabulary rather than in
-  // sienna on vellum. The steward bar below is `PraxisAdminBar`, equally bare.
-  // Every word of all three is the shared neutral block: this is the platform
-  // speaking, not the practice.
+  // The failed note and the flagged notice both come from the shared
+  // `PraxisStatusBanners` on its own neutral `--color-*` tokens — the crown hero
+  // went with #1710 and the mark is the score stamp's corner fleur now. The
+  // notice used to be re-typed here for want of a slot; #2718 gave it one, and
+  // this page names no ink for it, so it reads in the SAME neutral vocabulary
+  // rather than in sienna on vellum. The steward bar below is `PraxisAdminBar`,
+  // equally bare. Every word of all three is the shared neutral block: this is
+  // the platform speaking, not the practice.
   const banners = (
     <>
       <PraxisStatusBanners state={state} />
-      {praxis.moderation_status === "flagged" && (
-        <div
-          style={{
-            border: "2px solid var(--color-warning)",
-            borderRadius: 8,
-            padding: "var(--space-sm) var(--space-lg)",
-            marginBottom: "var(--space-md)",
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            flexWrap: "wrap",
-          }}
-        >
-          <span className="label-caption" style={{ color: "var(--color-warning)" }}>
-            {t("detail.banners.flaggedLabel")}
-          </span>
-          <span
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("detail.banners.flaggedBody")}
-          </span>
-        </div>
-      )}
       <PraxisAdminBar state={state} />
     </>
   );
