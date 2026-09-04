@@ -1,6 +1,7 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 import { EverymenSigil } from "../sigil/EverymenSigil";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red
@@ -24,19 +25,21 @@ const INK = "var(--everymen-ink)";
 const RED = "var(--everymen-red)";
 
 export default function EverymenFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The faction labels its own counts — page passes raw numbers only.
+  // The union names only `members`; the frame owns the other two labels and the
+  // order (#2997).
   // ponytail: three real counts. seasonRank / total-points-awarded aren't
   // sourced yet (no leaderboard/aggregate endpoint) — add rows when they are.
-  const stats = [
-    { value: members, label: i18n.t("feed:factionHero.everymen.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  const stats = heroCounts(i18n.t("feed:factionHero.everymen.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header
@@ -121,7 +124,7 @@ export default function EverymenFactionHero({
               100%)` keeps the floor from pushing the column past the hero's
               clipped edge on a phone — #1314's lesson on the S.N.I.D.E. hero. */}
           <div style={{ flex: 1, minWidth: "min(240px, 100%)" }}>
-            <div
+            <HeroKicker
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "var(--text-base)",
@@ -130,19 +133,18 @@ export default function EverymenFactionHero({
                 color: GOLD,
                 marginBottom: "var(--space-xs)",
               }}
-            >
-              {i18n.t("feed:factionHero.everymen.eyebrow")}
-            </div>
-            <h1
+              text={i18n.t("feed:factionHero.everymen.eyebrow")}
+            />
+            <HeroWordmark
               style={{
                 fontFamily: "var(--font-accent)",
                 // The mark SCALES rather than breaks (#2000). 76px is the
                 // poster size and the cap; the 20vw arm only bites below a
                 // ~380px viewport, where even the full column is too narrow for
-                // it. No overflow-wrap here on purpose: a wordmark that breaks
-                // mid-word reads as a different word, which is a worse failure
-                // than one that overflows, so the fit is bought by the track
-                // above and the cap here instead of by licensing a break.
+                // it. The wrap rule itself is the frame's now (#2997); what
+                // stays here is the FIT, which is this kit's own — bought by
+                // the track above and the cap here rather than by licensing a
+                // break.
                 //
                 // ornament: union-poster wordmark — accent face at 0.82 leading,
                 // hard drop shadow. This carried a no-raw-style-values disable
@@ -158,7 +160,7 @@ export default function EverymenFactionHero({
               }}
             >
               {name}
-            </h1>
+            </HeroWordmark>
             <div
               style={{
                 display: "inline-block",
@@ -173,13 +175,14 @@ export default function EverymenFactionHero({
                 padding: "4px 14px",
               }}
             >
-              {i18n.t("feed:factionSelect.everymen.tagline")}
+              {heroTagline(slug)}
             </div>
           </div>
         </div>
 
         {/* stats on the side — dark ledger panel */}
-        <div
+        <HeroCounts
+          counts={stats}
           style={{
             flexShrink: 0,
             width: 238,
@@ -191,9 +194,8 @@ export default function EverymenFactionHero({
             padding: "var(--space-lg) var(--space-xl)",
           }}
         >
-          {stats.map((s) => (
+          {(s) => (
             <div
-              key={s.label}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -220,8 +222,8 @@ export default function EverymenFactionHero({
                 {s.value}
               </span>
             </div>
-          ))}
-        </div>
+          )}
+        </HeroCounts>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@ import i18n from "../../i18n";
 import { factionRoleVars } from "../../utils/factionRoles";
 import { WowBannerScatter } from "../factionMarks/wowOrnament";
 import { WowSigil } from "../sigil/WowSigil";
+import { HeroCounts, HeroKicker, HeroWordmark, heroCounts, heroTagline } from "./heroFrame";
 
 /**
  * WOW faction-page hero — the recruiting banner (kit §08, #900).
@@ -25,16 +26,19 @@ import { WowSigil } from "../sigil/WowSigil";
  * catalog (feed:factionHero.wow.stats.*), per ADR-0016 — presentation only.
  */
 export default function WowFactionHero({
+  slug,
   name,
   members,
   tasks,
   praxes,
 }: FactionHeroProps) {
-  const muster = [
-    { value: members, label: i18n.t("feed:factionHero.wow.stats.members") },
-    { value: tasks, label: i18n.t("feed:factionHero.stats.tasks") },
-    { value: praxes, label: i18n.t("feed:factionHero.stats.praxes") },
-  ];
+  // The Court names only `members`; the frame owns the other two labels and the
+  // order (#2997).
+  const muster = heroCounts(i18n.t("feed:factionHero.wow.stats.members"), {
+    members,
+    tasks,
+    praxes,
+  });
 
   return (
     <header style={{ marginBottom: "var(--space-2xl)" }}>
@@ -96,30 +100,29 @@ export default function WowFactionHero({
           {/* The kit draws no eyebrow on the banner; every other faction hero in
               the repo carries one, so WOW gets the house slot in its own display
               face rather than a Courier line the Court would never set. */}
-          <div
+          <HeroKicker
             className="label-heading"
             style={{
               fontFamily: "var(--wow-hero-face)",
               color: "var(--faction-wow-accent-deep)",
             }}
-          >
-            {i18n.t("feed:factionHero.wow.eyebrow")}
-          </div>
+            text={i18n.t("feed:factionHero.wow.eyebrow")}
+          />
 
-          <h1
+          {/* The wrap rule is the frame's (#2997). The banner is full-width and
+              centred, and "Warriors of Whimsy" sets at --text-heading with two
+              spaces to wrap at. */}
+          <HeroWordmark
             style={{
               fontFamily: "var(--wow-hero-face)",
               fontSize: "var(--text-heading)",
               lineHeight: 1.05,
               color: "var(--wow-hero-ink)",
               margin: "var(--space-sm) 0 var(--space-xs)",
-              // No overflow-wrap: a wordmark never breaks mid-word (#2000). The
-              // banner is full-width and centred, and "Warriors of Whimsy" sets
-              // at --text-heading with two spaces to wrap at.
             }}
           >
             {name}
-          </h1>
+          </HeroWordmark>
 
           <p
             className="content-text"
@@ -130,12 +133,13 @@ export default function WowFactionHero({
               margin: "0 0 var(--space-lg)",
             }}
           >
-            {i18n.t("feed:factionSelect.wow.tagline")}
+            {heroTagline(slug)}
           </p>
 
 
           {/* ── the muster ── */}
-          <div
+          <HeroCounts
+            counts={muster}
             style={{
               display: "flex",
               flexWrap: "wrap",
@@ -144,9 +148,8 @@ export default function WowFactionHero({
               gap: "var(--space-xl)",
             }}
           >
-            {muster.map((entry, index) => (
+            {(entry, index) => (
               <div
-                key={entry.label}
                 style={{ display: "flex", alignItems: "stretch", gap: "var(--space-xl)" }}
               >
                 {index > 0 && (
@@ -189,8 +192,8 @@ export default function WowFactionHero({
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          </HeroCounts>
         </div>
       </div>
     </header>
